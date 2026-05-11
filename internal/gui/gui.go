@@ -19,10 +19,9 @@ func Run() error {
 	w := new(app.Window)
 	w.Option(
 		app.Title("Olden Era — Template Generator"),
-		app.Size(unit.Dp(1000), unit.Dp(780)),
-		app.MinSize(unit.Dp(720), unit.Dp(560)),
+		app.Size(unit.Dp(1180), unit.Dp(820)),
+		app.MinSize(unit.Dp(900), unit.Dp(600)),
 	)
-
 	th := newTheme()
 	state := newState()
 
@@ -51,7 +50,6 @@ func drawEditor(gtx layout.Context, th *material.Theme, ed *widget.Editor, hint 
 		return e.Layout(gtx)
 	})
 	call := macro.Stop()
-
 	radius := gtx.Dp(2)
 	rect := image.Rectangle{Max: dims.Size}
 	paint.FillShape(gtx.Ops, colInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
@@ -63,8 +61,9 @@ func drawEditor(gtx layout.Context, th *material.Theme, ed *widget.Editor, hint 
 	return dims
 }
 
-// sliderWithValue draws a Material slider with a gold value label on the right.
-func sliderWithValue(gtx layout.Context, th *material.Theme, f *widget.Float, value string) layout.Dimensions {
+// sliderLabeled draws a slider in a flex row with a fixed-width gold value
+// label on the right.
+func sliderLabeled(gtx layout.Context, th *material.Theme, f *widget.Float, value string) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			sl := material.Slider(th, f)
@@ -73,14 +72,71 @@ func sliderWithValue(gtx layout.Context, th *material.Theme, f *widget.Float, va
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min.X = gtx.Dp(48)
+			gtx.Constraints.Min.X = gtx.Dp(64)
 			lbl := material.Body1(th, value)
 			lbl.Color = colGold
 			lbl.TextSize = unit.Sp(13)
-			lbl.Alignment = 1 // text.End
+			lbl.Alignment = 1
 			return lbl.Layout(gtx)
 		}),
 	)
+}
+
+// snapIntSliderLabeled snaps the slider to the [lo, hi] integer range and
+// renders the integer value to the right.
+func snapIntSliderLabeled(gtx layout.Context, th *material.Theme, f *widget.Float, lo, hi int, suffix string) int {
+	v := mapRange(f.Value, float32(lo), float32(hi))
+	rounded := int(roundHalfAway(float64(v)))
+	if rounded < lo {
+		rounded = lo
+	}
+	if rounded > hi {
+		rounded = hi
+	}
+	target := mapRangeInv(float32(rounded), float32(lo), float32(hi))
+	if target != f.Value && !f.Dragging() {
+		f.Value = target
+	}
+	label := itoa(rounded) + suffix
+	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+			sl := material.Slider(th, f)
+			sl.Color = colGold
+			return sl.Layout(gtx)
+		}),
+		layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints.Min.X = gtx.Dp(64)
+			lbl := material.Body1(th, label)
+			lbl.Color = colGold
+			lbl.TextSize = unit.Sp(13)
+			lbl.Alignment = 1
+			return lbl.Layout(gtx)
+		}),
+	)
+	return rounded
+}
+
+func itoa(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+	var buf [20]byte
+	i := len(buf)
+	for n > 0 {
+		i--
+		buf[i] = byte('0' + n%10)
+		n /= 10
+	}
+	if neg {
+		i--
+		buf[i] = '-'
+	}
+	return string(buf[i:])
 }
 
 // checkRow renders one CheckBox + label as a clickable row.
@@ -96,5 +152,5 @@ func checkRow(th *material.Theme, b *widget.Bool, label string) layout.Widget {
 	}
 }
 
-// _ silences unused color import when builds remove specific consts.
+// _ silences unused-color warnings if the file is partially used.
 var _ = color.NRGBA{}
