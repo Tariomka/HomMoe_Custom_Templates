@@ -142,6 +142,10 @@ type State struct {
 	statusMsg    string
 	statusErr    bool
 
+	// Preview panel.
+	preview        previewState
+	btnSavePreview widget.Clickable
+
 	// Persistent settings file model. Updated continuously from widgets.
 	sf *models.SettingsFile
 }
@@ -629,11 +633,21 @@ func (s *State) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return s.tabs.Layout(gtx, th) }),
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				return borderedPanel(gtx, unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return s.layoutActiveTab(gtx, th)
-					})
-				})
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+						return borderedPanel(gtx, unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
+							return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+								return s.layoutActiveTab(gtx, th)
+							})
+						})
+					}),
+					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
+						gtx.Constraints.Max.X = gtx.Dp(unit.Dp(440))
+						return s.layoutPreviewPanel(gtx, th)
+					}),
+				)
 			}),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return s.layoutFooter(gtx, th) }),
