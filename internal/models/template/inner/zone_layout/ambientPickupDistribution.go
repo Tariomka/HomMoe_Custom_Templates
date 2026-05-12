@@ -1,4 +1,4 @@
-package zonelayout
+package zone_layout
 
 // AmbientPickupDistribution configures distribution of ambient pickups in a zone.
 type AmbientPickupDistribution struct {

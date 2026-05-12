@@ -1,4 +1,4 @@
-package content
+package common
 
 // PlacementRule biases placement of a MandatoryContentItem (or portal endpoint) towards a reference point.
 // Observed `type` values include: "Crossroads", "Road", "MainObject", "Sid".

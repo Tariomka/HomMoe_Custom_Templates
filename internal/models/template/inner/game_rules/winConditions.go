@@ -1,4 +1,6 @@
-package gamerules
+package game_rules
+
+import "encoding/json"
 
 // WinConditions enumerates every observed win-condition toggle and tuning value.
 // All fields are optional in the source JSON; absent fields keep their Go zero value.
@@ -30,4 +32,43 @@ type WinConditions struct {
 	TournamentSaveArmy     bool  `json:"tournamentSaveArmy,omitempty"`
 	TournamentDays         []int `json:"tournamentDays,omitempty"`
 	TournamentAnnounceDays []int `json:"tournamentAnnounceDays,omitempty"`
+}
+
+// MergeWinConditionsIfDoesNotExist copies fields from source into the receiver, but only for fields
+// where the receiver currently holds its zero value (so a nested `winConditions` block
+// always wins over flat sibling keys).
+func (this *WinConditions) MergeWinConditionsIfDoesNotExist(source WinConditions) {
+	destinationBytes, err := json.Marshal(*this)
+	if err != nil {
+		return
+	}
+	sourceBytes, err := json.Marshal(source)
+	if err != nil {
+		return
+	}
+	var destinationMap, sourceMap map[string]json.RawMessage
+	if err := json.Unmarshal(destinationBytes, &destinationMap); err != nil {
+		return
+	}
+	if err := json.Unmarshal(sourceBytes, &sourceMap); err != nil {
+		return
+	}
+	// Because every WinConditions field uses `omitempty`, any field present in
+	// sourceMap but absent from destinationMap is a zero-valued destination field that should be
+	// filled in from source.
+	changed := false
+	for k, v := range sourceMap {
+		if _, ok := destinationMap[k]; !ok {
+			destinationMap[k] = v
+			changed = true
+		}
+	}
+	if !changed {
+		return
+	}
+	merged, err := json.Marshal(destinationMap)
+	if err != nil {
+		return
+	}
+	_ = json.Unmarshal(merged, this)
 }

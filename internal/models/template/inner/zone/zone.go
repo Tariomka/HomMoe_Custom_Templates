@@ -1,7 +1,5 @@
 package zone
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner"
-
 // Zone represents a single zone in the map.
 type Zone struct {
 	Name string `json:"name"`
@@ -25,8 +23,8 @@ type Zone struct {
 	UnguardedContentPool []string `json:"unguardedContentPool"`
 	ResourcesContentPool []string `json:"resourcesContentPool"`
 
-	MandatoryContent   inner.StringList `json:"mandatoryContent,omitempty"`
-	ContentCountLimits inner.StringList `json:"contentCountLimits,omitempty"`
+	MandatoryContent   StringList `json:"mandatoryContent,omitempty"`
+	ContentCountLimits StringList `json:"contentCountLimits,omitempty"`
 
 	GuardedContentValue          int `json:"guardedContentValue"`
 	GuardedContentValuePerArea   int `json:"guardedContentValuePerArea"`
@@ -35,12 +33,12 @@ type Zone struct {
 	ResourcesValue               int `json:"resourcesValue"`
 	ResourcesValuePerArea        int `json:"resourcesValuePerArea"`
 
-	MainObjects []inner.MainObject `json:"mainObjects"`
+	MainObjects []MainObject `json:"mainObjects"`
 
-	ZoneBiome        inner.TypedRef `json:"zoneBiome"`
-	ContentBiome     inner.TypedRef `json:"contentBiome"`
-	MetaObjectsBiome inner.TypedRef `json:"metaObjectsBiome"`
+	ZoneBiome        TypedRef `json:"zoneBiome"`
+	ContentBiome     TypedRef `json:"contentBiome"`
+	MetaObjectsBiome TypedRef `json:"metaObjectsBiome"`
 
-	CrossroadsPosition *int         `json:"crossroadsPosition,omitempty"`
-	Roads              []inner.Road `json:"roads,omitempty"`
+	CrossroadsPosition *int   `json:"crossroadsPosition,omitempty"`
+	Roads              []Road `json:"roads,omitempty"`
 }

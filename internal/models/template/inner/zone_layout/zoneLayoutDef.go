@@ -1,4 +1,4 @@
-package zonelayout
+package zone_layout
 
 // ZoneLayoutDef is a named layout preset referenced by Zone.Layout.
 // Templates declare these at the root level under `zoneLayouts`.

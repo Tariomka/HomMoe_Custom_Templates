@@ -1,4 +1,4 @@
-package zonelayout
+package zone_layout
 
 // ElevationMode is one weighted elevation band used by zone generation.
 type ElevationMode struct {

@@ -1,4 +1,4 @@
-package gamerules
+package game_rules
 
 import "encoding/json"
 
@@ -8,9 +8,9 @@ import "encoding/json"
 type BonusList []Bonus
 
 // UnmarshalJSON allows decoding from either `{...}` or `[{...}, ...]`.
-func (b *BonusList) UnmarshalJSON(data []byte) error {
+func (this *BonusList) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 {
-		*b = nil
+		*this = nil
 		return nil
 	}
 	switch data[0] {
@@ -19,15 +19,15 @@ func (b *BonusList) UnmarshalJSON(data []byte) error {
 		if err := json.Unmarshal(data, &single); err != nil {
 			return err
 		}
-		*b = []Bonus{single}
+		*this = []Bonus{single}
 	case 'n':
-		*b = nil
+		*this = nil
 	default:
 		var arr []Bonus
 		if err := json.Unmarshal(data, &arr); err != nil {
 			return err
 		}
-		*b = arr
+		*this = arr
 	}
 	return nil
 }

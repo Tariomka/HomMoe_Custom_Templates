@@ -1,15 +1,17 @@
 package content
 
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/common"
+
 // MandatoryContentItem describes a single mandatory object and how it should be placed.
 // In some templates the item references a content list (via `includeLists`) and/or a
 // nested weighted content roster (via `content`) instead of a single `sid`; all forms
 // are supported.
 type MandatoryContentItem struct {
-	SID       string          `json:"sid,omitempty"`
-	Name      string          `json:"name,omitempty"`
-	IsMine    bool            `json:"isMine,omitempty"`
-	IsGuarded bool            `json:"isGuarded,omitempty"`
-	Rules     []PlacementRule `json:"rules,omitempty"`
+	SID       string                 `json:"sid,omitempty"`
+	Name      string                 `json:"name,omitempty"`
+	IsMine    bool                   `json:"isMine,omitempty"`
+	IsGuarded bool                   `json:"isGuarded,omitempty"`
+	Rules     []common.PlacementRule `json:"rules,omitempty"`
 
 	// Variant index this item applies to (-1 for all variants).
 	Variant *int `json:"variant,omitempty"`

@@ -1,4 +1,4 @@
-package gamerules
+package game_rules
 
 // Bonus describes a starting bonus granted to a side / hero.
 // `parameters` contents are type-dependent; all observed values are JSON strings.

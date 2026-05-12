@@ -1,4 +1,4 @@
-package zonelayout
+package zone_layout
 
 // GuardedEncounterResourceFractions configures resource splits for guarded encounters.
 type GuardedEncounterResourceFractions struct {

@@ -1,4 +1,4 @@
-package inner
+package zone
 
 // TypedRef is a generic polymorphic reference shape used across the schema for
 // biome selectors, factions, road endpoints, placement rules and similar lookups.

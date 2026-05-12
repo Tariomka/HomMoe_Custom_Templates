@@ -1,4 +1,4 @@
-package inner
+package zone
 
 import "encoding/json"
 

@@ -1,4 +1,4 @@
-package inner
+package zone
 
 // Border describes the outer obstacles/water boundary of a variant.
 type Border struct {
