@@ -470,7 +470,19 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		}
 		pz.IsPlayer = strings.HasPrefix(z.Name, "Spawn-")
 		for _, mo := range z.MainObjects {
-			if strings.EqualFold(mo.Type, "Spawn") || strings.EqualFold(mo.Type, "City") {
+			if strings.EqualFold(mo.Type, "Spawn") {
+				pz.HasCastle = true
+				pz.Castles++
+				// Extract player number from Spawn field (e.g. "Player1" → 1)
+				if strings.HasPrefix(mo.Spawn, "Player") {
+					n := mo.Spawn[len("Player"):]
+					for _, c := range n {
+						if c >= '0' && c <= '9' {
+							pz.Owner = pz.Owner*10 + int(c-'0')
+						}
+					}
+				}
+			} else if strings.EqualFold(mo.Type, "City") {
 				pz.HasCastle = true
 				pz.Castles++
 			}
@@ -769,7 +781,9 @@ func renderPreviewToImage(t *models.RmgTemplate, topology models.MapTopology, si
 		}
 		drawThickLine(img, ax, bx, w, col)
 	}
-	// Zones.
+	// Zones — non-player first, then player on top.
+	labelCol := color.NRGBA{R: 0xF8, G: 0xE8, B: 0xC0, A: 0xFF}
+	badgeCol := color.NRGBA{R: 0xFF, G: 0xE8, B: 0x90, A: 0xFF}
 	for _, z := range pl.Zones {
 		if z.IsPlayer {
 			continue
@@ -781,6 +795,11 @@ func renderPreviewToImage(t *models.RmgTemplate, topology models.MapTopology, si
 		}
 		fillCircle(img, z.Center, zr, fill)
 		strokeCircle(img, z.Center, zr, 2, edge)
+		drawBitmapTextCentered(img, z.Center, zoneLabel(z), 2, labelCol)
+		if z.HasCastle && z.Castles > 0 {
+			bp := image.Pt(z.Center.X+zr/2, z.Center.Y+zr/2)
+			drawBitmapTextCentered(img, bp, fmt.Sprintf("%d", z.Castles), 1, badgeCol)
+		}
 	}
 	for _, z := range pl.Zones {
 		if !z.IsPlayer {
@@ -789,6 +808,11 @@ func renderPreviewToImage(t *models.RmgTemplate, topology models.MapTopology, si
 		fill, edge := zoneColors(z)
 		fillCircle(img, z.Center, r, fill)
 		strokeCircle(img, z.Center, r, 2, edge)
+		drawBitmapTextCentered(img, z.Center, zoneLabel(z), 2, labelCol)
+		if z.HasCastle && z.Castles > 0 {
+			bp := image.Pt(z.Center.X+r/2, z.Center.Y+r/2)
+			drawBitmapTextCentered(img, bp, fmt.Sprintf("%d", z.Castles), 1, badgeCol)
+		}
 	}
 	return img
 }
@@ -888,4 +912,105 @@ func drawThickLine(img *image.RGBA, a, b image.Point, w int, col color.NRGBA) {
 		x += xinc
 		y += yinc
 	}
+}
+
+// ── Bitmap font for PNG annotations ──────────────────────────────────
+// A tiny 5×7 pixel font covering 0-9, A-Z, and a few symbols.
+// Each glyph is 5 columns wide; each column is a byte with 7 bit-rows
+// (bit 0 = top row).
+
+var bitmapGlyphs = map[byte][5]byte{
+	'0': {0x3E, 0x51, 0x49, 0x45, 0x3E},
+	'1': {0x00, 0x42, 0x7F, 0x40, 0x00},
+	'2': {0x42, 0x61, 0x51, 0x49, 0x46},
+	'3': {0x21, 0x41, 0x45, 0x4B, 0x31},
+	'4': {0x18, 0x14, 0x12, 0x7F, 0x10},
+	'5': {0x27, 0x45, 0x45, 0x45, 0x39},
+	'6': {0x3C, 0x4A, 0x49, 0x49, 0x30},
+	'7': {0x01, 0x71, 0x09, 0x05, 0x03},
+	'8': {0x36, 0x49, 0x49, 0x49, 0x36},
+	'9': {0x06, 0x49, 0x49, 0x29, 0x1E},
+	'A': {0x7E, 0x11, 0x11, 0x11, 0x7E},
+	'B': {0x7F, 0x49, 0x49, 0x49, 0x36},
+	'C': {0x3E, 0x41, 0x41, 0x41, 0x22},
+	'D': {0x7F, 0x41, 0x41, 0x22, 0x1C},
+	'E': {0x7F, 0x49, 0x49, 0x49, 0x41},
+	'F': {0x7F, 0x09, 0x09, 0x09, 0x01},
+	'G': {0x3E, 0x41, 0x49, 0x49, 0x7A},
+	'H': {0x7F, 0x08, 0x08, 0x08, 0x7F},
+	'I': {0x00, 0x41, 0x7F, 0x41, 0x00},
+	'J': {0x20, 0x40, 0x41, 0x3F, 0x01},
+	'K': {0x7F, 0x08, 0x14, 0x22, 0x41},
+	'L': {0x7F, 0x40, 0x40, 0x40, 0x40},
+	'M': {0x7F, 0x02, 0x0C, 0x02, 0x7F},
+	'N': {0x7F, 0x04, 0x08, 0x10, 0x7F},
+	'O': {0x3E, 0x41, 0x41, 0x41, 0x3E},
+	'P': {0x7F, 0x09, 0x09, 0x09, 0x06},
+	'Q': {0x3E, 0x41, 0x51, 0x21, 0x5E},
+	'R': {0x7F, 0x09, 0x19, 0x29, 0x46},
+	'S': {0x46, 0x49, 0x49, 0x49, 0x31},
+	'T': {0x01, 0x01, 0x7F, 0x01, 0x01},
+	'U': {0x3F, 0x40, 0x40, 0x40, 0x3F},
+	'V': {0x1F, 0x20, 0x40, 0x20, 0x1F},
+	'W': {0x3F, 0x40, 0x38, 0x40, 0x3F},
+	'X': {0x63, 0x14, 0x08, 0x14, 0x63},
+	'Y': {0x07, 0x08, 0x70, 0x08, 0x07},
+	'Z': {0x61, 0x51, 0x49, 0x45, 0x43},
+}
+
+// drawBitmapText draws a string onto img at (x, y) with the given scale.
+func drawBitmapText(img *image.RGBA, x, y int, text string, scale int, col color.NRGBA) {
+	if scale < 1 {
+		scale = 1
+	}
+	rgba := color.RGBA{R: col.R, G: col.G, B: col.B, A: col.A}
+	cx := x
+	for i := 0; i < len(text); i++ {
+		ch := text[i]
+		if ch >= 'a' && ch <= 'z' {
+			ch -= 32
+		}
+		glyph, ok := bitmapGlyphs[ch]
+		if !ok {
+			cx += 4 * scale // space for unknown chars
+			continue
+		}
+		for col := 0; col < 5; col++ {
+			bits := glyph[col]
+			for row := 0; row < 7; row++ {
+				if bits&(1<<uint(row)) != 0 {
+					for sy := 0; sy < scale; sy++ {
+						for sx := 0; sx < scale; sx++ {
+							px := cx + col*scale + sx
+							py := y + row*scale + sy
+							if px >= 0 && py >= 0 && px < img.Rect.Max.X && py < img.Rect.Max.Y {
+								img.SetRGBA(px, py, rgba)
+							}
+						}
+					}
+				}
+			}
+		}
+		cx += 6 * scale // 5 pixel cols + 1 pixel gap
+	}
+}
+
+// bitmapTextWidth returns the pixel width of a string at the given scale.
+func bitmapTextWidth(text string, scale int) int {
+	if len(text) == 0 {
+		return 0
+	}
+	return len(text)*6*scale - scale // subtract trailing gap
+}
+
+// drawBitmapTextCentered draws a string centered on the given point.
+func drawBitmapTextCentered(img *image.RGBA, center image.Point, text string, scale int, col color.NRGBA) {
+	if text == "" {
+		return
+	}
+	tw := bitmapTextWidth(text, scale)
+	th := 7 * scale
+	x := center.X - tw/2
+	y := center.Y - th/2
+	drawBitmapText(img, x, y, text, scale, col)
 }
