@@ -1,4 +1,6 @@
-package template
+package inner
+
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/content"
 
 // Connection links two zones together inside a Variant.
 type Connection struct {
@@ -27,6 +29,6 @@ type Connection struct {
 	GuardMatchGroup string `json:"guardMatchGroup,omitempty"`
 
 	// Portal placement rules - present on connections of type "Portal".
-	PortalPlacementRulesFrom []PlacementRule `json:"portalPlacementRulesFrom,omitempty"`
-	PortalPlacementRulesTo   []PlacementRule `json:"portalPlacementRulesTo,omitempty"`
+	PortalPlacementRulesFrom []content.PlacementRule `json:"portalPlacementRulesFrom,omitempty"`
+	PortalPlacementRulesTo   []content.PlacementRule `json:"portalPlacementRulesTo,omitempty"`
 }

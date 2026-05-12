@@ -1,5 +1,13 @@
 package template
 
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/gamerules"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/zonelayout"
+)
+
 // RmgTemplateModel represents the top-level template structure for .rmg.json files.
 // Mirrors the on-disk schema observed across all bundled `data/ExampleTemplates/*.rmg.json` files.
 type RmgTemplateModel struct {
@@ -12,22 +20,22 @@ type RmgTemplateModel struct {
 	SizeX int `json:"sizeX"`
 	SizeZ int `json:"sizeZ"`
 
-	ValueOverrides []ValueOverride `json:"valueOverrides,omitempty"`
+	ValueOverrides []inner.ValueOverride `json:"valueOverrides,omitempty"`
 
 	// A handful of templates ("OctoJebus") declare a stray top-level `orientation` /
 	// `border` block alongside `variants`. These hold the same data as Variant's own
 	// orientation/border and are preserved here for round-trip fidelity.
-	Orientation *Orientation `json:"orientation,omitempty"`
-	Border      *Border      `json:"border,omitempty"`
+	Orientation *inner.Orientation `json:"orientation,omitempty"`
+	Border      *inner.Border      `json:"border,omitempty"`
 
-	GameRules  GameRules   `json:"gameRules"`
-	GlobalBans *GlobalBans `json:"globalBans,omitempty"`
+	GameRules  gamerules.GameRules `json:"gameRules"`
+	GlobalBans *inner.GlobalBans   `json:"globalBans,omitempty"`
 
-	Variants []Variant `json:"variants"`
+	Variants []zone.Variant `json:"variants"`
 
-	ZoneLayouts        []ZoneLayoutDef     `json:"zoneLayouts,omitempty"`
-	MandatoryContent   []MandatoryContent  `json:"mandatoryContent,omitempty"`
-	ContentCountLimits []ContentCountLimit `json:"contentCountLimits,omitempty"`
-	ContentPools       []ContentPool       `json:"contentPools"`
-	ContentLists       []ContentList       `json:"contentLists"`
+	ZoneLayouts        []zonelayout.ZoneLayoutDef  `json:"zoneLayouts,omitempty"`
+	MandatoryContent   []content.MandatoryContent  `json:"mandatoryContent,omitempty"`
+	ContentCountLimits []content.ContentCountLimit `json:"contentCountLimits,omitempty"`
+	ContentPools       []content.ContentPool       `json:"contentPools"`
+	ContentLists       []content.ContentList       `json:"contentLists"`
 }

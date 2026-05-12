@@ -1,4 +1,4 @@
-package template
+package inner
 
 // ValueOverride overrides the default guard value of a specific object SID, optionally per variant index.
 type ValueOverride struct {

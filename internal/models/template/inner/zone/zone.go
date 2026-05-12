@@ -1,4 +1,6 @@
-package template
+package zone
+
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner"
 
 // Zone represents a single zone in the map.
 type Zone struct {
@@ -23,8 +25,8 @@ type Zone struct {
 	UnguardedContentPool []string `json:"unguardedContentPool"`
 	ResourcesContentPool []string `json:"resourcesContentPool"`
 
-	MandatoryContent   StringList `json:"mandatoryContent,omitempty"`
-	ContentCountLimits StringList `json:"contentCountLimits,omitempty"`
+	MandatoryContent   inner.StringList `json:"mandatoryContent,omitempty"`
+	ContentCountLimits inner.StringList `json:"contentCountLimits,omitempty"`
 
 	GuardedContentValue          int `json:"guardedContentValue"`
 	GuardedContentValuePerArea   int `json:"guardedContentValuePerArea"`
@@ -33,18 +35,12 @@ type Zone struct {
 	ResourcesValue               int `json:"resourcesValue"`
 	ResourcesValuePerArea        int `json:"resourcesValuePerArea"`
 
-	MainObjects []MainObject `json:"mainObjects"`
+	MainObjects []inner.MainObject `json:"mainObjects"`
 
-	ZoneBiome        TypedRef `json:"zoneBiome"`
-	ContentBiome     TypedRef `json:"contentBiome"`
-	MetaObjectsBiome TypedRef `json:"metaObjectsBiome"`
+	ZoneBiome        inner.TypedRef `json:"zoneBiome"`
+	ContentBiome     inner.TypedRef `json:"contentBiome"`
+	MetaObjectsBiome inner.TypedRef `json:"metaObjectsBiome"`
 
-	CrossroadsPosition *int   `json:"crossroadsPosition,omitempty"`
-	Roads              []Road `json:"roads,omitempty"`
-}
-
-// EncounterHolesSettings overrides the global encounter-holes parameters for a single zone.
-type EncounterHolesSettings struct {
-	AffectedEncounters float64 `json:"affectedEncounters"`
-	TwoHoleEncounters  float64 `json:"twoHoleEncounters"`
+	CrossroadsPosition *int         `json:"crossroadsPosition,omitempty"`
+	Roads              []inner.Road `json:"roads,omitempty"`
 }

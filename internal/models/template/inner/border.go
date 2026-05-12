@@ -1,4 +1,4 @@
-package template
+package inner
 
 // Border describes the outer obstacles/water boundary of a variant.
 type Border struct {

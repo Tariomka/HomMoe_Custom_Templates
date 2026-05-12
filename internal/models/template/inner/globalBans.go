@@ -1,4 +1,4 @@
-package template
+package inner
 
 // GlobalBans declares globally banned content (items, magics, heroes) at the template level.
 type GlobalBans struct {

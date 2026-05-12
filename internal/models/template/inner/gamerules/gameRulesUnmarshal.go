@@ -1,4 +1,4 @@
-package template
+package gamerules
 
 import "encoding/json"
 
