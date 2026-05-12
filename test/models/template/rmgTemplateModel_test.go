@@ -36,7 +36,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 				t.Fatalf("read: %v", err)
 			}
 
-			var tpl template.RmgTemplate
+			var tpl template.RmgTemplateModel
 			dec := json.NewDecoder(strings.NewReader(string(raw)))
 			dec.DisallowUnknownFields()
 			if err := dec.Decode(&tpl); err != nil {
@@ -50,7 +50,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 			if err != nil {
 				t.Fatalf("re-encode: %v", err)
 			}
-			var tpl2 template.RmgTemplate
+			var tpl2 template.RmgTemplateModel
 			if err := json.Unmarshal(out, &tpl2); err != nil {
 				t.Fatalf("re-decode: %v", err)
 			}

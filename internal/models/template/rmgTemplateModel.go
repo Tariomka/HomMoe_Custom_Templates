@@ -1,8 +1,8 @@
 package template
 
-// RmgTemplate represents the top-level template structure for .rmg.json files.
+// RmgTemplateModel represents the top-level template structure for .rmg.json files.
 // Mirrors the on-disk schema observed across all bundled `data/ExampleTemplates/*.rmg.json` files.
-type RmgTemplate struct {
+type RmgTemplateModel struct {
 	Name string `json:"name"`
 
 	GameMode            string `json:"gameMode"`
@@ -30,18 +30,4 @@ type RmgTemplate struct {
 	ContentCountLimits []ContentCountLimit `json:"contentCountLimits,omitempty"`
 	ContentPools       []ContentPool       `json:"contentPools"`
 	ContentLists       []ContentList       `json:"contentLists"`
-}
-
-// ValueOverride overrides the default guard value of a specific object SID, optionally per variant index.
-type ValueOverride struct {
-	SID        string `json:"sid"`
-	Variant    int    `json:"variant"`
-	GuardValue int    `json:"guardValue"`
-}
-
-// GlobalBans declares globally banned content (items, magics, heroes) at the template level.
-type GlobalBans struct {
-	Items  []string `json:"items,omitempty"`
-	Magics []string `json:"magics,omitempty"`
-	Heroes []string `json:"heroes,omitempty"`
 }
