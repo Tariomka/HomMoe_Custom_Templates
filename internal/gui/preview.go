@@ -255,16 +255,90 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		return pl
 	}
 
+	// Connections in this generator reference zones by Letter, while Zone.Name
+	// is human-readable (e.g. "Player 1", "Neutral A (Bronze)"). Build a
+	// key→zoneName map so endpoints resolve regardless of which form is used.
+	zoneNameByKey := make(map[string]string, len(zones)*2)
+	for _, z := range zones {
+		zoneNameByKey[z.Name] = z.Name
+		if z.Letter != "" {
+			if _, exists := zoneNameByKey[z.Letter]; !exists {
+				zoneNameByKey[z.Letter] = z.Name
+			}
+		}
+	}
+	resolveKey := func(key string) (string, bool) {
+		n, ok := zoneNameByKey[key]
+		return n, ok
+	}
+
 	// Layout: hub-and-spoke if multiple "Hub-*" zones; ring otherwise (with optional center "Hub").
 	cx := side / 2
 	cy := side / 2
 	margin := 24.0
 
-	// Detect multi-hub (tournament).
+	// Detect multi-hub (tournament): zones literally named "Hub-*".
 	var hubs []int
 	for i, z := range zones {
 		if strings.HasPrefix(z.Name, "Hub-") {
 			hubs = append(hubs, i)
+		}
+	}
+
+	// Identify the implicit hub zone — the single non-player zone that
+	// every player zone connects to. Works for HubAndSpoke and any other
+	// topology where one neutral acts as a central hub. Falls back to a
+	// plain ring when no such zone exists.
+	implicitHubIdx := -1
+	if len(hubs) < 2 {
+		// Collect player zone names.
+		playerNames := map[string]bool{}
+		for _, z := range zones {
+			if strings.EqualFold(z.Type, "player") {
+				playerNames[z.Name] = true
+			}
+		}
+		// neighbours[zoneName] = set of connected zone names.
+		neighbours := make(map[string]map[string]bool, len(zones))
+		for _, c := range v.Connections {
+			a, ok1 := resolveKey(c.FromZone)
+			b, ok2 := resolveKey(c.ToZone)
+			if !ok1 || !ok2 {
+				continue
+			}
+			if neighbours[a] == nil {
+				neighbours[a] = map[string]bool{}
+			}
+			if neighbours[b] == nil {
+				neighbours[b] = map[string]bool{}
+			}
+			neighbours[a][b] = true
+			neighbours[b][a] = true
+		}
+		bestDeg := -1
+		for i, z := range zones {
+			if strings.EqualFold(z.Type, "player") {
+				continue
+			}
+			nbrs := neighbours[z.Name]
+			if len(nbrs) < 2 {
+				continue
+			}
+			// Must connect to every player zone.
+			connectsAllPlayers := len(playerNames) > 0
+			for pn := range playerNames {
+				if !nbrs[pn] {
+					connectsAllPlayers = false
+					break
+				}
+			}
+			if !connectsAllPlayers {
+				continue
+			}
+			if len(nbrs) > bestDeg {
+				bestDeg = len(nbrs)
+				implicitHubIdx = i
+			}
 		}
 	}
 	if len(hubs) >= 2 {
@@ -276,18 +350,24 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		hubSpokes := make(map[string][]int, len(hubs))
 		for _, hi := range hubs {
 			hub := zones[hi].Name
+			hubLetter := zones[hi].Letter
 			seen := map[int]bool{}
 			for _, c := range v.Connections {
 				other := ""
-				if c.FromZone == hub {
+				switch {
+				case c.FromZone == hub || (hubLetter != "" && c.FromZone == hubLetter):
 					other = c.ToZone
-				} else if c.ToZone == hub {
+				case c.ToZone == hub || (hubLetter != "" && c.ToZone == hubLetter):
 					other = c.FromZone
 				}
 				if other == "" {
 					continue
 				}
-				if oi, ok := zoneIdx[other]; ok && !seen[oi] {
+				otherName, ok := resolveKey(other)
+				if !ok {
+					continue
+				}
+				if oi, ok := zoneIdx[otherName]; ok && !seen[oi] {
 					seen[oi] = true
 					hubSpokes[hub] = append(hubSpokes[hub], oi)
 				}
@@ -332,11 +412,13 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		}
 	} else {
 		// Single ring with optional centre Hub.
-		hubIdx := -1
-		for i, z := range zones {
-			if z.Name == "Hub" {
-				hubIdx = i
-				break
+		hubIdx := implicitHubIdx
+		if hubIdx < 0 {
+			for i, z := range zones {
+				if z.Name == "Hub" {
+					hubIdx = i
+					break
+				}
 			}
 		}
 		var outer []int
@@ -382,13 +464,17 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		if !ok {
 			continue
 		}
+		isHub := strings.EqualFold(z.Name, "Hub") || strings.HasPrefix(z.Name, "Hub-")
+		if implicitHubIdx >= 0 && z.Name == zones[implicitHubIdx].Name {
+			isHub = true
+		}
 		pz := previewZone{
 			Name:   z.Name,
 			Letter: z.Letter,
 			Center: pos,
 			Owner:  z.Owner,
 			Tier:   classifyTier(z),
-			IsHub:  strings.EqualFold(z.Name, "Hub") || strings.HasPrefix(z.Name, "Hub-"),
+			IsHub:  isHub,
 		}
 		pz.IsPlayer = strings.EqualFold(z.Type, "player") || strings.HasPrefix(z.Name, "Spawn-")
 		for _, mo := range z.MainObjects {
@@ -399,11 +485,17 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		}
 		pl.Zones = append(pl.Zones, pz)
 	}
-	// Connections.
+	// Connections — endpoints may use either Zone.Name or Zone.Letter,
+	// so resolve through zoneNameByKey before looking up positions.
 	for _, c := range v.Connections {
-		a, ok1 := pl.Positions[c.FromZone]
-		b, ok2 := pl.Positions[c.ToZone]
+		aName, ok1 := resolveKey(c.FromZone)
+		bName, ok2 := resolveKey(c.ToZone)
 		if !ok1 || !ok2 {
+			continue
+		}
+		a, okA := pl.Positions[aName]
+		b, okB := pl.Positions[bName]
+		if !okA || !okB {
 			continue
 		}
 		isPortal := false

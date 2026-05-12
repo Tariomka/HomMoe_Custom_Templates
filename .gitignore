@@ -20,7 +20,6 @@ go.work
 
 # Build artifacts
 template-generator
-*.rmg.json
 
 # IDE
 .vscode/
