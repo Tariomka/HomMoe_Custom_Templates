@@ -1502,7 +1502,7 @@ func ensureFullConnectivity(playerLetters, allLetters []string, pos [][2]float64
 			for _, zn := range []string{za, zb} {
 				z := findZone(zones, zn)
 				if z != nil {
-					if z.MainObjects != nil && len(z.MainObjects) > 0 {
+					if len(z.MainObjects) > 0 {
 						z.Roads = append(z.Roads, plainRoad(mainObjectEndpoint("0"), connectionEndpoint(bridgeName)))
 					} else if len(z.Roads) > 0 {
 						existingConn := ""
