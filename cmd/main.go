@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	// Generate template
-	template, err := generator.Generate(settings)
+	template, err := services.Generate(settings)
 	if err != nil {
 		log.Fatalf("Failed to generate template: %v", err)
 	}

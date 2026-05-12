@@ -15,8 +15,8 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
 // Domain knowledge ported from KnownValues.cs and TopologyOptions in MainWindow.xaml.cs.
@@ -400,7 +400,7 @@ func (s *State) generate() {
 		s.setStatus("Template name is required.", true)
 		return
 	}
-	tmpl, err := generator.Generate(settings)
+	tmpl, err := services.Generate(settings)
 	if err != nil {
 		s.setStatus(fmt.Sprintf("Generation failed: %v", err), true)
 		s.lastTemplate = nil

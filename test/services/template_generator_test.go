@@ -1,9 +1,10 @@
-package generator
+package services_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -21,7 +22,7 @@ func TestGenerateUsesRequestedSettings(t *testing.T) {
 		},
 	}
 
-	template, err := generator.Generate(settings)
+	template, err := services.Generate(settings)
 	if err != nil {
 		t.Fatalf("Generate failed: %v", err)
 	}
@@ -47,7 +48,7 @@ func TestGenerateDefaultTopologyCreatesRingConnections(t *testing.T) {
 		},
 	}
 
-	template, err := generator.Generate(settings)
+	template, err := services.Generate(settings)
 	if err != nil {
 		t.Fatalf("Generate failed: %v", err)
 	}
@@ -69,8 +70,8 @@ func TestComputeContentScale(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		scale := generator.ComputeContentScale(test.mapSize, test.zoneCount)
-		if scale < generator.ContentScaleMin || scale > generator.ContentScaleMax {
+		scale := services.ComputeContentScale(test.mapSize, test.zoneCount)
+		if scale < services.ContentScaleMin || scale > services.ContentScaleMax {
 			t.Errorf("Scale out of bounds for %s: %f", test.mapSize, scale)
 		}
 	}
@@ -89,7 +90,7 @@ func TestGenerateWithRoadsDisabled(t *testing.T) {
 		},
 	}
 
-	template, err := generator.Generate(settings)
+	template, err := services.Generate(settings)
 	if err != nil {
 		t.Fatalf("Generate failed: %v", err)
 	}
