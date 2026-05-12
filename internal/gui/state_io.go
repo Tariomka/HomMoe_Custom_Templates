@@ -32,81 +32,75 @@ func SaveSettingsFile(path string, sf *models.SettingsFile) error {
 // settingsFileToGenerator translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
 func settingsFileToGenerator(sf *models.SettingsFile) *models.GeneratorSettings {
-	gs := &models.GeneratorSettings{
-		TemplateName:                  sf.TemplateName,
-		GameMode:                      "Classic",
-		PlayerCount:                   sf.PlayerCount,
-		MapSize:                       mapSizeLabelInt(sf.MapSize),
-		MapSizeValue:                  sf.MapSize,
-		Topology:                      sf.Topology,
-		AllowRoads:                    sf.GenerateRoads,
-		AllowPortals:                  sf.RandomPortals,
-		AllowFootholds:                sf.SpawnRemoteFootholds,
-		EnablePlayerIsolation:         sf.NoDirectPlayerConn,
-		EnableCityHold:                sf.CityHold,
-		ShowDescription:               true,
-		IncludeOptionsInDescription:   true,
-		MaxPortalConnections:          sf.MaxPortalConnections,
-		MinNeutralZonesBetweenPlayers: sf.MinNeutralZonesBetweenPlayers,
-		MatchPlayerCastleFactions:     sf.MatchPlayerCastleFactions,
-		NeutralStackStrengthPercent:   sf.NeutralStackStrengthPercent,
-		BorderGuardStrengthPercent:    sf.BorderGuardStrengthPercent,
-		ResourceDensityPercent:        sf.EffectiveResourceDensity(),
-		StructureDensityPercent:       sf.EffectiveStructureDensity(),
-		FactionLawsExpPercent:         sf.FactionLawsExpPercent,
-		AstrologyExpPercent:           sf.AstrologyExpPercent,
-		PlayerZoneSize:                sf.PlayerZoneSize,
-		NeutralZoneSize:               sf.NeutralZoneSize,
-		HubZoneSize:                   sf.HubZoneSize,
-		HubZoneCastles:                sf.HubZoneCastles,
-		PlayerZoneMandatoryContent:    sf.PlayerZoneMandatoryContent,
-		AdvancedSettings: &models.AdvancedSettings{
+	gs := models.NewGeneratorSettings()
+	gs.TemplateName = sf.TemplateName
+	gs.PlayerCount = sf.PlayerCount
+	gs.MapSize = sf.MapSize
+	gs.Topology = sf.Topology
+	gs.GenerateRoads = sf.GenerateRoads
+	gs.RandomPortals = sf.RandomPortals
+	gs.SpawnRemoteFootholds = sf.SpawnRemoteFootholds
+	gs.NoDirectPlayerConnections = sf.NoDirectPlayerConn
+	gs.MaxPortalConnections = sf.MaxPortalConnections
+	gs.MinNeutralZonesBetweenPlayers = sf.MinNeutralZonesBetweenPlayers
+	gs.MatchPlayerCastleFactions = sf.MatchPlayerCastleFactions
+	gs.ExperimentalBalancedZonePlacement = sf.ExperimentalBalancedZonePlacement
+	gs.FactionLawsExpPercent = sf.FactionLawsExpPercent
+	gs.AstrologyExpPercent = sf.AstrologyExpPercent
+
+	gs.ZoneCfg = models.ZoneConfiguration{
+		NeutralZoneCount:            sf.NeutralZoneCount,
+		PlayerZoneCastles:           sf.PlayerZoneCastles,
+		NeutralZoneCastles:          sf.NeutralZoneCastles,
+		ResourceDensityPercent:      sf.EffectiveResourceDensity(),
+		StructureDensityPercent:     sf.EffectiveStructureDensity(),
+		NeutralStackStrengthPercent: sf.NeutralStackStrengthPercent,
+		BorderGuardStrengthPercent:  sf.BorderGuardStrengthPercent,
+		HubZoneSize:                 sf.HubZoneSize,
+		HubZoneCastles:              sf.HubZoneCastles,
+		Advanced: models.AdvancedSettings{
 			Enabled:                    sf.AdvancedMode,
-			GuardRandomization:         sf.GuardRandomization,
-			ConnectionCountPerZone:     2,
-			NeutralZoneCount:           sf.NeutralZoneCount,
 			NeutralLowNoCastleCount:    sf.NeutralLowNoCastleCount,
 			NeutralLowCastleCount:      sf.NeutralLowCastleCount,
 			NeutralMediumNoCastleCount: sf.NeutralMediumNoCastleCount,
 			NeutralMediumCastleCount:   sf.NeutralMediumCastleCount,
 			NeutralHighNoCastleCount:   sf.NeutralHighNoCastleCount,
 			NeutralHighCastleCount:     sf.NeutralHighCastleCount,
-			PlayerCastleCount:          sf.PlayerZoneCastles,
-			NeutralCastleCount:         sf.NeutralZoneCastles,
-			NeutralZoneLowCount:        sf.NeutralLowNoCastleCount + sf.NeutralLowCastleCount,
-			NeutralZoneMediumCount:     sf.NeutralMediumNoCastleCount + sf.NeutralMediumCastleCount,
-			NeutralZoneHighCount:       sf.NeutralHighNoCastleCount + sf.NeutralHighCastleCount,
-		},
-		HeroSettings: &models.HeroSettings{
-			HeroCount:          sf.HeroCountMax,
-			HeroCountMin:       sf.HeroCountMin,
-			HeroCountMax:       sf.HeroCountMax,
-			HeroCountIncrement: sf.HeroCountIncrement,
-		},
-		GameEndConditions: &models.GameEndConditions{
-			VictoryCondition:     sf.VictoryCondition,
-			EnableClassicVictory: sf.VictoryCondition == "win_condition_1",
-			EnableCityHold:       sf.CityHold || sf.VictoryCondition == "win_condition_5",
-			CityHoldDays:         sf.CityHoldDays,
-			LostStartCity:        sf.LostStartCity,
-			LostStartCityDay:     sf.LostStartCityDay,
-			LostStartHero:        sf.LostStartHero,
-			EnableGladiatorArena: sf.GladiatorArena,
-			EnableTournaments:    sf.Tournament || sf.VictoryCondition == "win_condition_6",
-		},
-		GladiatorArenaRules: &models.GladiatorArenaRules{
-			Enabled:        sf.GladiatorArena,
-			DaysDelayStart: sf.GladiatorArenaDaysDelayStart,
-			CountDay:       sf.GladiatorArenaCountDay,
-		},
-		TournamentRules: &models.TournamentRules{
-			Enabled:            sf.Tournament,
-			FirstTournamentDay: sf.TournamentFirstTournamentDay,
-			Interval:           sf.TournamentInterval,
-			PointsToWin:        sf.TournamentPointsToWin,
-			SaveArmy:           sf.TournamentSaveArmy,
+			PlayerZoneSize:             sf.PlayerZoneSize,
+			NeutralZoneSize:            sf.NeutralZoneSize,
+			GuardRandomization:         sf.GuardRandomization,
 		},
 	}
+
+	gs.HeroSettings = &models.HeroSettings{
+		HeroCountMin:       sf.HeroCountMin,
+		HeroCountMax:       sf.HeroCountMax,
+		HeroCountIncrement: sf.HeroCountIncrement,
+	}
+
+	gs.GameEndConditions = &models.GameEndConditions{
+		VictoryCondition: sf.VictoryCondition,
+		CityHold:         sf.CityHold || sf.VictoryCondition == "win_condition_5",
+		CityHoldDays:     sf.CityHoldDays,
+		LostStartCity:    sf.LostStartCity,
+		LostStartCityDay: sf.LostStartCityDay,
+		LostStartHero:    sf.LostStartHero,
+	}
+
+	gs.GladiatorArenaRules = &models.GladiatorArenaRules{
+		Enabled:        sf.GladiatorArena,
+		DaysDelayStart: sf.GladiatorArenaDaysDelayStart,
+		CountDay:       sf.GladiatorArenaCountDay,
+	}
+
+	gs.TournamentRules = &models.TournamentRules{
+		Enabled:            sf.Tournament,
+		FirstTournamentDay: sf.TournamentFirstTournamentDay,
+		Interval:           sf.TournamentInterval,
+		PointsToWin:        sf.TournamentPointsToWin,
+		SaveArmy:           sf.TournamentSaveArmy,
+	}
+
 	return gs
 }
 

@@ -255,17 +255,10 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		return pl
 	}
 
-	// Connections in this generator reference zones by Letter, while Zone.Name
-	// is human-readable (e.g. "Player 1", "Neutral A (Bronze)"). Build a
-	// key→zoneName map so endpoints resolve regardless of which form is used.
+	// Build name lookup. Zone names are like "Spawn-A", "Neutral-C", "Hub".
 	zoneNameByKey := make(map[string]string, len(zones)*2)
 	for _, z := range zones {
 		zoneNameByKey[z.Name] = z.Name
-		if z.Letter != "" {
-			if _, exists := zoneNameByKey[z.Letter]; !exists {
-				zoneNameByKey[z.Letter] = z.Name
-			}
-		}
 	}
 	resolveKey := func(key string) (string, bool) {
 		n, ok := zoneNameByKey[key]
@@ -280,7 +273,7 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 	// Detect multi-hub (tournament): zones literally named "Hub-*".
 	var hubs []int
 	for i, z := range zones {
-		if strings.HasPrefix(z.Name, "Hub-") {
+		if strings.HasPrefix(z.Name, "Hub") {
 			hubs = append(hubs, i)
 		}
 	}
@@ -294,15 +287,15 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		// Collect player zone names.
 		playerNames := map[string]bool{}
 		for _, z := range zones {
-			if strings.EqualFold(z.Type, "player") {
+			if strings.HasPrefix(z.Name, "Spawn-") {
 				playerNames[z.Name] = true
 			}
 		}
 		// neighbours[zoneName] = set of connected zone names.
 		neighbours := make(map[string]map[string]bool, len(zones))
 		for _, c := range v.Connections {
-			a, ok1 := resolveKey(c.FromZone)
-			b, ok2 := resolveKey(c.ToZone)
+			a, ok1 := resolveKey(c.From)
+			b, ok2 := resolveKey(c.To)
 			if !ok1 || !ok2 {
 				continue
 			}
@@ -317,7 +310,7 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		}
 		bestDeg := -1
 		for i, z := range zones {
-			if strings.EqualFold(z.Type, "player") {
+			if strings.HasPrefix(z.Name, "Spawn-") {
 				continue
 			}
 			nbrs := neighbours[z.Name]
@@ -350,15 +343,14 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		hubSpokes := make(map[string][]int, len(hubs))
 		for _, hi := range hubs {
 			hub := zones[hi].Name
-			hubLetter := zones[hi].Letter
 			seen := map[int]bool{}
 			for _, c := range v.Connections {
 				other := ""
 				switch {
-				case c.FromZone == hub || (hubLetter != "" && c.FromZone == hubLetter):
-					other = c.ToZone
-				case c.ToZone == hub || (hubLetter != "" && c.ToZone == hubLetter):
-					other = c.FromZone
+				case c.From == hub:
+					other = c.To
+				case c.To == hub:
+					other = c.From
 				}
 				if other == "" {
 					continue
@@ -468,17 +460,29 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		if implicitHubIdx >= 0 && z.Name == zones[implicitHubIdx].Name {
 			isHub = true
 		}
+		letter := extractLetter(z.Name)
 		pz := previewZone{
 			Name:   z.Name,
-			Letter: z.Letter,
+			Letter: letter,
 			Center: pos,
-			Owner:  z.Owner,
 			Tier:   classifyTier(z),
 			IsHub:  isHub,
 		}
-		pz.IsPlayer = strings.EqualFold(z.Type, "player") || strings.HasPrefix(z.Name, "Spawn-")
+		pz.IsPlayer = strings.HasPrefix(z.Name, "Spawn-")
 		for _, mo := range z.MainObjects {
-			if strings.EqualFold(mo.Type, "Castle") || strings.EqualFold(mo.Type, "Town") {
+			if strings.EqualFold(mo.Type, "Spawn") {
+				pz.HasCastle = true
+				pz.Castles++
+				// Extract player number from Spawn field (e.g. "Player1" → 1)
+				if strings.HasPrefix(mo.Spawn, "Player") {
+					n := mo.Spawn[len("Player"):]
+					for _, c := range n {
+						if c >= '0' && c <= '9' {
+							pz.Owner = pz.Owner*10 + int(c-'0')
+						}
+					}
+				}
+			} else if strings.EqualFold(mo.Type, "City") {
 				pz.HasCastle = true
 				pz.Castles++
 			}
@@ -488,8 +492,8 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 	// Connections — endpoints may use either Zone.Name or Zone.Letter,
 	// so resolve through zoneNameByKey before looking up positions.
 	for _, c := range v.Connections {
-		aName, ok1 := resolveKey(c.FromZone)
-		bName, ok2 := resolveKey(c.ToZone)
+		aName, ok1 := resolveKey(c.From)
+		bName, ok2 := resolveKey(c.To)
 		if !ok1 || !ok2 {
 			continue
 		}
@@ -498,10 +502,7 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		if !okA || !okB {
 			continue
 		}
-		isPortal := false
-		if c.PortalPlacement.From.ZoneName != "" || c.PortalPlacement.To.ZoneName != "" {
-			isPortal = true
-		}
+		isPortal := len(c.PortalPlacementRulesFrom) > 0 || len(c.PortalPlacementRulesTo) > 0 || c.ConnectionType == "Portal"
 		pl.Connections = append(pl.Connections, previewConn{A: a, B: b, Portal: isPortal})
 	}
 	return pl
@@ -516,11 +517,21 @@ func max2(a, b int) int {
 
 // classifyTier guesses a neutral zone's tier from its layout template name
 // (matches C# SideLayoutName / TreasureLayoutName / CenterLayoutName).
-func classifyTier(z models.Zone) int {
-	if strings.EqualFold(z.Type, "player") {
+func extractLetter(zoneName string) string {
+	if strings.HasPrefix(zoneName, "Spawn-") {
+		return strings.TrimPrefix(zoneName, "Spawn-")
+	}
+	if strings.HasPrefix(zoneName, "Neutral-") {
+		return strings.TrimPrefix(zoneName, "Neutral-")
+	}
+	return zoneName
+}
+
+func classifyTier(z models.RmgZone) int {
+	if strings.HasPrefix(z.Name, "Spawn-") {
 		return 0
 	}
-	t := strings.ToLower(z.Layout.Template)
+	t := strings.ToLower(z.Layout)
 	switch {
 	case strings.Contains(t, "sides"):
 		return 1
@@ -770,7 +781,9 @@ func renderPreviewToImage(t *models.RmgTemplate, topology models.MapTopology, si
 		}
 		drawThickLine(img, ax, bx, w, col)
 	}
-	// Zones.
+	// Zones — non-player first, then player on top.
+	labelCol := color.NRGBA{R: 0xF8, G: 0xE8, B: 0xC0, A: 0xFF}
+	badgeCol := color.NRGBA{R: 0xFF, G: 0xE8, B: 0x90, A: 0xFF}
 	for _, z := range pl.Zones {
 		if z.IsPlayer {
 			continue
@@ -782,6 +795,11 @@ func renderPreviewToImage(t *models.RmgTemplate, topology models.MapTopology, si
 		}
 		fillCircle(img, z.Center, zr, fill)
 		strokeCircle(img, z.Center, zr, 2, edge)
+		drawBitmapTextCentered(img, z.Center, zoneLabel(z), 2, labelCol)
+		if z.HasCastle && z.Castles > 0 {
+			bp := image.Pt(z.Center.X+zr/2, z.Center.Y+zr/2)
+			drawBitmapTextCentered(img, bp, fmt.Sprintf("%d", z.Castles), 1, badgeCol)
+		}
 	}
 	for _, z := range pl.Zones {
 		if !z.IsPlayer {
@@ -790,6 +808,11 @@ func renderPreviewToImage(t *models.RmgTemplate, topology models.MapTopology, si
 		fill, edge := zoneColors(z)
 		fillCircle(img, z.Center, r, fill)
 		strokeCircle(img, z.Center, r, 2, edge)
+		drawBitmapTextCentered(img, z.Center, zoneLabel(z), 2, labelCol)
+		if z.HasCastle && z.Castles > 0 {
+			bp := image.Pt(z.Center.X+r/2, z.Center.Y+r/2)
+			drawBitmapTextCentered(img, bp, fmt.Sprintf("%d", z.Castles), 1, badgeCol)
+		}
 	}
 	return img
 }
@@ -889,4 +912,105 @@ func drawThickLine(img *image.RGBA, a, b image.Point, w int, col color.NRGBA) {
 		x += xinc
 		y += yinc
 	}
+}
+
+// ── Bitmap font for PNG annotations ──────────────────────────────────
+// A tiny 5×7 pixel font covering 0-9, A-Z, and a few symbols.
+// Each glyph is 5 columns wide; each column is a byte with 7 bit-rows
+// (bit 0 = top row).
+
+var bitmapGlyphs = map[byte][5]byte{
+	'0': {0x3E, 0x51, 0x49, 0x45, 0x3E},
+	'1': {0x00, 0x42, 0x7F, 0x40, 0x00},
+	'2': {0x42, 0x61, 0x51, 0x49, 0x46},
+	'3': {0x21, 0x41, 0x45, 0x4B, 0x31},
+	'4': {0x18, 0x14, 0x12, 0x7F, 0x10},
+	'5': {0x27, 0x45, 0x45, 0x45, 0x39},
+	'6': {0x3C, 0x4A, 0x49, 0x49, 0x30},
+	'7': {0x01, 0x71, 0x09, 0x05, 0x03},
+	'8': {0x36, 0x49, 0x49, 0x49, 0x36},
+	'9': {0x06, 0x49, 0x49, 0x29, 0x1E},
+	'A': {0x7E, 0x11, 0x11, 0x11, 0x7E},
+	'B': {0x7F, 0x49, 0x49, 0x49, 0x36},
+	'C': {0x3E, 0x41, 0x41, 0x41, 0x22},
+	'D': {0x7F, 0x41, 0x41, 0x22, 0x1C},
+	'E': {0x7F, 0x49, 0x49, 0x49, 0x41},
+	'F': {0x7F, 0x09, 0x09, 0x09, 0x01},
+	'G': {0x3E, 0x41, 0x49, 0x49, 0x7A},
+	'H': {0x7F, 0x08, 0x08, 0x08, 0x7F},
+	'I': {0x00, 0x41, 0x7F, 0x41, 0x00},
+	'J': {0x20, 0x40, 0x41, 0x3F, 0x01},
+	'K': {0x7F, 0x08, 0x14, 0x22, 0x41},
+	'L': {0x7F, 0x40, 0x40, 0x40, 0x40},
+	'M': {0x7F, 0x02, 0x0C, 0x02, 0x7F},
+	'N': {0x7F, 0x04, 0x08, 0x10, 0x7F},
+	'O': {0x3E, 0x41, 0x41, 0x41, 0x3E},
+	'P': {0x7F, 0x09, 0x09, 0x09, 0x06},
+	'Q': {0x3E, 0x41, 0x51, 0x21, 0x5E},
+	'R': {0x7F, 0x09, 0x19, 0x29, 0x46},
+	'S': {0x46, 0x49, 0x49, 0x49, 0x31},
+	'T': {0x01, 0x01, 0x7F, 0x01, 0x01},
+	'U': {0x3F, 0x40, 0x40, 0x40, 0x3F},
+	'V': {0x1F, 0x20, 0x40, 0x20, 0x1F},
+	'W': {0x3F, 0x40, 0x38, 0x40, 0x3F},
+	'X': {0x63, 0x14, 0x08, 0x14, 0x63},
+	'Y': {0x07, 0x08, 0x70, 0x08, 0x07},
+	'Z': {0x61, 0x51, 0x49, 0x45, 0x43},
+}
+
+// drawBitmapText draws a string onto img at (x, y) with the given scale.
+func drawBitmapText(img *image.RGBA, x, y int, text string, scale int, col color.NRGBA) {
+	if scale < 1 {
+		scale = 1
+	}
+	rgba := color.RGBA{R: col.R, G: col.G, B: col.B, A: col.A}
+	cx := x
+	for i := 0; i < len(text); i++ {
+		ch := text[i]
+		if ch >= 'a' && ch <= 'z' {
+			ch -= 32
+		}
+		glyph, ok := bitmapGlyphs[ch]
+		if !ok {
+			cx += 4 * scale // space for unknown chars
+			continue
+		}
+		for col := 0; col < 5; col++ {
+			bits := glyph[col]
+			for row := 0; row < 7; row++ {
+				if bits&(1<<uint(row)) != 0 {
+					for sy := 0; sy < scale; sy++ {
+						for sx := 0; sx < scale; sx++ {
+							px := cx + col*scale + sx
+							py := y + row*scale + sy
+							if px >= 0 && py >= 0 && px < img.Rect.Max.X && py < img.Rect.Max.Y {
+								img.SetRGBA(px, py, rgba)
+							}
+						}
+					}
+				}
+			}
+		}
+		cx += 6 * scale // 5 pixel cols + 1 pixel gap
+	}
+}
+
+// bitmapTextWidth returns the pixel width of a string at the given scale.
+func bitmapTextWidth(text string, scale int) int {
+	if len(text) == 0 {
+		return 0
+	}
+	return len(text)*6*scale - scale // subtract trailing gap
+}
+
+// drawBitmapTextCentered draws a string centered on the given point.
+func drawBitmapTextCentered(img *image.RGBA, center image.Point, text string, scale int, col color.NRGBA) {
+	if text == "" {
+		return
+	}
+	tw := bitmapTextWidth(text, scale)
+	th := 7 * scale
+	x := center.X - tw/2
+	y := center.Y - th/2
+	drawBitmapText(img, x, y, text, scale, col)
 }
