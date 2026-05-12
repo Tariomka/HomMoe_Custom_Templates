@@ -255,17 +255,10 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		return pl
 	}
 
-	// Connections in this generator reference zones by Letter, while Zone.Name
-	// is human-readable (e.g. "Player 1", "Neutral A (Bronze)"). Build a
-	// key→zoneName map so endpoints resolve regardless of which form is used.
+	// Build name lookup. Zone names are like "Spawn-A", "Neutral-C", "Hub".
 	zoneNameByKey := make(map[string]string, len(zones)*2)
 	for _, z := range zones {
 		zoneNameByKey[z.Name] = z.Name
-		if z.Letter != "" {
-			if _, exists := zoneNameByKey[z.Letter]; !exists {
-				zoneNameByKey[z.Letter] = z.Name
-			}
-		}
 	}
 	resolveKey := func(key string) (string, bool) {
 		n, ok := zoneNameByKey[key]
@@ -280,7 +273,7 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 	// Detect multi-hub (tournament): zones literally named "Hub-*".
 	var hubs []int
 	for i, z := range zones {
-		if strings.HasPrefix(z.Name, "Hub-") {
+		if strings.HasPrefix(z.Name, "Hub") {
 			hubs = append(hubs, i)
 		}
 	}
@@ -294,15 +287,15 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		// Collect player zone names.
 		playerNames := map[string]bool{}
 		for _, z := range zones {
-			if strings.EqualFold(z.Type, "player") {
+			if strings.HasPrefix(z.Name, "Spawn-") {
 				playerNames[z.Name] = true
 			}
 		}
 		// neighbours[zoneName] = set of connected zone names.
 		neighbours := make(map[string]map[string]bool, len(zones))
 		for _, c := range v.Connections {
-			a, ok1 := resolveKey(c.FromZone)
-			b, ok2 := resolveKey(c.ToZone)
+			a, ok1 := resolveKey(c.From)
+			b, ok2 := resolveKey(c.To)
 			if !ok1 || !ok2 {
 				continue
 			}
@@ -317,7 +310,7 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		}
 		bestDeg := -1
 		for i, z := range zones {
-			if strings.EqualFold(z.Type, "player") {
+			if strings.HasPrefix(z.Name, "Spawn-") {
 				continue
 			}
 			nbrs := neighbours[z.Name]
@@ -350,15 +343,14 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		hubSpokes := make(map[string][]int, len(hubs))
 		for _, hi := range hubs {
 			hub := zones[hi].Name
-			hubLetter := zones[hi].Letter
 			seen := map[int]bool{}
 			for _, c := range v.Connections {
 				other := ""
 				switch {
-				case c.FromZone == hub || (hubLetter != "" && c.FromZone == hubLetter):
-					other = c.ToZone
-				case c.ToZone == hub || (hubLetter != "" && c.ToZone == hubLetter):
-					other = c.FromZone
+				case c.From == hub:
+					other = c.To
+				case c.To == hub:
+					other = c.From
 				}
 				if other == "" {
 					continue
@@ -468,17 +460,17 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		if implicitHubIdx >= 0 && z.Name == zones[implicitHubIdx].Name {
 			isHub = true
 		}
+		letter := extractLetter(z.Name)
 		pz := previewZone{
 			Name:   z.Name,
-			Letter: z.Letter,
+			Letter: letter,
 			Center: pos,
-			Owner:  z.Owner,
 			Tier:   classifyTier(z),
 			IsHub:  isHub,
 		}
-		pz.IsPlayer = strings.EqualFold(z.Type, "player") || strings.HasPrefix(z.Name, "Spawn-")
+		pz.IsPlayer = strings.HasPrefix(z.Name, "Spawn-")
 		for _, mo := range z.MainObjects {
-			if strings.EqualFold(mo.Type, "Castle") || strings.EqualFold(mo.Type, "Town") {
+			if strings.EqualFold(mo.Type, "Spawn") || strings.EqualFold(mo.Type, "City") {
 				pz.HasCastle = true
 				pz.Castles++
 			}
@@ -488,8 +480,8 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 	// Connections — endpoints may use either Zone.Name or Zone.Letter,
 	// so resolve through zoneNameByKey before looking up positions.
 	for _, c := range v.Connections {
-		aName, ok1 := resolveKey(c.FromZone)
-		bName, ok2 := resolveKey(c.ToZone)
+		aName, ok1 := resolveKey(c.From)
+		bName, ok2 := resolveKey(c.To)
 		if !ok1 || !ok2 {
 			continue
 		}
@@ -498,10 +490,7 @@ func buildPreviewLayout(t *models.RmgTemplate, topology models.MapTopology, side
 		if !okA || !okB {
 			continue
 		}
-		isPortal := false
-		if c.PortalPlacement.From.ZoneName != "" || c.PortalPlacement.To.ZoneName != "" {
-			isPortal = true
-		}
+		isPortal := len(c.PortalPlacementRulesFrom) > 0 || len(c.PortalPlacementRulesTo) > 0 || c.ConnectionType == "Portal"
 		pl.Connections = append(pl.Connections, previewConn{A: a, B: b, Portal: isPortal})
 	}
 	return pl
@@ -516,11 +505,21 @@ func max2(a, b int) int {
 
 // classifyTier guesses a neutral zone's tier from its layout template name
 // (matches C# SideLayoutName / TreasureLayoutName / CenterLayoutName).
-func classifyTier(z models.Zone) int {
-	if strings.EqualFold(z.Type, "player") {
+func extractLetter(zoneName string) string {
+	if strings.HasPrefix(zoneName, "Spawn-") {
+		return strings.TrimPrefix(zoneName, "Spawn-")
+	}
+	if strings.HasPrefix(zoneName, "Neutral-") {
+		return strings.TrimPrefix(zoneName, "Neutral-")
+	}
+	return zoneName
+}
+
+func classifyTier(z models.RmgZone) int {
+	if strings.HasPrefix(z.Name, "Spawn-") {
 		return 0
 	}
-	t := strings.ToLower(z.Layout.Template)
+	t := strings.ToLower(z.Layout)
 	switch {
 	case strings.Contains(t, "sides"):
 		return 1

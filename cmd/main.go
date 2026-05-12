@@ -16,42 +16,36 @@ func main() {
 	var (
 		name      = flag.String("name", "Generated Template", "Template name")
 		players   = flag.Int("players", 4, "Number of players")
-		mapSize   = flag.String("size", "L", "Map size (S, M, L, XL, 2XL)")
+		mapSize   = flag.Int("size", 160, "Map size in tiles (e.g. 96, 128, 160, 192, 224)")
 		topology  = flag.String("topology", "Default", "Topology (Default, Chain, HubAndSpoke, SharedWeb, Random)")
 		output    = flag.String("output", ".", "Output directory")
 		gameMode  = flag.String("game", "Classic", "Game type (Classic, Blitz, Heroic)")
-		roads     = flag.Bool("roads", true, "Allow roads")
-		portals   = flag.Bool("portals", true, "Allow portals")
-		footholds = flag.Bool("footholds", false, "Allow footholds")
+		roads     = flag.Bool("roads", true, "Generate roads")
+		portals   = flag.Bool("portals", false, "Random portals")
+		footholds = flag.Bool("footholds", true, "Spawn remote footholds")
 		cityHold  = flag.Bool("cityhold", false, "Enable city hold win condition")
+		neutrals  = flag.Int("neutrals", 2, "Number of neutral zones")
 	)
 
 	flag.Parse()
 
-	// Create settings
-	settings := &models.GeneratorSettings{
-		TemplateName:                *name,
-		GameMode:                    *gameMode,
-		PlayerCount:                 *players,
-		MapSize:                     *mapSize,
-		Topology:                    models.MapTopology(*topology),
-		AllowRoads:                  *roads,
-		AllowPortals:                *portals,
-		AllowFootholds:              *footholds,
-		EnableCityHold:              *cityHold,
-		ShowDescription:             true,
-		IncludeOptionsInDescription: true,
-		AdvancedSettings: &models.AdvancedSettings{
-			GuardRandomization:     0.05,
-			ConnectionCountPerZone: 2,
-			NeutralZoneLowCount:    1,
-			NeutralZoneMediumCount: 1,
-			NeutralZoneHighCount:   0,
-		},
-		GameEndConditions: &models.GameEndConditions{
-			EnableClassicVictory: true,
-			EnableCityHold:       *cityHold,
-		},
+	settings := models.NewGeneratorSettings()
+	settings.TemplateName = *name
+	settings.GameMode = *gameMode
+	settings.PlayerCount = *players
+	settings.MapSize = *mapSize
+	settings.Topology = models.MapTopology(*topology)
+	settings.GenerateRoads = *roads
+	settings.RandomPortals = *portals
+	settings.SpawnRemoteFootholds = *footholds
+	settings.ZoneCfg.NeutralZoneCount = *neutrals
+	if *cityHold {
+		settings.GameEndConditions = &models.GameEndConditions{
+			VictoryCondition: "win_condition_5",
+			CityHold:         true,
+			CityHoldDays:     6,
+			LostStartCityDay: 3,
+		}
 	}
 
 	// Generate template
@@ -79,7 +73,7 @@ func main() {
 	fmt.Printf("Template generated successfully: %s\n", filepath)
 	fmt.Printf("  Name: %s\n", template.Name)
 	fmt.Printf("  Description: %s\n", template.Description)
-	fmt.Printf("  Size: %s\n", template.Size)
+	fmt.Printf("  Size: %dx%d\n", template.SizeX, template.SizeZ)
 	fmt.Printf("  Zones: %d\n", len(template.Variants[0].Zones))
 	fmt.Printf("  Connections: %d\n", len(template.Variants[0].Connections))
 }
