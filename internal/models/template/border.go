@@ -1,7 +1,8 @@
 package template
 
+// Border describes the outer obstacles/water boundary of a variant.
 type Border struct {
-	CornerRadius   float32 `json:"cornerRadius"`
+	CornerRadius   float64 `json:"cornerRadius"`
 	ObstaclesWidth int     `json:"obstaclesWidth"`
 	ObstaclesNoise []Noise `json:"obstaclesNoise"`
 	WaterWidth     int     `json:"waterWidth"`

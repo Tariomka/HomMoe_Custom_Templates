@@ -1,20 +1,32 @@
 package template
 
-// Connection links two zones together
+// Connection links two zones together inside a Variant.
 type Connection struct {
-	Name     string `json:"name"`
-	FromZone string `json:"from"`
-	ToZone   string `json:"to"`
-	Type     string `json:"connectionType"`
+	Name string `json:"name"`
+	From string `json:"from"`
+	To   string `json:"to"`
 
-	IsSimTurnSquad bool `json:"simTurnSquad,omitempty"`
-	IsRoad         bool `json:"road,omitempty"`
+	ConnectionType string `json:"connectionType"`
 
-	GuardZone            string  `json:"guardZone,omitempty"`
-	IsGuardEscape        bool    `json:"guardEscape,omitempty"`
+	SimTurnSquad bool  `json:"simTurnSquad,omitempty"`
+	Road         *bool `json:"road,omitempty"`
+
+	GuardZone   string `json:"guardZone,omitempty"`
+	GuardEscape bool   `json:"guardEscape,omitempty"`
+
 	GuardValue           int     `json:"guardValue"`
-	GuardRandomization   float32 `json:"guardRandomization,omitempty"`
-	GuardWeeklyIncrement float32 `json:"guardWeeklyIncrement"`
+	GuardRandomization   float64 `json:"guardRandomization,omitempty"`
+	GuardWeeklyIncrement float64 `json:"guardWeeklyIncrement"`
 
 	GatePlacement string `json:"gatePlacement,omitempty"`
+
+	// Optional "Proximity" pseudo-connection length factor (Arcade, Hallway, etc.).
+	Length float64 `json:"length,omitempty"`
+
+	// Identifier used to share a guard pool across multiple connections (Jebus Cross family).
+	GuardMatchGroup string `json:"guardMatchGroup,omitempty"`
+
+	// Portal placement rules - present on connections of type "Portal".
+	PortalPlacementRulesFrom []PlacementRule `json:"portalPlacementRulesFrom,omitempty"`
+	PortalPlacementRulesTo   []PlacementRule `json:"portalPlacementRulesTo,omitempty"`
 }
