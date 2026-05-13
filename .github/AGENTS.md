@@ -143,13 +143,13 @@ any file you *do* touch must leave the repo in conformance.
 
 Place new code in the package whose responsibility matches its role:
 
-| Kind of code                                              | Location                       |
-| --------------------------------------------------------- | ------------------------------ |
-| UI / rendering (Gio widgets, layouts, theming, input)     | [internal/gui/](internal/gui/) |
+| Kind of code                                              | Location                                                                                       |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| UI / rendering (Gio widgets, layouts, theming, input)     | [internal/gui/](internal/gui/)                                                                 |
 | Data structs / DTOs / factory functions (no behaviour)    | [internal/models/](internal/models/) — **except** the read-only `template/` subtree (see §2.1) |
-| Business logic, orchestrators, services                   | [internal/services/](internal/services/) |
-| Constants, IDs, immutable lookup tables                   | [internal/constants/](internal/constants/) |
-| Misc / cross-cutting utility functions                    | [internal/helpers/](internal/helpers/) |
+| Business logic, orchestrators, services                   | [internal/services/](internal/services/)                                                       |
+| Constants, IDs, immutable lookup tables                   | [internal/constants/](internal/constants/)                                                     |
+| Misc / cross-cutting utility functions                    | [internal/helpers/](internal/helpers/)                                                         |
 
 - If a struct or function has dependencies (helper structs, private types)
   **that are not used anywhere else**, nest them in a sibling folder next to
@@ -196,11 +196,7 @@ as having a soft budget.
 
 When the limit is reached — or when the user asks to wrap up — write a
 **carry-forward prompt** that the next session can be started with. Save it
-to:
-
-```
-./.agent/session-carry-forward.md
-```
+to `./.agent/session-carry-forward.md`
 
 (Create the `./.agent/` folder if missing. This folder is for agent scratch
 notes and is safe to add to `.gitignore` if the user wants.)
