@@ -99,7 +99,7 @@ folder, and to jump out to the project's Discord / GitHub / patch-notes pages.
 | Topology      | Constant                          | Shape                                                        |
 |---------------|-----------------------------------|--------------------------------------------------------------|
 | Random        | `generator.TopologyRandom`        | Default. Random placement / Delaunay-style connections.      |
-| Ring          | `generator.TopologyDefault`       | Players in a circle, each connected to neighbours.           |
+| Ring          | `generator.TopologyDefault`       | Players in a circle, each connected to neighbors.            |
 | Hub-and-Spoke | `generator.TopologyHubAndSpoke`   | All players connect through a central hub neutral zone.      |
 | Chain         | `generator.TopologyChain`         | Linear arrangement of zones.                                 |
 | Shared Web    | `generator.TopologySharedWeb`     | Players connected through shared neutral zones.              |
