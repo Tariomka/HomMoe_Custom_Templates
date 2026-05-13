@@ -38,13 +38,13 @@ func borderedPanel(gtx layout.Context, padding unit.Dp, w layout.Widget) layout.
 }
 
 // warnBanner draws a yellow warning banner with the given text.
-func warnBanner(gtx layout.Context, th *material.Theme, txt string) layout.Dimensions {
+func warnBanner(gtx layout.Context, theme *material.Theme, txt string) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
 	dims := layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		lbl := material.Body2(th, txt)
-		lbl.Color = colWarnText
-		lbl.TextSize = unit.Sp(11)
-		return lbl.Layout(gtx)
+		label := material.Body2(theme, txt)
+		label.Color = colWarnText
+		label.TextSize = unit.Sp(11)
+		return label.Layout(gtx)
 	})
 	call := macro.Stop()
 	radius := gtx.Dp(3)
@@ -59,31 +59,31 @@ func warnBanner(gtx layout.Context, th *material.Theme, txt string) layout.Dimen
 }
 
 // sectionHeader draws an accented gold section title (with diamond bullet).
-func sectionHeader(gtx layout.Context, th *material.Theme, txt string) layout.Dimensions {
-	lbl := material.Body1(th, "◆  "+txt)
-	lbl.Color = colGold
-	lbl.Font = font.Font{Weight: font.SemiBold}
-	lbl.TextSize = unit.Sp(13)
-	return lbl.Layout(gtx)
+func sectionHeader(gtx layout.Context, theme *material.Theme, txt string) layout.Dimensions {
+	label := material.Body1(theme, "◆  "+txt)
+	label.Color = colGold
+	label.Font = font.Font{Weight: font.SemiBold}
+	label.TextSize = unit.Sp(13)
+	return label.Layout(gtx)
 }
 
 // dimLabel renders a small dimmed description line.
-func dimLabel(gtx layout.Context, th *material.Theme, txt string) layout.Dimensions {
-	lbl := material.Body2(th, txt)
-	lbl.Color = colTextDim
-	lbl.TextSize = unit.Sp(12)
-	return lbl.Layout(gtx)
+func dimLabel(gtx layout.Context, theme *material.Theme, txt string) layout.Dimensions {
+	label := material.Body2(theme, txt)
+	label.Color = colTextDim
+	label.TextSize = unit.Sp(12)
+	return label.Layout(gtx)
 }
 
 // labeledRow lays out a label on the left and the supplied widget on the right.
-func labeledRow(gtx layout.Context, th *material.Theme, label string, labelW unit.Dp, control layout.Widget) layout.Dimensions {
+func labeledRow(gtx layout.Context, theme *material.Theme, label string, labelW unit.Dp, control layout.Widget) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			gtx.Constraints.Min.X = gtx.Dp(labelW)
-			lbl := material.Body1(th, label)
-			lbl.Color = colText
-			lbl.TextSize = unit.Sp(13)
-			return lbl.Layout(gtx)
+			label := material.Body1(theme, label)
+			label.Color = colText
+			label.TextSize = unit.Sp(13)
+			return label.Layout(gtx)
 		}),
 		layout.Flexed(1, control),
 	)
@@ -102,36 +102,36 @@ type segmentGroup struct {
 }
 
 func newSegmentGroup(labels []string) *segmentGroup {
-	g := &segmentGroup{buttons: make([]segmentButton, len(labels))}
-	for i, l := range labels {
-		g.buttons[i].Label = l
+	group := &segmentGroup{buttons: make([]segmentButton, len(labels))}
+	for i, label := range labels {
+		group.buttons[i].Label = label
 	}
-	return g
+	return group
 }
 
 // Update returns true if the selection changed this frame.
-func (g *segmentGroup) Update(gtx layout.Context) bool {
+func (this *segmentGroup) Update(gtx layout.Context) bool {
 	changed := false
-	for i := range g.buttons {
-		if g.buttons[i].click.Clicked(gtx) && g.Selected != i {
-			g.Selected = i
+	for i := range this.buttons {
+		if this.buttons[i].click.Clicked(gtx) && this.Selected != i {
+			this.Selected = i
 			changed = true
 		}
 	}
 	return changed
 }
 
-func (g *segmentGroup) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	g.Update(gtx)
-	children := make([]layout.FlexChild, 0, len(g.buttons))
-	for i := range g.buttons {
+func (this *segmentGroup) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	this.Update(gtx)
+	children := make([]layout.FlexChild, 0, len(this.buttons))
+	for i := range this.buttons {
 		i := i
-		b := &g.buttons[i]
-		selected := i == g.Selected
+		button := &this.buttons[i]
+		selected := i == this.Selected
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return material.Clickable(gtx, &b.click, func(gtx layout.Context) layout.Dimensions {
+			return material.Clickable(gtx, &button.click, func(gtx layout.Context) layout.Dimensions {
 				return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return drawSegment(gtx, th, b.Label, selected)
+					return drawSegment(gtx, theme, button.Label, selected)
 				})
 			})
 		}))
@@ -139,26 +139,26 @@ func (g *segmentGroup) Layout(gtx layout.Context, th *material.Theme) layout.Dim
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
 }
 
-func drawSegment(gtx layout.Context, th *material.Theme, label string, selected bool) layout.Dimensions {
-	bg := colInput
-	fg := colTextDim
+func drawSegment(gtx layout.Context, theme *material.Theme, label string, selected bool) layout.Dimensions {
+	bgColor := colInput
+	fgColor := colTextDim
 	border := colBorder
 	if selected {
-		bg = colGenerate
-		fg = colGoldBright
+		bgColor = colGenerate
+		fgColor = colGoldBright
 		border = colGold
 	}
 	macro := op.Record(gtx.Ops)
 	dims := layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		lbl := material.Body2(th, label)
-		lbl.Color = fg
-		lbl.TextSize = unit.Sp(12)
-		return lbl.Layout(gtx)
+		label := material.Body2(theme, label)
+		label.Color = fgColor
+		label.TextSize = unit.Sp(12)
+		return label.Layout(gtx)
 	})
 	call := macro.Stop()
 	radius := gtx.Dp(3)
 	rect := image.Rectangle{Max: dims.Size}
-	paint.FillShape(gtx.Ops, bg, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, bgColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 	paint.FillShape(gtx.Ops, border, clip.Stroke{
 		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 		Width: float32(gtx.Dp(1)),
@@ -174,34 +174,34 @@ type goldButton struct {
 	Disabled bool
 }
 
-func (b goldButton) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	if b.Disabled {
+func (this goldButton) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	if this.Disabled {
 		gtx = gtx.Disabled()
 	}
-	return material.Clickable(gtx, b.Click, func(gtx layout.Context) layout.Dimensions {
+	return material.Clickable(gtx, this.Click, func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)
 		dims := layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				lbl := material.Body1(th, b.Text)
-				lbl.Color = colGoldBright
-				lbl.TextSize = unit.Sp(14)
-				lbl.Font = font.Font{Weight: font.SemiBold}
-				if b.Disabled {
-					lbl.Color = colTextDim
+				label := material.Body1(theme, this.Text)
+				label.Color = colGoldBright
+				label.TextSize = unit.Sp(14)
+				label.Font = font.Font{Weight: font.SemiBold}
+				if this.Disabled {
+					label.Color = colTextDim
 				}
-				return lbl.Layout(gtx)
+				return label.Layout(gtx)
 			})
 		})
 		call := macro.Stop()
 		radius := gtx.Dp(3)
 		rect := image.Rectangle{Max: dims.Size}
-		bg := colGenerate
+		bgColor := colGenerate
 		border := colGold
-		if b.Disabled {
-			bg = color.NRGBA{R: 0x3A, G: 0x30, B: 0x20, A: 0xFF}
+		if this.Disabled {
+			bgColor = color.NRGBA{R: 0x3A, G: 0x30, B: 0x20, A: 0xFF}
 			border = color.NRGBA{R: 0x4A, G: 0x40, B: 0x30, A: 0xFF}
 		}
-		paint.FillShape(gtx.Ops, bg, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+		paint.FillShape(gtx.Ops, bgColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 		paint.FillShape(gtx.Ops, border, clip.Stroke{
 			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 			Width: float32(gtx.Dp(1)),
@@ -218,21 +218,21 @@ type toolbarButton struct {
 	Disabled bool
 }
 
-func (b toolbarButton) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	if b.Disabled {
+func (this toolbarButton) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	if this.Disabled {
 		gtx = gtx.Disabled()
 	}
-	return material.Clickable(gtx, b.Click, func(gtx layout.Context) layout.Dimensions {
+	return material.Clickable(gtx, this.Click, func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)
 		dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				lbl := material.Body2(th, b.Text)
-				lbl.Color = colText
-				lbl.TextSize = unit.Sp(12)
-				if b.Disabled {
-					lbl.Color = colTextDim
+				label := material.Body2(theme, this.Text)
+				label.Color = colText
+				label.TextSize = unit.Sp(12)
+				if this.Disabled {
+					label.Color = colTextDim
 				}
-				return lbl.Layout(gtx)
+				return label.Layout(gtx)
 			})
 		})
 		call := macro.Stop()
@@ -266,19 +266,19 @@ func newComboBox(items []string) *comboBox {
 }
 
 // SetItems replaces the option list and resets selection bounds.
-func (c *comboBox) SetItems(items []string) {
-	c.Items = append([]string(nil), items...)
-	c.rows = make([]widget.Clickable, len(items))
-	if c.Selected >= len(items) {
-		c.Selected = 0
+func (this *comboBox) SetItems(items []string) {
+	this.Items = append([]string(nil), items...)
+	this.rows = make([]widget.Clickable, len(items))
+	if this.Selected >= len(items) {
+		this.Selected = 0
 	}
 }
 
 // SelectByName sets Selected to the index whose label matches name.
-func (c *comboBox) SelectByName(name string) bool {
-	for i, it := range c.Items {
+func (this *comboBox) SelectByName(name string) bool {
+	for i, it := range this.Items {
 		if it == name {
-			c.Selected = i
+			this.Selected = i
 			return true
 		}
 	}
@@ -286,72 +286,72 @@ func (c *comboBox) SelectByName(name string) bool {
 }
 
 // Value returns the currently selected option label, or "" if empty.
-func (c *comboBox) Value() string {
-	if c.Selected >= 0 && c.Selected < len(c.Items) {
-		return c.Items[c.Selected]
+func (this *comboBox) Value() string {
+	if this.Selected >= 0 && this.Selected < len(this.Items) {
+		return this.Items[this.Selected]
 	}
 	return ""
 }
 
 // Update returns true if the selection changed this frame.
-func (c *comboBox) Update(gtx layout.Context) bool {
+func (this *comboBox) Update(gtx layout.Context) bool {
 	changed := false
-	if c.toggle.Clicked(gtx) {
-		c.Open = !c.Open
+	if this.toggle.Clicked(gtx) {
+		this.Open = !this.Open
 	}
-	for i := range c.rows {
-		if i >= len(c.Items) {
+	for i := range this.rows {
+		if i >= len(this.Items) {
 			break
 		}
-		if c.rows[i].Clicked(gtx) {
-			if c.Selected != i {
-				c.Selected = i
+		if this.rows[i].Clicked(gtx) {
+			if this.Selected != i {
+				this.Selected = i
 				changed = true
 			}
-			c.Open = false
+			this.Open = false
 		}
 	}
 	return changed
 }
 
-func (c *comboBox) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	c.Update(gtx)
+func (this *comboBox) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	this.Update(gtx)
 	flex := layout.Flex{Axis: layout.Vertical}
 	children := []layout.FlexChild{
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions { return c.layoutTrigger(gtx, th) }),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutTrigger(gtx, theme) }),
 	}
-	if c.Open && len(c.Items) > 0 {
+	if this.Open && len(this.Items) > 0 {
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Top: unit.Dp(2)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return c.layoutList(gtx, th)
+				return this.layoutList(gtx, theme)
 			})
 		}))
 	}
 	return flex.Layout(gtx, children...)
 }
 
-func (c *comboBox) layoutTrigger(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	return material.Clickable(gtx, &c.toggle, func(gtx layout.Context) layout.Dimensions {
+func (this *comboBox) layoutTrigger(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	return material.Clickable(gtx, &this.toggle, func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)
 		dims := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					lbl := material.Body1(th, c.Value())
-					lbl.Color = colText
-					lbl.TextSize = unit.Sp(13)
-					lbl.MaxLines = 1
-					lbl.Truncator = "…"
-					return lbl.Layout(gtx)
+					label := material.Body1(theme, this.Value())
+					label.Color = colText
+					label.TextSize = unit.Sp(13)
+					label.MaxLines = 1
+					label.Truncator = "…"
+					return label.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					arrow := "▾"
-					if c.Open {
+					if this.Open {
 						arrow = "▴"
 					}
-					lbl := material.Body1(th, arrow)
-					lbl.Color = colGoldDim
-					lbl.TextSize = unit.Sp(11)
-					return lbl.Layout(gtx)
+					label := material.Body1(theme, arrow)
+					label.Color = colGoldDim
+					label.TextSize = unit.Sp(11)
+					return label.Layout(gtx)
 				}),
 			)
 		})
@@ -360,7 +360,7 @@ func (c *comboBox) layoutTrigger(gtx layout.Context, th *material.Theme) layout.
 		rect := image.Rectangle{Max: dims.Size}
 		paint.FillShape(gtx.Ops, colInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 		border := colBorder
-		if c.Open {
+		if this.Open {
 			border = colGold
 		}
 		paint.FillShape(gtx.Ops, border, clip.Stroke{
@@ -372,14 +372,14 @@ func (c *comboBox) layoutTrigger(gtx layout.Context, th *material.Theme) layout.
 	})
 }
 
-func (c *comboBox) layoutList(gtx layout.Context, th *material.Theme) layout.Dimensions {
+func (this *comboBox) layoutList(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
-	rows := make([]layout.FlexChild, 0, len(c.Items))
-	for i := range c.Items {
+	rows := make([]layout.FlexChild, 0, len(this.Items))
+	for i := range this.Items {
 		i := i
 		rows = append(rows, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return material.Clickable(gtx, &c.rows[i], func(gtx layout.Context) layout.Dimensions {
-				return drawComboRow(gtx, th, c.Items[i], i == c.Selected)
+			return material.Clickable(gtx, &this.rows[i], func(gtx layout.Context) layout.Dimensions {
+				return drawComboRow(gtx, theme, this.Items[i], i == this.Selected)
 			})
 		}))
 	}
@@ -397,19 +397,19 @@ func (c *comboBox) layoutList(gtx layout.Context, th *material.Theme) layout.Dim
 	return dims
 }
 
-func drawComboRow(gtx layout.Context, th *material.Theme, label string, selected bool) layout.Dimensions {
+func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selected bool) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
 	dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		lbl := material.Body1(th, label)
-		lbl.Color = colText
-		lbl.TextSize = unit.Sp(13)
-		lbl.MaxLines = 1
-		lbl.Truncator = "…"
+		label := material.Body1(theme, label)
+		label.Color = colText
+		label.TextSize = unit.Sp(13)
+		label.MaxLines = 1
+		label.Truncator = "…"
 		if selected {
-			lbl.Color = colGold
-			lbl.Font = font.Font{Weight: font.SemiBold}
+			label.Color = colGold
+			label.Font = font.Font{Weight: font.SemiBold}
 		}
-		return lbl.Layout(gtx)
+		return label.Layout(gtx)
 	})
 	call := macro.Stop()
 	if selected {
@@ -434,55 +434,55 @@ func newTabs(labels []string) *tabs {
 	return &tabs{Labels: labels, clicks: make([]widget.Clickable, len(labels))}
 }
 
-func (t *tabs) Update(gtx layout.Context) bool {
-	for i := range t.clicks {
-		if t.clicks[i].Clicked(gtx) && t.Selected != i {
-			t.Selected = i
+func (this *tabs) Update(gtx layout.Context) bool {
+	for i := range this.clicks {
+		if this.clicks[i].Clicked(gtx) && this.Selected != i {
+			this.Selected = i
 			return true
 		}
 	}
 	return false
 }
 
-func (t *tabs) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	t.Update(gtx)
-	children := make([]layout.FlexChild, 0, len(t.Labels))
-	for i := range t.Labels {
+func (this *tabs) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	this.Update(gtx)
+	children := make([]layout.FlexChild, 0, len(this.Labels))
+	for i := range this.Labels {
 		i := i
-		selected := i == t.Selected
+		selected := i == this.Selected
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return material.Clickable(gtx, &t.clicks[i], func(gtx layout.Context) layout.Dimensions {
-				return drawTab(gtx, th, t.Labels[i], selected)
+			return material.Clickable(gtx, &this.clicks[i], func(gtx layout.Context) layout.Dimensions {
+				return drawTab(gtx, theme, this.Labels[i], selected)
 			})
 		}))
 	}
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
 }
 
-func drawTab(gtx layout.Context, th *material.Theme, label string, selected bool) layout.Dimensions {
+func drawTab(gtx layout.Context, theme *material.Theme, label string, selected bool) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
 	dims := layout.Inset{Top: unit.Dp(7), Bottom: unit.Dp(7), Left: unit.Dp(20), Right: unit.Dp(20)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		lbl := material.Body1(th, label)
-		lbl.TextSize = unit.Sp(13)
-		lbl.Alignment = text.Middle
+		label := material.Body1(theme, label)
+		label.TextSize = unit.Sp(13)
+		label.Alignment = text.Middle
 		if selected {
-			lbl.Color = colGold
-			lbl.Font = font.Font{Weight: font.SemiBold}
+			label.Color = colGold
+			label.Font = font.Font{Weight: font.SemiBold}
 		} else {
-			lbl.Color = colTextDim
+			label.Color = colTextDim
 		}
-		return lbl.Layout(gtx)
+		return label.Layout(gtx)
 	})
 	call := macro.Stop()
-	bg := colInput
+	bgColor := colInput
 	border := colBorder
 	if selected {
-		bg = colPanel
+		bgColor = colPanel
 		border = colGold
 	}
 	rect := image.Rectangle{Max: dims.Size}
 	radius := gtx.Dp(4)
-	paint.FillShape(gtx.Ops, bg, clip.RRect{Rect: rect, NE: radius, NW: radius}.Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, bgColor, clip.RRect{Rect: rect, NE: radius, NW: radius}.Op(gtx.Ops))
 	paint.FillShape(gtx.Ops, border, clip.Stroke{
 		Path:  clip.RRect{Rect: rect, NE: radius, NW: radius}.Path(gtx.Ops),
 		Width: float32(gtx.Dp(1)),
@@ -491,30 +491,30 @@ func drawTab(gtx layout.Context, th *material.Theme, label string, selected bool
 	return dims
 }
 
-// snapIntSlider draws a slider snapped to integer steps in [lo, hi] and
+// snapIntSlider draws a slider snapped to integer steps in [low, high] and
 // returns the resolved integer value.
-func snapIntSlider(gtx layout.Context, th *material.Theme, f *widget.Float, lo, hi int) int {
-	v := mapRange(f.Value, float32(lo), float32(hi))
-	rounded := int(roundHalfAway(float64(v)))
-	if rounded < lo {
-		rounded = lo
+func snapIntSlider(gtx layout.Context, theme *material.Theme, f *widget.Float, low, high int) int {
+	value := mapRange(f.Value, float32(low), float32(high))
+	rounded := int(roundHalfAway(float64(value)))
+	if rounded < low {
+		rounded = low
 	}
-	if rounded > hi {
-		rounded = hi
+	if rounded > high {
+		rounded = high
 	}
-	target := mapRangeInv(float32(rounded), float32(lo), float32(hi))
+	target := mapRangeInv(float32(rounded), float32(low), float32(high))
 	if target != f.Value && !f.Dragging() {
 		f.Value = target
 	}
-	sl := material.Slider(th, f)
-	sl.Color = colGold
-	sl.Layout(gtx)
+	slider := material.Slider(theme, f)
+	slider.Color = colGold
+	slider.Layout(gtx)
 	return rounded
 }
 
-func roundHalfAway(v float64) float64 {
-	if v < 0 {
-		return -roundHalfAway(-v)
+func roundHalfAway(value float64) float64 {
+	if value < 0 {
+		return -roundHalfAway(-value)
 	}
-	return float64(int(v + 0.5))
+	return float64(int(value + 0.5))
 }

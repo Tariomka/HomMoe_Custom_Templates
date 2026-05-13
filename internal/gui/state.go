@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -149,180 +148,170 @@ type State struct {
 	btnSavePreview widget.Clickable
 
 	// Persistent settings file model. Updated continuously from widgets.
-	sf *models.SettingsFile
+	settingsFile *models.SettingsFile
 }
 
 func newState() *State {
-	s := &State{
-		tabs:        newTabs(mainTabLabels),
-		gameMode:    newSegmentGroup(gameModes),
-		topology:    newComboBox(topologyLabels),
-		victory:     newComboBox(victoryLabels),
-		sf:          models.NewSettingsFile(),
-		zcMines:     newZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
-		zcTreasures: newZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
-		zcHires:     newZoneContentSection("Random Hires", constants.ContentItemGroup.HireBuildings, 10, false),
-		zcBanks:     newZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
+	state := &State{
+		tabs:         newTabs(mainTabLabels),
+		gameMode:     newSegmentGroup(gameModes),
+		topology:     newComboBox(topologyLabels),
+		victory:      newComboBox(victoryLabels),
+		settingsFile: models.NewSettingsFile(),
+		zcMines:      newZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
+		zcTreasures:  newZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
+		zcHires:      newZoneContentSection("Random Hires", constants.ContentItemGroup.HireBuildings, 10, false),
+		zcBanks:      newZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
 	}
-	for i := range s.scrolls {
-		s.scrolls[i].Axis = layout.Vertical
+	for i := range state.scrolls {
+		state.scrolls[i].Axis = layout.Vertical
 	}
-	s.templateName.SingleLine = true
-	s.outputPath.SingleLine = true
-	if wd, err := os.Getwd(); err == nil {
-		s.outputPath.SetText(wd)
+	state.templateName.SingleLine = true
+	state.outputPath.SingleLine = true
+	if workingDir, err := os.Getwd(); err == nil {
+		state.outputPath.SetText(workingDir)
 	}
 
 	// Seed default in-memory zone content (mirrors C# InitializeDefaultPlayerZoneContents).
-	s.seedDefaultPlayerZoneContent()
-	s.applyFromSettingsFile()
-	return s
+	state.seedDefaultPlayerZoneContent()
+	state.applyFromSettingsFile()
+	return state
 }
 
-// applyFromSettingsFile pushes values from s.sf into all widget states.
-func (s *State) applyFromSettingsFile() {
-	sf := s.sf
-	s.templateName.SetText(sf.TemplateName)
-	s.gameMode.Selected = 0
-	s.topology.SelectByName(topologyLabelFor(sf.Topology))
+// applyFromSettingsFile pushes values from this.settingsFile into all widget states.
+func (this *State) applyFromSettingsFile() {
+	settingsFile := this.settingsFile
+	this.templateName.SetText(settingsFile.TemplateName)
+	this.gameMode.Selected = 0
+	this.topology.SelectByName(topologyLabelFor(settingsFile.Topology))
 
-	s.chkExpSizes.Value = sf.ExperimentalMapSizes
-	s.mapSizeSld.Value = mapSizeToSlider(sf.MapSize, s.chkExpSizes.Value)
-	s.playerCnt.Value = mapRangeInv(float32(sf.PlayerCount), 2, 8)
+	this.chkExpSizes.Value = settingsFile.ExperimentalMapSizes
+	this.mapSizeSld.Value = mapSizeToSlider(settingsFile.MapSize, this.chkExpSizes.Value)
+	this.playerCnt.Value = mapRangeInv(float32(settingsFile.PlayerCount), 2, 8)
 
-	s.chkRoads.Value = sf.GenerateRoads
-	s.chkPortals.Value = sf.RandomPortals
-	s.sldMaxPortals.Value = mapRangeInv(float32(sf.MaxPortalConnections), 1, 32)
-	s.chkFootholds.Value = sf.SpawnRemoteFootholds
-	s.chkBalancedZones.Value = sf.ExperimentalBalancedZonePlacement
-	s.chkPlayerIsolation.Value = sf.NoDirectPlayerConn
-	s.chkMatchPlayerFactions.Value = sf.MatchPlayerCastleFactions
-	s.sldMinNeutralBetween.Value = mapRangeInv(float32(sf.MinNeutralZonesBetweenPlayers), 0, 8)
+	this.chkRoads.Value = settingsFile.GenerateRoads
+	this.chkPortals.Value = settingsFile.RandomPortals
+	this.sldMaxPortals.Value = mapRangeInv(float32(settingsFile.MaxPortalConnections), 1, 32)
+	this.chkFootholds.Value = settingsFile.SpawnRemoteFootholds
+	this.chkBalancedZones.Value = settingsFile.ExperimentalBalancedZonePlacement
+	this.chkPlayerIsolation.Value = settingsFile.NoDirectPlayerConn
+	this.chkMatchPlayerFactions.Value = settingsFile.MatchPlayerCastleFactions
+	this.sldMinNeutralBetween.Value = mapRangeInv(float32(settingsFile.MinNeutralZonesBetweenPlayers), 0, 8)
 
-	s.chkAdvancedZones.Value = sf.AdvancedMode
-	s.sldNeutralCount.Value = mapRangeInv(float32(sf.NeutralZoneCount), 0, 16)
-	s.sldPlayerCastles.Value = mapRangeInv(float32(sf.PlayerZoneCastles), 0, 4)
-	s.sldNeutralCastles.Value = mapRangeInv(float32(sf.NeutralZoneCastles), 0, 4)
-	s.sldNeutralLowNoCastle.Value = mapRangeInv(float32(sf.NeutralLowNoCastleCount), 0, 8)
-	s.sldNeutralLowCastle.Value = mapRangeInv(float32(sf.NeutralLowCastleCount), 0, 8)
-	s.sldNeutralMedNoCastle.Value = mapRangeInv(float32(sf.NeutralMediumNoCastleCount), 0, 8)
-	s.sldNeutralMedCastle.Value = mapRangeInv(float32(sf.NeutralMediumCastleCount), 0, 8)
-	s.sldNeutralHighNoCastle.Value = mapRangeInv(float32(sf.NeutralHighNoCastleCount), 0, 8)
-	s.sldNeutralHighCastle.Value = mapRangeInv(float32(sf.NeutralHighCastleCount), 0, 8)
-	s.sldHubSize.Value = float32((sf.HubZoneSize - 0.5) / 1.5)
-	s.sldHubCastles.Value = mapRangeInv(float32(sf.HubZoneCastles), 0, 4)
-	s.sldPlayerZoneSize.Value = float32((sf.PlayerZoneSize - 0.5) / 1.5)
-	s.sldNeutralZoneSize.Value = float32((sf.NeutralZoneSize - 0.5) / 1.5)
-	s.sldGuardRandom.Value = mapRangeInv(float32(sf.GuardRandomization), 0, 0.5)
-	s.sldResourceDensity.Value = mapRangeInv(float32(sf.EffectiveResourceDensity()), 25, 200)
-	s.sldStructureDensity.Value = mapRangeInv(float32(sf.EffectiveStructureDensity()), 25, 200)
-	s.sldNeutralStack.Value = mapRangeInv(float32(sf.NeutralStackStrengthPercent), 25, 200)
-	s.sldBorderGuard.Value = mapRangeInv(float32(sf.BorderGuardStrengthPercent), 25, 200)
+	this.chkAdvancedZones.Value = settingsFile.AdvancedMode
+	this.sldNeutralCount.Value = mapRangeInv(float32(settingsFile.NeutralZoneCount), 0, 16)
+	this.sldPlayerCastles.Value = mapRangeInv(float32(settingsFile.PlayerZoneCastles), 0, 4)
+	this.sldNeutralCastles.Value = mapRangeInv(float32(settingsFile.NeutralZoneCastles), 0, 4)
+	this.sldNeutralLowNoCastle.Value = mapRangeInv(float32(settingsFile.NeutralLowNoCastleCount), 0, 8)
+	this.sldNeutralLowCastle.Value = mapRangeInv(float32(settingsFile.NeutralLowCastleCount), 0, 8)
+	this.sldNeutralMedNoCastle.Value = mapRangeInv(float32(settingsFile.NeutralMediumNoCastleCount), 0, 8)
+	this.sldNeutralMedCastle.Value = mapRangeInv(float32(settingsFile.NeutralMediumCastleCount), 0, 8)
+	this.sldNeutralHighNoCastle.Value = mapRangeInv(float32(settingsFile.NeutralHighNoCastleCount), 0, 8)
+	this.sldNeutralHighCastle.Value = mapRangeInv(float32(settingsFile.NeutralHighCastleCount), 0, 8)
+	this.sldHubSize.Value = float32((settingsFile.HubZoneSize - 0.5) / 1.5)
+	this.sldHubCastles.Value = mapRangeInv(float32(settingsFile.HubZoneCastles), 0, 4)
+	this.sldPlayerZoneSize.Value = float32((settingsFile.PlayerZoneSize - 0.5) / 1.5)
+	this.sldNeutralZoneSize.Value = float32((settingsFile.NeutralZoneSize - 0.5) / 1.5)
+	this.sldGuardRandom.Value = mapRangeInv(float32(settingsFile.GuardRandomization), 0, 0.5)
+	this.sldResourceDensity.Value = mapRangeInv(float32(settingsFile.EffectiveResourceDensity()), 25, 200)
+	this.sldStructureDensity.Value = mapRangeInv(float32(settingsFile.EffectiveStructureDensity()), 25, 200)
+	this.sldNeutralStack.Value = mapRangeInv(float32(settingsFile.NeutralStackStrengthPercent), 25, 200)
+	this.sldBorderGuard.Value = mapRangeInv(float32(settingsFile.BorderGuardStrengthPercent), 25, 200)
 
 	// Game rules.
-	s.victory.Selected = victoryIndex(sf.VictoryCondition)
-	s.chkLostStartCity.Value = sf.LostStartCity
-	s.sldLostCityDay.Value = mapRangeInv(float32(sf.LostStartCityDay), 1, 30)
-	s.chkLostStartHero.Value = sf.LostStartHero
-	s.chkCityHold.Value = sf.CityHold
-	s.sldCityHoldDays.Value = mapRangeInv(float32(sf.CityHoldDays), 1, 30)
-	s.chkGladiatorArena.Value = sf.GladiatorArena
-	s.sldGladiatorDelay.Value = mapRangeInv(float32(sf.GladiatorArenaDaysDelayStart), 1, 90)
-	s.sldGladiatorCountDay.Value = mapRangeInv(float32(sf.GladiatorArenaCountDay), 1, 14)
-	s.chkTournament.Value = sf.Tournament
-	s.sldTournamentDay.Value = mapRangeInv(float32(sf.TournamentFirstTournamentDay), 1, 60)
-	s.sldTournamentInterval.Value = mapRangeInv(float32(sf.TournamentInterval), 1, 30)
-	s.sldTournamentPoints.Value = mapRangeInv(float32(sf.TournamentPointsToWin), 1, 10)
-	s.chkTournamentSaveArmy.Value = sf.TournamentSaveArmy
-	s.sldHeroMin.Value = mapRangeInv(float32(sf.HeroCountMin), 1, 16)
-	s.sldHeroMax.Value = mapRangeInv(float32(sf.HeroCountMax), 1, 16)
-	s.sldHeroIncr.Value = mapRangeInv(float32(sf.HeroCountIncrement), 1, 5)
-	s.sldFactionLawsExp.Value = mapRangeInv(float32(sf.FactionLawsExpPercent), 25, 200)
-	s.sldAstrologyExp.Value = mapRangeInv(float32(sf.AstrologyExpPercent), 25, 200)
+	this.victory.Selected = victoryIndex(settingsFile.VictoryCondition)
+	this.chkLostStartCity.Value = settingsFile.LostStartCity
+	this.sldLostCityDay.Value = mapRangeInv(float32(settingsFile.LostStartCityDay), 1, 30)
+	this.chkLostStartHero.Value = settingsFile.LostStartHero
+	this.chkCityHold.Value = settingsFile.CityHold
+	this.sldCityHoldDays.Value = mapRangeInv(float32(settingsFile.CityHoldDays), 1, 30)
+	this.chkGladiatorArena.Value = settingsFile.GladiatorArena
+	this.sldGladiatorDelay.Value = mapRangeInv(float32(settingsFile.GladiatorArenaDaysDelayStart), 1, 90)
+	this.sldGladiatorCountDay.Value = mapRangeInv(float32(settingsFile.GladiatorArenaCountDay), 1, 14)
+	this.chkTournament.Value = settingsFile.Tournament
+	this.sldTournamentDay.Value = mapRangeInv(float32(settingsFile.TournamentFirstTournamentDay), 1, 60)
+	this.sldTournamentInterval.Value = mapRangeInv(float32(settingsFile.TournamentInterval), 1, 30)
+	this.sldTournamentPoints.Value = mapRangeInv(float32(settingsFile.TournamentPointsToWin), 1, 10)
+	this.chkTournamentSaveArmy.Value = settingsFile.TournamentSaveArmy
+	this.sldHeroMin.Value = mapRangeInv(float32(settingsFile.HeroCountMin), 1, 16)
+	this.sldHeroMax.Value = mapRangeInv(float32(settingsFile.HeroCountMax), 1, 16)
+	this.sldHeroIncr.Value = mapRangeInv(float32(settingsFile.HeroCountIncrement), 1, 5)
+	this.sldFactionLawsExp.Value = mapRangeInv(float32(settingsFile.FactionLawsExpPercent), 25, 200)
+	this.sldAstrologyExp.Value = mapRangeInv(float32(settingsFile.AstrologyExpPercent), 25, 200)
 
 	// Zone content.
-	if len(sf.PlayerZoneMandatoryContent) > 0 {
-		s.applyZoneContentItems(sf.PlayerZoneMandatoryContent)
+	if len(settingsFile.PlayerZoneMandatoryContent) > 0 {
+		this.applyZoneContentItems(settingsFile.PlayerZoneMandatoryContent)
 	}
 }
 
-// captureToSettingsFile pulls live widget state back into s.sf.
-func (s *State) captureToSettingsFile() *models.SettingsFile {
-	sf := s.sf
-	sf.TemplateName = strings.TrimSpace(s.templateName.Text())
-	sf.PlayerCount = int(roundHalfAway(float64(mapRange(s.playerCnt.Value, 2, 8))))
-	sf.MapSize = sliderToMapSize(s.mapSizeSld.Value, s.chkExpSizes.Value)
-	sf.ExperimentalMapSizes = s.chkExpSizes.Value
-	sf.Topology = topologyValues[s.topology.Selected]
+// captureToSettingsFile pulls live widget state back into this.settingsFile.
+func (this *State) captureToSettingsFile() *models.SettingsFile {
+	settingsFile := this.settingsFile
+	settingsFile.TemplateName = strings.TrimSpace(this.templateName.Text())
+	settingsFile.PlayerCount = int(roundHalfAway(float64(mapRange(this.playerCnt.Value, 2, 8))))
+	settingsFile.MapSize = sliderToMapSize(this.mapSizeSld.Value, this.chkExpSizes.Value)
+	settingsFile.ExperimentalMapSizes = this.chkExpSizes.Value
+	settingsFile.Topology = topologyValues[this.topology.Selected]
 
-	sf.GenerateRoads = s.chkRoads.Value
-	sf.RandomPortals = s.chkPortals.Value
-	sf.MaxPortalConnections = roundedRange(s.sldMaxPortals.Value, 1, 32)
-	sf.SpawnRemoteFootholds = s.chkFootholds.Value
-	sf.ExperimentalBalancedZonePlacement = s.chkBalancedZones.Value
-	sf.NoDirectPlayerConn = s.chkPlayerIsolation.Value
-	sf.MatchPlayerCastleFactions = s.chkMatchPlayerFactions.Value
-	sf.MinNeutralZonesBetweenPlayers = roundedRange(s.sldMinNeutralBetween.Value, 0, 8)
+	settingsFile.GenerateRoads = this.chkRoads.Value
+	settingsFile.RandomPortals = this.chkPortals.Value
+	settingsFile.MaxPortalConnections = roundedRange(this.sldMaxPortals.Value, 1, 32)
+	settingsFile.SpawnRemoteFootholds = this.chkFootholds.Value
+	settingsFile.ExperimentalBalancedZonePlacement = this.chkBalancedZones.Value
+	settingsFile.NoDirectPlayerConn = this.chkPlayerIsolation.Value
+	settingsFile.MatchPlayerCastleFactions = this.chkMatchPlayerFactions.Value
+	settingsFile.MinNeutralZonesBetweenPlayers = roundedRange(this.sldMinNeutralBetween.Value, 0, 8)
 
-	sf.AdvancedMode = s.chkAdvancedZones.Value
-	sf.NeutralZoneCount = roundedRange(s.sldNeutralCount.Value, 0, 16)
-	sf.PlayerZoneCastles = roundedRange(s.sldPlayerCastles.Value, 0, 4)
-	sf.NeutralZoneCastles = roundedRange(s.sldNeutralCastles.Value, 0, 4)
-	sf.NeutralLowNoCastleCount = roundedRange(s.sldNeutralLowNoCastle.Value, 0, 8)
-	sf.NeutralLowCastleCount = roundedRange(s.sldNeutralLowCastle.Value, 0, 8)
-	sf.NeutralMediumNoCastleCount = roundedRange(s.sldNeutralMedNoCastle.Value, 0, 8)
-	sf.NeutralMediumCastleCount = roundedRange(s.sldNeutralMedCastle.Value, 0, 8)
-	sf.NeutralHighNoCastleCount = roundedRange(s.sldNeutralHighNoCastle.Value, 0, 8)
-	sf.NeutralHighCastleCount = roundedRange(s.sldNeutralHighCastle.Value, 0, 8)
-	sf.HubZoneSize = float64(0.5 + s.sldHubSize.Value*1.5)
-	sf.HubZoneCastles = roundedRange(s.sldHubCastles.Value, 0, 4)
-	sf.PlayerZoneSize = float64(0.5 + s.sldPlayerZoneSize.Value*1.5)
-	sf.NeutralZoneSize = float64(0.5 + s.sldNeutralZoneSize.Value*1.5)
-	sf.GuardRandomization = float64(mapRange(s.sldGuardRandom.Value, 0, 0.5))
-	rd := roundedRange(s.sldResourceDensity.Value, 25, 200)
-	sd := roundedRange(s.sldStructureDensity.Value, 25, 200)
-	sf.ResourceDensityPercent = &rd
-	sf.StructureDensityPercent = &sd
-	sf.NeutralStackStrengthPercent = roundedRange(s.sldNeutralStack.Value, 25, 200)
-	sf.BorderGuardStrengthPercent = roundedRange(s.sldBorderGuard.Value, 25, 200)
+	settingsFile.AdvancedMode = this.chkAdvancedZones.Value
+	settingsFile.NeutralZoneCount = roundedRange(this.sldNeutralCount.Value, 0, 16)
+	settingsFile.PlayerZoneCastles = roundedRange(this.sldPlayerCastles.Value, 0, 4)
+	settingsFile.NeutralZoneCastles = roundedRange(this.sldNeutralCastles.Value, 0, 4)
+	settingsFile.NeutralLowNoCastleCount = roundedRange(this.sldNeutralLowNoCastle.Value, 0, 8)
+	settingsFile.NeutralLowCastleCount = roundedRange(this.sldNeutralLowCastle.Value, 0, 8)
+	settingsFile.NeutralMediumNoCastleCount = roundedRange(this.sldNeutralMedNoCastle.Value, 0, 8)
+	settingsFile.NeutralMediumCastleCount = roundedRange(this.sldNeutralMedCastle.Value, 0, 8)
+	settingsFile.NeutralHighNoCastleCount = roundedRange(this.sldNeutralHighNoCastle.Value, 0, 8)
+	settingsFile.NeutralHighCastleCount = roundedRange(this.sldNeutralHighCastle.Value, 0, 8)
+	settingsFile.HubZoneSize = float64(0.5 + this.sldHubSize.Value*1.5)
+	settingsFile.HubZoneCastles = roundedRange(this.sldHubCastles.Value, 0, 4)
+	settingsFile.PlayerZoneSize = float64(0.5 + this.sldPlayerZoneSize.Value*1.5)
+	settingsFile.NeutralZoneSize = float64(0.5 + this.sldNeutralZoneSize.Value*1.5)
+	settingsFile.GuardRandomization = float64(mapRange(this.sldGuardRandom.Value, 0, 0.5))
+	rd := roundedRange(this.sldResourceDensity.Value, 25, 200)
+	sd := roundedRange(this.sldStructureDensity.Value, 25, 200)
+	settingsFile.ResourceDensityPercent = &rd
+	settingsFile.StructureDensityPercent = &sd
+	settingsFile.NeutralStackStrengthPercent = roundedRange(this.sldNeutralStack.Value, 25, 200)
+	settingsFile.BorderGuardStrengthPercent = roundedRange(this.sldBorderGuard.Value, 25, 200)
 
-	sf.VictoryCondition = victoryIDs[s.victory.Selected]
-	sf.LostStartCity = s.chkLostStartCity.Value
-	sf.LostStartCityDay = roundedRange(s.sldLostCityDay.Value, 1, 30)
-	sf.LostStartHero = s.chkLostStartHero.Value
-	sf.CityHold = s.chkCityHold.Value || s.victory.Selected == 2
-	sf.CityHoldDays = roundedRange(s.sldCityHoldDays.Value, 1, 30)
-	sf.GladiatorArena = s.chkGladiatorArena.Value
-	sf.GladiatorArenaDaysDelayStart = roundedRange(s.sldGladiatorDelay.Value, 1, 90)
-	sf.GladiatorArenaCountDay = roundedRange(s.sldGladiatorCountDay.Value, 1, 14)
-	sf.Tournament = s.chkTournament.Value || s.victory.Selected == 3
-	sf.TournamentFirstTournamentDay = roundedRange(s.sldTournamentDay.Value, 1, 60)
-	sf.TournamentInterval = roundedRange(s.sldTournamentInterval.Value, 1, 30)
-	sf.TournamentPointsToWin = roundedRange(s.sldTournamentPoints.Value, 1, 10)
-	sf.TournamentSaveArmy = s.chkTournamentSaveArmy.Value
-	sf.HeroCountMin = roundedRange(s.sldHeroMin.Value, 1, 16)
-	sf.HeroCountMax = roundedRange(s.sldHeroMax.Value, 1, 16)
-	if sf.HeroCountMax < sf.HeroCountMin {
-		sf.HeroCountMax = sf.HeroCountMin
-	}
-	sf.HeroCountIncrement = roundedRange(s.sldHeroIncr.Value, 1, 5)
-	sf.FactionLawsExpPercent = roundedRange(s.sldFactionLawsExp.Value, 25, 200)
-	sf.AstrologyExpPercent = roundedRange(s.sldAstrologyExp.Value, 25, 200)
+	settingsFile.VictoryCondition = victoryIDs[this.victory.Selected]
+	settingsFile.LostStartCity = this.chkLostStartCity.Value
+	settingsFile.LostStartCityDay = roundedRange(this.sldLostCityDay.Value, 1, 30)
+	settingsFile.LostStartHero = this.chkLostStartHero.Value
+	settingsFile.CityHold = this.chkCityHold.Value || this.victory.Selected == 2
+	settingsFile.CityHoldDays = roundedRange(this.sldCityHoldDays.Value, 1, 30)
+	settingsFile.GladiatorArena = this.chkGladiatorArena.Value
+	settingsFile.GladiatorArenaDaysDelayStart = roundedRange(this.sldGladiatorDelay.Value, 1, 90)
+	settingsFile.GladiatorArenaCountDay = roundedRange(this.sldGladiatorCountDay.Value, 1, 14)
+	settingsFile.Tournament = this.chkTournament.Value || this.victory.Selected == 3
+	settingsFile.TournamentFirstTournamentDay = roundedRange(this.sldTournamentDay.Value, 1, 60)
+	settingsFile.TournamentInterval = roundedRange(this.sldTournamentInterval.Value, 1, 30)
+	settingsFile.TournamentPointsToWin = roundedRange(this.sldTournamentPoints.Value, 1, 10)
+	settingsFile.TournamentSaveArmy = this.chkTournamentSaveArmy.Value
+	settingsFile.HeroCountMin = roundedRange(this.sldHeroMin.Value, 1, 16)
+	settingsFile.HeroCountMax = max(roundedRange(this.sldHeroMax.Value, 1, 16), settingsFile.HeroCountMin)
+	settingsFile.HeroCountIncrement = roundedRange(this.sldHeroIncr.Value, 1, 5)
+	settingsFile.FactionLawsExpPercent = roundedRange(this.sldFactionLawsExp.Value, 25, 200)
+	settingsFile.AstrologyExpPercent = roundedRange(this.sldAstrologyExp.Value, 25, 200)
 
-	sf.PlayerZoneMandatoryContent = s.collectZoneContentItems()
-	return sf
+	settingsFile.PlayerZoneMandatoryContent = this.collectZoneContentItems()
+	return settingsFile
 }
 
-// roundedRange snaps a [0,1] slider value to the nearest integer in [lo, hi].
-func roundedRange(v float32, lo, hi int) int {
-	r := int(roundHalfAway(float64(mapRange(v, float32(lo), float32(hi)))))
-	if r < lo {
-		r = lo
-	}
-	if r > hi {
-		r = hi
-	}
-	return r
+// roundedRange snaps a [0,1] slider value to the nearest integer in [low, high].
+func roundedRange(value float32, low, high int) int {
+	return min(max(int(roundHalfAway(float64(mapRange(value, float32(low), float32(high))))), low), high)
 }
 
 // mapSizeToSlider returns the [0,1] slider position for a map size value.
@@ -331,8 +320,8 @@ func mapSizeToSlider(size int, includeExp bool) float32 {
 	if includeExp {
 		all = append(append([]int{}, mapSizes...), expMapSizes...)
 	}
-	for i, v := range all {
-		if v == size {
+	for i, value := range all {
+		if value == size {
 			if len(all) <= 1 {
 				return 0
 			}
@@ -342,13 +331,13 @@ func mapSizeToSlider(size int, includeExp bool) float32 {
 	// Closest match.
 	closest := 0
 	best := 1 << 31
-	for i, v := range all {
-		d := v - size
-		if d < 0 {
-			d = -d
+	for i, value := range all {
+		diff := value - size
+		if diff < 0 {
+			diff = -diff
 		}
-		if d < best {
-			best = d
+		if diff < best {
+			best = diff
 			closest = i
 		}
 	}
@@ -358,7 +347,7 @@ func mapSizeToSlider(size int, includeExp bool) float32 {
 	return float32(closest) / float32(len(all)-1)
 }
 
-func sliderToMapSize(v float32, includeExp bool) int {
+func sliderToMapSize(value float32, includeExp bool) int {
 	all := mapSizes
 	if includeExp {
 		all = append(append([]int{}, mapSizes...), expMapSizes...)
@@ -366,7 +355,7 @@ func sliderToMapSize(v float32, includeExp bool) int {
 	if len(all) == 1 {
 		return all[0]
 	}
-	idx := int(math.Round(float64(v) * float64(len(all)-1)))
+	idx := int(math.Round(float64(value) * float64(len(all)-1)))
 	if idx < 0 {
 		idx = 0
 	}
@@ -376,9 +365,9 @@ func sliderToMapSize(v float32, includeExp bool) int {
 	return all[idx]
 }
 
-func topologyLabelFor(t models.MapTopology) string {
-	for i, v := range topologyValues {
-		if v == t {
+func topologyLabelFor(topology models.MapTopology) string {
+	for i, value := range topologyValues {
+		if value == topology {
 			return topologyLabels[i]
 		}
 	}
@@ -386,8 +375,8 @@ func topologyLabelFor(t models.MapTopology) string {
 }
 
 func victoryIndex(id string) int {
-	for i, v := range victoryIDs {
-		if v == id {
+	for i, value := range victoryIDs {
+		if value == id {
 			return i
 		}
 	}
@@ -395,82 +384,56 @@ func victoryIndex(id string) int {
 }
 
 // generate runs the template generator and stores the result.
-func (s *State) generate() {
-	sf := s.captureToSettingsFile()
-	settings := settingsFileToGenerator(sf)
-	if settings.TemplateName == "" {
-		s.setStatus("Template name is required.", true)
+func (this *State) generate() {
+	captured := this.captureToSettingsFile()
+	generatorSettings := services.SettingsToGenerator(captured)
+	if generatorSettings.TemplateName == "" {
+		this.setStatus("Template name is required.", true)
 		return
 	}
-	tmpl, err := services.Generate(settings)
+	template, err := services.Generate(generatorSettings)
 	if err != nil {
-		s.setStatus(fmt.Sprintf("Generation failed: %v", err), true)
-		s.lastTemplate = nil
+		this.setStatus(fmt.Sprintf("Generation failed: %value", err), true)
+		this.lastTemplate = nil
 		return
 	}
-	s.lastTemplate = tmpl
-	zones := 0
-	conns := 0
-	if len(tmpl.Variants) > 0 {
-		zones = len(tmpl.Variants[0].Zones)
-		conns = len(tmpl.Variants[0].Connections)
+	this.lastTemplate = template
+	zoneCount := 0
+	connectionCount := 0
+	if len(template.Variants) > 0 {
+		zoneCount = len(template.Variants[0].Zones)
+		connectionCount = len(template.Variants[0].Connections)
 	}
-	s.setStatus(fmt.Sprintf("Generated '%s' — %d zones, %d connections.", tmpl.Name, zones, conns), false)
+	this.setStatus(fmt.Sprintf("Generated '%s' — %d zones, %d connections.", template.Name, zoneCount, connectionCount), false)
 }
 
 // saveTemplate writes the most recently generated template as .rmg.json.
-func (s *State) saveTemplate() {
-	if s.lastTemplate == nil {
-		s.setStatus("Nothing to save — generate a template first.", true)
+func (this *State) saveTemplate() {
+	if this.lastTemplate == nil {
+		this.setStatus("Nothing to save — generate a template first.", true)
 		return
 	}
-	dir := strings.TrimSpace(s.outputPath.Text())
+	dir := strings.TrimSpace(this.outputPath.Text())
 	if dir == "" {
-		s.setStatus("Output directory is empty.", true)
+		this.setStatus("Output directory is empty.", true)
 		return
 	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		s.setStatus(fmt.Sprintf("Cannot create directory: %v", err), true)
-		return
-	}
-	safeName := sanitizeFilename(s.lastTemplate.Name)
-	if safeName == "" {
-		safeName = "Generated_Template"
-	}
-	out := filepath.Join(dir, safeName+".rmg.json")
-	data, err := json.MarshalIndent(s.lastTemplate, "", "  ")
+	out, err := services.WriteTemplate(dir, this.lastTemplate)
 	if err != nil {
-		s.setStatus(fmt.Sprintf("Marshal failed: %v", err), true)
+		this.setStatus(fmt.Sprintf("Save failed: %value", err), true)
 		return
 	}
-	if err := os.WriteFile(out, data, 0o644); err != nil {
-		s.setStatus(fmt.Sprintf("Write failed: %v", err), true)
-		return
-	}
-	s.setStatus("Saved template to "+out, false)
+	this.setStatus("Saved template to "+out, false)
 }
 
-func sanitizeFilename(name string) string {
-	bad := []rune{'/', '\\', ':', '*', '?', '"', '<', '>', '|'}
-	out := []rune(strings.TrimSpace(name))
-	for i, r := range out {
-		for _, b := range bad {
-			if r == b {
-				out[i] = '_'
-			}
-		}
-	}
-	return string(out)
-}
-
-func (s *State) setStatus(msg string, isErr bool) {
-	s.statusMsg = msg
-	s.statusErr = isErr
+func (this *State) setStatus(msg string, isErr bool) {
+	this.statusMsg = msg
+	this.statusErr = isErr
 }
 
 // handleToolbar processes File toolbar clicks.
-func (s *State) handleToolbar() {
-	if s.btnNew.Clicked(layoutCtxNop()) {
+func (this *State) handleToolbar() {
+	if this.btnNew.Clicked(layoutCtxNop()) {
 		// no-op handled in Layout via direct check; this guard allows reuse
 	}
 }
@@ -478,168 +441,168 @@ func (s *State) handleToolbar() {
 func layoutCtxNop() layout.Context { return layout.Context{} }
 
 // fileNew clears the in-memory model.
-func (s *State) fileNew() {
-	s.sf = models.NewSettingsFile()
-	s.currentPath = ""
-	s.dirty = false
-	s.seedDefaultPlayerZoneContent()
-	s.applyFromSettingsFile()
-	s.setStatus("New settings file.", false)
+func (this *State) fileNew() {
+	this.settingsFile = models.NewSettingsFile()
+	this.currentPath = ""
+	this.dirty = false
+	this.seedDefaultPlayerZoneContent()
+	this.applyFromSettingsFile()
+	this.setStatus("New settings file.", false)
 }
 
 // fileOpen presents a dialog and loads the chosen .gen.json file.
-func (s *State) fileOpen() {
-	path, err := PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", s.suggestDir())
+func (this *State) fileOpen() {
+	path, err := PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.suggestDir())
 	if err != nil {
-		s.setStatus("Open dialog failed: "+err.Error(), true)
+		this.setStatus("Open dialog failed: "+err.Error(), true)
 		return
 	}
 	if path == "" {
 		return
 	}
-	sf, err := LoadSettingsFile(path)
+	loaded, err := services.LoadSettingsFile(path)
 	if err != nil {
-		s.setStatus("Load failed: "+err.Error(), true)
+		this.setStatus("Load failed: "+err.Error(), true)
 		return
 	}
-	s.sf = sf
-	s.currentPath = path
-	s.dirty = false
-	s.applyFromSettingsFile()
-	s.setStatus("Loaded "+path, false)
+	this.settingsFile = loaded
+	this.currentPath = path
+	this.dirty = false
+	this.applyFromSettingsFile()
+	this.setStatus("Loaded "+path, false)
 }
 
 // fileSave writes to the current path or prompts via Save As if none.
-func (s *State) fileSave() {
-	if s.currentPath == "" {
-		s.fileSaveAs()
+func (this *State) fileSave() {
+	if this.currentPath == "" {
+		this.fileSaveAs()
 		return
 	}
-	if err := SaveSettingsFile(s.currentPath, s.captureToSettingsFile()); err != nil {
-		s.setStatus("Save failed: "+err.Error(), true)
+	if err := services.SaveSettingsFile(this.currentPath, this.captureToSettingsFile()); err != nil {
+		this.setStatus("Save failed: "+err.Error(), true)
 		return
 	}
-	s.dirty = false
-	s.setStatus("Saved "+s.currentPath, false)
+	this.dirty = false
+	this.setStatus("Saved "+this.currentPath, false)
 }
 
 // fileSaveAs prompts for a destination path then writes the settings file.
-func (s *State) fileSaveAs() {
-	defaultName := sanitizeFilename(strings.TrimSpace(s.templateName.Text())) + ".gen.json"
-	path, err := PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", s.suggestDir(), defaultName)
+func (this *State) fileSaveAs() {
+	defaultName := services.SanitizeFilename(strings.TrimSpace(this.templateName.Text())) + ".gen.json"
+	path, err := PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.suggestDir(), defaultName)
 	if err != nil {
-		s.setStatus("Save dialog failed: "+err.Error(), true)
+		this.setStatus("Save dialog failed: "+err.Error(), true)
 		return
 	}
 	if path == "" {
 		return
 	}
-	if err := SaveSettingsFile(path, s.captureToSettingsFile()); err != nil {
-		s.setStatus("Save failed: "+err.Error(), true)
+	if err := services.SaveSettingsFile(path, this.captureToSettingsFile()); err != nil {
+		this.setStatus("Save failed: "+err.Error(), true)
 		return
 	}
-	s.currentPath = path
-	s.dirty = false
-	s.setStatus("Saved "+path, false)
+	this.currentPath = path
+	this.dirty = false
+	this.setStatus("Saved "+path, false)
 }
 
-func (s *State) suggestDir() string {
-	if s.currentPath != "" {
-		return filepath.Dir(s.currentPath)
+func (this *State) suggestDir() string {
+	if this.currentPath != "" {
+		return filepath.Dir(this.currentPath)
 	}
-	if d := strings.TrimSpace(s.outputPath.Text()); d != "" {
-		return d
+	if outputDir := strings.TrimSpace(this.outputPath.Text()); outputDir != "" {
+		return outputDir
 	}
-	wd, _ := os.Getwd()
-	return wd
+	workingDir, _ := os.Getwd()
+	return workingDir
 }
 
 // openTemplatesFolder opens the official Steam templates directory in Explorer.
-func (s *State) openTemplatesFolder() {
+func (this *State) openTemplatesFolder() {
 	dir := FindOldenEraTemplatesDir()
 	if dir == "" {
-		s.setStatus("Heroes Olden Era templates folder not found.", true)
+		this.setStatus("Heroes Olden Era templates folder not found.", true)
 		return
 	}
 	if err := RevealInExplorer(dir); err != nil {
-		s.setStatus("Open folder failed: "+err.Error(), true)
+		this.setStatus("Open folder failed: "+err.Error(), true)
 		return
 	}
-	s.setStatus("Opened "+dir, false)
+	this.setStatus("Opened "+dir, false)
 }
 
 // pickOutputDir presents a folder picker for the template output directory.
-func (s *State) pickOutputDir() {
-	cur := strings.TrimSpace(s.outputPath.Text())
+func (this *State) pickOutputDir() {
+	cur := strings.TrimSpace(this.outputPath.Text())
 	dir, err := PickFolder("Select output directory", cur)
 	if err != nil {
-		s.setStatus("Folder dialog failed: "+err.Error(), true)
+		this.setStatus("Folder dialog failed: "+err.Error(), true)
 		return
 	}
 	if dir == "" {
 		return
 	}
-	s.outputPath.SetText(dir)
+	this.outputPath.SetText(dir)
 }
 
 // — Layout —
 
-func (s *State) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions {
+func (this *State) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	// Process button clicks first.
-	if s.btnGenerate.Clicked(gtx) {
-		s.generate()
+	if this.btnGenerate.Clicked(gtx) {
+		this.generate()
 	}
-	if s.btnSaveTemplate.Clicked(gtx) {
-		s.saveTemplate()
+	if this.btnSaveTemplate.Clicked(gtx) {
+		this.saveTemplate()
 	}
-	if s.btnNew.Clicked(gtx) {
-		s.fileNew()
+	if this.btnNew.Clicked(gtx) {
+		this.fileNew()
 	}
-	if s.btnOpen.Clicked(gtx) {
-		s.fileOpen()
+	if this.btnOpen.Clicked(gtx) {
+		this.fileOpen()
 	}
-	if s.btnSave.Clicked(gtx) {
-		s.fileSave()
+	if this.btnSave.Clicked(gtx) {
+		this.fileSave()
 	}
-	if s.btnSaveAs.Clicked(gtx) {
-		s.fileSaveAs()
+	if this.btnSaveAs.Clicked(gtx) {
+		this.fileSaveAs()
 	}
-	if s.btnTemplates.Clicked(gtx) {
-		s.openTemplatesFolder()
+	if this.btnTemplates.Clicked(gtx) {
+		this.openTemplatesFolder()
 	}
-	if s.btnDiscord.Clicked(gtx) {
+	if this.btnDiscord.Clicked(gtx) {
 		_ = OpenURL("https://discord.gg/UqT8KshsxW")
 	}
-	if s.btnGitHub.Clicked(gtx) {
+	if this.btnGitHub.Clicked(gtx) {
 		_ = OpenURL("https://github.com/KhanDevelopsGames/Olden-Era---Template-Generator")
 	}
-	if s.btnPatchNotes.Clicked(gtx) {
+	if this.btnPatchNotes.Clicked(gtx) {
 		_ = OpenURL("https://github.com/KhanDevelopsGames/Olden-Era---Template-Generator/releases")
 	}
-	if s.btnPickOutput.Clicked(gtx) {
-		s.pickOutputDir()
+	if this.btnPickOutput.Clicked(gtx) {
+		this.pickOutputDir()
 	}
-	if s.btnRevealOutput.Clicked(gtx) {
-		_ = RevealInExplorer(strings.TrimSpace(s.outputPath.Text()))
+	if this.btnRevealOutput.Clicked(gtx) {
+		_ = RevealInExplorer(strings.TrimSpace(this.outputPath.Text()))
 	}
-	if s.btnZoneReset.Clicked(gtx) {
-		s.seedDefaultPlayerZoneContent()
+	if this.btnZoneReset.Clicked(gtx) {
+		this.seedDefaultPlayerZoneContent()
 	}
 
 	fillBackground(gtx, colBackground)
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return s.layoutTitleBar(gtx, th) }),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutTitleBar(gtx, theme) }),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return s.layoutToolbar(gtx, th) }),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutToolbar(gtx, theme) }),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return s.tabs.Layout(gtx, th) }),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.tabs.Layout(gtx, theme) }),
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 						return borderedPanel(gtx, unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
 							return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-								return s.layoutActiveTab(gtx, th)
+								return this.layoutActiveTab(gtx, theme)
 							})
 						})
 					}),
@@ -647,98 +610,98 @@ func (s *State) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
 						gtx.Constraints.Max.X = gtx.Dp(unit.Dp(440))
-						return s.layoutPreviewPanel(gtx, th)
+						return this.layoutPreviewPanel(gtx, theme)
 					}),
 				)
 			}),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return s.layoutFooter(gtx, th) }),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutFooter(gtx, theme) }),
 		)
 	})
 }
 
-func (s *State) layoutTitleBar(gtx layout.Context, th *material.Theme) layout.Dimensions {
+func (this *State) layoutTitleBar(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			lbl := material.H6(th, "⚔  Olden Era — Template Generator")
-			lbl.Color = colGold
-			lbl.Font = font.Font{Weight: font.SemiBold}
-			return lbl.Layout(gtx)
+			label := material.H6(theme, "⚔  Olden Era — Template Generator")
+			label.Color = colGold
+			label.Font = font.Font{Weight: font.SemiBold}
+			return label.Layout(gtx)
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions { return layout.Dimensions{Size: gtx.Constraints.Min} }),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "Discord", Click: &s.btnDiscord}.Layout(gtx, th)
+			return toolbarButton{Text: "Discord", Click: &this.btnDiscord}.Layout(gtx, theme)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "GitHub", Click: &s.btnGitHub}.Layout(gtx, th)
+			return toolbarButton{Text: "GitHub", Click: &this.btnGitHub}.Layout(gtx, theme)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "Patch notes", Click: &s.btnPatchNotes}.Layout(gtx, th)
+			return toolbarButton{Text: "Patch notes", Click: &this.btnPatchNotes}.Layout(gtx, theme)
 		}),
 	)
 }
 
-func (s *State) layoutToolbar(gtx layout.Context, th *material.Theme) layout.Dimensions {
+func (this *State) layoutToolbar(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	row := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}
 	return row.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "📄 New", Click: &s.btnNew}.Layout(gtx, th)
+			return toolbarButton{Text: "📄 New", Click: &this.btnNew}.Layout(gtx, theme)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "📂 Open…", Click: &s.btnOpen}.Layout(gtx, th)
+			return toolbarButton{Text: "📂 Open…", Click: &this.btnOpen}.Layout(gtx, theme)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "💾 Save", Click: &s.btnSave}.Layout(gtx, th)
+			return toolbarButton{Text: "💾 Save", Click: &this.btnSave}.Layout(gtx, theme)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "💾 Save As…", Click: &s.btnSaveAs}.Layout(gtx, th)
+			return toolbarButton{Text: "💾 Save As…", Click: &this.btnSaveAs}.Layout(gtx, theme)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "🗀 Open templates folder", Click: &s.btnTemplates}.Layout(gtx, th)
+			return toolbarButton{Text: "🗀 Open templates folder", Click: &this.btnTemplates}.Layout(gtx, theme)
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Left: unit.Dp(12)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				path := s.currentPath
+				path := this.currentPath
 				if path == "" {
 					path = "(unsaved)"
 				}
-				if s.dirty {
+				if this.dirty {
 					path += " *"
 				}
-				lbl := material.Body2(th, "File: "+path)
-				lbl.Color = colTextDim
-				lbl.TextSize = unit.Sp(11)
-				lbl.MaxLines = 1
-				lbl.Truncator = "…"
-				lbl.Alignment = text.End
-				return lbl.Layout(gtx)
+				label := material.Body2(theme, "File: "+path)
+				label.Color = colTextDim
+				label.TextSize = unit.Sp(11)
+				label.MaxLines = 1
+				label.Truncator = "…"
+				label.Alignment = text.End
+				return label.Layout(gtx)
 			})
 		}),
 	)
 }
 
-func (s *State) layoutActiveTab(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	idx := s.tabs.Selected
-	if idx < 0 || idx >= len(s.scrolls) {
+func (this *State) layoutActiveTab(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	idx := this.tabs.Selected
+	if idx < 0 || idx >= len(this.scrolls) {
 		idx = 0
 	}
-	list := material.List(th, &s.scrolls[idx])
+	list := material.List(theme, &this.scrolls[idx])
 	var sections []layout.Widget
 	switch idx {
 	case 0:
-		sections = s.tabMapSetup(th)
+		sections = this.tabMapSetup(theme)
 	case 1:
-		sections = s.tabGenerationOptions(th)
+		sections = this.tabGenerationOptions(theme)
 	case 2:
-		sections = s.tabGameRules(th)
+		sections = this.tabGameRules(theme)
 	case 3:
-		sections = s.tabZoneContent(th)
+		sections = this.tabZoneContent(theme)
 	}
 	return list.Layout(gtx, len(sections), func(gtx layout.Context, i int) layout.Dimensions {
 		return sections[i](gtx)
@@ -747,28 +710,28 @@ func (s *State) layoutActiveTab(gtx layout.Context, th *material.Theme) layout.D
 
 // — Footer (Generate + Save Template + Output) —
 
-func (s *State) layoutFooter(gtx layout.Context, th *material.Theme) layout.Dimensions {
+func (this *State) layoutFooter(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	return borderedPanel(gtx, unit.Dp(10), func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(120)
-						lbl := material.Body1(th, "Output dir")
-						lbl.Color = colText
-						lbl.TextSize = unit.Sp(13)
-						return lbl.Layout(gtx)
+						label := material.Body1(theme, "Output dir")
+						label.Color = colText
+						label.TextSize = unit.Sp(13)
+						return label.Layout(gtx)
 					}),
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return drawEditor(gtx, th, &s.outputPath, "Choose folder")
+						return drawEditor(gtx, theme, &this.outputPath, "Choose folder")
 					}),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return toolbarButton{Text: "Browse…", Click: &s.btnPickOutput}.Layout(gtx, th)
+						return toolbarButton{Text: "Browse…", Click: &this.btnPickOutput}.Layout(gtx, theme)
 					}),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return toolbarButton{Text: "Reveal", Click: &s.btnRevealOutput}.Layout(gtx, th)
+						return toolbarButton{Text: "Reveal", Click: &this.btnRevealOutput}.Layout(gtx, theme)
 					}),
 				)
 			}),
@@ -776,31 +739,31 @@ func (s *State) layoutFooter(gtx layout.Context, th *material.Theme) layout.Dime
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						msg := s.statusMsg
+						msg := this.statusMsg
 						if msg == "" {
 							msg = "Ready."
 						}
 						col := colTextDim
-						if s.statusErr {
+						if this.statusErr {
 							col = colError
-						} else if s.lastTemplate != nil {
+						} else if this.lastTemplate != nil {
 							col = colGoldBright
 						}
-						lbl := material.Body2(th, msg)
-						lbl.Color = col
-						lbl.TextSize = unit.Sp(12)
-						lbl.MaxLines = 2
-						return lbl.Layout(gtx)
+						label := material.Body2(theme, msg)
+						label.Color = col
+						label.TextSize = unit.Sp(12)
+						label.MaxLines = 2
+						return label.Layout(gtx)
 					}),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(10)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(190)
-						return goldButton{Text: "⚔  Generate Template", Click: &s.btnGenerate}.Layout(gtx, th)
+						return goldButton{Text: "⚔  Generate Template", Click: &this.btnGenerate}.Layout(gtx, theme)
 					}),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(180)
-						return goldButton{Text: "💾  Save Template", Click: &s.btnSaveTemplate, Disabled: s.lastTemplate == nil}.Layout(gtx, th)
+						return goldButton{Text: "💾  Save Template", Click: &this.btnSaveTemplate, Disabled: this.lastTemplate == nil}.Layout(gtx, theme)
 					}),
 				)
 			}),

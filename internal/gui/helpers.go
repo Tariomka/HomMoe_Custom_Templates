@@ -8,60 +8,81 @@ import (
 
 // labeledRowW wraps labeledRow so it can be used as a layout.Widget value
 // in slice literals. Accepts a unitless dp value for the label width.
-func labeledRowW(th *material.Theme, label string, labelDp int, control layout.Widget) layout.Widget {
+func labeledRowW(theme *material.Theme, label string, labelDp int, control layout.Widget) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		return labeledRow(gtx, th, label, unit.Dp(labelDp), control)
+		return labeledRow(gtx, theme, label, unit.Dp(labelDp), control)
 	}
 }
 
 // dimLabelW returns dimLabel as a layout.Widget.
-func dimLabelW(th *material.Theme, txt string) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions { return dimLabel(gtx, th, txt) }
+func dimLabelW(theme *material.Theme, txt string) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions { return dimLabel(gtx, theme, txt) }
 }
 
 // warnBannerW returns warnBanner as a layout.Widget.
-func warnBannerW(th *material.Theme, txt string) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions { return warnBanner(gtx, th, txt) }
+func warnBannerW(theme *material.Theme, txt string) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions { return warnBanner(gtx, theme, txt) }
 }
 
 // sectionHeaderW returns sectionHeader as a layout.Widget.
-func sectionHeaderW(th *material.Theme, txt string) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions { return sectionHeader(gtx, th, txt) }
+func sectionHeaderW(theme *material.Theme, txt string) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions { return sectionHeader(gtx, theme, txt) }
 }
 
-// mapRange linearly maps a [0,1] slider value into [lo, hi].
-func mapRange(v, lo, hi float32) float32 {
-	if v < 0 {
-		v = 0
+// mapRange linearly maps a [0,1] slider value into [low, high].
+func mapRange(value, low, high float32) float32 {
+	if value < 0 {
+		value = 0
 	}
-	if v > 1 {
-		v = 1
+	if value > 1 {
+		value = 1
 	}
-	return lo + v*(hi-lo)
+	return low + value*(high-low)
 }
 
-// mapRangeInv is the inverse of mapRange: maps a value in [lo, hi]
+// mapRangeInv is the inverse of mapRange: maps a value in [low, high]
 // back to its [0,1] slider position.
-func mapRangeInv(v, lo, hi float32) float32 {
-	if hi == lo {
+func mapRangeInv(value, low, high float32) float32 {
+	if high == low {
 		return 0
 	}
-	r := (v - lo) / (hi - lo)
-	if r < 0 {
-		r = 0
+	ratio := (value - low) / (high - low)
+	if ratio < 0 {
+		ratio = 0
 	}
-	if r > 1 {
-		r = 1
+	if ratio > 1 {
+		ratio = 1
 	}
-	return r
+	return ratio
 }
 
-// indexOf returns the index of v in items, or -1 when not present.
-func indexOf[T comparable](items []T, v T) int {
-	for i, x := range items {
-		if x == v {
+// indexOf returns the index of value in items, or -1 when not present.
+func indexOf[T comparable](items []T, value T) int {
+	for i, candidate := range items {
+		if candidate == value {
 			return i
 		}
 	}
 	return -1
+}
+
+// mapSizeLabelInt returns the short S/M/L/XL/H/G/C label for an integer size.
+// Mirrors KnownValues.MapSizeLabel from the C# source.
+func mapSizeLabelInt(size int) string {
+	switch {
+	case size == 64:
+		return "S"
+	case size == 80 || size == 96:
+		return "M"
+	case size == 112 || size == 128:
+		return "L"
+	case size == 144 || size == 160:
+		return "XL"
+	case size == 176 || size == 192:
+		return "H"
+	case size >= 208 && size <= 256:
+		return "G"
+	default:
+		return "C"
+	}
 }

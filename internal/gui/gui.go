@@ -16,38 +16,38 @@ import (
 
 // Run opens the GUI window and runs the event loop until close.
 func Run() error {
-	w := new(app.Window)
-	w.Option(
+	window := new(app.Window)
+	window.Option(
 		app.Title("Olden Era — Template Generator"),
 		app.Size(unit.Dp(1180), unit.Dp(820)),
 		app.MinSize(unit.Dp(900), unit.Dp(600)),
 	)
-	th := newTheme()
+	theme := newTheme()
 	state := newState()
 
 	var ops op.Ops
 	for {
-		switch e := w.Event().(type) {
+		switch event := window.Event().(type) {
 		case app.DestroyEvent:
-			return e.Err
+			return event.Err
 		case app.FrameEvent:
-			gtx := app.NewContext(&ops, e)
-			state.Layout(gtx, th)
-			e.Frame(gtx.Ops)
+			gtx := app.NewContext(&ops, event)
+			state.Layout(gtx, theme)
+			event.Frame(gtx.Ops)
 		}
 	}
 }
 
 // drawEditor renders a text editor with a bordered input background.
-func drawEditor(gtx layout.Context, th *material.Theme, ed *widget.Editor, hint string) layout.Dimensions {
+func drawEditor(gtx layout.Context, theme *material.Theme, editor *widget.Editor, hint string) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
 	inset := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}
 	dims := inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		e := material.Editor(th, ed, hint)
-		e.Color = colText
-		e.HintColor = colTextDim
-		e.TextSize = unit.Sp(13)
-		return e.Layout(gtx)
+		editorWidget := material.Editor(theme, editor, hint)
+		editorWidget.Color = colText
+		editorWidget.HintColor = colTextDim
+		editorWidget.TextSize = unit.Sp(13)
+		return editorWidget.Layout(gtx)
 	})
 	call := macro.Stop()
 	radius := gtx.Dp(2)
@@ -63,74 +63,74 @@ func drawEditor(gtx layout.Context, th *material.Theme, ed *widget.Editor, hint 
 
 // sliderLabeled draws a slider in a flex row with a fixed-width gold value
 // label on the right.
-func sliderLabeled(gtx layout.Context, th *material.Theme, f *widget.Float, value string) layout.Dimensions {
+func sliderLabeled(gtx layout.Context, theme *material.Theme, floatValue *widget.Float, value string) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			sl := material.Slider(th, f)
-			sl.Color = colGold
-			return sl.Layout(gtx)
+			slider := material.Slider(theme, floatValue)
+			slider.Color = colGold
+			return slider.Layout(gtx)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			gtx.Constraints.Min.X = gtx.Dp(64)
-			lbl := material.Body1(th, value)
-			lbl.Color = colGold
-			lbl.TextSize = unit.Sp(13)
-			lbl.Alignment = 1
-			return lbl.Layout(gtx)
+			label := material.Body1(theme, value)
+			label.Color = colGold
+			label.TextSize = unit.Sp(13)
+			label.Alignment = 1
+			return label.Layout(gtx)
 		}),
 	)
 }
 
-// snapIntSliderLabeled snaps the slider to the [lo, hi] integer range and
+// snapIntSliderLabeled snaps the slider to the [low, high] integer range and
 // renders the integer value to the right.
-func snapIntSliderLabeled(gtx layout.Context, th *material.Theme, f *widget.Float, lo, hi int, suffix string) int {
-	v := mapRange(f.Value, float32(lo), float32(hi))
-	rounded := int(roundHalfAway(float64(v)))
-	if rounded < lo {
-		rounded = lo
+func snapIntSliderLabeled(gtx layout.Context, theme *material.Theme, floatValue *widget.Float, low, high int, suffix string) int {
+	mapped := mapRange(floatValue.Value, float32(low), float32(high))
+	rounded := int(roundHalfAway(float64(mapped)))
+	if rounded < low {
+		rounded = low
 	}
-	if rounded > hi {
-		rounded = hi
+	if rounded > high {
+		rounded = high
 	}
-	target := mapRangeInv(float32(rounded), float32(lo), float32(hi))
-	if target != f.Value && !f.Dragging() {
-		f.Value = target
+	target := mapRangeInv(float32(rounded), float32(low), float32(high))
+	if target != floatValue.Value && !floatValue.Dragging() {
+		floatValue.Value = target
 	}
-	label := itoa(rounded) + suffix
+	labelText := itoa(rounded) + suffix
 	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			sl := material.Slider(th, f)
-			sl.Color = colGold
-			return sl.Layout(gtx)
+			slider := material.Slider(theme, floatValue)
+			slider.Color = colGold
+			return slider.Layout(gtx)
 		}),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			gtx.Constraints.Min.X = gtx.Dp(64)
-			lbl := material.Body1(th, label)
-			lbl.Color = colGold
-			lbl.TextSize = unit.Sp(13)
-			lbl.Alignment = 1
-			return lbl.Layout(gtx)
+			label := material.Body1(theme, labelText)
+			label.Color = colGold
+			label.TextSize = unit.Sp(13)
+			label.Alignment = 1
+			return label.Layout(gtx)
 		}),
 	)
 	return rounded
 }
 
-func itoa(n int) string {
-	if n == 0 {
+func itoa(number int) string {
+	if number == 0 {
 		return "0"
 	}
-	neg := n < 0
+	neg := number < 0
 	if neg {
-		n = -n
+		number = -number
 	}
 	var buf [20]byte
 	i := len(buf)
-	for n > 0 {
+	for number > 0 {
 		i--
-		buf[i] = byte('0' + n%10)
-		n /= 10
+		buf[i] = byte('0' + number%10)
+		number /= 10
 	}
 	if neg {
 		i--
@@ -140,14 +140,14 @@ func itoa(n int) string {
 }
 
 // checkRow renders one CheckBox + label as a clickable row.
-func checkRow(th *material.Theme, b *widget.Bool, label string) layout.Widget {
+func checkRow(theme *material.Theme, boolValue *widget.Bool, label string) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: unit.Dp(3), Bottom: unit.Dp(3)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			cb := material.CheckBox(th, b, label)
-			cb.Color = colText
-			cb.IconColor = colGold
-			cb.TextSize = unit.Sp(13)
-			return cb.Layout(gtx)
+			checkbox := material.CheckBox(theme, boolValue, label)
+			checkbox.Color = colText
+			checkbox.IconColor = colGold
+			checkbox.TextSize = unit.Sp(13)
+			return checkbox.Layout(gtx)
 		})
 	}
 }

@@ -94,22 +94,22 @@ func NewSettingsFile() *SettingsFile {
 	}
 }
 
-func (s *SettingsFile) EffectiveResourceDensity() int {
-	if s.ResourceDensityPercent != nil {
-		return *s.ResourceDensityPercent
+func (this *SettingsFile) EffectiveResourceDensity() int {
+	if this.ResourceDensityPercent != nil {
+		return *this.ResourceDensityPercent
 	}
-	if s.ContentDensityPercent != nil {
-		return *s.ContentDensityPercent
+	if this.ContentDensityPercent != nil {
+		return *this.ContentDensityPercent
 	}
 	return 100
 }
 
-func (s *SettingsFile) EffectiveStructureDensity() int {
-	if s.StructureDensityPercent != nil {
-		return *s.StructureDensityPercent
+func (this *SettingsFile) EffectiveStructureDensity() int {
+	if this.StructureDensityPercent != nil {
+		return *this.StructureDensityPercent
 	}
-	if s.ContentDensityPercent != nil {
-		return *s.ContentDensityPercent
+	if this.ContentDensityPercent != nil {
+		return *this.ContentDensityPercent
 	}
 	return 100
 }

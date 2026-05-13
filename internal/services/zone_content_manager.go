@@ -42,22 +42,25 @@ func newContentBuilder(sid string) *contentBuilder {
 	return &contentBuilder{item: template.MandatoryContentItem{SID: sid}}
 }
 
-func (b *contentBuilder) withName(name string) *contentBuilder { b.item.Name = name; return b }
-func (b *contentBuilder) guarded() *contentBuilder             { b.item.IsGuarded = true; return b }
-func (b *contentBuilder) mine() *contentBuilder                { b.item.IsMine = true; return b }
-func (b *contentBuilder) soloEncounter() *contentBuilder       { b.item.SoloEncounter = true; return b }
-func (b *contentBuilder) roadDistance(d distancePreset) *contentBuilder {
-	return b.addRule(ruleRoadDistance(d, 1))
+func (this *contentBuilder) withName(name string) *contentBuilder { this.item.Name = name; return this }
+func (this *contentBuilder) guarded() *contentBuilder             { this.item.IsGuarded = true; return this }
+func (this *contentBuilder) mine() *contentBuilder                { this.item.IsMine = true; return this }
+func (this *contentBuilder) soloEncounter() *contentBuilder {
+	this.item.SoloEncounter = true
+	return this
 }
-func (b *contentBuilder) addRule(r template.PlacementRule) *contentBuilder {
-	b.item.Rules = append(b.item.Rules, r)
-	return b
+func (this *contentBuilder) roadDistance(d distancePreset) *contentBuilder {
+	return this.addRule(ruleRoadDistance(d, 1))
 }
-func (b *contentBuilder) addRules(rs []template.PlacementRule) *contentBuilder {
-	b.item.Rules = append(b.item.Rules, rs...)
-	return b
+func (this *contentBuilder) addRule(r template.PlacementRule) *contentBuilder {
+	this.item.Rules = append(this.item.Rules, r)
+	return this
 }
-func (b *contentBuilder) build() template.MandatoryContentItem { return b.item }
+func (this *contentBuilder) addRules(rs []template.PlacementRule) *contentBuilder {
+	this.item.Rules = append(this.item.Rules, rs...)
+	return this
+}
+func (this *contentBuilder) build() template.MandatoryContentItem { return this.item }
 
 // ── Content presets ──────────────────────────────────────────────────
 

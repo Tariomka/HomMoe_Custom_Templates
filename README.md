@@ -150,7 +150,7 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
 
 ```
 GUI widgets
-   │   (translated by gui.settingsFileToGenerator)
+   │   (translated by services.SettingsToGenerator)
    ▼
 SettingsFile  ──►  GeneratorSettings
                         │

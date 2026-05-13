@@ -28,20 +28,20 @@ type zoneContentRow struct {
 	dupBtn    widget.Clickable
 }
 
-func newZoneContentRow(m models.SidMapping, count int, guarded, nearCastle bool, roadIdx int, isGroup bool) *zoneContentRow {
-	r := &zoneContentRow{
-		Mapping:     m,
+func newZoneContentRow(mapping models.SidMapping, count int, guarded, nearCastle bool, roadIdx int, isGroup bool) *zoneContentRow {
+	row := &zoneContentRow{
+		Mapping:     mapping,
 		Count:       count,
 		RoadDistIdx: roadIdx,
 		IsGroup:     isGroup,
 		roadCombo:   newComboBox(roadDistances),
 	}
-	if r.RoadDistIdx >= 0 && r.RoadDistIdx < len(roadDistances) {
-		r.roadCombo.Selected = r.RoadDistIdx
+	if row.RoadDistIdx >= 0 && row.RoadDistIdx < len(roadDistances) {
+		row.roadCombo.Selected = row.RoadDistIdx
 	}
-	r.IsGuarded.Value = guarded
-	r.NearCastle.Value = nearCastle
-	return r
+	row.IsGuarded.Value = guarded
+	row.NearCastle.Value = nearCastle
+	return row
 }
 
 // zoneContentSection is one of the four mandatory-content groups.
@@ -57,8 +57,8 @@ type zoneContentSection struct {
 
 func newZoneContentSection(title string, items []models.SidMapping, maxCount int, showNear bool) *zoneContentSection {
 	labels := make([]string, len(items))
-	for i, it := range items {
-		labels[i] = it.Name
+	for i, item := range items {
+		labels[i] = item.Name
 	}
 	return &zoneContentSection{
 		Title:     title,
@@ -70,76 +70,76 @@ func newZoneContentSection(title string, items []models.SidMapping, maxCount int
 }
 
 // Add appends a new row using the given mapping with sensible defaults.
-func (sec *zoneContentSection) Add(m models.SidMapping, count int, guarded, near bool, roadIdx int, group bool) {
+func (this *zoneContentSection) Add(mapping models.SidMapping, count int, guarded, near bool, roadIdx int, group bool) {
 	if count < 1 {
 		count = 1
 	}
-	if count > sec.MaxCount {
-		count = sec.MaxCount
+	if count > this.MaxCount {
+		count = this.MaxCount
 	}
-	sec.rows = append(sec.rows, newZoneContentRow(m, count, guarded, near, roadIdx, group))
+	this.rows = append(this.rows, newZoneContentRow(mapping, count, guarded, near, roadIdx, group))
 }
 
-func (sec *zoneContentSection) Layout(th *material.Theme) layout.Widget {
+func (this *zoneContentSection) Layout(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		// Process per-section button clicks first.
-		if sec.addBtn.Clicked(gtx) && len(sec.Items) > 0 {
-			idx := sec.addPreset.Selected
-			if idx < 0 || idx >= len(sec.Items) {
+		if this.addBtn.Clicked(gtx) && len(this.Items) > 0 {
+			idx := this.addPreset.Selected
+			if idx < 0 || idx >= len(this.Items) {
 				idx = 0
 			}
-			sec.Add(sec.Items[idx], 1, true, false, 0, false)
+			this.Add(this.Items[idx], 1, true, false, 0, false)
 		}
 		// Process per-row clicks (collect indices to remove).
-		keep := sec.rows[:0]
-		for i, r := range sec.rows {
-			if r.removeBtn.Clicked(gtx) {
+		keep := this.rows[:0]
+		for i, row := range this.rows {
+			if row.removeBtn.Clicked(gtx) {
 				continue
 			}
-			if r.dupBtn.Clicked(gtx) {
-				keep = append(keep, r)
-				clone := newZoneContentRow(r.Mapping, r.Count, r.IsGuarded.Value, r.NearCastle.Value, r.RoadDistIdx, r.IsGroup)
+			if row.dupBtn.Clicked(gtx) {
+				keep = append(keep, row)
+				clone := newZoneContentRow(row.Mapping, row.Count, row.IsGuarded.Value, row.NearCastle.Value, row.RoadDistIdx, row.IsGroup)
 				keep = append(keep, clone)
 				continue
 			}
 			_ = i
-			keep = append(keep, r)
+			keep = append(keep, row)
 		}
-		sec.rows = keep
+		this.rows = keep
 
-		return section(th, sec.Title, []layout.Widget{
+		return section(theme, this.Title, []layout.Widget{
 			func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(120)
-						lbl := material.Body2(th, "Add preset:")
-						lbl.Color = colTextDim
-						lbl.TextSize = unit.Sp(12)
-						return lbl.Layout(gtx)
+						label := material.Body2(theme, "Add preset:")
+						label.Color = colTextDim
+						label.TextSize = unit.Sp(12)
+						return label.Layout(gtx)
 					}),
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return sec.addPreset.Layout(gtx, th)
+						return this.addPreset.Layout(gtx, theme)
 					}),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return toolbarButton{Text: "+ Add", Click: &sec.addBtn}.Layout(gtx, th)
+						return toolbarButton{Text: "+ Add", Click: &this.addBtn}.Layout(gtx, theme)
 					}),
 				)
 			},
 			func(gtx layout.Context) layout.Dimensions {
-				if len(sec.rows) == 0 {
-					lbl := material.Body2(th, "(no items)")
-					lbl.Color = colTextDim
-					lbl.TextSize = unit.Sp(12)
-					return layout.Inset{Top: unit.Dp(4), Left: unit.Dp(4)}.Layout(gtx, lbl.Layout)
+				if len(this.rows) == 0 {
+					label := material.Body2(theme, "(no items)")
+					label.Color = colTextDim
+					label.TextSize = unit.Sp(12)
+					return layout.Inset{Top: unit.Dp(4), Left: unit.Dp(4)}.Layout(gtx, label.Layout)
 				}
-				children := make([]layout.FlexChild, 0, len(sec.rows)*2)
-				for i, r := range sec.rows {
-					r := r
+				children := make([]layout.FlexChild, 0, len(this.rows)*2)
+				for i, row := range this.rows {
+					row := row
 					if i > 0 {
 						children = append(children, layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout))
 					}
-					children = append(children, layout.Rigid(sec.layoutRow(th, r)))
+					children = append(children, layout.Rigid(this.layoutRow(theme, row)))
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
 			},
@@ -147,54 +147,54 @@ func (sec *zoneContentSection) Layout(th *material.Theme) layout.Widget {
 	}
 }
 
-func (sec *zoneContentSection) layoutRow(th *material.Theme, r *zoneContentRow) layout.Widget {
+func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneContentRow) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		// Sync count slider into integer field.
-		desired := mapRangeInv(float32(r.Count), 1, float32(sec.MaxCount))
-		if !r.countSld.Dragging() && r.countSld.Value == 0 && r.Count > 0 {
-			r.countSld.Value = desired
+		desired := mapRangeInv(float32(row.Count), 1, float32(this.MaxCount))
+		if !row.countSld.Dragging() && row.countSld.Value == 0 && row.Count > 0 {
+			row.countSld.Value = desired
 		}
-		liveCount := roundedRange(r.countSld.Value, 1, sec.MaxCount)
-		r.Count = liveCount
-		r.RoadDistIdx = r.roadCombo.Selected
+		liveCount := roundedRange(row.countSld.Value, 1, this.MaxCount)
+		row.Count = liveCount
+		row.RoadDistIdx = row.roadCombo.Selected
 
 		return borderedPanel(gtx, unit.Dp(6), func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-							lbl := material.Body1(th, r.Mapping.Name)
-							lbl.Color = colGold
-							lbl.TextSize = unit.Sp(13)
-							return lbl.Layout(gtx)
+							label := material.Body1(theme, row.Mapping.Name)
+							label.Color = colGold
+							label.TextSize = unit.Sp(13)
+							return label.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return toolbarButton{Text: "Duplicate", Click: &r.dupBtn}.Layout(gtx, th)
+							return toolbarButton{Text: "Duplicate", Click: &row.dupBtn}.Layout(gtx, theme)
 						}),
 						layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return toolbarButton{Text: "Remove", Click: &r.removeBtn}.Layout(gtx, th)
+							return toolbarButton{Text: "Remove", Click: &row.removeBtn}.Layout(gtx, theme)
 						}),
 					)
 				}),
 				layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
-				layout.Rigid(labeledRowW(th, "Count", 100, func(gtx layout.Context) layout.Dimensions {
-					return sliderLabeled(gtx, th, &r.countSld, fmt.Sprintf("%d", liveCount))
+				layout.Rigid(labeledRowW(theme, "Count", 100, func(gtx layout.Context) layout.Dimensions {
+					return sliderLabeled(gtx, theme, &row.countSld, fmt.Sprintf("%d", liveCount))
 				})),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(checkRow(th, &r.IsGuarded, "Guarded")),
+						layout.Rigid(checkRow(theme, &row.IsGuarded, "Guarded")),
 						layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							if !sec.ShowNear {
+							if !this.ShowNear {
 								return layout.Dimensions{}
 							}
-							return checkRow(th, &r.NearCastle, "Near castle")(gtx)
+							return checkRow(theme, &row.NearCastle, "Near castle")(gtx)
 						}),
 					)
 				}),
-				layout.Rigid(labeledRowW(th, "Road distance", 100, func(gtx layout.Context) layout.Dimensions {
-					return r.roadCombo.Layout(gtx, th)
+				layout.Rigid(labeledRowW(theme, "Road distance", 100, func(gtx layout.Context) layout.Dimensions {
+					return row.roadCombo.Layout(gtx, theme)
 				})),
 			)
 		})
@@ -204,75 +204,75 @@ func (sec *zoneContentSection) layoutRow(th *material.Theme, r *zoneContentRow) 
 // — State integration —
 
 // seedDefaultPlayerZoneContent mirrors C# InitializeDefaultPlayerZoneContents.
-func (s *State) seedDefaultPlayerZoneContent() {
-	s.zcMines.rows = nil
-	s.zcTreasures.rows = nil
-	s.zcHires.rows = nil
-	s.zcBanks.rows = nil
+func (this *State) seedDefaultPlayerZoneContent() {
+	this.zcMines.rows = nil
+	this.zcTreasures.rows = nil
+	this.zcHires.rows = nil
+	this.zcBanks.rows = nil
 
 	// Mines: wood/ore/gold guarded next-to-castle; crystals/mercury/gemstones/alchemy-lab guarded near road.
-	s.zcMines.Add(constants.ContentIds.MineWood, 1, true, true, 0, false)
-	s.zcMines.Add(constants.ContentIds.MineOre, 1, true, true, 0, false)
-	s.zcMines.Add(constants.ContentIds.MineGold, 1, true, true, 0, false)
-	s.zcMines.Add(constants.ContentIds.MineCrystals, 1, true, false, 1, false)
-	s.zcMines.Add(constants.ContentIds.MineMercury, 1, true, false, 1, false)
-	s.zcMines.Add(constants.ContentIds.MineGemstones, 1, true, false, 1, false)
-	s.zcMines.Add(constants.ContentIds.AlchemyLab, 1, true, false, 1, false)
+	this.zcMines.Add(constants.ContentIds.MineWood, 1, true, true, 0, false)
+	this.zcMines.Add(constants.ContentIds.MineOre, 1, true, true, 0, false)
+	this.zcMines.Add(constants.ContentIds.MineGold, 1, true, true, 0, false)
+	this.zcMines.Add(constants.ContentIds.MineCrystals, 1, true, false, 1, false)
+	this.zcMines.Add(constants.ContentIds.MineMercury, 1, true, false, 1, false)
+	this.zcMines.Add(constants.ContentIds.MineGemstones, 1, true, false, 1, false)
+	this.zcMines.Add(constants.ContentIds.AlchemyLab, 1, true, false, 1, false)
 
 	// Treasures: PandoraBox + RandomItemEpic guarded.
-	s.zcTreasures.Add(constants.ContentIds.PandoraBox, 1, true, false, 0, false)
-	s.zcTreasures.Add(constants.ContentIds.RandomItemEpic, 1, true, false, 0, false)
+	this.zcTreasures.Add(constants.ContentIds.PandoraBox, 1, true, false, 0, false)
+	this.zcTreasures.Add(constants.ContentIds.RandomItemEpic, 1, true, false, 0, false)
 
 	// Random hires: low ×2, high ×1, all-tier ×1 (groups).
-	s.zcHires.Add(constants.IncludeListIds.RandomHiresLowTier, 2, true, false, 0, true)
-	s.zcHires.Add(constants.IncludeListIds.RandomHiresHighTier, 1, true, false, 0, true)
-	s.zcHires.Add(constants.IncludeListIds.RandomHiresAllTier, 1, true, false, 0, true)
+	this.zcHires.Add(constants.IncludeListIds.RandomHiresLowTier, 2, true, false, 0, true)
+	this.zcHires.Add(constants.IncludeListIds.RandomHiresHighTier, 1, true, false, 0, true)
+	this.zcHires.Add(constants.IncludeListIds.RandomHiresAllTier, 1, true, false, 0, true)
 
 	// Resource banks: tier1 ×2, tier2 ×1.
-	s.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier1, 2, true, false, 0, true)
-	s.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier2, 1, true, false, 0, true)
+	this.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier1, 2, true, false, 0, true)
+	this.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier2, 1, true, false, 0, true)
 }
 
 // applyZoneContentItems replaces every section based on a flat list of items
 // loaded from a settings file. Items are routed to the appropriate section by
 // SID lookup.
-func (s *State) applyZoneContentItems(items []models.ZoneContentItem) {
-	s.zcMines.rows = nil
-	s.zcTreasures.rows = nil
-	s.zcHires.rows = nil
-	s.zcBanks.rows = nil
-	for _, it := range items {
-		m := models.SidMapping{Sid: it.Sid, Name: it.Name}
-		if found, ok := helpers.LookupSid(it.Sid); ok {
-			m = found
+func (this *State) applyZoneContentItems(items []models.ZoneContentItem) {
+	this.zcMines.rows = nil
+	this.zcTreasures.rows = nil
+	this.zcHires.rows = nil
+	this.zcBanks.rows = nil
+	for _, item := range items {
+		mapping := models.SidMapping{Sid: item.Sid, Name: item.Name}
+		if found, ok := helpers.LookupSid(item.Sid); ok {
+			mapping = found
 		}
-		count := it.Count
+		count := item.Count
 		if count < 1 {
 			count = 1
 		}
-		roadIdx := indexOf(roadDistances, it.RoadDistance)
+		roadIdx := indexOf(roadDistances, item.RoadDistance)
 		if roadIdx < 0 {
 			roadIdx = 0
 		}
 		switch {
-		case sectionContains(constants.ContentItemGroup.Mines, it.Sid):
-			s.zcMines.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
-		case sectionContains(constants.ContentItemGroup.Treasures, it.Sid):
-			s.zcTreasures.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
-		case sectionContains(constants.ContentItemGroup.HireBuildings, it.Sid):
-			s.zcHires.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
-		case sectionContains(constants.ContentItemGroup.ResourceBanks, it.Sid):
-			s.zcBanks.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
+		case sectionContains(constants.ContentItemGroup.Mines, item.Sid):
+			this.zcMines.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
+		case sectionContains(constants.ContentItemGroup.Treasures, item.Sid):
+			this.zcTreasures.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
+		case sectionContains(constants.ContentItemGroup.HireBuildings, item.Sid):
+			this.zcHires.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
+		case sectionContains(constants.ContentItemGroup.ResourceBanks, item.Sid):
+			this.zcBanks.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
 		default:
 			// Unknown SID — keep with treasures by default.
-			s.zcTreasures.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
+			this.zcTreasures.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
 		}
 	}
 }
 
 func sectionContains(list []models.SidMapping, sid string) bool {
-	for _, m := range list {
-		if m.Sid == sid {
+	for _, mapping := range list {
+		if mapping.Sid == sid {
 			return true
 		}
 	}
@@ -280,28 +280,28 @@ func sectionContains(list []models.SidMapping, sid string) bool {
 }
 
 // collectZoneContentItems serialises every section into a flat list.
-func (s *State) collectZoneContentItems() []models.ZoneContentItem {
+func (this *State) collectZoneContentItems() []models.ZoneContentItem {
 	var out []models.ZoneContentItem
-	collect := func(sec *zoneContentSection) {
-		for _, r := range sec.rows {
-			rd := ""
-			if r.RoadDistIdx >= 0 && r.RoadDistIdx < len(roadDistances) {
-				rd = roadDistances[r.RoadDistIdx]
+	collect := func(contentSection *zoneContentSection) {
+		for _, row := range contentSection.rows {
+			roadDistance := ""
+			if row.RoadDistIdx >= 0 && row.RoadDistIdx < len(roadDistances) {
+				roadDistance = roadDistances[row.RoadDistIdx]
 			}
 			out = append(out, models.ZoneContentItem{
-				Sid:          r.Mapping.Sid,
-				Name:         r.Mapping.Name,
-				Count:        r.Count,
-				IsGuarded:    r.IsGuarded.Value,
-				NearCastle:   r.NearCastle.Value,
-				RoadDistance: rd,
-				IsGroup:      r.IsGroup,
+				Sid:          row.Mapping.Sid,
+				Name:         row.Mapping.Name,
+				Count:        row.Count,
+				IsGuarded:    row.IsGuarded.Value,
+				NearCastle:   row.NearCastle.Value,
+				RoadDistance: roadDistance,
+				IsGroup:      row.IsGroup,
 			})
 		}
 	}
-	collect(s.zcMines)
-	collect(s.zcTreasures)
-	collect(s.zcHires)
-	collect(s.zcBanks)
+	collect(this.zcMines)
+	collect(this.zcTreasures)
+	collect(this.zcHires)
+	collect(this.zcBanks)
 	return out
 }

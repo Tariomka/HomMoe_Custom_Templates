@@ -27,13 +27,13 @@ var (
 
 // newTheme builds a material.Theme tuned to the medieval palette.
 func newTheme() *material.Theme {
-	th := material.NewTheme()
-	th.Shaper = text.NewShaper(text.WithCollection(gofont.Collection()))
-	th.Palette = material.Palette{
+	theme := material.NewTheme()
+	theme.Shaper = text.NewShaper(text.WithCollection(gofont.Collection()))
+	theme.Palette = material.Palette{
 		Bg:         colBackground,
 		Fg:         colText,
 		ContrastBg: colGenerate,
 		ContrastFg: colText,
 	}
-	return th
+	return theme
 }

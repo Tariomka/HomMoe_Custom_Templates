@@ -86,8 +86,8 @@ if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output 
 }
 
 func runPowerShell(script string) (string, error) {
-	cmd := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script)
-	out, err := cmd.Output()
+	command := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script)
+	out, err := command.Output()
 	if err != nil {
 		return "", err
 	}
