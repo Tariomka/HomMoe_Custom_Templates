@@ -8,6 +8,8 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -209,39 +211,39 @@ func (s *State) seedDefaultPlayerZoneContent() {
 	s.zcBanks.rows = nil
 
 	// Mines: wood/ore/gold guarded next-to-castle; crystals/mercury/gemstones/alchemy-lab guarded near road.
-	s.zcMines.Add(models.ContentIds.MineWood, 1, true, true, 0, false)
-	s.zcMines.Add(models.ContentIds.MineOre, 1, true, true, 0, false)
-	s.zcMines.Add(models.ContentIds.MineGold, 1, true, true, 0, false)
-	s.zcMines.Add(models.ContentIds.MineCrystals, 1, true, false, 1, false)
-	s.zcMines.Add(models.ContentIds.MineMercury, 1, true, false, 1, false)
-	s.zcMines.Add(models.ContentIds.MineGemstones, 1, true, false, 1, false)
-	s.zcMines.Add(models.ContentIds.AlchemyLab, 1, true, false, 1, false)
+	s.zcMines.Add(constants.ContentIds.MineWood, 1, true, true, 0, false)
+	s.zcMines.Add(constants.ContentIds.MineOre, 1, true, true, 0, false)
+	s.zcMines.Add(constants.ContentIds.MineGold, 1, true, true, 0, false)
+	s.zcMines.Add(constants.ContentIds.MineCrystals, 1, true, false, 1, false)
+	s.zcMines.Add(constants.ContentIds.MineMercury, 1, true, false, 1, false)
+	s.zcMines.Add(constants.ContentIds.MineGemstones, 1, true, false, 1, false)
+	s.zcMines.Add(constants.ContentIds.AlchemyLab, 1, true, false, 1, false)
 
 	// Treasures: PandoraBox + RandomItemEpic guarded.
-	s.zcTreasures.Add(models.ContentIds.PandoraBox, 1, true, false, 0, false)
-	s.zcTreasures.Add(models.ContentIds.RandomItemEpic, 1, true, false, 0, false)
+	s.zcTreasures.Add(constants.ContentIds.PandoraBox, 1, true, false, 0, false)
+	s.zcTreasures.Add(constants.ContentIds.RandomItemEpic, 1, true, false, 0, false)
 
 	// Random hires: low ×2, high ×1, all-tier ×1 (groups).
-	s.zcHires.Add(models.IncludeListIds.RandomHiresLowTier, 2, true, false, 0, true)
-	s.zcHires.Add(models.IncludeListIds.RandomHiresHighTier, 1, true, false, 0, true)
-	s.zcHires.Add(models.IncludeListIds.RandomHiresAllTier, 1, true, false, 0, true)
+	s.zcHires.Add(constants.IncludeListIds.RandomHiresLowTier, 2, true, false, 0, true)
+	s.zcHires.Add(constants.IncludeListIds.RandomHiresHighTier, 1, true, false, 0, true)
+	s.zcHires.Add(constants.IncludeListIds.RandomHiresAllTier, 1, true, false, 0, true)
 
 	// Resource banks: tier1 ×2, tier2 ×1.
-	s.zcBanks.Add(models.IncludeListIds.ResourceBanksTier1, 2, true, false, 0, true)
-	s.zcBanks.Add(models.IncludeListIds.ResourceBanksTier2, 1, true, false, 0, true)
+	s.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier1, 2, true, false, 0, true)
+	s.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier2, 1, true, false, 0, true)
 }
 
 // applyZoneContentItems replaces every section based on a flat list of items
 // loaded from a settings file. Items are routed to the appropriate section by
 // SID lookup.
-func (s *State) applyZoneContentItems(items []models.ZoneContentItemUI) {
+func (s *State) applyZoneContentItems(items []models.ZoneContentItem) {
 	s.zcMines.rows = nil
 	s.zcTreasures.rows = nil
 	s.zcHires.rows = nil
 	s.zcBanks.rows = nil
 	for _, it := range items {
 		m := models.SidMapping{Sid: it.Sid, Name: it.Name}
-		if found, ok := models.LookupSid(it.Sid); ok {
+		if found, ok := helpers.LookupSid(it.Sid); ok {
 			m = found
 		}
 		count := it.Count
@@ -253,13 +255,13 @@ func (s *State) applyZoneContentItems(items []models.ZoneContentItemUI) {
 			roadIdx = 0
 		}
 		switch {
-		case sectionContains(models.ContentItemGroup.Mines, it.Sid):
+		case sectionContains(constants.ContentItemGroup.Mines, it.Sid):
 			s.zcMines.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
-		case sectionContains(models.ContentItemGroup.Treasures, it.Sid):
+		case sectionContains(constants.ContentItemGroup.Treasures, it.Sid):
 			s.zcTreasures.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
-		case sectionContains(models.ContentItemGroup.HireBuildings, it.Sid):
+		case sectionContains(constants.ContentItemGroup.HireBuildings, it.Sid):
 			s.zcHires.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
-		case sectionContains(models.ContentItemGroup.ResourceBanks, it.Sid):
+		case sectionContains(constants.ContentItemGroup.ResourceBanks, it.Sid):
 			s.zcBanks.Add(m, count, it.IsGuarded, it.NearCastle, roadIdx, it.IsGroup)
 		default:
 			// Unknown SID — keep with treasures by default.
@@ -278,15 +280,15 @@ func sectionContains(list []models.SidMapping, sid string) bool {
 }
 
 // collectZoneContentItems serialises every section into a flat list.
-func (s *State) collectZoneContentItems() []models.ZoneContentItemUI {
-	var out []models.ZoneContentItemUI
+func (s *State) collectZoneContentItems() []models.ZoneContentItem {
+	var out []models.ZoneContentItem
 	collect := func(sec *zoneContentSection) {
 		for _, r := range sec.rows {
 			rd := ""
 			if r.RoadDistIdx >= 0 && r.RoadDistIdx < len(roadDistances) {
 				rd = roadDistances[r.RoadDistIdx]
 			}
-			out = append(out, models.ZoneContentItemUI{
+			out = append(out, models.ZoneContentItem{
 				Sid:          r.Mapping.Sid,
 				Name:         r.Mapping.Name,
 				Count:        r.Count,

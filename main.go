@@ -1,7 +1,3 @@
-// Command gui launches the Olden Era Template Generator desktop UI.
-//
-// The UI is rendered with Gio (https://gioui.org). On Windows, Gio uses the
-// Direct3D 11 backend through syscall — pure Go, no CGO, no OpenGL required.
 package main
 
 import (

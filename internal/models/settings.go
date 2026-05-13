@@ -2,8 +2,7 @@ package models
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 
-// GeneratorSettings is the input model for the template generator. It mirrors
-// the C# Olden_Era___Template_Editor.Models.GeneratorSettings type field-for-field.
+// GeneratorSettings is the input model for the template generator
 //
 // All values here describe a single template generation request — the GUI and
 // CLI build one of these and hand it to services.Generate.

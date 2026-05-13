@@ -15,6 +15,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
@@ -157,10 +158,10 @@ func newState() *State {
 		topology:    newComboBox(topologyLabels),
 		victory:     newComboBox(victoryLabels),
 		sf:          models.NewSettingsFile(),
-		zcMines:     newZoneContentSection("Mines", models.ContentItemGroup.Mines, 3, true),
-		zcTreasures: newZoneContentSection("Treasures", models.ContentItemGroup.Treasures, 10, false),
-		zcHires:     newZoneContentSection("Random Hires", models.ContentItemGroup.HireBuildings, 10, false),
-		zcBanks:     newZoneContentSection("Resource Banks", models.ContentItemGroup.ResourceBanks, 10, false),
+		zcMines:     newZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
+		zcTreasures: newZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
+		zcHires:     newZoneContentSection("Random Hires", constants.ContentItemGroup.HireBuildings, 10, false),
+		zcBanks:     newZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
 	}
 	for i := range s.scrolls {
 		s.scrolls[i].Axis = layout.Vertical

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
@@ -722,12 +723,12 @@ func TestBuildAllContentCountLimits_UserContentLiftsLimit(t *testing.T) {
 	s := defaultSettings()
 	// Add 5 pandora boxes — should lift the default limit (4)
 	for i := 0; i < 5; i++ {
-		s.PlayerZoneMandatoryContent = append(s.PlayerZoneMandatoryContent, template.MandatoryContentItem{SID: models.ContentIds.PandoraBox.Sid})
+		s.PlayerZoneMandatoryContent = append(s.PlayerZoneMandatoryContent, template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid})
 	}
 	limits := services.BuildAllContentCountLimits(s)
 	for _, group := range limits {
 		for _, l := range group.Limits {
-			if strings.EqualFold(l.SID, models.ContentIds.PandoraBox.Sid) {
+			if strings.EqualFold(l.SID, constants.ContentIds.PandoraBox.Sid) {
 				if l.MaxCount < 5 {
 					t.Errorf("pandora box limit = %d, want >= 5 after user added 5", l.MaxCount)
 				}

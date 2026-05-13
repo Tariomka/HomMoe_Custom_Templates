@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
@@ -74,7 +75,7 @@ func footholdRules(castleCount int) []template.PlacementRule {
 }
 
 func presetRemoteFoothold(castleCount int) template.MandatoryContentItem {
-	return newContentBuilder(models.ContentIds.RemoteFoothold.Sid).
+	return newContentBuilder(constants.ContentIds.RemoteFoothold.Sid).
 		withName("name_remote_foothold_1").
 		soloEncounter().
 		addRules(footholdRules(castleCount)).
@@ -82,27 +83,27 @@ func presetRemoteFoothold(castleCount int) template.MandatoryContentItem {
 }
 
 func presetMineGoldNearCrossroads() template.MandatoryContentItem {
-	return newContentBuilder(models.ContentIds.MineGold.Sid).mine().
+	return newContentBuilder(constants.ContentIds.MineGold.Sid).mine().
 		addRule(ruleCrossroadsDistance(distNear, 1)).build()
 }
 
 func presetMineCrystalsNextToRoad() template.MandatoryContentItem {
-	return newContentBuilder(models.ContentIds.MineCrystals.Sid).withName("name_mine_crystals").mine().
+	return newContentBuilder(constants.ContentIds.MineCrystals.Sid).withName("name_mine_crystals").mine().
 		roadDistance(distNextTo).build()
 }
 
 func presetMineMercuryNextToRoad() template.MandatoryContentItem {
-	return newContentBuilder(models.ContentIds.MineMercury.Sid).withName("name_mine_mercury").mine().
+	return newContentBuilder(constants.ContentIds.MineMercury.Sid).withName("name_mine_mercury").mine().
 		roadDistance(distNextTo).build()
 }
 
 func presetMineGemstonesNextToRoad() template.MandatoryContentItem {
-	return newContentBuilder(models.ContentIds.MineGemstones.Sid).withName("name_mine_gemstones").mine().
+	return newContentBuilder(constants.ContentIds.MineGemstones.Sid).withName("name_mine_gemstones").mine().
 		roadDistance(distNextTo).build()
 }
 
 func presetAlchemyLabNearRoad() template.MandatoryContentItem {
-	return newContentBuilder(models.ContentIds.AlchemyLab.Sid).withName("name_alchemy_lab").mine().
+	return newContentBuilder(constants.ContentIds.AlchemyLab.Sid).withName("name_alchemy_lab").mine().
 		roadDistance(distNear).build()
 }
 
@@ -121,8 +122,8 @@ func BuildPlayerZoneMandatoryContent(settings *models.GeneratorSettings) []templ
 
 	content = append(content,
 		template.MandatoryContentItem{SID: "watchtower"},
-		newContentBuilder(models.ContentIds.Market.Sid).guarded().roadDistance(distNear).build(),
-		newContentBuilder(models.ContentIds.ManaWell.Sid).roadDistance(distNear).build(),
+		newContentBuilder(constants.ContentIds.Market.Sid).guarded().roadDistance(distNear).build(),
+		newContentBuilder(constants.ContentIds.ManaWell.Sid).roadDistance(distNear).build(),
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_2"}},
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_uncommon_hero_banks"}},
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_low_tier"}, IsGuarded: true},
@@ -139,14 +140,14 @@ func BuildLowNeutralMandatoryContent(castleCount int, spawnFootholds bool) []tem
 	content = append(content,
 		template.MandatoryContentItem{Name: "name_mine_by_biome_1", IncludeLists: []string{"basic_content_list_rare_mines_by_biome"}, IsMine: true},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_rare_mines"}, IsMine: true},
-		newContentBuilder(models.ContentIds.Market.Sid).guarded().addRule(ruleCrossroadsDistance(distNear, 1)).build(),
+		newContentBuilder(constants.ContentIds.Market.Sid).guarded().addRule(ruleCrossroadsDistance(distNear, 1)).build(),
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_vision_buildings_tier_1"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_buff_tier_1"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_buff_tier_1"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_1"}},
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_low_tier"}},
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_low_tier"}},
-		newContentBuilder(models.ContentIds.PandoraBox.Sid).soloEncounter().build(),
+		newContentBuilder(constants.ContentIds.PandoraBox.Sid).soloEncounter().build(),
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_low_tier"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_pickup_random_items"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_magic_tier_1"}},
@@ -165,8 +166,8 @@ func BuildMediumNeutralMandatoryContent(castleCount int, spawnFootholds bool) []
 		presetMineMercuryNextToRoad(),
 		presetMineGemstonesNextToRoad(),
 		presetAlchemyLabNearRoad(),
-		newContentBuilder(models.ContentIds.MineGold.Sid).mine().roadDistance(distNear).build(),
-		newContentBuilder(models.ContentIds.Watchtower.Sid).guarded().build(),
+		newContentBuilder(constants.ContentIds.MineGold.Sid).mine().roadDistance(distNear).build(),
+		newContentBuilder(constants.ContentIds.Watchtower.Sid).guarded().build(),
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_vision_buildings_tier_1"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_buff_tier_1"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_1"}},
@@ -177,10 +178,10 @@ func BuildMediumNeutralMandatoryContent(castleCount int, spawnFootholds bool) []
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_high_tier"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_units_banks_only_biome_restriction"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_resource_banks_tier_2"}},
-		newContentBuilder(models.ContentIds.RandomItemEpic.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: models.ContentIds.RandomItemEpic.Sid},
-		newContentBuilder(models.ContentIds.PandoraBox.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: models.ContentIds.PandoraBox.Sid},
+		newContentBuilder(constants.ContentIds.RandomItemEpic.Sid).soloEncounter().build(),
+		template.MandatoryContentItem{SID: constants.ContentIds.RandomItemEpic.Sid},
+		newContentBuilder(constants.ContentIds.PandoraBox.Sid).soloEncounter().build(),
+		template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid},
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_low_tier"}},
 	)
 	return content
@@ -214,22 +215,22 @@ func BuildHighNeutralMandatoryContent(castleCount int, spawnFootholds bool) []te
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_resource_banks_tier_3"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_pickup_mythic_scroll_box"}},
 		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_pickup_mythic_scroll_box"}},
-		newContentBuilder(models.ContentIds.RandomItemLegendary.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: models.ContentIds.RandomItemLegendary.Sid},
-		template.MandatoryContentItem{SID: models.ContentIds.RandomItemEpic.Sid},
-		newContentBuilder(models.ContentIds.PandoraBox.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: models.ContentIds.PandoraBox.Sid},
-		template.MandatoryContentItem{SID: models.ContentIds.PandoraBox.Sid},
+		newContentBuilder(constants.ContentIds.RandomItemLegendary.Sid).soloEncounter().build(),
+		template.MandatoryContentItem{SID: constants.ContentIds.RandomItemLegendary.Sid},
+		template.MandatoryContentItem{SID: constants.ContentIds.RandomItemEpic.Sid},
+		newContentBuilder(constants.ContentIds.PandoraBox.Sid).soloEncounter().build(),
+		template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid},
+		template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid},
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_high_tier"}},
 		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_high_tier"}},
 		presetMineGoldNearCrossroads(),
-		template.MandatoryContentItem{SID: models.ContentIds.MineGold.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: models.ContentIds.MineGold.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: models.ContentIds.MineCrystals.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: models.ContentIds.MineMercury.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: models.ContentIds.MineGemstones.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: models.ContentIds.AlchemyLab.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: models.ContentIds.AlchemyLab.Sid, IsMine: true},
+		template.MandatoryContentItem{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
+		template.MandatoryContentItem{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
+		template.MandatoryContentItem{SID: constants.ContentIds.MineCrystals.Sid, IsMine: true},
+		template.MandatoryContentItem{SID: constants.ContentIds.MineMercury.Sid, IsMine: true},
+		template.MandatoryContentItem{SID: constants.ContentIds.MineGemstones.Sid, IsMine: true},
+		template.MandatoryContentItem{SID: constants.ContentIds.AlchemyLab.Sid, IsMine: true},
+		template.MandatoryContentItem{SID: constants.ContentIds.AlchemyLab.Sid, IsMine: true},
 	)
 	return content
 }
@@ -240,49 +241,49 @@ func BuildHighNeutralMandatoryContent(castleCount int, spawnFootholds bool) []te
 func BuildAllContentCountLimits(settings *models.GeneratorSettings) []template.ContentCountLimit {
 	sidLimits := []template.ContentLimit{
 		{SID: "black_tower", MaxCount: 0},
-		{SID: models.ContentIds.Fountain.Sid, MaxCount: 2},
-		{SID: models.ContentIds.Fountain2.Sid, MaxCount: 2},
-		{SID: models.ContentIds.ManaWell.Sid, MaxCount: 2},
-		{SID: models.ContentIds.BeerFountain.Sid, MaxCount: 2},
-		{SID: models.ContentIds.Market.Sid, MaxCount: 1},
-		{SID: models.ContentIds.Forge.Sid, MaxCount: 2},
-		{SID: models.ContentIds.Stables.Sid, MaxCount: 1},
-		{SID: models.ContentIds.Watchtower.Sid, MaxCount: 2},
-		{SID: models.ContentIds.WindRose.Sid, MaxCount: 1},
-		{SID: models.ContentIds.QuixsPath.Sid, MaxCount: 2},
-		{SID: models.ContentIds.CrystalTrail.Sid, MaxCount: 3},
-		{SID: models.ContentIds.MysteriousStone.Sid, MaxCount: 2},
-		{SID: models.ContentIds.University.Sid, MaxCount: 2},
-		{SID: models.ContentIds.WiseOwl.Sid, MaxCount: 4},
-		{SID: models.ContentIds.CelestialSphere.Sid, MaxCount: 2},
-		{SID: models.ContentIds.PileOfBooks.Sid, MaxCount: 2},
-		{SID: models.ContentIds.InsarasEye.Sid, MaxCount: 2},
-		{SID: models.ContentIds.TearOfTruth.Sid, MaxCount: 3},
-		{SID: models.ContentIds.TreeOfAbundance.Sid, MaxCount: 2},
-		{SID: models.ContentIds.HuntsmansCamp.Sid, MaxCount: 2},
-		{SID: models.ContentIds.ShadyDen.Sid, MaxCount: 2},
-		{SID: models.ContentIds.RandomHire1.Sid, MaxCount: 6},
-		{SID: models.ContentIds.RandomHire2.Sid, MaxCount: 6},
-		{SID: models.ContentIds.RandomHire3.Sid, MaxCount: 6},
-		{SID: models.ContentIds.RandomHire4.Sid, MaxCount: 6},
-		{SID: models.ContentIds.RandomHire5.Sid, MaxCount: 6},
-		{SID: models.ContentIds.RandomHire6.Sid, MaxCount: 6},
-		{SID: models.ContentIds.RandomHire7.Sid, MaxCount: 6},
-		{SID: models.ContentIds.Arena.Sid, MaxCount: 2},
-		{SID: models.ContentIds.SacrificialShrine.Sid, MaxCount: 2},
-		{SID: models.ContentIds.Chimerologist.Sid, MaxCount: 2},
-		{SID: models.ContentIds.Circus.Sid, MaxCount: 2},
-		{SID: models.ContentIds.InfernalCirque.Sid, MaxCount: 2},
-		{SID: models.ContentIds.FlatteringMirror.Sid, MaxCount: 2},
-		{SID: models.ContentIds.FickleShrine.Sid, MaxCount: 1},
-		{SID: models.ContentIds.PointOfBalance.Sid, MaxCount: 3},
-		{SID: models.ContentIds.PandoraBox.Sid, MaxCount: 4},
-		{SID: models.ContentIds.RitualPyre.Sid, MaxCount: 3},
-		{SID: models.ContentIds.BorealCall.Sid, MaxCount: 3},
-		{SID: models.ContentIds.JoustingRange.Sid, MaxCount: 1},
-		{SID: models.ContentIds.UnforgottenGrave.Sid, MaxCount: 1},
-		{SID: models.ContentIds.PetrifiedMemorial.Sid, MaxCount: 1},
-		{SID: models.ContentIds.TheGorge.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.Fountain.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.Fountain2.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.ManaWell.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.BeerFountain.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.Market.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.Forge.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.Stables.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.Watchtower.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.WindRose.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.QuixsPath.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.CrystalTrail.Sid, MaxCount: 3},
+		{SID: constants.ContentIds.MysteriousStone.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.University.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.WiseOwl.Sid, MaxCount: 4},
+		{SID: constants.ContentIds.CelestialSphere.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.PileOfBooks.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.InsarasEye.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.TearOfTruth.Sid, MaxCount: 3},
+		{SID: constants.ContentIds.TreeOfAbundance.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.HuntsmansCamp.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.ShadyDen.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.RandomHire1.Sid, MaxCount: 6},
+		{SID: constants.ContentIds.RandomHire2.Sid, MaxCount: 6},
+		{SID: constants.ContentIds.RandomHire3.Sid, MaxCount: 6},
+		{SID: constants.ContentIds.RandomHire4.Sid, MaxCount: 6},
+		{SID: constants.ContentIds.RandomHire5.Sid, MaxCount: 6},
+		{SID: constants.ContentIds.RandomHire6.Sid, MaxCount: 6},
+		{SID: constants.ContentIds.RandomHire7.Sid, MaxCount: 6},
+		{SID: constants.ContentIds.Arena.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.SacrificialShrine.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.Chimerologist.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.Circus.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.InfernalCirque.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.FlatteringMirror.Sid, MaxCount: 2},
+		{SID: constants.ContentIds.FickleShrine.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.PointOfBalance.Sid, MaxCount: 3},
+		{SID: constants.ContentIds.PandoraBox.Sid, MaxCount: 4},
+		{SID: constants.ContentIds.RitualPyre.Sid, MaxCount: 3},
+		{SID: constants.ContentIds.BorealCall.Sid, MaxCount: 3},
+		{SID: constants.ContentIds.JoustingRange.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.UnforgottenGrave.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.PetrifiedMemorial.Sid, MaxCount: 1},
+		{SID: constants.ContentIds.TheGorge.Sid, MaxCount: 1},
 	}
 
 	// Lift limits when player mandatory content has more items than the default.
