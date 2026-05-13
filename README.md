@@ -1,208 +1,199 @@
-# Heroes of Might and Magic: Olden Era - Template Generator (Go)
+# Heroes of Might and Magic: Olden Era — Custom Templates
 
-This is a Go implementation of the random map template generator for Heroes of Might and Magic: Olden Era.
+A desktop GUI for designing and generating `.rmg.json` random map templates for
+**Heroes of Might and Magic: Olden Era**. Written in Go using the
+[Gio](https://gioui.org) immediate-mode UI toolkit.
+
+The app lets you configure every knob the game's RMG exposes (players, map
+size, topology, zone counts, victory conditions, neutral zone quality
+distribution, mandatory content, etc.), persist your work as a `.oetgs`
+settings file, and emit a ready-to-drop-in `.rmg.json` template.
 
 ## Project Structure
 
 ```
 .
-├── cmd/                          # CLI entry point
-│   └── main.go                  # Template generator command-line tool
-├── internal/
-│   ├── generator/               # Core generation logic
-│   │   ├── template_generator.go
-│   │   └── template_generator_test.go
-│   ├── models/                  # Data structures
-│   │   ├── template.go          # .rmg.json template models
-│   │   └── settings.go          # Generator settings models
-│   └── services/                # Content and utility services
-│       └── zone_content_manager.go
+├── main.go                         # GUI entry point (boots gioui app)
+├── go.mod                          # Go module + gioui.org dependency
 ├── data/
-│   └── GameData/                # Example templates and generator data
-│       ├── ExampleTemplates/    # Reference .rmg.json files (57 examples)
-│       └── GeneratorData/       # Game configuration and content pools
-├── go.mod                        # Go module definition
-└── README.md                     # This file
+│   ├── ExampleTemplates/           # 57 reference .rmg.json templates
+│   └── GameData/GeneratorData/     # Game configuration & content pools
+│       ├── generator_config.json
+│       ├── generator_environment_assets.json
+│       ├── generator_stats_config.json
+│       ├── content_lists/
+│       ├── content_pools/          # quality tiers t2..t5
+│       ├── encounter_templates/
+│       └── zone_layouts/
+├── internal/
+│   ├── constants/                  # Stable string IDs (content, includes, groups)
+│   ├── gui/                        # Gio UI: window, tabs, widgets, theme, state
+│   ├── helpers/                    # Small shared utilities (e.g. SID lookup)
+│   ├── models/
+│   │   ├── settingsFile.go         # .oetgs persistence model
+│   │   ├── sidMapping.go
+│   │   ├── types.go                # Re-exports of generator/template types
+│   │   ├── zoneContentItem.go
+│   │   ├── generator/              # Inputs to the generator (settings, topology, …)
+│   │   └── template/               # Output schema for .rmg.json files
+│   └── services/
+│       ├── template_generator.go   # Core generation logic (Generate)
+│       └── zone_content_manager.go # Mandatory content per zone tier
+├── test/
+│   ├── models/template/            # RmgTemplateModel round-trip tests
+│   └── services/                   # Generator / topology / zone tests
+└── bin/                            # Pre-built binaries (gitignored target)
 ```
 
 ## Features
 
-- **Template Generation**: Create `.rmg.json` random map template files
-- **Multiple Topologies**: Support for Default (Ring), Chain, HubAndSpoke, SharedWeb, and Random topologies
-- **Zone Management**: Player and neutral zones with quality tiers (Low, Medium, High)
-- **Content Scaling**: Automatic content scaling based on map size and zone count
-- **Game Rules**: Support for various win conditions (Classic Victory, City Hold, Gladiator Arena, Tournaments)
-- **CLI Interface**: Command-line tool for generating templates
-- **Unit Tests**: Comprehensive test coverage
+- **Gio desktop GUI** (`gioui.org v0.9.0`) with four tabs:
+  1. **Map Setup** — template name, game mode, players, map size, topology
+  2. **Generation Options** — roads, portals, footholds, player isolation,
+     advanced neutral-zone count breakdown by quality / castle presence
+  3. **Game Rules** — victory condition, hero counts, faction-laws &
+     astrology XP, gladiator arena, tournament rules, lost-city / city-hold
+  4. **Zone Content (EXP)** — extra mandatory content seeded into player zones
+- **Settings persistence**: load/save `.oetgs` JSON files (`models.SettingsFile`)
+- **Template generation**: emit `.rmg.json` files compatible with the in-game RMG
+- **Five topologies**: Random (default), Ring, Hub-and-Spoke, Chain, Shared Web
+- **Map sizes**: 64–240 tiles, plus an experimental range up to 512
+- **Players**: 2–8
+- **Quality-tiered neutral zones**: Low / Medium / High, with optional
+  fine-grained per-tier counts split by "with castle" / "without castle"
+- **Mandatory-content seeding** through `services.ZoneContentManager`
 
-## Building the Project
+## Building & Running
 
-```bash
-# Build the CLI tool
-go build -o template-generator ./cmd
+Requires **Go 1.25.8** or later (see `go.mod`). On Windows, Gio additionally
+needs a working CGO-free build — no extra toolchain is required.
+
+```powershell
+# Build the GUI
+go build -o bin/template-gui.exe .
+
+# Run directly without producing a binary
+go run .
 
 # Run tests
-go test ./...
-
-# Run with verbose output
-go test -v ./...
+go test ./test/...
 ```
 
-## Usage
+A pre-built `bin/template-gui.exe` is checked in for convenience.
 
-### Command-Line Tool
+## Workflow
 
-```bash
-# Generate a basic 4-player template
-./template-generator -name="My Template" -players=4 -size=L -topology=Default -output=.
+1. Launch the GUI (`go run .` or `bin\template-gui.exe`).
+2. Configure the template across the four tabs.
+3. **Save** / **Save As** writes a `.oetgs` settings file (your inputs).
+4. **Pick output folder**, then **Generate** writes
+   `<TemplateName>.rmg.json` into that folder.
+5. Drop the `.rmg.json` into the game's templates folder and pick it from
+   the in-game RMG screen.
 
-# Generate with custom settings
-./template-generator \
-  -name="Custom Map" \
-  -players=6 \
-  -size=XL \
-  -topology=HubAndSpoke \
-  -mode=Blitz \
-  -roads=true \
-  -portals=true \
-  -footholds=true \
-  -cityhold=false \
-  -output=./templates
-```
+The toolbar also has shortcut buttons to open the bundled example templates
+folder, and to jump out to the project's Discord / GitHub / patch-notes pages.
 
-### Programmatic Usage
+## Topologies
 
-```go
-package main
+| Topology      | Constant                          | Shape                                                        |
+|---------------|-----------------------------------|--------------------------------------------------------------|
+| Random        | `generator.TopologyRandom`        | Default. Random placement / Delaunay-style connections.      |
+| Ring          | `generator.TopologyDefault`       | Players in a circle, each connected to neighbours.           |
+| Hub-and-Spoke | `generator.TopologyHubAndSpoke`   | All players connect through a central hub neutral zone.      |
+| Chain         | `generator.TopologyChain`         | Linear arrangement of zones.                                 |
+| Shared Web    | `generator.TopologySharedWeb`     | Players connected through shared neutral zones.              |
 
-import (
-    "github.com/Tariomka/hommoe_custom_templates/internal/generator"
-    "github.com/Tariomka/hommoe_custom_templates/internal/models"
-)
+## Game Modes & Victory Conditions
 
-settings := &models.GeneratorSettings{
-    TemplateName: "My Template",
-    PlayerCount:  4,
-    MapSize:      "L",
-    Topology:     models.TopologyDefault,
-}
+Game modes (UI exposes both, generator currently always emits `Classic`):
 
-template, err := generator.Generate(settings)
-```
+- `Classic`
+- `SingleHero` (reserved)
 
-## Map Topologies
+Victory condition IDs (`SettingsFile.VictoryCondition`):
 
-- **Default (Ring)**: Players arranged in a circle with neighbors connected
-- **Chain**: Linear arrangement of zones
-- **HubAndSpoke**: All player zones connect through a central hub
-- **SharedWeb**: Players connected through neutral zones in a spoke pattern
-- **Random**: Random zone positions computed with Delaunay triangulation
+| ID                 | UI label             |
+|--------------------|----------------------|
+| `win_condition_1`  | Standard             |
+| `win_condition_3`  | Lost Starting City   |
+| `win_condition_5`  | Hold City            |
+| `win_condition_6`  | Tournament           |
 
-## Supported Map Sizes
-
-- `S` - Small
-- `M` - Medium
-- `L` - Large
-- `XL` - Extra Large
-- `2XL` - Double Extra Large
-
-## Game Modes
-
-- `Classic` - Standard mode
-- `Blitz` - Fast-paced mode
-- `Heroic` - Hard mode
-
-## Win Conditions
-
-- **Classic Victory**: Capture all towns
-- **City Hold**: Hold a specific town for a number of days
-- **Gladiator Arena**: Gladiator arena matches
-- **Tournaments**: Tournament challenges
-
-## Example Templates
-
-57 reference templates are included in `data/GameData/ExampleTemplates/`. These serve as design references and examples for understanding the `.rmg.json` format.
-
-## Generator Data
-
-The generator uses configuration files in `data/GameData/GeneratorData/`:
-
-- `generator_config.json` - Meta objects and item definitions
-- `generator_environment_assets.json` - Biome and environment settings
-- `generator_stats_config.json` - Hero stat modifiers
-- `content_lists/` - Named groupings of items
-- `content_pools/` - Quality tier pools (t2, t3, t4, t5)
-- `encounter_templates/` - Encounter definitions
-- `zone_layouts/` - Zone structure templates
-
-## Testing
-
-Run the full test suite:
-
-```bash
-go test ./...
-```
-
-Run tests for a specific package:
-
-```bash
-go test ./internal/generator
-go test ./internal/services
-```
-
-Run specific tests:
-
-```bash
-go test ./internal/generator -run TestGenerateUsesRequestedSettings
-```
+Independent toggles also exist for `lostStartCity`, `lostStartHero`,
+`cityHold`, `gladiatorArena`, and `tournament`.
 
 ## Architecture
 
-### Core Components
+### Layers
 
-1. **Models** (`internal/models/`)
-   - `RmgTemplate` - Top-level template structure
-   - `Variant` - Map variant with zones and connections
-   - `Zone` - Individual zone with content and guards
-   - `GeneratorSettings` - User configuration
-
-2. **Generator** (`internal/generator/`)
-   - `Generate()` - Main generation entry point
-   - `buildTopologyAdjacency()` - Zone connectivity logic
-   - `buildGameRules()` - Win condition construction
-   - `buildZones()` - Zone creation
-   - `ComputeContentScale()` - Dynamic content scaling
-
+1. **GUI** (`internal/gui/`) — Gio widgets, four-tab layout, file dialogs,
+   binds widget state into `models.SettingsFile`.
+2. **Models** (`internal/models/`)
+   - `SettingsFile` — `.oetgs` persistence schema (the editor's source of truth).
+   - `models/generator/` — `GeneratorSettings`, `MapTopology`,
+     `ZoneConfiguration`, `AdvancedSettings`, `HeroSettings`,
+     `GameEndConditions`, `GladiatorArenaRules`, `TournamentRules`,
+     `NeutralZoneQuality`.
+   - `models/template/` — On-disk `.rmg.json` schema (`RmgTemplateModel`,
+     `Variant`, `Zone`, `GameRules`, `ContentPool`, `MandatoryContent`, …).
+   - `models/types.go` — Re-export aliases used by the GUI.
 3. **Services** (`internal/services/`)
-   - `ZoneContentManager` - Mandatory content by zone type
-   - `ContentItemBuilder` - Fluent builder for content items
+   - `Generate(*GeneratorSettings) (*RmgTemplateModel, error)` — the entry
+     point that turns settings into a template.
+   - `ZoneContentManager` — builds per-tier mandatory content for player
+     zones and Low / Medium / High neutral zones, plus content count limits.
+4. **Constants** (`internal/constants/`) — stable string IDs for content
+   items, include lists and content groups.
 
 ### Generation Flow
 
 ```
-GeneratorSettings
-    ↓
-Generate()
-├─→ buildNeutralZonePlan()      # Plan neutral zones
-├─→ buildTopologyAdjacency()    # Map zone connections
-├─→ buildGameRules()            # Create win conditions
-└─→ buildVariant()              # Create zones and connections
-    ↓
-RmgTemplate (JSON serializable)
+GUI widgets
+   │   (translated by gui.settingsFileToGenerator)
+   ▼
+SettingsFile  ──►  GeneratorSettings
+                        │
+                        ▼
+                services.Generate
+                ├── buildNeutralZonePlan
+                ├── buildTopologyAdjacency
+                ├── buildGameRules
+                ├── buildVariant / buildZones
+                └── ZoneContentManager (mandatory content)
+                        │
+                        ▼
+                RmgTemplateModel  ──►  <Name>.rmg.json
+```
+
+## Testing
+
+```powershell
+# Full suite
+go test ./test/...
+
+# Just the generator / services tests
+go test ./test/services/...
+
+# A single test
+go test ./test/services/ -run TestGenerate_DefaultSettings_Succeeds
 ```
 
 ## Notes
 
-- Zones are lettered A-AF (supporting up to 32 zones)
-- Guard randomization defaults to 0.05
-- Content scaling uses a gentle sqrt curve, clamped to 0.5-2.5x
-- Default connection count per zone is 2
-- Player zones come first (A onwards), neutral zones follow
+- Zones are labelled `A`–`AF` (up to 32 zones).
+- Default guard randomization is `0.05`.
+- Default connections-per-zone is `1`.
+- Player zones are emitted first (`A` onwards), neutral zones follow.
+- The generator and the example templates are kept in sync by the
+  round-trip tests under `test/models/template/`.
 
-## Related Documentation
+## Related
 
-- See `AGENTS.md` for development guidelines
-- See the C# project (Olden Era - Template Editor) for the original implementation
+- The original C# WPF editor that this project was ported from. See
+  `MIGRATION.md` and `CONVERSION_SUMMARY.md` for the migration history.
+- `data/ExampleTemplates/` — 57 reference templates from the game itself,
+  invaluable when reasoning about the on-disk schema.
 
 ## License
 
