@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
 
 // LoadSettingsFile reads a .oetgs file and returns the parsed SettingsFile.
@@ -32,7 +33,7 @@ func SaveSettingsFile(path string, sf *models.SettingsFile) error {
 // settingsFileToGenerator translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
 func settingsFileToGenerator(sf *models.SettingsFile) *models.GeneratorSettings {
-	gs := models.NewGeneratorSettings()
+	gs := generator.NewGeneratorSettings()
 	gs.TemplateName = sf.TemplateName
 	gs.PlayerCount = sf.PlayerCount
 	gs.MapSize = sf.MapSize

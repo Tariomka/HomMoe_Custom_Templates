@@ -10,6 +10,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
 
 // ——————————————————————————————————————————————
@@ -89,7 +90,7 @@ func (s *State) tabGenerationOptions(th *material.Theme) []layout.Widget {
 				return sliderLabeled(gtx, th, &s.sldNeutralZoneSize, fmt.Sprintf("× %.2f", size))
 			}),
 			func(gtx layout.Context) layout.Dimensions {
-				if topologyValues[s.topology.Selected] != models.TopologyHubAndSpoke {
+				if topologyValues[s.topology.Selected] != generator.TopologyHubAndSpoke {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -329,13 +330,13 @@ func section(th *material.Theme, title string, rows []layout.Widget) layout.Widg
 
 func topologyDescription(t models.MapTopology) string {
 	switch t {
-	case models.TopologyDefault:
+	case generator.TopologyDefault:
 		return "Ring: each player borders two neighbors in a closed loop."
-	case models.TopologyHubAndSpoke:
+	case generator.TopologyHubAndSpoke:
 		return "Hub: central neutral hub connects all player zones."
-	case models.TopologyChain:
+	case generator.TopologyChain:
 		return "Chain: linear series, harder for outer players to interact."
-	case models.TopologySharedWeb:
+	case generator.TopologySharedWeb:
 		return "Shared web: heavy interconnection through central neutral mesh."
 	default:
 		return "Random: layout decided by the generator."

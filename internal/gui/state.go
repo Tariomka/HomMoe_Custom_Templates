@@ -17,6 +17,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
@@ -27,11 +28,11 @@ var (
 	expMapSizes    = []int{256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512}
 	topologyLabels = []string{"Random", "Ring", "Hub", "Chain", "Shared Web"}
 	topologyValues = []models.MapTopology{
-		models.TopologyRandom,
-		models.TopologyDefault,
-		models.TopologyHubAndSpoke,
-		models.TopologyChain,
-		models.TopologySharedWeb,
+		generator.TopologyRandom,
+		generator.TopologyDefault,
+		generator.TopologyHubAndSpoke,
+		generator.TopologyChain,
+		generator.TopologySharedWeb,
 	}
 	victoryLabels = []string{"Standard", "Lost Starting City", "Hold City", "Tournament"}
 	victoryIDs    = []string{"win_condition_1", "win_condition_3", "win_condition_5", "win_condition_6"}
