@@ -2,7 +2,7 @@ package models
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 
-// SettingsFile is the serialised .oetgs file produced and consumed by the editor
+// SettingsFile is the serialised .gen.json file produced and consumed by the editor
 type SettingsFile struct {
 	TemplateName                      string                `json:"templateName"`
 	MapSize                           int                   `json:"mapSize"`

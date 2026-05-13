@@ -73,11 +73,11 @@ to the defaults from `services.ZoneContentManager`.
 
 ## 3. Save / Load Settings
 
-Settings are persisted as `.oetgs` JSON files (the
+Settings are persisted as `.gen.json` files (the
 `models.SettingsFile` struct).
 
 - **Save / Save As** — write the current widget state to disk.
-- **Open** — load a `.oetgs` file back into the widgets.
+- **Open** — load a `.gen.json` file back into the widgets.
 - **New** — reset to defaults.
 
 ## 4. Generate a Template

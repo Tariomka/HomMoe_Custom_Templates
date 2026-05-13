@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
 
-// LoadSettingsFile reads a .oetgs file and returns the parsed SettingsFile.
+// LoadSettingsFile reads a .gen.json file and returns the parsed SettingsFile.
 func LoadSettingsFile(path string) (*models.SettingsFile, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {

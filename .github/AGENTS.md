@@ -11,7 +11,7 @@ working on the **HomMoe Custom Templates** repository. Follow them strictly.
   `github.com/Tariomka/hommoe_custom_templates`.
 - **UI:** Gio (`gioui.org v0.9.0`) — immediate-mode desktop GUI.
 - **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
-  and Magic: Olden Era* and persist editor state as `.oetgs` files.
+  and Magic: Olden Era* and persist editor state as `.gen.json` files.
 - **Entry point:** [main.go](main.go) → [internal/gui/gui.go](internal/gui/gui.go).
 - **Core generation:** [internal/services/template_generator.go](internal/services/template_generator.go).
 

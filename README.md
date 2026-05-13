@@ -6,7 +6,7 @@ A desktop GUI for designing and generating `.rmg.json` random map templates for
 
 The app lets you configure every knob the game's RMG exposes (players, map
 size, topology, zone counts, victory conditions, neutral zone quality
-distribution, mandatory content, etc.), persist your work as a `.oetgs`
+distribution, mandatory content, etc.), persist your work as a `.gen.json`
 settings file, and emit a ready-to-drop-in `.rmg.json` template.
 
 ## Project Structure
@@ -30,7 +30,7 @@ settings file, and emit a ready-to-drop-in `.rmg.json` template.
 │   ├── gui/                        # Gio UI: window, tabs, widgets, theme, state
 │   ├── helpers/                    # Small shared utilities (e.g. SID lookup)
 │   ├── models/
-│   │   ├── settingsFile.go         # .oetgs persistence model
+│   │   ├── settingsFile.go         # .gen.json persistence model
 │   │   ├── sidMapping.go
 │   │   ├── types.go                # Re-exports of generator/template types
 │   │   ├── zoneContentItem.go
@@ -54,7 +54,7 @@ settings file, and emit a ready-to-drop-in `.rmg.json` template.
   3. **Game Rules** — victory condition, hero counts, faction-laws &
      astrology XP, gladiator arena, tournament rules, lost-city / city-hold
   4. **Zone Content (EXP)** — extra mandatory content seeded into player zones
-- **Settings persistence**: load/save `.oetgs` JSON files (`models.SettingsFile`)
+- **Settings persistence**: load/save `.gen.json` files (`models.SettingsFile`)
 - **Template generation**: emit `.rmg.json` files compatible with the in-game RMG
 - **Five topologies**: Random (default), Ring, Hub-and-Spoke, Chain, Shared Web
 - **Map sizes**: 64–240 tiles, plus an experimental range up to 512
@@ -85,7 +85,7 @@ A pre-built `bin/template-gui.exe` is checked in for convenience.
 
 1. Launch the GUI (`go run .` or `bin\template-gui.exe`).
 2. Configure the template across the four tabs.
-3. **Save** / **Save As** writes a `.oetgs` settings file (your inputs).
+3. **Save** / **Save As** writes a `.gen.json` settings file (your inputs).
 4. **Pick output folder**, then **Generate** writes
    `<TemplateName>.rmg.json` into that folder.
 5. Drop the `.rmg.json` into the game's templates folder and pick it from
@@ -130,7 +130,7 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
 1. **GUI** (`internal/gui/`) — Gio widgets, four-tab layout, file dialogs,
    binds widget state into `models.SettingsFile`.
 2. **Models** (`internal/models/`)
-   - `SettingsFile` — `.oetgs` persistence schema (the editor's source of truth).
+   - `SettingsFile` — `.gen.json` persistence schema (the editor's source of truth).
    - `models/generator/` — `GeneratorSettings`, `MapTopology`,
      `ZoneConfiguration`, `AdvancedSettings`, `HeroSettings`,
      `GameEndConditions`, `GladiatorArenaRules`, `TournamentRules`,

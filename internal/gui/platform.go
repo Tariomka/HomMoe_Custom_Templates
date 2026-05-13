@@ -37,7 +37,7 @@ func RevealInExplorer(path string) error {
 
 // PickOpenFile shows a native file open dialog and returns the chosen path
 // (empty string if cancelled). filter is a comma-separated "Description|*.ext"
-// pair list, e.g. "Settings (*.oetgs)|*.oetgs|All files|*.*".
+// pair list, e.g. "Settings (*.gen.json)|*.gen.json|All files|*.*".
 func PickOpenFile(title, filter, initialDir string) (string, error) {
 	if runtime.GOOS != "windows" {
 		return "", nil // unsupported on non-Windows builds

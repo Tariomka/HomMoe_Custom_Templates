@@ -487,9 +487,9 @@ func (s *State) fileNew() {
 	s.setStatus("New settings file.", false)
 }
 
-// fileOpen presents a dialog and loads the chosen .oetgs file.
+// fileOpen presents a dialog and loads the chosen .gen.json file.
 func (s *State) fileOpen() {
-	path, err := PickOpenFile("Open settings", "Settings (*.oetgs)|*.oetgs|All files|*.*", s.suggestDir())
+	path, err := PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", s.suggestDir())
 	if err != nil {
 		s.setStatus("Open dialog failed: "+err.Error(), true)
 		return
@@ -525,8 +525,8 @@ func (s *State) fileSave() {
 
 // fileSaveAs prompts for a destination path then writes the settings file.
 func (s *State) fileSaveAs() {
-	defaultName := sanitizeFilename(strings.TrimSpace(s.templateName.Text())) + ".oetgs"
-	path, err := PickSaveFile("Save settings as", "Settings (*.oetgs)|*.oetgs", s.suggestDir(), defaultName)
+	defaultName := sanitizeFilename(strings.TrimSpace(s.templateName.Text())) + ".gen.json"
+	path, err := PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", s.suggestDir(), defaultName)
 	if err != nil {
 		s.setStatus("Save dialog failed: "+err.Error(), true)
 		return
