@@ -100,12 +100,90 @@ The project must build and run on **both Windows and Linux**. Therefore:
 
 ---
 
-## 4. Session Length & Carry-Forward
+## 4. Code Style
+
+These rules are mandatory for any Go file the agent creates or substantially
+edits. Do **not** retroactively rewrite untouched files just to comply, but
+any file you *do* touch must leave the repo in conformance.
+
+### 4.1 File & struct layout
+
+- **One struct per file.** A file defines exactly one primary struct (its
+  methods, constructors, and tightly-bound private helpers may live with it).
+- **File name == struct name in `camelCase`** (lower-camel), with `.go`
+  extension. Example: a struct `ZoneContentManager` lives in
+  `zoneContentManager.go`. Test files mirror this: `zoneContentManager_test.go`.
+- Interfaces, enums, and small value types that are not the primary struct
+  belong in their own appropriately-named file (or in `internal/models/` /
+  `internal/constants/` per §4.4).
+
+### 4.2 Naming
+
+- **No single-letter variables** and **no cryptic abbreviations**. Use
+  descriptive names (`zoneIndex`, `playerCount`, `templatePath`).
+- **Allowed exceptions** — only the well-established Go idioms:
+  - `i`, `j`, `k` for loop indices
+  - `err` for errors
+  - `ok` for the comma-ok idiom
+  - `ctx` for `context.Context`
+  - Standard short receiver names are **not** allowed — see §4.3.
+
+### 4.3 Method receivers
+
+- The receiver for any method attached to a struct **must be named `this`**.
+
+  ```go
+  func (this *ZoneContentManager) Load(path string) error { ... }
+  ```
+
+- Apply this consistently across every method of the struct (Go vet warns on
+  inconsistent receiver names, so do not mix `this` with anything else).
+
+### 4.4 Package layout
+
+Place new code in the package whose responsibility matches its role:
+
+| Kind of code                                              | Location                       |
+| --------------------------------------------------------- | ------------------------------ |
+| UI / rendering (Gio widgets, layouts, theming, input)     | [internal/gui/](internal/gui/) |
+| Data structs / DTOs / factory functions (no behaviour)    | [internal/models/](internal/models/) — **except** the read-only `template/` subtree (see §2.1) |
+| Business logic, orchestrators, services                   | [internal/services/](internal/services/) |
+| Constants, IDs, immutable lookup tables                   | [internal/constants/](internal/constants/) |
+| Misc / cross-cutting utility functions                    | [internal/helpers/](internal/helpers/) |
+
+- If a struct or function has dependencies (helper structs, private types)
+  **that are not used anywhere else**, nest them in a sibling folder next to
+  the dependant file rather than polluting a shared package.
+- Do not introduce new top-level packages without a clear reason.
+
+### 4.5 UI vs. business logic separation
+
+- Code under [internal/gui/](internal/gui/) **must contain only rendering
+  logic** — widget composition, layout, input handling, view state.
+- All business logic (validation, generation, transformation, persistence)
+  lives in [internal/services/](internal/services/) (or `models/`,
+  `helpers/`, `constants/` as appropriate) and is invoked by the GUI layer.
+- If you find yourself writing an `if`/`switch` in a GUI file that decides
+  *what* to do (rather than *how to draw*), extract it into a service.
+
+### 4.6 Tests
+
+- Tests live under [test/](test/) and **mirror the structure of
+  `internal/`**. A file at `internal/services/foo.go` is tested by
+  `test/services/foo_test.go`; `internal/models/bar/baz.go` by
+  `test/models/bar/baz_test.go`.
+- Test files follow the same `camelCase` filename rule, with the `_test.go`
+  suffix.
+- See §2.3 for coverage requirements.
+
+---
+
+## 5. Session Length & Carry-Forward
 
 To keep context windows healthy and answers high-quality, treat each session
 as having a soft budget.
 
-### 4.1 Session budget
+### 5.1 Session budget
 
 - **Recommended length: 10–20 messages per session.**
 - Around message **15**, warn the user that the session is approaching the
@@ -114,7 +192,7 @@ as having a soft budget.
   failing, or summaries become lossy), **stop taking new work** and produce a
   carry-forward document instead.
 
-### 4.2 Carry-forward document
+### 5.2 Carry-forward document
 
 When the limit is reached — or when the user asks to wrap up — write a
 **carry-forward prompt** that the next session can be started with. Save it
@@ -153,7 +231,7 @@ The document **must** include the following sections, in this order:
 The carry-forward document should be **self-contained** — a fresh agent with
 no prior memory must be able to resume work from it alone.
 
-### 4.3 During the session
+### 5.3 During the session
 
 - Keep a running mental (or `manage_todo_list`) checklist of items to fold
   into the carry-forward so the final write-up is fast and lossless.
@@ -162,7 +240,7 @@ no prior memory must be able to resume work from it alone.
 
 ---
 
-## 5. Communication Style
+## 6. Communication Style
 
 - Be brief. 1–3 sentences for simple answers; expand only for genuine
   complexity.
@@ -175,7 +253,7 @@ no prior memory must be able to resume work from it alone.
 
 ---
 
-## 6. Quick Reference
+## 7. Quick Reference
 
 | Task                       | Command (Windows PowerShell / Linux bash)              |
 | -------------------------- | ------------------------------------------------------ |
