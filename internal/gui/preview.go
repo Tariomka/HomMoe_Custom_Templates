@@ -17,11 +17,11 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
-// Preview palette — ported from TemplatePreviewPngWriter colours.
 var (
 	previewBg         = color.NRGBA{R: 0x1C, G: 0x16, B: 0x10, A: 0xFF}
 	previewFrame      = color.NRGBA{R: 0x8F, G: 0x73, B: 0x3F, A: 0xFF}
@@ -103,9 +103,7 @@ func (this *State) layoutPreviewPanel(gtx layout.Context, theme *material.Theme)
 						label.MaxLines = 2
 						return label.Layout(gtx)
 					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return toolbarButton{Text: "🖼  Save PNG", Click: &this.btnSavePreview, Disabled: template == nil}.Layout(gtx, theme)
-					}),
+					layout.Rigid(widgets.NewButtonWidget(theme, "🖼  Save PNG", &this.btnSavePreview, template == nil)),
 				)
 			}),
 		)

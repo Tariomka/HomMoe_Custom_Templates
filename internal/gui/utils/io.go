@@ -1,8 +1,4 @@
-// Package gui — platform helpers for opening URLs, picking files, and
-// revealing folders. On Windows we shell out to PowerShell which uses the
-// native System.Windows.Forms dialogs. On other platforms the helpers fall
-// back to xdg-open / open. No cgo is used.
-package gui
+package utils
 
 import (
 	"os/exec"
@@ -85,20 +81,6 @@ if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output 
 	return runPowerShell(script)
 }
 
-func runPowerShell(script string) (string, error) {
-	command := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script)
-	out, err := command.Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
-}
-
-// escapePS escapes a value for use inside single-quoted PowerShell strings.
-func escapePS(s string) string {
-	return strings.ReplaceAll(s, "'", "''")
-}
-
 // FindOldenEraTemplatesDir tries to locate the official Steam install folder
 // for "Heroes of Might and Magic Olden Era" and returns its map_templates
 // directory, or "" if it cannot be located. Mirrors GetSteamTemplatesDir() in
@@ -110,13 +92,13 @@ func FindOldenEraTemplatesDir() string {
 	script := `
 $paths = @()
 $reg = @(
-  'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 3105440',
+	'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 3105440',
   'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 3105440'
 )
 foreach ($k in $reg) {
-  try {
-    $v = Get-ItemProperty -Path $k -ErrorAction Stop
-    if ($v.InstallLocation) { $paths += (Join-Path $v.InstallLocation 'HeroesOldenEra_Data\StreamingAssets\map_templates') }
+	try {
+		$v = Get-ItemProperty -Path $k -ErrorAction Stop
+		if ($v.InstallLocation) { $paths += (Join-Path $v.InstallLocation 'HeroesOldenEra_Data\StreamingAssets\map_templates') }
   } catch {}
 }
 $paths += @(
@@ -130,4 +112,18 @@ foreach ($p in $paths) { if ($p -and (Test-Path -Path $p -PathType Container)) {
 		return ""
 	}
 	return out
+}
+
+func runPowerShell(script string) (string, error) {
+	command := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script)
+	out, err := command.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// escapePS escapes a value for use inside single-quoted PowerShell strings.
+func escapePS(s string) string {
+	return strings.ReplaceAll(s, "'", "''")
 }

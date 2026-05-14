@@ -1,39 +1,11 @@
 package gui
 
 import (
-	"image"
-
 	"gioui.org/layout"
-	"gioui.org/op"
-	"gioui.org/op/clip"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
-
-// drawEditor renders a text editor with a bordered input background.
-func drawEditor(gtx layout.Context, theme *material.Theme, editor *widget.Editor, hint string) layout.Dimensions {
-	macro := op.Record(gtx.Ops)
-	inset := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}
-	dims := inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		editorWidget := material.Editor(theme, editor, hint)
-		editorWidget.Color = colText
-		editorWidget.HintColor = colTextDim
-		editorWidget.TextSize = unit.Sp(13)
-		return editorWidget.Layout(gtx)
-	})
-	call := macro.Stop()
-	radius := gtx.Dp(2)
-	rect := image.Rectangle{Max: dims.Size}
-	paint.FillShape(gtx.Ops, colInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, colBorder, clip.Stroke{
-		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-		Width: float32(gtx.Dp(1)),
-	}.Op())
-	call.Add(gtx.Ops)
-	return dims
-}
 
 // sliderLabeled draws a slider in a flex row with a fixed-width gold value
 // label on the right.

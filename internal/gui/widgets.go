@@ -21,6 +21,7 @@ func fillBackground(gtx layout.Context, c color.NRGBA) {
 	paint.FillShape(gtx.Ops, c, clip.Rect(rect).Op())
 }
 
+// TODO: Remove
 // borderedPanel wraps content with a rounded border on a panel background.
 func borderedPanel(gtx layout.Context, padding unit.Dp, w layout.Widget) layout.Dimensions {
 	radius := gtx.Dp(4)
@@ -73,7 +74,6 @@ func (this *segmentGroup) Layout(gtx layout.Context, theme *material.Theme) layo
 	this.Update(gtx)
 	children := make([]layout.FlexChild, 0, len(this.buttons))
 	for i := range this.buttons {
-		i := i
 		button := &this.buttons[i]
 		selected := i == this.Selected
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -151,44 +151,6 @@ func (this goldButton) Layout(gtx layout.Context, theme *material.Theme) layout.
 		}
 		paint.FillShape(gtx.Ops, bgColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 		paint.FillShape(gtx.Ops, border, clip.Stroke{
-			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-			Width: float32(gtx.Dp(1)),
-		}.Op())
-		call.Add(gtx.Ops)
-		return dims
-	})
-}
-
-// toolbarButton renders a small dark toolbar-style button.
-type toolbarButton struct {
-	Text     string
-	Click    *widget.Clickable
-	Disabled bool
-}
-
-func (this toolbarButton) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	if this.Disabled {
-		gtx = gtx.Disabled()
-	}
-	return material.Clickable(gtx, this.Click, func(gtx layout.Context) layout.Dimensions {
-		macro := op.Record(gtx.Ops)
-		dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, this.Text)
-				label.Color = colText
-				label.TextSize = unit.Sp(12)
-				if this.Disabled {
-					label.Color = colTextDim
-				}
-				return label.Layout(gtx)
-			})
-		})
-		call := macro.Stop()
-		radius := gtx.Dp(3)
-		rect := image.Rectangle{Max: dims.Size}
-		paint.FillShape(gtx.Ops, color.NRGBA{R: 0x2A, G: 0x2A, B: 0x2A, A: 0xFF},
-			clip.UniformRRect(rect, radius).Op(gtx.Ops))
-		paint.FillShape(gtx.Ops, colBorder, clip.Stroke{
 			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 			Width: float32(gtx.Dp(1)),
 		}.Op())

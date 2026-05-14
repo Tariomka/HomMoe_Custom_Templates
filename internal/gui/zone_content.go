@@ -108,7 +108,7 @@ func (this *zoneContentSection) Layout(theme *material.Theme) layout.Widget {
 		}
 		this.rows = keep
 
-		return section(theme, this.Title, []layout.Widget{
+		return NewSectionWidget(theme, this.Title, []layout.Widget{
 			func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -122,9 +122,7 @@ func (this *zoneContentSection) Layout(theme *material.Theme) layout.Widget {
 						return this.addPreset.Layout(gtx, theme)
 					}),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return toolbarButton{Text: "+ Add", Click: &this.addBtn}.Layout(gtx, theme)
-					}),
+					layout.Rigid(widgets.NewButtonWidget(theme, "+ Add", &this.addBtn, false)),
 				)
 			},
 			func(gtx layout.Context) layout.Dimensions {
@@ -169,13 +167,9 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 							label.TextSize = unit.Sp(13)
 							return label.Layout(gtx)
 						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return toolbarButton{Text: "Duplicate", Click: &row.dupBtn}.Layout(gtx, theme)
-						}),
+						layout.Rigid(widgets.NewButtonWidget(theme, "Duplicate", &row.dupBtn, false)),
 						layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return toolbarButton{Text: "Remove", Click: &row.removeBtn}.Layout(gtx, theme)
-						}),
+						layout.Rigid(widgets.NewButtonWidget(theme, "Remove", &row.removeBtn, false)),
 					)
 				}),
 				layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
@@ -247,14 +241,8 @@ func (this *State) applyZoneContentItems(items []models.ZoneContentItem) {
 		if found, ok := helpers.LookupSid(item.Sid); ok {
 			mapping = found
 		}
-		count := item.Count
-		if count < 1 {
-			count = 1
-		}
-		roadIdx := indexOf(roadDistances, item.RoadDistance)
-		if roadIdx < 0 {
-			roadIdx = 0
-		}
+		count := max(item.Count, 1)
+		roadIdx := max(indexOf(roadDistances, item.RoadDistance), 0)
 		switch {
 		case sectionContains(constants.ContentItemGroup.Mines, item.Sid):
 			this.zcMines.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)

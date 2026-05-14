@@ -15,6 +15,8 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
@@ -56,14 +58,11 @@ type State struct {
 	scrolls [4]widget.List
 
 	// Toolbar buttons.
-	btnNew        widget.Clickable
-	btnOpen       widget.Clickable
-	btnSave       widget.Clickable
-	btnSaveAs     widget.Clickable
-	btnTemplates  widget.Clickable
-	btnDiscord    widget.Clickable
-	btnGitHub     widget.Clickable
-	btnPatchNotes widget.Clickable
+	btnNew       widget.Clickable
+	btnOpen      widget.Clickable
+	btnSave      widget.Clickable
+	btnSaveAs    widget.Clickable
+	btnTemplates widget.Clickable
 
 	// Footer buttons.
 	btnGenerate     widget.Clickable
@@ -431,15 +430,6 @@ func (this *State) setStatus(msg string, isErr bool) {
 	this.statusErr = isErr
 }
 
-// handleToolbar processes File toolbar clicks.
-func (this *State) handleToolbar() {
-	if this.btnNew.Clicked(layoutCtxNop()) {
-		// no-op handled in Layout via direct check; this guard allows reuse
-	}
-}
-
-func layoutCtxNop() layout.Context { return layout.Context{} }
-
 // fileNew clears the in-memory model.
 func (this *State) fileNew() {
 	this.settingsFile = models.NewSettingsFile()
@@ -452,7 +442,7 @@ func (this *State) fileNew() {
 
 // fileOpen presents a dialog and loads the chosen .gen.json file.
 func (this *State) fileOpen() {
-	path, err := PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.suggestDir())
+	path, err := utils.PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.suggestDir())
 	if err != nil {
 		this.setStatus("Open dialog failed: "+err.Error(), true)
 		return
@@ -489,7 +479,7 @@ func (this *State) fileSave() {
 // fileSaveAs prompts for a destination path then writes the settings file.
 func (this *State) fileSaveAs() {
 	defaultName := services.SanitizeFilename(strings.TrimSpace(this.templateName.Text())) + ".gen.json"
-	path, err := PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.suggestDir(), defaultName)
+	path, err := utils.PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.suggestDir(), defaultName)
 	if err != nil {
 		this.setStatus("Save dialog failed: "+err.Error(), true)
 		return
@@ -519,12 +509,12 @@ func (this *State) suggestDir() string {
 
 // openTemplatesFolder opens the official Steam templates directory in Explorer.
 func (this *State) openTemplatesFolder() {
-	dir := FindOldenEraTemplatesDir()
+	dir := utils.FindOldenEraTemplatesDir()
 	if dir == "" {
 		this.setStatus("Heroes Olden Era templates folder not found.", true)
 		return
 	}
-	if err := RevealInExplorer(dir); err != nil {
+	if err := utils.RevealInExplorer(dir); err != nil {
 		this.setStatus("Open folder failed: "+err.Error(), true)
 		return
 	}
@@ -534,7 +524,7 @@ func (this *State) openTemplatesFolder() {
 // pickOutputDir presents a folder picker for the template output directory.
 func (this *State) pickOutputDir() {
 	cur := strings.TrimSpace(this.outputPath.Text())
-	dir, err := PickFolder("Select output directory", cur)
+	dir, err := utils.PickFolder("Select output directory", cur)
 	if err != nil {
 		this.setStatus("Folder dialog failed: "+err.Error(), true)
 		return
@@ -570,20 +560,11 @@ func (this *State) Layout(gtx layout.Context, theme *material.Theme) layout.Dime
 	if this.btnTemplates.Clicked(gtx) {
 		this.openTemplatesFolder()
 	}
-	if this.btnDiscord.Clicked(gtx) {
-		_ = OpenURL("https://discord.gg/UqT8KshsxW")
-	}
-	if this.btnGitHub.Clicked(gtx) {
-		_ = OpenURL("https://github.com/KhanDevelopsGames/Olden-Era---Template-Generator")
-	}
-	if this.btnPatchNotes.Clicked(gtx) {
-		_ = OpenURL("https://github.com/KhanDevelopsGames/Olden-Era---Template-Generator/releases")
-	}
 	if this.btnPickOutput.Clicked(gtx) {
 		this.pickOutputDir()
 	}
 	if this.btnRevealOutput.Clicked(gtx) {
-		_ = RevealInExplorer(strings.TrimSpace(this.outputPath.Text()))
+		_ = utils.RevealInExplorer(strings.TrimSpace(this.outputPath.Text()))
 	}
 	if this.btnZoneReset.Clicked(gtx) {
 		this.seedDefaultPlayerZoneContent()
@@ -599,13 +580,11 @@ func (this *State) Layout(gtx layout.Context, theme *material.Theme) layout.Dime
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.tabs.Layout(gtx, theme) }),
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return borderedPanel(gtx, unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
-							return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-								return this.layoutActiveTab(gtx, theme)
-							})
+					layout.Flexed(1, widgets.NewPanelWidget(unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
+						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							return this.layoutActiveTab(gtx, theme)
 						})
-					}),
+					})),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
@@ -628,43 +607,21 @@ func (this *State) layoutTitleBar(gtx layout.Context, theme *material.Theme) lay
 			label.Font = font.Font{Weight: font.SemiBold}
 			return label.Layout(gtx)
 		}),
-		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions { return layout.Dimensions{Size: gtx.Constraints.Min} }),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "Discord", Click: &this.btnDiscord}.Layout(gtx, theme)
-		}),
-		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "GitHub", Click: &this.btnGitHub}.Layout(gtx, theme)
-		}),
-		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "Patch notes", Click: &this.btnPatchNotes}.Layout(gtx, theme)
-		}),
 	)
 }
 
 func (this *State) layoutToolbar(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	row := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}
 	return row.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "📄 New", Click: &this.btnNew}.Layout(gtx, theme)
-		}),
+		layout.Rigid(widgets.NewButtonWidget(theme, "📄 New", &this.btnNew, false)),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "📂 Open…", Click: &this.btnOpen}.Layout(gtx, theme)
-		}),
+		layout.Rigid(widgets.NewButtonWidget(theme, "📂 Open…", &this.btnOpen, false)),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "💾 Save", Click: &this.btnSave}.Layout(gtx, theme)
-		}),
+		layout.Rigid(widgets.NewButtonWidget(theme, "💾 Save", &this.btnSave, false)),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "💾 Save As…", Click: &this.btnSaveAs}.Layout(gtx, theme)
-		}),
+		layout.Rigid(widgets.NewButtonWidget(theme, "💾 Save As…", &this.btnSaveAs, false)),
 		layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return toolbarButton{Text: "🗀 Open templates folder", Click: &this.btnTemplates}.Layout(gtx, theme)
-		}),
+		layout.Rigid(widgets.NewButtonWidget(theme, "🗀 Open templates folder", &this.btnTemplates, false)),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Left: unit.Dp(12)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				path := this.currentPath
@@ -722,17 +679,11 @@ func (this *State) layoutFooter(gtx layout.Context, theme *material.Theme) layou
 						label.TextSize = unit.Sp(13)
 						return label.Layout(gtx)
 					}),
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return drawEditor(gtx, theme, &this.outputPath, "Choose folder")
-					}),
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.outputPath, "Choose folder")),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return toolbarButton{Text: "Browse…", Click: &this.btnPickOutput}.Layout(gtx, theme)
-					}),
+					layout.Rigid(widgets.NewButtonWidget(theme, "Browse…", &this.btnPickOutput, false)),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return toolbarButton{Text: "Reveal", Click: &this.btnRevealOutput}.Layout(gtx, theme)
-					}),
+					layout.Rigid(widgets.NewButtonWidget(theme, "Reveal", &this.btnRevealOutput, false)),
 				)
 			}),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
