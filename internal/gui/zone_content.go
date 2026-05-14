@@ -157,7 +157,7 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 		row.Count = liveCount
 		row.RoadDistIdx = row.roadCombo.Selected
 
-		return borderedPanel(gtx, unit.Dp(6), func(gtx layout.Context) layout.Dimensions {
+		return widgets.NewPanelWidget(unit.Dp(6), func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -178,13 +178,13 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				})),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(checkRow(theme, &row.IsGuarded, "Guarded")),
+						layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &row.IsGuarded, "Guarded")),
 						layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							if !this.ShowNear {
 								return layout.Dimensions{}
 							}
-							return checkRow(theme, &row.NearCastle, "Near castle")(gtx)
+							return widgets.NewLabeledCheckboxRowWidget(theme, &row.NearCastle, "Near castle")(gtx)
 						}),
 					)
 				}),
@@ -192,7 +192,7 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					return row.roadCombo.Layout(gtx, theme)
 				})),
 			)
-		})
+		})(gtx)
 	}
 }
 

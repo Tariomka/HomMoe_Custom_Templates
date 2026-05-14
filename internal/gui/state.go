@@ -2,12 +2,10 @@ package gui
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -22,7 +20,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
-// Domain knowledge ported from KnownValues.cs and TopologyOptions in MainWindow.xaml.cs.
 var (
 	gameModes      = []string{"Classic", "SingleHero"}
 	mapSizes       = []int{64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 240}
@@ -308,80 +305,6 @@ func (this *State) captureToSettingsFile() *models.SettingsFile {
 	return settingsFile
 }
 
-// roundedRange snaps a [0,1] slider value to the nearest integer in [low, high].
-func roundedRange(value float32, low, high int) int {
-	return min(max(int(roundHalfAway(float64(mapRange(value, float32(low), float32(high))))), low), high)
-}
-
-// mapSizeToSlider returns the [0,1] slider position for a map size value.
-func mapSizeToSlider(size int, includeExp bool) float32 {
-	all := mapSizes
-	if includeExp {
-		all = append(append([]int{}, mapSizes...), expMapSizes...)
-	}
-	for i, value := range all {
-		if value == size {
-			if len(all) <= 1 {
-				return 0
-			}
-			return float32(i) / float32(len(all)-1)
-		}
-	}
-	// Closest match.
-	closest := 0
-	best := 1 << 31
-	for i, value := range all {
-		diff := value - size
-		if diff < 0 {
-			diff = -diff
-		}
-		if diff < best {
-			best = diff
-			closest = i
-		}
-	}
-	if len(all) <= 1 {
-		return 0
-	}
-	return float32(closest) / float32(len(all)-1)
-}
-
-func sliderToMapSize(value float32, includeExp bool) int {
-	all := mapSizes
-	if includeExp {
-		all = append(append([]int{}, mapSizes...), expMapSizes...)
-	}
-	if len(all) == 1 {
-		return all[0]
-	}
-	idx := int(math.Round(float64(value) * float64(len(all)-1)))
-	if idx < 0 {
-		idx = 0
-	}
-	if idx >= len(all) {
-		idx = len(all) - 1
-	}
-	return all[idx]
-}
-
-func topologyLabelFor(topology models.MapTopology) string {
-	for i, value := range topologyValues {
-		if value == topology {
-			return topologyLabels[i]
-		}
-	}
-	return topologyLabels[0]
-}
-
-func victoryIndex(id string) int {
-	for i, value := range victoryIDs {
-		if value == id {
-			return i
-		}
-	}
-	return 0
-}
-
 // generate runs the template generator and stores the result.
 func (this *State) generate() {
 	captured := this.captureToSettingsFile()
@@ -573,7 +496,7 @@ func (this *State) Layout(gtx layout.Context, theme *material.Theme) layout.Dime
 	fillBackground(gtx, colBackground)
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutTitleBar(gtx, theme) }),
+			layout.Rigid(widgets.NewTitleBarWidget(theme, "⚔  Olden Era — Template Generator")),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutToolbar(gtx, theme) }),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
@@ -594,20 +517,9 @@ func (this *State) Layout(gtx layout.Context, theme *material.Theme) layout.Dime
 				)
 			}),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutFooter(gtx, theme) }),
+			layout.Rigid(this.layoutFooterWidget(theme)),
 		)
 	})
-}
-
-func (this *State) layoutTitleBar(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			label := material.H6(theme, "⚔  Olden Era — Template Generator")
-			label.Color = colGold
-			label.Font = font.Font{Weight: font.SemiBold}
-			return label.Layout(gtx)
-		}),
-	)
 }
 
 func (this *State) layoutToolbar(gtx layout.Context, theme *material.Theme) layout.Dimensions {
@@ -667,8 +579,8 @@ func (this *State) layoutActiveTab(gtx layout.Context, theme *material.Theme) la
 
 // — Footer (Generate + Save Template + Output) —
 
-func (this *State) layoutFooter(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	return borderedPanel(gtx, unit.Dp(10), func(gtx layout.Context) layout.Dimensions {
+func (this *State) layoutFooterWidget(theme *material.Theme) layout.Widget {
+	return widgets.NewPanelWidget(unit.Dp(10), func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,

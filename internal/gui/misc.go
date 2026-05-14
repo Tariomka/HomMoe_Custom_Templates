@@ -84,16 +84,3 @@ func itoa(number int) string {
 	}
 	return string(buf[i:])
 }
-
-// checkRow renders one CheckBox + label as a clickable row.
-func checkRow(theme *material.Theme, boolValue *widget.Bool, label string) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Inset{Top: unit.Dp(3), Bottom: unit.Dp(3)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			checkbox := material.CheckBox(theme, boolValue, label)
-			checkbox.Color = colText
-			checkbox.IconColor = colGold
-			checkbox.TextSize = unit.Sp(13)
-			return checkbox.Layout(gtx)
-		})
-	}
-}

@@ -21,27 +21,10 @@ func fillBackground(gtx layout.Context, c color.NRGBA) {
 	paint.FillShape(gtx.Ops, c, clip.Rect(rect).Op())
 }
 
-// TODO: Remove
-// borderedPanel wraps content with a rounded border on a panel background.
-func borderedPanel(gtx layout.Context, padding unit.Dp, w layout.Widget) layout.Dimensions {
-	radius := gtx.Dp(4)
-	macro := op.Record(gtx.Ops)
-	dims := layout.UniformInset(padding).Layout(gtx, w)
-	call := macro.Stop()
-	rect := image.Rectangle{Max: dims.Size}
-	paint.FillShape(gtx.Ops, colPanel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, colBorder, clip.Stroke{
-		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-		Width: float32(gtx.Dp(1)),
-	}.Op())
-	call.Add(gtx.Ops)
-	return dims
-}
-
 // segmentButton represents a single selectable option in a row of segments.
 type segmentButton struct {
-	Label string
-	click widget.Clickable
+	Label  string
+	button widget.Clickable
 }
 
 // segmentGroup is a horizontal row of mutually-exclusive segment buttons.
@@ -62,7 +45,7 @@ func newSegmentGroup(labels []string) *segmentGroup {
 func (this *segmentGroup) Update(gtx layout.Context) bool {
 	changed := false
 	for i := range this.buttons {
-		if this.buttons[i].click.Clicked(gtx) && this.Selected != i {
+		if this.buttons[i].button.Clicked(gtx) && this.Selected != i {
 			this.Selected = i
 			changed = true
 		}
@@ -77,7 +60,7 @@ func (this *segmentGroup) Layout(gtx layout.Context, theme *material.Theme) layo
 		button := &this.buttons[i]
 		selected := i == this.Selected
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return material.Clickable(gtx, &button.click, func(gtx layout.Context) layout.Dimensions {
+			return material.Clickable(gtx, &button.button, func(gtx layout.Context) layout.Dimensions {
 				return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return drawSegment(gtx, theme, button.Label, selected)
 				})

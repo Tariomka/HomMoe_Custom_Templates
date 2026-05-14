@@ -36,7 +36,7 @@ func (this *State) tabMapSetup(theme *material.Theme) []layout.Widget {
 				label := fmt.Sprintf("%d × %d  (%s)", size, size, mapSizeLabelInt(size))
 				return sliderLabeled(gtx, theme, &this.mapSizeSld, label)
 			}),
-			checkRow(theme, &this.chkExpSizes, "Allow experimental large map sizes (>240)"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkExpSizes, "Allow experimental large map sizes (>240)"),
 		}),
 		NewSectionWidget(theme, "Topology", []layout.Widget{
 			widgets.NewLabeledRowWidget(theme, "Topology", 160, func(gtx layout.Context) layout.Dimensions {
@@ -59,8 +59,8 @@ func (this *State) tabMapSetup(theme *material.Theme) []layout.Widget {
 func (this *State) tabGenerationOptions(theme *material.Theme) []layout.Widget {
 	widgetLayout := []layout.Widget{
 		NewSectionWidget(theme, "Connectivity", []layout.Widget{
-			checkRow(theme, &this.chkRoads, "Generate roads between zones"),
-			checkRow(theme, &this.chkPortals, "Random portals (instead of fixed connections)"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkRoads, "Generate roads between zones"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPortals, "Random portals (instead of fixed connections)"),
 			func(gtx layout.Context) layout.Dimensions {
 				if !this.chkPortals.Value {
 					return layout.Dimensions{}
@@ -70,10 +70,10 @@ func (this *State) tabGenerationOptions(theme *material.Theme) []layout.Widget {
 					return sliderLabeled(gtx, theme, &this.sldMaxPortals, fmt.Sprintf("%d", number))
 				})(gtx)
 			},
-			checkRow(theme, &this.chkFootholds, "Spawn remote footholds"),
-			checkRow(theme, &this.chkBalancedZones, "Experimental balanced zone placement"),
-			checkRow(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
-			checkRow(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkBalancedZones, "Experimental balanced zone placement"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
 			widgets.NewLabeledRowWidget(theme, "Min neutrals between players", 200, func(gtx layout.Context) layout.Dimensions {
 				number := roundedRange(this.sldMinNeutralBetween.Value, 0, 8)
 				return sliderLabeled(gtx, theme, &this.sldMinNeutralBetween, fmt.Sprintf("%d", number))
@@ -126,7 +126,7 @@ func (this *State) tabGenerationOptions(theme *material.Theme) []layout.Widget {
 				return sliderLabeled(gtx, theme, &this.sldGuardRandom, fmt.Sprintf("± %.2f", value))
 			}),
 		}),
-		checkRow(theme, &this.chkAdvancedZones, "Advanced zone control (split low / medium / high tiers)"),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAdvancedZones, "Advanced zone control (split low / medium / high tiers)"),
 	}
 
 	if this.chkAdvancedZones.Value {
@@ -187,7 +187,7 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 			}),
 		}),
 		NewSectionWidget(theme, "Loss Conditions", []layout.Widget{
-			checkRow(theme, &this.chkLostStartCity, "Lose if start city is captured"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkLostStartCity, "Lose if start city is captured"),
 			func(gtx layout.Context) layout.Dimensions {
 				if !this.chkLostStartCity.Value {
 					return layout.Dimensions{}
@@ -197,10 +197,10 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 					return sliderLabeled(gtx, theme, &this.sldLostCityDay, fmt.Sprintf("%d", number))
 				})(gtx)
 			},
-			checkRow(theme, &this.chkLostStartHero, "Lose if start hero is killed"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkLostStartHero, "Lose if start hero is killed"),
 		}),
 		NewSectionWidget(theme, "City Hold", []layout.Widget{
-			checkRow(theme, &this.chkCityHold, "Win if you hold a target city"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkCityHold, "Win if you hold a target city"),
 			func(gtx layout.Context) layout.Dimensions {
 				if !this.chkCityHold.Value && this.victory.Selected != 2 {
 					return layout.Dimensions{}
@@ -212,7 +212,7 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 			},
 		}),
 		NewSectionWidget(theme, "Gladiator Arena", []layout.Widget{
-			checkRow(theme, &this.chkGladiatorArena, "Enable gladiator arena"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkGladiatorArena, "Enable gladiator arena"),
 			func(gtx layout.Context) layout.Dimensions {
 				if !this.chkGladiatorArena.Value {
 					return layout.Dimensions{}
@@ -230,7 +230,7 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 			},
 		}),
 		NewSectionWidget(theme, "Tournament", []layout.Widget{
-			checkRow(theme, &this.chkTournament, "Enable tournament"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkTournament, "Enable tournament"),
 			func(gtx layout.Context) layout.Dimensions {
 				if !this.chkTournament.Value && this.victory.Selected != 3 {
 					return layout.Dimensions{}
@@ -248,7 +248,7 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 						number := roundedRange(this.sldTournamentPoints.Value, 1, 10)
 						return sliderLabeled(gtx, theme, &this.sldTournamentPoints, fmt.Sprintf("%d", number))
 					})),
-					layout.Rigid(checkRow(theme, &this.chkTournamentSaveArmy, "Save army between rounds")),
+					layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.chkTournamentSaveArmy, "Save army between rounds")),
 				)
 			},
 		}),
