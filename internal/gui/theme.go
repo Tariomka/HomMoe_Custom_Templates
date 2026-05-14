@@ -25,8 +25,8 @@ var (
 	colGenerate   = color.NRGBA{R: 0x7A, G: 0x5A, B: 0x18, A: 0xFF}
 )
 
-// newTheme builds a material.Theme tuned to the medieval palette.
-func newTheme() *material.Theme {
+// NewTheme builds a material.Theme tuned to the medieval palette.
+func NewTheme() *material.Theme {
 	theme := material.NewTheme()
 	theme.Shaper = text.NewShaper(text.WithCollection(gofont.Collection()))
 	theme.Palette = material.Palette{

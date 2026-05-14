@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -178,7 +179,7 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					)
 				}),
 				layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
-				layout.Rigid(labeledRowW(theme, "Count", 100, func(gtx layout.Context) layout.Dimensions {
+				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count", 100, func(gtx layout.Context) layout.Dimensions {
 					return sliderLabeled(gtx, theme, &row.countSld, fmt.Sprintf("%d", liveCount))
 				})),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -193,7 +194,7 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 						}),
 					)
 				}),
-				layout.Rigid(labeledRowW(theme, "Road distance", 100, func(gtx layout.Context) layout.Dimensions {
+				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Road distance", 100, func(gtx layout.Context) layout.Dimensions {
 					return row.roadCombo.Layout(gtx, theme)
 				})),
 			)

@@ -37,58 +37,6 @@ func borderedPanel(gtx layout.Context, padding unit.Dp, w layout.Widget) layout.
 	return dims
 }
 
-// warnBanner draws a yellow warning banner with the given text.
-func warnBanner(gtx layout.Context, theme *material.Theme, txt string) layout.Dimensions {
-	macro := op.Record(gtx.Ops)
-	dims := layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		label := material.Body2(theme, txt)
-		label.Color = colWarnText
-		label.TextSize = unit.Sp(11)
-		return label.Layout(gtx)
-	})
-	call := macro.Stop()
-	radius := gtx.Dp(3)
-	rect := image.Rectangle{Max: dims.Size}
-	paint.FillShape(gtx.Ops, colWarnBg, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, color.NRGBA{R: 0x6A, G: 0x50, B: 0x20, A: 0xFF}, clip.Stroke{
-		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-		Width: float32(gtx.Dp(1)),
-	}.Op())
-	call.Add(gtx.Ops)
-	return dims
-}
-
-// sectionHeader draws an accented gold section title (with diamond bullet).
-func sectionHeader(gtx layout.Context, theme *material.Theme, txt string) layout.Dimensions {
-	label := material.Body1(theme, "◆  "+txt)
-	label.Color = colGold
-	label.Font = font.Font{Weight: font.SemiBold}
-	label.TextSize = unit.Sp(13)
-	return label.Layout(gtx)
-}
-
-// dimLabel renders a small dimmed description line.
-func dimLabel(gtx layout.Context, theme *material.Theme, txt string) layout.Dimensions {
-	label := material.Body2(theme, txt)
-	label.Color = colTextDim
-	label.TextSize = unit.Sp(12)
-	return label.Layout(gtx)
-}
-
-// labeledRow lays out a label on the left and the supplied widget on the right.
-func labeledRow(gtx layout.Context, theme *material.Theme, label string, labelW unit.Dp, control layout.Widget) layout.Dimensions {
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min.X = gtx.Dp(labelW)
-			label := material.Body1(theme, label)
-			label.Color = colText
-			label.TextSize = unit.Sp(13)
-			return label.Layout(gtx)
-		}),
-		layout.Flexed(1, control),
-	)
-}
-
 // segmentButton represents a single selectable option in a row of segments.
 type segmentButton struct {
 	Label string
