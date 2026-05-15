@@ -23,6 +23,10 @@ func eventLoop() {
 		app.Title("Olden Era — Template Generator"),
 		app.Size(unit.Dp(1180), unit.Dp(820)),
 		app.MinSize(unit.Dp(900), unit.Dp(600)))
+	if os.Getenv("HOT_RELOAD") == "1" {
+		window.Option(app.Minimized.Option())
+	}
+
 	theme := themes.NewTheme()
 	state := gui.NewState()
 
