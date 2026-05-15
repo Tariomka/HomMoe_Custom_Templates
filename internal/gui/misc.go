@@ -7,9 +7,9 @@ import (
 	"gioui.org/widget/material"
 )
 
-// sliderLabeled draws a slider in a flex row with a fixed-width gold value
+// labeledSlider draws a slider in a flex row with a fixed-width gold value
 // label on the right.
-func sliderLabeled(gtx layout.Context, theme *material.Theme, floatValue *widget.Float, value string) layout.Dimensions {
+func labeledSlider(gtx layout.Context, theme *material.Theme, floatValue *widget.Float, value string) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			slider := material.Slider(theme, floatValue)

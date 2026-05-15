@@ -174,7 +174,7 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				}),
 				layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
 				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count", 100, func(gtx layout.Context) layout.Dimensions {
-					return sliderLabeled(gtx, theme, &row.countSld, fmt.Sprintf("%d", liveCount))
+					return labeledSlider(gtx, theme, &row.countSld, fmt.Sprintf("%d", liveCount))
 				})),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,

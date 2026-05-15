@@ -1,4 +1,4 @@
-package generator
+package constants
 
 // NeutralZoneQuality is the tier of a neutral zone.
 type NeutralZoneQuality int

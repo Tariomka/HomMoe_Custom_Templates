@@ -109,10 +109,7 @@ func sliderToMapSize(value float32, includeExp bool) int {
 	if len(all) == 1 {
 		return all[0]
 	}
-	idx := int(math.Round(float64(value) * float64(len(all)-1)))
-	if idx < 0 {
-		idx = 0
-	}
+	idx := max(int(math.Round(float64(value)*float64(len(all)-1))), 0)
 	if idx >= len(all) {
 		idx = len(all) - 1
 	}
