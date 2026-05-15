@@ -147,7 +147,7 @@ type State struct {
 	settingsFile *models.SettingsFile
 }
 
-func newState() *State {
+func NewState() *State {
 	state := &State{
 		tabs:         newTabs(mainTabLabels),
 		gameMode:     newSegmentGroup(gameModes),
