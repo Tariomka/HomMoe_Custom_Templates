@@ -15,14 +15,15 @@
 # Dependency directories
 vendor/
 
+# Temporary directories
+tmp/
+
 # Go workspace file
 go.work
 
 # Build artifacts
-template-generator
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
