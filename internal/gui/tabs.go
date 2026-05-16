@@ -3,13 +3,12 @@ package gui
 import (
 	"fmt"
 
-	"gioui.org/font"
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
@@ -27,14 +26,11 @@ func (this *State) tabMapSetup(theme *material.Theme) []layout.Widget {
 			}),
 		}),
 		NewSectionWidget(theme, "Map", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Players", 160, func(gtx layout.Context) layout.Dimensions {
-				players := roundedRange(this.playerCnt.Value, 2, 8)
-				return labeledSlider(gtx, theme, &this.playerCnt, fmt.Sprintf("%d", players))
-			}),
+			widgets.NewLabeledRowWidget(theme, "Players", 160, widgets.NewLabeledSlider(theme, &this.playerCnt, fmt.Sprintf("%d", roundedRange(this.playerCnt.Value, 2, 8)))),
 			widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
 				size := sliderToMapSize(this.mapSizeSld.Value, this.chkExpSizes.Value)
 				label := fmt.Sprintf("%d × %d  (%s)", size, size, mapSizeLabelInt(size))
-				return labeledSlider(gtx, theme, &this.mapSizeSld, label)
+				return widgets.NewLabeledSlider(theme, &this.mapSizeSld, label)(gtx)
 			}),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkExpSizes, "Allow experimental large map sizes (>240)"),
 		}),
@@ -65,111 +61,51 @@ func (this *State) tabGenerationOptions(theme *material.Theme) []layout.Widget {
 				if !this.chkPortals.Value {
 					return layout.Dimensions{}
 				}
-				return widgets.NewLabeledRowWidget(theme, "Max portal connections", 200, func(gtx layout.Context) layout.Dimensions {
-					number := roundedRange(this.sldMaxPortals.Value, 1, 32)
-					return labeledSlider(gtx, theme, &this.sldMaxPortals, fmt.Sprintf("%d", number))
-				})(gtx)
+				return widgets.NewLabeledRowWidget(theme, "Max portal connections", 200, widgets.NewLabeledSlider(theme, &this.sldMaxPortals, fmt.Sprintf("%d", roundedRange(this.sldMaxPortals.Value, 1, 32))))(gtx)
 			},
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkBalancedZones, "Experimental balanced zone placement"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
-			widgets.NewLabeledRowWidget(theme, "Min neutrals between players", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldMinNeutralBetween.Value, 0, 8)
-				return labeledSlider(gtx, theme, &this.sldMinNeutralBetween, fmt.Sprintf("%d", number))
-			}),
+			widgets.NewLabeledRowWidget(theme, "Min neutrals between players", 200, widgets.NewLabeledSlider(theme, &this.sldMinNeutralBetween, fmt.Sprintf("%d", roundedRange(this.sldMinNeutralBetween.Value, 0, 8)))),
 		}),
 		NewSectionWidget(theme, "Zone sizes", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Player zone size", 200, func(gtx layout.Context) layout.Dimensions {
-				size := 0.5 + float64(this.sldPlayerZoneSize.Value)*1.5
-				return labeledSlider(gtx, theme, &this.sldPlayerZoneSize, fmt.Sprintf("× %.2f", size))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Neutral zone size", 200, func(gtx layout.Context) layout.Dimensions {
-				size := 0.5 + float64(this.sldNeutralZoneSize.Value)*1.5
-				return labeledSlider(gtx, theme, &this.sldNeutralZoneSize, fmt.Sprintf("× %.2f", size))
-			}),
+			widgets.NewLabeledRowWidget(theme, "Player zone size", 200, widgets.NewLabeledSlider(theme, &this.sldPlayerZoneSize, fmt.Sprintf("× %.2f", 0.5+float64(this.sldPlayerZoneSize.Value)*1.5))),
+			widgets.NewLabeledRowWidget(theme, "Neutral zone size", 200, widgets.NewLabeledSlider(theme, &this.sldNeutralZoneSize, fmt.Sprintf("× %.2f", 0.5+float64(this.sldNeutralZoneSize.Value)*1.5))),
 			func(gtx layout.Context) layout.Dimensions {
 				if topologyValues[this.topology.Selected] != generator.TopologyHubAndSpoke {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Hub zone size", 200, func(gtx layout.Context) layout.Dimensions {
-						size := 0.5 + float64(this.sldHubSize.Value)*1.5
-						return labeledSlider(gtx, theme, &this.sldHubSize, fmt.Sprintf("× %.2f", size))
-					})),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Hub zone castles", 200, func(gtx layout.Context) layout.Dimensions {
-						number := roundedRange(this.sldHubCastles.Value, 0, 4)
-						return labeledSlider(gtx, theme, &this.sldHubCastles, fmt.Sprintf("%d", number))
-					})),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Hub zone size", 200, widgets.NewLabeledSlider(theme, &this.sldHubSize, fmt.Sprintf("× %.2f", 0.5+float64(this.sldHubSize.Value)*1.5)))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Hub zone castles", 200, widgets.NewLabeledSlider(theme, &this.sldHubCastles, fmt.Sprintf("%d", roundedRange(this.sldHubCastles.Value, 0, 4))))),
 				)
 			},
 		}),
 		NewSectionWidget(theme, "Difficulty & Density", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Resource density %", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldResourceDensity.Value, 25, 200)
-				return labeledSlider(gtx, theme, &this.sldResourceDensity, fmt.Sprintf("%d%%", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Structure density %", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldStructureDensity.Value, 25, 200)
-				return labeledSlider(gtx, theme, &this.sldStructureDensity, fmt.Sprintf("%d%%", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Neutral stack strength %", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralStack.Value, 25, 200)
-				return labeledSlider(gtx, theme, &this.sldNeutralStack, fmt.Sprintf("%d%%", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Border guard strength %", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldBorderGuard.Value, 25, 200)
-				return labeledSlider(gtx, theme, &this.sldBorderGuard, fmt.Sprintf("%d%%", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Guard randomization", 200, func(gtx layout.Context) layout.Dimensions {
-				value := mapRange(this.sldGuardRandom.Value, 0, 0.5)
-				return labeledSlider(gtx, theme, &this.sldGuardRandom, fmt.Sprintf("± %.2f", value))
-			}),
+			widgets.NewLabeledRowWidget(theme, "Resource density %", 200, widgets.NewLabeledSlider(theme, &this.sldResourceDensity, fmt.Sprintf("%d%%", roundedRange(this.sldResourceDensity.Value, 25, 200)))),
+			widgets.NewLabeledRowWidget(theme, "Structure density %", 200, widgets.NewLabeledSlider(theme, &this.sldStructureDensity, fmt.Sprintf("%d%%", roundedRange(this.sldStructureDensity.Value, 25, 200)))),
+			widgets.NewLabeledRowWidget(theme, "Neutral stack strength %", 200, widgets.NewLabeledSlider(theme, &this.sldNeutralStack, fmt.Sprintf("%d%%", roundedRange(this.sldNeutralStack.Value, 25, 200)))),
+			widgets.NewLabeledRowWidget(theme, "Border guard strength %", 200, widgets.NewLabeledSlider(theme, &this.sldBorderGuard, fmt.Sprintf("%d%%", roundedRange(this.sldBorderGuard.Value, 25, 200)))),
+			widgets.NewLabeledRowWidget(theme, "Guard randomization", 200, widgets.NewLabeledSlider(theme, &this.sldGuardRandom, fmt.Sprintf("± %.2f", utils.Denormalize(this.sldGuardRandom.Value, 0, 0.5)))),
 		}),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAdvancedZones, "Advanced zone control (split low / medium / high tiers)"),
 	}
 
 	if this.chkAdvancedZones.Value {
 		widgetLayout = append(widgetLayout, NewSectionWidget(theme, "Zones (advanced)", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Total neutral zones", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralCount.Value, 0, 16)
-				return labeledSlider(gtx, theme, &this.sldNeutralCount, fmt.Sprintf("%d", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Player castles per zone", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldPlayerCastles.Value, 0, 4)
-				return labeledSlider(gtx, theme, &this.sldPlayerCastles, fmt.Sprintf("%d", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Neutral castles per zone", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralCastles.Value, 0, 4)
-				return labeledSlider(gtx, theme, &this.sldNeutralCastles, fmt.Sprintf("%d", number))
-			}),
+			widgets.NewLabeledRowWidget(theme, "Total neutral zones", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralCount, fmt.Sprintf("%d", roundedRange(this.sldNeutralCount.Value, 0, 16)))),
+			widgets.NewLabeledRowWidget(theme, "Player castles per zone", 220, widgets.NewLabeledSlider(theme, &this.sldPlayerCastles, fmt.Sprintf("%d", roundedRange(this.sldPlayerCastles.Value, 0, 4)))),
+			widgets.NewLabeledRowWidget(theme, "Neutral castles per zone", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralCastles, fmt.Sprintf("%d", roundedRange(this.sldNeutralCastles.Value, 0, 4)))),
 			widgets.NewDimmedLabelWidget(theme, "Low tier"),
-			widgets.NewLabeledRowWidget(theme, "  no castle", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralLowNoCastle.Value, 0, 8)
-				return labeledSlider(gtx, theme, &this.sldNeutralLowNoCastle, fmt.Sprintf("%d", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "  with castle", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralLowCastle.Value, 0, 8)
-				return labeledSlider(gtx, theme, &this.sldNeutralLowCastle, fmt.Sprintf("%d", number))
-			}),
+			widgets.NewLabeledRowWidget(theme, "  no castle", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralLowNoCastle, fmt.Sprintf("%d", roundedRange(this.sldNeutralLowNoCastle.Value, 0, 8)))),
+			widgets.NewLabeledRowWidget(theme, "  with castle", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralLowCastle, fmt.Sprintf("%d", roundedRange(this.sldNeutralLowCastle.Value, 0, 8)))),
 			widgets.NewDimmedLabelWidget(theme, "Medium tier"),
-			widgets.NewLabeledRowWidget(theme, "  no castle", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralMedNoCastle.Value, 0, 8)
-				return labeledSlider(gtx, theme, &this.sldNeutralMedNoCastle, fmt.Sprintf("%d", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "  with castle", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralMedCastle.Value, 0, 8)
-				return labeledSlider(gtx, theme, &this.sldNeutralMedCastle, fmt.Sprintf("%d", number))
-			}),
+			widgets.NewLabeledRowWidget(theme, "  no castle", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralMedNoCastle, fmt.Sprintf("%d", roundedRange(this.sldNeutralMedNoCastle.Value, 0, 8)))),
+			widgets.NewLabeledRowWidget(theme, "  with castle", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralMedCastle, fmt.Sprintf("%d", roundedRange(this.sldNeutralMedCastle.Value, 0, 8)))),
 			widgets.NewDimmedLabelWidget(theme, "High tier"),
-			widgets.NewLabeledRowWidget(theme, "  no castle", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralHighNoCastle.Value, 0, 8)
-				return labeledSlider(gtx, theme, &this.sldNeutralHighNoCastle, fmt.Sprintf("%d", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "  with castle", 220, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldNeutralHighCastle.Value, 0, 8)
-				return labeledSlider(gtx, theme, &this.sldNeutralHighCastle, fmt.Sprintf("%d", number))
-			}),
+			widgets.NewLabeledRowWidget(theme, "  no castle", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralHighNoCastle, fmt.Sprintf("%d", roundedRange(this.sldNeutralHighNoCastle.Value, 0, 8)))),
+			widgets.NewLabeledRowWidget(theme, "  with castle", 220, widgets.NewLabeledSlider(theme, &this.sldNeutralHighCastle, fmt.Sprintf("%d", roundedRange(this.sldNeutralHighCastle.Value, 0, 8)))),
 		}))
 	}
 	return widgetLayout
@@ -192,10 +128,7 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 				if !this.chkLostStartCity.Value {
 					return layout.Dimensions{}
 				}
-				return widgets.NewLabeledRowWidget(theme, "Grace period (days)", 200, func(gtx layout.Context) layout.Dimensions {
-					number := roundedRange(this.sldLostCityDay.Value, 1, 30)
-					return labeledSlider(gtx, theme, &this.sldLostCityDay, fmt.Sprintf("%d", number))
-				})(gtx)
+				return widgets.NewLabeledRowWidget(theme, "Grace period (days)", 200, widgets.NewLabeledSlider(theme, &this.sldLostCityDay, fmt.Sprintf("%d", roundedRange(this.sldLostCityDay.Value, 1, 30))))(gtx)
 			},
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkLostStartHero, "Lose if start hero is killed"),
 		}),
@@ -205,10 +138,7 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 				if !this.chkCityHold.Value && this.victory.Selected != 2 {
 					return layout.Dimensions{}
 				}
-				return widgets.NewLabeledRowWidget(theme, "Days to hold", 200, func(gtx layout.Context) layout.Dimensions {
-					number := roundedRange(this.sldCityHoldDays.Value, 1, 30)
-					return labeledSlider(gtx, theme, &this.sldCityHoldDays, fmt.Sprintf("%d", number))
-				})(gtx)
+				return widgets.NewLabeledRowWidget(theme, "Days to hold", 200, widgets.NewLabeledSlider(theme, &this.sldCityHoldDays, fmt.Sprintf("%d", roundedRange(this.sldCityHoldDays.Value, 1, 30))))(gtx)
 			},
 		}),
 		NewSectionWidget(theme, "Gladiator Arena", []layout.Widget{
@@ -218,14 +148,8 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Days delay start", 200, func(gtx layout.Context) layout.Dimensions {
-						number := roundedRange(this.sldGladiatorDelay.Value, 1, 90)
-						return labeledSlider(gtx, theme, &this.sldGladiatorDelay, fmt.Sprintf("%d", number))
-					})),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count days", 200, func(gtx layout.Context) layout.Dimensions {
-						number := roundedRange(this.sldGladiatorCountDay.Value, 1, 14)
-						return labeledSlider(gtx, theme, &this.sldGladiatorCountDay, fmt.Sprintf("%d", number))
-					})),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Days delay start", 200, widgets.NewLabeledSlider(theme, &this.sldGladiatorDelay, fmt.Sprintf("%d", roundedRange(this.sldGladiatorDelay.Value, 1, 90))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count days", 200, widgets.NewLabeledSlider(theme, &this.sldGladiatorCountDay, fmt.Sprintf("%d", roundedRange(this.sldGladiatorCountDay.Value, 1, 14))))),
 				)
 			},
 		}),
@@ -236,45 +160,21 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "First tournament day", 200, func(gtx layout.Context) layout.Dimensions {
-						number := roundedRange(this.sldTournamentDay.Value, 1, 60)
-						return labeledSlider(gtx, theme, &this.sldTournamentDay, fmt.Sprintf("%d", number))
-					})),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Interval (days)", 200, func(gtx layout.Context) layout.Dimensions {
-						number := roundedRange(this.sldTournamentInterval.Value, 1, 30)
-						return labeledSlider(gtx, theme, &this.sldTournamentInterval, fmt.Sprintf("%d", number))
-					})),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Points to win", 200, func(gtx layout.Context) layout.Dimensions {
-						number := roundedRange(this.sldTournamentPoints.Value, 1, 10)
-						return labeledSlider(gtx, theme, &this.sldTournamentPoints, fmt.Sprintf("%d", number))
-					})),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "First tournament day", 200, widgets.NewLabeledSlider(theme, &this.sldTournamentDay, fmt.Sprintf("%d", roundedRange(this.sldTournamentDay.Value, 1, 60))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Interval (days)", 200, widgets.NewLabeledSlider(theme, &this.sldTournamentInterval, fmt.Sprintf("%d", roundedRange(this.sldTournamentInterval.Value, 1, 30))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Points to win", 200, widgets.NewLabeledSlider(theme, &this.sldTournamentPoints, fmt.Sprintf("%d", roundedRange(this.sldTournamentPoints.Value, 1, 10))))),
 					layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.chkTournamentSaveArmy, "Save army between rounds")),
 				)
 			},
 		}),
 		NewSectionWidget(theme, "Heroes", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Hero count min", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldHeroMin.Value, 1, 16)
-				return labeledSlider(gtx, theme, &this.sldHeroMin, fmt.Sprintf("%d", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Hero count max", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldHeroMax.Value, 1, 16)
-				return labeledSlider(gtx, theme, &this.sldHeroMax, fmt.Sprintf("%d", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Increment", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldHeroIncr.Value, 1, 5)
-				return labeledSlider(gtx, theme, &this.sldHeroIncr, fmt.Sprintf("%d", number))
-			}),
+			widgets.NewLabeledRowWidget(theme, "Hero count min", 200, widgets.NewLabeledSlider(theme, &this.sldHeroMin, fmt.Sprintf("%d", roundedRange(this.sldHeroMin.Value, 1, 16)))),
+			widgets.NewLabeledRowWidget(theme, "Hero count max", 200, widgets.NewLabeledSlider(theme, &this.sldHeroMax, fmt.Sprintf("%d", roundedRange(this.sldHeroMax.Value, 1, 16)))),
+			widgets.NewLabeledRowWidget(theme, "Increment", 200, widgets.NewLabeledSlider(theme, &this.sldHeroIncr, fmt.Sprintf("%d", roundedRange(this.sldHeroIncr.Value, 1, 5)))),
 		}),
 		NewSectionWidget(theme, "Experience modifiers", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Faction laws exp %", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldFactionLawsExp.Value, 25, 200)
-				return labeledSlider(gtx, theme, &this.sldFactionLawsExp, fmt.Sprintf("%d%%", number))
-			}),
-			widgets.NewLabeledRowWidget(theme, "Astrology exp %", 200, func(gtx layout.Context) layout.Dimensions {
-				number := roundedRange(this.sldAstrologyExp.Value, 25, 200)
-				return labeledSlider(gtx, theme, &this.sldAstrologyExp, fmt.Sprintf("%d%%", number))
-			}),
+			widgets.NewLabeledRowWidget(theme, "Faction laws exp %", 200, widgets.NewLabeledSlider(theme, &this.sldFactionLawsExp, fmt.Sprintf("%d%%", roundedRange(this.sldFactionLawsExp.Value, 25, 200)))),
+			widgets.NewLabeledRowWidget(theme, "Astrology exp %", 200, widgets.NewLabeledSlider(theme, &this.sldAstrologyExp, fmt.Sprintf("%d%%", roundedRange(this.sldAstrologyExp.Value, 25, 200)))),
 		}),
 	}
 	return widgetLayout
@@ -334,7 +234,3 @@ func topologyDescription(topology models.MapTopology) string {
 		return "Random: layout decided by the generator."
 	}
 }
-
-// (font import kept for future use)
-var _ = font.Font{}
-var _ = text.Start

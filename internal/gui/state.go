@@ -183,57 +183,57 @@ func (this *State) applyFromSettingsFile() {
 
 	this.chkExpSizes.Value = settingsFile.ExperimentalMapSizes
 	this.mapSizeSld.Value = mapSizeToSlider(settingsFile.MapSize, this.chkExpSizes.Value)
-	this.playerCnt.Value = mapRangeInv(float32(settingsFile.PlayerCount), 2, 8)
+	this.playerCnt.Value = utils.Normalize(float32(settingsFile.PlayerCount), 2, 8)
 
 	this.chkRoads.Value = settingsFile.GenerateRoads
 	this.chkPortals.Value = settingsFile.RandomPortals
-	this.sldMaxPortals.Value = mapRangeInv(float32(settingsFile.MaxPortalConnections), 1, 32)
+	this.sldMaxPortals.Value = utils.Normalize(float32(settingsFile.MaxPortalConnections), 1, 32)
 	this.chkFootholds.Value = settingsFile.SpawnRemoteFootholds
 	this.chkBalancedZones.Value = settingsFile.ExperimentalBalancedZonePlacement
 	this.chkPlayerIsolation.Value = settingsFile.NoDirectPlayerConn
 	this.chkMatchPlayerFactions.Value = settingsFile.MatchPlayerCastleFactions
-	this.sldMinNeutralBetween.Value = mapRangeInv(float32(settingsFile.MinNeutralZonesBetweenPlayers), 0, 8)
+	this.sldMinNeutralBetween.Value = utils.Normalize(float32(settingsFile.MinNeutralZonesBetweenPlayers), 0, 8)
 
 	this.chkAdvancedZones.Value = settingsFile.AdvancedMode
-	this.sldNeutralCount.Value = mapRangeInv(float32(settingsFile.NeutralZoneCount), 0, 16)
-	this.sldPlayerCastles.Value = mapRangeInv(float32(settingsFile.PlayerZoneCastles), 0, 4)
-	this.sldNeutralCastles.Value = mapRangeInv(float32(settingsFile.NeutralZoneCastles), 0, 4)
-	this.sldNeutralLowNoCastle.Value = mapRangeInv(float32(settingsFile.NeutralLowNoCastleCount), 0, 8)
-	this.sldNeutralLowCastle.Value = mapRangeInv(float32(settingsFile.NeutralLowCastleCount), 0, 8)
-	this.sldNeutralMedNoCastle.Value = mapRangeInv(float32(settingsFile.NeutralMediumNoCastleCount), 0, 8)
-	this.sldNeutralMedCastle.Value = mapRangeInv(float32(settingsFile.NeutralMediumCastleCount), 0, 8)
-	this.sldNeutralHighNoCastle.Value = mapRangeInv(float32(settingsFile.NeutralHighNoCastleCount), 0, 8)
-	this.sldNeutralHighCastle.Value = mapRangeInv(float32(settingsFile.NeutralHighCastleCount), 0, 8)
+	this.sldNeutralCount.Value = utils.Normalize(float32(settingsFile.NeutralZoneCount), 0, 16)
+	this.sldPlayerCastles.Value = utils.Normalize(float32(settingsFile.PlayerZoneCastles), 0, 4)
+	this.sldNeutralCastles.Value = utils.Normalize(float32(settingsFile.NeutralZoneCastles), 0, 4)
+	this.sldNeutralLowNoCastle.Value = utils.Normalize(float32(settingsFile.NeutralLowNoCastleCount), 0, 8)
+	this.sldNeutralLowCastle.Value = utils.Normalize(float32(settingsFile.NeutralLowCastleCount), 0, 8)
+	this.sldNeutralMedNoCastle.Value = utils.Normalize(float32(settingsFile.NeutralMediumNoCastleCount), 0, 8)
+	this.sldNeutralMedCastle.Value = utils.Normalize(float32(settingsFile.NeutralMediumCastleCount), 0, 8)
+	this.sldNeutralHighNoCastle.Value = utils.Normalize(float32(settingsFile.NeutralHighNoCastleCount), 0, 8)
+	this.sldNeutralHighCastle.Value = utils.Normalize(float32(settingsFile.NeutralHighCastleCount), 0, 8)
 	this.sldHubSize.Value = float32((settingsFile.HubZoneSize - 0.5) / 1.5)
-	this.sldHubCastles.Value = mapRangeInv(float32(settingsFile.HubZoneCastles), 0, 4)
+	this.sldHubCastles.Value = utils.Normalize(float32(settingsFile.HubZoneCastles), 0, 4)
 	this.sldPlayerZoneSize.Value = float32((settingsFile.PlayerZoneSize - 0.5) / 1.5)
 	this.sldNeutralZoneSize.Value = float32((settingsFile.NeutralZoneSize - 0.5) / 1.5)
-	this.sldGuardRandom.Value = mapRangeInv(float32(settingsFile.GuardRandomization), 0, 0.5)
-	this.sldResourceDensity.Value = mapRangeInv(float32(settingsFile.EffectiveResourceDensity()), 25, 200)
-	this.sldStructureDensity.Value = mapRangeInv(float32(settingsFile.EffectiveStructureDensity()), 25, 200)
-	this.sldNeutralStack.Value = mapRangeInv(float32(settingsFile.NeutralStackStrengthPercent), 25, 200)
-	this.sldBorderGuard.Value = mapRangeInv(float32(settingsFile.BorderGuardStrengthPercent), 25, 200)
+	this.sldGuardRandom.Value = utils.Normalize(float32(settingsFile.GuardRandomization), 0, 0.5)
+	this.sldResourceDensity.Value = utils.Normalize(float32(settingsFile.EffectiveResourceDensity()), 25, 200)
+	this.sldStructureDensity.Value = utils.Normalize(float32(settingsFile.EffectiveStructureDensity()), 25, 200)
+	this.sldNeutralStack.Value = utils.Normalize(float32(settingsFile.NeutralStackStrengthPercent), 25, 200)
+	this.sldBorderGuard.Value = utils.Normalize(float32(settingsFile.BorderGuardStrengthPercent), 25, 200)
 
 	// Game rules.
 	this.victory.Selected = victoryIndex(settingsFile.VictoryCondition)
 	this.chkLostStartCity.Value = settingsFile.LostStartCity
-	this.sldLostCityDay.Value = mapRangeInv(float32(settingsFile.LostStartCityDay), 1, 30)
+	this.sldLostCityDay.Value = utils.Normalize(float32(settingsFile.LostStartCityDay), 1, 30)
 	this.chkLostStartHero.Value = settingsFile.LostStartHero
 	this.chkCityHold.Value = settingsFile.CityHold
-	this.sldCityHoldDays.Value = mapRangeInv(float32(settingsFile.CityHoldDays), 1, 30)
+	this.sldCityHoldDays.Value = utils.Normalize(float32(settingsFile.CityHoldDays), 1, 30)
 	this.chkGladiatorArena.Value = settingsFile.GladiatorArena
-	this.sldGladiatorDelay.Value = mapRangeInv(float32(settingsFile.GladiatorArenaDaysDelayStart), 1, 90)
-	this.sldGladiatorCountDay.Value = mapRangeInv(float32(settingsFile.GladiatorArenaCountDay), 1, 14)
+	this.sldGladiatorDelay.Value = utils.Normalize(float32(settingsFile.GladiatorArenaDaysDelayStart), 1, 90)
+	this.sldGladiatorCountDay.Value = utils.Normalize(float32(settingsFile.GladiatorArenaCountDay), 1, 14)
 	this.chkTournament.Value = settingsFile.Tournament
-	this.sldTournamentDay.Value = mapRangeInv(float32(settingsFile.TournamentFirstTournamentDay), 1, 60)
-	this.sldTournamentInterval.Value = mapRangeInv(float32(settingsFile.TournamentInterval), 1, 30)
-	this.sldTournamentPoints.Value = mapRangeInv(float32(settingsFile.TournamentPointsToWin), 1, 10)
+	this.sldTournamentDay.Value = utils.Normalize(float32(settingsFile.TournamentFirstTournamentDay), 1, 60)
+	this.sldTournamentInterval.Value = utils.Normalize(float32(settingsFile.TournamentInterval), 1, 30)
+	this.sldTournamentPoints.Value = utils.Normalize(float32(settingsFile.TournamentPointsToWin), 1, 10)
 	this.chkTournamentSaveArmy.Value = settingsFile.TournamentSaveArmy
-	this.sldHeroMin.Value = mapRangeInv(float32(settingsFile.HeroCountMin), 1, 16)
-	this.sldHeroMax.Value = mapRangeInv(float32(settingsFile.HeroCountMax), 1, 16)
-	this.sldHeroIncr.Value = mapRangeInv(float32(settingsFile.HeroCountIncrement), 1, 5)
-	this.sldFactionLawsExp.Value = mapRangeInv(float32(settingsFile.FactionLawsExpPercent), 25, 200)
-	this.sldAstrologyExp.Value = mapRangeInv(float32(settingsFile.AstrologyExpPercent), 25, 200)
+	this.sldHeroMin.Value = utils.Normalize(float32(settingsFile.HeroCountMin), 1, 16)
+	this.sldHeroMax.Value = utils.Normalize(float32(settingsFile.HeroCountMax), 1, 16)
+	this.sldHeroIncr.Value = utils.Normalize(float32(settingsFile.HeroCountIncrement), 1, 5)
+	this.sldFactionLawsExp.Value = utils.Normalize(float32(settingsFile.FactionLawsExpPercent), 25, 200)
+	this.sldAstrologyExp.Value = utils.Normalize(float32(settingsFile.AstrologyExpPercent), 25, 200)
 
 	// Zone content.
 	if len(settingsFile.PlayerZoneMandatoryContent) > 0 {
@@ -245,7 +245,7 @@ func (this *State) applyFromSettingsFile() {
 func (this *State) captureToSettingsFile() *models.SettingsFile {
 	settingsFile := this.settingsFile
 	settingsFile.TemplateName = strings.TrimSpace(this.templateName.Text())
-	settingsFile.PlayerCount = int(roundHalfAway(float64(mapRange(this.playerCnt.Value, 2, 8))))
+	settingsFile.PlayerCount = int(roundHalfAway(float64(utils.Denormalize(this.playerCnt.Value, 2, 8))))
 	settingsFile.MapSize = sliderToMapSize(this.mapSizeSld.Value, this.chkExpSizes.Value)
 	settingsFile.ExperimentalMapSizes = this.chkExpSizes.Value
 	settingsFile.Topology = topologyValues[this.topology.Selected]
@@ -273,7 +273,7 @@ func (this *State) captureToSettingsFile() *models.SettingsFile {
 	settingsFile.HubZoneCastles = roundedRange(this.sldHubCastles.Value, 0, 4)
 	settingsFile.PlayerZoneSize = float64(0.5 + this.sldPlayerZoneSize.Value*1.5)
 	settingsFile.NeutralZoneSize = float64(0.5 + this.sldNeutralZoneSize.Value*1.5)
-	settingsFile.GuardRandomization = float64(mapRange(this.sldGuardRandom.Value, 0, 0.5))
+	settingsFile.GuardRandomization = float64(utils.Denormalize(this.sldGuardRandom.Value, 0, 0.5))
 	rd := roundedRange(this.sldResourceDensity.Value, 25, 200)
 	sd := roundedRange(this.sldStructureDensity.Value, 25, 200)
 	settingsFile.ResourceDensityPercent = &rd

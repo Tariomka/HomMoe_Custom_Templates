@@ -10,6 +10,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -149,7 +150,7 @@ func (this *zoneContentSection) Layout(theme *material.Theme) layout.Widget {
 func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneContentRow) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		// Sync count slider into integer field.
-		desired := mapRangeInv(float32(row.Count), 1, float32(this.MaxCount))
+		desired := utils.Normalize(float32(row.Count), 1, float32(this.MaxCount))
 		if !row.countSld.Dragging() && row.countSld.Value == 0 && row.Count > 0 {
 			row.countSld.Value = desired
 		}
@@ -173,9 +174,7 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					)
 				}),
 				layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
-				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count", 100, func(gtx layout.Context) layout.Dimensions {
-					return labeledSlider(gtx, theme, &row.countSld, fmt.Sprintf("%d", liveCount))
-				})),
+				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count", 100, widgets.NewLabeledSlider(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &row.IsGuarded, "Guarded")),

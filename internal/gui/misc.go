@@ -5,41 +5,18 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 )
-
-// labeledSlider draws a slider in a flex row with a fixed-width gold value
-// label on the right.
-func labeledSlider(gtx layout.Context, theme *material.Theme, floatValue *widget.Float, value string) layout.Dimensions {
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			slider := material.Slider(theme, floatValue)
-			slider.Color = colGold
-			return slider.Layout(gtx)
-		}),
-		layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min.X = gtx.Dp(64)
-			label := material.Body1(theme, value)
-			label.Color = colGold
-			label.TextSize = unit.Sp(13)
-			label.Alignment = 1
-			return label.Layout(gtx)
-		}),
-	)
-}
 
 // snapIntSliderLabeled snaps the slider to the [low, high] integer range and
 // renders the integer value to the right.
 func snapIntSliderLabeled(gtx layout.Context, theme *material.Theme, floatValue *widget.Float, low, high int, suffix string) int {
-	mapped := mapRange(floatValue.Value, float32(low), float32(high))
-	rounded := int(roundHalfAway(float64(mapped)))
-	if rounded < low {
-		rounded = low
-	}
+	mapped := utils.Denormalize(floatValue.Value, float32(low), float32(high))
+	rounded := max(int(roundHalfAway(float64(mapped))), low)
 	if rounded > high {
 		rounded = high
 	}
-	target := mapRangeInv(float32(rounded), float32(low), float32(high))
+	target := utils.Normalize(float32(rounded), float32(low), float32(high))
 	if target != floatValue.Value && !floatValue.Dragging() {
 		floatValue.Value = target
 	}

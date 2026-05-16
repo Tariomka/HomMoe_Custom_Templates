@@ -3,35 +3,9 @@ package gui
 import (
 	"math"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
-
-// mapRange linearly maps a [0,1] slider value into [low, high].
-func mapRange(value, low, high float32) float32 {
-	if value < 0 {
-		value = 0
-	}
-	if value > 1 {
-		value = 1
-	}
-	return low + value*(high-low)
-}
-
-// mapRangeInv is the inverse of mapRange: maps a value in [low, high]
-// back to its [0,1] slider position.
-func mapRangeInv(value, low, high float32) float32 {
-	if high == low {
-		return 0
-	}
-	ratio := (value - low) / (high - low)
-	if ratio < 0 {
-		ratio = 0
-	}
-	if ratio > 1 {
-		ratio = 1
-	}
-	return ratio
-}
 
 // indexOf returns the index of value in items, or -1 when not present.
 func indexOf[T comparable](items []T, value T) int {
@@ -65,7 +39,7 @@ func mapSizeLabelInt(size int) string {
 
 // roundedRange snaps a [0,1] slider value to the nearest integer in [low, high].
 func roundedRange(value float32, low, high int) int {
-	return min(max(int(roundHalfAway(float64(mapRange(value, float32(low), float32(high))))), low), high)
+	return min(max(int(roundHalfAway(float64(utils.Denormalize(value, float32(low), float32(high))))), low), high)
 }
 
 // mapSizeToSlider returns the [0,1] slider position for a map size value.

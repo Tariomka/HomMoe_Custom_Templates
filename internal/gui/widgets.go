@@ -13,6 +13,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 )
 
 // fillBackground paints the given color over gtx.Constraints.Max.
@@ -387,7 +388,7 @@ func drawTab(gtx layout.Context, theme *material.Theme, label string, selected b
 // snapIntSlider draws a slider snapped to integer steps in [low, high] and
 // returns the resolved integer value.
 func snapIntSlider(gtx layout.Context, theme *material.Theme, f *widget.Float, low, high int) int {
-	value := mapRange(f.Value, float32(low), float32(high))
+	value := utils.Denormalize(f.Value, float32(low), float32(high))
 	rounded := int(roundHalfAway(float64(value)))
 	if rounded < low {
 		rounded = low
@@ -395,7 +396,7 @@ func snapIntSlider(gtx layout.Context, theme *material.Theme, f *widget.Float, l
 	if rounded > high {
 		rounded = high
 	}
-	target := mapRangeInv(float32(rounded), float32(low), float32(high))
+	target := utils.Normalize(float32(rounded), float32(low), float32(high))
 	if target != f.Value && !f.Dragging() {
 		f.Value = target
 	}
