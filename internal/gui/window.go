@@ -44,8 +44,8 @@ var (
 	}
 )
 
-// State holds all interactive widget state and the current SettingsFile.
-type State struct {
+// Window holds all interactive widget state and the current SettingsFile.
+type Window struct {
 	// File state.
 	currentPath string
 	dirty       bool
@@ -147,8 +147,8 @@ type State struct {
 	settingsFile *models.SettingsFile
 }
 
-func NewState() *State {
-	state := &State{
+func NewState() *Window {
+	state := &Window{
 		tabs:         newTabs(mainTabLabels),
 		gameMode:     newSegmentGroup(gameModes),
 		topology:     newComboBox(topologyLabels),
@@ -175,7 +175,7 @@ func NewState() *State {
 }
 
 // applyFromSettingsFile pushes values from this.settingsFile into all widget states.
-func (this *State) applyFromSettingsFile() {
+func (this *Window) applyFromSettingsFile() {
 	settingsFile := this.settingsFile
 	this.templateName.SetText(settingsFile.TemplateName)
 	this.gameMode.Selected = 0
@@ -242,7 +242,7 @@ func (this *State) applyFromSettingsFile() {
 }
 
 // captureToSettingsFile pulls live widget state back into this.settingsFile.
-func (this *State) captureToSettingsFile() *models.SettingsFile {
+func (this *Window) captureToSettingsFile() *models.SettingsFile {
 	settingsFile := this.settingsFile
 	settingsFile.TemplateName = strings.TrimSpace(this.templateName.Text())
 	settingsFile.PlayerCount = int(roundHalfAway(float64(utils.Denormalize(this.playerCnt.Value, 2, 8))))
@@ -306,7 +306,7 @@ func (this *State) captureToSettingsFile() *models.SettingsFile {
 }
 
 // generate runs the template generator and stores the result.
-func (this *State) generate() {
+func (this *Window) generate() {
 	captured := this.captureToSettingsFile()
 	generatorSettings := services.SettingsToGenerator(captured)
 	if generatorSettings.TemplateName == "" {
@@ -330,7 +330,7 @@ func (this *State) generate() {
 }
 
 // saveTemplate writes the most recently generated template as .rmg.json.
-func (this *State) saveTemplate() {
+func (this *Window) saveTemplate() {
 	if this.lastTemplate == nil {
 		this.setStatus("Nothing to save — generate a template first.", true)
 		return
@@ -348,13 +348,13 @@ func (this *State) saveTemplate() {
 	this.setStatus("Saved template to "+out, false)
 }
 
-func (this *State) setStatus(msg string, isErr bool) {
+func (this *Window) setStatus(msg string, isErr bool) {
 	this.statusMsg = msg
 	this.statusErr = isErr
 }
 
 // fileNew clears the in-memory model.
-func (this *State) fileNew() {
+func (this *Window) fileNew() {
 	this.settingsFile = models.NewSettingsFile()
 	this.currentPath = ""
 	this.dirty = false
@@ -364,7 +364,7 @@ func (this *State) fileNew() {
 }
 
 // fileOpen presents a dialog and loads the chosen .gen.json file.
-func (this *State) fileOpen() {
+func (this *Window) fileOpen() {
 	path, err := utils.PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.suggestDir())
 	if err != nil {
 		this.setStatus("Open dialog failed: "+err.Error(), true)
@@ -386,7 +386,7 @@ func (this *State) fileOpen() {
 }
 
 // fileSave writes to the current path or prompts via Save As if none.
-func (this *State) fileSave() {
+func (this *Window) fileSave() {
 	if this.currentPath == "" {
 		this.fileSaveAs()
 		return
@@ -400,7 +400,7 @@ func (this *State) fileSave() {
 }
 
 // fileSaveAs prompts for a destination path then writes the settings file.
-func (this *State) fileSaveAs() {
+func (this *Window) fileSaveAs() {
 	defaultName := services.SanitizeFilename(strings.TrimSpace(this.templateName.Text())) + ".gen.json"
 	path, err := utils.PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.suggestDir(), defaultName)
 	if err != nil {
@@ -419,7 +419,7 @@ func (this *State) fileSaveAs() {
 	this.setStatus("Saved "+path, false)
 }
 
-func (this *State) suggestDir() string {
+func (this *Window) suggestDir() string {
 	if this.currentPath != "" {
 		return filepath.Dir(this.currentPath)
 	}
@@ -431,7 +431,7 @@ func (this *State) suggestDir() string {
 }
 
 // openTemplatesFolder opens the official Steam templates directory in Explorer.
-func (this *State) openTemplatesFolder() {
+func (this *Window) openTemplatesFolder() {
 	dir := utils.FindOldenEraTemplatesDir()
 	if dir == "" {
 		this.setStatus("Heroes Olden Era templates folder not found.", true)
@@ -445,7 +445,7 @@ func (this *State) openTemplatesFolder() {
 }
 
 // pickOutputDir presents a folder picker for the template output directory.
-func (this *State) pickOutputDir() {
+func (this *Window) pickOutputDir() {
 	cur := strings.TrimSpace(this.outputPath.Text())
 	dir, err := utils.PickFolder("Select output directory", cur)
 	if err != nil {
@@ -460,7 +460,7 @@ func (this *State) pickOutputDir() {
 
 // — Layout —
 
-func (this *State) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	// Process button clicks first.
 	if this.btnGenerate.Clicked(gtx) {
 		this.generate()
@@ -522,7 +522,7 @@ func (this *State) Layout(gtx layout.Context, theme *material.Theme) layout.Dime
 	})
 }
 
-func (this *State) layoutToolbar(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *Window) layoutToolbar(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	row := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}
 	return row.Layout(gtx,
 		layout.Rigid(widgets.NewButtonWidget(theme, "📄 New", &this.btnNew, false)),
@@ -555,7 +555,7 @@ func (this *State) layoutToolbar(gtx layout.Context, theme *material.Theme) layo
 	)
 }
 
-func (this *State) layoutActiveTab(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *Window) layoutActiveTab(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	idx := this.tabs.Selected
 	if idx < 0 || idx >= len(this.scrolls) {
 		idx = 0
@@ -579,7 +579,7 @@ func (this *State) layoutActiveTab(gtx layout.Context, theme *material.Theme) la
 
 // — Footer (Generate + Save Template + Output) —
 
-func (this *State) layoutFooterWidget(theme *material.Theme) layout.Widget {
+func (this *Window) layoutFooterWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewPanelWidget(unit.Dp(10), func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {

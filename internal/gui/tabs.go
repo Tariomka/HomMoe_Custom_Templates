@@ -17,7 +17,7 @@ import (
 // Tab 1: Map Setup
 // ——————————————————————————————————————————————
 
-func (this *State) tabMapSetup(theme *material.Theme) []layout.Widget {
+func (this *Window) tabMapSetup(theme *material.Theme) []layout.Widget {
 	return []layout.Widget{
 		NewSectionWidget(theme, "Template", []layout.Widget{
 			widgets.NewLabeledRowWidget(theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
@@ -52,7 +52,7 @@ func (this *State) tabMapSetup(theme *material.Theme) []layout.Widget {
 // Tab 2: Generation Options (advanced map gen)
 // ——————————————————————————————————————————————
 
-func (this *State) tabGenerationOptions(theme *material.Theme) []layout.Widget {
+func (this *Window) tabGenerationOptions(theme *material.Theme) []layout.Widget {
 	widgetLayout := []layout.Widget{
 		NewSectionWidget(theme, "Connectivity", []layout.Widget{
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkRoads, "Generate roads between zones"),
@@ -115,7 +115,7 @@ func (this *State) tabGenerationOptions(theme *material.Theme) []layout.Widget {
 // Tab 3: Game Rules
 // ——————————————————————————————————————————————
 
-func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
+func (this *Window) tabGameRules(theme *material.Theme) []layout.Widget {
 	widgetLayout := []layout.Widget{
 		NewSectionWidget(theme, "Victory Condition", []layout.Widget{
 			widgets.NewLabeledRowWidget(theme, "Victory", 160, func(gtx layout.Context) layout.Dimensions {
@@ -184,7 +184,7 @@ func (this *State) tabGameRules(theme *material.Theme) []layout.Widget {
 // Tab 4: Zone Content
 // ——————————————————————————————————————————————
 
-func (this *State) tabZoneContent(theme *material.Theme) []layout.Widget {
+func (this *Window) tabZoneContent(theme *material.Theme) []layout.Widget {
 	return []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			return widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Player zone mandatory content. Effects only apply on generation.")(gtx)

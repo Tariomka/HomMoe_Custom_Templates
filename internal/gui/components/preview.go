@@ -1,46 +1,24 @@
-package gui
+package components
 
 import (
-	"fmt"
 	"image"
 	"image/color"
-	"math"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
-	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
-var (
-	previewBg         = color.NRGBA{R: 0x1C, G: 0x16, B: 0x10, A: 0xFF}
-	previewFrame      = color.NRGBA{R: 0x8F, G: 0x73, B: 0x3F, A: 0xFF}
-	previewBronzeFill = color.NRGBA{R: 0x65, G: 0x43, B: 0x21, A: 0xFF}
-	previewBronzeEdge = color.NRGBA{R: 0xCD, G: 0x7F, B: 0x32, A: 0xFF}
-	previewSilverFill = color.NRGBA{R: 0x48, G: 0x4C, B: 0x50, A: 0xFF}
-	previewSilverEdge = color.NRGBA{R: 0xC0, G: 0xC0, B: 0xC0, A: 0xFF}
-	previewGoldFill   = color.NRGBA{R: 0x78, G: 0x5A, B: 0x14, A: 0xFF}
-	previewGoldEdge   = color.NRGBA{R: 0xFF, G: 0xD2, B: 0x32, A: 0xFF}
-	previewSpawnFill  = color.NRGBA{R: 0x2A, G: 0x5A, B: 0x32, A: 0xFF}
-	previewSpawnEdge  = color.NRGBA{R: 0x64, G: 0xC8, B: 0x78, A: 0xFF}
-	previewHubFill    = color.NRGBA{R: 0x37, G: 0x50, B: 0x5F, A: 0xFF}
-	previewHubEdge    = color.NRGBA{R: 0x82, G: 0xB4, B: 0xC8, A: 0xFF}
-	previewDirectLine = color.NRGBA{R: 0xB4, G: 0x91, B: 0x3C, A: 0xFF}
-	previewPortalLine = color.NRGBA{R: 0x5A, G: 0xAA, B: 0xD2, A: 0xB4}
-)
-
-// previewState holds the layout cache + buttons for the preview panel.
-type previewState struct {
+// Preview holds the layout cache + buttons for the preview panel.
+type Preview struct {
 	btnSavePNG  widget.Clickable
 	btnRefresh  widget.Clickable
 	pngStatus   string
@@ -204,170 +182,4 @@ func (this *Window) layoutPreviewLegend(gtx layout.Context, theme *material.Them
 		}))
 	}
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)
-}
-
-// — Drawing primitives (Gio canvas) —
-
-func drawConnection(gtx layout.Context, conn services.PreviewConnection, zoneRadius int) {
-	// Trim line to circle edges so it doesn't overlap zone fill.
-	dx := float64(conn.B.X - conn.A.X)
-	dy := float64(conn.B.Y - conn.A.Y)
-	distance := math.Hypot(dx, dy)
-	if distance < 1 {
-		return
-	}
-	ux := dx / distance
-	uy := dy / distance
-	radius := float64(zoneRadius)
-	ax := float64(conn.A.X) + ux*radius
-	ay := float64(conn.A.Y) + uy*radius
-	bx := float64(conn.B.X) - ux*radius
-	by := float64(conn.B.Y) - uy*radius
-
-	lineColor := previewDirectLine
-	lineWidth := float32(gtx.Dp(unit.Dp(2.0)))
-	if conn.Portal {
-		lineColor = previewPortalLine
-		lineWidth = float32(gtx.Dp(unit.Dp(1.5)))
-	}
-	drawLine(gtx, image.Pt(int(ax), int(ay)), image.Pt(int(bx), int(by)), lineWidth, lineColor)
-}
-
-func drawLine(gtx layout.Context, start, end image.Point, width float32, lineColor color.NRGBA) {
-	var path clip.Path
-	path.Begin(gtx.Ops)
-	path.MoveTo(f32Pt(start))
-	path.LineTo(f32Pt(end))
-	paint.FillShape(gtx.Ops, lineColor, clip.Stroke{
-		Path:  path.End(),
-		Width: width,
-	}.Op())
-}
-
-func f32Pt(point image.Point) (out f32Point) {
-	out.X = float32(point.X)
-	out.Y = float32(point.Y)
-	return
-}
-
-// f32Point is a tiny shim so we don't import gioui.org/f32 just for two fields.
-type f32Point = struct {
-	X, Y float32
-}
-
-func drawPreviewZone(gtx layout.Context, theme *material.Theme, zone services.PreviewZone, zoneRadius int) {
-	radius := zoneRadius
-	if zone.IsHub && radius < 28 {
-		radius = 28
-	}
-	cx, cy := zone.Center.X, zone.Center.Y
-	rect := image.Rect(cx-radius, cy-radius, cx+radius, cy+radius)
-
-	fill, edge := zoneColors(zone)
-	circle := clip.UniformRRect(rect, radius).Op(gtx.Ops)
-	paint.FillShape(gtx.Ops, fill, circle)
-	paint.FillShape(gtx.Ops, edge, clip.Stroke{
-		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-		Width: float32(gtx.Dp(unit.Dp(2))),
-	}.Op())
-
-	label := zoneLabel(zone)
-	if label != "" {
-		drawCenteredText(gtx, theme, image.Pt(cx, cy), label, 12, color.NRGBA{R: 0xF8, G: 0xE8, B: 0xC0, A: 0xFF})
-	}
-	if zone.HasCastle && zone.Castles > 0 {
-		// Small badge in lower right.
-		badgeX := cx + radius/2
-		badgeY := cy + radius/2
-		drawCenteredText(gtx, theme, image.Pt(badgeX, badgeY), fmt.Sprintf("⌂%d", zone.Castles), 10, color.NRGBA{R: 0xFF, G: 0xE8, B: 0x90, A: 0xFF})
-	}
-}
-
-func zoneColors(zone services.PreviewZone) (fill, edge color.NRGBA) {
-	switch {
-	case zone.IsPlayer:
-		return previewSpawnFill, previewSpawnEdge
-	case zone.IsHub:
-		return previewHubFill, previewHubEdge
-	}
-	switch zone.Tier {
-	case 3:
-		return previewGoldFill, previewGoldEdge
-	case 2:
-		return previewSilverFill, previewSilverEdge
-	default:
-		return previewBronzeFill, previewBronzeEdge
-	}
-}
-
-func zoneLabel(zone services.PreviewZone) string {
-	if zone.IsPlayer {
-		if zone.Owner > 0 {
-			return fmt.Sprintf("P%d", zone.Owner)
-		}
-		// Spawn-1 / Spawn-2 → "P1"…
-		if strings.HasPrefix(zone.Name, "Spawn-") {
-			return "P" + zone.Name[len("Spawn-"):]
-		}
-		return zone.Letter
-	}
-	if zone.IsHub {
-		return "Hub"
-	}
-	switch zone.Tier {
-	case 3:
-		return "G"
-	case 2:
-		return "S"
-	default:
-		return "B"
-	}
-}
-
-// drawCenteredText draws text centered on the given canvas point.
-func drawCenteredText(gtx layout.Context, theme *material.Theme, center image.Point, txt string, sizeSp int, textColor color.NRGBA) {
-	macro := op.Record(gtx.Ops)
-	dims := func() layout.Dimensions {
-		gtxLocal := gtx
-		gtxLocal.Constraints.Min = image.Point{}
-		gtxLocal.Constraints.Max = image.Pt(1<<14, 1<<14)
-		label := material.Label(theme, unit.Sp(float32(sizeSp)), txt)
-		label.Color = textColor
-		label.Font = font.Font{Weight: font.SemiBold}
-		return label.Layout(gtxLocal)
-	}()
-	call := macro.Stop()
-
-	tx := center.X - dims.Size.X/2
-	ty := center.Y - dims.Size.Y/2
-	stack := op.Offset(image.Pt(tx, ty)).Push(gtx.Ops)
-	call.Add(gtx.Ops)
-	stack.Pop()
-}
-
-// — PNG export —
-
-// savePreviewPNG renders the current template into a software bitmap and
-// writes it next to the .rmg.json output.
-func (this *Window) savePreviewPNG() {
-	template := this.lastTemplate
-	if template == nil {
-		this.preview.pngStatus = "Generate a template first."
-		this.preview.pngStatusOK = false
-		return
-	}
-	dir := strings.TrimSpace(this.outputPath.Text())
-	if dir == "" {
-		this.preview.pngStatus = "Output directory is empty."
-		this.preview.pngStatusOK = false
-		return
-	}
-	out, err := services.WritePreviewPNG(dir, template, this.settingsFile.Topology, 700)
-	if err != nil {
-		this.preview.pngStatus = "Save failed: " + err.Error()
-		this.preview.pngStatusOK = false
-		return
-	}
-	this.preview.pngStatus = "Saved " + out
-	this.preview.pngStatusOK = true
 }
