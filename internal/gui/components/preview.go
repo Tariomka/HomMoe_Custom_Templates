@@ -6,6 +6,7 @@ import (
 
 	"gioui.org/font"
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
@@ -57,9 +58,6 @@ func (this *Window) layoutPreviewPanel(gtx layout.Context, theme *material.Theme
 				return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(6)}.Layout(gtx, label.Layout)
 			}),
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				if template == nil {
-					return this.layoutPreviewEmpty(gtx, theme)
-				}
 				return this.layoutPreviewCanvas(gtx, theme, template)
 			}),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
@@ -67,6 +65,7 @@ func (this *Window) layoutPreviewPanel(gtx layout.Context, theme *material.Theme
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(widgets.NewButtonWidget(theme, "🖼  Save PNG", &this.btnSavePreview, template == nil)),
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 						if this.preview.pngStatus == "" {
 							return layout.Dimensions{}
@@ -81,30 +80,27 @@ func (this *Window) layoutPreviewPanel(gtx layout.Context, theme *material.Theme
 						label.MaxLines = 2
 						return label.Layout(gtx)
 					}),
-					layout.Rigid(widgets.NewButtonWidget(theme, "🖼  Save PNG", &this.btnSavePreview, template == nil)),
 				)
 			}),
 		)
 	})(gtx)
 }
 
-func (this *Window) layoutPreviewEmpty(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		label := material.Body2(theme, "Press \"Generate Template\" to see the map layout.")
-		label.Color = colTextDim
-		label.TextSize = unit.Sp(12)
-		label.Alignment = text.Middle
-		return label.Layout(gtx)
-	})
-}
-
-// layoutPreviewCanvas draws the actual map preview at the largest possible
-// square fitting inside the available area.
+// layoutPreviewCanvas draws the preview area. Always fills the available
+// space (so the surrounding panel keeps a consistent size) and renders an
+// informational message inside the canvas when there is no template or no
+// computed layout yet.
 func (this *Window) layoutPreviewCanvas(gtx layout.Context, theme *material.Theme, template *models.RmgTemplate) layout.Dimensions {
 	maxX := gtx.Constraints.Max.X
 	maxY := gtx.Constraints.Max.Y
+	outerSize := image.Pt(maxX, maxY)
 	side := max(min(maxY, maxX), 80)
 	canvasSize := image.Pt(side, side)
+
+	// Center the square canvas inside the available area.
+	offsetX := (maxX - side) / 2
+	offsetY := (maxY - side) / 2
+	defer op.Offset(image.Pt(offsetX, offsetY)).Push(gtx.Ops).Pop()
 
 	// Background.
 	rect := image.Rectangle{Max: canvasSize}
@@ -118,10 +114,15 @@ func (this *Window) layoutPreviewCanvas(gtx layout.Context, theme *material.Them
 		Width: 2,
 	}.Op())
 
+	if template == nil {
+		drawCenteredMessage(gtx, theme, canvasSize, "Press \"Generate Template\" to see the map layout.")
+		return layout.Dimensions{Size: outerSize}
+	}
+
 	previewLayout := services.BuildPreviewLayout(template, this.settingsFile.Topology, float64(side))
 	if len(previewLayout.Positions) == 0 {
-		drawCenteredText(gtx, theme, canvasSize, template.Name, 18, colText)
-		return layout.Dimensions{Size: canvasSize}
+		drawCenteredMessage(gtx, theme, canvasSize, template.Name)
+		return layout.Dimensions{Size: outerSize}
 	}
 
 	// Connections beneath zones.
@@ -142,7 +143,29 @@ func (this *Window) layoutPreviewCanvas(gtx layout.Context, theme *material.Them
 		drawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 	}
 
-	return layout.Dimensions{Size: canvasSize}
+	return layout.Dimensions{Size: outerSize}
+}
+
+// drawCenteredMessage renders a Body2 label centered inside the given canvas
+// area. Uses the same material.Label approach as the (former) empty-state
+// view so text renders reliably (unlike drawCenteredText for longer strings).
+func drawCenteredMessage(gtx layout.Context, theme *material.Theme, canvasSize image.Point, txt string) {
+	macro := op.Record(gtx.Ops)
+	gtxLocal := gtx
+	gtxLocal.Constraints.Min = image.Point{}
+	gtxLocal.Constraints.Max = canvasSize
+	label := material.Body2(theme, txt)
+	label.Color = colTextDim
+	label.TextSize = unit.Sp(12)
+	label.Alignment = text.Middle
+	dims := label.Layout(gtxLocal)
+	call := macro.Stop()
+
+	tx := (canvasSize.X - dims.Size.X) / 2
+	ty := (canvasSize.Y - dims.Size.Y) / 2
+	stack := op.Offset(image.Pt(tx, ty)).Push(gtx.Ops)
+	call.Add(gtx.Ops)
+	stack.Pop()
 }
 
 func (this *Window) layoutPreviewLegend(gtx layout.Context, theme *material.Theme) layout.Dimensions {
