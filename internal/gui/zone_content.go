@@ -198,7 +198,7 @@ func (this *zoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 // — State integration —
 
 // seedDefaultPlayerZoneContent mirrors C# InitializeDefaultPlayerZoneContents.
-func (this *Window) seedDefaultPlayerZoneContent() {
+func (this *WindowOld) seedDefaultPlayerZoneContent() {
 	this.zcMines.rows = nil
 	this.zcTreasures.rows = nil
 	this.zcHires.rows = nil
@@ -230,7 +230,7 @@ func (this *Window) seedDefaultPlayerZoneContent() {
 // applyZoneContentItems replaces every section based on a flat list of items
 // loaded from a settings file. Items are routed to the appropriate section by
 // SID lookup.
-func (this *Window) applyZoneContentItems(items []models.ZoneContentItem) {
+func (this *WindowOld) applyZoneContentItems(items []models.ZoneContentItem) {
 	this.zcMines.rows = nil
 	this.zcTreasures.rows = nil
 	this.zcHires.rows = nil
@@ -268,7 +268,7 @@ func sectionContains(list []models.SidMapping, sid string) bool {
 }
 
 // collectZoneContentItems serialises every section into a flat list.
-func (this *Window) collectZoneContentItems() []models.ZoneContentItem {
+func (this *WindowOld) collectZoneContentItems() []models.ZoneContentItem {
 	var out []models.ZoneContentItem
 	collect := func(contentSection *zoneContentSection) {
 		for _, row := range contentSection.rows {

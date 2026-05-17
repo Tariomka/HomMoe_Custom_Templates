@@ -53,6 +53,10 @@ func (this *State) IsDirty() bool {
 	return this.dirty
 }
 
+func (this *State) GetLastTemplate() *models.RmgTemplate {
+	return this.lastTemplate
+}
+
 func (this *State) GetOutputPath() string {
 	return this.outputPath.Text()
 }

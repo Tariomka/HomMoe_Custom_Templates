@@ -18,6 +18,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
@@ -51,7 +52,7 @@ type previewState struct {
 
 // layoutPreviewPanel renders the right-hand preview area. Returns empty
 // dimensions when there's nothing to show (so the caller can omit it).
-func (this *Window) layoutPreviewPanel(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *WindowOld) layoutPreviewPanel(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	if this.btnSavePreview.Clicked(gtx) {
 		this.savePreviewPNG()
 	}
@@ -82,24 +83,34 @@ func (this *Window) layoutPreviewPanel(gtx layout.Context, theme *material.Theme
 				return this.layoutPreviewCanvas(gtx, theme, template)
 			}),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				// Reserve a fixed-height slot so the canvas above doesn't shift
+				// when the status message appears/disappears or grows from 1 to
+				// 2 lines. Height is sized for 2 lines of 11sp text + the
+				// bottom inset used below the legend separator.
+				reserved := gtx.Dp(unit.Dp(34))
+				gtx.Constraints.Min.Y = reserved
+				gtx.Constraints.Max.Y = reserved
+				if this.preview.pngStatus == "" {
+					return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, reserved)}
+				}
+				statusColor := colTextDim
+				if !this.preview.pngStatusOK {
+					statusColor = colError
+				}
+				return layout.Inset{Bottom: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					label := material.Body2(theme, this.preview.pngStatus)
+					label.Color = statusColor
+					label.TextSize = unit.Sp(11)
+					label.MaxLines = 2
+					label.Alignment = text.Middle
+					return label.Layout(gtx)
+				})
+			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutPreviewLegend(gtx, theme) }),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						if this.preview.pngStatus == "" {
-							return layout.Dimensions{}
-						}
-						statusColor := colTextDim
-						if !this.preview.pngStatusOK {
-							statusColor = colError
-						}
-						label := material.Body2(theme, this.preview.pngStatus)
-						label.Color = statusColor
-						label.TextSize = unit.Sp(11)
-						label.MaxLines = 2
-						return label.Layout(gtx)
-					}),
 					layout.Rigid(widgets.NewButtonWidget(theme, "🖼  Save PNG", &this.btnSavePreview, template == nil)),
 				)
 			}),
@@ -111,7 +122,7 @@ func (this *Window) layoutPreviewPanel(gtx layout.Context, theme *material.Theme
 // space (so the surrounding panel keeps a consistent size) and renders an
 // informational message inside the canvas when there is no template or no
 // computed layout yet.
-func (this *Window) layoutPreviewCanvas(gtx layout.Context, theme *material.Theme, template *models.RmgTemplate) layout.Dimensions {
+func (this *WindowOld) layoutPreviewCanvas(gtx layout.Context, theme *material.Theme, template *models.RmgTemplate) layout.Dimensions {
 	maxX := gtx.Constraints.Max.X
 	maxY := gtx.Constraints.Max.Y
 	outerSize := image.Pt(maxX, maxY)
@@ -189,7 +200,7 @@ func drawCenteredMessage(gtx layout.Context, theme *material.Theme, canvasSize i
 	stack.Pop()
 }
 
-func (this *Window) layoutPreviewLegend(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *WindowOld) layoutPreviewLegend(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	type legendItem struct {
 		Color color.NRGBA
 		Label string
@@ -295,13 +306,13 @@ func drawPreviewZone(gtx layout.Context, theme *material.Theme, zone services.Pr
 
 	label := zoneLabel(zone)
 	if label != "" {
-		drawCenteredText(gtx, theme, image.Pt(cx, cy), label, 12, color.NRGBA{R: 0xF8, G: 0xE8, B: 0xC0, A: 0xFF})
+		utils.DrawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, color.NRGBA{R: 0xF8, G: 0xE8, B: 0xC0, A: 0xFF})
 	}
 	if zone.HasCastle && zone.Castles > 0 {
 		// Small badge in lower right.
 		badgeX := cx + radius/2
 		badgeY := cy + radius/2
-		drawCenteredText(gtx, theme, image.Pt(badgeX, badgeY), fmt.Sprintf("⌂%d", zone.Castles), 10, color.NRGBA{R: 0xFF, G: 0xE8, B: 0x90, A: 0xFF})
+		utils.DrawOffsetText(gtx, theme, image.Pt(badgeX, badgeY), fmt.Sprintf("⌂%d", zone.Castles), 10, color.NRGBA{R: 0xFF, G: 0xE8, B: 0x90, A: 0xFF})
 	}
 }
 
@@ -346,32 +357,11 @@ func zoneLabel(zone services.PreviewZone) string {
 	}
 }
 
-// drawCenteredText draws text centered on the given canvas point.
-func drawCenteredText(gtx layout.Context, theme *material.Theme, center image.Point, txt string, sizeSp int, textColor color.NRGBA) {
-	macro := op.Record(gtx.Ops)
-	dims := func() layout.Dimensions {
-		gtxLocal := gtx
-		gtxLocal.Constraints.Min = image.Point{}
-		gtxLocal.Constraints.Max = image.Pt(1<<14, 1<<14)
-		label := material.Label(theme, unit.Sp(float32(sizeSp)), txt)
-		label.Color = textColor
-		label.Font = font.Font{Weight: font.SemiBold}
-		return label.Layout(gtxLocal)
-	}()
-	call := macro.Stop()
-
-	tx := center.X - dims.Size.X/2
-	ty := center.Y - dims.Size.Y/2
-	stack := op.Offset(image.Pt(tx, ty)).Push(gtx.Ops)
-	call.Add(gtx.Ops)
-	stack.Pop()
-}
-
 // — PNG export —
 
 // savePreviewPNG renders the current template into a software bitmap and
 // writes it next to the .rmg.json output.
-func (this *Window) savePreviewPNG() {
+func (this *WindowOld) savePreviewPNG() {
 	template := this.lastTemplate
 	if template == nil {
 		this.preview.pngStatus = "Generate a template first."

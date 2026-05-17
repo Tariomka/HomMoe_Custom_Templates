@@ -17,7 +17,7 @@ import (
 // Tab 1: Map Setup
 // ——————————————————————————————————————————————
 
-func (this *Window) tabMapSetup(theme *material.Theme) []layout.Widget {
+func (this *WindowOld) tabMapSetup(theme *material.Theme) []layout.Widget {
 	return []layout.Widget{
 		NewSectionWidget(theme, "Template", []layout.Widget{
 			widgets.NewLabeledRowWidget(theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
@@ -52,7 +52,7 @@ func (this *Window) tabMapSetup(theme *material.Theme) []layout.Widget {
 // Tab 2: Generation Options (advanced map gen)
 // ——————————————————————————————————————————————
 
-func (this *Window) tabGenerationOptions(theme *material.Theme) []layout.Widget {
+func (this *WindowOld) tabGenerationOptions(theme *material.Theme) []layout.Widget {
 	widgetLayout := []layout.Widget{
 		NewSectionWidget(theme, "Connectivity", []layout.Widget{
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkRoads, "Generate roads between zones"),
@@ -115,7 +115,7 @@ func (this *Window) tabGenerationOptions(theme *material.Theme) []layout.Widget 
 // Tab 3: Game Rules
 // ——————————————————————————————————————————————
 
-func (this *Window) tabGameRules(theme *material.Theme) []layout.Widget {
+func (this *WindowOld) tabGameRules(theme *material.Theme) []layout.Widget {
 	widgetLayout := []layout.Widget{
 		NewSectionWidget(theme, "Victory Condition", []layout.Widget{
 			widgets.NewLabeledRowWidget(theme, "Victory", 160, func(gtx layout.Context) layout.Dimensions {
@@ -184,11 +184,9 @@ func (this *Window) tabGameRules(theme *material.Theme) []layout.Widget {
 // Tab 4: Zone Content
 // ——————————————————————————————————————————————
 
-func (this *Window) tabZoneContent(theme *material.Theme) []layout.Widget {
+func (this *WindowOld) tabZoneContent(theme *material.Theme) []layout.Widget {
 	return []layout.Widget{
-		func(gtx layout.Context) layout.Dimensions {
-			return widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Player zone mandatory content. Effects only apply on generation.")(gtx)
-		},
+		widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Player zone mandatory content. Effects only apply on generation."),
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset to defaults", &this.btnZoneReset, false)))
 		},
