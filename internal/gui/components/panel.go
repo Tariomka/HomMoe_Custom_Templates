@@ -6,5 +6,5 @@ import (
 )
 
 type IPanel interface {
-	GetWidget(theme *material.Theme) layout.Widget
+	GetPanelWidget(theme *material.Theme) layout.Widget
 }

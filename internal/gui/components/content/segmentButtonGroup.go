@@ -37,6 +37,12 @@ func NewSegmentButtonGroup(labels []string) *SegmentButtonGroup {
 	return &SegmentButtonGroup{buttons: buttons}
 }
 
+func (this *SegmentButtonGroup) SetSelectedIndex(index int) {
+	if index >= 0 && index < len(this.buttons) {
+		this.selectedIndex = index
+	}
+}
+
 // Update returns true if the selection changed this frame.
 func (this *SegmentButtonGroup) Update(gtx layout.Context) bool {
 	changed := false

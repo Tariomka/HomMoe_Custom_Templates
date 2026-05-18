@@ -30,7 +30,11 @@ type PreviewPanel struct {
 	state *State
 }
 
-func (this *PreviewPanel) GetWidget(theme *material.Theme) layout.Widget {
+func NewPreviewPanel(state *State) *PreviewPanel {
+	return &PreviewPanel{state: state}
+}
+
+func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	template := this.state.GetLastTemplate()
 	return widgets.NewPanelWidget(unit.Dp(8), func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

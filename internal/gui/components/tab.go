@@ -73,7 +73,7 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 
 func (this *Tab) GetPanelWidget(theme *material.Theme) layout.Widget {
 	if this.isSelected {
-		return this.panel.GetWidget(theme)
+		return this.panel.GetPanelWidget(theme)
 	}
 
 	return func(gtx layout.Context) layout.Dimensions { return layout.Dimensions{} }

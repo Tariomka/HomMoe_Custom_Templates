@@ -40,6 +40,10 @@ func NewDropdownSelector(labels []string) *DropdownSelector {
 	return &DropdownSelector{items: items}
 }
 
+func (this *DropdownSelector) GetSelectedIndex() int {
+	return this.selectedIndex
+}
+
 // SetItems replaces the option list and resets selection bounds.
 func (this *DropdownSelector) SetItems(items []string) {
 	newItems := make([]dropdownItem, len(items))
