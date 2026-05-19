@@ -78,3 +78,11 @@ func (this *Tab) GetPanelWidget(theme *material.Theme) layout.Widget {
 
 	return func(gtx layout.Context) layout.Dimensions { return layout.Dimensions{} }
 }
+
+func (this *Tab) LoadFromState() {
+	this.panel.LoadFromState()
+}
+
+func (this *Tab) SaveToState() {
+	this.panel.SaveToState()
+}

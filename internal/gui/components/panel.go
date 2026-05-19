@@ -7,4 +7,6 @@ import (
 
 type IPanel interface {
 	GetPanelWidget(theme *material.Theme) layout.Widget
+	LoadFromState()
+	SaveToState()
 }

@@ -83,7 +83,6 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 func (this *Toolbar) HandleClicks(gtx layout.Context) {
 	if this.buttonReset.Clicked(gtx) {
 		this.state.Reset()
-		// this.seedDefaultPlayerZoneContent()
 		// this.applyFromSettingsFile()
 	}
 	if this.buttonOpen.Clicked(gtx) {
@@ -95,7 +94,4 @@ func (this *Toolbar) HandleClicks(gtx layout.Context) {
 	if this.buttonSaveAs.Clicked(gtx) {
 		this.state.SaveAs(this.state.GetSettingsFile().TemplateName)
 	}
-	// if this.buttonTemplates.Clicked(gtx) {
-	// 	this.openTemplatesFolder()
-	// }
 }

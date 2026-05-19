@@ -45,7 +45,7 @@ func NewRulesPanel(state *State) *RulesPanel {
 		state:   state,
 	}
 	panel.scroll.Axis = layout.Vertical
-	panel.loadFromState()
+	panel.LoadFromState()
 	return panel
 }
 
@@ -118,7 +118,7 @@ func (this *RulesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	}
 }
 
-func (this *RulesPanel) loadFromState() {
+func (this *RulesPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
 	this.victory.SelectByName(constants.VictoryIDs[victoryIndex(settings.VictoryCondition)])
 	this.chkLostStartCity.Value = settings.LostStartCity
@@ -142,7 +142,7 @@ func (this *RulesPanel) loadFromState() {
 }
 
 // TODO: check `.Update(gtx)` and on true update the value
-func (this *RulesPanel) saveToState() {
+func (this *RulesPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.VictoryCondition = constants.VictoryIDs[this.victory.GetSelectedIndex()]
 		settings.LostStartCity = this.chkLostStartCity.Value

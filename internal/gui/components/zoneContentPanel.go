@@ -33,7 +33,7 @@ func NewZoneContentPanel(state *State) *ZoneContentPanel {
 	}
 	panel.scroll.Axis = layout.Vertical
 	panel.seedDefaultPlayerZoneContent()
-	panel.loadFromState()
+	panel.LoadFromState()
 	return panel
 }
 
@@ -46,7 +46,7 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 	}
 }
 
-func (this *ZoneContentPanel) loadFromState() {
+func (this *ZoneContentPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
 	if len(settings.PlayerZoneMandatoryContent) > 0 {
 		this.applyZoneContentItems(settings.PlayerZoneMandatoryContent)
@@ -54,7 +54,7 @@ func (this *ZoneContentPanel) loadFromState() {
 }
 
 // TODO: check `.Update(gtx)` and on true update the value
-func (this *ZoneContentPanel) saveToState() {
+func (this *ZoneContentPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.PlayerZoneMandatoryContent = this.collectZoneContentItems()
 	})
@@ -125,7 +125,7 @@ func (this *ZoneContentPanel) applyZoneContentItems(items []models.ZoneContentIt
 func (this *ZoneContentPanel) collectZoneContentItems() []models.ZoneContentItem {
 	var out []models.ZoneContentItem
 	collect := func(contentSection *content.ZoneContentSection) {
-		for _, row := range contentSection.rows {
+		for row := range contentSection.IterateRows() {
 			roadDistance := ""
 			if row.RoadDistIdx >= 0 && row.RoadDistIdx < len(constants.RoadDistances) {
 				roadDistance = constants.RoadDistances[row.RoadDistIdx]

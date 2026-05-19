@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"iter"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -83,6 +84,16 @@ func (this *ZoneContentSection) Add(mapping models.SidMapping, count int, guarde
 
 func (this *ZoneContentSection) ClearRows() {
 	this.rows = nil
+}
+
+func (this *ZoneContentSection) IterateRows() iter.Seq[*zoneContentRow] {
+	return func(yield func(*zoneContentRow) bool) {
+		for _, row := range this.rows {
+			if !yield(row) {
+				return
+			}
+		}
+	}
 }
 
 func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {

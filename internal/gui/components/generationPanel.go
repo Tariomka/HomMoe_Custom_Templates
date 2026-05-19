@@ -50,7 +50,7 @@ type GenerationPanel struct {
 func NewGenerationPanel(state *State) *GenerationPanel {
 	panel := &GenerationPanel{state: state}
 	panel.scroll.Axis = layout.Vertical
-	panel.loadFromState()
+	panel.LoadFromState()
 	return panel
 }
 
@@ -116,7 +116,7 @@ func (this *GenerationPanel) GetPanelWidget(theme *material.Theme) layout.Widget
 	}
 }
 
-func (this *GenerationPanel) loadFromState() {
+func (this *GenerationPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
 	this.chkRoads.Value = settings.GenerateRoads
 	this.chkPortals.Value = settings.RandomPortals
@@ -149,7 +149,7 @@ func (this *GenerationPanel) loadFromState() {
 }
 
 // TODO: check `.Update(gtx)` and on true update the value
-func (this *GenerationPanel) saveToState() {
+func (this *GenerationPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.GenerateRoads = this.chkRoads.Value
 		settings.RandomPortals = this.chkPortals.Value

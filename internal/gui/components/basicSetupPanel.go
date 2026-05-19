@@ -38,7 +38,7 @@ func NewBasicSetupPanel(state *State) *BasicSetupPanel {
 		state:        state,
 	}
 	panel.scroll.Axis = layout.Vertical
-	panel.loadFromState()
+	panel.LoadFromState()
 	return panel
 }
 
@@ -78,7 +78,7 @@ func (this *BasicSetupPanel) GetPanelWidget(theme *material.Theme) layout.Widget
 	}
 }
 
-func (this *BasicSetupPanel) loadFromState() {
+func (this *BasicSetupPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
 	this.templateName.SetText(settings.TemplateName)
 	this.gameMode.SetSelectedIndex(0)
@@ -89,7 +89,7 @@ func (this *BasicSetupPanel) loadFromState() {
 }
 
 // TODO: check `.Update(gtx)` and on true update the value
-func (this *BasicSetupPanel) saveToState() {
+func (this *BasicSetupPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
