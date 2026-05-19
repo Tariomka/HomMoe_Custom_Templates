@@ -28,8 +28,8 @@ func eventLoop() {
 	}
 
 	theme := themes.NewTheme()
-	state := gui.NewState()
-	// windowState := gui.NewWindow()
+	// state := gui.NewState()
+	windowState := gui.NewWindow()
 
 	var ops op.Ops
 	for {
@@ -42,8 +42,8 @@ func eventLoop() {
 			os.Exit(0)
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, event)
-			state.Layout(gtx, theme)
-			// windowState.Layout(gtx, theme)
+			// state.Layout(gtx, theme)
+			windowState.Layout(gtx, theme)
 			event.Frame(gtx.Ops)
 		}
 	}

@@ -38,7 +38,9 @@ func NewZoneContentPanel(state *State) *ZoneContentPanel {
 }
 
 func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
-	widgetsList := []layout.Widget{}
+	widgetsList := []layout.Widget{
+		// TODO: add widgets
+	}
 	return func(gtx layout.Context) layout.Dimensions {
 		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
 			return widgetsList[index](gtx)

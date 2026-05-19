@@ -28,6 +28,7 @@ func NewWindow() *Window {
 		components.NewTab("Zone Content", components.NewZoneContentPanel(window.state)),
 	}
 	window.previewPanel = components.NewPreviewPanel(window.state)
+	window.tabs[0].SetSelected(true)
 	return &window
 }
 
@@ -65,10 +66,11 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 
 func (this *Window) getTabsWidget(gtx layout.Context, theme *material.Theme) layout.Widget {
 	for i, tab := range this.tabs {
-		tab.SetSelected(false)
 		if tab.IsTabClicked(gtx) && this.selectedTab != i {
 			this.selectedTab = i
-			tab.SetSelected(true)
+			for i, t := range this.tabs {
+				t.SetSelected(this.selectedTab == i)
+			}
 		}
 	}
 	children := make([]layout.FlexChild, 0, len(this.tabs))
