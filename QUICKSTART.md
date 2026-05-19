@@ -1,18 +1,11 @@
 # Quick Start — Olden Era Custom Templates GUI
 
 This is a desktop GUI app, not a CLI. Launching it opens a window where
-you configure a template across four tabs and then click **Generate** to
-write a `.rmg.json` file.
+you configure a template across four tabs, preview the layout in a side
+panel, then click **Generate** + **Save Template** to write a `.rmg.json`
+file.
 
 ## 1. Run the App
-
-### Use the bundled binary
-
-```powershell
-.\bin\template-gui.exe
-```
-
-### Build from source
 
 Requires Go **1.25.8+**.
 
@@ -25,15 +18,24 @@ go build -o bin/template-gui.exe .
 .\bin\template-gui.exe
 ```
 
+For iterative work the project ships an [air](https://github.com/air-verse/air)
+config ([.air.toml](.air.toml)):
+
+```powershell
+air
+```
+
 ## 2. The Window
 
-The window has three regions:
+The window has four regions:
 
-- **Toolbar** (top): `New`, `Open`, `Save`, `Save As`, `Templates folder`,
-  `Discord`, `GitHub`, `Patch notes`.
-- **Tabs** (centre): the four configuration tabs listed below.
-- **Footer** (bottom): output folder picker, `Reveal output`,
-  `Generate`, `Save template`.
+- **Toolbar** (top): `New`, `Open…`, `Save`, `Save As…`, with the current
+  settings-file path on the right (a trailing `*` marks unsaved edits).
+- **Tabs** (centre-left): the four configuration tabs listed below.
+- **Preview** (centre-right): live render of the most recently generated
+  template, with `Refresh` and `Save PNG` buttons.
+- **Footer** (bottom): output folder picker, `Browse…`, `Reveal`,
+  `Generate Template`, `Save Template`, plus a status line.
 
 ### Tabs
 
@@ -67,28 +69,36 @@ The window has three regions:
 - **Gladiator arena** — start delay and counter day.
 - **Tournament** — first day, interval, points-to-win, save-army.
 
-#### 4. Zone Content (EXP)
+#### 4. Zone Content
 Add extra mandatory content items to seed into player zones in addition
 to the defaults from `services.ZoneContentManager`.
 
 ## 3. Save / Load Settings
 
 Settings are persisted as `.gen.json` files (the
-`models.SettingsFile` struct).
+`models.SettingsFile` struct, handled by `services.settingsFileLoader`).
 
-- **Save / Save As** — write the current widget state to disk.
-- **Open** — load a `.gen.json` file back into the widgets.
+- **Save / Save As…** — write the current widget state to disk.
+- **Open…** — load a `.gen.json` file back into the widgets.
 - **New** — reset to defaults.
+
+The toolbar's right-hand label always shows the active `.gen.json` path
+and an asterisk when there are unsaved changes.
 
 ## 4. Generate a Template
 
-1. Pick an output folder in the footer (`...` button next to the path).
-2. Click **Generate**.
-3. The app writes `<TemplateName>.rmg.json` into that folder.
-4. **Reveal output** opens the folder in Explorer.
+1. Pick an output folder in the footer (`Browse…` button next to the path).
+2. Click **Generate Template** — this builds the template in memory and
+   refreshes the preview panel.
+3. Click **Save Template** — writes `<TemplateName>.rmg.json` into the
+   chosen folder.
+4. **Reveal** opens the output folder in Explorer.
 
 Drop the resulting `.rmg.json` into the game's templates directory and
 pick it from the in-game Random Map Generator screen.
+
+The preview panel's **Save PNG** button writes a snapshot of the current
+preview canvas next to the template.
 
 ## 5. Programmatic Use
 
@@ -156,16 +166,16 @@ presets the slider snaps to:
   desktop session instead.
 - **`go build` complains about Go version** — install Go 1.25.8 or later
   (`go version`).
-- **`Generate` does nothing** — check that the output folder is set and
-  writable; the footer status line shows the last error.
-- **Template name is empty** — the generator returns an error; pick a name.
+- **`Save Template` is disabled** — click **Generate Template** first;
+  the button only enables once a template is in memory.
+- **Nothing happens after Generate** — check the footer status line for
+  errors and verify the template name is non-empty.
 - **Template won't load in the game** — verify the JSON is valid
   (`Get-Content map.rmg.json | python -m json.tool`) and compare against
-  files in `data/ExampleTemplates/`.
+  files in [data/ExampleTemplates/](data/ExampleTemplates).
 
 ## 9. Reference
 
 - [README.md](README.md) — architecture, project layout, build/test commands.
-- [MIGRATION.md](MIGRATION.md) — history of the C# WPF → Go GUI port.
-- [CONVERSION_SUMMARY.md](CONVERSION_SUMMARY.md) — checkpoint summary of the port.
-- `data/ExampleTemplates/` — 57 reference templates shipped with the game.
+- [data/ExampleTemplates/](data/ExampleTemplates) — 57 reference templates
+  shipped with the game.
