@@ -4,18 +4,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
 // ── helpers ──────────────────────────────────────────────────────────
 
-func defaultSettings() *models.GeneratorSettings {
-	return models.NewGeneratorSettings()
+func defaultSettings() *generator.GeneratorSettings {
+	return generator.NewGeneratorSettings()
 }
 
-func settingsWithTopology(topo models.MapTopology, players, neutrals int) *models.GeneratorSettings {
+func settingsWithTopology(topo generator.MapTopology, players, neutrals int) *generator.GeneratorSettings {
 	s := defaultSettings()
 	s.Topology = topo
 	s.PlayerCount = players
@@ -73,17 +75,17 @@ func TestGenerate_MapSizePreserved(t *testing.T) {
 func TestGenerate_ZoneCount_MatchesPlayersPlusNeutrals(t *testing.T) {
 	cases := []struct {
 		name     string
-		topo     models.MapTopology
+		topo     generator.MapTopology
 		players  int
 		neutrals int
 		wantMin  int // minimum expected zones
 	}{
-		{"Ring 2p 2n", models.TopologyDefault, 2, 2, 4},
-		{"Ring 4p 4n", models.TopologyDefault, 4, 4, 8},
-		{"Chain 2p 1n", models.TopologyChain, 2, 1, 3},
-		{"Hub 4p 0n", models.TopologyHubAndSpoke, 4, 0, 5}, // 4 player + 1 hub
-		{"SharedWeb 2p 1n", models.TopologySharedWeb, 2, 1, 3},
-		{"Random 3p 3n", models.TopologyRandom, 3, 3, 6},
+		{"Ring 2p 2n", generator.TopologyDefault, 2, 2, 4},
+		{"Ring 4p 4n", generator.TopologyDefault, 4, 4, 8},
+		{"Chain 2p 1n", generator.TopologyChain, 2, 1, 3},
+		{"Hub 4p 0n", generator.TopologyHubAndSpoke, 4, 0, 5}, // 4 player + 1 hub
+		{"SharedWeb 2p 1n", generator.TopologySharedWeb, 2, 1, 3},
+		{"Random 3p 3n", generator.TopologyRandom, 3, 3, 6},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -101,7 +103,7 @@ func TestGenerate_ZoneCount_MatchesPlayersPlusNeutrals(t *testing.T) {
 }
 
 func TestGenerate_PlayerZoneNames(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 3, 0)
+	s := settingsWithTopology(generator.TopologyDefault, 3, 0)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -118,7 +120,7 @@ func TestGenerate_PlayerZoneNames(t *testing.T) {
 }
 
 func TestGenerate_NeutralZoneNames(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 3)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 3)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -137,7 +139,7 @@ func TestGenerate_NeutralZoneNames(t *testing.T) {
 // ── Generate: connections ────────────────────────────────────────────
 
 func TestGenerate_RingTopology_HasConnections(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 4, 4)
+	s := settingsWithTopology(generator.TopologyDefault, 4, 4)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -158,7 +160,7 @@ func TestGenerate_RingTopology_HasConnections(t *testing.T) {
 }
 
 func TestGenerate_ChainTopology_HasFewerConnections(t *testing.T) {
-	s := settingsWithTopology(models.TopologyChain, 3, 2)
+	s := settingsWithTopology(generator.TopologyChain, 3, 2)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -171,7 +173,7 @@ func TestGenerate_ChainTopology_HasFewerConnections(t *testing.T) {
 }
 
 func TestGenerate_HubTopology_HasHubZone(t *testing.T) {
-	s := settingsWithTopology(models.TopologyHubAndSpoke, 4, 2)
+	s := settingsWithTopology(generator.TopologyHubAndSpoke, 4, 2)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -189,7 +191,7 @@ func TestGenerate_HubTopology_HasHubZone(t *testing.T) {
 }
 
 func TestGenerate_RandomPortals_AddsPortalConnections(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 4, 4)
+	s := settingsWithTopology(generator.TopologyDefault, 4, 4)
 	s.RandomPortals = true
 	s.MaxPortalConnections = 4
 	tmpl, err := services.Generate(s)
@@ -210,7 +212,7 @@ func TestGenerate_RandomPortals_AddsPortalConnections(t *testing.T) {
 // ── Generate: roads ──────────────────────────────────────────────────
 
 func TestGenerate_RoadsDisabled_NoRoads(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 2)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 2)
 	s.GenerateRoads = false
 	tmpl, err := services.Generate(s)
 	if err != nil {
@@ -224,7 +226,7 @@ func TestGenerate_RoadsDisabled_NoRoads(t *testing.T) {
 }
 
 func TestGenerate_RoadsEnabled_HasRoads(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 2)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 2)
 	s.GenerateRoads = true
 	tmpl, err := services.Generate(s)
 	if err != nil {
@@ -348,7 +350,7 @@ func TestGenerate_FactionLawsExpModifier(t *testing.T) {
 // ── Generate: mandatory content ──────────────────────────────────────
 
 func TestGenerate_MandatoryContent_PerZone(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 3)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 3)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -414,7 +416,7 @@ func TestGenerate_ContentCountLimits(t *testing.T) {
 // ── Generate: orientation ────────────────────────────────────────────
 
 func TestGenerate_Orientation_AngleStep(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 4, 4)
+	s := settingsWithTopology(generator.TopologyDefault, 4, 4)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -432,12 +434,12 @@ func TestGenerate_Orientation_AngleStep(t *testing.T) {
 // ── Generate: all topologies succeed ─────────────────────────────────
 
 func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
-	topos := []models.MapTopology{
-		models.TopologyDefault,
-		models.TopologyChain,
-		models.TopologyHubAndSpoke,
-		models.TopologySharedWeb,
-		models.TopologyRandom,
+	topos := []generator.MapTopology{
+		generator.TopologyDefault,
+		generator.TopologyChain,
+		generator.TopologyHubAndSpoke,
+		generator.TopologySharedWeb,
+		generator.TopologyRandom,
 	}
 	for _, topo := range topos {
 		for _, players := range []int{2, 3, 4, 8} {
@@ -464,7 +466,7 @@ func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
 // ── Generate: spawn zone content ─────────────────────────────────────
 
 func TestGenerate_SpawnZone_HasMainObjectSpawn(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 0)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 0)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -487,7 +489,7 @@ func TestGenerate_SpawnZone_HasMainObjectSpawn(t *testing.T) {
 }
 
 func TestGenerate_SpawnZone_MultipleCastles(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 0)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 0)
 	s.ZoneCfg.PlayerZoneCastles = 3
 	tmpl, err := services.Generate(s)
 	if err != nil {
@@ -507,7 +509,7 @@ func TestGenerate_SpawnZone_MultipleCastles(t *testing.T) {
 
 func TestGenerate_AdvancedMode_MixedNeutralTiers(t *testing.T) {
 	s := defaultSettings()
-	s.Topology = models.TopologyDefault
+	s.Topology = generator.TopologyDefault
 	s.PlayerCount = 2
 	s.ZoneCfg.Advanced.Enabled = true
 	s.ZoneCfg.Advanced.NeutralLowNoCastleCount = 1
@@ -532,7 +534,7 @@ func TestGenerate_AdvancedMode_MixedNeutralTiers(t *testing.T) {
 // ── Generate: city hold ──────────────────────────────────────────────
 
 func TestGenerate_CityHold_NeutralHasHoldCityFlag(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 2)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 2)
 	s.GameEndConditions = &models.GameEndConditions{
 		VictoryCondition: "win_condition_5",
 		CityHold:         true,
@@ -560,14 +562,14 @@ func TestGenerate_CityHold_NeutralHasHoldCityFlag(t *testing.T) {
 
 func TestGenerate_Description_ContainsTopology(t *testing.T) {
 	cases := []struct {
-		topo models.MapTopology
+		topo generator.MapTopology
 		want string
 	}{
-		{models.TopologyDefault, "Ring"},
-		{models.TopologyChain, "Chain"},
-		{models.TopologyHubAndSpoke, "Hub"},
-		{models.TopologySharedWeb, "Shared Web"},
-		{models.TopologyRandom, "Random"},
+		{generator.TopologyDefault, "Ring"},
+		{generator.TopologyChain, "Chain"},
+		{generator.TopologyHubAndSpoke, "Hub"},
+		{generator.TopologySharedWeb, "Shared Web"},
+		{generator.TopologyRandom, "Random"},
 	}
 	for _, tc := range cases {
 		s := settingsWithTopology(tc.topo, 2, 1)
@@ -582,7 +584,7 @@ func TestGenerate_Description_ContainsTopology(t *testing.T) {
 }
 
 func TestGenerate_Description_ContainsOptions(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 2)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 2)
 	s.NoDirectPlayerConnections = true
 	s.RandomPortals = true
 	s.GenerateRoads = false
@@ -600,7 +602,7 @@ func TestGenerate_Description_ContainsOptions(t *testing.T) {
 // ── Generate: isolation mode ─────────────────────────────────────────
 
 func TestGenerate_Isolation_NoDirectPlayerConnections(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 2)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 2)
 	s.NoDirectPlayerConnections = true
 	tmpl, err := services.Generate(s)
 	if err != nil {
@@ -722,12 +724,12 @@ func TestBuildAllContentCountLimits_UserContentLiftsLimit(t *testing.T) {
 	s := defaultSettings()
 	// Add 5 pandora boxes — should lift the default limit (4)
 	for i := 0; i < 5; i++ {
-		s.PlayerZoneMandatoryContent = append(s.PlayerZoneMandatoryContent, template.MandatoryContentItem{SID: models.ContentIds.PandoraBox.Sid})
+		s.PlayerZoneMandatoryContent = append(s.PlayerZoneMandatoryContent, template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid})
 	}
 	limits := services.BuildAllContentCountLimits(s)
 	for _, group := range limits {
 		for _, l := range group.Limits {
-			if strings.EqualFold(l.SID, models.ContentIds.PandoraBox.Sid) {
+			if strings.EqualFold(l.SID, constants.ContentIds.PandoraBox.Sid) {
 				if l.MaxCount < 5 {
 					t.Errorf("pandora box limit = %d, want >= 5 after user added 5", l.MaxCount)
 				}
@@ -741,7 +743,7 @@ func TestBuildAllContentCountLimits_UserContentLiftsLimit(t *testing.T) {
 // ── SharedWeb topology ───────────────────────────────────────────────
 
 func TestGenerate_SharedWeb_ForcesAtLeastOneNeutral(t *testing.T) {
-	s := settingsWithTopology(models.TopologySharedWeb, 2, 0)
+	s := settingsWithTopology(generator.TopologySharedWeb, 2, 0)
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -760,7 +762,7 @@ func TestGenerate_SharedWeb_ForcesAtLeastOneNeutral(t *testing.T) {
 // ── Tournament topology ──────────────────────────────────────────────
 
 func TestGenerate_TournamentMode_2Players(t *testing.T) {
-	s := settingsWithTopology(models.TopologyDefault, 2, 4)
+	s := settingsWithTopology(generator.TopologyDefault, 2, 4)
 	s.TournamentRules = &models.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
 	tmpl, err := services.Generate(s)
 	if err != nil {
@@ -781,10 +783,12 @@ func TestGenerate_TournamentMode_2Players(t *testing.T) {
 // ── Comprehensive topology JSON validity ─────────────────────────────
 
 func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
-	topos := []models.MapTopology{
-		models.TopologyDefault, models.TopologyChain,
-		models.TopologyHubAndSpoke, models.TopologySharedWeb,
-		models.TopologyRandom,
+	topos := []generator.MapTopology{
+		generator.TopologyDefault,
+		generator.TopologyChain,
+		generator.TopologyHubAndSpoke,
+		generator.TopologySharedWeb,
+		generator.TopologyRandom,
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 3)
@@ -819,10 +823,12 @@ func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 }
 
 func TestGenerate_AllConnections_ReferenceValidZones(t *testing.T) {
-	topos := []models.MapTopology{
-		models.TopologyDefault, models.TopologyChain,
-		models.TopologyHubAndSpoke, models.TopologySharedWeb,
-		models.TopologyRandom,
+	topos := []generator.MapTopology{
+		generator.TopologyDefault,
+		generator.TopologyChain,
+		generator.TopologyHubAndSpoke,
+		generator.TopologySharedWeb,
+		generator.TopologyRandom,
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 2)

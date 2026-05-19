@@ -1,217 +1,108 @@
-# Quick Start Guide - Template Generator (Go)
+# Quick Start — Olden Era Custom Templates GUI
 
-## Installation
+This is a desktop GUI app, not a CLI. Launching it opens a window where
+you configure a template across four tabs, preview the layout in a side
+panel, then click **Generate** + **Save Template** to write a `.rmg.json`
+file.
 
-### Option 1: Build from Source
+## 1. Run the App
 
-Requirements:
-- Go 1.25.8 or later
+Requires Go **1.25.8+**.
 
-```bash
-# Clone or navigate to the project
-cd "Template Generator"
+```powershell
+# Run directly
+go run .
 
-# Build the binary
-go build -o template-generator ./cmd
-
-# The binary is ready to use
-./template-generator -help
+# Or build a binary first
+go build -o bin/template-gui.exe .
+.\bin\template-gui.exe
 ```
 
-### Option 2: Use the Pre-built Binary
+For iterative work the project ships an [air](https://github.com/air-verse/air)
+config ([.air.toml](.air.toml)):
 
-If a pre-built binary is available, download it and run:
-```bash
-./template-generator -help
+```powershell
+air
 ```
 
-## Basic Usage
+## 2. The Window
 
-### Generate a Simple Template
+The window has four regions:
 
-```bash
-./template-generator \
-  -name="My First Map" \
-  -players=4 \
-  -size=L \
-  -output=.
-```
+- **Toolbar** (top): `New`, `Open…`, `Save`, `Save As…`, with the current
+  settings-file path on the right (a trailing `*` marks unsaved edits).
+- **Tabs** (centre-left): the four configuration tabs listed below.
+- **Preview** (centre-right): live render of the most recently generated
+  template, with `Refresh` and `Save PNG` buttons.
+- **Footer** (bottom): output folder picker, `Browse…`, `Reveal`,
+  `Generate Template`, `Save Template`, plus a status line.
 
-This creates: `My First Map.rmg.json`
+### Tabs
 
-### Generate with Custom Settings
+#### 1. Map Setup
+- **Template name** — used as the output filename (`<name>.rmg.json`).
+- **Game mode** — `Classic` or `SingleHero` (only `Classic` is currently emitted).
+- **Players** — 2..8.
+- **Map size** — slider in tile units (64..240). Tick
+  *"Allow experimental large map sizes (>240)"* to extend to 256..512.
+- **Topology** — `Random` (default), `Ring`, `Hub`, `Chain`, `Shared Web`.
 
-```bash
-./template-generator \
-  -name="Epic Battle" \
-  -players=6 \
-  -size=2XL \
-  -topology=HubAndSpoke \
-  -game=Heroic \
-  -roads=true \
-  -portals=true \
-  -footholds=true \
-  -cityhold=true \
-  -output=./my_templates
-```
+#### 2. Generation Options
+- **Connectivity** — toggle roads, random portals (with max-portal slider),
+  remote footholds, experimental balanced placement, player isolation,
+  faction-matched player castles, minimum neutrals between players.
+- **Advanced neutral zones** — when enabled, set per-quality counts split
+  between *with castle* and *without castle* (Low / Medium / High).
+  When disabled, just set the total `Neutral zone count`.
+- **Zone sizes** — player / neutral / hub multipliers, hub castle count,
+  guard randomization.
+- **Content density** — resource and structure density percents
+  (independent or via the unified `Content density` knob).
 
-## Command-Line Options
+#### 3. Game Rules
+- **Victory condition** — Standard / Lost Starting City / Hold City / Tournament.
+  When Hold City is selected the generator also picks a neutral zone to
+  host the city-hold target.
+- **Heroes** — min, max, increment.
+- **Faction laws XP %** and **Astrology XP %** — 25..200 (100 = baseline).
+- **Lost-city / lost-hero / city-hold** day toggles.
+- **Gladiator arena** — start delay and counter day.
+- **Tournament** — first day, interval, points-to-win, save-army.
 
-```
--name string
-    Template name (default "Generated Template")
+#### 4. Zone Content
+Add extra mandatory content items to seed into player zones in addition
+to the defaults from `services.ZoneContentManager`.
 
--players int
-    Number of players (default 4)
+## 3. Save / Load Settings
 
--size string
-    Map size: S, M, L, XL, 2XL (default "L")
+Settings are persisted as `.gen.json` files (the
+`models.SettingsFile` struct, handled by `services.settingsFileLoader`).
 
--topology string
-    Topology type: Default, Chain, HubAndSpoke, SharedWeb, Random (default "Default")
+- **Save / Save As…** — write the current widget state to disk.
+- **Open…** — load a `.gen.json` file back into the widgets.
+- **New** — reset to defaults.
 
--game string
-    Game mode: Classic, Blitz, Heroic (default "Classic")
+The toolbar's right-hand label always shows the active `.gen.json` path
+and an asterisk when there are unsaved changes.
 
--roads boolean
-    Allow roads between zones (default true)
+## 4. Generate a Template
 
--portals boolean
-    Allow portals between zones (default true)
+1. Pick an output folder in the footer (`Browse…` button next to the path).
+2. Click **Generate Template** — this builds the template in memory and
+   refreshes the preview panel.
+3. Click **Save Template** — writes `<TemplateName>.rmg.json` into the
+   chosen folder.
+4. **Reveal** opens the output folder in Explorer.
 
--footholds boolean
-    Allow footholds (default false)
+Drop the resulting `.rmg.json` into the game's templates directory and
+pick it from the in-game Random Map Generator screen.
 
--cityhold boolean
-    Enable city hold win condition (default false)
+The preview panel's **Save PNG** button writes a snapshot of the current
+preview canvas next to the template.
 
--output string
-    Output directory (default ".")
-```
+## 5. Programmatic Use
 
-## Examples
-
-### Tournament Map (4 Players)
-```bash
-./template-generator \
-  -name="Tournament" \
-  -players=4 \
-  -size=L \
-  -topology=Default \
-  -output=./templates
-```
-
-### Large Free-for-All (8 Players)
-```bash
-./template-generator \
-  -name="Free for All" \
-  -players=8 \
-  -size=2XL \
-  -topology=Random \
-  -roads=false \
-  -output=./templates
-```
-
-### Hub and Spoke (6 Players)
-```bash
-./template-generator \
-  -name="Spoke" \
-  -players=6 \
-  -size=XL \
-  -topology=HubAndSpoke \
-  -output=./templates
-```
-
-### Blitz Mode (2v2)
-```bash
-./template-generator \
-  -name="Blitz 2v2" \
-  -players=4 \
-  -size=M \
-  -game=Blitz \
-  -topology=Chain \
-  -output=./templates
-```
-
-## Understanding Map Sizes
-
-- **S (Small)**: Fast-paced, testing maps - 72x72 tiles
-- **M (Medium)**: Quick games - 108x108 tiles
-- **L (Large)**: Standard play - 144x144 tiles (default)
-- **XL (Extra Large)**: Long games - 180x180 tiles
-- **2XL (Double Extra Large)**: Epic battles - 216x216 tiles
-
-## Understanding Topologies
-
-### Default (Ring)
-Players arranged in a circle, each connected to neighbors.
-```
-    1
-  6   2
-5       3
-  4
-```
-
-### Chain
-Players in a line, each connected linearly.
-```
-1 -- 2 -- 3 -- 4
-```
-
-### HubAndSpoke
-All players connected through a central neutral zone.
-```
-    1
-    |
-5--HUB--2
-    |
-    4
-    |
-    3
-```
-
-### SharedWeb
-Players connected through neutral zones.
-```
-1 -- N1 -- 2 -- N2 -- 3
-```
-
-### Random
-Random connections with Delaunay triangulation logic.
-```
-(variable topology based on zone positions)
-```
-
-## File Output
-
-The generator creates a `.rmg.json` file with:
-- Template metadata (name, description, size)
-- Game rules (win conditions, hero counts)
-- Zones (player and neutral)
-- Connections (roads, portals, guard zones)
-- Layout information
-
-## Troubleshooting
-
-### "command not found: template-generator"
-- Make sure you're in the correct directory
-- Use `./template-generator` with the leading `./`
-- Or add to PATH: `export PATH=$PATH:$(pwd)`
-
-### Output directory doesn't exist
-- Create the directory first: `mkdir -p ./my_templates`
-- Or use an existing directory like `.` (current directory)
-
-### File already exists
-- The tool will overwrite existing files
-- Rename or move existing `.rmg.json` files first
-
-### Template won't load in game
-- Verify the JSON is valid: `cat your-template.rmg.json | python -m json.tool`
-- Check example templates for correct structure
-- Ensure map size and zone count are appropriate
-
-## Programmatic Usage (Go)
+If you want to call the generator from Go without the GUI:
 
 ```go
 package main
@@ -220,38 +111,71 @@ import (
     "encoding/json"
     "os"
 
-    "github.com/Tariomka/hommoe_custom_templates/internal/generator"
-    "github.com/Tariomka/hommoe_custom_templates/internal/models"
+    "github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+    "github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
 func main() {
-    settings := &models.GeneratorSettings{
-        TemplateName: "Programmatic Map",
-        PlayerCount: 4,
-        MapSize: "L",
-        Topology: models.TopologyDefault,
-    }
+    s := generator.NewGeneratorSettings() // sensible defaults
+    s.TemplateName = "Programmatic Map"
+    s.PlayerCount = 4
+    s.MapSize = 160
+    s.Topology = generator.TopologyDefault // Ring
 
-    template, err := generator.Generate(settings)
+    tmpl, err := services.Generate(s)
     if err != nil {
         panic(err)
     }
 
-    // Marshal to JSON and save
-    data, _ := json.MarshalIndent(template, "", "  ")
-    os.WriteFile("output.rmg.json", data, 0644)
+    data, _ := json.MarshalIndent(tmpl, "", "  ")
+    _ = os.WriteFile("Programmatic Map.rmg.json", data, 0o644)
 }
 ```
 
-## Reference
+`generator.NewGeneratorSettings()` matches the GUI's defaults
+(2 players, size 160, topology Random, Classic mode, etc.).
 
-- See `README.md` for technical details
-- See `MIGRATION.md` for C# to Go conversion notes
-- Example templates: `data/GameData/ExampleTemplates/`
+## 6. Map Sizes
 
-## Support
+Map size is the raw tile count (`sizeX = sizeZ = MapSize`). Common
+presets the slider snaps to:
 
-For issues or questions:
-1. Check the README.md
-2. Review AGENTS.md for development guidelines
-3. Examine example templates for format reference
+| Tiles | Notes                                  |
+|-------|----------------------------------------|
+|  64   | Tiny                                   |
+|  96   | Small                                  |
+| 128   | Medium                                 |
+| 160   | Large (default)                        |
+| 192   | Extra Large                            |
+| 240   | Maximum non-experimental               |
+| 256+  | Experimental (enable the checkbox)     |
+| 512   | Largest experimental size              |
+
+## 7. Topologies at a Glance
+
+- **Random** — default; positions and connections are randomised.
+- **Ring** (`TopologyDefault`) — players in a circle, neighbours connected.
+- **Hub** (`TopologyHubAndSpoke`) — all players connect through a central hub zone.
+- **Chain** — players strung in a line.
+- **Shared Web** — players linked through shared neutral zones.
+
+## 8. Troubleshooting
+
+- **Window doesn't open** — Gio needs a working graphics stack. If
+  running over Remote Desktop or in a headless container, run on a real
+  desktop session instead.
+- **`go build` complains about Go version** — install Go 1.25.8 or later
+  (`go version`).
+- **`Save Template` is disabled** — click **Generate Template** first;
+  the button only enables once a template is in memory.
+- **Nothing happens after Generate** — check the footer status line for
+  errors and verify the template name is non-empty.
+- **Template won't load in the game** — verify the JSON is valid
+  (`Get-Content map.rmg.json | python -m json.tool`) and compare against
+  files in [data/ExampleTemplates/](data/ExampleTemplates).
+
+## 9. Reference
+
+- [README.md](README.md) — architecture, project layout, build/test commands.
+- [data/ExampleTemplates/](data/ExampleTemplates) — 57 reference templates
+  shipped with the game.
