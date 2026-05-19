@@ -97,7 +97,7 @@ func (this *DropdownSelector) Layout(gtx layout.Context, theme *material.Theme) 
 	this.Update(gtx)
 	flex := layout.Flex{Axis: layout.Vertical}
 	children := []layout.FlexChild{
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.layoutTrigger(gtx, theme) }),
+		layout.Rigid(this.getTriggerWidget(theme)),
 	}
 	if this.isOpen && len(this.items) > 0 {
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -109,46 +109,48 @@ func (this *DropdownSelector) Layout(gtx layout.Context, theme *material.Theme) 
 	return flex.Layout(gtx, children...)
 }
 
-func (this *DropdownSelector) layoutTrigger(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	return material.Clickable(gtx, &this.toggle, func(gtx layout.Context) layout.Dimensions {
-		macro := op.Record(gtx.Ops)
-		dims := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					label := material.Body1(theme, this.Value())
-					label.Color = themes.ColorText
-					label.TextSize = unit.Sp(13)
-					label.MaxLines = 1
-					label.Truncator = "…"
-					return label.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					arrow := "▾"
-					if this.isOpen {
-						arrow = "▴"
-					}
-					label := material.Body1(theme, arrow)
-					label.Color = themes.ColorGoldDim
-					label.TextSize = unit.Sp(11)
-					return label.Layout(gtx)
-				}),
-			)
+func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		return material.Clickable(gtx, &this.toggle, func(gtx layout.Context) layout.Dimensions {
+			macro := op.Record(gtx.Ops)
+			dims := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+						label := material.Body1(theme, this.Value())
+						label.Color = themes.ColorText
+						label.TextSize = unit.Sp(13)
+						label.MaxLines = 1
+						label.Truncator = "…"
+						return label.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						arrow := "▾"
+						if this.isOpen {
+							arrow = "▴"
+						}
+						label := material.Body1(theme, arrow)
+						label.Color = themes.ColorGoldDim
+						label.TextSize = unit.Sp(11)
+						return label.Layout(gtx)
+					}),
+				)
+			})
+			call := macro.Stop()
+			radius := gtx.Dp(2)
+			rect := image.Rectangle{Max: dims.Size}
+			paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+			border := themes.ColorBorder
+			if this.isOpen {
+				border = themes.ColorGold
+			}
+			paint.FillShape(gtx.Ops, border, clip.Stroke{
+				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
+				Width: float32(gtx.Dp(1)),
+			}.Op())
+			call.Add(gtx.Ops)
+			return dims
 		})
-		call := macro.Stop()
-		radius := gtx.Dp(2)
-		rect := image.Rectangle{Max: dims.Size}
-		paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-		border := themes.ColorBorder
-		if this.isOpen {
-			border = themes.ColorGold
-		}
-		paint.FillShape(gtx.Ops, border, clip.Stroke{
-			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-			Width: float32(gtx.Dp(1)),
-		}.Op())
-		call.Add(gtx.Ops)
-		return dims
-	})
+	}
 }
 
 func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.Theme) layout.Dimensions {

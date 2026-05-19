@@ -6,6 +6,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -24,7 +25,6 @@ type ZoneContentPanel struct {
 
 func NewZoneContentPanel(state *State) *ZoneContentPanel {
 	panel := &ZoneContentPanel{
-
 		zcMines:     content.NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
 		zcTreasures: content.NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
 		zcHires:     content.NewZoneContentSection("Random Hires", constants.ContentItemGroup.HireBuildings, 10, false),
@@ -32,14 +32,20 @@ func NewZoneContentPanel(state *State) *ZoneContentPanel {
 		state:       state,
 	}
 	panel.scroll.Axis = layout.Vertical
-	panel.seedDefaultPlayerZoneContent()
 	panel.LoadFromState()
 	return panel
 }
 
 func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	widgetsList := []layout.Widget{
-		// TODO: add widgets
+		widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Player zone mandatory content. Effects only apply on generation."),
+		func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset to defaults", &this.btnZoneReset, false)))
+		},
+		this.zcMines.Layout(theme),
+		this.zcTreasures.Layout(theme),
+		this.zcHires.Layout(theme),
+		this.zcBanks.Layout(theme),
 	}
 	return func(gtx layout.Context) layout.Dimensions {
 		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
@@ -49,6 +55,7 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 }
 
 func (this *ZoneContentPanel) LoadFromState() {
+	this.seedDefaultPlayerZoneContent()
 	settings := this.state.GetSettingsFile()
 	if len(settings.PlayerZoneMandatoryContent) > 0 {
 		this.applyZoneContentItems(settings.PlayerZoneMandatoryContent)

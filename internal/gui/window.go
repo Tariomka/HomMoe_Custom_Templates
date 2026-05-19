@@ -16,6 +16,7 @@ type Window struct {
 
 	toolbar      *components.Toolbar
 	previewPanel *components.PreviewPanel
+	footerPanel  *components.FooterPanel
 }
 
 func NewWindow() *Window {
@@ -28,14 +29,17 @@ func NewWindow() *Window {
 		components.NewTab("Zone Content", components.NewZoneContentPanel(window.state)),
 	}
 	window.previewPanel = components.NewPreviewPanel(window.state)
+	window.footerPanel = components.NewFooterPanel(window.state)
 	window.tabs[0].SetSelected(true)
 	return &window
 }
 
 func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	this.save()
+
 	this.toolbar.HandleClicks(gtx)
 	this.previewPanel.HandleClicks(gtx)
-	// TODO: Footer handle clicks
+	this.footerPanel.HandleClicks(gtx)
 
 	fillBackground(gtx, colBackground)
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -59,7 +63,7 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 				)
 			}),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-			// layout.Rigid(this.layoutFooterWidget(theme)),
+			layout.Rigid(this.footerPanel.GetPanelWidget(theme)),
 		)
 	})
 }
