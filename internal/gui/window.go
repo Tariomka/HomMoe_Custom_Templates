@@ -1,10 +1,15 @@
 package gui
 
 import (
+	"image"
+
 	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 )
 
@@ -41,7 +46,8 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 	this.previewPanel.HandleClicks(gtx)
 	this.footerPanel.HandleClicks(gtx)
 
-	fillBackground(gtx, colBackground)
+	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
+
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(widgets.NewTitleBarWidget(theme, "⚔  Olden Era — Template Generator")),
