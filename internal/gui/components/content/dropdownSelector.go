@@ -20,12 +20,12 @@ type dropdownItem struct {
 	row   widget.Clickable
 }
 
-func newDropdownItem(label string) dropdownItem {
-	return dropdownItem{label: label}
+func newDropdownItem(label string) *dropdownItem {
+	return &dropdownItem{label: label}
 }
 
 type DropdownSelector struct {
-	items         []dropdownItem
+	items         []*dropdownItem
 	selectedIndex int
 
 	toggle widget.Clickable
@@ -33,7 +33,7 @@ type DropdownSelector struct {
 }
 
 func NewDropdownSelector(labels []string) *DropdownSelector {
-	items := make([]dropdownItem, len(labels))
+	items := make([]*dropdownItem, len(labels))
 	for i, label := range labels {
 		items[i] = newDropdownItem(label)
 	}
@@ -46,7 +46,7 @@ func (this *DropdownSelector) GetSelectedIndex() int {
 
 // SetItems replaces the option list and resets selection bounds.
 func (this *DropdownSelector) SetItems(items []string) {
-	newItems := make([]dropdownItem, len(items))
+	newItems := make([]*dropdownItem, len(items))
 	for i, label := range items {
 		newItems[i] = newDropdownItem(label)
 	}
