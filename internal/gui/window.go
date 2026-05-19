@@ -1,6 +1,12 @@
 package gui
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/gui/components"
+import (
+	"gioui.org/layout"
+	"gioui.org/unit"
+	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+)
 
 type Window struct {
 	state *components.State
@@ -14,7 +20,7 @@ type Window struct {
 
 func NewWindow() *Window {
 	window := Window{state: components.NewUiState()}
-	window.toolbar = components.NewToolbar(window.state)
+	window.toolbar = components.NewToolbar(window.state, window.reset)
 	window.tabs = []*components.Tab{
 		components.NewTab("Map Setup", components.NewBasicSetupPanel(window.state)),
 		components.NewTab("Generation Options", components.NewGenerationPanel(window.state)),
@@ -23,6 +29,55 @@ func NewWindow() *Window {
 	}
 	window.previewPanel = components.NewPreviewPanel(window.state)
 	return &window
+}
+
+func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	this.toolbar.HandleClicks(gtx)
+	this.previewPanel.HandleClicks(gtx)
+	// TODO: Footer handle clicks
+
+	fillBackground(gtx, colBackground)
+	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(widgets.NewTitleBarWidget(theme, "⚔  Olden Era — Template Generator")),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
+			layout.Rigid(this.toolbar.GetWidget(theme)),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
+			layout.Rigid(this.getTabsWidget(gtx, theme)),
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(1, widgets.NewPanelWidget(unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
+						return layout.UniformInset(unit.Dp(10)).Layout(gtx, this.tabs[this.selectedTab].GetPanelWidget(theme))
+					})),
+					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
+						gtx.Constraints.Max.X = gtx.Dp(unit.Dp(440))
+						return this.previewPanel.GetPanelWidget(theme)(gtx)
+					}),
+				)
+			}),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
+			// layout.Rigid(this.layoutFooterWidget(theme)),
+		)
+	})
+}
+
+func (this *Window) getTabsWidget(gtx layout.Context, theme *material.Theme) layout.Widget {
+	for i, tab := range this.tabs {
+		tab.SetSelected(false)
+		if tab.IsTabClicked(gtx) && this.selectedTab != i {
+			this.selectedTab = i
+			tab.SetSelected(true)
+		}
+	}
+	children := make([]layout.FlexChild, 0, len(this.tabs))
+	for _, tab := range this.tabs {
+		children = append(children, layout.Rigid(tab.GetWidget(theme)))
+	}
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
+	}
 }
 
 func (this *Window) save() {
@@ -35,4 +90,9 @@ func (this *Window) load() {
 	for _, tab := range this.tabs {
 		tab.LoadFromState()
 	}
+}
+
+func (this *Window) reset() {
+	this.state.Reset()
+	this.load()
 }

@@ -16,12 +16,14 @@ type Toolbar struct {
 	buttonSave   widget.Clickable
 	buttonSaveAs widget.Clickable
 
-	state *State
+	resetCallback func()
+	state         *State
 }
 
-func NewToolbar(state *State) *Toolbar {
+func NewToolbar(state *State, resetCallback func()) *Toolbar {
 	return &Toolbar{
-		state: state,
+		state:         state,
+		resetCallback: resetCallback,
 	}
 }
 
@@ -83,7 +85,7 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 func (this *Toolbar) HandleClicks(gtx layout.Context) {
 	if this.buttonReset.Clicked(gtx) {
 		this.state.Reset()
-		// this.applyFromSettingsFile()
+		this.resetCallback()
 	}
 	if this.buttonOpen.Clicked(gtx) {
 		this.state.Load()
