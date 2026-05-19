@@ -19,18 +19,18 @@ type segmentButton struct {
 	button widget.Clickable
 }
 
-func newSegmentButton(label string) segmentButton {
-	return segmentButton{label: label}
+func newSegmentButton(label string) *segmentButton {
+	return &segmentButton{label: label}
 }
 
 // SegmentButtonGroup is a horizontal row of mutually-exclusive segment buttons.
 type SegmentButtonGroup struct {
-	buttons       []segmentButton
+	buttons       []*segmentButton
 	selectedIndex int
 }
 
 func NewSegmentButtonGroup(labels []string) *SegmentButtonGroup {
-	buttons := make([]segmentButton, len(labels))
+	buttons := make([]*segmentButton, len(labels))
 	for i, label := range labels {
 		buttons[i] = newSegmentButton(label)
 	}
@@ -46,8 +46,8 @@ func (this *SegmentButtonGroup) SetSelectedIndex(index int) {
 // Update returns true if the selection changed this frame.
 func (this *SegmentButtonGroup) Update(gtx layout.Context) bool {
 	changed := false
-	for i := range this.buttons {
-		if this.buttons[i].button.Clicked(gtx) && this.selectedIndex != i {
+	for i, button := range this.buttons {
+		if button.button.Clicked(gtx) && this.selectedIndex != i {
 			this.selectedIndex = i
 			changed = true
 		}
@@ -58,13 +58,11 @@ func (this *SegmentButtonGroup) Update(gtx layout.Context) bool {
 func (this *SegmentButtonGroup) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	this.Update(gtx)
 	children := make([]layout.FlexChild, 0, len(this.buttons))
-	for i := range this.buttons {
-		button := &this.buttons[i]
-		selected := i == this.selectedIndex
+	for i, button := range this.buttons {
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return material.Clickable(gtx, &button.button, func(gtx layout.Context) layout.Dimensions {
 				return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return drawSegment(gtx, theme, button.label, selected)
+					return drawSegment(gtx, theme, button.label, this.selectedIndex == i)
 				})
 			})
 		}))
