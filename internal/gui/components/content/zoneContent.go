@@ -149,7 +149,6 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 				}
 				children := make([]layout.FlexChild, 0, len(this.rows)*2)
 				for i, row := range this.rows {
-					row := row
 					if i > 0 {
 						children = append(children, layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout))
 					}
