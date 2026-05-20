@@ -9,14 +9,31 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
-// ── Distance presets ─────────────────────────────────────────────────
-
 var (
-	distNextTo = distancePreset{0.05, 0.1}
-	// distMedium = distancePreset{0.25, 0.5}   // unused currently
-	// distFar    = distancePreset{0.5, 0.75}
-	// distVeryFar = distancePreset{0.75, 0.9}
+	distNextTo  = distancePreset{0.05, 0.1}
+	distMedium  = distancePreset{0.25, 0.5}
+	distFar     = distancePreset{0.5, 0.75}
+	distVeryFar = distancePreset{0.75, 0.9}
 )
+
+// distanceForLabel resolves the road-distance label persisted in a
+// ZoneContentRowSave to the matching distancePreset. An empty or unknown
+// label means "Any" (no constraint added).
+func distanceForLabel(label string) (distancePreset, bool) {
+	switch strings.TrimSpace(label) {
+	case "Next To":
+		return distNextTo, true
+	case "Near":
+		return distNear, true
+	case "Medium":
+		return distMedium, true
+	case "Far":
+		return distFar, true
+	case "Very Far":
+		return distVeryFar, true
+	}
+	return distancePreset{}, false
+}
 
 // ── Rule presets ─────────────────────────────────────────────────────
 
@@ -62,7 +79,7 @@ func (this *contentBuilder) addRules(rs []template.PlacementRule) *contentBuilde
 }
 func (this *contentBuilder) build() template.MandatoryContentItem { return this.item }
 
-// ── Content presets ──────────────────────────────────────────────────
+// ── Foothold preset (still used by every zone type) ──────────────────
 
 func footholdRules(castleCount int) []template.PlacementRule {
 	rules := []template.PlacementRule{
@@ -85,162 +102,121 @@ func presetRemoteFoothold(castleCount int) template.MandatoryContentItem {
 		build()
 }
 
-func presetMineGoldNearCrossroads() template.MandatoryContentItem {
-	return newContentBuilder(constants.ContentIds.MineGold.Sid).mine().
-		addRule(ruleCrossroadsDistance(distNear, 1)).build()
+// RowsToMandatoryContent expands a slice of save-rows to a flat list of
+// MandatoryContentItem entries suitable for a MandatoryContent.Content.
+func RowsToMandatoryContent(rows []models.ZoneContentRowSave) []template.MandatoryContentItem {
+	if len(rows) == 0 {
+		return nil
+	}
+	var out []template.MandatoryContentItem
+	for _, raw := range rows {
+		row := raw.Normalised()
+		if row.Sid == "" {
+			continue
+		}
+		for i := 0; i < row.Count; i++ {
+			out = append(out, rowToMandatoryItem(row))
+		}
+	}
+	return out
 }
 
-func presetMineCrystalsNextToRoad() template.MandatoryContentItem {
-	return newContentBuilder(constants.ContentIds.MineCrystals.Sid).withName("name_mine_crystals").mine().
-		roadDistance(distNextTo).build()
+func rowToMandatoryItem(row models.ZoneContentRowSave) template.MandatoryContentItem {
+	item := template.MandatoryContentItem{
+		IsGuarded: row.IsGuarded,
+		IsMine:    row.IsMine,
+	}
+	if row.IsGroup {
+		item.IncludeLists = []string{row.Sid}
+	} else {
+		item.SID = row.Sid
+	}
+	if row.NearCastle {
+		item.Rules = append(item.Rules, ruleNearCastle(1))
+	}
+	if d, ok := distanceForLabel(row.RoadDistance); ok {
+		item.Rules = append(item.Rules, ruleRoadDistance(d, 1))
+	}
+	return item
 }
 
-func presetMineMercuryNextToRoad() template.MandatoryContentItem {
-	return newContentBuilder(constants.ContentIds.MineMercury.Sid).withName("name_mine_mercury").mine().
-		roadDistance(distNextTo).build()
+// StripNearCastleRules removes placement rules that anchor an item near
+// the zone's main castle. Used when a zone has no castle so the rule
+// would never be satisfiable
+func StripNearCastleRules(items []template.MandatoryContentItem) []template.MandatoryContentItem {
+	for i := range items {
+		if len(items[i].Rules) == 0 {
+			continue
+		}
+		kept := items[i].Rules[:0]
+		for _, rule := range items[i].Rules {
+			if rule.Type == "MainObject" && len(rule.Args) > 0 {
+				if arg, ok := rule.Args[0].(string); ok && arg == "0" {
+					continue
+				}
+			}
+			kept = append(kept, rule)
+		}
+		items[i].Rules = kept
+	}
+	return items
 }
 
-func presetMineGemstonesNextToRoad() template.MandatoryContentItem {
-	return newContentBuilder(constants.ContentIds.MineGemstones.Sid).withName("name_mine_gemstones").mine().
-		roadDistance(distNextTo).build()
+func contentWithFootholdAndRows(
+	settings *models.GeneratorSettings,
+	castleCount int,
+	rows []template.MandatoryContentItem,
+) []template.MandatoryContentItem {
+	var content []template.MandatoryContentItem
+	if settings.SpawnRemoteFootholds {
+		content = append(content, presetRemoteFoothold(castleCount))
+	}
+	content = append(content, rows...)
+	return content
 }
-
-func presetAlchemyLabNearRoad() template.MandatoryContentItem {
-	return newContentBuilder(constants.ContentIds.AlchemyLab.Sid).withName("name_alchemy_lab").mine().
-		roadDistance(distNear).build()
-}
-
-// ── Zone content manager ─────────────────────────────────────────────
 
 // BuildPlayerZoneMandatoryContent returns the mandatory content list for a player spawn zone.
 func BuildPlayerZoneMandatoryContent(settings *models.GeneratorSettings) []template.MandatoryContentItem {
-	var content []template.MandatoryContentItem
-
-	if settings.SpawnRemoteFootholds {
-		content = append(content, presetRemoteFoothold(settings.ZoneCfg.PlayerZoneCastles))
-	}
-
-	// Append user-configured items from the UI.
-	content = append(content, settings.PlayerZoneMandatoryContent...)
-
-	content = append(content,
-		template.MandatoryContentItem{SID: "watchtower"},
-		newContentBuilder(constants.ContentIds.Market.Sid).guarded().roadDistance(distNear).build(),
-		newContentBuilder(constants.ContentIds.ManaWell.Sid).roadDistance(distNear).build(),
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_2"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_uncommon_hero_banks"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_low_tier"}, IsGuarded: true},
-	)
-	return content
+	return contentWithFootholdAndRows(settings, settings.ZoneCfg.PlayerZoneCastles, settings.PlayerZoneMandatoryContent)
 }
 
 // BuildLowNeutralMandatoryContent returns mandatory content for a low-quality neutral zone.
-func BuildLowNeutralMandatoryContent(castleCount int, spawnFootholds bool) []template.MandatoryContentItem {
-	var content []template.MandatoryContentItem
-	if spawnFootholds {
-		content = append(content, presetRemoteFoothold(castleCount))
+func BuildLowNeutralMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+	rows := settings.LowNeutralMandatoryContent
+	if castleCount == 0 {
+		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
 	}
-	content = append(content,
-		template.MandatoryContentItem{Name: "name_mine_by_biome_1", IncludeLists: []string{"basic_content_list_rare_mines_by_biome"}, IsMine: true},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_rare_mines"}, IsMine: true},
-		newContentBuilder(constants.ContentIds.Market.Sid).guarded().addRule(ruleCrossroadsDistance(distNear, 1)).build(),
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_vision_buildings_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_buff_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_buff_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_low_tier"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_low_tier"}},
-		newContentBuilder(constants.ContentIds.PandoraBox.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_low_tier"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_pickup_random_items"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_magic_tier_1"}},
-	)
-	return content
+	return contentWithFootholdAndRows(settings, castleCount, rows)
 }
 
 // BuildMediumNeutralMandatoryContent returns mandatory content for a medium-quality neutral zone.
-func BuildMediumNeutralMandatoryContent(castleCount int, spawnFootholds bool) []template.MandatoryContentItem {
-	var content []template.MandatoryContentItem
-	if spawnFootholds {
-		content = append(content, presetRemoteFoothold(castleCount))
+func BuildMediumNeutralMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+	rows := settings.MediumNeutralMandatoryContent
+	if castleCount == 0 {
+		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
 	}
-	content = append(content,
-		presetMineCrystalsNextToRoad(),
-		presetMineMercuryNextToRoad(),
-		presetMineGemstonesNextToRoad(),
-		presetAlchemyLabNearRoad(),
-		newContentBuilder(constants.ContentIds.MineGold.Sid).mine().roadDistance(distNear).build(),
-		newContentBuilder(constants.ContentIds.Watchtower.Sid).guarded().build(),
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_vision_buildings_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_buff_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_2"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_magic_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_magic_tier_2"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_low_tier"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_high_tier"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_units_banks_only_biome_restriction"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_resource_banks_tier_2"}},
-		newContentBuilder(constants.ContentIds.RandomItemEpic.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: constants.ContentIds.RandomItemEpic.Sid},
-		newContentBuilder(constants.ContentIds.PandoraBox.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_low_tier"}},
-	)
-	return content
+	return contentWithFootholdAndRows(settings, castleCount, rows)
 }
 
 // BuildHighNeutralMandatoryContent returns mandatory content for a high-quality neutral zone.
-func BuildHighNeutralMandatoryContent(castleCount int, spawnFootholds bool) []template.MandatoryContentItem {
-	var content []template.MandatoryContentItem
-	if spawnFootholds {
-		content = append(content, presetRemoteFoothold(castleCount))
+func BuildHighNeutralMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+	rows := settings.HighNeutralMandatoryContent
+	if castleCount == 0 {
+		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
 	}
-	content = append(content,
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_utopia"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_utopia"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_epic_guarded_resource_banks"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_epic_guarded_resource_banks"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_vision_buildings_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_buff_tier_1"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_2"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_3"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_hero_stats_and_skills_tier_3"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_magic_tier_2"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_magic_tier_2"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_high_tier"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_building_random_hires_high_tier"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_random_hires"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_units_banks_only_biome_restriction"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_units_banks_no_biome_restriction"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_units_banks_no_biome_restriction"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_resource_banks_tier_2"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_building_guarded_resource_banks_tier_3"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_pickup_mythic_scroll_box"}},
-		template.MandatoryContentItem{IncludeLists: []string{"basic_content_list_pickup_mythic_scroll_box"}},
-		newContentBuilder(constants.ContentIds.RandomItemLegendary.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: constants.ContentIds.RandomItemLegendary.Sid},
-		template.MandatoryContentItem{SID: constants.ContentIds.RandomItemEpic.Sid},
-		newContentBuilder(constants.ContentIds.PandoraBox.Sid).soloEncounter().build(),
-		template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid},
-		template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_high_tier"}},
-		template.MandatoryContentItem{IncludeLists: []string{"content_list_pickup_pandora_box_army_high_tier"}},
-		presetMineGoldNearCrossroads(),
-		template.MandatoryContentItem{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: constants.ContentIds.MineCrystals.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: constants.ContentIds.MineMercury.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: constants.ContentIds.MineGemstones.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: constants.ContentIds.AlchemyLab.Sid, IsMine: true},
-		template.MandatoryContentItem{SID: constants.ContentIds.AlchemyLab.Sid, IsMine: true},
-	)
-	return content
+	return contentWithFootholdAndRows(settings, castleCount, rows)
 }
 
-// ── Content count limits ─────────────────────────────────────────────
+// BuildHubZoneMandatoryContent returns mandatory content for the central
+// hub zone of a Hub-and-Spoke layout
+func BuildHubZoneMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+	rows := settings.HubZoneMandatoryContent
+	if castleCount == 0 {
+		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
+	}
+	return contentWithFootholdAndRows(settings, castleCount, rows)
+}
 
-// BuildAllContentCountLimits returns the full set of content count limits.
 func BuildAllContentCountLimits(settings *models.GeneratorSettings) []template.ContentCountLimit {
 	sidLimits := []template.ContentLimit{
 		{SID: "black_tower", MaxCount: 0},
@@ -289,13 +265,21 @@ func BuildAllContentCountLimits(settings *models.GeneratorSettings) []template.C
 		{SID: constants.ContentIds.TheGorge.Sid, MaxCount: 1},
 	}
 
-	// Lift limits when player mandatory content has more items than the default.
+	// Lift limits when any mandatory-content list (player or neutral or
+	// hub) requests more of a given SID than the default cap.
 	sidCounts := map[string]int{}
-	for _, item := range settings.PlayerZoneMandatoryContent {
-		if item.SID != "" {
-			sidCounts[strings.ToLower(item.SID)]++
+	tally := func(items []template.MandatoryContentItem) {
+		for _, item := range items {
+			if item.SID != "" {
+				sidCounts[strings.ToLower(item.SID)]++
+			}
 		}
 	}
+	tally(settings.PlayerZoneMandatoryContent)
+	tally(settings.LowNeutralMandatoryContent)
+	tally(settings.MediumNeutralMandatoryContent)
+	tally(settings.HighNeutralMandatoryContent)
+	tally(settings.HubZoneMandatoryContent)
 	for i := range sidLimits {
 		if count, ok := sidCounts[strings.ToLower(sidLimits[i].SID)]; ok {
 			if count > sidLimits[i].MaxCount {

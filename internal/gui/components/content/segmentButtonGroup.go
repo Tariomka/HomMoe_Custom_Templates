@@ -43,6 +43,11 @@ func (this *SegmentButtonGroup) SetSelectedIndex(index int) {
 	}
 }
 
+// GetSelectedIndex returns the index of the currently-selected segment.
+func (this *SegmentButtonGroup) GetSelectedIndex() int {
+	return this.selectedIndex
+}
+
 // Update returns true if the selection changed this frame.
 func (this *SegmentButtonGroup) Update(gtx layout.Context) bool {
 	changed := false

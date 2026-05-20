@@ -2,24 +2,28 @@ package models
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 
-// SettingsFile is the serialised .gen.json file produced and consumed by the editor
+// SettingsFile is the serialised .gen.json file produced and consumed by the
+// editor
 type SettingsFile struct {
-	TemplateName                      string                `json:"templateName"`
-	MapSize                           int                   `json:"mapSize"`
-	PlayerCount                       int                   `json:"playerCount"`
-	NeutralZoneCount                  int                   `json:"neutralZoneCount"`
-	PlayerZoneCastles                 int                   `json:"playerCastles"`
-	NeutralZoneCastles                int                   `json:"neutralCastles"`
-	AdvancedMode                      bool                  `json:"advancedMode"`
-	NeutralLowNoCastleCount           int                   `json:"neutralLowNoCastle"`
-	NeutralLowCastleCount             int                   `json:"neutralLowCastle"`
-	NeutralMediumNoCastleCount        int                   `json:"neutralMediumNoCastle"`
-	NeutralMediumCastleCount          int                   `json:"neutralMediumCastle"`
-	NeutralHighNoCastleCount          int                   `json:"neutralHighNoCastle"`
-	NeutralHighCastleCount            int                   `json:"neutralHighCastle"`
-	MatchPlayerCastleFactions         bool                  `json:"matchPlayerCastleFactions"`
-	MinNeutralZonesBetweenPlayers     int                   `json:"minNeutralZonesBetweenPlayers"`
-	ExperimentalBalancedZonePlacement bool                  `json:"experimentalBalancedZonePlacement"`
+	TemplateName                  string `json:"templateName"`
+	MapSize                       int    `json:"mapSize"`
+	PlayerCount                   int    `json:"playerCount"`
+	NeutralZoneCount              int    `json:"neutralZoneCount"`
+	PlayerZoneCastles             int    `json:"playerCastles"`
+	NeutralZoneCastles            int    `json:"neutralCastles"`
+	AdvancedMode                  bool   `json:"advancedMode"`
+	NeutralLowNoCastleCount       int    `json:"neutralLowNoCastle"`
+	NeutralLowCastleCount         int    `json:"neutralLowCastle"`
+	NeutralMediumNoCastleCount    int    `json:"neutralMediumNoCastle"`
+	NeutralMediumCastleCount      int    `json:"neutralMediumCastle"`
+	NeutralHighNoCastleCount      int    `json:"neutralHighNoCastle"`
+	NeutralHighCastleCount        int    `json:"neutralHighCastle"`
+	MatchPlayerCastleFactions     bool   `json:"matchPlayerCastleFactions"`
+	MinNeutralZonesBetweenPlayers int    `json:"minNeutralZonesBetweenPlayers"`
+	// Deprecated: replaced by Topology == TopologyBalanced.
+	// Retained only for one-way migration of older .gen.json files; the
+	// loader copies the value into Topology and clears it again on save.
+	ExperimentalBalancedZonePlacement bool                  `json:"experimentalBalancedZonePlacement,omitempty"`
 	ExperimentalMapSizes              bool                  `json:"experimentalMapSizes"`
 	PlayerZoneSize                    float64               `json:"playerZoneSize"`
 	NeutralZoneSize                   float64               `json:"neutralZoneSize"`
@@ -55,11 +59,27 @@ type SettingsFile struct {
 	TournamentInterval                int                   `json:"tournamentInterval"`
 	TournamentPointsToWin             int                   `json:"tournamentPointsToWin"`
 	TournamentSaveArmy                bool                  `json:"tournamentSaveArmy"`
-	PlayerZoneMandatoryContent        []ZoneContentItem     `json:"playerZoneMandatoryContent,omitempty"`
-	ContentDensityPercent             *int                  `json:"contentDensity,omitempty"`
+
+	// ── Banned content / overrides / bonuses ─────────────────────────────
+	BannedItems        string `json:"bannedItems"`
+	BannedMagics       string `json:"bannedMagics"`
+	ValueOverridesText string `json:"valueOverrides"`
+	// BonusesJson stores configurable bonuses as a newline-separated list of
+	// `BonusEntry.String()` lines (see ParseBonusesJson).
+	BonusesJson string `json:"bonuses"`
+
+	// ── Mandatory content rows per zone type ─────────────────────────────
+	PlayerZoneContentRows    []ZoneContentRowSave `json:"playerZoneContentRows,omitempty"`
+	LowNeutralContentRows    []ZoneContentRowSave `json:"lowNeutralContentRows,omitempty"`
+	MediumNeutralContentRows []ZoneContentRowSave `json:"mediumNeutralContentRows,omitempty"`
+	HighNeutralContentRows   []ZoneContentRowSave `json:"highNeutralContentRows,omitempty"`
+	HubZoneContentRows       []ZoneContentRowSave `json:"hubZoneContentRows,omitempty"`
+
+	// ContentDensityPercent is a legacy v0.2 setting; when present it seeds
+	// both split density sliders on load.
+	ContentDensityPercent *int `json:"contentDensity,omitempty"`
 }
 
-// NewSettingsFile returns a SettingsFile populated with defaults
 func NewSettingsFile() *SettingsFile {
 	return &SettingsFile{
 		TemplateName:                 "Custom Template",
@@ -74,7 +94,7 @@ func NewSettingsFile() *SettingsFile {
 		HeroCountMin:                 4,
 		HeroCountMax:                 8,
 		HeroCountIncrement:           1,
-		Topology:                     generator.TopologyRandom,
+		Topology:                     generator.TopologyBalanced,
 		MaxPortalConnections:         32,
 		SpawnRemoteFootholds:         true,
 		GenerateRoads:                true,

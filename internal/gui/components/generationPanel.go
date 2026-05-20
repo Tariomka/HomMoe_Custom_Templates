@@ -17,7 +17,6 @@ type GenerationPanel struct {
 	chkPortals             widget.Bool
 	sldMaxPortals          widget.Float
 	chkFootholds           widget.Bool
-	chkBalancedZones       widget.Bool
 	chkPlayerIsolation     widget.Bool
 	chkMatchPlayerFactions widget.Bool
 	sldMinNeutralBetween   widget.Float
@@ -66,7 +65,6 @@ func (this *GenerationPanel) GetPanelWidget(theme *material.Theme) layout.Widget
 				return widgets.NewLabeledRowWidget(theme, "Max portal connections", 200, widgets.NewLabeledSlider(theme, &this.sldMaxPortals, fmt.Sprintf("%d", utils.RoundedRange(this.sldMaxPortals.Value, 1, 32))))(gtx)
 			},
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
-			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkBalancedZones, "Experimental balanced zone placement"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
 			widgets.NewLabeledRowWidget(theme, "Min neutrals between players", 200, widgets.NewLabeledSlider(theme, &this.sldMinNeutralBetween, fmt.Sprintf("%d", utils.RoundedRange(this.sldMinNeutralBetween.Value, 0, 8)))),
@@ -122,7 +120,6 @@ func (this *GenerationPanel) LoadFromState() {
 	this.chkPortals.Value = settings.RandomPortals
 	this.sldMaxPortals.Value = utils.Normalize(float32(settings.MaxPortalConnections), 1, 32)
 	this.chkFootholds.Value = settings.SpawnRemoteFootholds
-	this.chkBalancedZones.Value = settings.ExperimentalBalancedZonePlacement
 	this.chkPlayerIsolation.Value = settings.NoDirectPlayerConn
 	this.chkMatchPlayerFactions.Value = settings.MatchPlayerCastleFactions
 	this.sldMinNeutralBetween.Value = utils.Normalize(float32(settings.MinNeutralZonesBetweenPlayers), 0, 8)
@@ -155,7 +152,6 @@ func (this *GenerationPanel) SaveToState() {
 		settings.RandomPortals = this.chkPortals.Value
 		settings.MaxPortalConnections = utils.RoundedRange(this.sldMaxPortals.Value, 1, 32)
 		settings.SpawnRemoteFootholds = this.chkFootholds.Value
-		settings.ExperimentalBalancedZonePlacement = this.chkBalancedZones.Value
 		settings.NoDirectPlayerConn = this.chkPlayerIsolation.Value
 		settings.MatchPlayerCastleFactions = this.chkMatchPlayerFactions.Value
 		settings.MinNeutralZonesBetweenPlayers = utils.RoundedRange(this.sldMinNeutralBetween.Value, 0, 8)

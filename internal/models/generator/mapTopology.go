@@ -9,4 +9,5 @@ const (
 	TopologyChain       MapTopology = "Chain"
 	TopologySharedWeb   MapTopology = "SharedWeb"
 	TopologyRandom      MapTopology = "Random"
+	TopologyBalanced    MapTopology = "Balanced"
 )

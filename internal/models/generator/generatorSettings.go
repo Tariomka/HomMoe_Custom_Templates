@@ -14,14 +14,22 @@ type GeneratorSettings struct {
 
 	HeroSettings *HeroSettings
 
-	NoDirectPlayerConnections         bool // isolate player zones from each other
-	RandomPortals                     bool
-	MaxPortalConnections              int
-	SpawnRemoteFootholds              bool
-	GenerateRoads                     bool
-	ExperimentalBalancedZonePlacement bool
-	MatchPlayerCastleFactions         bool
-	MinNeutralZonesBetweenPlayers     int
+	NoDirectPlayerConnections     bool // isolate player zones from each other
+	RandomPortals                 bool
+	MaxPortalConnections          int
+	SpawnRemoteFootholds          bool
+	GenerateRoads                 bool
+	MatchPlayerCastleFactions     bool
+	MinNeutralZonesBetweenPlayers int
+
+	// Banned content & overrides (raw strings as edited in the UI).
+	BannedItems        string
+	BannedMagics       string
+	ValueOverridesText string
+
+	// Configurable game-start bonuses (Wood/Ore/spell/etc.). Parsed from
+	// SettingsFile.BonusesJson by the loader.
+	Bonuses []BonusEntry
 
 	Topology MapTopology
 	ZoneCfg  ZoneConfiguration
@@ -34,8 +42,12 @@ type GeneratorSettings struct {
 	TournamentRules     *TournamentRules
 
 	// Optional extra mandatory content seeded by the UI; appended to the
-	// player-zone defaults built by ZoneContentManager
-	PlayerZoneMandatoryContent []template.MandatoryContentItem
+	// player-zone defaults built by ZoneContentManager.
+	PlayerZoneMandatoryContent    []template.MandatoryContentItem
+	LowNeutralMandatoryContent    []template.MandatoryContentItem
+	MediumNeutralMandatoryContent []template.MandatoryContentItem
+	HighNeutralMandatoryContent   []template.MandatoryContentItem
+	HubZoneMandatoryContent       []template.MandatoryContentItem
 }
 
 func NewGeneratorSettings() *GeneratorSettings {
@@ -48,7 +60,7 @@ func NewGeneratorSettings() *GeneratorSettings {
 		SpawnRemoteFootholds:  true,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,
-		Topology:              TopologyRandom,
+		Topology:              TopologyBalanced,
 		FactionLawsExpPercent: 100,
 		AstrologyExpPercent:   100,
 		ZoneCfg: ZoneConfiguration{
