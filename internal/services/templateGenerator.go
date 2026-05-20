@@ -1350,6 +1350,20 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 		}
 	}
 
+	// Stamp generator-driven positions onto the freshly built zones so the
+	// preview renderer can reproduce the exact geometry used to derive the
+	// Delaunay connections. Balanced layouts also stamp the concentric ring
+	// index so the preview can snap zones to clean rings. Mirrors C#
+	// TemplateGenerator (Random / Balanced branches).
+	for i := range zones {
+		p := pos[i]
+		zones[i].GeneratorPosition = &[2]float64{p[0], p[1]}
+		if settings.Topology == generator.TopologyBalanced {
+			r := zoneTierRank(allLetters[i], playerLetters, neutralByLetter)
+			zones[i].GeneratorRing = &r
+		}
+	}
+
 	if settings.RandomPortals {
 		conns = append(conns, buildRandomPortalConnections(playerLetters, allLetters, tuning, settings.MaxPortalConnections)...)
 	}
@@ -1798,6 +1812,16 @@ func buildTournamentBalancedCluster(playerIndex int, playerLetter string, myNeut
 		} else {
 			*zones = append(*zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneCfg.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, false))
 		}
+	}
+
+	// Stamp generator positions and ring indices onto the freshly built cluster
+	// zones so the preview renderer can reproduce the tournament-balanced
+	// geometry without re-deriving it from connections.
+	for i := 0; i < len(orderedLetters); i++ {
+		p := pos[i]
+		(*zones)[clusterStart+i].GeneratorPosition = &[2]float64{p[0], p[1]}
+		r := zoneTierRank(orderedLetters[i], singlePlayerList, neutralByLetter)
+		(*zones)[clusterStart+i].GeneratorRing = &r
 	}
 
 	// Ensure the cluster is fully connected (same guarantee as the standard
