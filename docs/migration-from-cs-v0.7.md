@@ -625,6 +625,15 @@ Editor.Tests/TemplateGeneratorTests.cs`. Grep there for `[Fact]`.)
 
 ## 7. Phase 7 — Preview rendering
 
+**Status: ✅ Complete.** `internal/services/previewLayout.go` now has a
+dedicated Balanced branch (concentric tier rings, per-cluster canvas
+split via floodfill so tournament-balanced renders as two side-by-side
+sub-canvases). Hub-castle count was already drawn whenever
+`HasCastle && Castles > 0` (set for both `Spawn` and `City` main
+objects), so 7.1 needs no extra renderer work. A panic-free smoke test
+`TestRenderPreviewImage_DoesNotPanic_AllTopologies` covers every
+topology × `PlayerCount ∈ {2,3,4,6,8}`, both vanilla and tournament.
+
 ### 7.1 Hub castle count badge (`432eeb9`)
 
 In `go:internal/services/previewRenderer.go` the hub zone is drawn as a
@@ -662,6 +671,36 @@ panic for every topology under `PlayerCount ∈ {2,3,4,6,8}`.
 ---
 
 ## 8. Phase 8 — Test parity & misc
+
+**Status: ✅ Complete.** All actionable items ported:
+
+- `30a235f` — "The Gorge" SID display name → "Carrion Pile"
+  (`internal/constants/contentIds.go`).
+- `48deacc` / `7029355` / `9151ffd` — full content-group catch-up:
+  - Added ~50 missing SIDs to `internal/constants/contentIds.go`
+    (Altar/Magic Amplifier 1–4, Scroll Box variants, Twilight Bloom,
+    Storage * resources, all new resource-bank / utility / hero-improvement
+    structures).
+  - Added 17 new entries to `internal/constants/includeListIds.go`
+    (Guarded Banks T1–T3, Basic Storage, Rare Mines, Magic Buildings T1–T2,
+    Hero Stats/Skills T1–T3, etc.) plus the C# naming fixes (`Any Tier`,
+    weighted variant).
+  - Restructured `internal/constants/contentItemGroups.go` to mirror
+    the v0.7 six-group layout (`Mines`, `UtilityStructures`, `Treasures`,
+    `UnitRecruitment`, `ResourceBanks`, `HeroImprovementStructures`).
+    `HireBuildings` is kept as an alias of `UnitRecruitment` for
+    backwards compatibility with existing UI callers.
+- `fc4cb46` — neutral-zone breakdown no longer gated by Advanced
+  toggle: `buildNeutralZonePlan` in `internal/services/templateGenerator.go`
+  now always reads the breakdown fields when any of them are non-zero,
+  falling back to the legacy single-bucket form when the breakdown is
+  empty (preserves back-compat for older settings files).
+- `7303848` / `cc63ecc` — pure C# test renames/refactors; Go test suite
+  already uses the new `Advanced.NeutralMediumCastleCount` shape and
+  the v0.7 guard values are exercised by the Phase 6d tier-aware guard
+  scaling tests.
+
+### 8.1 Original notes (kept for reference)
 
 - `7303848` / `cc63ecc` / `c400677` are pure test fixes; port the test
   changes (renamed asserts, removed obsolete tests) directly.

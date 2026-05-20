@@ -2,6 +2,7 @@ package components
 
 import (
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
@@ -11,11 +12,40 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
+// ZoneContentPanel is the editor for the five mandatory-content lists
+// added in C# v0.7: Player zone, three neutral tiers (Low / Medium /
+// High), and the central Hub zone. A SegmentButtonGroup tier selector
+// swaps which list is being edited; the actual row sections (Mines /
+// Treasures / Hires / Banks) are shared across tiers — the panel keeps
+// a per-tier cache of rows and writes them all back on save.
+
+// tierIndex is the position of a tier inside the tierRows cache. The
+// numeric order must match the SegmentButtonGroup label list below.
+type tierIndex int
+
+const (
+	tierPlayer tierIndex = iota
+	tierLow
+	tierMedium
+	tierHigh
+	tierHub
+	tierCount
+)
+
+var tierLabels = []string{"Player", "Low Neutral", "Medium Neutral", "High Neutral", "Hub"}
+
 type ZoneContentPanel struct {
-	zcMines      *content.ZoneContentSection
-	zcTreasures  *content.ZoneContentSection
-	zcHires      *content.ZoneContentSection
-	zcBanks      *content.ZoneContentSection
+	zcMines     *content.ZoneContentSection
+	zcTreasures *content.ZoneContentSection
+	zcHires     *content.ZoneContentSection
+	zcBanks     *content.ZoneContentSection
+
+	tierSelector *content.SegmentButtonGroup
+	currentTier  tierIndex
+	// tierRows caches the rows for every tier so the user can swap
+	// between tabs without losing in-progress edits.
+	tierRows [tierCount][]models.ZoneContentRowSave
+
 	btnZoneReset widget.Clickable
 
 	scroll widget.List
@@ -25,11 +55,12 @@ type ZoneContentPanel struct {
 
 func NewZoneContentPanel(state *State) *ZoneContentPanel {
 	panel := &ZoneContentPanel{
-		zcMines:     content.NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
-		zcTreasures: content.NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
-		zcHires:     content.NewZoneContentSection("Random Hires", constants.ContentItemGroup.HireBuildings, 10, false),
-		zcBanks:     content.NewZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
-		state:       state,
+		zcMines:      content.NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
+		zcTreasures:  content.NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
+		zcHires:      content.NewZoneContentSection("Random Hires", constants.ContentItemGroup.HireBuildings, 10, false),
+		zcBanks:      content.NewZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
+		tierSelector: content.NewSegmentButtonGroup(tierLabels),
+		state:        state,
 	}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
@@ -37,124 +68,187 @@ func NewZoneContentPanel(state *State) *ZoneContentPanel {
 }
 
 func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
-	widgetsList := []layout.Widget{
-		widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Player zone mandatory content. Effects only apply on generation."),
-		func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset to defaults", &this.btnZoneReset, false)))
-		},
-		this.zcMines.Layout(theme),
-		this.zcTreasures.Layout(theme),
-		this.zcHires.Layout(theme),
-		this.zcBanks.Layout(theme),
-	}
 	return func(gtx layout.Context) layout.Dimensions {
+		// Reset button is global to the currently-selected tier.
+		if this.btnZoneReset.Clicked(gtx) {
+			this.resetCurrentTier()
+		}
+		// Tier switch: persist current section into cache, then load the
+		// new tier's rows into the shared sections.
+		if this.tierSelector.Update(gtx) {
+			this.cacheCurrentSections()
+			this.currentTier = tierIndex(this.tierSelector.GetSelectedIndex())
+			this.loadTierIntoSections(this.currentTier)
+		}
+
+		widgetsList := []layout.Widget{
+			widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Mandatory content per zone tier. Effects only apply on generation."),
+			func(gtx layout.Context) layout.Dimensions {
+				return this.tierSelector.Layout(gtx, theme)
+			},
+			func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset this tier", &this.btnZoneReset, false)),
+					)
+				})
+			},
+			this.zcMines.Layout(theme),
+			this.zcTreasures.Layout(theme),
+			this.zcHires.Layout(theme),
+			this.zcBanks.Layout(theme),
+		}
 		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
 			return widgetsList[index](gtx)
 		})
 	}
 }
 
+// LoadFromState pulls all five tier lists out of the SettingsFile,
+// caches them, and shows the currently-selected tier.
 func (this *ZoneContentPanel) LoadFromState() {
-	this.seedDefaultPlayerZoneContent()
 	settings := this.state.GetSettingsFile()
-	if len(settings.PlayerZoneMandatoryContent) > 0 {
-		this.applyZoneContentItems(settings.PlayerZoneMandatoryContent)
+	this.tierRows[tierPlayer] = append([]models.ZoneContentRowSave(nil), settings.PlayerZoneContentRows...)
+	this.tierRows[tierLow] = append([]models.ZoneContentRowSave(nil), settings.LowNeutralContentRows...)
+	this.tierRows[tierMedium] = append([]models.ZoneContentRowSave(nil), settings.MediumNeutralContentRows...)
+	this.tierRows[tierHigh] = append([]models.ZoneContentRowSave(nil), settings.HighNeutralContentRows...)
+	this.tierRows[tierHub] = append([]models.ZoneContentRowSave(nil), settings.HubZoneContentRows...)
+
+	// Seed the Player tier with the historical defaults when the file
+	// has never been edited, so brand-new users still get something
+	// sensible to start from (C# editor does the same on first launch).
+	if len(this.tierRows[tierPlayer]) == 0 {
+		this.tierRows[tierPlayer] = defaultPlayerTierRows()
 	}
+
+	this.tierSelector.SetSelectedIndex(int(this.currentTier))
+	this.loadTierIntoSections(this.currentTier)
 }
 
-// TODO: check `.Update(gtx)` and on true update the value
+// SaveToState collects every tier's rows back into the SettingsFile.
 func (this *ZoneContentPanel) SaveToState() {
+	this.cacheCurrentSections()
 	this.state.UpdateState(func(settings *models.SettingsFile) {
-		settings.PlayerZoneMandatoryContent = this.collectZoneContentItems()
+		settings.PlayerZoneContentRows = cloneRows(this.tierRows[tierPlayer])
+		settings.LowNeutralContentRows = cloneRows(this.tierRows[tierLow])
+		settings.MediumNeutralContentRows = cloneRows(this.tierRows[tierMedium])
+		settings.HighNeutralContentRows = cloneRows(this.tierRows[tierHigh])
+		settings.HubZoneContentRows = cloneRows(this.tierRows[tierHub])
 	})
 }
 
-// seedDefaultPlayerZoneContent mirrors C# InitializeDefaultPlayerZoneContents.
-func (this *ZoneContentPanel) seedDefaultPlayerZoneContent() {
+// ── tier <-> section plumbing ────────────────────────────────────────
+
+// loadTierIntoSections replaces the section rows with the given tier's
+// cached row list, routing each row to its appropriate section.
+func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 	this.zcMines.ClearRows()
 	this.zcTreasures.ClearRows()
 	this.zcHires.ClearRows()
 	this.zcBanks.ClearRows()
-
-	// Mines: wood/ore/gold guarded next-to-castle; crystals/mercury/gemstones/alchemy-lab guarded near road.
-	this.zcMines.Add(constants.ContentIds.MineWood, 1, true, true, 0, false)
-	this.zcMines.Add(constants.ContentIds.MineOre, 1, true, true, 0, false)
-	this.zcMines.Add(constants.ContentIds.MineGold, 1, true, true, 0, false)
-	this.zcMines.Add(constants.ContentIds.MineCrystals, 1, true, false, 1, false)
-	this.zcMines.Add(constants.ContentIds.MineMercury, 1, true, false, 1, false)
-	this.zcMines.Add(constants.ContentIds.MineGemstones, 1, true, false, 1, false)
-	this.zcMines.Add(constants.ContentIds.AlchemyLab, 1, true, false, 1, false)
-
-	// Treasures: PandoraBox + RandomItemEpic guarded.
-	this.zcTreasures.Add(constants.ContentIds.PandoraBox, 1, true, false, 0, false)
-	this.zcTreasures.Add(constants.ContentIds.RandomItemEpic, 1, true, false, 0, false)
-
-	// Random hires: low ×2, high ×1, all-tier ×1 (groups).
-	this.zcHires.Add(constants.IncludeListIds.RandomHiresLowTier, 2, true, false, 0, true)
-	this.zcHires.Add(constants.IncludeListIds.RandomHiresHighTier, 1, true, false, 0, true)
-	this.zcHires.Add(constants.IncludeListIds.RandomHiresAllTier, 1, true, false, 0, true)
-
-	// Resource banks: tier1 ×2, tier2 ×1.
-	this.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier1, 2, true, false, 0, true)
-	this.zcBanks.Add(constants.IncludeListIds.ResourceBanksTier2, 1, true, false, 0, true)
-}
-
-// applyZoneContentItems replaces every section based on a flat list of items
-// loaded from a settings file. Items are routed to the appropriate section by
-// SID lookup.
-func (this *ZoneContentPanel) applyZoneContentItems(items []models.ZoneContentItem) {
-	this.zcMines.ClearRows()
-	this.zcTreasures.ClearRows()
-	this.zcHires.ClearRows()
-	this.zcBanks.ClearRows()
-	for _, item := range items {
-		mapping := models.SidMapping{Sid: item.Sid, Name: item.Name}
-		if found, ok := helpers.LookupSid(item.Sid); ok {
+	for _, raw := range this.tierRows[tier] {
+		row := raw.Normalised()
+		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
+		if found, ok := helpers.LookupSid(row.Sid); ok {
 			mapping = found
 		}
-		count := max(item.Count, 1)
-		roadIdx := max(indexOf(constants.RoadDistances, item.RoadDistance), 0)
-		switch {
-		case sectionContains(constants.ContentItemGroup.Mines, item.Sid):
-			this.zcMines.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
-		case sectionContains(constants.ContentItemGroup.Treasures, item.Sid):
-			this.zcTreasures.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
-		case sectionContains(constants.ContentItemGroup.HireBuildings, item.Sid):
-			this.zcHires.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
-		case sectionContains(constants.ContentItemGroup.ResourceBanks, item.Sid):
-			this.zcBanks.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
-		default:
-			// Unknown SID — keep with treasures by default.
-			this.zcTreasures.Add(mapping, count, item.IsGuarded, item.NearCastle, roadIdx, item.IsGroup)
-		}
+		roadIdx := max(indexOf(constants.RoadDistances, row.RoadDistance), 0)
+		section := this.routeToSection(row.Sid, row.IsMine)
+		section.Add(mapping, row.Count, row.IsGuarded, row.NearCastle, roadIdx, row.IsGroup)
 	}
 }
 
-// collectZoneContentItems serialises every section into a flat list.
-func (this *ZoneContentPanel) collectZoneContentItems() []models.ZoneContentItem {
-	var out []models.ZoneContentItem
-	collect := func(contentSection *content.ZoneContentSection) {
-		for row := range contentSection.IterateRows() {
-			roadDistance := ""
+// cacheCurrentSections serialises the shared sections back into the
+// row cache for the currently-active tier.
+func (this *ZoneContentPanel) cacheCurrentSections() {
+	this.tierRows[this.currentTier] = this.collectSectionRows()
+}
+
+// resetCurrentTier reverts the active tier to its defaults — that means
+// the historical seeded defaults for Player, and an empty list for the
+// other four tiers (matching the C# editor's "Reset" behaviour).
+func (this *ZoneContentPanel) resetCurrentTier() {
+	switch this.currentTier {
+	case tierPlayer:
+		this.tierRows[tierPlayer] = defaultPlayerTierRows()
+	default:
+		this.tierRows[this.currentTier] = nil
+	}
+	this.loadTierIntoSections(this.currentTier)
+}
+
+// routeToSection picks the correct UI section for a SID, honouring the
+// IsMine flag so that a mine-include-list still ends up in Mines.
+func (this *ZoneContentPanel) routeToSection(sid string, isMine bool) *content.ZoneContentSection {
+	if isMine || sectionContains(constants.ContentItemGroup.Mines, sid) {
+		return this.zcMines
+	}
+	switch {
+	case sectionContains(constants.ContentItemGroup.HireBuildings, sid):
+		return this.zcHires
+	case sectionContains(constants.ContentItemGroup.ResourceBanks, sid):
+		return this.zcBanks
+	case sectionContains(constants.ContentItemGroup.Treasures, sid):
+		return this.zcTreasures
+	}
+	return this.zcTreasures
+}
+
+// collectSectionRows reads the current sections back into a flat slice
+// of save-rows tagged with the correct IsMine flag.
+func (this *ZoneContentPanel) collectSectionRows() []models.ZoneContentRowSave {
+	var out []models.ZoneContentRowSave
+	gather := func(section *content.ZoneContentSection, isMine bool) {
+		for row := range section.IterateRows() {
+			roadDistance := "Any"
 			if row.RoadDistIdx >= 0 && row.RoadDistIdx < len(constants.RoadDistances) {
 				roadDistance = constants.RoadDistances[row.RoadDistIdx]
 			}
-			out = append(out, models.ZoneContentItem{
+			out = append(out, models.ZoneContentRowSave{
 				Sid:          row.Mapping.Sid,
-				Name:         row.Mapping.Name,
 				Count:        row.Count,
 				IsGuarded:    row.IsGuarded.Value,
 				NearCastle:   row.NearCastle.Value,
 				RoadDistance: roadDistance,
 				IsGroup:      row.IsGroup,
+				IsMine:       isMine,
 			})
 		}
 	}
-	collect(this.zcMines)
-	collect(this.zcTreasures)
-	collect(this.zcHires)
-	collect(this.zcBanks)
+	gather(this.zcMines, true)
+	gather(this.zcTreasures, false)
+	gather(this.zcHires, false)
+	gather(this.zcBanks, false)
 	return out
+}
+
+// ── helpers ──────────────────────────────────────────────────────────
+
+func cloneRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
+	if len(rows) == 0 {
+		return nil
+	}
+	return append([]models.ZoneContentRowSave(nil), rows...)
+}
+
+// defaultPlayerTierRows mirrors the historical C# InitializeDefaultPlayerZoneContents.
+func defaultPlayerTierRows() []models.ZoneContentRowSave {
+	return []models.ZoneContentRowSave{
+		{Sid: constants.ContentIds.MineWood.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
+		{Sid: constants.ContentIds.MineOre.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
+		{Sid: constants.ContentIds.MineGold.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
+		{Sid: constants.ContentIds.MineCrystals.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
+		{Sid: constants.ContentIds.MineMercury.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
+		{Sid: constants.ContentIds.MineGemstones.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
+		{Sid: constants.ContentIds.AlchemyLab.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
+		{Sid: constants.ContentIds.PandoraBox.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any"},
+		{Sid: constants.ContentIds.RandomItemEpic.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any"},
+		{Sid: constants.IncludeListIds.RandomHiresLowTier.Sid, Count: 2, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
+		{Sid: constants.IncludeListIds.RandomHiresHighTier.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
+		{Sid: constants.IncludeListIds.RandomHiresAllTier.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
+		{Sid: constants.IncludeListIds.ResourceBanksTier1.Sid, Count: 2, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
+		{Sid: constants.IncludeListIds.ResourceBanksTier2.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
+	}
 }
 
 // indexOf returns the index of value in items, or -1 when not present.

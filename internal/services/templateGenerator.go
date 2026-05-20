@@ -131,9 +131,6 @@ func buildTemplateDescription(settings *models.GeneratorSettings, neutralCount i
 	if settings.NoDirectPlayerConnections {
 		options = append(options, "isolated player starts")
 	}
-	if settings.ExperimentalBalancedZonePlacement {
-		options = append(options, "balanced zone placement")
-	}
 	if settings.RandomPortals {
 		options = append(options, "random portals")
 	}
@@ -172,6 +169,8 @@ func topologyLabel(t generator.MapTopology) string {
 		return "Shared Web"
 	case generator.TopologyRandom:
 		return "Random"
+	case generator.TopologyBalanced:
+		return "Balanced"
 	default:
 		return string(t)
 	}
@@ -198,13 +197,22 @@ func buildNeutralZonePlan(settings *models.GeneratorSettings) []neutralZonePlan 
 		}
 	}
 
-	if settings.ZoneCfg.Advanced.Enabled {
-		add(settings.ZoneCfg.Advanced.NeutralLowNoCastleCount, constants.QualityLow, 0)
-		add(settings.ZoneCfg.Advanced.NeutralLowCastleCount, constants.QualityLow, castleZoneCastleCount)
-		add(settings.ZoneCfg.Advanced.NeutralMediumNoCastleCount, constants.QualityMedium, 0)
-		add(settings.ZoneCfg.Advanced.NeutralMediumCastleCount, constants.QualityMedium, castleZoneCastleCount)
-		add(settings.ZoneCfg.Advanced.NeutralHighNoCastleCount, constants.QualityHigh, 0)
-		add(settings.ZoneCfg.Advanced.NeutralHighCastleCount, constants.QualityHigh, castleZoneCastleCount)
+	// C# v0.7 (fc4cb46): the neutral-zone breakdown is no longer gated
+	// behind the Advanced toggle. The Advanced fields are always read.
+	// To preserve back-compat for older settings that only set the
+	// flat NeutralZoneCount, fall back to the single-bucket form when
+	// the breakdown is empty.
+	advanced := settings.ZoneCfg.Advanced
+	advancedTotal := advanced.NeutralLowNoCastleCount + advanced.NeutralLowCastleCount +
+		advanced.NeutralMediumNoCastleCount + advanced.NeutralMediumCastleCount +
+		advanced.NeutralHighNoCastleCount + advanced.NeutralHighCastleCount
+	if advancedTotal > 0 {
+		add(advanced.NeutralLowNoCastleCount, constants.QualityLow, 0)
+		add(advanced.NeutralLowCastleCount, constants.QualityLow, castleZoneCastleCount)
+		add(advanced.NeutralMediumNoCastleCount, constants.QualityMedium, 0)
+		add(advanced.NeutralMediumCastleCount, constants.QualityMedium, castleZoneCastleCount)
+		add(advanced.NeutralHighNoCastleCount, constants.QualityHigh, 0)
+		add(advanced.NeutralHighCastleCount, constants.QualityHigh, castleZoneCastleCount)
 	} else {
 		cc := clampInt(settings.ZoneCfg.NeutralZoneCastles, 0, 4)
 		add(settings.ZoneCfg.NeutralZoneCount, constants.QualityMedium, cc)
@@ -245,6 +253,61 @@ func scaleBorderGuardValue(value int, t generationTuning) int {
 }
 func scaleGuardMultiplier(value float64, t generationTuning) float64 {
 	return roundToDP(value*t.NeutralStackStrengthMultiplier, 3)
+}
+
+// borderGuardValue returns the base border-guard value (already scaled
+// by the BorderGuardStrengthMultiplier tuning) for a connection between
+// two zone letters. Mirrors C# TemplateGenerator.BorderGuardValue added
+// in commit 89cba4b ("scale guard value by zone type"):
+//
+//   - player  ↔ player   → 30000
+//   - player  ↔ neutral  → by neutral quality (Low 15k / Med 20k / High 25k)
+//   - neutral ↔ neutral  → by the higher quality of the two zones
+//
+// `neutralByLetter` may be nil, in which case missing entries default to
+// Medium quality (matching the C# fallback behaviour).
+func borderGuardValue(letterA, letterB string, playerLetters []string, neutralByLetter map[string]neutralZonePlan, t generationTuning) int {
+	aIsPlayer := contains(playerLetters, letterA)
+	bIsPlayer := contains(playerLetters, letterB)
+	if aIsPlayer && bIsPlayer {
+		return scaleBorderGuardValue(30000, t)
+	}
+	if !aIsPlayer && !bIsPlayer {
+		qa := neutralQualityOf(neutralByLetter, letterA)
+		qb := neutralQualityOf(neutralByLetter, letterB)
+		higher := qa
+		if int(qb) > int(qa) {
+			higher = qb
+		}
+		return scaleBorderGuardValue(qualityGuardBase(higher), t)
+	}
+	neutralLetter := letterB
+	if !aIsPlayer {
+		neutralLetter = letterA
+	}
+	return scaleBorderGuardValue(qualityGuardBase(neutralQualityOf(neutralByLetter, neutralLetter)), t)
+}
+
+func neutralQualityOf(neutralByLetter map[string]neutralZonePlan, letter string) constants.NeutralZoneQuality {
+	if neutralByLetter == nil {
+		return constants.QualityMedium
+	}
+	plan, ok := neutralByLetter[letter]
+	if !ok {
+		return constants.QualityMedium
+	}
+	return plan.Quality
+}
+
+func qualityGuardBase(q constants.NeutralZoneQuality) int {
+	switch q {
+	case constants.QualityLow:
+		return 15000
+	case constants.QualityHigh:
+		return 25000
+	default:
+		return 20000
+	}
 }
 
 func effectiveGuardRandomization(settings *models.GeneratorSettings) float64 {
@@ -390,6 +453,8 @@ func buildVariant(settings *models.GeneratorSettings, playerLetters []string, ne
 		return buildVariantSharedWeb(settings, pl, neutralZones, tuning, holdCityNeutralLetter)
 	case generator.TopologyRandom:
 		return buildVariantRandom(settings, pl, neutralZones, tuning, holdCityNeutralLetter)
+	case generator.TopologyBalanced:
+		return buildVariantBalanced(settings, pl, neutralZones, tuning, holdCityNeutralLetter)
 	default:
 		return buildVariantDefault(settings, pl, neutralZones, tuning, holdCityNeutralLetter)
 	}
@@ -769,11 +834,11 @@ func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZone
 		var content []template.MandatoryContentItem
 		switch nz.Quality {
 		case constants.QualityLow:
-			content = BuildLowNeutralMandatoryContent(nz.CastleCount, settings.SpawnRemoteFootholds)
+			content = BuildLowNeutralMandatoryContent(settings, nz.CastleCount)
 		case constants.QualityHigh:
-			content = BuildHighNeutralMandatoryContent(nz.CastleCount, settings.SpawnRemoteFootholds)
+			content = BuildHighNeutralMandatoryContent(settings, nz.CastleCount)
 		default:
-			content = BuildMediumNeutralMandatoryContent(nz.CastleCount, settings.SpawnRemoteFootholds)
+			content = BuildMediumNeutralMandatoryContent(settings, nz.CastleCount)
 		}
 		groups = append(groups, template.MandatoryContent{
 			Name:    "mandatory_content_neutral_" + nz.Letter,
@@ -785,7 +850,7 @@ func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZone
 
 // ── ring connections ─────────────────────────────────────────────────
 
-func buildRingConnections(playerLetters, orderedLetters []string, tuning generationTuning, isolate bool) []template.Connection {
+func buildRingConnections(playerLetters, orderedLetters []string, tuning generationTuning, isolate bool, neutralByLetter map[string]neutralZonePlan) []template.Connection {
 	count := len(orderedLetters)
 	if count < 2 {
 		return nil
@@ -803,7 +868,7 @@ func buildRingConnections(playerLetters, orderedLetters []string, tuning generat
 		conns = append(conns, template.Connection{
 			Name: fmt.Sprintf("Ring-%s-%s", from, to), From: fromZone, To: toZone,
 			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+			GuardValue: borderGuardValue(from, to, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: fmt.Sprintf("ring_guard_%s_%s", from, to),
 		})
 	}
@@ -895,6 +960,17 @@ func buildNonAdjacentDerangement(count int) []int {
 
 // ── topology: Default (Ring) ─────────────────────────────────────────
 
+// buildVariantBalanced is the "Balanced" topology dispatch added in
+// C# v0.7 (commit 6dd070e "Added balanced map layout"). The actual
+// algorithm is the Delaunay-over-concentric-rings path that lives
+// inside buildVariantRandom: when Topology == TopologyBalanced it
+// switches to ring letter ordering, ring-radius positions, and edge
+// filtering that prunes tier-skipping connections. Forwarding here
+// keeps the dispatch switch readable.
+func buildVariantBalanced(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+	return buildVariantRandom(settings, playerLetters, neutralZones, tuning, holdCityNeutralLetter)
+}
+
 func buildVariantDefault(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	ordered := buildOrderedLetters(settings, playerLetters, neutralZones, true)
@@ -930,7 +1006,7 @@ func buildVariantDefault(settings *models.GeneratorSettings, playerLetters []str
 		}
 	}
 
-	conns := buildRingConnections(playerLetters, ordered, tuning, isolate)
+	conns := buildRingConnections(playerLetters, ordered, tuning, isolate, neutralByLetter)
 	if settings.RandomPortals {
 		conns = append(conns, buildRandomPortalConnections(playerLetters, ordered, tuning, settings.MaxPortalConnections)...)
 	}
@@ -985,7 +1061,7 @@ func buildVariantChain(settings *models.GeneratorSettings, playerLetters []strin
 		conns = append(conns, template.Connection{
 			Name: connNames[i], From: fromZone, To: toZone,
 			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+			GuardValue: borderGuardValue(from, to, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: fmt.Sprintf("chain_guard_%s_%s", from, to),
 		})
 	}
@@ -1008,7 +1084,7 @@ func buildVariantHubAndSpoke(settings *models.GeneratorSettings, playerLetters [
 	}
 
 	var outerLetters []string
-	if settings.ExperimentalBalancedZonePlacement {
+	if settings.Topology == generator.TopologyBalanced {
 		sep := 0
 		if settings.MinNeutralZonesBetweenPlayers > 0 && canHonorNeutralSeparation(settings, len(neutralZones)) {
 			sep = settings.MinNeutralZonesBetweenPlayers
@@ -1039,17 +1115,22 @@ func buildVariantHubAndSpoke(settings *models.GeneratorSettings, playerLetters [
 
 	for _, letter := range outerLetters {
 		outerZone := zoneName(letter, playerLetters)
+		hubAnchor := letter
+		if len(playerLetters) > 0 {
+			hubAnchor = playerLetters[0]
+		}
+		hubGuard := borderGuardValue(hubAnchor, letter, playerLetters, neutralByLetter, tuning)
 		conns = append(conns, template.Connection{
 			Name: "Hub-" + letter, From: "Hub", To: outerZone,
 			ConnectionType: "Direct", GuardZone: "Hub", SimTurnSquad: true,
-			GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+			GuardValue: hubGuard, GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: "hub_guard_" + letter,
 		})
 		for e := 1; e < connectionsPerZone; e++ {
 			conns = append(conns, template.Connection{
 				From: "Hub", To: outerZone, ConnectionType: "Direct",
 				GuardZone: "Hub", SimTurnSquad: true,
-				GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+				GuardValue: hubGuard, GuardWeeklyIncrement: 0.15,
 				GuardMatchGroup: fmt.Sprintf("hub_guard_%s_%d", letter, e),
 			})
 		}
@@ -1081,7 +1162,7 @@ func buildVariantHubAndSpoke(settings *models.GeneratorSettings, playerLetters [
 func buildVariantSharedWeb(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	var neutrals []string
-	if settings.ExperimentalBalancedZonePlacement {
+	if settings.Topology == generator.TopologyBalanced {
 		neutrals = buildBalancedNeutralRing(neutralZones, len(playerLetters))
 	} else {
 		for _, nz := range neutralZones {
@@ -1149,7 +1230,7 @@ func buildVariantSharedWeb(settings *models.GeneratorSettings, playerLetters []s
 			conns = append(conns, template.Connection{
 				Name: cn, From: "Spawn-" + pl, To: "Neutral-" + nl,
 				ConnectionType: "Direct", GuardZone: "Neutral-" + nl, SimTurnSquad: true,
-				GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+				GuardValue: borderGuardValue(pl, nl, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 				GuardMatchGroup: fmt.Sprintf("web_guard_%s_%s", pl, nl),
 			})
 		}
@@ -1161,7 +1242,7 @@ func buildVariantSharedWeb(settings *models.GeneratorSettings, playerLetters []s
 			conns = append(conns, template.Connection{
 				Name: neutralRingConns[i], From: "Neutral-" + neutrals[i], To: "Neutral-" + neutrals[next],
 				ConnectionType: "Direct", GuardZone: "Neutral-" + neutrals[i], SimTurnSquad: true,
-				GuardValue: scaleBorderGuardValue(20000, tuning), GuardWeeklyIncrement: 0.15,
+				GuardValue: borderGuardValue(neutrals[i], neutrals[next], playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 				GuardMatchGroup: fmt.Sprintf("nring_guard_%s_%s", neutrals[i], neutrals[next]),
 			})
 		}
@@ -1188,7 +1269,7 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 	isolate := settings.NoDirectPlayerConnections && len(playerLetters) > 1
 
 	var allLetters []string
-	if settings.ExperimentalBalancedZonePlacement {
+	if settings.Topology == generator.TopologyBalanced {
 		allLetters = buildBalancedRingLetters(playerLetters, neutralZones, 0)
 	} else {
 		allLetters = append(append([]string{}, playerLetters...), neutralLetters...)
@@ -1197,7 +1278,7 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 	count := len(allLetters)
 
 	var pos [][2]float64
-	if settings.ExperimentalBalancedZonePlacement {
+	if settings.Topology == generator.TopologyBalanced {
 		pos = buildBalancedRandomPositions(allLetters, playerLetters, neutralByLetter)
 	} else {
 		for i := 0; i < count; i++ {
@@ -1207,7 +1288,7 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 
 	pairs := delaunayEdges(pos)
 
-	if settings.ExperimentalBalancedZonePlacement {
+	if settings.Topology == generator.TopologyBalanced {
 		presentTiers := map[int]bool{}
 		for _, l := range allLetters {
 			presentTiers[zoneTierRank(l, playerLetters, neutralByLetter)] = true
@@ -1253,7 +1334,7 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 		conns = append(conns, template.Connection{
 			Name: cn, From: zoneName(from, playerLetters), To: zoneName(to, playerLetters),
 			ConnectionType: "Direct", GuardZone: zoneName(from, playerLetters), SimTurnSquad: true,
-			GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+			GuardValue: borderGuardValue(from, to, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: fmt.Sprintf("rnd_guard_%s_%s", from, to),
 		})
 	}
@@ -1275,7 +1356,7 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 	if isolate {
 		ensurePlayerZonesConnected(playerLetters, zones, &conns, tuning)
 	}
-	ensureFullConnectivity(playerLetters, allLetters, pos, zones, &conns, tuning)
+	ensureFullConnectivity(playerLetters, allLetters, pos, zones, &conns, tuning, neutralByLetter)
 	return makeVariant(playerLetters, allLetters[0], count, zones, conns)
 }
 
@@ -1284,6 +1365,9 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 func buildVariantTournament(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 
+	// Distribute neutrals in a balanced round-robin: sort by descending quality
+	// (then castle count, then letter) so that quality tiers are split evenly
+	// across the two players (e91e79f / v0.7 ordering).
 	sorted := make([]neutralZonePlan, len(neutralZones))
 	copy(sorted, neutralZones)
 	sort.SliceStable(sorted, func(i, j int) bool {
@@ -1300,29 +1384,54 @@ func buildVariantTournament(settings *models.GeneratorSettings, playerLetters []
 		neutralsForPlayer[i%2] = append(neutralsForPlayer[i%2], nz)
 	}
 
-	maxSlots := maxInt(len(neutralsForPlayer[0]), len(neutralsForPlayer[1]))
-	slotOrder := make([]int, maxSlots)
-	for i := range slotOrder {
-		slotOrder[i] = i
-	}
-	rand.Shuffle(len(slotOrder), func(i, j int) { slotOrder[i], slotOrder[j] = slotOrder[j], slotOrder[i] })
+	// Order each player's neutrals ascending by balance score so chain/ring
+	// layouts read player → low → medium → high (mirrors non-tournament
+	// layouts, replacing the random slot shuffle removed in C# e91e79f).
 	for p := 0; p < 2; p++ {
-		orig := neutralsForPlayer[p]
-		var reordered []neutralZonePlan
-		for _, idx := range slotOrder {
-			if idx < len(orig) {
-				reordered = append(reordered, orig[idx])
+		sort.SliceStable(neutralsForPlayer[p], func(i, j int) bool {
+			ai, aj := neutralsForPlayer[p][i], neutralsForPlayer[p][j]
+			si, sj := neutralZoneBalanceScore(ai), neutralZoneBalanceScore(aj)
+			if si != sj {
+				return si < sj
 			}
-		}
-		neutralsForPlayer[p] = reordered
+			return ai.Letter < aj.Letter
+		})
 	}
 
 	var zones []template.Zone
 	var conns []template.Connection
 
-	for p := 0; p < 2; p++ {
-		buildTournamentChainCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+	switch settings.Topology {
+	case generator.TopologyHubAndSpoke:
+		for p := 0; p < 2; p++ {
+			buildTournamentHubCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
+	case generator.TopologyBalanced:
+		for p := 0; p < 2; p++ {
+			buildTournamentBalancedCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
+	case generator.TopologyDefault:
+		for p := 0; p < 2; p++ {
+			buildTournamentRingCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
+	default:
+		// Chain, SharedWeb, Random → chain-per-cluster fallback.
+		for p := 0; p < 2; p++ {
+			buildTournamentChainCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
 	}
+
+	// c20b40d: per-cluster portals so they never cross the isolation boundary.
+	if settings.RandomPortals {
+		for p := 0; p < 2; p++ {
+			clusterLetters := []string{playerLetters[p]}
+			for _, n := range neutralsForPlayer[p] {
+				clusterLetters = append(clusterLetters, n.Letter)
+			}
+			conns = append(conns, buildRandomPortalConnections(playerLetters, clusterLetters, tuning, settings.MaxPortalConnections)...)
+		}
+	}
+
 	return makeVariant(playerLetters, playerLetters[0], len(zones), zones, conns)
 }
 
@@ -1359,10 +1468,359 @@ func buildTournamentChainCluster(playerIndex int, playerLetter string, myNeutral
 		*connections = append(*connections, template.Connection{
 			Name: connNames[i], From: fromZone, To: "Neutral-" + to,
 			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+			GuardValue: borderGuardValue(from, to, []string{playerLetter}, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: fmt.Sprintf("tourney_guard_%s_%s", from, to),
 		})
 	}
+}
+
+// buildTournamentRingCluster — one player's isolated cluster as a ring:
+// player → low → … → high → … → low → player. Sorts neutrals by balance
+// score, then fills outward-from-player so the highest-quality zones sit
+// at the ring midpoint. Mirrors C# v0.7 BuildTournamentRingCluster.
+func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+	sortedNeutrals := make([]neutralZonePlan, len(myNeutrals))
+	copy(sortedNeutrals, myNeutrals)
+	sort.SliceStable(sortedNeutrals, func(i, j int) bool {
+		si, sj := neutralZoneBalanceScore(sortedNeutrals[i]), neutralZoneBalanceScore(sortedNeutrals[j])
+		if si != sj {
+			return si < sj
+		}
+		return sortedNeutrals[i].Letter < sortedNeutrals[j].Letter
+	})
+
+	n := len(sortedNeutrals)
+	orderedNeutrals := make([]neutralZonePlan, n)
+	lo, hi := 0, n-1
+	for i := 0; i < n; i++ {
+		if i%2 == 0 {
+			orderedNeutrals[lo] = sortedNeutrals[i]
+			lo++
+		} else {
+			orderedNeutrals[hi] = sortedNeutrals[i]
+			hi--
+		}
+	}
+
+	ringLetters := []string{playerLetter}
+	for _, nz := range orderedNeutrals {
+		ringLetters = append(ringLetters, nz.Letter)
+	}
+	count := len(ringLetters)
+	if count < 2 {
+		// Lone player zone — no ring edges possible.
+		*zones = append(*zones, buildSpawnZone(playerLetter, fmt.Sprintf("Player%d", playerIndex+1), nil, settings.ZoneCfg.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneCfg.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
+		return
+	}
+
+	connNames := make([]string, count)
+	for i := 0; i < count; i++ {
+		next := (i + 1) % count
+		connNames[i] = fmt.Sprintf("TRing-%s-%s", ringLetters[i], ringLetters[next])
+	}
+
+	for i, letter := range ringLetters {
+		prev := (i - 1 + count) % count
+		seen := map[string]bool{}
+		var myConns []string
+		for _, name := range []string{connNames[prev], connNames[i]} {
+			if !seen[name] {
+				seen[name] = true
+				myConns = append(myConns, name)
+			}
+		}
+		if i == 0 {
+			*zones = append(*zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", playerIndex+1), myConns, settings.ZoneCfg.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneCfg.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
+		} else {
+			*zones = append(*zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneCfg.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, false))
+		}
+	}
+
+	for i := 0; i < count; i++ {
+		next := (i + 1) % count
+		from := ringLetters[i]
+		to := ringLetters[next]
+		fromZone := "Spawn-" + from
+		if i != 0 {
+			fromZone = "Neutral-" + from
+		}
+		toZone := "Spawn-" + to
+		if next != 0 {
+			toZone = "Neutral-" + to
+		}
+		*connections = append(*connections, template.Connection{
+			Name: connNames[i], From: fromZone, To: toZone,
+			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
+			GuardValue: borderGuardValue(from, to, []string{playerLetter}, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup: fmt.Sprintf("tourney_ring_guard_%s_%s", from, to),
+		})
+	}
+}
+
+// buildTournamentHubCluster — one player's isolated cluster as a private
+// hub-and-spoke layout. A dedicated mini-hub zone "Hub-{playerLetter}" sits
+// at the centre and connects directly to the player spawn and all of their
+// exclusive neutrals. Mirrors C# v0.7 BuildTournamentHubCluster.
+func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+	hubName := "Hub-" + playerLetter
+
+	spokeLetters := []string{playerLetter}
+	for _, nz := range myNeutrals {
+		spokeLetters = append(spokeLetters, nz.Letter)
+	}
+
+	spokeConnNames := make([]string, len(spokeLetters))
+	for i, l := range spokeLetters {
+		spokeConnNames[i] = fmt.Sprintf("THubSpoke-%s-%s", playerLetter, l)
+	}
+
+	hubZone := buildHubZone(spokeConnNames, tuning, false, settings.ZoneCfg.HubZoneSize, settings.ZoneCfg.HubZoneCastles, settings.GenerateRoads)
+	hubZone.Name = hubName
+	*zones = append(*zones, hubZone)
+
+	for i, letter := range spokeLetters {
+		conn := []string{spokeConnNames[i]}
+		if i == 0 {
+			*zones = append(*zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", playerIndex+1), conn, settings.ZoneCfg.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneCfg.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
+		} else {
+			*zones = append(*zones, buildNeutralZone(neutralByLetter[letter], conn, settings.ZoneCfg.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, false))
+		}
+	}
+
+	for i, spokeLetter := range spokeLetters {
+		spokeZone := "Spawn-" + spokeLetter
+		if i != 0 {
+			spokeZone = "Neutral-" + spokeLetter
+		}
+		*connections = append(*connections, template.Connection{
+			Name: spokeConnNames[i], From: hubName, To: spokeZone,
+			ConnectionType: "Direct", GuardZone: hubName, SimTurnSquad: true,
+			GuardValue: borderGuardValue(playerLetter, spokeLetter, []string{playerLetter}, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup: fmt.Sprintf("tourney_hub_guard_%s_%s", playerLetter, spokeLetter),
+		})
+	}
+
+	// Proximity ring around spokes so the engine arranges them sensibly.
+	for i := 0; i < len(spokeLetters); i++ {
+		next := (i + 1) % len(spokeLetters)
+		from := spokeLetters[i]
+		to := spokeLetters[next]
+		fromZone := "Spawn-" + from
+		if i != 0 {
+			fromZone = "Neutral-" + from
+		}
+		toZone := "Spawn-" + to
+		if next != 0 {
+			toZone = "Neutral-" + to
+		}
+		*connections = append(*connections, template.Connection{
+			Name:           fmt.Sprintf("TPseudo-%s-%s-%s", playerLetter, from, to),
+			From:           fromZone,
+			To:             toZone,
+			ConnectionType: "Proximity",
+		})
+	}
+}
+
+// buildTournamentBalancedCluster — one player's isolated cluster using the
+// balanced concentric-ring layout. Mirrors the non-tournament Balanced
+// variant (BuildBalancedRingLetters + BuildBalancedRandomPositions) but
+// scoped to a single player. Edges are built from pure ring structure
+// (same-tier circle neighbors + adjacent-tier nearest neighbors with ties)
+// per C# a040c98. GuardMatchGroup prefix `tourney_bal_guard_`.
+func buildTournamentBalancedCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+	singlePlayerList := []string{playerLetter}
+	orderedLetters := buildBalancedRingLetters(singlePlayerList, myNeutrals, 0)
+	rawPos := buildBalancedRandomPositions(orderedLetters, singlePlayerList, neutralByLetter)
+
+	// Position remap to the player's canvas half (kept for parity even
+	// though Go's template.Zone does not yet have a GeneratorPosition
+	// field; preview will pick this up in Phase 7).
+	rawXMin, rawXMax, rawYMin, rawYMax := 0.05, 0.95, 0.05, 0.95
+	if len(rawPos) > 0 {
+		rawXMin, rawXMax = rawPos[0][0], rawPos[0][0]
+		rawYMin, rawYMax = rawPos[0][1], rawPos[0][1]
+		for _, p := range rawPos[1:] {
+			if p[0] < rawXMin {
+				rawXMin = p[0]
+			}
+			if p[0] > rawXMax {
+				rawXMax = p[0]
+			}
+			if p[1] < rawYMin {
+				rawYMin = p[1]
+			}
+			if p[1] > rawYMax {
+				rawYMax = p[1]
+			}
+		}
+	}
+	spanX := math.Max(rawXMax-rawXMin, 0.001)
+	spanY := math.Max(rawYMax-rawYMin, 0.001)
+	xMin, xMax := 0.03, 0.43
+	if playerIndex != 0 {
+		xMin, xMax = 0.57, 0.97
+	}
+	targetW := xMax - xMin
+	const targetH = 0.90
+	scale := math.Min(targetW/spanX, targetH/spanY)
+	xCentre := (xMin + xMax) / 2.0
+	const yCentre = 0.5
+	pos := make([][2]float64, len(rawPos))
+	for i, pt := range rawPos {
+		pos[i] = [2]float64{
+			xCentre + (pt[0]-(rawXMin+rawXMax)/2.0)*scale,
+			yCentre + (pt[1]-(rawYMin+rawYMax)/2.0)*scale,
+		}
+	}
+
+	// Build connections from pure ring structure (a040c98).
+	angDist := func(a, b float64) float64 {
+		d := math.Mod(math.Abs(a-b), 2*math.Pi)
+		if d > math.Pi {
+			d = 2*math.Pi - d
+		}
+		return d
+	}
+	tierIndices := map[int][]int{}
+	for i, l := range orderedLetters {
+		t := zoneTierRank(l, singlePlayerList, neutralByLetter)
+		tierIndices[t] = append(tierIndices[t], i)
+	}
+	tierKeys := make([]int, 0, len(tierIndices))
+	for k := range tierIndices {
+		tierKeys = append(tierKeys, k)
+	}
+	sort.Ints(tierKeys)
+
+	tierSorted := map[int][]int{}
+	tierAngles := map[int][]float64{}
+	for tier, idx := range tierIndices {
+		s := make([]int, len(idx))
+		copy(s, idx)
+		sort.SliceStable(s, func(i, j int) bool {
+			return math.Atan2(rawPos[s[i]][1]-0.5, rawPos[s[i]][0]-0.5) <
+				math.Atan2(rawPos[s[j]][1]-0.5, rawPos[s[j]][0]-0.5)
+		})
+		tierSorted[tier] = s
+		ang := make([]float64, len(s))
+		for j, ii := range s {
+			ang[j] = math.Atan2(rawPos[ii][1]-0.5, rawPos[ii][0]-0.5)
+		}
+		tierAngles[tier] = ang
+	}
+
+	pairSet := map[[2]int]bool{}
+	addPair := func(a, b int) {
+		if a > b {
+			a, b = b, a
+		}
+		pairSet[[2]int{a, b}] = true
+	}
+
+	// Same-ring: circle-neighbors only; skip degenerate < 3 rings.
+	for _, sorted := range tierSorted {
+		nn := len(sorted)
+		if nn < 3 {
+			continue
+		}
+		for j := 0; j < nn; j++ {
+			addPair(sorted[j], sorted[(j+1)%nn])
+		}
+	}
+
+	// Cross-ring: bidirectional nearest-neighbor between adjacent tiers.
+	for ti := 0; ti+1 < len(tierKeys); ti++ {
+		outerSorted := tierSorted[tierKeys[ti]]
+		innerSorted := tierSorted[tierKeys[ti+1]]
+		outerAngles := tierAngles[tierKeys[ti]]
+		innerAngles := tierAngles[tierKeys[ti+1]]
+
+		for oi := 0; oi < len(outerSorted); oi++ {
+			best, bestD := 0, math.MaxFloat64
+			for ii := 0; ii < len(innerSorted); ii++ {
+				if d := angDist(outerAngles[oi], innerAngles[ii]); d < bestD {
+					bestD = d
+					best = ii
+				}
+			}
+			if len(innerSorted) > 0 {
+				addPair(outerSorted[oi], innerSorted[best])
+			}
+		}
+
+		const epsilon = 1e-9
+		for ii := 0; ii < len(innerSorted); ii++ {
+			bestD := math.MaxFloat64
+			for oi := 0; oi < len(outerSorted); oi++ {
+				if d := angDist(innerAngles[ii], outerAngles[oi]); d < bestD {
+					bestD = d
+				}
+			}
+			for oi := 0; oi < len(outerSorted); oi++ {
+				if angDist(innerAngles[ii], outerAngles[oi]) <= bestD+epsilon {
+					addPair(innerSorted[ii], outerSorted[oi])
+				}
+			}
+		}
+	}
+
+	count := len(orderedLetters)
+	connsByZone := make([][]string, count)
+	for _, p := range sortedPairs(pairSet) {
+		from := orderedLetters[p[0]]
+		to := orderedLetters[p[1]]
+		connName := fmt.Sprintf("TBal-%s-%s", from, to)
+		connsByZone[p[0]] = append(connsByZone[p[0]], connName)
+		connsByZone[p[1]] = append(connsByZone[p[1]], connName)
+
+		fromZone := "Spawn-" + from
+		if from != playerLetter {
+			fromZone = "Neutral-" + from
+		}
+		toZone := "Spawn-" + to
+		if to != playerLetter {
+			toZone = "Neutral-" + to
+		}
+		*connections = append(*connections, template.Connection{
+			Name: connName, From: fromZone, To: toZone,
+			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
+			GuardValue: borderGuardValue(from, to, []string{playerLetter}, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup: fmt.Sprintf("tourney_bal_guard_%s_%s", from, to),
+		})
+	}
+
+	clusterStart := len(*zones)
+	for i, letter := range orderedLetters {
+		myConns := connsByZone[i]
+		if letter == playerLetter {
+			*zones = append(*zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", playerIndex+1), myConns, settings.ZoneCfg.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneCfg.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
+		} else {
+			*zones = append(*zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneCfg.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, false))
+		}
+	}
+
+	// Ensure the cluster is fully connected (same guarantee as the standard
+	// balanced variant). Operate on the slice header of the cluster's zones.
+	clusterZones := (*zones)[clusterStart:]
+	ensureFullConnectivity(singlePlayerList, orderedLetters, pos, clusterZones, connections, tuning, neutralByLetter)
+}
+
+// sortedPairs returns the keys of a [2]int→bool set in deterministic order
+// (by element 0 then element 1) so that connection ordering does not depend
+// on Go's map iteration randomness.
+func sortedPairs(set map[[2]int]bool) [][2]int {
+	out := make([][2]int, 0, len(set))
+	for p := range set {
+		out = append(out, p)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i][0] != out[j][0] {
+			return out[i][0] < out[j][0]
+		}
+		return out[i][1] < out[j][1]
+	})
+	return out
 }
 
 // ── isolation / connectivity failsafes ───────────────────────────────
@@ -1414,7 +1872,7 @@ func ensurePlayerZonesConnected(playerLetters []string, zones []template.Zone, c
 		*connections = append(*connections, template.Connection{
 			Name: fn, From: "Spawn-" + letter, To: "Spawn-" + partner,
 			ConnectionType: "Direct", GuardZone: "Spawn-" + letter, SimTurnSquad: true,
-			GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+			GuardValue: borderGuardValue(letter, partner, playerLetters, nil, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: "fallback_guard_" + fn,
 		})
 		connNames[fn] = true
@@ -1427,7 +1885,7 @@ func ensurePlayerZonesConnected(playerLetters []string, zones []template.Zone, c
 	}
 }
 
-func ensureFullConnectivity(playerLetters, allLetters []string, pos [][2]float64, zones []template.Zone, connections *[]template.Connection, tuning generationTuning) {
+func ensureFullConnectivity(playerLetters, allLetters []string, pos [][2]float64, zones []template.Zone, connections *[]template.Connection, tuning generationTuning, neutralByLetter map[string]neutralZonePlan) {
 	if len(allLetters) <= 1 {
 		return
 	}
@@ -1497,7 +1955,7 @@ func ensureFullConnectivity(playerLetters, allLetters []string, pos [][2]float64
 			*connections = append(*connections, template.Connection{
 				Name: bridgeName, From: za, To: zb,
 				ConnectionType: "Direct", GuardZone: za, SimTurnSquad: true,
-				GuardValue: scaleBorderGuardValue(30000, tuning), GuardWeeklyIncrement: 0.15,
+				GuardValue: borderGuardValue(la, lb, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 				GuardMatchGroup: fmt.Sprintf("bridge_guard_%s-%s", la, lb),
 			})
 			connNameSet[bridgeName] = true
@@ -1747,7 +2205,7 @@ func buildOrderedLetters(settings *models.GeneratorSettings, playerLetters []str
 	for i, nz := range neutralZones {
 		neutralLetters[i] = nz.Letter
 	}
-	if settings.ExperimentalBalancedZonePlacement {
+	if settings.Topology == generator.TopologyBalanced {
 		sep := 0
 		if settings.MinNeutralZonesBetweenPlayers > 0 && canHonorNeutralSeparation(settings, len(neutralLetters)) {
 			sep = settings.MinNeutralZonesBetweenPlayers
@@ -1795,7 +2253,7 @@ func canHonorNeutralSeparation(settings *models.GeneratorSettings, neutralCount 
 		return false
 	}
 	switch settings.Topology {
-	case generator.TopologyDefault:
+	case generator.TopologyDefault, generator.TopologyBalanced:
 		return neutralCount >= settings.PlayerCount*min
 	case generator.TopologyChain:
 		return neutralCount >= (settings.PlayerCount-1)*min
@@ -1845,9 +2303,21 @@ func buildBalancedChainLetters(playerLetters []string, neutralZones []neutralZon
 		}
 		remaining -= reqInterior
 	}
-	extras := buildEvenGapCapacities(gapCount, remaining, 0)
-	for i := 0; i < gapCount; i++ {
-		capacities[i] += extras[i]
+	// Distribute extra neutrals only into interior gaps so that the first
+	// and last positions of the chain are always player zones (mirrors C#
+	// cc5d7ee "fix chain player positions"). Degenerate cases (0 or 1
+	// player) fall back to even distribution across every gap.
+	interiorGapCount := maxInt(0, gapCount-2)
+	if interiorGapCount > 0 {
+		extras := buildEvenGapCapacities(interiorGapCount, remaining, 0)
+		for i := 1; i < gapCount-1; i++ {
+			capacities[i] += extras[i-1]
+		}
+	} else {
+		extras := buildEvenGapCapacities(gapCount, remaining, 0)
+		for i := 0; i < gapCount; i++ {
+			capacities[i] += extras[i]
+		}
 	}
 	gaps := assignNeutralZonesToGaps(neutralZones, capacities, true)
 	var ordered []string
@@ -2048,7 +2518,7 @@ func buildTopologyAdjacency(settings *models.GeneratorSettings, playerLetters []
 			}
 			link(ordered[i], ordered[i+1])
 		}
-	case generator.TopologyDefault:
+	case generator.TopologyDefault, generator.TopologyBalanced:
 		ordered := buildOrderedLetters(settings, playerLetters, neutralZones, true)
 		isolate := settings.NoDirectPlayerConnections && len(playerLetters) > 1
 		playerSet := toSet(playerLetters)

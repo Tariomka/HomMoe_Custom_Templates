@@ -2,46 +2,170 @@ package constants
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models"
 
-// ContentItemGroup categorizes models.SidMappings by zone-content kind.
-// Mirrors Services/ContentManagement/ContentItemGroup.cs.
+// ContentItemGroup categorizes SidMappings by zone-content kind.
+// Mirrors Services/ContentManagement/ContentItemGroup.cs (v0.7).
 //
 //nolint:gochecknoglobals // semantic registry
 var ContentItemGroup = struct {
-	Mines         []models.SidMapping
-	Treasures     []models.SidMapping
+	Mines                     []models.SidMapping
+	UtilityStructures         []models.SidMapping
+	Treasures                 []models.SidMapping
+	UnitRecruitment           []models.SidMapping
+	ResourceBanks             []models.SidMapping
+	HeroImprovementStructures []models.SidMapping
+	// HireBuildings is an alias of UnitRecruitment kept for backwards
+	// compatibility with earlier Go callers; new code should use
+	// UnitRecruitment directly.
 	HireBuildings []models.SidMapping
-	ResourceBanks []models.SidMapping
 }{
 	Mines: []models.SidMapping{
 		ContentIds.MineWood,
 		ContentIds.MineOre,
 		ContentIds.MineGold,
+		IncludeListIds.RandomRareMines,
+		IncludeListIds.RandomRareMinesBiomeRestricted,
 		ContentIds.MineMercury,
 		ContentIds.MineCrystals,
 		ContentIds.MineGemstones,
 		ContentIds.AlchemyLab,
 	},
+	UtilityStructures: []models.SidMapping{
+		ContentIds.Watchtower,
+		ContentIds.ManaWell,
+		ContentIds.WindRose,
+		ContentIds.Market,
+		ContentIds.Tavern,
+		ContentIds.Forge,
+		ContentIds.Stables,
+		ContentIds.TearOfTruth,
+		ContentIds.Fountain,
+		ContentIds.Fountain2,
+		ContentIds.BeerFountain,
+		ContentIds.QuixsPath,
+		ContentIds.PileOfBooks,
+		ContentIds.MysteriousStone,
+		ContentIds.CrystalTrail,
+		ContentIds.SacrificialShrine,
+		ContentIds.Chimerologist,
+	},
 	Treasures: []models.SidMapping{
-		ContentIds.MythicScrollBox,
 		ContentIds.PandoraBox,
 		ContentIds.RandomItemCommon,
+		ContentIds.RandomItemRare,
 		ContentIds.RandomItemEpic,
 		ContentIds.RandomItemLegendary,
+		ContentIds.ScrollBox,
+		ContentIds.EnchantedScrollBox,
+		ContentIds.MythicScrollBox,
+		ContentIds.Prison,
+		ContentIds.Mirage,
 	},
-	HireBuildings: []models.SidMapping{
+	UnitRecruitment: []models.SidMapping{
+		// Random hires — matching the player faction.
+		IncludeListIds.RandomHiresLowTier,
 		ContentIds.RandomHire1,
 		ContentIds.RandomHire2,
 		ContentIds.RandomHire3,
 		ContentIds.RandomHire4,
+		IncludeListIds.RandomHiresHighTier,
 		ContentIds.RandomHire5,
 		ContentIds.RandomHire6,
 		ContentIds.RandomHire7,
-		IncludeListIds.RandomHiresLowTier,
-		IncludeListIds.RandomHiresHighTier,
 		IncludeListIds.RandomHiresAllTier,
+		IncludeListIds.RandomHiresAllTierWeighted,
+		ContentIds.MercenaryGuild,
+		// Guarded unit banks.
+		IncludeListIds.RandomGuardedUnitBank,
+		ContentIds.JoustingRange,
+		ContentIds.UnforgottenGrave,
+		ContentIds.PetrifiedMemorial,
+		ContentIds.RitualPyre,
+		ContentIds.BorealCall,
+		ContentIds.TheGorge,
+		ContentIds.PointOfBalance,
 	},
 	ResourceBanks: []models.SidMapping{
+		IncludeListIds.BasicStorageBanks,
+		ContentIds.StorageWood,
+		ContentIds.StorageOre,
+		ContentIds.StorageGold,
+		ContentIds.StorageMercury,
+		ContentIds.StorageCrystals,
+		ContentIds.StorageGemstones,
+		ContentIds.StorageDust,
 		IncludeListIds.ResourceBanksTier1,
+		ContentIds.Gardener,
+		ContentIds.Windmill,
+		ContentIds.Village,
+		ContentIds.GingerbreadHouse,
+		ContentIds.PeasantCart,
+		ContentIds.AbandonedCorpse,
+		ContentIds.CrowNest,
+		ContentIds.GoblinCache,
 		IncludeListIds.ResourceBanksTier2,
+		ContentIds.MontyHall,
+		ContentIds.HerosCrypt,
+		IncludeListIds.GuardedBanksTier1,
+		ContentIds.BlackTower,
+		ContentIds.AbandonedMansion,
+		ContentIds.MereasShrine,
+		ContentIds.ShadyDen,
+		IncludeListIds.GuardedBanksTier2,
+		ContentIds.RaidersCamp,
+		ContentIds.OvergrownGrave,
+		ContentIds.LegionsMemorial,
+		ContentIds.AlvarsEye,
+		ContentIds.CursedOldHouse,
+		ContentIds.AbnormalStructure,
+		ContentIds.PrismaticLair,
+		ContentIds.UncannyRite,
+		ContentIds.CircleOfLife,
+		ContentIds.IridescentAbbey,
+		IncludeListIds.GuardedBanksTier3,
+		ContentIds.TroglodyteThrone,
+		ContentIds.TwilightBloom,
+		ContentIds.UnstableRuins,
+		ContentIds.DragonUtopia,
+		ContentIds.ResearchLaboratory,
 	},
+	HeroImprovementStructures: []models.SidMapping{
+		IncludeListIds.HeroImprovementUncommon,
+		IncludeListIds.HeroStatsAndSkillsTier1,
+		ContentIds.StingingSword,
+		ContentIds.ArmoryAutomaton,
+		ContentIds.MagicWheel,
+		ContentIds.KnowledgeGarden,
+		ContentIds.WiseOwl,
+		IncludeListIds.HeroStatsAndSkillsTier2,
+		ContentIds.Fort,
+		ContentIds.OrbObservatory,
+		ContentIds.University,
+		ContentIds.Circus,
+		ContentIds.InfernalCirque,
+		IncludeListIds.HeroStatsAndSkillsTier3,
+		ContentIds.Maze,
+		ContentIds.TrialScales,
+		ContentIds.CollegeOfWonder,
+		ContentIds.LearningStone,
+		IncludeListIds.HeroExpTier2,
+		ContentIds.LostLibrary,
+		ContentIds.TreeOfKnowledge,
+		IncludeListIds.MagicBuildingsTier1,
+		ContentIds.MysticalTower,
+		ContentIds.CelestialSphere,
+		ContentIds.AltarOfMagic1,
+		ContentIds.AltarOfMagic2,
+		ContentIds.AltarOfMagic3,
+		ContentIds.AltarOfMagic4,
+		IncludeListIds.MagicBuildingsTier2,
+		ContentIds.MagicAmplifier1,
+		ContentIds.MagicAmplifier2,
+		ContentIds.MagicAmplifier3,
+		ContentIds.MagicAmplifier4,
+	},
+}
+
+func init() {
+	// HireBuildings ≡ UnitRecruitment (kept for backward compat).
+	ContentItemGroup.HireBuildings = ContentItemGroup.UnitRecruitment
 }

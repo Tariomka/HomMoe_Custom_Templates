@@ -8,6 +8,8 @@ import (
 type (
 	RmgTemplate         = template.RmgTemplateModel
 	RmgZone             = template.Zone
+	RmgVariant          = template.Variant
+	RmgConnection       = template.Connection
 	MapTopology         = generator.MapTopology
 	ZoneConfiguration   = generator.ZoneConfiguration
 	AdvancedSettings    = generator.AdvancedSettings
@@ -16,4 +18,6 @@ type (
 	GladiatorArenaRules = generator.GladiatorArenaRules
 	TournamentRules     = generator.TournamentRules
 	GeneratorSettings   = generator.GeneratorSettings
+	BonusEntry          = generator.BonusEntry
+	BonusPresetType     = generator.BonusPresetType
 )

@@ -32,6 +32,7 @@ func NewWindow() *Window {
 		components.NewTab("Generation Options", components.NewGenerationPanel(window.state)),
 		components.NewTab("Game Rules", components.NewRulesPanel(window.state)),
 		components.NewTab("Zone Content", components.NewZoneContentPanel(window.state)),
+		components.NewTab("Bonuses & Bans", components.NewBonusesPanel(window.state)),
 	}
 	window.previewPanel = components.NewPreviewPanel(window.state)
 	window.footerPanel = components.NewFooterPanel(window.state)

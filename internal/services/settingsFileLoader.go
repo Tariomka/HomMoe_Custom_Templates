@@ -18,6 +18,13 @@ func LoadSettingsFile(path string) (*models.SettingsFile, error) {
 	if err := json.Unmarshal(data, settingsFile); err != nil {
 		return nil, err
 	}
+	// One-way legacy upgrade: older .gen.json files used a boolean flag
+	// for the balanced topology. Promote it to Topology = Balanced and
+	// clear the flag so subsequent saves drop it from disk.
+	if settingsFile.ExperimentalBalancedZonePlacement {
+		settingsFile.Topology = generator.TopologyBalanced
+		settingsFile.ExperimentalBalancedZonePlacement = false
+	}
 	return settingsFile, nil
 }
 
@@ -45,7 +52,15 @@ func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSet
 	generatorSettings.MaxPortalConnections = settingsFile.MaxPortalConnections
 	generatorSettings.MinNeutralZonesBetweenPlayers = settingsFile.MinNeutralZonesBetweenPlayers
 	generatorSettings.MatchPlayerCastleFactions = settingsFile.MatchPlayerCastleFactions
-	generatorSettings.ExperimentalBalancedZonePlacement = settingsFile.ExperimentalBalancedZonePlacement
+	generatorSettings.BannedItems = settingsFile.BannedItems
+	generatorSettings.BannedMagics = settingsFile.BannedMagics
+	generatorSettings.ValueOverridesText = settingsFile.ValueOverridesText
+	generatorSettings.Bonuses = generator.ParseBonusesJson(settingsFile.BonusesJson)
+	generatorSettings.PlayerZoneMandatoryContent = RowsToMandatoryContent(settingsFile.PlayerZoneContentRows)
+	generatorSettings.LowNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.LowNeutralContentRows)
+	generatorSettings.MediumNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.MediumNeutralContentRows)
+	generatorSettings.HighNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.HighNeutralContentRows)
+	generatorSettings.HubZoneMandatoryContent = RowsToMandatoryContent(settingsFile.HubZoneContentRows)
 	generatorSettings.FactionLawsExpPercent = settingsFile.FactionLawsExpPercent
 	generatorSettings.AstrologyExpPercent = settingsFile.AstrologyExpPercent
 
