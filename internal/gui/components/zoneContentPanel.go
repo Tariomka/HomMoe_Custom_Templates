@@ -35,10 +35,12 @@ const (
 var tierLabels = []string{"Player", "Low Neutral", "Medium Neutral", "High Neutral", "Hub"}
 
 type ZoneContentPanel struct {
-	zcMines     *content.ZoneContentSection
-	zcTreasures *content.ZoneContentSection
-	zcHires     *content.ZoneContentSection
-	zcBanks     *content.ZoneContentSection
+	zcMines           *content.ZoneContentSection
+	zcUtilities       *content.ZoneContentSection
+	zcTreasures       *content.ZoneContentSection
+	zcHires           *content.ZoneContentSection
+	zcBanks           *content.ZoneContentSection
+	zcHeroImprovement *content.ZoneContentSection
 
 	tierSelector *content.SegmentButtonGroup
 	currentTier  tierIndex
@@ -55,12 +57,14 @@ type ZoneContentPanel struct {
 
 func NewZoneContentPanel(state *State) *ZoneContentPanel {
 	panel := &ZoneContentPanel{
-		zcMines:      content.NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
-		zcTreasures:  content.NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
-		zcHires:      content.NewZoneContentSection("Random Hires", constants.ContentItemGroup.HireBuildings, 10, false),
-		zcBanks:      content.NewZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
-		tierSelector: content.NewSegmentButtonGroup(tierLabels),
-		state:        state,
+		zcMines:           content.NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
+		zcUtilities:       content.NewZoneContentSection("Utility Structures", constants.ContentItemGroup.UtilityStructures, 10, false),
+		zcTreasures:       content.NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
+		zcHires:           content.NewZoneContentSection("Unit Recruitment", constants.ContentItemGroup.UnitRecruitment, 10, false),
+		zcBanks:           content.NewZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
+		zcHeroImprovement: content.NewZoneContentSection("Hero Improvement", constants.ContentItemGroup.HeroImprovementStructures, 10, false),
+		tierSelector:      content.NewSegmentButtonGroup(tierLabels),
+		state:             state,
 	}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
@@ -94,9 +98,11 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 				})
 			},
 			this.zcMines.Layout(theme),
+			this.zcUtilities.Layout(theme),
 			this.zcTreasures.Layout(theme),
 			this.zcHires.Layout(theme),
 			this.zcBanks.Layout(theme),
+			this.zcHeroImprovement.Layout(theme),
 		}
 		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
 			return widgetsList[index](gtx)
@@ -143,9 +149,11 @@ func (this *ZoneContentPanel) SaveToState() {
 // cached row list, routing each row to its appropriate section.
 func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 	this.zcMines.ClearRows()
+	this.zcUtilities.ClearRows()
 	this.zcTreasures.ClearRows()
 	this.zcHires.ClearRows()
 	this.zcBanks.ClearRows()
+	this.zcHeroImprovement.ClearRows()
 	for _, raw := range this.tierRows[tier] {
 		row := raw.Normalised()
 		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
@@ -184,10 +192,14 @@ func (this *ZoneContentPanel) routeToSection(sid string, isMine bool) *content.Z
 		return this.zcMines
 	}
 	switch {
-	case sectionContains(constants.ContentItemGroup.HireBuildings, sid):
+	case sectionContains(constants.ContentItemGroup.UnitRecruitment, sid):
 		return this.zcHires
 	case sectionContains(constants.ContentItemGroup.ResourceBanks, sid):
 		return this.zcBanks
+	case sectionContains(constants.ContentItemGroup.HeroImprovementStructures, sid):
+		return this.zcHeroImprovement
+	case sectionContains(constants.ContentItemGroup.UtilityStructures, sid):
+		return this.zcUtilities
 	case sectionContains(constants.ContentItemGroup.Treasures, sid):
 		return this.zcTreasures
 	}
@@ -216,9 +228,11 @@ func (this *ZoneContentPanel) collectSectionRows() []models.ZoneContentRowSave {
 		}
 	}
 	gather(this.zcMines, true)
+	gather(this.zcUtilities, false)
 	gather(this.zcTreasures, false)
 	gather(this.zcHires, false)
 	gather(this.zcBanks, false)
+	gather(this.zcHeroImprovement, false)
 	return out
 }
 
