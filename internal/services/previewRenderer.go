@@ -106,7 +106,7 @@ func RenderPreviewImage(template *models.RmgTemplate, topology models.MapTopolog
 		drawBitmapTextCentered(img, zone.Center, pngZoneLabel(zone), 2, labelColor)
 		if zone.HasCastle && zone.Castles > 0 {
 			badgePos := image.Pt(zone.Center.X+zoneRadius/2, zone.Center.Y+zoneRadius/2)
-			drawBitmapTextCentered(img, badgePos, intToString(zone.Castles), 1, badgeColor)
+			drawCastleBadge(img, badgePos, zone.Castles, badgeColor)
 		}
 	}
 	for _, zone := range layout.Zones {
@@ -119,7 +119,7 @@ func RenderPreviewImage(template *models.RmgTemplate, topology models.MapTopolog
 		drawBitmapTextCentered(img, zone.Center, pngZoneLabel(zone), 2, labelColor)
 		if zone.HasCastle && zone.Castles > 0 {
 			badgePos := image.Pt(zone.Center.X+radius/2, zone.Center.Y+radius/2)
-			drawBitmapTextCentered(img, badgePos, intToString(zone.Castles), 1, badgeColor)
+			drawCastleBadge(img, badgePos, zone.Castles, badgeColor)
 		}
 	}
 	return img
@@ -224,10 +224,7 @@ func fillCircle(img *image.RGBA, center image.Point, radius int, fillColor color
 func strokeCircle(img *image.RGBA, center image.Point, radius, width int, strokeColor color.NRGBA) {
 	outerSq := radius * radius
 	innerRadius := radius - width
-	innerSq := innerRadius * innerRadius
-	if innerSq < 0 {
-		innerSq = 0
-	}
+	innerSq := max(innerRadius*innerRadius, 0)
 	for dy := -radius; dy <= radius; dy++ {
 		for dx := -radius; dx <= radius; dx++ {
 			distSq := dx*dx + dy*dy
@@ -247,16 +244,7 @@ func strokeCircle(img *image.RGBA, center image.Point, radius, width int, stroke
 func drawThickLine(img *image.RGBA, a, b image.Point, width int, lineColor color.NRGBA) {
 	dx := b.X - a.X
 	dy := b.Y - a.Y
-	steps := dx
-	if -dx > steps {
-		steps = -dx
-	}
-	if dy > steps {
-		steps = dy
-	}
-	if -dy > steps {
-		steps = -dy
-	}
+	steps := max(-dy, max(dy, max(-dx, dx)))
 	if steps <= 0 {
 		fillCircle(img, a, width, lineColor)
 		return
@@ -345,9 +333,9 @@ func drawBitmapText(img *image.RGBA, x, y int, text string, scale int, textColor
 			cursorX += 4 * scale // space for unknown chars
 			continue
 		}
-		for col := 0; col < 5; col++ {
+		for col := range 5 {
 			bits := glyph[col]
-			for row := 0; row < 7; row++ {
+			for row := range 7 {
 				if bits&(1<<uint(row)) != 0 {
 					for sy := 0; sy < scale; sy++ {
 						for sx := 0; sx < scale; sx++ {
@@ -383,4 +371,74 @@ func drawBitmapTextCentered(img *image.RGBA, center image.Point, text string, sc
 	x := center.X - textWidth/2
 	y := center.Y - textHeight/2
 	drawBitmapText(img, x, y, text, scale, textColor)
+}
+
+// castleIconBitmap is a 7-column × 7-row pixel-art castle silhouette.
+// Each column byte stores 7 rows in low-order bits (bit 0 = top row),
+// matching the bitmapGlyphs format used by drawBitmapText.
+//
+//	row 0:  X . X . X . X    (crenellations)
+//	row 1:  X X X X X X X    (wall top)
+//	row 2:  X X X X X X X    (wall)
+//	row 3:  X X . X . X X    (windows row)
+//	row 4:  X X . X . X X
+//	row 5:  X X X . X X X    (door cutout)
+//	row 6:  X X X . X X X    (base)
+var castleIconBitmap = [7]byte{
+	0b1111111, // col 0: rows 0..6 all set
+	0b1110110, // col 1: rows 1,2,4,5,6
+	0b1100111, // col 2: rows 0,1,2,5,6
+	0b0011110, // col 3: rows 1,2,3,4
+	0b1100111, // col 4: rows 0,1,2,5,6
+	0b1110110, // col 5: rows 1,2,4,5,6
+	0b1111111, // col 6: rows 0..6 all set
+}
+
+// drawCastleIcon draws the 7×7 castle silhouette at the given top-left
+// position, scaled by the supplied factor.
+func drawCastleIcon(img *image.RGBA, topLeft image.Point, scale int, iconColor color.NRGBA) {
+	if scale < 1 {
+		scale = 1
+	}
+	rgba := color.RGBA{R: iconColor.R, G: iconColor.G, B: iconColor.B, A: iconColor.A}
+	for col := range 7 {
+		bits := castleIconBitmap[col]
+		for row := range 7 {
+			if bits&(1<<uint(row)) == 0 {
+				continue
+			}
+			for sy := 0; sy < scale; sy++ {
+				for sx := 0; sx < scale; sx++ {
+					px := topLeft.X + col*scale + sx
+					py := topLeft.Y + row*scale + sy
+					if px < 0 || py < 0 || px >= img.Rect.Max.X || py >= img.Rect.Max.Y {
+						continue
+					}
+					img.SetRGBA(px, py, rgba)
+				}
+			}
+		}
+	}
+}
+
+// drawCastleBadge renders a small castle icon followed by the count,
+// centered on the given anchor point. Mirrors the "⌂N" badge used by
+// the live Gio preview.
+func drawCastleBadge(img *image.RGBA, center image.Point, count int, badgeColor color.NRGBA) {
+	const iconScale = 2
+	const textScale = 1
+	iconWidth := 7 * iconScale
+	iconHeight := 7 * iconScale
+	countText := intToString(count)
+	textWidth := bitmapTextWidth(countText, textScale)
+	textHeight := 7 * textScale
+	gap := iconScale // small gap between icon and number
+	totalWidth := iconWidth + gap + textWidth
+	totalHeight := max(textHeight, iconHeight)
+	originX := center.X - totalWidth/2
+	originY := center.Y - totalHeight/2
+	drawCastleIcon(img, image.Pt(originX, originY+(totalHeight-iconHeight)/2), iconScale, badgeColor)
+	textX := originX + iconWidth + gap
+	textY := originY + (totalHeight-textHeight)/2
+	drawBitmapText(img, textX, textY, countText, textScale, badgeColor)
 }
