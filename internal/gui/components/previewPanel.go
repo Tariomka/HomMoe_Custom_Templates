@@ -17,7 +17,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
@@ -58,7 +57,7 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 				label.Truncator = "…"
 				return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(6)}.Layout(gtx, label.Layout)
 			}),
-			layout.Flexed(1, this.getPreviewCanvasWidget(theme, template)),
+			layout.Flexed(1, this.getPreviewCanvasWidget(theme)),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				// Reserve a fixed-height slot so the canvas above doesn't shift
@@ -105,7 +104,7 @@ func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
 // space (so the surrounding panel keeps a consistent size) and renders an
 // informational message inside the canvas when there is no template or no
 // computed layout yet.
-func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme, template *models.RmgTemplate) layout.Widget {
+func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		maxX := gtx.Constraints.Max.X
 		maxY := gtx.Constraints.Max.Y
@@ -119,8 +118,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme, template
 		defer op.Offset(image.Pt(offsetX, offsetY)).Push(gtx.Ops).Pop()
 
 		// Background.
-		rect := image.Rectangle{Max: canvasSize}
-		paint.FillShape(gtx.Ops, themes.ColorPreviewBg, clip.Rect(rect).Op())
+		paint.FillShape(gtx.Ops, themes.ColorPreviewBg, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
 
 		// Frame.
 		radius := gtx.Dp(unit.Dp(6))
@@ -130,6 +128,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme, template
 			Width: 2,
 		}.Op())
 
+		template := this.state.GetLastTemplate()
 		if template == nil {
 			return widgets.NewCenteredMessageWidget(theme, "Press \"Generate Template\" to see the map layout.", canvasSize, outerSize)(gtx)
 		}

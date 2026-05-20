@@ -42,7 +42,7 @@ type RulesPanel struct {
 func NewRulesPanel(state *State) *RulesPanel {
 	panel := &RulesPanel{
 		victory: content.NewDropdownSelector(func() []string {
-			labels := make([]string, len(constants.VictoryConditions))
+			labels := make([]string, 0)
 			for _, victory := range constants.VictoryConditions {
 				labels = append(labels, victory.Label)
 			}
@@ -150,7 +150,7 @@ func (this *RulesPanel) LoadFromState() {
 func (this *RulesPanel) SaveToState() {
 	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *models.SettingsFile) {
-		settings.VictoryCondition = constants.VictoryConditions[this.victory.GetSelectedIndex()].ID
+		settings.VictoryCondition = this.getCurrentVictoryCondition().ID
 		settings.LostStartCity = this.chkLostStartCity.Value
 		settings.LostStartCityDay = utils.RoundedRange(this.sldLostCityDay.Value, 1, 30)
 		settings.LostStartHero = this.chkLostStartHero.Value
@@ -170,4 +170,8 @@ func (this *RulesPanel) SaveToState() {
 		settings.FactionLawsExpPercent = utils.RoundedRange(this.sldFactionLawsExp.Value, 25, 200)
 		settings.AstrologyExpPercent = utils.RoundedRange(this.sldAstrologyExp.Value, 25, 200)
 	})
+}
+
+func (this *RulesPanel) getCurrentVictoryCondition() constants.Victory {
+	return constants.VictoryConditions[this.victory.GetSelectedIndex()]
 }

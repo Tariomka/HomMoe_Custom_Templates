@@ -176,10 +176,9 @@ func (this *ZoneContentPanel) resetCurrentTier() {
 // routeToSection picks the correct UI section for a SID, honouring the
 // IsMine flag so that a mine-include-list still ends up in Mines.
 func (this *ZoneContentPanel) routeToSection(sid string, isMine bool) *content.ZoneContentSection {
-	if isMine || sectionContains(constants.ContentItemGroup.Mines, sid) {
-		return this.zcMines
-	}
 	switch {
+	case isMine || sectionContains(constants.ContentItemGroup.Mines, sid):
+		return this.zcMines
 	case sectionContains(constants.ContentItemGroup.UnitRecruitment, sid):
 		return this.zcHires
 	case sectionContains(constants.ContentItemGroup.ResourceBanks, sid):
@@ -190,8 +189,9 @@ func (this *ZoneContentPanel) routeToSection(sid string, isMine bool) *content.Z
 		return this.zcUtilities
 	case sectionContains(constants.ContentItemGroup.Treasures, sid):
 		return this.zcTreasures
+	default:
+		return this.zcTreasures
 	}
-	return this.zcTreasures
 }
 
 // collectSectionRows reads the current sections back into a flat slice

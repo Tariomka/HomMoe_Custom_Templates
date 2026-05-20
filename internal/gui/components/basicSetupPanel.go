@@ -34,7 +34,7 @@ func NewBasicSetupPanel(state *State) *BasicSetupPanel {
 		templateName: widget.Editor{SingleLine: true},
 		gameMode:     content.NewSegmentButtonGroup([]string{"Classic", "SingleHero"}),
 		topology: content.NewDropdownSelector(func() []string {
-			labels := make([]string, len(constants.Topologies))
+			labels := make([]string, 0)
 			for _, topology := range constants.Topologies {
 				labels = append(labels, topology.Label)
 			}

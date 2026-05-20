@@ -166,7 +166,7 @@ func stripFirstClusterIfTwo(zones []models.RmgZone, conns []models.RmgConnection
 		compID[i] = -1
 	}
 	var comps [][]int
-	for start := 0; start < n; start++ {
+	for start := range n {
 		if compID[start] >= 0 {
 			continue
 		}
@@ -253,8 +253,8 @@ func allHaveRing(zones []models.RmgZone) bool {
 }
 
 func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side float64) {
-	n := len(zones)
-	if n == 0 {
+	zoneCount := len(zones)
+	if zoneCount == 0 {
 		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
 		return
 	}
@@ -265,7 +265,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	cx := side / 2.0
 	cy := side / 2.0
 
-	if n == 1 {
+	if zoneCount == 1 {
 		layout.ZoneRadius = int(math.Round(zoneRadiusMax))
 		layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
 		return
@@ -295,7 +295,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	}
 
 	ringIndices := make([][]int, ringCount)
-	ringLabel := make([]int, n)
+	ringLabel := make([]int, zoneCount)
 	for i, z := range zones {
 		r := tierToRing[*z.GeneratorRing]
 		ringLabel[i] = r
@@ -307,20 +307,20 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	assignRingRadii := func(zr float64) []float64 {
 		mc := 2.0*zr + minGap
 		radii := make([]float64, ringCount)
-		for r := 0; r < ringCount; r++ {
-			cnt := len(ringIndices[r])
-			natural := drawRadius * float64(r+1) / float64(ringCount)
+		for ringIndex := range ringCount {
+			cnt := len(ringIndices[ringIndex])
+			natural := drawRadius * float64(ringIndex+1) / float64(ringCount)
 			withinRing := 0.0
 			if cnt >= 2 {
 				withinRing = mc / (2.0 * math.Sin(math.Pi/float64(cnt)))
-			} else if cnt == 1 && r > 0 {
+			} else if cnt == 1 && ringIndex > 0 {
 				withinRing = mc
 			}
 			afterPrev := 0.0
-			if r > 0 {
-				afterPrev = radii[r-1] + mc
+			if ringIndex > 0 {
+				afterPrev = radii[ringIndex-1] + mc
 			}
-			radii[r] = math.Max(natural, math.Max(withinRing, afterPrev))
+			radii[ringIndex] = math.Max(natural, math.Max(withinRing, afterPrev))
 		}
 		return radii
 	}
@@ -328,7 +328,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	// Binary-search the largest zone radius that keeps the outer ring inside
 	// the available draw radius.
 	lo, hi := 8.0, zoneRadiusMax
-	for iter := 0; iter < 32; iter++ {
+	for range 32 {
 		mid := (lo + hi) / 2.0
 		r2 := assignRingRadii(mid)
 		if r2[ringCount-1] <= drawRadius {
@@ -343,13 +343,13 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 
 	rawCx, rawCy := positionCentroid(zones)
 
-	for r := 0; r < ringCount; r++ {
-		group := ringIndices[r]
+	for ringIndex := range ringCount {
+		group := ringIndices[ringIndex]
 		cnt := len(group)
 		if cnt == 0 {
 			continue
 		}
-		if cnt == 1 && r == 0 {
+		if cnt == 1 && ringIndex == 0 {
 			layout.Positions[zones[group[0]].Name] = image.Pt(int(cx), int(cy))
 			continue
 		}
@@ -361,7 +361,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 				positionAngle(zones[sorted[j]], rawCx, rawCy)
 		})
 		firstAngle := positionAngle(zones[sorted[0]], rawCx, rawCy)
-		canvasRadius := ringRadii[r]
+		canvasRadius := ringRadii[ringIndex]
 		for j, idx := range sorted {
 			angle := firstAngle + 2.0*math.Pi*float64(j)/float64(cnt)
 			x := cx + math.Cos(angle)*canvasRadius
