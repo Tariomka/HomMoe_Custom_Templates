@@ -14,7 +14,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
 
 type BasicSetupPanel struct {
@@ -33,9 +32,15 @@ type BasicSetupPanel struct {
 func NewBasicSetupPanel(state *State) *BasicSetupPanel {
 	panel := &BasicSetupPanel{
 		templateName: widget.Editor{SingleLine: true},
-		gameMode:     content.NewSegmentButtonGroup(constants.GameModes),
-		topology:     content.NewDropdownSelector(constants.TopologyLabels),
-		state:        state,
+		gameMode:     content.NewSegmentButtonGroup([]string{"Classic", "SingleHero"}),
+		topology: content.NewDropdownSelector(func() []string {
+			labels := make([]string, len(constants.Topologies))
+			for _, topology := range constants.Topologies {
+				labels = append(labels, topology.Label)
+			}
+			return labels
+		}()),
+		state: state,
 	}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
@@ -64,7 +69,7 @@ func (this *BasicSetupPanel) GetPanelWidget(theme *material.Theme) layout.Widget
 				return this.topology.Layout(gtx, theme)
 			}),
 			func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, topologyDescription(constants.TopologyValues[this.topology.GetSelectedIndex()]))
+				label := material.Body2(theme, this.getCurrentTopology().Description)
 				label.Color = themes.ColorTextDim
 				label.TextSize = unit.Sp(12)
 				return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(168)}.Layout(gtx, label.Layout)
@@ -85,27 +90,22 @@ func (this *BasicSetupPanel) LoadFromState() {
 	this.playerCount.Value = utils.Normalize(float32(settings.PlayerCount), 2, 8)
 	this.checkExperimentalSizes.Value = settings.ExperimentalMapSizes
 	this.mapSizeSlider.Value = utils.MapSizeToSlider(settings.MapSize, this.checkExperimentalSizes.Value)
-	this.topology.SelectByName(topologyLabelFor(settings.Topology))
+	this.topology.SelectByName(constants.GetTopologyDescriptor(settings.Topology).Label)
 }
 
-// TODO: check `.Update(gtx)` and on true update the value
 func (this *BasicSetupPanel) SaveToState() {
+	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
 		settings.MapSize = utils.SliderToMapSize(this.mapSizeSlider.Value, this.checkExperimentalSizes.Value)
 		settings.ExperimentalMapSizes = this.checkExperimentalSizes.Value
-		settings.Topology = constants.TopologyValues[this.topology.GetSelectedIndex()]
+		settings.Topology = this.getCurrentTopology().Type
 	})
 }
 
-func topologyLabelFor(topology models.MapTopology) string {
-	for i, value := range constants.TopologyValues {
-		if value == topology {
-			return constants.TopologyLabels[i]
-		}
-	}
-	return constants.TopologyLabels[0]
+func (this *BasicSetupPanel) getCurrentTopology() models.TopologyDescriptor {
+	return constants.Topologies[this.topology.GetSelectedIndex()]
 }
 
 // mapSizeLabelInt returns the short S/M/L/XL/H/G/C label for an integer size.
@@ -125,20 +125,5 @@ func mapSizeLabelInt(size int) string {
 		return "G"
 	default:
 		return "C"
-	}
-}
-
-func topologyDescription(topology models.MapTopology) string {
-	switch topology {
-	case generator.TopologyDefault:
-		return "Ring: each player borders two neighbors in a closed loop."
-	case generator.TopologyHubAndSpoke:
-		return "Hub: central neutral hub connects all player zones."
-	case generator.TopologyChain:
-		return "Chain: linear series, harder for outer players to interact."
-	case generator.TopologySharedWeb:
-		return "Shared web: heavy interconnection through central neutral mesh."
-	default:
-		return "Random: layout decided by the generator."
 	}
 }

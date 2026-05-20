@@ -41,8 +41,14 @@ type RulesPanel struct {
 
 func NewRulesPanel(state *State) *RulesPanel {
 	panel := &RulesPanel{
-		victory: content.NewDropdownSelector(constants.VictoryLabels),
-		state:   state,
+		victory: content.NewDropdownSelector(func() []string {
+			labels := make([]string, len(constants.VictoryConditions))
+			for _, victory := range constants.VictoryConditions {
+				labels = append(labels, victory.Label)
+			}
+			return labels
+		}()),
+		state: state,
 	}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
@@ -120,7 +126,7 @@ func (this *RulesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 
 func (this *RulesPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
-	this.victory.SelectByName(constants.VictoryIDs[victoryIndex(settings.VictoryCondition)])
+	this.victory.SelectByName(constants.GetVictoryCondition(settings.VictoryCondition).Label)
 	this.chkLostStartCity.Value = settings.LostStartCity
 	this.sldLostCityDay.Value = utils.Normalize(float32(settings.LostStartCityDay), 1, 30)
 	this.chkLostStartHero.Value = settings.LostStartHero
@@ -141,10 +147,10 @@ func (this *RulesPanel) LoadFromState() {
 	this.sldAstrologyExp.Value = utils.Normalize(float32(settings.AstrologyExpPercent), 25, 200)
 }
 
-// TODO: check `.Update(gtx)` and on true update the value
 func (this *RulesPanel) SaveToState() {
+	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *models.SettingsFile) {
-		settings.VictoryCondition = constants.VictoryIDs[this.victory.GetSelectedIndex()]
+		settings.VictoryCondition = constants.VictoryConditions[this.victory.GetSelectedIndex()].ID
 		settings.LostStartCity = this.chkLostStartCity.Value
 		settings.LostStartCityDay = utils.RoundedRange(this.sldLostCityDay.Value, 1, 30)
 		settings.LostStartHero = this.chkLostStartHero.Value
@@ -164,12 +170,4 @@ func (this *RulesPanel) SaveToState() {
 		settings.FactionLawsExpPercent = utils.RoundedRange(this.sldFactionLawsExp.Value, 25, 200)
 		settings.AstrologyExpPercent = utils.RoundedRange(this.sldAstrologyExp.Value, 25, 200)
 	})
-}
-func victoryIndex(id string) int {
-	for i, value := range constants.VictoryIDs {
-		if value == id {
-			return i
-		}
-	}
-	return 0
 }

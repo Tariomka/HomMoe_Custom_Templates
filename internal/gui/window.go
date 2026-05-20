@@ -25,7 +25,7 @@ type Window struct {
 }
 
 func NewWindow() *Window {
-	window := Window{state: components.NewUiState()}
+	window := Window{state: components.NewUIState()}
 	window.toolbar = components.NewToolbar(window.state, window.reset)
 	window.tabs = []*components.Tab{
 		components.NewTab("Map Setup", components.NewBasicSetupPanel(window.state)),

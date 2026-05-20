@@ -29,3 +29,12 @@ var Topologies = []models.TopologyDescriptor{
 	Topology.Chain,
 	Topology.SharedWeb,
 }
+
+func GetTopologyDescriptor(topology models.MapTopology) models.TopologyDescriptor {
+	for _, value := range Topologies {
+		if value.Type == topology {
+			return value
+		}
+	}
+	return Topologies[0]
+}

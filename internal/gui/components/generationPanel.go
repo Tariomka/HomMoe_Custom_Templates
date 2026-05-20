@@ -145,8 +145,8 @@ func (this *GenerationPanel) LoadFromState() {
 	this.sldBorderGuard.Value = utils.Normalize(float32(settings.BorderGuardStrengthPercent), 25, 200)
 }
 
-// TODO: check `.Update(gtx)` and on true update the value
 func (this *GenerationPanel) SaveToState() {
+	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.GenerateRoads = this.chkRoads.Value
 		settings.RandomPortals = this.chkPortals.Value
@@ -172,8 +172,8 @@ func (this *GenerationPanel) SaveToState() {
 		settings.NeutralZoneSize = float64(0.5 + this.sldNeutralZoneSize.Value*1.5)
 		settings.GuardRandomization = float64(utils.Denormalize(this.sldGuardRandom.Value, 0, 0.5))
 		rd := utils.RoundedRange(this.sldResourceDensity.Value, 25, 200)
-		sd := utils.RoundedRange(this.sldStructureDensity.Value, 25, 200)
 		settings.ResourceDensityPercent = &rd
+		sd := utils.RoundedRange(this.sldStructureDensity.Value, 25, 200)
 		settings.StructureDensityPercent = &sd
 		settings.NeutralStackStrengthPercent = utils.RoundedRange(this.sldNeutralStack.Value, 25, 200)
 		settings.BorderGuardStrengthPercent = utils.RoundedRange(this.sldBorderGuard.Value, 25, 200)

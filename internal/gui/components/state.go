@@ -27,7 +27,7 @@ type State struct {
 	statusErr    bool
 }
 
-func NewUiState() *State {
+func NewUIState() *State {
 	state := &State{settings: models.NewSettingsFile()}
 	state.outputPath.SingleLine = true
 	if workingDir, err := os.Getwd(); err == nil {

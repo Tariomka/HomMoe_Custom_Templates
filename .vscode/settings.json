@@ -13,6 +13,8 @@
         "ui.diagnostic.staticcheck": true,
         "ui.diagnostic.analyses": {
             "ST1006": false, // Too noisy. Generic name is useful to distinguish attached struct from ouside variables. Single character names are evil
+
+            "ST1000": false, // Temporarily disabled while still work in progress
         }
     },
 }
