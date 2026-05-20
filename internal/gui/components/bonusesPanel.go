@@ -11,13 +11,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-// BonusesPanel is the editor for the Game Start Bonuses, Banned Items,
-// Banned Spells and Guard-Value Overrides lists added in C# v0.7.
-//
-// The C# WPF editor presents these as picker dialogs that build the
-// underlying strings; the Go port exposes the raw newline-separated
-// text directly so the user can copy/paste between editors and so we
-// preserve full data parity without porting four modal dialogs.
 type BonusesPanel struct {
 	bonusesEdit       widget.Editor
 	bannedItemsEdit   widget.Editor

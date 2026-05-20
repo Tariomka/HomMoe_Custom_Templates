@@ -4,8 +4,6 @@ package models
 // mandatory-content UI row. It preserves the row exactly as the user
 // configured it, including the Count slider — so e.g. two separate sawmill
 // rows stay as two rows after a round-trip.
-//
-// Mirror of the C# Models/Generator/ZoneContentRowSave.cs record.
 type ZoneContentRowSave struct {
 	// SID of the content item or include-list.
 	Sid string `json:"sid"`

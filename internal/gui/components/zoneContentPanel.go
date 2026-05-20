@@ -12,15 +12,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-// ZoneContentPanel is the editor for the five mandatory-content lists
-// added in C# v0.7: Player zone, three neutral tiers (Low / Medium /
-// High), and the central Hub zone. A SegmentButtonGroup tier selector
-// swaps which list is being edited; the actual row sections (Mines /
-// Treasures / Hires / Banks) are shared across tiers — the panel keeps
-// a per-tier cache of rows and writes them all back on save.
-
 // tierIndex is the position of a tier inside the tierRows cache. The
-// numeric order must match the SegmentButtonGroup label list below.
+// numeric order must match the SegmentButtonGroup label list below
 type tierIndex int
 
 const (
@@ -120,9 +113,6 @@ func (this *ZoneContentPanel) LoadFromState() {
 	this.tierRows[tierHigh] = append([]models.ZoneContentRowSave(nil), settings.HighNeutralContentRows...)
 	this.tierRows[tierHub] = append([]models.ZoneContentRowSave(nil), settings.HubZoneContentRows...)
 
-	// Seed the Player tier with the historical defaults when the file
-	// has never been edited, so brand-new users still get something
-	// sensible to start from (C# editor does the same on first launch).
 	if len(this.tierRows[tierPlayer]) == 0 {
 		this.tierRows[tierPlayer] = defaultPlayerTierRows()
 	}
@@ -142,8 +132,6 @@ func (this *ZoneContentPanel) SaveToState() {
 		settings.HubZoneContentRows = cloneRows(this.tierRows[tierHub])
 	})
 }
-
-// ── tier <-> section plumbing ────────────────────────────────────────
 
 // loadTierIntoSections replaces the section rows with the given tier's
 // cached row list, routing each row to its appropriate section.
@@ -174,7 +162,7 @@ func (this *ZoneContentPanel) cacheCurrentSections() {
 
 // resetCurrentTier reverts the active tier to its defaults — that means
 // the historical seeded defaults for Player, and an empty list for the
-// other four tiers (matching the C# editor's "Reset" behaviour).
+// other four tiers
 func (this *ZoneContentPanel) resetCurrentTier() {
 	switch this.currentTier {
 	case tierPlayer:
@@ -236,8 +224,6 @@ func (this *ZoneContentPanel) collectSectionRows() []models.ZoneContentRowSave {
 	return out
 }
 
-// ── helpers ──────────────────────────────────────────────────────────
-
 func cloneRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
 	if len(rows) == 0 {
 		return nil
@@ -245,7 +231,6 @@ func cloneRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
 	return append([]models.ZoneContentRowSave(nil), rows...)
 }
 
-// defaultPlayerTierRows mirrors the historical C# InitializeDefaultPlayerZoneContents.
 func defaultPlayerTierRows() []models.ZoneContentRowSave {
 	return []models.ZoneContentRowSave{
 		{Sid: constants.ContentIds.MineWood.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},

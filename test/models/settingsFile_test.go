@@ -8,9 +8,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
 
-// TestNewSettingsFile_DefaultsToBalanced ensures the default topology
-// matches the C# editor v0.7 default (Balanced) instead of the legacy
-// random placement that the Go port shipped with previously.
 func TestNewSettingsFile_DefaultsToBalanced(t *testing.T) {
 	s := models.NewSettingsFile()
 	if s.Topology != generator.TopologyBalanced {
@@ -18,8 +15,6 @@ func TestNewSettingsFile_DefaultsToBalanced(t *testing.T) {
 	}
 }
 
-// TestSettingsFile_RoundTrip verifies that all new C#-parity fields
-// survive a JSON encode/decode cycle.
 func TestSettingsFile_RoundTrip(t *testing.T) {
 	original := models.NewSettingsFile()
 	original.TemplateName = "Round Trip"
@@ -70,7 +65,6 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 	}
 }
 
-// TestBonusEntry_RoundTrip verifies the C# pipe-separated bonus format.
 func TestBonusEntry_RoundTrip(t *testing.T) {
 	entries := []models.BonusEntry{
 		{PresetType: models.BonusStartingWood, ReceiverFilter: "start_hero", Param: "10", Param2: ""},
@@ -89,8 +83,6 @@ func TestBonusEntry_RoundTrip(t *testing.T) {
 	}
 }
 
-// TestBonusEntry_AcceptsLegacyOrdinalForm checks that BonusesJson values
-// produced by older C# builds (numeric preset ordinal) still parse.
 func TestBonusEntry_AcceptsLegacyOrdinalForm(t *testing.T) {
 	const legacy = "9|start_hero|10|"
 	decoded := models.ParseBonusesJson(legacy)

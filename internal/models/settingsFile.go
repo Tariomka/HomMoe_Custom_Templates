@@ -3,9 +3,7 @@ package models
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 
 // SettingsFile is the serialised .gen.json file produced and consumed by the
-// editor. JSON keys must remain stable across versions and match the C#
-// editor's Olden_Era___Template_Editor.Models.SettingsFile shape so that
-// .gen.json files round-trip between the two editors.
+// editor
 type SettingsFile struct {
 	TemplateName                  string `json:"templateName"`
 	MapSize                       int    `json:"mapSize"`
@@ -82,8 +80,6 @@ type SettingsFile struct {
 	ContentDensityPercent *int `json:"contentDensity,omitempty"`
 }
 
-// NewSettingsFile returns a SettingsFile populated with defaults matching
-// the C# editor (Olden_Era___Template_Editor.Models.SettingsFile).
 func NewSettingsFile() *SettingsFile {
 	return &SettingsFile{
 		TemplateName:                 "Custom Template",

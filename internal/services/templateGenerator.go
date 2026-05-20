@@ -176,8 +176,6 @@ func topologyLabel(t generator.MapTopology) string {
 	}
 }
 
-// ── neutral zone plan ────────────────────────────────────────────────
-
 type neutralZonePlan struct {
 	Letter      string
 	Quality     constants.NeutralZoneQuality
@@ -197,11 +195,6 @@ func buildNeutralZonePlan(settings *models.GeneratorSettings) []neutralZonePlan 
 		}
 	}
 
-	// C# v0.7 (fc4cb46): the neutral-zone breakdown is no longer gated
-	// behind the Advanced toggle. The Advanced fields are always read.
-	// To preserve back-compat for older settings that only set the
-	// flat NeutralZoneCount, fall back to the single-bucket form when
-	// the breakdown is empty.
 	advanced := settings.ZoneCfg.Advanced
 	advancedTotal := advanced.NeutralLowNoCastleCount + advanced.NeutralLowCastleCount +
 		advanced.NeutralMediumNoCastleCount + advanced.NeutralMediumCastleCount +
@@ -224,8 +217,6 @@ func buildNeutralZonePlan(settings *models.GeneratorSettings) []neutralZonePlan 
 	}
 	return plans
 }
-
-// ── tuning ───────────────────────────────────────────────────────────
 
 type generationTuning struct {
 	ContentScale                   float64
@@ -257,15 +248,7 @@ func scaleGuardMultiplier(value float64, t generationTuning) float64 {
 
 // borderGuardValue returns the base border-guard value (already scaled
 // by the BorderGuardStrengthMultiplier tuning) for a connection between
-// two zone letters. Mirrors C# TemplateGenerator.BorderGuardValue added
-// in commit 89cba4b ("scale guard value by zone type"):
-//
-//   - player  ↔ player   → 30000
-//   - player  ↔ neutral  → by neutral quality (Low 15k / Med 20k / High 25k)
-//   - neutral ↔ neutral  → by the higher quality of the two zones
-//
-// `neutralByLetter` may be nil, in which case missing entries default to
-// Medium quality (matching the C# fallback behaviour).
+// two zone letters
 func borderGuardValue(letterA, letterB string, playerLetters []string, neutralByLetter map[string]neutralZonePlan, t generationTuning) int {
 	aIsPlayer := contains(playerLetters, letterA)
 	bIsPlayer := contains(playerLetters, letterB)
@@ -337,8 +320,6 @@ func normalizeZoneSize(zoneSize float64) float64 {
 func percentToModifier(percent int) float64 {
 	return roundToDP(float64(clampInt(percent, 25, 200))/100.0, 2)
 }
-
-// ── game rules ───────────────────────────────────────────────────────
 
 func buildGameRules(settings *models.GeneratorSettings, effectiveVC string) template.GameRules {
 	hs := settings.HeroSettings
@@ -430,8 +411,6 @@ func buildAdvancedWinConditions(settings *models.GeneratorSettings, effectiveVC 
 	return wc
 }
 
-// ── variant dispatch ─────────────────────────────────────────────────
-
 func buildVariant(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string, hubIsHoldCity bool) template.Variant {
 	// Shuffle player letters
 	pl := make([]string, len(playerLetters))
@@ -459,8 +438,6 @@ func buildVariant(settings *models.GeneratorSettings, playerLetters []string, ne
 		return buildVariantDefault(settings, pl, neutralZones, tuning, holdCityNeutralLetter)
 	}
 }
-
-// ── content pools ────────────────────────────────────────────────────
 
 var (
 	t2Guarded   = []string{"classic_template_pool_random_t2_item", "classic_template_pool_random_t2_pandora", "classic_template_pool_random_t2_hire", "classic_template_pool_random_t2_unit_bank", "classic_template_pool_random_t2_res_bank", "classic_template_pool_random_t2_stat", "classic_template_pool_random_t2_magic"}
@@ -507,8 +484,6 @@ func getNeutralZoneProfile(quality constants.NeutralZoneQuality) neutralZoneProf
 }
 
 func cp(s []string) []string { r := make([]string, len(s)); copy(r, s); return r }
-
-// ── spawn zone ───────────────────────────────────────────────────────
 
 func buildSpawnZone(letter, player string, ringConns []string, castleCount int, matchFactions bool, zoneSize float64, spawnFootholds, generateRoads bool, tuning generationTuning) template.Zone {
 	mainObjects := []template.MainObject{
@@ -558,8 +533,6 @@ func buildSpawnZone(letter, player string, ringConns []string, castleCount int, 
 		CrossroadsPosition: &cp0, Roads: roads,
 	}
 }
-
-// ── neutral zone ─────────────────────────────────────────────────────
 
 func buildNeutralZone(plan neutralZonePlan, ringConns []string, zoneSize float64, spawnFootholds, generateRoads bool, tuning generationTuning, isHoldCity bool) template.Zone {
 	letter := plan.Letter
@@ -636,8 +609,6 @@ func buildNeutralZone(plan neutralZonePlan, ringConns []string, zoneSize float64
 	}
 }
 
-// ── hub zone ─────────────────────────────────────────────────────────
-
 func buildHubZone(spokeConns []string, tuning generationTuning, isHoldCity bool, size float64, castleCount int, generateRoads bool) template.Zone {
 	effectiveCastleCount := castleCount
 	if isHoldCity && effectiveCastleCount < 1 {
@@ -700,8 +671,6 @@ func buildHubZone(spokeConns []string, tuning generationTuning, isHoldCity bool,
 		CrossroadsPosition: &cp0, Roads: roads,
 	}
 }
-
-// ── roads ────────────────────────────────────────────────────────────
 
 func mainObjectEndpoint(index string) template.TypedRef {
 	return template.TypedRef{Type: "MainObject", Args: []string{index}}
@@ -766,8 +735,6 @@ func buildSideContentLimits() template.StringList {
 	return limits
 }
 
-// ── variant factory ──────────────────────────────────────────────────
-
 func makeVariant(playerLetters []string, firstLetter string, totalZones int, zones []template.Zone, connections []template.Connection) template.Variant {
 	zeroZone := "Neutral-" + firstLetter
 	if contains(playerLetters, firstLetter) {
@@ -791,8 +758,6 @@ func makeVariant(playerLetters []string, firstLetter string, totalZones int, zon
 		Zones: zones, Connections: connections,
 	}
 }
-
-// ── zone layouts ─────────────────────────────────────────────────────
 
 func buildZoneLayouts() []template.ZoneLayoutDef {
 	return []template.ZoneLayoutDef{
@@ -820,8 +785,6 @@ func buildZoneLayout(name string, obsFill, obsFillVoid, lakesFill float64, minLa
 	}
 }
 
-// ── mandatory content ────────────────────────────────────────────────
-
 func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZonePlan, settings *models.GeneratorSettings) []template.MandatoryContent {
 	var groups []template.MandatoryContent
 	for _, letter := range playerLetters {
@@ -848,8 +811,6 @@ func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZone
 	return groups
 }
 
-// ── ring connections ─────────────────────────────────────────────────
-
 func buildRingConnections(playerLetters, orderedLetters []string, tuning generationTuning, isolate bool, neutralByLetter map[string]neutralZonePlan) []template.Connection {
 	count := len(orderedLetters)
 	if count < 2 {
@@ -874,8 +835,6 @@ func buildRingConnections(playerLetters, orderedLetters []string, tuning generat
 	}
 	return conns
 }
-
-// ── portal connections ───────────────────────────────────────────────
 
 func buildRandomPortalConnections(playerLetters, orderedLetters []string, tuning generationTuning, maxCount int) []template.Connection {
 	count := len(orderedLetters)
@@ -958,15 +917,6 @@ func buildNonAdjacentDerangement(count int) []int {
 	return dest
 }
 
-// ── topology: Default (Ring) ─────────────────────────────────────────
-
-// buildVariantBalanced is the "Balanced" topology dispatch added in
-// C# v0.7 (commit 6dd070e "Added balanced map layout"). The actual
-// algorithm is the Delaunay-over-concentric-rings path that lives
-// inside buildVariantRandom: when Topology == TopologyBalanced it
-// switches to ring letter ordering, ring-radius positions, and edge
-// filtering that prunes tier-skipping connections. Forwarding here
-// keeps the dispatch switch readable.
 func buildVariantBalanced(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	return buildVariantRandom(settings, playerLetters, neutralZones, tuning, holdCityNeutralLetter)
 }
@@ -1353,8 +1303,7 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 	// Stamp generator-driven positions onto the freshly built zones so the
 	// preview renderer can reproduce the exact geometry used to derive the
 	// Delaunay connections. Balanced layouts also stamp the concentric ring
-	// index so the preview can snap zones to clean rings. Mirrors C#
-	// TemplateGenerator (Random / Balanced branches).
+	// index so the preview can snap zones to clean rings
 	for i := range zones {
 		p := pos[i]
 		zones[i].GeneratorPosition = &[2]float64{p[0], p[1]}
@@ -1398,10 +1347,7 @@ func buildVariantTournament(settings *models.GeneratorSettings, playerLetters []
 		neutralsForPlayer[i%2] = append(neutralsForPlayer[i%2], nz)
 	}
 
-	// Order each player's neutrals ascending by balance score so chain/ring
-	// layouts read player → low → medium → high (mirrors non-tournament
-	// layouts, replacing the random slot shuffle removed in C# e91e79f).
-	for p := 0; p < 2; p++ {
+	for p := range 2 {
 		sort.SliceStable(neutralsForPlayer[p], func(i, j int) bool {
 			ai, aj := neutralsForPlayer[p][i], neutralsForPlayer[p][j]
 			si, sj := neutralZoneBalanceScore(ai), neutralZoneBalanceScore(aj)
@@ -1491,7 +1437,7 @@ func buildTournamentChainCluster(playerIndex int, playerLetter string, myNeutral
 // buildTournamentRingCluster — one player's isolated cluster as a ring:
 // player → low → … → high → … → low → player. Sorts neutrals by balance
 // score, then fills outward-from-player so the highest-quality zones sit
-// at the ring midpoint. Mirrors C# v0.7 BuildTournamentRingCluster.
+// at the ring midpoint
 func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	sortedNeutrals := make([]neutralZonePlan, len(myNeutrals))
 	copy(sortedNeutrals, myNeutrals)
@@ -1574,7 +1520,7 @@ func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals
 // buildTournamentHubCluster — one player's isolated cluster as a private
 // hub-and-spoke layout. A dedicated mini-hub zone "Hub-{playerLetter}" sits
 // at the centre and connects directly to the player spawn and all of their
-// exclusive neutrals. Mirrors C# v0.7 BuildTournamentHubCluster.
+// exclusive neutrals
 func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	hubName := "Hub-" + playerLetter
 
@@ -1636,12 +1582,6 @@ func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals 
 	}
 }
 
-// buildTournamentBalancedCluster — one player's isolated cluster using the
-// balanced concentric-ring layout. Mirrors the non-tournament Balanced
-// variant (BuildBalancedRingLetters + BuildBalancedRandomPositions) but
-// scoped to a single player. Edges are built from pure ring structure
-// (same-tier circle neighbors + adjacent-tier nearest neighbors with ties)
-// per C# a040c98. GuardMatchGroup prefix `tourney_bal_guard_`.
 func buildTournamentBalancedCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	singlePlayerList := []string{playerLetter}
 	orderedLetters := buildBalancedRingLetters(singlePlayerList, myNeutrals, 0)
@@ -2328,9 +2268,8 @@ func buildBalancedChainLetters(playerLetters []string, neutralZones []neutralZon
 		remaining -= reqInterior
 	}
 	// Distribute extra neutrals only into interior gaps so that the first
-	// and last positions of the chain are always player zones (mirrors C#
-	// cc5d7ee "fix chain player positions"). Degenerate cases (0 or 1
-	// player) fall back to even distribution across every gap.
+	// and last positions of the chain are always player zones. Degenerate cases (0 or 1
+	// player) fall back to even distribution across every gap
 	interiorGapCount := maxInt(0, gapCount-2)
 	if interiorGapCount > 0 {
 		extras := buildEvenGapCapacities(interiorGapCount, remaining, 0)

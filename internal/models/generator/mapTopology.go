@@ -9,7 +9,5 @@ const (
 	TopologyChain       MapTopology = "Chain"
 	TopologySharedWeb   MapTopology = "SharedWeb"
 	TopologyRandom      MapTopology = "Random"
-	// TopologyBalanced is the ring layout with evenly distributed castle
-	// counts and balanced player zone placement (see C# v0.7).
-	TopologyBalanced MapTopology = "Balanced"
+	TopologyBalanced    MapTopology = "Balanced"
 )

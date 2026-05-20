@@ -6,8 +6,6 @@ import (
 )
 
 // BonusPresetType enumerates the configurable game-start bonus presets.
-// Mirror of OldenEraTemplateEditor.Models.BonusPresetType from
-// Models/Unfrozen/BonusEntry.cs.
 type BonusPresetType int
 
 const (
@@ -20,12 +18,10 @@ const (
 	BonusStartingGems     BonusPresetType = 6
 	BonusStartingCrystals BonusPresetType = 7
 	BonusStartingMercury  BonusPresetType = 8
-	BonusStartingWood     BonusPresetType = 9  // added in C# commit 4565e6c
-	BonusStartingOre      BonusPresetType = 10 // added in C# commit 4565e6c
+	BonusStartingWood     BonusPresetType = 9
+	BonusStartingOre      BonusPresetType = 10
 )
 
-// String returns the C# enum name for this preset (used as the leading
-// token of the pipe-separated BonusesJson line format).
 func (t BonusPresetType) String() string {
 	switch t {
 	case BonusTownPortalFree:
@@ -54,8 +50,6 @@ func (t BonusPresetType) String() string {
 	return strconv.Itoa(int(t))
 }
 
-// parseBonusPresetType accepts both the C# enum name (preferred) and the
-// legacy integer ordinal form.
 func parseBonusPresetType(s string) (BonusPresetType, bool) {
 	if n, err := strconv.Atoi(s); err == nil {
 		return BonusPresetType(n), true
@@ -87,8 +81,7 @@ func parseBonusPresetType(s string) (BonusPresetType, bool) {
 	return 0, false
 }
 
-// BonusEntry is the editor-side view-model for a single configurable
-// game-start bonus. Mirror of OldenEraTemplateEditor.Models.BonusEntry.
+// BonusEntry is the editor-side view-model for a single configurable game-start bonus
 type BonusEntry struct {
 	PresetType BonusPresetType
 	// "start_hero" or "all_heroes".
@@ -99,8 +92,6 @@ type BonusEntry struct {
 	Param2 string
 }
 
-// String serialises the entry to its compact pipe-separated form, matching
-// the C# BonusEntry.ToString() output and BonusesJson line format.
 func (b BonusEntry) String() string {
 	return b.PresetType.String() + "|" + b.ReceiverFilter + "|" + b.Param + "|" + b.Param2
 }
@@ -129,8 +120,7 @@ func ParseBonusEntry(s string) (BonusEntry, bool) {
 }
 
 // ParseBonusesJson splits the persisted BonusesJson string (newline-separated
-// pipe-encoded entries) into individual BonusEntry values. Blank lines and
-// malformed lines are silently skipped, matching the C# loader behaviour.
+// pipe-encoded entries) into individual BonusEntry values.
 func ParseBonusesJson(s string) []BonusEntry {
 	if s == "" {
 		return nil

@@ -9,11 +9,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
-// ── Distance presets ─────────────────────────────────────────────────
-//
-// These match the road-distance bands used by the C# editor's
-// RoadDistance dropdown (Any / Next To / Near / Medium / Far / Very Far).
-
 var (
 	distNextTo  = distancePreset{0.05, 0.1}
 	distMedium  = distancePreset{0.25, 0.5}
@@ -107,14 +102,6 @@ func presetRemoteFoothold(castleCount int) template.MandatoryContentItem {
 		build()
 }
 
-// ── Row → MandatoryContentItem conversion ────────────────────────────
-//
-// Mirror of the C# editor's ContentItemRowSave.ToContentItem() helper.
-// One ZoneContentRowSave can expand to multiple MandatoryContentItem
-// entries (one per Count); each entry carries the SID/IncludeList plus
-// the placement rules derived from the row's NearCastle / RoadDistance
-// flags.
-
 // RowsToMandatoryContent expands a slice of save-rows to a flat list of
 // MandatoryContentItem entries suitable for a MandatoryContent.Content.
 func RowsToMandatoryContent(rows []models.ZoneContentRowSave) []template.MandatoryContentItem {
@@ -155,7 +142,7 @@ func rowToMandatoryItem(row models.ZoneContentRowSave) template.MandatoryContent
 
 // StripNearCastleRules removes placement rules that anchor an item near
 // the zone's main castle. Used when a zone has no castle so the rule
-// would never be satisfiable. Mirrors C# ZoneContentManager.StripNearCastleRules.
+// would never be satisfiable
 func StripNearCastleRules(items []template.MandatoryContentItem) []template.MandatoryContentItem {
 	for i := range items {
 		if len(items[i].Rules) == 0 {
@@ -174,12 +161,6 @@ func StripNearCastleRules(items []template.MandatoryContentItem) []template.Mand
 	}
 	return items
 }
-
-// ── Mandatory content builders ───────────────────────────────────────
-//
-// In C# v0.7 each builder is just a thin foothold + user-row pipeline.
-// The big hardcoded preset blocks the Go port used to carry have been
-// removed in line with that change — users now own every row.
 
 func contentWithFootholdAndRows(
 	settings *models.GeneratorSettings,
@@ -227,7 +208,7 @@ func BuildHighNeutralMandatoryContent(settings *models.GeneratorSettings, castle
 }
 
 // BuildHubZoneMandatoryContent returns mandatory content for the central
-// hub zone of a Hub-and-Spoke layout. Added in C# v0.7.
+// hub zone of a Hub-and-Spoke layout
 func BuildHubZoneMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
 	rows := settings.HubZoneMandatoryContent
 	if castleCount == 0 {
@@ -236,12 +217,6 @@ func BuildHubZoneMandatoryContent(settings *models.GeneratorSettings, castleCoun
 	return contentWithFootholdAndRows(settings, castleCount, rows)
 }
 
-// ── Content count limits ─────────────────────────────────────────────
-
-// BuildAllContentCountLimits returns the full set of content count limits.
-// Limits are lifted when the per-zone mandatory content lists request a
-// higher count than the default — matching the C# v0.7 behaviour that
-// scans every tier (player / low / medium / high / hub).
 func BuildAllContentCountLimits(settings *models.GeneratorSettings) []template.ContentCountLimit {
 	sidLimits := []template.ContentLimit{
 		{SID: "black_tower", MaxCount: 0},

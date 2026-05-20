@@ -38,12 +38,6 @@ type PreviewLayout struct {
 	ZoneRadius  int
 }
 
-// ── Canvas constants ──────────────────────────────────────────────────────
-//
-// Mirror the C# TemplatePreviewPngWriter defaults sized for a 700×700
-// canvas, scaled proportionally to the requested side length so previews
-// render consistently at any size.
-
 const (
 	csCanvasSide     = 700.0
 	csMargin         = 18.0
@@ -51,7 +45,7 @@ const (
 	csHubRadiusMin   = 28.0
 	csMinGap         = 6.0
 	csConnectionGap  = 26.0 // ring layout — visible chord clearance between zones
-	csClusterGap     = 20.0 // unused (kept for parity with C#)
+	csClusterGap     = 20.0
 	scatterIdealMult = 3.2
 	scatterMinDist   = 3.8
 	scatterEdgeClear = 1.2
@@ -77,7 +71,7 @@ func BuildPreviewLayout(template *models.RmgTemplate, topology models.MapTopolog
 
 	// Tournament single-cluster strip: if Direct-only adjacency has exactly two
 	// components, render only the first cluster at full canvas size so the
-	// preview reads like a non-tournament layout (mirrors C# DrawPreview).
+	// preview reads like a non-tournament layout
 	zones, connections := stripFirstClusterIfTwo(variant.Zones, variant.Connections)
 
 	// Apply the optional ZeroAngleZone rotation so the first ring slot lines
@@ -95,8 +89,6 @@ func BuildPreviewLayout(template *models.RmgTemplate, topology models.MapTopolog
 		layoutRingOrHub(&layout, zones, connections, side)
 	}
 
-	// ── Build PreviewZones in the original variant order (preserves the
-	// caller's stable iteration order regardless of layout reshuffling).
 	implicitHub := findImplicitHubName(zones, connections)
 	for _, zone := range variant.Zones {
 		pos, ok := layout.Positions[zone.Name]
@@ -150,12 +142,6 @@ func BuildPreviewLayout(template *models.RmgTemplate, topology models.MapTopolog
 	return layout
 }
 
-// ── Cluster stripping ─────────────────────────────────────────────────────
-
-// stripFirstClusterIfTwo mirrors the C# preview path: when the Direct-only
-// adjacency graph has exactly two connected components (tournament layout),
-// only the first cluster's zones and connections are returned so the renderer
-// sizes everything against the full canvas.
 func stripFirstClusterIfTwo(zones []models.RmgZone, conns []models.RmgConnection) ([]models.RmgZone, []models.RmgConnection) {
 	n := len(zones)
 	idx := make(map[string]int, n)
@@ -224,13 +210,9 @@ func stripFirstClusterIfTwo(zones []models.RmgZone, conns []models.RmgConnection
 	return keptZones, keptConns
 }
 
-// isStructuralIgnored — Proximity and Portal edges are layout hints in the
-// generator; they do not partition zones into clusters for preview purposes.
 func isStructuralIgnored(connectionType string) bool {
 	return connectionType == "Proximity" || connectionType == "Portal"
 }
-
-// ── Zero-angle rotation ───────────────────────────────────────────────────
 
 func orderZonesByZeroAngle(zones []models.RmgZone, zeroAngleZone string) []models.RmgZone {
 	if zeroAngleZone == "" {
@@ -252,8 +234,6 @@ func orderZonesByZeroAngle(zones []models.RmgZone, zeroAngleZone string) []model
 	return out
 }
 
-// ── Helpers for picking a layout path ─────────────────────────────────────
-
 func allHavePosition(zones []models.RmgZone) bool {
 	for _, z := range zones {
 		if z.GeneratorPosition == nil {
@@ -272,14 +252,6 @@ func allHaveRing(zones []models.RmgZone) bool {
 	return true
 }
 
-// ── Balanced (concentric-ring) layout ─────────────────────────────────────
-//
-// Mirrors C# LayoutZones single-cluster Balanced branch. The generator stamps
-// a tier-rank on each zone via GeneratorRing (0=player, then 1/2/3 for low/
-// med/high neutrals); we map the *present* tiers to dense ring indices
-// counting outward → inward, then place zones on each ring at angles taken
-// from their raw GeneratorPosition (so the relative neighbourhoods stay
-// stable across previews).
 func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side float64) {
 	n := len(zones)
 	if n == 0 {
@@ -399,13 +371,6 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	}
 }
 
-// ── Random / scatter layout ───────────────────────────────────────────────
-//
-// Mirrors C# LayoutZones single-cluster Random branch. Uses the generator's
-// raw GeneratorPosition coordinates, rescales them so the mean direct-edge
-// length equals an ideal scaled by zoneRadius, then runs two corrective
-// relaxation passes (A: hard floor on centre distances, B: clearance for
-// nodes inside other connection lines) before shrinking to fit.
 func layoutScatter(layout *PreviewLayout, zones []models.RmgZone, conns []models.RmgConnection, side float64) {
 	n := len(zones)
 	if n == 0 {
@@ -523,7 +488,7 @@ func layoutScatter(layout *PreviewLayout, zones []models.RmgZone, conns []models
 	relaxPasses(px, py, adj, zoneRadius)
 
 	// Final fit: recentre the bounding box then shrink only if it overflows
-	// the padded canvas (matches C# end-of-LayoutZones behaviour).
+	// the padded canvas
 	finalMinX, finalMaxX := minMax(px)
 	finalMinY, finalMaxY := minMax(py)
 	finalCx := (finalMinX + finalMaxX) / 2.0
@@ -559,9 +524,6 @@ func layoutScatter(layout *PreviewLayout, zones []models.RmgZone, conns []models
 	}
 }
 
-// relaxPasses runs the C# Pass A + Pass B loop: A enforces a hard minimum
-// centre-to-centre distance, B pushes any node sitting on top of an edge to
-// the side that keeps it closer to its own neighbours.
 func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 	n := len(px)
 	minDist := zoneRadius * scatterMinDist
@@ -657,8 +619,6 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 	}
 }
 
-// ── Ring / hub fallback ───────────────────────────────────────────────────
-//
 // Used for structured topologies (Default, HubAndSpoke, Chain, SharedWeb).
 // Multi-hub "Hub-*" templates fan their spokes out from each cluster centre;
 // otherwise zones land on a single outer ring with an optional centre hub.
@@ -923,8 +883,7 @@ func ExtractZoneLetter(zoneName string) string {
 }
 
 // ClassifyZoneTier guesses a neutral zone's tier from its layout name and
-// falls back to keyword matching on the zone name.
-// (Mirrors C# SideLayoutName / TreasureLayoutName / CenterLayoutName.)
+// falls back to keyword matching on the zone name
 func ClassifyZoneTier(zone models.RmgZone) int {
 	if strings.HasPrefix(zone.Name, "Spawn-") {
 		return 0
@@ -949,8 +908,6 @@ func ClassifyZoneTier(zone models.RmgZone) int {
 	}
 	return 1
 }
-
-// ── Tiny math helpers ─────────────────────────────────────────────────────
 
 func connectedComponents(n int, adj [][]int) [][]int {
 	id := make([]int, n)

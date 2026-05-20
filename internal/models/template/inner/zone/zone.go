@@ -7,13 +7,13 @@ type Zone struct {
 	// GeneratorPosition is an optional normalised [0,1]×[0,1] hint stamped by
 	// the generator for Random / Balanced layouts. It is NOT serialised — the
 	// preview renderer uses it to reproduce the same geometry that drove
-	// connection generation. Mirrors the C# editor's Zone.GeneratorPosition.
+	// connection generation
 	GeneratorPosition *[2]float64 `json:"-"`
 
 	// GeneratorRing is the concentric-ring index (0 = outermost player ring,
 	// increasing toward centre) stamped by the generator for Balanced layouts.
 	// Not serialised — used only by the preview renderer to snap zones onto
-	// the correct ring. Mirrors C# Zone.GeneratorRing.
+	// the correct ring
 	GeneratorRing *int `json:"-"`
 
 	Size   float64 `json:"size"`
