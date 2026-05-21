@@ -1,11 +1,11 @@
 package constants
 
-type Map struct {
+type MapSize struct {
 	Size  int
 	Label string
 }
 
-var BaseMapSizes = []Map{
+var BaseMapSizes = []MapSize{
 	{Size: 64, Label: "64x64 - S"},
 	{Size: 80, Label: "80x80 - M"},
 	{Size: 96, Label: "96x96 - M"},
@@ -19,7 +19,7 @@ var BaseMapSizes = []Map{
 	{Size: 240, Label: "240x240 - G"},
 }
 
-var ExpandedMapSizes = []Map{
+var ExpandedMapSizes = []MapSize{
 	{Size: 256, Label: "256x256 - C"},
 	{Size: 272, Label: "272x272 - C"},
 	{Size: 288, Label: "288x288 - C"},
@@ -37,4 +37,22 @@ var ExpandedMapSizes = []Map{
 	{Size: 480, Label: "480x480 - C"},
 	{Size: 496, Label: "496x496 - C"},
 	{Size: 512, Label: "512x512 - C"},
+}
+
+var AllMapSizes = append(BaseMapSizes, ExpandedMapSizes...)
+
+func GetMapSize(size int) MapSize {
+	for _, mapSize := range AllMapSizes {
+		if mapSize.Size == size {
+			return mapSize
+		}
+	}
+	return BaseMapSizes[0]
+}
+
+func GetMapSizes(withExperimental bool) []MapSize {
+	if withExperimental {
+		return AllMapSizes
+	}
+	return BaseMapSizes
 }

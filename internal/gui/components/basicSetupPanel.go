@@ -17,12 +17,14 @@ import (
 )
 
 type BasicSetupPanel struct {
-	templateName           widget.Editor
-	gameMode               *content.SegmentButtonGroup
+	templateName widget.Editor
+	gameMode     *content.SegmentButtonGroup
+
 	playerCount            widget.Float
-	mapSizeSlider          widget.Float
 	checkExperimentalSizes widget.Bool
-	topology               *content.DropdownSelector
+	mapSize                *content.DropdownSelector
+
+	topology *content.DropdownSelector
 
 	scroll widget.List
 
@@ -37,6 +39,19 @@ func NewBasicSetupPanel(state *State) *BasicSetupPanel {
 			labels := make([]string, 0)
 			for _, topology := range constants.Topologies {
 				labels = append(labels, topology.Label)
+			}
+			return labels
+		}()),
+		mapSize: content.NewDropdownSelector(func() []string {
+			labels := make([]string, 0)
+			if state.GetSettingsFile().ExperimentalMapSizes {
+				for _, mapSize := range constants.AllMapSizes {
+					labels = append(labels, mapSize.Label)
+				}
+			} else {
+				for _, mapSize := range constants.BaseMapSizes {
+					labels = append(labels, mapSize.Label)
+				}
 			}
 			return labels
 		}()),
@@ -67,9 +82,11 @@ func (this *BasicSetupPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
 	this.templateName.SetText(settings.TemplateName)
 	this.gameMode.SetSelectedIndex(0)
+
 	this.playerCount.Value = utils.Normalize(float32(settings.PlayerCount), 2, 8)
 	this.checkExperimentalSizes.Value = settings.ExperimentalMapSizes
-	this.mapSizeSlider.Value = utils.MapSizeToSlider(settings.MapSize, this.checkExperimentalSizes.Value)
+	this.mapSize.SelectByName(constants.GetMapSize(settings.MapSize).Label)
+
 	this.topology.SelectByName(constants.GetTopologyDescriptor(settings.Topology).Label)
 }
 
@@ -78,7 +95,7 @@ func (this *BasicSetupPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
-		settings.MapSize = utils.SliderToMapSize(this.mapSizeSlider.Value, this.checkExperimentalSizes.Value)
+		settings.MapSize = this.getCurrentMapSize().Size
 		settings.ExperimentalMapSizes = this.checkExperimentalSizes.Value
 		settings.Topology = this.getCurrentTopology().Type
 	})
@@ -97,9 +114,7 @@ func (this *BasicSetupPanel) getMapSectionWidget(theme *material.Theme) layout.W
 	return widgets.NewSectionWidget(theme, "Map", []layout.Widget{
 		widgets.NewLabeledRowWidget(theme, "Players", 160, widgets.NewLabeledSlider(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
 		widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
-			size := utils.SliderToMapSize(this.mapSizeSlider.Value, this.checkExperimentalSizes.Value)
-			label := fmt.Sprintf("%d × %d  (%s)", size, size, mapSizeLabelInt(size))
-			return widgets.NewLabeledSlider(theme, &this.mapSizeSlider, label)(gtx)
+			return this.updateMapSizeSelector(gtx).Layout(gtx, theme)
 		}),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkExperimentalSizes, "Allow experimental large map sizes (>240)"),
 	})
@@ -119,26 +134,24 @@ func (this *BasicSetupPanel) getTopologySectionWidget(theme *material.Theme) lay
 	})
 }
 
+func (this *BasicSetupPanel) updateMapSizeSelector(gtx layout.Context) *content.DropdownSelector {
+	if !this.checkExperimentalSizes.Update(gtx) {
+		return this.mapSize
+	}
+	labels := make([]string, 0)
+	for _, mapSize := range constants.GetMapSizes(this.checkExperimentalSizes.Value) {
+		labels = append(labels, mapSize.Label)
+	}
+	this.mapSize.SetItems(labels)
+	this.mapSize.SelectByName(constants.GetMapSize(this.state.GetSettingsFile().MapSize).Label)
+
+	return this.mapSize
+}
+
 func (this *BasicSetupPanel) getCurrentTopology() constants.TopologyDescriptor {
 	return constants.Topologies[this.topology.GetSelectedIndex()]
 }
 
-// mapSizeLabelInt returns the short S/M/L/XL/H/G/C label for an integer size.
-func mapSizeLabelInt(size int) string {
-	switch {
-	case size == 64:
-		return "S"
-	case size == 80 || size == 96:
-		return "M"
-	case size == 112 || size == 128:
-		return "L"
-	case size == 144 || size == 160:
-		return "XL"
-	case size == 176 || size == 192:
-		return "H"
-	case size >= 208 && size <= 256:
-		return "G"
-	default:
-		return "C"
-	}
+func (this *BasicSetupPanel) getCurrentMapSize() constants.MapSize {
+	return constants.AllMapSizes[this.mapSize.GetSelectedIndex()]
 }
