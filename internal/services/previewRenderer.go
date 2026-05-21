@@ -11,7 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-// Preview palette — ported from TemplatePreviewPngWriter colours.
+// Preview palette — ported from TemplatePreviewPngWriter colors.
 var (
 	previewBg         = color.NRGBA{R: 0x1C, G: 0x16, B: 0x10, A: 0xFF}
 	previewFrame      = color.NRGBA{R: 0x8F, G: 0x73, B: 0x3F, A: 0xFF}
@@ -193,7 +193,7 @@ func intToString(value int) string {
 func fillRect(img *image.RGBA, rect image.Rectangle, fillColor color.NRGBA) {
 	for y := rect.Min.Y; y < rect.Max.Y; y++ {
 		for x := rect.Min.X; x < rect.Max.X; x++ {
-			img.SetRGBA(x, y, color.RGBA{R: fillColor.R, G: fillColor.G, B: fillColor.B, A: fillColor.A})
+			img.SetRGBA(x, y, color.RGBA(fillColor))
 		}
 	}
 }
@@ -215,7 +215,7 @@ func fillCircle(img *image.RGBA, center image.Point, radius int, fillColor color
 				if x < 0 || y < 0 || x >= img.Rect.Max.X || y >= img.Rect.Max.Y {
 					continue
 				}
-				img.SetRGBA(x, y, color.RGBA{R: fillColor.R, G: fillColor.G, B: fillColor.B, A: fillColor.A})
+				img.SetRGBA(x, y, color.RGBA(fillColor))
 			}
 		}
 	}
@@ -234,7 +234,7 @@ func strokeCircle(img *image.RGBA, center image.Point, radius, width int, stroke
 				if x < 0 || y < 0 || x >= img.Rect.Max.X || y >= img.Rect.Max.Y {
 					continue
 				}
-				img.SetRGBA(x, y, color.RGBA{R: strokeColor.R, G: strokeColor.G, B: strokeColor.B, A: strokeColor.A})
+				img.SetRGBA(x, y, color.RGBA(strokeColor))
 			}
 		}
 	}
@@ -264,7 +264,7 @@ func drawThickLine(img *image.RGBA, a, b image.Point, width int, lineColor color
 				if xx < 0 || yy < 0 || xx >= img.Rect.Max.X || yy >= img.Rect.Max.Y {
 					continue
 				}
-				img.SetRGBA(xx, yy, color.RGBA{R: lineColor.R, G: lineColor.G, B: lineColor.B, A: lineColor.A})
+				img.SetRGBA(xx, yy, color.RGBA(lineColor))
 			}
 		}
 		x += xinc
@@ -321,7 +321,7 @@ func drawBitmapText(img *image.RGBA, x, y int, text string, scale int, textColor
 	if scale < 1 {
 		scale = 1
 	}
-	rgba := color.RGBA{R: textColor.R, G: textColor.G, B: textColor.B, A: textColor.A}
+	rgba := color.RGBA(textColor)
 	cursorX := x
 	for i := 0; i < len(text); i++ {
 		ch := text[i]
@@ -400,7 +400,7 @@ func drawCastleIcon(img *image.RGBA, topLeft image.Point, scale int, iconColor c
 	if scale < 1 {
 		scale = 1
 	}
-	rgba := color.RGBA{R: iconColor.R, G: iconColor.G, B: iconColor.B, A: iconColor.A}
+	rgba := color.RGBA(iconColor)
 	for col := range 7 {
 		bits := castleIconBitmap[col]
 		for row := range 7 {

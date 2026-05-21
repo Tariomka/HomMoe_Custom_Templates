@@ -49,37 +49,17 @@ func NewBasicSetupPanel(state *State) *BasicSetupPanel {
 
 func (this *BasicSetupPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	widgetsList := []layout.Widget{
-		widgets.NewSectionWidget(theme, "Template", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
-			widgets.NewLabeledRowWidget(theme, "Game mode", 160, func(gtx layout.Context) layout.Dimensions {
-				return this.gameMode.Layout(gtx, theme)
-			}),
-		}),
-		widgets.NewSectionWidget(theme, "Map", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Players", 160, widgets.NewLabeledSlider(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
-			widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
-				size := utils.SliderToMapSize(this.mapSizeSlider.Value, this.checkExperimentalSizes.Value)
-				label := fmt.Sprintf("%d × %d  (%s)", size, size, mapSizeLabelInt(size))
-				return widgets.NewLabeledSlider(theme, &this.mapSizeSlider, label)(gtx)
-			}),
-			widgets.NewLabeledCheckboxRowWidget(theme, &this.checkExperimentalSizes, "Allow experimental large map sizes (>240)"),
-		}),
-		widgets.NewSectionWidget(theme, "Topology", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Topology", 160, func(gtx layout.Context) layout.Dimensions {
-				return this.topology.Layout(gtx, theme)
-			}),
-			func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, this.getCurrentTopology().Description)
-				label.Color = themes.ColorTextDim
-				label.TextSize = unit.Sp(12)
-				return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(168)}.Layout(gtx, label.Layout)
-			},
-		}),
+		func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Flexed(0.5, this.getTemplateSectionWidget(theme)),
+				layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
+				layout.Flexed(0.5, this.getMapSectionWidget(theme)))
+		},
+		this.getTopologySectionWidget(theme),
 	}
 	return func(gtx layout.Context) layout.Dimensions {
-		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
-			return widgetsList[index](gtx)
-		})
+		return material.List(theme, &this.scroll).
+			Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
 	}
 }
 
@@ -101,6 +81,41 @@ func (this *BasicSetupPanel) SaveToState() {
 		settings.MapSize = utils.SliderToMapSize(this.mapSizeSlider.Value, this.checkExperimentalSizes.Value)
 		settings.ExperimentalMapSizes = this.checkExperimentalSizes.Value
 		settings.Topology = this.getCurrentTopology().Type
+	})
+}
+
+func (this *BasicSetupPanel) getTemplateSectionWidget(theme *material.Theme) layout.Widget {
+	return widgets.NewSectionWidget(theme, "Template", []layout.Widget{
+		widgets.NewLabeledRowWidget(theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
+		widgets.NewLabeledRowWidget(theme, "Game mode", 160, func(gtx layout.Context) layout.Dimensions {
+			return this.gameMode.Layout(gtx, theme)
+		}),
+	})
+}
+
+func (this *BasicSetupPanel) getMapSectionWidget(theme *material.Theme) layout.Widget {
+	return widgets.NewSectionWidget(theme, "Map", []layout.Widget{
+		widgets.NewLabeledRowWidget(theme, "Players", 160, widgets.NewLabeledSlider(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
+		widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
+			size := utils.SliderToMapSize(this.mapSizeSlider.Value, this.checkExperimentalSizes.Value)
+			label := fmt.Sprintf("%d × %d  (%s)", size, size, mapSizeLabelInt(size))
+			return widgets.NewLabeledSlider(theme, &this.mapSizeSlider, label)(gtx)
+		}),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkExperimentalSizes, "Allow experimental large map sizes (>240)"),
+	})
+}
+
+func (this *BasicSetupPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
+	return widgets.NewSectionWidget(theme, "Topology", []layout.Widget{
+		widgets.NewLabeledRowWidget(theme, "Topology", 160, func(gtx layout.Context) layout.Dimensions {
+			return this.topology.Layout(gtx, theme)
+		}),
+		func(gtx layout.Context) layout.Dimensions {
+			label := material.Body2(theme, this.getCurrentTopology().Description)
+			label.Color = themes.ColorTextDim
+			label.TextSize = unit.Sp(12)
+			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(168)}.Layout(gtx, label.Layout)
+		},
 	})
 }
 
