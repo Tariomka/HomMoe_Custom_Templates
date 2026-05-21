@@ -55,7 +55,7 @@ func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSet
 	generatorSettings.BannedItems = settingsFile.BannedItems
 	generatorSettings.BannedMagics = settingsFile.BannedMagics
 	generatorSettings.ValueOverridesText = settingsFile.ValueOverridesText
-	generatorSettings.Bonuses = generator.ParseBonusesJson(settingsFile.BonusesJson)
+	generatorSettings.Bonuses = generator.ParseBonusesJSON(settingsFile.BonusesJson)
 	generatorSettings.PlayerZoneMandatoryContent = RowsToMandatoryContent(settingsFile.PlayerZoneContentRows)
 	generatorSettings.LowNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.LowNeutralContentRows)
 	generatorSettings.MediumNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.MediumNeutralContentRows)

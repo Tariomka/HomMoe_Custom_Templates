@@ -18,8 +18,8 @@ const (
 	BonusStartingOre      = generator.BonusStartingOre
 )
 
-// ParseBonusesJson is a thin re-export to keep call sites short.
-func ParseBonusesJson(s string) []BonusEntry { return generator.ParseBonusesJson(s) }
+// ParseBonusesJSON is a thin re-export to keep call sites short.
+func ParseBonusesJSON(s string) []BonusEntry { return generator.ParseBonusesJSON(s) }
 
 // SerialiseBonuses is a thin re-export to keep call sites short.
 func SerialiseBonuses(entries []BonusEntry) string { return generator.SerialiseBonuses(entries) }

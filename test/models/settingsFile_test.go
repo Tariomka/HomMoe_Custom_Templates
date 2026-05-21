@@ -72,7 +72,7 @@ func TestBonusEntry_RoundTrip(t *testing.T) {
 		{PresetType: models.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
 	}
 	encoded := models.SerialiseBonuses(entries)
-	decoded := models.ParseBonusesJson(encoded)
+	decoded := models.ParseBonusesJSON(encoded)
 	if len(decoded) != len(entries) {
 		t.Fatalf("decoded %d entries, want %d", len(decoded), len(entries))
 	}
@@ -85,7 +85,7 @@ func TestBonusEntry_RoundTrip(t *testing.T) {
 
 func TestBonusEntry_AcceptsLegacyOrdinalForm(t *testing.T) {
 	const legacy = "9|start_hero|10|"
-	decoded := models.ParseBonusesJson(legacy)
+	decoded := models.ParseBonusesJSON(legacy)
 	if len(decoded) != 1 {
 		t.Fatalf("legacy parse produced %d entries", len(decoded))
 	}

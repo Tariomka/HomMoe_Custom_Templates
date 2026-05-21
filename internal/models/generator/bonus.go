@@ -119,14 +119,14 @@ func ParseBonusEntry(s string) (BonusEntry, bool) {
 	}, true
 }
 
-// ParseBonusesJson splits the persisted BonusesJson string (newline-separated
+// ParseBonusesJSON splits the persisted BonusesJSON string (newline-separated
 // pipe-encoded entries) into individual BonusEntry values.
-func ParseBonusesJson(s string) []BonusEntry {
+func ParseBonusesJSON(s string) []BonusEntry {
 	if s == "" {
 		return nil
 	}
 	var out []BonusEntry
-	for _, line := range strings.Split(s, "\n") {
+	for line := range strings.SplitSeq(s, "\n") {
 		entry, ok := ParseBonusEntry(strings.TrimRight(line, "\r"))
 		if ok {
 			out = append(out, entry)

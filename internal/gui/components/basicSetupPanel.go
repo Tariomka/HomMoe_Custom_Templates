@@ -119,7 +119,7 @@ func (this *BasicSetupPanel) getTopologySectionWidget(theme *material.Theme) lay
 	})
 }
 
-func (this *BasicSetupPanel) getCurrentTopology() models.TopologyDescriptor {
+func (this *BasicSetupPanel) getCurrentTopology() constants.TopologyDescriptor {
 	return constants.Topologies[this.topology.GetSelectedIndex()]
 }
 
