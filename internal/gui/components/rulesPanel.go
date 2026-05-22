@@ -28,11 +28,9 @@ type RulesPanel struct {
 	sldTournamentInterval widget.Float
 	sldTournamentPoints   widget.Float
 	chkTournamentSaveArmy widget.Bool
-	sldHeroMin            widget.Float
-	sldHeroMax            widget.Float
-	sldHeroIncr           widget.Float
-	sldFactionLawsExp     widget.Float
-	sldAstrologyExp       widget.Float
+
+	sldFactionLawsExp widget.Float
+	sldAstrologyExp   widget.Float
 
 	scroll widget.List
 
@@ -107,11 +105,6 @@ func (this *RulesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 				)
 			},
 		}),
-		widgets.NewSectionWidget(theme, "Heroes", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Hero count min", 200, widgets.NewLabeledSlider(theme, &this.sldHeroMin, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroMin.Value, 1, 16)))),
-			widgets.NewLabeledRowWidget(theme, "Hero count max", 200, widgets.NewLabeledSlider(theme, &this.sldHeroMax, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroMax.Value, 1, 16)))),
-			widgets.NewLabeledRowWidget(theme, "Increment", 200, widgets.NewLabeledSlider(theme, &this.sldHeroIncr, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroIncr.Value, 1, 5)))),
-		}),
 		widgets.NewSectionWidget(theme, "Experience modifiers", []layout.Widget{
 			widgets.NewLabeledRowWidget(theme, "Faction laws exp %", 200, widgets.NewLabeledSlider(theme, &this.sldFactionLawsExp, fmt.Sprintf("%d%%", utils.RoundedRange(this.sldFactionLawsExp.Value, 25, 200)))),
 			widgets.NewLabeledRowWidget(theme, "Astrology exp %", 200, widgets.NewLabeledSlider(theme, &this.sldAstrologyExp, fmt.Sprintf("%d%%", utils.RoundedRange(this.sldAstrologyExp.Value, 25, 200)))),
@@ -140,9 +133,7 @@ func (this *RulesPanel) LoadFromState() {
 	this.sldTournamentInterval.Value = utils.Normalize(float32(settings.TournamentInterval), 1, 30)
 	this.sldTournamentPoints.Value = utils.Normalize(float32(settings.TournamentPointsToWin), 1, 10)
 	this.chkTournamentSaveArmy.Value = settings.TournamentSaveArmy
-	this.sldHeroMin.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 16)
-	this.sldHeroMax.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 16)
-	this.sldHeroIncr.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 5)
+
 	this.sldFactionLawsExp.Value = utils.Normalize(float32(settings.FactionLawsExpPercent), 25, 200)
 	this.sldAstrologyExp.Value = utils.Normalize(float32(settings.AstrologyExpPercent), 25, 200)
 }
@@ -164,9 +155,7 @@ func (this *RulesPanel) SaveToState() {
 		settings.TournamentInterval = utils.RoundedRange(this.sldTournamentInterval.Value, 1, 30)
 		settings.TournamentPointsToWin = utils.RoundedRange(this.sldTournamentPoints.Value, 1, 10)
 		settings.TournamentSaveArmy = this.chkTournamentSaveArmy.Value
-		settings.HeroCountMin = utils.RoundedRange(this.sldHeroMin.Value, 1, 16)
-		settings.HeroCountMax = max(utils.RoundedRange(this.sldHeroMax.Value, 1, 16), settings.HeroCountMin)
-		settings.HeroCountIncrement = utils.RoundedRange(this.sldHeroIncr.Value, 1, 5)
+
 		settings.FactionLawsExpPercent = utils.RoundedRange(this.sldFactionLawsExp.Value, 25, 200)
 		settings.AstrologyExpPercent = utils.RoundedRange(this.sldAstrologyExp.Value, 25, 200)
 	})

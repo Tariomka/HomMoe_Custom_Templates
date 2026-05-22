@@ -17,12 +17,15 @@ import (
 )
 
 type BasicSetupPanel struct {
-	templateName widget.Editor
-	gameMode     *content.SegmentButtonGroup
+	templateName      widget.Editor
+	playerCount       widget.Float
+	mapSize           *content.DropdownSelector
+	checkMoreMapSizes widget.Bool
 
-	playerCount            widget.Float
-	checkExperimentalSizes widget.Bool
-	mapSize                *content.DropdownSelector
+	gameMode    *content.SegmentButtonGroup
+	sldHeroMin  widget.Float
+	sldHeroMax  widget.Float
+	sldHeroIncr widget.Float
 
 	topology *content.DropdownSelector
 
@@ -80,12 +83,16 @@ func (this *BasicSetupPanel) GetPanelWidget(theme *material.Theme) layout.Widget
 
 func (this *BasicSetupPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
-	this.templateName.SetText(settings.TemplateName)
-	this.gameMode.SetSelectedIndex(0)
 
+	this.templateName.SetText(settings.TemplateName)
 	this.playerCount.Value = utils.Normalize(float32(settings.PlayerCount), 2, 8)
-	this.checkExperimentalSizes.Value = settings.ExperimentalMapSizes
 	this.mapSize.SelectByName(constants.GetMapSize(settings.MapSize).Label)
+	this.checkMoreMapSizes.Value = settings.ExperimentalMapSizes
+
+	this.gameMode.SetSelectedIndex(0)
+	this.sldHeroMin.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 12)
+	this.sldHeroMax.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
+	this.sldHeroIncr.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 10)
 
 	this.topology.SelectByName(constants.GetTopologyDescriptor(settings.Topology).Label)
 }
@@ -95,29 +102,52 @@ func (this *BasicSetupPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
+
+		settings.GameMode = constants.GameModes[this.gameMode.GetSelectedIndex()]
+		settings.HeroCountMin = utils.RoundedRange(this.sldHeroMin.Value, 1, 12)
+		settings.HeroCountMax = max(utils.RoundedRange(this.sldHeroMax.Value, 1, 12), settings.HeroCountMin)
+		settings.HeroCountIncrement = utils.RoundedRange(this.sldHeroIncr.Value, 1, 10)
+
 		settings.MapSize = this.getCurrentMapSize().Size
-		settings.ExperimentalMapSizes = this.checkExperimentalSizes.Value
+		settings.ExperimentalMapSizes = this.checkMoreMapSizes.Value
 		settings.Topology = this.getCurrentTopology().Type
 	})
 }
 
 func (this *BasicSetupPanel) getTemplateSectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Template", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
-		widgets.NewLabeledRowWidget(theme, "Game mode", 160, func(gtx layout.Context) layout.Dimensions {
-			return this.gameMode.Layout(gtx, theme)
+		widgets.NewLabeledRowWidget(
+			theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
+		widgets.NewLabeledRowWidget(
+			theme, "Players", 160,
+			widgets.NewLabeledSlider(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
+		widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
+			return this.updateMapSizeSelector(gtx).Layout(gtx, theme)
 		}),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkMoreMapSizes, "Allow non official larger map sizes (>240)"),
 	})
 }
 
 func (this *BasicSetupPanel) getMapSectionWidget(theme *material.Theme) layout.Widget {
-	return widgets.NewSectionWidget(theme, "Map", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Players", 160, widgets.NewLabeledSlider(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
-		widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
-			return this.updateMapSizeSelector(gtx).Layout(gtx, theme)
+	labelWidth := 150
+	widgetList := []layout.Widget{
+		widgets.NewLabeledRowWidget(theme, "Game mode", labelWidth, func(gtx layout.Context) layout.Dimensions {
+			return this.gameMode.Layout(gtx, theme)
 		}),
-		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkExperimentalSizes, "Allow experimental large map sizes (>240)"),
-	})
+	}
+	if !this.isSingleHero() {
+		widgetList = append(widgetList,
+			widgets.NewLabeledRowWidget(
+				theme, "Hero count min", labelWidth,
+				widgets.NewLabeledSlider(theme, &this.sldHeroMin, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroMin.Value, 1, 12)))),
+			widgets.NewLabeledRowWidget(
+				theme, "Hero count max", labelWidth,
+				widgets.NewLabeledSlider(theme, &this.sldHeroMax, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroMax.Value, 1, 12)))),
+			widgets.NewLabeledRowWidget(
+				theme, "Increment", labelWidth,
+				widgets.NewLabeledSlider(theme, &this.sldHeroIncr, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroIncr.Value, 1, 10)))))
+	}
+	return widgets.NewSectionWidget(theme, "Hero Restrictions", widgetList)
 }
 
 func (this *BasicSetupPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
@@ -135,11 +165,12 @@ func (this *BasicSetupPanel) getTopologySectionWidget(theme *material.Theme) lay
 }
 
 func (this *BasicSetupPanel) updateMapSizeSelector(gtx layout.Context) *content.DropdownSelector {
-	if !this.checkExperimentalSizes.Update(gtx) {
+	if !this.checkMoreMapSizes.Update(gtx) {
 		return this.mapSize
 	}
+
 	labels := make([]string, 0)
-	for _, mapSize := range constants.GetMapSizes(this.checkExperimentalSizes.Value) {
+	for _, mapSize := range constants.GetMapSizes(this.checkMoreMapSizes.Value) {
 		labels = append(labels, mapSize.Label)
 	}
 	this.mapSize.SetItems(labels)
@@ -154,4 +185,8 @@ func (this *BasicSetupPanel) getCurrentTopology() constants.TopologyDescriptor {
 
 func (this *BasicSetupPanel) getCurrentMapSize() constants.MapSize {
 	return constants.AllMapSizes[this.mapSize.GetSelectedIndex()]
+}
+
+func (this *BasicSetupPanel) isSingleHero() bool {
+	return this.gameMode.GetSelectedIndex() == 1
 }

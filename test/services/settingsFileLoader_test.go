@@ -50,7 +50,7 @@ func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
 	sf.BannedItems = "x"
 	sf.BannedMagics = "y"
 	sf.ValueOverridesText = "z"
-	sf.BonusesJson = "StartingWood|start_hero|7|"
+	sf.BonusesJSON = "StartingWood|start_hero|7|"
 	sf.PlayerZoneContentRows = []models.ZoneContentRowSave{
 		{Sid: "mine_gold", Count: 2, IsMine: true},
 	}

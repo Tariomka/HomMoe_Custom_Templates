@@ -39,9 +39,10 @@ func SaveSettingsFile(path string, settingsFile *models.SettingsFile) error {
 
 // SettingsToGenerator translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
-func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSettings {
+func SettingsToGenerator(settingsFile *models.SettingsFile) *generator.GeneratorSettings {
 	generatorSettings := generator.NewGeneratorSettings()
 	generatorSettings.TemplateName = settingsFile.TemplateName
+	generatorSettings.GameMode = settingsFile.GameMode
 	generatorSettings.PlayerCount = settingsFile.PlayerCount
 	generatorSettings.MapSize = settingsFile.MapSize
 	generatorSettings.Topology = settingsFile.Topology
@@ -55,7 +56,7 @@ func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSet
 	generatorSettings.BannedItems = settingsFile.BannedItems
 	generatorSettings.BannedMagics = settingsFile.BannedMagics
 	generatorSettings.ValueOverridesText = settingsFile.ValueOverridesText
-	generatorSettings.Bonuses = generator.ParseBonusesJSON(settingsFile.BonusesJson)
+	generatorSettings.Bonuses = generator.ParseBonusesJSON(settingsFile.BonusesJSON)
 	generatorSettings.PlayerZoneMandatoryContent = RowsToMandatoryContent(settingsFile.PlayerZoneContentRows)
 	generatorSettings.LowNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.LowNeutralContentRows)
 	generatorSettings.MediumNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.MediumNeutralContentRows)
@@ -64,7 +65,7 @@ func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSet
 	generatorSettings.FactionLawsExpPercent = settingsFile.FactionLawsExpPercent
 	generatorSettings.AstrologyExpPercent = settingsFile.AstrologyExpPercent
 
-	generatorSettings.ZoneCfg = models.ZoneConfiguration{
+	generatorSettings.ZoneCfg = generator.ZoneConfiguration{
 		NeutralZoneCount:            settingsFile.NeutralZoneCount,
 		PlayerZoneCastles:           settingsFile.PlayerZoneCastles,
 		NeutralZoneCastles:          settingsFile.NeutralZoneCastles,
@@ -74,7 +75,7 @@ func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSet
 		BorderGuardStrengthPercent:  settingsFile.BorderGuardStrengthPercent,
 		HubZoneSize:                 settingsFile.HubZoneSize,
 		HubZoneCastles:              settingsFile.HubZoneCastles,
-		Advanced: models.AdvancedSettings{
+		Advanced: generator.AdvancedSettings{
 			Enabled:                    settingsFile.AdvancedMode,
 			NeutralLowNoCastleCount:    settingsFile.NeutralLowNoCastleCount,
 			NeutralLowCastleCount:      settingsFile.NeutralLowCastleCount,
@@ -88,13 +89,13 @@ func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSet
 		},
 	}
 
-	generatorSettings.HeroSettings = &models.HeroSettings{
+	generatorSettings.HeroSettings = generator.HeroSettings{
 		HeroCountMin:       settingsFile.HeroCountMin,
 		HeroCountMax:       settingsFile.HeroCountMax,
 		HeroCountIncrement: settingsFile.HeroCountIncrement,
 	}
 
-	generatorSettings.GameEndConditions = &models.GameEndConditions{
+	generatorSettings.GameEndConditions = &generator.GameEndConditions{
 		VictoryCondition: settingsFile.VictoryCondition,
 		CityHold:         settingsFile.CityHold || settingsFile.VictoryCondition == "win_condition_5",
 		CityHoldDays:     settingsFile.CityHoldDays,
@@ -103,13 +104,13 @@ func SettingsToGenerator(settingsFile *models.SettingsFile) *models.GeneratorSet
 		LostStartHero:    settingsFile.LostStartHero,
 	}
 
-	generatorSettings.GladiatorArenaRules = &models.GladiatorArenaRules{
+	generatorSettings.GladiatorArenaRules = &generator.GladiatorArenaRules{
 		Enabled:        settingsFile.GladiatorArena,
 		DaysDelayStart: settingsFile.GladiatorArenaDaysDelayStart,
 		CountDay:       settingsFile.GladiatorArenaCountDay,
 	}
 
-	generatorSettings.TournamentRules = &models.TournamentRules{
+	generatorSettings.TournamentRules = &generator.TournamentRules{
 		Enabled:            settingsFile.Tournament,
 		FirstTournamentDay: settingsFile.TournamentFirstTournamentDay,
 		Interval:           settingsFile.TournamentInterval,

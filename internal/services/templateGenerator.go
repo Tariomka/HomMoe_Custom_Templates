@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
@@ -63,7 +62,7 @@ var ZoneLetters = []string{
 }
 
 // Generate produces an RmgTemplate from the given settings.
-func Generate(settings *models.GeneratorSettings) (*template.RmgTemplateModel, error) {
+func Generate(settings *generator.GeneratorSettings) (*template.RmgTemplateModel, error) {
 	if settings.TemplateName == "" {
 		return nil, fmt.Errorf("template name is required")
 	}
@@ -114,9 +113,9 @@ func Generate(settings *models.GeneratorSettings) (*template.RmgTemplateModel, e
 
 // ── description ──────────────────────────────────────────────────────
 
-func buildTemplateDescription(settings *models.GeneratorSettings, neutralCount int) string {
+func buildTemplateDescription(settings *generator.GeneratorSettings, neutralCount int) string {
 	parts := []string{
-		topologyLabel(settings.Topology) + " layout",
+		constants.GetTopologyDescriptor(settings.Topology).Label + " layout",
 		countPhrase(neutralCount, "neutral zone", "neutral zones"),
 		countPhrase(settings.ZoneCfg.PlayerZoneCastles, "castle", "castles") + " per player zone",
 	}
@@ -157,32 +156,13 @@ func countPhrase(count int, singular, plural string) string {
 	return fmt.Sprintf("%d %s", count, word)
 }
 
-func topologyLabel(t generator.MapTopology) string {
-	switch t {
-	case generator.TopologyDefault:
-		return "Ring"
-	case generator.TopologyHubAndSpoke:
-		return "Hub"
-	case generator.TopologyChain:
-		return "Chain"
-	case generator.TopologySharedWeb:
-		return "Shared Web"
-	case generator.TopologyRandom:
-		return "Random"
-	case generator.TopologyBalanced:
-		return "Balanced"
-	default:
-		return string(t)
-	}
-}
-
 type neutralZonePlan struct {
 	Letter      string
 	Quality     constants.NeutralZoneQuality
 	CastleCount int
 }
 
-func buildNeutralZonePlan(settings *models.GeneratorSettings) []neutralZonePlan {
+func buildNeutralZonePlan(settings *generator.GeneratorSettings) []neutralZonePlan {
 	var plans []neutralZonePlan
 	maxNeutral := maxInt(0, len(ZoneLetters)-settings.PlayerCount)
 	castleZoneCastleCount := clampInt(settings.ZoneCfg.NeutralZoneCastles, 1, 4)
@@ -293,7 +273,7 @@ func qualityGuardBase(q constants.NeutralZoneQuality) int {
 	}
 }
 
-func effectiveGuardRandomization(settings *models.GeneratorSettings) float64 {
+func effectiveGuardRandomization(settings *generator.GeneratorSettings) float64 {
 	if !settings.ZoneCfg.Advanced.Enabled {
 		return defaultGuardRandomization
 	}
@@ -321,16 +301,19 @@ func percentToModifier(percent int) float64 {
 	return roundToDP(float64(clampInt(percent, 25, 200))/100.0, 2)
 }
 
-func buildGameRules(settings *models.GeneratorSettings, effectiveVC string) template.GameRules {
+func buildGameRules(settings *generator.GeneratorSettings, effectiveVC string) template.GameRules {
 	hs := settings.HeroSettings
-	if hs == nil {
-		hs = &models.HeroSettings{HeroCountMin: 4, HeroCountMax: 8, HeroCountIncrement: 1}
+	isSingleHero := settings.GameMode == "SingleHero"
+	if isSingleHero {
+		hs.HeroCountMin = 1
+		hs.HeroCountMax = 1
+		hs.HeroCountIncrement = 1
 	}
 	return template.GameRules{
-		HeroCountMin:           hs.HeroCountMin - hs.HeroCountIncrement,
+		HeroCountMin:           hs.HeroCountMin,
 		HeroCountMax:           hs.HeroCountMax,
 		HeroCountIncrement:     hs.HeroCountIncrement,
-		HeroHireBan:            false,
+		HeroHireBan:            isSingleHero,
 		EncounterHoles:         false,
 		FactionLawsExpModifier: percentToModifier(settings.FactionLawsExpPercent),
 		AstrologyExpModifier:   percentToModifier(settings.AstrologyExpPercent),
@@ -341,18 +324,18 @@ func buildGameRules(settings *models.GeneratorSettings, effectiveVC string) temp
 	}
 }
 
-func buildAdvancedWinConditions(settings *models.GeneratorSettings, effectiveVC string) template.WinConditions {
+func buildAdvancedWinConditions(settings *generator.GeneratorSettings, effectiveVC string) template.WinConditions {
 	ge := settings.GameEndConditions
 	if ge == nil {
-		ge = &models.GameEndConditions{VictoryCondition: "win_condition_1", LostStartCityDay: 3, CityHoldDays: 6}
+		ge = &generator.GameEndConditions{VictoryCondition: "win_condition_1", LostStartCityDay: 3, CityHoldDays: 6}
 	}
 	gr := settings.GladiatorArenaRules
 	if gr == nil {
-		gr = &models.GladiatorArenaRules{}
+		gr = &generator.GladiatorArenaRules{}
 	}
 	tr := settings.TournamentRules
 	if tr == nil {
-		tr = &models.TournamentRules{}
+		tr = &generator.TournamentRules{}
 	}
 
 	useLostStartCity := ge.LostStartCity || effectiveVC == "win_condition_3"
@@ -411,7 +394,7 @@ func buildAdvancedWinConditions(settings *models.GeneratorSettings, effectiveVC 
 	return wc
 }
 
-func buildVariant(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string, hubIsHoldCity bool) template.Variant {
+func buildVariant(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string, hubIsHoldCity bool) template.Variant {
 	// Shuffle player letters
 	pl := make([]string, len(playerLetters))
 	copy(pl, playerLetters)
@@ -785,7 +768,7 @@ func buildZoneLayout(name string, obsFill, obsFillVoid, lakesFill float64, minLa
 	}
 }
 
-func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZonePlan, settings *models.GeneratorSettings) []template.MandatoryContent {
+func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZonePlan, settings *generator.GeneratorSettings) []template.MandatoryContent {
 	var groups []template.MandatoryContent
 	for _, letter := range playerLetters {
 		groups = append(groups, template.MandatoryContent{
@@ -917,11 +900,11 @@ func buildNonAdjacentDerangement(count int) []int {
 	return dest
 }
 
-func buildVariantBalanced(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+func buildVariantBalanced(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	return buildVariantRandom(settings, playerLetters, neutralZones, tuning, holdCityNeutralLetter)
 }
 
-func buildVariantDefault(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+func buildVariantDefault(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	ordered := buildOrderedLetters(settings, playerLetters, neutralZones, true)
 	n := len(ordered)
@@ -968,7 +951,7 @@ func buildVariantDefault(settings *models.GeneratorSettings, playerLetters []str
 
 // ── topology: Chain ──────────────────────────────────────────────────
 
-func buildVariantChain(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+func buildVariantChain(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	ordered := buildOrderedLetters(settings, playerLetters, neutralZones, false)
 	n := len(ordered)
@@ -1026,7 +1009,7 @@ func buildVariantChain(settings *models.GeneratorSettings, playerLetters []strin
 
 // ── topology: Hub & Spoke ────────────────────────────────────────────
 
-func buildVariantHubAndSpoke(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, hubIsHoldCity bool) template.Variant {
+func buildVariantHubAndSpoke(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, hubIsHoldCity bool) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	neutralLetters := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
@@ -1109,7 +1092,7 @@ func buildVariantHubAndSpoke(settings *models.GeneratorSettings, playerLetters [
 
 // ── topology: Shared Web ─────────────────────────────────────────────
 
-func buildVariantSharedWeb(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+func buildVariantSharedWeb(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	var neutrals []string
 	if settings.Topology == generator.TopologyBalanced {
@@ -1210,7 +1193,7 @@ func buildVariantSharedWeb(settings *models.GeneratorSettings, playerLetters []s
 
 // ── topology: Random ─────────────────────────────────────────────────
 
-func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+func buildVariantRandom(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	neutralLetters := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
@@ -1325,7 +1308,7 @@ func buildVariantRandom(settings *models.GeneratorSettings, playerLetters []stri
 
 // ── topology: Tournament ─────────────────────────────────────────────
 
-func buildVariantTournament(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning) template.Variant {
+func buildVariantTournament(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 
 	// Distribute neutrals in a balanced round-robin: sort by descending quality
@@ -1395,7 +1378,7 @@ func buildVariantTournament(settings *models.GeneratorSettings, playerLetters []
 	return makeVariant(playerLetters, playerLetters[0], len(zones), zones, conns)
 }
 
-func buildTournamentChainCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+func buildTournamentChainCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *generator.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	chain := []string{playerLetter}
 	for _, n := range myNeutrals {
 		chain = append(chain, n.Letter)
@@ -1438,7 +1421,7 @@ func buildTournamentChainCluster(playerIndex int, playerLetter string, myNeutral
 // player → low → … → high → … → low → player. Sorts neutrals by balance
 // score, then fills outward-from-player so the highest-quality zones sit
 // at the ring midpoint
-func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *generator.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	sortedNeutrals := make([]neutralZonePlan, len(myNeutrals))
 	copy(sortedNeutrals, myNeutrals)
 	sort.SliceStable(sortedNeutrals, func(i, j int) bool {
@@ -1521,7 +1504,7 @@ func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals
 // hub-and-spoke layout. A dedicated mini-hub zone "Hub-{playerLetter}" sits
 // at the centre and connects directly to the player spawn and all of their
 // exclusive neutrals
-func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *generator.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	hubName := "Hub-" + playerLetter
 
 	spokeLetters := []string{playerLetter}
@@ -1582,7 +1565,7 @@ func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals 
 	}
 }
 
-func buildTournamentBalancedCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *models.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+func buildTournamentBalancedCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *generator.GeneratorSettings, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	singlePlayerList := []string{playerLetter}
 	orderedLetters := buildBalancedRingLetters(singlePlayerList, myNeutrals, 0)
 	rawPos := buildBalancedRandomPositions(orderedLetters, singlePlayerList, neutralByLetter)
@@ -2164,7 +2147,7 @@ func buildBalancedRandomPositions(orderedLetters, playerLetters []string, neutra
 
 // ── ordered letters / balanced placement ─────────────────────────────
 
-func buildOrderedLetters(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, isRing bool) []string {
+func buildOrderedLetters(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan, isRing bool) []string {
 	neutralLetters := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
 		neutralLetters[i] = nz.Letter
@@ -2208,7 +2191,7 @@ func buildOrderedLetters(settings *models.GeneratorSettings, playerLetters []str
 	return ordered
 }
 
-func canHonorNeutralSeparation(settings *models.GeneratorSettings, neutralCount int) bool {
+func canHonorNeutralSeparation(settings *generator.GeneratorSettings, neutralCount int) bool {
 	min := settings.MinNeutralZonesBetweenPlayers
 	if min <= 0 {
 		return true
@@ -2458,7 +2441,7 @@ func orderEdgeGap(neutralZones []neutralZonePlan, playerAtEnd bool) []neutralZon
 
 // ── topology adjacency (for hold city picking) ───────────────────────
 
-func buildTopologyAdjacency(settings *models.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan) map[string]map[string]bool {
+func buildTopologyAdjacency(settings *generator.GeneratorSettings, playerLetters []string, neutralZones []neutralZonePlan) map[string]map[string]bool {
 	adj := map[string]map[string]bool{}
 	link := func(a, b string) {
 		if adj[a] == nil {

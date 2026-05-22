@@ -19,10 +19,12 @@ const (
 )
 
 // ParseBonusesJSON is a thin re-export to keep call sites short.
-func ParseBonusesJSON(s string) []BonusEntry { return generator.ParseBonusesJSON(s) }
+func ParseBonusesJSON(s string) []generator.BonusEntry { return generator.ParseBonusesJSON(s) }
 
 // SerialiseBonuses is a thin re-export to keep call sites short.
-func SerialiseBonuses(entries []BonusEntry) string { return generator.SerialiseBonuses(entries) }
+func SerialiseBonuses(entries []generator.BonusEntry) string {
+	return generator.SerialiseBonuses(entries)
+}
 
 // ParseBonusEntry is a thin re-export to keep call sites short.
-func ParseBonusEntry(s string) (BonusEntry, bool) { return generator.ParseBonusEntry(s) }
+func ParseBonusEntry(s string) (generator.BonusEntry, bool) { return generator.ParseBonusEntry(s) }

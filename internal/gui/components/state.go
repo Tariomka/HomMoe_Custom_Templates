@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
@@ -18,11 +19,11 @@ type State struct {
 
 	// File state
 	currentPath string
-	dirty       bool
+	unsaved     bool
 
 	// Output / status
 	outputPath   widget.Editor
-	lastTemplate *models.RmgTemplate
+	lastTemplate *template.RmgTemplateModel
 	statusMsg    string
 	statusErr    bool
 }
@@ -48,11 +49,11 @@ func (this *State) GetCurrentPath() string {
 	return this.currentPath
 }
 
-func (this *State) IsDirty() bool {
-	return this.dirty
+func (this *State) IsUnsaved() bool {
+	return this.unsaved
 }
 
-func (this *State) GetLastTemplate() *models.RmgTemplate {
+func (this *State) GetLastTemplate() *template.RmgTemplateModel {
 	return this.lastTemplate
 }
 
@@ -63,13 +64,8 @@ func (this *State) GetOutputPath() string {
 func (this *State) Reset() {
 	this.settings = models.NewSettingsFile()
 	this.currentPath = ""
-	this.dirty = false
-	this.SetStatus("New settings file.", false)
-}
-
-func (this *State) SetStatus(msg string, isErr bool) {
-	this.statusMsg = msg
-	this.statusErr = isErr
+	this.unsaved = false
+	this.setStatus("New settings file.", false)
 }
 
 func (this *State) SuggestDirectory() string {
@@ -86,7 +82,7 @@ func (this *State) SuggestDirectory() string {
 func (this *State) Load() {
 	path, err := utils.PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.SuggestDirectory())
 	if err != nil {
-		this.SetStatus("Open dialog failed: "+err.Error(), true)
+		this.setStatus("Open dialog failed: "+err.Error(), true)
 		return
 	}
 
@@ -96,14 +92,14 @@ func (this *State) Load() {
 
 	loaded, err := services.LoadSettingsFile(path)
 	if err != nil {
-		this.SetStatus("Load failed: "+err.Error(), true)
+		this.setStatus("Load failed: "+err.Error(), true)
 		return
 	}
 
 	this.settings = loaded
 	this.currentPath = path
-	this.dirty = false
-	this.SetStatus("Loaded "+path, false)
+	this.unsaved = false
+	this.setStatus("Loaded "+path, false)
 }
 
 func (this *State) Save() {
@@ -113,19 +109,19 @@ func (this *State) Save() {
 	}
 
 	if err := services.SaveSettingsFile(this.currentPath, this.settings); err != nil {
-		this.SetStatus("Save failed: "+err.Error(), true)
+		this.setStatus("Save failed: "+err.Error(), true)
 		return
 	}
 
-	this.dirty = false
-	this.SetStatus("Saved "+this.currentPath, false)
+	this.unsaved = false
+	this.setStatus("Saved "+this.currentPath, false)
 }
 
 func (this *State) SaveAs(templateName string) {
 	defaultName := services.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
 	path, err := utils.PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.SuggestDirectory(), defaultName)
 	if err != nil {
-		this.SetStatus("Save dialog failed: "+err.Error(), true)
+		this.setStatus("Save dialog failed: "+err.Error(), true)
 		return
 	}
 
@@ -134,24 +130,23 @@ func (this *State) SaveAs(templateName string) {
 	}
 
 	if err := services.SaveSettingsFile(path, this.settings); err != nil {
-		this.SetStatus("Save failed: "+err.Error(), true)
+		this.setStatus("Save failed: "+err.Error(), true)
 		return
 	}
 	this.currentPath = path
-	this.dirty = false
-	this.SetStatus("Saved "+path, false)
+	this.unsaved = false
+	this.setStatus("Saved "+path, false)
 }
 
 func (this *State) Generate() {
-	captured := this.GetSettingsFile()
-	generatorSettings := services.SettingsToGenerator(captured)
+	generatorSettings := services.SettingsToGenerator(this.GetSettingsFile())
 	if generatorSettings.TemplateName == "" {
-		this.SetStatus("Template name is required.", true)
+		this.setStatus("Template name is required.", true)
 		return
 	}
 	template, err := services.Generate(generatorSettings)
 	if err != nil {
-		this.SetStatus(fmt.Sprintf("Generation failed: %value", err), true)
+		this.setStatus(fmt.Sprintf("Generation failed: %value", err), true)
 		this.lastTemplate = nil
 		return
 	}
@@ -162,27 +157,27 @@ func (this *State) Generate() {
 		zoneCount = len(template.Variants[0].Zones)
 		connectionCount = len(template.Variants[0].Connections)
 	}
-	this.SetStatus(fmt.Sprintf("Generated '%s' — %d zones, %d connections.", template.Name, zoneCount, connectionCount), false)
+	this.setStatus(fmt.Sprintf("Generated '%s' — %d zones, %d connections.", template.Name, zoneCount, connectionCount), false)
 }
 
 // SaveTemplate writes the most recently generated template as .rmg.json.
 func (this *State) SaveTemplate() {
 	lastTemplate := this.GetLastTemplate()
 	if lastTemplate == nil {
-		this.SetStatus("Nothing to save — generate a template first.", true)
+		this.setStatus("Nothing to save — generate a template first.", true)
 		return
 	}
 	dir := strings.TrimSpace(this.outputPath.Text())
 	if dir == "" {
-		this.SetStatus("Output directory is empty.", true)
+		this.setStatus("Output directory is empty.", true)
 		return
 	}
 	out, err := services.WriteTemplate(dir, lastTemplate)
 	if err != nil {
-		this.SetStatus(fmt.Sprintf("Save failed: %value", err), true)
+		this.setStatus(fmt.Sprintf("Save failed: %value", err), true)
 		return
 	}
-	this.SetStatus("Saved template to "+out, false)
+	this.setStatus("Saved template to "+out, false)
 }
 
 // PickOutputDir presents a folder picker for the template output directory.
@@ -190,7 +185,7 @@ func (this *State) PickOutputDir() {
 	cur := strings.TrimSpace(this.outputPath.Text())
 	dir, err := utils.PickFolder("Select output directory", cur)
 	if err != nil {
-		this.SetStatus("Folder dialog failed: "+err.Error(), true)
+		this.setStatus("Folder dialog failed: "+err.Error(), true)
 		return
 	}
 	if dir == "" {
@@ -201,4 +196,9 @@ func (this *State) PickOutputDir() {
 
 func (this *State) UpdateState(updateFunc func(*models.SettingsFile)) {
 	updateFunc(this.settings)
+}
+
+func (this *State) setStatus(msg string, isErr bool) {
+	this.statusMsg = msg
+	this.statusErr = isErr
 }

@@ -1,7 +1,6 @@
 package constants
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
 
@@ -36,7 +35,7 @@ var Topologies = []TopologyDescriptor{
 	Topology.SharedWeb,
 }
 
-func GetTopologyDescriptor(topology models.MapTopology) TopologyDescriptor {
+func GetTopologyDescriptor(topology generator.MapTopology) TopologyDescriptor {
 	for _, value := range Topologies {
 		if value.Type == topology {
 			return value

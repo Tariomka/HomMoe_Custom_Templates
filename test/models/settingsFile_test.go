@@ -21,7 +21,7 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 	original.BannedItems = "bad_item_1,bad_item_2"
 	original.BannedMagics = "bad_spell_1"
 	original.ValueOverridesText = "watchtower=999"
-	original.BonusesJson = "StartingWood|start_hero|10|\nStartingOre|all_heroes|5|"
+	original.BonusesJSON = "StartingWood|start_hero|10|\nStartingOre|all_heroes|5|"
 	original.PlayerZoneContentRows = []models.ZoneContentRowSave{
 		{Sid: "watchtower", Count: 2, IsGuarded: true, NearCastle: true, RoadDistance: "Near"},
 		{Sid: "mine_gold", Count: 1, IsMine: true, RoadDistance: "Any"},
@@ -48,8 +48,8 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 	if round.ValueOverridesText != original.ValueOverridesText {
 		t.Errorf("ValueOverridesText round-trip mismatch: %q", round.ValueOverridesText)
 	}
-	if round.BonusesJson != original.BonusesJson {
-		t.Errorf("BonusesJson round-trip mismatch: %q", round.BonusesJson)
+	if round.BonusesJSON != original.BonusesJSON {
+		t.Errorf("BonusesJson round-trip mismatch: %q", round.BonusesJSON)
 	}
 	if len(round.PlayerZoneContentRows) != 2 {
 		t.Fatalf("PlayerZoneContentRows lost: %d", len(round.PlayerZoneContentRows))
@@ -66,13 +66,13 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 }
 
 func TestBonusEntry_RoundTrip(t *testing.T) {
-	entries := []models.BonusEntry{
-		{PresetType: models.BonusStartingWood, ReceiverFilter: "start_hero", Param: "10", Param2: ""},
-		{PresetType: models.BonusStartingOre, ReceiverFilter: "all_heroes", Param: "5", Param2: ""},
-		{PresetType: models.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
+	entries := []generator.BonusEntry{
+		{PresetType: generator.BonusStartingWood, ReceiverFilter: "start_hero", Param: "10", Param2: ""},
+		{PresetType: generator.BonusStartingOre, ReceiverFilter: "all_heroes", Param: "5", Param2: ""},
+		{PresetType: generator.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
 	}
-	encoded := models.SerialiseBonuses(entries)
-	decoded := models.ParseBonusesJSON(encoded)
+	encoded := generator.SerialiseBonuses(entries)
+	decoded := generator.ParseBonusesJSON(encoded)
 	if len(decoded) != len(entries) {
 		t.Fatalf("decoded %d entries, want %d", len(decoded), len(entries))
 	}

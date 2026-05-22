@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
@@ -249,7 +248,7 @@ func TestGenerate_RoadsEnabled_HasRoads(t *testing.T) {
 
 func TestGenerate_GameRules_HeroSettings(t *testing.T) {
 	s := defaultSettings()
-	s.HeroSettings = &models.HeroSettings{HeroCountMin: 6, HeroCountMax: 10, HeroCountIncrement: 2}
+	s.HeroSettings = generator.HeroSettings{HeroCountMin: 6, HeroCountMax: 10, HeroCountIncrement: 2}
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -268,7 +267,7 @@ func TestGenerate_GameRules_HeroSettings(t *testing.T) {
 
 func TestGenerate_WinConditions_CityHold(t *testing.T) {
 	s := defaultSettings()
-	s.GameEndConditions = &models.GameEndConditions{
+	s.GameEndConditions = &generator.GameEndConditions{
 		VictoryCondition: "win_condition_5",
 		CityHold:         true,
 		CityHoldDays:     7,
@@ -289,7 +288,7 @@ func TestGenerate_WinConditions_CityHold(t *testing.T) {
 
 func TestGenerate_WinConditions_GladiatorArena(t *testing.T) {
 	s := defaultSettings()
-	s.GladiatorArenaRules = &models.GladiatorArenaRules{Enabled: true, DaysDelayStart: 15, CountDay: 5}
+	s.GladiatorArenaRules = &generator.GladiatorArenaRules{Enabled: true, DaysDelayStart: 15, CountDay: 5}
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -311,7 +310,7 @@ func TestGenerate_WinConditions_GladiatorArena(t *testing.T) {
 
 func TestGenerate_WinConditions_Tournament(t *testing.T) {
 	s := defaultSettings()
-	s.TournamentRules = &models.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 3}
+	s.TournamentRules = &generator.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 3}
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -537,7 +536,7 @@ func TestGenerate_AdvancedMode_MixedNeutralTiers(t *testing.T) {
 
 func TestGenerate_CityHold_NeutralHasHoldCityFlag(t *testing.T) {
 	s := settingsWithTopology(generator.TopologyDefault, 2, 2)
-	s.GameEndConditions = &models.GameEndConditions{
+	s.GameEndConditions = &generator.GameEndConditions{
 		VictoryCondition: "win_condition_5",
 		CityHold:         true,
 		CityHoldDays:     6,
@@ -813,7 +812,7 @@ func TestGenerate_SharedWeb_ForcesAtLeastOneNeutral(t *testing.T) {
 
 func TestGenerate_TournamentMode_2Players(t *testing.T) {
 	s := settingsWithTopology(generator.TopologyDefault, 2, 4)
-	s.TournamentRules = &models.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
+	s.TournamentRules = &generator.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
 	tmpl, err := services.Generate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -834,7 +833,7 @@ func TestGenerate_TournamentMode_2Players(t *testing.T) {
 
 func tournamentSettings(topo generator.MapTopology, neutrals int) *generator.GeneratorSettings {
 	s := settingsWithTopology(topo, 2, neutrals)
-	s.TournamentRules = &models.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
+	s.TournamentRules = &generator.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
 	return s
 }
 
