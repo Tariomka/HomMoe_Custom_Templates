@@ -42,16 +42,13 @@ func NewWindow() *Window {
 
 func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	this.save()
-
-	this.toolbar.HandleClicks(gtx)
-	this.previewPanel.HandleClicks(gtx)
-	this.footerPanel.HandleClicks(gtx)
+	this.handleClicks(gtx)
 
 	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
 
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(widgets.NewTitleBarWidget(theme, "⚔  Olden Era — Template Generator")),
+			layout.Rigid(widgets.NewTitleBarWidget(theme, "Heroes: Olden Era — Custom Template Editor")),
 			layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 			layout.Rigid(this.toolbar.GetWidget(theme)),
 			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
@@ -106,6 +103,12 @@ func (this *Window) updateTabSelection() {
 	for i, tab := range this.tabs {
 		tab.SetSelected(this.selectedTab == i)
 	}
+}
+
+func (this *Window) handleClicks(gtx layout.Context) {
+	this.toolbar.HandleClicks(gtx)
+	this.previewPanel.HandleClicks(gtx)
+	this.footerPanel.HandleClicks(gtx)
 }
 
 func (this *Window) save() {

@@ -17,17 +17,25 @@ import (
 )
 
 type BasicSetupPanel struct {
+	// Template section
+
 	templateName      widget.Editor
 	playerCount       widget.Float
 	mapSize           *content.DropdownSelector
 	checkMoreMapSizes widget.Bool
+
+	// Hero section
 
 	gameMode               *content.SegmentButtonGroup
 	heroMinimumCount       widget.Float
 	heroMaximumCount       widget.Float
 	heroIncrementPerCastle widget.Float
 
+	// Rules section
+
 	topology *content.DropdownSelector
+
+	// The rest of the stuff
 
 	scroll widget.List
 
