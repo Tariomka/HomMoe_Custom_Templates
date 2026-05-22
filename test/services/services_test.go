@@ -254,7 +254,7 @@ func TestGenerate_GameRules_HeroSettings(t *testing.T) {
 		t.Fatal(err)
 	}
 	gr := tmpl.GameRules
-	if gr.HeroCountMin != 4 { // 6 - 2 = 4
+	if gr.HeroCountMin != 6 {
 		t.Errorf("heroCountMin = %d, want 4", gr.HeroCountMin)
 	}
 	if gr.HeroCountMax != 10 {

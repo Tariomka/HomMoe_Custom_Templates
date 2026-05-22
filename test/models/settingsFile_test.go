@@ -6,13 +6,12 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewSettingsFile_DefaultsToBalanced(t *testing.T) {
 	s := models.NewSettingsFile()
-	if s.Topology != generator.TopologyBalanced {
-		t.Errorf("default topology = %q, want %q", s.Topology, generator.TopologyBalanced)
-	}
+	assert.Equal(t, generator.TopologyBalanced, s.Topology)
 }
 
 func TestSettingsFile_RoundTrip(t *testing.T) {
@@ -31,38 +30,21 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 	}
 
 	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
-	}
+	assert.NoError(t, err, "marshal")
 	round := &models.SettingsFile{}
-	if err := json.Unmarshal(data, round); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
+	err = json.Unmarshal(data, round)
+	assert.NoError(t, err, "unmarshal")
 
-	if round.BannedItems != original.BannedItems {
-		t.Errorf("BannedItems round-trip mismatch: %q", round.BannedItems)
-	}
-	if round.BannedMagics != original.BannedMagics {
-		t.Errorf("BannedMagics round-trip mismatch: %q", round.BannedMagics)
-	}
-	if round.ValueOverridesText != original.ValueOverridesText {
-		t.Errorf("ValueOverridesText round-trip mismatch: %q", round.ValueOverridesText)
-	}
-	if round.BonusesJSON != original.BonusesJSON {
-		t.Errorf("BonusesJson round-trip mismatch: %q", round.BonusesJSON)
-	}
-	if len(round.PlayerZoneContentRows) != 2 {
-		t.Fatalf("PlayerZoneContentRows lost: %d", len(round.PlayerZoneContentRows))
-	}
-	if round.PlayerZoneContentRows[0].Sid != "watchtower" || round.PlayerZoneContentRows[0].Count != 2 {
-		t.Errorf("PlayerZoneContentRows[0] mismatch: %+v", round.PlayerZoneContentRows[0])
-	}
-	if !round.PlayerZoneContentRows[1].IsMine {
-		t.Error("IsMine flag lost in round trip")
-	}
-	if len(round.HubZoneContentRows) != 1 || round.HubZoneContentRows[0].Sid != "pandora_box" {
-		t.Errorf("HubZoneContentRows lost: %+v", round.HubZoneContentRows)
-	}
+	assert.Equal(t, original.BannedItems, round.BannedItems, "BannedItems round-trip mismatch")
+	assert.Equal(t, original.BannedMagics, round.BannedMagics, "BannedMagics round-trip mismatch")
+	assert.Equal(t, original.ValueOverridesText, round.ValueOverridesText, "ValueOverridesText round-trip mismatch")
+	assert.Equal(t, original.BonusesJSON, round.BonusesJSON, "BonusesJson round-trip mismatch")
+	assert.Equal(t, 2, len(round.PlayerZoneContentRows), "PlayerZoneContentRows lost")
+	assert.Equal(t, "watchtower", round.PlayerZoneContentRows[0].Sid, "PlayerZoneContentRows[0] Sid mismatch")
+	assert.Equal(t, 2, round.PlayerZoneContentRows[0].Count, "PlayerZoneContentRows[0] Count mismatch")
+	assert.True(t, round.PlayerZoneContentRows[1].IsMine, "IsMine flag lost in round trip")
+	assert.Equal(t, 1, len(round.HubZoneContentRows), "HubZoneContentRows lost")
+	assert.Equal(t, "pandora_box", round.HubZoneContentRows[0].Sid, "HubZoneContentRows[0] Sid mismatch")
 }
 
 func TestBonusEntry_RoundTrip(t *testing.T) {
@@ -73,23 +55,15 @@ func TestBonusEntry_RoundTrip(t *testing.T) {
 	}
 	encoded := generator.SerialiseBonuses(entries)
 	decoded := generator.ParseBonusesJSON(encoded)
-	if len(decoded) != len(entries) {
-		t.Fatalf("decoded %d entries, want %d", len(decoded), len(entries))
-	}
-	for i, want := range entries {
-		if decoded[i] != want {
-			t.Errorf("entry[%d] = %+v, want %+v", i, decoded[i], want)
-		}
+	assert.Equal(t, len(entries), len(decoded))
+	for i, expected := range entries {
+		assert.Equal(t, expected, decoded[i])
 	}
 }
 
 func TestBonusEntry_AcceptsLegacyOrdinalForm(t *testing.T) {
 	const legacy = "9|start_hero|10|"
 	decoded := models.ParseBonusesJSON(legacy)
-	if len(decoded) != 1 {
-		t.Fatalf("legacy parse produced %d entries", len(decoded))
-	}
-	if decoded[0].PresetType != models.BonusStartingWood {
-		t.Errorf("legacy ordinal 9 should map to StartingWood, got %v", decoded[0].PresetType)
-	}
+	assert.Equal(t, 1, len(decoded))
+	assert.Equal(t, models.BonusStartingWood, decoded[0].PresetType)
 }
