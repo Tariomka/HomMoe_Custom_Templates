@@ -1,5 +1,7 @@
 package constants
 
+const DefaultLabelWidth = 150
+
 var (
 	GameModes = []string{"Classic", "SingleHero"}
 

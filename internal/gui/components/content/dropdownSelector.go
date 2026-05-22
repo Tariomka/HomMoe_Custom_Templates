@@ -67,34 +67,8 @@ func (this *DropdownSelector) SelectByName(name string) bool {
 	return false
 }
 
-// Value returns the currently selected option label, or "" if empty.
-func (this *DropdownSelector) Value() string {
-	if this.selectedIndex >= 0 && this.selectedIndex < len(this.items) {
-		return this.items[this.selectedIndex].label
-	}
-	return ""
-}
-
-// Update returns true if the selection changed this frame.
-func (this *DropdownSelector) Update(gtx layout.Context) bool {
-	changed := false
-	if this.toggle.Clicked(gtx) {
-		this.isOpen = !this.isOpen
-	}
-	for i, item := range this.items {
-		if item.row.Clicked(gtx) {
-			if this.selectedIndex != i {
-				this.selectedIndex = i
-				changed = true
-			}
-			this.isOpen = false
-		}
-	}
-	return changed
-}
-
 func (this *DropdownSelector) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	this.Update(gtx)
+	this.update(gtx)
 	flex := layout.Flex{Axis: layout.Vertical}
 	children := []layout.FlexChild{
 		layout.Rigid(this.getTriggerWidget(theme)),
@@ -116,7 +90,7 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 			dims := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						label := material.Body1(theme, this.Value())
+						label := material.Body1(theme, this.value())
 						label.Color = themes.ColorText
 						label.TextSize = unit.Sp(13)
 						label.MaxLines = 1
@@ -200,4 +174,30 @@ func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selec
 		dims.Size.X = gtx.Constraints.Min.X
 	}
 	return dims
+}
+
+// update returns true if the selection changed this frame.
+func (this *DropdownSelector) update(gtx layout.Context) bool {
+	changed := false
+	if this.toggle.Clicked(gtx) {
+		this.isOpen = !this.isOpen
+	}
+	for i, item := range this.items {
+		if item.row.Clicked(gtx) {
+			if this.selectedIndex != i {
+				this.selectedIndex = i
+				changed = true
+			}
+			this.isOpen = false
+		}
+	}
+	return changed
+}
+
+// value returns the currently selected option label, or "" if empty.
+func (this *DropdownSelector) value() string {
+	if this.selectedIndex >= 0 && this.selectedIndex < len(this.items) {
+		return this.items[this.selectedIndex].label
+	}
+	return ""
 }

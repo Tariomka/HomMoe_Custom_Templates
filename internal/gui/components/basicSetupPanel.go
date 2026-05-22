@@ -117,11 +117,11 @@ func (this *BasicSetupPanel) SaveToState() {
 func (this *BasicSetupPanel) getTemplateSectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Template", []layout.Widget{
 		widgets.NewLabeledRowWidget(
-			theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
+			theme, "Template name", constants.DefaultLabelWidth, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
 		widgets.NewLabeledRowWidget(
-			theme, "Players", 160,
+			theme, "Players", constants.DefaultLabelWidth,
 			widgets.NewLabeledSliderWidget(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
-		widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
+		widgets.NewLabeledRowWidget(theme, "Map size", constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
 			return this.updateMapSizeSelector(gtx).Layout(gtx, theme)
 		}),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkMoreMapSizes, "Allow non official larger map sizes (>240)"),
@@ -129,22 +129,21 @@ func (this *BasicSetupPanel) getTemplateSectionWidget(theme *material.Theme) lay
 }
 
 func (this *BasicSetupPanel) getMapSectionWidget(theme *material.Theme) layout.Widget {
-	labelWidth := 150
 	widgetList := []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Game mode", labelWidth, func(gtx layout.Context) layout.Dimensions {
+		widgets.NewLabeledRowWidget(theme, "Game mode", constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
 			return this.gameMode.Layout(gtx, theme)
 		}),
 	}
 	if !this.isSingleHero() {
 		widgetList = append(widgetList,
 			widgets.NewLabeledRowWidget(
-				theme, "Hero count min", labelWidth,
+				theme, "Hero count min", constants.DefaultLabelWidth,
 				widgets.NewLabeledSliderWidget(theme, &this.heroMinimumCount, fmt.Sprintf("%d", utils.RoundedRange(this.heroMinimumCount.Value, 1, 12)))),
 			widgets.NewLabeledRowWidget(
-				theme, "Hero count max", labelWidth,
+				theme, "Hero count max", constants.DefaultLabelWidth,
 				widgets.NewLabeledSliderWidget(theme, &this.heroMaximumCount, fmt.Sprintf("%d", utils.RoundedRange(this.heroMaximumCount.Value, 1, 12)))),
 			widgets.NewLabeledRowWidget(
-				theme, "Increment", labelWidth,
+				theme, "Increment", constants.DefaultLabelWidth,
 				widgets.NewLabeledSliderWidget(theme, &this.heroIncrementPerCastle, fmt.Sprintf("%d", utils.RoundedRange(this.heroIncrementPerCastle.Value, 1, 10)))))
 	}
 	return widgets.NewSectionWidget(theme, "Hero Restrictions", widgetList)
@@ -152,14 +151,14 @@ func (this *BasicSetupPanel) getMapSectionWidget(theme *material.Theme) layout.W
 
 func (this *BasicSetupPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Topology", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Topology", 160, func(gtx layout.Context) layout.Dimensions {
+		widgets.NewLabeledRowWidget(theme, "Topology", constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
 			return this.topology.Layout(gtx, theme)
 		}),
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Body2(theme, this.getCurrentTopology().Description)
 			label.Color = themes.ColorTextDim
 			label.TextSize = unit.Sp(12)
-			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(168)}.Layout(gtx, label.Layout)
+			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
 		},
 	})
 }
