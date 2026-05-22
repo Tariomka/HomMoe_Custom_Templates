@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"strings"
 
 	"gioui.org/layout"
@@ -84,8 +83,9 @@ func (this *BasicSetupPanel) GetPanelWidget(theme *material.Theme) layout.Widget
 		this.getTopologySectionWidget(theme),
 	}
 	return func(gtx layout.Context) layout.Dimensions {
-		return material.List(theme, &this.scroll).
-			Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
+		return material.List(theme, &this.scroll).Layout(
+			gtx, len(widgetsList),
+			func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
 	}
 }
 
@@ -110,14 +110,14 @@ func (this *BasicSetupPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
+		settings.MapSize = this.getCurrentMapSize().Size
+		settings.ExperimentalMapSizes = this.checkMoreMapSizes.Value
 
 		settings.GameMode = constants.GameModes[this.gameMode.GetSelectedIndex()]
 		settings.HeroCountMin = utils.RoundedRange(this.heroMinimumCount.Value, 1, 12)
 		settings.HeroCountMax = max(utils.RoundedRange(this.heroMaximumCount.Value, 1, 12), settings.HeroCountMin)
 		settings.HeroCountIncrement = utils.RoundedRange(this.heroIncrementPerCastle.Value, 1, 10)
 
-		settings.MapSize = this.getCurrentMapSize().Size
-		settings.ExperimentalMapSizes = this.checkMoreMapSizes.Value
 		settings.Topology = this.getCurrentTopology().Type
 	})
 }
@@ -125,10 +125,11 @@ func (this *BasicSetupPanel) SaveToState() {
 func (this *BasicSetupPanel) getTemplateSectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Template", []layout.Widget{
 		widgets.NewLabeledRowWidget(
-			theme, "Template name", constants.DefaultLabelWidth, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
+			theme, "Template name", constants.DefaultLabelWidth,
+			widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
 		widgets.NewLabeledRowWidget(
 			theme, "Players", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
+			widgets.NewLabeledSliderWidget(theme, &this.playerCount, utils.RoundedRangeString(this.playerCount.Value, 2, 8))),
 		widgets.NewLabeledRowWidget(theme, "Map size", constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
 			return this.updateMapSizeSelector(gtx).Layout(gtx, theme)
 		}),
@@ -146,13 +147,13 @@ func (this *BasicSetupPanel) getMapSectionWidget(theme *material.Theme) layout.W
 		widgetList = append(widgetList,
 			widgets.NewLabeledRowWidget(
 				theme, "Hero count min", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.heroMinimumCount, fmt.Sprintf("%d", utils.RoundedRange(this.heroMinimumCount.Value, 1, 12)))),
+				widgets.NewLabeledSliderWidget(theme, &this.heroMinimumCount, utils.RoundedRangeString(this.heroMinimumCount.Value, 1, 12))),
 			widgets.NewLabeledRowWidget(
 				theme, "Hero count max", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.heroMaximumCount, fmt.Sprintf("%d", utils.RoundedRange(this.heroMaximumCount.Value, 1, 12)))),
+				widgets.NewLabeledSliderWidget(theme, &this.heroMaximumCount, utils.RoundedRangeString(this.heroMaximumCount.Value, 1, 12))),
 			widgets.NewLabeledRowWidget(
 				theme, "Increment", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.heroIncrementPerCastle, fmt.Sprintf("%d", utils.RoundedRange(this.heroIncrementPerCastle.Value, 1, 10)))))
+				widgets.NewLabeledSliderWidget(theme, &this.heroIncrementPerCastle, utils.RoundedRangeString(this.heroIncrementPerCastle.Value, 1, 10))))
 	}
 	return widgets.NewSectionWidget(theme, "Hero Restrictions", widgetList)
 }
