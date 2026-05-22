@@ -135,9 +135,9 @@ func ParseBonusesJSON(s string) []BonusEntry {
 	return out
 }
 
-// SerialiseBonuses joins a slice of bonus entries back to the canonical
+// SerializeBonuses joins a slice of bonus entries back to the canonical
 // newline-separated string used by BonusesJson.
-func SerialiseBonuses(entries []BonusEntry) string {
+func SerializeBonuses(entries []BonusEntry) string {
 	if len(entries) == 0 {
 		return ""
 	}

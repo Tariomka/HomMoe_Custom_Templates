@@ -22,10 +22,10 @@ type BasicSetupPanel struct {
 	mapSize           *content.DropdownSelector
 	checkMoreMapSizes widget.Bool
 
-	gameMode    *content.SegmentButtonGroup
-	sldHeroMin  widget.Float
-	sldHeroMax  widget.Float
-	sldHeroIncr widget.Float
+	gameMode               *content.SegmentButtonGroup
+	heroMinimumCount       widget.Float
+	heroMaximumCount       widget.Float
+	heroIncrementPerCastle widget.Float
 
 	topology *content.DropdownSelector
 
@@ -90,9 +90,9 @@ func (this *BasicSetupPanel) LoadFromState() {
 	this.checkMoreMapSizes.Value = settings.ExperimentalMapSizes
 
 	this.gameMode.SetSelectedIndex(0)
-	this.sldHeroMin.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 12)
-	this.sldHeroMax.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
-	this.sldHeroIncr.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 10)
+	this.heroMinimumCount.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 12)
+	this.heroMaximumCount.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
+	this.heroIncrementPerCastle.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 10)
 
 	this.topology.SelectByName(constants.GetTopologyDescriptor(settings.Topology).Label)
 }
@@ -104,9 +104,9 @@ func (this *BasicSetupPanel) SaveToState() {
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
 
 		settings.GameMode = constants.GameModes[this.gameMode.GetSelectedIndex()]
-		settings.HeroCountMin = utils.RoundedRange(this.sldHeroMin.Value, 1, 12)
-		settings.HeroCountMax = max(utils.RoundedRange(this.sldHeroMax.Value, 1, 12), settings.HeroCountMin)
-		settings.HeroCountIncrement = utils.RoundedRange(this.sldHeroIncr.Value, 1, 10)
+		settings.HeroCountMin = utils.RoundedRange(this.heroMinimumCount.Value, 1, 12)
+		settings.HeroCountMax = max(utils.RoundedRange(this.heroMaximumCount.Value, 1, 12), settings.HeroCountMin)
+		settings.HeroCountIncrement = utils.RoundedRange(this.heroIncrementPerCastle.Value, 1, 10)
 
 		settings.MapSize = this.getCurrentMapSize().Size
 		settings.ExperimentalMapSizes = this.checkMoreMapSizes.Value
@@ -120,7 +120,7 @@ func (this *BasicSetupPanel) getTemplateSectionWidget(theme *material.Theme) lay
 			theme, "Template name", 160, widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
 		widgets.NewLabeledRowWidget(
 			theme, "Players", 160,
-			widgets.NewLabeledSlider(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
+			widgets.NewLabeledSliderWidget(theme, &this.playerCount, fmt.Sprintf("%d", utils.RoundedRange(this.playerCount.Value, 2, 8)))),
 		widgets.NewLabeledRowWidget(theme, "Map size", 160, func(gtx layout.Context) layout.Dimensions {
 			return this.updateMapSizeSelector(gtx).Layout(gtx, theme)
 		}),
@@ -139,13 +139,13 @@ func (this *BasicSetupPanel) getMapSectionWidget(theme *material.Theme) layout.W
 		widgetList = append(widgetList,
 			widgets.NewLabeledRowWidget(
 				theme, "Hero count min", labelWidth,
-				widgets.NewLabeledSlider(theme, &this.sldHeroMin, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroMin.Value, 1, 12)))),
+				widgets.NewLabeledSliderWidget(theme, &this.heroMinimumCount, fmt.Sprintf("%d", utils.RoundedRange(this.heroMinimumCount.Value, 1, 12)))),
 			widgets.NewLabeledRowWidget(
 				theme, "Hero count max", labelWidth,
-				widgets.NewLabeledSlider(theme, &this.sldHeroMax, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroMax.Value, 1, 12)))),
+				widgets.NewLabeledSliderWidget(theme, &this.heroMaximumCount, fmt.Sprintf("%d", utils.RoundedRange(this.heroMaximumCount.Value, 1, 12)))),
 			widgets.NewLabeledRowWidget(
 				theme, "Increment", labelWidth,
-				widgets.NewLabeledSlider(theme, &this.sldHeroIncr, fmt.Sprintf("%d", utils.RoundedRange(this.sldHeroIncr.Value, 1, 10)))))
+				widgets.NewLabeledSliderWidget(theme, &this.heroIncrementPerCastle, fmt.Sprintf("%d", utils.RoundedRange(this.heroIncrementPerCastle.Value, 1, 10)))))
 	}
 	return widgets.NewSectionWidget(theme, "Hero Restrictions", widgetList)
 }

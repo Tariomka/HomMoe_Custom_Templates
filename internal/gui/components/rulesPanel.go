@@ -66,7 +66,7 @@ func (this *RulesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 				if !this.chkLostStartCity.Value {
 					return layout.Dimensions{}
 				}
-				return widgets.NewLabeledRowWidget(theme, "Grace period (days)", 200, widgets.NewLabeledSlider(theme, &this.sldLostCityDay, fmt.Sprintf("%d", utils.RoundedRange(this.sldLostCityDay.Value, 1, 30))))(gtx)
+				return widgets.NewLabeledRowWidget(theme, "Grace period (days)", 200, widgets.NewLabeledSliderWidget(theme, &this.sldLostCityDay, fmt.Sprintf("%d", utils.RoundedRange(this.sldLostCityDay.Value, 1, 30))))(gtx)
 			},
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkLostStartHero, "Lose if start hero is killed"),
 		}),
@@ -76,7 +76,7 @@ func (this *RulesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 				if !this.chkCityHold.Value && this.victory.GetSelectedIndex() != 2 {
 					return layout.Dimensions{}
 				}
-				return widgets.NewLabeledRowWidget(theme, "Days to hold", 200, widgets.NewLabeledSlider(theme, &this.sldCityHoldDays, fmt.Sprintf("%d", utils.RoundedRange(this.sldCityHoldDays.Value, 1, 30))))(gtx)
+				return widgets.NewLabeledRowWidget(theme, "Days to hold", 200, widgets.NewLabeledSliderWidget(theme, &this.sldCityHoldDays, fmt.Sprintf("%d", utils.RoundedRange(this.sldCityHoldDays.Value, 1, 30))))(gtx)
 			},
 		}),
 		widgets.NewSectionWidget(theme, "Gladiator Arena", []layout.Widget{
@@ -86,8 +86,8 @@ func (this *RulesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Days delay start", 200, widgets.NewLabeledSlider(theme, &this.sldGladiatorDelay, fmt.Sprintf("%d", utils.RoundedRange(this.sldGladiatorDelay.Value, 1, 90))))),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count days", 200, widgets.NewLabeledSlider(theme, &this.sldGladiatorCountDay, fmt.Sprintf("%d", utils.RoundedRange(this.sldGladiatorCountDay.Value, 1, 14))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Days delay start", 200, widgets.NewLabeledSliderWidget(theme, &this.sldGladiatorDelay, fmt.Sprintf("%d", utils.RoundedRange(this.sldGladiatorDelay.Value, 1, 90))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count days", 200, widgets.NewLabeledSliderWidget(theme, &this.sldGladiatorCountDay, fmt.Sprintf("%d", utils.RoundedRange(this.sldGladiatorCountDay.Value, 1, 14))))),
 				)
 			},
 		}),
@@ -98,16 +98,16 @@ func (this *RulesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "First tournament day", 200, widgets.NewLabeledSlider(theme, &this.sldTournamentDay, fmt.Sprintf("%d", utils.RoundedRange(this.sldTournamentDay.Value, 1, 60))))),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Interval (days)", 200, widgets.NewLabeledSlider(theme, &this.sldTournamentInterval, fmt.Sprintf("%d", utils.RoundedRange(this.sldTournamentInterval.Value, 1, 30))))),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Points to win", 200, widgets.NewLabeledSlider(theme, &this.sldTournamentPoints, fmt.Sprintf("%d", utils.RoundedRange(this.sldTournamentPoints.Value, 1, 10))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "First tournament day", 200, widgets.NewLabeledSliderWidget(theme, &this.sldTournamentDay, fmt.Sprintf("%d", utils.RoundedRange(this.sldTournamentDay.Value, 1, 60))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Interval (days)", 200, widgets.NewLabeledSliderWidget(theme, &this.sldTournamentInterval, fmt.Sprintf("%d", utils.RoundedRange(this.sldTournamentInterval.Value, 1, 30))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Points to win", 200, widgets.NewLabeledSliderWidget(theme, &this.sldTournamentPoints, fmt.Sprintf("%d", utils.RoundedRange(this.sldTournamentPoints.Value, 1, 10))))),
 					layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.chkTournamentSaveArmy, "Save army between rounds")),
 				)
 			},
 		}),
 		widgets.NewSectionWidget(theme, "Experience modifiers", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Faction laws exp %", 200, widgets.NewLabeledSlider(theme, &this.sldFactionLawsExp, fmt.Sprintf("%d%%", utils.RoundedRange(this.sldFactionLawsExp.Value, 25, 200)))),
-			widgets.NewLabeledRowWidget(theme, "Astrology exp %", 200, widgets.NewLabeledSlider(theme, &this.sldAstrologyExp, fmt.Sprintf("%d%%", utils.RoundedRange(this.sldAstrologyExp.Value, 25, 200)))),
+			widgets.NewLabeledRowWidget(theme, "Faction laws exp %", 200, widgets.NewLabeledSliderWidget(theme, &this.sldFactionLawsExp, fmt.Sprintf("%d%%", utils.RoundedRange(this.sldFactionLawsExp.Value, 25, 200)))),
+			widgets.NewLabeledRowWidget(theme, "Astrology exp %", 200, widgets.NewLabeledSliderWidget(theme, &this.sldAstrologyExp, fmt.Sprintf("%d%%", utils.RoundedRange(this.sldAstrologyExp.Value, 25, 200)))),
 		}),
 	}
 	return func(gtx layout.Context) layout.Dimensions {

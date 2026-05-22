@@ -53,7 +53,7 @@ func TestBonusEntry_RoundTrip(t *testing.T) {
 		{PresetType: generator.BonusStartingOre, ReceiverFilter: "all_heroes", Param: "5", Param2: ""},
 		{PresetType: generator.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
 	}
-	encoded := generator.SerialiseBonuses(entries)
+	encoded := generator.SerializeBonuses(entries)
 	decoded := generator.ParseBonusesJSON(encoded)
 	assert.Equal(t, len(entries), len(decoded))
 	for i, expected := range entries {
@@ -65,5 +65,5 @@ func TestBonusEntry_AcceptsLegacyOrdinalForm(t *testing.T) {
 	const legacy = "9|start_hero|10|"
 	decoded := models.ParseBonusesJSON(legacy)
 	assert.Equal(t, 1, len(decoded))
-	assert.Equal(t, models.BonusStartingWood, decoded[0].PresetType)
+	assert.Equal(t, generator.BonusStartingWood, decoded[0].PresetType)
 }

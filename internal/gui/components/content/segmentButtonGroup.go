@@ -84,7 +84,7 @@ func drawSegment(gtx layout.Context, theme *material.Theme, label string, select
 		border = themes.ColorGold
 	}
 	macro := op.Record(gtx.Ops)
-	dims := layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	dims := layout.UniformInset(unit.Dp(6)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		label := material.Body2(theme, label)
 		label.Color = fgColor
 		label.TextSize = unit.Sp(12)

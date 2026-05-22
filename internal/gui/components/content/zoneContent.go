@@ -187,7 +187,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					)
 				}),
 				layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
-				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count", 100, widgets.NewLabeledSlider(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
+				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count", 100, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &row.IsGuarded, "Guarded")),
