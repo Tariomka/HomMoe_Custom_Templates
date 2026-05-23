@@ -4,6 +4,7 @@ go 1.25.8
 
 require (
 	gioui.org v0.9.0
+	github.com/andygrunwald/vdf v1.1.0
 	github.com/stretchr/testify v1.11.1
 )
 

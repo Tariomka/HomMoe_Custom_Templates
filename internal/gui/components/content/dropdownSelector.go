@@ -30,6 +30,8 @@ type DropdownSelector struct {
 
 	toggle widget.Clickable
 	isOpen bool
+
+	WasUpdated bool
 }
 
 func NewDropdownSelector(labels []string) *DropdownSelector {
@@ -178,7 +180,7 @@ func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selec
 
 // update returns true if the selection changed this frame.
 func (this *DropdownSelector) update(gtx layout.Context) bool {
-	changed := false
+	this.WasUpdated = false
 	if this.toggle.Clicked(gtx) {
 		this.isOpen = !this.isOpen
 	}
@@ -186,12 +188,12 @@ func (this *DropdownSelector) update(gtx layout.Context) bool {
 		if item.row.Clicked(gtx) {
 			if this.selectedIndex != i {
 				this.selectedIndex = i
-				changed = true
+				this.WasUpdated = true
 			}
 			this.isOpen = false
 		}
 	}
-	return changed
+	return this.WasUpdated
 }
 
 // value returns the currently selected option label, or "" if empty.

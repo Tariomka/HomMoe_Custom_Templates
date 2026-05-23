@@ -28,9 +28,8 @@ func NewWindow() *Window {
 	window := Window{state: components.NewUIState()}
 	window.toolbar = components.NewToolbar(window.state, window.reset)
 	window.tabs = []*components.Tab{
-		components.NewTab("General", components.NewBasicSetupPanel(window.state)),
-		components.NewTab("Layout", components.NewGenerationPanel(window.state)),
-		components.NewTab("Game Rules (TO BE DELETED)", components.NewRulesPanel(window.state)),
+		components.NewTab("General", components.NewGeneralPanel(window.state)),
+		components.NewTab("Layout", components.NewLayoutPanel(window.state)),
 		components.NewTab("Zone Content", components.NewZoneContentPanel(window.state)),
 		components.NewTab("Bonuses & Bans", components.NewBonusesPanel(window.state)),
 	}

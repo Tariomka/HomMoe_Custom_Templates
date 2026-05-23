@@ -6,19 +6,6 @@ import (
 	"strings"
 )
 
-// OpenURL opens the given URL in the user's default web browser.
-func OpenURL(url string) error {
-	switch runtime.GOOS {
-	case "windows":
-		// rundll32 is the most reliable launcher for hyperlinks on Windows.
-		return exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		return exec.Command("open", url).Start()
-	default:
-		return exec.Command("xdg-open", url).Start()
-	}
-}
-
 // RevealInExplorer opens the given directory in a file manager window.
 func RevealInExplorer(path string) error {
 	switch runtime.GOOS {
@@ -79,39 +66,6 @@ $d.SelectedPath = '` + escapePS(initialDir) + `'
 if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.SelectedPath }
 `
 	return runPowerShell(script)
-}
-
-// FindOldenEraTemplatesDir tries to locate the official Steam install folder
-// for "Heroes of Might and Magic Olden Era" and returns its map_templates
-// directory, or "" if it cannot be located. Mirrors GetSteamTemplatesDir() in
-// MainWindow.xaml.cs.
-func FindOldenEraTemplatesDir() string {
-	if runtime.GOOS != "windows" {
-		return ""
-	}
-	script := `
-$paths = @()
-$reg = @(
-	'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 3105440',
-  'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 3105440'
-)
-foreach ($k in $reg) {
-	try {
-		$v = Get-ItemProperty -Path $k -ErrorAction Stop
-		if ($v.InstallLocation) { $paths += (Join-Path $v.InstallLocation 'HeroesOldenEra_Data\StreamingAssets\map_templates') }
-  } catch {}
-}
-$paths += @(
-  (Join-Path $env:ProgramFiles      'Steam\steamapps\common\Heroes of Might and Magic Olden Era\HeroesOldenEra_Data\StreamingAssets\map_templates'),
-  (Join-Path ${env:ProgramFiles(x86)} 'Steam\steamapps\common\Heroes of Might and Magic Olden Era\HeroesOldenEra_Data\StreamingAssets\map_templates')
-)
-foreach ($p in $paths) { if ($p -and (Test-Path -Path $p -PathType Container)) { Write-Output $p; break } }
-`
-	out, err := runPowerShell(script)
-	if err != nil {
-		return ""
-	}
-	return out
 }
 
 func runPowerShell(script string) (string, error) {

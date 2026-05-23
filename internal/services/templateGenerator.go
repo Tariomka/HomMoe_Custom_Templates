@@ -375,7 +375,7 @@ func buildAdvancedWinConditions(settings *generator.GeneratorSettings, effective
 
 		var announceDays, battleOffsets []int
 		prevBattle := 0
-		for i := 0; i < roundCount; i++ {
+		for i := range roundCount {
 			announce := 1
 			if i > 0 {
 				announce = prevBattle + 1

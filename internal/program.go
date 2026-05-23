@@ -22,7 +22,7 @@ func eventLoop() {
 	window.Option(
 		app.Title("Olden Era — Template Generator"),
 		app.Size(unit.Dp(1600), unit.Dp(900)),
-		app.MinSize(unit.Dp(1280), unit.Dp(720)))
+		app.MinSize(unit.Dp(1280), unit.Dp(800)))
 	if os.Getenv("HOT_RELOAD") == "1" {
 		window.Option(app.Minimized.Option())
 	}

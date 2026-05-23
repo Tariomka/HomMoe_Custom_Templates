@@ -1,5 +1,7 @@
 package constants
 
+import "strings"
+
 type Victory struct {
 	ID    string
 	Label string
@@ -26,7 +28,7 @@ var VictoryConditions = []Victory{
 
 func GetVictoryCondition(id string) Victory {
 	for _, victory := range VictoryConditions {
-		if victory.ID == id {
+		if strings.EqualFold(victory.ID, id) {
 			return victory
 		}
 	}

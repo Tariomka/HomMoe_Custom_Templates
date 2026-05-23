@@ -8,6 +8,7 @@ import (
 
 	"gioui.org/widget"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
@@ -31,9 +32,14 @@ type State struct {
 func NewUIState() *State {
 	state := &State{settings: models.NewSettingsFile()}
 	state.outputPath.SingleLine = true
-	if workingDir, err := os.Getwd(); err == nil {
-		state.outputPath.SetText(workingDir)
+
+	templateDir := helpers.FindOldenEraTemplatesDir(false)
+	if templateDir == "" {
+		if workingDir, err := os.Getwd(); err == nil {
+			templateDir = workingDir
+		}
 	}
+	state.outputPath.SetText(templateDir)
 	return state
 }
 

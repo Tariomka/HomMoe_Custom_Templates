@@ -4,15 +4,21 @@ import (
 	"fmt"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 )
 
-type GenerationPanel struct {
+type LayoutPanel struct {
+	topology *content.DropdownSelector
+
 	chkRoads               widget.Bool
 	chkPortals             widget.Bool
 	sldMaxPortals          widget.Float
@@ -46,15 +52,25 @@ type GenerationPanel struct {
 	state *State
 }
 
-func NewGenerationPanel(state *State) *GenerationPanel {
-	panel := &GenerationPanel{state: state}
+func NewLayoutPanel(state *State) *LayoutPanel {
+	panel := &LayoutPanel{
+		topology: content.NewDropdownSelector(func() []string {
+			labels := make([]string, 0)
+			for _, topology := range constants.Topologies {
+				labels = append(labels, topology.Label)
+			}
+			return labels
+		}()),
+		state: state,
+	}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
 	return panel
 }
 
-func (this *GenerationPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
+func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	widgetsList := []layout.Widget{
+		this.getTopologySectionWidget(theme),
 		widgets.NewSectionWidget(theme, "Connectivity", []layout.Widget{
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkRoads, "Generate roads between zones"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPortals, "Random portals (instead of fixed connections)"),
@@ -114,8 +130,11 @@ func (this *GenerationPanel) GetPanelWidget(theme *material.Theme) layout.Widget
 	}
 }
 
-func (this *GenerationPanel) LoadFromState() {
+func (this *LayoutPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
+
+	this.topology.SelectByName(constants.GetTopologyDescriptor(settings.Topology).Label)
+
 	this.chkRoads.Value = settings.GenerateRoads
 	this.chkPortals.Value = settings.RandomPortals
 	this.sldMaxPortals.Value = utils.Normalize(float32(settings.MaxPortalConnections), 1, 32)
@@ -145,9 +164,11 @@ func (this *GenerationPanel) LoadFromState() {
 	this.sldBorderGuard.Value = utils.Normalize(float32(settings.BorderGuardStrengthPercent), 25, 200)
 }
 
-func (this *GenerationPanel) SaveToState() {
+func (this *LayoutPanel) SaveToState() {
 	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *models.SettingsFile) {
+		settings.Topology = this.getCurrentTopology().Type
+
 		settings.GenerateRoads = this.chkRoads.Value
 		settings.RandomPortals = this.chkPortals.Value
 		settings.MaxPortalConnections = utils.RoundedRange(this.sldMaxPortals.Value, 1, 32)
@@ -178,4 +199,22 @@ func (this *GenerationPanel) SaveToState() {
 		settings.NeutralStackStrengthPercent = utils.RoundedRange(this.sldNeutralStack.Value, 25, 200)
 		settings.BorderGuardStrengthPercent = utils.RoundedRange(this.sldBorderGuard.Value, 25, 200)
 	})
+}
+
+func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
+	return widgets.NewSectionWidget(theme, "Topology", []layout.Widget{
+		widgets.NewLabeledRowWidget(theme, "Topology", constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
+			return this.topology.Layout(gtx, theme)
+		}),
+		func(gtx layout.Context) layout.Dimensions {
+			label := material.Body2(theme, this.getCurrentTopology().Description)
+			label.Color = themes.ColorTextDim
+			label.TextSize = unit.Sp(12)
+			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
+		},
+	})
+}
+
+func (this *LayoutPanel) getCurrentTopology() constants.TopologyDescriptor {
+	return constants.Topologies[this.topology.GetSelectedIndex()]
 }
