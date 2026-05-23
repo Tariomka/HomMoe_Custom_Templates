@@ -352,7 +352,7 @@ func buildAdvancedWinConditions(settings *generator.GeneratorSettings, effective
 		HeroLightingDay:  1,
 		LostStartCity:    useLostStartCity,
 		LostStartCityDay: clampInt(ge.LostStartCityDay, 1, 30),
-		LostStartHero:    ge.LostStartHero || useGladiator,
+		LostStartHero:    ge.LostStartHero || useGladiator || settings.GameMode == "SingleHero",
 		CityHold:         useCityHold,
 		CityHoldDays:     clampInt(ge.CityHoldDays, 1, 30),
 	}

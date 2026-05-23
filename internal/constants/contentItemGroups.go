@@ -3,7 +3,6 @@ package constants
 import "github.com/Tariomka/hommoe_custom_templates/internal/models"
 
 // ContentItemGroup categorizes SidMappings by zone-content kind.
-// Mirrors Services/ContentManagement/ContentItemGroup.cs (v0.7).
 //
 //nolint:gochecknoglobals // semantic registry
 var ContentItemGroup = struct {
@@ -13,10 +12,6 @@ var ContentItemGroup = struct {
 	UnitRecruitment           []models.SidMapping
 	ResourceBanks             []models.SidMapping
 	HeroImprovementStructures []models.SidMapping
-	// HireBuildings is an alias of UnitRecruitment kept for backwards
-	// compatibility with earlier Go callers; new code should use
-	// UnitRecruitment directly.
-	HireBuildings []models.SidMapping
 }{
 	Mines: []models.SidMapping{
 		ContentIds.MineWood,
@@ -47,6 +42,7 @@ var ContentItemGroup = struct {
 		ContentIds.CrystalTrail,
 		ContentIds.SacrificialShrine,
 		ContentIds.Chimerologist,
+		IncludeListIds.VisionBuildingsTier1,
 	},
 	Treasures: []models.SidMapping{
 		ContentIds.PandoraBox,
@@ -59,6 +55,10 @@ var ContentItemGroup = struct {
 		ContentIds.MythicScrollBox,
 		ContentIds.Prison,
 		ContentIds.Mirage,
+		IncludeListIds.RandomPickupItems,
+		IncludeListIds.MythicScrollBoxPickup,
+		IncludeListIds.PandoraBoxArmyLowTier,
+		IncludeListIds.PandoraBoxArmyHighTier,
 	},
 	UnitRecruitment: []models.SidMapping{
 		// Random hires — matching the player faction.
@@ -127,8 +127,13 @@ var ContentItemGroup = struct {
 		ContentIds.UnstableRuins,
 		ContentIds.DragonUtopia,
 		ContentIds.ResearchLaboratory,
+		IncludeListIds.UtopiaBuildings,
+		IncludeListIds.EpicGuardedResourceBanks,
+		IncludeListIds.GuardedUnitBanksBiomeRestricted,
+		IncludeListIds.GuardedUnitBanksNoBiome,
 	},
 	HeroImprovementStructures: []models.SidMapping{
+		IncludeListIds.HeroBuffTier1,
 		IncludeListIds.HeroImprovementUncommon,
 		IncludeListIds.HeroStatsAndSkillsTier1,
 		ContentIds.StingingSword,
@@ -163,9 +168,4 @@ var ContentItemGroup = struct {
 		ContentIds.MagicAmplifier3,
 		ContentIds.MagicAmplifier4,
 	},
-}
-
-func init() {
-	// HireBuildings ≡ UnitRecruitment (kept for backward compat).
-	ContentItemGroup.HireBuildings = ContentItemGroup.UnitRecruitment
 }
