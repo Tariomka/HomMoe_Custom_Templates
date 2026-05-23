@@ -1,4 +1,4 @@
-# Heroes of Might and Magic: Olden Era — Custom Templates
+# Heroes of Might and Magic: Olden Era - Custom Templates
 
 A desktop GUI for designing and generating `.rmg.json` random map templates for
 **Heroes of Might and Magic: Olden Era**. Written in Go using the
