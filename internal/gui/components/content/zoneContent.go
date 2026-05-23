@@ -150,7 +150,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 				children := make([]layout.FlexChild, 0, len(this.rows)*2)
 				for i, row := range this.rows {
 					if i > 0 {
-						children = append(children, layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout))
+						children = append(children, layout.Rigid(widgets.NewVerticalSpacerWidget(4)))
 					}
 					children = append(children, layout.Rigid(this.layoutRow(theme, row)))
 				}
@@ -182,28 +182,32 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 							return label.Layout(gtx)
 						}),
 						layout.Rigid(widgets.NewButtonWidget(theme, "Duplicate", &row.dupBtn, false)),
-						layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(4)),
 						layout.Rigid(widgets.NewButtonWidget(theme, "Remove", &row.removeBtn, false)),
 					)
 				}),
-				layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
-				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count", 100, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
+				layout.Rigid(widgets.NewVerticalSpacerWidget(4)),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &row.IsGuarded, "Guarded")),
-						layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
+						layout.Flexed(0.7, widgets.NewLabeledRowWidget(theme, "Count", 60, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							if !this.ShowNear {
-								return layout.Dimensions{}
-							}
-							return widgets.NewLabeledCheckboxRowWidget(theme, &row.NearCastle, "Near castle")(gtx)
+							return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &row.IsGuarded, "Guarded")),
+								layout.Rigid(widgets.NewHorizontalSpacerWidget(12)),
+								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+									if !this.ShowNear {
+										return layout.Dimensions{}
+									}
+									return widgets.NewLabeledCheckboxRowWidget(theme, &row.NearCastle, "Near castle")(gtx)
+								}),
+							)
 						}),
-					)
-				}),
-				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Road distance", 100, func(gtx layout.Context) layout.Dimensions {
-					return row.roadCombo.Layout(gtx, theme)
-				})),
-			)
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
+						layout.Flexed(0.3, widgets.NewLabeledRowWidget(theme, "Road distance", 100, func(gtx layout.Context) layout.Dimensions {
+							return row.roadCombo.Layout(gtx, theme)
+						})))
+				}))
 		})(gtx)
 	}
 }
