@@ -6,6 +6,7 @@ import "github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 // editor
 type SettingsFile struct {
 	TemplateName                  string `json:"templateName"`
+	GameMode                      string `json:"gameMode"`
 	MapSize                       int    `json:"mapSize"`
 	PlayerCount                   int    `json:"playerCount"`
 	NeutralZoneCount              int    `json:"neutralZoneCount"`
@@ -64,9 +65,9 @@ type SettingsFile struct {
 	BannedItems        string `json:"bannedItems"`
 	BannedMagics       string `json:"bannedMagics"`
 	ValueOverridesText string `json:"valueOverrides"`
-	// BonusesJson stores configurable bonuses as a newline-separated list of
-	// `BonusEntry.String()` lines (see ParseBonusesJson).
-	BonusesJson string `json:"bonuses"`
+	// BonusesJSON stores configurable bonuses as a newline-separated list of
+	// `BonusEntry.String()` lines (see ParseBonusesJSON).
+	BonusesJSON string `json:"bonuses"`
 
 	// ── Mandatory content rows per zone type ─────────────────────────────
 	PlayerZoneContentRows    []ZoneContentRowSave `json:"playerZoneContentRows,omitempty"`
@@ -83,6 +84,7 @@ type SettingsFile struct {
 func NewSettingsFile() *SettingsFile {
 	return &SettingsFile{
 		TemplateName:                 "Custom Template",
+		GameMode:                     "Classic",
 		MapSize:                      160,
 		PlayerCount:                  2,
 		PlayerZoneCastles:            1,

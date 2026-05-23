@@ -66,7 +66,7 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 					if path == "" {
 						path = "(unsaved)"
 					}
-					if this.state.IsDirty() {
+					if this.state.IsUnsaved() {
 						path += " *"
 					}
 					label := material.Body2(theme, "File: "+path)

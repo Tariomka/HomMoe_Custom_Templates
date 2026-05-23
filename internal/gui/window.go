@@ -25,12 +25,11 @@ type Window struct {
 }
 
 func NewWindow() *Window {
-	window := Window{state: components.NewUiState()}
+	window := Window{state: components.NewUIState()}
 	window.toolbar = components.NewToolbar(window.state, window.reset)
 	window.tabs = []*components.Tab{
-		components.NewTab("Map Setup", components.NewBasicSetupPanel(window.state)),
-		components.NewTab("Generation Options", components.NewGenerationPanel(window.state)),
-		components.NewTab("Game Rules", components.NewRulesPanel(window.state)),
+		components.NewTab("General", components.NewGeneralPanel(window.state)),
+		components.NewTab("Layout", components.NewLayoutPanel(window.state)),
 		components.NewTab("Zone Content", components.NewZoneContentPanel(window.state)),
 		components.NewTab("Bonuses & Bans", components.NewBonusesPanel(window.state)),
 	}
@@ -42,55 +41,73 @@ func NewWindow() *Window {
 
 func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	this.save()
-
-	this.toolbar.HandleClicks(gtx)
-	this.previewPanel.HandleClicks(gtx)
-	this.footerPanel.HandleClicks(gtx)
+	this.handleClicks(gtx)
 
 	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
 
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(widgets.NewTitleBarWidget(theme, "⚔  Olden Era — Template Generator")),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
+			layout.Rigid(widgets.NewTitleBarWidget(theme, "Heroes: Olden Era — Custom Template Editor")),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 			layout.Rigid(this.toolbar.GetWidget(theme)),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 			layout.Rigid(this.getTabsWidget(gtx, theme)),
-			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, widgets.NewPanelWidget(unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, this.tabs[this.selectedTab].GetPanelWidget(theme))
-					})),
-					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
-						gtx.Constraints.Max.X = gtx.Dp(unit.Dp(440))
-						return this.previewPanel.GetPanelWidget(theme)(gtx)
-					}),
-				)
-			}),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-			layout.Rigid(this.footerPanel.GetPanelWidget(theme)),
-		)
+			layout.Flexed(1, this.getPanelsWidget(theme)),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+			layout.Rigid(this.footerPanel.GetPanelWidget(theme)))
 	})
 }
 
 func (this *Window) getTabsWidget(gtx layout.Context, theme *material.Theme) layout.Widget {
-	for i, tab := range this.tabs {
-		if tab.IsTabClicked(gtx) && this.selectedTab != i {
-			this.selectedTab = i
-			for i, t := range this.tabs {
-				t.SetSelected(this.selectedTab == i)
-			}
-		}
-	}
-	children := make([]layout.FlexChild, 0, len(this.tabs))
+	this.updateTabs(gtx)
+
+	children := make([]layout.FlexChild, 0)
 	for _, tab := range this.tabs {
 		children = append(children, layout.Rigid(tab.GetWidget(theme)))
 	}
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
 	}
+}
+
+func (this *Window) getPanelsWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Flexed(1, widgets.NewPanelWidget(unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
+				return layout.UniformInset(unit.Dp(10)).Layout(gtx, this.getSelectedPanelWidget(theme))
+			})),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
+				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(440))
+				return this.previewPanel.GetPanelWidget(theme)(gtx)
+			}))
+	}
+}
+
+func (this *Window) getSelectedPanelWidget(theme *material.Theme) layout.Widget {
+	return this.tabs[this.selectedTab].GetPanelWidget(theme)
+}
+
+func (this *Window) updateTabs(gtx layout.Context) {
+	for i, tab := range this.tabs {
+		if tab.IsTabClicked(gtx) && this.selectedTab != i {
+			this.selectedTab = i
+			this.updateTabSelection()
+		}
+	}
+}
+
+func (this *Window) updateTabSelection() {
+	for i, tab := range this.tabs {
+		tab.SetSelected(this.selectedTab == i)
+	}
+}
+
+func (this *Window) handleClicks(gtx layout.Context) {
+	this.toolbar.HandleClicks(gtx)
+	this.previewPanel.HandleClicks(gtx)
+	this.footerPanel.HandleClicks(gtx)
 }
 
 func (this *Window) save() {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
@@ -163,7 +164,7 @@ func StripNearCastleRules(items []template.MandatoryContentItem) []template.Mand
 }
 
 func contentWithFootholdAndRows(
-	settings *models.GeneratorSettings,
+	settings *generator.GeneratorSettings,
 	castleCount int,
 	rows []template.MandatoryContentItem,
 ) []template.MandatoryContentItem {
@@ -176,12 +177,12 @@ func contentWithFootholdAndRows(
 }
 
 // BuildPlayerZoneMandatoryContent returns the mandatory content list for a player spawn zone.
-func BuildPlayerZoneMandatoryContent(settings *models.GeneratorSettings) []template.MandatoryContentItem {
+func BuildPlayerZoneMandatoryContent(settings *generator.GeneratorSettings) []template.MandatoryContentItem {
 	return contentWithFootholdAndRows(settings, settings.ZoneCfg.PlayerZoneCastles, settings.PlayerZoneMandatoryContent)
 }
 
 // BuildLowNeutralMandatoryContent returns mandatory content for a low-quality neutral zone.
-func BuildLowNeutralMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+func BuildLowNeutralMandatoryContent(settings *generator.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
 	rows := settings.LowNeutralMandatoryContent
 	if castleCount == 0 {
 		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
@@ -190,7 +191,7 @@ func BuildLowNeutralMandatoryContent(settings *models.GeneratorSettings, castleC
 }
 
 // BuildMediumNeutralMandatoryContent returns mandatory content for a medium-quality neutral zone.
-func BuildMediumNeutralMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+func BuildMediumNeutralMandatoryContent(settings *generator.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
 	rows := settings.MediumNeutralMandatoryContent
 	if castleCount == 0 {
 		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
@@ -199,7 +200,7 @@ func BuildMediumNeutralMandatoryContent(settings *models.GeneratorSettings, cast
 }
 
 // BuildHighNeutralMandatoryContent returns mandatory content for a high-quality neutral zone.
-func BuildHighNeutralMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+func BuildHighNeutralMandatoryContent(settings *generator.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
 	rows := settings.HighNeutralMandatoryContent
 	if castleCount == 0 {
 		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
@@ -209,7 +210,7 @@ func BuildHighNeutralMandatoryContent(settings *models.GeneratorSettings, castle
 
 // BuildHubZoneMandatoryContent returns mandatory content for the central
 // hub zone of a Hub-and-Spoke layout
-func BuildHubZoneMandatoryContent(settings *models.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
+func BuildHubZoneMandatoryContent(settings *generator.GeneratorSettings, castleCount int) []template.MandatoryContentItem {
 	rows := settings.HubZoneMandatoryContent
 	if castleCount == 0 {
 		rows = StripNearCastleRules(append([]template.MandatoryContentItem(nil), rows...))
@@ -217,7 +218,7 @@ func BuildHubZoneMandatoryContent(settings *models.GeneratorSettings, castleCoun
 	return contentWithFootholdAndRows(settings, castleCount, rows)
 }
 
-func BuildAllContentCountLimits(settings *models.GeneratorSettings) []template.ContentCountLimit {
+func BuildAllContentCountLimits(settings *generator.GeneratorSettings) []template.ContentCountLimit {
 	sidLimits := []template.ContentLimit{
 		{SID: "black_tower", MaxCount: 0},
 		{SID: constants.ContentIds.Fountain.Sid, MaxCount: 2},

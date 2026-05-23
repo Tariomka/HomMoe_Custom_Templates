@@ -66,7 +66,7 @@ func (this *BonusesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 
 func (this *BonusesPanel) LoadFromState() {
 	settings := this.state.GetSettingsFile()
-	this.bonusesEdit.SetText(settings.BonusesJson)
+	this.bonusesEdit.SetText(settings.BonusesJSON)
 	this.bannedItemsEdit.SetText(settings.BannedItems)
 	this.bannedMagicsEdit.SetText(settings.BannedMagics)
 	this.valueOverrideEdit.SetText(settings.ValueOverridesText)
@@ -74,7 +74,7 @@ func (this *BonusesPanel) LoadFromState() {
 
 func (this *BonusesPanel) SaveToState() {
 	this.state.UpdateState(func(settings *models.SettingsFile) {
-		settings.BonusesJson = normaliseLines(this.bonusesEdit.Text())
+		settings.BonusesJSON = normaliseLines(this.bonusesEdit.Text())
 		settings.BannedItems = normaliseLines(this.bannedItemsEdit.Text())
 		settings.BannedMagics = normaliseLines(this.bannedMagicsEdit.Text())
 		settings.ValueOverridesText = normaliseLines(this.valueOverrideEdit.Text())

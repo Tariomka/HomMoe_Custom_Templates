@@ -8,11 +8,11 @@ import "github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 // CLI build one of these and hand it to services.Generate.
 type GeneratorSettings struct {
 	TemplateName string
-	GameMode     string // "Classic" (only mode currently emitted; SingleHero reserved)
+	GameMode     string // "Classic"/"SingleHero"
 	PlayerCount  int    // 1..8
 	MapSize      int    // raw map size in tiles (e.g. 160). sizeX = sizeZ = MapSize.
 
-	HeroSettings *HeroSettings
+	HeroSettings HeroSettings
 
 	NoDirectPlayerConnections     bool // isolate player zones from each other
 	RandomPortals                 bool
@@ -56,7 +56,7 @@ func NewGeneratorSettings() *GeneratorSettings {
 		GameMode:              "Classic",
 		PlayerCount:           2,
 		MapSize:               160,
-		HeroSettings:          &HeroSettings{HeroCountMin: 4, HeroCountMax: 8, HeroCountIncrement: 1},
+		HeroSettings:          HeroSettings{HeroCountMin: 4, HeroCountMax: 8, HeroCountIncrement: 1},
 		SpawnRemoteFootholds:  true,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,

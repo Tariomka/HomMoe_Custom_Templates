@@ -21,7 +21,6 @@ func NewLabeledRowWidget(theme *material.Theme, label string, labelWidthPixels i
 				label.TextSize = unit.Sp(13)
 				return label.Layout(gtx)
 			}),
-			layout.Flexed(1, control),
-		)
+			layout.Flexed(1, control))
 	}
 }

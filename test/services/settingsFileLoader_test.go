@@ -50,7 +50,7 @@ func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
 	sf.BannedItems = "x"
 	sf.BannedMagics = "y"
 	sf.ValueOverridesText = "z"
-	sf.BonusesJson = "StartingWood|start_hero|7|"
+	sf.BonusesJSON = "StartingWood|start_hero|7|"
 	sf.PlayerZoneContentRows = []models.ZoneContentRowSave{
 		{Sid: "mine_gold", Count: 2, IsMine: true},
 	}
@@ -62,7 +62,7 @@ func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
 	if gs.BannedItems != "x" || gs.BannedMagics != "y" || gs.ValueOverridesText != "z" {
 		t.Errorf("banned/overrides not propagated: %+v", gs)
 	}
-	if len(gs.Bonuses) != 1 || gs.Bonuses[0].PresetType != models.BonusStartingWood {
+	if len(gs.Bonuses) != 1 || gs.Bonuses[0].PresetType != generator.BonusStartingWood {
 		t.Errorf("bonuses not parsed: %+v", gs.Bonuses)
 	}
 	if len(gs.PlayerZoneMandatoryContent) != 2 {

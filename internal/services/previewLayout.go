@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 // PreviewZone is one zone laid out on the preview canvas.
@@ -59,7 +59,7 @@ func canvasScale(side float64) float64 { return side / csCanvasSide }
 // GeneratorRing stamps; Random scatters zones using the GeneratorPosition
 // stamps with hard-floor and edge-clearance correction passes; all other
 // topologies fall back to the classic ring / hub-and-spoke renderer.
-func BuildPreviewLayout(template *models.RmgTemplate, topology models.MapTopology, side float64) PreviewLayout {
+func BuildPreviewLayout(template *template.RmgTemplateModel, topology generator.MapTopology, side float64) PreviewLayout {
 	layout := PreviewLayout{Positions: map[string]image.Point{}}
 	if template == nil || len(template.Variants) == 0 {
 		return layout
@@ -142,7 +142,7 @@ func BuildPreviewLayout(template *models.RmgTemplate, topology models.MapTopolog
 	return layout
 }
 
-func stripFirstClusterIfTwo(zones []models.RmgZone, conns []models.RmgConnection) ([]models.RmgZone, []models.RmgConnection) {
+func stripFirstClusterIfTwo(zones []template.Zone, conns []template.Connection) ([]template.Zone, []template.Connection) {
 	n := len(zones)
 	idx := make(map[string]int, n)
 	for i, z := range zones {
@@ -166,7 +166,7 @@ func stripFirstClusterIfTwo(zones []models.RmgZone, conns []models.RmgConnection
 		compID[i] = -1
 	}
 	var comps [][]int
-	for start := 0; start < n; start++ {
+	for start := range n {
 		if compID[start] >= 0 {
 			continue
 		}
@@ -193,7 +193,7 @@ func stripFirstClusterIfTwo(zones []models.RmgZone, conns []models.RmgConnection
 	for _, i := range comps[0] {
 		keep[i] = true
 	}
-	keptZones := make([]models.RmgZone, 0, len(comps[0]))
+	keptZones := make([]template.Zone, 0, len(comps[0]))
 	keptNames := make(map[string]bool, len(comps[0]))
 	for i, z := range zones {
 		if keep[i] {
@@ -201,7 +201,7 @@ func stripFirstClusterIfTwo(zones []models.RmgZone, conns []models.RmgConnection
 			keptNames[z.Name] = true
 		}
 	}
-	keptConns := make([]models.RmgConnection, 0, len(conns))
+	keptConns := make([]template.Connection, 0, len(conns))
 	for _, c := range conns {
 		if keptNames[c.From] && keptNames[c.To] {
 			keptConns = append(keptConns, c)
@@ -214,7 +214,7 @@ func isStructuralIgnored(connectionType string) bool {
 	return connectionType == "Proximity" || connectionType == "Portal"
 }
 
-func orderZonesByZeroAngle(zones []models.RmgZone, zeroAngleZone string) []models.RmgZone {
+func orderZonesByZeroAngle(zones []template.Zone, zeroAngleZone string) []template.Zone {
 	if zeroAngleZone == "" {
 		return zones
 	}
@@ -228,13 +228,13 @@ func orderZonesByZeroAngle(zones []models.RmgZone, zeroAngleZone string) []model
 	if pivot <= 0 {
 		return zones
 	}
-	out := make([]models.RmgZone, 0, len(zones))
+	out := make([]template.Zone, 0, len(zones))
 	out = append(out, zones[pivot:]...)
 	out = append(out, zones[:pivot]...)
 	return out
 }
 
-func allHavePosition(zones []models.RmgZone) bool {
+func allHavePosition(zones []template.Zone) bool {
 	for _, z := range zones {
 		if z.GeneratorPosition == nil {
 			return false
@@ -243,7 +243,7 @@ func allHavePosition(zones []models.RmgZone) bool {
 	return true
 }
 
-func allHaveRing(zones []models.RmgZone) bool {
+func allHaveRing(zones []template.Zone) bool {
 	for _, z := range zones {
 		if z.GeneratorRing == nil {
 			return false
@@ -252,9 +252,9 @@ func allHaveRing(zones []models.RmgZone) bool {
 	return true
 }
 
-func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side float64) {
-	n := len(zones)
-	if n == 0 {
+func layoutBalancedRings(layout *PreviewLayout, zones []template.Zone, side float64) {
+	zoneCount := len(zones)
+	if zoneCount == 0 {
 		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
 		return
 	}
@@ -265,7 +265,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	cx := side / 2.0
 	cy := side / 2.0
 
-	if n == 1 {
+	if zoneCount == 1 {
 		layout.ZoneRadius = int(math.Round(zoneRadiusMax))
 		layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
 		return
@@ -295,7 +295,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	}
 
 	ringIndices := make([][]int, ringCount)
-	ringLabel := make([]int, n)
+	ringLabel := make([]int, zoneCount)
 	for i, z := range zones {
 		r := tierToRing[*z.GeneratorRing]
 		ringLabel[i] = r
@@ -307,20 +307,20 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	assignRingRadii := func(zr float64) []float64 {
 		mc := 2.0*zr + minGap
 		radii := make([]float64, ringCount)
-		for r := 0; r < ringCount; r++ {
-			cnt := len(ringIndices[r])
-			natural := drawRadius * float64(r+1) / float64(ringCount)
+		for ringIndex := range ringCount {
+			cnt := len(ringIndices[ringIndex])
+			natural := drawRadius * float64(ringIndex+1) / float64(ringCount)
 			withinRing := 0.0
 			if cnt >= 2 {
 				withinRing = mc / (2.0 * math.Sin(math.Pi/float64(cnt)))
-			} else if cnt == 1 && r > 0 {
+			} else if cnt == 1 && ringIndex > 0 {
 				withinRing = mc
 			}
 			afterPrev := 0.0
-			if r > 0 {
-				afterPrev = radii[r-1] + mc
+			if ringIndex > 0 {
+				afterPrev = radii[ringIndex-1] + mc
 			}
-			radii[r] = math.Max(natural, math.Max(withinRing, afterPrev))
+			radii[ringIndex] = math.Max(natural, math.Max(withinRing, afterPrev))
 		}
 		return radii
 	}
@@ -328,7 +328,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	// Binary-search the largest zone radius that keeps the outer ring inside
 	// the available draw radius.
 	lo, hi := 8.0, zoneRadiusMax
-	for iter := 0; iter < 32; iter++ {
+	for range 32 {
 		mid := (lo + hi) / 2.0
 		r2 := assignRingRadii(mid)
 		if r2[ringCount-1] <= drawRadius {
@@ -343,13 +343,13 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 
 	rawCx, rawCy := positionCentroid(zones)
 
-	for r := 0; r < ringCount; r++ {
-		group := ringIndices[r]
+	for ringIndex := range ringCount {
+		group := ringIndices[ringIndex]
 		cnt := len(group)
 		if cnt == 0 {
 			continue
 		}
-		if cnt == 1 && r == 0 {
+		if cnt == 1 && ringIndex == 0 {
 			layout.Positions[zones[group[0]].Name] = image.Pt(int(cx), int(cy))
 			continue
 		}
@@ -361,7 +361,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 				positionAngle(zones[sorted[j]], rawCx, rawCy)
 		})
 		firstAngle := positionAngle(zones[sorted[0]], rawCx, rawCy)
-		canvasRadius := ringRadii[r]
+		canvasRadius := ringRadii[ringIndex]
 		for j, idx := range sorted {
 			angle := firstAngle + 2.0*math.Pi*float64(j)/float64(cnt)
 			x := cx + math.Cos(angle)*canvasRadius
@@ -371,7 +371,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []models.RmgZone, side flo
 	}
 }
 
-func layoutScatter(layout *PreviewLayout, zones []models.RmgZone, conns []models.RmgConnection, side float64) {
+func layoutScatter(layout *PreviewLayout, zones []template.Zone, conns []template.Connection, side float64) {
 	n := len(zones)
 	if n == 0 {
 		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
@@ -622,7 +622,7 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 // Used for structured topologies (Default, HubAndSpoke, Chain, SharedWeb).
 // Multi-hub "Hub-*" templates fan their spokes out from each cluster centre;
 // otherwise zones land on a single outer ring with an optional centre hub.
-func layoutRingOrHub(layout *PreviewLayout, zones []models.RmgZone, conns []models.RmgConnection, side float64) {
+func layoutRingOrHub(layout *PreviewLayout, zones []template.Zone, conns []template.Connection, side float64) {
 	n := len(zones)
 	scale := canvasScale(side)
 	margin := csMargin * scale
@@ -714,7 +714,7 @@ func layoutRingOrHub(layout *PreviewLayout, zones []models.RmgZone, conns []mode
 	}
 }
 
-func layoutMultiHub(layout *PreviewLayout, zones []models.RmgZone, conns []models.RmgConnection, hubIndices []int, side float64) {
+func layoutMultiHub(layout *PreviewLayout, zones []template.Zone, conns []template.Connection, hubIndices []int, side float64) {
 	scale := canvasScale(side)
 	margin := csMargin * scale
 	minGap := csMinGap * scale
@@ -816,7 +816,7 @@ func layoutMultiHub(layout *PreviewLayout, zones []models.RmgZone, conns []model
 // findImplicitHubName returns the single non-player zone connected (Direct
 // edges) to every player zone, or "" if no such zone exists. Used to render
 // shared hubs that were not literally named "Hub".
-func findImplicitHubName(zones []models.RmgZone, conns []models.RmgConnection) string {
+func findImplicitHubName(zones []template.Zone, conns []template.Connection) string {
 	playerNames := map[string]bool{}
 	for _, z := range zones {
 		if strings.HasPrefix(z.Name, "Spawn-") {
@@ -882,11 +882,21 @@ func ExtractZoneLetter(zoneName string) string {
 	return zoneName
 }
 
-// ClassifyZoneTier guesses a neutral zone's tier from its layout name and
-// falls back to keyword matching on the zone name
-func ClassifyZoneTier(zone models.RmgZone) int {
+// ClassifyZoneTier guesses a neutral zone's tier from its content pools,
+// layout name, and zone name (in order of reliability).
+func ClassifyZoneTier(zone template.Zone) int {
 	if strings.HasPrefix(zone.Name, "Spawn-") {
 		return 0
+	}
+	// Most reliable for templates generated by this tool: the guarded content
+	// pool names embed the encounter tier (t2/t3/t4/t5). High-tier zones share
+	// the "treasure" layout with medium-tier ones, so layout alone cannot
+	// distinguish them.
+	if tier := tierFromContentPools(zone.GuardedContentPool); tier > 0 {
+		return tier
+	}
+	if tier := tierFromContentPools(zone.UnguardedContentPool); tier > 0 {
+		return tier
 	}
 	layout := strings.ToLower(zone.Layout)
 	switch {
@@ -907,6 +917,29 @@ func ClassifyZoneTier(zone models.RmgZone) int {
 		return 3
 	}
 	return 1
+}
+
+// tierFromContentPools scans pool SIDs for tier markers ("_t2_".."_t5_") and
+// returns the highest tier found mapped to preview tiers: t4/t5 → 3 (gold),
+// t3 → 2 (silver), t2 → 1 (bronze). Returns 0 if no marker is present.
+func tierFromContentPools(pools []string) int {
+	best := 0
+	for _, p := range pools {
+		lp := strings.ToLower(p)
+		var t int
+		switch {
+		case strings.Contains(lp, "_t5_") || strings.Contains(lp, "_t4_"):
+			t = 3
+		case strings.Contains(lp, "_t3_"):
+			t = 2
+		case strings.Contains(lp, "_t2_"):
+			t = 1
+		}
+		if t > best {
+			best = t
+		}
+	}
+	return best
 }
 
 func connectedComponents(n int, adj [][]int) [][]int {
@@ -938,7 +971,7 @@ func connectedComponents(n int, adj [][]int) [][]int {
 	return comps
 }
 
-func positionCentroid(zones []models.RmgZone) (float64, float64) {
+func positionCentroid(zones []template.Zone) (float64, float64) {
 	if len(zones) == 0 {
 		return 0.5, 0.5
 	}
@@ -951,7 +984,7 @@ func positionCentroid(zones []models.RmgZone) (float64, float64) {
 	return sx / float64(len(zones)), sy / float64(len(zones))
 }
 
-func positionAngle(z models.RmgZone, rawCx, rawCy float64) float64 {
+func positionAngle(z template.Zone, rawCx, rawCy float64) float64 {
 	p := *z.GeneratorPosition
 	return math.Atan2(p[1]-rawCy, p[0]-rawCx)
 }

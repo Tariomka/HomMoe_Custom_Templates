@@ -16,7 +16,7 @@ func NewSectionWidget(theme *material.Theme, title string, rows []layout.Widget)
 					children := make([]layout.FlexChild, 0, len(rows)*2)
 					for i, rowWidget := range rows {
 						if i > 0 {
-							children = append(children, layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout))
+							children = append(children, layout.Rigid(NewVerticalSpacerWidget(4)))
 						}
 						children = append(children, layout.Rigid(rowWidget))
 					}

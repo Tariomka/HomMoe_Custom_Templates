@@ -11,7 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 )
 
-// drawCenteredMessage renders a Body2 label centered inside the given canvas
+// NewCenteredMessageWidget renders a Body2 label centered inside the given canvas
 // area. Uses the same material.Label approach as the (former) empty-state
 // view so text renders reliably (unlike drawCenteredText for longer strings).
 func NewCenteredMessageWidget(theme *material.Theme, message string, innerCanvasSize, outerCanvasSize image.Point) layout.Widget {
