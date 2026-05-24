@@ -106,7 +106,7 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 // LoadFromState pulls all five tier lists out of the SettingsFile,
 // caches them, and shows the currently-selected tier.
 func (this *ZoneContentPanel) LoadFromState() {
-	settings := this.state.GetSettingsFile()
+	settings := this.state.GetStateData()
 	this.tierRows[tierPlayer] = append([]models.ZoneContentRowSave(nil), settings.PlayerZoneContentRows...)
 	this.tierRows[tierLow] = append([]models.ZoneContentRowSave(nil), settings.LowNeutralContentRows...)
 	this.tierRows[tierMedium] = append([]models.ZoneContentRowSave(nil), settings.MediumNeutralContentRows...)
@@ -124,7 +124,7 @@ func (this *ZoneContentPanel) LoadFromState() {
 // SaveToState collects every tier's rows back into the SettingsFile.
 func (this *ZoneContentPanel) SaveToState() {
 	this.cacheCurrentSections()
-	this.state.UpdateState(func(settings *models.SettingsFile) {
+	this.state.UpdateState(func(settings *models.EditorStateModel) {
 		settings.PlayerZoneContentRows = cloneRows(this.tierRows[tierPlayer])
 		settings.LowNeutralContentRows = cloneRows(this.tierRows[tierLow])
 		settings.MediumNeutralContentRows = cloneRows(this.tierRows[tierMedium])

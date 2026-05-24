@@ -15,8 +15,8 @@ import (
 )
 
 type State struct {
-	// Persistent settings file model. Updated continuously from widgets.
-	settings *models.SettingsFile
+	// Persistent stateModel file model. Updated continuously from widgets.
+	stateModel *models.EditorStateModel
 
 	// File state
 	currentPath string
@@ -30,7 +30,7 @@ type State struct {
 }
 
 func NewUIState() *State {
-	state := &State{settings: models.NewSettingsFile()}
+	state := &State{stateModel: models.NewEditorStateModel()}
 	state.outputPath.SingleLine = true
 
 	templateDir := helpers.FindOldenEraTemplatesDir(false)
@@ -47,8 +47,8 @@ func (this *State) GetStatus() (msg string, isErr bool) {
 	return this.statusMsg, this.statusErr
 }
 
-func (this *State) GetSettingsFile() *models.SettingsFile {
-	return this.settings
+func (this *State) GetStateData() models.EditorStateModel {
+	return *this.stateModel
 }
 
 func (this *State) GetCurrentPath() string {
@@ -68,7 +68,7 @@ func (this *State) GetOutputPath() string {
 }
 
 func (this *State) Reset() {
-	this.settings = models.NewSettingsFile()
+	this.stateModel = models.NewEditorStateModel()
 	this.currentPath = ""
 	this.unsaved = false
 	this.setStatus("New settings file.", false)
@@ -102,7 +102,7 @@ func (this *State) Load() {
 		return
 	}
 
-	this.settings = loaded
+	this.stateModel = loaded
 	this.currentPath = path
 	this.unsaved = false
 	this.setStatus("Loaded "+path, false)
@@ -110,11 +110,11 @@ func (this *State) Load() {
 
 func (this *State) Save() {
 	if this.currentPath == "" {
-		this.SaveAs(this.settings.TemplateName)
+		this.SaveAs(this.stateModel.TemplateName)
 		return
 	}
 
-	if err := services.SaveSettingsFile(this.currentPath, this.settings); err != nil {
+	if err := services.SaveSettingsFile(this.currentPath, this.stateModel); err != nil {
 		this.setStatus("Save failed: "+err.Error(), true)
 		return
 	}
@@ -135,7 +135,7 @@ func (this *State) SaveAs(templateName string) {
 		return
 	}
 
-	if err := services.SaveSettingsFile(path, this.settings); err != nil {
+	if err := services.SaveSettingsFile(path, this.stateModel); err != nil {
 		this.setStatus("Save failed: "+err.Error(), true)
 		return
 	}
@@ -145,7 +145,7 @@ func (this *State) SaveAs(templateName string) {
 }
 
 func (this *State) Generate() {
-	generatorSettings := services.SettingsToGenerator(this.GetSettingsFile())
+	generatorSettings := services.SettingsToGenerator(this.stateModel)
 	if generatorSettings.TemplateName == "" {
 		this.setStatus("Template name is required.", true)
 		return
@@ -200,8 +200,9 @@ func (this *State) PickOutputDir() {
 	this.outputPath.SetText(dir)
 }
 
-func (this *State) UpdateState(updateFunc func(*models.SettingsFile)) {
-	updateFunc(this.settings)
+func (this *State) UpdateState(updateFunc func(*models.EditorStateModel)) {
+	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
+	updateFunc(this.stateModel)
 }
 
 func (this *State) setStatus(msg string, isErr bool) {

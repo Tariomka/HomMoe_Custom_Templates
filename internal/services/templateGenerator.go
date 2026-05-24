@@ -478,6 +478,7 @@ func buildSpawnZone(letter, player string, ringConns []string, castleCount int, 
 		},
 	}
 	for i := 1; i < castleCount; i++ {
+		// TODO: add player own castles
 		mo := template.MainObject{
 			Type: "City", GuardChance: 1, GuardValue: scaleNeutralGuardValue(2500, tuning), GuardWeeklyIncrement: 0.10,
 			BuildingsConstructionSid: "poor_buildings_construction",

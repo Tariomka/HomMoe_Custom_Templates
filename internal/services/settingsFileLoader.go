@@ -9,27 +9,22 @@ import (
 )
 
 // LoadSettingsFile reads a .gen.json file and returns the parsed SettingsFile.
-func LoadSettingsFile(path string) (*models.SettingsFile, error) {
+func LoadSettingsFile(path string) (*models.EditorStateModel, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	settingsFile := models.NewSettingsFile()
+
+	settingsFile := models.NewEditorStateModel()
 	if err := json.Unmarshal(data, settingsFile); err != nil {
 		return nil, err
 	}
-	// One-way legacy upgrade: older .gen.json files used a boolean flag
-	// for the balanced topology. Promote it to Topology = Balanced and
-	// clear the flag so subsequent saves drop it from disk.
-	if settingsFile.ExperimentalBalancedZonePlacement {
-		settingsFile.Topology = generator.TopologyBalanced
-		settingsFile.ExperimentalBalancedZonePlacement = false
-	}
+
 	return settingsFile, nil
 }
 
 // SaveSettingsFile writes a SettingsFile to disk as indented JSON.
-func SaveSettingsFile(path string, settingsFile *models.SettingsFile) error {
+func SaveSettingsFile(path string, settingsFile *models.EditorStateModel) error {
 	data, err := json.MarshalIndent(settingsFile, "", "  ")
 	if err != nil {
 		return err
@@ -39,83 +34,83 @@ func SaveSettingsFile(path string, settingsFile *models.SettingsFile) error {
 
 // SettingsToGenerator translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
-func SettingsToGenerator(settingsFile *models.SettingsFile) *generator.GeneratorSettings {
+func SettingsToGenerator(editorState *models.EditorStateModel) *generator.GeneratorSettings {
 	generatorSettings := generator.NewGeneratorSettings()
-	generatorSettings.TemplateName = settingsFile.TemplateName
-	generatorSettings.GameMode = settingsFile.GameMode
-	generatorSettings.PlayerCount = settingsFile.PlayerCount
-	generatorSettings.MapSize = settingsFile.MapSize
-	generatorSettings.Topology = settingsFile.Topology
-	generatorSettings.GenerateRoads = settingsFile.GenerateRoads
-	generatorSettings.RandomPortals = settingsFile.RandomPortals
-	generatorSettings.SpawnRemoteFootholds = settingsFile.SpawnRemoteFootholds
-	generatorSettings.NoDirectPlayerConnections = settingsFile.NoDirectPlayerConn
-	generatorSettings.MaxPortalConnections = settingsFile.MaxPortalConnections
-	generatorSettings.MinNeutralZonesBetweenPlayers = settingsFile.MinNeutralZonesBetweenPlayers
-	generatorSettings.MatchPlayerCastleFactions = settingsFile.MatchPlayerCastleFactions
-	generatorSettings.BannedItems = settingsFile.BannedItems
-	generatorSettings.BannedMagics = settingsFile.BannedMagics
-	generatorSettings.ValueOverridesText = settingsFile.ValueOverridesText
-	generatorSettings.Bonuses = generator.ParseBonusesJSON(settingsFile.BonusesJSON)
-	generatorSettings.PlayerZoneMandatoryContent = RowsToMandatoryContent(settingsFile.PlayerZoneContentRows)
-	generatorSettings.LowNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.LowNeutralContentRows)
-	generatorSettings.MediumNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.MediumNeutralContentRows)
-	generatorSettings.HighNeutralMandatoryContent = RowsToMandatoryContent(settingsFile.HighNeutralContentRows)
-	generatorSettings.HubZoneMandatoryContent = RowsToMandatoryContent(settingsFile.HubZoneContentRows)
-	generatorSettings.FactionLawsExpPercent = settingsFile.FactionLawsExpPercent
-	generatorSettings.AstrologyExpPercent = settingsFile.AstrologyExpPercent
+	generatorSettings.TemplateName = editorState.TemplateName
+	generatorSettings.GameMode = editorState.GameMode
+	generatorSettings.PlayerCount = editorState.PlayerCount
+	generatorSettings.MapSize = editorState.MapSize
+	generatorSettings.Topology = editorState.Topology
+	generatorSettings.GenerateRoads = editorState.GenerateRoads
+	generatorSettings.RandomPortals = editorState.RandomPortals
+	generatorSettings.SpawnRemoteFootholds = editorState.SpawnRemoteFootholds
+	generatorSettings.NoDirectPlayerConnections = editorState.NoDirectPlayerConn
+	generatorSettings.MaxPortalConnections = editorState.MaxPortalConnections
+	generatorSettings.MinNeutralZonesBetweenPlayers = editorState.MinNeutralZonesBetweenPlayers
+	generatorSettings.MatchPlayerCastleFactions = editorState.MatchPlayerCastleFactions
+	generatorSettings.BannedItems = editorState.BannedItems
+	generatorSettings.BannedMagics = editorState.BannedMagics
+	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
+	generatorSettings.Bonuses = generator.ParseBonusesJSON(editorState.BonusesJSON)
+	generatorSettings.PlayerZoneMandatoryContent = RowsToMandatoryContent(editorState.PlayerZoneContentRows)
+	generatorSettings.LowNeutralMandatoryContent = RowsToMandatoryContent(editorState.LowNeutralContentRows)
+	generatorSettings.MediumNeutralMandatoryContent = RowsToMandatoryContent(editorState.MediumNeutralContentRows)
+	generatorSettings.HighNeutralMandatoryContent = RowsToMandatoryContent(editorState.HighNeutralContentRows)
+	generatorSettings.HubZoneMandatoryContent = RowsToMandatoryContent(editorState.HubZoneContentRows)
+	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
+	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent
 
 	generatorSettings.ZoneCfg = generator.ZoneConfiguration{
-		NeutralZoneCount:            settingsFile.NeutralZoneCount,
-		PlayerZoneCastles:           settingsFile.PlayerZoneCastles,
-		NeutralZoneCastles:          settingsFile.NeutralZoneCastles,
-		ResourceDensityPercent:      settingsFile.EffectiveResourceDensity(),
-		StructureDensityPercent:     settingsFile.EffectiveStructureDensity(),
-		NeutralStackStrengthPercent: settingsFile.NeutralStackStrengthPercent,
-		BorderGuardStrengthPercent:  settingsFile.BorderGuardStrengthPercent,
-		HubZoneSize:                 settingsFile.HubZoneSize,
-		HubZoneCastles:              settingsFile.HubZoneCastles,
+		NeutralZoneCount:            editorState.NeutralZoneCount,
+		PlayerZoneCastles:           editorState.PlayerZoneCastles,
+		NeutralZoneCastles:          editorState.NeutralZoneCastles,
+		ResourceDensityPercent:      editorState.ResourceDensityPercent,
+		StructureDensityPercent:     editorState.StructureDensityPercent,
+		NeutralStackStrengthPercent: editorState.NeutralStackStrengthPercent,
+		BorderGuardStrengthPercent:  editorState.BorderGuardStrengthPercent,
+		HubZoneSize:                 editorState.HubZoneSize,
+		HubZoneCastles:              editorState.HubZoneCastles,
 		Advanced: generator.AdvancedSettings{
-			Enabled:                    settingsFile.AdvancedMode,
-			NeutralLowNoCastleCount:    settingsFile.NeutralLowNoCastleCount,
-			NeutralLowCastleCount:      settingsFile.NeutralLowCastleCount,
-			NeutralMediumNoCastleCount: settingsFile.NeutralMediumNoCastleCount,
-			NeutralMediumCastleCount:   settingsFile.NeutralMediumCastleCount,
-			NeutralHighNoCastleCount:   settingsFile.NeutralHighNoCastleCount,
-			NeutralHighCastleCount:     settingsFile.NeutralHighCastleCount,
-			PlayerZoneSize:             settingsFile.PlayerZoneSize,
-			NeutralZoneSize:            settingsFile.NeutralZoneSize,
-			GuardRandomization:         settingsFile.GuardRandomization,
+			Enabled:                    editorState.AdvancedMode,
+			NeutralLowNoCastleCount:    editorState.NeutralLowNoCastleCount,
+			NeutralLowCastleCount:      editorState.NeutralLowCastleCount,
+			NeutralMediumNoCastleCount: editorState.NeutralMediumNoCastleCount,
+			NeutralMediumCastleCount:   editorState.NeutralMediumCastleCount,
+			NeutralHighNoCastleCount:   editorState.NeutralHighNoCastleCount,
+			NeutralHighCastleCount:     editorState.NeutralHighCastleCount,
+			PlayerZoneSize:             editorState.PlayerZoneSize,
+			NeutralZoneSize:            editorState.NeutralZoneSize,
+			GuardRandomization:         editorState.GuardRandomization,
 		},
 	}
 
 	generatorSettings.HeroSettings = generator.HeroSettings{
-		HeroCountMin:       settingsFile.HeroCountMin,
-		HeroCountMax:       settingsFile.HeroCountMax,
-		HeroCountIncrement: settingsFile.HeroCountIncrement,
+		HeroCountMin:       editorState.HeroCountMin,
+		HeroCountMax:       editorState.HeroCountMax,
+		HeroCountIncrement: editorState.HeroCountIncrement,
 	}
 
 	generatorSettings.GameEndConditions = &generator.GameEndConditions{
-		VictoryCondition: settingsFile.VictoryCondition,
-		CityHold:         settingsFile.CityHold || settingsFile.VictoryCondition == "win_condition_5",
-		CityHoldDays:     settingsFile.CityHoldDays,
-		LostStartCity:    settingsFile.LostStartCity,
-		LostStartCityDay: settingsFile.LostStartCityDay,
-		LostStartHero:    settingsFile.LostStartHero,
+		VictoryCondition: editorState.VictoryCondition,
+		CityHold:         editorState.CityHold || editorState.VictoryCondition == "win_condition_5",
+		CityHoldDays:     editorState.CityHoldDays,
+		LostStartCity:    editorState.LostStartCity,
+		LostStartCityDay: editorState.LostStartCityDay,
+		LostStartHero:    editorState.LostStartHero,
 	}
 
 	generatorSettings.GladiatorArenaRules = &generator.GladiatorArenaRules{
-		Enabled:        settingsFile.GladiatorArena,
-		DaysDelayStart: settingsFile.GladiatorArenaDaysDelayStart,
-		CountDay:       settingsFile.GladiatorArenaCountDay,
+		Enabled:        editorState.GladiatorArena,
+		DaysDelayStart: editorState.GladiatorArenaDaysDelayStart,
+		CountDay:       editorState.GladiatorArenaCountDay,
 	}
 
 	generatorSettings.TournamentRules = &generator.TournamentRules{
-		Enabled:            settingsFile.Tournament,
-		FirstTournamentDay: settingsFile.TournamentFirstTournamentDay,
-		Interval:           settingsFile.TournamentInterval,
-		PointsToWin:        settingsFile.TournamentPointsToWin,
-		SaveArmy:           settingsFile.TournamentSaveArmy,
+		Enabled:            editorState.Tournament,
+		FirstTournamentDay: editorState.TournamentFirstTournamentDay,
+		Interval:           editorState.TournamentInterval,
+		PointsToWin:        editorState.TournamentPointsToWin,
+		SaveArmy:           editorState.TournamentSaveArmy,
 	}
 
 	return generatorSettings

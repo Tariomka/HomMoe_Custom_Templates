@@ -10,12 +10,12 @@ import (
 )
 
 func TestNewSettingsFile_DefaultsToBalanced(t *testing.T) {
-	s := models.NewSettingsFile()
+	s := models.NewEditorStateModel()
 	assert.Equal(t, generator.TopologyBalanced, s.Topology)
 }
 
 func TestSettingsFile_RoundTrip(t *testing.T) {
-	original := models.NewSettingsFile()
+	original := models.NewEditorStateModel()
 	original.TemplateName = "Round Trip"
 	original.BannedItems = "bad_item_1,bad_item_2"
 	original.BannedMagics = "bad_spell_1"
@@ -31,7 +31,7 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 
 	data, err := json.Marshal(original)
 	assert.NoError(t, err, "marshal")
-	round := &models.SettingsFile{}
+	round := &models.EditorStateModel{}
 	err = json.Unmarshal(data, round)
 	assert.NoError(t, err, "unmarshal")
 

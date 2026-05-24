@@ -1,9 +1,6 @@
 package services_test
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -11,42 +8,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
-// TestLoadSettingsFile_LegacyBalancedFlagUpgradesToTopology verifies the
-// one-way migration of older .gen.json files that used the
-// ExperimentalBalancedZonePlacement boolean.
-func TestLoadSettingsFile_LegacyBalancedFlagUpgradesToTopology(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "legacy.gen.json")
-	legacy := map[string]any{
-		"templateName":                      "Legacy",
-		"experimentalBalancedZonePlacement": true,
-		"topology":                          string(generator.TopologyRandom),
-	}
-	data, err := json.Marshal(legacy)
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
-	}
-	if err := os.WriteFile(path, data, 0o644); err != nil {
-		t.Fatalf("write: %v", err)
-	}
-
-	loaded, err := services.LoadSettingsFile(path)
-	if err != nil {
-		t.Fatalf("LoadSettingsFile: %v", err)
-	}
-	if loaded.Topology != generator.TopologyBalanced {
-		t.Errorf("topology = %q, want %q (legacy upgrade)", loaded.Topology, generator.TopologyBalanced)
-	}
-	if loaded.ExperimentalBalancedZonePlacement {
-		t.Error("legacy flag should be cleared after upgrade")
-	}
-}
-
 // TestSettingsToGenerator_PopulatesNewFields covers the loader paths that
 // translate persisted SettingsFile content rows and bonuses into the
 // GeneratorSettings model used by the template generator.
 func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
-	sf := models.NewSettingsFile()
+	sf := models.NewEditorStateModel()
 	sf.BannedItems = "x"
 	sf.BannedMagics = "y"
 	sf.ValueOverridesText = "z"

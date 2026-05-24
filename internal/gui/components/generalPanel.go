@@ -31,8 +31,8 @@ type GeneralPanel struct {
 
 	// Rules section
 
-	factionLawsXpMultiplier widget.Float
-	astrologyXpMultiplier   widget.Float
+	factionLawXpMultiplier widget.Float
+	astrologyXpMultiplier  widget.Float
 
 	victorySelector *content.DropdownSelector
 
@@ -74,7 +74,7 @@ func NewGeneralPanel(state *State) *GeneralPanel {
 		}()),
 		mapSizeSelector: content.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
-			if state.GetSettingsFile().ExperimentalMapSizes {
+			if state.GetStateData().ExperimentalMapSizes {
 				for _, mapSize := range constants.AllMapSizes {
 					labels = append(labels, mapSize.Label)
 				}
@@ -110,7 +110,7 @@ func (this *GeneralPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 }
 
 func (this *GeneralPanel) LoadFromState() {
-	settings := this.state.GetSettingsFile()
+	settings := this.state.GetStateData()
 
 	this.templateName.SetText(settings.TemplateName)
 	this.playerCount.Value = utils.Normalize(float32(settings.PlayerCount), 2, 8)
@@ -122,8 +122,8 @@ func (this *GeneralPanel) LoadFromState() {
 	this.heroMaximumCount.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
 	this.heroIncrementPerCastle.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 10)
 
-	this.factionLawsXpMultiplier.Value = utils.Normalize(float32(settings.FactionLawsExpPercent), 25, 200)
-	this.astrologyXpMultiplier.Value = utils.Normalize(float32(settings.AstrologyExpPercent), 25, 200)
+	this.factionLawXpMultiplier.Value = utils.Normalize(float32(settings.FactionLawXpPercent), 25, 200)
+	this.astrologyXpMultiplier.Value = utils.Normalize(float32(settings.AstrologyXpPercent), 25, 200)
 
 	this.victorySelector.SelectByName(constants.GetVictoryCondition(settings.VictoryCondition).Label)
 
@@ -148,7 +148,7 @@ func (this *GeneralPanel) LoadFromState() {
 
 func (this *GeneralPanel) SaveToState() {
 	// TODO: check `.Update(gtx)` and on true update the value
-	this.state.UpdateState(func(settings *models.SettingsFile) {
+	this.state.UpdateState(func(settings *models.EditorStateModel) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
 		settings.MapSize = this.getCurrentMapSize().Size
@@ -159,8 +159,8 @@ func (this *GeneralPanel) SaveToState() {
 		settings.HeroCountMax = max(utils.RoundedRange(this.heroMaximumCount.Value, 1, 12), settings.HeroCountMin)
 		settings.HeroCountIncrement = utils.RoundedRange(this.heroIncrementPerCastle.Value, 1, 10)
 
-		settings.FactionLawsExpPercent = utils.RoundedRange(this.factionLawsXpMultiplier.Value, 25, 200)
-		settings.AstrologyExpPercent = utils.RoundedRange(this.astrologyXpMultiplier.Value, 25, 200)
+		settings.FactionLawXpPercent = utils.RoundedRange(this.factionLawXpMultiplier.Value, 25, 200)
+		settings.AstrologyXpPercent = utils.RoundedRange(this.astrologyXpMultiplier.Value, 25, 200)
 
 		settings.VictoryCondition = this.getCurrentVictoryCondition().ID
 
@@ -224,7 +224,7 @@ func (this *GeneralPanel) getRulesWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Rules", []layout.Widget{
 		widgets.NewLabeledRowWidget(
 			theme, "Faction laws exp %", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.factionLawsXpMultiplier, utils.RoundedRangeString(this.factionLawsXpMultiplier.Value, 25, 200)+"%")),
+			widgets.NewLabeledSliderWidget(theme, &this.factionLawXpMultiplier, utils.RoundedRangeString(this.factionLawXpMultiplier.Value, 25, 200)+"%")),
 		widgets.NewLabeledRowWidget(
 			theme, "Astrology exp %", constants.DefaultLabelWidth,
 			widgets.NewLabeledSliderWidget(theme, &this.astrologyXpMultiplier, utils.RoundedRangeString(this.astrologyXpMultiplier.Value, 25, 200)+"%")),
@@ -302,7 +302,7 @@ func (this *GeneralPanel) updateMapSizeSelector(gtx layout.Context) *content.Dro
 		labels = append(labels, mapSize.Label)
 	}
 	this.mapSizeSelector.SetItems(labels)
-	this.mapSizeSelector.SelectByName(constants.GetMapSize(this.state.GetSettingsFile().MapSize).Label)
+	this.mapSizeSelector.SelectByName(constants.GetMapSize(this.state.GetStateData().MapSize).Label)
 
 	return this.mapSizeSelector
 }

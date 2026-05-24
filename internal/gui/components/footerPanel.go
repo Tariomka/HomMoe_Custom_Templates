@@ -12,6 +12,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 )
 
+// TODO: Move footer to preview panel
+
 type FooterPanel struct {
 	btnGenerate     widget.Clickable
 	btnSaveTemplate widget.Clickable
