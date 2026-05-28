@@ -12,6 +12,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
+// TODO: Make generator a class
+// TODO: Use strategy pattern for building topology specific layouts
+// TODO: Split this shit and organize everything
+
 const (
 	connectionsPerZone        = 1
 	defaultGuardRandomization = 0.05
@@ -31,18 +35,6 @@ func roundToDP(v float64, dp int) float64 {
 	return math.Round(v*mul) / mul
 }
 
-func maxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
 func clampInt(v, lo, hi int) int {
 	if v < lo {
 		return lo
@@ -164,7 +156,7 @@ type neutralZonePlan struct {
 
 func buildNeutralZonePlan(settings *generator.GeneratorSettings) []neutralZonePlan {
 	var plans []neutralZonePlan
-	maxNeutral := maxInt(0, len(ZoneLetters)-settings.PlayerCount)
+	maxNeutral := max(0, len(ZoneLetters)-settings.PlayerCount)
 	castleZoneCastleCount := clampInt(settings.ZoneCfg.NeutralZoneCastles, 1, 4)
 
 	add := func(requested int, quality constants.NeutralZoneQuality, castleCount int) {
@@ -208,7 +200,7 @@ type generationTuning struct {
 }
 
 func scaleValue(value, multiplier float64) int {
-	return maxInt(0, int(value*multiplier))
+	return max(0, int(value*multiplier))
 }
 func scaleStructureValue(value float64, t generationTuning) int {
 	return scaleValue(value, t.StructureDensityMultiplier)
@@ -832,11 +824,11 @@ func buildRandomPortalConnections(playerLetters, orderedLetters []string, tuning
 	}
 	rand.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
 
-	limit := minInt(count, maxCount)
+	limit := min(count, maxCount)
 	trueVal := true
 	rule := template.PlacementRule{Type: "Crossroads", Args: []any{}, TargetMin: distNear.Min, TargetMax: distNear.Max, Weight: 2}
 	var conns []template.Connection
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		idx := indices[i]
 		from := orderedLetters[idx]
 		to := orderedLetters[dest[idx]]
@@ -855,7 +847,7 @@ func buildRandomPortalConnections(playerLetters, orderedLetters []string, tuning
 
 func buildNonAdjacentDerangement(count int) []int {
 	dest := make([]int, count)
-	for attempt := 0; attempt < 100; attempt++ {
+	for range 100 {
 		candidates := make([]int, count)
 		for i := range candidates {
 			candidates[i] = i
@@ -863,9 +855,9 @@ func buildNonAdjacentDerangement(count int) []int {
 		rand.Shuffle(len(candidates), func(i, j int) { candidates[i], candidates[j] = candidates[j], candidates[i] })
 		valid := true
 		used := make([]bool, count)
-		for i := 0; i < count; i++ {
+		for i := range count {
 			found := -1
-			for j := 0; j < len(candidates); j++ {
+			for j := range candidates {
 				if used[candidates[j]] {
 					continue
 				}
@@ -876,7 +868,7 @@ func buildNonAdjacentDerangement(count int) []int {
 				}
 			}
 			if found < 0 {
-				for j := 0; j < len(candidates); j++ {
+				for j := range candidates {
 					if !used[candidates[j]] && candidates[j] != i {
 						found = j
 						break
@@ -894,8 +886,8 @@ func buildNonAdjacentDerangement(count int) []int {
 			return dest
 		}
 	}
-	shift := maxInt(1, count/2)
-	for i := 0; i < count; i++ {
+	shift := max(1, count/2)
+	for i := range count {
 		dest[i] = (i + shift) % count
 	}
 	return dest
@@ -913,7 +905,7 @@ func buildVariantDefault(settings *generator.GeneratorSettings, playerLetters []
 
 	ringConnRight := make([]string, n)
 	ringConnLeft := make([]string, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		next := (i + 1) % n
 		if isolate && contains(playerLetters, ordered[i]) && contains(playerLetters, ordered[next]) {
 			continue
@@ -924,7 +916,7 @@ func buildVariantDefault(settings *generator.GeneratorSettings, playerLetters []
 	}
 
 	var zones []template.Zone
-	for i := 0; i < n; i++ {
+	for i := range n {
 		letter := ordered[i]
 		var myConns []string
 		if ringConnLeft[i] != "" {
@@ -967,7 +959,7 @@ func buildVariantChain(settings *generator.GeneratorSettings, playerLetters []st
 	}
 
 	var zones []template.Zone
-	for i := 0; i < n; i++ {
+	for i := range n {
 		letter := ordered[i]
 		var myConns []string
 		if i > 0 && connNames[i-1] != "" {
@@ -2244,7 +2236,7 @@ func buildBalancedChainLetters(playerLetters []string, neutralZones []neutralZon
 	gapCount := len(playerLetters) + 1
 	capacities := make([]int, gapCount)
 	remaining := len(neutralZones)
-	reqInterior := maxInt(0, len(playerLetters)-1) * minSep
+	reqInterior := max(0, len(playerLetters)-1) * minSep
 	if minSep > 0 && len(neutralZones) >= reqInterior {
 		for i := 1; i < gapCount-1; i++ {
 			capacities[i] = minSep
@@ -2254,7 +2246,7 @@ func buildBalancedChainLetters(playerLetters []string, neutralZones []neutralZon
 	// Distribute extra neutrals only into interior gaps so that the first
 	// and last positions of the chain are always player zones. Degenerate cases (0 or 1
 	// player) fall back to even distribution across every gap
-	interiorGapCount := maxInt(0, gapCount-2)
+	interiorGapCount := max(0, gapCount-2)
 	if interiorGapCount > 0 {
 		extras := buildEvenGapCapacities(interiorGapCount, remaining, 0)
 		for i := 1; i < gapCount-1; i++ {
@@ -2303,7 +2295,7 @@ func buildBalancedNeutralRing(neutralZones []neutralZonePlan, playerCount int) [
 		}
 		return r
 	}
-	gc := maxInt(1, playerCount)
+	gc := max(1, playerCount)
 	caps := buildEvenGapCapacities(gc, len(neutralZones), 0)
 	gaps := assignNeutralZonesToGaps(neutralZones, caps, false)
 	var result []string
@@ -2323,7 +2315,7 @@ func buildEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 	if itemCount <= 0 {
 		return capacities
 	}
-	minimum := maxInt(0, minimumPerGap)
+	minimum := max(0, minimumPerGap)
 	reserved := minimum * gapCount
 	remaining := itemCount
 	if minimum > 0 && itemCount >= reserved {
