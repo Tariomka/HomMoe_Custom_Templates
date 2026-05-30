@@ -1,6 +1,6 @@
 package zone
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/common"
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/common"
 
 // Connection links two zones together inside a Variant.
 type Connection struct {

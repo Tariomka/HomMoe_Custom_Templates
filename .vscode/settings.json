@@ -5,6 +5,7 @@
         "gofmt",
         "gofont",
         "hommoe",
+        "isolateplayers",
         "syscalls",
         "Tariomka"
     ],
@@ -13,6 +14,7 @@
         "ui.diagnostic.staticcheck": true,
         "ui.diagnostic.analyses": {
             "ST1006": false, // Too noisy. Generic name is useful to distinguish attached struct from ouside variables. Single character names are evil
+            "ST1003": false, // Too many package overpals, need more descriptive package names
 
             "ST1000": false, // Temporarily disabled while still work in progress
         }

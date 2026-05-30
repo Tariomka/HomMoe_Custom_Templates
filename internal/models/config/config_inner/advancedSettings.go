@@ -1,4 +1,4 @@
-package generator
+package config_inner
 
 type AdvancedSettings struct {
 	Enabled                    bool

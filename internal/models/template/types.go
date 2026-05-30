@@ -1,17 +1,17 @@
 package template
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/common"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/game_rules"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/zone_layout"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/game_rules"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/zone_layout"
 )
 
 // Re-exported aliases so external callers can keep using template.Border, template.Variant, etc.
 type (
-	ValueOverride = inner.ValueOverride
+	ValueOverride = template_inner.ValueOverride
 
 	PlacementRule = common.PlacementRule
 

@@ -13,7 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 type LayoutPanel struct {
@@ -89,7 +89,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			widgets.NewLabeledRowWidget(theme, "Player zone size", 200, widgets.NewLabeledSliderWidget(theme, &this.sldPlayerZoneSize, fmt.Sprintf("× %.2f", 0.5+float64(this.sldPlayerZoneSize.Value)*1.5))),
 			widgets.NewLabeledRowWidget(theme, "Neutral zone size", 200, widgets.NewLabeledSliderWidget(theme, &this.sldNeutralZoneSize, fmt.Sprintf("× %.2f", 0.5+float64(this.sldNeutralZoneSize.Value)*1.5))),
 			func(gtx layout.Context) layout.Dimensions {
-				if this.state.GetStateData().Topology != generator.TopologyHubAndSpoke {
+				if this.state.GetStateData().Topology != config.TopologyHubAndSpoke {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

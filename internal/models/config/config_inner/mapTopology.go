@@ -1,4 +1,4 @@
-package generator
+package config_inner
 
 // MapTopology enumerates the supported map shapes.
 type MapTopology string

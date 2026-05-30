@@ -1,4 +1,4 @@
-package services
+package generator
 
 import (
 	"fmt"
@@ -17,7 +17,6 @@ import (
 // TODO: Split this shit and organize everything
 
 const (
-	connectionsPerZone        = 1
 	defaultGuardRandomization = 0.05
 	spawnLayoutName           = "zone_layout_spawns"
 	sideLayoutName            = "zone_layout_sides"
@@ -1046,20 +1045,19 @@ func buildVariantHubAndSpoke(settings *config.GeneratorConfig, playerLetters []s
 			hubAnchor = playerLetters[0]
 		}
 		hubGuard := borderGuardValue(hubAnchor, letter, playerLetters, neutralByLetter, tuning)
-		conns = append(conns, template.Connection{
-			Name: "Hub-" + letter, From: "Hub", To: outerZone,
-			ConnectionType: "Direct", GuardZone: "Hub", SimTurnSquad: true,
-			GuardValue: hubGuard, GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: "hub_guard_" + letter,
-		})
-		for e := 1; e < connectionsPerZone; e++ {
-			conns = append(conns, template.Connection{
+		conns = append(conns,
+			template.Connection{
+				Name: "Hub-" + letter, From: "Hub", To: outerZone,
+				ConnectionType: "Direct", GuardZone: "Hub", SimTurnSquad: true,
+				GuardValue: hubGuard, GuardWeeklyIncrement: 0.15,
+				GuardMatchGroup: "hub_guard_" + letter,
+			},
+			template.Connection{
 				From: "Hub", To: outerZone, ConnectionType: "Direct",
 				GuardZone: "Hub", SimTurnSquad: true,
 				GuardValue: hubGuard, GuardWeeklyIncrement: 0.15,
-				GuardMatchGroup: fmt.Sprintf("hub_guard_%s_%d", letter, e),
+				GuardMatchGroup: fmt.Sprintf("hub_guard_%s_%d", letter, 1),
 			})
-		}
 	}
 
 	// Proximity ring
@@ -1339,27 +1337,27 @@ func buildVariantTournament(settings *config.GeneratorConfig, playerLetters []st
 
 	switch settings.Topology {
 	case config.TopologyHubAndSpoke:
-		for p := 0; p < 2; p++ {
+		for p := range 2 {
 			buildTournamentHubCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
 		}
 	case config.TopologyBalanced:
-		for p := 0; p < 2; p++ {
+		for p := range 2 {
 			buildTournamentBalancedCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
 		}
 	case config.TopologyDefault:
-		for p := 0; p < 2; p++ {
+		for p := range 2 {
 			buildTournamentRingCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
 		}
 	default:
 		// Chain, SharedWeb, Random → chain-per-cluster fallback.
-		for p := 0; p < 2; p++ {
+		for p := range 2 {
 			buildTournamentChainCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
 		}
 	}
 
 	// c20b40d: per-cluster portals so they never cross the isolation boundary.
 	if settings.RandomPortals {
-		for p := 0; p < 2; p++ {
+		for p := range 2 {
 			clusterLetters := []string{playerLetters[p]}
 			for _, n := range neutralsForPlayer[p] {
 				clusterLetters = append(clusterLetters, n.Letter)
@@ -1377,7 +1375,7 @@ func buildTournamentChainCluster(playerIndex int, playerLetter string, myNeutral
 		chain = append(chain, n.Letter)
 	}
 	connNames := make([]string, len(chain)-1)
-	for i := 0; i < len(connNames); i++ {
+	for i := range connNames {
 		connNames[i] = fmt.Sprintf("Tourney-%s-%s", chain[i], chain[i+1])
 	}
 	for i, letter := range chain {
@@ -1394,7 +1392,7 @@ func buildTournamentChainCluster(playerIndex int, playerLetter string, myNeutral
 			*zones = append(*zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, false))
 		}
 	}
-	for i := 0; i < len(connNames); i++ {
+	for i := range connNames {
 		from := chain[i]
 		to := chain[i+1]
 		fromZone := "Spawn-" + from
@@ -1428,7 +1426,7 @@ func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals
 	n := len(sortedNeutrals)
 	orderedNeutrals := make([]neutralZonePlan, n)
 	lo, hi := 0, n-1
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if i%2 == 0 {
 			orderedNeutrals[lo] = sortedNeutrals[i]
 			lo++
@@ -1450,7 +1448,7 @@ func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals
 	}
 
 	connNames := make([]string, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		next := (i + 1) % count
 		connNames[i] = fmt.Sprintf("TRing-%s-%s", ringLetters[i], ringLetters[next])
 	}
@@ -1472,7 +1470,7 @@ func buildTournamentRingCluster(playerIndex int, playerLetter string, myNeutrals
 		}
 	}
 
-	for i := 0; i < count; i++ {
+	for i := range count {
 		next := (i + 1) % count
 		from := ringLetters[i]
 		to := ringLetters[next]

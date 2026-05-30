@@ -5,7 +5,8 @@ import (
 	"os"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 )
 
 // LoadSettingsFile reads a .gen.json file and returns the parsed SettingsFile.
@@ -24,8 +25,8 @@ func LoadSettingsFile(path string) (*models.EditorStateModel, error) {
 }
 
 // SaveSettingsFile writes a SettingsFile to disk as indented JSON.
-func SaveSettingsFile(path string, settingsFile *models.EditorStateModel) error {
-	data, err := json.MarshalIndent(settingsFile, "", "  ")
+func SaveSettingsFile(path string, editorState *models.EditorStateModel) error {
+	data, err := json.MarshalIndent(editorState, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -34,8 +35,8 @@ func SaveSettingsFile(path string, settingsFile *models.EditorStateModel) error 
 
 // SettingsToGenerator translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
-func SettingsToGenerator(editorState *models.EditorStateModel) *generator.GeneratorSettings {
-	generatorSettings := generator.NewGeneratorSettings()
+func SettingsToGenerator(editorState *models.EditorStateModel) *config.GeneratorConfig {
+	generatorSettings := config.NewGeneratorConfig()
 	generatorSettings.TemplateName = editorState.TemplateName
 	generatorSettings.GameMode = editorState.GameMode
 	generatorSettings.PlayerCount = editorState.PlayerCount
@@ -51,7 +52,7 @@ func SettingsToGenerator(editorState *models.EditorStateModel) *generator.Genera
 	generatorSettings.BannedItems = editorState.BannedItems
 	generatorSettings.BannedMagics = editorState.BannedMagics
 	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
-	generatorSettings.Bonuses = generator.ParseBonusesJSON(editorState.BonusesJSON)
+	generatorSettings.Bonuses = config_inner.ParseBonusesJSON(editorState.BonusesJSON)
 	generatorSettings.PlayerZoneMandatoryContent = RowsToMandatoryContent(editorState.PlayerZoneContentRows)
 	generatorSettings.LowNeutralMandatoryContent = RowsToMandatoryContent(editorState.LowNeutralContentRows)
 	generatorSettings.MediumNeutralMandatoryContent = RowsToMandatoryContent(editorState.MediumNeutralContentRows)
@@ -60,7 +61,7 @@ func SettingsToGenerator(editorState *models.EditorStateModel) *generator.Genera
 	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
 	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent
 
-	generatorSettings.ZoneCfg = generator.ZoneConfiguration{
+	generatorSettings.ZoneConfiguration = config.ZoneConfig{
 		NeutralZoneCount:            editorState.NeutralZoneCount,
 		PlayerZoneCastles:           editorState.PlayerZoneCastles,
 		NeutralZoneCastles:          editorState.NeutralZoneCastles,
@@ -70,7 +71,7 @@ func SettingsToGenerator(editorState *models.EditorStateModel) *generator.Genera
 		BorderGuardStrengthPercent:  editorState.BorderGuardStrengthPercent,
 		HubZoneSize:                 editorState.HubZoneSize,
 		HubZoneCastles:              editorState.HubZoneCastles,
-		Advanced: generator.AdvancedSettings{
+		Advanced: config.AdvancedSettings{
 			Enabled:                    editorState.AdvancedMode,
 			NeutralLowNoCastleCount:    editorState.NeutralLowNoCastleCount,
 			NeutralLowCastleCount:      editorState.NeutralLowCastleCount,
@@ -84,13 +85,13 @@ func SettingsToGenerator(editorState *models.EditorStateModel) *generator.Genera
 		},
 	}
 
-	generatorSettings.HeroSettings = generator.HeroSettings{
+	generatorSettings.HeroSettings = config.HeroSettings{
 		HeroCountMin:       editorState.HeroCountMin,
 		HeroCountMax:       editorState.HeroCountMax,
 		HeroCountIncrement: editorState.HeroCountIncrement,
 	}
 
-	generatorSettings.GameEndConditions = &generator.GameEndConditions{
+	generatorSettings.GameEndConditions = &config.GameEndConditions{
 		VictoryCondition: editorState.VictoryCondition,
 		CityHold:         editorState.CityHold || editorState.VictoryCondition == "win_condition_5",
 		CityHoldDays:     editorState.CityHoldDays,
@@ -99,13 +100,13 @@ func SettingsToGenerator(editorState *models.EditorStateModel) *generator.Genera
 		LostStartHero:    editorState.LostStartHero,
 	}
 
-	generatorSettings.GladiatorArenaRules = &generator.GladiatorArenaRules{
+	generatorSettings.GladiatorArenaRules = &config.GladiatorArenaRules{
 		Enabled:        editorState.GladiatorArena,
 		DaysDelayStart: editorState.GladiatorArenaDaysDelayStart,
 		CountDay:       editorState.GladiatorArenaCountDay,
 	}
 
-	generatorSettings.TournamentRules = &generator.TournamentRules{
+	generatorSettings.TournamentRules = &config.TournamentRules{
 		Enabled:            editorState.Tournament,
 		FirstTournamentDay: editorState.TournamentFirstTournamentDay,
 		Interval:           editorState.TournamentInterval,

@@ -1,12 +1,15 @@
-package generator
+package config
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+)
 
-// GeneratorSettings is the input model for the template generator
+// GeneratorConfig is the input model for the template generator
 //
 // All values here describe a single template generation request — the GUI and
 // CLI build one of these and hand it to services.Generate.
-type GeneratorSettings struct {
+type GeneratorConfig struct {
 	TemplateName string
 	GameMode     string // "Classic"/"SingleHero"
 	PlayerCount  int    // 1..8
@@ -31,8 +34,8 @@ type GeneratorSettings struct {
 	// SettingsFile.BonusesJson by the loader.
 	Bonuses []BonusEntry
 
-	Topology MapTopology
-	ZoneCfg  ZoneConfiguration
+	Topology          MapTopology
+	ZoneConfiguration ZoneConfig
 
 	FactionLawsExpPercent int // 25..200 (1.0 baseline = 100)
 	AstrologyExpPercent   int
@@ -50,8 +53,8 @@ type GeneratorSettings struct {
 	HubZoneMandatoryContent       []template.MandatoryContentItem
 }
 
-func NewGeneratorSettings() *GeneratorSettings {
-	return &GeneratorSettings{
+func NewGeneratorConfig() *GeneratorConfig {
+	return &GeneratorConfig{
 		TemplateName:          "Custom Template",
 		GameMode:              "Classic",
 		PlayerCount:           2,
@@ -60,10 +63,10 @@ func NewGeneratorSettings() *GeneratorSettings {
 		SpawnRemoteFootholds:  true,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,
-		Topology:              TopologyBalanced,
+		Topology:              config_inner.TopologyBalanced,
 		FactionLawsExpPercent: 100,
 		AstrologyExpPercent:   100,
-		ZoneCfg: ZoneConfiguration{
+		ZoneConfiguration: ZoneConfig{
 			PlayerZoneCastles:           1,
 			NeutralZoneCastles:          1,
 			ResourceDensityPercent:      100,
@@ -81,4 +84,26 @@ func NewGeneratorSettings() *GeneratorSettings {
 		GladiatorArenaRules: &GladiatorArenaRules{DaysDelayStart: 30, CountDay: 3},
 		TournamentRules:     &TournamentRules{FirstTournamentDay: 14, Interval: 7, PointsToWin: 2, SaveArmy: true},
 	}
+}
+
+func (this *GeneratorConfig) IsTournamentMode() bool {
+	return (this.TournamentRules != nil && this.TournamentRules.Enabled) ||
+		(this.GameEndConditions != nil && this.GameEndConditions.VictoryCondition == "win_condition_6")
+}
+
+func (this *GeneratorConfig) IsCityHoldMode() bool {
+	return this.GameEndConditions != nil &&
+		(this.GameEndConditions.CityHold || this.GameEndConditions.VictoryCondition == "win_condition_5")
+}
+
+func (this *GeneratorConfig) IsHubCityToHold() bool {
+	return this.Topology == config_inner.TopologyHubAndSpoke && this.IsCityHoldMode()
+}
+
+func (this *GeneratorConfig) GetVictoryCondition() string {
+	if this.GameEndConditions != nil {
+		return this.GameEndConditions.VictoryCondition
+	}
+
+	return "win_condition_1"
 }

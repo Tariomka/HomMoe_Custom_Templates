@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewSettingsFile_DefaultsToBalanced(t *testing.T) {
 	s := models.NewEditorStateModel()
-	assert.Equal(t, generator.TopologyBalanced, s.Topology)
+	assert.Equal(t, config.TopologyBalanced, s.Topology)
 }
 
 func TestSettingsFile_RoundTrip(t *testing.T) {
@@ -48,13 +49,13 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 }
 
 func TestBonusEntry_RoundTrip(t *testing.T) {
-	entries := []generator.BonusEntry{
-		{PresetType: generator.BonusStartingWood, ReceiverFilter: "start_hero", Param: "10", Param2: ""},
-		{PresetType: generator.BonusStartingOre, ReceiverFilter: "all_heroes", Param: "5", Param2: ""},
-		{PresetType: generator.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
+	entries := []config.BonusEntry{
+		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "10", Param2: ""},
+		{PresetType: config_inner.BonusStartingOre, ReceiverFilter: "all_heroes", Param: "5", Param2: ""},
+		{PresetType: config_inner.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
 	}
-	encoded := generator.SerializeBonuses(entries)
-	decoded := generator.ParseBonusesJSON(encoded)
+	encoded := config_inner.SerializeBonuses(entries)
+	decoded := config_inner.ParseBonusesJSON(encoded)
 	assert.Equal(t, len(entries), len(decoded))
 	for i, expected := range entries {
 		assert.Equal(t, expected, decoded[i])
@@ -63,7 +64,7 @@ func TestBonusEntry_RoundTrip(t *testing.T) {
 
 func TestBonusEntry_AcceptsLegacyOrdinalForm(t *testing.T) {
 	const legacy = "9|start_hero|10|"
-	decoded := models.ParseBonusesJSON(legacy)
+	decoded := config_inner.ParseBonusesJSON(legacy)
 	assert.Equal(t, 1, len(decoded))
-	assert.Equal(t, generator.BonusStartingWood, decoded[0].PresetType)
+	assert.Equal(t, config_inner.BonusStartingWood, decoded[0].PresetType)
 }

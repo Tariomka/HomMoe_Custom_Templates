@@ -1,6 +1,6 @@
-package generator
+package config_inner
 
-type ZoneConfiguration struct {
+type ZoneConfig struct {
 	NeutralZoneCount            int
 	PlayerZoneCastles           int
 	NeutralZoneCastles          int

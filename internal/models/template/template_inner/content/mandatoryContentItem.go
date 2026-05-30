@@ -1,6 +1,6 @@
 package content
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/common"
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/common"
 
 // MandatoryContentItem describes a single mandatory object and how it should be placed.
 // In some templates the item references a content list (via `includeLists`) and/or a

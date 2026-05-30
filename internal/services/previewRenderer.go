@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
@@ -33,7 +33,7 @@ var (
 // WritePreviewPNG rasterises the given template and writes it as a PNG into
 // dir/<safeName>.png at the requested side length. The directory is created
 // if missing. Returns the final path on success.
-func WritePreviewPNG(dir string, template *template.RmgTemplateModel, topology generator.MapTopology, side int) (string, error) {
+func WritePreviewPNG(dir string, template *template.RmgTemplateModel, topology config.MapTopology, side int) (string, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
@@ -57,7 +57,7 @@ func WritePreviewPNG(dir string, template *template.RmgTemplateModel, topology g
 // RenderPreviewImage rasterises the layout into an *image.RGBA. It uses only
 // the standard library — circles are filled scanline-by-scanline, lines via
 // a simple DDA with a tiny brush.
-func RenderPreviewImage(template *template.RmgTemplateModel, topology generator.MapTopology, side int) *image.RGBA {
+func RenderPreviewImage(template *template.RmgTemplateModel, topology config.MapTopology, side int) *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, side, side))
 	fillRect(img, img.Bounds(), previewBg)
 

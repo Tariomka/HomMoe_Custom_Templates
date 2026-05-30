@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
@@ -28,7 +28,7 @@ func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
 	if gs.BannedItems != "x" || gs.BannedMagics != "y" || gs.ValueOverridesText != "z" {
 		t.Errorf("banned/overrides not propagated: %+v", gs)
 	}
-	if len(gs.Bonuses) != 1 || gs.Bonuses[0].PresetType != generator.BonusStartingWood {
+	if len(gs.Bonuses) != 1 || gs.Bonuses[0].PresetType != config_inner.BonusStartingWood {
 		t.Errorf("bonuses not parsed: %+v", gs.Bonuses)
 	}
 	if len(gs.PlayerZoneMandatoryContent) != 2 {
