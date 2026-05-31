@@ -40,3 +40,28 @@ func (this *PlacementRuleBuilder) WithArgs(arguments []any) *PlacementRuleBuilde
 	return this
 }
 func (this *PlacementRuleBuilder) Build() template.PlacementRule { return this.item }
+
+func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) template.PlacementRule {
+	return this.
+		WithRoadType().
+		WithDistance(distance).
+		WithWeight(weight).
+		Build()
+}
+
+func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight int) template.PlacementRule {
+	return this.
+		WithCrossroadsType().
+		WithDistance(distance).
+		WithWeight(weight).
+		Build()
+}
+
+func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) template.PlacementRule {
+	return this.
+		WithMainObjectType().
+		WithArg("0").
+		WithDistance(Distance{Min: 0.1, Max: 0.3}).
+		WithWeight(weight).
+		Build()
+}

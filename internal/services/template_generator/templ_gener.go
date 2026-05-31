@@ -8,13 +8,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // TODO: Make generator a class
@@ -22,11 +22,10 @@ import (
 // TODO: Split this shit and organize everything
 
 const (
-	defaultGuardRandomization = 0.05
-	spawnLayoutName           = "zone_layout_spawns"
-	sideLayoutName            = "zone_layout_sides"
-	treasureLayoutName        = "zone_layout_treasure_zone"
-	centerLayoutName          = "zone_layout_center"
+	spawnLayoutName    = "zone_layout_spawns"
+	sideLayoutName     = "zone_layout_sides"
+	treasureLayoutName = "zone_layout_treasure_zone"
+	centerLayoutName   = "zone_layout_center"
 )
 
 // distance presets
@@ -47,17 +46,12 @@ func Generate(generatorSettings *config.GeneratorConfig) (*template.RmgTemplateM
 	if generatorSettings.TemplateName == "" {
 		return nil, fmt.Errorf("template name is required")
 	}
-	playerLetters := make([]string, generatorSettings.PlayerCount)
-	copy(playerLetters, ZoneLetters[:generatorSettings.PlayerCount])
+	zoneLabelProvider := zones.NewZoneLabelProvider()
+	playerLetters := zoneLabelProvider.CreatePlayerLabels(generatorSettings.PlayerCount)
+	neutralZonesNew := zoneLabelProvider.CreateNeutralZonePlans(*generatorSettings)
+	holdCityNeutralLetter := zoneLabelProvider.GetHoldCityLabel(*generatorSettings, playerLetters, neutralZonesNew)
 
 	neutralZones := buildNeutralZonePlan(generatorSettings)
-	useCityHold := generatorSettings.GameEndConditions != nil &&
-		(generatorSettings.GameEndConditions.CityHold || generatorSettings.GameEndConditions.VictoryCondition == "win_condition_5")
-	var holdCityNeutralLetter string
-	if useCityHold && generatorSettings.Topology != config.TopologyHubAndSpoke {
-		adj := buildTopologyAdjacency(generatorSettings, playerLetters, neutralZones)
-		holdCityNeutralLetter = pickHoldCityNeutralLetter(neutralZones, playerLetters, adj)
-	}
 
 	totalZones := generatorSettings.PlayerCount + len(neutralZones)
 	tuning := generationTuning{
@@ -72,12 +66,12 @@ func Generate(generatorSettings *config.GeneratorConfig) (*template.RmgTemplateM
 	tmpl := &template.RmgTemplateModel{
 		Name:                generatorSettings.TemplateName,
 		GameMode:            generatorSettings.GameMode,
-		Description:         buildTemplateDescription(generatorSettings, len(neutralZones)),
+		Description:         "",
 		DisplayWinCondition: generatorSettings.GetVictoryCondition(),
 		SizeX:               generatorSettings.MapSize,
 		SizeZ:               generatorSettings.MapSize,
 		GameRules:           providers.NewGameRulesProvider().CreateGameRules(*generatorSettings),
-		Variants:            []template.Variant{buildVariant(generatorSettings, playerLetters, neutralZones, tuning, holdCityNeutralLetter, useCityHold && generatorSettings.Topology == config.TopologyHubAndSpoke)},
+		Variants:            []template.Variant{buildVariant(generatorSettings, playerLetters, neutralZones, tuning, holdCityNeutralLetter, generatorSettings.IsHubCityToHold())},
 		ZoneLayouts:         providers.NewZoneLayoutProvider().CreateZoneLayouts(),
 		MandatoryContent:    buildAllMandatoryContent(playerLetters, neutralZones, generatorSettings),
 		ContentCountLimits:  providers.NewContentLimitProvider().CreateContentCountLimits(*generatorSettings),
@@ -88,49 +82,6 @@ func Generate(generatorSettings *config.GeneratorConfig) (*template.RmgTemplateM
 }
 
 // ── description ──────────────────────────────────────────────────────
-
-func buildTemplateDescription(settings *config.GeneratorConfig, neutralCount int) string {
-	parts := []string{
-		constants.GetTopologyDescriptor(settings.Topology).Label + " layout",
-		countPhrase(neutralCount, "neutral zone", "neutral zones"),
-		countPhrase(settings.ZoneConfiguration.PlayerZoneCastles, "castle", "castles") + " per player zone",
-	}
-	if neutralCount > 0 {
-		if settings.ZoneConfiguration.Advanced.Enabled {
-			parts = append(parts, "mixed neutral zone tiers")
-		} else {
-			parts = append(parts, countPhrase(settings.ZoneConfiguration.NeutralZoneCastles, "castle", "castles")+" per neutral zone")
-		}
-	}
-	var options []string
-	if settings.NoDirectPlayerConnections {
-		options = append(options, "isolated player starts")
-	}
-	if settings.RandomPortals {
-		options = append(options, "random portals")
-	}
-	if !settings.SpawnRemoteFootholds {
-		options = append(options, "no remote footholds")
-	}
-	if !settings.GenerateRoads {
-		options = append(options, "roads disabled")
-	}
-	if len(options) > 0 {
-		parts = append(parts, "options: "+strings.Join(options, ", "))
-	}
-	return "Generated with Olden Era Template Generator: " + strings.Join(parts, ", ") + "."
-}
-
-func countPhrase(count int, singular, plural string) string {
-	if count == 0 {
-		return "no " + plural
-	}
-	word := singular
-	if count != 1 {
-		word = plural
-	}
-	return fmt.Sprintf("%d %s", count, word)
-}
 
 type neutralZonePlan struct {
 	Letter      string

@@ -12,7 +12,7 @@ var (
 	DistanceVeryFar = Distance{Min: 0.75, Max: 0.9}
 )
 
-// GetDistanceFrom resolves the road-distance label persisted in a
+// TryGetDistanceFrom resolves the road-distance label persisted in a
 // ZoneContentRowSave to the matching distancePreset. An empty or unknown
 // label means "Any" (no constraint added).
 func TryGetDistanceFrom(label string) (Distance, bool) {

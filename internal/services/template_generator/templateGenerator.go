@@ -18,6 +18,7 @@ type TemplateGenerator struct {
 	zoneLabelProvider *zones.ZoneLabelProvider
 
 	contentLimitProvider *providers.ContentLimitProvider
+	contentProvider      *providers.MandatoryContentProvider
 	gameRulesProvider    *providers.GameRulesProvider
 	topologyProvider     *providers.TopologyProvider
 	zoneLayoutProvider   *providers.ZoneLayoutProvider
@@ -31,6 +32,7 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) *TemplateGenera
 		configuration:        configuration,
 		zoneLabelProvider:    zones.NewZoneLabelProvider(),
 		contentLimitProvider: providers.NewContentLimitProvider(),
+		contentProvider:      providers.NewMandatoryContentProvider(),
 		gameRulesProvider:    providers.NewGameRulesProvider(),
 		topologyProvider:     providers.NewTopologyProvider(),
 		zoneLayoutProvider:   providers.NewZoneLayoutProvider(),
@@ -64,7 +66,7 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 				CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel),
 		},
 		ZoneLayouts:        this.zoneLayoutProvider.CreateZoneLayouts(),
-		MandatoryContent:   buildAllMandatoryContent(playerLabels, neutralZones, *this.configuration),
+		MandatoryContent:   this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
 		ContentCountLimits: this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
 		ContentPools:       []template.ContentPool{},
 		ContentLists:       []template.ContentList{},

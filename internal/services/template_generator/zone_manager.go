@@ -1,10 +1,7 @@
 package template_generator
 
 import (
-	"strings"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
@@ -15,25 +12,6 @@ var (
 	distFar     = distancePreset{0.5, 0.75}
 	distVeryFar = distancePreset{0.75, 0.9}
 )
-
-// distanceForLabel resolves the road-distance label persisted in a
-// ZoneContentRowSave to the matching distancePreset. An empty or unknown
-// label means "Any" (no constraint added).
-func distanceForLabel(label string) (distancePreset, bool) {
-	switch strings.TrimSpace(label) {
-	case "Next To":
-		return distNextTo, true
-	case "Near":
-		return distNear, true
-	case "Medium":
-		return distMedium, true
-	case "Far":
-		return distFar, true
-	case "Very Far":
-		return distVeryFar, true
-	}
-	return distancePreset{}, false
-}
 
 // ── Rule presets ─────────────────────────────────────────────────────
 
@@ -100,44 +78,6 @@ func presetRemoteFoothold(castleCount int) template.MandatoryContentItem {
 		soloEncounter().
 		addRules(footholdRules(castleCount)).
 		build()
-}
-
-// RowsToMandatoryContent expands a slice of save-rows to a flat list of
-// MandatoryContentItem entries suitable for a MandatoryContent.Content.
-func RowsToMandatoryContent(rows []models.ZoneContentRowSave) []template.MandatoryContentItem {
-	if len(rows) == 0 {
-		return nil
-	}
-	var out []template.MandatoryContentItem
-	for _, raw := range rows {
-		row := raw.Normalised()
-		if row.Sid == "" {
-			continue
-		}
-		for i := 0; i < row.Count; i++ {
-			out = append(out, rowToMandatoryItem(row))
-		}
-	}
-	return out
-}
-
-func rowToMandatoryItem(row models.ZoneContentRowSave) template.MandatoryContentItem {
-	item := template.MandatoryContentItem{
-		IsGuarded: row.IsGuarded,
-		IsMine:    row.IsMine,
-	}
-	if row.IsGroup {
-		item.IncludeLists = []string{row.Sid}
-	} else {
-		item.SID = row.Sid
-	}
-	if row.NearCastle {
-		item.Rules = append(item.Rules, ruleNearCastle(1))
-	}
-	if d, ok := distanceForLabel(row.RoadDistance); ok {
-		item.Rules = append(item.Rules, ruleRoadDistance(d, 1))
-	}
-	return item
 }
 
 // StripNearCastleRules removes placement rules that anchor an item near

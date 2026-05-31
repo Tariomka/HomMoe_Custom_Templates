@@ -28,9 +28,6 @@ func (this *MandatoryContentBuilder) WithSoloEncounter() *MandatoryContentBuilde
 	this.item.SoloEncounter = true
 	return this
 }
-func (this *MandatoryContentBuilder) WithRoadDistance(distance Distance) *MandatoryContentBuilder {
-	return this.WithRule(ruleRoadDistance(distance, 1))
-}
 func (this *MandatoryContentBuilder) WithRule(rule template.PlacementRule) *MandatoryContentBuilder {
 	this.item.Rules = append(this.item.Rules, rule)
 	return this
@@ -39,4 +36,12 @@ func (this *MandatoryContentBuilder) WithRules(rules []template.PlacementRule) *
 	this.item.Rules = append(this.item.Rules, rules...)
 	return this
 }
+func (this *MandatoryContentBuilder) WithRulesCallback(
+	callback func() []template.PlacementRule) *MandatoryContentBuilder {
+	return this.WithRules(callback())
+}
 func (this *MandatoryContentBuilder) Build() template.MandatoryContentItem { return this.item }
+
+func (this *MandatoryContentBuilder) WithRoadDistance(distance Distance) *MandatoryContentBuilder { // TODO: probably not needed
+	return this.WithRule(NewPlacementRuleBuilder().BuildRoadRule(distance, 1))
+}

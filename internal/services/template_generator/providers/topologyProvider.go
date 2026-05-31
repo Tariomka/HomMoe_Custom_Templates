@@ -22,7 +22,7 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones []models.NeutralZonePlan,
 	tuning models.GenerationTuning,
-	holdCityNeutralLetter string) template.Variant {
+	holdCityNeutralLabel string) template.Variant {
 	pl := make([]string, len(playerLabels))
 	copy(pl, playerLabels)
 	if this.shufflePlayerZones {
@@ -37,14 +37,14 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	case config.TopologyHubAndSpoke:
 		return buildVariantHubAndSpoke(configuration, pl, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
-		return buildVariantChain(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantChain(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySharedWeb:
-		return buildVariantSharedWeb(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantSharedWeb(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyRandom, config.TopologyBalanced:
-		return buildVariantRandom(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantRandom(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
 	default:
 		return topology.NewRingTopologyService().
-			GetTopologyVariant(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
+			GetTopologyVariant(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
 	}
 }
 
