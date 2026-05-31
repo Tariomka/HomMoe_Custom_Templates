@@ -1,4 +1,4 @@
-package topology
+package providers
 
 import (
 	"math/rand/v2"
@@ -6,24 +6,25 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 )
 
-type TopologyFactory struct {
+type TopologyProvider struct {
 	shufflePlayerZones bool
 }
 
-func NewTopologyFactory() *TopologyFactory {
-	return &TopologyFactory{}
+func NewTopologyProvider() *TopologyProvider {
+	return &TopologyProvider{}
 }
 
-func (this *TopologyFactory) CreateTopologyVariant(
-	configuration *config.GeneratorConfig,
-	playerLetters []string,
+func (this *TopologyProvider) CreateTopologyVariant(
+	configuration config.GeneratorConfig,
+	playerLabels []string,
 	neutralZones []models.NeutralZonePlan,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) template.Variant {
-	pl := make([]string, len(playerLetters))
-	copy(pl, playerLetters)
+	pl := make([]string, len(playerLabels))
+	copy(pl, playerLabels)
 	if this.shufflePlayerZones {
 		rand.Shuffle(len(pl), func(i, j int) { pl[i], pl[j] = pl[j], pl[i] })
 	}
@@ -42,12 +43,12 @@ func (this *TopologyFactory) CreateTopologyVariant(
 	case config.TopologyRandom, config.TopologyBalanced:
 		return buildVariantRandom(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
 	default:
-		return NewRingTopologyService().
+		return topology.NewRingTopologyService().
 			GetTopologyVariant(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
 	}
 }
 
-func (this *TopologyFactory) ShufflePlayerZones(enabled bool) *TopologyFactory {
+func (this *TopologyProvider) ShufflePlayerZones(enabled bool) *TopologyProvider {
 	this.shufflePlayerZones = enabled
 	return this
 }

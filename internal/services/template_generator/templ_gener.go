@@ -1,4 +1,4 @@
-package generator
+package template_generator
 
 import (
 	"fmt"
@@ -13,6 +13,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
 )
 
 // TODO: Make generator a class
@@ -59,31 +61,26 @@ func Generate(generatorSettings *config.GeneratorConfig) (*template.RmgTemplateM
 
 	totalZones := generatorSettings.PlayerCount + len(neutralZones)
 	tuning := generationTuning{
-		ContentScale:                   computeContentScale(generatorSettings.MapSize, totalZones),
+		ContentScale:                   utils.ComputeContentScale(generatorSettings.MapSize, totalZones),
 		ResourceDensityMultiplier:      float64(generatorSettings.ZoneConfiguration.ResourceDensityPercent) / 200.0,
 		StructureDensityMultiplier:     float64(generatorSettings.ZoneConfiguration.StructureDensityPercent) / 100.0,
 		NeutralStackStrengthMultiplier: float64(generatorSettings.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
 		BorderGuardStrengthMultiplier:  float64(generatorSettings.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
-		GuardRandomization:             effectiveGuardRandomization(generatorSettings),
-	}
-
-	effectiveVC := "win_condition_1"
-	if generatorSettings.GameEndConditions != nil {
-		effectiveVC = generatorSettings.GameEndConditions.VictoryCondition
+		GuardRandomization:             generatorSettings.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
 	}
 
 	tmpl := &template.RmgTemplateModel{
 		Name:                generatorSettings.TemplateName,
 		GameMode:            generatorSettings.GameMode,
 		Description:         buildTemplateDescription(generatorSettings, len(neutralZones)),
-		DisplayWinCondition: effectiveVC,
+		DisplayWinCondition: generatorSettings.GetVictoryCondition(),
 		SizeX:               generatorSettings.MapSize,
 		SizeZ:               generatorSettings.MapSize,
-		GameRules:           buildGameRules(generatorSettings, effectiveVC),
+		GameRules:           providers.NewGameRulesProvider().CreateGameRules(*generatorSettings),
 		Variants:            []template.Variant{buildVariant(generatorSettings, playerLetters, neutralZones, tuning, holdCityNeutralLetter, useCityHold && generatorSettings.Topology == config.TopologyHubAndSpoke)},
-		ZoneLayouts:         buildZoneLayouts(),
+		ZoneLayouts:         providers.NewZoneLayoutProvider().CreateZoneLayouts(),
 		MandatoryContent:    buildAllMandatoryContent(playerLetters, neutralZones, generatorSettings),
-		ContentCountLimits:  BuildAllContentCountLimits(generatorSettings),
+		ContentCountLimits:  providers.NewContentLimitProvider().CreateContentCountLimits(*generatorSettings),
 		ContentPools:        []template.ContentPool{},
 		ContentLists:        []template.ContentList{},
 	}
@@ -252,125 +249,11 @@ func qualityGuardBase(q models.NeutralZoneQuality) int {
 	}
 }
 
-func effectiveGuardRandomization(settings *config.GeneratorConfig) float64 {
-	if !settings.ZoneConfiguration.Advanced.Enabled {
-		return defaultGuardRandomization
-	}
-	v := settings.ZoneConfiguration.Advanced.GuardRandomization
-	if math.IsNaN(v) || math.IsInf(v, 0) {
-		return defaultGuardRandomization
-	}
-	return helpers.RoundWithPrecision(math.Max(0, math.Min(v, 0.5)), 3)
-}
-
-func computeContentScale(mapSize, totalZones int) float64 {
-	const referenceArea = 160.0 * 160.0 / 4.0
-	zoneArea := float64(mapSize) * float64(mapSize) / math.Max(1, float64(totalZones))
-	return math.Max(0.5, math.Min(2.5, math.Sqrt(zoneArea/referenceArea)))
-}
-
 func normalizeZoneSize(zoneSize float64) float64 {
 	if math.IsNaN(zoneSize) || math.IsInf(zoneSize, 0) {
 		return 1.0
 	}
 	return helpers.RoundWithPrecision(math.Max(0.1, math.Min(zoneSize, 2.0)), 2)
-}
-
-func percentToModifier(percent int) float64 {
-	return helpers.RoundWithPrecision(float64(helpers.Clamp(percent, 25, 200))/100.0, 2)
-}
-
-func buildGameRules(settings *config.GeneratorConfig, effectiveVC string) template.GameRules {
-	hs := settings.HeroSettings
-	isSingleHero := settings.GameMode == "SingleHero"
-	if isSingleHero {
-		hs.HeroCountMin = 1
-		hs.HeroCountMax = 1
-		hs.HeroCountIncrement = 1
-	}
-	return template.GameRules{
-		HeroCountMin:           hs.HeroCountMin,
-		HeroCountMax:           hs.HeroCountMax,
-		HeroCountIncrement:     hs.HeroCountIncrement,
-		HeroHireBan:            isSingleHero,
-		EncounterHoles:         false,
-		FactionLawsExpModifier: percentToModifier(settings.FactionLawsExpPercent),
-		AstrologyExpModifier:   percentToModifier(settings.AstrologyExpPercent),
-		Bonuses: template.BonusList{
-			{SID: "add_bonus_hero_stat", ReceiverSide: -1, ReceiverFilter: "all_heroes", Parameters: []string{"movementBonus", "0"}},
-		},
-		WinConditions: buildAdvancedWinConditions(settings, effectiveVC),
-	}
-}
-
-func buildAdvancedWinConditions(generatorSettings *config.GeneratorConfig, effectiveVC string) template.WinConditions {
-	ge := generatorSettings.GameEndConditions
-	if ge == nil {
-		ge = &config.GameEndConditions{VictoryCondition: "win_condition_1", LostStartCityDay: 3, CityHoldDays: 6}
-	}
-	gr := generatorSettings.GladiatorArenaRules
-	if gr == nil {
-		gr = &config.GladiatorArenaRules{}
-	}
-	tr := generatorSettings.TournamentRules
-	if tr == nil {
-		tr = &config.TournamentRules{}
-	}
-
-	useLostStartCity := ge.LostStartCity || effectiveVC == "win_condition_3"
-	useCityHold := ge.CityHold || effectiveVC == "win_condition_5"
-	useGladiator := gr.Enabled || effectiveVC == "win_condition_4"
-	useTournament := tr.Enabled || effectiveVC == "win_condition_6"
-
-	wc := template.WinConditions{
-		Classic:          true,
-		Desertion:        true,
-		DesertionDay:     3,
-		DesertionValue:   3000,
-		HeroLighting:     true,
-		HeroLightingDay:  1,
-		LostStartCity:    useLostStartCity,
-		LostStartCityDay: helpers.Clamp(ge.LostStartCityDay, 1, 30),
-		LostStartHero:    ge.LostStartHero || useGladiator || generatorSettings.GameMode == "SingleHero",
-		CityHold:         useCityHold,
-		CityHoldDays:     helpers.Clamp(ge.CityHoldDays, 1, 30),
-	}
-	if useGladiator {
-		wc.GladiatorArena = true
-		wc.GladiatorArenaRegistrationStartFight = true
-		wc.GladiatorArenaDaysDelayStart = helpers.Clamp(gr.DaysDelayStart, 1, 60)
-		wc.GladiatorArenaCountDay = helpers.Clamp(gr.CountDay, 1, 30)
-		wc.ChampionSelectRule = "StartHero"
-	}
-	if useTournament {
-		firstDay := helpers.Clamp(tr.FirstTournamentDay, 3, 60)
-		interval := helpers.Clamp(tr.Interval, 3, 30)
-		pointsToWin := helpers.Clamp(tr.PointsToWin, 1, 10)
-		roundCount := pointsToWin*2 - 1
-		wc.ChampionSelectRule = "StartHero"
-		wc.Tournament = true
-		wc.TournamentSaveArmy = true
-		wc.TournamentPointsToWin = pointsToWin
-
-		var announceDays, battleOffsets []int
-		prevBattle := 0
-		for i := range roundCount {
-			announce := 1
-			if i > 0 {
-				announce = prevBattle + 1
-			}
-			offset := firstDay - 1
-			if i > 0 {
-				offset = interval - 1
-			}
-			announceDays = append(announceDays, announce)
-			battleOffsets = append(battleOffsets, offset)
-			prevBattle = announce + offset
-		}
-		wc.TournamentAnnounceDays = announceDays
-		wc.TournamentDays = battleOffsets
-	}
-	return wc
 }
 
 func buildVariant(generatorSettings *config.GeneratorConfig, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string, hubIsHoldCity bool) template.Variant {
@@ -719,32 +602,6 @@ func makeVariant(playerLetters []string, firstLetter string, totalZones int, zon
 			WaterType: "water grass",
 		},
 		Zones: zones, Connections: connections,
-	}
-}
-
-func buildZoneLayouts() []template.ZoneLayoutDef {
-	return []template.ZoneLayoutDef{
-		buildZoneLayout(spawnLayoutName, 0.24, 0.48, 0.30, 16, 0.16, 160, -0.30, 0.4, []int{20, 2, 1}),
-		buildZoneLayout(sideLayoutName, 0.36, 0.50, 0.25, 16, 0.128, 128, -0.30, 0.3, []int{20, 2, 1}),
-		buildZoneLayout(treasureLayoutName, 0.50, 0.50, 0.45, 12, 0.12, 96, -0.30, 0.3, []int{12, 3, 1}),
-		buildZoneLayout(centerLayoutName, 0.56, 0.60, 0.30, 10, 0.128, 96, -0.25, 0.3, []int{12, 4, 1}),
-	}
-}
-
-func buildZoneLayout(name string, obsFill, obsFillVoid, lakesFill float64, minLake int, elevScale float64, roadCluster int, roadAttraction, ambientNoise float64, groupWeights []int) template.ZoneLayoutDef {
-	return template.ZoneLayoutDef{
-		Name: name, ObstaclesFill: obsFill, ObstaclesFillVoid: obsFillVoid,
-		LakesFill: lakesFill, MinLakeArea: minLake, ElevationClusterScale: elevScale,
-		ElevationModes: []template.ElevationMode{
-			{Weight: 2, MinElevatedFraction: 0.2, MaxElevatedFraction: 0.4},
-			{Weight: 1, MinElevatedFraction: 0.6, MaxElevatedFraction: 0.8},
-		},
-		RoadClusterArea:                   roadCluster,
-		GuardedEncounterResourceFractions: template.GuardedEncounterResourceFractions{CountBounds: []int{}, Fractions: []float64{0.66}},
-		AmbientPickupDistribution: template.AmbientPickupDistribution{
-			Repulsion: 1.0, Noise: ambientNoise, RoadAttraction: roadAttraction,
-			ObstacleAttraction: 0, GroupSizeWeights: groupWeights,
-		},
 	}
 }
 

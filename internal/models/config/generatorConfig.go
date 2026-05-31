@@ -105,12 +105,48 @@ func (this *GeneratorConfig) IsHubCityToHold() bool {
 	return this.Topology == config_inner.TopologyHubAndSpoke && this.IsCityHoldMode()
 }
 
+func (this *GeneratorConfig) IsSingleHeroMode() bool {
+	return this.GameMode == "SingleHero"
+}
+
 func (this *GeneratorConfig) GetVictoryCondition() string {
 	if this.GameEndConditions != nil {
 		return this.GameEndConditions.VictoryCondition
 	}
 
 	return "win_condition_1"
+}
+
+func (this *GeneratorConfig) GetHeroSettings() HeroSettings {
+	if this.IsSingleHeroMode() {
+		return HeroSettings{
+			HeroCountMin:       1,
+			HeroCountMax:       1,
+			HeroCountIncrement: 1,
+		}
+	}
+	return this.HeroSettings
+}
+
+func (this *GeneratorConfig) GetGameEndConditions() GameEndConditions {
+	if this.GameEndConditions != nil {
+		return *this.GameEndConditions
+	}
+	return GameEndConditions{VictoryCondition: "win_condition_1", LostStartCityDay: 3, CityHoldDays: 6}
+}
+
+func (this *GeneratorConfig) GetGladiatorArenaRules() GladiatorArenaRules {
+	if this.GladiatorArenaRules != nil {
+		return *this.GladiatorArenaRules
+	}
+	return GladiatorArenaRules{}
+}
+
+func (this *GeneratorConfig) GetTournamentRules() TournamentRules {
+	if this.TournamentRules != nil {
+		return *this.TournamentRules
+	}
+	return TournamentRules{}
 }
 
 func (this *GeneratorConfig) EnsureNameExists() {

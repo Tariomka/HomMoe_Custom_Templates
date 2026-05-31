@@ -1,18 +1,26 @@
-package generator
+package template_generator
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/topology"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type TemplateGenerator struct {
 	configuration     *config.GeneratorConfig
-	zoneLabelProvider *ZoneLabelProvider
+	zoneLabelProvider *zones.ZoneLabelProvider
+
+	contentLimitProvider *providers.ContentLimitProvider
+	gameRulesProvider    *providers.GameRulesProvider
+	topologyProvider     *providers.TopologyProvider
+	zoneLayoutProvider   *providers.ZoneLayoutProvider
 }
 
 func NewTemplateGenerator(configuration *config.GeneratorConfig) *TemplateGenerator {
@@ -20,8 +28,12 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) *TemplateGenera
 		configuration = config.NewGeneratorConfig()
 	}
 	return &TemplateGenerator{
-		configuration:     configuration,
-		zoneLabelProvider: NewZoneLabelProvider(),
+		configuration:        configuration,
+		zoneLabelProvider:    zones.NewZoneLabelProvider(),
+		contentLimitProvider: providers.NewContentLimitProvider(),
+		gameRulesProvider:    providers.NewGameRulesProvider(),
+		topologyProvider:     providers.NewTopologyProvider(),
+		zoneLayoutProvider:   providers.NewZoneLayoutProvider(),
 	}
 }
 
@@ -37,23 +49,23 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
 	tuning := this.createGenerationTuning(this.configuration.PlayerCount + len(neutralZones))
-	victoryCondition := this.configuration.GetVictoryCondition()
 
 	return &template.RmgTemplateModel{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
 		Description:         this.createTemplateDescription(len(neutralZones)),
-		DisplayWinCondition: victoryCondition,
+		DisplayWinCondition: this.configuration.GetVictoryCondition(),
 		SizeX:               this.configuration.MapSize,
 		SizeZ:               this.configuration.MapSize,
-		GameRules:           buildGameRules(this.configuration, victoryCondition),
+		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
 		Variants: []template.Variant{
-			topology.NewTopologyFactory().
+			this.topologyProvider.
 				ShufflePlayerZones(true).
-				CreateTopologyVariant(this.configuration, playerLabels, neutralZones, tuning, holdCityLabel)},
-		ZoneLayouts:        buildZoneLayouts(),
-		MandatoryContent:   buildAllMandatoryContent(playerLabels, neutralZones, this.configuration),
-		ContentCountLimits: BuildAllContentCountLimits(this.configuration),
+				CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel),
+		},
+		ZoneLayouts:        this.zoneLayoutProvider.CreateZoneLayouts(),
+		MandatoryContent:   buildAllMandatoryContent(playerLabels, neutralZones, *this.configuration),
+		ContentCountLimits: this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
 		ContentPools:       []template.ContentPool{},
 		ContentLists:       []template.ContentList{},
 	}
@@ -61,26 +73,33 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 
 func (this *TemplateGenerator) createGenerationTuning(totalZoneCount int) models.GenerationTuning {
 	return models.GenerationTuning{
-		ContentScale:                   computeContentScale(this.configuration.MapSize, totalZoneCount),
+		ContentScale:                   utils.ComputeContentScale(this.configuration.MapSize, totalZoneCount),
 		ResourceDensityMultiplier:      float64(this.configuration.ZoneConfiguration.ResourceDensityPercent) / 200.0,
 		StructureDensityMultiplier:     float64(this.configuration.ZoneConfiguration.StructureDensityPercent) / 100.0,
 		NeutralStackStrengthMultiplier: float64(this.configuration.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
 		BorderGuardStrengthMultiplier:  float64(this.configuration.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
-		GuardRandomization:             effectiveGuardRandomization(this.configuration),
+		GuardRandomization:             this.configuration.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
 	}
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {
 	parts := []string{
 		constants.GetTopologyDescriptor(this.configuration.Topology).Label + " layout",
-		countPhrase(neutralCount, "neutral zone", "neutral zones"),
-		countPhrase(this.configuration.ZoneConfiguration.PlayerZoneCastles, "castle", "castles") + " per player zone",
+		formatPhraseWithCount(neutralCount, "neutral zone", "neutral zones"),
+		formatPhraseWithCount(
+			this.configuration.ZoneConfiguration.PlayerZoneCastles,
+			"castle",
+			"castles") + " per player zone",
 	}
 	if neutralCount > 0 {
 		if this.configuration.ZoneConfiguration.Advanced.Enabled {
 			parts = append(parts, "mixed neutral zone tiers")
 		} else {
-			parts = append(parts, countPhrase(this.configuration.ZoneConfiguration.NeutralZoneCastles, "castle", "castles")+" per neutral zone")
+			parts = append(parts,
+				formatPhraseWithCount(
+					this.configuration.ZoneConfiguration.NeutralZoneCastles,
+					"castle",
+					"castles")+" per neutral zone")
 		}
 	}
 	var options []string
@@ -99,5 +118,16 @@ func (this *TemplateGenerator) createTemplateDescription(neutralCount int) strin
 	if len(options) > 0 {
 		parts = append(parts, "options: "+strings.Join(options, ", "))
 	}
-	return "Generated with Olden Era Template Generator: " + strings.Join(parts, ", ") + "."
+	return "Generated with Custom Template Editor: " + strings.Join(parts, ", ") + "."
+}
+
+func formatPhraseWithCount(count int, singular, plural string) string {
+	if count == 0 {
+		return "no " + plural
+	}
+	word := singular
+	if count != 1 {
+		word = plural
+	}
+	return fmt.Sprintf("%d %s", count, word)
 }
