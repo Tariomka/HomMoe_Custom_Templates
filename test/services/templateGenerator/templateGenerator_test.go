@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
@@ -633,6 +634,324 @@ func TestGenerate_AllTopologiesCompleteWithoutError(t *testing.T) {
 			}
 		})
 	}
+}
+
+// ── Generate: per-topology snapshot assertion ────────────────────────
+
+type expectedConnection struct {
+	From, To       string
+	ConnectionType string
+}
+
+type expectedTemplate struct {
+	Name                string
+	GameMode            string
+	Description         string
+	DisplayWinCondition string
+	SizeX               int
+	SizeZ               int
+	VariantCount        int
+	ZoneNames           []string // order-independent
+	Connections         []expectedConnection
+	ZoneLayoutCount     int
+	MandatoryCount      int
+	ContentCountLimits  int
+	ContentPoolCount    int
+	ContentListCount    int
+
+	HeroCountMin           int
+	HeroCountMax           int
+	HeroCountIncrement     int
+	HeroHireBan            bool
+	FactionLawsExpModifier float64
+	AstrologyExpModifier   float64
+
+	WinClassic       bool
+	WinDesertion     bool
+	WinDesertionDay  int
+	WinHeroLighting  bool
+	WinLostStartCity int
+	WinCityHoldDays  int
+}
+
+func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
+	commonGameRules := struct {
+		min, max, inc                            int
+		hireBan                                  bool
+		factionLawsMod, astrologyMod             float64
+		winClassic, winDes, winHeroLight         bool
+		winDesDay, winLostStartCity, winCityHold int
+	}{4, 8, 1, false, 1.0, 1.0, true, true, true, 3, 3, 6}
+
+	mk := func(name, gameMode, description string, zones []string, conns []expectedConnection, mandatory int) expectedTemplate {
+		return expectedTemplate{
+			Name:                   name,
+			GameMode:               gameMode,
+			Description:            description,
+			DisplayWinCondition:    "win_condition_1",
+			SizeX:                  160,
+			SizeZ:                  160,
+			VariantCount:           1,
+			ZoneNames:              zones,
+			Connections:            conns,
+			ZoneLayoutCount:        4,
+			MandatoryCount:         mandatory,
+			ContentCountLimits:     17,
+			ContentPoolCount:       0,
+			ContentListCount:       0,
+			HeroCountMin:           commonGameRules.min,
+			HeroCountMax:           commonGameRules.max,
+			HeroCountIncrement:     commonGameRules.inc,
+			HeroHireBan:            commonGameRules.hireBan,
+			FactionLawsExpModifier: commonGameRules.factionLawsMod,
+			AstrologyExpModifier:   commonGameRules.astrologyMod,
+			WinClassic:             commonGameRules.winClassic,
+			WinDesertion:           commonGameRules.winDes,
+			WinDesertionDay:        commonGameRules.winDesDay,
+			WinHeroLighting:        commonGameRules.winHeroLight,
+			WinLostStartCity:       commonGameRules.winLostStartCity,
+			WinCityHoldDays:        commonGameRules.winCityHold,
+		}
+	}
+
+	cases := []struct {
+		topology config.MapTopology
+		want     expectedTemplate
+	}{
+		{
+			topology: config.TopologyDefault,
+			want: mk(
+				"Custom Template", "Classic",
+				"Generated with Olden Era Template Generator: Ring layout, no neutral zones, 1 castle per player zone.",
+				[]string{"Spawn-A", "Spawn-B"},
+				[]expectedConnection{
+					{"Spawn-A", "Spawn-B", "Direct"},
+					{"Spawn-B", "Spawn-A", "Direct"},
+				},
+				2,
+			),
+		},
+		{
+			topology: config.TopologyChain,
+			want: mk(
+				"Custom Template", "Classic",
+				"Generated with Olden Era Template Generator: Chain layout, no neutral zones, 1 castle per player zone.",
+				[]string{"Spawn-A", "Spawn-B"},
+				[]expectedConnection{{"Spawn-A", "Spawn-B", "Direct"}},
+				2,
+			),
+		},
+		{
+			topology: config.TopologyHubAndSpoke,
+			want: mk(
+				"Custom Template", "Classic",
+				"Generated with Olden Era Template Generator: Hub layout, no neutral zones, 1 castle per player zone.",
+				[]string{"Hub", "Spawn-A", "Spawn-B"},
+				[]expectedConnection{
+					{"Hub", "Spawn-B", "Direct"},
+					{"Hub", "Spawn-A", "Direct"},
+					{"Spawn-B", "Spawn-A", "Proximity"},
+					{"Spawn-A", "Spawn-B", "Proximity"},
+				},
+				2,
+			),
+		},
+		{
+			topology: config.TopologySharedWeb,
+			want: mk(
+				"Custom Template", "Classic",
+				"Generated with Olden Era Template Generator: Shared Web layout, 1 neutral zone, 1 castle per player zone, 1 castle per neutral zone.",
+				[]string{"Neutral-C", "Spawn-A", "Spawn-B"},
+				[]expectedConnection{
+					{"Spawn-B", "Neutral-C", "Direct"},
+					{"Spawn-A", "Neutral-C", "Direct"},
+				},
+				3,
+			),
+		},
+		{
+			topology: config.TopologyRandom,
+			want: mk(
+				"Custom Template", "Classic",
+				"Generated with Olden Era Template Generator: Random layout, no neutral zones, 1 castle per player zone.",
+				[]string{"Spawn-A", "Spawn-B"},
+				[]expectedConnection{{"Spawn-B", "Spawn-A", "Direct"}},
+				2,
+			),
+		},
+		{
+			topology: config.TopologyBalanced,
+			want: mk(
+				"Custom Template", "Classic",
+				"Generated with Olden Era Template Generator: Balanced layout, no neutral zones, 1 castle per player zone.",
+				[]string{"Spawn-A", "Spawn-B"},
+				[]expectedConnection{{"Spawn-A", "Spawn-B", "Direct"}},
+				2,
+			),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(string(tc.topology), func(t *testing.T) {
+			s := config.NewGeneratorConfig()
+			s.Topology = tc.topology
+
+			tmpl, err := services.Generate(s)
+			if err != nil {
+				t.Fatalf("Generate(%s) returned error: %v", tc.topology, err)
+			}
+
+			assertTemplateMatches(t, tc.want, tmpl)
+		})
+	}
+}
+
+func assertTemplateMatches(t *testing.T, want expectedTemplate, got *template.RmgTemplateModel) {
+	t.Helper()
+
+	// Top-level scalar fields.
+	if got.Name != want.Name {
+		t.Errorf("Name = %q, want %q", got.Name, want.Name)
+	}
+	if got.GameMode != want.GameMode {
+		t.Errorf("GameMode = %q, want %q", got.GameMode, want.GameMode)
+	}
+	if got.Description != want.Description {
+		t.Errorf("Description = %q, want %q", got.Description, want.Description)
+	}
+	if got.DisplayWinCondition != want.DisplayWinCondition {
+		t.Errorf("DisplayWinCondition = %q, want %q", got.DisplayWinCondition, want.DisplayWinCondition)
+	}
+	if got.SizeX != want.SizeX {
+		t.Errorf("SizeX = %d, want %d", got.SizeX, want.SizeX)
+	}
+	if got.SizeZ != want.SizeZ {
+		t.Errorf("SizeZ = %d, want %d", got.SizeZ, want.SizeZ)
+	}
+
+	// Variants / zones / connections.
+	if len(got.Variants) != want.VariantCount {
+		t.Fatalf("Variants count = %d, want %d", len(got.Variants), want.VariantCount)
+	}
+	variant := got.Variants[0]
+
+	gotZoneNames := make([]string, len(variant.Zones))
+	for i, z := range variant.Zones {
+		gotZoneNames[i] = z.Name
+	}
+	if !sameStringSet(gotZoneNames, want.ZoneNames) {
+		t.Errorf("Zones = %v, want set %v", gotZoneNames, want.ZoneNames)
+	}
+
+	gotConns := make([]expectedConnection, len(variant.Connections))
+	for i, c := range variant.Connections {
+		gotConns[i] = expectedConnection{From: c.From, To: c.To, ConnectionType: c.ConnectionType}
+	}
+	if !sameConnectionSet(gotConns, want.Connections) {
+		t.Errorf("Connections = %v, want set %v", gotConns, want.Connections)
+	}
+
+	// Collection counts.
+	if len(got.ZoneLayouts) != want.ZoneLayoutCount {
+		t.Errorf("ZoneLayouts count = %d, want %d", len(got.ZoneLayouts), want.ZoneLayoutCount)
+	}
+	if len(got.MandatoryContent) != want.MandatoryCount {
+		t.Errorf("MandatoryContent count = %d, want %d", len(got.MandatoryContent), want.MandatoryCount)
+	}
+	if len(got.ContentCountLimits) != want.ContentCountLimits {
+		t.Errorf("ContentCountLimits count = %d, want %d", len(got.ContentCountLimits), want.ContentCountLimits)
+	}
+	if len(got.ContentPools) != want.ContentPoolCount {
+		t.Errorf("ContentPools count = %d, want %d", len(got.ContentPools), want.ContentPoolCount)
+	}
+	if len(got.ContentLists) != want.ContentListCount {
+		t.Errorf("ContentLists count = %d, want %d", len(got.ContentLists), want.ContentListCount)
+	}
+
+	// Game rules.
+	gr := got.GameRules
+	if gr.HeroCountMin != want.HeroCountMin {
+		t.Errorf("HeroCountMin = %d, want %d", gr.HeroCountMin, want.HeroCountMin)
+	}
+	if gr.HeroCountMax != want.HeroCountMax {
+		t.Errorf("HeroCountMax = %d, want %d", gr.HeroCountMax, want.HeroCountMax)
+	}
+	if gr.HeroCountIncrement != want.HeroCountIncrement {
+		t.Errorf("HeroCountIncrement = %d, want %d", gr.HeroCountIncrement, want.HeroCountIncrement)
+	}
+	if gr.HeroHireBan != want.HeroHireBan {
+		t.Errorf("HeroHireBan = %t, want %t", gr.HeroHireBan, want.HeroHireBan)
+	}
+	if gr.FactionLawsExpModifier != want.FactionLawsExpModifier {
+		t.Errorf("FactionLawsExpModifier = %v, want %v", gr.FactionLawsExpModifier, want.FactionLawsExpModifier)
+	}
+	if gr.AstrologyExpModifier != want.AstrologyExpModifier {
+		t.Errorf("AstrologyExpModifier = %v, want %v", gr.AstrologyExpModifier, want.AstrologyExpModifier)
+	}
+
+	// Win conditions.
+	wc := gr.WinConditions
+	if wc.Classic != want.WinClassic {
+		t.Errorf("WinConditions.Classic = %t, want %t", wc.Classic, want.WinClassic)
+	}
+	if wc.Desertion != want.WinDesertion {
+		t.Errorf("WinConditions.Desertion = %t, want %t", wc.Desertion, want.WinDesertion)
+	}
+	if wc.DesertionDay != want.WinDesertionDay {
+		t.Errorf("WinConditions.DesertionDay = %d, want %d", wc.DesertionDay, want.WinDesertionDay)
+	}
+	if wc.HeroLighting != want.WinHeroLighting {
+		t.Errorf("WinConditions.HeroLighting = %t, want %t", wc.HeroLighting, want.WinHeroLighting)
+	}
+	if wc.LostStartCityDay != want.WinLostStartCity {
+		t.Errorf("WinConditions.LostStartCityDay = %d, want %d", wc.LostStartCityDay, want.WinLostStartCity)
+	}
+	if wc.CityHoldDays != want.WinCityHoldDays {
+		t.Errorf("WinConditions.CityHoldDays = %d, want %d", wc.CityHoldDays, want.WinCityHoldDays)
+	}
+}
+
+func sameStringSet(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counts := map[string]int{}
+	for _, s := range a {
+		counts[s]++
+	}
+	for _, s := range b {
+		counts[s]--
+		if counts[s] < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func sameConnectionSet(a, b []expectedConnection) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	// Connections are conceptually undirected — normalise endpoints so callers
+	// don't have to anticipate the (non-deterministic) emission order.
+	key := func(c expectedConnection) string {
+		from, to := c.From, c.To
+		if from > to {
+			from, to = to, from
+		}
+		return from + "|" + to + "|" + c.ConnectionType
+	}
+	counts := map[string]int{}
+	for _, c := range a {
+		counts[key(c)]++
+	}
+	for _, c := range b {
+		counts[key(c)]--
+		if counts[key(c)] < 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // ── Generate: connection endpoints resolve ───────────────────────────

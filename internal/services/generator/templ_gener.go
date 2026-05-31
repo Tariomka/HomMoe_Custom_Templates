@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
@@ -28,21 +31,6 @@ const (
 type distancePreset struct{ Min, Max float64 }
 
 var distNear = distancePreset{0.0, 0.35}
-
-func roundToDP(v float64, dp int) float64 {
-	mul := math.Pow(10, float64(dp))
-	return math.Round(v*mul) / mul
-}
-
-func clampInt(v, lo, hi int) int {
-	if v < lo {
-		return lo
-	}
-	if v > hi {
-		return hi
-	}
-	return v
-}
 
 // ZoneLetters are the labels used to name zones (max 32).
 var ZoneLetters = []string{
@@ -149,17 +137,17 @@ func countPhrase(count int, singular, plural string) string {
 
 type neutralZonePlan struct {
 	Letter      string
-	Quality     constants.NeutralZoneQuality
+	Quality     models.NeutralZoneQuality
 	CastleCount int
 }
 
 func buildNeutralZonePlan(generatorSettings *config.GeneratorConfig) []neutralZonePlan {
 	var plans []neutralZonePlan
 	maxNeutral := max(0, len(ZoneLetters)-generatorSettings.PlayerCount)
-	castleZoneCastleCount := clampInt(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 1, 4)
+	castleZoneCastleCount := helpers.Clamp(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 1, 4)
 
-	add := func(requested int, quality constants.NeutralZoneQuality, castleCount int) {
-		count := clampInt(requested, 0, 30)
+	add := func(requested int, quality models.NeutralZoneQuality, castleCount int) {
+		count := helpers.Clamp(requested, 0, 30)
 		for i := 0; i < count && len(plans) < maxNeutral; i++ {
 			letter := ZoneLetters[generatorSettings.PlayerCount+len(plans)]
 			plans = append(plans, neutralZonePlan{letter, quality, castleCount})
@@ -171,20 +159,20 @@ func buildNeutralZonePlan(generatorSettings *config.GeneratorConfig) []neutralZo
 		advanced.NeutralMediumNoCastleCount + advanced.NeutralMediumCastleCount +
 		advanced.NeutralHighNoCastleCount + advanced.NeutralHighCastleCount
 	if advancedTotal > 0 {
-		add(advanced.NeutralLowNoCastleCount, constants.QualityLow, 0)
-		add(advanced.NeutralLowCastleCount, constants.QualityLow, castleZoneCastleCount)
-		add(advanced.NeutralMediumNoCastleCount, constants.QualityMedium, 0)
-		add(advanced.NeutralMediumCastleCount, constants.QualityMedium, castleZoneCastleCount)
-		add(advanced.NeutralHighNoCastleCount, constants.QualityHigh, 0)
-		add(advanced.NeutralHighCastleCount, constants.QualityHigh, castleZoneCastleCount)
+		add(advanced.NeutralLowNoCastleCount, models.QualityLow, 0)
+		add(advanced.NeutralLowCastleCount, models.QualityLow, castleZoneCastleCount)
+		add(advanced.NeutralMediumNoCastleCount, models.QualityMedium, 0)
+		add(advanced.NeutralMediumCastleCount, models.QualityMedium, castleZoneCastleCount)
+		add(advanced.NeutralHighNoCastleCount, models.QualityHigh, 0)
+		add(advanced.NeutralHighCastleCount, models.QualityHigh, castleZoneCastleCount)
 	} else {
-		cc := clampInt(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 0, 4)
-		add(generatorSettings.ZoneConfiguration.NeutralZoneCount, constants.QualityMedium, cc)
+		cc := helpers.Clamp(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 0, 4)
+		add(generatorSettings.ZoneConfiguration.NeutralZoneCount, models.QualityMedium, cc)
 	}
 	if generatorSettings.Topology == config.TopologySharedWeb && len(plans) == 0 && maxNeutral > 0 {
 		letter := ZoneLetters[generatorSettings.PlayerCount]
-		cc := clampInt(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 0, 4)
-		plans = append(plans, neutralZonePlan{letter, constants.QualityMedium, cc})
+		cc := helpers.Clamp(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 0, 4)
+		plans = append(plans, neutralZonePlan{letter, models.QualityMedium, cc})
 	}
 	return plans
 }
@@ -214,15 +202,15 @@ func scaleBorderGuardValue(value int, t generationTuning) int {
 	return scaleValue(float64(value), t.BorderGuardStrengthMultiplier)
 }
 func scaleGuardMultiplier(value float64, t generationTuning) float64 {
-	return roundToDP(value*t.NeutralStackStrengthMultiplier, 3)
+	return helpers.RoundWithPrecision(value*t.NeutralStackStrengthMultiplier, 3)
 }
 
 // borderGuardValue returns the base border-guard value (already scaled
 // by the BorderGuardStrengthMultiplier tuning) for a connection between
 // two zone letters
 func borderGuardValue(letterA, letterB string, playerLetters []string, neutralByLetter map[string]neutralZonePlan, t generationTuning) int {
-	aIsPlayer := contains(playerLetters, letterA)
-	bIsPlayer := contains(playerLetters, letterB)
+	aIsPlayer := slices.Contains(playerLetters, letterA)
+	bIsPlayer := slices.Contains(playerLetters, letterB)
 	if aIsPlayer && bIsPlayer {
 		return scaleBorderGuardValue(30000, t)
 	}
@@ -242,22 +230,22 @@ func borderGuardValue(letterA, letterB string, playerLetters []string, neutralBy
 	return scaleBorderGuardValue(qualityGuardBase(neutralQualityOf(neutralByLetter, neutralLetter)), t)
 }
 
-func neutralQualityOf(neutralByLetter map[string]neutralZonePlan, letter string) constants.NeutralZoneQuality {
+func neutralQualityOf(neutralByLetter map[string]neutralZonePlan, letter string) models.NeutralZoneQuality {
 	if neutralByLetter == nil {
-		return constants.QualityMedium
+		return models.QualityMedium
 	}
 	plan, ok := neutralByLetter[letter]
 	if !ok {
-		return constants.QualityMedium
+		return models.QualityMedium
 	}
 	return plan.Quality
 }
 
-func qualityGuardBase(q constants.NeutralZoneQuality) int {
+func qualityGuardBase(q models.NeutralZoneQuality) int {
 	switch q {
-	case constants.QualityLow:
+	case models.QualityLow:
 		return 15000
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		return 25000
 	default:
 		return 20000
@@ -272,7 +260,7 @@ func effectiveGuardRandomization(settings *config.GeneratorConfig) float64 {
 	if math.IsNaN(v) || math.IsInf(v, 0) {
 		return defaultGuardRandomization
 	}
-	return roundToDP(math.Max(0, math.Min(v, 0.5)), 3)
+	return helpers.RoundWithPrecision(math.Max(0, math.Min(v, 0.5)), 3)
 }
 
 func computeContentScale(mapSize, totalZones int) float64 {
@@ -285,11 +273,11 @@ func normalizeZoneSize(zoneSize float64) float64 {
 	if math.IsNaN(zoneSize) || math.IsInf(zoneSize, 0) {
 		return 1.0
 	}
-	return roundToDP(math.Max(0.1, math.Min(zoneSize, 2.0)), 2)
+	return helpers.RoundWithPrecision(math.Max(0.1, math.Min(zoneSize, 2.0)), 2)
 }
 
 func percentToModifier(percent int) float64 {
-	return roundToDP(float64(clampInt(percent, 25, 200))/100.0, 2)
+	return helpers.RoundWithPrecision(float64(helpers.Clamp(percent, 25, 200))/100.0, 2)
 }
 
 func buildGameRules(settings *config.GeneratorConfig, effectiveVC string) template.GameRules {
@@ -342,22 +330,22 @@ func buildAdvancedWinConditions(generatorSettings *config.GeneratorConfig, effec
 		HeroLighting:     true,
 		HeroLightingDay:  1,
 		LostStartCity:    useLostStartCity,
-		LostStartCityDay: clampInt(ge.LostStartCityDay, 1, 30),
+		LostStartCityDay: helpers.Clamp(ge.LostStartCityDay, 1, 30),
 		LostStartHero:    ge.LostStartHero || useGladiator || generatorSettings.GameMode == "SingleHero",
 		CityHold:         useCityHold,
-		CityHoldDays:     clampInt(ge.CityHoldDays, 1, 30),
+		CityHoldDays:     helpers.Clamp(ge.CityHoldDays, 1, 30),
 	}
 	if useGladiator {
 		wc.GladiatorArena = true
 		wc.GladiatorArenaRegistrationStartFight = true
-		wc.GladiatorArenaDaysDelayStart = clampInt(gr.DaysDelayStart, 1, 60)
-		wc.GladiatorArenaCountDay = clampInt(gr.CountDay, 1, 30)
+		wc.GladiatorArenaDaysDelayStart = helpers.Clamp(gr.DaysDelayStart, 1, 60)
+		wc.GladiatorArenaCountDay = helpers.Clamp(gr.CountDay, 1, 30)
 		wc.ChampionSelectRule = "StartHero"
 	}
 	if useTournament {
-		firstDay := clampInt(tr.FirstTournamentDay, 3, 60)
-		interval := clampInt(tr.Interval, 3, 30)
-		pointsToWin := clampInt(tr.PointsToWin, 1, 10)
+		firstDay := helpers.Clamp(tr.FirstTournamentDay, 3, 60)
+		interval := helpers.Clamp(tr.Interval, 3, 30)
+		pointsToWin := helpers.Clamp(tr.PointsToWin, 1, 10)
 		roundCount := pointsToWin*2 - 1
 		wc.ChampionSelectRule = "StartHero"
 		wc.Tournament = true
@@ -446,11 +434,11 @@ type neutralZoneProfile struct {
 	ExtraBuildingsCSid           string
 }
 
-func getNeutralZoneProfile(quality constants.NeutralZoneQuality) neutralZoneProfile {
+func getNeutralZoneProfile(quality models.NeutralZoneQuality) neutralZoneProfile {
 	switch quality {
-	case constants.QualityLow:
+	case models.QualityLow:
 		return neutralZoneProfile{sideLayoutName, 1.1, cp(t2Guarded), cp(t2Unguarded), cp(generalResourcesPoor), 120000, 1000, 25000, 200, 30000, 240, 4000, 2000, "poor_buildings_construction", "poor_buildings_construction"}
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		return neutralZoneProfile{treasureLayoutName, 1.8, append(cp(t4Guarded), t5Guarded...), append(cp(t4Unguarded), t5Unguarded...), cp(generalResourcesRich), 480000, 3000, 80000, 620, 90000, 580, 16000, 8000, "rich_buildings_construction", "rich_buildings_construction"}
 	default: // Medium
 		return neutralZoneProfile{treasureLayoutName, 1.4, cp(t3Guarded), cp(t3Unguarded), cp(generalResourcesMedium), 240000, 2000, 38000, 300, 55000, 420, 8000, 4000, "rich_buildings_construction", "poor_buildings_construction"}
@@ -550,7 +538,7 @@ func buildNeutralZone(plan neutralZonePlan, ringConns []string, zoneSize float64
 	}
 
 	reaction := []int{0, 10, 10, 10, 10, 0}
-	if plan.Quality == constants.QualityHigh {
+	if plan.Quality == models.QualityHigh {
 		reaction = []int{0, 10, 10, 20, 10, 0}
 	}
 
@@ -712,7 +700,7 @@ func buildSideContentLimits() template.StringList {
 
 func makeVariant(playerLetters []string, firstLetter string, totalZones int, zones []template.Zone, connections []template.Connection) template.Variant {
 	zeroZone := "Neutral-" + firstLetter
-	if contains(playerLetters, firstLetter) {
+	if slices.Contains(playerLetters, firstLetter) {
 		zeroZone = "Spawn-" + firstLetter
 	}
 	step := 0
@@ -771,9 +759,9 @@ func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZone
 	for _, nz := range neutralZones {
 		var content []template.MandatoryContentItem
 		switch nz.Quality {
-		case constants.QualityLow:
+		case models.QualityLow:
 			content = BuildLowNeutralMandatoryContent(settings, nz.CastleCount)
-		case constants.QualityHigh:
+		case models.QualityHigh:
 			content = BuildHighNeutralMandatoryContent(settings, nz.CastleCount)
 		default:
 			content = BuildMediumNeutralMandatoryContent(settings, nz.CastleCount)
@@ -796,7 +784,7 @@ func buildRingConnections(playerLetters, orderedLetters []string, tuning generat
 		next := (i + 1) % count
 		from := orderedLetters[i]
 		to := orderedLetters[next]
-		if isolate && contains(playerLetters, from) && contains(playerLetters, to) {
+		if isolate && slices.Contains(playerLetters, from) && slices.Contains(playerLetters, to) {
 			continue
 		}
 		fromZone := zoneName(from, playerLetters)
@@ -906,7 +894,7 @@ func buildVariantDefault(settings *config.GeneratorConfig, playerLetters []strin
 	ringConnLeft := make([]string, n)
 	for i := range n {
 		next := (i + 1) % n
-		if isolate && contains(playerLetters, ordered[i]) && contains(playerLetters, ordered[next]) {
+		if isolate && slices.Contains(playerLetters, ordered[i]) && slices.Contains(playerLetters, ordered[next]) {
 			continue
 		}
 		name := fmt.Sprintf("Ring-%s-%s", ordered[i], ordered[next])
@@ -924,7 +912,7 @@ func buildVariantDefault(settings *config.GeneratorConfig, playerLetters []strin
 		if ringConnRight[i] != "" && ringConnRight[i] != ringConnLeft[i] {
 			myConns = append(myConns, ringConnRight[i])
 		}
-		if pi := indexOf(playerLetters, letter); pi >= 0 {
+		if pi := slices.Index(playerLetters, letter); pi >= 0 {
 			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, settings.ZoneConfiguration.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneConfiguration.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
 		} else {
 			zones = append(zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, letter == holdCityNeutralLetter))
@@ -951,7 +939,7 @@ func buildVariantChain(settings *config.GeneratorConfig, playerLetters []string,
 
 	connNames := make([]string, n-1)
 	for i := 0; i < n-1; i++ {
-		if isolate && contains(playerLetters, ordered[i]) && contains(playerLetters, ordered[i+1]) {
+		if isolate && slices.Contains(playerLetters, ordered[i]) && slices.Contains(playerLetters, ordered[i+1]) {
 			continue
 		}
 		connNames[i] = fmt.Sprintf("Chain-%s-%s", ordered[i], ordered[i+1])
@@ -967,7 +955,7 @@ func buildVariantChain(settings *config.GeneratorConfig, playerLetters []string,
 		if i < n-1 && connNames[i] != "" {
 			myConns = append(myConns, connNames[i])
 		}
-		if pi := indexOf(playerLetters, letter); pi >= 0 {
+		if pi := slices.Index(playerLetters, letter); pi >= 0 {
 			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, settings.ZoneConfiguration.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneConfiguration.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
 		} else {
 			zones = append(zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, letter == holdCityNeutralLetter))
@@ -1030,7 +1018,7 @@ func buildVariantHubAndSpoke(settings *config.GeneratorConfig, playerLetters []s
 
 	for i, letter := range outerLetters {
 		spokeConns := []string{"Hub-" + letter}
-		if pi := indexOf(playerLetters, letter); pi >= 0 {
+		if pi := slices.Index(playerLetters, letter); pi >= 0 {
 			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), spokeConns, settings.ZoneConfiguration.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneConfiguration.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
 		} else {
 			zones = append(zones, buildNeutralZone(neutralByLetter[letter], spokeConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, false))
@@ -1065,7 +1053,7 @@ func buildVariantHubAndSpoke(settings *config.GeneratorConfig, playerLetters []s
 		next := (i + 1) % len(outerLetters)
 		from := outerLetters[i]
 		to := outerLetters[next]
-		if settings.NoDirectPlayerConnections && contains(playerLetters, from) && contains(playerLetters, to) {
+		if settings.NoDirectPlayerConnections && slices.Contains(playerLetters, from) && slices.Contains(playerLetters, to) {
 			continue
 		}
 		conns = append(conns, template.Connection{
@@ -1249,7 +1237,7 @@ func buildVariantRandom(settings *config.GeneratorConfig, playerLetters []string
 		a, b := p[0], p[1]
 		from := allLetters[a]
 		to := allLetters[b]
-		if isolate && contains(playerLetters, from) && contains(playerLetters, to) {
+		if isolate && slices.Contains(playerLetters, from) && slices.Contains(playerLetters, to) {
 			continue
 		}
 		cn := fmt.Sprintf("Rnd-%s-%s", from, to)
@@ -1267,7 +1255,7 @@ func buildVariantRandom(settings *config.GeneratorConfig, playerLetters []string
 	for i := 0; i < count; i++ {
 		letter := allLetters[i]
 		myConns := connsByZone[i]
-		if pi := indexOf(playerLetters, letter); pi >= 0 {
+		if pi := slices.Index(playerLetters, letter); pi >= 0 {
 			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, settings.ZoneConfiguration.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneConfiguration.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
 		} else {
 			zones = append(zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, letter == holdCityNeutralLetter))
@@ -2077,7 +2065,7 @@ func inCircumcircle(pts [][2]float64, i0, i1, i2 int, px, py float64) bool {
 // ── balanced positions ───────────────────────────────────────────────
 
 func zoneTierRank(letter string, playerLetters []string, neutralByLetter map[string]neutralZonePlan) int {
-	if contains(playerLetters, letter) {
+	if slices.Contains(playerLetters, letter) {
 		return 0
 	}
 	plan, ok := neutralByLetter[letter]
@@ -2085,9 +2073,9 @@ func zoneTierRank(letter string, playerLetters []string, neutralByLetter map[str
 		return 1
 	}
 	switch plan.Quality {
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		return 3
-	case constants.QualityMedium:
+	case models.QualityMedium:
 		return 2
 	default:
 		return 1
@@ -2324,7 +2312,7 @@ func buildEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 	}
 	for i := 0; i < remaining; i++ {
 		gap := int(math.Floor((float64(i) + 0.5) * float64(gapCount) / float64(remaining)))
-		capacities[clampInt(gap, 0, gapCount-1)]++
+		capacities[helpers.Clamp(gap, 0, gapCount-1)]++
 	}
 	return capacities
 }
@@ -2332,9 +2320,9 @@ func buildEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 func neutralZoneBalanceScore(zone neutralZonePlan) float64 {
 	q := 1.0
 	switch zone.Quality {
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		q = 3.0
-	case constants.QualityMedium:
+	case models.QualityMedium:
 		q = 2.0
 	}
 	return q + math.Min(float64(zone.CastleCount), 4)*0.15
@@ -2557,26 +2545,8 @@ func pickHoldCityNeutralLetter(neutralZones []neutralZonePlan, playerLetters []s
 
 // ── helpers ──────────────────────────────────────────────────────────
 
-func contains(ss []string, s string) bool {
-	for _, v := range ss {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
-
-func indexOf(ss []string, s string) int {
-	for i, v := range ss {
-		if v == s {
-			return i
-		}
-	}
-	return -1
-}
-
 func zoneName(letter string, playerLetters []string) string {
-	if contains(playerLetters, letter) {
+	if slices.Contains(playerLetters, letter) {
 		return "Spawn-" + letter
 	}
 	return "Neutral-" + letter

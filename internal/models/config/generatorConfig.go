@@ -1,8 +1,13 @@
 package config
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+)
+
+const (
+	defaultTemplateName = "Custom Template"
 )
 
 // GeneratorConfig is the input model for the template generator
@@ -106,4 +111,53 @@ func (this *GeneratorConfig) GetVictoryCondition() string {
 	}
 
 	return "win_condition_1"
+}
+
+func (this *GeneratorConfig) EnsureNameExists() {
+	if this.TemplateName == "" {
+		this.TemplateName = defaultTemplateName
+	}
+}
+
+func (this *GeneratorConfig) CanHonorNeutralSeparation() bool {
+	min := this.MinNeutralZonesBetweenPlayers
+	if min <= 0 {
+		return true
+	}
+
+	if this.RandomPortals {
+		return false
+	}
+
+	neutralZoneCount := this.getNeutralZoneCount()
+	switch this.Topology {
+	case config_inner.TopologyDefault, config_inner.TopologyBalanced:
+		return neutralZoneCount >= this.PlayerCount*min
+	case config_inner.TopologyChain:
+		return neutralZoneCount >= (this.PlayerCount-1)*min
+	case config_inner.TopologyHubAndSpoke:
+		return min <= 1
+	case config_inner.TopologySharedWeb:
+		return min <= 1 && neutralZoneCount >= 1
+	default:
+		return false
+	}
+}
+
+func (this *GeneratorConfig) getNeutralZoneCount() int {
+	advancedTotal := this.ZoneConfiguration.Advanced.NeutralLowNoCastleCount +
+		this.ZoneConfiguration.Advanced.NeutralLowCastleCount +
+		this.ZoneConfiguration.Advanced.NeutralMediumNoCastleCount +
+		this.ZoneConfiguration.Advanced.NeutralMediumCastleCount +
+		this.ZoneConfiguration.Advanced.NeutralHighNoCastleCount +
+		this.ZoneConfiguration.Advanced.NeutralHighCastleCount
+
+	count := helpers.BoolToInt(this.Topology == config_inner.TopologySharedWeb)
+	if advancedTotal > 0 {
+		count += advancedTotal
+	} else {
+		count += this.ZoneConfiguration.NeutralZoneCount
+	}
+
+	return count
 }

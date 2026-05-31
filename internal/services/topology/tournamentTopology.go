@@ -2,10 +2,80 @@ package topology
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
+
+func buildVariantTournament(settings *config.GeneratorConfig, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning) template.Variant {
+	neutralByLetter := mapNeutralByLetter(neutralZones)
+
+	// Distribute neutrals in a balanced round-robin: sort by descending quality
+	// (then castle count, then letter) so that quality tiers are split evenly
+	// across the two players (e91e79f / v0.7 ordering).
+	sorted := make([]neutralZonePlan, len(neutralZones))
+	copy(sorted, neutralZones)
+	sort.SliceStable(sorted, func(i, j int) bool {
+		if sorted[i].Quality != sorted[j].Quality {
+			return sorted[i].Quality > sorted[j].Quality
+		}
+		if sorted[i].CastleCount != sorted[j].CastleCount {
+			return sorted[i].CastleCount > sorted[j].CastleCount
+		}
+		return sorted[i].Letter < sorted[j].Letter
+	})
+	neutralsForPlayer := [2][]neutralZonePlan{}
+	for i, nz := range sorted {
+		neutralsForPlayer[i%2] = append(neutralsForPlayer[i%2], nz)
+	}
+
+	for p := range 2 {
+		sort.SliceStable(neutralsForPlayer[p], func(i, j int) bool {
+			ai, aj := neutralsForPlayer[p][i], neutralsForPlayer[p][j]
+			si, sj := neutralZoneBalanceScore(ai), neutralZoneBalanceScore(aj)
+			if si != sj {
+				return si < sj
+			}
+			return ai.Letter < aj.Letter
+		})
+	}
+
+	var zones []template.Zone
+	var conns []template.Connection
+
+	switch settings.Topology {
+	case config.TopologyHubAndSpoke:
+		for p := range 2 {
+			buildTournamentHubCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
+	case config.TopologyBalanced:
+		for p := range 2 {
+			buildTournamentBalancedCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
+	case config.TopologyDefault:
+		for p := range 2 {
+			buildTournamentRingCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
+	default:
+		// Chain, SharedWeb, Random → chain-per-cluster fallback.
+		for p := range 2 {
+			buildTournamentChainCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+		}
+	}
+
+	if settings.RandomPortals {
+		for p := range 2 {
+			clusterLetters := []string{playerLetters[p]}
+			for _, n := range neutralsForPlayer[p] {
+				clusterLetters = append(clusterLetters, n.Letter)
+			}
+			conns = append(conns, buildRandomPortalConnections(playerLetters, clusterLetters, tuning, settings.MaxPortalConnections)...)
+		}
+	}
+
+	return makeVariant(playerLetters, playerLetters[0], len(zones), zones, conns)
+}
 
 // buildTournamentHubCluster — one player's isolated cluster as a private
 // hub-and-spoke layout. A dedicated mini-hub zone "Hub-{playerLetter}" sits

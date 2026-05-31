@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -145,7 +145,7 @@ func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 	for _, raw := range this.tierRows[tier] {
 		row := raw.Normalised()
 		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
-		if found, ok := helpers.LookupSid(row.Sid); ok {
+		if found, ok := utils.LookupSid(row.Sid); ok {
 			mapping = found
 		}
 		roadIdx := max(indexOf(constants.RoadDistances, row.RoadDistance), 0)

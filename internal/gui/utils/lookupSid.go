@@ -1,4 +1,4 @@
-package helpers
+package utils
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"

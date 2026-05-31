@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
@@ -150,7 +151,7 @@ func countPhrase(count int, singular, plural string) string {
 
 type neutralZonePlan struct {
 	Letter      string
-	Quality     constants.NeutralZoneQuality
+	Quality     models.NeutralZoneQuality
 	CastleCount int
 }
 
@@ -159,7 +160,7 @@ func buildNeutralZonePlan(generatorSettings *config.GeneratorConfig) []neutralZo
 	maxNeutral := max(0, len(ZoneLetters)-generatorSettings.PlayerCount)
 	castleZoneCastleCount := clampInt(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 1, 4)
 
-	add := func(requested int, quality constants.NeutralZoneQuality, castleCount int) {
+	add := func(requested int, quality models.NeutralZoneQuality, castleCount int) {
 		count := clampInt(requested, 0, 30)
 		for i := 0; i < count && len(plans) < maxNeutral; i++ {
 			letter := ZoneLetters[generatorSettings.PlayerCount+len(plans)]
@@ -172,20 +173,20 @@ func buildNeutralZonePlan(generatorSettings *config.GeneratorConfig) []neutralZo
 		advanced.NeutralMediumNoCastleCount + advanced.NeutralMediumCastleCount +
 		advanced.NeutralHighNoCastleCount + advanced.NeutralHighCastleCount
 	if advancedTotal > 0 {
-		add(advanced.NeutralLowNoCastleCount, constants.QualityLow, 0)
-		add(advanced.NeutralLowCastleCount, constants.QualityLow, castleZoneCastleCount)
-		add(advanced.NeutralMediumNoCastleCount, constants.QualityMedium, 0)
-		add(advanced.NeutralMediumCastleCount, constants.QualityMedium, castleZoneCastleCount)
-		add(advanced.NeutralHighNoCastleCount, constants.QualityHigh, 0)
-		add(advanced.NeutralHighCastleCount, constants.QualityHigh, castleZoneCastleCount)
+		add(advanced.NeutralLowNoCastleCount, models.QualityLow, 0)
+		add(advanced.NeutralLowCastleCount, models.QualityLow, castleZoneCastleCount)
+		add(advanced.NeutralMediumNoCastleCount, models.QualityMedium, 0)
+		add(advanced.NeutralMediumCastleCount, models.QualityMedium, castleZoneCastleCount)
+		add(advanced.NeutralHighNoCastleCount, models.QualityHigh, 0)
+		add(advanced.NeutralHighCastleCount, models.QualityHigh, castleZoneCastleCount)
 	} else {
 		cc := clampInt(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 0, 4)
-		add(generatorSettings.ZoneConfiguration.NeutralZoneCount, constants.QualityMedium, cc)
+		add(generatorSettings.ZoneConfiguration.NeutralZoneCount, models.QualityMedium, cc)
 	}
 	if generatorSettings.Topology == config.TopologySharedWeb && len(plans) == 0 && maxNeutral > 0 {
 		letter := ZoneLetters[generatorSettings.PlayerCount]
 		cc := clampInt(generatorSettings.ZoneConfiguration.NeutralZoneCastles, 0, 4)
-		plans = append(plans, neutralZonePlan{letter, constants.QualityMedium, cc})
+		plans = append(plans, neutralZonePlan{letter, models.QualityMedium, cc})
 	}
 	return plans
 }
@@ -243,22 +244,22 @@ func borderGuardValue(letterA, letterB string, playerLetters []string, neutralBy
 	return scaleBorderGuardValue(qualityGuardBase(neutralQualityOf(neutralByLetter, neutralLetter)), t)
 }
 
-func neutralQualityOf(neutralByLetter map[string]neutralZonePlan, letter string) constants.NeutralZoneQuality {
+func neutralQualityOf(neutralByLetter map[string]neutralZonePlan, letter string) models.NeutralZoneQuality {
 	if neutralByLetter == nil {
-		return constants.QualityMedium
+		return models.QualityMedium
 	}
 	plan, ok := neutralByLetter[letter]
 	if !ok {
-		return constants.QualityMedium
+		return models.QualityMedium
 	}
 	return plan.Quality
 }
 
-func qualityGuardBase(q constants.NeutralZoneQuality) int {
+func qualityGuardBase(q models.NeutralZoneQuality) int {
 	switch q {
-	case constants.QualityLow:
+	case models.QualityLow:
 		return 15000
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		return 25000
 	default:
 		return 20000
@@ -386,31 +387,29 @@ func buildAdvancedWinConditions(generatorSettings *config.GeneratorConfig, effec
 	return wc
 }
 
-func buildVariant(generatorSettings *config.GeneratorConfig, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string, hubIsHoldCity bool) template.Variant {
+func buildVariant(configuration *config.GeneratorConfig, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string, hubIsHoldCity bool) template.Variant {
 	// Shuffle player letters
 	pl := make([]string, len(playerLetters))
 	copy(pl, playerLetters)
 	rand.Shuffle(len(pl), func(i, j int) { pl[i], pl[j] = pl[j], pl[i] })
 
-	isTournament := (generatorSettings.TournamentRules != nil && generatorSettings.TournamentRules.Enabled) ||
-		(generatorSettings.GameEndConditions != nil && generatorSettings.GameEndConditions.VictoryCondition == "win_condition_6")
-	if isTournament && len(pl) == 2 {
-		return buildVariantTournament(generatorSettings, pl, neutralZones, tuning)
+	if configuration.IsTournamentMode() && len(pl) == 2 {
+		return buildVariantTournament(configuration, pl, neutralZones, tuning)
 	}
 
-	switch generatorSettings.Topology {
+	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
-		return buildVariantHubAndSpoke(generatorSettings, pl, neutralZones, tuning, hubIsHoldCity)
+		return buildVariantHubAndSpoke(configuration, pl, neutralZones, tuning, hubIsHoldCity)
 	case config.TopologyChain:
-		return buildVariantChain(generatorSettings, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantChain(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
 	case config.TopologySharedWeb:
-		return buildVariantSharedWeb(generatorSettings, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantSharedWeb(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
 	case config.TopologyRandom:
-		return buildVariantRandom(generatorSettings, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantRandom(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
 	case config.TopologyBalanced:
-		return buildVariantBalanced(generatorSettings, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantBalanced(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
 	default:
-		return buildVariantDefault(generatorSettings, pl, neutralZones, tuning, holdCityNeutralLetter)
+		return buildVariantDefault(configuration, pl, neutralZones, tuning, holdCityNeutralLetter)
 	}
 }
 
@@ -447,11 +446,11 @@ type neutralZoneProfile struct {
 	ExtraBuildingsCSid           string
 }
 
-func getNeutralZoneProfile(quality constants.NeutralZoneQuality) neutralZoneProfile {
+func getNeutralZoneProfile(quality models.NeutralZoneQuality) neutralZoneProfile {
 	switch quality {
-	case constants.QualityLow:
+	case models.QualityLow:
 		return neutralZoneProfile{sideLayoutName, 1.1, cp(t2Guarded), cp(t2Unguarded), cp(generalResourcesPoor), 120000, 1000, 25000, 200, 30000, 240, 4000, 2000, "poor_buildings_construction", "poor_buildings_construction"}
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		return neutralZoneProfile{treasureLayoutName, 1.8, append(cp(t4Guarded), t5Guarded...), append(cp(t4Unguarded), t5Unguarded...), cp(generalResourcesRich), 480000, 3000, 80000, 620, 90000, 580, 16000, 8000, "rich_buildings_construction", "rich_buildings_construction"}
 	default: // Medium
 		return neutralZoneProfile{treasureLayoutName, 1.4, cp(t3Guarded), cp(t3Unguarded), cp(generalResourcesMedium), 240000, 2000, 38000, 300, 55000, 420, 8000, 4000, "rich_buildings_construction", "poor_buildings_construction"}
@@ -551,7 +550,7 @@ func buildNeutralZone(plan neutralZonePlan, ringConns []string, zoneSize float64
 	}
 
 	reaction := []int{0, 10, 10, 10, 10, 0}
-	if plan.Quality == constants.QualityHigh {
+	if plan.Quality == models.QualityHigh {
 		reaction = []int{0, 10, 10, 20, 10, 0}
 	}
 
@@ -772,9 +771,9 @@ func buildAllMandatoryContent(playerLetters []string, neutralZones []neutralZone
 	for _, nz := range neutralZones {
 		var content []template.MandatoryContentItem
 		switch nz.Quality {
-		case constants.QualityLow:
+		case models.QualityLow:
 			content = BuildLowNeutralMandatoryContent(settings, nz.CastleCount)
-		case constants.QualityHigh:
+		case models.QualityHigh:
 			content = BuildHighNeutralMandatoryContent(settings, nz.CastleCount)
 		default:
 			content = BuildMediumNeutralMandatoryContent(settings, nz.CastleCount)
@@ -2087,9 +2086,9 @@ func zoneTierRank(letter string, playerLetters []string, neutralByLetter map[str
 		return 1
 	}
 	switch plan.Quality {
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		return 3
-	case constants.QualityMedium:
+	case models.QualityMedium:
 		return 2
 	default:
 		return 1
@@ -2334,9 +2333,9 @@ func buildEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 func neutralZoneBalanceScore(zone neutralZonePlan) float64 {
 	q := 1.0
 	switch zone.Quality {
-	case constants.QualityHigh:
+	case models.QualityHigh:
 		q = 3.0
-	case constants.QualityMedium:
+	case models.QualityMedium:
 		q = 2.0
 	}
 	return q + math.Min(float64(zone.CastleCount), 4)*0.15

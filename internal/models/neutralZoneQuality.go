@@ -1,4 +1,4 @@
-package constants
+package models
 
 // NeutralZoneQuality is the tier of a neutral zone.
 type NeutralZoneQuality int
