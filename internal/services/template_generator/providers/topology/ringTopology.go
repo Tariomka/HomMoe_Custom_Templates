@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
@@ -14,35 +15,38 @@ type RingTopologyService struct {
 }
 
 func NewRingTopologyService() *RingTopologyService {
-	return &RingTopologyService{}
+	return &RingTopologyService{
+		topologyBase: newTopologyBase(),
+	}
 }
 
-func (this *RingTopologyService) GetTopologyVariant(
-	settings config.GeneratorConfig,
+func (this *RingTopologyService) CreateTopologyVariant(
+	configuration config.GeneratorConfig,
 	playerLetters []string,
 	neutralZones []models.NeutralZonePlan,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) template.Variant {
-	neutralByLetter := mapNeutralByLetter(neutralZones)
-	ordered := buildOrderedLetters(settings, playerLetters, neutralZones, true)
-	n := len(ordered)
-	isolate := settings.NoDirectPlayerConnections && len(playerLetters) > 1
+	neutralByLetter := mapNeutralByLetter(neutralZones) // TODO: Remove
 
-	ringConnRight := make([]string, n)
-	ringConnLeft := make([]string, n)
-	for i := range n {
-		next := (i + 1) % n
-		if isolate && slices.Contains(playerLetters, ordered[i]) && slices.Contains(playerLetters, ordered[next]) {
+	orderedLabels := this.zoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, true)
+	labelCount := len(orderedLabels)
+	isolate := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
+
+	ringConnRight := make([]string, labelCount)
+	ringConnLeft := make([]string, labelCount)
+	for i := range labelCount {
+		next := (i + 1) % labelCount
+		if isolate && slices.Contains(playerLetters, orderedLabels[i]) && slices.Contains(playerLetters, orderedLabels[next]) {
 			continue
 		}
-		name := fmt.Sprintf("Ring-%s-%s", ordered[i], ordered[next])
+		name := fmt.Sprintf("Ring-%s-%s", orderedLabels[i], orderedLabels[next])
 		ringConnRight[i] = name
 		ringConnLeft[next] = name
 	}
 
 	var zones []template.Zone
-	for i := range n {
-		letter := ordered[i]
+	for i := range labelCount {
+		label := orderedLabels[i]
 		var myConns []string
 		if ringConnLeft[i] != "" {
 			myConns = append(myConns, ringConnLeft[i])
@@ -50,27 +54,27 @@ func (this *RingTopologyService) GetTopologyVariant(
 		if ringConnRight[i] != "" && ringConnRight[i] != ringConnLeft[i] {
 			myConns = append(myConns, ringConnRight[i])
 		}
-		if pi := slices.Index(playerLetters, letter); pi >= 0 {
+		if pi := slices.Index(playerLetters, label); pi >= 0 {
 			zones = append(zones,
-				this.getSpawnZone(
-					letter, fmt.Sprintf("Player%d", pi+1), myConns, settings.ZoneConfiguration.PlayerZoneCastles,
-					settings.MatchPlayerCastleFactions, settings.ZoneConfiguration.Advanced.PlayerZoneSize,
-					settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
+				this.GetSpawnZone(
+					label, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
+					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
-				buildNeutralZone(
-					neutralByLetter[letter],
-					myConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize,
-					settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, letter == holdCityNeutralLetter))
+				this.CreateNeutralZone(
+					linq.FromSlice(neutralZones).FirstOrDefault(func(nz models.NeutralZonePlan) bool { return nz.Letter == label }),
+					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, label == holdCityNeutralLetter))
 		}
 	}
 
-	conns := buildRingConnections(playerLetters, ordered, tuning, isolate, neutralByLetter)
-	if settings.RandomPortals {
-		conns = append(conns, buildRandomPortalConnections(playerLetters, ordered, tuning, settings.MaxPortalConnections)...)
+	conns := buildRingConnections(playerLetters, orderedLabels, tuning, isolate, neutralByLetter)
+	if configuration.RandomPortals {
+		conns = append(conns, buildRandomPortalConnections(playerLetters, orderedLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isolate {
 		ensurePlayerZonesConnected(playerLetters, zones, &conns, tuning)
 	}
-	return makeVariant(playerLetters, ordered[0], n, zones, conns)
+	return makeVariant(playerLetters, orderedLabels[0], labelCount, zones, conns)
 }

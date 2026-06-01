@@ -134,20 +134,17 @@ type generationTuning struct {
 	GuardRandomization             float64
 }
 
-func scaleValue(value, multiplier float64) int {
-	return max(0, int(value*multiplier))
-}
 func scaleStructureValue(value float64, t generationTuning) int {
-	return scaleValue(value, t.StructureDensityMultiplier)
+	return helpers.Scale(value, t.StructureDensityMultiplier)
 }
 func scaleResourceValue(value float64, t generationTuning) int {
-	return scaleValue(value, t.ResourceDensityMultiplier)
+	return helpers.Scale(value, t.ResourceDensityMultiplier)
 }
 func scaleNeutralGuardValue(value int, t generationTuning) int {
-	return scaleValue(float64(value), t.NeutralStackStrengthMultiplier)
+	return helpers.Scale(float64(value), t.NeutralStackStrengthMultiplier)
 }
 func scaleBorderGuardValue(value int, t generationTuning) int {
-	return scaleValue(float64(value), t.BorderGuardStrengthMultiplier)
+	return helpers.Scale(float64(value), t.BorderGuardStrengthMultiplier)
 }
 func scaleGuardMultiplier(value float64, t generationTuning) float64 {
 	return helpers.RoundWithPrecision(value*t.NeutralStackStrengthMultiplier, 3)

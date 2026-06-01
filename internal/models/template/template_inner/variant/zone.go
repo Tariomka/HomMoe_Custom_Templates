@@ -1,4 +1,4 @@
-package zone
+package variant
 
 // Zone represents a single zone in the map.
 type Zone struct {

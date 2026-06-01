@@ -4,17 +4,32 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
-func buildVariantTournament(settings *config.GeneratorConfig, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning) template.Variant {
+type TournamentTopologyService struct {
+	topologyBase
+}
+
+func NewTournamentTopologyService() *TournamentTopologyService {
+	return &TournamentTopologyService{
+		topologyBase: newTopologyBase(),
+	}
+}
+
+func (this *TournamentTopologyService) GetTopologyVariant(
+	configuration config.GeneratorConfig,
+	playerLetters []string,
+	neutralZones []models.NeutralZonePlan,
+	tuning models.GenerationTuning) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 
 	// Distribute neutrals in a balanced round-robin: sort by descending quality
 	// (then castle count, then letter) so that quality tiers are split evenly
 	// across the two players (e91e79f / v0.7 ordering).
-	sorted := make([]neutralZonePlan, len(neutralZones))
+	sorted := make([]models.NeutralZonePlan, len(neutralZones))
 	copy(sorted, neutralZones)
 	sort.SliceStable(sorted, func(i, j int) bool {
 		if sorted[i].Quality != sorted[j].Quality {
@@ -25,7 +40,7 @@ func buildVariantTournament(settings *config.GeneratorConfig, playerLetters []st
 		}
 		return sorted[i].Letter < sorted[j].Letter
 	})
-	neutralsForPlayer := [2][]neutralZonePlan{}
+	neutralsForPlayer := [2][]models.NeutralZonePlan{}
 	for i, nz := range sorted {
 		neutralsForPlayer[i%2] = append(neutralsForPlayer[i%2], nz)
 	}
@@ -44,33 +59,33 @@ func buildVariantTournament(settings *config.GeneratorConfig, playerLetters []st
 	var zones []template.Zone
 	var conns []template.Connection
 
-	switch settings.Topology {
+	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
 		for p := range 2 {
-			buildTournamentHubCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+			buildTournamentHubCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, configuration, tuning, &zones, &conns)
 		}
 	case config.TopologyBalanced:
 		for p := range 2 {
-			buildTournamentBalancedCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+			buildTournamentBalancedCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, configuration, tuning, &zones, &conns)
 		}
 	case config.TopologyDefault:
 		for p := range 2 {
-			buildTournamentRingCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+			buildTournamentRingCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, configuration, tuning, &zones, &conns)
 		}
 	default:
 		// Chain, SharedWeb, Random → chain-per-cluster fallback.
 		for p := range 2 {
-			buildTournamentChainCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, settings, tuning, &zones, &conns)
+			buildTournamentChainCluster(p, playerLetters[p], neutralsForPlayer[p], neutralByLetter, configuration, tuning, &zones, &conns)
 		}
 	}
 
-	if settings.RandomPortals {
+	if configuration.RandomPortals {
 		for p := range 2 {
 			clusterLetters := []string{playerLetters[p]}
 			for _, n := range neutralsForPlayer[p] {
 				clusterLetters = append(clusterLetters, n.Letter)
 			}
-			conns = append(conns, buildRandomPortalConnections(playerLetters, clusterLetters, tuning, settings.MaxPortalConnections)...)
+			conns = append(conns, buildRandomPortalConnections(playerLetters, clusterLetters, tuning, configuration.MaxPortalConnections)...)
 		}
 	}
 

@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/mandatory_content"
 )
 
 var (
@@ -12,50 +13,6 @@ var (
 	distFar     = distancePreset{0.5, 0.75}
 	distVeryFar = distancePreset{0.75, 0.9}
 )
-
-// ── Rule presets ─────────────────────────────────────────────────────
-
-func ruleRoadDistance(d distancePreset, weight int) template.PlacementRule {
-	return template.PlacementRule{Type: "Road", Args: []any{}, TargetMin: d.Min, TargetMax: d.Max, Weight: weight}
-}
-
-func ruleCrossroadsDistance(d distancePreset, weight int) template.PlacementRule {
-	return template.PlacementRule{Type: "Crossroads", Args: []any{}, TargetMin: d.Min, TargetMax: d.Max, Weight: weight}
-}
-
-func ruleNearCastle(weight int) template.PlacementRule {
-	return template.PlacementRule{Type: "MainObject", Args: []any{"0"}, TargetMin: 0.1, TargetMax: 0.3, Weight: weight}
-}
-
-// ── Content builder (fluent) ─────────────────────────────────────────
-
-type contentBuilder struct {
-	item template.MandatoryContentItem
-}
-
-func newContentBuilder(sid string) *contentBuilder {
-	return &contentBuilder{item: template.MandatoryContentItem{SID: sid}}
-}
-
-func (this *contentBuilder) withName(name string) *contentBuilder { this.item.Name = name; return this }
-func (this *contentBuilder) guarded() *contentBuilder             { this.item.IsGuarded = true; return this }
-func (this *contentBuilder) mine() *contentBuilder                { this.item.IsMine = true; return this }
-func (this *contentBuilder) soloEncounter() *contentBuilder {
-	this.item.SoloEncounter = true
-	return this
-}
-func (this *contentBuilder) roadDistance(d distancePreset) *contentBuilder {
-	return this.addRule(ruleRoadDistance(d, 1))
-}
-func (this *contentBuilder) addRule(r template.PlacementRule) *contentBuilder {
-	this.item.Rules = append(this.item.Rules, r)
-	return this
-}
-func (this *contentBuilder) addRules(rs []template.PlacementRule) *contentBuilder {
-	this.item.Rules = append(this.item.Rules, rs...)
-	return this
-}
-func (this *contentBuilder) build() template.MandatoryContentItem { return this.item }
 
 // ── Foothold preset (still used by every zone type) ──────────────────
 
@@ -73,11 +30,11 @@ func footholdRules(castleCount int) []template.PlacementRule {
 }
 
 func presetRemoteFoothold(castleCount int) template.MandatoryContentItem {
-	return newContentBuilder(constants.ContentIds.RemoteFoothold.Sid).
-		withName("name_remote_foothold_1").
-		soloEncounter().
-		addRules(footholdRules(castleCount)).
-		build()
+	return mandatory_content.NewContentBuilder(constants.ContentIds.RemoteFoothold.Sid).
+		WithName("name_remote_foothold_1").
+		WithSoloEncounter().
+		WithRules(footholdRules(castleCount)...).
+		Build()
 }
 
 // StripNearCastleRules removes placement rules that anchor an item near

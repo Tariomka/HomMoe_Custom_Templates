@@ -4,14 +4,30 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
-func buildVariantSharedWeb(settings *config.GeneratorConfig, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+type SharedWebTopologyService struct {
+	topologyBase
+}
+
+func NewSharedWebTopologyService() *SharedWebTopologyService {
+	return &SharedWebTopologyService{
+		topologyBase: newTopologyBase(),
+	}
+}
+
+func (this *SharedWebTopologyService) GetTopologyVariant(
+	configuration config.GeneratorConfig,
+	playerLetters []string,
+	neutralZones []models.NeutralZonePlan,
+	tuning models.GenerationTuning,
+	holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	var neutrals []string
-	if settings.Topology == config.TopologyBalanced {
+	if configuration.Topology == config.TopologyBalanced {
 		neutrals = buildBalancedNeutralRing(neutralZones, len(playerLetters))
 	} else {
 		for _, nz := range neutralZones {
@@ -61,9 +77,9 @@ func buildVariantSharedWeb(settings *config.GeneratorConfig, playerLetters []str
 		}
 		nConns = append(nConns, spokeByNeutral[neutrals[i]]...)
 		nConns = uniqueStrings(nConns)
-		z := buildNeutralZone(neutralByLetter[neutrals[i]], nConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, neutrals[i] == holdCityNeutralLetter)
+		z := buildNeutralZone(neutralByLetter[neutrals[i]], nConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, neutrals[i] == holdCityNeutralLetter)
 		if neutralByLetter[neutrals[i]].CastleCount == 0 {
-			z.Roads = buildConnectorZoneRoads(nConns, settings.GenerateRoads)
+			z.Roads = buildConnectorZoneRoads(nConns, configuration.GenerateRoads)
 		}
 		zones = append(zones, z)
 	}
@@ -71,7 +87,7 @@ func buildVariantSharedWeb(settings *config.GeneratorConfig, playerLetters []str
 	for i := 0; i < p; i++ {
 		pl := playerLetters[i]
 		sc := spokeByPlayer[pl]
-		zones = append(zones, buildSpawnZone(pl, fmt.Sprintf("Player%d", i+1), sc, settings.ZoneConfiguration.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneConfiguration.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
+		zones = append(zones, buildSpawnZone(pl, fmt.Sprintf("Player%d", i+1), sc, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 
 		for _, cn := range sc {
 			parts := strings.Split(cn, "-")
@@ -97,11 +113,11 @@ func buildVariantSharedWeb(settings *config.GeneratorConfig, playerLetters []str
 		}
 	}
 
-	if settings.RandomPortals {
+	if configuration.RandomPortals {
 		all := append(append([]string{}, playerLetters...), neutrals...)
-		conns = append(conns, buildRandomPortalConnections(playerLetters, all, tuning, settings.MaxPortalConnections)...)
+		conns = append(conns, buildRandomPortalConnections(playerLetters, all, tuning, configuration.MaxPortalConnections)...)
 	}
-	if settings.NoDirectPlayerConnections && len(playerLetters) > 1 {
+	if configuration.NoDirectPlayerConnections && len(playerLetters) > 1 {
 		ensurePlayerZonesConnected(playerLetters, zones, &conns, tuning)
 	}
 	return makeVariant(playerLetters, playerLetters[0], len(zones), zones, conns)

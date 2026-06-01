@@ -1,4 +1,4 @@
-package zone
+package variant
 
 // Variant represents a single layout variant of the map.
 // The template root has a `variants` array - each variant has its own zones/connections,

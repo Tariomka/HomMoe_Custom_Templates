@@ -4,20 +4,36 @@ import (
 	"fmt"
 	"math/rand/v2"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
-func buildVariantRandom(settings *config.GeneratorConfig, playerLetters []string, neutralZones []neutralZonePlan, tuning generationTuning, holdCityNeutralLetter string) template.Variant {
+type RandomTopologyService struct {
+	topologyBase
+}
+
+func NewRandomTopologyService() *RandomTopologyService {
+	return &RandomTopologyService{
+		topologyBase: newTopologyBase(),
+	}
+}
+
+func (this *RandomTopologyService) GetTopologyVariant(
+	configuration config.GeneratorConfig,
+	playerLetters []string,
+	neutralZones []models.NeutralZonePlan,
+	tuning models.GenerationTuning,
+	holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	neutralLetters := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
 		neutralLetters[i] = nz.Letter
 	}
-	isolate := settings.NoDirectPlayerConnections && len(playerLetters) > 1
+	isolate := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
 
 	var allLetters []string
-	if settings.Topology == config.TopologyBalanced {
+	if configuration.Topology == config.TopologyBalanced {
 		allLetters = buildBalancedRingLetters(playerLetters, neutralZones, 0)
 	} else {
 		allLetters = append(append([]string{}, playerLetters...), neutralLetters...)
@@ -26,7 +42,7 @@ func buildVariantRandom(settings *config.GeneratorConfig, playerLetters []string
 	count := len(allLetters)
 
 	var pos [][2]float64
-	if settings.Topology == config.TopologyBalanced {
+	if configuration.Topology == config.TopologyBalanced {
 		pos = buildBalancedRandomPositions(allLetters, playerLetters, neutralByLetter)
 	} else {
 		for i := 0; i < count; i++ {
@@ -36,7 +52,7 @@ func buildVariantRandom(settings *config.GeneratorConfig, playerLetters []string
 
 	pairs := delaunayEdges(pos)
 
-	if settings.Topology == config.TopologyBalanced {
+	if configuration.Topology == config.TopologyBalanced {
 		presentTiers := map[int]bool{}
 		for _, l := range allLetters {
 			presentTiers[zoneTierRank(l, playerLetters, neutralByLetter)] = true
@@ -92,9 +108,9 @@ func buildVariantRandom(settings *config.GeneratorConfig, playerLetters []string
 		letter := allLetters[i]
 		myConns := connsByZone[i]
 		if pi := indexOf(playerLetters, letter); pi >= 0 {
-			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, settings.ZoneConfiguration.PlayerZoneCastles, settings.MatchPlayerCastleFactions, settings.ZoneConfiguration.Advanced.PlayerZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning))
+			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 		} else {
-			zones = append(zones, buildNeutralZone(neutralByLetter[letter], myConns, settings.ZoneConfiguration.Advanced.NeutralZoneSize, settings.SpawnRemoteFootholds, settings.GenerateRoads, tuning, letter == holdCityNeutralLetter))
+			zones = append(zones, buildNeutralZone(neutralByLetter[letter], myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, letter == holdCityNeutralLetter))
 		}
 	}
 
@@ -105,14 +121,14 @@ func buildVariantRandom(settings *config.GeneratorConfig, playerLetters []string
 	for i := range zones {
 		p := pos[i]
 		zones[i].GeneratorPosition = &[2]float64{p[0], p[1]}
-		if settings.Topology == config.TopologyBalanced {
+		if configuration.Topology == config.TopologyBalanced {
 			r := zoneTierRank(allLetters[i], playerLetters, neutralByLetter)
 			zones[i].GeneratorRing = &r
 		}
 	}
 
-	if settings.RandomPortals {
-		conns = append(conns, buildRandomPortalConnections(playerLetters, allLetters, tuning, settings.MaxPortalConnections)...)
+	if configuration.RandomPortals {
+		conns = append(conns, buildRandomPortalConnections(playerLetters, allLetters, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isolate {
 		ensurePlayerZonesConnected(playerLetters, zones, &conns, tuning)

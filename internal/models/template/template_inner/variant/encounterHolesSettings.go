@@ -1,4 +1,4 @@
-package zone
+package variant
 
 // EncounterHolesSettings overrides the global encounter-holes parameters for a single zone.
 type EncounterHolesSettings struct {

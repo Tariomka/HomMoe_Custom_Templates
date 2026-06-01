@@ -1,4 +1,4 @@
-package zone
+package variant
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/common"
 

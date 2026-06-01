@@ -63,6 +63,7 @@ func (this Query[T]) SelectString(selector func(T) string) Query[string] {
 // 	}
 // }
 
+// ToSlice executes the query and returns the results as a slice. The returned slice is a copy, not a reference.
 func (this Query[T]) ToSlice() []T {
 	var result []T
 	this.Iterate(func(item T) bool {

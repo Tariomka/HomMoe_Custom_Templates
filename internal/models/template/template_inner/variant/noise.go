@@ -1,4 +1,4 @@
-package zone
+package variant
 
 // Noise describes a single noise layer applied to borders/water.
 // `amp` may be integer or fractional across the example templates.

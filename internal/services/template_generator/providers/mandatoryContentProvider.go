@@ -5,7 +5,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/mandatory_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/mandatory_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 )
 
 type MandatoryContentProvider struct{}
@@ -49,7 +50,8 @@ func (this *MandatoryContentProvider) CreateContents(
 	return groups
 }
 
-func (this *MandatoryContentProvider) CreateContentItemsFrom(rows []models.ZoneContentRowSave) []template.MandatoryContentItem {
+func (this *MandatoryContentProvider) CreateContentItemsFrom(
+	rows []models.ZoneContentRowSave) []template.MandatoryContentItem {
 	if len(rows) == 0 {
 		return nil
 	}
@@ -66,7 +68,8 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(rows []models.ZoneC
 	return out
 }
 
-func (this *MandatoryContentProvider) createContentItemFrom(row models.ZoneContentRowSave) template.MandatoryContentItem {
+func (this *MandatoryContentProvider) createContentItemFrom(
+	row models.ZoneContentRowSave) template.MandatoryContentItem {
 	item := template.MandatoryContentItem{
 		IsGuarded: row.IsGuarded,
 		IsMine:    row.IsMine,
@@ -77,10 +80,10 @@ func (this *MandatoryContentProvider) createContentItemFrom(row models.ZoneConte
 		item.SID = row.Sid
 	}
 	if row.NearCastle {
-		item.Rules = append(item.Rules, mandatory_content.NewPlacementRuleBuilder().BuildNearCastleRule(1))
+		item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildNearCastleRule(1))
 	}
-	if distance, ok := mandatory_content.TryGetDistanceFrom(row.RoadDistance); ok {
-		item.Rules = append(item.Rules, mandatory_content.NewPlacementRuleBuilder().BuildRoadRule(distance, 1))
+	if distance, ok := placement_rule.TryGetDistanceFrom(row.RoadDistance); ok {
+		item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildRoadRule(distance, 1))
 	}
 	return item
 }
@@ -97,30 +100,31 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 	return content
 }
 
-func (this *MandatoryContentProvider) createFootholdContentItem(castleCount int) template.MandatoryContentItem {
+func (this *MandatoryContentProvider) createFootholdContentItem(
+	castleCount int) template.MandatoryContentItem {
 	return mandatory_content.NewContentBuilder(constants.ContentIds.RemoteFoothold.Sid).
 		WithName("name_remote_foothold_1").
 		WithSoloEncounter().
 		WithRulesCallback(func() []template.PlacementRule {
 			rules := []template.PlacementRule{
-				mandatory_content.NewPlacementRuleBuilder().
-					BuildCrossroadsRule(mandatory_content.Distance{Min: 0.2, Max: 0.3}, 0),
+				placement_rule.NewPlacementRuleBuilder().
+					BuildCrossroadsRule(placement_rule.Distance{Min: 0.2, Max: 0.3}, 0),
 			}
 			if castleCount > 0 {
 				rules = append(rules,
-					mandatory_content.NewPlacementRuleBuilder().
+					placement_rule.NewPlacementRuleBuilder().
 						WithMainObjectType().
-						WithArg("0").
-						WithDistance(mandatory_content.Distance{Min: 0.2, Max: 0.4}).
+						WithArgs("0").
+						WithDistance(placement_rule.Distance{Min: 0.2, Max: 0.4}).
 						WithWeight(0).
 						Build())
 			}
 			if castleCount > 1 {
 				rules = append(rules,
-					mandatory_content.NewPlacementRuleBuilder().
+					placement_rule.NewPlacementRuleBuilder().
 						WithMainObjectType().
-						WithArg("1").
-						WithDistance(mandatory_content.Distance{Min: 0.5, Max: 0.5}).
+						WithArgs("1").
+						WithDistance(placement_rule.Distance{Min: 0.5, Max: 0.5}).
 						WithWeight(2).
 						Build())
 			}

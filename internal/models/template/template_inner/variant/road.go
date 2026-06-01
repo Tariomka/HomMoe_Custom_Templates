@@ -1,4 +1,4 @@
-package zone
+package variant
 
 // Road describes an in-zone road segment between two endpoints (typed references).
 type Road struct {

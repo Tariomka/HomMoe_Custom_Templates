@@ -1,4 +1,4 @@
-package zone
+package variant
 
 // MainObject is a featured object placed in a zone (a player Spawn, a City, etc.).
 type MainObject struct {

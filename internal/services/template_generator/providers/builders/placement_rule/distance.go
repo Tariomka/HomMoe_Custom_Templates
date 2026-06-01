@@ -1,4 +1,4 @@
-package mandatory_content
+package placement_rule
 
 import "strings"
 

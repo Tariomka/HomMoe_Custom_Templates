@@ -31,7 +31,8 @@ func (this *ZoneLabelProvider) CreatePlayerLabels(playerCount int) []string {
 	return letters
 }
 
-func (this *ZoneLabelProvider) CreateNeutralZonePlans(configuration config.GeneratorConfig) []models.NeutralZonePlan {
+func (this *ZoneLabelProvider) CreateNeutralZonePlans(
+	configuration config.GeneratorConfig) []models.NeutralZonePlan {
 	var plans []models.NeutralZonePlan
 	maxNeutral := max(0, len(this.zoneLabels)-configuration.PlayerCount)
 	castleZoneCastleCount := helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 1, 4)
@@ -94,7 +95,7 @@ func (this *ZoneLabelProvider) GetHoldCityLabel(
 }
 
 func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
-	settings config.GeneratorConfig,
+	configuration config.GeneratorConfig,
 	playerLabels []string,
 	neutralZones []models.NeutralZonePlan,
 	isRing bool) []string {
@@ -102,10 +103,10 @@ func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 		SelectString(func(x models.NeutralZonePlan) string { return x.Letter }).
 		ToSlice()
 
-	if settings.Topology == config.TopologyBalanced {
+	if configuration.Topology == config.TopologyBalanced {
 		separationCount := 0
-		if settings.MinNeutralZonesBetweenPlayers > 0 && settings.CanHonorNeutralSeparation() {
-			separationCount = settings.MinNeutralZonesBetweenPlayers
+		if configuration.MinNeutralZonesBetweenPlayers > 0 && configuration.CanHonorNeutralSeparation() {
+			separationCount = configuration.MinNeutralZonesBetweenPlayers
 		}
 		if isRing {
 			return this.CreateBalancedRingZoneLabels(playerLabels, neutralZones, separationCount)
@@ -113,35 +114,35 @@ func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 		return this.CreateBalancedChainZoneLabels(playerLabels, neutralZones, separationCount)
 	}
 
-	separationCount := settings.MinNeutralZonesBetweenPlayers
-	if separationCount <= 0 || settings.RandomPortals || !settings.CanHonorNeutralSeparation() {
+	separationCount := configuration.MinNeutralZonesBetweenPlayers
+	if separationCount <= 0 || configuration.RandomPortals || !configuration.CanHonorNeutralSeparation() {
 		return append(append([]string{}, playerLabels...), neutralLabels...)
 	}
 
-	var ordered []string
+	var orderedLabels []string
 	queue := make([]string, len(neutralLabels))
 	copy(queue, neutralLabels)
 	qi := 0
 	for i, pl := range playerLabels {
-		ordered = append(ordered, pl)
+		orderedLabels = append(orderedLabels, pl)
 		needsSep := isRing || i < len(playerLabels)-1
 		if !needsSep {
 			continue
 		}
 		for j := 0; j < separationCount && qi < len(queue); j++ {
-			ordered = append(ordered, queue[qi])
+			orderedLabels = append(orderedLabels, queue[qi])
 			qi++
 		}
 	}
 	for qi < len(queue) {
-		ordered = append(ordered, queue[qi])
+		orderedLabels = append(orderedLabels, queue[qi])
 		qi++
 	}
-	if len(ordered) == 0 {
+	if len(orderedLabels) == 0 {
 		return append(append([]string{}, playerLabels...), neutralLabels...)
 	}
 
-	return ordered
+	return orderedLabels
 }
 
 func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
@@ -232,7 +233,9 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 	return orderedLabels
 }
 
-func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(neutralZones []models.NeutralZonePlan, playerCount int) []string {
+func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
+	neutralZones []models.NeutralZonePlan,
+	playerCount int) []string {
 	if len(neutralZones) <= 1 {
 		r := make([]string, len(neutralZones))
 		for i, nz := range neutralZones {

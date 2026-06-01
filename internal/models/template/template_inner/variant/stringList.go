@@ -1,4 +1,4 @@
-package zone
+package variant
 
 import "encoding/json"
 

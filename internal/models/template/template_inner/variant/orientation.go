@@ -1,4 +1,4 @@
-package zone
+package variant
 
 // Orientation controls how the bounding shape is fit and how the layout is rotated.
 type Orientation struct {

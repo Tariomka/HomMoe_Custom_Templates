@@ -3,6 +3,7 @@ package providers
 import (
 	"math/rand/v2"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
@@ -23,32 +24,36 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	neutralZones []models.NeutralZonePlan,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) template.Variant {
-	pl := make([]string, len(playerLabels))
-	copy(pl, playerLabels)
-	if this.shufflePlayerZones {
-		rand.Shuffle(len(pl), func(i, j int) { pl[i], pl[j] = pl[j], pl[i] })
-	}
+	playerLabelsCopy := this.copyLabels(playerLabels)
 
-	if configuration.IsTournamentMode() && len(pl) == 2 {
-		return buildVariantTournament(configuration, pl, neutralZones, tuning)
+	if configuration.IsTournamentMode() && len(playerLabelsCopy) == 2 {
+		return buildVariantTournament(configuration, playerLabelsCopy, neutralZones, tuning)
 	}
 
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
-		return buildVariantHubAndSpoke(configuration, pl, neutralZones, tuning, configuration.IsHubCityToHold())
+		return buildVariantHubAndSpoke(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
-		return buildVariantChain(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
+		return buildVariantChain(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySharedWeb:
-		return buildVariantSharedWeb(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
+		return buildVariantSharedWeb(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyRandom, config.TopologyBalanced:
-		return buildVariantRandom(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
+		return buildVariantRandom(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	default:
 		return topology.NewRingTopologyService().
-			GetTopologyVariant(configuration, pl, neutralZones, tuning, holdCityNeutralLabel)
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	}
 }
 
 func (this *TopologyProvider) ShufflePlayerZones(enabled bool) *TopologyProvider {
 	this.shufflePlayerZones = enabled
 	return this
+}
+
+func (this *TopologyProvider) copyLabels(playerLabels []string) []string {
+	playerLabelsCopy := linq.FromSlice(playerLabels).ToSlice()
+	if this.shufflePlayerZones {
+		rand.Shuffle(len(playerLabelsCopy), func(i, j int) { playerLabelsCopy[i], playerLabelsCopy[j] = playerLabelsCopy[j], playerLabelsCopy[i] })
+	}
+	return playerLabelsCopy
 }

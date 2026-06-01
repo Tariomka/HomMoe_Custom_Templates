@@ -1,4 +1,4 @@
-package mandatory_content
+package placement_rule
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 
@@ -31,11 +31,7 @@ func (this *PlacementRuleBuilder) WithWeight(weight int) *PlacementRuleBuilder {
 	this.item.Weight = weight
 	return this
 }
-func (this *PlacementRuleBuilder) WithArg(argument any) *PlacementRuleBuilder {
-	this.item.Args = append(this.item.Args, argument)
-	return this
-}
-func (this *PlacementRuleBuilder) WithArgs(arguments []any) *PlacementRuleBuilder {
+func (this *PlacementRuleBuilder) WithArgs(arguments ...any) *PlacementRuleBuilder {
 	this.item.Args = append(this.item.Args, arguments...)
 	return this
 }
@@ -60,7 +56,7 @@ func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight 
 func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) template.PlacementRule {
 	return this.
 		WithMainObjectType().
-		WithArg("0").
+		WithArgs("0").
 		WithDistance(Distance{Min: 0.1, Max: 0.3}).
 		WithWeight(weight).
 		Build()
