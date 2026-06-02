@@ -240,36 +240,6 @@ namespace OldenEraTemplateEditor.Models
             "Player8",
         ];
 
-        // ── Biome selectors ──────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Known values for BiomeSelector.Type / TypedSelector.Type
-        /// (used for zoneBiome, contentBiome, metaObjectsBiome, faction).
-        /// </summary>
-        public static readonly string[] SelectorTypes =
-        [
-            "FromList",
-            "Match",
-            "MatchMainObject",
-            "MatchZone",
-        ];
-
-        // ── Roads ────────────────────────────────────────────────────────────────
-
-        /// <summary>Known values for Road.Type.</summary>
-        public static readonly string[] RoadTypes =
-        [
-            "Dirt",
-            "Stone",
-        ];
-
-        /// <summary>Known values for RoadEndpoint.Type.</summary>
-        public static readonly string[] RoadEndpointTypes =
-        [
-            "Connection",
-            "MainObject",
-            "MandatoryContent",
-        ];
 
         // ── Connections ──────────────────────────────────────────────────────────
 

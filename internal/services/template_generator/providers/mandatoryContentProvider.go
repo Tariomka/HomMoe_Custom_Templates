@@ -43,7 +43,7 @@ func (this *MandatoryContentProvider) CreateContents(
 			content = stripNearCastleRules(content)
 		}
 		groups = append(groups, template.MandatoryContent{
-			Name:    "mandatory_content_neutral_" + neutralZone.Letter,
+			Name:    "mandatory_content_neutral_" + neutralZone.Label,
 			Content: this.createContentItemsWithFoothold(content, configuration.SpawnRemoteFootholds, neutralZone.CastleCount),
 		})
 	}

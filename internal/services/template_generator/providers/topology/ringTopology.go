@@ -63,7 +63,7 @@ func (this *RingTopologyService) CreateTopologyVariant(
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).FirstOrDefault(func(nz models.NeutralZonePlan) bool { return nz.Letter == label }),
+					linq.FromSlice(neutralZones).FirstOrDefault(func(nz models.NeutralZonePlan) bool { return nz.Label == label }),
 					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, label == holdCityNeutralLetter))
 		}

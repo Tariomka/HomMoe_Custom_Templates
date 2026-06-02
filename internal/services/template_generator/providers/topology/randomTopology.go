@@ -28,7 +28,7 @@ func (this *RandomTopologyService) GetTopologyVariant(
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	neutralLetters := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
-		neutralLetters[i] = nz.Letter
+		neutralLetters[i] = nz.Label
 	}
 	isolate := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
 

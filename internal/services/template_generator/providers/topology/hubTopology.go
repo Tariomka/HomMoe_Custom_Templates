@@ -27,7 +27,7 @@ func (this *HubTopologyService) GetTopologyVariant(
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 	neutralLetters := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
-		neutralLetters[i] = nz.Letter
+		neutralLetters[i] = nz.Label
 	}
 
 	var outerLetters []string

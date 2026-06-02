@@ -4,28 +4,16 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
-var (
-	t2Guarded   = []string{"classic_template_pool_random_t2_item", "classic_template_pool_random_t2_pandora", "classic_template_pool_random_t2_hire", "classic_template_pool_random_t2_unit_bank", "classic_template_pool_random_t2_res_bank", "classic_template_pool_random_t2_stat", "classic_template_pool_random_t2_magic"}
-	t2Unguarded = []string{"classic_template_pool_random_unguarded_t2_item", "classic_template_pool_random_unguarded_t2_pandora", "classic_template_pool_random_unguarded_t2_hire", "classic_template_pool_random_unguarded_t2_unit_bank", "classic_template_pool_random_unguarded_t2_res_bank", "classic_template_pool_random_unguarded_t2_stat", "classic_template_pool_random_unguarded_t2_magic"}
-	t3Guarded   = []string{"classic_template_pool_random_t3_item", "classic_template_pool_random_t3_pandora", "classic_template_pool_random_t3_hire", "classic_template_pool_random_t3_unit_bank", "classic_template_pool_random_t3_res_bank", "classic_template_pool_random_t3_stat", "classic_template_pool_random_t3_magic"}
-	t3Unguarded = []string{"classic_template_pool_random_unguarded_t3_item", "classic_template_pool_random_unguarded_t3_pandora", "classic_template_pool_random_unguarded_t3_hire", "classic_template_pool_random_unguarded_t3_unit_bank", "classic_template_pool_random_unguarded_t3_res_bank", "classic_template_pool_random_unguarded_t3_stat", "classic_template_pool_random_unguarded_t3_magic"}
-	t4Guarded   = []string{"classic_template_pool_random_t4_item", "classic_template_pool_random_t4_pandora", "classic_template_pool_random_t4_hire", "classic_template_pool_random_t4_unit_bank", "classic_template_pool_random_t4_res_bank", "classic_template_pool_random_t4_stat", "classic_template_pool_random_t4_magic"}
-	t4Unguarded = []string{"classic_template_pool_random_unguarded_t4_item", "classic_template_pool_random_unguarded_t4_pandora", "classic_template_pool_random_unguarded_t4_hire", "classic_template_pool_random_unguarded_t4_unit_bank", "classic_template_pool_random_unguarded_t4_res_bank", "classic_template_pool_random_unguarded_t4_stat", "classic_template_pool_random_unguarded_t4_magic"}
-	t5Guarded   = []string{"classic_template_pool_random_t5_item", "classic_template_pool_random_t5_pandora", "classic_template_pool_random_t5_hire", "classic_template_pool_random_t5_unit_bank", "classic_template_pool_random_t5_res_bank", "classic_template_pool_random_t5_stat", "classic_template_pool_random_t5_magic"}
-	t5Unguarded = []string{"classic_template_pool_random_unguarded_t5_item", "classic_template_pool_random_unguarded_t5_pandora", "classic_template_pool_random_unguarded_t5_hire", "classic_template_pool_random_unguarded_t5_unit_bank", "classic_template_pool_random_unguarded_t5_res_bank", "classic_template_pool_random_unguarded_t5_stat", "classic_template_pool_random_unguarded_t5_magic"}
-
-	generalResourcesPoor   = []string{"content_pool_general_resources_start_zone_poor"}
-	generalResourcesMedium = []string{"content_pool_general_resources_start_zone_medium"}
-	generalResourcesRich   = []string{"content_pool_general_resources_start_zone_rich"}
-)
+var resourceContentPool = registry.GetResourcesContentPoolValues()
 
 type topologyBase struct {
 	zoneLabelProvider *zones.ZoneLabelProvider
@@ -46,18 +34,15 @@ func (this *topologyBase) GetSpawnZone(
 	spawnFootholds,
 	generateRoads bool,
 	tuning models.GenerationTuning) template.Zone {
-	mainObjects := []template.MainObject{this.createPlayerSpawnCity(playerName, tuning.ScaleByNeutralGuardStrength(5000))}
+	mainObjects := []template.MainObject{
+		this.createPlayerSpawnCity(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
+	}
 	// TODO: add player owned castles
-	mainObjects = append(mainObjects, this.createPlayerUnclaimedCities(matchFactions, tuning.ScaleByNeutralGuardStrength(2500), castleCount-1)...)
+	mainObjects = append(mainObjects,
+		this.createPlayerUnclaimedCities(matchFactions, tuning.ScaleByNeutralGuardStrength(2500), castleCount-1)...)
 
 	crossroadsPosition := 0
-	biome := template.TypedRef{Type: "MatchMainObject", Args: []string{"0"}}
-	var roads []template.Road
-	if castleCount > 0 {
-		roads = buildOuterZoneRoads(ringConns, castleCount, spawnFootholds, generateRoads)
-	} else {
-		roads = buildConnectorZoneRoads(ringConns, generateRoads)
-	}
+	biome := variant_content.NewRefBuilder().BuildBiomeMatchMainObjectType("0")
 	return template.Zone{
 		Name:                         "Spawn-" + label,
 		Size:                         utils.NormalizeZoneSize(zoneSize),
@@ -68,9 +53,9 @@ func (this *topologyBase) GetSpawnZone(
 		GuardWeeklyIncrement:         0.20,
 		GuardReactionDistribution:    []int{60, 20, 10, 10, 2, 0},
 		DiplomacyModifier:            -0.5,
-		GuardedContentPool:           linq.FromSlice(t2Guarded).ToSlice(),
-		UnguardedContentPool:         linq.FromSlice(t2Unguarded).ToSlice(),
-		ResourcesContentPool:         linq.FromSlice(generalResourcesPoor).ToSlice(),
+		GuardedContentPool:           registry.GetGuardedContentPoolT2List(),
+		UnguardedContentPool:         registry.GetUnguardedContentPoolT2List(),
+		ResourcesContentPool:         []string{resourceContentPool.StartZonePoor},
 		MandatoryContent:             template.StringList{"mandatory_content_side_" + label},
 		ContentCountLimits:           buildSideContentLimits(),
 		GuardedContentValue:          tuning.ScaleByStructureDensity(200000 * tuning.ContentScale),
@@ -84,7 +69,7 @@ func (this *topologyBase) GetSpawnZone(
 		ContentBiome:                 biome,
 		MetaObjectsBiome:             biome,
 		CrossroadsPosition:           &crossroadsPosition,
-		Roads:                        roads,
+		Roads:                        this.createOuterZoneRoads(ringConns, castleCount, spawnFootholds, generateRoads),
 	}
 }
 
@@ -95,14 +80,13 @@ func (this *topologyBase) CreateNeutralZone(
 	spawnFootholds, generateRoads bool,
 	tuning models.GenerationTuning,
 	isHoldCity bool) template.Zone {
-	castleCount := plan.CastleCount
-	if isHoldCity && castleCount < 1 {
-		castleCount = 1
+	if isHoldCity && plan.CastleCount < 1 {
+		plan.CastleCount = 1
 	}
-	profile := getNeutralZoneProfile(plan.Quality)
+	profile := models.NewNeutralZoneProfile(plan.Quality)
 
 	var mainObjects []template.MainObject
-	if castleCount > 0 {
+	if plan.CastleCount > 0 {
 		guardVal := profile.PrimaryCityGuardValue
 		bcsid := profile.PrimaryBuildingsCSid
 		placement := "Uniform"
@@ -126,7 +110,7 @@ func (this *topologyBase) CreateNeutralZone(
 		}
 		mainObjects = append(mainObjects, mo)
 	}
-	for i := 1; i < castleCount; i++ {
+	for i := 1; i < plan.CastleCount; i++ {
 		mainObjects = append(mainObjects, template.MainObject{
 			Type: "City", GuardChance: 1,
 			GuardValue:               tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue),
@@ -143,18 +127,12 @@ func (this *topologyBase) CreateNeutralZone(
 	}
 
 	biome := template.TypedRef{Type: "MatchZone", Args: []string{}}
-	if castleCount > 0 {
+	if plan.CastleCount > 0 {
 		biome = template.TypedRef{Type: "MatchMainObject", Args: []string{"0"}}
 	}
 	crossroadsPosition := 0
-	var roads []template.Road
-	if castleCount > 0 {
-		roads = buildOuterZoneRoads(ringConns, castleCount, spawnFootholds, generateRoads)
-	} else {
-		roads = buildConnectorZoneRoads(ringConns, generateRoads)
-	}
 	return template.Zone{
-		Name:                         "Neutral-" + plan.Letter,
+		Name:                         "Neutral-" + plan.Label,
 		Size:                         utils.NormalizeZoneSize(zoneSize),
 		Layout:                       profile.Layout,
 		GuardCutoffValue:             2000,
@@ -166,7 +144,7 @@ func (this *topologyBase) CreateNeutralZone(
 		GuardedContentPool:           profile.GuardedContentPool,
 		UnguardedContentPool:         profile.UnguardedContentPool,
 		ResourcesContentPool:         profile.ResourcesContentPool,
-		MandatoryContent:             template.StringList{"mandatory_content_neutral_" + plan.Letter},
+		MandatoryContent:             template.StringList{"mandatory_content_neutral_" + plan.Label},
 		ContentCountLimits:           buildSideContentLimits(),
 		GuardedContentValue:          tuning.ScaleByStructureDensity(float64(profile.GuardedContentValue) * tuning.ContentScale),
 		GuardedContentValuePerArea:   tuning.ScaleByStructureDensity(float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale)),
@@ -176,12 +154,12 @@ func (this *topologyBase) CreateNeutralZone(
 		ResourcesValuePerArea:        tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale)),
 		MainObjects:                  mainObjects, ZoneBiome: biome, ContentBiome: biome, MetaObjectsBiome: biome,
 		CrossroadsPosition: &crossroadsPosition,
-		Roads:              roads,
+		Roads:              this.createOuterZoneRoads(ringConns, plan.CastleCount, spawnFootholds, generateRoads),
 	}
 }
 
 func (this *topologyBase) CreateHubZone(
-	spokeConns []string,
+	connectionNames []string,
 	tuning models.GenerationTuning,
 	isHoldCity bool,
 	size float64,
@@ -226,21 +204,15 @@ func (this *topologyBase) CreateHubZone(
 	if effectiveCastleCount > 0 {
 		biome = template.TypedRef{Type: "MatchMainObject", Args: []string{"0"}}
 	}
-	cp0 := 0
-	var roads []template.Road
-	if effectiveCastleCount > 0 {
-		roads = buildOuterZoneRoads(spokeConns, effectiveCastleCount, false, generateRoads)
-	} else {
-		roads = buildConnectorZoneRoads(spokeConns, generateRoads)
-	}
+	crossroadsPosition := 0
 	return template.Zone{
 		Name: "Hub", Size: size, Layout: "zone_layout_center",
 		GuardCutoffValue: 2000, GuardRandomization: 0.05,
 		GuardMultiplier: tuning.ScaleByNeutralGuardStrengthPrecise(1.5), GuardWeeklyIncrement: 0.20,
 		GuardReactionDistribution: []int{0, 10, 10, 20, 10, 0}, DiplomacyModifier: -0.5,
-		GuardedContentPool:   linq.FromSlice(t3Guarded).ToSlice(),
-		UnguardedContentPool: linq.FromSlice(t3Unguarded).ToSlice(),
-		ResourcesContentPool: linq.FromSlice(generalResourcesMedium).ToSlice(),
+		GuardedContentPool:   registry.GetGuardedContentPoolT3List(),
+		UnguardedContentPool: registry.GetUnguardedContentPoolT3List(),
+		ResourcesContentPool: []string{resourceContentPool.StartZoneMedium},
 		MandatoryContent:     template.StringList{}, ContentCountLimits: buildSideContentLimits(),
 		GuardedContentValue:          tuning.ScaleByStructureDensity(300000 * tuning.ContentScale),
 		GuardedContentValuePerArea:   tuning.ScaleByStructureDensity(2400 * math.Sqrt(tuning.ContentScale)),
@@ -249,7 +221,8 @@ func (this *topologyBase) CreateHubZone(
 		ResourcesValue:               tuning.ScaleByResourceDensity(80000 * tuning.ContentScale),
 		ResourcesValuePerArea:        tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale)),
 		MainObjects:                  mainObjects, ZoneBiome: biome, ContentBiome: biome, MetaObjectsBiome: biome,
-		CrossroadsPosition: &cp0, Roads: roads,
+		CrossroadsPosition: &crossroadsPosition,
+		Roads:              this.createOuterZoneRoads(connectionNames, effectiveCastleCount, false, generateRoads),
 	}
 }
 
@@ -267,7 +240,9 @@ func (this *topologyBase) createPlayerSpawnCity(playerName string, guardValue in
 		Build()
 }
 
-func (this *topologyBase) createPlayerUnclaimedCities(matchPlayerFaction bool, guardValue int, castleCount int) []template.MainObject {
+func (this *topologyBase) createPlayerUnclaimedCities(
+	matchPlayerFaction bool,
+	guardValue, castleCount int) []template.MainObject {
 	var castles []template.MainObject
 	for range castleCount {
 		object := variant_content.NewObjectBuilder().
@@ -286,6 +261,71 @@ func (this *topologyBase) createPlayerUnclaimedCities(matchPlayerFaction bool, g
 		castles = append(castles, object.Build())
 	}
 	return castles
+}
+
+func (this *topologyBase) createOuterZoneRoads(
+	connectionNames []string,
+	castleCount int,
+	includeFoothold, generateRoads bool) []template.Road {
+	if !generateRoads {
+		return nil
+	}
+
+	if castleCount == 0 {
+		return this.createConnectorZoneRoads(connectionNames, generateRoads)
+	}
+
+	var roads []template.Road
+	for i := 1; i < castleCount; i++ {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
+				Build())
+	}
+	if includeFoothold {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildMandatoryContentType("name_remote_foothold_1")).
+				Build())
+	}
+	for _, name := range connectionNames {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
+				Build())
+	}
+	return roads
+}
+
+func (this *topologyBase) createConnectorZoneRoads(connectionNames []string, generateRoads bool) []template.Road {
+	if !generateRoads {
+		return nil
+	}
+
+	distinctNames := helpers.GetUniqueElements(connectionNames)
+	if len(distinctNames) == 0 {
+		return nil
+	}
+
+	if len(distinctNames) == 1 {
+		return []template.Road{
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
+				Build()}
+	}
+	var roads []template.Road
+	for _, name := range distinctNames[1:] {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
+				Build())
+	}
+	return roads
 }
 
 func buildSideContentLimits() template.StringList {

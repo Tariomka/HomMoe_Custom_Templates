@@ -38,7 +38,7 @@ func (this *TournamentTopologyService) GetTopologyVariant(
 		if sorted[i].CastleCount != sorted[j].CastleCount {
 			return sorted[i].CastleCount > sorted[j].CastleCount
 		}
-		return sorted[i].Letter < sorted[j].Letter
+		return sorted[i].Label < sorted[j].Label
 	})
 	neutralsForPlayer := [2][]models.NeutralZonePlan{}
 	for i, nz := range sorted {
@@ -52,7 +52,7 @@ func (this *TournamentTopologyService) GetTopologyVariant(
 			if si != sj {
 				return si < sj
 			}
-			return ai.Letter < aj.Letter
+			return ai.Label < aj.Label
 		})
 	}
 
@@ -83,7 +83,7 @@ func (this *TournamentTopologyService) GetTopologyVariant(
 		for p := range 2 {
 			clusterLetters := []string{playerLetters[p]}
 			for _, n := range neutralsForPlayer[p] {
-				clusterLetters = append(clusterLetters, n.Letter)
+				clusterLetters = append(clusterLetters, n.Label)
 			}
 			conns = append(conns, buildRandomPortalConnections(playerLetters, clusterLetters, tuning, configuration.MaxPortalConnections)...)
 		}

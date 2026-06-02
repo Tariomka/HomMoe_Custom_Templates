@@ -31,7 +31,7 @@ func (this *SharedWebTopologyService) GetTopologyVariant(
 		neutrals = buildBalancedNeutralRing(neutralZones, len(playerLetters))
 	} else {
 		for _, nz := range neutralZones {
-			neutrals = append(neutrals, nz.Letter)
+			neutrals = append(neutrals, nz.Label)
 		}
 	}
 

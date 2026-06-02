@@ -21,7 +21,7 @@ func CreateHubZoneCandidates(neutralZones []models.NeutralZonePlan, distancesByP
 	for _, plan := range neutralZones {
 		var dists []int
 		for _, d := range distancesByPlayer {
-			v, ok := d[plan.Letter]
+			v, ok := d[plan.Label]
 			if !ok {
 				v = 999999
 			}
@@ -46,7 +46,7 @@ func CreateHubZoneCandidates(neutralZones []models.NeutralZonePlan, distancesByP
 		if plan.CastleCount > 0 {
 			hc = 1
 		}
-		candidates = append(candidates, candidate{plan.Letter, minD, variance, int(plan.Quality), hc})
+		candidates = append(candidates, candidate{plan.Label, minD, variance, int(plan.Quality), hc})
 	}
 	return &candidates
 }

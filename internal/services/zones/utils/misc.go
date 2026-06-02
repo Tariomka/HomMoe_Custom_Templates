@@ -118,7 +118,7 @@ func sortNeutralZonePlans(neutralZones []models.NeutralZonePlan) []models.Neutra
 		if scoreI != scoreJ {
 			return scoreI > scoreJ
 		}
-		return sorted[i].Letter < sorted[j].Letter
+		return sorted[i].Label < sorted[j].Label
 	})
 	return sorted
 }

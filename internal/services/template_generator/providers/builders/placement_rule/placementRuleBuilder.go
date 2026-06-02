@@ -1,12 +1,11 @@
 package placement_rule
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-
-const (
-	typeRoad       = "Road"
-	typeCrossroads = "Crossroads"
-	typeMainObject = "MainObject"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
+
+var ruleTypes = registry.GetRuleTypeValues()
 
 type PlacementRuleBuilder struct {
 	item template.PlacementRule
@@ -17,13 +16,13 @@ func NewPlacementRuleBuilder() *PlacementRuleBuilder {
 }
 
 func (this *PlacementRuleBuilder) WithTypeRoad() *PlacementRuleBuilder {
-	return this.withType(typeRoad)
+	return this.withType(ruleTypes.Road)
 }
 func (this *PlacementRuleBuilder) WithTypeCrossroads() *PlacementRuleBuilder {
-	return this.withType(typeCrossroads)
+	return this.withType(ruleTypes.Crossroads)
 }
 func (this *PlacementRuleBuilder) WithTypeMainObject() *PlacementRuleBuilder {
-	return this.withType(typeMainObject)
+	return this.withType(ruleTypes.MainObject)
 }
 func (this *PlacementRuleBuilder) WithDistance(distance Distance) *PlacementRuleBuilder {
 	this.item.TargetMin = distance.Min

@@ -1,7 +1,7 @@
 package models
 
 type NeutralZonePlan struct {
-	Letter      string
+	Label       string
 	Quality     NeutralZoneQuality
 	CastleCount int
 }
