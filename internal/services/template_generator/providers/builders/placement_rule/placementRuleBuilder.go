@@ -2,6 +2,12 @@ package placement_rule
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 
+const (
+	typeRoad       = "Road"
+	typeCrossroads = "Crossroads"
+	typeMainObject = "MainObject"
+)
+
 type PlacementRuleBuilder struct {
 	item template.PlacementRule
 }
@@ -10,17 +16,14 @@ func NewPlacementRuleBuilder() *PlacementRuleBuilder {
 	return &PlacementRuleBuilder{}
 }
 
-func (this *PlacementRuleBuilder) WithRoadType() *PlacementRuleBuilder {
-	this.item.Type = "Road"
-	return this
+func (this *PlacementRuleBuilder) WithTypeRoad() *PlacementRuleBuilder {
+	return this.withType(typeRoad)
 }
-func (this *PlacementRuleBuilder) WithCrossroadsType() *PlacementRuleBuilder {
-	this.item.Type = "Crossroads"
-	return this
+func (this *PlacementRuleBuilder) WithTypeCrossroads() *PlacementRuleBuilder {
+	return this.withType(typeCrossroads)
 }
-func (this *PlacementRuleBuilder) WithMainObjectType() *PlacementRuleBuilder {
-	this.item.Type = "MainObject"
-	return this
+func (this *PlacementRuleBuilder) WithTypeMainObject() *PlacementRuleBuilder {
+	return this.withType(typeMainObject)
 }
 func (this *PlacementRuleBuilder) WithDistance(distance Distance) *PlacementRuleBuilder {
 	this.item.TargetMin = distance.Min
@@ -39,7 +42,7 @@ func (this *PlacementRuleBuilder) Build() template.PlacementRule { return this.i
 
 func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) template.PlacementRule {
 	return this.
-		WithRoadType().
+		WithTypeRoad().
 		WithDistance(distance).
 		WithWeight(weight).
 		Build()
@@ -47,7 +50,7 @@ func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) t
 
 func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight int) template.PlacementRule {
 	return this.
-		WithCrossroadsType().
+		WithTypeCrossroads().
 		WithDistance(distance).
 		WithWeight(weight).
 		Build()
@@ -55,9 +58,14 @@ func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight 
 
 func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) template.PlacementRule {
 	return this.
-		WithMainObjectType().
+		WithTypeMainObject().
 		WithArgs("0").
 		WithDistance(Distance{Min: 0.1, Max: 0.3}).
 		WithWeight(weight).
 		Build()
+}
+
+func (this *PlacementRuleBuilder) withType(ruleType string) *PlacementRuleBuilder {
+	this.item.Type = ruleType
+	return this
 }

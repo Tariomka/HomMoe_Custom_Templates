@@ -1,0 +1,5 @@
+TODO: remove this file
+
+This should contain all of the known values inside the game, as constants or close to it
+
+Both UI and builders inside services should use these values for structurization

@@ -18,6 +18,17 @@ func Clamp(value, lowest, highest int) int {
 	return value
 }
 
+// ClampFloat returns value clamped to [lowest, highest]
+func ClampFloat(value, lowest, highest float64) float64 {
+	if value < lowest {
+		return lowest
+	}
+	if value > highest {
+		return highest
+	}
+	return value
+}
+
 // Scale returns value scaled by multiplier, clamped to a minimum of 0
 func Scale(value, multiplier float64) int {
 	return max(0, int(value*multiplier))

@@ -10,9 +10,7 @@ type MandatoryContentBuilder struct {
 }
 
 func NewContentBuilder(sid string) *MandatoryContentBuilder {
-	return &MandatoryContentBuilder{
-		item: template.MandatoryContentItem{SID: sid},
-	}
+	return &MandatoryContentBuilder{item: template.MandatoryContentItem{SID: sid}}
 }
 
 func (this *MandatoryContentBuilder) WithName(name string) *MandatoryContentBuilder {

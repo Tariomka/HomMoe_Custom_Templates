@@ -113,7 +113,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 			if castleCount > 0 {
 				rules = append(rules,
 					placement_rule.NewPlacementRuleBuilder().
-						WithMainObjectType().
+						WithTypeMainObject().
 						WithArgs("0").
 						WithDistance(placement_rule.Distance{Min: 0.2, Max: 0.4}).
 						WithWeight(0).
@@ -122,7 +122,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 			if castleCount > 1 {
 				rules = append(rules,
 					placement_rule.NewPlacementRuleBuilder().
-						WithMainObjectType().
+						WithTypeMainObject().
 						WithArgs("1").
 						WithDistance(placement_rule.Distance{Min: 0.5, Max: 0.5}).
 						WithWeight(2).
