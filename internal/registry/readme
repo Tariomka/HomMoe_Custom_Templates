@@ -60,7 +60,7 @@ namespace OldenEraTemplateEditor.Models
         [
             "Standard",
             "Lost Starting City",
-            //"Gladiator Arena",
+            "Gladiator Arena",
             "Hold City",
             "Tournament",
         ];
@@ -227,15 +227,6 @@ namespace OldenEraTemplateEditor.Models
 
         // ── Main object ──────────────────────────────────────────────────────────
 
-        /// <summary>Known values for MainObject.Type.</summary>
-        public static readonly string[] MainObjectTypes =
-        [
-            "AbandonedOutpost",
-            "City",
-            "GladiatorArena",
-            "Spawn",
-        ];
-
         /// <summary>Known values for MainObject.Spawn (player slots).</summary>
         public static readonly string[] SpawnPlayers =
         [
@@ -247,39 +238,6 @@ namespace OldenEraTemplateEditor.Models
             "Player6",
             "Player7",
             "Player8",
-        ];
-
-        /// <summary>Known values for MainObject.Placement.</summary>
-        public static readonly string[] MainObjectPlacements =
-        [
-            "Center",
-            "Connection",
-            "NearZone",
-            "Uniform",
-        ];
-
-        /// <summary>Known values for MainObject.BuildingsConstructionSid.</summary>
-        public static readonly string[] BuildingsConstructionSids =
-        [
-            "arcade_buildings_construction",
-            "army_buildings_construction",
-            "chosen_one_buildings_construction",
-            "chosen_one_buildings_construction_up_1",
-            "chosen_one_buildings_construction_up_2",
-            "chosen_one_buildings_construction_up_3",
-            "default_buildings_construction",
-            "extra_poor_buildings_construction",
-            "extra_rich_buildings_construction",
-            "full_buildings_construction",
-            "massacre_buildings_construction",
-            "massacre_buildings_construction_up_1",
-            "massacre_buildings_construction_up_2",
-            "massacre_buildings_construction_up_3",
-            "medium_buildings_construction",
-            "poor_buildings_construction",
-            "rich_buildings_construction",
-            "siege_buildings_construction",
-            "ultra_rich_buildings_construction",
         ];
 
         // ── Biome selectors ──────────────────────────────────────────────────────

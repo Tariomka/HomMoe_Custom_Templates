@@ -3,29 +3,13 @@ package variant_content
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-const (
-	typeSpawn = "Spawn"
-	typeCity  = "City"
-
-	castleQualityDefault   = "default_buildings_construction"
-	castleQualityPoor      = "poor_buildings_construction"
-	castleQualityMedium    = "medium_buildings_construction"
-	castleQualityRich      = "rich_buildings_construction"
-	castleQualityExtraRich = "extra_rich_buildings_construction"
-	castleQualityUltraRich = "ultra_rich_buildings_construction"
-	castleQualityArcade    = "arcade_buildings_construction"
-	castleQualityArmy      = "army_buildings_construction"
-	castleQualityChosenOne = "chosen_one_buildings_construction"
-	castleQualityFull      = "full_buildings_construction"
-	castleQualityMassacre  = "massacre_buildings_construction"
-	castleQualitySiege     = "siege_buildings_construction"
-
-	placementCenter     = "Center"
-	placementConnection = "Connection"
-	placementNearZone   = "NearZone"
-	placementUniform    = "Uniform"
+var (
+	castleQualities = registry.GetBuildingsConstructionSidValues()
+	types           = registry.GetMainObjectTypeValues()
+	placements      = registry.GetPlacementValues()
 )
 
 type MainObjectBuilder struct {
@@ -34,8 +18,8 @@ type MainObjectBuilder struct {
 
 func NewObjectBuilder() *MainObjectBuilder { return &MainObjectBuilder{item: template.MainObject{}} }
 
-func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder { return this.withType(typeSpawn) }
-func (this *MainObjectBuilder) WithTypeCity() *MainObjectBuilder  { return this.withType(typeCity) }
+func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder { return this.withType(types.Spawn) }
+func (this *MainObjectBuilder) WithTypeCity() *MainObjectBuilder  { return this.withType(types.City) }
 func (this *MainObjectBuilder) WithSpawn(spawn string) *MainObjectBuilder {
 	this.item.Spawn = spawn
 	return this
@@ -65,40 +49,22 @@ func (this *MainObjectBuilder) WithGuardWeeklyIncrement(increment float64) *Main
 	return this
 }
 func (this *MainObjectBuilder) WithCastleQualityDefault() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityDefault)
+	return this.withBuildingsQuality(castleQualities.Default)
 }
 func (this *MainObjectBuilder) WithCastleQualityPoor() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityPoor)
+	return this.withBuildingsQuality(castleQualities.Poor)
 }
 func (this *MainObjectBuilder) WithCastleQualityMedium() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityMedium)
+	return this.withBuildingsQuality(castleQualities.Medium)
 }
 func (this *MainObjectBuilder) WithCastleQualityRich() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityRich)
+	return this.withBuildingsQuality(castleQualities.Rich)
 }
 func (this *MainObjectBuilder) WithCastleQualityExtraRich() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityExtraRich)
+	return this.withBuildingsQuality(castleQualities.ExtraRich)
 }
 func (this *MainObjectBuilder) WithCastleQualityUltraRich() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityUltraRich)
-}
-func (this *MainObjectBuilder) WithCastleQualityArcade() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityArcade)
-}
-func (this *MainObjectBuilder) WithCastleQualityArmy() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityArmy)
-}
-func (this *MainObjectBuilder) WithCastleQualityChosenOne() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityChosenOne)
-}
-func (this *MainObjectBuilder) WithCastleQualityFull() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityFull)
-}
-func (this *MainObjectBuilder) WithCastleQualityMassacre() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualityMassacre)
-}
-func (this *MainObjectBuilder) WithCastleQualitySiege() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualitySiege)
+	return this.withBuildingsQuality(castleQualities.UltraRich)
 }
 func (this *MainObjectBuilder) WithFaction(matchOrFromListType string, arguments ...string) *MainObjectBuilder {
 	this.item.Faction = &template.TypedRef{Type: matchOrFromListType, Args: arguments}
@@ -109,16 +75,16 @@ func (this *MainObjectBuilder) WithFactions(factions ...string) *MainObjectBuild
 	return this
 }
 func (this *MainObjectBuilder) WithPlacementCenter() *MainObjectBuilder {
-	return this.withPlacement(placementCenter)
+	return this.withPlacement(placements.Center)
 }
 func (this *MainObjectBuilder) WithPlacementConnection() *MainObjectBuilder {
-	return this.withPlacement(placementConnection)
+	return this.withPlacement(placements.Connection)
 }
 func (this *MainObjectBuilder) WithPlacementNearZone() *MainObjectBuilder {
-	return this.withPlacement(placementNearZone)
+	return this.withPlacement(placements.NearZone)
 }
 func (this *MainObjectBuilder) WithPlacementUniform() *MainObjectBuilder {
-	return this.withPlacement(placementUniform)
+	return this.withPlacement(placements.Uniform)
 }
 func (this *MainObjectBuilder) WithPlacementArgs(arguments ...string) *MainObjectBuilder {
 	this.item.PlacementArgs = append(this.item.PlacementArgs, arguments...)
