@@ -28,3 +28,44 @@ func (this *ZoneAdjacency) GetDistancesFrom(startLabel string) map[string]int {
 	}
 	return distances
 }
+
+type ZoneIndexAdjacency map[int]map[int]bool
+
+func NewZoneIndexAdjacency(size int) *ZoneIndexAdjacency {
+	adjacency := make(ZoneIndexAdjacency, size)
+	for i := range adjacency {
+		adjacency[i] = make(map[int]bool)
+	}
+	return &adjacency
+}
+
+func (this *ZoneIndexAdjacency) Link(inputIdx, outputIdx int) {
+	(*this)[inputIdx][outputIdx] = true
+	(*this)[outputIdx][inputIdx] = true
+}
+
+func (this *ZoneIndexAdjacency) FindIndexes(nodeCount int) [][]int {
+	visited := make([]bool, nodeCount)
+	var components [][]int
+	for start := range nodeCount {
+		if visited[start] {
+			continue
+		}
+		var comp []int
+		queue := []int{start}
+		visited[start] = true
+		for len(queue) > 0 {
+			cur := queue[0]
+			queue = queue[1:]
+			comp = append(comp, cur)
+			for nb := range (*this)[cur] {
+				if !visited[nb] {
+					visited[nb] = true
+					queue = append(queue, nb)
+				}
+			}
+		}
+		components = append(components, comp)
+	}
+	return components
+}

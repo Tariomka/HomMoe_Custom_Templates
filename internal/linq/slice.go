@@ -85,18 +85,17 @@ func (this Query[T]) FirstOrDefault(predicate Predicate[T]) T {
 	return result
 }
 
-func (this Query[T]) First(predicate Predicate[T]) (T, bool) {
-	var result T
-	found := false
+func (this Query[T]) First(predicate Predicate[T]) (result T, ok bool) {
 	this.Iterate(func(item T) bool {
 		if predicate(item) {
 			result = item
-			found = true
+			ok = true
 			return false
 		}
 		return true
 	})
-	return result, found
+
+	return // result, ok
 }
 
 func (this Query[T]) Any() bool {

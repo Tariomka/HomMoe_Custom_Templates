@@ -96,8 +96,8 @@ func (this *RandomTopologyService) GetTopologyVariant(
 		connsByZone[a] = append(connsByZone[a], cn)
 		connsByZone[b] = append(connsByZone[b], cn)
 		conns = append(conns, template.Connection{
-			Name: cn, From: zoneName(from, playerLetters), To: zoneName(to, playerLetters),
-			ConnectionType: "Direct", GuardZone: zoneName(from, playerLetters), SimTurnSquad: true,
+			Name: cn, From: createZoneName(from, playerLetters), To: createZoneName(to, playerLetters),
+			ConnectionType: "Direct", GuardZone: createZoneName(from, playerLetters), SimTurnSquad: true,
 			GuardValue: borderGuardValue(from, to, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: fmt.Sprintf("rnd_guard_%s_%s", from, to),
 		})

@@ -64,7 +64,7 @@ func AssignNeutralZonesToGaps(neutralZones []models.NeutralZonePlan, caps []int,
 			}
 		}
 		gaps[best] = append(gaps[best], nz)
-		loads[best] += CalculateBalanceScore(nz)
+		loads[best] += nz.GetBalanceScore()
 	}
 	return gaps
 }
@@ -99,22 +99,11 @@ func OrderEdgeGap(neutralZones []models.NeutralZonePlan, playerAtEnd bool) []mod
 	return sorted
 }
 
-func CalculateBalanceScore(zone models.NeutralZonePlan) float64 {
-	q := 1.0
-	switch zone.Quality {
-	case models.QualityHigh:
-		q = 3.0
-	case models.QualityMedium:
-		q = 2.0
-	}
-	return q + math.Min(float64(zone.CastleCount), 4)*0.15
-}
-
 func sortNeutralZonePlans(neutralZones []models.NeutralZonePlan) []models.NeutralZonePlan {
 	sorted := make([]models.NeutralZonePlan, len(neutralZones))
 	copy(sorted, neutralZones)
 	sort.SliceStable(sorted, func(i, j int) bool {
-		scoreI, scoreJ := CalculateBalanceScore(sorted[i]), CalculateBalanceScore(sorted[j])
+		scoreI, scoreJ := sorted[i].GetBalanceScore(), sorted[j].GetBalanceScore()
 		if scoreI != scoreJ {
 			return scoreI > scoreJ
 		}

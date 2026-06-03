@@ -2,6 +2,7 @@ package topology
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -25,13 +26,14 @@ func (this *ChainTopologyService) GetTopologyVariant(
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
-	ordered := buildOrderedLetters(configuration, playerLetters, neutralZones, false)
+
+	ordered := this.zoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
 	n := len(ordered)
 	isolate := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
 
 	connNames := make([]string, n-1)
 	for i := 0; i < n-1; i++ {
-		if isolate && contains(playerLetters, ordered[i]) && contains(playerLetters, ordered[i+1]) {
+		if isolate && slices.Contains(playerLetters, ordered[i]) && slices.Contains(playerLetters, ordered[i+1]) {
 			continue
 		}
 		connNames[i] = fmt.Sprintf("Chain-%s-%s", ordered[i], ordered[i+1])
@@ -47,10 +49,10 @@ func (this *ChainTopologyService) GetTopologyVariant(
 		if i < n-1 && connNames[i] != "" {
 			myConns = append(myConns, connNames[i])
 		}
-		if pi := indexOf(playerLetters, letter); pi >= 0 {
-			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
+		if pi := slices.Index(playerLetters, letter); pi >= 0 {
+			zones = append(zones, this.CreateSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 		} else {
-			zones = append(zones, buildNeutralZone(neutralByLetter[letter], myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, letter == holdCityNeutralLetter))
+			zones = append(zones, this.CreateNeutralZone(neutralByLetter[letter], myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, letter == holdCityNeutralLetter))
 		}
 	}
 
@@ -61,8 +63,8 @@ func (this *ChainTopologyService) GetTopologyVariant(
 		}
 		from := ordered[i]
 		to := ordered[i+1]
-		fromZone := zoneName(from, playerLetters)
-		toZone := zoneName(to, playerLetters)
+		fromZone := createZoneName(from, playerLetters)
+		toZone := createZoneName(to, playerLetters)
 		conns = append(conns, template.Connection{
 			Name: connNames[i], From: fromZone, To: toZone,
 			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,

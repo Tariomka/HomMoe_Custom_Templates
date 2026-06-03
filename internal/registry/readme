@@ -192,14 +192,6 @@ namespace OldenEraTemplateEditor.Models
             "MinimalBoundingSquare",
         ];
 
-        // ── Border ───────────────────────────────────────────────────────────────
-
-        /// <summary>Known values for Border.WaterType.</summary>
-        public static readonly string[] WaterTypes =
-        [
-            "water grass",
-        ];
-
         // ── Main object ──────────────────────────────────────────────────────────
 
         /// <summary>Known values for MainObject.Spawn (player slots).</summary>

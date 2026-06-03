@@ -61,7 +61,7 @@ func (this *HubTopologyService) GetTopologyVariant(
 	}
 
 	for _, letter := range outerLetters {
-		outerZone := zoneName(letter, playerLetters)
+		outerZone := createZoneName(letter, playerLetters)
 		hubAnchor := letter
 		if len(playerLetters) > 0 {
 			hubAnchor = playerLetters[0]
@@ -101,7 +101,7 @@ func (this *HubTopologyService) GetTopologyVariant(
 		}
 		conns = append(conns, template.Connection{
 			Name: fmt.Sprintf("Pseudo-%s-%s", from, to),
-			From: zoneName(from, playerLetters), To: zoneName(to, playerLetters),
+			From: createZoneName(from, playerLetters), To: createZoneName(to, playerLetters),
 			ConnectionType: "Proximity",
 		})
 	}

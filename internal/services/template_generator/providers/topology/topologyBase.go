@@ -3,11 +3,15 @@ package topology
 import (
 	"fmt"
 	"math"
+	"math/rand/v2"
+	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -25,9 +29,45 @@ func newTopologyBase() topologyBase {
 	}
 }
 
-func (this *topologyBase) GetSpawnZone(
+func (this *topologyBase) CreateVariant(
+	playerLabels []string,
+	firstLabel string,
+	zoneCount int,
+	zones []template.Zone,
+	connections []template.Connection) template.Variant {
+	orientationBuilder := variant_content.NewOrientationBuilder().
+		WithBaseAngleMin(45).
+		WithBaseAngleMax(45).
+		WithRandomAngleAmplitude(360)
+
+	if zoneCount > 0 {
+		orientationBuilder.WithRandomAngleStep(360 / zoneCount)
+	}
+
+	if slices.Contains(playerLabels, firstLabel) {
+		orientationBuilder.WithZeroAngleZone("Spawn-" + firstLabel)
+	} else {
+		orientationBuilder.WithZeroAngleZone("Neutral-" + firstLabel)
+	}
+
+	return variant_content.NewVariantBuilder().
+		WithOrientation(orientationBuilder.Build()).
+		WithBorder(variant_content.NewBorderBuilder().
+			WithCornerRadius(0).
+			WithObstaclesWidth(3).
+			WithObstaclesNoise(1, 12).
+			WithWaterWidth(0).
+			WithWaterNoise(1, 12).
+			WithWaterTypeWaterGrass().
+			Build()).
+		WithZones(zones...).
+		WithConnections(connections...).
+		Build()
+}
+
+func (this *topologyBase) CreateSpawnZone(
 	label, playerName string,
-	ringConns []string,
+	connectionNames []string,
 	castleCount int,
 	matchFactions bool,
 	zoneSize float64,
@@ -65,13 +105,13 @@ func (this *topologyBase) GetSpawnZone(
 		WithMainObjects(mainObjects).
 		WithBiomeMatchMainObject("0").
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(ringConns, castleCount, spawnFootholds, generateRoads)).
+		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, spawnFootholds, generateRoads)).
 		Build()
 }
 
 func (this *topologyBase) CreateNeutralZone(
 	plan models.NeutralZonePlan,
-	ringConns []string,
+	connectionNames []string,
 	zoneSize float64,
 	spawnFootholds, generateRoads bool,
 	tuning models.GenerationTuning,
@@ -104,7 +144,7 @@ func (this *topologyBase) CreateNeutralZone(
 		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
 		WithMainObjects(this.createNeutralZoneCastles(profile, tuning, plan.CastleCount, isHoldCity)).
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(ringConns, plan.CastleCount, spawnFootholds, generateRoads))
+		WithRoads(this.createOuterZoneRoads(connectionNames, plan.CastleCount, spawnFootholds, generateRoads))
 
 	if plan.CastleCount > 0 {
 		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
@@ -157,6 +197,242 @@ func (this *topologyBase) CreateHubZone(
 	}
 
 	return zoneBuilder.Build()
+}
+
+func (this *topologyBase) CreateRandomPortalConnections(
+	playerLabels, orderedLabels []string,
+	tuning models.GenerationTuning,
+	maxCount int) []template.Connection {
+	count := len(orderedLabels)
+	if count < 2 {
+		return nil
+	}
+	dest := buildNonAdjacentDerangement(count)
+	indices := make([]int, count)
+	for i := range indices {
+		indices[i] = i
+	}
+	rand.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
+
+	limit := min(count, maxCount)
+	trueVal := true
+	rule := placement_rule.NewPlacementRuleBuilder().BuildCrossroadsRule(placement_rule.DistanceNear, 2)
+	var conns []template.Connection
+	for i := range limit {
+		idx := indices[i]
+		from := orderedLabels[idx]
+		to := orderedLabels[dest[idx]]
+		fromZone := createZoneName(from, playerLabels)
+		toZone := createZoneName(to, playerLabels)
+		conns = append(conns, template.Connection{
+			Name: fmt.Sprintf("Portal-%s-%s", from, to), From: fromZone, To: toZone,
+			ConnectionType:           "Portal",
+			PortalPlacementRulesFrom: []template.PlacementRule{rule},
+			PortalPlacementRulesTo:   []template.PlacementRule{rule},
+			Road:                     &trueVal, GuardValue: tuning.ScaleByBorderGuardStrength(25000), GuardWeeklyIncrement: 0.15,
+		})
+	}
+	return conns
+}
+
+func (this *topologyBase) GetBorderGuardValue(
+	labelA, labelB string,
+	playerLabels []string,
+	neutralZones []models.NeutralZonePlan,
+	tuning models.GenerationTuning) int {
+	aIsPlayer := slices.Contains(playerLabels, labelA)
+	bIsPlayer := slices.Contains(playerLabels, labelB)
+	if aIsPlayer && bIsPlayer {
+		return tuning.ScaleByBorderGuardStrength(30_000)
+	}
+
+	if !aIsPlayer && !bIsPlayer {
+		qa := neutralQualityOf(neutralZones, labelA)
+		qb := neutralQualityOf(neutralZones, labelB)
+		higher := qa
+		if int(qb) > int(qa) {
+			higher = qb
+		}
+		return tuning.ScaleByBorderGuardStrength(higher.GetGuardValue())
+	}
+
+	neutralLetter := labelB
+	if !aIsPlayer {
+		neutralLetter = labelA
+	}
+	return tuning.ScaleByBorderGuardStrength(neutralQualityOf(neutralZones, neutralLetter).GetGuardValue())
+}
+
+func (this *topologyBase) EnsurePlayerZonesConnected(
+	playerLabels []string,
+	zones []template.Zone,
+	connections *[]template.Connection,
+	tuning models.GenerationTuning) {
+	if len(playerLabels) < 2 {
+		return
+	}
+	connNames := map[string]bool{}
+	for _, c := range *connections {
+		if c.Name != "" {
+			connNames[c.Name] = true
+		}
+	}
+	for _, letter := range playerLabels {
+		zn := "Spawn-" + letter
+		z, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == zn })
+		if !ok {
+			continue
+		}
+		hasConn := false
+		for _, r := range z.Roads {
+			if r.To.Type == "Connection" && len(r.To.Args) > 0 && connNames[r.To.Args[0]] {
+				hasConn = true
+				break
+			}
+		}
+		if hasConn {
+			continue
+		}
+		var partner string
+		for _, pl := range playerLabels {
+			if pl != letter {
+				partner = pl
+				break
+			}
+		}
+		if partner == "" {
+			continue
+		}
+		a, b := letter, partner
+		if a > b {
+			a, b = b, a
+		}
+		fn := "Fallback-" + a + "-" + b
+		if connNames[fn] {
+			continue
+		}
+		*connections = append(*connections, template.Connection{
+			Name: fn, From: "Spawn-" + letter, To: "Spawn-" + partner,
+			ConnectionType: "Direct", GuardZone: "Spawn-" + letter, SimTurnSquad: true,
+			GuardValue: this.GetBorderGuardValue(letter, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup: "fallback_guard_" + fn,
+		})
+		connNames[fn] = true
+		for _, pl := range []string{letter, partner} {
+			if pz, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
+				pz.Roads = append(pz.Roads, plainRoad(mainObjectEndpoint("0"), connectionEndpoint(fn)))
+			}
+		}
+	}
+}
+
+func (this *topologyBase) EnsureFullConnectivity(
+	playerLabels, allLabels []string,
+	positions [][2]float64,
+	zones []template.Zone,
+	connections *[]template.Connection,
+	tuning models.GenerationTuning,
+	neutralZones []models.NeutralZonePlan) {
+	if len(allLabels) <= 1 {
+		return
+	}
+
+	zoneNameToIdx := map[string]int{}
+	for i, l := range allLabels {
+		zoneNameToIdx[createZoneName(l, playerLabels)] = i
+	}
+	adjacency := models.NewZoneIndexAdjacency(len(allLabels))
+
+	for _, connection := range *connections {
+		if connection.ConnectionType != "Direct" && connection.ConnectionType != "Portal" {
+			continue
+		}
+		a, okA := zoneNameToIdx[connection.From]
+		b, okB := zoneNameToIdx[connection.To]
+		if !okA || !okB {
+			continue
+		}
+		adjacency.Link(a, b)
+	}
+
+	connNameSet := map[string]bool{}
+	for _, c := range *connections {
+		if c.Name != "" {
+			connNameSet[c.Name] = true
+		}
+	}
+
+	for {
+		components := adjacency.FindIndexes(len(allLabels))
+		if len(components) <= 1 {
+			break
+		}
+		mainComp := map[int]bool{}
+		for _, idx := range components[0] {
+			mainComp[idx] = true
+		}
+		bestA, bestB := -1, -1
+		bestDist := math.MaxFloat64
+		for _, a := range components[0] {
+			for ci := 1; ci < len(components); ci++ {
+				for _, b := range components[ci] {
+					dx := positions[a][0] - positions[b][0]
+					dy := positions[a][1] - positions[b][1]
+					d := dx*dx + dy*dy
+					if d < bestDist {
+						bestDist = d
+						bestA, bestB = a, b
+					}
+				}
+			}
+		}
+		if bestA < 0 {
+			break
+		}
+		la, lb := allLabels[bestA], allLabels[bestB]
+		if la > lb {
+			la, lb = lb, la
+		}
+		bridgeName := fmt.Sprintf("Bridge-%s-%s", la, lb)
+		if !connNameSet[bridgeName] {
+			zoneFrom := createZoneName(allLabels[bestA], playerLabels)
+			zoneTo := createZoneName(allLabels[bestB], playerLabels)
+			*connections = append(*connections, template.Connection{
+				Name: bridgeName, From: zoneFrom, To: zoneTo,
+				ConnectionType: "Direct", GuardZone: zoneFrom, SimTurnSquad: true,
+				GuardValue: this.GetBorderGuardValue(la, lb, playerLabels, neutralZones, tuning), GuardWeeklyIncrement: 0.15,
+				GuardMatchGroup: fmt.Sprintf("bridge_guard_%s-%s", la, lb),
+			})
+			connNameSet[bridgeName] = true
+			for _, zn := range []string{zoneFrom, zoneTo} {
+				if z, ok := linq.FromSlice(zones).First(func(x template.Zone) bool { return x.Name == zn }); ok {
+					if len(z.MainObjects) > 0 {
+						z.Roads = append(z.Roads, plainRoad(mainObjectEndpoint("0"), connectionEndpoint(bridgeName)))
+					} else if len(z.Roads) > 0 {
+						existingConn := ""
+						for _, r := range z.Roads {
+							if r.From.Type == "Connection" && len(r.From.Args) > 0 {
+								existingConn = r.From.Args[0]
+								break
+							}
+							if r.To.Type == "Connection" && len(r.To.Args) > 0 {
+								existingConn = r.To.Args[0]
+								break
+							}
+						}
+						if existingConn != "" {
+							z.Roads = append(z.Roads, plainRoad(connectionEndpoint(existingConn), connectionEndpoint(bridgeName)))
+						} else {
+							z.Roads = append(z.Roads, plainRoad(connectionEndpoint(bridgeName), connectionEndpoint(bridgeName)))
+						}
+					} else {
+						z.Roads = append(z.Roads, plainRoad(connectionEndpoint(bridgeName), connectionEndpoint(bridgeName)))
+					}
+				}
+			}
+		}
+		adjacency.Link(bestA, bestB)
+	}
 }
 
 func (this *topologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {
@@ -360,4 +636,71 @@ func buildSideContentLimits() template.StringList {
 		}
 	}
 	return limits
+}
+
+func createZoneName(label string, playerLabels []string) string {
+	if slices.Contains(playerLabels, label) {
+		return "Spawn-" + label
+	}
+	return "Neutral-" + label
+}
+
+func neutralQualityOf(neutralZones []models.NeutralZonePlan, label string) models.NeutralZoneQuality {
+	if neutralZones == nil {
+		return models.QualityMedium
+	}
+	plan, ok := linq.FromSlice(neutralZones).First(func(x models.NeutralZonePlan) bool { return x.Label == label })
+	if !ok {
+		return models.QualityMedium
+	}
+	return plan.Quality
+}
+
+func buildNonAdjacentDerangement(count int) []int {
+	dest := make([]int, count)
+	for range 100 {
+		candidates := make([]int, count)
+		for i := range candidates {
+			candidates[i] = i
+		}
+		rand.Shuffle(len(candidates), func(i, j int) { candidates[i], candidates[j] = candidates[j], candidates[i] })
+		valid := true
+		used := make([]bool, count)
+		for i := range count {
+			found := -1
+			for j := range candidates {
+				if used[candidates[j]] {
+					continue
+				}
+				candidate := candidates[j]
+				if candidate != i && candidate != (i+1)%count && candidate != (i-1+count)%count {
+					found = j
+					break
+				}
+			}
+			if found < 0 {
+				for j := range candidates {
+					if !used[candidates[j]] && candidates[j] != i {
+						found = j
+						break
+					}
+				}
+			}
+			if found < 0 {
+				valid = false
+				break
+			}
+			dest[i] = candidates[found]
+			used[candidates[found]] = true
+		}
+		if valid {
+			return dest
+		}
+	}
+
+	shift := max(1, count/2)
+	for i := range count {
+		dest[i] = (i + shift) % count
+	}
+	return dest
 }
