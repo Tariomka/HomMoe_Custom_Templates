@@ -56,18 +56,6 @@ func (this *ZoneBuilder) WithDiplomacyModifier(modifier float64) *ZoneBuilder {
 	this.item.DiplomacyModifier = modifier
 	return this
 }
-func (this *ZoneBuilder) WithEncounterHolesSettings(settings variant.EncounterHolesSettings) *ZoneBuilder {
-	this.item.EncounterHolesSettings = &settings
-	return this
-}
-func (this *ZoneBuilder) WithRandomHireEnableWeeklyUnitIncrement(values []bool) *ZoneBuilder {
-	this.item.RandomHireEnableWeeklyUnitIncrement = values
-	return this
-}
-func (this *ZoneBuilder) WithRandomHireInitialUnitIncrement(values []int) *ZoneBuilder {
-	this.item.RandomHireInitialUnitIncrement = values
-	return this
-}
 func (this *ZoneBuilder) WithGuardedContentPool(pool []string) *ZoneBuilder {
 	this.item.GuardedContentPool = pool
 	return this
@@ -159,12 +147,24 @@ func (this *ZoneBuilder) WithRoads(roads []template.Road) *ZoneBuilder {
 	return this
 }
 
+func (this *ZoneBuilder) WithEncounterHolesSettings(settings variant.EncounterHolesSettings) *ZoneBuilder {
+	this.item.EncounterHolesSettings = &settings
+	return this
+}
 func (this *ZoneBuilder) WithGeneratorPosition(position [2]float64) *ZoneBuilder {
 	this.item.GeneratorPosition = &position
 	return this
 }
 func (this *ZoneBuilder) WithGeneratorRing(ring int) *ZoneBuilder {
 	this.item.GeneratorRing = &ring
+	return this
+}
+func (this *ZoneBuilder) WithRandomHireEnableWeeklyUnitIncrement(values []bool) *ZoneBuilder {
+	this.item.RandomHireEnableWeeklyUnitIncrement = values
+	return this
+}
+func (this *ZoneBuilder) WithRandomHireInitialUnitIncrement(values []int) *ZoneBuilder {
+	this.item.RandomHireInitialUnitIncrement = values
 	return this
 }
 func (this *ZoneBuilder) Build() template.Zone { return this.item }
