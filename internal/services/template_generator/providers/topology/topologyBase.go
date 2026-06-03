@@ -35,42 +35,38 @@ func (this *topologyBase) GetSpawnZone(
 	generateRoads bool,
 	tuning models.GenerationTuning) template.Zone {
 	mainObjects := []template.MainObject{
-		this.createPlayerSpawnCity(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
+		this.createPlayerSpawnCastle(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
 	}
 	// TODO: add player owned castles
 	mainObjects = append(mainObjects,
-		this.createPlayerUnclaimedCities(matchFactions, tuning.ScaleByNeutralGuardStrength(2500), castleCount-1)...)
+		this.createPlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(2500), castleCount-1)...)
 
-	crossroadsPosition := 0
-	biome := variant_content.NewRefBuilder().BuildBiomeMatchMainObjectType("0")
-	return template.Zone{
-		Name:                         "Spawn-" + label,
-		Size:                         utils.NormalizeZoneSize(zoneSize),
-		Layout:                       "zone_layout_spawns",
-		GuardCutoffValue:             2000,
-		GuardRandomization:           tuning.GuardRandomization,
-		GuardMultiplier:              tuning.ScaleByNeutralGuardStrengthPrecise(1.0),
-		GuardWeeklyIncrement:         0.20,
-		GuardReactionDistribution:    []int{60, 20, 10, 10, 2, 0},
-		DiplomacyModifier:            -0.5,
-		GuardedContentPool:           registry.GetGuardedContentPoolT2List(),
-		UnguardedContentPool:         registry.GetUnguardedContentPoolT2List(),
-		ResourcesContentPool:         []string{resourceContentPool.StartZonePoor},
-		MandatoryContent:             template.StringList{"mandatory_content_side_" + label},
-		ContentCountLimits:           buildSideContentLimits(),
-		GuardedContentValue:          tuning.ScaleByStructureDensity(200000 * tuning.ContentScale),
-		GuardedContentValuePerArea:   tuning.ScaleByStructureDensity(2000 * math.Sqrt(tuning.ContentScale)),
-		UnguardedContentValue:        tuning.ScaleByStructureDensity(50000 * tuning.ContentScale),
-		UnguardedContentValuePerArea: tuning.ScaleByStructureDensity(400 * math.Sqrt(tuning.ContentScale)),
-		ResourcesValue:               tuning.ScaleByResourceDensity(80000 * tuning.ContentScale),
-		ResourcesValuePerArea:        tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale)),
-		MainObjects:                  mainObjects,
-		ZoneBiome:                    biome,
-		ContentBiome:                 biome,
-		MetaObjectsBiome:             biome,
-		CrossroadsPosition:           &crossroadsPosition,
-		Roads:                        this.createOuterZoneRoads(ringConns, castleCount, spawnFootholds, generateRoads),
-	}
+	return variant_content.NewZoneBuilder().
+		WithName("Spawn-" + label).
+		WithSize(utils.NormalizeZoneSize(zoneSize)).
+		WithLayoutSpawns().
+		WithGuardCutoffValue(2000).
+		WithGuardRandomization(tuning.GuardRandomization).
+		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(1.0)).
+		WithGuardWeeklyIncrement(0.20).
+		WithGuardReactionDistribution([]int{60, 20, 10, 10, 2, 0}).
+		WithDiplomacyModifier(-0.5).
+		WithGuardedContentPool(registry.GetGuardedContentPoolT2List()).
+		WithUnguardedContentPool(registry.GetUnguardedContentPoolT2List()).
+		WithResourcesContentPool([]string{resourceContentPool.StartZonePoor}).
+		WithMandatoryContent("mandatory_content_side_" + label).
+		WithContentCountLimits(buildSideContentLimits()).
+		WithGuardedContentValue(tuning.ScaleByStructureDensity(200000 * tuning.ContentScale)).
+		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(2000 * math.Sqrt(tuning.ContentScale))).
+		WithUnguardedContentValue(tuning.ScaleByStructureDensity(50000 * tuning.ContentScale)).
+		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(400 * math.Sqrt(tuning.ContentScale))).
+		WithResourcesValue(tuning.ScaleByResourceDensity(80000 * tuning.ContentScale)).
+		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale))).
+		WithMainObjects(mainObjects).
+		WithBiomeMatchMainObject("0").
+		WithCrossroadsPosition(0).
+		WithRoads(this.createOuterZoneRoads(ringConns, castleCount, spawnFootholds, generateRoads)).
+		Build()
 }
 
 func (this *topologyBase) CreateNeutralZone(
@@ -85,77 +81,38 @@ func (this *topologyBase) CreateNeutralZone(
 	}
 	profile := models.NewNeutralZoneProfile(plan.Quality)
 
-	var mainObjects []template.MainObject
+	zoneBuilder := variant_content.NewZoneBuilder().
+		WithName("Neutral-" + plan.Label).
+		WithSize(utils.NormalizeZoneSize(zoneSize)).
+		WithLayout(profile.Layout).
+		WithGuardCutoffValue(2000).
+		WithGuardRandomization(tuning.GuardRandomization).
+		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)).
+		WithGuardWeeklyIncrement(0.20).
+		WithGuardReactionDistribution(profile.GuardReactionDistribution).
+		WithDiplomacyModifier(-0.5).
+		WithGuardedContentPool(profile.GuardedContentPool).
+		WithUnguardedContentPool(profile.UnguardedContentPool).
+		WithResourcesContentPool(profile.ResourcesContentPool).
+		WithMandatoryContent("mandatory_content_neutral_" + plan.Label).
+		WithContentCountLimits(buildSideContentLimits()).
+		WithGuardedContentValue(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValue) * tuning.ContentScale)).
+		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
+		WithUnguardedContentValue(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValue) * tuning.ContentScale)).
+		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
+		WithResourcesValue(tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)).
+		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
+		WithMainObjects(this.createNeutralZoneCastles(profile, tuning, plan.CastleCount, isHoldCity)).
+		WithCrossroadsPosition(0).
+		WithRoads(this.createOuterZoneRoads(ringConns, plan.CastleCount, spawnFootholds, generateRoads))
+
 	if plan.CastleCount > 0 {
-		guardVal := profile.PrimaryCityGuardValue
-		bcsid := profile.PrimaryBuildingsCSid
-		placement := "Uniform"
-		var placementArgs []string
-		if isHoldCity {
-			if guardVal < 20000 {
-				guardVal = 20000
-			}
-			bcsid = "ultra_rich_buildings_construction"
-			placement = "Center"
-		} else {
-			placementArgs = []string{"true", "0.8", "2"}
-		}
-		mo := template.MainObject{
-			Type: "City", GuardChance: 1,
-			GuardValue:               tuning.ScaleByBorderGuardStrength(guardVal),
-			GuardWeeklyIncrement:     0.10,
-			BuildingsConstructionSid: bcsid,
-			Faction:                  &template.TypedRef{Type: "FromList", Args: []string{}},
-			Placement:                placement, PlacementArgs: placementArgs, HoldCityWinCon: isHoldCity,
-		}
-		mainObjects = append(mainObjects, mo)
-	}
-	for i := 1; i < plan.CastleCount; i++ {
-		mainObjects = append(mainObjects, template.MainObject{
-			Type: "City", GuardChance: 1,
-			GuardValue:               tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue),
-			GuardWeeklyIncrement:     0.10,
-			BuildingsConstructionSid: profile.ExtraBuildingsCSid,
-			Faction:                  &template.TypedRef{Type: "FromList", Args: []string{}},
-			Placement:                "Uniform", PlacementArgs: []string{"false", "-0.8", "3"},
-		})
+		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
+	} else {
+		zoneBuilder = zoneBuilder.WithBiomeMatchZone()
 	}
 
-	reaction := []int{0, 10, 10, 10, 10, 0}
-	if plan.Quality == models.QualityHigh {
-		reaction = []int{0, 10, 10, 20, 10, 0}
-	}
-
-	biome := template.TypedRef{Type: "MatchZone", Args: []string{}}
-	if plan.CastleCount > 0 {
-		biome = template.TypedRef{Type: "MatchMainObject", Args: []string{"0"}}
-	}
-	crossroadsPosition := 0
-	return template.Zone{
-		Name:                         "Neutral-" + plan.Label,
-		Size:                         utils.NormalizeZoneSize(zoneSize),
-		Layout:                       profile.Layout,
-		GuardCutoffValue:             2000,
-		GuardRandomization:           tuning.GuardRandomization,
-		GuardMultiplier:              tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier),
-		GuardWeeklyIncrement:         0.20,
-		GuardReactionDistribution:    reaction,
-		DiplomacyModifier:            -0.5,
-		GuardedContentPool:           profile.GuardedContentPool,
-		UnguardedContentPool:         profile.UnguardedContentPool,
-		ResourcesContentPool:         profile.ResourcesContentPool,
-		MandatoryContent:             template.StringList{"mandatory_content_neutral_" + plan.Label},
-		ContentCountLimits:           buildSideContentLimits(),
-		GuardedContentValue:          tuning.ScaleByStructureDensity(float64(profile.GuardedContentValue) * tuning.ContentScale),
-		GuardedContentValuePerArea:   tuning.ScaleByStructureDensity(float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale)),
-		UnguardedContentValue:        tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValue) * tuning.ContentScale),
-		UnguardedContentValuePerArea: tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale)),
-		ResourcesValue:               tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale),
-		ResourcesValuePerArea:        tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale)),
-		MainObjects:                  mainObjects, ZoneBiome: biome, ContentBiome: biome, MetaObjectsBiome: biome,
-		CrossroadsPosition: &crossroadsPosition,
-		Roads:              this.createOuterZoneRoads(ringConns, plan.CastleCount, spawnFootholds, generateRoads),
-	}
+	return zoneBuilder.Build()
 }
 
 func (this *topologyBase) CreateHubZone(
@@ -165,68 +122,44 @@ func (this *topologyBase) CreateHubZone(
 	size float64,
 	castleCount int,
 	generateRoads bool) template.Zone {
-	effectiveCastleCount := castleCount
-	if isHoldCity && effectiveCastleCount < 1 {
-		effectiveCastleCount = 1
+	if isHoldCity && castleCount < 1 {
+		castleCount = 1
 	}
-	var mainObjects []template.MainObject
-	for i := 0; i < effectiveCastleCount; i++ {
-		isHoldSlot := isHoldCity && i == 0
-		gv := 16000
-		if isHoldSlot {
-			gv = 25000
-		}
-		gc := 0.5
-		if isHoldSlot {
-			gc = 1.0
-		}
-		bcsid := "rich_buildings_construction"
-		if isHoldSlot {
-			bcsid = "ultra_rich_buildings_construction"
-		}
-		placement := "Uniform"
-		var placementArgs []string
-		if isHoldSlot {
-			placement = "Center"
-		} else {
-			placementArgs = []string{"true", "0.8", "2"}
-		}
-		mainObjects = append(mainObjects, template.MainObject{
-			Type: "City", GuardChance: gc,
-			GuardValue:               tuning.ScaleByNeutralGuardStrength(gv),
-			GuardWeeklyIncrement:     0.10,
-			BuildingsConstructionSid: bcsid,
-			Faction:                  &template.TypedRef{Type: "FromList", Args: []string{}},
-			Placement:                placement, PlacementArgs: placementArgs, HoldCityWinCon: isHoldSlot,
-		})
+
+	zoneBuilder := variant_content.NewZoneBuilder().
+		WithName("Hub").
+		WithSize(utils.NormalizeZoneSize(size)).
+		WithLayoutCenter().
+		WithGuardCutoffValue(2000).
+		WithGuardRandomization(0.05).
+		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(1.5)).
+		WithGuardWeeklyIncrement(0.20).
+		WithGuardReactionDistribution([]int{0, 10, 10, 20, 10, 0}).
+		WithDiplomacyModifier(-0.5).
+		WithGuardedContentPool(registry.GetGuardedContentPoolT3List()).
+		WithUnguardedContentPool(registry.GetUnguardedContentPoolT3List()).
+		WithResourcesContentPool([]string{resourceContentPool.StartZoneMedium}).
+		WithContentCountLimits(buildSideContentLimits()).
+		WithGuardedContentValue(tuning.ScaleByStructureDensity(300000 * tuning.ContentScale)).
+		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(2400 * math.Sqrt(tuning.ContentScale))).
+		WithUnguardedContentValue(tuning.ScaleByStructureDensity(50000 * tuning.ContentScale)).
+		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(600 * math.Sqrt(tuning.ContentScale))).
+		WithResourcesValue(tuning.ScaleByResourceDensity(80000 * tuning.ContentScale)).
+		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale))).
+		WithMainObjects(this.createHubZoneCastles(tuning, castleCount, isHoldCity)).
+		WithCrossroadsPosition(0).
+		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, false, generateRoads))
+
+	if castleCount > 0 {
+		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
+	} else {
+		zoneBuilder = zoneBuilder.WithBiomeMatchZone()
 	}
-	biome := template.TypedRef{Type: "MatchZone", Args: []string{}}
-	if effectiveCastleCount > 0 {
-		biome = template.TypedRef{Type: "MatchMainObject", Args: []string{"0"}}
-	}
-	crossroadsPosition := 0
-	return template.Zone{
-		Name: "Hub", Size: size, Layout: "zone_layout_center",
-		GuardCutoffValue: 2000, GuardRandomization: 0.05,
-		GuardMultiplier: tuning.ScaleByNeutralGuardStrengthPrecise(1.5), GuardWeeklyIncrement: 0.20,
-		GuardReactionDistribution: []int{0, 10, 10, 20, 10, 0}, DiplomacyModifier: -0.5,
-		GuardedContentPool:   registry.GetGuardedContentPoolT3List(),
-		UnguardedContentPool: registry.GetUnguardedContentPoolT3List(),
-		ResourcesContentPool: []string{resourceContentPool.StartZoneMedium},
-		MandatoryContent:     template.StringList{}, ContentCountLimits: buildSideContentLimits(),
-		GuardedContentValue:          tuning.ScaleByStructureDensity(300000 * tuning.ContentScale),
-		GuardedContentValuePerArea:   tuning.ScaleByStructureDensity(2400 * math.Sqrt(tuning.ContentScale)),
-		UnguardedContentValue:        tuning.ScaleByStructureDensity(50000 * tuning.ContentScale),
-		UnguardedContentValuePerArea: tuning.ScaleByStructureDensity(600 * math.Sqrt(tuning.ContentScale)),
-		ResourcesValue:               tuning.ScaleByResourceDensity(80000 * tuning.ContentScale),
-		ResourcesValuePerArea:        tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale)),
-		MainObjects:                  mainObjects, ZoneBiome: biome, ContentBiome: biome, MetaObjectsBiome: biome,
-		CrossroadsPosition: &crossroadsPosition,
-		Roads:              this.createOuterZoneRoads(connectionNames, effectiveCastleCount, false, generateRoads),
-	}
+
+	return zoneBuilder.Build()
 }
 
-func (this *topologyBase) createPlayerSpawnCity(playerName string, guardValue int) template.MainObject {
+func (this *topologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {
 	return variant_content.NewObjectBuilder().
 		WithTypeSpawn().
 		WithSpawn(playerName).
@@ -240,12 +173,14 @@ func (this *topologyBase) createPlayerSpawnCity(playerName string, guardValue in
 		Build()
 }
 
-func (this *topologyBase) createPlayerUnclaimedCities(
+// func (this *topologyBase) createPlayerOwnedCastles(playerIndex int, guardValue int, castleCount int) []template.MainObject {  }
+
+func (this *topologyBase) createPlayerUnclaimedCastles(
 	matchPlayerFaction bool,
 	guardValue, castleCount int) []template.MainObject {
 	var castles []template.MainObject
 	for range castleCount {
-		object := variant_content.NewObjectBuilder().
+		objectBuilder := variant_content.NewObjectBuilder().
 			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardValue(guardValue).
@@ -254,12 +189,101 @@ func (this *topologyBase) createPlayerUnclaimedCities(
 			WithPlacementUniform().
 			WithPlacementArgs("false", "-0.8", "3")
 		if matchPlayerFaction {
-			object = object.WithFaction("Match", "0")
+			objectBuilder = objectBuilder.WithFaction("Match", "0")
 		} else {
-			object = object.WithFaction("Random") // TODO: is this valid?
+			objectBuilder = objectBuilder.WithFaction("Random") // TODO: is this valid?
 		}
-		castles = append(castles, object.Build())
+		castles = append(castles, objectBuilder.Build())
 	}
+	return castles
+}
+
+func (this *topologyBase) createNeutralZoneCastles(
+	profile models.NeutralZoneProfile,
+	tuning models.GenerationTuning,
+	castleCount int,
+	isHoldCityZone bool) []template.MainObject {
+	var castles []template.MainObject
+
+	if castleCount > 0 {
+		objectBuilder := variant_content.NewObjectBuilder().
+			WithTypeCity().
+			WithGuardChance(1).
+			WithGuardWeeklyIncrement(0.10).
+			WithFaction("FromList")
+		if isHoldCityZone {
+			objectBuilder = objectBuilder.
+				WithGuardValue(tuning.ScaleByBorderGuardStrength(max(profile.PrimaryCityGuardValue, 20_000))).
+				WithCastleQualityUltraRich().
+				WithPlacementCenter().
+				WithHoldCityWinCon()
+		} else {
+			objectBuilder = objectBuilder.
+				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.PrimaryCityGuardValue)).
+				WithCastleQuality(profile.PrimaryBuildingsCSid).
+				WithPlacementUniform().
+				WithPlacementArgs("true", "0.8", "2")
+		}
+		castles = append(castles, objectBuilder.Build())
+	}
+
+	for range castleCount - 1 {
+		castles = append(castles,
+			variant_content.NewObjectBuilder().
+				WithTypeCity().
+				WithGuardChance(1).
+				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
+				WithGuardWeeklyIncrement(0.10).
+				WithCastleQuality(profile.ExtraBuildingsCSid).
+				WithFaction("FromList").
+				WithPlacementUniform().
+				WithPlacementArgs("false", "-0.8", "3").
+				Build())
+	}
+
+	return castles
+}
+
+func (this *topologyBase) createHubZoneCastles(
+	tuning models.GenerationTuning,
+	castleCount int,
+	isHoldCityZone bool) []template.MainObject {
+	var castles []template.MainObject
+	newCastleBuilder := func() *variant_content.MainObjectBuilder {
+		return variant_content.NewObjectBuilder().
+			WithTypeCity().
+			WithGuardWeeklyIncrement(0.10).
+			WithFaction("FromList")
+	}
+	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) template.MainObject {
+		return builder.
+			WithGuardChance(1).
+			WithGuardValue(tuning.ScaleByNeutralGuardStrength(25_000)).
+			WithCastleQualityUltraRich().
+			WithPlacementCenter().
+			WithHoldCityWinCon().
+			Build()
+	}
+	buildCastle := func(builder *variant_content.MainObjectBuilder) template.MainObject {
+		return builder.
+			WithGuardChance(0.5).
+			WithGuardValue(tuning.ScaleByNeutralGuardStrength(16_000)).
+			WithCastleQualityRich().
+			WithPlacementUniform().
+			WithPlacementArgs("true", "0.8", "2").
+			Build()
+	}
+
+	if castleCount > 0 && isHoldCityZone {
+		castles = append(castles, buildHoldCityCastle(newCastleBuilder()))
+	} else if castleCount > 0 {
+		castles = append(castles, buildCastle(newCastleBuilder()))
+	}
+
+	for range castleCount - 1 {
+		castles = append(castles, buildCastle(newCastleBuilder()))
+	}
+
 	return castles
 }
 

@@ -48,23 +48,27 @@ func (this *MainObjectBuilder) WithGuardWeeklyIncrement(increment float64) *Main
 	this.item.GuardWeeklyIncrement = increment
 	return this
 }
+func (this *MainObjectBuilder) WithCastleQuality(sid string) *MainObjectBuilder {
+	this.item.BuildingsConstructionSid = sid
+	return this
+}
 func (this *MainObjectBuilder) WithCastleQualityDefault() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualities.Default)
+	return this.WithCastleQuality(castleQualities.Default)
 }
 func (this *MainObjectBuilder) WithCastleQualityPoor() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualities.Poor)
+	return this.WithCastleQuality(castleQualities.Poor)
 }
 func (this *MainObjectBuilder) WithCastleQualityMedium() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualities.Medium)
+	return this.WithCastleQuality(castleQualities.Medium)
 }
 func (this *MainObjectBuilder) WithCastleQualityRich() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualities.Rich)
+	return this.WithCastleQuality(castleQualities.Rich)
 }
 func (this *MainObjectBuilder) WithCastleQualityExtraRich() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualities.ExtraRich)
+	return this.WithCastleQuality(castleQualities.ExtraRich)
 }
 func (this *MainObjectBuilder) WithCastleQualityUltraRich() *MainObjectBuilder {
-	return this.withBuildingsQuality(castleQualities.UltraRich)
+	return this.WithCastleQuality(castleQualities.UltraRich)
 }
 func (this *MainObjectBuilder) WithFaction(matchOrFromListType string, arguments ...string) *MainObjectBuilder {
 	this.item.Faction = &template.TypedRef{Type: matchOrFromListType, Args: arguments}
@@ -110,10 +114,6 @@ func (this *MainObjectBuilder) Build() template.MainObject { return this.item }
 
 func (this *MainObjectBuilder) withType(objectType string) *MainObjectBuilder {
 	this.item.Type = objectType
-	return this
-}
-func (this *MainObjectBuilder) withBuildingsQuality(sid string) *MainObjectBuilder {
-	this.item.BuildingsConstructionSid = sid
 	return this
 }
 func (this *MainObjectBuilder) withPlacement(placement string) *MainObjectBuilder {

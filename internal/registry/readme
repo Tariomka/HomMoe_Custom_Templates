@@ -200,31 +200,6 @@ namespace OldenEraTemplateEditor.Models
             "water grass",
         ];
 
-        // ── Zone ─────────────────────────────────────────────────────────────────
-
-        /// <summary>Known values for Zone.Layout.</summary>
-        public static readonly string[] ZoneLayouts =
-        [
-            "zone_layout_ai_spawn",
-            "zone_layout_back",
-            "zone_layout_center",
-            "zone_layout_center_zone",
-            "zone_layout_leaf",
-            "zone_layout_player_spawn",
-            "zone_layout_second_spawn",
-            "zone_layout_side_spawn_zone",
-            "zone_layout_side_zone",
-            "zone_layout_sides",
-            "zone_layout_spawn",
-            "zone_layout_spawns",
-            "zone_layout_start_zone",
-            "zone_layout_supertreasure_zone",
-            "zone_layout_treasure",
-            "zone_layout_treasure_zone",
-            "zone_layout_treasures",
-            "zone_layout_wincondition_zone",
-        ];
-
         // ── Main object ──────────────────────────────────────────────────────────
 
         /// <summary>Known values for MainObject.Spawn (player slots).</summary>
