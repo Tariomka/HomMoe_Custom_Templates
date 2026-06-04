@@ -32,19 +32,15 @@ func (this *ZoneLabelProvider) CreatePlayerLabels(playerCount int) []string {
 }
 
 func (this *ZoneLabelProvider) CreateNeutralZonePlans(
-	configuration config.GeneratorConfig) []models.NeutralZonePlan {
-	var plans []models.NeutralZonePlan
+	configuration config.GeneratorConfig) models.NeutralZonePlans {
+	var plans models.NeutralZonePlans
 	maxNeutral := max(0, len(this.zoneLabels)-configuration.PlayerCount)
 	castleZoneCastleCount := helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 1, 4)
 
 	add := func(requested int, quality models.NeutralZoneQuality, castleCount int) {
 		count := helpers.Clamp(requested, 0, 30)                // TODO: Clamp up to labelCount - playerCount
 		for i := 0; i < count && len(plans) < maxNeutral; i++ { // TODO: Is plans length needed?
-			plans = append(plans, models.NeutralZonePlan{
-				Label:       this.zoneLabels[configuration.PlayerCount+len(plans)],
-				Quality:     quality,
-				CastleCount: castleCount,
-			})
+			plans.AddPlan(this.zoneLabels[configuration.PlayerCount+len(plans)], quality, castleCount)
 		}
 	}
 
@@ -64,13 +60,9 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 		add(configuration.ZoneConfiguration.NeutralZoneCount, models.QualityMedium, castleCount)
 	}
 	if configuration.Topology == config.TopologySharedWeb && len(plans) == 0 && maxNeutral > 0 {
-		label := this.zoneLabels[configuration.PlayerCount]
-		castleCount := helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 0, 4)
-		plans = append(plans, models.NeutralZonePlan{
-			Label:       label,
-			Quality:     models.QualityMedium,
-			CastleCount: castleCount,
-		})
+		plans.AddMediumPlan(
+			this.zoneLabels[configuration.PlayerCount],
+			helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 0, 4))
 	}
 	return plans
 }
@@ -78,8 +70,8 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 func (this *ZoneLabelProvider) GetHoldCityLabel(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan) string {
-	if len(neutralZones) == 0 || !configuration.IsHubCityToHold() {
+	neutralZones models.NeutralZonePlans) string {
+	if !neutralZones.Any() || !configuration.IsHubCityToHold() {
 		return ""
 	}
 

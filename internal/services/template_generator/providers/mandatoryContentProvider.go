@@ -18,7 +18,7 @@ func NewMandatoryContentProvider() *MandatoryContentProvider {
 func (this *MandatoryContentProvider) CreateContents(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan) []template.MandatoryContent {
+	neutralZones models.NeutralZonePlans) []template.MandatoryContent {
 	var groups []template.MandatoryContent
 	for _, letter := range playerLabels {
 		groups = append(groups, template.MandatoryContent{

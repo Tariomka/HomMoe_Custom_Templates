@@ -238,7 +238,7 @@ func (this *topologyBase) CreateRandomPortalConnections(
 func (this *topologyBase) GetBorderGuardValue(
 	labelA, labelB string,
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning) int {
 	aIsPlayer := slices.Contains(playerLabels, labelA)
 	bIsPlayer := slices.Contains(playerLabels, labelB)
@@ -247,8 +247,8 @@ func (this *topologyBase) GetBorderGuardValue(
 	}
 
 	if !aIsPlayer && !bIsPlayer {
-		qa := neutralQualityOf(neutralZones, labelA)
-		qb := neutralQualityOf(neutralZones, labelB)
+		qa := neutralZones.GetQuality(labelA)
+		qb := neutralZones.GetQuality(labelB)
 		higher := qa
 		if int(qb) > int(qa) {
 			higher = qb
@@ -256,11 +256,11 @@ func (this *topologyBase) GetBorderGuardValue(
 		return tuning.ScaleByBorderGuardStrength(higher.GetGuardValue())
 	}
 
-	neutralLetter := labelB
+	neutralLabel := labelB
 	if !aIsPlayer {
-		neutralLetter = labelA
+		neutralLabel = labelA
 	}
-	return tuning.ScaleByBorderGuardStrength(neutralQualityOf(neutralZones, neutralLetter).GetGuardValue())
+	return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
 }
 
 func (this *topologyBase) EnsurePlayerZonesConnected(
@@ -331,111 +331,102 @@ func (this *topologyBase) EnsurePlayerZonesConnected(
 
 func (this *topologyBase) EnsureFullConnectivity(
 	playerLabels, allLabels []string,
-	positions [][2]float64,
+	positions models.Positions,
 	zones []template.Zone,
-	connections *[]template.Connection,
+	connections []template.Connection,
 	tuning models.GenerationTuning,
-	neutralZones []models.NeutralZonePlan) {
+	neutralZones models.NeutralZonePlans) []template.Connection {
 	if len(allLabels) <= 1 {
-		return
+		return connections
 	}
 
+	adjacency := models.NewZoneIndexAdjacency(len(allLabels))
+	// TODO: move out to a separate function
 	zoneNameToIdx := map[string]int{}
 	for i, l := range allLabels {
 		zoneNameToIdx[createZoneName(l, playerLabels)] = i
 	}
-	adjacency := models.NewZoneIndexAdjacency(len(allLabels))
-
-	for _, connection := range *connections {
+	for _, connection := range connections {
 		if connection.ConnectionType != "Direct" && connection.ConnectionType != "Portal" {
 			continue
 		}
-		a, okA := zoneNameToIdx[connection.From]
-		b, okB := zoneNameToIdx[connection.To]
+		indexA, okA := zoneNameToIdx[connection.From]
+		indexB, okB := zoneNameToIdx[connection.To]
 		if !okA || !okB {
 			continue
 		}
-		adjacency.Link(a, b)
+		adjacency.Link(indexA, indexB)
 	}
 
 	connNameSet := map[string]bool{}
-	for _, c := range *connections {
-		if c.Name != "" {
-			connNameSet[c.Name] = true
+	for _, connection := range connections {
+		if connection.Name != "" {
+			connNameSet[connection.Name] = true
 		}
 	}
 
 	for {
 		components := adjacency.FindIndexes(len(allLabels))
-		if len(components) <= 1 {
+		bestIndexA, bestIndexB, ok := positions.GetShortestDistanceIndex(components)
+		if !ok {
 			break
 		}
-		mainComp := map[int]bool{}
-		for _, idx := range components[0] {
-			mainComp[idx] = true
+
+		labelA, labelB := allLabels[bestIndexA], allLabels[bestIndexB]
+		if labelA > labelB {
+			labelA, labelB = labelB, labelA
 		}
-		bestA, bestB := -1, -1
-		bestDist := math.MaxFloat64
-		for _, a := range components[0] {
-			for ci := 1; ci < len(components); ci++ {
-				for _, b := range components[ci] {
-					dx := positions[a][0] - positions[b][0]
-					dy := positions[a][1] - positions[b][1]
-					d := dx*dx + dy*dy
-					if d < bestDist {
-						bestDist = d
-						bestA, bestB = a, b
+		bridgeName := fmt.Sprintf("Bridge-%s-%s", labelA, labelB)
+		if connNameSet[bridgeName] {
+			continue
+		}
+
+		zoneFrom := createZoneName(allLabels[bestIndexA], playerLabels)
+		zoneTo := createZoneName(allLabels[bestIndexB], playerLabels)
+		connections = append(connections, template.Connection{
+			Name: bridgeName, From: zoneFrom, To: zoneTo,
+			ConnectionType: "Direct", GuardZone: zoneFrom, SimTurnSquad: true,
+			GuardValue: this.GetBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning), GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup: fmt.Sprintf("bridge_guard_%s-%s", labelA, labelB),
+		})
+		connNameSet[bridgeName] = true
+		for _, zoneName := range []string{zoneFrom, zoneTo} {
+			if zone, ok := linq.FromSlice(zones).First(func(x template.Zone) bool { return x.Name == zoneName }); ok {
+				roadBuilder := variant_content.NewRoadBuilder().
+					WithTo(variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
+				if len(zone.MainObjects) > 0 {
+					zone.Roads = append(zone.Roads,
+						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).Build())
+				} else if len(zone.Roads) > 0 {
+					existingConn := ""
+					for _, r := range zone.Roads {
+						if r.From.Type == "Connection" && len(r.From.Args) > 0 {
+							existingConn = r.From.Args[0]
+							break
+						}
+						if r.To.Type == "Connection" && len(r.To.Args) > 0 {
+							existingConn = r.To.Args[0]
+							break
+						}
 					}
-				}
-			}
-		}
-		if bestA < 0 {
-			break
-		}
-		la, lb := allLabels[bestA], allLabels[bestB]
-		if la > lb {
-			la, lb = lb, la
-		}
-		bridgeName := fmt.Sprintf("Bridge-%s-%s", la, lb)
-		if !connNameSet[bridgeName] {
-			zoneFrom := createZoneName(allLabels[bestA], playerLabels)
-			zoneTo := createZoneName(allLabels[bestB], playerLabels)
-			*connections = append(*connections, template.Connection{
-				Name: bridgeName, From: zoneFrom, To: zoneTo,
-				ConnectionType: "Direct", GuardZone: zoneFrom, SimTurnSquad: true,
-				GuardValue: this.GetBorderGuardValue(la, lb, playerLabels, neutralZones, tuning), GuardWeeklyIncrement: 0.15,
-				GuardMatchGroup: fmt.Sprintf("bridge_guard_%s-%s", la, lb),
-			})
-			connNameSet[bridgeName] = true
-			for _, zn := range []string{zoneFrom, zoneTo} {
-				if z, ok := linq.FromSlice(zones).First(func(x template.Zone) bool { return x.Name == zn }); ok {
-					if len(z.MainObjects) > 0 {
-						z.Roads = append(z.Roads, plainRoad(mainObjectEndpoint("0"), connectionEndpoint(bridgeName)))
-					} else if len(z.Roads) > 0 {
-						existingConn := ""
-						for _, r := range z.Roads {
-							if r.From.Type == "Connection" && len(r.From.Args) > 0 {
-								existingConn = r.From.Args[0]
-								break
-							}
-							if r.To.Type == "Connection" && len(r.To.Args) > 0 {
-								existingConn = r.To.Args[0]
-								break
-							}
-						}
-						if existingConn != "" {
-							z.Roads = append(z.Roads, plainRoad(connectionEndpoint(existingConn), connectionEndpoint(bridgeName)))
-						} else {
-							z.Roads = append(z.Roads, plainRoad(connectionEndpoint(bridgeName), connectionEndpoint(bridgeName)))
-						}
+					if existingConn != "" {
+						zone.Roads = append(zone.Roads,
+							roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(existingConn)).Build())
 					} else {
-						z.Roads = append(z.Roads, plainRoad(connectionEndpoint(bridgeName), connectionEndpoint(bridgeName)))
+						zone.Roads = append(zone.Roads,
+							roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
 					}
+				} else {
+					zone.Roads = append(zone.Roads,
+						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
 				}
 			}
 		}
-		adjacency.Link(bestA, bestB)
+
+		adjacency.Link(bestIndexA, bestIndexB)
 	}
+
+	return connections
 }
 
 func (this *topologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {
@@ -646,17 +637,6 @@ func createZoneName(label string, playerLabels []string) string {
 		return "Spawn-" + label
 	}
 	return "Neutral-" + label
-}
-
-func neutralQualityOf(neutralZones []models.NeutralZonePlan, label string) models.NeutralZoneQuality {
-	if neutralZones == nil {
-		return models.QualityMedium
-	}
-	plan, ok := linq.FromSlice(neutralZones).First(func(x models.NeutralZonePlan) bool { return x.Label == label })
-	if !ok {
-		return models.QualityMedium
-	}
-	return plan.Quality
 }
 
 func buildNonAdjacentDerangement(count int) []int {

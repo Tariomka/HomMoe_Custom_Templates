@@ -22,26 +22,17 @@ func NewTournamentTopologyService() *TournamentTopologyService {
 func (this *TournamentTopologyService) GetTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLetters []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)
 
 	// Distribute neutrals in a balanced round-robin: sort by descending quality
 	// (then castle count, then letter) so that quality tiers are split evenly
 	// across the two players (e91e79f / v0.7 ordering).
-	sorted := make([]models.NeutralZonePlan, len(neutralZones))
-	copy(sorted, neutralZones)
-	sort.SliceStable(sorted, func(i, j int) bool {
-		if sorted[i].Quality != sorted[j].Quality {
-			return sorted[i].Quality > sorted[j].Quality
-		}
-		if sorted[i].CastleCount != sorted[j].CastleCount {
-			return sorted[i].CastleCount > sorted[j].CastleCount
-		}
-		return sorted[i].Label < sorted[j].Label
-	})
-	neutralsForPlayer := [2][]models.NeutralZonePlan{}
-	for i, nz := range sorted {
+	sorted := models.NewNeutralZonePlansSorted(neutralZones)
+
+	neutralsForPlayer := [2]models.NeutralZonePlans{}
+	for i, nz := range *sorted {
 		neutralsForPlayer[i%2] = append(neutralsForPlayer[i%2], nz)
 	}
 
@@ -96,12 +87,12 @@ func (this *TournamentTopologyService) GetTopologyVariant(
 // hub-and-spoke layout. A dedicated mini-hub zone "Hub-{playerLetter}" sits
 // at the centre and connects directly to the player spawn and all of their
 // exclusive neutrals
-func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals []neutralZonePlan, neutralByLetter map[string]neutralZonePlan, settings *config.GeneratorConfig, tuning generationTuning, zones *[]template.Zone, connections *[]template.Connection) {
+func buildTournamentHubCluster(playerIndex int, playerLetter string, myNeutrals models.NeutralZonePlans, neutralByLetter map[string]models.NeutralZonePlan, settings *config.GeneratorConfig, tuning models.GenerationTuning, zones *[]template.Zone, connections *[]template.Connection) {
 	hubName := "Hub-" + playerLetter
 
 	spokeLetters := []string{playerLetter}
 	for _, nz := range myNeutrals {
-		spokeLetters = append(spokeLetters, nz.Letter)
+		spokeLetters = append(spokeLetters, nz.Label)
 	}
 
 	spokeConnNames := make([]string, len(spokeLetters))

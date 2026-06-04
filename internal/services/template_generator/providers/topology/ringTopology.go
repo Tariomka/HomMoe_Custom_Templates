@@ -23,7 +23,7 @@ func NewRingTopologyService() *RingTopologyService {
 func (this *RingTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) template.Variant {
 
@@ -47,7 +47,7 @@ func (this *RingTopologyService) createZones(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones models.NeutralZonePlans,
 	holdCityNeutralLetter string) []template.Zone {
 
 	labelCount := len(orderedLabels)
@@ -95,7 +95,7 @@ func (this *RingTopologyService) createConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones []models.NeutralZonePlan) []template.Connection {
+	neutralZones models.NeutralZonePlans) []template.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
 		return nil

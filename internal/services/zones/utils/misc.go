@@ -2,7 +2,6 @@ package utils
 
 import (
 	"math"
-	"sort"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -32,11 +31,11 @@ func GetEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 	return capacities
 }
 
-func AssignNeutralZonesToGaps(neutralZones []models.NeutralZonePlan, caps []int, preferInterior bool) [][]models.NeutralZonePlan {
-	gaps := make([][]models.NeutralZonePlan, len(caps))
+func AssignNeutralZonesToGaps(neutralZones models.NeutralZonePlans, caps []int, preferInterior bool) []models.NeutralZonePlans {
+	gaps := make([]models.NeutralZonePlans, len(caps))
 	loads := make([]float64, len(caps))
-	sorted := sortNeutralZonePlans(neutralZones)
-	for _, nz := range sorted {
+	sortedZones := models.NewNeutralZonePlansSortedByBalance(neutralZones)
+	for _, zonePlan := range *sortedZones {
 		var candidates []int
 		for i := range caps {
 			if len(gaps[i]) < caps[i] {
@@ -58,56 +57,47 @@ func AssignNeutralZonesToGaps(neutralZones []models.NeutralZonePlan, caps []int,
 			}
 		}
 		best := candidates[0]
-		for _, c := range candidates[1:] {
-			if loads[c] < loads[best] || (loads[c] == loads[best] && len(gaps[c]) < len(gaps[best])) || (loads[c] == loads[best] && len(gaps[c]) == len(gaps[best]) && c < best) {
-				best = c
+		for _, candidate := range candidates[1:] {
+			if loads[candidate] < loads[best] ||
+				(loads[candidate] == loads[best] && len(gaps[candidate]) < len(gaps[best])) ||
+				(loads[candidate] == loads[best] && len(gaps[candidate]) == len(gaps[best]) && candidate < best) {
+				best = candidate
 			}
 		}
-		gaps[best] = append(gaps[best], nz)
-		loads[best] += nz.GetBalanceScore()
+		gaps[best] = append(gaps[best], zonePlan)
+		loads[best] += zonePlan.GetBalanceScore()
 	}
 	return gaps
 }
 
-func OrderNeutralsWithinGap(neutralZones []models.NeutralZonePlan) []models.NeutralZonePlan {
+func OrderNeutralsWithinGap(neutralZones models.NeutralZonePlans) models.NeutralZonePlans {
 	if len(neutralZones) <= 1 {
-		return append([]models.NeutralZonePlan{}, neutralZones...)
+		zones := models.NeutralZonePlans{}
+		zones.AddPlans(neutralZones...)
+		return zones
 	}
 
-	sorted := sortNeutralZonePlans(neutralZones)
-	slots := make([]models.NeutralZonePlan, len(sorted))
-	lo, hi := 0, len(sorted)-1
-	for i, nz := range sorted {
+	sortedZones := models.NewNeutralZonePlansSortedByBalance(neutralZones)
+	slots := make(models.NeutralZonePlans, len(*sortedZones))
+	lowIndex, highIndex := 0, len(*sortedZones)-1
+	for i, zonePlan := range *sortedZones {
 		if i%2 == 0 {
-			slots[lo] = nz
-			lo++
+			slots[lowIndex] = zonePlan
+			lowIndex++
 		} else {
-			slots[hi] = nz
-			hi--
+			slots[highIndex] = zonePlan
+			highIndex--
 		}
 	}
 	return slots
 }
 
-func OrderEdgeGap(neutralZones []models.NeutralZonePlan, playerAtEnd bool) []models.NeutralZonePlan {
-	sorted := sortNeutralZonePlans(neutralZones)
+func OrderEdgeGap(neutralZones models.NeutralZonePlans, playerAtEnd bool) models.NeutralZonePlans {
+	sorted := models.NewNeutralZonePlansSortedByBalance(neutralZones)
 	if playerAtEnd {
-		for i, j := 0, len(sorted)-1; i < j; i, j = i+1, j-1 {
-			sorted[i], sorted[j] = sorted[j], sorted[i]
+		for i, j := 0, len(*sorted)-1; i < j; i, j = i+1, j-1 {
+			sorted.Swap(i, j)
 		}
 	}
-	return sorted
-}
-
-func sortNeutralZonePlans(neutralZones []models.NeutralZonePlan) []models.NeutralZonePlan {
-	sorted := make([]models.NeutralZonePlan, len(neutralZones))
-	copy(sorted, neutralZones)
-	sort.SliceStable(sorted, func(i, j int) bool {
-		scoreI, scoreJ := sorted[i].GetBalanceScore(), sorted[j].GetBalanceScore()
-		if scoreI != scoreJ {
-			return scoreI > scoreJ
-		}
-		return sorted[i].Label < sorted[j].Label
-	})
-	return sorted
+	return *sorted
 }

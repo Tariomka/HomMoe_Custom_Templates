@@ -22,7 +22,7 @@ func NewSharedWebTopologyService() *SharedWebTopologyService {
 func (this *SharedWebTopologyService) GetTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLetters []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)

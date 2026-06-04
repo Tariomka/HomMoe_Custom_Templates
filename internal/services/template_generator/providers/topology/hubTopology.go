@@ -21,7 +21,7 @@ func NewHubTopologyService() *HubTopologyService {
 func (this *HubTopologyService) GetTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLetters []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	hubIsHoldCity bool) template.Variant {
 	neutralByLetter := mapNeutralByLetter(neutralZones)

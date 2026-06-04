@@ -21,7 +21,7 @@ func NewTopologyProvider() *TopologyProvider {
 func (this *TopologyProvider) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) template.Variant {
 	playerLabelsCopy := this.copyLabels(playerLabels)
