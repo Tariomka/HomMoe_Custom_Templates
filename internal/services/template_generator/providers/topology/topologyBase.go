@@ -320,7 +320,10 @@ func (this *topologyBase) EnsurePlayerZonesConnected(
 		connNames[fn] = true
 		for _, pl := range []string{letter, partner} {
 			if pz, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
-				pz.Roads = append(pz.Roads, plainRoad(mainObjectEndpoint("0"), connectionEndpoint(fn)))
+				pz.Roads = append(pz.Roads, variant_content.NewRoadBuilder().
+					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+					WithTo(variant_content.NewRefBuilder().BuildConnectionType(fn)).
+					Build())
 			}
 		}
 	}

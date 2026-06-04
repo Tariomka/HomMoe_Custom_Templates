@@ -39,9 +39,9 @@ func NewZoneIndexAdjacency(size int) *ZoneIndexAdjacency {
 	return &adjacency
 }
 
-func (this *ZoneIndexAdjacency) Link(inputIdx, outputIdx int) {
-	(*this)[inputIdx][outputIdx] = true
-	(*this)[outputIdx][inputIdx] = true
+func (this *ZoneIndexAdjacency) Link(inputZoneIndex, outputZoneIndex int) {
+	(*this)[inputZoneIndex][outputZoneIndex] = true
+	(*this)[outputZoneIndex][inputZoneIndex] = true
 }
 
 func (this *ZoneIndexAdjacency) FindIndexes(nodeCount int) [][]int {
@@ -52,7 +52,7 @@ func (this *ZoneIndexAdjacency) FindIndexes(nodeCount int) [][]int {
 			continue
 		}
 		var comp []int
-		queue := []int{start}
+		queue := []int{start} // TODO: introduce a data structure for this
 		visited[start] = true
 		for len(queue) > 0 {
 			cur := queue[0]
