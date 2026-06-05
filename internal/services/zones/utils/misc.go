@@ -31,14 +31,14 @@ func GetEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 	return capacities
 }
 
-func AssignNeutralZonesToGaps(neutralZones models.NeutralZonePlans, caps []int, preferInterior bool) []models.NeutralZonePlans {
-	gaps := make([]models.NeutralZonePlans, len(caps))
-	loads := make([]float64, len(caps))
+func AssignNeutralZonesToGaps(neutralZones models.NeutralZonePlans, capacities []int, preferInterior bool) []models.NeutralZonePlans {
+	gaps := make([]models.NeutralZonePlans, len(capacities))
+	loads := make([]float64, len(capacities))
 	sortedZones := models.NewNeutralZonePlansSortedByBalance(neutralZones)
 	for _, zonePlan := range *sortedZones {
 		var candidates []int
-		for i := range caps {
-			if len(gaps[i]) < caps[i] {
+		for i := range capacities {
+			if len(gaps[i]) < capacities[i] {
 				candidates = append(candidates, i)
 			}
 		}
@@ -48,7 +48,7 @@ func AssignNeutralZonesToGaps(neutralZones models.NeutralZonePlans, caps []int, 
 		if preferInterior {
 			var interior []int
 			for _, c := range candidates {
-				if c > 0 && c < len(caps)-1 {
+				if c > 0 && c < len(capacities)-1 {
 					interior = append(interior, c)
 				}
 			}

@@ -34,9 +34,11 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	case config.TopologyHubAndSpoke:
 		return buildVariantHubAndSpoke(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
-		return buildVariantChain(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+		return topology.NewChainTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySharedWeb:
-		return buildVariantSharedWeb(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+		return topology.NewSharedWebTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyRandom, config.TopologyBalanced:
 		return buildVariantRandom(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	default:

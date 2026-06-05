@@ -3,7 +3,9 @@ package topology
 import (
 	"fmt"
 	"math/rand/v2"
+	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
@@ -21,63 +23,72 @@ func NewRandomTopologyService() *RandomTopologyService {
 
 func (this *RandomTopologyService) GetTopologyVariant(
 	configuration config.GeneratorConfig,
-	playerLetters []string,
+	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) template.Variant {
-	neutralByLetter := mapNeutralByLetter(neutralZones)
 	neutralLetters := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
 		neutralLetters[i] = nz.Label
 	}
-	isolate := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
+	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 
-	var allLetters []string
+	var allLabels []string
 	if configuration.Topology == config.TopologyBalanced {
-		allLetters = buildBalancedRingLetters(playerLetters, neutralZones, 0)
+		allLabels = this.zoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones, 0)
 	} else {
-		allLetters = append(append([]string{}, playerLetters...), neutralLetters...)
-		rand.Shuffle(len(allLetters), func(i, j int) { allLetters[i], allLetters[j] = allLetters[j], allLetters[i] })
+		allLabels = append(append([]string{}, playerLabels...), neutralLetters...)
+		rand.Shuffle(len(allLabels), func(i, j int) { allLabels[i], allLabels[j] = allLabels[j], allLabels[i] })
 	}
-	count := len(allLetters)
+	count := len(allLabels)
 
-	var pos [][2]float64
+	var positions models.Positions
 	if configuration.Topology == config.TopologyBalanced {
-		pos = buildBalancedRandomPositions(allLetters, playerLetters, neutralByLetter)
+		positions = models.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
 	} else {
 		for i := 0; i < count; i++ {
-			pos = append(pos, [2]float64{rand.Float64()*0.9 + 0.05, rand.Float64()*0.9 + 0.05})
+			positions.Add(models.NewPosition(rand.Float64()*0.9+0.05, rand.Float64()*0.9+0.05))
 		}
 	}
 
-	pairs := delaunayEdges(pos)
+	pairs := positions.CreateDelaunayTriangulation()
 
 	if configuration.Topology == config.TopologyBalanced {
 		presentTiers := map[int]bool{}
-		for _, l := range allLetters {
-			presentTiers[zoneTierRank(l, playerLetters, neutralByLetter)] = true
+		for _, label := range allLabels {
+			tier := 0
+			if !slices.Contains(playerLabels, label) {
+				tier = neutralZones.GetTier(label)
+			}
+			presentTiers[tier] = true
 		}
 		var filtered [][2]int
-		for _, p := range pairs {
-			ta := zoneTierRank(allLetters[p[0]], playerLetters, neutralByLetter)
-			tb := zoneTierRank(allLetters[p[1]], playerLetters, neutralByLetter)
-			lo, hi := ta, tb
-			if lo > hi {
-				lo, hi = hi, lo
+		for _, pair := range pairs {
+			tierA := 0
+			if !slices.Contains(playerLabels, allLabels[pair[0]]) {
+				tierA = neutralZones.GetTier(allLabels[pair[0]])
 			}
-			if hi-lo <= 1 {
-				filtered = append(filtered, p)
+			tierB := 0
+			if !slices.Contains(playerLabels, allLabels[pair[1]]) {
+				tierB = neutralZones.GetTier(allLabels[pair[1]])
+			}
+			low, high := tierA, tierB
+			if low > high {
+				low, high = high, low
+			}
+			if high-low <= 1 {
+				filtered = append(filtered, pair)
 				continue
 			}
 			skip := false
-			for t := lo + 1; t < hi; t++ {
+			for t := low + 1; t < high; t++ {
 				if presentTiers[t] {
 					skip = true
 					break
 				}
 			}
 			if !skip {
-				filtered = append(filtered, p)
+				filtered = append(filtered, pair)
 			}
 		}
 		pairs = filtered
@@ -87,30 +98,39 @@ func (this *RandomTopologyService) GetTopologyVariant(
 	var conns []template.Connection
 	for _, p := range pairs {
 		a, b := p[0], p[1]
-		from := allLetters[a]
-		to := allLetters[b]
-		if isolate && contains(playerLetters, from) && contains(playerLetters, to) {
+		labelFrom := allLabels[a]
+		labelTo := allLabels[b]
+		if isIsolated && slices.Contains(playerLabels, labelFrom) && slices.Contains(playerLabels, labelTo) {
 			continue
 		}
-		cn := fmt.Sprintf("Rnd-%s-%s", from, to)
+		cn := fmt.Sprintf("Rnd-%s-%s", labelFrom, labelTo)
 		connsByZone[a] = append(connsByZone[a], cn)
 		connsByZone[b] = append(connsByZone[b], cn)
 		conns = append(conns, template.Connection{
-			Name: cn, From: createZoneName(from, playerLetters), To: createZoneName(to, playerLetters),
-			ConnectionType: "Direct", GuardZone: createZoneName(from, playerLetters), SimTurnSquad: true,
-			GuardValue: borderGuardValue(from, to, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: fmt.Sprintf("rnd_guard_%s_%s", from, to),
+			Name:           cn,
+			From:           this.zoneLabelProvider.CreateZoneName(labelFrom, playerLabels),
+			To:             this.zoneLabelProvider.CreateZoneName(labelTo, playerLabels),
+			ConnectionType: "Direct", GuardZone: this.zoneLabelProvider.CreateZoneName(labelFrom, playerLabels), SimTurnSquad: true,
+			GuardValue: this.GetBorderGuardValue(labelFrom, labelTo, playerLabels, neutralZones, tuning), GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup: fmt.Sprintf("rnd_guard_%s_%s", labelFrom, labelTo),
 		})
 	}
 
 	var zones []template.Zone
-	for i := 0; i < count; i++ {
-		letter := allLetters[i]
+	for i, label := range allLabels {
 		myConns := connsByZone[i]
-		if pi := indexOf(playerLetters, letter); pi >= 0 {
-			zones = append(zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
+		if pi := slices.Index(playerLabels, label); pi >= 0 {
+			zones = append(zones,
+				this.CreateSpawnZone(
+					label, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
+					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 		} else {
-			zones = append(zones, buildNeutralZone(neutralByLetter[letter], myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, letter == holdCityNeutralLetter))
+			zones = append(zones,
+				this.CreateNeutralZone(
+					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, label == holdCityNeutralLetter))
 		}
 	}
 
@@ -119,20 +139,23 @@ func (this *RandomTopologyService) GetTopologyVariant(
 	// Delaunay connections. Balanced layouts also stamp the concentric ring
 	// index so the preview can snap zones to clean rings
 	for i := range zones {
-		p := pos[i]
-		zones[i].GeneratorPosition = &[2]float64{p[0], p[1]}
+		p := positions[i]
+		zones[i].GeneratorPosition = &[2]float64{p.X, p.Y}
 		if configuration.Topology == config.TopologyBalanced {
-			r := zoneTierRank(allLetters[i], playerLetters, neutralByLetter)
-			zones[i].GeneratorRing = &r
+			tier := 0
+			if !slices.Contains(playerLabels, allLabels[i]) {
+				tier = neutralZones.GetTier(allLabels[i])
+			}
+			zones[i].GeneratorRing = &tier
 		}
 	}
 
 	if configuration.RandomPortals {
-		conns = append(conns, buildRandomPortalConnections(playerLetters, allLetters, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
-	if isolate {
-		ensurePlayerZonesConnected(playerLetters, zones, &conns, tuning)
+	if isIsolated {
+		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	ensureFullConnectivity(playerLetters, allLetters, pos, zones, &conns, tuning, neutralByLetter)
-	return makeVariant(playerLetters, allLetters[0], count, zones, conns)
+	conns = this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)
+	return this.CreateVariant(playerLabels, allLabels[0], count, zones, conns)
 }

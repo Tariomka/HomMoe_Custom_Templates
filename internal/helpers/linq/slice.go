@@ -36,6 +36,7 @@ func (this Query[T]) Where(predicate Predicate[T]) Query[T] {
 				if predicate(item) {
 					return yield(item)
 				}
+
 				return true
 			})
 		},
@@ -66,22 +67,27 @@ func (this Query[T]) SelectString(selector func(T) string) Query[string] {
 // ToSlice executes the query and returns the results as a slice. The returned slice is a copy, not a reference.
 func (this Query[T]) ToSlice() []T {
 	var result []T
+
 	this.Iterate(func(item T) bool {
 		result = append(result, item)
 		return true
 	})
+
 	return result
 }
 
 func (this Query[T]) FirstOrDefault(predicate Predicate[T]) T {
 	var result T
+
 	this.Iterate(func(item T) bool {
 		if predicate(item) {
 			result = item
 			return false
 		}
+
 		return true
 	})
+
 	return result
 }
 
@@ -92,6 +98,7 @@ func (this Query[T]) First(predicate Predicate[T]) (result T, ok bool) {
 			ok = true
 			return false
 		}
+
 		return true
 	})
 
@@ -100,9 +107,52 @@ func (this Query[T]) First(predicate Predicate[T]) (result T, ok bool) {
 
 func (this Query[T]) Any() bool {
 	found := false
+
 	this.Iterate(func(item T) bool {
 		found = true
 		return false
 	})
+
 	return found
+}
+
+// Distinct method returns distinct elements from a collection. The result is an
+// unordered collection that contains no duplicate values.
+func (this Query[T]) Distinct() Query[T] {
+	return Query[T]{
+		Iterate: func(yield func(T) bool) {
+			set := make(map[any]bool)
+
+			this.Iterate(func(item T) bool {
+				if _, seen := set[item]; !seen {
+					set[item] = true
+					return yield(item)
+				}
+
+				return true
+			})
+		},
+	}
+}
+
+// DistinctBy method returns distinct elements from a collection. This method
+// executes selector function for each element to determine a value to compare.
+// The result is an unordered collection that contains no duplicate values.
+func (this Query[T]) DistinctBy(selector func(T) any) Query[T] {
+	return Query[T]{
+		Iterate: func(yield func(T) bool) {
+			set := make(map[any]bool)
+
+			this.Iterate(func(item T) bool {
+				key := selector(item)
+
+				if _, seen := set[key]; !seen {
+					set[key] = true
+					return yield(item)
+				}
+
+				return true
+			})
+		},
+	}
 }

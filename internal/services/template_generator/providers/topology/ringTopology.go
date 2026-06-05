@@ -100,28 +100,27 @@ func (this *RingTopologyService) createConnections(
 		return nil
 	}
 
-	var conns []template.Connection
+	var connections []template.Connection
 	for i := 0; i < count; i++ {
-		next := (i + 1) % count
-		from := orderedLabels[i]
-		to := orderedLabels[next]
-		if isIsolated && slices.Contains(playerLabels, from) && slices.Contains(playerLabels, to) {
+		labelFrom := orderedLabels[i]
+		labelTo := orderedLabels[(i+1)%count]
+		if isIsolated && slices.Contains(playerLabels, labelFrom) && slices.Contains(playerLabels, labelTo) {
 			continue
 		}
 
-		fromZone := createZoneName(from, playerLabels)
-		toZone := createZoneName(to, playerLabels)
-		conns = append(conns, variant_content.NewConnectionBuilder().
-			WithName(fmt.Sprintf("Ring-%s-%s", from, to)).
-			WithFrom(fromZone).
-			WithTo(toZone).
+		zoneFrom := this.zoneLabelProvider.CreateZoneName(labelFrom, playerLabels)
+		zoneTo := this.zoneLabelProvider.CreateZoneName(labelTo, playerLabels)
+		connections = append(connections, variant_content.NewConnectionBuilder().
+			WithName(fmt.Sprintf("Ring-%s-%s", labelFrom, labelTo)).
+			WithFrom(zoneFrom).
+			WithTo(zoneTo).
 			WithConnectionTypeDirect().
-			WithGuardZone(fromZone).
+			WithGuardZone(zoneFrom).
 			WithSimTurnSquad().
-			WithGuardValue(this.GetBorderGuardValue(from, to, playerLabels, neutralZones, tuning)).
+			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(0.15).
-			WithGuardMatchGroup(fmt.Sprintf("ring_guard_%s_%s", from, to)).
+			WithGuardMatchGroup(fmt.Sprintf("ring_guard_%s_%s", labelFrom, labelTo)).
 			Build())
 	}
-	return conns
+	return connections
 }

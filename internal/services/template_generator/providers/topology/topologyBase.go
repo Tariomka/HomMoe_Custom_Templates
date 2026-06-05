@@ -220,8 +220,8 @@ func (this *topologyBase) CreateRandomPortalConnections(
 		idx := indices[i]
 		fromLabel := orderedLabels[idx]
 		toLabel := orderedLabels[dest[idx]]
-		fromName := createZoneName(fromLabel, playerLabels)
-		toName := createZoneName(toLabel, playerLabels)
+		fromName := this.zoneLabelProvider.CreateZoneName(fromLabel, playerLabels)
+		toName := this.zoneLabelProvider.CreateZoneName(toLabel, playerLabels)
 		conns = append(conns, variant_content.NewConnectionBuilder().
 			WithName(fmt.Sprintf("Portal-%s-%s", fromLabel, toLabel)).
 			WithFrom(fromName).
@@ -235,34 +235,6 @@ func (this *topologyBase) CreateRandomPortalConnections(
 			Build())
 	}
 	return conns
-}
-
-func (this *topologyBase) GetBorderGuardValue(
-	labelA, labelB string,
-	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
-	tuning models.GenerationTuning) int {
-	aIsPlayer := slices.Contains(playerLabels, labelA)
-	bIsPlayer := slices.Contains(playerLabels, labelB)
-	if aIsPlayer && bIsPlayer {
-		return tuning.ScaleByBorderGuardStrength(30_000)
-	}
-
-	if !aIsPlayer && !bIsPlayer {
-		qa := neutralZones.GetQuality(labelA)
-		qb := neutralZones.GetQuality(labelB)
-		higher := qa
-		if int(qb) > int(qa) {
-			higher = qb
-		}
-		return tuning.ScaleByBorderGuardStrength(higher.GetGuardValue())
-	}
-
-	neutralLabel := labelB
-	if !aIsPlayer {
-		neutralLabel = labelA
-	}
-	return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
 }
 
 func (this *topologyBase) CreateMissingPlayerConnections(
@@ -365,7 +337,7 @@ func (this *topologyBase) CreateMissingConnections(
 	// TODO: move out to a separate function
 	zoneNameToIdx := map[string]int{}
 	for index, label := range allLabels {
-		zoneNameToIdx[createZoneName(label, playerLabels)] = index
+		zoneNameToIdx[this.zoneLabelProvider.CreateZoneName(label, playerLabels)] = index
 	}
 	for connection := range linq.FromSlice(connections).
 		Where(func(x template.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
@@ -400,8 +372,8 @@ func (this *topologyBase) CreateMissingConnections(
 			continue
 		}
 
-		zoneFrom := createZoneName(allLabels[bestIndexA], playerLabels)
-		zoneTo := createZoneName(allLabels[bestIndexB], playerLabels)
+		zoneFrom := this.zoneLabelProvider.CreateZoneName(allLabels[bestIndexA], playerLabels)
+		zoneTo := this.zoneLabelProvider.CreateZoneName(allLabels[bestIndexB], playerLabels)
 		additionalConns = append(additionalConns, variant_content.NewConnectionBuilder().
 			WithName(bridgeName).
 			WithFrom(zoneFrom).
@@ -440,6 +412,62 @@ func (this *topologyBase) CreateMissingConnections(
 	}
 
 	return additionalConns
+}
+
+func (this *topologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []template.Road {
+	if !generateRoads {
+		return nil
+	}
+
+	distinctNames := helpers.GetUniqueElements(connectionNames)
+	if len(distinctNames) == 0 {
+		return nil
+	}
+
+	if len(distinctNames) == 1 {
+		return []template.Road{
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
+				Build()}
+	}
+	var roads []template.Road
+	for _, name := range distinctNames[1:] {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
+				Build())
+	}
+	return roads
+}
+
+func (this *topologyBase) GetBorderGuardValue(
+	labelA, labelB string,
+	playerLabels []string,
+	neutralZones models.NeutralZonePlans,
+	tuning models.GenerationTuning) int {
+	aIsPlayer := slices.Contains(playerLabels, labelA)
+	bIsPlayer := slices.Contains(playerLabels, labelB)
+	if aIsPlayer && bIsPlayer {
+		return tuning.ScaleByBorderGuardStrength(30_000)
+	}
+
+	if !aIsPlayer && !bIsPlayer {
+		qualityA := neutralZones.GetQuality(labelA)
+		qualityB := neutralZones.GetQuality(labelB)
+		higher := qualityA
+		if int(qualityB) > int(qualityA) {
+			higher = qualityB
+		}
+		return tuning.ScaleByBorderGuardStrength(higher.GetGuardValue())
+	}
+
+	neutralLabel := labelB
+	if !aIsPlayer {
+		neutralLabel = labelA
+	}
+	return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
 }
 
 func (this *topologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {
@@ -579,7 +607,7 @@ func (this *topologyBase) createOuterZoneRoads(
 	}
 
 	if castleCount == 0 {
-		return this.createConnectorZoneRoads(connectionNames, generateRoads)
+		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
 	}
 
 	var roads []template.Road
@@ -607,34 +635,6 @@ func (this *topologyBase) createOuterZoneRoads(
 	return roads
 }
 
-func (this *topologyBase) createConnectorZoneRoads(connectionNames []string, generateRoads bool) []template.Road {
-	if !generateRoads {
-		return nil
-	}
-
-	distinctNames := helpers.GetUniqueElements(connectionNames)
-	if len(distinctNames) == 0 {
-		return nil
-	}
-
-	if len(distinctNames) == 1 {
-		return []template.Road{
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
-				WithTo(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
-				Build()}
-	}
-	var roads []template.Road
-	for _, name := range distinctNames[1:] {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
-				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
-				Build())
-	}
-	return roads
-}
-
 func buildSideContentLimits() template.StringList {
 	var limits []string
 	for a := 1; a <= 5; a++ {
@@ -643,13 +643,6 @@ func buildSideContentLimits() template.StringList {
 		}
 	}
 	return limits
-}
-
-func createZoneName(label string, playerLabels []string) string {
-	if slices.Contains(playerLabels, label) {
-		return "Spawn-" + label
-	}
-	return "Neutral-" + label
 }
 
 func buildNonAdjacentDerangement(count int) []int {

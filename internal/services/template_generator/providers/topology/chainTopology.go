@@ -21,7 +21,7 @@ func NewChainTopologyService() *ChainTopologyService {
 	}
 }
 
-func (this *ChainTopologyService) GetTopologyVariant(
+func (this *ChainTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLetters []string,
 	neutralZones models.NeutralZonePlans,
@@ -59,7 +59,7 @@ func (this *ChainTopologyService) createConnectionNames(
 
 func (this *ChainTopologyService) createZones(
 	configuration config.GeneratorConfig,
-	playerLetters, orderedLabels []string,
+	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	neutralZones models.NeutralZonePlans,
 	holdCityNeutralLabel string,
@@ -67,15 +67,15 @@ func (this *ChainTopologyService) createZones(
 	labelCount := len(orderedLabels)
 
 	var zones []template.Zone
-	for i, label := range orderedLabels {
+	for index, label := range orderedLabels {
 		var tempConnectionNames []string
-		if i > 0 && connectionNames[i-1] != "" {
-			tempConnectionNames = append(tempConnectionNames, connectionNames[i-1])
+		if index > 0 && connectionNames[index-1] != "" {
+			tempConnectionNames = append(tempConnectionNames, connectionNames[index-1])
 		}
-		if i < labelCount-1 && connectionNames[i] != "" {
-			tempConnectionNames = append(tempConnectionNames, connectionNames[i])
+		if index < labelCount-1 && connectionNames[index] != "" {
+			tempConnectionNames = append(tempConnectionNames, connectionNames[index])
 		}
-		if playerIndex := slices.Index(playerLetters, label); playerIndex >= 0 {
+		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
 			zones = append(zones,
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", playerIndex+1), tempConnectionNames, configuration.ZoneConfiguration.PlayerZoneCastles,
@@ -99,27 +99,27 @@ func (this *ChainTopologyService) createConnections(
 	connectionNames []string) []template.Connection {
 	labelCount := len(orderedLabels)
 
-	var conns []template.Connection
+	var connections []template.Connection
 	for i := range labelCount - 1 {
 		if connectionNames[i] == "" {
 			continue
 		}
 
-		from := orderedLabels[i]
-		to := orderedLabels[i+1]
-		fromZone := createZoneName(from, playerLabels)
-		toZone := createZoneName(to, playerLabels)
-		conns = append(conns, variant_content.NewConnectionBuilder().
+		labelFrom := orderedLabels[i]
+		labelTo := orderedLabels[i+1]
+		zoneFrom := this.zoneLabelProvider.CreateZoneName(labelFrom, playerLabels)
+		zoneTo := this.zoneLabelProvider.CreateZoneName(labelTo, playerLabels)
+		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(connectionNames[i]).
-			WithFrom(fromZone).
-			WithTo(toZone).
+			WithFrom(zoneFrom).
+			WithTo(zoneTo).
 			WithConnectionTypeDirect().
-			WithGuardZone(fromZone).
+			WithGuardZone(zoneFrom).
 			WithSimTurnSquad().
-			WithGuardValue(this.GetBorderGuardValue(from, to, playerLabels, neutralZones, tuning)).
+			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(0.15).
-			WithGuardMatchGroup(fmt.Sprintf("chain_guard_%s_%s", from, to)).
+			WithGuardMatchGroup(fmt.Sprintf("chain_guard_%s_%s", labelFrom, labelTo)).
 			Build())
 	}
-	return conns
+	return connections
 }

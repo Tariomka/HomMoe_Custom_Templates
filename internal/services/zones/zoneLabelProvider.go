@@ -86,6 +86,13 @@ func (this *ZoneLabelProvider) GetHoldCityLabel(
 		GetFirstCandidateLabel()
 }
 
+func (this *ZoneLabelProvider) CreateZoneName(label string, playerLabels []string) string {
+	if slices.Contains(playerLabels, label) {
+		return "Spawn-" + label
+	}
+	return "Neutral-" + label
+}
+
 func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
@@ -228,24 +235,23 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
 	neutralZones []models.NeutralZonePlan,
 	playerCount int) []string {
-	if len(neutralZones) <= 1 {
-		r := make([]string, len(neutralZones))
-		for i, nz := range neutralZones {
-			r[i] = nz.Label
+	if len(neutralZones) < 2 {
+		labels := make([]string, len(neutralZones))
+		for index, zonePlan := range neutralZones {
+			labels[index] = zonePlan.Label
 		}
-		return r
+		return labels
 	}
 
-	gc := max(1, playerCount)
-	caps := utils.GetEvenGapCapacities(gc, len(neutralZones), 0)
+	caps := utils.GetEvenGapCapacities(max(1, playerCount), len(neutralZones), 0)
 	gaps := utils.AssignNeutralZonesToGaps(neutralZones, caps, false)
-	var result []string
+	var labels []string
 	for _, gap := range gaps {
-		for _, nz := range utils.OrderNeutralsWithinGap(gap) {
-			result = append(result, nz.Label)
+		for _, zonePlan := range utils.OrderNeutralsWithinGap(gap) {
+			labels = append(labels, zonePlan.Label)
 		}
 	}
-	return result
+	return labels
 }
 
 func (this *ZoneLabelProvider) createTopologyAdjacency(
