@@ -7,7 +7,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -209,28 +209,30 @@ func (this *topologyBase) CreateRandomPortalConnections(
 	}
 	dest := buildNonAdjacentDerangement(count)
 	indices := make([]int, count)
-	for i := range indices {
+	for i := range count {
 		indices[i] = i
 	}
 	rand.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
 
-	limit := min(count, maxCount)
-	trueVal := true
 	rule := placement_rule.NewPlacementRuleBuilder().BuildCrossroadsRule(placement_rule.DistanceNear, 2)
 	var conns []template.Connection
-	for i := range limit {
+	for i := range min(count, maxCount) {
 		idx := indices[i]
-		from := orderedLabels[idx]
-		to := orderedLabels[dest[idx]]
-		fromZone := createZoneName(from, playerLabels)
-		toZone := createZoneName(to, playerLabels)
-		conns = append(conns, template.Connection{
-			Name: fmt.Sprintf("Portal-%s-%s", from, to), From: fromZone, To: toZone,
-			ConnectionType:           "Portal",
-			PortalPlacementRulesFrom: []template.PlacementRule{rule},
-			PortalPlacementRulesTo:   []template.PlacementRule{rule},
-			Road:                     &trueVal, GuardValue: tuning.ScaleByBorderGuardStrength(25000), GuardWeeklyIncrement: 0.15,
-		})
+		fromLabel := orderedLabels[idx]
+		toLabel := orderedLabels[dest[idx]]
+		fromName := createZoneName(fromLabel, playerLabels)
+		toName := createZoneName(toLabel, playerLabels)
+		conns = append(conns, variant_content.NewConnectionBuilder().
+			WithName(fmt.Sprintf("Portal-%s-%s", fromLabel, toLabel)).
+			WithFrom(fromName).
+			WithTo(toName).
+			WithConnectionTypePortal().
+			WithPortalPlacementRulesFrom(rule).
+			WithPortalPlacementRulesTo(rule).
+			WithRoad(true).
+			WithGuardValue(tuning.ScaleByBorderGuardStrength(25000)).
+			WithGuardWeeklyIncrement(0.15).
+			Build())
 	}
 	return conns
 }
@@ -263,28 +265,38 @@ func (this *topologyBase) GetBorderGuardValue(
 	return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
 }
 
-func (this *topologyBase) EnsurePlayerZonesConnected(
+func (this *topologyBase) CreateMissingPlayerConnections(
 	playerLabels []string,
 	zones []template.Zone,
-	connections *[]template.Connection,
-	tuning models.GenerationTuning) {
+	connections []template.Connection,
+	tuning models.GenerationTuning) []template.Connection {
 	if len(playerLabels) < 2 {
-		return
+		return nil
 	}
+
+	createFallbackConnName := func(label string, partner string) string {
+		if label > partner {
+			label, partner = partner, label
+		}
+		return fmt.Sprintf("Fallback-%s-%s", label, partner)
+	}
+
 	connNames := map[string]bool{}
-	for _, c := range *connections {
+	for _, c := range connections {
 		if c.Name != "" {
 			connNames[c.Name] = true
 		}
 	}
+	var additionalConns []template.Connection
 	for _, letter := range playerLabels {
-		zn := "Spawn-" + letter
-		z, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == zn })
+		zoneName := "Spawn-" + letter
+		zone, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == zoneName })
 		if !ok {
 			continue
 		}
+
 		hasConn := false
-		for _, r := range z.Roads {
+		for _, r := range zone.Roads {
 			if r.To.Type == "Connection" && len(r.To.Args) > 0 && connNames[r.To.Args[0]] {
 				hasConn = true
 				break
@@ -293,78 +305,85 @@ func (this *topologyBase) EnsurePlayerZonesConnected(
 		if hasConn {
 			continue
 		}
-		var partner string
-		for _, pl := range playerLabels {
-			if pl != letter {
-				partner = pl
-				break
-			}
-		}
+
+		partner := linq.FromSlice(playerLabels).FirstOrDefault(func(x string) bool { return x != letter })
 		if partner == "" {
 			continue
 		}
-		a, b := letter, partner
-		if a > b {
-			a, b = b, a
-		}
-		fn := "Fallback-" + a + "-" + b
-		if connNames[fn] {
+
+		fallbackName := createFallbackConnName(letter, partner)
+		if connNames[fallbackName] {
 			continue
 		}
-		*connections = append(*connections, template.Connection{
-			Name: fn, From: "Spawn-" + letter, To: "Spawn-" + partner,
-			ConnectionType: "Direct", GuardZone: "Spawn-" + letter, SimTurnSquad: true,
+
+		additionalConns = append(additionalConns, template.Connection{
+			Name: fallbackName, From: zoneName, To: "Spawn-" + partner,
+			ConnectionType: "Direct", GuardZone: zoneName, SimTurnSquad: true,
 			GuardValue: this.GetBorderGuardValue(letter, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: "fallback_guard_" + fn,
+			GuardMatchGroup: "fallback_guard_" + fallbackName,
 		})
-		connNames[fn] = true
+		connNames[fallbackName] = true
 		for _, pl := range []string{letter, partner} {
 			if pz, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
 				pz.Roads = append(pz.Roads, variant_content.NewRoadBuilder().
 					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-					WithTo(variant_content.NewRefBuilder().BuildConnectionType(fn)).
+					WithTo(variant_content.NewRefBuilder().BuildConnectionType(fallbackName)).
 					Build())
 			}
 		}
 	}
+	return additionalConns
 }
 
-func (this *topologyBase) EnsureFullConnectivity(
+func (this *topologyBase) CreateMissingConnections(
 	playerLabels, allLabels []string,
 	positions models.Positions,
 	zones []template.Zone,
 	connections []template.Connection,
 	tuning models.GenerationTuning,
 	neutralZones models.NeutralZonePlans) []template.Connection {
-	if len(allLabels) <= 1 {
-		return connections
+	if len(allLabels) < 2 {
+		return nil
+	}
+
+	getFallbackConnName := func(zone template.Zone) string {
+		existingConn := ""
+		for _, road := range zone.Roads {
+			if road.From.Type == "Connection" && len(road.From.Args) > 0 {
+				existingConn = road.From.Args[0]
+				break
+			}
+			if road.To.Type == "Connection" && len(road.To.Args) > 0 {
+				existingConn = road.To.Args[0]
+				break
+			}
+		}
+		return existingConn
 	}
 
 	adjacency := models.NewZoneIndexAdjacency(len(allLabels))
 	// TODO: move out to a separate function
 	zoneNameToIdx := map[string]int{}
-	for i, l := range allLabels {
-		zoneNameToIdx[createZoneName(l, playerLabels)] = i
+	for index, label := range allLabels {
+		zoneNameToIdx[createZoneName(label, playerLabels)] = index
 	}
-	for _, connection := range connections {
-		if connection.ConnectionType != "Direct" && connection.ConnectionType != "Portal" {
-			continue
-		}
-		indexA, okA := zoneNameToIdx[connection.From]
-		indexB, okB := zoneNameToIdx[connection.To]
-		if !okA || !okB {
-			continue
-		}
-		adjacency.Link(indexA, indexB)
+	for connection := range linq.FromSlice(connections).
+		Where(func(x template.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
+		Where(func(x template.Connection) bool {
+			_, okA := zoneNameToIdx[x.From]
+			_, okB := zoneNameToIdx[x.To]
+			return okA && okB
+		}).Iterate {
+		adjacency.Link(zoneNameToIdx[connection.From], zoneNameToIdx[connection.To])
 	}
 
 	connNameSet := map[string]bool{}
-	for _, connection := range connections {
-		if connection.Name != "" {
-			connNameSet[connection.Name] = true
-		}
+	for connection := range linq.FromSlice(connections).
+		Where(func(x template.Connection) bool { return x.Name != "" }).Iterate {
+		connNameSet[connection.Name] = true
 	}
 
+	var additionalConns []template.Connection
 	for {
 		components := adjacency.FindIndexes(len(allLabels))
 		bestIndexA, bestIndexB, ok := positions.GetShortestDistanceIndex(components)
@@ -383,39 +402,33 @@ func (this *topologyBase) EnsureFullConnectivity(
 
 		zoneFrom := createZoneName(allLabels[bestIndexA], playerLabels)
 		zoneTo := createZoneName(allLabels[bestIndexB], playerLabels)
-		connections = append(connections, template.Connection{
-			Name: bridgeName, From: zoneFrom, To: zoneTo,
-			ConnectionType: "Direct", GuardZone: zoneFrom, SimTurnSquad: true,
-			GuardValue: this.GetBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: fmt.Sprintf("bridge_guard_%s-%s", labelA, labelB),
-		})
+		additionalConns = append(additionalConns, variant_content.NewConnectionBuilder().
+			WithName(bridgeName).
+			WithFrom(zoneFrom).
+			WithTo(zoneTo).
+			WithConnectionTypeDirect().
+			WithGuardZone(zoneFrom).
+			WithSimTurnSquad().
+			WithGuardValue(this.GetBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)).
+			WithGuardWeeklyIncrement(0.15).
+			WithGuardMatchGroup(fmt.Sprintf("bridge_guard_%s-%s", labelA, labelB)).
+			Build())
 		connNameSet[bridgeName] = true
+
 		for _, zoneName := range []string{zoneFrom, zoneTo} {
 			if zone, ok := linq.FromSlice(zones).First(func(x template.Zone) bool { return x.Name == zoneName }); ok {
-				roadBuilder := variant_content.NewRoadBuilder().
-					WithTo(variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
+				roadBuilder := variant_content.NewRoadBuilder().WithTo(
+					variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
 				if len(zone.MainObjects) > 0 {
 					zone.Roads = append(zone.Roads,
 						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).Build())
 				} else if len(zone.Roads) > 0 {
-					existingConn := ""
-					for _, r := range zone.Roads {
-						if r.From.Type == "Connection" && len(r.From.Args) > 0 {
-							existingConn = r.From.Args[0]
-							break
-						}
-						if r.To.Type == "Connection" && len(r.To.Args) > 0 {
-							existingConn = r.To.Args[0]
-							break
-						}
+					connectionName := getFallbackConnName(zone)
+					if connectionName == "" {
+						connectionName = bridgeName
 					}
-					if existingConn != "" {
-						zone.Roads = append(zone.Roads,
-							roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(existingConn)).Build())
-					} else {
-						zone.Roads = append(zone.Roads,
-							roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
-					}
+					zone.Roads = append(zone.Roads,
+						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(connectionName)).Build())
 				} else {
 					zone.Roads = append(zone.Roads,
 						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
@@ -426,7 +439,7 @@ func (this *topologyBase) EnsureFullConnectivity(
 		adjacency.Link(bestIndexA, bestIndexB)
 	}
 
-	return connections
+	return additionalConns
 }
 
 func (this *topologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {

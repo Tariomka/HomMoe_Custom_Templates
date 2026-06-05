@@ -207,25 +207,6 @@ namespace OldenEraTemplateEditor.Models
             "Player8",
         ];
 
-
-        // ── Connections ──────────────────────────────────────────────────────────
-
-        /// <summary>Known values for Connection.ConnectionType.</summary>
-        public static readonly string[] ConnectionTypes =
-        [
-            "Default",
-            "Direct",
-            "GladiatorArena",
-            "Portal",
-            "Proximity",
-        ];
-
-        /// <summary>Known values for Connection.GatePlacement.</summary>
-        public static readonly string[] GatePlacements =
-        [
-            "Center",
-        ];
-
         // ── Bannable items catalog ────────────────────────────────────────────────
 
         /// <summary>

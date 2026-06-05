@@ -4,7 +4,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 )
 
 type NeutralZonePlan struct {

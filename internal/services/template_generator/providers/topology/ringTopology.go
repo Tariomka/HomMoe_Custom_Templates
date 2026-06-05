@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 )
 
 type RingTopologyService struct {
@@ -26,20 +27,18 @@ func (this *RingTopologyService) CreateTopologyVariant(
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) template.Variant {
-
 	orderedLabels := this.zoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
-	labelCount := len(orderedLabels)
-	isolate := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
+	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 
-	zones := this.createZones(configuration, playerLabels, orderedLabels, tuning, isolate, neutralZones, holdCityNeutralLabel)
-	conns := this.createConnections(playerLabels, orderedLabels, tuning, isolate, neutralZones)
+	zones := this.createZones(configuration, playerLabels, orderedLabels, tuning, isIsolated, neutralZones, holdCityNeutralLabel)
+	conns := this.createConnections(playerLabels, orderedLabels, tuning, isIsolated, neutralZones)
 	if configuration.RandomPortals {
 		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, orderedLabels, tuning, configuration.MaxPortalConnections)...)
 	}
-	if isolate {
-		this.EnsurePlayerZonesConnected(playerLabels, zones, &conns, tuning)
+	if isIsolated {
+		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	return this.CreateVariant(playerLabels, orderedLabels[0], labelCount, zones, conns)
+	return this.CreateVariant(playerLabels, orderedLabels[0], len(orderedLabels), zones, conns)
 }
 
 func (this *RingTopologyService) createZones(
@@ -48,7 +47,7 @@ func (this *RingTopologyService) createZones(
 	tuning models.GenerationTuning,
 	isIsolated bool,
 	neutralZones models.NeutralZonePlans,
-	holdCityNeutralLetter string) []template.Zone {
+	holdCityNeutralLabel string) []template.Zone {
 
 	labelCount := len(orderedLabels)
 
@@ -67,25 +66,25 @@ func (this *RingTopologyService) createZones(
 	var zones []template.Zone
 	for i := range labelCount {
 		label := orderedLabels[i]
-		var myConns []string
+		var connNames []string
 		if ringConnLeft[i] != "" {
-			myConns = append(myConns, ringConnLeft[i])
+			connNames = append(connNames, ringConnLeft[i])
 		}
 		if ringConnRight[i] != "" && ringConnRight[i] != ringConnLeft[i] {
-			myConns = append(myConns, ringConnRight[i])
+			connNames = append(connNames, ringConnRight[i])
 		}
 		if pi := slices.Index(playerLabels, label); pi >= 0 {
 			zones = append(zones,
 				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
+					label, fmt.Sprintf("Player%d", pi+1), connNames, configuration.ZoneConfiguration.PlayerZoneCastles,
 					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
 					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).FirstOrDefault(func(nz models.NeutralZonePlan) bool { return nz.Label == label }),
-					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, label == holdCityNeutralLetter))
+					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					connNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
 	}
 	return zones
@@ -100,6 +99,7 @@ func (this *RingTopologyService) createConnections(
 	if count < 2 {
 		return nil
 	}
+
 	var conns []template.Connection
 	for i := 0; i < count; i++ {
 		next := (i + 1) % count
@@ -108,15 +108,20 @@ func (this *RingTopologyService) createConnections(
 		if isIsolated && slices.Contains(playerLabels, from) && slices.Contains(playerLabels, to) {
 			continue
 		}
+
 		fromZone := createZoneName(from, playerLabels)
 		toZone := createZoneName(to, playerLabels)
-		conns = append(conns, template.Connection{
-			Name: fmt.Sprintf("Ring-%s-%s", from, to), From: fromZone, To: toZone,
-			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue:           this.GetBorderGuardValue(from, to, playerLabels, neutralZones, tuning),
-			GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup:      fmt.Sprintf("ring_guard_%s_%s", from, to),
-		})
+		conns = append(conns, variant_content.NewConnectionBuilder().
+			WithName(fmt.Sprintf("Ring-%s-%s", from, to)).
+			WithFrom(fromZone).
+			WithTo(toZone).
+			WithConnectionTypeDirect().
+			WithGuardZone(fromZone).
+			WithSimTurnSquad().
+			WithGuardValue(this.GetBorderGuardValue(from, to, playerLabels, neutralZones, tuning)).
+			WithGuardWeeklyIncrement(0.15).
+			WithGuardMatchGroup(fmt.Sprintf("ring_guard_%s_%s", from, to)).
+			Build())
 	}
 	return conns
 }

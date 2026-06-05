@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 )
 
 type ChainTopologyService struct {
@@ -25,58 +27,99 @@ func (this *ChainTopologyService) GetTopologyVariant(
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) template.Variant {
-	neutralByLetter := mapNeutralByLetter(neutralZones)
+	orderedLabels := this.zoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
+	isIsolated := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
+	connNames := this.createConnectionNames(playerLetters, orderedLabels, isIsolated)
 
-	ordered := this.zoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
-	n := len(ordered)
-	isolate := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
+	zones := this.createZones(configuration, playerLetters, orderedLabels, tuning, neutralZones, holdCityNeutralLetter, connNames)
+	conns := this.createConnections(playerLetters, orderedLabels, tuning, neutralZones, connNames)
+	if configuration.RandomPortals {
+		conns = append(conns, this.CreateRandomPortalConnections(playerLetters, orderedLabels, tuning, configuration.MaxPortalConnections)...)
+	}
+	if isIsolated {
+		conns = append(conns, this.CreateMissingPlayerConnections(playerLetters, zones, conns, tuning)...)
+	}
+	return this.CreateVariant(playerLetters, orderedLabels[0], len(orderedLabels), zones, conns)
+}
 
-	connNames := make([]string, n-1)
-	for i := 0; i < n-1; i++ {
-		if isolate && slices.Contains(playerLetters, ordered[i]) && slices.Contains(playerLetters, ordered[i+1]) {
+func (this *ChainTopologyService) createConnectionNames(
+	playerLetters, orderedLabels []string,
+	isIsolated bool) []string {
+	labelCount := len(orderedLabels)
+
+	connNames := make([]string, labelCount-1)
+	for i := range labelCount - 1 {
+		if isIsolated && slices.Contains(playerLetters, orderedLabels[i]) && slices.Contains(playerLetters, orderedLabels[i+1]) {
 			continue
 		}
-		connNames[i] = fmt.Sprintf("Chain-%s-%s", ordered[i], ordered[i+1])
+		connNames[i] = fmt.Sprintf("Chain-%s-%s", orderedLabels[i], orderedLabels[i+1])
 	}
+	return connNames
+}
+
+func (this *ChainTopologyService) createZones(
+	configuration config.GeneratorConfig,
+	playerLetters, orderedLabels []string,
+	tuning models.GenerationTuning,
+	neutralZones models.NeutralZonePlans,
+	holdCityNeutralLabel string,
+	connectionNames []string) []template.Zone {
+	labelCount := len(orderedLabels)
 
 	var zones []template.Zone
-	for i := range n {
-		letter := ordered[i]
-		var myConns []string
-		if i > 0 && connNames[i-1] != "" {
-			myConns = append(myConns, connNames[i-1])
+	for i, label := range orderedLabels {
+		var tempConnectionNames []string
+		if i > 0 && connectionNames[i-1] != "" {
+			tempConnectionNames = append(tempConnectionNames, connectionNames[i-1])
 		}
-		if i < n-1 && connNames[i] != "" {
-			myConns = append(myConns, connNames[i])
+		if i < labelCount-1 && connectionNames[i] != "" {
+			tempConnectionNames = append(tempConnectionNames, connectionNames[i])
 		}
-		if pi := slices.Index(playerLetters, letter); pi >= 0 {
-			zones = append(zones, this.CreateSpawnZone(letter, fmt.Sprintf("Player%d", pi+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
+		if playerIndex := slices.Index(playerLetters, label); playerIndex >= 0 {
+			zones = append(zones,
+				this.CreateSpawnZone(
+					label, fmt.Sprintf("Player%d", playerIndex+1), tempConnectionNames, configuration.ZoneConfiguration.PlayerZoneCastles,
+					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 		} else {
-			zones = append(zones, this.CreateNeutralZone(neutralByLetter[letter], myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, letter == holdCityNeutralLetter))
+			zones = append(zones,
+				this.CreateNeutralZone(
+					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					tempConnectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
 	}
+	return zones
+}
+
+func (this *ChainTopologyService) createConnections(
+	playerLabels, orderedLabels []string,
+	tuning models.GenerationTuning,
+	neutralZones models.NeutralZonePlans,
+	connectionNames []string) []template.Connection {
+	labelCount := len(orderedLabels)
 
 	var conns []template.Connection
-	for i := 0; i < n-1; i++ {
-		if connNames[i] == "" {
+	for i := range labelCount - 1 {
+		if connectionNames[i] == "" {
 			continue
 		}
-		from := ordered[i]
-		to := ordered[i+1]
-		fromZone := createZoneName(from, playerLetters)
-		toZone := createZoneName(to, playerLetters)
-		conns = append(conns, template.Connection{
-			Name: connNames[i], From: fromZone, To: toZone,
-			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue: borderGuardValue(from, to, playerLetters, neutralByLetter, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: fmt.Sprintf("chain_guard_%s_%s", from, to),
-		})
+
+		from := orderedLabels[i]
+		to := orderedLabels[i+1]
+		fromZone := createZoneName(from, playerLabels)
+		toZone := createZoneName(to, playerLabels)
+		conns = append(conns, variant_content.NewConnectionBuilder().
+			WithName(connectionNames[i]).
+			WithFrom(fromZone).
+			WithTo(toZone).
+			WithConnectionTypeDirect().
+			WithGuardZone(fromZone).
+			WithSimTurnSquad().
+			WithGuardValue(this.GetBorderGuardValue(from, to, playerLabels, neutralZones, tuning)).
+			WithGuardWeeklyIncrement(0.15).
+			WithGuardMatchGroup(fmt.Sprintf("chain_guard_%s_%s", from, to)).
+			Build())
 	}
-	if configuration.RandomPortals {
-		conns = append(conns, buildRandomPortalConnections(playerLetters, ordered, tuning, configuration.MaxPortalConnections)...)
-	}
-	if isolate {
-		ensurePlayerZonesConnected(playerLetters, zones, &conns, tuning)
-	}
-	return makeVariant(playerLetters, ordered[0], n, zones, conns)
+	return conns
 }

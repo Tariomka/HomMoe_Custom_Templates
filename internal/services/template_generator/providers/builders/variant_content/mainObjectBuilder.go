@@ -8,7 +8,7 @@ import (
 
 var (
 	castleQualities = registry.GetBuildingsConstructionSidValues()
-	types           = registry.GetMainObjectTypeValues()
+	objectTypes     = registry.GetMainObjectTypeValues()
 	placements      = registry.GetPlacementValues()
 )
 
@@ -18,8 +18,12 @@ type MainObjectBuilder struct {
 
 func NewObjectBuilder() *MainObjectBuilder { return &MainObjectBuilder{item: template.MainObject{}} }
 
-func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder { return this.withType(types.Spawn) }
-func (this *MainObjectBuilder) WithTypeCity() *MainObjectBuilder  { return this.withType(types.City) }
+func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder {
+	return this.withType(objectTypes.Spawn)
+}
+func (this *MainObjectBuilder) WithTypeCity() *MainObjectBuilder {
+	return this.withType(objectTypes.City)
+}
 func (this *MainObjectBuilder) WithSpawn(spawn string) *MainObjectBuilder {
 	this.item.Spawn = spawn
 	return this

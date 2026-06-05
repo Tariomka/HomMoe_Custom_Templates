@@ -3,7 +3,7 @@ package providers
 import (
 	"math/rand/v2"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
