@@ -1,0 +1,27 @@
+package tournament_variant
+
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+)
+
+type HubClusterService struct {
+	base.TopologyBase
+}
+
+func NewHubClusterService() *HubClusterService {
+	return &HubClusterService{
+		TopologyBase: base.NewTopologyBase(),
+	}
+}
+
+func (this *HubClusterService) CreateClusterVariant(
+	configuration config.GeneratorConfig,
+	tuning models.GenerationTuning,
+	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
+	playerIndex int,
+	playerLabel string) ([]template.Zone, []template.Connection) {
+	return nil, nil
+}

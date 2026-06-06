@@ -1,4 +1,4 @@
-package topology
+package base
 
 import (
 	"fmt"
@@ -13,23 +13,23 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 var resourceContentPool = registry.GetResourcesContentPoolValues()
 
-type topologyBase struct {
-	zoneLabelProvider *zones.ZoneLabelProvider
+type TopologyBase struct {
+	ZoneLabelProvider *zones.ZoneLabelProvider
 }
 
-func newTopologyBase() topologyBase {
-	return topologyBase{
-		zoneLabelProvider: zones.NewZoneLabelProvider(),
+func NewTopologyBase() TopologyBase {
+	return TopologyBase{
+		ZoneLabelProvider: zones.NewZoneLabelProvider(),
 	}
 }
 
-func (this *topologyBase) CreateVariant(
+func (this *TopologyBase) CreateVariant(
 	playerLabels []string,
 	firstLabel string,
 	zoneCount int,
@@ -65,7 +65,7 @@ func (this *topologyBase) CreateVariant(
 		Build()
 }
 
-func (this *topologyBase) CreateSpawnZone(
+func (this *TopologyBase) CreateSpawnZone(
 	label, playerName string,
 	connectionNames []string,
 	castleCount int,
@@ -109,7 +109,7 @@ func (this *topologyBase) CreateSpawnZone(
 		Build()
 }
 
-func (this *topologyBase) CreateNeutralZone(
+func (this *TopologyBase) CreateNeutralZone(
 	plan models.NeutralZonePlan,
 	connectionNames []string,
 	zoneSize float64,
@@ -155,7 +155,7 @@ func (this *topologyBase) CreateNeutralZone(
 	return zoneBuilder.Build()
 }
 
-func (this *topologyBase) CreateHubZone(
+func (this *TopologyBase) CreateHubZone(
 	connectionNames []string,
 	tuning models.GenerationTuning,
 	isHoldCity bool,
@@ -199,7 +199,7 @@ func (this *topologyBase) CreateHubZone(
 	return zoneBuilder.Build()
 }
 
-func (this *topologyBase) CreateRandomPortalConnections(
+func (this *TopologyBase) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	maxCount int) []template.Connection {
@@ -220,8 +220,8 @@ func (this *topologyBase) CreateRandomPortalConnections(
 		idx := indices[i]
 		fromLabel := orderedLabels[idx]
 		toLabel := orderedLabels[dest[idx]]
-		fromName := this.zoneLabelProvider.CreateZoneName(fromLabel, playerLabels)
-		toName := this.zoneLabelProvider.CreateZoneName(toLabel, playerLabels)
+		fromName := this.ZoneLabelProvider.CreateZoneName(fromLabel, playerLabels)
+		toName := this.ZoneLabelProvider.CreateZoneName(toLabel, playerLabels)
 		conns = append(conns, variant_content.NewConnectionBuilder().
 			WithName(fmt.Sprintf("Portal-%s-%s", fromLabel, toLabel)).
 			WithFrom(fromName).
@@ -237,7 +237,7 @@ func (this *topologyBase) CreateRandomPortalConnections(
 	return conns
 }
 
-func (this *topologyBase) CreateMissingPlayerConnections(
+func (this *TopologyBase) CreateMissingPlayerConnections(
 	playerLabels []string,
 	zones []template.Zone,
 	connections []template.Connection,
@@ -307,7 +307,7 @@ func (this *topologyBase) CreateMissingPlayerConnections(
 	return additionalConns
 }
 
-func (this *topologyBase) CreateMissingConnections(
+func (this *TopologyBase) CreateMissingConnections(
 	playerLabels, allLabels []string,
 	positions models.Positions,
 	zones []template.Zone,
@@ -337,7 +337,7 @@ func (this *topologyBase) CreateMissingConnections(
 	// TODO: move out to a separate function
 	zoneNameToIdx := map[string]int{}
 	for index, label := range allLabels {
-		zoneNameToIdx[this.zoneLabelProvider.CreateZoneName(label, playerLabels)] = index
+		zoneNameToIdx[this.ZoneLabelProvider.CreateZoneName(label, playerLabels)] = index
 	}
 	for connection := range linq.FromSlice(connections).
 		Where(func(x template.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
@@ -372,8 +372,8 @@ func (this *topologyBase) CreateMissingConnections(
 			continue
 		}
 
-		zoneFrom := this.zoneLabelProvider.CreateZoneName(allLabels[bestIndexA], playerLabels)
-		zoneTo := this.zoneLabelProvider.CreateZoneName(allLabels[bestIndexB], playerLabels)
+		zoneFrom := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexA], playerLabels)
+		zoneTo := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexB], playerLabels)
 		additionalConns = append(additionalConns, variant_content.NewConnectionBuilder().
 			WithName(bridgeName).
 			WithFrom(zoneFrom).
@@ -414,7 +414,7 @@ func (this *topologyBase) CreateMissingConnections(
 	return additionalConns
 }
 
-func (this *topologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []template.Road {
+func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []template.Road {
 	if !generateRoads {
 		return nil
 	}
@@ -442,7 +442,7 @@ func (this *topologyBase) CreateConnectorZoneRoads(connectionNames []string, gen
 	return roads
 }
 
-func (this *topologyBase) GetBorderGuardValue(
+func (this *TopologyBase) GetBorderGuardValue(
 	labelA, labelB string,
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
@@ -470,7 +470,7 @@ func (this *topologyBase) GetBorderGuardValue(
 	return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
 }
 
-func (this *topologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {
+func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {
 	return variant_content.NewObjectBuilder().
 		WithTypeSpawn().
 		WithSpawn(playerName).
@@ -486,7 +486,7 @@ func (this *topologyBase) createPlayerSpawnCastle(playerName string, guardValue 
 
 // func (this *topologyBase) createPlayerOwnedCastles(playerIndex int, guardValue int, castleCount int) []template.MainObject {  }
 
-func (this *topologyBase) createPlayerUnclaimedCastles(
+func (this *TopologyBase) createPlayerUnclaimedCastles(
 	matchPlayerFaction bool,
 	guardValue, castleCount int) []template.MainObject {
 	var castles []template.MainObject
@@ -509,7 +509,7 @@ func (this *topologyBase) createPlayerUnclaimedCastles(
 	return castles
 }
 
-func (this *topologyBase) createNeutralZoneCastles(
+func (this *TopologyBase) createNeutralZoneCastles(
 	profile models.NeutralZoneProfile,
 	tuning models.GenerationTuning,
 	castleCount int,
@@ -555,7 +555,7 @@ func (this *topologyBase) createNeutralZoneCastles(
 	return castles
 }
 
-func (this *topologyBase) createHubZoneCastles(
+func (this *TopologyBase) createHubZoneCastles(
 	tuning models.GenerationTuning,
 	castleCount int,
 	isHoldCityZone bool) []template.MainObject {
@@ -598,7 +598,7 @@ func (this *topologyBase) createHubZoneCastles(
 	return castles
 }
 
-func (this *topologyBase) createOuterZoneRoads(
+func (this *TopologyBase) createOuterZoneRoads(
 	connectionNames []string,
 	castleCount int,
 	includeFoothold, generateRoads bool) []template.Road {

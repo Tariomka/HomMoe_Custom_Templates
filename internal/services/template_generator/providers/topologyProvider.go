@@ -27,21 +27,27 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabelsCopy := this.copyLabels(playerLabels)
 
 	if configuration.IsTournamentMode() && len(playerLabelsCopy) == 2 {
-		return buildVariantTournament(configuration, playerLabelsCopy, neutralZones, tuning)
+		return topology.NewTournamentTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning)
 	}
 
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
-		return buildVariantHubAndSpoke(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
+		return topology.NewHubTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
 		return topology.NewChainTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySharedWeb:
 		return topology.NewSharedWebTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyRandom, config.TopologyBalanced:
-		return buildVariantRandom(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	default:
+	case config.TopologyRandom:
+		return topology.NewRandomTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+	case config.TopologyBalanced:
+		return topology.NewRandomBalancedTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+	default: // config.TopologyDefault
 		return topology.NewRingTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	}

@@ -9,15 +9,16 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
 type SharedWebTopologyService struct {
-	topologyBase
+	base.TopologyBase
 }
 
 func NewSharedWebTopologyService() *SharedWebTopologyService {
 	return &SharedWebTopologyService{
-		topologyBase: newTopologyBase(),
+		TopologyBase: base.NewTopologyBase(),
 	}
 }
 
@@ -49,7 +50,7 @@ func (this *SharedWebTopologyService) createLabels(
 	isBalanced bool) []string {
 	var neutrals []string
 	if isBalanced {
-		neutrals = this.zoneLabelProvider.CreateBalancedNeutralRingZoneLabels(neutralZones, len(playerLabels))
+		neutrals = this.ZoneLabelProvider.CreateBalancedNeutralRingZoneLabels(neutralZones, len(playerLabels))
 	} else {
 		for _, zonePlan := range neutralZones {
 			neutrals = append(neutrals, zonePlan.Label)

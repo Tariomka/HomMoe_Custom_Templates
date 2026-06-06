@@ -97,6 +97,16 @@ func (this *NeutralZonePlans) Swap(firstIndex, secondIndex int) {
 	(*this)[firstIndex], (*this)[secondIndex] = (*this)[secondIndex], (*this)[firstIndex]
 }
 
+func (this *NeutralZonePlans) SortByBalanceScore() {
+	sort.SliceStable(*this, func(i, j int) bool {
+		scoreI, scoreJ := (*this)[i].GetBalanceScore(), (*this)[j].GetBalanceScore()
+		if scoreI != scoreJ {
+			return scoreI > scoreJ
+		}
+		return (*this)[i].Label < (*this)[j].Label
+	})
+}
+
 func (this *NeutralZonePlans) sort() {
 	sort.SliceStable(*this, func(i, j int) bool {
 		if (*this)[i].Quality != (*this)[j].Quality {

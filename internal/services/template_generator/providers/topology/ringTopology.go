@@ -9,15 +9,16 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
 type RingTopologyService struct {
-	topologyBase
+	base.TopologyBase
 }
 
 func NewRingTopologyService() *RingTopologyService {
 	return &RingTopologyService{
-		topologyBase: newTopologyBase(),
+		TopologyBase: base.NewTopologyBase(),
 	}
 }
 
@@ -27,7 +28,7 @@ func (this *RingTopologyService) CreateTopologyVariant(
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) template.Variant {
-	orderedLabels := this.zoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
+	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 
 	zones := this.createZones(configuration, playerLabels, orderedLabels, tuning, isIsolated, neutralZones, holdCityNeutralLabel)
@@ -108,8 +109,8 @@ func (this *RingTopologyService) createConnections(
 			continue
 		}
 
-		zoneFrom := this.zoneLabelProvider.CreateZoneName(labelFrom, playerLabels)
-		zoneTo := this.zoneLabelProvider.CreateZoneName(labelTo, playerLabels)
+		zoneFrom := this.ZoneLabelProvider.CreateZoneName(labelFrom, playerLabels)
+		zoneTo := this.ZoneLabelProvider.CreateZoneName(labelTo, playerLabels)
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(fmt.Sprintf("Ring-%s-%s", labelFrom, labelTo)).
 			WithFrom(zoneFrom).

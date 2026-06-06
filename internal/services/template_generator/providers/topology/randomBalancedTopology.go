@@ -1,0 +1,101 @@
+package topology
+
+import (
+	"slices"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+)
+
+type RandomBalancedTopologyService struct {
+	RandomTopologyService
+}
+
+func NewRandomBalancedTopologyService() *RandomBalancedTopologyService {
+	return &RandomBalancedTopologyService{
+		RandomTopologyService: *NewRandomTopologyService(),
+	}
+}
+
+func (this *RandomBalancedTopologyService) CreateTopologyVariant(
+	configuration config.GeneratorConfig,
+	playerLabels []string,
+	neutralZones models.NeutralZonePlans,
+	tuning models.GenerationTuning,
+	holdCityNeutralLabel string) template.Variant {
+	neutralLabels := make([]string, len(neutralZones))
+	for i, zonePlan := range neutralZones {
+		neutralLabels[i] = zonePlan.Label
+	}
+	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
+	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones, 0)
+	positions := models.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
+	pairs := this.createBalancedPairs(positions.CreateDelaunayTriangulation(), allLabels, playerLabels, neutralZones)
+	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
+
+	zones := this.createZones(configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
+	for index := range zones {
+		position := positions[index]
+		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
+		tier := 0
+		if !slices.Contains(playerLabels, allLabels[index]) {
+			tier = neutralZones.GetTier(allLabels[index])
+		}
+		zones[index].GeneratorRing = &tier
+	}
+
+	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
+	if configuration.RandomPortals {
+		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+	}
+	if isIsolated {
+		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
+	}
+	conns = this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)
+	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
+}
+
+func (this *RandomBalancedTopologyService) createBalancedPairs(pairs [][2]int, allLabels, playerLabels []string, neutralZones models.NeutralZonePlans) [][2]int {
+	presentTiers := map[int]bool{}
+	for _, label := range allLabels {
+		tier := 0
+		if !slices.Contains(playerLabels, label) {
+			tier = neutralZones.GetTier(label)
+		}
+		presentTiers[tier] = true
+	}
+
+	var filtered [][2]int
+	for _, pair := range pairs {
+		tierA := 0
+		if !slices.Contains(playerLabels, allLabels[pair[0]]) {
+			tierA = neutralZones.GetTier(allLabels[pair[0]])
+		}
+		tierB := 0
+		if !slices.Contains(playerLabels, allLabels[pair[1]]) {
+			tierB = neutralZones.GetTier(allLabels[pair[1]])
+		}
+		low, high := tierA, tierB
+		if low > high {
+			low, high = high, low
+		}
+		if high-low <= 1 {
+			filtered = append(filtered, pair)
+			continue
+		}
+
+		skip := false
+		for tier := low + 1; tier < high; tier++ {
+			if presentTiers[tier] {
+				skip = true
+				break
+			}
+		}
+
+		if !skip {
+			filtered = append(filtered, pair)
+		}
+	}
+	return filtered
+}

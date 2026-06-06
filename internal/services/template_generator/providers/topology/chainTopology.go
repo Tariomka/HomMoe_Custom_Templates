@@ -9,15 +9,16 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
 type ChainTopologyService struct {
-	topologyBase
+	base.TopologyBase
 }
 
 func NewChainTopologyService() *ChainTopologyService {
 	return &ChainTopologyService{
-		topologyBase: newTopologyBase(),
+		TopologyBase: base.NewTopologyBase(),
 	}
 }
 
@@ -27,7 +28,7 @@ func (this *ChainTopologyService) CreateTopologyVariant(
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) template.Variant {
-	orderedLabels := this.zoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
+	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
 	connNames := this.createConnectionNames(playerLetters, orderedLabels, isIsolated)
 
@@ -107,8 +108,8 @@ func (this *ChainTopologyService) createConnections(
 
 		labelFrom := orderedLabels[i]
 		labelTo := orderedLabels[i+1]
-		zoneFrom := this.zoneLabelProvider.CreateZoneName(labelFrom, playerLabels)
-		zoneTo := this.zoneLabelProvider.CreateZoneName(labelTo, playerLabels)
+		zoneFrom := this.ZoneLabelProvider.CreateZoneName(labelFrom, playerLabels)
+		zoneTo := this.ZoneLabelProvider.CreateZoneName(labelTo, playerLabels)
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(connectionNames[i]).
 			WithFrom(zoneFrom).
