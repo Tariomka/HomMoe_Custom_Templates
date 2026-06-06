@@ -1,7 +1,8 @@
 package utils
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -52,18 +53,24 @@ func CreateHubZoneCandidates(neutralZones models.NeutralZonePlans, distancesByPl
 }
 
 func (this *hubZoneCandidates) SortForHubCity() *hubZoneCandidates {
-	sort.SliceStable(*this, func(i, j int) bool {
-		a, b := (*this)[i], (*this)[j]
-		if a.minDist != b.minDist {
-			return a.minDist > b.minDist
+	slices.SortStableFunc(*this, func(a, b candidate) int {
+		// a.minDist > b.minDist
+		if comparison := cmp.Compare(b.minDist, a.minDist); comparison != 0 {
+			return comparison
 		}
-		if a.variance != b.variance {
-			return a.variance < b.variance
+
+		// a.variance < b.variance
+		if comparison := cmp.Compare(a.variance, b.variance); comparison != 0 {
+			return comparison
 		}
-		if a.quality != b.quality {
-			return a.quality > b.quality
+
+		// a.quality > b.quality
+		if comparison := cmp.Compare(b.quality, a.quality); comparison != 0 {
+			return comparison
 		}
-		return a.hasCastle > b.hasCastle
+
+		// a.hasCastle > b.hasCastle
+		return cmp.Compare(b.hasCastle, a.hasCastle)
 	})
 
 	return this
