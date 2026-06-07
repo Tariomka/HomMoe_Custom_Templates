@@ -3,12 +3,15 @@ package tournament_variant
 import (
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
 )
 
 type BalancedClusterService struct {
@@ -27,51 +30,61 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
 	playerIndex int,
 	playerLabel string) ([]template.Zone, []template.Connection) {
-	var zones []template.Zone
-	var connections []template.Connection
-
 	singlePlayerList := []string{playerLabel}
-	orderedLetters := buildBalancedRingLetters(singlePlayerList, playerNeutralZonePlans, 0)
-	rawPos := buildBalancedRandomPositions(orderedLetters, singlePlayerList, allNeutralZonePlans)
+	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans, 0)
+	rawPositions := models.CreatePositionsFromPlans(orderedLabels, singlePlayerList, allNeutralZonePlans)
+	positions := this.createPositions(rawPositions, playerIndex)
 
-	rawXMin, rawXMax, rawYMin, rawYMax := 0.05, 0.95, 0.05, 0.95
-	if len(rawPos) > 0 {
-		rawXMin, rawXMax = rawPos[0][0], rawPos[0][0]
-		rawYMin, rawYMax = rawPos[0][1], rawPos[0][1]
-		for _, p := range rawPos[1:] {
-			if p[0] < rawXMin {
-				rawXMin = p[0]
-			}
-			if p[0] > rawXMax {
-				rawXMax = p[0]
-			}
-			if p[1] < rawYMin {
-				rawYMin = p[1]
-			}
-			if p[1] > rawYMax {
-				rawYMax = p[1]
-			}
-		}
+	sortedPairs := this.createSortedPairs(orderedLabels, rawPositions, allNeutralZonePlans)
+
+	connectionNames := this.createConnectionNames(orderedLabels, sortedPairs)
+	zones := this.createZones(configuration, playerLabel, playerIndex, orderedLabels, tuning, allNeutralZonePlans, connectionNames)
+
+	clusterStart := len(zones)
+	for index, label := range orderedLabels {
+		position := positions[index]
+		zones[clusterStart+index].GeneratorPosition = &[2]float64{position.X, position.Y}
+		tier := allNeutralZonePlans.GetTier(label)
+		zones[clusterStart+index].GeneratorRing = &tier
 	}
-	spanX := math.Max(rawXMax-rawXMin, 0.001)
-	spanY := math.Max(rawYMax-rawYMin, 0.001)
+
+	connections := this.createConnections(playerLabel, orderedLabels, tuning, allNeutralZonePlans, connectionNames, sortedPairs)
+	connections = this.CreateMissingConnections(singlePlayerList, orderedLabels, positions, zones[clusterStart:], connections, tuning, allNeutralZonePlans)
+	return zones, connections
+}
+
+func (this *BalancedClusterService) createPositions(rawPositions models.Positions, playerIndex int) models.Positions {
+	if len(rawPositions) < 1 {
+		return models.Positions{}
+	}
+
+	min, max := rawPositions.GetMinAndMaxPositions()
+	spanX := math.Max(max.X-min.X, 0.001)
+	spanY := math.Max(max.Y-min.Y, 0.001)
+
 	xMin, xMax := 0.03, 0.43
 	if playerIndex != 0 {
 		xMin, xMax = 0.57, 0.97
 	}
-	targetW := xMax - xMin
-	const targetH = 0.90
-	scale := math.Min(targetW/spanX, targetH/spanY)
+
+	scale := math.Min((xMax-xMin)/spanX, 0.9/spanY)
 	xCentre := (xMin + xMax) / 2.0
-	const yCentre = 0.5
-	pos := make([][2]float64, len(rawPos))
-	for i, pt := range rawPos {
-		pos[i] = [2]float64{
-			xCentre + (pt[0]-(rawXMin+rawXMax)/2.0)*scale,
-			yCentre + (pt[1]-(rawYMin+rawYMax)/2.0)*scale,
-		}
+	yCentre := 0.5
+
+	positions := models.Positions{}
+	for _, position := range rawPositions {
+		positions.Add(models.NewPosition(
+			xCentre+(position.X-(min.X+max.X)/2.0)*scale,
+			yCentre+(position.Y-(min.Y+max.Y)/2.0)*scale))
 	}
 
+	return positions
+}
+
+func (this *BalancedClusterService) createSortedPairs(
+	orderedLabels []string,
+	rawPositions models.Positions,
+	allNeutralZonePlans models.NeutralZonePlans) [][2]int {
 	// Build connections from pure ring structure (a040c98).
 	angDist := func(a, b float64) float64 {
 		d := math.Mod(math.Abs(a-b), 2*math.Pi)
@@ -81,15 +94,15 @@ func (this *BalancedClusterService) CreateClusterVariant(
 		return d
 	}
 	tierIndices := map[int][]int{}
-	for i, l := range orderedLetters {
-		t := zoneTierRank(l, singlePlayerList, allNeutralZonePlans)
-		tierIndices[t] = append(tierIndices[t], i)
+	for index, label := range orderedLabels {
+		tier := allNeutralZonePlans.GetTier(label)
+		tierIndices[tier] = append(tierIndices[tier], index)
 	}
 	tierKeys := make([]int, 0, len(tierIndices))
-	for k := range tierIndices {
-		tierKeys = append(tierKeys, k)
+	for tier := range tierIndices {
+		tierKeys = append(tierKeys, tier)
 	}
-	sort.Ints(tierKeys)
+	slices.Sort(tierKeys)
 
 	tierSorted := map[int][]int{}
 	tierAngles := map[int][]float64{}
@@ -97,24 +110,18 @@ func (this *BalancedClusterService) CreateClusterVariant(
 		s := make([]int, len(idx))
 		copy(s, idx)
 		sort.SliceStable(s, func(i, j int) bool {
-			return math.Atan2(rawPos[s[i]][1]-0.5, rawPos[s[i]][0]-0.5) <
-				math.Atan2(rawPos[s[j]][1]-0.5, rawPos[s[j]][0]-0.5)
+			return math.Atan2(rawPositions[s[i]].Y-0.5, rawPositions[s[i]].X-0.5) <
+				math.Atan2(rawPositions[s[j]].Y-0.5, rawPositions[s[j]].X-0.5)
 		})
 		tierSorted[tier] = s
 		ang := make([]float64, len(s))
 		for j, ii := range s {
-			ang[j] = math.Atan2(rawPos[ii][1]-0.5, rawPos[ii][0]-0.5)
+			ang[j] = math.Atan2(rawPositions[ii].Y-0.5, rawPositions[ii].X-0.5)
 		}
 		tierAngles[tier] = ang
 	}
 
-	pairSet := map[[2]int]bool{}
-	addPair := func(a, b int) {
-		if a > b {
-			a, b = b, a
-		}
-		pairSet[[2]int{a, b}] = true
-	}
+	pairSet := misc.NewPairSet()
 
 	// Same-ring: circle-neighbors only; skip degenerate < 3 rings.
 	for _, sorted := range tierSorted {
@@ -123,7 +130,7 @@ func (this *BalancedClusterService) CreateClusterVariant(
 			continue
 		}
 		for j := 0; j < nn; j++ {
-			addPair(sorted[j], sorted[(j+1)%nn])
+			pairSet.Add(sorted[j], sorted[(j+1)%nn])
 		}
 	}
 
@@ -143,7 +150,7 @@ func (this *BalancedClusterService) CreateClusterVariant(
 				}
 			}
 			if len(innerSorted) > 0 {
-				addPair(outerSorted[oi], innerSorted[best])
+				pairSet.Add(outerSorted[oi], innerSorted[best])
 			}
 		}
 
@@ -157,60 +164,93 @@ func (this *BalancedClusterService) CreateClusterVariant(
 			}
 			for oi := 0; oi < len(outerSorted); oi++ {
 				if angDist(innerAngles[ii], outerAngles[oi]) <= bestD+epsilon {
-					addPair(innerSorted[ii], outerSorted[oi])
+					pairSet.Add(innerSorted[ii], outerSorted[oi])
 				}
 			}
 		}
 	}
 
-	count := len(orderedLetters)
-	connsByZone := make([][]string, count)
-	for _, p := range sortedPairs(pairSet) {
-		from := orderedLetters[p[0]]
-		to := orderedLetters[p[1]]
-		connName := fmt.Sprintf("TBal-%s-%s", from, to)
-		connsByZone[p[0]] = append(connsByZone[p[0]], connName)
-		connsByZone[p[1]] = append(connsByZone[p[1]], connName)
+	sortedPairs := linq.FromMap(*pairSet).SelectKeys().ToSlice()
+	sort.Slice(sortedPairs, func(i, j int) bool {
+		if sortedPairs[i][0] != sortedPairs[j][0] {
+			return sortedPairs[i][0] < sortedPairs[j][0]
+		}
+		return sortedPairs[i][1] < sortedPairs[j][1]
+	})
+	return sortedPairs
+}
 
-		fromZone := "Spawn-" + from
-		if from != playerLabel {
-			fromZone = "Neutral-" + from
+func (this *BalancedClusterService) createConnectionNames(orderedLabels []string, sortedPairs [][2]int) [][]string {
+	connectionNamesByZone := make([][]string, len(orderedLabels))
+	for _, pair := range sortedPairs {
+		labelFrom := orderedLabels[pair[0]]
+		labelTo := orderedLabels[pair[1]]
+		connectionName := fmt.Sprintf("TBal-%s-%s", labelFrom, labelTo)
+		connectionNamesByZone[pair[0]] = append(connectionNamesByZone[pair[0]], connectionName)
+		connectionNamesByZone[pair[1]] = append(connectionNamesByZone[pair[1]], connectionName)
+	}
+	return connectionNamesByZone
+}
+
+func (this *BalancedClusterService) createZones(
+	configuration config.GeneratorConfig,
+	playerLabel string,
+	playerIndex int,
+	orderedLabels []string,
+	tuning models.GenerationTuning,
+	allNeutralZonePlans models.NeutralZonePlans,
+	connectionNames [][]string) []template.Zone {
+	var zones []template.Zone
+	for index, label := range orderedLabels {
+		myConns := connectionNames[index]
+		if label == playerLabel {
+			zones = append(zones, this.CreateSpawnZone(
+				label, fmt.Sprintf("Player%d", playerIndex+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
+				configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+				configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
+		} else {
+			zones = append(zones, this.CreateNeutralZone(
+				linq.FromSlice(allNeutralZonePlans).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds,
+				configuration.GenerateRoads, tuning, false))
 		}
-		toZone := "Spawn-" + to
-		if to != playerLabel {
-			toZone = "Neutral-" + to
+	}
+	return zones
+}
+
+func (this *BalancedClusterService) createConnections(
+	playerLabel string,
+	orderedLabels []string,
+	tuning models.GenerationTuning,
+	allNeutralZonePlans models.NeutralZonePlans,
+	connectionNames [][]string,
+	sortedPairs [][2]int) []template.Connection {
+	nameLookup := make(map[int]int, len(orderedLabels))
+
+	var connections []template.Connection
+	for _, pair := range sortedPairs {
+		indexA, indexB := pair[0], pair[1]
+		labelFrom := orderedLabels[indexA]
+		labelTo := orderedLabels[indexB]
+
+		connName := connectionNames[indexA][nameLookup[indexA]]
+		nameLookup[indexA]++
+		nameLookup[indexB]++
+
+		fromZone := "Spawn-" + labelFrom
+		if labelFrom != playerLabel {
+			fromZone = "Neutral-" + labelFrom
 		}
-		*connections = append(*connections, template.Connection{
+		toZone := "Spawn-" + labelTo
+		if labelTo != playerLabel {
+			toZone = "Neutral-" + labelTo
+		}
+		connections = append(connections, template.Connection{
 			Name: connName, From: fromZone, To: toZone,
 			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue: GetBorderGuardValue(from, to, []string{playerLabel}, allNeutralZonePlans, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: fmt.Sprintf("tourney_bal_guard_%s_%s", from, to),
+			GuardValue: this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning), GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup: fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo),
 		})
 	}
-
-	clusterStart := len(*zones)
-	for i, letter := range orderedLetters {
-		myConns := connsByZone[i]
-		if letter == playerLabel {
-			*zones = append(*zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", playerIndex+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
-		} else {
-			*zones = append(*zones, buildNeutralZone(allNeutralZonePlans[letter], myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, false))
-		}
-	}
-
-	// Stamp generator positions and ring indices onto the freshly built cluster
-	// zones so the preview renderer can reproduce the tournament-balanced
-	// geometry without re-deriving it from connections.
-	for i := 0; i < len(orderedLetters); i++ {
-		p := pos[i]
-		(*zones)[clusterStart+i].GeneratorPosition = &[2]float64{p[0], p[1]}
-		r := zoneTierRank(orderedLetters[i], singlePlayerList, allNeutralZonePlans)
-		(*zones)[clusterStart+i].GeneratorRing = &r
-	}
-
-	// Ensure the cluster is fully connected (same guarantee as the standard
-	// balanced variant). Operate on the slice header of the cluster's zones.
-	clusterZones := (*zones)[clusterStart:]
-	ensureFullConnectivity(singlePlayerList, orderedLetters, pos, clusterZones, connections, tuning, allNeutralZonePlans)
-	return zones, connections
+	return connections
 }

@@ -32,8 +32,8 @@ func (this *ChainClusterService) CreateClusterVariant(
 			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
 			ToSlice()...)
 	connectionNames := make([]string, len(chainLabels)-1)
-	for i := range connectionNames {
-		connectionNames[i] = fmt.Sprintf("Tourney-%s-%s", chainLabels[i], chainLabels[i+1])
+	for index := range connectionNames {
+		connectionNames[index] = fmt.Sprintf("Tourney-%s-%s", chainLabels[index], chainLabels[index+1])
 	}
 
 	zones := this.createZones(configuration, chainLabels, connectionNames, tuning, allNeutralZonePlans, playerIndex)
@@ -48,15 +48,15 @@ func (this *ChainClusterService) createZones(
 	allNeutralZonePlans models.NeutralZonePlans,
 	playerIndex int) []template.Zone {
 	var zones []template.Zone
-	for i, label := range chainLabels {
+	for index, label := range chainLabels {
 		var myConns []string
-		if i > 0 {
-			myConns = append(myConns, connectionNames[i-1])
+		if index > 0 {
+			myConns = append(myConns, connectionNames[index-1])
 		}
-		if i < len(connectionNames) {
-			myConns = append(myConns, connectionNames[i])
+		if index < len(connectionNames) {
+			myConns = append(myConns, connectionNames[index])
 		}
-		if i == 0 {
+		if index == 0 {
 			zones = append(zones,
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
@@ -83,19 +83,21 @@ func (this *ChainClusterService) createConnections(
 	for index, name := range connectionNames {
 		labelFrom := chainLabels[index]
 		labelTo := chainLabels[index+1]
-		zoneFrom := "Spawn-" + labelFrom
-		if index > 0 {
-			zoneFrom = "Neutral-" + labelFrom
-		}
-		connections = append(connections, variant_content.NewConnectionBuilder().
+		connectionBuilder := variant_content.NewConnectionBuilder().
 			WithName(name).
-			WithFrom(zoneFrom).
-			WithTo("Neutral-"+labelTo).
+			WithTo("Neutral-" + labelTo).
 			WithConnectionTypeDirect().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
 			WithGuardWeeklyIncrement(0.15).
-			WithGuardMatchGroup(fmt.Sprintf("tourney_guard_%s_%s", labelFrom, labelTo)).
-			Build())
+			WithGuardMatchGroup(fmt.Sprintf("tourney_guard_%s_%s", labelFrom, labelTo))
+
+		if index > 0 {
+			connectionBuilder = connectionBuilder.WithFrom("Neutral-" + labelFrom)
+		} else {
+			connectionBuilder = connectionBuilder.WithFrom("Spawn-" + labelFrom)
+		}
+
+		connections = append(connections, connectionBuilder.Build())
 	}
 	return connections
 }

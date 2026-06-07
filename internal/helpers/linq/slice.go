@@ -10,7 +10,17 @@ type Iterable[T any] interface {
 }
 
 // Query is the type returned from query functions. It can be iterated manually
-// as shown in the example.
+// using Iterate property. Example:
+//
+//	for value := range linq.FromSlice(mySlice).Iterate {
+//		// use value
+//	}
+//
+//	linq.FromSlice(mySlice).Iterate(func(item T) bool {
+//		// use item
+//		return true // to continue iteration
+//		return false // to stop iteration
+//	})
 type Query[T any] struct {
 	Iterate iter.Seq[T]
 }

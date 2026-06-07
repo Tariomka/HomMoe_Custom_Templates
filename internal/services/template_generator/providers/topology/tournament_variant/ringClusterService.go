@@ -2,11 +2,12 @@ package tournament_variant
 
 import (
 	"fmt"
-	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
@@ -26,84 +27,130 @@ func (this *RingClusterService) CreateClusterVariant(
 	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
 	playerIndex int,
 	playerLabel string) ([]template.Zone, []template.Connection) {
-	var zones []template.Zone
-	var connections []template.Connection
-	sortedNeutrals := make([]neutralZonePlan, len(playerNeutralZonePlans))
-	copy(sortedNeutrals, playerNeutralZonePlans)
-	sort.SliceStable(sortedNeutrals, func(i, j int) bool {
-		si, sj := neutralZoneBalanceScore(sortedNeutrals[i]), neutralZoneBalanceScore(sortedNeutrals[j])
-		if si != sj {
-			return si < sj
-		}
-		return sortedNeutrals[i].Letter < sortedNeutrals[j].Letter
-	})
+	ringLabels := this.createLabels(playerNeutralZonePlans, playerLabel)
+	ringCount := len(ringLabels)
+	if ringCount < 2 {
+		return []template.Zone{this.createSinglePlayerZone(configuration, playerLabel, playerIndex, tuning)}, nil
+	}
 
-	n := len(sortedNeutrals)
-	orderedNeutrals := make([]neutralZonePlan, n)
-	lo, hi := 0, n-1
-	for i := range n {
-		if i%2 == 0 {
-			orderedNeutrals[lo] = sortedNeutrals[i]
-			lo++
+	connNames := make([]string, ringCount)
+	for index, label := range ringLabels {
+		nextIndex := (index + 1) % ringCount
+		connNames[index] = fmt.Sprintf("TRing-%s-%s", label, ringLabels[nextIndex])
+	}
+
+	zones := this.createZones(configuration, ringLabels, connNames, tuning, allNeutralZonePlans, playerIndex)
+	connections := this.createConnections(ringLabels, connNames, tuning, allNeutralZonePlans, playerLabel)
+	return zones, connections
+}
+
+func (this *RingClusterService) createLabels(playerNeutralZonePlans models.NeutralZonePlans, playerLabel string) []string {
+	sortedNeutralZonePlans := models.NeutralZonePlans{}
+	sortedNeutralZonePlans.AddPlans(playerNeutralZonePlans...)
+	sortedNeutralZonePlans.SortByBalanceScoreAscending()
+
+	zoneCount := len(sortedNeutralZonePlans)
+	orderedNeutralZonePlans := make(models.NeutralZonePlans, zoneCount)
+	lowIndex, highIndex := 0, zoneCount-1
+	for index, zonePlan := range sortedNeutralZonePlans {
+		if index%2 == 0 {
+			orderedNeutralZonePlans[lowIndex] = zonePlan
+			lowIndex++
 		} else {
-			orderedNeutrals[hi] = sortedNeutrals[i]
-			hi--
+			orderedNeutralZonePlans[highIndex] = zonePlan
+			highIndex--
 		}
 	}
 
-	ringLetters := []string{playerLabel}
-	for _, nz := range orderedNeutrals {
-		ringLetters = append(ringLetters, nz.Letter)
-	}
-	count := len(ringLetters)
-	if count < 2 {
-		// Lone player zone — no ring edges possible.
-		*zones = append(*zones, buildSpawnZone(playerLabel, fmt.Sprintf("Player%d", playerIndex+1), nil, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
-		return
-	}
+	return append([]string{playerLabel},
+		linq.FromSlice(orderedNeutralZonePlans).
+			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+			ToSlice()...)
+}
 
-	connNames := make([]string, count)
-	for i := range count {
-		next := (i + 1) % count
-		connNames[i] = fmt.Sprintf("TRing-%s-%s", ringLetters[i], ringLetters[next])
-	}
+func (this *RingClusterService) createZones(
+	configuration config.GeneratorConfig,
+	ringLabels, connectionNames []string,
+	tuning models.GenerationTuning,
+	allNeutralZonePlans models.NeutralZonePlans,
+	playerIndex int) []template.Zone {
+	count := len(ringLabels)
 
-	for i, letter := range ringLetters {
-		prev := (i - 1 + count) % count
+	var zones []template.Zone
+	for index, label := range ringLabels {
+		prev := (index - 1 + count) % count
 		seen := map[string]bool{}
 		var myConns []string
-		for _, name := range []string{connNames[prev], connNames[i]} {
+		for _, name := range []string{connectionNames[prev], connectionNames[index]} {
 			if !seen[name] {
 				seen[name] = true
 				myConns = append(myConns, name)
 			}
 		}
-		if i == 0 {
-			*zones = append(*zones, buildSpawnZone(letter, fmt.Sprintf("Player%d", playerIndex+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
+		if index == 0 {
+			zones = append(zones, this.CreateSpawnZone(
+				label, fmt.Sprintf("Player%d", playerIndex+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
+				configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+				configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
 		} else {
-			*zones = append(*zones, buildNeutralZone(allNeutralZonePlans[letter], myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, false))
+			zones = append(zones, this.CreateNeutralZone(
+				linq.FromSlice(allNeutralZonePlans).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, configuration.SpawnRemoteFootholds,
+				configuration.GenerateRoads, tuning, false))
 		}
 	}
+	return zones
+}
 
-	for i := range count {
-		next := (i + 1) % count
-		from := ringLetters[i]
-		to := ringLetters[next]
-		fromZone := "Spawn-" + from
-		if i != 0 {
-			fromZone = "Neutral-" + from
+func (this *RingClusterService) createSinglePlayerZone(
+	configuration config.GeneratorConfig,
+	playerLabel string,
+	playerIndex int,
+	tuning models.GenerationTuning) template.Zone {
+	return this.CreateSpawnZone(
+		playerLabel, fmt.Sprintf("Player%d", playerIndex+1), nil, configuration.ZoneConfiguration.PlayerZoneCastles,
+		configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+		configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning)
+}
+
+func (this *RingClusterService) createConnections(
+	ringLabels, connectionNames []string,
+	tuning models.GenerationTuning,
+	allNeutralZonePlans models.NeutralZonePlans,
+	playerLabel string) []template.Connection {
+	ringCount := len(ringLabels)
+
+	var connections []template.Connection
+	for currentIndex := range ringCount {
+		nextIndex := (currentIndex + 1) % ringCount
+		labelFrom := ringLabels[currentIndex]
+		labelTo := ringLabels[nextIndex]
+
+		connectionBuilder := variant_content.NewConnectionBuilder().
+			WithName(connectionNames[currentIndex]).
+			WithConnectionTypeDirect().
+			WithSimTurnSquad().
+			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
+			WithGuardWeeklyIncrement(0.15).
+			WithGuardMatchGroup(fmt.Sprintf("tourney_ring_guard_%s_%s", labelFrom, labelTo))
+
+		if currentIndex != 0 {
+			zoneFrom := "Neutral-" + labelFrom
+			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
+		} else {
+			zoneFrom := "Spawn-" + labelFrom
+			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
 		}
-		toZone := "Spawn-" + to
-		if next != 0 {
-			toZone = "Neutral-" + to
+
+		if nextIndex != 0 {
+			zoneTo := "Neutral-" + labelTo
+			connectionBuilder.WithTo(zoneTo)
+		} else {
+			zoneTo := "Spawn-" + labelTo
+			connectionBuilder.WithTo(zoneTo)
 		}
-		*connections = append(*connections, template.Connection{
-			Name: connNames[i], From: fromZone, To: toZone,
-			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue: GetBorderGuardValue(from, to, []string{playerLabel}, allNeutralZonePlans, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: fmt.Sprintf("tourney_ring_guard_%s_%s", from, to),
-		})
+
+		connections = append(connections, connectionBuilder.Build())
 	}
-
-	return zones, connections
+	return connections
 }

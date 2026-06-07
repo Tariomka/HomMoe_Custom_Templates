@@ -107,37 +107,22 @@ func (this *Positions) CreateDelaunayTriangulation() [][2]int {
 	if count == 2 {
 		return [][2]int{{0, 1}}
 	}
-	minX, minY := (*this)[0].X, (*this)[0].Y
-	maxX, maxY := minX, minY
-	for _, p := range (*this)[1:] {
-		if p.X < minX {
-			minX = p.X
-		}
-		if p.Y < minY {
-			minY = p.Y
-		}
-		if p.X > maxX {
-			maxX = p.X
-		}
-		if p.Y > maxY {
-			maxY = p.Y
-		}
-	}
-	dx, dy := maxX-minX, maxY-minY
-	delta := math.Max(dx, dy) * 10
+	min, max := this.GetMinAndMaxPositions()
+	deltaX, deltaY := max.X-min.X, max.Y-min.Y
+	delta := math.Max(deltaX, deltaY) * 10
 	superPts := make([][2]float64, count+3)
 	for i, p := range *this {
 		superPts[i] = [2]float64{p.X, p.Y}
 	}
-	superPts[count] = [2]float64{minX - delta, minY - delta*3}
-	superPts[count+1] = [2]float64{minX + delta*3, minY - delta}
-	superPts[count+2] = [2]float64{minX, minY + delta*3}
+	superPts[count] = [2]float64{min.X - delta, min.Y - delta*3}
+	superPts[count+1] = [2]float64{min.X + delta*3, min.Y - delta}
+	superPts[count+2] = [2]float64{min.X, min.Y + delta*3}
 
 	type tri struct{ i0, i1, i2 int }
 	triangles := []tri{{count, count + 1, count + 2}}
 
-	for p := 0; p < count; p++ {
-		px, py := superPts[p][0], superPts[p][1]
+	for index := range *this {
+		px, py := superPts[index][0], superPts[index][1]
 		var bad []tri
 		for _, t := range triangles {
 			if inCircumscribedCircle(superPts, t.i0, t.i1, t.i2, px, py) {
@@ -177,7 +162,7 @@ func (this *Positions) CreateDelaunayTriangulation() [][2]int {
 			}
 		}
 		for _, e := range boundary {
-			newTris = append(newTris, tri{e.a, e.b, p})
+			newTris = append(newTris, tri{e.a, e.b, index})
 		}
 		triangles = newTris
 	}
@@ -205,7 +190,26 @@ func (this *Positions) CreateDelaunayTriangulation() [][2]int {
 		result = append(result, e)
 	}
 	return result
+}
 
+func (this *Positions) GetMinAndMaxPositions() (min, max Vector2) {
+	min = (*this)[0]
+	max = (*this)[0]
+	for _, position := range (*this)[1:] {
+		if position.X < min.X {
+			min.X = position.X
+		}
+		if position.Y < min.Y {
+			min.Y = position.Y
+		}
+		if position.X > max.X {
+			max.X = position.X
+		}
+		if position.Y > max.Y {
+			max.Y = position.Y
+		}
+	}
+	return
 }
 
 // inCircumscribedCircle reports whether (px,py) lies strictly inside the

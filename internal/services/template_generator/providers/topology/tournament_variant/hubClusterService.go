@@ -83,41 +83,48 @@ func (this *HubClusterService) createConnections(
 	hubName, playerLabel string) []template.Connection {
 	var connections []template.Connection
 	for index, spokeLabel := range spokeLabels {
-		spokeZone := "Spawn-" + spokeLabel
-		if index != 0 {
-			spokeZone = "Neutral-" + spokeLabel
-		}
-		connections = append(connections, variant_content.NewConnectionBuilder().
+		connectionBuilder := variant_content.NewConnectionBuilder().
 			WithName(spokeConnNames[index]).
 			WithFrom(hubName).
-			WithTo(spokeZone).
 			WithConnectionTypeDirect().
 			WithGuardZone(hubName).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(playerLabel, spokeLabel, []string{playerLabel}, allNeutralZonePlans, tuning)).
 			WithGuardWeeklyIncrement(0.15).
-			WithGuardMatchGroup(fmt.Sprintf("tourney_hub_guard_%s_%s", playerLabel, spokeLabel)).
-			Build())
+			WithGuardMatchGroup(fmt.Sprintf("tourney_hub_guard_%s_%s", playerLabel, spokeLabel))
+
+		if index != 0 {
+			spokeZone := "Neutral-" + spokeLabel
+			connectionBuilder = connectionBuilder.WithTo(spokeZone).WithGuardZone(spokeZone)
+		} else {
+			spokeZone := "Spawn-" + spokeLabel
+			connectionBuilder = connectionBuilder.WithTo(spokeZone).WithGuardZone(hubName)
+		}
+
+		connections = append(connections, connectionBuilder.Build())
 	}
 
 	// Proximity ring around spokes so the engine arranges them sensibly.
 	for currentIndex, label := range spokeLabels {
 		nextIndex := (currentIndex + 1) % len(spokeLabels)
 		labelTo := spokeLabels[nextIndex]
-		zoneFrom := "Spawn-" + label
+		connectionBuilder := variant_content.NewConnectionBuilder().
+			WithName(fmt.Sprintf("THubRing-%s-%s-%s", playerLabel, label, labelTo)).
+			WithConnectionTypeProximity()
+
 		if currentIndex != 0 {
-			zoneFrom = "Neutral-" + label
+			connectionBuilder = connectionBuilder.WithFrom("Neutral-" + label)
+		} else {
+			connectionBuilder = connectionBuilder.WithFrom("Spawn-" + label)
 		}
-		zoneTo := "Spawn-" + labelTo
+
 		if nextIndex != 0 {
-			zoneTo = "Neutral-" + labelTo
+			connectionBuilder = connectionBuilder.WithTo("Neutral-" + labelTo)
+		} else {
+			connectionBuilder = connectionBuilder.WithTo("Spawn-" + labelTo)
 		}
-		connections = append(connections, variant_content.NewConnectionBuilder().
-			WithName(fmt.Sprintf("TPseudo-%s-%s-%s", playerLabel, label, labelTo)).
-			WithFrom(zoneFrom).
-			WithTo(zoneTo).
-			WithConnectionTypeProximity().
-			Build())
+
+		connections = append(connections, connectionBuilder.Build())
 	}
 	return connections
 }
