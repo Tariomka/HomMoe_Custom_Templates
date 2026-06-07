@@ -85,14 +85,7 @@ func (this *BalancedClusterService) createSortedPairs(
 	orderedLabels []string,
 	rawPositions models.Positions,
 	allNeutralZonePlans models.NeutralZonePlans) [][2]int {
-	// Build connections from pure ring structure (a040c98).
-	angDist := func(a, b float64) float64 {
-		d := math.Mod(math.Abs(a-b), 2*math.Pi)
-		if d > math.Pi {
-			d = 2*math.Pi - d
-		}
-		return d
-	}
+
 	tierIndices := map[int][]int{}
 	for index, label := range orderedLabels {
 		tier := allNeutralZonePlans.GetTier(label)
@@ -129,42 +122,42 @@ func (this *BalancedClusterService) createSortedPairs(
 		if nn < 3 {
 			continue
 		}
-		for j := 0; j < nn; j++ {
+		for j := range nn {
 			pairSet.Add(sorted[j], sorted[(j+1)%nn])
 		}
 	}
 
 	// Cross-ring: bidirectional nearest-neighbor between adjacent tiers.
-	for ti := 0; ti+1 < len(tierKeys); ti++ {
-		outerSorted := tierSorted[tierKeys[ti]]
-		innerSorted := tierSorted[tierKeys[ti+1]]
-		outerAngles := tierAngles[tierKeys[ti]]
-		innerAngles := tierAngles[tierKeys[ti+1]]
+	for tierIndex := range tierKeys[:len(tierKeys)-1] {
+		outerSorted := tierSorted[tierKeys[tierIndex]]
+		innerSorted := tierSorted[tierKeys[tierIndex+1]]
+		outerAngles := tierAngles[tierKeys[tierIndex]]
+		innerAngles := tierAngles[tierKeys[tierIndex+1]]
 
-		for oi := 0; oi < len(outerSorted); oi++ {
+		for outerIndex := range outerSorted {
 			best, bestD := 0, math.MaxFloat64
-			for ii := 0; ii < len(innerSorted); ii++ {
-				if d := angDist(outerAngles[oi], innerAngles[ii]); d < bestD {
-					bestD = d
-					best = ii
+			for innerIndex := range innerSorted {
+				if distance := misc.GetShortestAngleDistance(outerAngles[outerIndex], innerAngles[innerIndex]); distance < bestD {
+					bestD = distance
+					best = innerIndex
 				}
 			}
 			if len(innerSorted) > 0 {
-				pairSet.Add(outerSorted[oi], innerSorted[best])
+				pairSet.Add(outerSorted[outerIndex], innerSorted[best])
 			}
 		}
 
 		const epsilon = 1e-9
-		for ii := 0; ii < len(innerSorted); ii++ {
-			bestD := math.MaxFloat64
-			for oi := 0; oi < len(outerSorted); oi++ {
-				if d := angDist(innerAngles[ii], outerAngles[oi]); d < bestD {
-					bestD = d
+		for innerIndex := range innerSorted {
+			bestDistance := math.MaxFloat64
+			for outerIndex := range outerSorted {
+				if distance := misc.GetShortestAngleDistance(innerAngles[innerIndex], outerAngles[outerIndex]); distance < bestDistance {
+					bestDistance = distance
 				}
 			}
-			for oi := 0; oi < len(outerSorted); oi++ {
-				if angDist(innerAngles[ii], outerAngles[oi]) <= bestD+epsilon {
-					pairSet.Add(innerSorted[ii], outerSorted[oi])
+			for outerIndex := range outerSorted {
+				if misc.GetShortestAngleDistance(innerAngles[innerIndex], outerAngles[outerIndex]) <= bestDistance+epsilon {
+					pairSet.Add(innerSorted[innerIndex], outerSorted[outerIndex])
 				}
 			}
 		}
