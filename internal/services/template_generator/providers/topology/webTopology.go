@@ -70,9 +70,11 @@ func (this *SharedWebTopologyService) createSpokes(
 		neutralSpokes[neutralLabel] = append(neutralSpokes[neutralLabel], connectionName)
 	}
 
+	playerSpokes = make(map[string][]string, playerCount)
 	for _, label := range playerLabels {
 		playerSpokes[label] = nil
 	}
+	neutralSpokes = make(map[string][]string, neutralCount)
 	for _, label := range neutralLabels {
 		neutralSpokes[label] = nil
 	}
