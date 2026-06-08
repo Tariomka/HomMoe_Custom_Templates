@@ -10,6 +10,7 @@ require (
 
 require (
 	gioui.org/shader v1.0.8 // indirect
+	github.com/brianvoe/gofakeit/v7 v7.15.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-text/typesetting v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

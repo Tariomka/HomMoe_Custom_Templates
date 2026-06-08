@@ -32,11 +32,11 @@ func (this *ZoneAdjacency) GetDistancesFrom(startLabel string) map[string]int {
 type ZoneIndexAdjacency map[int]map[int]bool
 
 func NewZoneIndexAdjacency(size int) *ZoneIndexAdjacency {
-	adjacency := make(ZoneIndexAdjacency, size)
-	for i := range adjacency {
+	adjacency := make(map[int]map[int]bool, size)
+	for i := range size {
 		adjacency[i] = make(map[int]bool)
 	}
-	return &adjacency
+	return (*ZoneIndexAdjacency)(&adjacency)
 }
 
 func (this *ZoneIndexAdjacency) Link(inputZoneIndex, outputZoneIndex int) {
