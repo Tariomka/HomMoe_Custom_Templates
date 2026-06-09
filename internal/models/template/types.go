@@ -1,17 +1,17 @@
 package template
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/common"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/game_rules"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/inner/zone_layout"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/game_rules"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/variant"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/zone_layout"
 )
 
 // Re-exported aliases so external callers can keep using template.Border, template.Variant, etc.
 type (
-	ValueOverride = inner.ValueOverride
+	ValueOverride = template_inner.ValueOverride
 
 	PlacementRule = common.PlacementRule
 
@@ -29,17 +29,17 @@ type (
 	GlobalBans    = game_rules.GlobalBans
 	WinConditions = game_rules.WinConditions
 
-	Border                 = zone.Border
-	Connection             = zone.Connection
-	EncounterHolesSettings = zone.EncounterHolesSettings
-	MainObject             = zone.MainObject
-	Noise                  = zone.Noise
-	Orientation            = zone.Orientation
-	Road                   = zone.Road
-	StringList             = zone.StringList
-	TypedRef               = zone.TypedRef
-	Variant                = zone.Variant
-	Zone                   = zone.Zone
+	Border                 = variant.Border
+	Connection             = variant.Connection
+	EncounterHolesSettings = variant.EncounterHolesSettings
+	MainObject             = variant.MainObject
+	Noise                  = variant.Noise
+	Orientation            = variant.Orientation
+	Road                   = variant.Road
+	StringList             = variant.StringList
+	TypedRef               = variant.TypedRef
+	Variant                = variant.Variant
+	Zone                   = variant.Zone
 
 	AmbientPickupDistribution         = zone_layout.AmbientPickupDistribution
 	ElevationMode                     = zone_layout.ElevationMode

@@ -19,11 +19,11 @@ jobs:
         include:
           - goos: windows
             goarch: amd64
-            binary: HeroesOldenEra_CustomTemplates.exe
+            binary: HeroesOldenEra_CustomTemplates_win_x64.exe
             cgo: '0'
           - goos: linux
             goarch: amd64
-            binary: HeroesOldenEra_CustomTemplates
+            binary: HeroesOldenEra_CustomTemplates_linux_x64
             cgo: '1'
 
     steps:

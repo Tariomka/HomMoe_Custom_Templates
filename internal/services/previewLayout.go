@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
@@ -59,7 +59,7 @@ func canvasScale(side float64) float64 { return side / csCanvasSide }
 // GeneratorRing stamps; Random scatters zones using the GeneratorPosition
 // stamps with hard-floor and edge-clearance correction passes; all other
 // topologies fall back to the classic ring / hub-and-spoke renderer.
-func BuildPreviewLayout(template *template.RmgTemplateModel, topology generator.MapTopology, side float64) PreviewLayout {
+func BuildPreviewLayout(template *template.RmgTemplateModel, topology config.MapTopology, side float64) PreviewLayout {
 	layout := PreviewLayout{Positions: map[string]image.Point{}}
 	if template == nil || len(template.Variants) == 0 {
 		return layout
@@ -81,9 +81,9 @@ func BuildPreviewLayout(template *template.RmgTemplateModel, topology generator.
 	// Dispatch to the topology-specific layout. Each path writes positions
 	// into `layout.Positions` and sets `layout.ZoneRadius`.
 	switch {
-	case (topology == generator.TopologyBalanced) && allHaveRing(zones):
+	case (topology == config.TopologyBalanced) && allHaveRing(zones):
 		layoutBalancedRings(&layout, zones, side)
-	case (topology == generator.TopologyRandom || topology == generator.TopologyBalanced) && allHavePosition(zones):
+	case (topology == config.TopologyRandom || topology == config.TopologyBalanced) && allHavePosition(zones):
 		layoutScatter(&layout, zones, connections, side)
 	default:
 		layoutRingOrHub(&layout, zones, connections, side)

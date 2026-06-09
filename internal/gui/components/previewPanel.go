@@ -133,7 +133,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 			return widgets.NewCenteredMessageWidget(theme, "Press \"Generate Template\" to see the map layout.", canvasSize, outerSize)(gtx)
 		}
 
-		previewLayout := services.BuildPreviewLayout(template, this.state.GetSettingsFile().Topology, float64(side))
+		previewLayout := services.BuildPreviewLayout(template, this.state.GetStateData().Topology, float64(side))
 		if len(previewLayout.Positions) == 0 {
 			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerSize)(gtx)
 		}
@@ -204,7 +204,7 @@ func (this *PreviewPanel) savePreviewPNG() {
 		this.pngStatusOK = false
 		return
 	}
-	out, err := services.WritePreviewPNG(dir, template, this.state.GetSettingsFile().Topology, 700)
+	out, err := services.WritePreviewPNG(dir, template, this.state.GetStateData().Topology, 700)
 	if err != nil {
 		this.pngStatus = "Save failed: " + err.Error()
 		this.pngStatusOK = false

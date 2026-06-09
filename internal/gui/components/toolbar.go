@@ -94,6 +94,6 @@ func (this *Toolbar) HandleClicks(gtx layout.Context) {
 		this.state.Save()
 	}
 	if this.buttonSaveAs.Clicked(gtx) {
-		this.state.SaveAs(this.state.GetSettingsFile().TemplateName)
+		this.state.SaveAs(this.state.GetStateData().TemplateName)
 	}
 }

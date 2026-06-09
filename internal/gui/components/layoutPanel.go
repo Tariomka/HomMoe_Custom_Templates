@@ -13,7 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 type LayoutPanel struct {
@@ -89,7 +89,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			widgets.NewLabeledRowWidget(theme, "Player zone size", 200, widgets.NewLabeledSliderWidget(theme, &this.sldPlayerZoneSize, fmt.Sprintf("× %.2f", 0.5+float64(this.sldPlayerZoneSize.Value)*1.5))),
 			widgets.NewLabeledRowWidget(theme, "Neutral zone size", 200, widgets.NewLabeledSliderWidget(theme, &this.sldNeutralZoneSize, fmt.Sprintf("× %.2f", 0.5+float64(this.sldNeutralZoneSize.Value)*1.5))),
 			func(gtx layout.Context) layout.Dimensions {
-				if this.state.GetSettingsFile().Topology != generator.TopologyHubAndSpoke {
+				if this.state.GetStateData().Topology != config.TopologyHubAndSpoke {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -131,7 +131,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 }
 
 func (this *LayoutPanel) LoadFromState() {
-	settings := this.state.GetSettingsFile()
+	settings := this.state.GetStateData()
 
 	this.topology.SelectByName(constants.GetTopologyDescriptor(settings.Topology).Label)
 
@@ -158,15 +158,15 @@ func (this *LayoutPanel) LoadFromState() {
 	this.sldPlayerZoneSize.Value = float32((settings.PlayerZoneSize - 0.5) / 1.5)
 	this.sldNeutralZoneSize.Value = float32((settings.NeutralZoneSize - 0.5) / 1.5)
 	this.sldGuardRandom.Value = utils.Normalize(float32(settings.GuardRandomization), 0, 0.5)
-	this.sldResourceDensity.Value = utils.Normalize(float32(settings.EffectiveResourceDensity()), 25, 200)
-	this.sldStructureDensity.Value = utils.Normalize(float32(settings.EffectiveStructureDensity()), 25, 200)
+	this.sldResourceDensity.Value = utils.Normalize(float32(settings.ResourceDensityPercent), 25, 200)
+	this.sldStructureDensity.Value = utils.Normalize(float32(settings.StructureDensityPercent), 25, 200)
 	this.sldNeutralStack.Value = utils.Normalize(float32(settings.NeutralStackStrengthPercent), 25, 200)
 	this.sldBorderGuard.Value = utils.Normalize(float32(settings.BorderGuardStrengthPercent), 25, 200)
 }
 
 func (this *LayoutPanel) SaveToState() {
 	// TODO: check `.Update(gtx)` and on true update the value
-	this.state.UpdateState(func(settings *models.SettingsFile) {
+	this.state.UpdateState(func(settings *models.EditorStateModel) {
 		settings.Topology = this.getCurrentTopology().Type
 
 		settings.GenerateRoads = this.chkRoads.Value
@@ -192,10 +192,8 @@ func (this *LayoutPanel) SaveToState() {
 		settings.PlayerZoneSize = float64(0.5 + this.sldPlayerZoneSize.Value*1.5)
 		settings.NeutralZoneSize = float64(0.5 + this.sldNeutralZoneSize.Value*1.5)
 		settings.GuardRandomization = float64(utils.Denormalize(this.sldGuardRandom.Value, 0, 0.5))
-		rd := utils.RoundedRange(this.sldResourceDensity.Value, 25, 200)
-		settings.ResourceDensityPercent = &rd
-		sd := utils.RoundedRange(this.sldStructureDensity.Value, 25, 200)
-		settings.StructureDensityPercent = &sd
+		settings.ResourceDensityPercent = utils.RoundedRange(this.sldResourceDensity.Value, 25, 200)
+		settings.StructureDensityPercent = utils.RoundedRange(this.sldStructureDensity.Value, 25, 200)
 		settings.NeutralStackStrengthPercent = utils.RoundedRange(this.sldNeutralStack.Value, 25, 200)
 		settings.BorderGuardStrengthPercent = utils.RoundedRange(this.sldBorderGuard.Value, 25, 200)
 	})
