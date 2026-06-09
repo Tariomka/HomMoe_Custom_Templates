@@ -83,7 +83,7 @@
 				"includeLists": 	[ "content_list_building_common_guarded_resource_bank_fix" ]
 			}
 		],
-		"bans": [ { "sid" : "dragon_utopia"},{ "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" }, {"sid": "monty_hall"} ]
+		"bans": [ { "sid" : "dragon_utopia"},{ "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" } ]
 	},
 
 	{

@@ -40,7 +40,7 @@
 		"content": 			[ { "sid" : "fort", "weight": 200 }, { "sid" : "orb_observatory", "weight": 200 }, { "sid" : "college_of_wonder", "weight": 100 } ]
 	},
 	
-	{ 	"weight": 30000,
+	{ 	"weight": 12500,
 		"includeLists": 	[ "content_list_building_random_hires" ],
 		"content": 			[ { "sid" : "random_hire_1", "weight": 75 }, { "sid" : "random_hire_2", "weight": 100 }, { "sid" : "random_hire_3", "weight": 125 }, { "sid" : "random_hire_4", "weight": 150 }, { "sid" : "random_hire_5", "weight": 100 }, { "sid" : "random_hire_6", "weight": 75 }, { "sid" : "random_hire_7", "weight": 50 } ]
 	},
@@ -99,7 +99,7 @@
             "includeLists": 	[ "content_list_building_common_guarded_resource_bank_fix" ]
         }
     ],
-    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" }, {"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3}  ]
+    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" }  ]
     },
   	{
         "name": "content_pool_template_expanse_guarded_connector_zone",
@@ -209,9 +209,7 @@
 			{ 	"weight": 5000,
 				"includeLists": 	[ "content_list_building_common_guarded_resource_bank_fix" ]
 			}
-		],
-		"bans": [{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3} ]
-	},
+		]	},
 	{	"name": "content_pool_template_expanse_guarded_treasure_zone",
 
 	"valueDistribution": { "priceBounds": [ 6999, 12999, 19999 ], "weights": [ 17, 20, 21, 0 ] },
@@ -220,7 +218,7 @@
 		[
 			{ 	"weight": 60000,
 			"includeLists": 	[ "content_list_pickup_random_items" ],
-			"content": 			[ { "sid" : "random_item_common", "weight": 100 }, { "sid" : "random_item_rare", "weight": 80 }, { "sid" : "random_item_epic", "weight": 60 }, { "sid" : "random_item_legendary", "weight": 40 } ]
+			"content": 			[ { "sid" : "random_item_common", "weight": 100 }, { "sid" : "random_item_rare", "weight": 80 }, { "sid" : "random_item_epic", "weight": 60 }, { "sid" : "random_item_legendary", "weight": 0 } ]
 		},
 
 		{ 	"weight": 40000,
@@ -302,7 +300,7 @@
 			"includeLists": 	[ "content_list_building_uncommon_guarded_units_banks_equal" ]
 		}
 		],
-		"bans": [{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3}, {"sid": "random_item_legendary"}]
+		"bans": []
 	},
 	{
 		"name": "content_pool_template_expanse_unguarded_treasure_zone",

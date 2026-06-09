@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 )
@@ -71,20 +72,15 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 func (this *MandatoryContentProvider) createContentItemFrom(
 	row models.ZoneContentRowSave) template.MandatoryContentItem {
 	item := template.MandatoryContentItem{
-		IsGuarded: row.IsGuarded,
-		IsMine:    row.IsMine,
+		IsMine: row.IsMine,
 	}
 	if row.IsGroup {
 		item.IncludeLists = []string{row.Sid}
 	} else {
 		item.SID = row.Sid
 	}
-	if row.NearCastle {
-		item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildNearCastleRule(1))
-	}
-	if distance, ok := placement_rule.TryGetDistanceFrom(row.RoadDistance); ok {
-		item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildRoadRule(distance, 1))
-	}
+	rules := content_rules.RestoreRulesFromRow(row, models.SidMapping{Sid: row.Sid})
+	content_rules.ApplyRulesToItem(&item, rules)
 	return item
 }
 

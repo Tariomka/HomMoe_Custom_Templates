@@ -9,7 +9,7 @@
 
 		"groups":
 		[
-			{ 	"weight": 125000,
+			{ 	"weight": 150000,
 				"includeLists": 	[ "basic_content_list_pickup_random_items" ],
 				"content": 			[ { "sid" : "random_item_common", "weight": 50 }, { "sid" : "random_item_rare", "weight": 150 }, { "sid" : "random_item_epic", "weight": 75 }, { "sid" : "random_item_legendary", "weight": 75 } ]
 			},
@@ -34,7 +34,7 @@
 				"includeLists": 	[ "basic_content_list_pickup_scroll_box" ]
 			},
 
-			{ 	"weight": 250000,
+			{ 	"weight": 400000,
 				"includeLists":		[ "template_pool_jebus_cross_guarded_start_zone_pandora_box" ]
 			},
 			{ 	"weight": 0,
@@ -80,9 +80,9 @@
 				"content": 			[ { "sid" : "tree_of_abundance", "weight": 50 } ]
 			},
 
-			{ 	"weight": 60000,
+			{ 	"weight": 80000,
 				"includeLists": 	[ "basic_content_list_building_random_hires" ],
-				"content": 			[ { "sid" : "random_hire_1", "weight": 100 }, { "sid" : "random_hire_2", "weight": 150 }, { "sid" : "random_hire_3", "weight": 200 }, { "sid" : "random_hire_4", "weight": 250 }, { "sid" : "random_hire_5", "weight": 225 }, { "sid" : "random_hire_6", "weight": 200 }, { "sid" : "random_hire_7", "weight": 175 } ]
+				"content": 			[ { "sid" : "random_hire_1", "weight": 100 }, { "sid" : "random_hire_2", "weight": 125 }, { "sid" : "random_hire_3", "weight": 150 }, { "sid" : "random_hire_4", "weight": 175 }, { "sid" : "random_hire_5", "weight": 200 }, { "sid" : "random_hire_6", "weight": 225 }, { "sid" : "random_hire_7", "weight": 250 } ]
 			},
 
 			{ 	"weight": 20000,
@@ -98,7 +98,7 @@
 				"includeLists": 	[ "template_pool_jebus_cross_guarded_resource_banks_tier_3_pro" ]
 			},
 
-			{ 	"weight": 225000,
+			{ 	"weight": 300000,
 				"includeLists": 	[ "basic_content_list_building_guarded_units_banks_no_biome_restriction" ],
 				"content": 			[ { "sid" : "point_of_balance", "weight": 30 } ]			
 			}
@@ -147,9 +147,9 @@
 				"includeLists": 	[ "basic_content_list_building_resource_banks_tier_1" ]
 			},
 
-			{ 	"weight": 37500,
+			{ 	"weight": 42500,
 				"includeLists": 	[ "basic_content_list_building_random_hires" ],
-				"content": 			[ { "sid" : "random_hire_1", "weight": 150 }, { "sid" : "random_hire_2", "weight": 150 }, { "sid" : "random_hire_3", "weight": 150 }, { "sid" : "random_hire_4", "weight": 150 }, { "sid" : "random_hire_5", "weight": 100 }, { "sid" : "random_hire_6", "weight": 75 }, { "sid" : "random_hire_7", "weight": 50 } ]
+				"content": 			[ { "sid" : "random_hire_1", "weight": 100 }, { "sid" : "random_hire_2", "weight": 125 }, { "sid" : "random_hire_3", "weight": 150 }, { "sid" : "random_hire_4", "weight": 175 }, { "sid" : "random_hire_5", "weight": 200 }, { "sid" : "random_hire_6", "weight": 225 }, { "sid" : "random_hire_7", "weight": 250 } ]
 			},
 
 			{ 	"weight": 20000,
@@ -162,7 +162,7 @@
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_3" ]
 			},
 
-			{ 	"weight": 75000,
+			{ 	"weight": 80000,
 				"includeLists": 	[ "basic_content_list_building_guarded_units_banks_no_biome_restriction" ],
 				"content": 			[ { "sid" : "point_of_balance", "weight": 30 } ]			
 			}
@@ -184,7 +184,7 @@
 		[
 			{ 	"weight": 150000,
 				"includeLists": 	[ "basic_content_list_pickup_random_items" ],
-				"content": 			[ { "sid" : "random_item_common", "weight": 50 }, { "sid" : "random_item_rare", "weight": 150 }, { "sid" : "random_item_epic", "weight": 75 }, { "sid" : "random_item_legendary", "weight": 75 } ]
+				"content": 			[ { "sid" : "random_item_common", "weight": 25 }, { "sid" : "random_item_rare", "weight": 50 }, { "sid" : "random_item_epic", "weight": 75 }, { "sid" : "random_item_legendary", "weight": 100 } ]
 			},
 
 			{ 	"weight": 5000,
@@ -207,8 +207,8 @@
 				"includeLists": 	[ "basic_content_list_pickup_scroll_box" ]
 			},
 
-			{ 	"weight": 200000,
-				"includeLists":		[ "template_pool_jebus_cross_guarded_start_zone_pandora_box" ]
+			{ 	"weight": 300000,
+				"includeLists":		[ "template_pool_jebus_cross_guarded_side_zone_pandora_box" ]
 			},
 			{ 	"weight": 0,
 				"includeLists":		[ "basic_content_list_pickup_pandora_box" ]
@@ -224,25 +224,25 @@
 			{ 	"weight": 50000,
 				"includeLists": 	[ "basic_content_list_building_hero_exp_tier_1", "basic_content_list_building_hero_exp_tier_2" ]
 			},
-			{ 	"weight": 75000,
+			{ 	"weight": 60000,
 				"includeLists": 	[ "basic_content_list_building_magic_tier_1" ]
 			},
-			{ 	"weight": 50000,
+			{ 	"weight": 40000,
 				"includeLists": 	[ "basic_content_list_building_magic_tier_2" ]
 			},
-			{ 	"weight": 80000,
+			{ 	"weight": 50000,
 				"includeLists": 	[ "basic_content_list_building_hero_stats_and_skills_tier_1" ]
 			},
-			{ 	"weight": 45000,
+			{ 	"weight": 30000,
 				"includeLists": 	[ "basic_content_list_building_hero_stats_and_skills_tier_2" ]
 			},
-			{ 	"weight": 15000,
+			{ 	"weight": 10000,
 				"includeLists": 	[ "basic_content_list_building_hero_stats_and_skills_tier_3" ]
 			},
-			{ 	"weight": 20000,
+			{ 	"weight": 10000,
 				"includeLists": 	[ "basic_content_list_building_resource_banks_tier_1" ]
 			},
-			{ 	"weight": 20000,
+			{ 	"weight": 10000,
 				"includeLists": 	[ "basic_content_list_building_resource_banks_tier_2" ]
 			},
 			{ 	"weight": 40000,
@@ -255,19 +255,19 @@
 
 			{ 	"weight": 50000,
 				"includeLists": 	[ "basic_content_list_building_random_hires" ],
-				"content": 			[ { "sid" : "random_hire_1", "weight": 100 }, { "sid" : "random_hire_2", "weight": 150 }, { "sid" : "random_hire_3", "weight": 200 }, { "sid" : "random_hire_4", "weight": 250 }, { "sid" : "random_hire_5", "weight": 225 }, { "sid" : "random_hire_6", "weight": 200 }, { "sid" : "random_hire_7", "weight": 175 } ]
+				"content": 			[ { "sid" : "random_hire_1", "weight": 100 }, { "sid" : "random_hire_2", "weight": 125 }, { "sid" : "random_hire_3", "weight": 150 }, { "sid" : "random_hire_4", "weight": 175 }, { "sid" : "random_hire_5", "weight": 200 }, { "sid" : "random_hire_6", "weight": 225 }, { "sid" : "random_hire_7", "weight": 250 } ]
 			},
 
-			{ 	"weight": 20000,
+			{ 	"weight": 0,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_1" ]
 			},
-			{ 	"weight": 40000,
+			{ 	"weight": 20000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2" ]
 			},
-			{ 	"weight": 80000,
+			{ 	"weight": 40000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_3" ]
 			},
-			{ 	"weight": 20000,
+			{ 	"weight": 40000,
 				"includeLists": 	[ "template_pool_jebus_cross_guarded_resource_banks_tier_3_pro" ]
 			},
 
@@ -322,7 +322,7 @@
 
 			{ 	"weight": 50000,
 				"includeLists": 	[ "basic_content_list_building_random_hires" ],
-				"content": 			[ { "sid" : "random_hire_1", "weight": 150 }, { "sid" : "random_hire_2", "weight": 150 }, { "sid" : "random_hire_3", "weight": 150 }, { "sid" : "random_hire_4", "weight": 150 }, { "sid" : "random_hire_5", "weight": 100 }, { "sid" : "random_hire_6", "weight": 75 }, { "sid" : "random_hire_7", "weight": 50 } ]
+				"content": 			[ { "sid" : "random_hire_1", "weight": 100 }, { "sid" : "random_hire_2", "weight": 125 }, { "sid" : "random_hire_3", "weight": 150 }, { "sid" : "random_hire_4", "weight": 175 }, { "sid" : "random_hire_5", "weight": 200 }, { "sid" : "random_hire_6", "weight": 225 }, { "sid" : "random_hire_7", "weight": 250 } ]
 			},
 
 			{ 	"weight": 20000,
@@ -360,7 +360,7 @@
 				"content": 			[ { "sid" : "random_item_common", "weight": 0 }, { "sid" : "random_item_rare", "weight": 50 }, { "sid" : "random_item_epic", "weight": 50 }, { "sid" : "random_item_legendary", "weight": 150 } ]
 			},
 
-			{ 	"weight": 135000,
+			{ 	"weight": 125000,
 				"includeLists": 	[ "basic_content_list_pickup_prison" ]
 			},
 

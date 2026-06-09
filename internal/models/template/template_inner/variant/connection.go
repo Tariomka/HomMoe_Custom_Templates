@@ -31,4 +31,9 @@ type Connection struct {
 	// Portal placement rules - present on connections of type "Portal".
 	PortalPlacementRulesFrom []common.PlacementRule `json:"portalPlacementRulesFrom,omitempty"`
 	PortalPlacementRulesTo   []common.PlacementRule `json:"portalPlacementRulesTo,omitempty"`
+
+	// IsUserAdded is a runtime-only flag set to true when this connection was
+	// added manually inside the zone connection editor (i.e. it was not produced
+	// by the template generator). It is never written to the .rmg.json output.
+	IsUserAdded bool `json:"-"`
 }

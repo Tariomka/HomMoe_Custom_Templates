@@ -78,8 +78,7 @@
 				"includeLists": 	[ "content_list_building_uncommon_guarded_resource_banks" ]
 			}
 		],
-		"bans": [  {"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, 
-		{"sid": "monty_hall", "variant":3} ]
+		"bans": [  ]
 	},
 
 	{
