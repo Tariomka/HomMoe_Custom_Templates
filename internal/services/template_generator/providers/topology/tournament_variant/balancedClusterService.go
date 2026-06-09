@@ -40,16 +40,15 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	connectionNames := this.createConnectionNames(orderedLabels, sortedPairs)
 	zones := this.createZones(configuration, playerLabel, playerIndex, orderedLabels, tuning, allNeutralZonePlans, connectionNames)
 
-	clusterStart := len(zones)
 	for index, label := range orderedLabels {
 		position := positions[index]
-		zones[clusterStart+index].GeneratorPosition = &[2]float64{position.X, position.Y}
+		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
 		tier := allNeutralZonePlans.GetTier(label)
-		zones[clusterStart+index].GeneratorRing = &tier
+		zones[index].GeneratorRing = &tier
 	}
 
 	connections := this.createConnections(playerLabel, orderedLabels, tuning, allNeutralZonePlans, connectionNames, sortedPairs)
-	connections = this.CreateMissingConnections(singlePlayerList, orderedLabels, positions, zones[clusterStart:], connections, tuning, allNeutralZonePlans)
+	connections = append(connections, this.CreateMissingConnections(singlePlayerList, orderedLabels, positions, zones, connections, tuning, allNeutralZonePlans)...)
 	return zones, connections
 }
 

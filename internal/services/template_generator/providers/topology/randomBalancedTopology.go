@@ -52,7 +52,7 @@ func (this *RandomBalancedTopologyService) CreateTopologyVariant(
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	conns = this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)
+	conns = append(conns, this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 

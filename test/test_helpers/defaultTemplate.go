@@ -293,7 +293,17 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 					},
 				},
 			},
-			Connections: nil,
+			Connections: []variant.Connection{{
+				Name:                 "Rnd-B-A",
+				From:                 "Spawn-B",
+				To:                   "Spawn-A",
+				ConnectionType:       "Direct",
+				SimTurnSquad:         true,
+				GuardZone:            "Spawn-B",
+				GuardValue:           30_000,
+				GuardWeeklyIncrement: 0.15,
+				GuardMatchGroup:      "rnd_guard_B_A",
+			}},
 		}},
 		ZoneLayouts: []template.ZoneLayoutDef{
 			{

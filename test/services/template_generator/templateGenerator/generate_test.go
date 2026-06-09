@@ -398,10 +398,14 @@ func TestWhenRandomPortalsDisabled_AddsNoPortalConnections(t *testing.T) {
 
 func TestWhenNoDirectPlayerConnectionsEnabled_OmitsDirectPlayerConnections(t *testing.T) {
 	// Arrange
+	playerCount := gofakeit.Number(2, 6)
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyDefault
-	configuration.PlayerCount = gofakeit.Number(2, 8)
-	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.PlayerCount = playerCount
+	// Provide at least one neutral zone between every player so the topology can
+	// actually honour the separation instead of falling back to direct links.
+	configuration.MinNeutralZonesBetweenPlayers = 1
+	configuration.ZoneConfiguration.NeutralZoneCount = playerCount + gofakeit.Number(0, 4)
 
 	configuration.NoDirectPlayerConnections = true
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
@@ -513,7 +517,7 @@ func TestWhenMatchPlayerCastleFactionsDisabled_SetsRandomFactionOnPlayerCastles(
 func TestWhenCityHoldEnabled_MarksHoldCityWinConditionObject(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyDefault
+	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(1, 6)
 	configuration.GameEndConditions = &config.GameEndConditions{
@@ -713,7 +717,7 @@ func TestWhenTournamentEnabledWithTwoPlayersAndDefaultTopology_CreatesRingGuardG
 
 func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesOneHubPerPlayer(t *testing.T) {
 	// Arrange
-	expectedHubCount := gofakeit.Number(2, 8)
+	const expectedHubCount = 2 // Tournament mode is only triggered for exactly 2 players.
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.PlayerCount = expectedHubCount
@@ -1179,6 +1183,8 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 				[]string{"Hub", "Spawn-A", "Spawn-B"},
 				[]expectedConnection{
 					{"Hub", "Spawn-B", "Direct"},
+					{"Hub", "Spawn-B", "Direct"},
+					{"Hub", "Spawn-A", "Direct"},
 					{"Hub", "Spawn-A", "Direct"},
 					{"Spawn-B", "Spawn-A", "Proximity"},
 					{"Spawn-A", "Spawn-B", "Proximity"},
