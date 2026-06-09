@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
 
 // TestSettingsToGenerator_PopulatesNewFields covers the loader paths that
@@ -48,7 +49,8 @@ func TestRowsToMandatoryContent_RoadDistanceRule(t *testing.T) {
 	rows := []models.ZoneContentRowSave{
 		{Sid: "watchtower", Count: 1, RoadDistance: "Near"},
 	}
-	items := services.RowsToMandatoryContent(rows)
+	contentProvider := providers.NewMandatoryContentProvider()
+	items := contentProvider.CreateContentItemsFrom(rows)
 	if len(items) != 1 {
 		t.Fatalf("items = %d, want 1", len(items))
 	}
@@ -63,7 +65,8 @@ func TestRowsToMandatoryContent_GroupBecomesIncludeList(t *testing.T) {
 	rows := []models.ZoneContentRowSave{
 		{Sid: "content_list_building_random_hires_low_tier", Count: 1, IsGroup: true},
 	}
-	items := services.RowsToMandatoryContent(rows)
+	contentProvider := providers.NewMandatoryContentProvider()
+	items := contentProvider.CreateContentItemsFrom(rows)
 	if len(items) != 1 {
 		t.Fatalf("items = %d, want 1", len(items))
 	}

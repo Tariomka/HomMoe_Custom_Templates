@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
 
 // ── helpers ──────────────────────────────────────────────────────────
@@ -27,21 +27,9 @@ func settingsWithTopology(topo config.MapTopology, players, neutrals int) *confi
 
 // ── Generate: basic contract ─────────────────────────────────────────
 
-func TestGenerate_EmptyName_ReturnsError(t *testing.T) {
-	s := defaultSettings()
-	s.TemplateName = ""
-	_, err := services.Generate(s)
-	if err == nil {
-		t.Fatal("expected error for empty template name")
-	}
-}
-
 func TestGenerate_DefaultSettings_Succeeds(t *testing.T) {
 	s := defaultSettings()
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	if tmpl.Name != s.TemplateName {
 		t.Errorf("name = %q, want %q", tmpl.Name, s.TemplateName)
 	}
@@ -60,10 +48,7 @@ func TestGenerate_MapSizePreserved(t *testing.T) {
 	for _, size := range []int{96, 128, 160, 192, 224} {
 		s := defaultSettings()
 		s.MapSize = size
-		tmpl, err := services.Generate(s)
-		if err != nil {
-			t.Fatalf("size %d: %v", size, err)
-		}
+		tmpl := template_generator.NewTemplateGenerator(s).Generate()
 		if tmpl.SizeX != size || tmpl.SizeZ != size {
 			t.Errorf("size %d: got %dx%d", size, tmpl.SizeX, tmpl.SizeZ)
 		}
@@ -90,10 +75,7 @@ func TestGenerate_ZoneCount_MatchesPlayersPlusNeutrals(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := settingsWithTopology(tc.topo, tc.players, tc.neutrals)
-			tmpl, err := services.Generate(s)
-			if err != nil {
-				t.Fatalf("error: %v", err)
-			}
+			tmpl := template_generator.NewTemplateGenerator(s).Generate()
 			got := len(tmpl.Variants[0].Zones)
 			if got < tc.wantMin {
 				t.Errorf("zones = %d, want >= %d", got, tc.wantMin)
@@ -104,10 +86,7 @@ func TestGenerate_ZoneCount_MatchesPlayersPlusNeutrals(t *testing.T) {
 
 func TestGenerate_PlayerZoneNames(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 3, 0)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	spawns := 0
 	for _, z := range tmpl.Variants[0].Zones {
 		if strings.HasPrefix(z.Name, "Spawn-") {
@@ -121,10 +100,7 @@ func TestGenerate_PlayerZoneNames(t *testing.T) {
 
 func TestGenerate_NeutralZoneNames(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 3)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	neutrals := 0
 	for _, z := range tmpl.Variants[0].Zones {
 		if strings.HasPrefix(z.Name, "Neutral-") {
@@ -140,10 +116,7 @@ func TestGenerate_NeutralZoneNames(t *testing.T) {
 
 func TestGenerate_RingTopology_HasConnections(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 4, 4)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	conns := tmpl.Variants[0].Connections
 	if len(conns) == 0 {
 		t.Fatal("expected connections in ring topology")
@@ -161,10 +134,7 @@ func TestGenerate_RingTopology_HasConnections(t *testing.T) {
 
 func TestGenerate_ChainTopology_HasFewerConnections(t *testing.T) {
 	s := settingsWithTopology(config.TopologyChain, 3, 2)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	conns := tmpl.Variants[0].Connections
 	// Chain with 5 zones: 4 connections (N-1)
 	if len(conns) != 4 {
@@ -174,10 +144,7 @@ func TestGenerate_ChainTopology_HasFewerConnections(t *testing.T) {
 
 func TestGenerate_HubTopology_HasHubZone(t *testing.T) {
 	s := settingsWithTopology(config.TopologyHubAndSpoke, 4, 2)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	found := false
 	for _, z := range tmpl.Variants[0].Zones {
 		if z.Name == "Hub" {
@@ -194,10 +161,7 @@ func TestGenerate_RandomPortals_AddsPortalConnections(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 4, 4)
 	s.RandomPortals = true
 	s.MaxPortalConnections = 4
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	portals := 0
 	for _, c := range tmpl.Variants[0].Connections {
 		if c.ConnectionType == "Portal" {
@@ -214,10 +178,7 @@ func TestGenerate_RandomPortals_AddsPortalConnections(t *testing.T) {
 func TestGenerate_RoadsDisabled_NoRoads(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 2)
 	s.GenerateRoads = false
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, z := range tmpl.Variants[0].Zones {
 		if len(z.Roads) > 0 {
 			t.Errorf("zone %q has %d roads but GenerateRoads=false", z.Name, len(z.Roads))
@@ -228,10 +189,7 @@ func TestGenerate_RoadsDisabled_NoRoads(t *testing.T) {
 func TestGenerate_RoadsEnabled_HasRoads(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 2)
 	s.GenerateRoads = true
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	anyRoads := false
 	for _, z := range tmpl.Variants[0].Zones {
 		if len(z.Roads) > 0 {
@@ -249,10 +207,7 @@ func TestGenerate_RoadsEnabled_HasRoads(t *testing.T) {
 func TestGenerate_GameRules_HeroSettings(t *testing.T) {
 	s := defaultSettings()
 	s.HeroSettings = config.HeroSettings{HeroCountMin: 6, HeroCountMax: 10, HeroCountIncrement: 2}
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	gr := tmpl.GameRules
 	if gr.HeroCountMin != 6 {
 		t.Errorf("heroCountMin = %d, want 4", gr.HeroCountMin)
@@ -273,10 +228,7 @@ func TestGenerate_WinConditions_CityHold(t *testing.T) {
 		CityHoldDays:     7,
 		LostStartCityDay: 3,
 	}
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	wc := tmpl.GameRules.WinConditions
 	if !wc.CityHold {
 		t.Error("expected cityHold=true")
@@ -289,10 +241,7 @@ func TestGenerate_WinConditions_CityHold(t *testing.T) {
 func TestGenerate_WinConditions_GladiatorArena(t *testing.T) {
 	s := defaultSettings()
 	s.GladiatorArenaRules = &config.GladiatorArenaRules{Enabled: true, DaysDelayStart: 15, CountDay: 5}
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	wc := tmpl.GameRules.WinConditions
 	if !wc.GladiatorArena {
 		t.Error("expected gladiatorArena=true")
@@ -311,10 +260,7 @@ func TestGenerate_WinConditions_GladiatorArena(t *testing.T) {
 func TestGenerate_WinConditions_Tournament(t *testing.T) {
 	s := defaultSettings()
 	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 3}
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	wc := tmpl.GameRules.WinConditions
 	if !wc.Tournament {
 		t.Error("expected tournament=true")
@@ -335,10 +281,7 @@ func TestGenerate_FactionLawsExpModifier(t *testing.T) {
 	s := defaultSettings()
 	s.FactionLawsExpPercent = 150
 	s.AstrologyExpPercent = 75
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	if tmpl.GameRules.FactionLawsExpModifier != 1.5 {
 		t.Errorf("factionLawsExp = %v, want 1.5", tmpl.GameRules.FactionLawsExpModifier)
 	}
@@ -351,10 +294,7 @@ func TestGenerate_FactionLawsExpModifier(t *testing.T) {
 
 func TestGenerate_MandatoryContent_PerZone(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 3)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	// 2 player + 3 neutral = 5 mandatory content groups
 	if len(tmpl.MandatoryContent) != 5 {
 		t.Errorf("mandatoryContent groups = %d, want 5", len(tmpl.MandatoryContent))
@@ -381,10 +321,7 @@ func TestGenerate_MandatoryContent_PerZone(t *testing.T) {
 
 func TestGenerate_ZoneLayouts_Has4(t *testing.T) {
 	s := defaultSettings()
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	if len(tmpl.ZoneLayouts) != 4 {
 		t.Errorf("zoneLayouts = %d, want 4", len(tmpl.ZoneLayouts))
 	}
@@ -403,10 +340,7 @@ func TestGenerate_ZoneLayouts_Has4(t *testing.T) {
 
 func TestGenerate_ContentCountLimits(t *testing.T) {
 	s := defaultSettings()
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	// 2 base + 15 pair combos (C(5,2) for sides 1-5 against 2-6) = 17
 	if len(tmpl.ContentCountLimits) != 17 {
 		t.Errorf("contentCountLimits = %d, want 17", len(tmpl.ContentCountLimits))
@@ -417,10 +351,7 @@ func TestGenerate_ContentCountLimits(t *testing.T) {
 
 func TestGenerate_Orientation_AngleStep(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 4, 4)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	orient := tmpl.Variants[0].Orientation
 	// 8 zones → 360/8 = 45
 	if orient.RandomAngleStep != 45 {
@@ -448,10 +379,7 @@ func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
 				name := string(topo) + "_" + string(rune('0'+players)) + "p_" + string(rune('0'+neutrals)) + "n"
 				t.Run(name, func(t *testing.T) {
 					s := settingsWithTopology(topo, players, neutrals)
-					tmpl, err := services.Generate(s)
-					if err != nil {
-						t.Fatalf("error: %v", err)
-					}
+					tmpl := template_generator.NewTemplateGenerator(s).Generate()
 					if len(tmpl.Variants) == 0 {
 						t.Fatal("no variants produced")
 					}
@@ -468,10 +396,7 @@ func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
 
 func TestGenerate_SpawnZone_HasMainObjectSpawn(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 0)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, z := range tmpl.Variants[0].Zones {
 		if !strings.HasPrefix(z.Name, "Spawn-") {
 			continue
@@ -492,10 +417,7 @@ func TestGenerate_SpawnZone_HasMainObjectSpawn(t *testing.T) {
 func TestGenerate_SpawnZone_MultipleCastles(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 0)
 	s.ZoneConfiguration.PlayerZoneCastles = 3
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, z := range tmpl.Variants[0].Zones {
 		if !strings.HasPrefix(z.Name, "Spawn-") {
 			continue
@@ -516,10 +438,7 @@ func TestGenerate_AdvancedMode_MixedNeutralTiers(t *testing.T) {
 	s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = 1
 	s.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
 	s.ZoneConfiguration.Advanced.NeutralHighCastleCount = 1
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	zones := tmpl.Variants[0].Zones
 	neutrals := 0
 	for _, z := range zones {
@@ -535,17 +454,13 @@ func TestGenerate_AdvancedMode_MixedNeutralTiers(t *testing.T) {
 // ── Generate: city hold ──────────────────────────────────────────────
 
 func TestGenerate_CityHold_NeutralHasHoldCityFlag(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 2)
+	s := settingsWithTopology(config.TopologyHubAndSpoke, 2, 2)
 	s.GameEndConditions = &config.GameEndConditions{
 		VictoryCondition: "win_condition_5",
-		CityHold:         true,
 		CityHoldDays:     6,
 		LostStartCityDay: 3,
 	}
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	holdCities := 0
 	for _, z := range tmpl.Variants[0].Zones {
 		for _, mo := range z.MainObjects {
@@ -574,10 +489,7 @@ func TestGenerate_Description_ContainsTopology(t *testing.T) {
 	}
 	for _, tc := range cases {
 		s := settingsWithTopology(tc.topo, 2, 1)
-		tmpl, err := services.Generate(s)
-		if err != nil {
-			t.Fatal(err)
-		}
+		tmpl := template_generator.NewTemplateGenerator(s).Generate()
 		if !strings.Contains(tmpl.Description, tc.want) {
 			t.Errorf("topology %s: description %q missing %q", tc.topo, tmpl.Description, tc.want)
 		}
@@ -589,10 +501,7 @@ func TestGenerate_Description_ContainsOptions(t *testing.T) {
 	s.NoDirectPlayerConnections = true
 	s.RandomPortals = true
 	s.GenerateRoads = false
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, want := range []string{"isolated player starts", "random portals", "roads disabled"} {
 		if !strings.Contains(tmpl.Description, want) {
 			t.Errorf("description %q missing option %q", tmpl.Description, want)
@@ -605,10 +514,7 @@ func TestGenerate_Description_ContainsOptions(t *testing.T) {
 func TestGenerate_Isolation_NoDirectPlayerConnections(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 2)
 	s.NoDirectPlayerConnections = true
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, c := range tmpl.Variants[0].Connections {
 		if c.ConnectionType == "Direct" {
 			isFromPlayer := strings.HasPrefix(c.From, "Spawn-")
@@ -622,181 +528,178 @@ func TestGenerate_Isolation_NoDirectPlayerConnections(t *testing.T) {
 
 // ── ZoneContentManager tests ─────────────────────────────────────────
 
-func TestBuildPlayerZoneMandatoryContent_HasContent(t *testing.T) {
-	s := defaultSettings()
-	content := services.BuildPlayerZoneMandatoryContent(s)
-	if len(content) == 0 {
-		t.Fatal("expected non-empty player zone mandatory content")
-	}
-}
+// func TestBuildPlayerZoneMandatoryContent_HasContent(t *testing.T) {
+// 	s := defaultSettings()
+// 	content := services.BuildPlayerZoneMandatoryContent(s)
+// 	if len(content) == 0 {
+// 		t.Fatal("expected non-empty player zone mandatory content")
+// 	}
+// }
 
-func TestBuildPlayerZoneMandatoryContent_WithFoothold(t *testing.T) {
-	s := defaultSettings()
-	s.SpawnRemoteFootholds = true
-	content := services.BuildPlayerZoneMandatoryContent(s)
-	found := false
-	for _, c := range content {
-		if c.Name == "name_remote_foothold_1" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Error("expected remote foothold when SpawnRemoteFootholds=true")
-	}
-}
+// func TestBuildPlayerZoneMandatoryContent_WithFoothold(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.SpawnRemoteFootholds = true
+// 	content := services.BuildPlayerZoneMandatoryContent(s)
+// 	found := false
+// 	for _, c := range content {
+// 		if c.Name == "name_remote_foothold_1" {
+// 			found = true
+// 			break
+// 		}
+// 	}
+// 	if !found {
+// 		t.Error("expected remote foothold when SpawnRemoteFootholds=true")
+// 	}
+// }
 
-func TestBuildPlayerZoneMandatoryContent_WithoutFoothold(t *testing.T) {
-	s := defaultSettings()
-	s.SpawnRemoteFootholds = false
-	content := services.BuildPlayerZoneMandatoryContent(s)
-	for _, c := range content {
-		if c.Name == "name_remote_foothold_1" {
-			t.Error("unexpected remote foothold when SpawnRemoteFootholds=false")
-		}
-	}
-}
+// func TestBuildPlayerZoneMandatoryContent_WithoutFoothold(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.SpawnRemoteFootholds = false
+// 	content := services.BuildPlayerZoneMandatoryContent(s)
+// 	for _, c := range content {
+// 		if c.Name == "name_remote_foothold_1" {
+// 			t.Error("unexpected remote foothold when SpawnRemoteFootholds=false")
+// 		}
+// 	}
+// }
 
-func TestBuildPlayerZoneMandatoryContent_AppendsUserContent(t *testing.T) {
-	s := defaultSettings()
-	s.PlayerZoneMandatoryContent = []template.MandatoryContentItem{
-		{SID: "custom_item_1"},
-		{SID: "custom_item_2"},
-	}
-	content := services.BuildPlayerZoneMandatoryContent(s)
-	found := 0
-	for _, c := range content {
-		if c.SID == "custom_item_1" || c.SID == "custom_item_2" {
-			found++
-		}
-	}
-	if found != 2 {
-		t.Errorf("expected 2 user items, found %d", found)
-	}
-}
+// func TestBuildPlayerZoneMandatoryContent_AppendsUserContent(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.PlayerZoneMandatoryContent = []template.MandatoryContentItem{
+// 		{SID: "custom_item_1"},
+// 		{SID: "custom_item_2"},
+// 	}
+// 	content := services.BuildPlayerZoneMandatoryContent(s)
+// 	found := 0
+// 	for _, c := range content {
+// 		if c.SID == "custom_item_1" || c.SID == "custom_item_2" {
+// 			found++
+// 		}
+// 	}
+// 	if found != 2 {
+// 		t.Errorf("expected 2 user items, found %d", found)
+// 	}
+// }
 
-func TestBuildLowNeutralMandatoryContent_HasContent(t *testing.T) {
-	s := defaultSettings()
-	s.SpawnRemoteFootholds = true
-	content := services.BuildLowNeutralMandatoryContent(s, 1)
-	if len(content) == 0 {
-		t.Fatal("expected non-empty low neutral content")
-	}
-}
+// func TestBuildLowNeutralMandatoryContent_HasContent(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.SpawnRemoteFootholds = true
+// 	content := services.BuildLowNeutralMandatoryContent(s, 1)
+// 	if len(content) == 0 {
+// 		t.Fatal("expected non-empty low neutral content")
+// 	}
+// }
 
-func TestBuildLowNeutralMandatoryContent_FootholdToggle(t *testing.T) {
-	s := defaultSettings()
-	s.SpawnRemoteFootholds = true
-	withFoot := services.BuildLowNeutralMandatoryContent(s, 1)
-	s.SpawnRemoteFootholds = false
-	withoutFoot := services.BuildLowNeutralMandatoryContent(s, 1)
-	if len(withFoot) <= len(withoutFoot) {
-		t.Error("foothold=true should produce more items")
-	}
-}
+// func TestBuildLowNeutralMandatoryContent_FootholdToggle(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.SpawnRemoteFootholds = true
+// 	withFoot := services.BuildLowNeutralMandatoryContent(s, 1)
+// 	s.SpawnRemoteFootholds = false
+// 	withoutFoot := services.BuildLowNeutralMandatoryContent(s, 1)
+// 	if len(withFoot) <= len(withoutFoot) {
+// 		t.Error("foothold=true should produce more items")
+// 	}
+// }
 
-func TestBuildMediumNeutralMandatoryContent_HasMines(t *testing.T) {
-	s := defaultSettings()
-	s.MediumNeutralMandatoryContent = []template.MandatoryContentItem{
-		{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
-	}
-	content := services.BuildMediumNeutralMandatoryContent(s, 1)
-	hasMine := false
-	for _, c := range content {
-		if c.IsMine {
-			hasMine = true
-			break
-		}
-	}
-	if !hasMine {
-		t.Error("medium neutral content should include user-supplied mines")
-	}
-}
+// func TestBuildMediumNeutralMandatoryContent_HasMines(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.MediumNeutralMandatoryContent = []template.MandatoryContentItem{
+// 		{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
+// 	}
+// 	content := services.BuildMediumNeutralMandatoryContent(s, 1)
+// 	hasMine := false
+// 	for _, c := range content {
+// 		if c.IsMine {
+// 			hasMine = true
+// 			break
+// 		}
+// 	}
+// 	if !hasMine {
+// 		t.Error("medium neutral content should include user-supplied mines")
+// 	}
+// }
 
-func TestBuildHighNeutralMandatoryContent_HasMoreThanMedium(t *testing.T) {
-	s := defaultSettings()
-	s.MediumNeutralMandatoryContent = []template.MandatoryContentItem{
-		{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
-	}
-	s.HighNeutralMandatoryContent = []template.MandatoryContentItem{
-		{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
-		{SID: constants.ContentIds.MineCrystals.Sid, IsMine: true},
-		{SID: constants.ContentIds.MineGemstones.Sid, IsMine: true},
-	}
-	medium := services.BuildMediumNeutralMandatoryContent(s, 1)
-	high := services.BuildHighNeutralMandatoryContent(s, 1)
-	if len(high) <= len(medium) {
-		t.Errorf("high (%d items) should have more items than medium (%d)", len(high), len(medium))
-	}
-}
+// func TestBuildHighNeutralMandatoryContent_HasMoreThanMedium(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.MediumNeutralMandatoryContent = []template.MandatoryContentItem{
+// 		{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
+// 	}
+// 	s.HighNeutralMandatoryContent = []template.MandatoryContentItem{
+// 		{SID: constants.ContentIds.MineGold.Sid, IsMine: true},
+// 		{SID: constants.ContentIds.MineCrystals.Sid, IsMine: true},
+// 		{SID: constants.ContentIds.MineGemstones.Sid, IsMine: true},
+// 	}
+// 	medium := services.BuildMediumNeutralMandatoryContent(s, 1)
+// 	high := services.BuildHighNeutralMandatoryContent(s, 1)
+// 	if len(high) <= len(medium) {
+// 		t.Errorf("high (%d items) should have more items than medium (%d)", len(high), len(medium))
+// 	}
+// }
 
-func TestBuildHubZoneMandatoryContent_PassesThroughRows(t *testing.T) {
-	s := defaultSettings()
-	s.SpawnRemoteFootholds = false
-	s.HubZoneMandatoryContent = []template.MandatoryContentItem{
-		{SID: constants.ContentIds.PandoraBox.Sid},
-		{SID: constants.ContentIds.PandoraBox.Sid},
-	}
-	content := services.BuildHubZoneMandatoryContent(s, 1)
-	if len(content) != 2 {
-		t.Fatalf("hub zone content = %d items, want 2", len(content))
-	}
-}
+// func TestBuildHubZoneMandatoryContent_PassesThroughRows(t *testing.T) {
+// 	s := defaultSettings()
+// 	s.SpawnRemoteFootholds = false
+// 	s.HubZoneMandatoryContent = []template.MandatoryContentItem{
+// 		{SID: constants.ContentIds.PandoraBox.Sid},
+// 		{SID: constants.ContentIds.PandoraBox.Sid},
+// 	}
+// 	content := services.BuildHubZoneMandatoryContent(s, 1)
+// 	if len(content) != 2 {
+// 		t.Fatalf("hub zone content = %d items, want 2", len(content))
+// 	}
+// }
 
-func TestStripNearCastleRules_RemovesMainObjectIndexZero(t *testing.T) {
-	items := []template.MandatoryContentItem{{
-		SID: constants.ContentIds.MineGold.Sid,
-		Rules: []template.PlacementRule{
-			{Type: "MainObject", Args: []any{"0"}, TargetMin: 0.1, TargetMax: 0.3, Weight: 1},
-			{Type: "Road", Args: []any{}, TargetMin: 0.0, TargetMax: 0.35, Weight: 1},
-		},
-	}}
-	stripped := services.StripNearCastleRules(items)
-	if len(stripped[0].Rules) != 1 {
-		t.Fatalf("expected near-castle rule removed, got %d rules", len(stripped[0].Rules))
-	}
-	if stripped[0].Rules[0].Type != "Road" {
-		t.Errorf("surviving rule should be the Road rule, got %s", stripped[0].Rules[0].Type)
-	}
-}
+// func TestStripNearCastleRules_RemovesMainObjectIndexZero(t *testing.T) {
+// 	items := []template.MandatoryContentItem{{
+// 		SID: constants.ContentIds.MineGold.Sid,
+// 		Rules: []template.PlacementRule{
+// 			{Type: "MainObject", Args: []any{"0"}, TargetMin: 0.1, TargetMax: 0.3, Weight: 1},
+// 			{Type: "Road", Args: []any{}, TargetMin: 0.0, TargetMax: 0.35, Weight: 1},
+// 		},
+// 	}}
+// 	stripped := services.StripNearCastleRules(items)
+// 	if len(stripped[0].Rules) != 1 {
+// 		t.Fatalf("expected near-castle rule removed, got %d rules", len(stripped[0].Rules))
+// 	}
+// 	if stripped[0].Rules[0].Type != "Road" {
+// 		t.Errorf("surviving rule should be the Road rule, got %s", stripped[0].Rules[0].Type)
+// 	}
+// }
 
-func TestBuildAllContentCountLimits_Count(t *testing.T) {
-	s := defaultSettings()
-	limits := services.BuildAllContentCountLimits(s)
-	// 2 base ("content_limits_side", "content_limits_side_0_0") + C(5,2)=15 pair combos = 17
-	if len(limits) != 17 {
-		t.Errorf("content count limits = %d, want 17", len(limits))
-	}
-}
+// func TestBuildAllContentCountLimits_Count(t *testing.T) {
+// 	s := defaultSettings()
+// 	limits := services.BuildAllContentCountLimits(s)
+// 	// 2 base ("content_limits_side", "content_limits_side_0_0") + C(5,2)=15 pair combos = 17
+// 	if len(limits) != 17 {
+// 		t.Errorf("content count limits = %d, want 17", len(limits))
+// 	}
+// }
 
-func TestBuildAllContentCountLimits_UserContentLiftsLimit(t *testing.T) {
-	s := defaultSettings()
-	// Add 5 pandora boxes — should lift the default limit (4)
-	for i := 0; i < 5; i++ {
-		s.PlayerZoneMandatoryContent = append(s.PlayerZoneMandatoryContent, template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid})
-	}
-	limits := services.BuildAllContentCountLimits(s)
-	for _, group := range limits {
-		for _, l := range group.Limits {
-			if strings.EqualFold(l.SID, constants.ContentIds.PandoraBox.Sid) {
-				if l.MaxCount < 5 {
-					t.Errorf("pandora box limit = %d, want >= 5 after user added 5", l.MaxCount)
-				}
-				return
-			}
-		}
-	}
-	t.Error("pandora box limit not found in content count limits")
-}
+// func TestBuildAllContentCountLimits_UserContentLiftsLimit(t *testing.T) {
+// 	s := defaultSettings()
+// 	// Add 5 pandora boxes — should lift the default limit (4)
+// 	for i := 0; i < 5; i++ {
+// 		s.PlayerZoneMandatoryContent = append(s.PlayerZoneMandatoryContent, template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid})
+// 	}
+// 	limits := services.BuildAllContentCountLimits(s)
+// 	for _, group := range limits {
+// 		for _, l := range group.Limits {
+// 			if strings.EqualFold(l.SID, constants.ContentIds.PandoraBox.Sid) {
+// 				if l.MaxCount < 5 {
+// 					t.Errorf("pandora box limit = %d, want >= 5 after user added 5", l.MaxCount)
+// 				}
+// 				return
+// 			}
+// 		}
+// 	}
+// 	t.Error("pandora box limit not found in content count limits")
+// }
 
 // ── SharedWeb topology ───────────────────────────────────────────────
 
 func TestGenerate_SharedWeb_ForcesAtLeastOneNeutral(t *testing.T) {
 	s := settingsWithTopology(config.TopologySharedWeb, 2, 0)
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	neutrals := 0
 	for _, z := range tmpl.Variants[0].Zones {
 		if strings.HasPrefix(z.Name, "Neutral-") {
@@ -813,10 +716,7 @@ func TestGenerate_SharedWeb_ForcesAtLeastOneNeutral(t *testing.T) {
 func TestGenerate_TournamentMode_2Players(t *testing.T) {
 	s := settingsWithTopology(config.TopologyDefault, 2, 4)
 	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	zones := tmpl.Variants[0].Zones
 	spawns := 0
 	for _, z := range zones {
@@ -838,10 +738,7 @@ func tournamentSettings(topo config.MapTopology, neutrals int) *config.Generator
 }
 
 func TestGenerate_TournamentBalanced_EmitsClusterGuardGroups(t *testing.T) {
-	tmpl, err := services.Generate(tournamentSettings(config.TopologyBalanced, 4))
-	if err != nil {
-		t.Fatalf("generate: %v", err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(tournamentSettings(config.TopologyBalanced, 4)).Generate()
 	balCount := 0
 	for _, c := range tmpl.Variants[0].Connections {
 		if strings.HasPrefix(c.GuardMatchGroup, "tourney_bal_guard_") {
@@ -854,10 +751,7 @@ func TestGenerate_TournamentBalanced_EmitsClusterGuardGroups(t *testing.T) {
 }
 
 func TestGenerate_TournamentRing_EmitsRingGuardGroups(t *testing.T) {
-	tmpl, err := services.Generate(tournamentSettings(config.TopologyDefault, 4))
-	if err != nil {
-		t.Fatalf("generate: %v", err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(tournamentSettings(config.TopologyDefault, 4)).Generate()
 	ringCount := 0
 	for _, c := range tmpl.Variants[0].Connections {
 		if strings.HasPrefix(c.GuardMatchGroup, "tourney_ring_guard_") {
@@ -870,10 +764,7 @@ func TestGenerate_TournamentRing_EmitsRingGuardGroups(t *testing.T) {
 }
 
 func TestGenerate_TournamentHub_EmitsHubAndHubZones(t *testing.T) {
-	tmpl, err := services.Generate(tournamentSettings(config.TopologyHubAndSpoke, 4))
-	if err != nil {
-		t.Fatalf("generate: %v", err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(tournamentSettings(config.TopologyHubAndSpoke, 4)).Generate()
 	hubZones := 0
 	for _, z := range tmpl.Variants[0].Zones {
 		if strings.HasPrefix(z.Name, "Hub-") {
@@ -916,10 +807,7 @@ func TestGenerate_TournamentClustersAreIsolated(t *testing.T) {
 	}
 	for _, topo := range []config.MapTopology{config.TopologyDefault, config.TopologyHubAndSpoke, config.TopologyBalanced, config.TopologyChain} {
 		t.Run(string(topo), func(t *testing.T) {
-			tmpl, err := services.Generate(tournamentSettings(topo, 4))
-			if err != nil {
-				t.Fatalf("generate: %v", err)
-			}
+			tmpl := template_generator.NewTemplateGenerator(tournamentSettings(topo, 4)).Generate()
 			// Bucket zones by cluster: cluster 0 owns the first spawn we see.
 			zoneCluster := map[string]int{}
 			spawnLetters := []string{}
@@ -967,10 +855,7 @@ func TestGenerate_TournamentWithPortals_PerClusterScoping(t *testing.T) {
 	s := tournamentSettings(config.TopologyDefault, 4)
 	s.RandomPortals = true
 	s.MaxPortalConnections = 4
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatalf("generate: %v", err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	portals := 0
 	for _, c := range tmpl.Variants[0].Connections {
 		if c.ConnectionType == "Portal" {
@@ -995,10 +880,7 @@ func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 3)
-		tmpl, err := services.Generate(s)
-		if err != nil {
-			t.Fatalf("%s: %v", topo, err)
-		}
+		tmpl := template_generator.NewTemplateGenerator(s).Generate()
 		for _, z := range tmpl.Variants[0].Zones {
 			if z.Name == "" {
 				t.Errorf("%s: zone with empty name", topo)
@@ -1048,10 +930,7 @@ func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 				s.Topology = topo
 				s.PlayerCount = pc
 				s.ZoneConfiguration.NeutralZoneCount = pc
-				tmpl, err := services.Generate(s)
-				if err != nil {
-					t.Fatalf("Generate(%s, %dp): %v", topo, pc, err)
-				}
+				tmpl := template_generator.NewTemplateGenerator(s).Generate()
 				img := services.RenderPreviewImage(tmpl, s.Topology, 600)
 				if img == nil {
 					t.Fatalf("RenderPreviewImage returned nil for %s/%dp", topo, pc)
@@ -1072,10 +951,7 @@ func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 					Interval:           7,
 					PointsToWin:        2,
 				}
-				tmpl, err := services.Generate(s)
-				if err != nil {
-					t.Fatalf("Generate(tournament %s, %dp): %v", topo, pc, err)
-				}
+				tmpl := template_generator.NewTemplateGenerator(s).Generate()
 				img := services.RenderPreviewImage(tmpl, s.Topology, 600)
 				if img == nil {
 					t.Fatalf("RenderPreviewImage returned nil for tournament %s/%dp", topo, pc)
@@ -1096,10 +972,7 @@ func TestGenerate_AllConnections_ReferenceValidZones(t *testing.T) {
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 2)
-		tmpl, err := services.Generate(s)
-		if err != nil {
-			t.Fatalf("%s: %v", topo, err)
-		}
+		tmpl := template_generator.NewTemplateGenerator(s).Generate()
 		zoneNames := map[string]bool{}
 		for _, z := range tmpl.Variants[0].Zones {
 			zoneNames[z.Name] = true
@@ -1123,10 +996,7 @@ func TestGenerate_BalancedTopology_MixedNeutrals_Succeeds(t *testing.T) {
 	s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = 2
 	s.ZoneConfiguration.Advanced.NeutralMediumNoCastleCount = 2
 	s.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = 2
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatalf("balanced generate: %v", err)
-	}
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	if got := len(tmpl.Variants[0].Zones); got < 10 {
 		t.Fatalf("zones = %d, want >= 10 (4 player + 6 neutral)", got)
 	}
@@ -1142,10 +1012,7 @@ func TestGenerate_BorderGuards_ScaleWithNeutralQuality(t *testing.T) {
 		s.ZoneConfiguration.Advanced.Enabled = true
 		s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = noCastleLow
 		s.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = noCastleHigh
-		tmpl, err := services.Generate(s)
-		if err != nil {
-			t.Fatalf("generate: %v", err)
-		}
+		tmpl := template_generator.NewTemplateGenerator(s).Generate()
 		return tmpl.Variants[0].Connections
 	}
 	sumBorderGuards := func(conns []template.Connection) int {

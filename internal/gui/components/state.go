@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
 
 type State struct {
@@ -150,12 +151,13 @@ func (this *State) Generate() {
 		this.setStatus("Template name is required.", true)
 		return
 	}
-	template, err := services.Generate(generatorSettings)
-	if err != nil {
-		this.setStatus(fmt.Sprintf("Generation failed: %value", err), true)
-		this.lastTemplate = nil
-		return
-	}
+	template := template_generator.NewTemplateGenerator(generatorSettings).Generate()
+	// template, err := services.Generate(generatorSettings)
+	// if err != nil {
+	// 	this.setStatus(fmt.Sprintf("Generation failed: %value", err), true)
+	// 	this.lastTemplate = nil
+	// 	return
+	// }
 	this.lastTemplate = template
 	zoneCount := 0
 	connectionCount := 0

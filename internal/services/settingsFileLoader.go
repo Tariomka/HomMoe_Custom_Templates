@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
 
 // LoadSettingsFile reads a .gen.json file and returns the parsed SettingsFile.
@@ -36,6 +37,7 @@ func SaveSettingsFile(path string, editorState *models.EditorStateModel) error {
 // SettingsToGenerator translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
 func SettingsToGenerator(editorState *models.EditorStateModel) *config.GeneratorConfig {
+	contentProvider := providers.NewMandatoryContentProvider()
 	generatorSettings := config.NewGeneratorConfig()
 	generatorSettings.TemplateName = editorState.TemplateName
 	generatorSettings.GameMode = editorState.GameMode
@@ -53,11 +55,11 @@ func SettingsToGenerator(editorState *models.EditorStateModel) *config.Generator
 	generatorSettings.BannedMagics = editorState.BannedMagics
 	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
 	generatorSettings.Bonuses = config_inner.ParseBonusesJSON(editorState.BonusesJSON)
-	generatorSettings.PlayerZoneMandatoryContent = RowsToMandatoryContent(editorState.PlayerZoneContentRows)
-	generatorSettings.LowNeutralMandatoryContent = RowsToMandatoryContent(editorState.LowNeutralContentRows)
-	generatorSettings.MediumNeutralMandatoryContent = RowsToMandatoryContent(editorState.MediumNeutralContentRows)
-	generatorSettings.HighNeutralMandatoryContent = RowsToMandatoryContent(editorState.HighNeutralContentRows)
-	generatorSettings.HubZoneMandatoryContent = RowsToMandatoryContent(editorState.HubZoneContentRows)
+	generatorSettings.PlayerZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.PlayerZoneContentRows)
+	generatorSettings.LowNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.LowNeutralContentRows)
+	generatorSettings.MediumNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.MediumNeutralContentRows)
+	generatorSettings.HighNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HighNeutralContentRows)
+	generatorSettings.HubZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HubZoneContentRows)
 	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
 	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent
 
