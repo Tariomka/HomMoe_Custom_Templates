@@ -101,7 +101,7 @@ jobs:
           merge-multiple: true
 
       - name: Ensure Linux binary is executable
-        run: chmod +x dist/HeroesOldenEra_CustomTemplates
+        run: chmod +x dist/${{ env.linux_binary }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
