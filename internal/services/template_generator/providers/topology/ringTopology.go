@@ -65,8 +65,7 @@ func (this *RingTopologyService) createZones(
 	}
 
 	var zones []template.Zone
-	for i := range labelCount {
-		label := orderedLabels[i]
+	for i, label := range orderedLabels {
 		var connNames []string
 		if ringConnLeft[i] != "" {
 			connNames = append(connNames, ringConnLeft[i])
@@ -102,7 +101,7 @@ func (this *RingTopologyService) createConnections(
 	}
 
 	var connections []template.Connection
-	for i := 0; i < count; i++ {
+	for i := range count {
 		labelFrom := orderedLabels[i]
 		labelTo := orderedLabels[(i+1)%count]
 		if isIsolated && slices.Contains(playerLabels, labelFrom) && slices.Contains(playerLabels, labelTo) {

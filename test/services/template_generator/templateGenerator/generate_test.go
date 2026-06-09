@@ -1,31 +1,23 @@
 package templateGenerator_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/variant"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
 
-func newCfg() *config.GeneratorConfig { return config.NewGeneratorConfig() }
-
-func cfgWith(topo config.MapTopology, players, neutrals int) *config.GeneratorConfig {
-	s := newCfg()
-	s.Topology = topo
-	s.PlayerCount = players
-	s.ZoneConfiguration.NeutralZoneCount = neutrals
-	return s
-}
-
 func TestWhenValidConfig_ReturnsExpectedResult(t *testing.T) {
 	// Arrange
-	configuration := newCfg()
+	configuration := config.NewGeneratorConfig()
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
 	expected := test_helpers.GetDefaultTemplate()
 
@@ -33,7 +25,7 @@ func TestWhenValidConfig_ReturnsExpectedResult(t *testing.T) {
 	actual := templateGenerator.Generate()
 
 	// Assert
-	assert.Equal(t, expected, *actual)
+	assert.Equal(t, expected, *actual) // This is a flaky assertion because zone labels are in a map struct so the order changes
 	assert.Equal(t, expected.Name, actual.Name)
 	assert.Equal(t, expected.GameMode, actual.GameMode)
 	assert.Equal(t, expected.Description, actual.Description)
@@ -57,7 +49,7 @@ func TestWhenValidConfig_ReturnsExpectedResult(t *testing.T) {
 
 func TestWhenTemplateNameIsEmpty_SetsDefaultName(t *testing.T) {
 	// Arrange
-	configuration := newCfg()
+	configuration := config.NewGeneratorConfig()
 	configuration.TemplateName = ""
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
 
@@ -68,12 +60,10 @@ func TestWhenTemplateNameIsEmpty_SetsDefaultName(t *testing.T) {
 	assert.Equal(t, actual.Name, "Custom Template")
 }
 
-// ── Generate: scalar field propagation ───────────────────────────────
-
 func TestWhenNonDefaultTemplateName_SetsExpectedName(t *testing.T) {
 	// Arrange
 	expectedName := gofakeit.InputName()
-	configuration := newCfg()
+	configuration := config.NewGeneratorConfig()
 	configuration.TemplateName = expectedName
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
 
@@ -84,592 +74,994 @@ func TestWhenNonDefaultTemplateName_SetsExpectedName(t *testing.T) {
 	assert.Equal(t, actual.Name, expectedName)
 }
 
-func TestGenerate_MapSizePropagated(t *testing.T) {
-	s := newCfg()
-	s.MapSize = 224
-	tmpl, _ := services.Generate(s)
-	if tmpl.SizeX != 224 || tmpl.SizeZ != 224 {
-		t.Errorf("size = %dx%d", tmpl.SizeX, tmpl.SizeZ)
+func TestWhenNonDefaultMapSize_SetsExpectedSize(t *testing.T) {
+	// Arrange
+	expectedSize := gofakeit.Number(20, 900)
+	configuration := config.NewGeneratorConfig()
+	configuration.MapSize = expectedSize
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, expectedSize, actual.SizeX)
+	assert.Equal(t, expectedSize, actual.SizeZ)
+}
+
+func TestWhenGameModeIsClassic_SetsExpectedGameModeAndDisablesHeroHireBan(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameMode = "Classic"
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, "Classic", actual.GameMode)
+	assert.False(t, actual.GameRules.HeroHireBan)
+}
+
+func TestWhenGameModeIsSingleHero_SetsExpectedHeroCounts(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameMode = "SingleHero"
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, "SingleHero", actual.GameMode)
+	assert.True(t, actual.GameRules.HeroHireBan)
+	assert.Equal(t, 1, actual.GameRules.HeroCountMin)
+	assert.Equal(t, 1, actual.GameRules.HeroCountMax)
+	assert.Equal(t, 1, actual.GameRules.HeroCountIncrement)
+}
+
+func TestWhenNonDefaultHeroSettingsInClassic_SetsExpectedHeroSettings(t *testing.T) {
+	// Arrange
+	expectedMin := gofakeit.Number(1, 5)
+	expectedMax := gofakeit.Number(expectedMin, 10)
+	expectedIncrement := gofakeit.Number(1, 3)
+	configuration := config.NewGeneratorConfig()
+	configuration.HeroSettings = config.HeroSettings{
+		HeroCountMin:       expectedMin,
+		HeroCountMax:       expectedMax,
+		HeroCountIncrement: expectedIncrement,
+	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, expectedIncrement, actual.GameRules.HeroCountIncrement)
+	assert.Equal(t, expectedMax, actual.GameRules.HeroCountMax)
+	assert.Equal(t, expectedMin, actual.GameRules.HeroCountMin)
+}
+
+func TestWhenNonDefaultFactionLawsExpPercent_SetsExpectedModifier(t *testing.T) {
+	// Arrange
+	expected := gofakeit.IntRange(25, 200)
+	configuration := config.NewGeneratorConfig()
+	configuration.FactionLawsExpPercent = expected
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, float64(expected)/100, actual.GameRules.FactionLawsExpModifier)
+}
+
+func TestWhenBelowMinimumFactionLawsExpPercent_SetsExpectedModifier(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.FactionLawsExpPercent = gofakeit.IntRange(-1000, 20)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, 0.25, actual.GameRules.FactionLawsExpModifier)
+}
+
+func TestWhenAboveMaximumFactionLawsExpPercent_SetsExpectedModifier(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.FactionLawsExpPercent = gofakeit.IntRange(201, 9999)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, 2.0, actual.GameRules.FactionLawsExpModifier)
+}
+
+func TestWhenNonDefaultAstrologyExpPercent_SetsExpectedModifier(t *testing.T) {
+	// Arrange
+	expected := gofakeit.IntRange(25, 200)
+	configuration := config.NewGeneratorConfig()
+	configuration.AstrologyExpPercent = expected
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, float64(expected)/100, actual.GameRules.AstrologyExpModifier)
+}
+
+func TestWhenBelowMinimumAstrologyExpPercent_SetsExpectedModifier(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.AstrologyExpPercent = gofakeit.IntRange(-1000, 20)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, 0.25, actual.GameRules.AstrologyExpModifier)
+}
+
+func TestWhenAboveMaximumAstrologyExpPercent_SetsExpectedModifier(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.AstrologyExpPercent = gofakeit.IntRange(201, 9999)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, 2.0, actual.GameRules.AstrologyExpModifier)
+}
+
+func TestWhenDefaultTopologySelectedAndNonDefaultPlayerCountProvided_SetsExpectedSpawnZones(t *testing.T) {
+	// Arrange
+	playerCount := gofakeit.Number(2, 8)
+	configuration := config.NewGeneratorConfig()
+	configuration.PlayerCount = playerCount
+	configuration.Topology = config.TopologyDefault
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		ToSlice()
+	assert.Equal(t, playerCount, len(spawnZones))
+	// for i, zone := range spawnZones {
+	// 	expectedName := fmt.Sprintf("Spawn-%c", 'A'+i)
+	// 	assert.Equal(t, expectedName, zone.Name)
+	// }
+}
+func TestWhenDefaultTopologySelectedAndNonDefaultNeutralZoneCountProvided_SetsExpectedNeutralZones(t *testing.T) {
+	// Arrange
+	expectedNeutralZoneCount := gofakeit.Number(0, 30)
+	configuration := config.NewGeneratorConfig()
+	configuration.ZoneConfiguration.NeutralZoneCount = expectedNeutralZoneCount
+	configuration.Topology = config.TopologyDefault
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	neutralZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
+		ToSlice()
+	assert.Equal(t, expectedNeutralZoneCount, len(neutralZones))
+	// for i, zone := range neutralZones {
+	// 	expectedName := fmt.Sprintf("Neutral-%c", 'A'+i+2) // default 2 player zones
+	// 	assert.Equal(t, expectedName, zone.Name)
+	// }
+}
+
+func TestWhenChainTopologySelected_HasZoneCountMinusOneConnections(t *testing.T) {
+	// Arrange
+	playerCount := gofakeit.Number(2, 8)
+	neutralZoneCount := gofakeit.Number(0, 10)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyChain
+	configuration.PlayerCount = playerCount
+	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	expectedConnectionCount := playerCount + neutralZoneCount - 1
+	assert.Equal(t, expectedConnectionCount, len(actual.Variants[0].Connections))
+}
+
+func TestWhenHubTopologySelected_CreatesHubZone(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hubZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return x.Name == "Hub" }).
+		ToSlice()
+	assert.Equal(t, 1, len(hubZones))
+}
+
+func TestWhenSharedWebTopologySelectedAndZeroNeutralZonesProvided_SetsMinimumNeutralZones(t *testing.T) {
+	// Arrange
+	playerCount := gofakeit.Number(3, 8)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySharedWeb
+	configuration.PlayerCount = playerCount
+	configuration.ZoneConfiguration.NeutralZoneCount = 0
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	actualNeutralZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
+		ToSlice()
+	assert.Equal(t, 1, len(actualNeutralZones))
+	assert.Equal(t, fmt.Sprintf("Neutral-%c", 'A'+playerCount), actualNeutralZones[0].Name)
+}
+
+func TestWhenRandomTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRandom
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.NotNil(t, zone.GeneratorPosition, "zone %q should have a generator position", zone.Name)
 	}
 }
 
-func TestGenerate_GameModeClassic(t *testing.T) {
-	s := newCfg()
-	s.GameMode = "Classic"
-	tmpl, _ := services.Generate(s)
-	if tmpl.GameMode != "Classic" {
-		t.Errorf("gameMode = %q", tmpl.GameMode)
-	}
-	if tmpl.GameRules.HeroHireBan {
-		t.Error("HeroHireBan should be false in Classic")
-	}
-}
+func TestWhenBalancedTopologySelected_SetsGeneratorRingOnAllZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyBalanced
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
 
-func TestGenerate_GameModeSingleHero_ForcesHeroCounts(t *testing.T) {
-	s := newCfg()
-	s.GameMode = "SingleHero"
-	s.HeroSettings = config.HeroSettings{HeroCountMin: 4, HeroCountMax: 8, HeroCountIncrement: 2}
-	tmpl, _ := services.Generate(s)
-	gr := tmpl.GameRules
-	if gr.HeroCountMin != 1 || gr.HeroCountMax != 1 || gr.HeroCountIncrement != 1 {
-		t.Errorf("SingleHero should force hero counts to 1, got %+v", gr)
-	}
-	if !gr.HeroHireBan {
-		t.Error("HeroHireBan should be true in SingleHero")
-	}
-}
+	// Act
+	actual := templateGenerator.Generate()
 
-func TestGenerate_HeroSettingsPropagatedInClassic(t *testing.T) {
-	s := newCfg()
-	s.HeroSettings = config.HeroSettings{HeroCountMin: 3, HeroCountMax: 7, HeroCountIncrement: 2}
-	tmpl, _ := services.Generate(s)
-	gr := tmpl.GameRules
-	if gr.HeroCountMin != 3 || gr.HeroCountMax != 7 || gr.HeroCountIncrement != 2 {
-		t.Errorf("hero settings mismatch: %+v", gr)
-	}
-}
-
-func TestGenerate_FactionLawsExpModifierClampedAndScaled(t *testing.T) {
-	s := newCfg()
-	s.FactionLawsExpPercent = 150
-	tmpl, _ := services.Generate(s)
-	if tmpl.GameRules.FactionLawsExpModifier != 1.5 {
-		t.Errorf("got %v, want 1.5", tmpl.GameRules.FactionLawsExpModifier)
-	}
-}
-
-func TestGenerate_AstrologyExpModifierScaled(t *testing.T) {
-	s := newCfg()
-	s.AstrologyExpPercent = 50
-	tmpl, _ := services.Generate(s)
-	if tmpl.GameRules.AstrologyExpModifier != 0.5 {
-		t.Errorf("got %v, want 0.5", tmpl.GameRules.AstrologyExpModifier)
-	}
-}
-
-// ── Generate: zone counts per topology ───────────────────────────────
-
-func countZones(t *testing.T, s *config.GeneratorConfig) (spawn, neutral int) {
-	t.Helper()
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, z := range tmpl.Variants[0].Zones {
-		if strings.HasPrefix(z.Name, "Spawn-") {
-			spawn++
-		}
-		if strings.HasPrefix(z.Name, "Neutral-") {
-			neutral++
-		}
-	}
-	return
-}
-
-func TestGenerate_DefaultTopology_ZoneCounts(t *testing.T) {
-	sp, ne := countZones(t, cfgWith(config.TopologyDefault, 3, 2))
-	if sp != 3 || ne != 2 {
-		t.Errorf("spawn=%d neutral=%d, want 3/2", sp, ne)
-	}
-}
-
-func TestGenerate_ChainTopology_HasNMinusOneConnections(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyChain, 3, 2))
-	if got := len(tmpl.Variants[0].Connections); got != 4 {
-		t.Errorf("chain conns = %d, want 4", got)
-	}
-}
-
-func TestGenerate_HubAndSpokeTopology_HasHubZone(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyHubAndSpoke, 3, 2))
-	found := false
-	for _, z := range tmpl.Variants[0].Zones {
-		if z.Name == "Hub" {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("expected Hub zone")
-	}
-}
-
-func TestGenerate_SharedWebTopology_ForcesNeutralWhenZero(t *testing.T) {
-	_, ne := countZones(t, cfgWith(config.TopologySharedWeb, 2, 0))
-	if ne < 1 {
-		t.Error("expected SharedWeb to inject at least one neutral")
-	}
-}
-
-func TestGenerate_RandomTopology_SetsGeneratorPosition(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyRandom, 3, 2))
-	for _, z := range tmpl.Variants[0].Zones {
-		if z.GeneratorPosition == nil {
-			t.Errorf("zone %q missing GeneratorPosition", z.Name)
-		}
-	}
-}
-
-func TestGenerate_BalancedTopology_SetsGeneratorRing(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyBalanced, 3, 2))
-	for _, z := range tmpl.Variants[0].Zones {
-		if z.GeneratorRing == nil {
-			t.Errorf("zone %q missing GeneratorRing", z.Name)
-		}
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.NotNil(t, zone.GeneratorRing, "zone %q should have a generator ring", zone.Name)
 	}
 }
 
 // ── Generate: connection-type behaviour ──────────────────────────────
 
-func TestGenerate_RandomPortals_AddsPortalConnections(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 4, 4)
-	s.RandomPortals = true
-	s.MaxPortalConnections = 4
-	tmpl, _ := services.Generate(s)
-	portals := 0
-	for _, c := range tmpl.Variants[0].Connections {
-		if c.ConnectionType == "Portal" {
-			portals++
-		}
-	}
-	if portals == 0 {
-		t.Error("expected portal connections")
-	}
+func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = 4
+	configuration.ZoneConfiguration.NeutralZoneCount = 4
+	configuration.RandomPortals = true
+	configuration.MaxPortalConnections = gofakeit.Number(1, 8)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x variant.Connection) bool { return x.ConnectionType == "Portal" }).
+		Any()
+	assert.True(t, hasPortalConnections)
 }
 
-func TestGenerate_RandomPortalsDisabled_NoPortals(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 4, 4)
-	s.RandomPortals = false
-	tmpl, _ := services.Generate(s)
-	for _, c := range tmpl.Variants[0].Connections {
-		if c.ConnectionType == "Portal" {
-			t.Error("portal connection found when RandomPortals=false")
-		}
-	}
+func TestWhenRandomPortalsDisabled_AddsNoPortalConnections(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = 4
+	configuration.ZoneConfiguration.NeutralZoneCount = 4
+	configuration.RandomPortals = false
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x variant.Connection) bool { return x.ConnectionType == "Portal" }).
+		Any()
+	assert.False(t, hasPortalConnections)
 }
 
-func TestGenerate_NoDirectPlayerConnections_Enforced(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 2)
-	s.NoDirectPlayerConnections = true
-	tmpl, _ := services.Generate(s)
-	for _, c := range tmpl.Variants[0].Connections {
-		if c.ConnectionType == "Direct" &&
-			strings.HasPrefix(c.From, "Spawn-") && strings.HasPrefix(c.To, "Spawn-") {
-			t.Errorf("direct player-player connection: %s→%s", c.From, c.To)
-		}
-	}
+func TestWhenNoDirectPlayerConnectionsEnabled_OmitsDirectPlayerConnections(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+
+	configuration.NoDirectPlayerConnections = true
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	directPlayerConnections := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x variant.Connection) bool {
+			return x.ConnectionType == "Direct" &&
+				strings.HasPrefix(x.From, "Spawn-") && strings.HasPrefix(x.To, "Spawn-")
+		}).
+		ToSlice()
+	assert.Empty(t, directPlayerConnections)
 }
 
 // ── Generate: roads ──────────────────────────────────────────────────
 
-func TestGenerate_RoadsEnabled_ProducesRoads(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 2)
-	s.GenerateRoads = true
-	tmpl, _ := services.Generate(s)
-	any := false
-	for _, z := range tmpl.Variants[0].Zones {
-		if len(z.Roads) > 0 {
-			any = true
-			break
-		}
-	}
-	if !any {
-		t.Error("expected some roads")
-	}
+func TestWhenRoadsEnabled_ProducesRoads(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.GenerateRoads = true
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hasRoads := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return len(x.Roads) > 0 }).
+		Any()
+	assert.True(t, hasRoads)
 }
 
-func TestGenerate_RoadsDisabled_NoRoads(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 2)
-	s.GenerateRoads = false
-	tmpl, _ := services.Generate(s)
-	for _, z := range tmpl.Variants[0].Zones {
-		if len(z.Roads) > 0 {
-			t.Errorf("zone %q has roads", z.Name)
-		}
+func TestWhenRoadsDisabled_ProducesNoRoads(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.GenerateRoads = false
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.Empty(t, zone.Roads, "zone %q should have no roads", zone.Name)
 	}
 }
 
 // ── Generate: castle factions ────────────────────────────────────────
 
-func TestGenerate_MatchPlayerCastleFactions_True(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 0)
-	s.ZoneConfiguration.PlayerZoneCastles = 2
-	s.MatchPlayerCastleFactions = true
-	tmpl, _ := services.Generate(s)
-	for _, z := range tmpl.Variants[0].Zones {
-		if !strings.HasPrefix(z.Name, "Spawn-") || len(z.MainObjects) < 2 {
-			continue
-		}
-		if z.MainObjects[1].Faction == nil || z.MainObjects[1].Faction.Type != "Match" {
-			t.Errorf("expected Match faction, got %+v", z.MainObjects[1].Faction)
+func TestWhenMatchPlayerCastleFactionsEnabled_SetsMatchFactionOnPlayerCastles(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.PlayerZoneCastles = 2
+	configuration.MatchPlayerCastleFactions = true
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		ToSlice()
+	for _, zone := range spawnZones {
+		castle := zone.MainObjects[1]
+		if assert.NotNil(t, castle.Faction) {
+			assert.Equal(t, "Match", castle.Faction.Type)
 		}
 	}
 }
 
-func TestGenerate_MatchPlayerCastleFactions_False(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 0)
-	s.ZoneConfiguration.PlayerZoneCastles = 2
-	s.MatchPlayerCastleFactions = false
-	tmpl, _ := services.Generate(s)
-	for _, z := range tmpl.Variants[0].Zones {
-		if !strings.HasPrefix(z.Name, "Spawn-") || len(z.MainObjects) < 2 {
-			continue
-		}
-		if z.MainObjects[1].Faction == nil || z.MainObjects[1].Faction.Type != "Random" {
-			t.Errorf("expected Random faction, got %+v", z.MainObjects[1].Faction)
+func TestWhenMatchPlayerCastleFactionsDisabled_SetsRandomFactionOnPlayerCastles(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.PlayerZoneCastles = 2
+	configuration.MatchPlayerCastleFactions = false
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		ToSlice()
+	for _, zone := range spawnZones {
+		castle := zone.MainObjects[1]
+		if assert.NotNil(t, castle.Faction) {
+			assert.Equal(t, "Random", castle.Faction.Type)
 		}
 	}
 }
 
 // ── Generate: city hold / lost city ──────────────────────────────────
 
-func TestGenerate_CityHoldExplicit_SetsHoldCity(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 2)
-	s.GameEndConditions = &config.GameEndConditions{
+func TestWhenCityHoldEnabled_MarksHoldCityWinConditionObject(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(1, 6)
+	configuration.GameEndConditions = &config.GameEndConditions{
 		VictoryCondition: "win_condition_1",
-		CityHold:         true, CityHoldDays: 5, LostStartCityDay: 3,
+		CityHold:         true,
+		CityHoldDays:     gofakeit.Number(1, 10),
+		LostStartCityDay: 3,
 	}
-	tmpl, _ := services.Generate(s)
-	if !tmpl.GameRules.WinConditions.CityHold {
-		t.Error("expected CityHold true")
-	}
-	hits := 0
-	for _, z := range tmpl.Variants[0].Zones {
-		for _, mo := range z.MainObjects {
-			if mo.HoldCityWinCon {
-				hits++
-			}
-		}
-	}
-	if hits == 0 {
-		t.Error("expected a HoldCityWinCon main object")
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.True(t, actual.GameRules.WinConditions.CityHold)
+	holdCityZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(zone variant.Zone) bool {
+			return linq.FromSlice(zone.MainObjects).
+				Where(func(object variant.MainObject) bool { return object.HoldCityWinCon }).
+				Any()
+		}).
+		ToSlice()
+	assert.NotEmpty(t, holdCityZones)
 }
 
-func TestGenerate_CityHoldFromVictoryCondition5(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 2)
-	s.GameEndConditions = &config.GameEndConditions{VictoryCondition: "win_condition_5", LostStartCityDay: 3, CityHoldDays: 6}
-	tmpl, _ := services.Generate(s)
-	if !tmpl.GameRules.WinConditions.CityHold {
-		t.Error("win_condition_5 should set CityHold")
+func TestWhenVictoryConditionFiveProvided_EnablesCityHoldWinCondition(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameEndConditions = &config.GameEndConditions{
+		VictoryCondition: "win_condition_5",
+		LostStartCityDay: 3,
+		CityHoldDays:     6,
 	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.True(t, actual.GameRules.WinConditions.CityHold)
 }
 
-func TestGenerate_HubAndSpokeCityHold_HubIsHoldCity(t *testing.T) {
-	s := cfgWith(config.TopologyHubAndSpoke, 2, 0)
-	s.GameEndConditions = &config.GameEndConditions{VictoryCondition: "win_condition_5", LostStartCityDay: 3, CityHoldDays: 6, CityHold: true}
-	tmpl, _ := services.Generate(s)
-	hubHold := false
-	for _, z := range tmpl.Variants[0].Zones {
-		if z.Name != "Hub" {
-			continue
-		}
-		for _, mo := range z.MainObjects {
-			if mo.HoldCityWinCon {
-				hubHold = true
-			}
-		}
+func TestWhenCityHoldEnabledWithHubAndSpokeTopology_MarksHubAsHoldCity(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.GameEndConditions = &config.GameEndConditions{
+		VictoryCondition: "win_condition_5",
+		LostStartCityDay: 3,
+		CityHoldDays:     6,
+		CityHold:         true,
 	}
-	if !hubHold {
-		t.Error("expected Hub to be the hold city")
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hubHoldsCity := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(zone variant.Zone) bool { return zone.Name == "Hub" }).
+		Where(func(zone variant.Zone) bool {
+			return linq.FromSlice(zone.MainObjects).
+				Where(func(object variant.MainObject) bool { return object.HoldCityWinCon }).
+				Any()
+		}).
+		Any()
+	assert.True(t, hubHoldsCity)
 }
 
-func TestGenerate_LostStartCityFromVictoryCondition3(t *testing.T) {
-	s := newCfg()
-	s.GameEndConditions = &config.GameEndConditions{VictoryCondition: "win_condition_3", LostStartCityDay: 5, CityHoldDays: 6}
-	tmpl, _ := services.Generate(s)
-	if !tmpl.GameRules.WinConditions.LostStartCity {
-		t.Error("win_condition_3 should set LostStartCity")
+func TestWhenVictoryConditionThreeProvided_EnablesLostStartCityWinCondition(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameEndConditions = &config.GameEndConditions{
+		VictoryCondition: "win_condition_3",
+		LostStartCityDay: 5,
+		CityHoldDays:     6,
 	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.True(t, actual.GameRules.WinConditions.LostStartCity)
 }
 
 // ── Generate: gladiator arena ────────────────────────────────────────
 
-func TestGenerate_GladiatorArena_Enabled(t *testing.T) {
-	s := newCfg()
-	s.GladiatorArenaRules = &config.GladiatorArenaRules{Enabled: true, DaysDelayStart: 10, CountDay: 4}
-	tmpl, _ := services.Generate(s)
-	wc := tmpl.GameRules.WinConditions
-	if !wc.GladiatorArena || wc.GladiatorArenaDaysDelayStart != 10 || wc.GladiatorArenaCountDay != 4 {
-		t.Errorf("gladiator config not propagated: %+v", wc)
+func TestWhenGladiatorArenaEnabled_PropagatesGladiatorRules(t *testing.T) {
+	// Arrange
+	expectedDaysDelayStart := gofakeit.Number(1, 30)
+	expectedCountDay := gofakeit.Number(1, 7)
+	configuration := config.NewGeneratorConfig()
+	configuration.GladiatorArenaRules = &config.GladiatorArenaRules{
+		Enabled:        true,
+		DaysDelayStart: expectedDaysDelayStart,
+		CountDay:       expectedCountDay,
 	}
-	if wc.ChampionSelectRule != "StartHero" {
-		t.Errorf("ChampionSelectRule = %q", wc.ChampionSelectRule)
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	winConditions := actual.GameRules.WinConditions
+	assert.True(t, winConditions.GladiatorArena)
+	assert.Equal(t, expectedDaysDelayStart, winConditions.GladiatorArenaDaysDelayStart)
+	assert.Equal(t, expectedCountDay, winConditions.GladiatorArenaCountDay)
+	assert.Equal(t, "StartHero", winConditions.ChampionSelectRule)
 }
 
-func TestGenerate_GladiatorArenaFromVictoryCondition4(t *testing.T) {
-	s := newCfg()
-	s.GameEndConditions = &config.GameEndConditions{VictoryCondition: "win_condition_4", LostStartCityDay: 3, CityHoldDays: 6}
-	tmpl, _ := services.Generate(s)
-	if !tmpl.GameRules.WinConditions.GladiatorArena {
-		t.Error("win_condition_4 should enable GladiatorArena")
+func TestWhenVictoryConditionFourProvided_EnablesGladiatorArenaWinCondition(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameEndConditions = &config.GameEndConditions{
+		VictoryCondition: "win_condition_4",
+		LostStartCityDay: 3,
+		CityHoldDays:     6,
 	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.True(t, actual.GameRules.WinConditions.GladiatorArena)
 }
 
 // ── Generate: tournament ─────────────────────────────────────────────
 
-func TestGenerate_TournamentEnabled_FillsRoundSchedule(t *testing.T) {
-	s := newCfg()
-	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 10, Interval: 5, PointsToWin: 3, SaveArmy: true}
-	tmpl, _ := services.Generate(s)
-	wc := tmpl.GameRules.WinConditions
-	if !wc.Tournament {
-		t.Fatal("expected Tournament=true")
+func TestWhenTournamentEnabled_FillsRoundScheduleFromPointsToWin(t *testing.T) {
+	// Arrange
+	expectedPointsToWin := gofakeit.Number(1, 5)
+	configuration := config.NewGeneratorConfig()
+	configuration.TournamentRules = &config.TournamentRules{
+		Enabled:            true,
+		FirstTournamentDay: 10,
+		Interval:           5,
+		PointsToWin:        expectedPointsToWin,
+		SaveArmy:           true,
 	}
-	if wc.TournamentPointsToWin != 3 {
-		t.Errorf("pointsToWin = %d", wc.TournamentPointsToWin)
-	}
-	// pointsToWin=3 → roundCount=5
-	if len(wc.TournamentAnnounceDays) != 5 || len(wc.TournamentDays) != 5 {
-		t.Errorf("expected 5 announce/battle slots, got %d/%d", len(wc.TournamentAnnounceDays), len(wc.TournamentDays))
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	winConditions := actual.GameRules.WinConditions
+	expectedRoundCount := expectedPointsToWin*2 - 1
+	assert.True(t, winConditions.Tournament)
+	assert.Equal(t, expectedPointsToWin, winConditions.TournamentPointsToWin)
+	assert.Len(t, winConditions.TournamentAnnounceDays, expectedRoundCount)
+	assert.Len(t, winConditions.TournamentDays, expectedRoundCount)
 }
 
-func TestGenerate_TournamentFromVictoryCondition6(t *testing.T) {
-	s := newCfg()
-	s.GameEndConditions = &config.GameEndConditions{VictoryCondition: "win_condition_6", LostStartCityDay: 3, CityHoldDays: 6}
-	tmpl, _ := services.Generate(s)
-	if !tmpl.GameRules.WinConditions.Tournament {
-		t.Error("win_condition_6 should enable Tournament")
+func TestWhenVictoryConditionSixProvided_EnablesTournamentWinCondition(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameEndConditions = &config.GameEndConditions{
+		VictoryCondition: "win_condition_6",
+		LostStartCityDay: 3,
+		CityHoldDays:     6,
 	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.True(t, actual.GameRules.WinConditions.Tournament)
 }
 
-func TestGenerate_Tournament2Players_BuildsSplitClusters(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 4)
-	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
-	tmpl, _ := services.Generate(s)
-	hasRingGuard := false
-	for _, c := range tmpl.Variants[0].Connections {
-		if strings.HasPrefix(c.GuardMatchGroup, "tourney_ring_guard_") {
-			hasRingGuard = true
-			break
-		}
+func TestWhenTournamentEnabledWithTwoPlayersAndDefaultTopology_CreatesRingGuardGroups(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = 2
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.TournamentRules = &config.TournamentRules{
+		Enabled:            true,
+		FirstTournamentDay: 14,
+		Interval:           7,
+		PointsToWin:        2,
 	}
-	if !hasRingGuard {
-		t.Error("expected tourney_ring_guard groups in 2p tournament default")
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hasRingGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x variant.Connection) bool { return strings.HasPrefix(x.GuardMatchGroup, "tourney_ring_guard_") }).
+		Any()
+	assert.True(t, hasRingGuardGroup)
 }
 
-func TestGenerate_TournamentHubAndSpoke_CreatesPerPlayerHubs(t *testing.T) {
-	s := cfgWith(config.TopologyHubAndSpoke, 2, 2)
-	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
-	tmpl, _ := services.Generate(s)
-	hubCount := 0
-	for _, z := range tmpl.Variants[0].Zones {
-		if strings.HasPrefix(z.Name, "Hub-") {
-			hubCount++
-		}
+func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesOneHubPerPlayer(t *testing.T) {
+	// Arrange
+	expectedHubCount := gofakeit.Number(2, 8)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.PlayerCount = expectedHubCount
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.TournamentRules = &config.TournamentRules{
+		Enabled:            true,
+		FirstTournamentDay: 14,
+		Interval:           7,
+		PointsToWin:        2,
 	}
-	if hubCount != 2 {
-		t.Errorf("expected 2 per-player hubs, got %d", hubCount)
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	perPlayerHubs := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Hub-") }).
+		ToSlice()
+	assert.Equal(t, expectedHubCount, len(perPlayerHubs))
 }
 
-func TestGenerate_TournamentChainTopology(t *testing.T) {
-	s := cfgWith(config.TopologyChain, 2, 2)
-	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
-	tmpl, _ := services.Generate(s)
-	hits := 0
-	for _, c := range tmpl.Variants[0].Connections {
-		if strings.HasPrefix(c.GuardMatchGroup, "tourney_guard_") {
-			hits++
-		}
+func TestWhenTournamentEnabledWithChainTopology_CreatesChainGuardGroups(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyChain
+	configuration.PlayerCount = 2
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.TournamentRules = &config.TournamentRules{
+		Enabled:            true,
+		FirstTournamentDay: 14,
+		Interval:           7,
+		PointsToWin:        2,
 	}
-	if hits == 0 {
-		t.Error("expected tourney_guard_* in chain tournament")
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hasChainGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x variant.Connection) bool { return strings.HasPrefix(x.GuardMatchGroup, "tourney_guard_") }).
+		Any()
+	assert.True(t, hasChainGuardGroup)
 }
 
-func TestGenerate_TournamentBalancedTopology(t *testing.T) {
-	s := cfgWith(config.TopologyBalanced, 2, 4)
-	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
-	tmpl, _ := services.Generate(s)
-	hits := 0
-	for _, c := range tmpl.Variants[0].Connections {
-		if strings.HasPrefix(c.GuardMatchGroup, "tourney_bal_guard_") {
-			hits++
-		}
+func TestWhenTournamentEnabledWithBalancedTopology_CreatesBalancedGuardGroups(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyBalanced
+	configuration.PlayerCount = 2
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.TournamentRules = &config.TournamentRules{
+		Enabled:            true,
+		FirstTournamentDay: 14,
+		Interval:           7,
+		PointsToWin:        2,
 	}
-	if hits == 0 {
-		t.Error("expected tourney_bal_guard_* in balanced tournament")
-	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	hasBalancedGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x variant.Connection) bool { return strings.HasPrefix(x.GuardMatchGroup, "tourney_bal_guard_") }).
+		Any()
+	assert.True(t, hasBalancedGuardGroup)
 }
 
 // ── Generate: advanced neutral mix ───────────────────────────────────
 
-func TestGenerate_AdvancedMode_MixedNeutralCounts(t *testing.T) {
-	s := newCfg()
-	s.Topology = config.TopologyDefault
-	s.PlayerCount = 2
-	s.ZoneConfiguration.Advanced.Enabled = true
-	s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = 1
-	s.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
-	s.ZoneConfiguration.Advanced.NeutralHighCastleCount = 1
-	_, ne := countZones(t, s)
-	if ne != 3 {
-		t.Errorf("expected 3 neutrals, got %d", ne)
-	}
+func TestWhenAdvancedModeEnabledAndNeutralZonesSelected_SetsExpectedNeutralZoneCount(t *testing.T) {
+	// Arrange
+	maxCastleCount := 30
+	lowNoCastleCount := gofakeit.Number(0, maxCastleCount)
+	maxCastleCount -= lowNoCastleCount
+	lowCastleCount := gofakeit.Number(0, maxCastleCount)
+	maxCastleCount -= lowCastleCount
+	mediumNoCastleCount := gofakeit.Number(0, maxCastleCount)
+	maxCastleCount -= mediumNoCastleCount
+	mediumCastleCount := gofakeit.Number(0, maxCastleCount)
+	maxCastleCount -= mediumCastleCount
+	highNoCastleCount := gofakeit.Number(0, maxCastleCount)
+	maxCastleCount -= highNoCastleCount
+	highCastleCount := gofakeit.Number(0, maxCastleCount)
+	expectedNeutralCount := lowNoCastleCount + lowCastleCount + mediumNoCastleCount + mediumCastleCount + highNoCastleCount + highCastleCount
+
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.ZoneConfiguration.Advanced.Enabled = true
+	configuration.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = lowNoCastleCount
+	configuration.ZoneConfiguration.Advanced.NeutralLowCastleCount = lowCastleCount
+	configuration.ZoneConfiguration.Advanced.NeutralMediumNoCastleCount = mediumNoCastleCount
+	configuration.ZoneConfiguration.Advanced.NeutralMediumCastleCount = mediumCastleCount
+	configuration.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = highNoCastleCount
+	configuration.ZoneConfiguration.Advanced.NeutralHighCastleCount = highCastleCount
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	actualNeutralCount := len(linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
+		ToSlice())
+	assert.Equal(t, expectedNeutralCount, actualNeutralCount)
 }
 
-func TestGenerate_AdvancedMode_GuardRandomizationClamped(t *testing.T) {
-	s := newCfg()
-	s.ZoneConfiguration.Advanced.Enabled = true
-	s.ZoneConfiguration.Advanced.GuardRandomization = 5.0 // way over 0.5
-	tmpl, _ := services.Generate(s)
-	for _, z := range tmpl.Variants[0].Zones {
-		if z.GuardRandomization > 0.5 {
-			t.Errorf("zone %q: GuardRandomization = %f, want <= 0.5", z.Name, z.GuardRandomization)
-		}
+func TestWhenAdvancedGuardRandomizationExceedsMaximum_ClampsGuardRandomization(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.ZoneConfiguration.Advanced.Enabled = true
+	configuration.ZoneConfiguration.Advanced.GuardRandomization = gofakeit.Float64Range(0.6, 10.0)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.LessOrEqual(t, zone.GuardRandomization, 0.5, "zone %q guard randomization should be clamped", zone.Name)
 	}
 }
 
 // ── Generate: structural template fields ─────────────────────────────
 
-func TestGenerate_AlwaysHasOneVariant(t *testing.T) {
-	tmpl, _ := services.Generate(newCfg())
-	if len(tmpl.Variants) != 1 {
-		t.Errorf("expected 1 variant, got %d", len(tmpl.Variants))
-	}
+func TestWhenGenerating_AlwaysProducesExactlyOneVariant(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Len(t, actual.Variants, 1)
 }
 
-func TestGenerate_ZoneLayouts_Has4Named(t *testing.T) {
-	tmpl, _ := services.Generate(newCfg())
-	if len(tmpl.ZoneLayouts) != 4 {
-		t.Errorf("expected 4 zone layouts, got %d", len(tmpl.ZoneLayouts))
-	}
+func TestWhenGenerating_ProducesFourZoneLayouts(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Len(t, actual.ZoneLayouts, 4)
 }
 
-func TestGenerate_ContentCountLimits_HasGroups(t *testing.T) {
-	tmpl, _ := services.Generate(newCfg())
-	if len(tmpl.ContentCountLimits) == 0 {
-		t.Error("expected content count limits")
-	}
+func TestWhenGenerating_ProducesContentCountLimits(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.NotEmpty(t, actual.ContentCountLimits)
 }
 
-func TestGenerate_Description_ContainsTopologyName(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyChain, 2, 2))
-	if !strings.Contains(tmpl.Description, "Chain") {
-		t.Errorf("description %q missing Chain", tmpl.Description)
-	}
+func TestWhenChainTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyChain
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Contains(t, actual.Description, "Chain")
 }
 
-func TestGenerate_Description_OptionsAppended(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 2)
-	s.NoDirectPlayerConnections = true
-	s.RandomPortals = true
-	s.SpawnRemoteFootholds = false
-	s.GenerateRoads = false
-	tmpl, _ := services.Generate(s)
-	for _, want := range []string{"isolated player starts", "random portals", "no remote footholds", "roads disabled"} {
-		if !strings.Contains(tmpl.Description, want) {
-			t.Errorf("description %q missing %q", tmpl.Description, want)
-		}
-	}
+func TestWhenDescriptionOptionsEnabled_AppendsOptionPhrasesToDescription(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.NoDirectPlayerConnections = true
+	configuration.RandomPortals = true
+	configuration.SpawnRemoteFootholds = false
+	configuration.GenerateRoads = false
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Contains(t, actual.Description, "isolated player starts")
+	assert.Contains(t, actual.Description, "random portals")
+	assert.Contains(t, actual.Description, "no remote footholds")
+	assert.Contains(t, actual.Description, "roads disabled")
 }
 
-func TestGenerate_DisplayWinConditionPropagated(t *testing.T) {
-	s := newCfg()
-	s.GameEndConditions = &config.GameEndConditions{VictoryCondition: "win_condition_2", LostStartCityDay: 3, CityHoldDays: 6}
-	tmpl, _ := services.Generate(s)
-	if tmpl.DisplayWinCondition != "win_condition_2" {
-		t.Errorf("got %q", tmpl.DisplayWinCondition)
+func TestWhenVictoryConditionProvided_PropagatesToDisplayWinCondition(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameEndConditions = &config.GameEndConditions{
+		VictoryCondition: "win_condition_2",
+		LostStartCityDay: 3,
+		CityHoldDays:     6,
 	}
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, "win_condition_2", actual.DisplayWinCondition)
 }
 
-func TestGenerate_NilGameEndConditions_UsesDefaults(t *testing.T) {
-	s := newCfg()
-	s.GameEndConditions = nil
-	tmpl, err := services.Generate(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if tmpl.DisplayWinCondition != "win_condition_1" {
-		t.Errorf("expected default win_condition_1, got %q", tmpl.DisplayWinCondition)
-	}
+func TestWhenGameEndConditionsAreNil_UsesDefaultWinCondition(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GameEndConditions = nil
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	assert.Equal(t, "win_condition_1", actual.DisplayWinCondition)
 }
 
 // ── Generate: mandatory content groups ───────────────────────────────
 
-func TestGenerate_MandatoryContentGroupsMatchZones(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyDefault, 3, 2))
-	playerGroups, neutralGroups := 0, 0
-	for _, mc := range tmpl.MandatoryContent {
-		switch {
-		case strings.HasPrefix(mc.Name, "mandatory_content_side_"):
-			playerGroups++
-		case strings.HasPrefix(mc.Name, "mandatory_content_neutral_"):
-			neutralGroups++
-		}
-	}
-	if playerGroups != 3 || neutralGroups != 2 {
-		t.Errorf("groups = %d player, %d neutral; want 3/2", playerGroups, neutralGroups)
-	}
+func TestWhenGenerating_CreatesMandatoryContentGroupPerPlayerAndNeutralZone(t *testing.T) {
+	// Arrange
+	playerCount := gofakeit.Number(2, 8)
+	neutralZoneCount := gofakeit.Number(1, 6)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = playerCount
+	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	playerGroups := linq.FromSlice(actual.MandatoryContent).
+		Where(func(x template.MandatoryContent) bool { return strings.HasPrefix(x.Name, "mandatory_content_side_") }).
+		ToSlice()
+	neutralGroups := linq.FromSlice(actual.MandatoryContent).
+		Where(func(x template.MandatoryContent) bool { return strings.HasPrefix(x.Name, "mandatory_content_neutral_") }).
+		ToSlice()
+	assert.Len(t, playerGroups, playerCount)
+	assert.Len(t, neutralGroups, neutralZoneCount)
 }
 
 // ── Generate: spawn zone main objects ────────────────────────────────
 
-func TestGenerate_SpawnZoneHasSpawnMainObject(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyDefault, 2, 0))
-	for _, z := range tmpl.Variants[0].Zones {
-		if !strings.HasPrefix(z.Name, "Spawn-") {
-			continue
-		}
-		if len(z.MainObjects) == 0 || z.MainObjects[0].Type != "Spawn" {
-			t.Errorf("zone %q: missing Spawn main object", z.Name)
+func TestWhenGenerating_PlacesSpawnMainObjectInEachSpawnZone(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		ToSlice()
+	for _, zone := range spawnZones {
+		if assert.NotEmpty(t, zone.MainObjects) {
+			assert.Equal(t, "Spawn", zone.MainObjects[0].Type)
 		}
 	}
 }
 
-func TestGenerate_MultipleCastlesAddedToSpawn(t *testing.T) {
-	s := cfgWith(config.TopologyDefault, 2, 0)
-	s.ZoneConfiguration.PlayerZoneCastles = 3
-	tmpl, _ := services.Generate(s)
-	for _, z := range tmpl.Variants[0].Zones {
-		if !strings.HasPrefix(z.Name, "Spawn-") {
-			continue
-		}
-		if len(z.MainObjects) != 3 {
-			t.Errorf("zone %q: %d main objects, want 3", z.Name, len(z.MainObjects))
-		}
+func TestWhenMultiplePlayerCastlesConfigured_AddsConfiguredCastleCountToEachSpawnZone(t *testing.T) {
+	// Arrange
+	expectedCastleCount := gofakeit.Number(2, 5)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.PlayerZoneCastles = expectedCastleCount
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		ToSlice()
+	for _, zone := range spawnZones {
+		assert.Len(t, zone.MainObjects, expectedCastleCount)
 	}
 }
 
 // ── Generate: border guards scale with quality ───────────────────────
 
-func TestGenerate_BorderGuardsHigherForHighQuality(t *testing.T) {
-	mk := func(low, high int) int {
-		s := cfgWith(config.TopologyDefault, 2, 0)
-		s.ZoneConfiguration.Advanced.Enabled = true
-		s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = low
-		s.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = high
-		tmpl, _ := services.Generate(s)
+func TestWhenNeutralZonesAreHighQuality_ProducesHigherBorderGuardValues(t *testing.T) {
+	// Arrange
+	totalGuardValueFor := func(lowQualityCount, highQualityCount int) int {
+		configuration := config.NewGeneratorConfig()
+		configuration.Topology = config.TopologyDefault
+		configuration.PlayerCount = 2
+		configuration.ZoneConfiguration.Advanced.Enabled = true
+		configuration.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = lowQualityCount
+		configuration.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = highQualityCount
+		actual := template_generator.NewTemplateGenerator(configuration).Generate()
 		total := 0
-		for _, c := range tmpl.Variants[0].Connections {
-			total += c.GuardValue
+		for _, connection := range actual.Variants[0].Connections {
+			total += connection.GuardValue
 		}
 		return total
 	}
-	if mk(0, 4) <= mk(4, 0) {
-		t.Error("expected high-quality border guards > low-quality")
-	}
+
+	// Act
+	highQualityTotal := totalGuardValueFor(0, 4)
+	lowQualityTotal := totalGuardValueFor(4, 0)
+
+	// Assert
+	assert.Greater(t, highQualityTotal, lowQualityTotal)
 }
 
 // ── Generate: comprehensive topology smoke ───────────────────────────
 
-func TestGenerate_AllTopologiesCompleteWithoutError(t *testing.T) {
-	for _, topo := range []config.MapTopology{
+func TestWhenGeneratingForEachTopology_ProducesZones(t *testing.T) {
+	topologies := []config.MapTopology{
 		config.TopologyDefault, config.TopologyChain, config.TopologyHubAndSpoke,
 		config.TopologySharedWeb, config.TopologyRandom, config.TopologyBalanced,
-	} {
-		t.Run(string(topo), func(t *testing.T) {
-			tmpl, err := services.Generate(cfgWith(topo, 4, 4))
-			if err != nil {
-				t.Fatal(err)
-			}
-			if len(tmpl.Variants[0].Zones) == 0 {
-				t.Fatal("no zones produced")
-			}
+	}
+	for _, topology := range topologies {
+		t.Run(string(topology), func(t *testing.T) {
+			// Arrange
+			configuration := config.NewGeneratorConfig()
+			configuration.Topology = topology
+			configuration.PlayerCount = 4
+			configuration.ZoneConfiguration.NeutralZoneCount = 4
+			templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+			// Act
+			actual := templateGenerator.Generate()
+
+			// Assert
+			assert.NotEmpty(t, actual.Variants[0].Zones)
 		})
 	}
 }
@@ -712,7 +1104,7 @@ type expectedTemplate struct {
 	WinCityHoldDays  int
 }
 
-func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
+func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 	commonGameRules := struct {
 		min, max, inc                            int
 		hireBan                                  bool
@@ -760,7 +1152,7 @@ func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
 			topology: config.TopologyDefault,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Olden Era Template Generator: Ring layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Ring layout, no neutral zones, 1 castle per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{
 					{"Spawn-A", "Spawn-B", "Direct"},
@@ -773,7 +1165,7 @@ func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
 			topology: config.TopologyChain,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Olden Era Template Generator: Chain layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Chain layout, no neutral zones, 1 castle per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{{"Spawn-A", "Spawn-B", "Direct"}},
 				2,
@@ -783,7 +1175,7 @@ func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
 			topology: config.TopologyHubAndSpoke,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Olden Era Template Generator: Hub layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Hub layout, no neutral zones, 1 castle per player zone.",
 				[]string{"Hub", "Spawn-A", "Spawn-B"},
 				[]expectedConnection{
 					{"Hub", "Spawn-B", "Direct"},
@@ -798,7 +1190,7 @@ func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
 			topology: config.TopologySharedWeb,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Olden Era Template Generator: Shared Web layout, 1 neutral zone, 1 castle per player zone, 1 castle per neutral zone.",
+				"Generated with Custom Template Editor: Shared Web layout, 1 neutral zone, 1 castle per player zone, 1 castle per neutral zone.",
 				[]string{"Neutral-C", "Spawn-A", "Spawn-B"},
 				[]expectedConnection{
 					{"Spawn-B", "Neutral-C", "Direct"},
@@ -811,7 +1203,7 @@ func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
 			topology: config.TopologyRandom,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Olden Era Template Generator: Random layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Random layout, no neutral zones, 1 castle per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{{"Spawn-B", "Spawn-A", "Direct"}},
 				2,
@@ -821,7 +1213,7 @@ func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
 			topology: config.TopologyBalanced,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Olden Era Template Generator: Balanced layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Balanced layout, no neutral zones, 1 castle per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{{"Spawn-A", "Spawn-B", "Direct"}},
 				2,
@@ -829,188 +1221,108 @@ func TestGenerate_AllTopologiesReturnExpectedResult(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(string(tc.topology), func(t *testing.T) {
-			s := config.NewGeneratorConfig()
-			s.Topology = tc.topology
+	for _, testCase := range cases {
+		t.Run(string(testCase.topology), func(t *testing.T) {
+			// Arrange
+			configuration := config.NewGeneratorConfig()
+			configuration.Topology = testCase.topology
+			templateGenerator := template_generator.NewTemplateGenerator(configuration)
 
-			tmpl, err := services.Generate(s)
-			if err != nil {
-				t.Fatalf("Generate(%s) returned error: %v", tc.topology, err)
-			}
+			// Act
+			actual := templateGenerator.Generate()
 
-			assertTemplateMatches(t, tc.want, tmpl)
+			// Assert
+			assertTemplateMatches(t, testCase.want, actual)
 		})
 	}
 }
 
-func assertTemplateMatches(t *testing.T, want expectedTemplate, got *template.RmgTemplateModel) {
+func assertTemplateMatches(t *testing.T, expected expectedTemplate, actual *template.RmgTemplateModel) {
 	t.Helper()
 
 	// Top-level scalar fields.
-	if got.Name != want.Name {
-		t.Errorf("Name = %q, want %q", got.Name, want.Name)
-	}
-	if got.GameMode != want.GameMode {
-		t.Errorf("GameMode = %q, want %q", got.GameMode, want.GameMode)
-	}
-	if got.Description != want.Description {
-		t.Errorf("Description = %q, want %q", got.Description, want.Description)
-	}
-	if got.DisplayWinCondition != want.DisplayWinCondition {
-		t.Errorf("DisplayWinCondition = %q, want %q", got.DisplayWinCondition, want.DisplayWinCondition)
-	}
-	if got.SizeX != want.SizeX {
-		t.Errorf("SizeX = %d, want %d", got.SizeX, want.SizeX)
-	}
-	if got.SizeZ != want.SizeZ {
-		t.Errorf("SizeZ = %d, want %d", got.SizeZ, want.SizeZ)
-	}
+	assert.Equal(t, expected.Name, actual.Name)
+	assert.Equal(t, expected.GameMode, actual.GameMode)
+	assert.Equal(t, expected.Description, actual.Description)
+	assert.Equal(t, expected.DisplayWinCondition, actual.DisplayWinCondition)
+	assert.Equal(t, expected.SizeX, actual.SizeX)
+	assert.Equal(t, expected.SizeZ, actual.SizeZ)
 
 	// Variants / zones / connections.
-	if len(got.Variants) != want.VariantCount {
-		t.Fatalf("Variants count = %d, want %d", len(got.Variants), want.VariantCount)
-	}
-	variant := got.Variants[0]
+	assert.Len(t, actual.Variants, expected.VariantCount)
+	generatedVariant := actual.Variants[0]
 
-	gotZoneNames := make([]string, len(variant.Zones))
-	for i, z := range variant.Zones {
-		gotZoneNames[i] = z.Name
+	actualZoneNames := make([]string, 0, len(generatedVariant.Zones))
+	for _, zone := range generatedVariant.Zones {
+		actualZoneNames = append(actualZoneNames, zone.Name)
 	}
-	if !sameStringSet(gotZoneNames, want.ZoneNames) {
-		t.Errorf("Zones = %v, want set %v", gotZoneNames, want.ZoneNames)
-	}
+	assert.ElementsMatch(t, expected.ZoneNames, actualZoneNames)
 
-	gotConns := make([]expectedConnection, len(variant.Connections))
-	for i, c := range variant.Connections {
-		gotConns[i] = expectedConnection{From: c.From, To: c.To, ConnectionType: c.ConnectionType}
+	actualConnections := make([]expectedConnection, 0, len(generatedVariant.Connections))
+	for _, connection := range generatedVariant.Connections {
+		actualConnections = append(actualConnections, normalizeConnection(connection.From, connection.To, connection.ConnectionType))
 	}
-	if !sameConnectionSet(gotConns, want.Connections) {
-		t.Errorf("Connections = %v, want set %v", gotConns, want.Connections)
+	expectedConnections := make([]expectedConnection, 0, len(expected.Connections))
+	for _, connection := range expected.Connections {
+		expectedConnections = append(expectedConnections, normalizeConnection(connection.From, connection.To, connection.ConnectionType))
 	}
+	assert.ElementsMatch(t, expectedConnections, actualConnections)
 
 	// Collection counts.
-	if len(got.ZoneLayouts) != want.ZoneLayoutCount {
-		t.Errorf("ZoneLayouts count = %d, want %d", len(got.ZoneLayouts), want.ZoneLayoutCount)
-	}
-	if len(got.MandatoryContent) != want.MandatoryCount {
-		t.Errorf("MandatoryContent count = %d, want %d", len(got.MandatoryContent), want.MandatoryCount)
-	}
-	if len(got.ContentCountLimits) != want.ContentCountLimits {
-		t.Errorf("ContentCountLimits count = %d, want %d", len(got.ContentCountLimits), want.ContentCountLimits)
-	}
-	if len(got.ContentPools) != want.ContentPoolCount {
-		t.Errorf("ContentPools count = %d, want %d", len(got.ContentPools), want.ContentPoolCount)
-	}
-	if len(got.ContentLists) != want.ContentListCount {
-		t.Errorf("ContentLists count = %d, want %d", len(got.ContentLists), want.ContentListCount)
-	}
+	assert.Len(t, actual.ZoneLayouts, expected.ZoneLayoutCount)
+	assert.Len(t, actual.MandatoryContent, expected.MandatoryCount)
+	assert.Len(t, actual.ContentCountLimits, expected.ContentCountLimits)
+	assert.Len(t, actual.ContentPools, expected.ContentPoolCount)
+	assert.Len(t, actual.ContentLists, expected.ContentListCount)
 
 	// Game rules.
-	gr := got.GameRules
-	if gr.HeroCountMin != want.HeroCountMin {
-		t.Errorf("HeroCountMin = %d, want %d", gr.HeroCountMin, want.HeroCountMin)
-	}
-	if gr.HeroCountMax != want.HeroCountMax {
-		t.Errorf("HeroCountMax = %d, want %d", gr.HeroCountMax, want.HeroCountMax)
-	}
-	if gr.HeroCountIncrement != want.HeroCountIncrement {
-		t.Errorf("HeroCountIncrement = %d, want %d", gr.HeroCountIncrement, want.HeroCountIncrement)
-	}
-	if gr.HeroHireBan != want.HeroHireBan {
-		t.Errorf("HeroHireBan = %t, want %t", gr.HeroHireBan, want.HeroHireBan)
-	}
-	if gr.FactionLawsExpModifier != want.FactionLawsExpModifier {
-		t.Errorf("FactionLawsExpModifier = %v, want %v", gr.FactionLawsExpModifier, want.FactionLawsExpModifier)
-	}
-	if gr.AstrologyExpModifier != want.AstrologyExpModifier {
-		t.Errorf("AstrologyExpModifier = %v, want %v", gr.AstrologyExpModifier, want.AstrologyExpModifier)
-	}
+	gameRules := actual.GameRules
+	assert.Equal(t, expected.HeroCountMin, gameRules.HeroCountMin)
+	assert.Equal(t, expected.HeroCountMax, gameRules.HeroCountMax)
+	assert.Equal(t, expected.HeroCountIncrement, gameRules.HeroCountIncrement)
+	assert.Equal(t, expected.HeroHireBan, gameRules.HeroHireBan)
+	assert.Equal(t, expected.FactionLawsExpModifier, gameRules.FactionLawsExpModifier)
+	assert.Equal(t, expected.AstrologyExpModifier, gameRules.AstrologyExpModifier)
 
 	// Win conditions.
-	wc := gr.WinConditions
-	if wc.Classic != want.WinClassic {
-		t.Errorf("WinConditions.Classic = %t, want %t", wc.Classic, want.WinClassic)
-	}
-	if wc.Desertion != want.WinDesertion {
-		t.Errorf("WinConditions.Desertion = %t, want %t", wc.Desertion, want.WinDesertion)
-	}
-	if wc.DesertionDay != want.WinDesertionDay {
-		t.Errorf("WinConditions.DesertionDay = %d, want %d", wc.DesertionDay, want.WinDesertionDay)
-	}
-	if wc.HeroLighting != want.WinHeroLighting {
-		t.Errorf("WinConditions.HeroLighting = %t, want %t", wc.HeroLighting, want.WinHeroLighting)
-	}
-	if wc.LostStartCityDay != want.WinLostStartCity {
-		t.Errorf("WinConditions.LostStartCityDay = %d, want %d", wc.LostStartCityDay, want.WinLostStartCity)
-	}
-	if wc.CityHoldDays != want.WinCityHoldDays {
-		t.Errorf("WinConditions.CityHoldDays = %d, want %d", wc.CityHoldDays, want.WinCityHoldDays)
-	}
+	winConditions := gameRules.WinConditions
+	assert.Equal(t, expected.WinClassic, winConditions.Classic)
+	assert.Equal(t, expected.WinDesertion, winConditions.Desertion)
+	assert.Equal(t, expected.WinDesertionDay, winConditions.DesertionDay)
+	assert.Equal(t, expected.WinHeroLighting, winConditions.HeroLighting)
+	assert.Equal(t, expected.WinLostStartCity, winConditions.LostStartCityDay)
+	assert.Equal(t, expected.WinCityHoldDays, winConditions.CityHoldDays)
 }
 
-func sameStringSet(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	counts := map[string]int{}
-	for _, s := range a {
-		counts[s]++
-	}
-	for _, s := range b {
-		counts[s]--
-		if counts[s] < 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func sameConnectionSet(a, b []expectedConnection) bool {
-	if len(a) != len(b) {
-		return false
-	}
+func normalizeConnection(from, to, connectionType string) expectedConnection {
 	// Connections are conceptually undirected — normalise endpoints so callers
 	// don't have to anticipate the (non-deterministic) emission order.
-	key := func(c expectedConnection) string {
-		from, to := c.From, c.To
-		if from > to {
-			from, to = to, from
-		}
-		return from + "|" + to + "|" + c.ConnectionType
+	if from > to {
+		from, to = to, from
 	}
-	counts := map[string]int{}
-	for _, c := range a {
-		counts[key(c)]++
-	}
-	for _, c := range b {
-		counts[key(c)]--
-		if counts[key(c)] < 0 {
-			return false
-		}
-	}
-	return true
+	return expectedConnection{From: from, To: to, ConnectionType: connectionType}
 }
 
 // ── Generate: connection endpoints resolve ───────────────────────────
 
-func TestGenerate_AllConnectionEndpointsReferenceKnownZones(t *testing.T) {
-	tmpl, _ := services.Generate(cfgWith(config.TopologyDefault, 3, 2))
-	names := map[string]bool{}
-	for _, z := range tmpl.Variants[0].Zones {
-		names[z.Name] = true
-	}
-	for _, c := range tmpl.Variants[0].Connections {
-		if !names[c.From] || !names[c.To] {
-			t.Errorf("connection %q references unknown zone(s): %s→%s", c.Name, c.From, c.To)
-		}
-	}
-}
+func TestWhenGenerating_AllConnectionEndpointsReferenceKnownZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyDefault
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(1, 6)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
 
-// ── Generate: ZoneLetters exported constant ──────────────────────────
+	// Act
+	actual := templateGenerator.Generate()
 
-func TestZoneLetters_HasAtLeast32Entries(t *testing.T) {
-	if len(services.ZoneLetters) < 32 {
-		t.Errorf("ZoneLetters len = %d, want >= 32", len(services.ZoneLetters))
+	// Assert
+	knownZoneNames := make(map[string]bool)
+	for _, zone := range actual.Variants[0].Zones {
+		knownZoneNames[zone.Name] = true
+	}
+	for _, connection := range actual.Variants[0].Connections {
+		assert.True(t, knownZoneNames[connection.From], "connection %q references unknown zone %q", connection.Name, connection.From)
+		assert.True(t, knownZoneNames[connection.To], "connection %q references unknown zone %q", connection.Name, connection.To)
 	}
 }
