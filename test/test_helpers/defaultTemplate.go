@@ -73,7 +73,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 		Variants: []template.Variant{{
 			Orientation: variant.Orientation{
 				Mode:                 "",
-				ZeroAngleZone:        "Spawn-B",
+				ZeroAngleZone:        "Spawn-A",
 				BaseAngleMin:         45,
 				BaseAngleMax:         45,
 				RandomAngleAmplitude: 360,
@@ -89,7 +89,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			Zones: []template.Zone{
 				{
-					Name:                                "Spawn-B",
+					Name:                                "Spawn-A",
 					GeneratorPosition:                   &[2]float64{0.8799878400648531, 0.4969600324265629}, // Most likely this is random
 					GeneratorRing:                       intPtr(0),
 					Size:                                1,
@@ -122,7 +122,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						"classic_template_pool_random_unguarded_t2_magic",
 					},
 					ResourcesContentPool: []string{"content_pool_general_resources_start_zone_poor"},
-					MandatoryContent:     variant.StringList{"mandatory_content_side_B"},
+					MandatoryContent:     variant.StringList{"mandatory_content_side_A"},
 					ContentCountLimits: variant.StringList{
 						"content_limits_side_1_2",
 						"content_limits_side_1_3",
@@ -182,7 +182,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						{
 							Type:                 "",
 							From:                 variant.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   variant.TypedRef{Type: "Connection", Args: []string{"Rnd-B-A"}},
+							To:                   variant.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,
@@ -191,7 +191,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 					},
 				},
 				{
-					Name:                                "Spawn-A",
+					Name:                                "Spawn-B",
 					GeneratorPosition:                   &[2]float64{0.12, 0.5},
 					GeneratorRing:                       intPtr(0),
 					Size:                                1,
@@ -224,7 +224,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						"classic_template_pool_random_unguarded_t2_magic",
 					},
 					ResourcesContentPool: []string{"content_pool_general_resources_start_zone_poor"},
-					MandatoryContent:     variant.StringList{"mandatory_content_side_A"},
+					MandatoryContent:     variant.StringList{"mandatory_content_side_B"},
 					ContentCountLimits: variant.StringList{
 						"content_limits_side_1_2",
 						"content_limits_side_1_3",
@@ -284,7 +284,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						{
 							Type:                 "",
 							From:                 variant.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   variant.TypedRef{Type: "Connection", Args: []string{"Rnd-B-A"}},
+							To:                   variant.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,
@@ -294,15 +294,15 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				},
 			},
 			Connections: []variant.Connection{{
-				Name:                 "Rnd-B-A",
-				From:                 "Spawn-B",
-				To:                   "Spawn-A",
+				Name:                 "Rnd-A-B",
+				From:                 "Spawn-A",
+				To:                   "Spawn-B",
 				ConnectionType:       "Direct",
 				SimTurnSquad:         true,
-				GuardZone:            "Spawn-B",
+				GuardZone:            "Spawn-A",
 				GuardValue:           30_000,
 				GuardWeeklyIncrement: 0.15,
-				GuardMatchGroup:      "rnd_guard_B_A",
+				GuardMatchGroup:      "rnd_guard_A_B",
 			}},
 		}},
 		ZoneLayouts: []template.ZoneLayoutDef{

@@ -62,7 +62,7 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
 		Variants: []template.Variant{
 			this.topologyProvider.
-				ShufflePlayerZones(true).
+				ShufflePlayerZones(this.configuration.ShufflePlayerZones).
 				CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel),
 		},
 		ZoneLayouts:        this.zoneLayoutProvider.CreateZoneLayouts(),

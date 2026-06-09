@@ -56,6 +56,11 @@ type GeneratorConfig struct {
 	MediumNeutralMandatoryContent []template.MandatoryContentItem
 	HighNeutralMandatoryContent   []template.MandatoryContentItem
 	HubZoneMandatoryContent       []template.MandatoryContentItem
+
+	// ShufflePlayerZones randomises which physical zone each player starts in.
+	// Enabled by default so generated templates vary between runs; tests can
+	// disable it to obtain deterministic output.
+	ShufflePlayerZones bool
 }
 
 func NewGeneratorConfig() *GeneratorConfig {
@@ -88,6 +93,7 @@ func NewGeneratorConfig() *GeneratorConfig {
 		GameEndConditions:   &GameEndConditions{VictoryCondition: "win_condition_1", LostStartCityDay: 3, CityHoldDays: 6},
 		GladiatorArenaRules: &GladiatorArenaRules{DaysDelayStart: 30, CountDay: 3},
 		TournamentRules:     &TournamentRules{FirstTournamentDay: 14, Interval: 7, PointsToWin: 2, SaveArmy: true},
+		ShufflePlayerZones:  true,
 	}
 }
 
