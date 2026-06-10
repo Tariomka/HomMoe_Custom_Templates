@@ -28,20 +28,20 @@ var (
 	dotDefault  = color.NRGBA{R: 0x80, G: 0x80, B: 0x80, A: 0xFF} // gray
 )
 
-// BonusesPanel mirrors the parallel C# editor's bonuses & bans tab: bonuses
-// and bans are shown as read-only lists with human-readable names; entries
-// are added through picker dialogs and removed with per-row buttons. Only
-// the guard-value overrides stay free-text (matching the C# editor).
+// BonusesPanel mirrors the parallel C# editor's bonuses & bans tab: bonuses,
+// bans and guard value overrides are shown as read-only lists with
+// human-readable names; entries are added through picker dialogs and removed
+// with per-row buttons.
 type BonusesPanel struct {
-	bonuses      []config_inner.BonusEntry
-	bannedItems  []string
-	bannedMagics []string
+	bonuses        []config_inner.BonusEntry
+	bannedItems    []string
+	bannedMagics   []string
+	valueOverrides []string
 
-	bonusRemoveBtns []widget.Clickable
-	itemRemoveBtns  []widget.Clickable
-	magicRemoveBtns []widget.Clickable
-
-	valueOverrideEdit widget.Editor
+	bonusRemoveBtns    []widget.Clickable
+	itemRemoveBtns     []widget.Clickable
+	magicRemoveBtns    []widget.Clickable
+	overrideRemoveBtns []widget.Clickable
 
 	addBonusBtn      widget.Clickable
 	pickItemsBtn     widget.Clickable
@@ -110,17 +110,23 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 		spellRows = append(spellRows, this.entryRow(theme, dotMagic, name, school, &this.magicRemoveBtns[i]))
 	}
 
+	overrideRows := []layout.Widget{
+		widgets.NewGoldButtonWidget(theme, "＋ Add override…", &this.pickOverridesBtn, false),
+	}
+	if len(this.valueOverrides) == 0 {
+		overrideRows = append(overrideRows, widgets.NewDimmedLabelWidget(theme, "(no overrides)"))
+	}
+	for i, line := range this.valueOverrides {
+		name, value := overrideLabel(line)
+		overrideRows = append(overrideRows, this.entryRow(theme, dotResource, name, value, &this.overrideRemoveBtns[i]))
+	}
+
 	return []layout.Widget{
 		widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Effects only apply on generation."),
 		widgets.NewSectionWidget(theme, "Game start bonuses", bonusRows),
 		widgets.NewSectionWidget(theme, "Banned items", itemRows),
 		widgets.NewSectionWidget(theme, "Banned spells", spellRows),
-		widgets.NewSectionWidget(theme, "Guard value overrides", []layout.Widget{
-			widgets.NewDimmedLabelWidget(theme, "One override per line. Format: sid=guardValue"),
-			widgets.NewDimmedLabelWidget(theme, "Example: archery_range=350"),
-			widgets.NewButtonWidget(theme, "＋ Pick overrides…", &this.pickOverridesBtn, false),
-			multilineEditor(theme, &this.valueOverrideEdit, "sid=guardValue"),
-		}),
+		widgets.NewSectionWidget(theme, "Guard value overrides", overrideRows),
 	}
 }
 
@@ -189,9 +195,11 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 		}))
 	}
 	if this.pickOverridesBtn.Clicked(gtx) {
-		excluded := overrideSids(this.valueOverrideEdit.Text())
+		excluded := overrideSids(this.valueOverrides)
 		opener(NewValueOverridePickerDialog(excluded, func(lines []string) {
-			this.appendOverrideLines(lines)
+			this.valueOverrides = appendUnique(this.valueOverrides, lines)
+			this.syncRemoveButtons()
+			this.SaveToState()
 		}))
 	}
 
@@ -210,6 +218,11 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 		this.syncRemoveButtons()
 		this.SaveToState()
 	}
+	if index := clickedIndex(gtx, this.overrideRemoveBtns); index >= 0 {
+		this.valueOverrides = append(this.valueOverrides[:index:index], this.valueOverrides[index+1:]...)
+		this.syncRemoveButtons()
+		this.SaveToState()
+	}
 }
 
 // syncRemoveButtons resizes the per-row clickable pools to the list lengths.
@@ -217,25 +230,7 @@ func (this *BonusesPanel) syncRemoveButtons() {
 	this.bonusRemoveBtns = resizeClickables(this.bonusRemoveBtns, len(this.bonuses))
 	this.itemRemoveBtns = resizeClickables(this.itemRemoveBtns, len(this.bannedItems))
 	this.magicRemoveBtns = resizeClickables(this.magicRemoveBtns, len(this.bannedMagics))
-}
-
-// appendOverrideLines appends new, non-duplicate lines to the override editor
-// and persists the result to state.
-func (this *BonusesPanel) appendOverrideLines(newLines []string) {
-	lines := splitNonEmptyLines(this.valueOverrideEdit.Text())
-	seen := make(map[string]bool, len(lines))
-	for _, line := range lines {
-		seen[line] = true
-	}
-	for _, line := range newLines {
-		if line == "" || seen[line] {
-			continue
-		}
-		seen[line] = true
-		lines = append(lines, line)
-	}
-	this.valueOverrideEdit.SetText(strings.Join(lines, "\n"))
-	this.SaveToState()
+	this.overrideRemoveBtns = resizeClickables(this.overrideRemoveBtns, len(this.valueOverrides))
 }
 
 func (this *BonusesPanel) LoadFromState() {
@@ -243,7 +238,7 @@ func (this *BonusesPanel) LoadFromState() {
 	this.bonuses = config_inner.ParseBonusesJSON(settings.BonusesJSON)
 	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
 	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
-	this.valueOverrideEdit.SetText(settings.ValueOverridesText)
+	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
 	this.syncRemoveButtons()
 }
 
@@ -252,7 +247,7 @@ func (this *BonusesPanel) SaveToState() {
 		settings.BonusesJSON = config_inner.SerializeBonuses(this.bonuses)
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
-		settings.ValueOverridesText = normaliseLines(this.valueOverrideEdit.Text())
+		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")
 	})
 }
 
@@ -410,31 +405,6 @@ func appendUnique(values, ids []string) []string {
 	return values
 }
 
-// multilineEditor wraps NewTextboxWidget with a sensible minimum height
-// so multi-line content stays visible inside the scrolling section.
-func multilineEditor(theme *material.Theme, editor *widget.Editor, hint string) layout.Widget {
-	inner := widgets.NewTextboxWidget(theme, editor, hint)
-	return func(gtx layout.Context) layout.Dimensions {
-		gtx.Constraints.Min.Y = gtx.Dp(unit.Dp(96))
-		return inner(gtx)
-	}
-}
-
-// normaliseLines trims trailing whitespace on every line, drops trailing
-// blank lines, and converts \r\n to \n so the persisted form is stable.
-func normaliseLines(text string) string {
-	text = strings.ReplaceAll(text, "\r\n", "\n")
-	lines := strings.Split(text, "\n")
-	for i, line := range lines {
-		lines[i] = strings.TrimRight(line, " \t")
-	}
-	// Drop trailing empty lines.
-	for len(lines) > 0 && lines[len(lines)-1] == "" {
-		lines = lines[:len(lines)-1]
-	}
-	return strings.Join(lines, "\n")
-}
-
 // splitNonEmptyLines returns the trimmed, non-empty lines of text.
 func splitNonEmptyLines(text string) []string {
 	var out []string
@@ -447,10 +417,9 @@ func splitNonEmptyLines(text string) []string {
 	return out
 }
 
-// overrideSids extracts the SID portion (before '=') of each existing override
-// line so the value-override picker can hide already-overridden SIDs.
-func overrideSids(text string) []string {
-	lines := splitNonEmptyLines(text)
+// overrideSids extracts the SID portion (before '=') of each override line so
+// the value-override picker can hide already-overridden SIDs.
+func overrideSids(lines []string) []string {
 	out := make([]string, 0, len(lines))
 	for _, line := range lines {
 		if idx := strings.IndexByte(line, '='); idx >= 0 {
@@ -460,4 +429,19 @@ func overrideSids(text string) []string {
 		}
 	}
 	return out
+}
+
+// overrideLabel splits a "sid=guardValue" line into a display name and a dim
+// trailing label describing the override value.
+func overrideLabel(line string) (name, trailing string) {
+	sid := line
+	value := ""
+	if idx := strings.IndexByte(line, '='); idx >= 0 {
+		sid = strings.TrimSpace(line[:idx])
+		value = strings.TrimSpace(line[idx+1:])
+	}
+	if value == "" {
+		return constants.SidToDisplayName(sid), sid
+	}
+	return constants.SidToDisplayName(sid), "guard value: " + value
 }
