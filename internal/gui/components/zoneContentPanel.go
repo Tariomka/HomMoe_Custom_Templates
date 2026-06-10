@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
 // tierIndex is the position of a tier inside the tierRows cache. The
@@ -60,6 +61,16 @@ func NewZoneContentPanel(state *State) *ZoneContentPanel {
 		state:             state,
 	}
 	panel.scroll.Axis = layout.Vertical
+
+	// Wire every section to the modal host so rows can open the Manage Rules dialog.
+	opener := state.Dialogs().Open
+	panel.zcMines.SetDialogOpener(opener)
+	panel.zcUtilities.SetDialogOpener(opener)
+	panel.zcTreasures.SetDialogOpener(opener)
+	panel.zcHires.SetDialogOpener(opener)
+	panel.zcBanks.SetDialogOpener(opener)
+	panel.zcHeroImprovement.SetDialogOpener(opener)
+
 	panel.LoadFromState()
 	return panel
 }
@@ -148,13 +159,21 @@ func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 		if found, ok := utils.LookupSid(row.Sid); ok {
 			mapping = found
 		}
-		roadIdx := max(indexOf(constants.RoadDistances, row.RoadDistance), 0)
+		// Prefer the explicit rule list; otherwise migrate legacy flat fields,
+		// but only when they actually carry rule data so empty rows stay clean.
+		var rules []models.ContentRuleRowSave
+		switch {
+		case len(row.Rules) > 0:
+			rules = row.Rules
+		case row.HasLegacyRuleData():
+			rules = content_rules.MigrateLegacyRow(row, mapping).Rules
+		}
 		section := this.routeToSection(row.Sid, row.IsMine)
-		section.Add(mapping, row.Count, row.IsGuarded, row.NearCastle, roadIdx, row.IsGroup)
+		section.Add(mapping, row.Count, rules, row.IsGroup)
 	}
 }
 
-// cacheCurrentSections serialises the shared sections back into the
+// cacheCurrentSections serializes the shared sections back into the
 // row cache for the currently-active tier.
 func (this *ZoneContentPanel) cacheCurrentSections() {
 	this.tierRows[this.currentTier] = this.collectSectionRows()
@@ -200,18 +219,12 @@ func (this *ZoneContentPanel) collectSectionRows() []models.ZoneContentRowSave {
 	var out []models.ZoneContentRowSave
 	gather := func(section *content.ZoneContentSection, isMine bool) {
 		for row := range section.IterateRows() {
-			roadDistance := "Any"
-			if row.RoadDistIdx >= 0 && row.RoadDistIdx < len(constants.RoadDistances) {
-				roadDistance = constants.RoadDistances[row.RoadDistIdx]
-			}
 			out = append(out, models.ZoneContentRowSave{
-				Sid:          row.Mapping.Sid,
-				Count:        row.Count,
-				IsGuarded:    row.IsGuarded.Value,
-				NearCastle:   row.NearCastle.Value,
-				RoadDistance: roadDistance,
-				IsGroup:      row.IsGroup,
-				IsMine:       isMine,
+				Sid:     row.Mapping.Sid,
+				Count:   row.Count,
+				IsGroup: row.IsGroup,
+				IsMine:  isMine,
+				Rules:   row.Rules(),
 			})
 		}
 	}
@@ -248,16 +261,6 @@ func defaultPlayerTierRows() []models.ZoneContentRowSave {
 		{Sid: constants.IncludeListIds.ResourceBanksTier1.Sid, Count: 2, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
 		{Sid: constants.IncludeListIds.ResourceBanksTier2.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
 	}
-}
-
-// indexOf returns the index of value in items, or -1 when not present.
-func indexOf[T comparable](items []T, value T) int {
-	for i, candidate := range items {
-		if candidate == value {
-			return i
-		}
-	}
-	return -1
 }
 
 func sectionContains(list []models.SidMapping, sid string) bool {

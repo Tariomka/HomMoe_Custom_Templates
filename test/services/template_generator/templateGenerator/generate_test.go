@@ -18,6 +18,7 @@ import (
 func TestWhenValidConfig_ReturnsExpectedResult(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
+	configuration.ShufflePlayerZones = false // Deterministic player-zone ordering for a stable golden comparison.
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
 	expected := test_helpers.GetDefaultTemplate()
 
@@ -25,7 +26,7 @@ func TestWhenValidConfig_ReturnsExpectedResult(t *testing.T) {
 	actual := templateGenerator.Generate()
 
 	// Assert
-	assert.Equal(t, expected, *actual) // This is a flaky assertion because zone labels are in a map struct so the order changes
+	assert.Equal(t, expected, *actual)
 	assert.Equal(t, expected.Name, actual.Name)
 	assert.Equal(t, expected.GameMode, actual.GameMode)
 	assert.Equal(t, expected.Description, actual.Description)

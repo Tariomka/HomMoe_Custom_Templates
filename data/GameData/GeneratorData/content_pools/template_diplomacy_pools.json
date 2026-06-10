@@ -103,7 +103,7 @@
             "includeLists": 	[ "content_list_building_common_guarded_resource_bank_fix" ]
         }
     ],
-    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" }, {"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3}  ]
+    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" } ]
     },
   	{
         "name": "content_pool_template_diplomacy_guarded_connector_zone",
@@ -203,7 +203,7 @@
 				"includeLists": 	[ "content_list_building_common_guarded_resource_bank_fix" ]
 			}
 		],
-		"bans": [{ "sid" : "lost_library" },{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3} ]
+		"bans": [{ "sid" : "lost_library" }]
 	},
 	{
         "name": "content_pool_template_diplomacy_guarded_treasure_zone",
@@ -264,7 +264,7 @@
 		[
 
 		],
-		"bans": [{ "sid" : "lost_library" },{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3} ]
+		"bans": [{ "sid" : "lost_library" } ]
 	},
 
 	{

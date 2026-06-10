@@ -1,0 +1,86 @@
+package constants
+
+import "github.com/Tariomka/hommoe_custom_templates/internal/registry"
+
+// ValueOverrideSids are the known object / encounter SIDs offered by the
+// guard-value-override picker. SIDs come from the registry; they reference
+// world objects whose guard value can be overridden via valueOverrides.
+//
+//nolint:gochecknoglobals // semantic catalog
+var ValueOverrideSids = buildValueOverrideSids()
+
+func buildValueOverrideSids() []string {
+	sids := registry.GetValueOverrideSidValues()
+	return []string{
+		sids.AlchemyLab,
+		sids.Arena,
+		sids.BeerFountain,
+		sids.BorealCall,
+		sids.CelestialSphere,
+		sids.Chimerologist,
+		sids.Circus,
+		sids.CollegeOfWonder,
+		sids.CrystalTrail,
+		sids.DragonUtopia,
+		sids.EternalDragon,
+		sids.FickleShrine,
+		sids.FlatteringMirror,
+		sids.Forge,
+		sids.Fort,
+		sids.Fountain,
+		sids.Fountain2,
+		sids.HuntsmansCamp,
+		sids.InfernalCirque,
+		sids.InsarasEye,
+		sids.JoustingRange,
+		sids.ManaWell,
+		sids.Market,
+		sids.MineCrystals,
+		sids.MineGemstones,
+		sids.MineGold,
+		sids.MineMercury,
+		sids.MineOre,
+		sids.MineWood,
+		sids.Mirage,
+		sids.MontyHall,
+		sids.MysteriousStone,
+		sids.MysticalTower,
+		sids.MythicScrollBox,
+		sids.OrbObservatory,
+		sids.PandoraBox,
+		sids.PetrifiedMemorial,
+		sids.PileOfBooks,
+		sids.PointOfBalance,
+		sids.Prison,
+		sids.QuixsPath,
+		sids.RandomHire1,
+		sids.RandomHire2,
+		sids.RandomHire3,
+		sids.RandomHire4,
+		sids.RandomHire5,
+		sids.RandomHire6,
+		sids.RandomHire7,
+		sids.RandomItemCommon,
+		sids.RandomItemEpic,
+		sids.RandomItemLegendary,
+		sids.RandomItemRare,
+		sids.RemoteFoothold,
+		sids.ResearchLaboratory,
+		sids.RitualPyre,
+		sids.SacrificialShrine,
+		sids.ShadyDen,
+		sids.Stables,
+		sids.Tavern,
+		sids.TearOfTruth,
+		sids.TheGorge,
+		sids.TownGate,
+		sids.TreeOfAbundance,
+		sids.TroglodyteThrone,
+		sids.UnforgottenGrave,
+		sids.University,
+		sids.UnstableRuins,
+		sids.Watchtower,
+		sids.WindRose,
+		sids.WiseOwl,
+	}
+}

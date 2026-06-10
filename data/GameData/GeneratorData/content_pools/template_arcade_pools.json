@@ -56,7 +56,8 @@
 				"includeLists": 	[ "basic_content_list_building_hero_exp_tier_1" ]
 			},
 			{ 	"weight": 10000,
-				"includeLists": 	[ "content_list_building_common_resource_banks" ]
+				"includeLists": 	[ "content_list_building_common_hero_buffs" ],
+				"content": 			[ { "sid" : "stables", "weight": 0 }, { "sid" : "quixs_path", "weight": 0 } ]
 			},
 			{ 	"weight": 10000,
 				"includeLists": 	[ "basic_content_list_building_hero_stats_and_skills_tier_1" ]
@@ -123,14 +124,11 @@
 			{ 	"weight": 40000,
 				"includeLists": 	[ "content_list_pickup_prison" ]
 			},
-			{ 	"weight": 5000,
+			{ 	"weight": 25000,
 				"includeLists": 	[ "basic_content_list_building_hero_stats_and_skills_tier_3" ]
 			},
 
-			{ 	"weight": 10000,
-				"includeLists": 	[ "content_list_building_common_hero_buffs" ],
-				"content": 			[ { "sid" : "stables", "weight": 0 }, { "sid" : "quixs_path", "weight": 0 } ]
-			},
+
 			{ 	"weight": 5000,
 				"includeLists": 	[ "content_list_building_uncommon_hero_banks" ]
 			},
@@ -138,7 +136,7 @@
 			{ 	"weight": 5000,
 				"includeLists": 	[ "content_list_building_uncommons_magic" ]
 			},
-			{ 	"weight": 35000,
+			{ 	"weight": 150000,
 				"includeLists": 	[ "content_list_building_utopia" ]
 			}
 			

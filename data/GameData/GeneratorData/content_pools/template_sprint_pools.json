@@ -78,24 +78,27 @@
 
   	{"name": "content_pool_template_sprint_guarded_red_zone",
 
-		"valueDistribution": { "priceBounds": [ 3999, 6999, 9999 ], "weights": [ 3, 17, 10, 5  ] },
+		"valueDistribution": { "priceBounds": [ 3999, 6999, 9999 ], "weights": [ 3, 14, 13, 13 ] },
 
 		"groups":
 		[
 			{ 	"weight": 75000,
 				"includeLists": 	[ "content_list_pickup_random_items" ],
-				"content": 			[ { "sid" : "random_item_common", "weight": 25 }, { "sid" : "random_item_rare", "weight": 75 }, { "sid" : "random_item_epic", "weight": 15 }, { "sid" : "random_item_legendary", "weight": 0 } ]
+				"content": 			[ { "sid" : "random_item_common", "weight": 45 }, { "sid" : "random_item_rare", "weight": 75 }, { "sid" : "random_item_epic", "weight": 25 }, { "sid" : "random_item_legendary", "weight": 0 } ]
 			},
 			{ 	"weight": 7500,
-				"includeLists": 	[ "content_list_pickup_scroll_box_tier_2", "content_list_pickup_scroll_box_tier_3", "content_list_pickup_scroll_box_tier_4" ]
+				"includeLists": 	[ "content_list_pickup_scroll_box_tier_2", "content_list_pickup_scroll_box_tier_3" ]
 			},			
 			{ 	"weight": 5000,
 				"includeLists": 	[ "content_list_pickup_enchanted_scroll_box_tier_1", "content_list_pickup_enchanted_scroll_box_tier_2", "content_list_pickup_enchanted_scroll_box_tier_3" ]
 			},
-			{ 	"weight": 2500,
+			{ 	"weight": 1500,
 				"includeLists": 	[ "content_list_building_uncommon_hero_banks" ]
 			},
-
+			{ 	"weight": 3000,
+				"includeLists": 	[ "content_list_building_uncommon_hero_stats" ],
+				"content": 			[ { "sid" : "fort", "weight": 200 }, { "sid" : "orb_observatory", "weight": 200 }, { "sid" : "college_of_wonder", "weight": 100 } ]
+			},
 			{ 	"weight": 5000,
 				"includeLists": 	[ "content_list_building_commons_magic" ]
 			}
@@ -130,11 +133,9 @@
 
 			{ 	"weight": 40000,
 				"includeLists": 	[ "content_list_building_random_hires" ],
-				"content": 			[ { "sid" : "random_hire_1", "weight": 75 }, { "sid" : "random_hire_2", "weight": 100 }, { "sid" : "random_hire_3", "weight": 125 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 0 }, { "sid" : "random_hire_6", "weight": 0 }, { "sid" : "random_hire_7", "weight": 0 } ]
+				"content": 			[ { "sid" : "random_hire_1", "weight": 75 }, { "sid" : "random_hire_2", "weight": 100 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 0 }, { "sid" : "random_hire_6", "weight": 0 }, { "sid" : "random_hire_7", "weight": 0 } ]
 			}
-		],
-		"bans": [{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3} ]
-	},
+		]	},
 	{	"name": "content_pool_template_sprint_guarded_orange_zone",
 
 		"valueDistribution": { "priceBounds": [ 3999, 8999, 11999 ], "weights": [ 3, 14, 13, 6 ] },
@@ -182,9 +183,7 @@
 				"includeLists": 	[ "content_list_building_random_hires" ],
 				"content": 			[ { "sid" : "random_hire_1", "weight": 0 }, { "sid" : "random_hire_2", "weight": 0 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 20 }, { "sid" : "random_hire_6", "weight": 15 }, { "sid" : "random_hire_7", "weight": 0 }  ]
 			}
-		],
-		"bans": [{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3} ]
-	},
+		]	},
 	{
 		"name": "content_pool_template_sprint_unguarded_orange_zone",
 
@@ -196,7 +195,7 @@
 				"includeLists": 	[ "content_list_basic_storage" ]
 			},
 			
-			{ 	"weight": 25000,
+			{ 	"weight": 5000,
 				"includeLists": 	[ "content_list_building_common_interact_no_imbalance" ]
 			},	
 			{ 	"weight": 30000,
@@ -204,7 +203,7 @@
 				"content": 			[ { "sid" : "random_hire_1", "weight": 20 }, { "sid" : "random_hire_2", "weight": 20 }, { "sid" : "random_hire_3", "weight": 20 }, { "sid" : "random_hire_4", "weight": 0 } ]
 			},
 
-			{ 	"weight": 20000,
+			{ 	"weight": 10000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2" ]
 			}
 		]
@@ -255,17 +254,16 @@
 			{ 	"weight": 15000,
 				"includeLists": 	[ "basic_content_list_building_magic_tier_1" ]
 			},
-			{ 	"weight": 75000,
+			{ 	"weight": 50000,
 				"includeLists": 	[ "content_list_building_random_hires" ],
-				"content": 			[ { "sid" : "random_hire_1", "weight": 0 }, { "sid" : "random_hire_2", "weight": 0 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 20 }, { "sid" : "random_hire_6", "weight": 15 }, { "sid" : "random_hire_7", "weight": 0 }  ]
+				"content": 			[ { "sid" : "random_hire_1", "weight": 0 }, { "sid" : "random_hire_2", "weight": 0 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 20 }, { "sid" : "random_hire_6", "weight": 15 }, { "sid" : "random_hire_7", "weight": 10 }  ]
 			},	
 			{ 	"weight": 10000,
 				"includeLists": 	[ "content_list_building_epic_guarded_resource_banks" ],
-				"content": 			[ { "sid" : "troglodyte_throne", "weight": 40 }, { "sid" : "twilight_bloom", "weight": 80 }, { "sid" : "unstable_ruins", "weight": 80 },{ "sid" : "dragon_utopia", "weight": 0 }]
+				"content": 			[ { "sid" : "troglodyte_throne", "weight": 40 }, { "sid" : "twilight_bloom", "weight": 80 }, { "sid" : "unstable_ruins", "weight": 0 },{ "sid" : "dragon_utopia", "weight": 0 },{ "sid": "research_laboratory",	"weight": 0	}]
 
 			}
-		],
-		"bans": [{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3} ]
+		]
 	},
 	{
 		"name": "content_pool_template_sprint_unguarded_yellow_zone",
@@ -281,9 +279,9 @@
 			{ 	"weight": 25000,
 				"includeLists": 	[ "content_list_building_common_interact_no_imbalance" ]
 			},	
-			{ 	"weight": 30000,
+			{ 	"weight": 20000,
 				"includeLists": 	[ "content_list_building_random_hires" ],
-				"content": 			[ { "sid" : "random_hire_1", "weight": 20 }, { "sid" : "random_hire_2", "weight": 20 }, { "sid" : "random_hire_3", "weight": 20 }, { "sid" : "random_hire_4", "weight": 0 } ]
+				"content": 			[ { "sid" : "random_hire_1", "weight": 0 }, { "sid" : "random_hire_2", "weight": 0 }, { "sid" : "random_hire_3", "weight": 20 }, { "sid" : "random_hire_4", "weight": 30 }, { "sid" : "random_hire_5", "weight": 0 }, { "sid" : "random_hire_6", "weight": 0 }, { "sid" : "random_hire_7", "weight": 0 }  ]
 			},
 
 			{ 	"weight": 20000,
@@ -293,7 +291,7 @@
 	},
 		{	"name": "content_pool_template_sprint_guarded_green_zone",
 
-		"valueDistribution": { "priceBounds": [ 3999, 6999, 12999, 15999  ], "weights": [ 0, 2, 10, 10, 5 ] },
+			"priceBounds": [ 3999, 6999, 12999, 20000 ], "weights": [ 5, 6, 12, 12, 12 ] ,
 
 		"groups":
 		[

@@ -79,7 +79,7 @@
             "includeLists": 	[ "content_list_building_common_guarded_resource_bank_fix" ]
         }
     ],
-    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" }, {"sid": "monty_hall"} ]
+    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" } ]
     },
 	{
 		"name": "content_pool_template_miracle_guarded_treasure_zone",

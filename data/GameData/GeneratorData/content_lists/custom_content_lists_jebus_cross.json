@@ -8,14 +8,14 @@
 			{ "sid" : "pandora_box",	"variant": 2,	"weight": 716	},
 			{ "sid" : "pandora_box",	"variant": 3,	"weight": 616	},
 
-			{ "sid" : "pandora_box",	"variant": 4,	"weight": 1055	},			
-			{ "sid" : "pandora_box",	"variant": 5,	"weight": 955	},
-			{ "sid" : "pandora_box",	"variant": 6,	"weight": 855	},
+			{ "sid" : "pandora_box",	"variant": 4,	"weight": 855	},			
+			{ "sid" : "pandora_box",	"variant": 5,	"weight": 755	},
+			{ "sid" : "pandora_box",	"variant": 6,	"weight": 655	},
 
 			{ "sid" : "pandora_box",	"variant": 8,	"weight": 816	},			
-			{ "sid" : "pandora_box",	"variant": 9,	"weight": 1416	},
-			{ "sid" : "pandora_box",	"variant": 10,	"weight": 2016	},
-			{ "sid" : "pandora_box",	"variant": 11,	"weight": 1416	},
+			{ "sid" : "pandora_box",	"variant": 9,	"weight": 1616	},
+			{ "sid" : "pandora_box",	"variant": 10,	"weight": 2416	},
+			{ "sid" : "pandora_box",	"variant": 11,	"weight": 1016	},
 			{ "sid" : "pandora_box",	"variant": 12,	"weight": 1016	},
 
 			{ "sid" : "pandora_box",	"variant": 15,	"weight": 872	},	
@@ -26,9 +26,30 @@
 			{ "sid" : "pandora_box",	"variant": 21,	"weight": 386	},
 			{ "sid" : "pandora_box",	"variant": 22,	"weight": 386	},
 
-			{ "sid" : "pandora_box",	"variant": 23,	"weight": 670	},			
-			{ "sid" : "pandora_box",	"variant": 24,	"weight": 670	},
-			{ "sid" : "pandora_box",	"variant": 25,	"weight": 670	}
+			{ "sid" : "pandora_box",	"variant": 23,	"weight": 870	},			
+			{ "sid" : "pandora_box",	"variant": 24,	"weight": 870	},
+			{ "sid" : "pandora_box",	"variant": 25,	"weight": 870	}
+		]
+	},
+
+	{
+		"name": "template_pool_jebus_cross_guarded_side_zone_pandora_box",
+		"content": 
+		[
+			{ "sid" : "pandora_box",	"variant": 0,	"weight": 0	},			
+			{ "sid" : "pandora_box",	"variant": 1,	"weight": 816	},
+			{ "sid" : "pandora_box",	"variant": 2,	"weight": 716	},
+			{ "sid" : "pandora_box",	"variant": 3,	"weight": 616	},
+
+			{ "sid" : "pandora_box",	"variant": 4,	"weight": 1055	},			
+			{ "sid" : "pandora_box",	"variant": 5,	"weight": 955	},
+			{ "sid" : "pandora_box",	"variant": 6,	"weight": 855	},
+			{ "sid" : "pandora_box",	"variant": 7,	"weight": 755	},
+
+			{ "sid" : "pandora_box",	"variant": 15,	"weight": 872	},	
+			{ "sid" : "pandora_box",	"variant": 16,	"weight": 672	},	
+			{ "sid" : "pandora_box",	"variant": 17,	"weight": 472	},	
+			{ "sid" : "pandora_box",	"variant": 18,	"weight": 272	}
 		]
 	},
 

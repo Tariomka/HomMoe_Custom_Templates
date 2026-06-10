@@ -96,7 +96,7 @@ func (b BonusEntry) String() string {
 	return b.PresetType.String() + "|" + b.ReceiverFilter + "|" + b.Param + "|" + b.Param2
 }
 
-// ParseBonusEntry deserialises a single line produced by BonusEntry.String.
+// ParseBonusEntry deserializes a single line produced by BonusEntry.String.
 // Returns ok=false for empty or malformed input.
 func ParseBonusEntry(s string) (BonusEntry, bool) {
 	s = strings.TrimSpace(s)

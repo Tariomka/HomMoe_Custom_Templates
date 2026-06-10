@@ -57,7 +57,7 @@
 			},
 
 
-			{ 	"weight": 12500,
+			{ 	"weight": 7500,
 				"includeLists": 	[ "template_pool_harmony_building_random_hires_spawn" ]
 			},
 			{ 	"weight": 0,
@@ -110,7 +110,7 @@
 			},
 
 
-			{ 	"weight": 5000,
+			{ 	"weight": 3000,
 				"includeLists": 	[ "template_pool_harmony_building_random_hires_spawn" ]
 			},
 			{ 	"weight": 0,
@@ -203,7 +203,7 @@
 			},
 
 
-			{ 	"weight": 20000,
+			{ 	"weight": 40000,
 				"includeLists": 	[ "template_pool_harmony_building_random_hires_side" ]
 			},
 			{ 	"weight": 0,
@@ -217,7 +217,7 @@
 			{ 	"weight": 15000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_1" ]
 			},
-			{ 	"weight": 10000,
+			{ 	"weight": 30000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2_no_biome_restriction" ]
 			},
 			{ 	"weight": 0,
@@ -242,7 +242,7 @@
 				"includeLists": 	[ "basic_content_list_basic_storage" ]
 			},
 
-			{ 	"weight": 17500,
+			{ 	"weight": 30000,
 				"includeLists": 	[ "template_pool_harmony_building_random_hires_side" ]
 			},
 			{ 	"weight": 0,
@@ -254,7 +254,7 @@
 			{ 	"weight": 15000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_1" ]
 			},
-			{ 	"weight": 15000,
+			{ 	"weight": 25000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2_no_biome_restriction" ]
 			},
 			{ 	"weight": 0,
@@ -336,7 +336,7 @@
 				"content": 			[ { "sid" : "tree_of_abundance", "weight": 0 } ]
 			},
 
-			{ 	"weight": 20000,
+			{ 	"weight": 55000,
 				"includeLists": 	[ "template_pool_harmony_building_random_hires_center" ]
 			},
 			{ 	"weight": 0,
@@ -375,7 +375,7 @@
 			{ 	"weight": 15000,
 				"includeLists": 	[ "basic_content_list_building_hero_exp_tier_1" ]
 			},	
-			{ 	"weight": 17500,
+			{ 	"weight": 25000,
 				"includeLists": 	[ "template_pool_harmony_building_random_hires_center" ]
 			},
 			{ 	"weight": 0,

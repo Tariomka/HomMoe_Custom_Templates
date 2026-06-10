@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
 
@@ -28,11 +29,21 @@ type State struct {
 	lastTemplate *template.RmgTemplateModel
 	statusMsg    string
 	statusErr    bool
+
+	// connectionsModified records that the live template's connections were
+	// hand-edited in the visual editor, so a later regeneration can warn that
+	// those edits will be replaced.
+	connectionsModified bool
+
+	// dialogs renders modal dialogs (rule editors, pickers, the connection
+	// editor) over the main UI.
+	dialogs *DialogHost
 }
 
 func NewUIState() *State {
 	state := &State{stateModel: models.NewEditorStateModel()}
 	state.outputPath.SingleLine = true
+	state.dialogs = &DialogHost{}
 
 	templateDir := helpers.FindOldenEraTemplatesDir(false)
 	if templateDir == "" {
@@ -46,6 +57,11 @@ func NewUIState() *State {
 
 func (this *State) GetStatus() (msg string, isErr bool) {
 	return this.statusMsg, this.statusErr
+}
+
+// Dialogs returns the modal host used to open and render dialogs.
+func (this *State) Dialogs() *DialogHost {
+	return this.dialogs
 }
 
 func (this *State) GetStateData() models.EditorStateModel {
@@ -62,6 +78,21 @@ func (this *State) IsUnsaved() bool {
 
 func (this *State) GetLastTemplate() *template.RmgTemplateModel {
 	return this.lastTemplate
+}
+
+// ApplyEditedConnections writes connections edited in the visual connection
+// editor back into the live template and flags that manual edits now exist.
+func (this *State) ApplyEditedConnections(connections []template.Connection) {
+	if this.lastTemplate == nil || len(this.lastTemplate.Variants) == 0 {
+		return
+	}
+	this.lastTemplate.Variants[0].Connections = connections
+	this.connectionsModified = true
+	if connection_editor.ComputeHasErrors(this.lastTemplate.Variants[0].Zones, connections) {
+		this.setStatus(fmt.Sprintf("Applied %d connections — \u26a0 some reference a missing zone; fix before export.", len(connections)), true)
+		return
+	}
+	this.setStatus(fmt.Sprintf("Applied %d connections from the editor.", len(connections)), false)
 }
 
 func (this *State) GetOutputPath() string {
@@ -151,6 +182,8 @@ func (this *State) Generate() {
 		this.setStatus("Template name is required.", true)
 		return
 	}
+	wasModified := this.connectionsModified
+	this.connectionsModified = false
 	template := template_generator.NewTemplateGenerator(generatorSettings).Generate()
 	// template, err := services.Generate(generatorSettings)
 	// if err != nil {
@@ -165,7 +198,11 @@ func (this *State) Generate() {
 		zoneCount = len(template.Variants[0].Zones)
 		connectionCount = len(template.Variants[0].Connections)
 	}
-	this.setStatus(fmt.Sprintf("Generated '%s' — %d zones, %d connections.", template.Name, zoneCount, connectionCount), false)
+	status := fmt.Sprintf("Generated '%s' — %d zones, %d connections.", template.Name, zoneCount, connectionCount)
+	if wasModified {
+		status += " (Manual connection edits were replaced by regeneration.)"
+	}
+	this.setStatus(status, false)
 }
 
 // SaveTemplate writes the most recently generated template as .rmg.json.

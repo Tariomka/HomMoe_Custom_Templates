@@ -65,7 +65,7 @@
 			},
 
 
-			{ 	"weight": 75000,
+			{ 	"weight": 100000,
 				"includeLists": 	[ "content_list_building_random_hires" ],
 				"content": 			[ { "sid" : "random_hire_1", "weight": 0 }, { "sid" : "random_hire_2", "weight": 0 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 125 }, { "sid" : "random_hire_5", "weight": 100 }, { "sid" : "random_hire_6", "weight": 75 }, { "sid" : "random_hire_7", "weight": 45 } ]
 			},
@@ -91,7 +91,7 @@
 	{
 		"name": "content_pool_template_vendetta_pools_unguarded_start_zone",
 
-		"valueDistribution": { "priceBounds": [ 2999, 4999, 8999 ], "weights": [ 3, 6, 2, 0 ] },
+		"valueDistribution": { "priceBounds": [ 2999, 4999, 8999 ], "weights": [ 3, 4, 2, 6 ] },
 
 		"groups":
 		[
@@ -119,11 +119,11 @@
 			{ 	"weight": 5000,
 				"includeLists": 	[ "content_list_building_uncommon_hero_banks" ]
 			},
-			{ 	"weight": 7500,
+			{ 	"weight": 800000,
 				"includeLists": 	[ "content_list_town_gates" ]
 			},
 
-			{ 	"weight": 50000,
+			{ 	"weight": 100000,
 				"includeLists": 	[ "content_list_building_random_hires" ],
 				"content": 			[ { "sid" : "random_hire_1", "weight": 75 }, { "sid" : "random_hire_2", "weight": 100 }, { "sid" : "random_hire_3", "weight": 125 }, { "sid" : "random_hire_4", "weight": 750 }, { "sid" : "random_hire_5", "weight": 0 }, { "sid" : "random_hire_6", "weight": 0 }, { "sid" : "random_hire_7", "weight": 0 } ]
 			},
@@ -217,7 +217,7 @@
 	{
 		"name": "content_pool_template_vendetta_pools_guarded_center_zone",
 
-		"valueDistribution": { 	"priceBounds": [ 4999, 7999, 13999, 17999 ], "weights": [ 1, 2, 7, 15, 15 ] },
+		"valueDistribution": { 	"priceBounds": [ 3999, 7999, 12999, 19999 ], "weights": [ 1, 2, 7, 15, 15 ] },
 
 		"groups":
 		[
@@ -233,7 +233,7 @@
 				"includeLists": 	[ "content_list_pickup_enchanted_scroll_box" ]
 			},
 
-			{ 	"weight": 300000,
+			{ 	"weight": 400000,
 				"includeLists":		[ "content_list_pickup_pandora_box_army_high_tier" ]
 			},
 

@@ -119,7 +119,7 @@
             "includeLists": 	[ "content_list_building_common_guarded_resource_bank_fix" ]
         }
     ],
-    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" }, {"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3}  ]
+    "bans": [ { "sid" : "wind_rose" }, { "sid" : "lost_library" }, { "sid" : "stables" }, { "sid" : "quixs_path" }  ]
     },
   	{
         "name": "content_pool_template_memory_lane_guarded_connector_zone",
@@ -251,7 +251,7 @@
 				"includeLists": 	[ "content_list_building_uncommon_guarded_resource_banks" ]
 			}
 		],
-		"bans": [{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3} ]
+		"bans": []
 	},
 	{	"name": "content_pool_template_memory_lane_guarded_treasure_zone",
 
@@ -343,7 +343,7 @@
 			"includeLists": 	[ "content_list_building_uncommon_guarded_units_banks_equal" ]
 		}
 		],
-		"bans": [{"sid": "monty_hall", "variant":1}, {"sid": "monty_hall", "variant":2}, {"sid": "monty_hall", "variant":3}, {"sid": "random_item_legendary"}]
+		"bans": [{"sid": "monty_hall", "variant":3}, {"sid": "random_item_legendary"}]
 	},
 	{
 		"name": "content_pool_template_memory_lane_unguarded_treasure_zone",
