@@ -4,15 +4,15 @@ package variant
 type Zone struct {
 	Name string `json:"name"`
 
-	// GeneratorPosition is an optional normalised [0,1]×[0,1] hint stamped by
-	// the generator for Random / Balanced layouts. It is NOT serialised — the
+	// GeneratorPosition is an optional normalized [0,1]×[0,1] hint stamped by
+	// the generator for Random / Balanced layouts. It is NOT serialized — the
 	// preview renderer uses it to reproduce the same geometry that drove
 	// connection generation
 	GeneratorPosition *[2]float64 `json:"-"`
 
 	// GeneratorRing is the concentric-ring index (0 = outermost player ring,
 	// increasing toward centre) stamped by the generator for Balanced layouts.
-	// Not serialised — used only by the preview renderer to snap zones onto
+	// Not serialized — used only by the preview renderer to snap zones onto
 	// the correct ring
 	GeneratorRing *int `json:"-"`
 

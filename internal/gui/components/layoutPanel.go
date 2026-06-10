@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 type LayoutPanel struct {
@@ -47,6 +48,8 @@ type LayoutPanel struct {
 	sldNeutralStack        widget.Float
 	sldBorderGuard         widget.Float
 
+	editConnectionsBtn widget.Clickable
+
 	scroll widget.List
 
 	state *State
@@ -71,6 +74,10 @@ func NewLayoutPanel(state *State) *LayoutPanel {
 func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	widgetsList := []layout.Widget{
 		this.getTopologySectionWidget(theme),
+		widgets.NewSectionWidget(theme, "Zone connections", []layout.Widget{
+			widgets.NewButtonWidget(theme, "Edit zone connections…", &this.editConnectionsBtn, false),
+			widgets.NewDimmedLabelWidget(theme, "Visually add, edit and delete connections on the generated map."),
+		}),
 		widgets.NewSectionWidget(theme, "Connectivity", []layout.Widget{
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkRoads, "Generate roads between zones"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPortals, "Random portals (instead of fixed connections)"),
@@ -124,10 +131,33 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 		}))
 	}
 	return func(gtx layout.Context) layout.Dimensions {
+		this.handleConnectionEditorClick(gtx)
 		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
 			return widgetsList[index](gtx)
 		})
 	}
+}
+
+// handleConnectionEditorClick opens the visual connection editor over the most
+// recently generated template, or reports that one must be generated first.
+func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
+	if !this.editConnectionsBtn.Clicked(gtx) {
+		return
+	}
+	tmpl := this.state.GetLastTemplate()
+	if tmpl == nil || len(tmpl.Variants) == 0 {
+		this.state.setStatus("Generate a template first to edit its connections.", true)
+		return
+	}
+	activeVariant := tmpl.Variants[0]
+	this.state.Dialogs().Open(NewConnectionEditorDialog(
+		activeVariant.Zones,
+		activeVariant.Connections,
+		this.state.GetStateData().Topology,
+		func(connections []template.Connection) {
+			this.state.ApplyEditedConnections(connections)
+		},
+	))
 }
 
 func (this *LayoutPanel) LoadFromState() {

@@ -45,17 +45,24 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 
 	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
 
-	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(widgets.NewTitleBarWidget(theme, "Heroes: Olden Era — Custom Template Editor")),
-			layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-			layout.Rigid(this.toolbar.GetWidget(theme)),
-			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-			layout.Rigid(this.getTabsWidget(gtx, theme)),
-			layout.Flexed(1, this.getPanelsWidget(theme)),
-			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-			layout.Rigid(this.footerPanel.GetPanelWidget(theme)))
-	})
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(widgets.NewTitleBarWidget(theme, "Heroes: Olden Era — Custom Template Editor")),
+					layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
+					layout.Rigid(this.toolbar.GetWidget(theme)),
+					layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+					layout.Rigid(this.getTabsWidget(gtx, theme)),
+					layout.Flexed(1, this.getPanelsWidget(theme)),
+					layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+					layout.Rigid(this.footerPanel.GetPanelWidget(theme)))
+			})
+		}),
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			return this.state.Dialogs().Layout(gtx, theme)
+		}),
+	)
 }
 
 func (this *Window) getTabsWidget(gtx layout.Context, theme *material.Theme) layout.Widget {

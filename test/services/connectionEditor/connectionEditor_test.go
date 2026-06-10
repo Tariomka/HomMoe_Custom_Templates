@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-	connectioneditor "github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -133,7 +133,7 @@ func TestT027a_AfterReset_ConnectionListMatchesOriginalInCountAndIsUserAddedIsFa
 
 	current := make([]template.Connection, 0, len(original))
 	for _, orig := range original {
-		current = append(current, connectioneditor.CloneConnection(orig, false))
+		current = append(current, connection_editor.CloneConnection(orig, false))
 	}
 
 	assert.Equal(t, len(original), len(current))
@@ -154,7 +154,7 @@ func TestT027b_IsolatedZoneDetection_IdentifiesZoneWithNoConnections(t *testing.
 		{From: "Spawn-A", To: "Neutral-1"},
 	}
 
-	isolated := connectioneditor.FindIsolatedZones(zones, connections)
+	isolated := connection_editor.FindIsolatedZones(zones, connections)
 
 	assert.Equal(t, 1, len(isolated))
 	assert.Equal(t, "Neutral-2", isolated[0])
@@ -167,9 +167,9 @@ func TestT027c_DuplicateNameDetection_FlagsWhenTwoConnectionsShareSameName(t *te
 		{From: "Spawn-B", To: "Neutral-1", Name: "side-path"},
 	}
 
-	assert.True(t, connectioneditor.HasDuplicateName(connections, &connections[0]))
-	assert.True(t, connectioneditor.HasDuplicateName(connections, &connections[1]))
-	assert.False(t, connectioneditor.HasDuplicateName(connections, &connections[2]))
+	assert.True(t, connection_editor.HasDuplicateName(connections, &connections[0]))
+	assert.True(t, connection_editor.HasDuplicateName(connections, &connections[1]))
+	assert.False(t, connection_editor.HasDuplicateName(connections, &connections[2]))
 }
 
 func TestT027c_DuplicateNameDetection_DoesNotFlagWhenNamesAreDistinct(t *testing.T) {
@@ -178,8 +178,8 @@ func TestT027c_DuplicateNameDetection_DoesNotFlagWhenNamesAreDistinct(t *testing
 		{From: "Neutral-1", To: "Neutral-2", Name: "beta"},
 	}
 
-	assert.False(t, connectioneditor.HasDuplicateName(connections, &connections[0]))
-	assert.False(t, connectioneditor.HasDuplicateName(connections, &connections[1]))
+	assert.False(t, connection_editor.HasDuplicateName(connections, &connections[0]))
+	assert.False(t, connection_editor.HasDuplicateName(connections, &connections[1]))
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -189,26 +189,26 @@ func TestT027c_DuplicateNameDetection_DoesNotFlagWhenNamesAreDistinct(t *testing
 func TestT032d_HasUnresolvedErrors_FalseWhenAllZoneNamesExist(t *testing.T) {
 	zones := []template.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}}
 	connections := []template.Connection{{From: "Spawn-A", To: "Neutral-1"}}
-	assert.False(t, connectioneditor.ComputeHasErrors(zones, connections))
+	assert.False(t, connection_editor.ComputeHasErrors(zones, connections))
 }
 
 func TestT032d_HasUnresolvedErrors_TrueWhenFromZoneIsMissing(t *testing.T) {
 	zones := []template.Zone{{Name: "Neutral-1"}}
 	connections := []template.Connection{{From: "Spawn-A", To: "Neutral-1"}}
-	assert.True(t, connectioneditor.ComputeHasErrors(zones, connections))
+	assert.True(t, connection_editor.ComputeHasErrors(zones, connections))
 }
 
 func TestT032d_HasUnresolvedErrors_TrueWhenToZoneIsMissing(t *testing.T) {
 	zones := []template.Zone{{Name: "Spawn-A"}}
 	connections := []template.Connection{{From: "Spawn-A", To: "Neutral-99"}}
-	assert.True(t, connectioneditor.ComputeHasErrors(zones, connections))
+	assert.True(t, connection_editor.ComputeHasErrors(zones, connections))
 }
 
 // ════════════════════════════════════════════════════════════════════════
 // IsUserAdded serialisation contract
 // ════════════════════════════════════════════════════════════════════════
 
-func TestIsUserAdded_IsNotSerialised_JsonDoesNotContainProperty(t *testing.T) {
+func TestIsUserAdded_IsNotSerialized_JsonDoesNotContainProperty(t *testing.T) {
 	conn := template.Connection{From: "Spawn-A", To: "Neutral-1", IsUserAdded: true}
 	data, err := json.Marshal(conn)
 	assert.NoError(t, err)
@@ -222,7 +222,7 @@ func TestIsUserAdded_IsNotSerialised_JsonDoesNotContainProperty(t *testing.T) {
 // ════════════════════════════════════════════════════════════════════════
 
 func TestUserCreatableConnectionTypes_ExcludesProximity(t *testing.T) {
-	types := connectioneditor.UserCreatableConnectionTypes()
+	types := connection_editor.UserCreatableConnectionTypes()
 	assert.Equal(t, []string{"Direct", "Portal"}, types)
 	for _, typeName := range types {
 		assert.NotEqual(t, "Proximity", typeName)
@@ -230,34 +230,34 @@ func TestUserCreatableConnectionTypes_ExcludesProximity(t *testing.T) {
 }
 
 func TestGuardPresets_MatchTable(t *testing.T) {
-	assert.Equal(t, [5]int{3000, 6000, 9000, 12000, 16000}, connectioneditor.GuardPresetsForTier(connectioneditor.ZoneTierBronze))
-	assert.Equal(t, [5]int{18000, 21000, 24000, 27000, 30000}, connectioneditor.GuardPresetsForTier(connectioneditor.ZoneTierSilver))
-	assert.Equal(t, [5]int{36000, 42000, 48000, 54000, 60000}, connectioneditor.GuardPresetsForTier(connectioneditor.ZoneTierGold))
-	assert.Equal(t, [5]int{10000, 22000, 34000, 46000, 58000}, connectioneditor.GuardPresetsForTier(connectioneditor.ZoneTierPlayerToPlayer))
+	assert.Equal(t, [5]int{3000, 6000, 9000, 12000, 16000}, connection_editor.GuardPresetsForTier(connection_editor.ZoneTierBronze))
+	assert.Equal(t, [5]int{18000, 21000, 24000, 27000, 30000}, connection_editor.GuardPresetsForTier(connection_editor.ZoneTierSilver))
+	assert.Equal(t, [5]int{36000, 42000, 48000, 54000, 60000}, connection_editor.GuardPresetsForTier(connection_editor.ZoneTierGold))
+	assert.Equal(t, [5]int{10000, 22000, 34000, 46000, 58000}, connection_editor.GuardPresetsForTier(connection_editor.ZoneTierPlayerToPlayer))
 }
 
 func TestTierExtras_GeneratorDefaults(t *testing.T) {
-	assert.Equal(t, 15000, connectioneditor.ExtrasForTier(connectioneditor.ZoneTierBronze)[0].Value)
-	assert.Equal(t, 20000, connectioneditor.ExtrasForTier(connectioneditor.ZoneTierSilver)[0].Value)
-	assert.Equal(t, 25000, connectioneditor.ExtrasForTier(connectioneditor.ZoneTierGold)[0].Value)
-	assert.Equal(t, 30000, connectioneditor.ExtrasForTier(connectioneditor.ZoneTierPlayerToPlayer)[0].Value)
+	assert.Equal(t, 15000, connection_editor.ExtrasForTier(connection_editor.ZoneTierBronze)[0].Value)
+	assert.Equal(t, 20000, connection_editor.ExtrasForTier(connection_editor.ZoneTierSilver)[0].Value)
+	assert.Equal(t, 25000, connection_editor.ExtrasForTier(connection_editor.ZoneTierGold)[0].Value)
+	assert.Equal(t, 30000, connection_editor.ExtrasForTier(connection_editor.ZoneTierPlayerToPlayer)[0].Value)
 }
 
 func TestWeeklyIncrementValues_MatchTable(t *testing.T) {
-	assert.Equal(t, []float64{0.05, 0.10, 0.15, 0.20, 0.25}, connectioneditor.WeeklyIncrementValues)
+	assert.Equal(t, []float64{0.05, 0.10, 0.15, 0.20, 0.25}, connection_editor.WeeklyIncrementValues)
 }
 
 func TestGetZoneTier_PlayerZoneIsBronze(t *testing.T) {
 	zones := []template.Zone{{Name: "Spawn-A"}}
 	players := map[string]bool{"Spawn-A": true}
-	assert.Equal(t, connectioneditor.ZoneTierBronze, connectioneditor.GetZoneTier("Spawn-A", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Spawn-A", zones, players))
 }
 
 func TestGetZoneTier_HubIsBronze(t *testing.T) {
 	zones := []template.Zone{{Name: "Hub"}, {Name: "Hub-1"}}
 	players := map[string]bool{}
-	assert.Equal(t, connectioneditor.ZoneTierBronze, connectioneditor.GetZoneTier("Hub", zones, players))
-	assert.Equal(t, connectioneditor.ZoneTierBronze, connectioneditor.GetZoneTier("Hub-1", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Hub", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Hub-1", zones, players))
 }
 
 func TestGetZoneTier_NeutralPoolDecidesBracket(t *testing.T) {
@@ -270,23 +270,23 @@ func TestGetZoneTier_NeutralPoolDecidesBracket(t *testing.T) {
 		{Name: "Neutral-NoPool"},
 	}
 	players := map[string]bool{}
-	assert.Equal(t, connectioneditor.ZoneTierGold, connectioneditor.GetZoneTier("Neutral-Gold", zones, players))
-	assert.Equal(t, connectioneditor.ZoneTierGold, connectioneditor.GetZoneTier("Neutral-Gold5", zones, players))
-	assert.Equal(t, connectioneditor.ZoneTierBronze, connectioneditor.GetZoneTier("Neutral-Bronze", zones, players))
-	assert.Equal(t, connectioneditor.ZoneTierBronze, connectioneditor.GetZoneTier("Neutral-Bronze2", zones, players))
-	assert.Equal(t, connectioneditor.ZoneTierSilver, connectioneditor.GetZoneTier("Neutral-Silver", zones, players))
-	assert.Equal(t, connectioneditor.ZoneTierSilver, connectioneditor.GetZoneTier("Neutral-NoPool", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierGold, connection_editor.GetZoneTier("Neutral-Gold", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierGold, connection_editor.GetZoneTier("Neutral-Gold5", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Neutral-Bronze", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Neutral-Bronze2", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierSilver, connection_editor.GetZoneTier("Neutral-Silver", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierSilver, connection_editor.GetZoneTier("Neutral-NoPool", zones, players))
 }
 
 func TestGetZoneTier_UnknownZoneIsBronze(t *testing.T) {
-	assert.Equal(t, connectioneditor.ZoneTierBronze, connectioneditor.GetZoneTier("Nope", nil, nil))
-	assert.Equal(t, connectioneditor.ZoneTierBronze, connectioneditor.GetZoneTier("", nil, nil))
+	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Nope", nil, nil))
+	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("", nil, nil))
 }
 
 func TestHigherTierOf_BothPlayersIsPlayerToPlayer(t *testing.T) {
 	zones := []template.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	players := map[string]bool{"Spawn-A": true, "Spawn-B": true}
-	assert.Equal(t, connectioneditor.ZoneTierPlayerToPlayer, connectioneditor.HigherTierOf("Spawn-A", "Spawn-B", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierPlayerToPlayer, connection_editor.HigherTierOf("Spawn-A", "Spawn-B", zones, players))
 }
 
 func TestHigherTierOf_TakesMaximumTier(t *testing.T) {
@@ -295,7 +295,7 @@ func TestHigherTierOf_TakesMaximumTier(t *testing.T) {
 		{Name: "Neutral-Gold", GuardedContentPool: []string{"pool_t4_x"}},
 	}
 	players := map[string]bool{"Spawn-A": true}
-	assert.Equal(t, connectioneditor.ZoneTierGold, connectioneditor.HigherTierOf("Spawn-A", "Neutral-Gold", zones, players))
+	assert.Equal(t, connection_editor.ZoneTierGold, connection_editor.HigherTierOf("Spawn-A", "Neutral-Gold", zones, players))
 }
 
 func TestNewDefaultConnection_UsesTierDefaultsAndIsUserAdded(t *testing.T) {
@@ -305,7 +305,7 @@ func TestNewDefaultConnection_UsesTierDefaultsAndIsUserAdded(t *testing.T) {
 	}
 	players := map[string]bool{"Spawn-A": true}
 
-	conn := connectioneditor.NewDefaultConnection("Spawn-A", "Neutral-Gold", zones, players)
+	conn := connection_editor.NewDefaultConnection("Spawn-A", "Neutral-Gold", zones, players)
 
 	assert.Equal(t, "Spawn-A", conn.From)
 	assert.Equal(t, "Neutral-Gold", conn.To)
@@ -318,9 +318,9 @@ func TestNewDefaultConnection_UsesTierDefaultsAndIsUserAdded(t *testing.T) {
 }
 
 func TestZoneLetterFromName(t *testing.T) {
-	assert.Equal(t, "A", connectioneditor.ZoneLetterFromName("Spawn-A"))
-	assert.Equal(t, "C", connectioneditor.ZoneLetterFromName("Neutral-C"))
-	assert.Equal(t, "Hub", connectioneditor.ZoneLetterFromName("Hub"))
+	assert.Equal(t, "A", connection_editor.ZoneLetterFromName("Spawn-A"))
+	assert.Equal(t, "C", connection_editor.ZoneLetterFromName("Neutral-C"))
+	assert.Equal(t, "Hub", connection_editor.ZoneLetterFromName("Hub"))
 }
 
 func TestCloneConnection_CopiesFieldsAndSetsFlag(t *testing.T) {
@@ -329,7 +329,7 @@ func TestCloneConnection_CopiesFieldsAndSetsFlag(t *testing.T) {
 		ConnectionType: "Portal", GuardValue: 4242, GuardWeeklyIncrement: 0.2,
 		GuardZone: "Spawn-A", GuardMatchGroup: "grp", Length: 1.25,
 	}
-	clone := connectioneditor.CloneConnection(original, true)
+	clone := connection_editor.CloneConnection(original, true)
 
 	assert.Equal(t, original.Name, clone.Name)
 	assert.Equal(t, original.From, clone.From)

@@ -7,7 +7,7 @@ import (
 
 // ContentRule is the polymorphic interface implemented by every content rule.
 // It mirrors the C# IContentRule contract: rules describe a configurable
-// constraint in the UI, know how to serialise themselves, and know how to
+// constraint in the UI, know how to serialize themselves, and know how to
 // apply their effect to a final content item.
 type ContentRule interface {
 	// Name uniquely identifies the rule and matches the persisted

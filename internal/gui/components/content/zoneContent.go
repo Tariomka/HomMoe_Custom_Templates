@@ -8,53 +8,52 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-// zoneContentRow is one editable item inside a zone-content section.
+// zoneContentRow is one editable item inside a zone-content section. The legacy
+// flat fields (guarded / near-castle / road-distance) are replaced by a
+// polymorphic rule list edited through the Manage Rules dialog.
 type zoneContentRow struct {
-	Mapping     models.SidMapping
-	Count       int
-	IsGuarded   widget.Bool
-	NearCastle  widget.Bool
-	RoadDistIdx int
-	IsGroup     bool
+	Mapping models.SidMapping
+	Count   int
+	IsGroup bool
+	rules   []models.ContentRuleRowSave
 
 	countSld  widget.Float
-	roadCombo *DropdownSelector
+	manageBtn widget.Clickable
 	removeBtn widget.Clickable
 	dupBtn    widget.Clickable
 }
 
-func newZoneContentRow(mapping models.SidMapping, count int, guarded, nearCastle bool, roadIdx int, isGroup bool) *zoneContentRow {
-	row := &zoneContentRow{
-		Mapping:     mapping,
-		Count:       count,
-		RoadDistIdx: roadIdx,
-		IsGroup:     isGroup,
-		roadCombo:   NewDropdownSelector(constants.RoadDistances),
+func newZoneContentRow(mapping models.SidMapping, count int, rules []models.ContentRuleRowSave, isGroup bool) *zoneContentRow {
+	return &zoneContentRow{
+		Mapping: mapping,
+		Count:   count,
+		IsGroup: isGroup,
+		rules:   cloneRuleRows(rules),
 	}
-	if row.RoadDistIdx >= 0 && row.RoadDistIdx < len(constants.RoadDistances) {
-		row.roadCombo.selectedIndex = row.RoadDistIdx
-	}
-	row.IsGuarded.Value = guarded
-	row.NearCastle.Value = nearCastle
-	return row
 }
 
-// ZoneContentSection is one of the four mandatory-content groups.
+// Rules returns a defensive copy of the row's content rules, letting the parent
+// panel serialize them without exposing the row's mutable slice.
+func (this *zoneContentRow) Rules() []models.ContentRuleRowSave {
+	return cloneRuleRows(this.rules)
+}
+
+// ZoneContentSection is one of the mandatory-content groups.
 type ZoneContentSection struct {
-	Title     string
-	Items     []models.SidMapping
-	MaxCount  int
-	ShowNear  bool
-	rows      []*zoneContentRow
-	addPreset *DropdownSelector
-	addBtn    widget.Clickable
+	Title      string
+	Items      []models.SidMapping
+	MaxCount   int
+	ShowNear   bool
+	rows       []*zoneContentRow
+	addPreset  *DropdownSelector
+	addBtn     widget.Clickable
+	openDialog widgets.DialogOpener
 }
 
 func NewZoneContentSection(title string, items []models.SidMapping, maxCount int, showNear bool) *ZoneContentSection {
@@ -71,15 +70,21 @@ func NewZoneContentSection(title string, items []models.SidMapping, maxCount int
 	}
 }
 
-// Add appends a new row using the given mapping with sensible defaults.
-func (this *ZoneContentSection) Add(mapping models.SidMapping, count int, guarded, near bool, roadIdx int, group bool) {
+// SetDialogOpener wires the section to the modal host so rows can launch the
+// Manage Rules dialog.
+func (this *ZoneContentSection) SetDialogOpener(opener widgets.DialogOpener) {
+	this.openDialog = opener
+}
+
+// Add appends a new row using the given mapping and rule list.
+func (this *ZoneContentSection) Add(mapping models.SidMapping, count int, rules []models.ContentRuleRowSave, group bool) {
 	if count < 1 {
 		count = 1
 	}
 	if count > this.MaxCount {
 		count = this.MaxCount
 	}
-	this.rows = append(this.rows, newZoneContentRow(mapping, count, guarded, near, roadIdx, group))
+	this.rows = append(this.rows, newZoneContentRow(mapping, count, rules, group))
 }
 
 func (this *ZoneContentSection) ClearRows() {
@@ -104,7 +109,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			if idx < 0 || idx >= len(this.Items) {
 				idx = 0
 			}
-			this.Add(this.Items[idx], 1, true, false, 0, false)
+			this.Add(this.Items[idx], 1, defaultContentRules(), false)
 		}
 		// Process per-row clicks (collect indices to remove).
 		keep := this.rows[:0]
@@ -114,7 +119,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			}
 			if row.dupBtn.Clicked(gtx) {
 				keep = append(keep, row)
-				clone := newZoneContentRow(row.Mapping, row.Count, row.IsGuarded.Value, row.NearCastle.Value, row.RoadDistIdx, row.IsGroup)
+				clone := newZoneContentRow(row.Mapping, row.Count, row.rules, row.IsGroup)
 				keep = append(keep, clone)
 				continue
 			}
@@ -169,7 +174,15 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 		}
 		liveCount := utils.RoundedRange(row.countSld.Value, 1, this.MaxCount)
 		row.Count = liveCount
-		row.RoadDistIdx = row.roadCombo.GetSelectedIndex()
+
+		// Launch the Manage Rules dialog. The captured row pointer keeps the
+		// callback bound to this exact row across frames/reorders.
+		if row.manageBtn.Clicked(gtx) && this.openDialog != nil {
+			captured := row
+			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules, func(updated []models.ContentRuleRowSave) {
+				captured.rules = updated
+			}))
+		}
 
 		return widgets.NewPanelWidget(unit.Dp(6), func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -189,25 +202,39 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(widgets.NewVerticalSpacerWidget(4)),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(0.7, widgets.NewLabeledRowWidget(theme, "Count", 60, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
+						layout.Flexed(0.55, widgets.NewLabeledRowWidget(theme, "Count", 60, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-								layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &row.IsGuarded, "Guarded")),
-								layout.Rigid(widgets.NewHorizontalSpacerWidget(12)),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									if !this.ShowNear {
-										return layout.Dimensions{}
-									}
-									return widgets.NewLabeledCheckboxRowWidget(theme, &row.NearCastle, "Near castle")(gtx)
-								}),
-							)
-						}),
-						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
-						layout.Flexed(0.3, widgets.NewLabeledRowWidget(theme, "Road distance", 100, func(gtx layout.Context) layout.Dimensions {
-							return row.roadCombo.Layout(gtx, theme)
-						})))
-				}))
+						layout.Rigid(widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+						layout.Rigid(widgets.NewButtonWidget(theme, "Manage Rules", &row.manageBtn, false)),
+					)
+				}),
+			)
 		})(gtx)
 	}
+}
+
+// layoutMarkers renders the compact marker badges for a row's rules, or a dim
+// placeholder when the row has no rules.
+func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneContentRow) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		markers := ruleMarkers(row.Mapping, row.rules)
+		if markers == "" {
+			label := material.Body2(theme, "(none)")
+			label.Color = themes.ColorTextDim
+			label.TextSize = unit.Sp(12)
+			return label.Layout(gtx)
+		}
+		label := material.Body1(theme, markers)
+		label.Color = themes.ColorGoldBright
+		label.TextSize = unit.Sp(13)
+		return label.Layout(gtx)
+	}
+}
+
+// defaultContentRules is the rule list applied to a freshly-added row: a single
+// Guarded rule, matching the historical default of the Guarded checkbox.
+func defaultContentRules() []models.ContentRuleRowSave {
+	guarded := true
+	return []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &guarded}}
 }

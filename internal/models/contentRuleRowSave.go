@@ -3,7 +3,7 @@ package models
 // ContentRuleRowSave is the lightweight, JSON-friendly representation of a
 // single content rule attached to a ZoneContentRowSave. It mirrors the C#
 // `ContentRuleRowSave` record: every field is optional so that each concrete
-// rule only serialises the data it actually needs.
+// rule only serializes the data it actually needs.
 type ContentRuleRowSave struct {
 	// Name identifies which rule this row represents (e.g. "Guarded",
 	// "Distance to road", "Distance to town", "Solo Encounter", "Variant").
