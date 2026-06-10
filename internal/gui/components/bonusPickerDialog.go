@@ -105,11 +105,13 @@ func NewBonusPickerDialog(existing []config_inner.BonusEntry, opener widgets.Dia
 		receiverDropdown: content.NewDropdownSelector(append([]string{}, bonusReceiverOptions...)),
 	}
 	dialog.spellEdit.SingleLine = true
+	dialog.spellEdit.ReadOnly = true
 	dialog.multiplierEdit.SingleLine = true
 	dialog.multiplierEdit.SetText("2")
 	dialog.movementEdit.SingleLine = true
 	dialog.movementEdit.SetText("0")
 	dialog.itemEdit.SingleLine = true
+	dialog.itemEdit.ReadOnly = true
 	dialog.resourceEdit.SingleLine = true
 	return dialog
 }
@@ -207,7 +209,7 @@ func (this *BonusPickerDialog) layoutEditor(gtx layout.Context, theme *material.
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.spellEdit, "spell sid")),
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.spellEdit, "use Pick spell…")),
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 					layout.Rigid(widgets.NewButtonWidget(theme, "Pick spell", &this.pickSpellBtn, this.opener == nil)),
 				)
@@ -221,7 +223,7 @@ func (this *BonusPickerDialog) layoutEditor(gtx layout.Context, theme *material.
 		return widgets.NewLabeledRowWidget(theme, "Movement", 90, widgets.NewTextboxWidget(theme, &this.movementEdit, "0"))(gtx)
 	case config_inner.BonusStartingItem:
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "item sid")),
+			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item…")),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
 		)

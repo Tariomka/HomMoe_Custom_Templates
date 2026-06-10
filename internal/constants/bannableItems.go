@@ -1,17 +1,21 @@
-package registry
+package constants
 
-// BannableItem is an artifact that can appear in globalBans.items. Category is
-// one of: Movement, Diplomacy, Combat, Magic, Misc, Set.
-type BannableItem struct {
-	Id          string
-	DisplayName string
-	Category    string
+import "strings"
+
+// BannableItemEntry pairs an artifact SID with its human-readable name and the
+// UI grouping category used by the item picker.
+type BannableItemEntry struct {
+	Sid      string
+	Name     string
+	Category string
 }
 
-// BannableItems is the catalog of bannable artifacts, ported from the C#
-// KnownValues.BannableItems. Sourced from official game templates and
-// test_content_lists.
-var BannableItems = []BannableItem{
+// BannableItems is the catalog of artifacts that can appear in
+// globalBans.items, sourced from official game templates and content lists.
+// Categories (Movement, Diplomacy, Combat, Magic, Misc, Set) group the picker.
+//
+//nolint:gochecknoglobals // semantic registry
+var BannableItems = []BannableItemEntry{
 	// Movement
 	{"pole_star_artifact", "Pole Star", "Movement"},
 	{"seven_league_boots_artifact", "Seven League Boots", "Movement"},
@@ -225,4 +229,26 @@ var BannableItems = []BannableItem{
 	// Set: Scholar's Wisdom
 	{"scholars_wisdom_scholars_tiara_artifact", "Scholar's Wisdom: Scholar's Tiara", "Set"},
 	{"scholars_wisdom_scholars_oberegus_artifact", "Scholar's Wisdom: Scholar's Oberegus", "Set"},
+}
+
+// FindBannableItem returns the catalog entry for an artifact SID, or ok=false
+// when the SID is not in the catalog (e.g. a custom/modded artifact).
+func FindBannableItem(sid string) (BannableItemEntry, bool) {
+	for _, item := range BannableItems {
+		if item.Sid == sid {
+			return item, true
+		}
+	}
+	return BannableItemEntry{}, false
+}
+
+// SidToDisplayName converts a snake_case SID (with optional _artifact suffix)
+// to a sentence-case display name. Used as a fallback for IDs not present in
+// any catalog.
+func SidToDisplayName(sid string) string {
+	s := strings.ReplaceAll(strings.ReplaceAll(sid, "_artifact", ""), "_", " ")
+	if len(s) == 0 {
+		return sid
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }

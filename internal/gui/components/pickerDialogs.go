@@ -14,9 +14,9 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 // checkedRowBg is the highlight behind a selected picker row (matches the C#
@@ -285,27 +285,27 @@ func (this *multiSelectPicker) selectedIds() []string {
 // artifact SIDs.
 func NewItemPickerDialog(title string, excluded []string, onApply func(ids []string)) *multiSelectPicker {
 	skip := toSet(excluded)
-	visible := make([]registry.BannableItem, 0, len(registry.BannableItems))
-	for _, item := range registry.BannableItems {
-		if !skip[item.Id] {
+	visible := make([]constants.BannableItemEntry, 0, len(constants.BannableItems))
+	for _, item := range constants.BannableItems {
+		if !skip[item.Sid] {
 			visible = append(visible, item)
 		}
 	}
-	sortStable(visible, func(a, b registry.BannableItem) bool {
+	sortStable(visible, func(a, b constants.BannableItemEntry) bool {
 		if a.Category != b.Category {
 			return a.Category < b.Category
 		}
-		return a.DisplayName < b.DisplayName
+		return a.Name < b.Name
 	})
 
 	entries := make([]pickerEntry, 0, len(visible))
 	for _, item := range visible {
 		entries = append(entries, pickerEntry{
-			id:       item.Id,
+			id:       item.Sid,
 			group:    item.Category,
-			label:    item.DisplayName,
-			trailing: item.Id,
-			haystack: strings.ToLower(item.DisplayName + " " + item.Id + " " + item.Category),
+			label:    item.Name,
+			trailing: item.Sid,
+			haystack: strings.ToLower(item.Name + " " + item.Sid + " " + item.Category),
 		})
 	}
 
@@ -322,17 +322,17 @@ func NewItemPickerDialog(title string, excluded []string, onApply func(ids []str
 func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids []string, makeFree bool)) *multiSelectPicker {
 	skip := toSet(excluded)
 	schoolRank := map[string]int{}
-	for i, school := range registry.SpellSchoolOrder {
+	for i, school := range constants.SpellSchoolOrder {
 		schoolRank[school] = i
 	}
 
-	visible := make([]registry.SpellEntry, 0, len(registry.KnownSpells))
-	for _, spell := range registry.KnownSpells {
-		if !skip[spell.Id] {
+	visible := make([]constants.SpellEntry, 0, len(constants.KnownSpells))
+	for _, spell := range constants.KnownSpells {
+		if !skip[spell.Sid] {
 			visible = append(visible, spell)
 		}
 	}
-	sortStable(visible, func(a, b registry.SpellEntry) bool {
+	sortStable(visible, func(a, b constants.SpellEntry) bool {
 		ra, rb := rankOf(schoolRank, a.School), rankOf(schoolRank, b.School)
 		if ra != rb {
 			return ra < rb
@@ -345,16 +345,16 @@ func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids
 
 	entries := make([]pickerEntry, 0, len(visible))
 	for _, spell := range visible {
-		label := registry.SpellSchoolDisplayNames[spell.School]
+		label := constants.SpellSchoolDisplayNames[spell.School]
 		if label == "" {
 			label = spell.School
 		}
 		entries = append(entries, pickerEntry{
-			id:       spell.Id,
+			id:       spell.Sid,
 			group:    label,
 			label:    spell.Name,
 			badge:    "[T" + strconv.Itoa(spell.Tier) + "]",
-			haystack: strings.ToLower(spell.Name + " " + spell.Id + " " + spell.School),
+			haystack: strings.ToLower(spell.Name + " " + spell.Sid + " " + spell.School),
 		})
 	}
 
@@ -397,8 +397,8 @@ func spellSchoolColor(group string) color.NRGBA {
 // "sid=guardValue" lines.
 func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *multiSelectPicker {
 	skip := toSet(excluded)
-	sids := make([]string, 0, len(registry.ObjectSids))
-	for _, sid := range registry.ObjectSids {
+	sids := make([]string, 0, len(constants.ValueOverrideSids))
+	for _, sid := range constants.ValueOverrideSids {
 		if !skip[sid] {
 			sids = append(sids, sid)
 		}

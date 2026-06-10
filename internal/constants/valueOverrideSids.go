@@ -1,11 +1,11 @@
-package registry
+package constants
 
-import "strings"
-
-// ObjectSids are known object / encounter SIDs used in ValueOverride and as
-// mandatory-content / content-pool references across example templates. Ported
-// from the C# KnownValues.ObjectSids.
-var ObjectSids = []string{
+// ValueOverrideSids are the known object / encounter SIDs offered by the
+// guard-value-override picker. They reference world objects whose guard value
+// can be overridden via config.ValueOverride.
+//
+//nolint:gochecknoglobals // semantic registry
+var ValueOverrideSids = []string{
 	"alchemy_lab",
 	"arena",
 	"beer_fountain",
@@ -76,14 +76,4 @@ var ObjectSids = []string{
 	"watchtower",
 	"wind_rose",
 	"wise_owl",
-}
-
-// SidToDisplayName converts a snake_case SID (with optional _artifact suffix)
-// to a Title Case display name. Used as a fallback for IDs not in a catalog.
-func SidToDisplayName(sid string) string {
-	s := strings.ReplaceAll(strings.ReplaceAll(sid, "_artifact", ""), "_", " ")
-	if len(s) == 0 {
-		return sid
-	}
-	return strings.ToUpper(s[:1]) + s[1:]
 }

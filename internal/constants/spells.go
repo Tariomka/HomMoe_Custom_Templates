@@ -1,16 +1,34 @@
-package registry
+package constants
 
-// SpellEntry is a single learnable spell from the game's spell library.
+// SpellEntry pairs a learnable spell SID with its display name, magic school
+// and tier (used for sorting in the spell picker).
 type SpellEntry struct {
-	Id     string
+	Sid    string
 	Name   string
 	School string
 	Tier   int
 }
 
-// KnownSpells is the catalog of learnable spells, ported from the C#
-// KnownValues.KnownSpells. Grouped logically by school; consumers sort by
-// tier within each school as needed.
+// SpellSchoolOrder gives the canonical display order of the magic schools.
+//
+//nolint:gochecknoglobals // semantic registry
+var SpellSchoolOrder = []string{"neutral", "day", "night", "space", "primal"}
+
+// SpellSchoolDisplayNames maps a school key to its display label.
+//
+//nolint:gochecknoglobals // semantic registry
+var SpellSchoolDisplayNames = map[string]string{
+	"neutral": "Neutral",
+	"day":     "Day",
+	"night":   "Night",
+	"space":   "Space",
+	"primal":  "Primal",
+}
+
+// KnownSpells is the catalog of learnable spells. Grouped logically by school;
+// consumers sort by tier within each school as needed.
+//
+//nolint:gochecknoglobals // semantic registry
 var KnownSpells = []SpellEntry{
 	// Neutral
 	{"neutral_magic_pocket_dimension", "Pocket Dimension", "neutral", 2},
@@ -101,15 +119,13 @@ var KnownSpells = []SpellEntry{
 	{"space_16_magic_reality_distortion", "Reality Distortion", "space", 5},
 }
 
-// SpellSchoolOrder gives the canonical display order of the magic schools, as
-// used by the C# SpellPickerWindow.
-var SpellSchoolOrder = []string{"neutral", "day", "night", "space", "primal"}
-
-// SpellSchoolDisplayNames maps a school key to its display label.
-var SpellSchoolDisplayNames = map[string]string{
-	"neutral": "Neutral",
-	"day":     "Day",
-	"night":   "Night",
-	"space":   "Space",
-	"primal":  "Primal",
+// FindSpell returns the catalog entry for a spell SID, or ok=false when the
+// SID is not in the catalog.
+func FindSpell(sid string) (SpellEntry, bool) {
+	for _, spell := range KnownSpells {
+		if spell.Sid == sid {
+			return spell, true
+		}
+	}
+	return SpellEntry{}, false
 }

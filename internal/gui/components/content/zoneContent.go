@@ -3,6 +3,7 @@ package content
 import (
 	"fmt"
 	"iter"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -12,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
 // zoneContentRow is one editable item inside a zone-content section. The legacy
@@ -189,7 +191,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-							label := material.Body1(theme, row.Mapping.Name)
+							label := material.Body1(theme, rowDisplayName(row))
 							label.Color = themes.ColorGold
 							label.TextSize = unit.Sp(13)
 							return label.Layout(gtx)
@@ -202,9 +204,9 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(widgets.NewVerticalSpacerWidget(4)),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(0.55, widgets.NewLabeledRowWidget(theme, "Count", 60, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
+						layout.Flexed(0.6, widgets.NewLabeledRowWidget(theme, "Count", 60, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
-						layout.Rigid(widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),
+						layout.Flexed(0.4, widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 						layout.Rigid(widgets.NewButtonWidget(theme, "Manage Rules", &row.manageBtn, false)),
 					)
@@ -230,6 +232,22 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 		label.TextSize = unit.Sp(13)
 		return label.Layout(gtx)
 	}
+}
+
+// rowDisplayName mirrors the C# ZoneContentItemUI.DisplayName: the item name,
+// with the chosen variant's description appended when a Variant rule applies.
+func rowDisplayName(row *zoneContentRow) string {
+	for _, saved := range row.rules {
+		if saved.VariantId == nil || !strings.EqualFold(saved.Name, content_rules.RuleVariantName) {
+			continue
+		}
+		for _, variant := range content_rules.GetVariantsForContent(row.Mapping) {
+			if description, ok := variant.Variants[*saved.VariantId]; ok {
+				return row.Mapping.Name + " (" + description + ")"
+			}
+		}
+	}
+	return row.Mapping.Name
 }
 
 // defaultContentRules is the rule list applied to a freshly-added row: a single
