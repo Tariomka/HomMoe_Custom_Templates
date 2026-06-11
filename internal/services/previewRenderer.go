@@ -65,6 +65,40 @@ func RenderPreviewImage(template *template.RmgTemplateModel, topology config.Map
 	}
 	drawnRadius := previewSpriteRadius * scale
 
+	// Keep every sprite inside the border line painted on the parchment
+	// background (inset ≈16 px on the 700 px canvas): if any zone artwork
+	// would cross it, pull all positions uniformly towards the centre.
+	// Player emblems extend well past the bubble outline (radius ≈36 in
+	// sprite space, plus the drop shadow).
+	borderInset := 19.0 * float64(side) / 700.0
+	centre := float64(side) / 2
+	fit := 1.0
+	for _, zone := range layout.Zones {
+		extent := 28.0 * scale
+		if zone.IsPlayer {
+			extent = 41.0 * scale
+		}
+		allowed := centre - borderInset - extent
+		if allowed < 1 {
+			continue
+		}
+		dev := math.Max(math.Abs(float64(zone.Center.X)-centre), math.Abs(float64(zone.Center.Y)-centre))
+		if dev > allowed {
+			if k := allowed / dev; k < fit {
+				fit = k
+			}
+		}
+	}
+	fitPt := func(p image.Point) image.Point {
+		if fit >= 1 {
+			return p
+		}
+		return image.Pt(
+			int(math.Round(centre+(float64(p.X)-centre)*fit)),
+			int(math.Round(centre+(float64(p.Y)-centre)*fit)),
+		)
+	}
+
 	// Connections: solid dark lines, ended at the bubble outlines so they
 	// do not show through the open (low-quality) rings.
 	lineWidth := int(math.Round(4.0 * float64(side) / 700.0))
@@ -72,16 +106,18 @@ func RenderPreviewImage(template *template.RmgTemplateModel, topology config.Map
 		lineWidth = 2
 	}
 	for _, conn := range layout.Connections {
-		dx := float64(conn.B.X - conn.A.X)
-		dy := float64(conn.B.Y - conn.A.Y)
+		a := fitPt(conn.A)
+		b := fitPt(conn.B)
+		dx := float64(b.X - a.X)
+		dy := float64(b.Y - a.Y)
 		distance := math.Hypot(dx, dy)
 		if distance < 1 {
 			continue
 		}
 		ux := dx / distance
 		uy := dy / distance
-		ax := image.Pt(int(float64(conn.A.X)+ux*drawnRadius), int(float64(conn.A.Y)+uy*drawnRadius))
-		bx := image.Pt(int(float64(conn.B.X)-ux*drawnRadius), int(float64(conn.B.Y)-uy*drawnRadius))
+		ax := image.Pt(int(float64(a.X)+ux*drawnRadius), int(float64(a.Y)+uy*drawnRadius))
+		bx := image.Pt(int(float64(b.X)-ux*drawnRadius), int(float64(b.Y)-uy*drawnRadius))
 		drawThickLine(img, ax, bx, lineWidth, previewLineColor)
 	}
 
@@ -92,14 +128,16 @@ func RenderPreviewImage(template *template.RmgTemplateModel, topology config.Map
 			continue
 		}
 		sprite := neutralSpriteFor(assets, zone)
-		drawSpriteScaled(img, sprite, zone.Center.X, zone.Center.Y, previewSpriteCenter, previewSpriteCenter, scale)
+		c := fitPt(zone.Center)
+		drawSpriteScaled(img, sprite, c.X, c.Y, previewSpriteCenter, previewSpriteCenter, scale)
 	}
 	for _, zone := range layout.Zones {
 		if !zone.IsPlayer {
 			continue
 		}
 		sprite := playerSpriteFor(assets, zone)
-		drawSpriteScaled(img, sprite, zone.Center.X, zone.Center.Y, previewSpriteCenter, previewSpriteCenter, scale)
+		c := fitPt(zone.Center)
+		drawSpriteScaled(img, sprite, c.X, c.Y, previewSpriteCenter, previewSpriteCenter, scale)
 	}
 	return img
 }
