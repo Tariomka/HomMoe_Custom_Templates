@@ -81,6 +81,8 @@ func BuildPreviewLayout(template *template.RmgTemplateModel, topology config.Map
 	// Dispatch to the topology-specific layout. Each path writes positions
 	// into `layout.Positions` and sets `layout.ZoneRadius`.
 	switch {
+	case allHaveManualPosition(zones):
+		layoutManualPositions(&layout, zones, side)
 	case (topology == config.TopologyBalanced) && allHaveRing(zones):
 		layoutBalancedRings(&layout, zones, side)
 	case (topology == config.TopologyRandom || topology == config.TopologyBalanced) && allHavePosition(zones):
@@ -241,6 +243,48 @@ func allHavePosition(zones []template.Zone) bool {
 		}
 	}
 	return true
+}
+
+func allHaveManualPosition(zones []template.Zone) bool {
+	for _, z := range zones {
+		if z.ManualPosition == nil {
+			return false
+		}
+	}
+	return len(zones) > 0
+}
+
+// layoutManualPositions places zones exactly where the manual zone editor put
+// them: canvas = normalized position × side. The mapping must stay trivially
+// invertible (p = pos / side) so dragging in the editor is exact. The zone
+// radius shrinks just enough to keep the closest pair of zones from
+// overlapping.
+func layoutManualPositions(layout *PreviewLayout, zones []template.Zone, side float64) {
+	scale := canvasScale(side)
+	radius := csZoneRadiusMax * scale
+	minGap := csMinGap * scale
+
+	minDist := math.MaxFloat64
+	for i := range zones {
+		for j := i + 1; j < len(zones); j++ {
+			pi := *zones[i].ManualPosition
+			pj := *zones[j].ManualPosition
+			dist := math.Hypot((pi[0]-pj[0])*side, (pi[1]-pj[1])*side)
+			minDist = math.Min(minDist, dist)
+		}
+	}
+	if minDist < math.MaxFloat64 {
+		radius = math.Min(radius, (minDist-minGap)/2.0)
+	}
+	radius = math.Max(radius, 8.0)
+
+	layout.ZoneRadius = int(math.Round(radius))
+	for _, zone := range zones {
+		p := *zone.ManualPosition
+		layout.Positions[zone.Name] = image.Pt(
+			int(math.Round(p[0]*side)),
+			int(math.Round(p[1]*side)))
+	}
 }
 
 func allHaveRing(zones []template.Zone) bool {

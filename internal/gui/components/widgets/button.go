@@ -49,6 +49,41 @@ func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickab
 	}
 }
 
+// NewToggleButtonWidget returns a segment-style toggle button matching the
+// SegmentButtonGroup visuals (tier selector, game-mode selector): a compact
+// 12sp label that turns gold while active.
+func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.Clickable, active bool) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
+			bgColor := themes.ColorInput
+			fgColor := themes.ColorTextDim
+			border := themes.ColorBorder
+			if active {
+				bgColor = themes.ColorGenerate
+				fgColor = themes.ColorGoldBright
+				border = themes.ColorGold
+			}
+			macro := op.Record(gtx.Ops)
+			dims := layout.UniformInset(unit.Dp(6)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				label := material.Body2(theme, label)
+				label.Color = fgColor
+				label.TextSize = unit.Sp(12)
+				return label.Layout(gtx)
+			})
+			call := macro.Stop()
+			radius := gtx.Dp(3)
+			rect := image.Rectangle{Max: dims.Size}
+			paint.FillShape(gtx.Ops, bgColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+			paint.FillShape(gtx.Ops, border, clip.Stroke{
+				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
+				Width: float32(gtx.Dp(1)),
+			}.Op())
+			call.Add(gtx.Ops)
+			return dims
+		})
+	}
+}
+
 func NewGoldButtonWidget(theme *material.Theme, label string, button *widget.Clickable, disabled bool) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		if disabled {

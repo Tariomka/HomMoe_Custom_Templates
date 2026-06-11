@@ -74,13 +74,20 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 }
 
 func (this *TemplateGenerator) createGenerationTuning(totalZoneCount int) models.GenerationTuning {
+	return NewGenerationTuning(this.configuration, totalZoneCount)
+}
+
+// NewGenerationTuning builds the content/guard scaling factors for the given
+// configuration. Exported so the manual zone editor can construct zones with
+// the same tuning the generator used.
+func NewGenerationTuning(configuration *config.GeneratorConfig, totalZoneCount int) models.GenerationTuning {
 	return models.GenerationTuning{
-		ContentScale:                   utils.ComputeContentScale(this.configuration.MapSize, totalZoneCount),
-		ResourceDensityMultiplier:      float64(this.configuration.ZoneConfiguration.ResourceDensityPercent) / 200.0,
-		StructureDensityMultiplier:     float64(this.configuration.ZoneConfiguration.StructureDensityPercent) / 100.0,
-		NeutralStackStrengthMultiplier: float64(this.configuration.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
-		BorderGuardStrengthMultiplier:  float64(this.configuration.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
-		GuardRandomization:             this.configuration.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
+		ContentScale:                   utils.ComputeContentScale(configuration.MapSize, totalZoneCount),
+		ResourceDensityMultiplier:      float64(configuration.ZoneConfiguration.ResourceDensityPercent) / 200.0,
+		StructureDensityMultiplier:     float64(configuration.ZoneConfiguration.StructureDensityPercent) / 100.0,
+		NeutralStackStrengthMultiplier: float64(configuration.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
+		BorderGuardStrengthMultiplier:  float64(configuration.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
+		GuardRandomization:             configuration.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
 	}
 }
 
