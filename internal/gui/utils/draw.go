@@ -15,7 +15,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
@@ -62,13 +62,13 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone services.Pr
 
 	label := zoneLabel(zone)
 	if label != "" {
-		drawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, color.NRGBA{R: 0xF8, G: 0xE8, B: 0xC0, A: 0xFF})
+		drawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, themes.ColorPreviewZoneLabel)
 	}
 	if zone.HasCastle && zone.Castles > 0 {
 		// Small badge in lower right.
 		badgeX := cx + radius/2
 		badgeY := cy + radius/2
-		drawOffsetText(gtx, theme, image.Pt(badgeX, badgeY), fmt.Sprintf("⌂%d", zone.Castles), 10, color.NRGBA{R: 0xFF, G: 0xE8, B: 0x90, A: 0xFF})
+		drawOffsetText(gtx, theme, image.Pt(badgeX, badgeY), fmt.Sprintf("⌂%d", zone.Castles), 10, themes.ColorPreviewCastleBadge)
 	}
 }
 

@@ -9,8 +9,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
@@ -192,7 +192,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 							label := material.Body1(theme, rowDisplayName(row))
-							label.Color = themes.ColorGold
+							label.Color = themes.ColorAccent
 							label.TextSize = unit.Sp(13)
 							return label.Layout(gtx)
 						}),
@@ -228,7 +228,7 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 			return label.Layout(gtx)
 		}
 		label := material.Body1(theme, markers)
-		label.Color = themes.ColorGoldBright
+		label.Color = themes.ColorAccentBright
 		label.TextSize = unit.Sp(13)
 		return label.Layout(gtx)
 	}

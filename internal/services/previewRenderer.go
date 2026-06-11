@@ -8,26 +8,28 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
-// Preview palette — ported from TemplatePreviewPngWriter colors.
+// Preview palette — sourced from the central Crimson Night theme so the
+// rasterised PNG matches the in-app preview exactly.
 var (
-	previewBg         = color.NRGBA{R: 0x1C, G: 0x16, B: 0x10, A: 0xFF}
-	previewFrame      = color.NRGBA{R: 0x8F, G: 0x73, B: 0x3F, A: 0xFF}
-	previewBronzeFill = color.NRGBA{R: 0x65, G: 0x43, B: 0x21, A: 0xFF}
-	previewBronzeEdge = color.NRGBA{R: 0xCD, G: 0x7F, B: 0x32, A: 0xFF}
-	previewSilverFill = color.NRGBA{R: 0x48, G: 0x4C, B: 0x50, A: 0xFF}
-	previewSilverEdge = color.NRGBA{R: 0xC0, G: 0xC0, B: 0xC0, A: 0xFF}
-	previewGoldFill   = color.NRGBA{R: 0x78, G: 0x5A, B: 0x14, A: 0xFF}
-	previewGoldEdge   = color.NRGBA{R: 0xFF, G: 0xD2, B: 0x32, A: 0xFF}
-	previewSpawnFill  = color.NRGBA{R: 0x2A, G: 0x5A, B: 0x32, A: 0xFF}
-	previewSpawnEdge  = color.NRGBA{R: 0x64, G: 0xC8, B: 0x78, A: 0xFF}
-	previewHubFill    = color.NRGBA{R: 0x37, G: 0x50, B: 0x5F, A: 0xFF}
-	previewHubEdge    = color.NRGBA{R: 0x82, G: 0xB4, B: 0xC8, A: 0xFF}
-	previewDirectLine = color.NRGBA{R: 0xB4, G: 0x91, B: 0x3C, A: 0xFF}
-	previewPortalLine = color.NRGBA{R: 0x5A, G: 0xAA, B: 0xD2, A: 0xB4}
+	previewBg         = themes.ColorPreviewBg
+	previewFrame      = themes.ColorPreviewFrame
+	previewBronzeFill = themes.ColorPreviewBronzeFill
+	previewBronzeEdge = themes.ColorPreviewBronzeEdge
+	previewSilverFill = themes.ColorPreviewSilverFill
+	previewSilverEdge = themes.ColorPreviewSilverEdge
+	previewGoldFill   = themes.ColorPreviewGoldFill
+	previewGoldEdge   = themes.ColorPreviewGoldEdge
+	previewSpawnFill  = themes.ColorPreviewSpawnFill
+	previewSpawnEdge  = themes.ColorPreviewSpawnEdge
+	previewHubFill    = themes.ColorPreviewHubFill
+	previewHubEdge    = themes.ColorPreviewHubEdge
+	previewDirectLine = themes.ColorPreviewDirectLine
+	previewPortalLine = themes.ColorPreviewPortalLine
 )
 
 // WritePreviewPNG rasterises the given template and writes it as a PNG into
@@ -91,8 +93,8 @@ func RenderPreviewImage(template *template.RmgTemplateModel, topology config.Map
 		drawThickLine(img, ax, bx, lineWidth, lineColor)
 	}
 	// Zones — non-player first, then player on top.
-	labelColor := color.NRGBA{R: 0xF8, G: 0xE8, B: 0xC0, A: 0xFF}
-	badgeColor := color.NRGBA{R: 0xFF, G: 0xE8, B: 0x90, A: 0xFF}
+	labelColor := themes.ColorPreviewZoneLabel
+	badgeColor := themes.ColorPreviewCastleBadge
 	for _, zone := range layout.Zones {
 		if zone.IsPlayer {
 			continue

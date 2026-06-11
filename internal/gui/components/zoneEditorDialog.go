@@ -21,8 +21,8 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -32,9 +32,9 @@ import (
 )
 
 var (
-	colorEdgeSelected = color.NRGBA{R: 0xFF, G: 0x8C, B: 0x00, A: 0xFF}
-	colorUserAddedDot = color.NRGBA{R: 0xFF, G: 0xD2, B: 0x80, A: 0xFF}
-	colorGuardLabel   = color.NRGBA{R: 0xF0, G: 0xE6, B: 0x9A, A: 0xFF}
+	colorEdgeSelected = themes.ColorEditorEdgeSelected
+	colorUserAddedDot = themes.ColorEditorUserAddedDot
+	colorGuardLabel   = themes.ColorEditorGuardLabel
 )
 
 // connEdgeGeom is the per-frame drawn geometry of one connection: a quadratic
@@ -697,7 +697,7 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 	rows := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Body1(theme, connection.From+"  →  "+connection.To)
-			label.Color = themes.ColorGoldBright
+			label.Color = themes.ColorAccentBright
 			label.Font = font.Font{Weight: font.SemiBold}
 			return label.Layout(gtx)
 		},
@@ -977,7 +977,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *temp
 	rows := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Body1(theme, zone.Name)
-			label.Color = themes.ColorGoldBright
+			label.Color = themes.ColorAccentBright
 			label.Font = font.Font{Weight: font.SemiBold}
 			return label.Layout(gtx)
 		},

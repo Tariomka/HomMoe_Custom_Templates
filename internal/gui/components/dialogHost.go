@@ -2,7 +2,6 @@ package components
 
 import (
 	"image"
-	"image/color"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -12,8 +11,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
 // DialogHost renders a stack of modal Dialogs over the main UI; only the
@@ -72,7 +71,7 @@ func (this *DialogHost) Layout(gtx layout.Context, theme *material.Theme) layout
 
 	// Scrim: a darkened, click-absorbing barrier over the entire window so the
 	// underlying UI cannot be interacted with while the modal is open.
-	paint.FillShape(gtx.Ops, color.NRGBA{A: 0xB0}, clip.Rect{Max: full}.Op())
+	paint.FillShape(gtx.Ops, themes.ColorScrim, clip.Rect{Max: full}.Op())
 	this.scrim.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{Size: full}
 	})
@@ -107,7 +106,7 @@ func (this *DialogHost) layoutPanel(gtx layout.Context, theme *material.Theme) l
 	radius := gtx.Dp(unit.Dp(6))
 	rect := image.Rectangle{Max: size}
 	paint.FillShape(gtx.Ops, themes.ColorPanel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, themes.ColorGold, clip.Stroke{
+	paint.FillShape(gtx.Ops, themes.ColorAccent, clip.Stroke{
 		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 		Width: float32(gtx.Dp(unit.Dp(1))),
 	}.Op())
@@ -143,7 +142,7 @@ func (this *DialogHost) layoutHeader(theme *material.Theme) layout.Widget {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 				title := material.H6(theme, this.titleText())
-				title.Color = themes.ColorGoldBright
+				title.Color = themes.ColorAccentBright
 				title.TextSize = unit.Sp(17)
 				title.Font = font.Font{Weight: font.SemiBold}
 				return title.Layout(gtx)

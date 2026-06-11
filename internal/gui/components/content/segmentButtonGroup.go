@@ -10,7 +10,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
 // segmentButton represents a single selectable option in a row of segments.
@@ -79,9 +79,9 @@ func drawSegment(gtx layout.Context, theme *material.Theme, label string, select
 	fgColor := themes.ColorTextDim
 	border := themes.ColorBorder
 	if selected {
-		bgColor = themes.ColorGenerate
-		fgColor = themes.ColorGoldBright
-		border = themes.ColorGold
+		bgColor = themes.ColorPrimaryButton
+		fgColor = themes.ColorAccentBright
+		border = themes.ColorAccent
 	}
 	macro := op.Record(gtx.Ops)
 	dims := layout.UniformInset(unit.Dp(6)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {

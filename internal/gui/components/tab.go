@@ -12,7 +12,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
 type Tab struct {
@@ -44,7 +44,7 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 				label.TextSize = unit.Sp(13)
 				label.Alignment = text.Middle
 				if this.isSelected {
-					label.Color = themes.ColorGold
+					label.Color = themes.ColorAccent
 					label.Font = font.Font{Weight: font.SemiBold}
 				} else {
 					label.Color = themes.ColorTextDim
@@ -56,7 +56,7 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 			border := themes.ColorBorder
 			if this.isSelected {
 				bgColor = themes.ColorPanel
-				border = themes.ColorGold
+				border = themes.ColorAccent
 			}
 			rect := image.Rectangle{Max: dims.Size}
 			radius := gtx.Dp(4)

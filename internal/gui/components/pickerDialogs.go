@@ -15,13 +15,12 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
-// checkedRowBg is the highlight behind a selected picker row (matches the C#
-// CheckedBrush 0x5A4A28).
-var checkedRowBg = color.NRGBA{R: 0x5A, G: 0x4A, B: 0x28, A: 0xFF}
+// checkedRowBg is the highlight behind a selected picker row.
+var checkedRowBg = themes.ColorSelection
 
 // pickerEntry is one selectable row in a multiSelectPicker.
 type pickerEntry struct {
@@ -170,7 +169,7 @@ func (this *multiSelectPicker) matches(entry pickerEntry, filter string) bool {
 }
 
 func (this *multiSelectPicker) groupHeader(theme *material.Theme, group string, count int) layout.Widget {
-	col := themes.ColorGold
+	col := themes.ColorAccent
 	if this.groupColor != nil {
 		col = this.groupColor(group)
 	}
@@ -218,7 +217,7 @@ func (this *multiSelectPicker) leafRow(theme *material.Theme, entry pickerEntry)
 							mark = "✓"
 						}
 						label := material.Body1(theme, mark)
-						label.Color = themes.ColorGoldBright
+						label.Color = themes.ColorAccentBright
 						label.Font = font.Font{Weight: font.Bold}
 						return label.Layout(gtx)
 					}),
@@ -377,17 +376,17 @@ func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids
 func spellSchoolColor(group string) color.NRGBA {
 	switch group {
 	case "Neutral":
-		return color.NRGBA{R: 0xA0, G: 0xA0, B: 0xA0, A: 0xFF}
+		return themes.ColorSchoolNeutral
 	case "Day":
-		return color.NRGBA{R: 0xC8, G: 0xB8, B: 0x7A, A: 0xFF}
+		return themes.ColorSchoolDay
 	case "Night":
-		return color.NRGBA{R: 0x9B, G: 0x7E, B: 0xD4, A: 0xFF}
+		return themes.ColorSchoolNight
 	case "Space":
-		return color.NRGBA{R: 0x7E, G: 0xC9, B: 0xD0, A: 0xFF}
+		return themes.ColorSchoolSpace
 	case "Primal":
-		return color.NRGBA{R: 0xD4, G: 0x7A, B: 0x48, A: 0xFF}
+		return themes.ColorSchoolPrimal
 	}
-	return themes.ColorGold
+	return themes.ColorAccent
 }
 
 // ── Value-override picker ───────────────────────────────────────────────────
