@@ -8,29 +8,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
-// Preview palette — sourced from the central Crimson Night theme so the
-// rasterised PNG matches the in-app preview exactly.
-var (
-	previewBg         = themes.ColorPreviewBg
-	previewFrame      = themes.ColorPreviewFrame
-	previewBronzeFill = themes.ColorPreviewBronzeFill
-	previewBronzeEdge = themes.ColorPreviewBronzeEdge
-	previewSilverFill = themes.ColorPreviewSilverFill
-	previewSilverEdge = themes.ColorPreviewSilverEdge
-	previewGoldFill   = themes.ColorPreviewGoldFill
-	previewGoldEdge   = themes.ColorPreviewGoldEdge
-	previewSpawnFill  = themes.ColorPreviewSpawnFill
-	previewSpawnEdge  = themes.ColorPreviewSpawnEdge
-	previewHubFill    = themes.ColorPreviewHubFill
-	previewHubEdge    = themes.ColorPreviewHubEdge
-	previewDirectLine = themes.ColorPreviewDirectLine
-	previewPortalLine = themes.ColorPreviewPortalLine
-)
+// previewLineColor is the connection-line colour sampled from the official
+// in-game template overview images (a dark warm brown, drawn under the
+// zone bubbles).
+var previewLineColor = color.NRGBA{R: 0x39, G: 0x11, B: 0x14, A: 0xFF}
 
 // WritePreviewPNG rasterises the given template and writes it as a PNG into
 // dir/<safeName>.png at the requested side length. The directory is created
@@ -56,23 +41,36 @@ func WritePreviewPNG(dir string, template *template.RmgTemplateModel, topology c
 	return out, nil
 }
 
-// RenderPreviewImage rasterises the layout into an *image.RGBA. It uses only
-// the standard library — circles are filled scanline-by-scanline, lines via
-// a simple DDA with a tiny brush.
+// RenderPreviewImage rasterises the layout in the style of the official
+// in-game template overview images: the parchment background, the zone
+// bubbles and the connection lines are composited from sprite assets
+// extracted from those images (see tools/assetgen).
 func RenderPreviewImage(template *template.RmgTemplateModel, topology config.MapTopology, side int) *image.RGBA {
+	assets := loadPreviewAssets()
 	img := image.NewRGBA(image.Rect(0, 0, side, side))
-	fillRect(img, img.Bounds(), previewBg)
+	drawBackgroundScaled(img, assets.background)
 
 	layout := BuildPreviewLayout(template, topology, float64(side))
 	if len(layout.Positions) == 0 {
 		return img
 	}
-	radius := layout.ZoneRadius
 
-	// Frame.
-	strokeRect(img, image.Rect(4, 4, side-4, side-4), 2, previewFrame)
+	// Sprite scale: follow the layout's zone radius for dense maps, but cap
+	// near the official proportions (bubble radius ≈21 px on a 700 px
+	// canvas) so sparse maps keep the in-game look instead of ballooning.
+	maxScale := 1.15 * float64(side) / 700.0
+	scale := float64(layout.ZoneRadius) / previewSpriteRadius
+	if scale > maxScale {
+		scale = maxScale
+	}
+	drawnRadius := previewSpriteRadius * scale
 
-	// Connections.
+	// Connections: solid dark lines, ended at the bubble outlines so they
+	// do not show through the open (low-quality) rings.
+	lineWidth := int(math.Round(4.0 * float64(side) / 700.0))
+	if lineWidth < 2 {
+		lineWidth = 2
+	}
 	for _, conn := range layout.Connections {
 		dx := float64(conn.B.X - conn.A.X)
 		dy := float64(conn.B.Y - conn.A.Y)
@@ -82,165 +80,28 @@ func RenderPreviewImage(template *template.RmgTemplateModel, topology config.Map
 		}
 		ux := dx / distance
 		uy := dy / distance
-		ax := image.Pt(int(float64(conn.A.X)+ux*float64(radius)), int(float64(conn.A.Y)+uy*float64(radius)))
-		bx := image.Pt(int(float64(conn.B.X)-ux*float64(radius)), int(float64(conn.B.Y)-uy*float64(radius)))
-		lineColor := previewDirectLine
-		lineWidth := 3
-		if conn.Portal {
-			lineColor = previewPortalLine
-			lineWidth = 2
-		}
-		drawThickLine(img, ax, bx, lineWidth, lineColor)
+		ax := image.Pt(int(float64(conn.A.X)+ux*drawnRadius), int(float64(conn.A.Y)+uy*drawnRadius))
+		bx := image.Pt(int(float64(conn.B.X)-ux*drawnRadius), int(float64(conn.B.Y)-uy*drawnRadius))
+		drawThickLine(img, ax, bx, lineWidth, previewLineColor)
 	}
-	// Zones — non-player first, then player on top.
-	labelColor := themes.ColorPreviewZoneLabel
-	badgeColor := themes.ColorPreviewCastleBadge
+
+	// Zones — non-player bubbles first, then the player bubbles on top,
+	// exactly like the official overview images layer them.
 	for _, zone := range layout.Zones {
 		if zone.IsPlayer {
 			continue
 		}
-		fill, edge := pngZoneColors(zone)
-		zoneRadius := radius
-		if zone.IsHub && zoneRadius < 28 {
-			zoneRadius = 28
-		}
-		fillCircle(img, zone.Center, zoneRadius, fill)
-		strokeCircle(img, zone.Center, zoneRadius, 2, edge)
-		drawBitmapTextCentered(img, zone.Center, pngZoneLabel(zone), 2, labelColor)
-		if zone.HasCastle && zone.Castles > 0 {
-			badgePos := image.Pt(zone.Center.X+zoneRadius/2, zone.Center.Y+zoneRadius/2)
-			drawCastleBadge(img, badgePos, zone.Castles, badgeColor)
-		}
+		sprite := neutralSpriteFor(assets, zone)
+		drawSpriteScaled(img, sprite, zone.Center.X, zone.Center.Y, previewSpriteCenter, previewSpriteCenter, scale)
 	}
 	for _, zone := range layout.Zones {
 		if !zone.IsPlayer {
 			continue
 		}
-		fill, edge := pngZoneColors(zone)
-		fillCircle(img, zone.Center, radius, fill)
-		strokeCircle(img, zone.Center, radius, 2, edge)
-		drawBitmapTextCentered(img, zone.Center, pngZoneLabel(zone), 2, labelColor)
-		if zone.HasCastle && zone.Castles > 0 {
-			badgePos := image.Pt(zone.Center.X+radius/2, zone.Center.Y+radius/2)
-			drawCastleBadge(img, badgePos, zone.Castles, badgeColor)
-		}
+		sprite := playerSpriteFor(assets, zone)
+		drawSpriteScaled(img, sprite, zone.Center.X, zone.Center.Y, previewSpriteCenter, previewSpriteCenter, scale)
 	}
 	return img
-}
-
-func pngZoneColors(zone PreviewZone) (fill, edge color.NRGBA) {
-	switch {
-	case zone.IsPlayer:
-		return previewSpawnFill, previewSpawnEdge
-	case zone.IsHub:
-		return previewHubFill, previewHubEdge
-	}
-	switch zone.Tier {
-	case 3:
-		return previewGoldFill, previewGoldEdge
-	case 2:
-		return previewSilverFill, previewSilverEdge
-	default:
-		return previewBronzeFill, previewBronzeEdge
-	}
-}
-
-func pngZoneLabel(zone PreviewZone) string {
-	if zone.IsPlayer {
-		if zone.Owner > 0 {
-			return "P" + intToString(zone.Owner)
-		}
-		// Spawn-1 / Spawn-2 → "P1"…
-		if len(zone.Letter) > 0 {
-			return "P" + zone.Letter
-		}
-		return zone.Letter
-	}
-	if zone.IsHub {
-		return "Hub"
-	}
-	switch zone.Tier {
-	case 3:
-		return "G"
-	case 2:
-		return "S"
-	default:
-		return "B"
-	}
-}
-
-func intToString(value int) string {
-	if value == 0 {
-		return "0"
-	}
-	negative := value < 0
-	if negative {
-		value = -value
-	}
-	var buf [20]byte
-	i := len(buf)
-	for value > 0 {
-		i--
-		buf[i] = byte('0' + value%10)
-		value /= 10
-	}
-	if negative {
-		i--
-		buf[i] = '-'
-	}
-	return string(buf[i:])
-}
-
-// ── Pixel-pushing primitives ────────────────────────────────────────
-
-func fillRect(img *image.RGBA, rect image.Rectangle, fillColor color.NRGBA) {
-	for y := rect.Min.Y; y < rect.Max.Y; y++ {
-		for x := rect.Min.X; x < rect.Max.X; x++ {
-			img.SetRGBA(x, y, color.RGBA(fillColor))
-		}
-	}
-}
-
-func strokeRect(img *image.RGBA, rect image.Rectangle, width int, strokeColor color.NRGBA) {
-	fillRect(img, image.Rect(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Min.Y+width), strokeColor)
-	fillRect(img, image.Rect(rect.Min.X, rect.Max.Y-width, rect.Max.X, rect.Max.Y), strokeColor)
-	fillRect(img, image.Rect(rect.Min.X, rect.Min.Y, rect.Min.X+width, rect.Max.Y), strokeColor)
-	fillRect(img, image.Rect(rect.Max.X-width, rect.Min.Y, rect.Max.X, rect.Max.Y), strokeColor)
-}
-
-func fillCircle(img *image.RGBA, center image.Point, radius int, fillColor color.NRGBA) {
-	radiusSq := radius * radius
-	for dy := -radius; dy <= radius; dy++ {
-		for dx := -radius; dx <= radius; dx++ {
-			if dx*dx+dy*dy <= radiusSq {
-				x := center.X + dx
-				y := center.Y + dy
-				if x < 0 || y < 0 || x >= img.Rect.Max.X || y >= img.Rect.Max.Y {
-					continue
-				}
-				img.SetRGBA(x, y, color.RGBA(fillColor))
-			}
-		}
-	}
-}
-
-func strokeCircle(img *image.RGBA, center image.Point, radius, width int, strokeColor color.NRGBA) {
-	outerSq := radius * radius
-	innerRadius := radius - width
-	innerSq := max(innerRadius*innerRadius, 0)
-	for dy := -radius; dy <= radius; dy++ {
-		for dx := -radius; dx <= radius; dx++ {
-			distSq := dx*dx + dy*dy
-			if distSq <= outerSq && distSq >= innerSq {
-				x := center.X + dx
-				y := center.Y + dy
-				if x < 0 || y < 0 || x >= img.Rect.Max.X || y >= img.Rect.Max.Y {
-					continue
-				}
-				img.SetRGBA(x, y, color.RGBA(strokeColor))
-			}
-		}
-	}
 }
 
 // drawThickLine draws a width-pixel-thick line via DDA with a square brush.
@@ -249,7 +110,6 @@ func drawThickLine(img *image.RGBA, a, b image.Point, width int, lineColor color
 	dy := b.Y - a.Y
 	steps := max(-dy, max(dy, max(-dx, dx)))
 	if steps <= 0 {
-		fillCircle(img, a, width, lineColor)
 		return
 	}
 	xinc := float64(dx) / float64(steps)
@@ -257,6 +117,7 @@ func drawThickLine(img *image.RGBA, a, b image.Point, width int, lineColor color
 	x := float64(a.X)
 	y := float64(a.Y)
 	half := width / 2
+	rgba := color.RGBA{lineColor.R, lineColor.G, lineColor.B, lineColor.A}
 	for i := 0; i <= steps; i++ {
 		px := int(math.Round(x))
 		py := int(math.Round(y))
@@ -267,181 +128,10 @@ func drawThickLine(img *image.RGBA, a, b image.Point, width int, lineColor color
 				if xx < 0 || yy < 0 || xx >= img.Rect.Max.X || yy >= img.Rect.Max.Y {
 					continue
 				}
-				img.SetRGBA(xx, yy, color.RGBA(lineColor))
+				img.SetRGBA(xx, yy, rgba)
 			}
 		}
 		x += xinc
 		y += yinc
 	}
-}
-
-// ── Bitmap font for PNG annotations ──────────────────────────────────
-// A tiny 5×7 pixel font covering 0-9, A-Z, and a few symbols.
-// Each glyph is 5 columns wide; each column is a byte with 7 bit-rows
-// (bit 0 = top row).
-
-var bitmapGlyphs = map[byte][5]byte{
-	'0': {0x3E, 0x51, 0x49, 0x45, 0x3E},
-	'1': {0x00, 0x42, 0x7F, 0x40, 0x00},
-	'2': {0x42, 0x61, 0x51, 0x49, 0x46},
-	'3': {0x21, 0x41, 0x45, 0x4B, 0x31},
-	'4': {0x18, 0x14, 0x12, 0x7F, 0x10},
-	'5': {0x27, 0x45, 0x45, 0x45, 0x39},
-	'6': {0x3C, 0x4A, 0x49, 0x49, 0x30},
-	'7': {0x01, 0x71, 0x09, 0x05, 0x03},
-	'8': {0x36, 0x49, 0x49, 0x49, 0x36},
-	'9': {0x06, 0x49, 0x49, 0x29, 0x1E},
-	'A': {0x7E, 0x11, 0x11, 0x11, 0x7E},
-	'B': {0x7F, 0x49, 0x49, 0x49, 0x36},
-	'C': {0x3E, 0x41, 0x41, 0x41, 0x22},
-	'D': {0x7F, 0x41, 0x41, 0x22, 0x1C},
-	'E': {0x7F, 0x49, 0x49, 0x49, 0x41},
-	'F': {0x7F, 0x09, 0x09, 0x09, 0x01},
-	'G': {0x3E, 0x41, 0x49, 0x49, 0x7A},
-	'H': {0x7F, 0x08, 0x08, 0x08, 0x7F},
-	'I': {0x00, 0x41, 0x7F, 0x41, 0x00},
-	'J': {0x20, 0x40, 0x41, 0x3F, 0x01},
-	'K': {0x7F, 0x08, 0x14, 0x22, 0x41},
-	'L': {0x7F, 0x40, 0x40, 0x40, 0x40},
-	'M': {0x7F, 0x02, 0x0C, 0x02, 0x7F},
-	'N': {0x7F, 0x04, 0x08, 0x10, 0x7F},
-	'O': {0x3E, 0x41, 0x41, 0x41, 0x3E},
-	'P': {0x7F, 0x09, 0x09, 0x09, 0x06},
-	'Q': {0x3E, 0x41, 0x51, 0x21, 0x5E},
-	'R': {0x7F, 0x09, 0x19, 0x29, 0x46},
-	'S': {0x46, 0x49, 0x49, 0x49, 0x31},
-	'T': {0x01, 0x01, 0x7F, 0x01, 0x01},
-	'U': {0x3F, 0x40, 0x40, 0x40, 0x3F},
-	'V': {0x1F, 0x20, 0x40, 0x20, 0x1F},
-	'W': {0x3F, 0x40, 0x38, 0x40, 0x3F},
-	'X': {0x63, 0x14, 0x08, 0x14, 0x63},
-	'Y': {0x07, 0x08, 0x70, 0x08, 0x07},
-	'Z': {0x61, 0x51, 0x49, 0x45, 0x43},
-}
-
-// drawBitmapText draws a string onto img at (x, y) with the given scale.
-func drawBitmapText(img *image.RGBA, x, y int, text string, scale int, textColor color.NRGBA) {
-	if scale < 1 {
-		scale = 1
-	}
-	rgba := color.RGBA(textColor)
-	cursorX := x
-	for i := 0; i < len(text); i++ {
-		ch := text[i]
-		if ch >= 'a' && ch <= 'z' {
-			ch -= 32
-		}
-		glyph, ok := bitmapGlyphs[ch]
-		if !ok {
-			cursorX += 4 * scale // space for unknown chars
-			continue
-		}
-		for col := range 5 {
-			bits := glyph[col]
-			for row := range 7 {
-				if bits&(1<<uint(row)) != 0 {
-					for sy := 0; sy < scale; sy++ {
-						for sx := 0; sx < scale; sx++ {
-							px := cursorX + col*scale + sx
-							py := y + row*scale + sy
-							if px >= 0 && py >= 0 && px < img.Rect.Max.X && py < img.Rect.Max.Y {
-								img.SetRGBA(px, py, rgba)
-							}
-						}
-					}
-				}
-			}
-		}
-		cursorX += 6 * scale // 5 pixel cols + 1 pixel gap
-	}
-}
-
-// bitmapTextWidth returns the pixel width of a string at the given scale.
-func bitmapTextWidth(text string, scale int) int {
-	if len(text) == 0 {
-		return 0
-	}
-	return len(text)*6*scale - scale // subtract trailing gap
-}
-
-// drawBitmapTextCentered draws a string centered on the given point.
-func drawBitmapTextCentered(img *image.RGBA, center image.Point, text string, scale int, textColor color.NRGBA) {
-	if text == "" {
-		return
-	}
-	textWidth := bitmapTextWidth(text, scale)
-	textHeight := 7 * scale
-	x := center.X - textWidth/2
-	y := center.Y - textHeight/2
-	drawBitmapText(img, x, y, text, scale, textColor)
-}
-
-// castleIconBitmap is a 7-column × 7-row pixel-art castle silhouette.
-// Each column byte stores 7 rows in low-order bits (bit 0 = top row),
-// matching the bitmapGlyphs format used by drawBitmapText.
-//
-//	row 0:  X . X . X . X    (crenellations)
-//	row 1:  X X X X X X X    (wall top)
-//	row 2:  X X X X X X X    (wall)
-//	row 3:  X X . X . X X    (windows row)
-//	row 4:  X X . X . X X
-//	row 5:  X X X . X X X    (door cutout)
-//	row 6:  X X X . X X X    (base)
-var castleIconBitmap = [7]byte{
-	0b1111111, // col 0: rows 0..6 all set
-	0b1110110, // col 1: rows 1,2,4,5,6
-	0b1100111, // col 2: rows 0,1,2,5,6
-	0b0011110, // col 3: rows 1,2,3,4
-	0b1100111, // col 4: rows 0,1,2,5,6
-	0b1110110, // col 5: rows 1,2,4,5,6
-	0b1111111, // col 6: rows 0..6 all set
-}
-
-// drawCastleIcon draws the 7×7 castle silhouette at the given top-left
-// position, scaled by the supplied factor.
-func drawCastleIcon(img *image.RGBA, topLeft image.Point, scale int, iconColor color.NRGBA) {
-	if scale < 1 {
-		scale = 1
-	}
-	rgba := color.RGBA(iconColor)
-	for col := range 7 {
-		bits := castleIconBitmap[col]
-		for row := range 7 {
-			if bits&(1<<uint(row)) == 0 {
-				continue
-			}
-			for sy := 0; sy < scale; sy++ {
-				for sx := 0; sx < scale; sx++ {
-					px := topLeft.X + col*scale + sx
-					py := topLeft.Y + row*scale + sy
-					if px < 0 || py < 0 || px >= img.Rect.Max.X || py >= img.Rect.Max.Y {
-						continue
-					}
-					img.SetRGBA(px, py, rgba)
-				}
-			}
-		}
-	}
-}
-
-// drawCastleBadge renders a small castle icon followed by the count,
-// centered on the given anchor point. Mirrors the "⌂N" badge used by
-// the live Gio preview.
-func drawCastleBadge(img *image.RGBA, center image.Point, count int, badgeColor color.NRGBA) {
-	const iconScale = 2
-	const textScale = 1
-	iconWidth := 7 * iconScale
-	iconHeight := 7 * iconScale
-	countText := intToString(count)
-	textWidth := bitmapTextWidth(countText, textScale)
-	textHeight := 7 * textScale
-	gap := iconScale // small gap between icon and number
-	totalWidth := iconWidth + gap + textWidth
-	totalHeight := max(textHeight, iconHeight)
-	originX := center.X - totalWidth/2
-	originY := center.Y - totalHeight/2
-	drawCastleIcon(img, image.Pt(originX, originY+(totalHeight-iconHeight)/2), iconScale, badgeColor)
-	textX := originX + iconWidth + gap
-	textY := originY + (totalHeight-textHeight)/2
-	drawBitmapText(img, textX, textY, countText, textScale, badgeColor)
 }
