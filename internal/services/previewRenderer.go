@@ -155,7 +155,7 @@ func drawThickLine(img *image.RGBA, a, b image.Point, width int, lineColor color
 	x := float64(a.X)
 	y := float64(a.Y)
 	half := width / 2
-	rgba := color.RGBA{lineColor.R, lineColor.G, lineColor.B, lineColor.A}
+	rgba := color.RGBA(lineColor)
 	for i := 0; i <= steps; i++ {
 		px := int(math.Round(x))
 		py := int(math.Round(y))
