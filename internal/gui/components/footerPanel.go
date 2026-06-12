@@ -7,8 +7,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 )
 
@@ -59,7 +59,7 @@ func (this *FooterPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 						if isErr {
 							col = themes.ColorError
 						} else if this.state.GetLastTemplate() != nil {
-							col = themes.ColorGoldBright
+							col = themes.ColorAccentBright
 						}
 						label := material.Body2(theme, message)
 						label.Color = col

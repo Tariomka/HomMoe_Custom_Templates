@@ -3,7 +3,7 @@ package constants
 import (
 	"image/color"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
 type legendItem struct {

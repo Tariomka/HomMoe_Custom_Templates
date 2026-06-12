@@ -12,20 +12,20 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 )
 
-// Category dot colours, matching the C# editor's brushes.
+// Category dot colors come from the central theme palette.
 var (
-	dotMovement = color.NRGBA{R: 0x64, G: 0x95, B: 0xED, A: 0xFF} // cornflower blue
-	dotCombat   = color.NRGBA{R: 0xCD, G: 0x5C, B: 0x5C, A: 0xFF} // indian red
-	dotMagic    = color.NRGBA{R: 0x93, G: 0x70, B: 0xDB, A: 0xFF} // medium purple
-	dotSet      = color.NRGBA{R: 0xBA, G: 0x55, B: 0xD3, A: 0xFF} // medium orchid
-	dotResource = color.NRGBA{R: 0xDA, G: 0xA5, B: 0x20, A: 0xFF} // goldenrod
-	dotDefault  = color.NRGBA{R: 0x80, G: 0x80, B: 0x80, A: 0xFF} // gray
+	dotMovement = themes.ColorDotMovement
+	dotCombat   = themes.ColorDotCombat
+	dotMagic    = themes.ColorDotMagic
+	dotSet      = themes.ColorDotSet
+	dotResource = themes.ColorDotResource
+	dotDefault  = themes.ColorDotDefault
 )
 
 // BonusesPanel mirrors the parallel C# editor's bonuses & bans tab: bonuses,

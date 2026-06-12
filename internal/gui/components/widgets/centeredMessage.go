@@ -8,7 +8,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
 // NewCenteredMessageWidget renders a Body2 label centered inside the given canvas

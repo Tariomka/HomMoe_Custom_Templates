@@ -80,19 +80,20 @@ func (this *State) GetLastTemplate() *template.RmgTemplateModel {
 	return this.lastTemplate
 }
 
-// ApplyEditedConnections writes connections edited in the visual connection
+// ApplyEditedZones writes zones and connections edited in the manual zone
 // editor back into the live template and flags that manual edits now exist.
-func (this *State) ApplyEditedConnections(connections []template.Connection) {
+func (this *State) ApplyEditedZones(zones []template.Zone, connections []template.Connection) {
 	if this.lastTemplate == nil || len(this.lastTemplate.Variants) == 0 {
 		return
 	}
+	this.lastTemplate.Variants[0].Zones = zones
 	this.lastTemplate.Variants[0].Connections = connections
 	this.connectionsModified = true
-	if connection_editor.ComputeHasErrors(this.lastTemplate.Variants[0].Zones, connections) {
-		this.setStatus(fmt.Sprintf("Applied %d connections — \u26a0 some reference a missing zone; fix before export.", len(connections)), true)
+	if connection_editor.ComputeHasErrors(zones, connections) {
+		this.setStatus(fmt.Sprintf("Applied %d zones and %d connections — \u26a0 some connections reference a missing zone; fix before export.", len(zones), len(connections)), true)
 		return
 	}
-	this.setStatus(fmt.Sprintf("Applied %d connections from the editor.", len(connections)), false)
+	this.setStatus(fmt.Sprintf("Applied %d zones and %d connections from the editor.", len(zones), len(connections)), false)
 }
 
 func (this *State) GetOutputPath() string {

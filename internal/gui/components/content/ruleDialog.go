@@ -8,8 +8,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
@@ -251,7 +251,7 @@ func (this *ManageRulesDialog) sectionLabel(theme *material.Theme, text string) 
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			label := material.Body1(theme, text)
-			label.Color = themes.ColorGold
+			label.Color = themes.ColorAccent
 			label.TextSize = unit.Sp(13)
 			return label.Layout(gtx)
 		})

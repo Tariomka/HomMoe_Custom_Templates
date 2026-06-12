@@ -2,7 +2,6 @@ package content
 
 import (
 	"image"
-	"image/color"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -12,7 +11,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
 type dropdownItem struct {
@@ -105,7 +104,7 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 							arrow = "▴"
 						}
 						label := material.Body1(theme, arrow)
-						label.Color = themes.ColorGoldDim
+						label.Color = themes.ColorAccentDim
 						label.TextSize = unit.Sp(11)
 						return label.Layout(gtx)
 					}),
@@ -117,7 +116,7 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 			paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			border := themes.ColorBorder
 			if this.isOpen {
-				border = themes.ColorGold
+				border = themes.ColorAccent
 			}
 			paint.FillShape(gtx.Ops, border, clip.Stroke{
 				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
@@ -143,7 +142,7 @@ func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.The
 	call := macro.Stop()
 	radius := gtx.Dp(2)
 	rect := image.Rectangle{Max: dims.Size}
-	paint.FillShape(gtx.Ops, color.NRGBA{R: 0x2C, G: 0x26, B: 0x19, A: 0xFF}, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 	paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
 		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 		Width: float32(gtx.Dp(1)),
@@ -161,14 +160,14 @@ func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selec
 		label.MaxLines = 1
 		label.Truncator = "…"
 		if selected {
-			label.Color = themes.ColorGold
+			label.Color = themes.ColorAccent
 			label.Font = font.Font{Weight: font.SemiBold}
 		}
 		return label.Layout(gtx)
 	})
 	call := macro.Stop()
 	if selected {
-		paint.FillShape(gtx.Ops, color.NRGBA{R: 0x5A, G: 0x4A, B: 0x28, A: 0xFF},
+		paint.FillShape(gtx.Ops, themes.ColorSelection,
 			clip.Rect{Max: dims.Size}.Op())
 	}
 	call.Add(gtx.Ops)

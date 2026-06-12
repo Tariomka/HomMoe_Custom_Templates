@@ -9,12 +9,14 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
 
 type LayoutPanel struct {
@@ -74,9 +76,9 @@ func NewLayoutPanel(state *State) *LayoutPanel {
 func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	widgetsList := []layout.Widget{
 		this.getTopologySectionWidget(theme),
-		widgets.NewSectionWidget(theme, "Zone connections", []layout.Widget{
-			widgets.NewButtonWidget(theme, "Edit zone connections…", &this.editConnectionsBtn, false),
-			widgets.NewDimmedLabelWidget(theme, "Visually add, edit and delete connections on the generated map."),
+		widgets.NewSectionWidget(theme, "Manual zone editing", []layout.Widget{
+			widgets.NewGoldButtonWidget(theme, "Manual zone editor…", &this.editConnectionsBtn, false),
+			widgets.NewDimmedLabelWidget(theme, "Visually add, move and edit zones and connections on the generated map."),
 		}),
 		widgets.NewSectionWidget(theme, "Connectivity", []layout.Widget{
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkRoads, "Generate roads between zones"),
@@ -138,7 +140,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	}
 }
 
-// handleConnectionEditorClick opens the visual connection editor over the most
+// handleConnectionEditorClick opens the manual zone editor over the most
 // recently generated template, or reports that one must be generated first.
 func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	if !this.editConnectionsBtn.Clicked(gtx) {
@@ -146,16 +148,21 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	}
 	tmpl := this.state.GetLastTemplate()
 	if tmpl == nil || len(tmpl.Variants) == 0 {
-		this.state.setStatus("Generate a template first to edit its connections.", true)
+		this.state.setStatus("Generate a template first to edit its zones.", true)
 		return
 	}
 	activeVariant := tmpl.Variants[0]
-	this.state.Dialogs().Open(NewConnectionEditorDialog(
+	settings := this.state.GetStateData()
+	generatorConfig := services.SettingsToGenerator(&settings)
+	tuning := template_generator.NewGenerationTuning(generatorConfig, len(activeVariant.Zones))
+	this.state.Dialogs().Open(NewZoneEditorDialog(
 		activeVariant.Zones,
 		activeVariant.Connections,
-		this.state.GetStateData().Topology,
-		func(connections []template.Connection) {
-			this.state.ApplyEditedConnections(connections)
+		settings.Topology,
+		tuning,
+		settings.GenerateRoads,
+		func(zones []template.Zone, connections []template.Connection) {
+			this.state.ApplyEditedZones(zones, connections)
 		},
 	))
 }

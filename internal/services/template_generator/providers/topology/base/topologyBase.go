@@ -142,7 +142,7 @@ func (this *TopologyBase) CreateNeutralZone(
 		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
 		WithResourcesValue(tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)).
 		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithMainObjects(this.createNeutralZoneCastles(profile, tuning, plan.CastleCount, isHoldCity)).
+		WithMainObjects(CreateNeutralZoneCastles(profile, tuning, plan.CastleCount, isHoldCity)).
 		WithCrossroadsPosition(0).
 		WithRoads(this.createOuterZoneRoads(connectionNames, plan.CastleCount, spawnFootholds, generateRoads))
 
@@ -509,7 +509,10 @@ func (this *TopologyBase) createPlayerUnclaimedCastles(
 	return castles
 }
 
-func (this *TopologyBase) createNeutralZoneCastles(
+// CreateNeutralZoneCastles builds the City main objects of a neutral zone.
+// Exported so the manual zone editor can rebuild castles when the user edits
+// a zone's quality or castle count.
+func CreateNeutralZoneCastles(
 	profile models.NeutralZoneProfile,
 	tuning models.GenerationTuning,
 	castleCount int,

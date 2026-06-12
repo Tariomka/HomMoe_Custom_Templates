@@ -16,6 +16,12 @@ type Zone struct {
 	// the correct ring
 	GeneratorRing *int `json:"-"`
 
+	// ManualPosition is a normalized [0,1]×[0,1] position assigned when the
+	// user moves or adds zones in the manual zone editor. It is NOT serialized
+	// — when every zone has one, the preview renderer honours these positions
+	// verbatim instead of computing a topology layout
+	ManualPosition *[2]float64 `json:"-"`
+
 	Size   float64 `json:"size"`
 	Layout string  `json:"layout"` // references a ZoneLayoutDef.Name in the template's `zoneLayouts`
 

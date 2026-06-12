@@ -8,7 +8,7 @@ import (
 	"gioui.org/op"
 	"gioui.org/unit"
 	"github.com/Tariomka/hommoe_custom_templates/internal/gui"
-	"github.com/Tariomka/hommoe_custom_templates/internal/gui/components/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/gui/themes"
 )
 
 func StartApplication() {
