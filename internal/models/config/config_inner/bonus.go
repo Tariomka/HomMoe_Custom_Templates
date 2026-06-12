@@ -22,8 +22,8 @@ const (
 	BonusStartingOre      BonusPresetType = 10
 )
 
-func (t BonusPresetType) String() string {
-	switch t {
+func (this BonusPresetType) String() string {
+	switch this {
 	case BonusTownPortalFree:
 		return "TownPortalFree"
 	case BonusSpell:
@@ -47,7 +47,11 @@ func (t BonusPresetType) String() string {
 	case BonusStartingOre:
 		return "StartingOre"
 	}
-	return strconv.Itoa(int(t))
+	return strconv.Itoa(int(this))
+}
+
+func (this BonusPresetType) IsResource() bool {
+	return this >= BonusStartingGold
 }
 
 func parseBonusPresetType(s string) (BonusPresetType, bool) {
