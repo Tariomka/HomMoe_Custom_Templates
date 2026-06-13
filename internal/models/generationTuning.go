@@ -2,6 +2,8 @@ package models
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
 )
 
 type GenerationTuning struct {
@@ -11,6 +13,18 @@ type GenerationTuning struct {
 	NeutralStackStrengthMultiplier float64
 	BorderGuardStrengthMultiplier  float64
 	GuardRandomization             float64
+}
+
+// NewGenerationTuning builds the content/guard scaling factors for the given configuration
+func NewGenerationTuning(configuration *config.GeneratorConfig, totalZoneCount int) GenerationTuning {
+	return GenerationTuning{
+		ContentScale:                   utils.ComputeContentScale(configuration.MapSize, totalZoneCount),
+		ResourceDensityMultiplier:      float64(configuration.ZoneConfiguration.ResourceDensityPercent) / 200.0,
+		StructureDensityMultiplier:     float64(configuration.ZoneConfiguration.StructureDensityPercent) / 100.0,
+		NeutralStackStrengthMultiplier: float64(configuration.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
+		BorderGuardStrengthMultiplier:  float64(configuration.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
+		GuardRandomization:             configuration.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
+	}
 }
 
 func (this GenerationTuning) ScaleByStructureDensity(value float64) int {

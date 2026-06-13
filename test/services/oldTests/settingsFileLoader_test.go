@@ -3,6 +3,7 @@ package services_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
@@ -13,33 +14,33 @@ import (
 // translate persisted SettingsFile content rows and bonuses into the
 // GeneratorSettings model used by the template generator.
 func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
-	sf := models.NewEditorStateModel()
-	sf.BannedItems = "x"
-	sf.BannedMagics = "y"
-	sf.ValueOverridesText = "z"
-	sf.BonusesJSON = "StartingWood|start_hero|7|"
-	sf.PlayerZoneContentRows = []models.ZoneContentRowSave{
+	state := dtos.NewDefaultEditorStateDto()
+	state.BannedItems = "x"
+	state.BannedMagics = "y"
+	state.ValueOverridesText = "z"
+	state.BonusesJSON = "StartingWood|start_hero|7|"
+	state.PlayerZoneContentRows = []models.ZoneContentRowSave{
 		{Sid: "mine_gold", Count: 2, IsMine: true},
 	}
-	sf.HighNeutralContentRows = []models.ZoneContentRowSave{
+	state.HighNeutralContentRows = []models.ZoneContentRowSave{
 		{Sid: "pandora_box", Count: 1},
 	}
 
-	gs := services.SettingsToGenerator(sf)
-	if gs.BannedItems != "x" || gs.BannedMagics != "y" || gs.ValueOverridesText != "z" {
-		t.Errorf("banned/overrides not propagated: %+v", gs)
+	configuration := services.SettingsToGenerator(&state)
+	if configuration.BannedItems != "x" || configuration.BannedMagics != "y" || configuration.ValueOverridesText != "z" {
+		t.Errorf("banned/overrides not propagated: %+v", configuration)
 	}
-	if len(gs.Bonuses) != 1 || gs.Bonuses[0].PresetType != config_inner.BonusStartingWood {
-		t.Errorf("bonuses not parsed: %+v", gs.Bonuses)
+	if len(configuration.Bonuses) != 1 || configuration.Bonuses[0].PresetType != config_inner.BonusStartingWood {
+		t.Errorf("bonuses not parsed: %+v", configuration.Bonuses)
 	}
-	if len(gs.PlayerZoneMandatoryContent) != 2 {
-		t.Errorf("PlayerZoneMandatoryContent count = %d, want 2 (mine_gold count=2)", len(gs.PlayerZoneMandatoryContent))
+	if len(configuration.PlayerZoneMandatoryContent) != 2 {
+		t.Errorf("PlayerZoneMandatoryContent count = %d, want 2 (mine_gold count=2)", len(configuration.PlayerZoneMandatoryContent))
 	}
-	if !gs.PlayerZoneMandatoryContent[0].IsMine {
+	if !configuration.PlayerZoneMandatoryContent[0].IsMine {
 		t.Error("IsMine flag lost on row → mandatory item conversion")
 	}
-	if len(gs.HighNeutralMandatoryContent) != 1 || gs.HighNeutralMandatoryContent[0].SID != "pandora_box" {
-		t.Errorf("HighNeutralMandatoryContent not populated: %+v", gs.HighNeutralMandatoryContent)
+	if len(configuration.HighNeutralMandatoryContent) != 1 || configuration.HighNeutralMandatoryContent[0].SID != "pandora_box" {
+		t.Errorf("HighNeutralMandatoryContent not populated: %+v", configuration.HighNeutralMandatoryContent)
 	}
 }
 

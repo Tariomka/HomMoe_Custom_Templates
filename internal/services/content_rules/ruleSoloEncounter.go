@@ -3,8 +3,8 @@ package content_rules
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 // Rule metadata constants for the solo-encounter rule.
@@ -39,7 +39,7 @@ func (this *RuleSoloEncounter) DisplayText() string {
 	return fmt.Sprintf("%s: %t", this.Name(), this.IsSoloEncounter)
 }
 
-func (this *RuleSoloEncounter) Apply(item *template.MandatoryContentItem) {
+func (this *RuleSoloEncounter) Apply(item *entities.MandatoryContentItem) {
 	item.SoloEncounter = this.IsSoloEncounter
 }
 

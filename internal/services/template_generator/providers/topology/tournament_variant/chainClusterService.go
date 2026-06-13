@@ -3,10 +3,10 @@ package tournament_variant
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -26,7 +26,7 @@ func (this *ChainClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
 	playerIndex int,
-	playerLabel string) ([]template.Zone, []template.Connection) {
+	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	chainLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).
 			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
@@ -46,8 +46,8 @@ func (this *ChainClusterService) createZones(
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans models.NeutralZonePlans,
-	playerIndex int) []template.Zone {
-	var zones []template.Zone
+	playerIndex int) []entities.Zone {
+	var zones []entities.Zone
 	for index, label := range chainLabels {
 		var myConns []string
 		if index > 0 {
@@ -78,8 +78,8 @@ func (this *ChainClusterService) createConnections(
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans models.NeutralZonePlans,
-	playerLabel string) []template.Connection {
-	var connections []template.Connection
+	playerLabel string) []entities.Connection {
+	var connections []entities.Connection
 	for index, name := range connectionNames {
 		labelFrom := chainLabels[index]
 		labelTo := chainLabels[index+1]

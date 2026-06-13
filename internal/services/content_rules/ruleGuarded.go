@@ -3,8 +3,8 @@ package content_rules
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 // Rule metadata constants for the guarded rule.
@@ -39,7 +39,7 @@ func (this *RuleGuarded) DisplayText() string {
 	return fmt.Sprintf("%s: %t", this.Name(), this.IsGuarded)
 }
 
-func (this *RuleGuarded) Apply(item *template.MandatoryContentItem) {
+func (this *RuleGuarded) Apply(item *entities.MandatoryContentItem) {
 	item.IsGuarded = this.IsGuarded
 }
 

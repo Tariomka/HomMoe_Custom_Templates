@@ -3,8 +3,8 @@ package connectionEditor_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +28,7 @@ func TestNextFreeZoneLabel_EmptyList_ReturnsA(t *testing.T) {
 }
 
 func TestNextFreeZoneLabel_SkipsUsedLetters(t *testing.T) {
-	zones := []template.Zone{
+	zones := []entities.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-B"},
 	}
@@ -36,7 +36,7 @@ func TestNextFreeZoneLabel_SkipsUsedLetters(t *testing.T) {
 }
 
 func TestNextFreeZoneLabel_SharedLetterAcrossPrefixes_CountsOnce(t *testing.T) {
-	zones := []template.Zone{
+	zones := []entities.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-A"},
 	}
@@ -95,12 +95,12 @@ func TestCanDeleteZone_ProtectsSpawnZones(t *testing.T) {
 }
 
 func TestRemoveZone_RemovesZoneAndItsConnections(t *testing.T) {
-	zones := []template.Zone{
+	zones := []entities.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-C"},
 		{Name: "Neutral-D"},
 	}
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-C"},
 		{From: "Neutral-C", To: "Neutral-D"},
 		{From: "Spawn-A", To: "Neutral-D"},

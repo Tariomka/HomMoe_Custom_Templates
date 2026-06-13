@@ -1,9 +1,9 @@
 package providers
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 type GameRulesProvider struct{}
@@ -12,10 +12,10 @@ func NewGameRulesProvider() *GameRulesProvider {
 	return &GameRulesProvider{}
 }
 
-func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorConfig) template.GameRules {
+func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorConfig) entities.GameRules {
 	heroSettings := configuration.GetHeroSettings()
 
-	return template.GameRules{
+	return entities.GameRules{
 		HeroCountMin:           heroSettings.HeroCountMin,
 		HeroCountMax:           heroSettings.HeroCountMax,
 		HeroCountIncrement:     heroSettings.HeroCountIncrement,
@@ -23,21 +23,21 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 		EncounterHoles:         false,
 		FactionLawsExpModifier: percentToModifier(configuration.FactionLawsExpPercent),
 		AstrologyExpModifier:   percentToModifier(configuration.AstrologyExpPercent),
-		Bonuses: template.BonusList{
+		Bonuses: entities.BonusList{
 			{SID: "add_bonus_hero_stat", ReceiverSide: -1, ReceiverFilter: "all_heroes", Parameters: []string{"movementBonus", "0"}},
 		},
 		WinConditions: this.createAdvancedWinConditions(configuration),
 	}
 }
 
-func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.GeneratorConfig) template.WinConditions {
+func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.GeneratorConfig) entities.WinConditions {
 	victoryCondition := configuration.GetVictoryCondition()
 	gameEndConditions := configuration.GetGameEndConditions()
 	gladiatorRules := configuration.GetGladiatorArenaRules()
 	tournamentRules := configuration.GetTournamentRules()
 
 	useGladiator := gladiatorRules.Enabled || victoryCondition == "win_condition_4"
-	winConditions := template.WinConditions{
+	winConditions := entities.WinConditions{
 		Classic:          true,
 		Desertion:        true,
 		DesertionDay:     3,

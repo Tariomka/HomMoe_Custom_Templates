@@ -1,9 +1,9 @@
 package config
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 const (
@@ -51,11 +51,11 @@ type GeneratorConfig struct {
 
 	// Optional extra mandatory content seeded by the UI; appended to the
 	// player-zone defaults built by ZoneContentManager.
-	PlayerZoneMandatoryContent    []template.MandatoryContentItem
-	LowNeutralMandatoryContent    []template.MandatoryContentItem
-	MediumNeutralMandatoryContent []template.MandatoryContentItem
-	HighNeutralMandatoryContent   []template.MandatoryContentItem
-	HubZoneMandatoryContent       []template.MandatoryContentItem
+	PlayerZoneMandatoryContent    []entities.MandatoryContentItem
+	LowNeutralMandatoryContent    []entities.MandatoryContentItem
+	MediumNeutralMandatoryContent []entities.MandatoryContentItem
+	HighNeutralMandatoryContent   []entities.MandatoryContentItem
+	HubZoneMandatoryContent       []entities.MandatoryContentItem
 
 	// ShufflePlayerZones randomises which physical zone each player starts in.
 	// Enabled by default so generated templates vary between runs; tests can

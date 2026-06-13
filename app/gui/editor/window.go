@@ -1,0 +1,136 @@
+package editor
+
+import (
+	"image"
+
+	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
+	"gioui.org/unit"
+	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+)
+
+type Window struct {
+	state *drivers.State
+
+	tabs        []*drivers.Tab
+	selectedTab int
+
+	toolbar      *Toolbar
+	previewPanel *panels.PreviewPanel
+	footerPanel  *panels.FooterPanel
+}
+
+func NewWindow() *Window {
+	window := Window{state: drivers.NewUIState()}
+	window.toolbar = NewToolbar(window.state, window.reset)
+	window.tabs = []*drivers.Tab{
+		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),
+		drivers.NewTab("Layout", panels.NewLayoutPanel(window.state)),
+		drivers.NewTab("Zone Content", panels.NewZoneContentPanel(window.state)),
+		drivers.NewTab("Bonuses & Bans", panels.NewBonusesPanel(window.state)),
+	}
+	window.previewPanel = panels.NewPreviewPanel(window.state)
+	window.footerPanel = panels.NewFooterPanel(window.state)
+	window.tabs[0].SetSelected(true)
+	return &window
+}
+
+func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+	this.save()
+	this.handleClicks(gtx)
+
+	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
+
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(widgets.NewTitleBarWidget(theme, "Heroes: Olden Era — Custom Template Editor")),
+					layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
+					layout.Rigid(this.toolbar.GetWidget(theme)),
+					layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+					layout.Rigid(this.getTabsWidget(gtx, theme)),
+					layout.Flexed(1, this.getPanelsWidget(theme)),
+					layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+					layout.Rigid(this.footerPanel.GetPanelWidget(theme)))
+			})
+		}),
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			return this.state.Dialogs().Layout(gtx, theme)
+		}),
+	)
+}
+
+func (this *Window) getTabsWidget(gtx layout.Context, theme *material.Theme) layout.Widget {
+	this.updateTabs(gtx)
+
+	children := make([]layout.FlexChild, 0)
+	for _, tab := range this.tabs {
+		children = append(children, layout.Rigid(tab.GetWidget(theme)))
+	}
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
+	}
+}
+
+func (this *Window) getPanelsWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Flexed(1, widgets.NewPanelWidget(unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
+				return layout.UniformInset(unit.Dp(10)).Layout(gtx, this.getSelectedPanelWidget(theme))
+			})),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
+				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(440))
+				return this.previewPanel.GetPanelWidget(theme)(gtx)
+			}))
+	}
+}
+
+func (this *Window) getSelectedPanelWidget(theme *material.Theme) layout.Widget {
+	return this.tabs[this.selectedTab].GetPanelWidget(theme)
+}
+
+func (this *Window) updateTabs(gtx layout.Context) {
+	for i, tab := range this.tabs {
+		if tab.IsTabClicked(gtx) && this.selectedTab != i {
+			this.selectedTab = i
+			this.updateTabSelection()
+		}
+	}
+}
+
+func (this *Window) updateTabSelection() {
+	for i, tab := range this.tabs {
+		tab.SetSelected(this.selectedTab == i)
+	}
+}
+
+func (this *Window) handleClicks(gtx layout.Context) {
+	this.toolbar.HandleClicks(gtx)
+	this.previewPanel.HandleClicks(gtx)
+	this.footerPanel.HandleClicks(gtx)
+}
+
+func (this *Window) save() {
+	for _, tab := range this.tabs {
+		tab.SaveToState()
+	}
+}
+
+func (this *Window) load() {
+	for _, tab := range this.tabs {
+		tab.LoadFromState()
+	}
+}
+
+func (this *Window) reset() {
+	this.state.Reset()
+	this.load()
+}

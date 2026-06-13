@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
@@ -12,26 +13,26 @@ import (
 )
 
 // LoadSettingsFile reads a .gen.json file and returns the parsed SettingsFile.
-func LoadSettingsFile(path string) (*models.EditorStateModel, error) {
+func LoadSettingsFile(path string) (*dtos.EditorStateDto, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	settingsFile := models.NewEditorStateModel()
-	if err := json.Unmarshal(data, settingsFile); err != nil {
+	settingsFile := dtos.NewDefaultEditorStateDto()
+	if err := json.Unmarshal(data, &settingsFile); err != nil {
 		return nil, err
 	}
 
-	migrateContentRowRules(settingsFile)
+	migrateContentRowRules(&settingsFile)
 
-	return settingsFile, nil
+	return &settingsFile, nil
 }
 
 // migrateContentRowRules upgrades every zone's content rows from the deprecated
 // flat rule fields to the serialized Rules list, mirroring the C# load path
 // which restores rules for every row on load.
-func migrateContentRowRules(state *models.EditorStateModel) {
+func migrateContentRowRules(state *dtos.EditorStateDto) {
 	state.PlayerZoneContentRows = migrateContentRows(state.PlayerZoneContentRows)
 	state.LowNeutralContentRows = migrateContentRows(state.LowNeutralContentRows)
 	state.MediumNeutralContentRows = migrateContentRows(state.MediumNeutralContentRows)
@@ -51,7 +52,7 @@ func migrateContentRows(rows []models.ZoneContentRowSave) []models.ZoneContentRo
 }
 
 // SaveSettingsFile writes a SettingsFile to disk as indented JSON.
-func SaveSettingsFile(path string, editorState *models.EditorStateModel) error {
+func SaveSettingsFile(path string, editorState *dtos.EditorStateDto) error {
 	data, err := json.MarshalIndent(editorState, "", "  ")
 	if err != nil {
 		return err
@@ -61,7 +62,7 @@ func SaveSettingsFile(path string, editorState *models.EditorStateModel) error {
 
 // SettingsToGenerator translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
-func SettingsToGenerator(editorState *models.EditorStateModel) *config.GeneratorConfig {
+func SettingsToGenerator(editorState *dtos.EditorStateDto) *config.GeneratorConfig {
 	contentProvider := providers.NewMandatoryContentProvider()
 	generatorSettings := config.NewGeneratorConfig()
 	generatorSettings.TemplateName = editorState.TemplateName

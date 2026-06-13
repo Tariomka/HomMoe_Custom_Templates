@@ -3,10 +3,10 @@ package providers
 import (
 	"math/rand/v2"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 )
 
@@ -23,7 +23,7 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) template.Variant {
+	holdCityNeutralLabel string) entities.Variant {
 	playerLabelsCopy := this.copyLabels(playerLabels)
 
 	if configuration.IsTournamentMode() && len(playerLabelsCopy) == 2 {

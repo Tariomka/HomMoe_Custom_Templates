@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 // Rule metadata constants for the variant rule.
@@ -55,7 +55,7 @@ func (this *RuleVariant) DisplayText() string {
 	return fmt.Sprintf("%s: ERROR - please show this on template generator discord :)", this.Name())
 }
 
-func (this *RuleVariant) Apply(item *template.MandatoryContentItem) {
+func (this *RuleVariant) Apply(item *entities.MandatoryContentItem) {
 	id := this.VariantId
 	item.Variant = &id
 }

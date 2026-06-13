@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
@@ -11,12 +12,12 @@ import (
 )
 
 func TestNewSettingsFile_DefaultsToBalanced(t *testing.T) {
-	s := models.NewEditorStateModel()
+	s := dtos.NewDefaultEditorStateDto()
 	assert.Equal(t, config.TopologyBalanced, s.Topology)
 }
 
 func TestSettingsFile_RoundTrip(t *testing.T) {
-	original := models.NewEditorStateModel()
+	original := dtos.NewDefaultEditorStateDto()
 	original.TemplateName = "Round Trip"
 	original.BannedItems = "bad_item_1,bad_item_2"
 	original.BannedMagics = "bad_spell_1"
@@ -32,7 +33,7 @@ func TestSettingsFile_RoundTrip(t *testing.T) {
 
 	data, err := json.Marshal(original)
 	assert.NoError(t, err, "marshal")
-	round := &models.EditorStateModel{}
+	round := &dtos.EditorStateDto{}
 	err = json.Unmarshal(data, round)
 	assert.NoError(t, err, "unmarshal")
 

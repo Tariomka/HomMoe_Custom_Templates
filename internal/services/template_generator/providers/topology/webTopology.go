@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -27,7 +27,7 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLetter string) template.Variant {
+	holdCityNeutralLetter string) entities.Variant {
 	neutralLabels := this.createLabels(playerLabels, neutralZones, configuration.Topology == config.TopologyBalanced)
 	playerSpokes, neutralSpokes := this.createSpokes(playerLabels, neutralLabels)
 	neutralConnNames := this.createRingConnectionNames(neutralLabels)
@@ -107,10 +107,10 @@ func (this *SharedWebTopologyService) createZones(
 	neutralZones models.NeutralZonePlans,
 	holdCityNeutralLabel string,
 	playerSpokes, neutralSpokes map[string][]string,
-	connectionNames []string) []template.Zone {
+	connectionNames []string) []entities.Zone {
 	neutralCount := len(neutralLabels)
 
-	var zones []template.Zone
+	var zones []entities.Zone
 	for i, label := range neutralLabels {
 		var neutralConnNames []string
 		if neutralCount > 1 {
@@ -147,10 +147,10 @@ func (this *SharedWebTopologyService) createConnections(
 	tuning models.GenerationTuning,
 	neutralZones models.NeutralZonePlans,
 	playerSpokes map[string][]string,
-	connectionNames []string) []template.Connection {
+	connectionNames []string) []entities.Connection {
 	neutralCount := len(neutralLabels)
 
-	var connections []template.Connection
+	var connections []entities.Connection
 	for _, label := range playerLabels {
 		for _, connectionName := range playerSpokes[label] {
 			nextLabel := strings.Split(connectionName, "-")[2]

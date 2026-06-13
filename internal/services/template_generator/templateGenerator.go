@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
@@ -45,14 +45,14 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 	}
 }
 
-func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
+func (this *TemplateGenerator) Generate() *template.RmgTemplate {
 	this.configuration.EnsureNameExists()
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
 	tuning := this.createGenerationTuning(this.configuration.PlayerCount + len(neutralZones))
 
-	return &template.RmgTemplateModel{
+	return &template.RmgTemplate{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
 		Description:         this.createTemplateDescription(len(neutralZones)),
@@ -60,7 +60,7 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 		SizeX:               this.configuration.MapSize,
 		SizeZ:               this.configuration.MapSize,
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
-		Variants: []template.Variant{
+		Variants: []entities.Variant{
 			this.topologyProvider.
 				ShufflePlayerZones(this.configuration.ShufflePlayerZones).
 				CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel),
@@ -68,27 +68,13 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 		ZoneLayouts:        this.zoneLayoutProvider.CreateZoneLayouts(),
 		MandatoryContent:   this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
 		ContentCountLimits: this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
-		ContentPools:       []template.ContentPool{},
-		ContentLists:       []template.ContentList{},
+		ContentPools:       []entities.ContentPool{},
+		ContentLists:       []entities.ContentList{},
 	}
 }
 
 func (this *TemplateGenerator) createGenerationTuning(totalZoneCount int) models.GenerationTuning {
-	return NewGenerationTuning(this.configuration, totalZoneCount)
-}
-
-// NewGenerationTuning builds the content/guard scaling factors for the given
-// configuration. Exported so the manual zone editor can construct zones with
-// the same tuning the generator used.
-func NewGenerationTuning(configuration *config.GeneratorConfig, totalZoneCount int) models.GenerationTuning {
-	return models.GenerationTuning{
-		ContentScale:                   utils.ComputeContentScale(configuration.MapSize, totalZoneCount),
-		ResourceDensityMultiplier:      float64(configuration.ZoneConfiguration.ResourceDensityPercent) / 200.0,
-		StructureDensityMultiplier:     float64(configuration.ZoneConfiguration.StructureDensityPercent) / 100.0,
-		NeutralStackStrengthMultiplier: float64(configuration.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
-		BorderGuardStrengthMultiplier:  float64(configuration.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
-		GuardRandomization:             configuration.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
-	}
+	return models.NewGenerationTuning(this.configuration, totalZoneCount)
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {

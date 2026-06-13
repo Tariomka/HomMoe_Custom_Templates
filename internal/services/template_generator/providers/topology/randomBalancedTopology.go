@@ -3,9 +3,9 @@ package topology
 import (
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 type RandomBalancedTopologyService struct {
@@ -23,7 +23,7 @@ func (this *RandomBalancedTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) template.Variant {
+	holdCityNeutralLabel string) entities.Variant {
 	neutralLabels := make([]string, len(neutralZones))
 	for i, zonePlan := range neutralZones {
 		neutralLabels[i] = zonePlan.Label

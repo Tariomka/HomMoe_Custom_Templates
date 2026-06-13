@@ -1,18 +1,14 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/common"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/game_rules"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/variant"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/zone_layout"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
 )
 
 func intPtr(i int) *int { return &i }
 
-func GetDefaultTemplate() template.RmgTemplateModel {
-	return template.RmgTemplateModel{
+func GetDefaultTemplate() entities.RmgTemplate {
+	return entities.RmgTemplate{
 		Name:                "Custom Template",
 		GameMode:            "Classic",
 		Description:         "Generated with Custom Template Editor: Balanced layout, no neutral zones, 1 castle per player zone.",
@@ -22,20 +18,20 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 		ValueOverrides:      nil,
 		Orientation:         nil,
 		Border:              nil,
-		GameRules: template.GameRules{
+		GameRules: entities.GameRules{
 			HeroCountMin:       4,
 			HeroCountMax:       8,
 			HeroCountIncrement: 1,
 			HeroHireBan:        false,
 			EncounterHoles:     false,
 			TournamentRules:    false,
-			Bonuses: game_rules.BonusList{{
+			Bonuses: entities.BonusList{{
 				SID:            "add_bonus_hero_stat",
 				ReceiverSide:   -1,
 				ReceiverFilter: "all_heroes",
 				Parameters:     []string{"movementBonus", "0"},
 			}},
-			WinConditions: template.WinConditions{
+			WinConditions: entities.WinConditions{
 				Classic:                              true,
 				Desertion:                            true,
 				DesertionDay:                         3,
@@ -70,8 +66,8 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			AstrologyExpModifier:                 1,
 		},
 		GlobalBans: nil,
-		Variants: []template.Variant{{
-			Orientation: variant.Orientation{
+		Variants: []entities.Variant{{
+			Orientation: entities.Orientation{
 				Mode:                 "",
 				ZeroAngleZone:        "Spawn-A",
 				BaseAngleMin:         45,
@@ -79,15 +75,15 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				RandomAngleAmplitude: 360,
 				RandomAngleStep:      180,
 			},
-			Border: variant.Border{
+			Border: entities.Border{
 				CornerRadius:   0,
 				ObstaclesWidth: 3,
-				ObstaclesNoise: []variant.Noise{{Amplitude: 1, Frequency: 12}},
+				ObstaclesNoise: []entities.Noise{{Amplitude: 1, Frequency: 12}},
 				WaterWidth:     0,
-				WaterNoise:     []variant.Noise{{Amplitude: 1, Frequency: 12}},
+				WaterNoise:     []entities.Noise{{Amplitude: 1, Frequency: 12}},
 				WaterType:      "water grass",
 			},
-			Zones: []template.Zone{
+			Zones: []entities.Zone{
 				{
 					Name:                                "Spawn-A",
 					GeneratorPosition:                   &[2]float64{0.8799878400648531, 0.4969600324265629}, // Most likely this is random
@@ -122,8 +118,8 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						"classic_template_pool_random_unguarded_t2_magic",
 					},
 					ResourcesContentPool: []string{"content_pool_general_resources_start_zone_poor"},
-					MandatoryContent:     variant.StringList{"mandatory_content_side_A"},
-					ContentCountLimits: variant.StringList{
+					MandatoryContent:     entities.StringList{"mandatory_content_side_A"},
+					ContentCountLimits: entities.StringList{
 						"content_limits_side_1_2",
 						"content_limits_side_1_3",
 						"content_limits_side_1_4",
@@ -146,7 +142,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 					UnguardedContentValuePerArea: 475,
 					ResourcesValue:               56_568,
 					ResourcesValuePerArea:        356,
-					MainObjects: []template.MainObject{{
+					MainObjects: []entities.MainObject{{
 						Type:                      "Spawn",
 						Spawn:                     "Player1",
 						Owner:                     "",
@@ -165,15 +161,15 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						EnableWeeklyUnitIncrement: false,
 						InitialUnitIncrement:      0,
 					}},
-					ZoneBiome:          variant.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
-					ContentBiome:       variant.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
-					MetaObjectsBiome:   variant.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
+					ZoneBiome:          entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
+					ContentBiome:       entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
+					MetaObjectsBiome:   entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
 					CrossroadsPosition: intPtr(0),
-					Roads: []variant.Road{
+					Roads: []entities.Road{
 						{
 							Type:                 "",
-							From:                 variant.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   variant.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+							From:                 entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+							To:                   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,
@@ -181,8 +177,8 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						},
 						{
 							Type:                 "",
-							From:                 variant.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   variant.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}},
+							From:                 entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+							To:                   entities.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,
@@ -224,8 +220,8 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						"classic_template_pool_random_unguarded_t2_magic",
 					},
 					ResourcesContentPool: []string{"content_pool_general_resources_start_zone_poor"},
-					MandatoryContent:     variant.StringList{"mandatory_content_side_B"},
-					ContentCountLimits: variant.StringList{
+					MandatoryContent:     template_variant.StringList{"mandatory_content_side_B"},
+					ContentCountLimits: template_variant.StringList{
 						"content_limits_side_1_2",
 						"content_limits_side_1_3",
 						"content_limits_side_1_4",
@@ -248,7 +244,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 					UnguardedContentValuePerArea: 475,
 					ResourcesValue:               56_568,
 					ResourcesValuePerArea:        356,
-					MainObjects: []template.MainObject{{
+					MainObjects: []entities.MainObject{{
 						Type:                      "Spawn",
 						Spawn:                     "Player2",
 						Owner:                     "",
@@ -267,15 +263,15 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						EnableWeeklyUnitIncrement: false,
 						InitialUnitIncrement:      0,
 					}},
-					ZoneBiome:          variant.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
-					ContentBiome:       variant.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
-					MetaObjectsBiome:   variant.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
+					ZoneBiome:          entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
+					ContentBiome:       entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
+					MetaObjectsBiome:   entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
 					CrossroadsPosition: intPtr(0),
-					Roads: []variant.Road{
+					Roads: []entities.Road{
 						{
 							Type:                 "",
-							From:                 variant.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   variant.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+							From:                 entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+							To:                   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,
@@ -283,8 +279,8 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 						},
 						{
 							Type:                 "",
-							From:                 variant.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   variant.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}},
+							From:                 entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+							To:                   entities.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,
@@ -293,7 +289,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 					},
 				},
 			},
-			Connections: []variant.Connection{{
+			Connections: []entities.Connection{{
 				Name:                 "Rnd-A-B",
 				From:                 "Spawn-A",
 				To:                   "Spawn-B",
@@ -305,7 +301,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				GuardMatchGroup:      "rnd_guard_A_B",
 			}},
 		}},
-		ZoneLayouts: []template.ZoneLayoutDef{
+		ZoneLayouts: []entities.ZoneLayoutDef{
 			{
 				Name:                  "zone_layout_spawns",
 				ObstaclesFill:         0.24,
@@ -313,16 +309,16 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				LakesFill:             0.3,
 				MinLakeArea:           16,
 				ElevationClusterScale: 0.16,
-				ElevationModes: []zone_layout.ElevationMode{
+				ElevationModes: []entities.ElevationMode{
 					{Weight: 2, MinElevatedFraction: 0.2, MaxElevatedFraction: 0.4},
 					{Weight: 1, MinElevatedFraction: 0.6, MaxElevatedFraction: 0.8},
 				},
 				RoadClusterArea: 160,
-				GuardedEncounterResourceFractions: zone_layout.GuardedEncounterResourceFractions{
+				GuardedEncounterResourceFractions: entities.GuardedEncounterResourceFractions{
 					CountBounds: []int{},
 					Fractions:   []float64{0.66},
 				},
-				AmbientPickupDistribution: zone_layout.AmbientPickupDistribution{
+				AmbientPickupDistribution: entities.AmbientPickupDistribution{
 					Repulsion:          1,
 					Noise:              0.4,
 					RoadAttraction:     -0.3,
@@ -337,16 +333,16 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				LakesFill:             0.25,
 				MinLakeArea:           16,
 				ElevationClusterScale: 0.128,
-				ElevationModes: []zone_layout.ElevationMode{
+				ElevationModes: []entities.ElevationMode{
 					{Weight: 2, MinElevatedFraction: 0.2, MaxElevatedFraction: 0.4},
 					{Weight: 1, MinElevatedFraction: 0.6, MaxElevatedFraction: 0.8},
 				},
 				RoadClusterArea: 128,
-				GuardedEncounterResourceFractions: zone_layout.GuardedEncounterResourceFractions{
+				GuardedEncounterResourceFractions: entities.GuardedEncounterResourceFractions{
 					CountBounds: []int{},
 					Fractions:   []float64{0.66},
 				},
-				AmbientPickupDistribution: zone_layout.AmbientPickupDistribution{
+				AmbientPickupDistribution: entities.AmbientPickupDistribution{
 					Repulsion:          1,
 					Noise:              0.3,
 					RoadAttraction:     -0.3,
@@ -361,16 +357,16 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				LakesFill:             0.45,
 				MinLakeArea:           12,
 				ElevationClusterScale: 0.12,
-				ElevationModes: []zone_layout.ElevationMode{
+				ElevationModes: []entities.ElevationMode{
 					{Weight: 2, MinElevatedFraction: 0.2, MaxElevatedFraction: 0.4},
 					{Weight: 1, MinElevatedFraction: 0.6, MaxElevatedFraction: 0.8},
 				},
 				RoadClusterArea: 96,
-				GuardedEncounterResourceFractions: zone_layout.GuardedEncounterResourceFractions{
+				GuardedEncounterResourceFractions: entities.GuardedEncounterResourceFractions{
 					CountBounds: []int{},
 					Fractions:   []float64{0.66},
 				},
-				AmbientPickupDistribution: zone_layout.AmbientPickupDistribution{
+				AmbientPickupDistribution: entities.AmbientPickupDistribution{
 					Repulsion:          1,
 					Noise:              0.3,
 					RoadAttraction:     -0.3,
@@ -385,16 +381,16 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				LakesFill:             0.3,
 				MinLakeArea:           10,
 				ElevationClusterScale: 0.128,
-				ElevationModes: []zone_layout.ElevationMode{
+				ElevationModes: []entities.ElevationMode{
 					{Weight: 2, MinElevatedFraction: 0.2, MaxElevatedFraction: 0.4},
 					{Weight: 1, MinElevatedFraction: 0.6, MaxElevatedFraction: 0.8},
 				},
 				RoadClusterArea: 96,
-				GuardedEncounterResourceFractions: zone_layout.GuardedEncounterResourceFractions{
+				GuardedEncounterResourceFractions: entities.GuardedEncounterResourceFractions{
 					CountBounds: []int{},
 					Fractions:   []float64{0.66},
 				},
-				AmbientPickupDistribution: zone_layout.AmbientPickupDistribution{
+				AmbientPickupDistribution: entities.AmbientPickupDistribution{
 					Repulsion:          1,
 					Noise:              0.3,
 					RoadAttraction:     -0.25,
@@ -403,15 +399,15 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				},
 			},
 		},
-		MandatoryContent: []template.MandatoryContent{
+		MandatoryContent: []entities.MandatoryContent{
 			{
 				Name: "mandatory_content_side_A",
-				Content: []content.MandatoryContentItem{{
+				Content: []entities.MandatoryContentItem{{
 					SID:       "remote_foothold",
 					Name:      "name_remote_foothold_1",
 					IsMine:    false,
 					IsGuarded: false,
-					Rules: []common.PlacementRule{
+					Rules: []entities.PlacementRule{
 						{
 							Type:      "Crossroads",
 							Args:      nil,
@@ -441,12 +437,12 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "mandatory_content_side_B",
-				Content: []content.MandatoryContentItem{{
+				Content: []entities.MandatoryContentItem{{
 					SID:       "remote_foothold",
 					Name:      "name_remote_foothold_1",
 					IsMine:    false,
 					IsGuarded: false,
-					Rules: []common.PlacementRule{
+					Rules: []entities.PlacementRule{
 						{
 							Type:      "Crossroads",
 							Args:      nil,
@@ -475,10 +471,10 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				}},
 			},
 		},
-		ContentCountLimits: []template.ContentCountLimit{
+		ContentCountLimits: []entities.ContentCountLimit{
 			{
 				Name: "content_limits_side",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -527,7 +523,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_0_0",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -576,7 +572,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_1_2",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -625,7 +621,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_1_3",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -674,7 +670,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_1_4",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -723,7 +719,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_1_5",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -772,7 +768,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_1_6",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -821,7 +817,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_2_3",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -870,7 +866,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_2_4",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -919,7 +915,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_2_5",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -968,7 +964,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_2_6",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -1017,7 +1013,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_3_4",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -1066,7 +1062,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_3_5",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -1115,7 +1111,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_3_6",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -1164,7 +1160,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_4_5",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -1213,7 +1209,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_4_6",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -1262,7 +1258,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 			},
 			{
 				Name: "content_limits_side_5_6",
-				Limits: []content.ContentLimit{
+				Limits: []entities.ContentLimit{
 					{SID: "black_tower", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 0},
 					{SID: "fountain", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
 					{SID: "fountain_2", IncludeLists: nil, Content: nil, Variant: nil, MaxCount: 2},
@@ -1310,7 +1306,7 @@ func GetDefaultTemplate() template.RmgTemplateModel {
 				},
 			},
 		},
-		ContentPools: []template.ContentPool{},
-		ContentLists: []template.ContentList{},
+		ContentPools: []entities.ContentPool{},
+		ContentLists: []entities.ContentList{},
 	}
 }

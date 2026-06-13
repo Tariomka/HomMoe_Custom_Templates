@@ -1,9 +1,9 @@
 package tournament_variant
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 type IClusterService interface {
@@ -12,5 +12,5 @@ type IClusterService interface {
 		tuning models.GenerationTuning,
 		allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
 		playerIndex int,
-		playerLabel string) ([]template.Zone, []template.Connection)
+		playerLabel string) ([]entities.Zone, []entities.Connection)
 }

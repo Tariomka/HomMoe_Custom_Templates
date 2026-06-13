@@ -1,7 +1,7 @@
 package variant_content
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -11,11 +11,11 @@ var (
 )
 
 type ConnectionBuilder struct {
-	item template.Connection
+	item entities.Connection
 }
 
 func NewConnectionBuilder() *ConnectionBuilder {
-	return &ConnectionBuilder{item: template.Connection{}}
+	return &ConnectionBuilder{item: entities.Connection{}}
 }
 
 func (this *ConnectionBuilder) WithName(name string) *ConnectionBuilder {
@@ -78,15 +78,15 @@ func (this *ConnectionBuilder) WithGuardMatchGroup(guardMatchGroup string) *Conn
 	this.item.GuardMatchGroup = guardMatchGroup
 	return this
 }
-func (this *ConnectionBuilder) WithPortalPlacementRulesFrom(rules ...template.PlacementRule) *ConnectionBuilder {
+func (this *ConnectionBuilder) WithPortalPlacementRulesFrom(rules ...entities.PlacementRule) *ConnectionBuilder {
 	this.item.PortalPlacementRulesFrom = append(this.item.PortalPlacementRulesFrom, rules...)
 	return this
 }
-func (this *ConnectionBuilder) WithPortalPlacementRulesTo(rules ...template.PlacementRule) *ConnectionBuilder {
+func (this *ConnectionBuilder) WithPortalPlacementRulesTo(rules ...entities.PlacementRule) *ConnectionBuilder {
 	this.item.PortalPlacementRulesTo = append(this.item.PortalPlacementRulesTo, rules...)
 	return this
 }
-func (this *ConnectionBuilder) Build() template.Connection { return this.item }
+func (this *ConnectionBuilder) Build() entities.Connection { return this.item }
 
 func (this *ConnectionBuilder) withConnectionType(connectionType string) *ConnectionBuilder {
 	this.item.ConnectionType = connectionType

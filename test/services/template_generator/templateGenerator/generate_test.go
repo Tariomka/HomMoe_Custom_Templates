@@ -5,10 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/variant"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -236,7 +235,7 @@ func TestWhenDefaultTopologySelectedAndNonDefaultPlayerCountProvided_SetsExpecte
 
 	// Assert
 	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
 		ToSlice()
 	assert.Equal(t, playerCount, len(spawnZones))
 	// for i, zone := range spawnZones {
@@ -257,7 +256,7 @@ func TestWhenDefaultTopologySelectedAndNonDefaultNeutralZoneCountProvided_SetsEx
 
 	// Assert
 	neutralZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
 		ToSlice()
 	assert.Equal(t, expectedNeutralZoneCount, len(neutralZones))
 	// for i, zone := range neutralZones {
@@ -297,7 +296,7 @@ func TestWhenHubTopologySelected_CreatesHubZone(t *testing.T) {
 
 	// Assert
 	hubZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return x.Name == "Hub" }).
+		Where(func(x entities.Zone) bool { return x.Name == "Hub" }).
 		ToSlice()
 	assert.Equal(t, 1, len(hubZones))
 }
@@ -316,7 +315,7 @@ func TestWhenSharedWebTopologySelectedAndZeroNeutralZonesProvided_SetsMinimumNeu
 
 	// Assert
 	actualNeutralZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
 		ToSlice()
 	assert.Equal(t, 1, len(actualNeutralZones))
 	assert.Equal(t, fmt.Sprintf("Neutral-%c", 'A'+playerCount), actualNeutralZones[0].Name)
@@ -373,7 +372,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 
 	// Assert
 	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(x variant.Connection) bool { return x.ConnectionType == "Portal" }).
+		Where(func(x entities.Connection) bool { return x.ConnectionType == "Portal" }).
 		Any()
 	assert.True(t, hasPortalConnections)
 }
@@ -392,7 +391,7 @@ func TestWhenRandomPortalsDisabled_AddsNoPortalConnections(t *testing.T) {
 
 	// Assert
 	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(x variant.Connection) bool { return x.ConnectionType == "Portal" }).
+		Where(func(x entities.Connection) bool { return x.ConnectionType == "Portal" }).
 		Any()
 	assert.False(t, hasPortalConnections)
 }
@@ -416,7 +415,7 @@ func TestWhenNoDirectPlayerConnectionsEnabled_OmitsDirectPlayerConnections(t *te
 
 	// Assert
 	directPlayerConnections := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(x variant.Connection) bool {
+		Where(func(x entities.Connection) bool {
 			return x.ConnectionType == "Direct" &&
 				strings.HasPrefix(x.From, "Spawn-") && strings.HasPrefix(x.To, "Spawn-")
 		}).
@@ -440,7 +439,7 @@ func TestWhenRoadsEnabled_ProducesRoads(t *testing.T) {
 
 	// Assert
 	hasRoads := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return len(x.Roads) > 0 }).
+		Where(func(x entities.Zone) bool { return len(x.Roads) > 0 }).
 		Any()
 	assert.True(t, hasRoads)
 }
@@ -479,7 +478,7 @@ func TestWhenMatchPlayerCastleFactionsEnabled_SetsMatchFactionOnPlayerCastles(t 
 
 	// Assert
 	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
 		ToSlice()
 	for _, zone := range spawnZones {
 		castle := zone.MainObjects[1]
@@ -503,7 +502,7 @@ func TestWhenMatchPlayerCastleFactionsDisabled_SetsRandomFactionOnPlayerCastles(
 
 	// Assert
 	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
 		ToSlice()
 	for _, zone := range spawnZones {
 		castle := zone.MainObjects[1]
@@ -535,9 +534,9 @@ func TestWhenCityHoldEnabled_MarksHoldCityWinConditionObject(t *testing.T) {
 	// Assert
 	assert.True(t, actual.GameRules.WinConditions.CityHold)
 	holdCityZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(zone variant.Zone) bool {
+		Where(func(zone entities.Zone) bool {
 			return linq.FromSlice(zone.MainObjects).
-				Where(func(object variant.MainObject) bool { return object.HoldCityWinCon }).
+				Where(func(object entities.MainObject) bool { return object.HoldCityWinCon }).
 				Any()
 		}).
 		ToSlice()
@@ -579,10 +578,10 @@ func TestWhenCityHoldEnabledWithHubAndSpokeTopology_MarksHubAsHoldCity(t *testin
 
 	// Assert
 	hubHoldsCity := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(zone variant.Zone) bool { return zone.Name == "Hub" }).
-		Where(func(zone variant.Zone) bool {
+		Where(func(zone entities.Zone) bool { return zone.Name == "Hub" }).
+		Where(func(zone entities.Zone) bool {
 			return linq.FromSlice(zone.MainObjects).
-				Where(func(object variant.MainObject) bool { return object.HoldCityWinCon }).
+				Where(func(object entities.MainObject) bool { return object.HoldCityWinCon }).
 				Any()
 		}).
 		Any()
@@ -711,7 +710,9 @@ func TestWhenTournamentEnabledWithTwoPlayersAndDefaultTopology_CreatesRingGuardG
 
 	// Assert
 	hasRingGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(x variant.Connection) bool { return strings.HasPrefix(x.GuardMatchGroup, "tourney_ring_guard_") }).
+		Where(func(x entities.Connection) bool {
+			return strings.HasPrefix(x.GuardMatchGroup, "tourney_ring_guard_")
+		}).
 		Any()
 	assert.True(t, hasRingGuardGroup)
 }
@@ -736,7 +737,7 @@ func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesOneHubPerPlayer(t *
 
 	// Assert
 	perPlayerHubs := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Hub-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Hub-") }).
 		ToSlice()
 	assert.Equal(t, expectedHubCount, len(perPlayerHubs))
 }
@@ -760,7 +761,9 @@ func TestWhenTournamentEnabledWithChainTopology_CreatesChainGuardGroups(t *testi
 
 	// Assert
 	hasChainGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(x variant.Connection) bool { return strings.HasPrefix(x.GuardMatchGroup, "tourney_guard_") }).
+		Where(func(x entities.Connection) bool {
+			return strings.HasPrefix(x.GuardMatchGroup, "tourney_guard_")
+		}).
 		Any()
 	assert.True(t, hasChainGuardGroup)
 }
@@ -784,7 +787,9 @@ func TestWhenTournamentEnabledWithBalancedTopology_CreatesBalancedGuardGroups(t 
 
 	// Assert
 	hasBalancedGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(x variant.Connection) bool { return strings.HasPrefix(x.GuardMatchGroup, "tourney_bal_guard_") }).
+		Where(func(x entities.Connection) bool {
+			return strings.HasPrefix(x.GuardMatchGroup, "tourney_bal_guard_")
+		}).
 		Any()
 	assert.True(t, hasBalancedGuardGroup)
 }
@@ -823,7 +828,7 @@ func TestWhenAdvancedModeEnabledAndNeutralZonesSelected_SetsExpectedNeutralZoneC
 
 	// Assert
 	actualNeutralCount := len(linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Neutral-") }).
 		ToSlice())
 	assert.Equal(t, expectedNeutralCount, actualNeutralCount)
 }
@@ -966,10 +971,10 @@ func TestWhenGenerating_CreatesMandatoryContentGroupPerPlayerAndNeutralZone(t *t
 
 	// Assert
 	playerGroups := linq.FromSlice(actual.MandatoryContent).
-		Where(func(x template.MandatoryContent) bool { return strings.HasPrefix(x.Name, "mandatory_content_side_") }).
+		Where(func(x entities.MandatoryContent) bool { return strings.HasPrefix(x.Name, "mandatory_content_side_") }).
 		ToSlice()
 	neutralGroups := linq.FromSlice(actual.MandatoryContent).
-		Where(func(x template.MandatoryContent) bool { return strings.HasPrefix(x.Name, "mandatory_content_neutral_") }).
+		Where(func(x entities.MandatoryContent) bool { return strings.HasPrefix(x.Name, "mandatory_content_neutral_") }).
 		ToSlice()
 	assert.Len(t, playerGroups, playerCount)
 	assert.Len(t, neutralGroups, neutralZoneCount)
@@ -989,7 +994,7 @@ func TestWhenGenerating_PlacesSpawnMainObjectInEachSpawnZone(t *testing.T) {
 
 	// Assert
 	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
 		ToSlice()
 	for _, zone := range spawnZones {
 		if assert.NotEmpty(t, zone.MainObjects) {
@@ -1012,7 +1017,7 @@ func TestWhenMultiplePlayerCastlesConfigured_AddsConfiguredCastleCountToEachSpaw
 
 	// Assert
 	spawnZones := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(x variant.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
+		Where(func(x entities.Zone) bool { return strings.HasPrefix(x.Name, "Spawn-") }).
 		ToSlice()
 	for _, zone := range spawnZones {
 		assert.Len(t, zone.MainObjects, expectedCastleCount)
@@ -1244,7 +1249,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 	}
 }
 
-func assertTemplateMatches(t *testing.T, expected expectedTemplate, actual *template.RmgTemplateModel) {
+func assertTemplateMatches(t *testing.T, expected expectedTemplate, actual *entities.RmgTemplate) {
 	t.Helper()
 
 	// Top-level scalar fields.

@@ -3,8 +3,8 @@ package content_rules
 import (
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 // GetRules returns one prototype instance of every known content rule, in the
@@ -22,7 +22,7 @@ func GetRules() []ContentRule {
 
 // ApplyRulesToItem applies every rule, in order, to the final content item.
 // Distance rules append placement rules; guarded/variant/solo rules set fields.
-func ApplyRulesToItem(item *template.MandatoryContentItem, rules []ContentRule) {
+func ApplyRulesToItem(item *entities.MandatoryContentItem, rules []ContentRule) {
 	for _, rule := range rules {
 		if rule != nil {
 			rule.Apply(item)
