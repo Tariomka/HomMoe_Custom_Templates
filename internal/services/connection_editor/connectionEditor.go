@@ -7,7 +7,7 @@ package connection_editor
 import (
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 )
 
 // ZoneTier classifies a zone by its expected guard-strength bracket.
@@ -70,12 +70,12 @@ func ExtrasForTier(tier ZoneTier) []GuardPresetExtra {
 
 // GetZoneTier classifies a zone by name, using its guarded content pool to decide
 // the bracket for neutral zones.
-func GetZoneTier(zoneName string, zones []template.Zone, playerZoneNames map[string]bool) ZoneTier {
+func GetZoneTier(zoneName string, zones []entities.Zone, playerZoneNames map[string]bool) ZoneTier {
 	if zoneName == "" {
 		return ZoneTierBronze
 	}
 
-	var zone *template.Zone
+	var zone *entities.Zone
 	for i := range zones {
 		if zones[i].Name == zoneName {
 			zone = &zones[i]
@@ -112,7 +112,7 @@ func GetZoneTier(zoneName string, zones []template.Zone, playerZoneNames map[str
 
 // HigherTierOf returns the higher guard tier of two zones, or PlayerToPlayer when
 // both endpoints are player zones.
-func HigherTierOf(zoneA, zoneB string, zones []template.Zone, playerZoneNames map[string]bool) ZoneTier {
+func HigherTierOf(zoneA, zoneB string, zones []entities.Zone, playerZoneNames map[string]bool) ZoneTier {
 	aIsPlayer := zoneA != "" && playerZoneNames[zoneA]
 	bIsPlayer := zoneB != "" && playerZoneNames[zoneB]
 	if aIsPlayer && bIsPlayer {
@@ -130,7 +130,7 @@ func HigherTierOf(zoneA, zoneB string, zones []template.Zone, playerZoneNames ma
 // CloneConnection returns a copy of c with IsUserAdded set as requested. Like the
 // C# CloneConnection it shares the placement-rule slices with the original (a
 // shallow reference copy), which is all the editor needs.
-func CloneConnection(c template.Connection, isUserAdded bool) template.Connection {
+func CloneConnection(c entities.Connection, isUserAdded bool) entities.Connection {
 	clone := c
 	clone.IsUserAdded = isUserAdded
 	return clone
@@ -139,9 +139,9 @@ func CloneConnection(c template.Connection, isUserAdded bool) template.Connectio
 // NewDefaultConnection builds a user-added Direct connection between two zones,
 // seeded with the tier's generator-default guard value and the standard (15%)
 // weekly increment, mirroring the C# AddConnectionWithDefaults.
-func NewDefaultConnection(from, to string, zones []template.Zone, playerZoneNames map[string]bool) template.Connection {
+func NewDefaultConnection(from, to string, zones []entities.Zone, playerZoneNames map[string]bool) entities.Connection {
 	tier := HigherTierOf(from, to, zones, playerZoneNames)
-	return template.Connection{
+	return entities.Connection{
 		From:                 from,
 		To:                   to,
 		ConnectionType:       "Direct",
@@ -163,7 +163,7 @@ func ZoneLetterFromName(zoneName string) string {
 }
 
 // FindIsolatedZones returns the names of zones not referenced by any connection.
-func FindIsolatedZones(zones []template.Zone, connections []template.Connection) []string {
+func FindIsolatedZones(zones []entities.Zone, connections []entities.Connection) []string {
 	var isolated []string
 	for _, zone := range zones {
 		referenced := false
@@ -182,7 +182,7 @@ func FindIsolatedZones(zones []template.Zone, connections []template.Connection)
 
 // ComputeHasErrors reports whether any connection references a zone name that
 // does not exist in the zone list.
-func ComputeHasErrors(zones []template.Zone, connections []template.Connection) bool {
+func ComputeHasErrors(zones []entities.Zone, connections []entities.Connection) bool {
 	zoneNames := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		zoneNames[zone.Name] = true
@@ -198,7 +198,7 @@ func ComputeHasErrors(zones []template.Zone, connections []template.Connection) 
 // HasDuplicateName reports whether a connection other than current shares its
 // (case-insensitive) name. current must be an element of connections; identity is
 // compared by pointer to mirror the C# ReferenceEquals check.
-func HasDuplicateName(connections []template.Connection, current *template.Connection) bool {
+func HasDuplicateName(connections []entities.Connection, current *entities.Connection) bool {
 	if current == nil || len(current.Name) == 0 {
 		return false
 	}

@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 type ContentLimitProvider struct{}
@@ -15,13 +15,13 @@ func NewContentLimitProvider() *ContentLimitProvider {
 	return &ContentLimitProvider{}
 }
 
-func (this *ContentLimitProvider) CreateContentCountLimits(settings config.GeneratorConfig) []template.ContentCountLimit {
+func (this *ContentLimitProvider) CreateContentCountLimits(settings config.GeneratorConfig) []entities.ContentCountLimit {
 	sidLimits := this.createDefaultContentLimits()
 
 	// Lift limits when any mandatory-content list (player or neutral or
 	// hub) requests more of a given SID than the default cap.
 	sidCounts := map[string]int{}
-	tally := func(items []template.MandatoryContentItem) {
+	tally := func(items []entities.MandatoryContentItem) {
 		for _, item := range items {
 			if item.SID != "" {
 				sidCounts[strings.ToLower(item.SID)]++
@@ -41,12 +41,12 @@ func (this *ContentLimitProvider) CreateContentCountLimits(settings config.Gener
 		}
 	}
 
-	var limits []template.ContentCountLimit
-	limits = append(limits, template.ContentCountLimit{Name: "content_limits_side", Limits: sidLimits})
-	limits = append(limits, template.ContentCountLimit{Name: "content_limits_side_0_0", Limits: sidLimits})
+	var limits []entities.ContentCountLimit
+	limits = append(limits, entities.ContentCountLimit{Name: "content_limits_side", Limits: sidLimits})
+	limits = append(limits, entities.ContentCountLimit{Name: "content_limits_side_0_0", Limits: sidLimits})
 	for a := 1; a <= 5; a++ {
 		for b := a + 1; b <= 6; b++ {
-			limits = append(limits, template.ContentCountLimit{
+			limits = append(limits, entities.ContentCountLimit{
 				Name:   fmt.Sprintf("content_limits_side_%d_%d", a, b),
 				Limits: sidLimits,
 			})
@@ -55,8 +55,8 @@ func (this *ContentLimitProvider) CreateContentCountLimits(settings config.Gener
 	return limits
 }
 
-func (this *ContentLimitProvider) createDefaultContentLimits() []template.ContentLimit {
-	return []template.ContentLimit{
+func (this *ContentLimitProvider) createDefaultContentLimits() []entities.ContentLimit {
+	return []entities.ContentLimit{
 		{SID: "black_tower", MaxCount: 0},
 		{SID: constants.ContentIds.Fountain.Sid, MaxCount: 2},
 		{SID: constants.ContentIds.Fountain2.Sid, MaxCount: 2},

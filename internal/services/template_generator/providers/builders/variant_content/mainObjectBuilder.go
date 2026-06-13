@@ -1,8 +1,8 @@
 package variant_content
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -13,10 +13,10 @@ var (
 )
 
 type MainObjectBuilder struct {
-	item template.MainObject
+	item entities.MainObject
 }
 
-func NewObjectBuilder() *MainObjectBuilder { return &MainObjectBuilder{item: template.MainObject{}} }
+func NewObjectBuilder() *MainObjectBuilder { return &MainObjectBuilder{item: entities.MainObject{}} }
 
 func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder {
 	return this.withType(objectTypes.Spawn)
@@ -75,7 +75,7 @@ func (this *MainObjectBuilder) WithCastleQualityUltraRich() *MainObjectBuilder {
 	return this.WithCastleQuality(castleQualities.UltraRich)
 }
 func (this *MainObjectBuilder) WithFaction(matchOrFromListType string, arguments ...string) *MainObjectBuilder {
-	this.item.Faction = &template.TypedRef{Type: matchOrFromListType, Args: arguments}
+	this.item.Faction = &entities.TypedRef{Type: matchOrFromListType, Args: arguments}
 	return this
 }
 func (this *MainObjectBuilder) WithFactions(factions ...string) *MainObjectBuilder {
@@ -114,7 +114,7 @@ func (this *MainObjectBuilder) WithInitialUnitIncrement(initialIncrement int) *M
 	this.item.InitialUnitIncrement = initialIncrement
 	return this
 }
-func (this *MainObjectBuilder) Build() template.MainObject { return this.item }
+func (this *MainObjectBuilder) Build() entities.MainObject { return this.item }
 
 func (this *MainObjectBuilder) withType(objectType string) *MainObjectBuilder {
 	this.item.Type = objectType

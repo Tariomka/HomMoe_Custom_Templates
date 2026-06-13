@@ -3,10 +3,10 @@ package tournament_variant
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -26,7 +26,7 @@ func (this *HubClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
 	playerIndex int,
-	playerLabel string) ([]template.Zone, []template.Connection) {
+	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	hubName := "Hub-" + playerLabel
 	spokeLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).
@@ -48,8 +48,8 @@ func (this *HubClusterService) createZones(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans models.NeutralZonePlans,
 	hubName string,
-	playerIndex int) []template.Zone {
-	var zones []template.Zone
+	playerIndex int) []entities.Zone {
+	var zones []entities.Zone
 	hubZone := this.CreateHubZone(
 		spokeConnNames, tuning, false, configuration.ZoneConfiguration.HubZoneSize,
 		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads)
@@ -80,8 +80,8 @@ func (this *HubClusterService) createConnections(
 	spokeLabels, spokeConnNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans models.NeutralZonePlans,
-	hubName, playerLabel string) []template.Connection {
-	var connections []template.Connection
+	hubName, playerLabel string) []entities.Connection {
+	var connections []entities.Connection
 	for index, spokeLabel := range spokeLabels {
 		connectionBuilder := variant_content.NewConnectionBuilder().
 			WithName(spokeConnNames[index]).

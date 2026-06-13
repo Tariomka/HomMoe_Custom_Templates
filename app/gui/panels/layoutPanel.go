@@ -14,9 +14,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
@@ -163,7 +163,7 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 		settings.Topology,
 		tuning,
 		settings.GenerateRoads,
-		func(zones []template.Zone, connections []template.Connection) {
+		func(zones []entities.Zone, connections []entities.Connection) {
 			this.state.ApplyEditedZones(zones, connections)
 		},
 	))

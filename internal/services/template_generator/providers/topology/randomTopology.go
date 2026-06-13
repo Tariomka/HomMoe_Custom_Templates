@@ -5,10 +5,10 @@ import (
 	"math/rand/v2"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -28,7 +28,7 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) template.Variant {
+	holdCityNeutralLabel string) entities.Variant {
 	neutralLabels := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
 		neutralLabels[i] = nz.Label
@@ -88,8 +88,8 @@ func (this *RandomTopologyService) createZones(
 	tuning models.GenerationTuning,
 	neutralZones models.NeutralZonePlans,
 	holdCityNeutralLabel string,
-	connectionNames map[int][]string) []template.Zone {
-	var zones []template.Zone
+	connectionNames map[int][]string) []entities.Zone {
+	var zones []entities.Zone
 	for index, label := range allLabels {
 		myConns := connectionNames[index]
 		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
@@ -115,10 +115,10 @@ func (this *RandomTopologyService) createConnections(
 	isIsolated bool,
 	neutralZones models.NeutralZonePlans,
 	connectionNames map[int][]string,
-	triangulationPairs [][2]int) []template.Connection {
+	triangulationPairs [][2]int) []entities.Connection {
 	nameLookup := make(map[int]int, len(allLabels))
 
-	var connections []template.Connection
+	var connections []entities.Connection
 	for _, pair := range triangulationPairs {
 		indexA, indexB := pair[0], pair[1]
 		labelFrom := allLabels[indexA]

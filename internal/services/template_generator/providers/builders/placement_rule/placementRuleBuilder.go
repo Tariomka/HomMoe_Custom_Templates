@@ -1,14 +1,14 @@
 package placement_rule
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 var ruleTypes = registry.GetRuleTypeValues()
 
 type PlacementRuleBuilder struct {
-	item template.PlacementRule
+	item entities.PlacementRule
 }
 
 func NewPlacementRuleBuilder() *PlacementRuleBuilder {
@@ -37,9 +37,9 @@ func (this *PlacementRuleBuilder) WithArgs(arguments ...any) *PlacementRuleBuild
 	this.item.Args = append(this.item.Args, arguments...)
 	return this
 }
-func (this *PlacementRuleBuilder) Build() template.PlacementRule { return this.item }
+func (this *PlacementRuleBuilder) Build() entities.PlacementRule { return this.item }
 
-func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) template.PlacementRule {
+func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) entities.PlacementRule {
 	return this.
 		WithTypeRoad().
 		WithDistance(distance).
@@ -47,7 +47,7 @@ func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) t
 		Build()
 }
 
-func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight int) template.PlacementRule {
+func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight int) entities.PlacementRule {
 	return this.
 		WithTypeCrossroads().
 		WithDistance(distance).
@@ -55,7 +55,7 @@ func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight 
 		Build()
 }
 
-func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) template.PlacementRule {
+func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) entities.PlacementRule {
 	return this.
 		WithTypeMainObject().
 		WithArgs("0").

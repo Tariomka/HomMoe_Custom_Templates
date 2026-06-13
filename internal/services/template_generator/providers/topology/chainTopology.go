@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -27,7 +27,7 @@ func (this *ChainTopologyService) CreateTopologyVariant(
 	playerLetters []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLetter string) template.Variant {
+	holdCityNeutralLetter string) entities.Variant {
 	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
 	connNames := this.createConnectionNames(playerLetters, orderedLabels, isIsolated)
@@ -64,10 +64,10 @@ func (this *ChainTopologyService) createZones(
 	tuning models.GenerationTuning,
 	neutralZones models.NeutralZonePlans,
 	holdCityNeutralLabel string,
-	connectionNames []string) []template.Zone {
+	connectionNames []string) []entities.Zone {
 	labelCount := len(orderedLabels)
 
-	var zones []template.Zone
+	var zones []entities.Zone
 	for index, label := range orderedLabels {
 		var tempConnectionNames []string
 		if index > 0 && connectionNames[index-1] != "" {
@@ -97,10 +97,10 @@ func (this *ChainTopologyService) createConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	neutralZones models.NeutralZonePlans,
-	connectionNames []string) []template.Connection {
+	connectionNames []string) []entities.Connection {
 	labelCount := len(orderedLabels)
 
-	var connections []template.Connection
+	var connections []entities.Connection
 	for i := range labelCount - 1 {
 		if connectionNames[i] == "" {
 			continue

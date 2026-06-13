@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -60,7 +61,7 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 		SizeX:               this.configuration.MapSize,
 		SizeZ:               this.configuration.MapSize,
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
-		Variants: []template.Variant{
+		Variants: []entities.Variant{
 			this.topologyProvider.
 				ShufflePlayerZones(this.configuration.ShufflePlayerZones).
 				CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel),
@@ -68,8 +69,8 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplateModel {
 		ZoneLayouts:        this.zoneLayoutProvider.CreateZoneLayouts(),
 		MandatoryContent:   this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
 		ContentCountLimits: this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
-		ContentPools:       []template.ContentPool{},
-		ContentLists:       []template.ContentList{},
+		ContentPools:       []entities.ContentPool{},
+		ContentLists:       []entities.ContentList{},
 	}
 }
 

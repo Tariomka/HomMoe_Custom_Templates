@@ -7,8 +7,8 @@ import (
 	"math"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
@@ -26,7 +26,7 @@ var QualityLabels = []string{"Low", "Medium", "High"}
 
 // NextFreeZoneLabel returns the first generator label not used by any zone, or
 // "" when the pool is exhausted.
-func NextFreeZoneLabel(zones []template.Zone) string {
+func NextFreeZoneLabel(zones []entities.Zone) string {
 	used := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		used[ZoneLetterFromName(zone.Name)] = true
@@ -47,7 +47,7 @@ func NewDefaultNeutralZone(
 	quality models.NeutralZoneQuality,
 	castleCount int,
 	generateRoads bool,
-	tuning models.GenerationTuning) template.Zone {
+	tuning models.GenerationTuning) entities.Zone {
 	topology := base.NewTopologyBase()
 	plan := models.NeutralZonePlan{Label: label, Quality: quality, CastleCount: castleCount}
 	zone := topology.CreateNeutralZone(plan, nil, 1.0, false, generateRoads, tuning, false)
@@ -57,7 +57,7 @@ func NewDefaultNeutralZone(
 
 // QualityOfZone infers a neutral zone's quality preset from its guarded
 // content pool, mirroring GetZoneTier's bracket rules.
-func QualityOfZone(zone template.Zone) models.NeutralZoneQuality {
+func QualityOfZone(zone entities.Zone) models.NeutralZoneQuality {
 	pool := ""
 	if len(zone.GuardedContentPool) > 0 {
 		pool = zone.GuardedContentPool[0]
@@ -72,7 +72,7 @@ func QualityOfZone(zone template.Zone) models.NeutralZoneQuality {
 }
 
 // CountZoneCastles returns the number of City main objects in the zone.
-func CountZoneCastles(zone template.Zone) int {
+func CountZoneCastles(zone entities.Zone) int {
 	count := 0
 	for _, mainObject := range zone.MainObjects {
 		if strings.EqualFold(mainObject.Type, "City") {
@@ -86,7 +86,7 @@ func CountZoneCastles(zone template.Zone) int {
 // multiplier, content pools and values) and rebuilds the zone's castles for
 // the requested count. Only meaningful for neutral zones.
 func ApplyNeutralZoneQuality(
-	zone *template.Zone,
+	zone *entities.Zone,
 	quality models.NeutralZoneQuality,
 	castleCount int,
 	tuning models.GenerationTuning) {
@@ -115,16 +115,16 @@ func CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
 // RemoveZone returns the zone and connection lists without the named zone and
 // without any connection referencing it.
 func RemoveZone(
-	zones []template.Zone,
-	connections []template.Connection,
-	zoneName string) ([]template.Zone, []template.Connection) {
-	keptZones := make([]template.Zone, 0, len(zones))
+	zones []entities.Zone,
+	connections []entities.Connection,
+	zoneName string) ([]entities.Zone, []entities.Connection) {
+	keptZones := make([]entities.Zone, 0, len(zones))
 	for _, zone := range zones {
 		if zone.Name != zoneName {
 			keptZones = append(keptZones, zone)
 		}
 	}
-	keptConnections := make([]template.Connection, 0, len(connections))
+	keptConnections := make([]entities.Connection, 0, len(connections))
 	for _, connection := range connections {
 		if connection.From != zoneName && connection.To != zoneName {
 			keptConnections = append(keptConnections, connection)

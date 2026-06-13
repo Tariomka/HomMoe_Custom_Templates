@@ -3,8 +3,6 @@ package constants
 import "github.com/Tariomka/hommoe_custom_templates/internal/models"
 
 // ContentIds enumerates every world-object SID known to the editor.
-//
-//nolint:gochecknoglobals // semantic registry
 var ContentIds = struct {
 	AbandonedCorpse     models.SidMapping
 	AbandonedMansion    models.SidMapping

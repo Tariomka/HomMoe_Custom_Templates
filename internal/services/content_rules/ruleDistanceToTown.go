@@ -3,8 +3,8 @@ package content_rules
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 // Rule metadata constants for the distance-to-town rule.
@@ -37,7 +37,7 @@ func (this *RuleDistanceToTown) DisplayText() string {
 	return fmt.Sprintf("%s: %s", this.Name(), this.Distance.Name)
 }
 
-func (this *RuleDistanceToTown) Apply(item *template.MandatoryContentItem) {
+func (this *RuleDistanceToTown) Apply(item *entities.MandatoryContentItem) {
 	item.Rules = append(item.Rules, TownDistance(this.Distance, 1))
 }
 

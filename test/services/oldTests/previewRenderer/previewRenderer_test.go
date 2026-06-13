@@ -7,21 +7,21 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
-func simpleTemplate(name string) *template.RmgTemplateModel {
-	return &template.RmgTemplateModel{
+func simpleTemplate(name string) *entities.RmgTemplateModel {
+	return &entities.RmgTemplateModel{
 		Name: name,
-		Variants: []template.Variant{{
-			Zones: []template.Zone{
-				{Name: "Spawn-A", MainObjects: []template.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
-				{Name: "Spawn-B", MainObjects: []template.MainObject{{Type: "Spawn", Spawn: "Player2"}}},
+		Variants: []entities.Variant{{
+			Zones: []entities.Zone{
+				{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
+				{Name: "Spawn-B", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player2"}}},
 				{Name: "Neutral-C"},
 			},
-			Connections: []template.Connection{
+			Connections: []entities.Connection{
 				{From: "Spawn-A", To: "Neutral-C", ConnectionType: "Direct"},
 				{From: "Neutral-C", To: "Spawn-B", ConnectionType: "Direct"},
 			},
@@ -42,7 +42,7 @@ func TestRenderPreviewImage_ReturnsImageOfRequestedSize(t *testing.T) {
 }
 
 func TestRenderPreviewImage_EmptyTemplateReturnsBackgroundOnly(t *testing.T) {
-	img := services.RenderPreviewImage(&template.RmgTemplateModel{}, config.TopologyDefault, 100)
+	img := services.RenderPreviewImage(&entities.RmgTemplateModel{}, config.TopologyDefault, 100)
 	if img == nil {
 		t.Fatal("nil image")
 	}
@@ -54,7 +54,7 @@ func TestRenderPreviewImage_EmptyTemplateReturnsBackgroundOnly(t *testing.T) {
 func TestRenderPreviewImage_PortalConnectionRenders(t *testing.T) {
 	tmpl := simpleTemplate("T")
 	tmpl.Variants[0].Connections = append(tmpl.Variants[0].Connections,
-		template.Connection{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"},
+		entities.Connection{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"},
 	)
 	img := services.RenderPreviewImage(tmpl, config.TopologyDefault, 300)
 	if img == nil {
@@ -66,7 +66,7 @@ func TestRenderPreviewImage_CastleBadgeDrawn(t *testing.T) {
 	tmpl := simpleTemplate("T")
 	// Add an extra city on player A so it has multiple castles and a badge.
 	tmpl.Variants[0].Zones[0].MainObjects = append(tmpl.Variants[0].Zones[0].MainObjects,
-		template.MainObject{Type: "City"})
+		entities.MainObject{Type: "City"})
 	img := services.RenderPreviewImage(tmpl, config.TopologyDefault, 300)
 	if img == nil {
 		t.Fatal("nil image")
@@ -74,13 +74,13 @@ func TestRenderPreviewImage_CastleBadgeDrawn(t *testing.T) {
 }
 
 func TestRenderPreviewImage_HubZoneRendered(t *testing.T) {
-	tmpl := &template.RmgTemplateModel{
-		Variants: []template.Variant{{
-			Zones: []template.Zone{
+	tmpl := &entities.RmgTemplateModel{
+		Variants: []entities.Variant{{
+			Zones: []entities.Zone{
 				{Name: "Hub"},
-				{Name: "Spawn-A", MainObjects: []template.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
+				{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
 			},
-			Connections: []template.Connection{{From: "Hub", To: "Spawn-A", ConnectionType: "Direct"}},
+			Connections: []entities.Connection{{From: "Hub", To: "Spawn-A", ConnectionType: "Direct"}},
 		}},
 	}
 	img := services.RenderPreviewImage(tmpl, config.TopologyDefault, 300)

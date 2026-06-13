@@ -8,9 +8,9 @@ import (
 
 	"gioui.org/widget"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
@@ -26,7 +26,7 @@ type State struct {
 
 	// Output / status
 	outputPath   widget.Editor
-	lastTemplate *template.RmgTemplateModel
+	lastTemplate *entities.RmgTemplateModel
 	statusMsg    string
 	statusErr    bool
 
@@ -76,13 +76,13 @@ func (this *State) IsUnsaved() bool {
 	return this.unsaved
 }
 
-func (this *State) GetLastTemplate() *template.RmgTemplateModel {
+func (this *State) GetLastTemplate() *entities.RmgTemplateModel {
 	return this.lastTemplate
 }
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
 // editor back into the live template and flags that manual edits now exist.
-func (this *State) ApplyEditedZones(zones []template.Zone, connections []template.Connection) {
+func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entities.Connection) {
 	if this.lastTemplate == nil || len(this.lastTemplate.Variants) == 0 {
 		return
 	}

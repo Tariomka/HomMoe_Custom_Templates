@@ -6,10 +6,10 @@ import (
 	"math/rand/v2"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
@@ -33,8 +33,8 @@ func (this *TopologyBase) CreateVariant(
 	playerLabels []string,
 	firstLabel string,
 	zoneCount int,
-	zones []template.Zone,
-	connections []template.Connection) template.Variant {
+	zones []entities.Zone,
+	connections []entities.Connection) entities.Variant {
 	orientationBuilder := variant_content.NewOrientationBuilder().
 		WithBaseAngleMin(45).
 		WithBaseAngleMax(45).
@@ -73,8 +73,8 @@ func (this *TopologyBase) CreateSpawnZone(
 	zoneSize float64,
 	spawnFootholds,
 	generateRoads bool,
-	tuning models.GenerationTuning) template.Zone {
-	mainObjects := []template.MainObject{
+	tuning models.GenerationTuning) entities.Zone {
+	mainObjects := []entities.MainObject{
 		this.createPlayerSpawnCastle(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
 	}
 	// TODO: add player owned castles
@@ -115,7 +115,7 @@ func (this *TopologyBase) CreateNeutralZone(
 	zoneSize float64,
 	spawnFootholds, generateRoads bool,
 	tuning models.GenerationTuning,
-	isHoldCity bool) template.Zone {
+	isHoldCity bool) entities.Zone {
 	if isHoldCity && plan.CastleCount < 1 {
 		plan.CastleCount = 1
 	}
@@ -161,7 +161,7 @@ func (this *TopologyBase) CreateHubZone(
 	isHoldCity bool,
 	size float64,
 	castleCount int,
-	generateRoads bool) template.Zone {
+	generateRoads bool) entities.Zone {
 	if isHoldCity && castleCount < 1 {
 		castleCount = 1
 	}
@@ -202,7 +202,7 @@ func (this *TopologyBase) CreateHubZone(
 func (this *TopologyBase) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
-	maxCount int) []template.Connection {
+	maxCount int) []entities.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
 		return nil
@@ -215,7 +215,7 @@ func (this *TopologyBase) CreateRandomPortalConnections(
 	rand.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
 
 	rule := placement_rule.NewPlacementRuleBuilder().BuildCrossroadsRule(placement_rule.DistanceNear, 2)
-	var conns []template.Connection
+	var conns []entities.Connection
 	for i := range min(count, maxCount) {
 		idx := indices[i]
 		fromLabel := orderedLabels[idx]
@@ -239,9 +239,9 @@ func (this *TopologyBase) CreateRandomPortalConnections(
 
 func (this *TopologyBase) CreateMissingPlayerConnections(
 	playerLabels []string,
-	zones []template.Zone,
-	connections []template.Connection,
-	tuning models.GenerationTuning) []template.Connection {
+	zones []entities.Zone,
+	connections []entities.Connection,
+	tuning models.GenerationTuning) []entities.Connection {
 	if len(playerLabels) < 2 {
 		return nil
 	}
@@ -259,10 +259,10 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 			connNames[c.Name] = true
 		}
 	}
-	var additionalConns []template.Connection
+	var additionalConns []entities.Connection
 	for _, letter := range playerLabels {
 		zoneName := "Spawn-" + letter
-		zone, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == zoneName })
+		zone, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == zoneName })
 		if !ok {
 			continue
 		}
@@ -288,7 +288,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 			continue
 		}
 
-		additionalConns = append(additionalConns, template.Connection{
+		additionalConns = append(additionalConns, entities.Connection{
 			Name: fallbackName, From: zoneName, To: "Spawn-" + partner,
 			ConnectionType: "Direct", GuardZone: zoneName, SimTurnSquad: true,
 			GuardValue: this.GetBorderGuardValue(letter, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
@@ -296,7 +296,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 		})
 		connNames[fallbackName] = true
 		for _, pl := range []string{letter, partner} {
-			if pz, ok := linq.FromSlice(zones).First(func(z template.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
+			if pz, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
 				pz.Roads = append(pz.Roads, variant_content.NewRoadBuilder().
 					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
 					WithTo(variant_content.NewRefBuilder().BuildConnectionType(fallbackName)).
@@ -310,15 +310,15 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 func (this *TopologyBase) CreateMissingConnections(
 	playerLabels, allLabels []string,
 	positions models.Positions,
-	zones []template.Zone,
-	connections []template.Connection,
+	zones []entities.Zone,
+	connections []entities.Connection,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans) []template.Connection {
+	neutralZones models.NeutralZonePlans) []entities.Connection {
 	if len(allLabels) < 2 {
 		return nil
 	}
 
-	getFallbackConnName := func(zone template.Zone) string {
+	getFallbackConnName := func(zone entities.Zone) string {
 		existingConn := ""
 		for _, road := range zone.Roads {
 			if road.From.Type == "Connection" && len(road.From.Args) > 0 {
@@ -340,8 +340,8 @@ func (this *TopologyBase) CreateMissingConnections(
 		zoneNameToIdx[this.ZoneLabelProvider.CreateZoneName(label, playerLabels)] = index
 	}
 	for connection := range linq.FromSlice(connections).
-		Where(func(x template.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
-		Where(func(x template.Connection) bool {
+		Where(func(x entities.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
+		Where(func(x entities.Connection) bool {
 			_, okA := zoneNameToIdx[x.From]
 			_, okB := zoneNameToIdx[x.To]
 			return okA && okB
@@ -351,11 +351,11 @@ func (this *TopologyBase) CreateMissingConnections(
 
 	connNameSet := map[string]bool{}
 	for connection := range linq.FromSlice(connections).
-		Where(func(x template.Connection) bool { return x.Name != "" }).Iterate {
+		Where(func(x entities.Connection) bool { return x.Name != "" }).Iterate {
 		connNameSet[connection.Name] = true
 	}
 
-	var additionalConns []template.Connection
+	var additionalConns []entities.Connection
 	for {
 		components := adjacency.FindIndexes(len(allLabels))
 		bestIndexA, bestIndexB, ok := positions.GetShortestDistanceIndex(components)
@@ -388,7 +388,7 @@ func (this *TopologyBase) CreateMissingConnections(
 		connNameSet[bridgeName] = true
 
 		for _, zoneName := range []string{zoneFrom, zoneTo} {
-			if zone, ok := linq.FromSlice(zones).First(func(x template.Zone) bool { return x.Name == zoneName }); ok {
+			if zone, ok := linq.FromSlice(zones).First(func(x entities.Zone) bool { return x.Name == zoneName }); ok {
 				roadBuilder := variant_content.NewRoadBuilder().WithTo(
 					variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
 				if len(zone.MainObjects) > 0 {
@@ -414,7 +414,7 @@ func (this *TopologyBase) CreateMissingConnections(
 	return additionalConns
 }
 
-func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []template.Road {
+func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []entities.Road {
 	if !generateRoads {
 		return nil
 	}
@@ -425,13 +425,13 @@ func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, gen
 	}
 
 	if len(distinctNames) == 1 {
-		return []template.Road{
+		return []entities.Road{
 			variant_content.NewRoadBuilder().
 				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
 				WithTo(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
 				Build()}
 	}
-	var roads []template.Road
+	var roads []entities.Road
 	for _, name := range distinctNames[1:] {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
@@ -470,7 +470,7 @@ func (this *TopologyBase) GetBorderGuardValue(
 	return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
 }
 
-func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue int) template.MainObject {
+func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
 	return variant_content.NewObjectBuilder().
 		WithTypeSpawn().
 		WithSpawn(playerName).
@@ -484,12 +484,12 @@ func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue 
 		Build()
 }
 
-// func (this *topologyBase) createPlayerOwnedCastles(playerIndex int, guardValue int, castleCount int) []template.MainObject {  }
+// func (this *topologyBase) createPlayerOwnedCastles(playerIndex int, guardValue int, castleCount int) []entities.MainObject {  }
 
 func (this *TopologyBase) createPlayerUnclaimedCastles(
 	matchPlayerFaction bool,
-	guardValue, castleCount int) []template.MainObject {
-	var castles []template.MainObject
+	guardValue, castleCount int) []entities.MainObject {
+	var castles []entities.MainObject
 	for range castleCount {
 		objectBuilder := variant_content.NewObjectBuilder().
 			WithTypeCity().
@@ -516,8 +516,8 @@ func CreateNeutralZoneCastles(
 	profile models.NeutralZoneProfile,
 	tuning models.GenerationTuning,
 	castleCount int,
-	isHoldCityZone bool) []template.MainObject {
-	var castles []template.MainObject
+	isHoldCityZone bool) []entities.MainObject {
+	var castles []entities.MainObject
 
 	if castleCount > 0 {
 		objectBuilder := variant_content.NewObjectBuilder().
@@ -561,15 +561,15 @@ func CreateNeutralZoneCastles(
 func (this *TopologyBase) createHubZoneCastles(
 	tuning models.GenerationTuning,
 	castleCount int,
-	isHoldCityZone bool) []template.MainObject {
-	var castles []template.MainObject
+	isHoldCityZone bool) []entities.MainObject {
+	var castles []entities.MainObject
 	newCastleBuilder := func() *variant_content.MainObjectBuilder {
 		return variant_content.NewObjectBuilder().
 			WithTypeCity().
 			WithGuardWeeklyIncrement(0.10).
 			WithFaction("FromList")
 	}
-	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) template.MainObject {
+	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
 		return builder.
 			WithGuardChance(1).
 			WithGuardValue(tuning.ScaleByNeutralGuardStrength(25_000)).
@@ -578,7 +578,7 @@ func (this *TopologyBase) createHubZoneCastles(
 			WithHoldCityWinCon().
 			Build()
 	}
-	buildCastle := func(builder *variant_content.MainObjectBuilder) template.MainObject {
+	buildCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
 		return builder.
 			WithGuardChance(0.5).
 			WithGuardValue(tuning.ScaleByNeutralGuardStrength(16_000)).
@@ -604,7 +604,7 @@ func (this *TopologyBase) createHubZoneCastles(
 func (this *TopologyBase) createOuterZoneRoads(
 	connectionNames []string,
 	castleCount int,
-	includeFoothold, generateRoads bool) []template.Road {
+	includeFoothold, generateRoads bool) []entities.Road {
 	if !generateRoads {
 		return nil
 	}
@@ -613,7 +613,7 @@ func (this *TopologyBase) createOuterZoneRoads(
 		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
 	}
 
-	var roads []template.Road
+	var roads []entities.Road
 	for i := 1; i < castleCount; i++ {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
@@ -638,7 +638,7 @@ func (this *TopologyBase) createOuterZoneRoads(
 	return roads
 }
 
-func buildSideContentLimits() template.StringList {
+func buildSideContentLimits() entities.StringList {
 	var limits []string
 	for a := 1; a <= 5; a++ {
 		for b := a + 1; b <= 6; b++ {

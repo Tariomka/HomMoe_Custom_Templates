@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
@@ -1007,7 +1007,7 @@ func TestGenerate_BalancedTopology_MixedNeutrals_Succeeds(t *testing.T) {
 
 func TestGenerate_BorderGuards_ScaleWithNeutralQuality(t *testing.T) {
 	// All-Low neutrals → border guards should be smaller than All-High.
-	mk := func(noCastleHigh, noCastleLow int) []template.Connection {
+	mk := func(noCastleHigh, noCastleLow int) []entities.Connection {
 		s := settingsWithTopology(config.TopologyDefault, 2, 0)
 		s.ZoneConfiguration.Advanced.Enabled = true
 		s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = noCastleLow
@@ -1015,7 +1015,7 @@ func TestGenerate_BorderGuards_ScaleWithNeutralQuality(t *testing.T) {
 		tmpl := template_generator.NewTemplateGenerator(s).Generate()
 		return tmpl.Variants[0].Connections
 	}
-	sumBorderGuards := func(conns []template.Connection) int {
+	sumBorderGuards := func(conns []entities.Connection) int {
 		total := 0
 		for _, c := range conns {
 			total += c.GuardValue

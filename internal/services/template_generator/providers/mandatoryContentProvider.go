@@ -2,9 +2,9 @@ package providers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
@@ -19,10 +19,10 @@ func NewMandatoryContentProvider() *MandatoryContentProvider {
 func (this *MandatoryContentProvider) CreateContents(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) []template.MandatoryContent {
-	var groups []template.MandatoryContent
+	neutralZones models.NeutralZonePlans) []entities.MandatoryContent {
+	var groups []entities.MandatoryContent
 	for _, letter := range playerLabels {
-		groups = append(groups, template.MandatoryContent{
+		groups = append(groups, entities.MandatoryContent{
 			Name: "mandatory_content_side_" + letter,
 			Content: this.createContentItemsWithFoothold(
 				configuration.PlayerZoneMandatoryContent,
@@ -31,7 +31,7 @@ func (this *MandatoryContentProvider) CreateContents(
 		})
 	}
 	for _, neutralZone := range neutralZones {
-		var content []template.MandatoryContentItem
+		var content []entities.MandatoryContentItem
 		switch neutralZone.Quality {
 		case models.QualityLow:
 			copy(content, configuration.LowNeutralMandatoryContent)
@@ -43,7 +43,7 @@ func (this *MandatoryContentProvider) CreateContents(
 		if neutralZone.CastleCount == 0 {
 			content = stripNearCastleRules(content)
 		}
-		groups = append(groups, template.MandatoryContent{
+		groups = append(groups, entities.MandatoryContent{
 			Name:    "mandatory_content_neutral_" + neutralZone.Label,
 			Content: this.createContentItemsWithFoothold(content, configuration.SpawnRemoteFootholds, neutralZone.CastleCount),
 		})
@@ -52,11 +52,11 @@ func (this *MandatoryContentProvider) CreateContents(
 }
 
 func (this *MandatoryContentProvider) CreateContentItemsFrom(
-	rows []models.ZoneContentRowSave) []template.MandatoryContentItem {
+	rows []models.ZoneContentRowSave) []entities.MandatoryContentItem {
 	if len(rows) == 0 {
 		return nil
 	}
-	var out []template.MandatoryContentItem
+	var out []entities.MandatoryContentItem
 	for _, raw := range rows {
 		row := raw.Normalised()
 		if row.Sid == "" {
@@ -70,8 +70,8 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 }
 
 func (this *MandatoryContentProvider) createContentItemFrom(
-	row models.ZoneContentRowSave) template.MandatoryContentItem {
-	item := template.MandatoryContentItem{
+	row models.ZoneContentRowSave) entities.MandatoryContentItem {
+	item := entities.MandatoryContentItem{
 		IsMine: row.IsMine,
 	}
 	if row.IsGroup {
@@ -85,10 +85,10 @@ func (this *MandatoryContentProvider) createContentItemFrom(
 }
 
 func (this *MandatoryContentProvider) createContentItemsWithFoothold(
-	rows []template.MandatoryContentItem,
+	rows []entities.MandatoryContentItem,
 	addFoothold bool,
-	castleCount int) []template.MandatoryContentItem {
-	var content []template.MandatoryContentItem
+	castleCount int) []entities.MandatoryContentItem {
+	var content []entities.MandatoryContentItem
 	if addFoothold {
 		content = append(content, this.createFootholdContentItem(castleCount))
 	}
@@ -97,12 +97,12 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 }
 
 func (this *MandatoryContentProvider) createFootholdContentItem(
-	castleCount int) template.MandatoryContentItem {
+	castleCount int) entities.MandatoryContentItem {
 	return mandatory_content.NewContentBuilder(constants.ContentIds.RemoteFoothold.Sid).
 		WithName("name_remote_foothold_1").
 		WithSoloEncounter().
-		WithRulesCallback(func() []template.PlacementRule {
-			rules := []template.PlacementRule{
+		WithRulesCallback(func() []entities.PlacementRule {
+			rules := []entities.PlacementRule{
 				placement_rule.NewPlacementRuleBuilder().
 					BuildCrossroadsRule(placement_rule.Distance{Min: 0.2, Max: 0.3}, 0),
 			}
@@ -132,7 +132,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 // stripNearCastleRules removes placement rules that anchor an item near
 // the zone's main castle. Used when a zone has no castle so the rule
 // would never be satisfiable
-func stripNearCastleRules(items []template.MandatoryContentItem) []template.MandatoryContentItem {
+func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
 	for i := range items {
 		if len(items[i].Rules) == 0 {
 			continue

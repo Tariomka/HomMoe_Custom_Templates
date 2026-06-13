@@ -1,10 +1,10 @@
 package topology
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 )
@@ -24,7 +24,7 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
-	tuning models.GenerationTuning) template.Variant {
+	tuning models.GenerationTuning) entities.Variant {
 	perPlayerNeutralZones := this.createPerPlayerNeutralZonePlans(neutralZones)
 
 	switch configuration.Topology {
@@ -39,8 +39,8 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 		this.clusterService = tournament_variant.NewChainClusterService()
 	}
 
-	var zones []template.Zone
-	var conns []template.Connection
+	var zones []entities.Zone
+	var conns []entities.Connection
 	for playerIndex := range 2 {
 		perPlayerZones, perPlayerConns := this.clusterService.CreateClusterVariant(
 			configuration,

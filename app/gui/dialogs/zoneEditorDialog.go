@@ -24,9 +24,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
@@ -41,7 +41,7 @@ var (
 // Bézier from p0 to p1 bulged through ctrl, with mid the curve's midpoint used
 // for the guard-value label and the user-added marker.
 type connEdgeGeom struct {
-	conn *template.Connection
+	conn *entities.Connection
 	p0   f32.Point
 	p1   f32.Point
 	ctrl f32.Point
@@ -55,15 +55,15 @@ type connEdgeGeom struct {
 // on private copies of the zone and connection lists; Apply commits, Cancel/✕
 // discards.
 type ZoneEditorDialog struct {
-	zones         []template.Zone
-	originalZones []template.Zone
+	zones         []entities.Zone
+	originalZones []entities.Zone
 	playerZones   map[string]bool
 	topology      config.MapTopology
 	tuning        models.GenerationTuning
 	generateRoads bool
-	working       []*template.Connection
-	original      []template.Connection
-	onApply       func([]template.Zone, []template.Connection)
+	working       []*entities.Connection
+	original      []entities.Connection
+	onApply       func([]entities.Zone, []entities.Connection)
 
 	// Geometry recomputed every frame from BuildPreviewLayout.
 	positions    map[string]image.Point
@@ -74,7 +74,7 @@ type ZoneEditorDialog struct {
 
 	// Canvas interaction.
 	canvasTag     int
-	selected      *template.Connection
+	selected      *entities.Connection
 	selectedZone  string
 	addMode       bool
 	pendingFrom   string
@@ -95,7 +95,7 @@ type ZoneEditorDialog struct {
 
 	// Property panel.
 	sideScroll        widget.List
-	syncedFor         *template.Connection
+	syncedFor         *entities.Connection
 	typeDropdown      *components.DropdownSelector
 	guardZoneDropdown *components.DropdownSelector
 	guardDropdown     *components.DropdownSelector
@@ -123,12 +123,12 @@ type ZoneEditorDialog struct {
 // connections. onApply receives the edited zone and connection lists when the
 // user applies.
 func NewZoneEditorDialog(
-	zones []template.Zone,
-	connections []template.Connection,
+	zones []entities.Zone,
+	connections []entities.Connection,
 	topology config.MapTopology,
 	tuning models.GenerationTuning,
 	generateRoads bool,
-	onApply func([]template.Zone, []template.Connection)) *ZoneEditorDialog {
+	onApply func([]entities.Zone, []entities.Connection)) *ZoneEditorDialog {
 	players := make(map[string]bool)
 	for _, zone := range zones {
 		if strings.HasPrefix(zone.Name, "Spawn-") {
@@ -137,8 +137,8 @@ func NewZoneEditorDialog(
 	}
 
 	dialog := &ZoneEditorDialog{
-		zones:             append([]template.Zone(nil), zones...),
-		originalZones:     append([]template.Zone(nil), zones...),
+		zones:             append([]entities.Zone(nil), zones...),
+		originalZones:     append([]entities.Zone(nil), zones...),
 		playerZones:       players,
 		topology:          topology,
 		tuning:            tuning,
@@ -420,8 +420,8 @@ func (this *ZoneEditorDialog) hitTestNode(pos image.Point) string {
 	return best
 }
 
-func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *template.Connection {
-	var best *template.Connection
+func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection {
+	var best *entities.Connection
 	bestDistance := 9.0
 	for i := range this.edges {
 		edge := this.edges[i]
@@ -445,8 +445,8 @@ func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *template.Connection 
 // bulging around intermediate nodes.
 func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 	this.side = side
-	mini := &template.RmgTemplateModel{
-		Variants: []template.Variant{{
+	mini := &entities.RmgTemplateModel{
+		Variants: []entities.Variant{{
 			Zones:       this.zones,
 			Connections: derefConnections(this.working),
 		}},
@@ -457,7 +457,7 @@ func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 	this.radius = layoutData.ZoneRadius
 
 	type pairKey struct{ a, b string }
-	groups := make(map[pairKey][]*template.Connection)
+	groups := make(map[pairKey][]*entities.Connection)
 	order := make([]pairKey, 0)
 	for _, connection := range this.working {
 		a, b := connection.From, connection.To
@@ -816,7 +816,7 @@ func (this *ZoneEditorDialog) addConnection(from, to string) {
 	this.syncedFor = nil
 }
 
-func (this *ZoneEditorDialog) deleteConnection(connection *template.Connection) {
+func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) {
 	for i, candidate := range this.working {
 		if candidate == connection {
 			this.working = append(this.working[:i], this.working[i+1:]...)
@@ -830,7 +830,7 @@ func (this *ZoneEditorDialog) deleteConnection(connection *template.Connection) 
 }
 
 func (this *ZoneEditorDialog) resetToOriginal() {
-	this.zones = append([]template.Zone(nil), this.originalZones...)
+	this.zones = append([]entities.Zone(nil), this.originalZones...)
 	this.working = this.working[:0]
 	for i := range this.original {
 		clone := connection_editor.CloneConnection(this.original[i], false)
@@ -855,14 +855,14 @@ func (this *ZoneEditorDialog) selectZone(name string) {
 	this.hint = ""
 }
 
-func (this *ZoneEditorDialog) selectedZoneRef() *template.Zone {
+func (this *ZoneEditorDialog) selectedZoneRef() *entities.Zone {
 	if this.selectedZone == "" {
 		return nil
 	}
 	return this.zoneByName(this.selectedZone)
 }
 
-func (this *ZoneEditorDialog) zoneByName(name string) *template.Zone {
+func (this *ZoneEditorDialog) zoneByName(name string) *entities.Zone {
 	for i := range this.zones {
 		if this.zones[i].Name == name {
 			return &this.zones[i]
@@ -971,7 +971,7 @@ func (this *ZoneEditorDialog) deleteZone(name string) {
 	this.hint = ""
 }
 
-func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *template.Zone) []layout.Widget {
+func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *entities.Zone) []layout.Widget {
 	isNeutral := strings.HasPrefix(zone.Name, "Neutral-")
 	isSpawn := this.playerZones[zone.Name]
 	rows := []layout.Widget{
@@ -1015,7 +1015,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *temp
 
 // syncZoneProps loads the zone property widgets from the selected zone.
 // Called once whenever the zone selection changes.
-func (this *ZoneEditorDialog) syncZoneProps(zone *template.Zone) {
+func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 	quality := connection_editor.QualityOfZone(*zone)
 	this.qualityDropdown.SelectByName(connection_editor.QualityLabels[int(quality)])
 	castles := connection_editor.CountZoneCastles(*zone)
@@ -1030,7 +1030,7 @@ func (this *ZoneEditorDialog) syncZoneProps(zone *template.Zone) {
 
 // writebackZoneProps copies the zone widget state back into the selected zone
 // after the panel has been laid out for this frame.
-func (this *ZoneEditorDialog) writebackZoneProps(gtx layout.Context, zone *template.Zone) {
+func (this *ZoneEditorDialog) writebackZoneProps(gtx layout.Context, zone *entities.Zone) {
 	if this.sideZoneDelete.Clicked(gtx) {
 		this.deleteZone(zone.Name)
 		return
@@ -1052,8 +1052,8 @@ func (this *ZoneEditorDialog) writebackZoneProps(gtx layout.Context, zone *templ
 	}
 }
 
-func derefConnections(pointers []*template.Connection) []template.Connection {
-	out := make([]template.Connection, len(pointers))
+func derefConnections(pointers []*entities.Connection) []entities.Connection {
+	out := make([]entities.Connection, len(pointers))
 	for i, pointer := range pointers {
 		out[i] = *pointer
 	}

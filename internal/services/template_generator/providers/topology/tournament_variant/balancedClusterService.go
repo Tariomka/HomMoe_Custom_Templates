@@ -6,10 +6,10 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
 )
@@ -29,7 +29,7 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
 	playerIndex int,
-	playerLabel string) ([]template.Zone, []template.Connection) {
+	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	singlePlayerList := []string{playerLabel}
 	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans, 0)
 	rawPositions := models.CreatePositionsFromPlans(orderedLabels, singlePlayerList, allNeutralZonePlans)
@@ -191,8 +191,8 @@ func (this *BalancedClusterService) createZones(
 	orderedLabels []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans models.NeutralZonePlans,
-	connectionNames [][]string) []template.Zone {
-	var zones []template.Zone
+	connectionNames [][]string) []entities.Zone {
+	var zones []entities.Zone
 	for index, label := range orderedLabels {
 		myConns := connectionNames[index]
 		if label == playerLabel {
@@ -216,10 +216,10 @@ func (this *BalancedClusterService) createConnections(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans models.NeutralZonePlans,
 	connectionNames [][]string,
-	sortedPairs [][2]int) []template.Connection {
+	sortedPairs [][2]int) []entities.Connection {
 	nameLookup := make(map[int]int, len(orderedLabels))
 
-	var connections []template.Connection
+	var connections []entities.Connection
 	for _, pair := range sortedPairs {
 		indexA, indexB := pair[0], pair[1]
 		labelFrom := orderedLabels[indexA]
@@ -237,7 +237,7 @@ func (this *BalancedClusterService) createConnections(
 		if labelTo != playerLabel {
 			toZone = "Neutral-" + labelTo
 		}
-		connections = append(connections, template.Connection{
+		connections = append(connections, entities.Connection{
 			Name: connName, From: fromZone, To: toZone,
 			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
 			GuardValue: this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning), GuardWeeklyIncrement: 0.15,

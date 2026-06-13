@@ -1,18 +1,17 @@
 package variant_content
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template/template_inner/variant"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 var layoutValues = registry.GetLayoutValues()
 
 type ZoneBuilder struct {
-	item template.Zone
+	item entities.Zone
 }
 
-func NewZoneBuilder() *ZoneBuilder { return &ZoneBuilder{item: template.Zone{}} }
+func NewZoneBuilder() *ZoneBuilder { return &ZoneBuilder{item: entities.Zone{}} }
 
 func (this *ZoneBuilder) WithName(name string) *ZoneBuilder {
 	this.item.Name = name
@@ -100,7 +99,7 @@ func (this *ZoneBuilder) WithResourcesValuePerArea(value int) *ZoneBuilder {
 	this.item.ResourcesValuePerArea = value
 	return this
 }
-func (this *ZoneBuilder) WithMainObjects(objects []template.MainObject) *ZoneBuilder {
+func (this *ZoneBuilder) WithMainObjects(objects []entities.MainObject) *ZoneBuilder {
 	this.item.MainObjects = objects
 	return this
 }
@@ -108,7 +107,7 @@ func (this *ZoneBuilder) WithMainObjects(objects []template.MainObject) *ZoneBui
 // WithBiome sets the same biome type for zone, content, and meta objects biomes. Effectively same as
 //
 //	builder.WithZoneBiome(biome).WithContentBiome(biome).WithMetaObjectsBiome(biome)
-func (this *ZoneBuilder) WithBiome(biome template.TypedRef) *ZoneBuilder {
+func (this *ZoneBuilder) WithBiome(biome entities.TypedRef) *ZoneBuilder {
 	return this.WithZoneBiome(biome).WithContentBiome(biome).WithMetaObjectsBiome(biome)
 }
 
@@ -126,15 +125,15 @@ func (this *ZoneBuilder) WithBiomeMatchZone(args ...string) *ZoneBuilder {
 	return this.WithBiome(NewRefBuilder().BuildBiomeMatchZoneType(args...))
 }
 
-func (this *ZoneBuilder) WithZoneBiome(biome template.TypedRef) *ZoneBuilder {
+func (this *ZoneBuilder) WithZoneBiome(biome entities.TypedRef) *ZoneBuilder {
 	this.item.ZoneBiome = biome
 	return this
 }
-func (this *ZoneBuilder) WithContentBiome(biome template.TypedRef) *ZoneBuilder {
+func (this *ZoneBuilder) WithContentBiome(biome entities.TypedRef) *ZoneBuilder {
 	this.item.ContentBiome = biome
 	return this
 }
-func (this *ZoneBuilder) WithMetaObjectsBiome(biome template.TypedRef) *ZoneBuilder {
+func (this *ZoneBuilder) WithMetaObjectsBiome(biome entities.TypedRef) *ZoneBuilder {
 	this.item.MetaObjectsBiome = biome
 	return this
 }
@@ -142,12 +141,12 @@ func (this *ZoneBuilder) WithCrossroadsPosition(position int) *ZoneBuilder {
 	this.item.CrossroadsPosition = &position
 	return this
 }
-func (this *ZoneBuilder) WithRoads(roads []template.Road) *ZoneBuilder {
+func (this *ZoneBuilder) WithRoads(roads []entities.Road) *ZoneBuilder {
 	this.item.Roads = roads
 	return this
 }
 
-func (this *ZoneBuilder) WithEncounterHolesSettings(settings variant.EncounterHolesSettings) *ZoneBuilder {
+func (this *ZoneBuilder) WithEncounterHolesSettings(settings entities.EncounterHolesSettings) *ZoneBuilder {
 	this.item.EncounterHolesSettings = &settings
 	return this
 }
@@ -167,4 +166,4 @@ func (this *ZoneBuilder) WithRandomHireInitialUnitIncrement(values []int) *ZoneB
 	this.item.RandomHireInitialUnitIncrement = values
 	return this
 }
-func (this *ZoneBuilder) Build() template.Zone { return this.item }
+func (this *ZoneBuilder) Build() entities.Zone { return this.item }

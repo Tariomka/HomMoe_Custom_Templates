@@ -6,8 +6,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 )
 
 // PreviewZone is one zone laid out on the preview canvas.
@@ -144,7 +145,7 @@ func BuildPreviewLayout(template *template.RmgTemplateModel, topology config.Map
 	return layout
 }
 
-func stripFirstClusterIfTwo(zones []template.Zone, conns []template.Connection) ([]template.Zone, []template.Connection) {
+func stripFirstClusterIfTwo(zones []entities.Zone, conns []entities.Connection) ([]entities.Zone, []entities.Connection) {
 	n := len(zones)
 	idx := make(map[string]int, n)
 	for i, z := range zones {
@@ -195,7 +196,7 @@ func stripFirstClusterIfTwo(zones []template.Zone, conns []template.Connection) 
 	for _, i := range comps[0] {
 		keep[i] = true
 	}
-	keptZones := make([]template.Zone, 0, len(comps[0]))
+	keptZones := make([]entities.Zone, 0, len(comps[0]))
 	keptNames := make(map[string]bool, len(comps[0]))
 	for i, z := range zones {
 		if keep[i] {
@@ -203,7 +204,7 @@ func stripFirstClusterIfTwo(zones []template.Zone, conns []template.Connection) 
 			keptNames[z.Name] = true
 		}
 	}
-	keptConns := make([]template.Connection, 0, len(conns))
+	keptConns := make([]entities.Connection, 0, len(conns))
 	for _, c := range conns {
 		if keptNames[c.From] && keptNames[c.To] {
 			keptConns = append(keptConns, c)
@@ -216,7 +217,7 @@ func isStructuralIgnored(connectionType string) bool {
 	return connectionType == "Proximity" || connectionType == "Portal"
 }
 
-func orderZonesByZeroAngle(zones []template.Zone, zeroAngleZone string) []template.Zone {
+func orderZonesByZeroAngle(zones []entities.Zone, zeroAngleZone string) []entities.Zone {
 	if zeroAngleZone == "" {
 		return zones
 	}
@@ -230,13 +231,13 @@ func orderZonesByZeroAngle(zones []template.Zone, zeroAngleZone string) []templa
 	if pivot <= 0 {
 		return zones
 	}
-	out := make([]template.Zone, 0, len(zones))
+	out := make([]entities.Zone, 0, len(zones))
 	out = append(out, zones[pivot:]...)
 	out = append(out, zones[:pivot]...)
 	return out
 }
 
-func allHavePosition(zones []template.Zone) bool {
+func allHavePosition(zones []entities.Zone) bool {
 	for _, z := range zones {
 		if z.GeneratorPosition == nil {
 			return false
@@ -245,7 +246,7 @@ func allHavePosition(zones []template.Zone) bool {
 	return true
 }
 
-func allHaveManualPosition(zones []template.Zone) bool {
+func allHaveManualPosition(zones []entities.Zone) bool {
 	for _, z := range zones {
 		if z.ManualPosition == nil {
 			return false
@@ -259,7 +260,7 @@ func allHaveManualPosition(zones []template.Zone) bool {
 // invertible (p = pos / side) so dragging in the editor is exact. The zone
 // radius shrinks just enough to keep the closest pair of zones from
 // overlapping.
-func layoutManualPositions(layout *PreviewLayout, zones []template.Zone, side float64) {
+func layoutManualPositions(layout *PreviewLayout, zones []entities.Zone, side float64) {
 	scale := canvasScale(side)
 	radius := csZoneRadiusMax * scale
 	minGap := csMinGap * scale
@@ -287,7 +288,7 @@ func layoutManualPositions(layout *PreviewLayout, zones []template.Zone, side fl
 	}
 }
 
-func allHaveRing(zones []template.Zone) bool {
+func allHaveRing(zones []entities.Zone) bool {
 	for _, z := range zones {
 		if z.GeneratorRing == nil {
 			return false
@@ -296,7 +297,7 @@ func allHaveRing(zones []template.Zone) bool {
 	return true
 }
 
-func layoutBalancedRings(layout *PreviewLayout, zones []template.Zone, side float64) {
+func layoutBalancedRings(layout *PreviewLayout, zones []entities.Zone, side float64) {
 	zoneCount := len(zones)
 	if zoneCount == 0 {
 		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
@@ -415,7 +416,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []template.Zone, side floa
 	}
 }
 
-func layoutScatter(layout *PreviewLayout, zones []template.Zone, conns []template.Connection, side float64) {
+func layoutScatter(layout *PreviewLayout, zones []entities.Zone, conns []entities.Connection, side float64) {
 	n := len(zones)
 	if n == 0 {
 		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
@@ -666,7 +667,7 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 // Used for structured topologies (Default, HubAndSpoke, Chain, SharedWeb).
 // Multi-hub "Hub-*" templates fan their spokes out from each cluster centre;
 // otherwise zones land on a single outer ring with an optional centre hub.
-func layoutRingOrHub(layout *PreviewLayout, zones []template.Zone, conns []template.Connection, side float64) {
+func layoutRingOrHub(layout *PreviewLayout, zones []entities.Zone, conns []entities.Connection, side float64) {
 	n := len(zones)
 	scale := canvasScale(side)
 	margin := csMargin * scale
@@ -758,7 +759,7 @@ func layoutRingOrHub(layout *PreviewLayout, zones []template.Zone, conns []templ
 	}
 }
 
-func layoutMultiHub(layout *PreviewLayout, zones []template.Zone, conns []template.Connection, hubIndices []int, side float64) {
+func layoutMultiHub(layout *PreviewLayout, zones []entities.Zone, conns []entities.Connection, hubIndices []int, side float64) {
 	scale := canvasScale(side)
 	margin := csMargin * scale
 	minGap := csMinGap * scale
@@ -860,7 +861,7 @@ func layoutMultiHub(layout *PreviewLayout, zones []template.Zone, conns []templa
 // findImplicitHubName returns the single non-player zone connected (Direct
 // edges) to every player zone, or "" if no such zone exists. Used to render
 // shared hubs that were not literally named "Hub".
-func findImplicitHubName(zones []template.Zone, conns []template.Connection) string {
+func findImplicitHubName(zones []entities.Zone, conns []entities.Connection) string {
 	playerNames := map[string]bool{}
 	for _, z := range zones {
 		if strings.HasPrefix(z.Name, "Spawn-") {
@@ -928,7 +929,7 @@ func ExtractZoneLetter(zoneName string) string {
 
 // ClassifyZoneTier guesses a neutral zone's tier from its content pools,
 // layout name, and zone name (in order of reliability).
-func ClassifyZoneTier(zone template.Zone) int {
+func ClassifyZoneTier(zone entities.Zone) int {
 	if strings.HasPrefix(zone.Name, "Spawn-") {
 		return 0
 	}
@@ -1015,7 +1016,7 @@ func connectedComponents(n int, adj [][]int) [][]int {
 	return comps
 }
 
-func positionCentroid(zones []template.Zone) (float64, float64) {
+func positionCentroid(zones []entities.Zone) (float64, float64) {
 	if len(zones) == 0 {
 		return 0.5, 0.5
 	}
@@ -1028,7 +1029,7 @@ func positionCentroid(zones []template.Zone) (float64, float64) {
 	return sx / float64(len(zones)), sy / float64(len(zones))
 }
 
-func positionAngle(z template.Zone, rawCx, rawCy float64) float64 {
+func positionAngle(z entities.Zone, rawCx, rawCy float64) float64 {
 	p := *z.GeneratorPosition
 	return math.Atan2(p[1]-rawCy, p[0]-rawCx)
 }

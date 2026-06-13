@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -27,7 +27,7 @@ func (this *RingTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) template.Variant {
+	holdCityNeutralLabel string) entities.Variant {
 	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 
@@ -48,7 +48,7 @@ func (this *RingTopologyService) createZones(
 	tuning models.GenerationTuning,
 	isIsolated bool,
 	neutralZones models.NeutralZonePlans,
-	holdCityNeutralLabel string) []template.Zone {
+	holdCityNeutralLabel string) []entities.Zone {
 
 	labelCount := len(orderedLabels)
 
@@ -64,7 +64,7 @@ func (this *RingTopologyService) createZones(
 		ringConnLeft[next] = name
 	}
 
-	var zones []template.Zone
+	var zones []entities.Zone
 	for i, label := range orderedLabels {
 		var connNames []string
 		if ringConnLeft[i] != "" {
@@ -94,13 +94,13 @@ func (this *RingTopologyService) createConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones models.NeutralZonePlans) []template.Connection {
+	neutralZones models.NeutralZonePlans) []entities.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
 		return nil
 	}
 
-	var connections []template.Connection
+	var connections []entities.Connection
 	for i := range count {
 		labelFrom := orderedLabels[i]
 		labelTo := orderedLabels[(i+1)%count]

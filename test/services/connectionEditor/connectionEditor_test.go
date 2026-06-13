@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,13 +15,13 @@ import (
 // ════════════════════════════════════════════════════════════════════════
 
 func TestT015a_GuardValue_CanBeSetAndReadBack(t *testing.T) {
-	conn := template.Connection{From: "Spawn-A", To: "Neutral-1", GuardValue: 100}
+	conn := entities.Connection{From: "Spawn-A", To: "Neutral-1", GuardValue: 100}
 	conn.GuardValue = 999
 	assert.Equal(t, 999, conn.GuardValue)
 }
 
 func TestT015b_ConnectionType_CanBeSetToPortal(t *testing.T) {
-	conn := template.Connection{From: "Spawn-A", To: "Neutral-1", ConnectionType: "Direct"}
+	conn := entities.Connection{From: "Spawn-A", To: "Neutral-1", ConnectionType: "Direct"}
 	conn.ConnectionType = "Portal"
 	assert.Equal(t, "Portal", conn.ConnectionType)
 }
@@ -29,13 +29,13 @@ func TestT015b_ConnectionType_CanBeSetToPortal(t *testing.T) {
 // The Go Connection model stores GuardWeeklyIncrement as a non-pointer float64,
 // so "clearing" maps to the zero value rather than null.
 func TestT015c_GuardWeeklyIncrement_CanBeCleared(t *testing.T) {
-	conn := template.Connection{From: "Spawn-A", To: "Neutral-1", GuardWeeklyIncrement: 1.5}
+	conn := entities.Connection{From: "Spawn-A", To: "Neutral-1", GuardWeeklyIncrement: 1.5}
 	conn.GuardWeeklyIncrement = 0
 	assert.Equal(t, 0.0, conn.GuardWeeklyIncrement)
 }
 
 func TestT015d_IsUserAdded_StartsAsFalse(t *testing.T) {
-	conn := template.Connection{From: "Spawn-A", To: "Neutral-1"}
+	conn := entities.Connection{From: "Spawn-A", To: "Neutral-1"}
 	assert.False(t, conn.IsUserAdded)
 }
 
@@ -44,10 +44,10 @@ func TestT015d_IsUserAdded_StartsAsFalse(t *testing.T) {
 // ════════════════════════════════════════════════════════════════════════
 
 func TestT019a_AddingConnection_AppendsOneEntryWithIsUserAddedTrue(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 	}
-	newConn := template.Connection{From: "Spawn-A", To: "Neutral-2", ConnectionType: "Direct", IsUserAdded: true}
+	newConn := entities.Connection{From: "Spawn-A", To: "Neutral-2", ConnectionType: "Direct", IsUserAdded: true}
 	connections = append(connections, newConn)
 
 	assert.Equal(t, 2, len(connections))
@@ -55,10 +55,10 @@ func TestT019a_AddingConnection_AppendsOneEntryWithIsUserAddedTrue(t *testing.T)
 }
 
 func TestT019b_AddingSecondConnectionBetweenSamePair_ResultsInTwoEntries(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", ConnectionType: "Direct"},
 	}
-	connections = append(connections, template.Connection{
+	connections = append(connections, entities.Connection{
 		From: "Spawn-A", To: "Neutral-1", ConnectionType: "Portal", IsUserAdded: true,
 	})
 
@@ -72,7 +72,7 @@ func TestT019b_AddingSecondConnectionBetweenSamePair_ResultsInTwoEntries(t *test
 }
 
 func TestT019c_CancelledAdd_LeavesListUnchanged(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 	}
 	countBefore := len(connections)
@@ -84,12 +84,12 @@ func TestT019c_CancelledAdd_LeavesListUnchanged(t *testing.T) {
 // T022 · US3 – Remove Connections
 // ════════════════════════════════════════════════════════════════════════
 
-func removeAt(connections []template.Connection, index int) []template.Connection {
+func removeAt(connections []entities.Connection, index int) []entities.Connection {
 	return append(connections[:index], connections[index+1:]...)
 }
 
 func TestT022a_RemovingConnection_LeavesCountMinusOne(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 		{From: "Neutral-1", To: "Neutral-2"},
 	}
@@ -98,7 +98,7 @@ func TestT022a_RemovingConnection_LeavesCountMinusOne(t *testing.T) {
 }
 
 func TestT022b_RemovingConnection_LeavesNoPairEntry(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 		{From: "Spawn-B", To: "Neutral-2"},
 	}
@@ -114,7 +114,7 @@ func TestT022b_RemovingConnection_LeavesNoPairEntry(t *testing.T) {
 }
 
 func TestT022c_ListIsEmptyAfterDelete(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 	}
 	connections = removeAt(connections, 0)
@@ -126,12 +126,12 @@ func TestT022c_ListIsEmptyAfterDelete(t *testing.T) {
 // ════════════════════════════════════════════════════════════════════════
 
 func TestT027a_AfterReset_ConnectionListMatchesOriginalInCountAndIsUserAddedIsFalse(t *testing.T) {
-	original := []template.Connection{
+	original := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", GuardValue: 100},
 		{From: "Spawn-B", To: "Neutral-1", GuardValue: 200},
 	}
 
-	current := make([]template.Connection, 0, len(original))
+	current := make([]entities.Connection, 0, len(original))
 	for _, orig := range original {
 		current = append(current, connection_editor.CloneConnection(orig, false))
 	}
@@ -145,12 +145,12 @@ func TestT027a_AfterReset_ConnectionListMatchesOriginalInCountAndIsUserAddedIsFa
 }
 
 func TestT027b_IsolatedZoneDetection_IdentifiesZoneWithNoConnections(t *testing.T) {
-	zones := []template.Zone{
+	zones := []entities.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-1"},
 		{Name: "Neutral-2"}, // isolated
 	}
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 	}
 
@@ -161,7 +161,7 @@ func TestT027b_IsolatedZoneDetection_IdentifiesZoneWithNoConnections(t *testing.
 }
 
 func TestT027c_DuplicateNameDetection_FlagsWhenTwoConnectionsShareSameName(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "main-road"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "main-road"},
 		{From: "Spawn-B", To: "Neutral-1", Name: "side-path"},
@@ -173,7 +173,7 @@ func TestT027c_DuplicateNameDetection_FlagsWhenTwoConnectionsShareSameName(t *te
 }
 
 func TestT027c_DuplicateNameDetection_DoesNotFlagWhenNamesAreDistinct(t *testing.T) {
-	connections := []template.Connection{
+	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "alpha"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "beta"},
 	}
@@ -187,20 +187,20 @@ func TestT027c_DuplicateNameDetection_DoesNotFlagWhenNamesAreDistinct(t *testing
 // ════════════════════════════════════════════════════════════════════════
 
 func TestT032d_HasUnresolvedErrors_FalseWhenAllZoneNamesExist(t *testing.T) {
-	zones := []template.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}}
-	connections := []template.Connection{{From: "Spawn-A", To: "Neutral-1"}}
+	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}}
+	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
 	assert.False(t, connection_editor.ComputeHasErrors(zones, connections))
 }
 
 func TestT032d_HasUnresolvedErrors_TrueWhenFromZoneIsMissing(t *testing.T) {
-	zones := []template.Zone{{Name: "Neutral-1"}}
-	connections := []template.Connection{{From: "Spawn-A", To: "Neutral-1"}}
+	zones := []entities.Zone{{Name: "Neutral-1"}}
+	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
 	assert.True(t, connection_editor.ComputeHasErrors(zones, connections))
 }
 
 func TestT032d_HasUnresolvedErrors_TrueWhenToZoneIsMissing(t *testing.T) {
-	zones := []template.Zone{{Name: "Spawn-A"}}
-	connections := []template.Connection{{From: "Spawn-A", To: "Neutral-99"}}
+	zones := []entities.Zone{{Name: "Spawn-A"}}
+	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-99"}}
 	assert.True(t, connection_editor.ComputeHasErrors(zones, connections))
 }
 
@@ -209,7 +209,7 @@ func TestT032d_HasUnresolvedErrors_TrueWhenToZoneIsMissing(t *testing.T) {
 // ════════════════════════════════════════════════════════════════════════
 
 func TestIsUserAdded_IsNotSerialized_JsonDoesNotContainProperty(t *testing.T) {
-	conn := template.Connection{From: "Spawn-A", To: "Neutral-1", IsUserAdded: true}
+	conn := entities.Connection{From: "Spawn-A", To: "Neutral-1", IsUserAdded: true}
 	data, err := json.Marshal(conn)
 	assert.NoError(t, err)
 
@@ -248,20 +248,20 @@ func TestWeeklyIncrementValues_MatchTable(t *testing.T) {
 }
 
 func TestGetZoneTier_PlayerZoneIsBronze(t *testing.T) {
-	zones := []template.Zone{{Name: "Spawn-A"}}
+	zones := []entities.Zone{{Name: "Spawn-A"}}
 	players := map[string]bool{"Spawn-A": true}
 	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Spawn-A", zones, players))
 }
 
 func TestGetZoneTier_HubIsBronze(t *testing.T) {
-	zones := []template.Zone{{Name: "Hub"}, {Name: "Hub-1"}}
+	zones := []entities.Zone{{Name: "Hub"}, {Name: "Hub-1"}}
 	players := map[string]bool{}
 	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Hub", zones, players))
 	assert.Equal(t, connection_editor.ZoneTierBronze, connection_editor.GetZoneTier("Hub-1", zones, players))
 }
 
 func TestGetZoneTier_NeutralPoolDecidesBracket(t *testing.T) {
-	zones := []template.Zone{
+	zones := []entities.Zone{
 		{Name: "Neutral-Gold", GuardedContentPool: []string{"pool_t4_x"}},
 		{Name: "Neutral-Gold5", GuardedContentPool: []string{"pool_t5_x"}},
 		{Name: "Neutral-Bronze", GuardedContentPool: []string{"pool_t1_x"}},
@@ -284,13 +284,13 @@ func TestGetZoneTier_UnknownZoneIsBronze(t *testing.T) {
 }
 
 func TestHigherTierOf_BothPlayersIsPlayerToPlayer(t *testing.T) {
-	zones := []template.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	players := map[string]bool{"Spawn-A": true, "Spawn-B": true}
 	assert.Equal(t, connection_editor.ZoneTierPlayerToPlayer, connection_editor.HigherTierOf("Spawn-A", "Spawn-B", zones, players))
 }
 
 func TestHigherTierOf_TakesMaximumTier(t *testing.T) {
-	zones := []template.Zone{
+	zones := []entities.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-Gold", GuardedContentPool: []string{"pool_t4_x"}},
 	}
@@ -299,7 +299,7 @@ func TestHigherTierOf_TakesMaximumTier(t *testing.T) {
 }
 
 func TestNewDefaultConnection_UsesTierDefaultsAndIsUserAdded(t *testing.T) {
-	zones := []template.Zone{
+	zones := []entities.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-Gold", GuardedContentPool: []string{"pool_t4_x"}},
 	}
@@ -324,7 +324,7 @@ func TestZoneLetterFromName(t *testing.T) {
 }
 
 func TestCloneConnection_CopiesFieldsAndSetsFlag(t *testing.T) {
-	original := template.Connection{
+	original := entities.Connection{
 		Name: "edge", From: "Spawn-A", To: "Neutral-1",
 		ConnectionType: "Portal", GuardValue: 4242, GuardWeeklyIncrement: 0.2,
 		GuardZone: "Spawn-A", GuardMatchGroup: "grp", Length: 1.25,

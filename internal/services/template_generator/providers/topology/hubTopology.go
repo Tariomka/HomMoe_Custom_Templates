@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -27,7 +27,7 @@ func (this *HubTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
-	hubIsHoldCity bool) template.Variant {
+	hubIsHoldCity bool) entities.Variant {
 	outerLabels := this.createOuterLabels(configuration, playerLabels, neutralZones)
 
 	zones := this.createZones(configuration, playerLabels, outerLabels, tuning, neutralZones, hubIsHoldCity)
@@ -61,12 +61,12 @@ func (this *HubTopologyService) createZones(
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
 	neutralZones models.NeutralZonePlans,
-	hubIsHoldCity bool) []template.Zone {
+	hubIsHoldCity bool) []entities.Zone {
 	hubConns := make([]string, len(outerLabels))
 	for index, label := range outerLabels {
 		hubConns[index] = "Hub-" + label
 	}
-	zones := []template.Zone{this.CreateHubZone(
+	zones := []entities.Zone{this.CreateHubZone(
 		hubConns, tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
 		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads)}
 
@@ -94,8 +94,8 @@ func (this *HubTopologyService) createConnections(
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones models.NeutralZonePlans) []template.Connection {
-	var connections []template.Connection
+	neutralZones models.NeutralZonePlans) []entities.Connection {
+	var connections []entities.Connection
 	for index, label := range outerLabels {
 		hubAnchor := label
 		if len(playerLabels) > 0 {
