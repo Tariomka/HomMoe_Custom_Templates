@@ -26,33 +26,33 @@ var (
 // Depending on the useInstallDir flag, it either looks for the official Steam install directory
 // or tries to find the user directory and tries to resolve the custom template path from there.
 // Returns "" if it cannot be located
-func FindOldenEraTemplatesDir(useInstallDir bool) string {
+func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 	if !useInstallDir && runtime.GOOS == "windows" {
 		templatePathPattern := filepath.Join(windowsUserPath, customTemplateRelativeGlob)
-		return tryResolveGlob(templatePathPattern)
+		return resolveGlob(templatePathPattern)
 	}
 
 	content, err := getVDFContent()
 	if err != nil {
-		return ""
+		return "", err
 	}
 
 	directory := getBasePath(content)
 	if directory == "" {
-		return ""
+		return "", nil
 	}
 
 	if !useInstallDir /*&& runtime.GOOS != "windows" is redundant here*/ {
 		templatePathPattern := filepath.Join(directory, unixCompatUserRelativePath, customTemplateRelativeGlob)
-		return tryResolveGlob(templatePathPattern)
+		return resolveGlob(templatePathPattern)
 	}
 
 	directory = filepath.Join(directory, oldenEraTemplateRelativePath)
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		return ""
+		return "", err
 	}
 
-	return directory
+	return directory, nil
 }
 
 func getVDFContent() (map[string]any, error) {
@@ -119,17 +119,17 @@ func getBasePath(vdfContent map[string]any) string {
 	return directory
 }
 
-func tryResolveGlob(pattern string) string {
+func resolveGlob(pattern string) (string, error) {
 	matches, err := filepath.Glob(pattern)
 	if err != nil || len(matches) == 0 {
-		return ""
+		return "", err
 	}
 
 	for _, path := range matches {
-		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			return path
+		if _, err = os.Stat(path); !os.IsNotExist(err) {
+			return path, nil
 		}
 	}
 
-	return ""
+	return "", err
 }

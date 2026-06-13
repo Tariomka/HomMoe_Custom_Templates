@@ -155,6 +155,7 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	}
 	activeVariant := tmpl.Variants[0]
 	settings := this.state.GetStateData()
+	// TODO: Use handler via state to get config
 	generatorConfig := services.SettingsToGenerator(&settings)
 	tuning := models.NewGenerationTuning(generatorConfig, len(activeVariant.Zones))
 	this.state.Dialogs().Open(dialogs.NewZoneEditorDialog(

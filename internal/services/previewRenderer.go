@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
@@ -20,16 +21,16 @@ var previewLineColor = color.NRGBA{R: 0x39, G: 0x11, B: 0x14, A: 0xFF}
 // WritePreviewPNG rasterises the given template and writes it as a PNG into
 // dir/<safeName>.png at the requested side length. The directory is created
 // if missing. Returns the final path on success.
-func WritePreviewPNG(dir string, template *template.RmgTemplate, topology config.MapTopology, side int) (string, error) {
+func WritePreviewPNG(dir string, template *template.RmgTemplate, topology config.MapTopology) (string, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
-	safeName := SanitizeFilename(template.Name)
+	safeName := helpers.SanitizeFilename(template.Name)
 	if safeName == "" {
 		safeName = "Generated_Template"
 	}
 	out := filepath.Join(dir, safeName+".png")
-	img := RenderPreviewImage(template, topology, side)
+	img := RenderPreviewImage(template, topology, 700)
 	file, err := os.Create(out)
 	if err != nil {
 		return "", err

@@ -60,7 +60,7 @@ func (this *FooterPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 						if isErr {
 							col = themes.ColorError
 						} else if this.state.GetLastTemplate() != nil {
-							col = themes.ColorAccentBright
+							col = themes.ColorText
 						}
 						label := material.Body2(theme, message)
 						label.Color = col

@@ -12,8 +12,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
 type State struct {
@@ -51,8 +49,13 @@ func NewUIState() *State {
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
 
-	templateDir := helpers.FindOldenEraTemplatesDir(false)
+	templateDir, err := helpers.FindOldenEraTemplatesDir(false)
 	if templateDir == "" {
+		if err != nil {
+			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)
+		} else {
+			state.SetStatus("Failed to find game template directory, using fallback directory.", false)
+		}
 		if workingDir, err := os.Getwd(); err == nil {
 			templateDir = workingDir
 		}
@@ -92,13 +95,21 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 	if this.lastTemplate == nil || len(this.lastTemplate.Variants) == 0 {
 		return
 	}
-	this.lastTemplate.Variants[0].Zones = zones
-	this.lastTemplate.Variants[0].Connections = connections
+	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
+		Template:    this.lastTemplate,
+		Zones:       zones,
+		Connections: connections,
+	})
+	this.lastTemplate = dto.Template
 	this.connectionsModified = true
-	if connection_editor.ComputeHasErrors(zones, connections) {
-		this.SetStatus(fmt.Sprintf("Applied %d zones and %d connections — \u26a0 some connections reference a missing zone; fix before export.", len(zones), len(connections)), true)
+	if err != nil {
+		status := fmt.Sprintf(
+			"Applied %d zones and %d connections. \u26a0 Error: %v; fix before export.",
+			len(zones), len(connections), err)
+		this.SetStatus(status, true)
 		return
 	}
+
 	this.SetStatus(fmt.Sprintf("Applied %d zones and %d connections from the editor.", len(zones), len(connections)), false)
 }
 
@@ -132,7 +143,7 @@ func (this *State) SuggestDirectory() string {
 func (this *State) Load() {
 	path, err := utils.PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.SuggestDirectory())
 	if err != nil {
-		this.SetStatus("Open dialog failed: "+err.Error(), true)
+		this.SetStatus(fmt.Sprintf("Open dialog failed: %v.", err), true)
 		return
 	}
 
@@ -140,13 +151,13 @@ func (this *State) Load() {
 		return
 	}
 
-	loaded, err := services.LoadSettingsFile(path)
+	dto, err := this.handler.LoadState(path)
 	if err != nil {
-		this.SetStatus("Load failed: "+err.Error(), true)
+		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
 		return
 	}
 
-	this.stateDto = loaded
+	this.stateDto = dto
 	this.currentPath = path
 	this.unsaved = false
 	this.SetStatus("Loaded "+path, false)
@@ -158,8 +169,11 @@ func (this *State) Save() {
 		return
 	}
 
-	if err := services.SaveSettingsFile(this.currentPath, this.stateDto); err != nil {
-		this.SetStatus("Save failed: "+err.Error(), true)
+	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+		State:      this.stateDto,
+		OutputPath: this.currentPath,
+	}); err != nil {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
 		return
 	}
 
@@ -168,10 +182,10 @@ func (this *State) Save() {
 }
 
 func (this *State) SaveAs(templateName string) {
-	defaultName := services.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
+	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
 	path, err := utils.PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.SuggestDirectory(), defaultName)
 	if err != nil {
-		this.SetStatus("Save dialog failed: "+err.Error(), true)
+		this.SetStatus(fmt.Sprintf("Save dialog failed: %v.", err), true)
 		return
 	}
 
@@ -179,10 +193,14 @@ func (this *State) SaveAs(templateName string) {
 		return
 	}
 
-	if err := services.SaveSettingsFile(path, this.stateDto); err != nil {
-		this.SetStatus("Save failed: "+err.Error(), true)
+	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+		State:      this.stateDto,
+		OutputPath: path,
+	}); err != nil {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
 		return
 	}
+
 	this.currentPath = path
 	this.unsaved = false
 	this.SetStatus("Saved "+path, false)
@@ -215,12 +233,18 @@ func (this *State) Generate() {
 
 // SaveTemplate writes the most recently generated template as .rmg.json.
 func (this *State) SaveTemplate() {
-	savedPath, err := this.handler.SaveTemplate(dtos.TemplateDto{
+	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
 		Template:   this.GetLastTemplate(),
+		Topology:   this.stateDto.Topology,
 		OutputPath: strings.TrimSpace(this.outputPath.Text()),
 	})
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Save failed: %v", err), true)
+	if err != nil && savedPath == "" {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	} else if err != nil {
+		this.SetStatus(
+			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
+			true)
 		return
 	}
 
@@ -232,12 +256,14 @@ func (this *State) PickOutputDir() {
 	cur := strings.TrimSpace(this.outputPath.Text())
 	dir, err := utils.PickFolder("Select output directory", cur)
 	if err != nil {
-		this.SetStatus("Folder dialog failed: "+err.Error(), true)
+		this.SetStatus(fmt.Sprintf("Folder dialog failed: %v.", err), true)
 		return
 	}
+
 	if dir == "" {
 		return
 	}
+
 	this.outputPath.SetText(dir)
 }
 

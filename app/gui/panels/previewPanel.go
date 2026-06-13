@@ -2,7 +2,6 @@ package panels
 
 import (
 	"image"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -23,7 +22,6 @@ import (
 
 // PreviewPanel holds the layout cache + buttons for the preview panel.
 type PreviewPanel struct {
-	btnSavePNG  widget.Clickable
 	btnRefresh  widget.Clickable
 	pngStatus   string
 	pngStatusOK bool
@@ -85,20 +83,12 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 				})
 			}),
 			layout.Rigid(this.getLegendWidget(theme)),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(widgets.NewButtonWidget(theme, "🖼  Save PNG", &this.btnSavePNG, template == nil)),
-				)
-			}),
 		)
 	})
 }
 
 func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
-	if this.btnSavePNG.Clicked(gtx) {
-		this.savePreviewPNG()
-	}
+	// TODO: add handling for generation and saving after footer is moved to the preview panel
 }
 
 // layoutPreviewCanvas draws the preview area. Always fills the available
@@ -188,29 +178,4 @@ func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
 		}
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)
 	}
-}
-
-// savePreviewPNG renders the current template into a software bitmap and
-// writes it next to the .rmg.json output.
-func (this *PreviewPanel) savePreviewPNG() {
-	template := this.state.GetLastTemplate()
-	if template == nil {
-		this.pngStatus = "Generate a template first."
-		this.pngStatusOK = false
-		return
-	}
-	dir := strings.TrimSpace(this.state.GetOutputPath())
-	if dir == "" {
-		this.pngStatus = "Output directory is empty."
-		this.pngStatusOK = false
-		return
-	}
-	out, err := services.WritePreviewPNG(dir, template, this.state.GetStateData().Topology, 700)
-	if err != nil {
-		this.pngStatus = "Save failed: " + err.Error()
-		this.pngStatusOK = false
-		return
-	}
-	this.pngStatus = "Saved " + out
-	this.pngStatusOK = true
 }

@@ -93,7 +93,7 @@ func TestRenderPreviewImage_HubZoneRendered(t *testing.T) {
 
 func TestWritePreviewPNG_WritesFileWithSanitisedName(t *testing.T) {
 	dir := t.TempDir()
-	path, err := services.WritePreviewPNG(dir, simpleTemplate("My/Preview"), config.TopologyDefault, 200)
+	path, err := services.WritePreviewPNG(dir, simpleTemplate("My/Preview"), config.TopologyDefault)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestWritePreviewPNG_WritesFileWithSanitisedName(t *testing.T) {
 
 func TestWritePreviewPNG_EmptyNameFallback(t *testing.T) {
 	dir := t.TempDir()
-	path, err := services.WritePreviewPNG(dir, simpleTemplate(""), config.TopologyDefault, 100)
+	path, err := services.WritePreviewPNG(dir, simpleTemplate(""), config.TopologyDefault)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +119,7 @@ func TestWritePreviewPNG_EmptyNameFallback(t *testing.T) {
 
 func TestWritePreviewPNG_CreatesMissingDirectory(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "nested", "preview")
-	if _, err := services.WritePreviewPNG(dir, simpleTemplate("T"), config.TopologyDefault, 100); err != nil {
+	if _, err := services.WritePreviewPNG(dir, simpleTemplate("T"), config.TopologyDefault); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(dir); err != nil {
@@ -132,7 +132,7 @@ func TestWritePreviewPNG_MkdirError(t *testing.T) {
 	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := services.WritePreviewPNG(filepath.Join(blocker, "x"), simpleTemplate("T"), config.TopologyDefault, 100); err == nil {
+	if _, err := services.WritePreviewPNG(filepath.Join(blocker, "x"), simpleTemplate("T"), config.TopologyDefault); err == nil {
 		t.Error("expected mkdir error")
 	}
 }

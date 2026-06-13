@@ -8,91 +8,92 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
 // ── SanitizeFilename ─────────────────────────────────────────────────
 
 func TestSanitizeFilename_PlainNameUnchanged(t *testing.T) {
-	if got := services.SanitizeFilename("clean_name-1"); got != "clean_name-1" {
+	if got := helpers.SanitizeFilename("clean_name-1"); got != "clean_name-1" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_TrimsWhitespace(t *testing.T) {
-	if got := services.SanitizeFilename("   spaced   "); got != "spaced" {
+	if got := helpers.SanitizeFilename("   spaced   "); got != "spaced" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesForwardSlash(t *testing.T) {
-	if got := services.SanitizeFilename("a/b"); got != "a_b" {
+	if got := helpers.SanitizeFilename("a/b"); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesBackslash(t *testing.T) {
-	if got := services.SanitizeFilename(`a\b`); got != "a_b" {
+	if got := helpers.SanitizeFilename(`a\b`); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesColon(t *testing.T) {
-	if got := services.SanitizeFilename("a:b"); got != "a_b" {
+	if got := helpers.SanitizeFilename("a:b"); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesAsterisk(t *testing.T) {
-	if got := services.SanitizeFilename("a*b"); got != "a_b" {
+	if got := helpers.SanitizeFilename("a*b"); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesQuestionMark(t *testing.T) {
-	if got := services.SanitizeFilename("a?b"); got != "a_b" {
+	if got := helpers.SanitizeFilename("a?b"); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesDoubleQuote(t *testing.T) {
-	if got := services.SanitizeFilename(`a"b`); got != "a_b" {
+	if got := helpers.SanitizeFilename(`a"b`); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesLessThan(t *testing.T) {
-	if got := services.SanitizeFilename("a<b"); got != "a_b" {
+	if got := helpers.SanitizeFilename("a<b"); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesGreaterThan(t *testing.T) {
-	if got := services.SanitizeFilename("a>b"); got != "a_b" {
+	if got := helpers.SanitizeFilename("a>b"); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesPipe(t *testing.T) {
-	if got := services.SanitizeFilename("a|b"); got != "a_b" {
+	if got := helpers.SanitizeFilename("a|b"); got != "a_b" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_ReplacesMultipleBadRunesInOneCall(t *testing.T) {
-	if got := services.SanitizeFilename(`bad/\*?":<>|name`); got != "bad_________name" {
+	if got := helpers.SanitizeFilename(`bad/\*?":<>|name`); got != "bad_________name" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_EmptyString(t *testing.T) {
-	if got := services.SanitizeFilename(""); got != "" {
+	if got := helpers.SanitizeFilename(""); got != "" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestSanitizeFilename_OnlyWhitespace(t *testing.T) {
-	if got := services.SanitizeFilename("   "); got != "" {
+	if got := helpers.SanitizeFilename("   "); got != "" {
 		t.Errorf("got %q", got)
 	}
 }
