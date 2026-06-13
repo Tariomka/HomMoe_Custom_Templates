@@ -8,9 +8,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
 )
 
-// RmgTemplateModel represents the top-level template structure for .rmg.json files.
+// RmgTemplate represents the top-level template structure for .rmg.json files.
 // Mirrors the on-disk schema observed across all bundled `data/ExampleTemplates/*.rmg.json` files.
-type RmgTemplateModel struct {
+type RmgTemplate struct {
 	Name string `json:"name"`
 
 	GameMode            string `json:"gameMode"`

@@ -7,8 +7,8 @@ import (
 
 func intPtr(i int) *int { return &i }
 
-func GetDefaultTemplate() entities.RmgTemplateModel {
-	return entities.RmgTemplateModel{
+func GetDefaultTemplate() entities.RmgTemplate {
+	return entities.RmgTemplate{
 		Name:                "Custom Template",
 		GameMode:            "Classic",
 		Description:         "Generated with Custom Template Editor: Balanced layout, no neutral zones, 1 castle per player zone.",

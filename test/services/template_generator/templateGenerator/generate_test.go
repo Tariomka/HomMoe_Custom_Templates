@@ -1249,7 +1249,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 	}
 }
 
-func assertTemplateMatches(t *testing.T, expected expectedTemplate, actual *entities.RmgTemplateModel) {
+func assertTemplateMatches(t *testing.T, expected expectedTemplate, actual *entities.RmgTemplate) {
 	t.Helper()
 
 	// Top-level scalar fields.

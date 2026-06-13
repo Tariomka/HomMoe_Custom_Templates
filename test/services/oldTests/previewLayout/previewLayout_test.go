@@ -28,8 +28,8 @@ func conn(from, to string) entities.Connection {
 	return entities.Connection{From: from, To: to, ConnectionType: "Direct"}
 }
 
-func tmpl(zones []entities.Zone, conns []entities.Connection) *entities.RmgTemplateModel {
-	return &entities.RmgTemplateModel{
+func tmpl(zones []entities.Zone, conns []entities.Connection) *entities.RmgTemplate {
+	return &entities.RmgTemplate{
 		Variants: []entities.Variant{{Zones: zones, Connections: conns}},
 	}
 }
@@ -44,7 +44,7 @@ func TestBuildPreviewLayout_NilTemplate(t *testing.T) {
 }
 
 func TestBuildPreviewLayout_EmptyVariants(t *testing.T) {
-	out := services.BuildPreviewLayout(&entities.RmgTemplateModel{}, config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(&entities.RmgTemplate{}, config.TopologyDefault, 600)
 	if len(out.Positions) != 0 {
 		t.Errorf("expected empty layout")
 	}

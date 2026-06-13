@@ -32,7 +32,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 			raw, err := os.ReadFile(path)
 			assert.NoError(t, err, "read file")
 
-			var tpl template.RmgTemplateModel
+			var tpl template.RmgTemplate
 			dec := json.NewDecoder(strings.NewReader(string(raw)))
 			dec.DisallowUnknownFields()
 			err = dec.Decode(&tpl)
@@ -45,7 +45,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 			// Re-encode and decode again to confirm the model is self-consistent.
 			out, err := json.Marshal(&tpl)
 			assert.NoError(t, err, "re-encode")
-			var tpl2 template.RmgTemplateModel
+			var tpl2 template.RmgTemplate
 			err = json.Unmarshal(out, &tpl2)
 			assert.NoError(t, err, "re-decode")
 		})

@@ -14,11 +14,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
 
 type LayoutPanel struct {
@@ -156,7 +156,7 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	activeVariant := tmpl.Variants[0]
 	settings := this.state.GetStateData()
 	generatorConfig := services.SettingsToGenerator(&settings)
-	tuning := template_generator.NewGenerationTuning(generatorConfig, len(activeVariant.Zones))
+	tuning := models.NewGenerationTuning(generatorConfig, len(activeVariant.Zones))
 	this.state.Dialogs().Open(dialogs.NewZoneEditorDialog(
 		activeVariant.Zones,
 		activeVariant.Connections,
@@ -205,7 +205,7 @@ func (this *LayoutPanel) LoadFromState() {
 
 func (this *LayoutPanel) SaveToState() {
 	// TODO: check `.Update(gtx)` and on true update the value
-	this.state.UpdateState(func(settings *models.EditorStateModel) {
+	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
 		settings.Topology = this.getCurrentTopology().Type
 
 		settings.GenerateRoads = this.chkRoads.Value

@@ -8,17 +8,19 @@ import (
 
 	"gioui.org/widget"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
 
 type State struct {
-	// Persistent stateModel file model. Updated continuously from widgets.
-	stateModel *models.EditorStateModel
+	handler *handlers.GUIHandler
+
+	// Persistent stateDto file model. Updated continuously from widgets.
+	stateDto *dtos.EditorStateDto
 
 	// File state
 	currentPath string
@@ -26,7 +28,7 @@ type State struct {
 
 	// Output / status
 	outputPath   widget.Editor
-	lastTemplate *entities.RmgTemplateModel
+	lastTemplate *entities.RmgTemplate
 	statusMsg    string
 	statusErr    bool
 
@@ -41,7 +43,11 @@ type State struct {
 }
 
 func NewUIState() *State {
-	state := &State{stateModel: models.NewEditorStateModel()}
+	stateDto := dtos.NewDefaultEditorStateDto()
+	state := &State{
+		handler:  handlers.NewGuiHandler(),
+		stateDto: &stateDto,
+	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
 
@@ -64,8 +70,8 @@ func (this *State) Dialogs() *DialogHost {
 	return this.dialogs
 }
 
-func (this *State) GetStateData() models.EditorStateModel {
-	return *this.stateModel
+func (this *State) GetStateData() dtos.EditorStateDto {
+	return *this.stateDto
 }
 
 func (this *State) GetCurrentPath() string {
@@ -76,7 +82,7 @@ func (this *State) IsUnsaved() bool {
 	return this.unsaved
 }
 
-func (this *State) GetLastTemplate() *entities.RmgTemplateModel {
+func (this *State) GetLastTemplate() *entities.RmgTemplate {
 	return this.lastTemplate
 }
 
@@ -105,7 +111,8 @@ func (this *State) GetOutputPathEditor() *widget.Editor {
 }
 
 func (this *State) Reset() {
-	this.stateModel = models.NewEditorStateModel()
+	stateDto := dtos.NewDefaultEditorStateDto()
+	this.stateDto = &stateDto
 	this.currentPath = ""
 	this.unsaved = false
 	this.SetStatus("New settings file.", false)
@@ -139,7 +146,7 @@ func (this *State) Load() {
 		return
 	}
 
-	this.stateModel = loaded
+	this.stateDto = loaded
 	this.currentPath = path
 	this.unsaved = false
 	this.SetStatus("Loaded "+path, false)
@@ -147,11 +154,11 @@ func (this *State) Load() {
 
 func (this *State) Save() {
 	if this.currentPath == "" {
-		this.SaveAs(this.stateModel.TemplateName)
+		this.SaveAs(this.stateDto.TemplateName)
 		return
 	}
 
-	if err := services.SaveSettingsFile(this.currentPath, this.stateModel); err != nil {
+	if err := services.SaveSettingsFile(this.currentPath, this.stateDto); err != nil {
 		this.SetStatus("Save failed: "+err.Error(), true)
 		return
 	}
@@ -172,7 +179,7 @@ func (this *State) SaveAs(templateName string) {
 		return
 	}
 
-	if err := services.SaveSettingsFile(path, this.stateModel); err != nil {
+	if err := services.SaveSettingsFile(path, this.stateDto); err != nil {
 		this.SetStatus("Save failed: "+err.Error(), true)
 		return
 	}
@@ -182,28 +189,24 @@ func (this *State) SaveAs(templateName string) {
 }
 
 func (this *State) Generate() {
-	generatorSettings := services.SettingsToGenerator(this.stateModel)
-	if generatorSettings.TemplateName == "" {
-		this.SetStatus("Template name is required.", true)
+	dto, err := this.handler.GenerateTemplate(*this.stateDto)
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
 		return
 	}
+
 	wasModified := this.connectionsModified
 	this.connectionsModified = false
-	template := template_generator.NewTemplateGenerator(generatorSettings).Generate()
-	// template, err := services.Generate(generatorSettings)
-	// if err != nil {
-	// 	this.setStatus(fmt.Sprintf("Generation failed: %value", err), true)
-	// 	this.lastTemplate = nil
-	// 	return
-	// }
-	this.lastTemplate = template
+	this.lastTemplate = dto.Template
 	zoneCount := 0
 	connectionCount := 0
-	if len(template.Variants) > 0 {
-		zoneCount = len(template.Variants[0].Zones)
-		connectionCount = len(template.Variants[0].Connections)
+	if len(this.lastTemplate.Variants) > 0 {
+		zoneCount = len(this.lastTemplate.Variants[0].Zones)
+		connectionCount = len(this.lastTemplate.Variants[0].Connections)
 	}
-	status := fmt.Sprintf("Generated '%s' — %d zones, %d connections.", template.Name, zoneCount, connectionCount)
+	status := fmt.Sprintf(
+		"Generated '%s' — %d zones, %d connections.",
+		this.lastTemplate.Name, zoneCount, connectionCount)
 	if wasModified {
 		status += " (Manual connection edits were replaced by regeneration.)"
 	}
@@ -212,22 +215,16 @@ func (this *State) Generate() {
 
 // SaveTemplate writes the most recently generated template as .rmg.json.
 func (this *State) SaveTemplate() {
-	lastTemplate := this.GetLastTemplate()
-	if lastTemplate == nil {
-		this.SetStatus("Nothing to save — generate a template first.", true)
-		return
-	}
-	dir := strings.TrimSpace(this.outputPath.Text())
-	if dir == "" {
-		this.SetStatus("Output directory is empty.", true)
-		return
-	}
-	out, err := services.WriteTemplate(dir, lastTemplate)
+	savedPath, err := this.handler.SaveTemplate(dtos.TemplateDto{
+		Template:   this.GetLastTemplate(),
+		OutputPath: strings.TrimSpace(this.outputPath.Text()),
+	})
 	if err != nil {
-		this.SetStatus(fmt.Sprintf("Save failed: %value", err), true)
+		this.SetStatus(fmt.Sprintf("Save failed: %v", err), true)
 		return
 	}
-	this.SetStatus("Saved template to "+out, false)
+
+	this.SetStatus("Saved template to "+savedPath, false)
 }
 
 // PickOutputDir presents a folder picker for the template output directory.
@@ -244,9 +241,9 @@ func (this *State) PickOutputDir() {
 	this.outputPath.SetText(dir)
 }
 
-func (this *State) UpdateState(updateFunc func(*models.EditorStateModel)) {
+func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
 	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
-	updateFunc(this.stateModel)
+	updateFunc(this.stateDto)
 }
 
 func (this *State) SetStatus(msg string, isErr bool) {

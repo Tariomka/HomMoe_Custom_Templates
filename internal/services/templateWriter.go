@@ -27,7 +27,7 @@ func SanitizeFilename(name string) string {
 // WriteTemplate writes the given template as indented JSON into
 // dir/<safeName>.rmg.json. The directory is created if missing. Returns the
 // final path on success.
-func WriteTemplate(dir string, template *template.RmgTemplateModel) (string, error) {
+func WriteTemplate(dir string, template *template.RmgTemplate) (string, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}

@@ -16,7 +16,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 )
 
@@ -245,7 +245,7 @@ func (this *BonusesPanel) LoadFromState() {
 }
 
 func (this *BonusesPanel) SaveToState() {
-	this.state.UpdateState(func(settings *models.EditorStateModel) {
+	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
 		settings.BonusesJSON = config_inner.SerializeBonuses(this.bonuses)
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")

@@ -12,8 +12,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
-func simpleTemplate(name string) *entities.RmgTemplateModel {
-	return &entities.RmgTemplateModel{
+func simpleTemplate(name string) *entities.RmgTemplate {
+	return &entities.RmgTemplate{
 		Name: name,
 		Variants: []entities.Variant{{
 			Zones: []entities.Zone{
@@ -42,7 +42,7 @@ func TestRenderPreviewImage_ReturnsImageOfRequestedSize(t *testing.T) {
 }
 
 func TestRenderPreviewImage_EmptyTemplateReturnsBackgroundOnly(t *testing.T) {
-	img := services.RenderPreviewImage(&entities.RmgTemplateModel{}, config.TopologyDefault, 100)
+	img := services.RenderPreviewImage(&entities.RmgTemplate{}, config.TopologyDefault, 100)
 	if img == nil {
 		t.Fatal("nil image")
 	}
@@ -74,7 +74,7 @@ func TestRenderPreviewImage_CastleBadgeDrawn(t *testing.T) {
 }
 
 func TestRenderPreviewImage_HubZoneRendered(t *testing.T) {
-	tmpl := &entities.RmgTemplateModel{
+	tmpl := &entities.RmgTemplate{
 		Variants: []entities.Variant{{
 			Zones: []entities.Zone{
 				{Name: "Hub"},

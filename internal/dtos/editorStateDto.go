@@ -1,12 +1,13 @@
-package models
+package dtos
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 )
 
-// EditorStateModel is the serialized .gen.json file produced and consumed by the
+// EditorStateDto is the serialized .gen.json file produced and consumed by the
 // editor
-type EditorStateModel struct {
+type EditorStateDto struct {
 	TemplateName                  string `json:"templateName"`
 	GameMode                      string `json:"gameMode"`
 	MapSize                       int    `json:"mapSize"`
@@ -69,15 +70,15 @@ type EditorStateModel struct {
 	BonusesJSON string `json:"bonuses"`
 
 	// ── Mandatory content rows per zone type ─────────────────────────────
-	PlayerZoneContentRows    []ZoneContentRowSave `json:"playerZoneContentRows,omitempty"`
-	LowNeutralContentRows    []ZoneContentRowSave `json:"lowNeutralContentRows,omitempty"`
-	MediumNeutralContentRows []ZoneContentRowSave `json:"mediumNeutralContentRows,omitempty"`
-	HighNeutralContentRows   []ZoneContentRowSave `json:"highNeutralContentRows,omitempty"`
-	HubZoneContentRows       []ZoneContentRowSave `json:"hubZoneContentRows,omitempty"`
+	PlayerZoneContentRows    []models.ZoneContentRowSave `json:"playerZoneContentRows,omitempty"`
+	LowNeutralContentRows    []models.ZoneContentRowSave `json:"lowNeutralContentRows,omitempty"`
+	MediumNeutralContentRows []models.ZoneContentRowSave `json:"mediumNeutralContentRows,omitempty"`
+	HighNeutralContentRows   []models.ZoneContentRowSave `json:"highNeutralContentRows,omitempty"`
+	HubZoneContentRows       []models.ZoneContentRowSave `json:"hubZoneContentRows,omitempty"`
 }
 
-func NewEditorStateModel() *EditorStateModel {
-	return &EditorStateModel{
+func NewDefaultEditorStateDto() EditorStateDto {
+	return EditorStateDto{
 		TemplateName:                 "Custom Template",
 		GameMode:                     "Classic",
 		MapSize:                      160,

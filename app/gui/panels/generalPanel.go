@@ -12,7 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
 type GeneralPanel struct {
@@ -149,7 +149,7 @@ func (this *GeneralPanel) LoadFromState() {
 
 func (this *GeneralPanel) SaveToState() {
 	// TODO: check `.Update(gtx)` and on true update the value
-	this.state.UpdateState(func(settings *models.EditorStateModel) {
+	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
 		settings.MapSize = this.getCurrentMapSize().Size

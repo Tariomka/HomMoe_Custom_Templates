@@ -12,7 +12,7 @@ import (
 
 // Re-exported aliases so external callers can keep using template.Border, template.Variant, etc.
 type (
-	RmgTemplateModel = template.RmgTemplateModel
+	RmgTemplate = template.RmgTemplate
 
 	ValueOverride = template_override.ValueOverride
 

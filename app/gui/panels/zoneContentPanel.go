@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
@@ -136,7 +137,7 @@ func (this *ZoneContentPanel) LoadFromState() {
 // SaveToState collects every tier's rows back into the SettingsFile.
 func (this *ZoneContentPanel) SaveToState() {
 	this.cacheCurrentSections()
-	this.state.UpdateState(func(settings *models.EditorStateModel) {
+	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
 		settings.PlayerZoneContentRows = cloneRows(this.tierRows[tierPlayer])
 		settings.LowNeutralContentRows = cloneRows(this.tierRows[tierLow])
 		settings.MediumNeutralContentRows = cloneRows(this.tierRows[tierMedium])

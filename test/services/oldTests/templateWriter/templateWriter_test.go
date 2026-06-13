@@ -101,7 +101,7 @@ func TestSanitizeFilename_OnlyWhitespace(t *testing.T) {
 
 func TestWriteTemplate_CreatesFileWithSanitisedName(t *testing.T) {
 	dir := t.TempDir()
-	tmpl := &template.RmgTemplateModel{Name: "My/Template"}
+	tmpl := &template.RmgTemplate{Name: "My/Template"}
 	path, err := services.WriteTemplate(dir, tmpl)
 	if err != nil {
 		t.Fatal(err)
@@ -117,7 +117,7 @@ func TestWriteTemplate_CreatesFileWithSanitisedName(t *testing.T) {
 
 func TestWriteTemplate_FallsBackToGeneratedTemplateOnEmptyName(t *testing.T) {
 	dir := t.TempDir()
-	tmpl := &template.RmgTemplateModel{Name: ""}
+	tmpl := &template.RmgTemplate{Name: ""}
 	path, err := services.WriteTemplate(dir, tmpl)
 	if err != nil {
 		t.Fatal(err)
@@ -129,7 +129,7 @@ func TestWriteTemplate_FallsBackToGeneratedTemplateOnEmptyName(t *testing.T) {
 
 func TestWriteTemplate_FallsBackWhenNameIsAllInvalidThenEmpty(t *testing.T) {
 	dir := t.TempDir()
-	tmpl := &template.RmgTemplateModel{Name: "   "}
+	tmpl := &template.RmgTemplate{Name: "   "}
 	path, err := services.WriteTemplate(dir, tmpl)
 	if err != nil {
 		t.Fatal(err)
@@ -141,7 +141,7 @@ func TestWriteTemplate_FallsBackWhenNameIsAllInvalidThenEmpty(t *testing.T) {
 
 func TestWriteTemplate_CreatesNestedMissingDirectory(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "a", "b", "c")
-	tmpl := &template.RmgTemplateModel{Name: "T"}
+	tmpl := &template.RmgTemplate{Name: "T"}
 	if _, err := services.WriteTemplate(dir, tmpl); err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +152,7 @@ func TestWriteTemplate_CreatesNestedMissingDirectory(t *testing.T) {
 
 func TestWriteTemplate_ProducesIndentedJSON(t *testing.T) {
 	dir := t.TempDir()
-	tmpl := &template.RmgTemplateModel{Name: "T", SizeX: 10}
+	tmpl := &template.RmgTemplate{Name: "T", SizeX: 10}
 	path, err := services.WriteTemplate(dir, tmpl)
 	if err != nil {
 		t.Fatal(err)
@@ -164,7 +164,7 @@ func TestWriteTemplate_ProducesIndentedJSON(t *testing.T) {
 	if !strings.Contains(string(data), "\n  ") {
 		t.Error("expected indented JSON")
 	}
-	var round template.RmgTemplateModel
+	var round template.RmgTemplate
 	if err := json.Unmarshal(data, &round); err != nil {
 		t.Errorf("round-trip parse failed: %v", err)
 	}
@@ -177,7 +177,7 @@ func TestWriteTemplate_MkdirError(t *testing.T) {
 		t.Fatal(err)
 	}
 	dir := filepath.Join(parent, "child")
-	tmpl := &template.RmgTemplateModel{Name: "T"}
+	tmpl := &template.RmgTemplate{Name: "T"}
 	if _, err := services.WriteTemplate(dir, tmpl); err == nil {
 		t.Error("expected mkdir error")
 	}
