@@ -11,8 +11,9 @@ import (
 var (
 	libraryFoldersVDFRelativePath = filepath.Join("steamapps", "libraryfolders.vdf")
 	windowsSteamPath              = filepath.Join("C:", "Program Files (x86)", "Steam")
-	unixSteamPath                 = filepath.Join("~", ".local", "share", "Steam")
-	unixSteamAltPath              = filepath.Join("~", ".steam", "steam")
+	unixHomePath                  = os.Getenv("HOME")
+	unixSteamPath                 = filepath.Join(unixHomePath, ".local", "share", "Steam")
+	unixSteamAltPath              = filepath.Join(unixHomePath, ".steam", "steam")
 
 	oldenEraID                   = "3105440"
 	oldenEraTemplateRelativePath = filepath.Join("steamapps", "common", "Heroes of Might and Magic Olden Era", "HeroesOldenEra_Data", "StreamingAssets", "map_templates")
