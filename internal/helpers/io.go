@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/andygrunwald/vdf"
 )
 
@@ -19,7 +20,7 @@ var (
 	oldenEraTemplateRelativePath = filepath.Join("steamapps", "common", "Heroes of Might and Magic Olden Era", "HeroesOldenEra_Data", "StreamingAssets", "map_templates")
 
 	windowsUserPath            = filepath.Join("C:", "Users", os.Getenv("USERNAME"))
-	unixCompatUserRelativePath = filepath.Join("compatdata", oldenEraID, "pfx", "drive_c", "users", "steamuser")
+	unixCompatUserRelativePath = filepath.Join("steamapps", "compatdata", oldenEraID, "pfx", "drive_c", "users", "steamuser")
 	customTemplateRelativeGlob = filepath.Join("AppData", "LocalLow", "Unfrozen", "HeroesOldenEra", "users", "*", "my_map_templates")
 )
 
@@ -40,7 +41,7 @@ func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 
 	directory := getBasePath(content)
 	if directory == "" {
-		return "", nil
+		return "", common.ErrGameInVDFNotFound
 	}
 
 	if !useInstallDir /*&& runtime.GOOS != "windows" is redundant here*/ {
@@ -91,33 +92,30 @@ func getVDFFilePath() (path string, err error) {
 }
 
 func getBasePath(vdfContent map[string]any) string {
-	directory := ""
-
 	for _, data := range vdfContent["libraryfolders"].(map[string]any) {
-		if directory != "" {
-			break
-		}
 		library, ok := data.(map[string]any)
 		if !ok {
 			continue
 		}
+
 		apps, ok := library["apps"].(map[string]any)
 		if !ok {
 			continue
 		}
+
 		for appID := range apps {
 			if appID == oldenEraID {
 				path, ok := library["path"].(string)
 				if !ok {
 					break
 				}
-				directory = path
-				break
+
+				return path
 			}
 		}
 	}
 
-	return directory
+	return ""
 }
 
 func resolveGlob(pattern string) (string, error) {
