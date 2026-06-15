@@ -61,22 +61,20 @@ type petal struct {
 }
 
 // createGeometricLayout builds the flower: a central neutral at the middle and
-// one rounded petal (lobe) per player. Each petal's neutrals are placed on a
-// circle (the lobe) so the outline is genuinely round — like the leaves of a
-// clover — and the player sits at the outer tip. Every petal is anchored to the
-// centre through its hub-facing base neutrals (never directly through the
-// player), matching the rounded figures of the example templates (Shamrock,
-// One for All, Nuclear, Kerberos, Infinity) which are built purely from player
-// and neutral zones with no dedicated hub.
+// one petal per player. Each petal is a fat teardrop (leaf) that fans out from
+// the centre to fill the player's whole angular sector, reaching almost to the
+// canvas edge where the player zone sits at the tip. The neutrals trace the two
+// bowed edges of the leaf so the lobes are large and space-filling — like the
+// example templates (Shamrock, One for All, Nuclear, Kerberos, Infinity) which
+// are built purely from player and neutral zones with no dedicated hub.
 func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
 	const (
 		centreX    = 0.5
 		centreY    = 0.5
-		lobeDist   = 0.255 // distance from the centre to the centre of each lobe
+		tipRadius  = 0.46 // player tip, almost at the canvas edge
 		startAngle = -math.Pi / 2.0
-		openHalf   = 42.0 * math.Pi / 180.0 // half-angle of the centre-facing gap
 	)
 	playerCount := len(playerLabels)
 	neutralCount := len(neutralZones)
@@ -103,52 +101,61 @@ func (this *GeometricTopologyService) createGeometricLayout(
 		petalPlans[offset%playerCount] = append(petalPlans[offset%playerCount], neutralCursor+offset)
 	}
 
-	// Size each lobe to fill its angular sector without letting neighbours
-	// collide: the lobe radius is bounded by how wide the sector is.
+	// Each petal fills its angular sector. The leaf edges bow out almost to the
+	// sector boundary so neighbouring petals nearly touch, leaving no large gaps.
 	sectorHalf := math.Pi
 	if playerCount >= 2 {
 		sectorHalf = math.Pi / float64(playerCount)
 	}
-	lobeRadius := math.Min(0.205, lobeDist*math.Sin(sectorHalf*0.85))
-	arcMax := math.Pi - openHalf // how far around the lobe the rim wraps
+	bowAngle := sectorHalf * 0.92
+	// Bézier control distance: pushing the control point out past the tip radius
+	// fattens the leaf so it bulges toward the edge instead of staying a thin
+	// sliver. Wider sectors (few players) get rounder leaves.
+	ctrlDist := tipRadius * (0.82 + 0.30*math.Min(1.0, sectorHalf/(math.Pi/3.0)))
 
 	petals := make([]petal, playerCount)
 	for index := 0; index < playerCount; index++ {
 		axis := startAngle + 2.0*math.Pi*float64(index)/float64(playerCount)
-		lobeX := centreX + math.Cos(axis)*lobeDist
-		lobeY := centreY + math.Sin(axis)*lobeDist
+		tipX := centreX + math.Cos(axis)*tipRadius
+		tipY := centreY + math.Sin(axis)*tipRadius
+		leftCtrl := axis + bowAngle
+		rightCtrl := axis - bowAngle
 		plan := petalPlans[index]
-		neutralPerSide := len(plan)
-		leftCount := (neutralPerSide + 1) / 2
-		rightCount := neutralPerSide - leftCount
+		leftCount := (len(plan) + 1) / 2
+		rightCount := len(plan) - leftCount
 
-		// lobePoint places a node on the lobe circle at local angle alpha,
-		// measured from the outward (tip) direction so alpha=0 is the tip.
-		lobePoint := func(alpha float64) models.Vector2 {
+		// leafPoint samples the bowed leaf edge on the given side at fraction t
+		// (0 = centre, 1 = tip) via a quadratic Bézier centre→control→tip.
+		leafPoint := func(ctrlAngle, t float64) models.Vector2 {
+			mt := 1.0 - t
+			p1x := centreX + math.Cos(ctrlAngle)*ctrlDist
+			p1y := centreY + math.Sin(ctrlAngle)*ctrlDist
 			return models.NewPosition(
-				lobeX+math.Cos(axis+alpha)*lobeRadius,
-				lobeY+math.Sin(axis+alpha)*lobeRadius)
+				mt*mt*centreX+2*mt*t*p1x+t*t*tipX,
+				mt*mt*centreY+2*mt*t*p1y+t*t*tipY)
 		}
 
 		var ring []int
-		addNode := func(planIndex int, alpha float64) {
+		addNode := func(planIndex int, point models.Vector2) {
 			ring = append(ring, len(allLabels))
 			allLabels = append(allLabels, neutralZones[planIndex].Label)
-			positions.Add(lobePoint(alpha))
+			positions.Add(point)
 		}
 
-		// Left rim: outermost (near the centre gap) down to the node beside the tip.
-		for j := leftCount; j >= 1; j-- {
-			addNode(plan[j-1], -arcMax*float64(j)/float64(leftCount))
+		// Left edge: from the base near the centre out toward the tip.
+		for j := 1; j <= leftCount; j++ {
+			t := float64(j) / float64(leftCount+1)
+			addNode(plan[j-1], leafPoint(leftCtrl, t))
 		}
-		// Tip: the player zone at the outermost point of the lobe.
+		// Tip: the player zone, almost at the canvas edge.
 		playerIndex := len(allLabels)
 		allLabels = append(allLabels, playerLabels[index])
-		positions.Add(lobePoint(0))
+		positions.Add(models.NewPosition(tipX, tipY))
 		ring = append(ring, playerIndex)
-		// Right rim: node beside the tip out to the outermost (near the centre gap).
-		for j := 1; j <= rightCount; j++ {
-			addNode(plan[leftCount+j-1], arcMax*float64(j)/float64(rightCount))
+		// Right edge: from the tip back down to the base near the centre.
+		for j := rightCount; j >= 1; j-- {
+			t := float64(j) / float64(rightCount+1)
+			addNode(plan[leftCount+rightCount-j], leafPoint(rightCtrl, t))
 		}
 
 		petals[index] = petal{ring: ring, player: playerIndex}
