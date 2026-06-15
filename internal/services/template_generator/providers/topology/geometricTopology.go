@@ -51,29 +51,31 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
-// petal holds the zone indices that make up one flower petal: the neutral zones
-// forming the left and right edges of the leaf (ordered hub→tip) and the player
-// zone at the tip.
+// petal holds the zone indices that make up one flower petal in ring order:
+// the neutral zones tracing the rounded lobe outline (from the hub-facing base
+// on one side, around the outer rim, to the base on the other side) with the
+// player zone sitting at the outer tip in the middle of that order.
 type petal struct {
-	left   []int
-	right  []int
+	ring   []int // ordered base → … → tip(player) → … → base
 	player int
 }
 
 // createGeometricLayout builds the flower: a hub neutral at the centre and one
-// petal per player. The remaining neutral zones are split evenly between the
-// petals and arranged into a leaf outline — each side of the leaf curves out
-// from near the hub to the player at the tip — so the connection graph reads as
-// a ring of rounded petals (Shamrock, One for All, Kerberos, Infinity).
+// rounded petal (lobe) per player. Each petal's neutrals are placed on a circle
+// (the lobe) so the outline is genuinely round — like the leaves of a clover —
+// and the player sits at the outer tip. Every petal is closed back to the hub
+// on both sides and split by a central "vein" spoke, so each player has three
+// guarded routes inward, matching the rich, rounded figures of the example
+// templates (Shamrock, One for All, Nuclear, Kerberos, Infinity).
 func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
 	const (
 		centreX    = 0.5
 		centreY    = 0.5
-		baseRadius = 0.10 // where the petal edges start, just off the hub
-		tipRadius  = 0.44 // the player zone at the petal tip
+		lobeDist   = 0.255 // distance from hub to the centre of each lobe
 		startAngle = -math.Pi / 2.0
+		openHalf   = 42.0 * math.Pi / 180.0 // half-angle of the hub-facing gap
 	)
 	playerCount := len(playerLabels)
 	neutralCount := len(neutralZones)
@@ -92,51 +94,61 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	}
 
 	// Distribute the remaining neutral zones across the petals round-robin so
-	// every petal grows at the same rate and zone tiers stay balanced.
+	// every lobe grows at the same rate and zone tiers stay balanced.
 	petalPlans := make([][]int, playerCount)
 	for offset := 0; neutralCursor+offset < neutralCount && playerCount > 0; offset++ {
 		petalPlans[offset%playerCount] = append(petalPlans[offset%playerCount], neutralCursor+offset)
 	}
 
-	// Keep each petal narrow enough that neighbours never overlap: the half-width
-	// stays under half the angular gap between adjacent players.
-	halfGap := math.Pi
+	// Size each lobe to fill its angular sector without letting neighbours
+	// collide: the lobe radius is bounded by how wide the sector is.
+	sectorHalf := math.Pi
 	if playerCount >= 2 {
-		halfGap = math.Pi / float64(playerCount)
+		sectorHalf = math.Pi / float64(playerCount)
 	}
-	maxOffset := halfGap * 0.62
+	lobeRadius := math.Min(0.205, lobeDist*math.Sin(sectorHalf*0.85))
+	arcMax := math.Pi - openHalf // how far around the lobe the rim wraps
 
 	petals := make([]petal, playerCount)
 	for index := 0; index < playerCount; index++ {
-		centreAngle := startAngle + 2.0*math.Pi*float64(index)/float64(playerCount)
+		axis := startAngle + 2.0*math.Pi*float64(index)/float64(playerCount)
+		lobeX := centreX + math.Cos(axis)*lobeDist
+		lobeY := centreY + math.Sin(axis)*lobeDist
 		plan := petalPlans[index]
-		leftCount := (len(plan) + 1) / 2
+		neutralPerSide := len(plan)
+		leftCount := (neutralPerSide + 1) / 2
+		rightCount := neutralPerSide - leftCount
 
-		// placeSide lays neutrals along one edge of the leaf. The angular offset
-		// follows sin(pi*t) so the edge bows out at the middle and closes in at
-		// both the hub (t→0) and the tip (t→1), tracing a leaf silhouette.
-		placeSide := func(planSlice []int, sign float64) []int {
-			indices := make([]int, 0, len(planSlice))
-			total := len(planSlice)
-			for step, planIndex := range planSlice {
-				t := float64(step+1) / float64(total+1)
-				radius := baseRadius + (tipRadius-baseRadius)*t
-				angle := centreAngle + sign*maxOffset*math.Sin(math.Pi*t)
-				indices = append(indices, len(allLabels))
-				allLabels = append(allLabels, neutralZones[planIndex].Label)
-				positions.Add(circlePoint(angle, centreX, centreY, radius))
-			}
-			return indices
+		// lobePoint places a node on the lobe circle at local angle alpha,
+		// measured from the outward (tip) direction so alpha=0 is the tip.
+		lobePoint := func(alpha float64) models.Vector2 {
+			return models.NewPosition(
+				lobeX+math.Cos(axis+alpha)*lobeRadius,
+				lobeY+math.Sin(axis+alpha)*lobeRadius)
 		}
 
-		left := placeSide(plan[:leftCount], -1.0)
-		right := placeSide(plan[leftCount:], +1.0)
+		var ring []int
+		addNode := func(planIndex int, alpha float64) {
+			ring = append(ring, len(allLabels))
+			allLabels = append(allLabels, neutralZones[planIndex].Label)
+			positions.Add(lobePoint(alpha))
+		}
 
+		// Left rim: outermost (near the hub gap) down to the node beside the tip.
+		for j := leftCount; j >= 1; j-- {
+			addNode(plan[j-1], -arcMax*float64(j)/float64(leftCount))
+		}
+		// Tip: the player zone at the outermost point of the lobe.
 		playerIndex := len(allLabels)
 		allLabels = append(allLabels, playerLabels[index])
-		positions.Add(circlePoint(centreAngle, centreX, centreY, tipRadius))
+		positions.Add(lobePoint(0))
+		ring = append(ring, playerIndex)
+		// Right rim: node beside the tip out to the outermost (near the hub gap).
+		for j := 1; j <= rightCount; j++ {
+			addNode(plan[leftCount+j-1], arcMax*float64(j)/float64(rightCount))
+		}
 
-		petals[index] = petal{left: left, right: right, player: playerIndex}
+		petals[index] = petal{ring: ring, player: playerIndex}
 	}
 
 	pairs := this.createGeometricPairs(centreIndex, petals, playerCount)
@@ -150,27 +162,18 @@ func (this *GeometricTopologyService) createGeometricPairs(
 	builder := newPairBuilder()
 
 	for _, p := range petals {
-		// Climb the left edge from the hub up to the player tip.
-		previous := centreIndex
-		for _, node := range p.left {
-			if previous >= 0 {
-				builder.add(previous, node)
-			}
-			previous = node
+		// Trace the rounded lobe outline.
+		for step := 0; step+1 < len(p.ring); step++ {
+			builder.add(p.ring[step], p.ring[step+1])
 		}
-		if previous >= 0 {
-			builder.add(previous, p.player)
-		}
-
-		// Descend the right edge from the tip back down to the hub, closing the
-		// petal loop.
-		previous = p.player
-		for step := len(p.right) - 1; step >= 0; step-- {
-			builder.add(previous, p.right[step])
-			previous = p.right[step]
-		}
-		if centreIndex >= 0 {
-			builder.add(previous, centreIndex)
+		if centreIndex >= 0 && len(p.ring) > 0 {
+			// Close the petal back to the hub on both sides so it reads as a
+			// distinct leaf, and run a central vein straight to the player tip —
+			// giving every player three guarded routes inward (left rim, vein,
+			// right rim) for strategic depth.
+			builder.add(centreIndex, p.ring[0])
+			builder.add(centreIndex, p.ring[len(p.ring)-1])
+			builder.add(centreIndex, p.player)
 		}
 	}
 
