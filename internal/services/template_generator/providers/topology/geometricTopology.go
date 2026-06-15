@@ -52,30 +52,31 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 }
 
 // petal holds the zone indices that make up one flower petal in ring order:
-// the neutral zones tracing the rounded lobe outline (from the hub-facing base
-// on one side, around the outer rim, to the base on the other side) with the
-// player zone sitting at the outer tip in the middle of that order.
+// the neutral zones tracing the rounded lobe outline (from the centre-facing
+// base on one side, around the outer rim, to the base on the other side) with
+// the player zone sitting at the outer tip in the middle of that order.
 type petal struct {
 	ring   []int // ordered base → … → tip(player) → … → base
 	player int
 }
 
-// createGeometricLayout builds the flower: a hub neutral at the centre and one
-// rounded petal (lobe) per player. Each petal's neutrals are placed on a circle
-// (the lobe) so the outline is genuinely round — like the leaves of a clover —
-// and the player sits at the outer tip. Every petal is closed back to the hub
-// on both sides and split by a central "vein" spoke, so each player has three
-// guarded routes inward, matching the rich, rounded figures of the example
-// templates (Shamrock, One for All, Nuclear, Kerberos, Infinity).
+// createGeometricLayout builds the flower: a central neutral at the middle and
+// one rounded petal (lobe) per player. Each petal's neutrals are placed on a
+// circle (the lobe) so the outline is genuinely round — like the leaves of a
+// clover — and the player sits at the outer tip. Every petal is anchored to the
+// centre through its hub-facing base neutrals (never directly through the
+// player), matching the rounded figures of the example templates (Shamrock,
+// One for All, Nuclear, Kerberos, Infinity) which are built purely from player
+// and neutral zones with no dedicated hub.
 func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
 	const (
 		centreX    = 0.5
 		centreY    = 0.5
-		lobeDist   = 0.255 // distance from hub to the centre of each lobe
+		lobeDist   = 0.255 // distance from the centre to the centre of each lobe
 		startAngle = -math.Pi / 2.0
-		openHalf   = 42.0 * math.Pi / 180.0 // half-angle of the hub-facing gap
+		openHalf   = 42.0 * math.Pi / 180.0 // half-angle of the centre-facing gap
 	)
 	playerCount := len(playerLabels)
 	neutralCount := len(neutralZones)
@@ -83,7 +84,9 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	var allLabels []string
 	var positions models.Positions
 
-	// Hub: the first neutral zone anchors the centre of the flower.
+	// Centre: the first neutral zone anchors the middle of the flower. It is a
+	// regular neutral zone — never a dedicated hub — so it only ever borders the
+	// petals' base neutrals, not the players.
 	centreIndex := -1
 	neutralCursor := 0
 	if neutralCount >= 1 {
@@ -134,7 +137,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 			positions.Add(lobePoint(alpha))
 		}
 
-		// Left rim: outermost (near the hub gap) down to the node beside the tip.
+		// Left rim: outermost (near the centre gap) down to the node beside the tip.
 		for j := leftCount; j >= 1; j-- {
 			addNode(plan[j-1], -arcMax*float64(j)/float64(leftCount))
 		}
@@ -143,7 +146,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 		allLabels = append(allLabels, playerLabels[index])
 		positions.Add(lobePoint(0))
 		ring = append(ring, playerIndex)
-		// Right rim: node beside the tip out to the outermost (near the hub gap).
+		// Right rim: node beside the tip out to the outermost (near the centre gap).
 		for j := 1; j <= rightCount; j++ {
 			addNode(plan[leftCount+j-1], arcMax*float64(j)/float64(rightCount))
 		}
@@ -162,22 +165,38 @@ func (this *GeometricTopologyService) createGeometricPairs(
 	builder := newPairBuilder()
 
 	for _, p := range petals {
-		// Trace the rounded lobe outline.
+		// Trace the rounded lobe outline (left rim → player tip → right rim).
 		for step := 0; step+1 < len(p.ring); step++ {
 			builder.add(p.ring[step], p.ring[step+1])
 		}
-		if centreIndex >= 0 && len(p.ring) > 0 {
-			// Close the petal back to the hub on both sides so it reads as a
-			// distinct leaf, and run a central vein straight to the player tip —
-			// giving every player three guarded routes inward (left rim, vein,
-			// right rim) for strategic depth.
-			builder.add(centreIndex, p.ring[0])
-			builder.add(centreIndex, p.ring[len(p.ring)-1])
+		if centreIndex < 0 || len(p.ring) == 0 {
+			continue
+		}
+
+		// Anchor the petal to the centre through its base neutrals — the rim ends
+		// nearest the centre gap. The centre must never border a player tip, or
+		// it would connect to every player and read as a dedicated hub, so a base
+		// that is the player itself (a petal with no neutrals on that side) is
+		// skipped in favour of the opposite base.
+		first, last := p.ring[0], p.ring[len(p.ring)-1]
+		anchored := false
+		if first != p.player {
+			builder.add(centreIndex, first)
+			anchored = true
+		}
+		if last != p.player && last != first {
+			builder.add(centreIndex, last)
+			anchored = true
+		}
+		// Degenerate petal with no neutrals at all: the player has to hang off
+		// the centre directly. Only reachable when there are fewer neutrals than
+		// players, an extreme low-zone configuration.
+		if !anchored {
 			builder.add(centreIndex, p.player)
 		}
 	}
 
-	// No neutral zones at all: there is no hub to build petals around, so fall
+	// No neutral zones at all: there is no centre to build petals around, so fall
 	// back to a closed player polygon to keep a geometric outline.
 	if centreIndex < 0 && playerCount >= 2 {
 		ring := make([]int, playerCount)
