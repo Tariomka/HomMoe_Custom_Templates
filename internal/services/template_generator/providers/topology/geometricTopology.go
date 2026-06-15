@@ -8,10 +8,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
-// GeometricTopologyService arranges zones into symmetric concentric polygons: a
-// player ring on the outside, a neutral ring on the inside and a central zone,
-// joined by ring loops and radial spokes so the connections trace clean
-// geometric shapes (petals, wheels and stars).
+// GeometricTopologyService arranges zones into a centrally symmetric flower: a
+// hub zone at the centre with one petal per player radiating outward. Each petal
+// is a closed leaf-shaped loop of neutral zones that bulges out to the player
+// zone at its tip and curves back to the hub, so the connections trace the
+// rounded petals of the example templates (Shamrock, One for All, Nuclear,
+// Kerberos, Infinity).
 type GeometricTopologyService struct {
 	RandomTopologyService
 }
@@ -49,22 +51,29 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
-// createGeometricLayout builds a centrally symmetric figure: a hub neutral zone
-// at the centre, the remaining neutral zones on an inner ring forming the
-// central polygon (joined in a loop and spoked to the hub like a star), and the
-// player zones on an outer ring, each hanging off the figure via a single
-// radial petal stem to its nearest inner-ring neutral. Players never border one
-// another, so the figure stays intact under isolated-player-starts and reads
-// like the example templates (Shamrock, One for All, Nuclear, Kerberos).
+// petal holds the zone indices that make up one flower petal: the neutral zones
+// forming the left and right edges of the leaf (ordered hub→tip) and the player
+// zone at the tip.
+type petal struct {
+	left   []int
+	right  []int
+	player int
+}
+
+// createGeometricLayout builds the flower: a hub neutral at the centre and one
+// petal per player. The remaining neutral zones are split evenly between the
+// petals and arranged into a leaf outline — each side of the leaf curves out
+// from near the hub to the player at the tip — so the connection graph reads as
+// a ring of rounded petals (Shamrock, One for All, Kerberos, Infinity).
 func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
 	const (
-		centreX     = 0.5
-		centreY     = 0.5
-		outerRadius = 0.42
-		innerRadius = 0.20
-		startAngle  = -math.Pi / 2.0
+		centreX    = 0.5
+		centreY    = 0.5
+		baseRadius = 0.10 // where the petal edges start, just off the hub
+		tipRadius  = 0.44 // the player zone at the petal tip
+		startAngle = -math.Pi / 2.0
 	)
 	playerCount := len(playerLabels)
 	neutralCount := len(neutralZones)
@@ -72,7 +81,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	var allLabels []string
 	var positions models.Positions
 
-	// Hub: the first neutral zone anchors the centre of the figure.
+	// Hub: the first neutral zone anchors the centre of the flower.
 	centreIndex := -1
 	neutralCursor := 0
 	if neutralCount >= 1 {
@@ -82,79 +91,112 @@ func (this *GeometricTopologyService) createGeometricLayout(
 		neutralCursor = 1
 	}
 
-	// Inner ring: every remaining neutral zone, evenly spaced, forming the
-	// central polygon.
-	innerStart := len(allLabels)
-	innerCount := neutralCount - neutralCursor
-	for j := 0; j < innerCount; j++ {
-		angle := startAngle + 2.0*math.Pi*float64(j)/float64(innerCount)
-		allLabels = append(allLabels, neutralZones[neutralCursor+j].Label)
-		positions.Add(circlePoint(angle, centreX, centreY, innerRadius))
+	// Distribute the remaining neutral zones across the petals round-robin so
+	// every petal grows at the same rate and zone tiers stay balanced.
+	petalPlans := make([][]int, playerCount)
+	for offset := 0; neutralCursor+offset < neutralCount && playerCount > 0; offset++ {
+		petalPlans[offset%playerCount] = append(petalPlans[offset%playerCount], neutralCursor+offset)
 	}
 
-	// Outer ring: player zones, aligned to the inner-ring spokes so the petal
-	// stems run radially.
-	playerStart := len(allLabels)
-	for i, label := range playerLabels {
-		angle := startAngle
-		if playerCount > 0 {
-			angle += 2.0 * math.Pi * float64(i) / float64(playerCount)
+	// Keep each petal narrow enough that neighbours never overlap: the half-width
+	// stays under half the angular gap between adjacent players.
+	halfGap := math.Pi
+	if playerCount >= 2 {
+		halfGap = math.Pi / float64(playerCount)
+	}
+	maxOffset := halfGap * 0.62
+
+	petals := make([]petal, playerCount)
+	for index := 0; index < playerCount; index++ {
+		centreAngle := startAngle + 2.0*math.Pi*float64(index)/float64(playerCount)
+		plan := petalPlans[index]
+		leftCount := (len(plan) + 1) / 2
+
+		// placeSide lays neutrals along one edge of the leaf. The angular offset
+		// follows sin(pi*t) so the edge bows out at the middle and closes in at
+		// both the hub (t→0) and the tip (t→1), tracing a leaf silhouette.
+		placeSide := func(planSlice []int, sign float64) []int {
+			indices := make([]int, 0, len(planSlice))
+			total := len(planSlice)
+			for step, planIndex := range planSlice {
+				t := float64(step+1) / float64(total+1)
+				radius := baseRadius + (tipRadius-baseRadius)*t
+				angle := centreAngle + sign*maxOffset*math.Sin(math.Pi*t)
+				indices = append(indices, len(allLabels))
+				allLabels = append(allLabels, neutralZones[planIndex].Label)
+				positions.Add(circlePoint(angle, centreX, centreY, radius))
+			}
+			return indices
 		}
-		allLabels = append(allLabels, label)
-		positions.Add(circlePoint(angle, centreX, centreY, outerRadius))
+
+		left := placeSide(plan[:leftCount], -1.0)
+		right := placeSide(plan[leftCount:], +1.0)
+
+		playerIndex := len(allLabels)
+		allLabels = append(allLabels, playerLabels[index])
+		positions.Add(circlePoint(centreAngle, centreX, centreY, tipRadius))
+
+		petals[index] = petal{left: left, right: right, player: playerIndex}
 	}
 
-	pairs := this.createGeometricPairs(centreIndex, innerStart, innerCount, playerStart, playerCount, positions)
+	pairs := this.createGeometricPairs(centreIndex, petals, playerCount)
 	return allLabels, positions, pairs
 }
 
 func (this *GeometricTopologyService) createGeometricPairs(
-	centreIndex, innerStart, innerCount, playerStart, playerCount int,
-	positions models.Positions) [][2]int {
+	centreIndex int,
+	petals []petal,
+	playerCount int) [][2]int {
 	builder := newPairBuilder()
 
-	// Central polygon joining the inner neutral ring.
-	if innerCount >= 2 {
-		for j := 0; j < innerCount; j++ {
-			builder.add(innerStart+j, innerStart+(j+1)%innerCount)
+	for _, p := range petals {
+		// Climb the left edge from the hub up to the player tip.
+		previous := centreIndex
+		for _, node := range p.left {
+			if previous >= 0 {
+				builder.add(previous, node)
+			}
+			previous = node
+		}
+		if previous >= 0 {
+			builder.add(previous, p.player)
+		}
+
+		// Descend the right edge from the tip back down to the hub, closing the
+		// petal loop.
+		previous = p.player
+		for step := len(p.right) - 1; step >= 0; step-- {
+			builder.add(previous, p.right[step])
+			previous = p.right[step]
+		}
+		if centreIndex >= 0 {
+			builder.add(previous, centreIndex)
 		}
 	}
 
-	// Hub star: spokes from the centre out to every inner-ring node (or straight
-	// to the players when there is no inner ring).
-	if centreIndex >= 0 {
-		if innerCount > 0 {
-			for j := 0; j < innerCount; j++ {
-				builder.add(centreIndex, innerStart+j)
-			}
-		} else {
-			for i := 0; i < playerCount; i++ {
-				builder.add(centreIndex, playerStart+i)
-			}
-		}
-	}
-
-	// Player petal stems: each player hangs off its nearest inner-ring neutral,
-	// or the hub when the figure has no inner ring.
-	for i := 0; i < playerCount; i++ {
-		playerIndex := playerStart + i
-		switch {
-		case innerCount > 0:
-			nearest := nearestIndexInRange(positions, playerIndex, innerStart, innerStart+innerCount)
-			if nearest >= 0 {
-				builder.add(playerIndex, nearest)
-			}
-		case centreIndex >= 0:
-			builder.add(playerIndex, centreIndex)
-		}
-	}
-
-	// With no neutral zones at all there is no central figure, so fall back to a
-	// closed player polygon to keep a geometric outline.
+	// No neutral zones at all: there is no hub to build petals around, so fall
+	// back to a closed player polygon to keep a geometric outline.
 	if centreIndex < 0 && playerCount >= 2 {
-		for i := 0; i < playerCount; i++ {
-			builder.add(playerStart+i, playerStart+(i+1)%playerCount)
+		ring := make([]int, playerCount)
+		for index, p := range petals {
+			ring[index] = p.player
 		}
+		connectRing(builder, ring)
 	}
 	return builder.pairs
+}
+
+// connectRing joins the given node indices into a closed loop (or a single edge
+// for a pair). Rings of fewer than two nodes are left untouched.
+func connectRing(builder *pairBuilder, ring []int) {
+	switch len(ring) {
+	case 0, 1:
+		return
+	case 2:
+		builder.add(ring[0], ring[1])
+	default:
+		for i := range ring {
+			builder.add(ring[i], ring[(i+1)%len(ring)])
+		}
+	}
 }
