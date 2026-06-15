@@ -56,10 +56,13 @@ func canvasScale(side float64) float64 { return side / csCanvasSide }
 
 // BuildPreviewLayout computes zone positions, radius and connections for a
 // preview canvas of the given side length. The layout strategy is picked to
-// match the in-game generator: Balanced uses concentric rings keyed off the
-// GeneratorRing stamps; Random scatters zones using the GeneratorPosition
-// stamps with hard-floor and edge-clearance correction passes; all other
-// topologies fall back to the classic ring / hub-and-spoke renderer.
+// match the in-game generator: Circles uses concentric rings keyed off the
+// GeneratorRing stamps; Square, Geometric and Cross are placed verbatim from
+// their GeneratorPosition stamps (centred and scaled to fit) so the exact
+// geometric figure is preserved; Random scatters zones using the
+// GeneratorPosition stamps with hard-floor and edge-clearance correction
+// passes; all other topologies fall back to the classic ring / hub-and-spoke
+// renderer.
 func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopology, side float64) PreviewLayout {
 	layout := PreviewLayout{Positions: map[string]image.Point{}}
 	if template == nil || len(template.Variants) == 0 {
@@ -84,9 +87,11 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 	switch {
 	case allHaveManualPosition(zones):
 		layoutManualPositions(&layout, zones, side)
-	case (topology == config.TopologyBalanced) && allHaveRing(zones):
+	case (topology == config.TopologyCircles) && allHaveRing(zones):
 		layoutBalancedRings(&layout, zones, side)
-	case (topology == config.TopologyRandom || topology == config.TopologyBalanced) && allHavePosition(zones):
+	case isFixedGeometryTopology(topology) && allHavePosition(zones):
+		layoutFixedPositions(&layout, zones, side)
+	case isScatterTopology(topology) && allHavePosition(zones):
 		layoutScatter(&layout, zones, connections, side)
 	default:
 		layoutRingOrHub(&layout, zones, connections, side)
@@ -246,6 +251,31 @@ func allHavePosition(zones []entities.Zone) bool {
 	return true
 }
 
+// isScatterTopology reports whether the topology lays out zones from their
+// GeneratorPosition stamps using the organic scatter renderer (mean-edge
+// scaling plus the relaxation passes that nudge zones apart).
+func isScatterTopology(topology config.MapTopology) bool {
+	switch topology {
+	case config.TopologyRandom, config.TopologyCircles:
+		return true
+	default:
+		return false
+	}
+}
+
+// isFixedGeometryTopology reports whether the topology defines an exact,
+// deterministic geometric figure from its GeneratorPosition stamps. These are
+// placed verbatim (only centred and scaled to fit) so the preview reproduces
+// the intended shape instead of relaxing it into a scatter.
+func isFixedGeometryTopology(topology config.MapTopology) bool {
+	switch topology {
+	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross:
+		return true
+	default:
+		return false
+	}
+}
+
 func allHaveManualPosition(zones []entities.Zone) bool {
 	for _, z := range zones {
 		if z.ManualPosition == nil {
@@ -285,6 +315,84 @@ func layoutManualPositions(layout *PreviewLayout, zones []entities.Zone, side fl
 		layout.Positions[zone.Name] = image.Pt(
 			int(math.Round(p[0]*side)),
 			int(math.Round(p[1]*side)))
+	}
+}
+
+// layoutFixedPositions places zones at their exact GeneratorPosition stamps,
+// preserving the deterministic geometric figure built by the Square, Geometric
+// and Cross topologies. The normalized positions are centred and uniformly
+// scaled to fill the padded canvas (never relaxed), then the zone radius is
+// shrunk just enough to keep the closest pair from overlapping.
+func layoutFixedPositions(layout *PreviewLayout, zones []entities.Zone, side float64) {
+	n := len(zones)
+	if n == 0 {
+		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
+		return
+	}
+	scale := canvasScale(side)
+	margin := csMargin * scale
+	minGap := csMinGap * scale
+	zoneRadiusMax := csZoneRadiusMax * scale
+	cx := side / 2.0
+	cy := side / 2.0
+
+	if n == 1 {
+		layout.ZoneRadius = int(math.Round(zoneRadiusMax))
+		layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
+		return
+	}
+
+	px := make([]float64, n)
+	py := make([]float64, n)
+	for i, z := range zones {
+		p := *z.GeneratorPosition
+		px[i] = p[0]
+		py[i] = p[1]
+	}
+
+	// Centre the bounding box and scale uniformly so the figure fills the
+	// canvas inside a margin that reserves room for the largest possible zone
+	// radius (so the eventual radius, which is never larger, always fits).
+	minX, maxX := minMax(px)
+	minY, maxY := minMax(py)
+	spanX := maxX - minX
+	spanY := maxY - minY
+	pad := margin + zoneRadiusMax
+	drawW := side - 2.0*pad
+	drawH := side - 2.0*pad
+	fitScale := math.MaxFloat64
+	if spanX > 1e-6 {
+		fitScale = math.Min(fitScale, drawW/spanX)
+	}
+	if spanY > 1e-6 {
+		fitScale = math.Min(fitScale, drawH/spanY)
+	}
+	if fitScale == math.MaxFloat64 || fitScale <= 0 {
+		fitScale = 1.0
+	}
+	boxCx := (minX + maxX) / 2.0
+	boxCy := (minY + maxY) / 2.0
+	for i := range px {
+		px[i] = cx + (px[i]-boxCx)*fitScale
+		py[i] = cy + (py[i]-boxCy)*fitScale
+	}
+
+	// Radius from the closest pair so neighbouring zones never overlap.
+	minDist := math.MaxFloat64
+	for i := 0; i < n; i++ {
+		for j := i + 1; j < n; j++ {
+			minDist = math.Min(minDist, math.Hypot(px[i]-px[j], py[i]-py[j]))
+		}
+	}
+	radius := zoneRadiusMax
+	if minDist < math.MaxFloat64 {
+		radius = math.Min(radius, (minDist-minGap)/2.0)
+	}
+	radius = math.Max(radius, 8.0)
+
+	layout.ZoneRadius = int(math.Round(radius))
+	for i, z := range zones {
+		layout.Positions[z.Name] = image.Pt(int(math.Round(px[i])), int(math.Round(py[i])))
 	}
 }
 

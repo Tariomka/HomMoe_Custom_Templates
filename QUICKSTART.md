@@ -133,7 +133,7 @@ func main() {
 ```
 
 `generator.NewGeneratorSettings()` matches the GUI's defaults
-(2 players, size 160, topology Random, Classic mode, etc.).
+(2 players, size 160, topology Circles, Classic mode, etc.).
 
 ## 6. Map Sizes
 
@@ -153,11 +153,15 @@ presets the slider snaps to:
 
 ## 7. Topologies at a Glance
 
-- **Random** — default; positions and connections are randomised.
+- **Circles** (`TopologyCircles`) — default; concentric rings sorted by zone tier.
+- **Random** — positions and connections are randomised.
 - **Ring** (`TopologyDefault`) — players in a circle, neighbours connected.
 - **Hub** (`TopologyHubAndSpoke`) — all players connect through a central hub zone.
 - **Chain** — players strung in a line.
 - **Shared Web** — players linked through shared neutral zones.
+- **Square** (`TopologySquare`) — players line the edges of a square; neutrals on the edges and inside.
+- **Geometric** (`TopologyGeometric`) — symmetric geometric shapes built around a central zone.
+- **Cross** (`TopologyCross`) — zones and connections radiate from a centre into cross-shaped arms.
 
 ## 8. Troubleshooting
 

@@ -28,7 +28,7 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 	neutralZones models.NeutralZonePlans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) entities.Variant {
-	neutralLabels := this.createLabels(playerLabels, neutralZones, configuration.Topology == config.TopologyBalanced)
+	neutralLabels := this.createLabels(playerLabels, neutralZones, configuration.Topology == config.TopologyCircles)
 	playerSpokes, neutralSpokes := this.createSpokes(playerLabels, neutralLabels)
 	neutralConnNames := this.createRingConnectionNames(neutralLabels)
 

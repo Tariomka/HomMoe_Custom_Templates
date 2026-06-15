@@ -102,7 +102,7 @@ func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 		SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
 		ToSlice()
 
-	if configuration.Topology == config.TopologyBalanced {
+	if configuration.Topology == config.TopologyCircles {
 		separationCount := 0
 		if configuration.MinNeutralZonesBetweenPlayers > 0 && configuration.CanHonorNeutralSeparation() {
 			separationCount = configuration.MinNeutralZonesBetweenPlayers
@@ -273,7 +273,7 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 			}
 			adjacency.Link(orderedLabels[current], orderedLabels[next])
 		}
-	case config.TopologyDefault, config.TopologyBalanced:
+	case config.TopologyDefault, config.TopologyCircles:
 		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
 		for current := range orderedLabels {
 			next := (current + 1) % len(orderedLabels)

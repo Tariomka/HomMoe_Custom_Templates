@@ -13,12 +13,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
-// previewLineColor is the connection-line colour sampled from the official
+// previewLineColor is the connection-line color sampled from the official
 // in-game template overview images (a dark warm brown, drawn under the
 // zone bubbles).
 var previewLineColor = color.NRGBA{R: 0x39, G: 0x11, B: 0x14, A: 0xFF}
 
-// WritePreviewPNG rasterises the given template and writes it as a PNG into
+// WritePreviewPNG rasterize the given template and writes it as a PNG into
 // dir/<safeName>.png at the requested side length. The directory is created
 // if missing. Returns the final path on success.
 func WritePreviewPNG(dir string, template *template.RmgTemplate, topology config.MapTopology) (string, error) {
@@ -42,10 +42,10 @@ func WritePreviewPNG(dir string, template *template.RmgTemplate, topology config
 	return out, nil
 }
 
-// RenderPreviewImage rasterises the layout in the style of the official
+// RenderPreviewImage rasterize the layout in the style of the official
 // in-game template overview images: the parchment background, the zone
 // bubbles and the connection lines are composited from sprite assets
-// extracted from those images (see tools/assetgen).
+// extracted from those images.
 func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopology, side int) *image.RGBA {
 	assets := loadPreviewAssets()
 	img := image.NewRGBA(image.Rect(0, 0, side, side))

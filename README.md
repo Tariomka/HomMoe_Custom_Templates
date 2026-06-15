@@ -122,11 +122,15 @@ Hot reload via [air](https://github.com/air-verse/air) is configured in
 
 | Topology      | Constant                          | Shape                                                        |
 |---------------|-----------------------------------|--------------------------------------------------------------|
-| Random        | `generator.TopologyRandom`        | Default. Random placement / Delaunay-style connections.      |
+| Circles       | `generator.TopologyCircles`       | Default. Concentric rings sorted by zone tier.               |
+| Random        | `generator.TopologyRandom`        | Random placement / Delaunay-style connections.               |
 | Ring          | `generator.TopologyDefault`       | Players in a circle, each connected to neighbors.            |
 | Hub-and-Spoke | `generator.TopologyHubAndSpoke`   | All players connect through a central hub neutral zone.      |
 | Chain         | `generator.TopologyChain`         | Linear arrangement of zones.                                 |
 | Shared Web    | `generator.TopologySharedWeb`     | Players connected through shared neutral zones.              |
+| Square        | `generator.TopologySquare`        | Players line the edges of a square; neutrals on edges and inside. |
+| Geometric     | `generator.TopologyGeometric`     | Symmetric geometric shapes built around a central zone.      |
+| Cross         | `generator.TopologyCross`         | Zones and connections radiate from a centre into cross arms. |
 
 ## Game Modes & Victory Conditions
 
