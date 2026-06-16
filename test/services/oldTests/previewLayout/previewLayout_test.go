@@ -151,35 +151,35 @@ func TestBuildPreviewLayout_RandomTopology_FallsBackWhenNoPositions(t *testing.T
 	}
 }
 
-// ── BuildPreviewLayout: balanced rings dispatch ──────────────────────
+// ── BuildPreviewLayout: circles rings dispatch ──────────────────────
 
-func TestBuildPreviewLayout_BalancedTopology_MultipleRings(t *testing.T) {
+func TestBuildPreviewLayout_CirclesTopology_MultipleRings(t *testing.T) {
 	zones := []entities.Zone{
 		zoneRing("Spawn-A", 0, 0.1, 0.1),
 		zoneRing("Spawn-B", 0, 0.9, 0.1),
 		zoneRing("Neutral-C", 1, 0.5, 0.5),
 	}
-	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyBalanced, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyCircles, 600)
 	if len(out.Positions) != 3 {
 		t.Errorf("expected 3 positions, got %d", len(out.Positions))
 	}
 }
 
-func TestBuildPreviewLayout_BalancedTopology_SingleRingFallsBack(t *testing.T) {
+func TestBuildPreviewLayout_CirclesTopology_SingleRingFallsBack(t *testing.T) {
 	zones := []entities.Zone{
 		zoneRing("Spawn-A", 0, 0.2, 0.2),
 		zoneRing("Spawn-B", 0, 0.8, 0.8),
 		zoneRing("Spawn-C", 0, 0.5, 0.5),
 	}
-	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyBalanced, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyCircles, 600)
 	if len(out.Positions) != 3 {
 		t.Errorf("expected 3 positions, got %d", len(out.Positions))
 	}
 }
 
-func TestBuildPreviewLayout_BalancedTopology_SingleZone(t *testing.T) {
+func TestBuildPreviewLayout_CirclesTopology_SingleZone(t *testing.T) {
 	zones := []entities.Zone{zoneRing("Spawn-A", 0, 0.5, 0.5)}
-	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyBalanced, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyCircles, 600)
 	if p := out.Positions["Spawn-A"]; p.X != 300 || p.Y != 300 {
 		t.Errorf("expected centre, got %+v", p)
 	}

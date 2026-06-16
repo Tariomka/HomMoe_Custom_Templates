@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewSettingsFile_DefaultsToBalanced(t *testing.T) {
+func TestNewSettingsFile_DefaultsToCircles(t *testing.T) {
 	s := dtos.NewDefaultEditorStateDto()
-	assert.Equal(t, config.TopologyBalanced, s.Topology)
+	assert.Equal(t, config.TopologyCircles, s.Topology)
 }
 
 func TestSettingsFile_RoundTrip(t *testing.T) {

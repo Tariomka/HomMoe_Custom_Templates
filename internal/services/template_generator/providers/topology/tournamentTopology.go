@@ -30,7 +30,7 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
 		this.clusterService = tournament_variant.NewHubClusterService()
-	case config.TopologyBalanced:
+	case config.TopologyCircles:
 		this.clusterService = tournament_variant.NewBalancedClusterService()
 	case config.TopologyDefault:
 		this.clusterService = tournament_variant.NewRingClusterService()

@@ -371,7 +371,11 @@ func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
 		config.TopologyRandom,
-		config.TopologyBalanced,
+		config.TopologyCircles,
+		config.TopologySquare,
+		config.TopologyGeometric,
+		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topo := range topos {
 		for _, players := range []int{2, 3, 4, 8} {
@@ -738,7 +742,7 @@ func tournamentSettings(topo config.MapTopology, neutrals int) *config.Generator
 }
 
 func TestGenerate_TournamentBalanced_EmitsClusterGuardGroups(t *testing.T) {
-	tmpl := template_generator.NewTemplateGenerator(tournamentSettings(config.TopologyBalanced, 4)).Generate()
+	tmpl := template_generator.NewTemplateGenerator(tournamentSettings(config.TopologyCircles, 4)).Generate()
 	balCount := 0
 	for _, c := range tmpl.Variants[0].Connections {
 		if strings.HasPrefix(c.GuardMatchGroup, "tourney_bal_guard_") {
@@ -805,7 +809,7 @@ func TestGenerate_TournamentClustersAreIsolated(t *testing.T) {
 		}
 		return -1
 	}
-	for _, topo := range []config.MapTopology{config.TopologyDefault, config.TopologyHubAndSpoke, config.TopologyBalanced, config.TopologyChain} {
+	for _, topo := range []config.MapTopology{config.TopologyDefault, config.TopologyHubAndSpoke, config.TopologyCircles, config.TopologyChain} {
 		t.Run(string(topo), func(t *testing.T) {
 			tmpl := template_generator.NewTemplateGenerator(tournamentSettings(topo, 4)).Generate()
 			// Bucket zones by cluster: cluster 0 owns the first spawn we see.
@@ -876,7 +880,11 @@ func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
 		config.TopologyRandom,
-		config.TopologyBalanced,
+		config.TopologyCircles,
+		config.TopologySquare,
+		config.TopologyGeometric,
+		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 3)
@@ -912,7 +920,7 @@ func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 // TestRenderPreviewImage_DoesNotPanic_AllTopologies ensures the preview
 // renderer succeeds for every supported topology across a representative
 // range of player counts. Covers both the structural layout dispatch and
-// the Phase 7 Balanced + tournament-cluster paths.
+// the Phase 7 Circles + tournament-cluster paths.
 func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 	topologies := []config.MapTopology{
 		config.TopologyDefault,
@@ -920,7 +928,11 @@ func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
 		config.TopologyRandom,
-		config.TopologyBalanced,
+		config.TopologyCircles,
+		config.TopologySquare,
+		config.TopologyGeometric,
+		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	playerCounts := []int{2, 3, 4, 6, 8}
 	for _, topo := range topologies {
@@ -968,7 +980,11 @@ func TestGenerate_AllConnections_ReferenceValidZones(t *testing.T) {
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
 		config.TopologyRandom,
-		config.TopologyBalanced,
+		config.TopologyCircles,
+		config.TopologySquare,
+		config.TopologyGeometric,
+		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 2)
@@ -988,10 +1004,10 @@ func TestGenerate_AllConnections_ReferenceValidZones(t *testing.T) {
 	}
 }
 
-// ── Balanced topology (Phase 6) ──────────────────────────────────────
+// ── Circles topology (Phase 6) ──────────────────────────────────────
 
-func TestGenerate_BalancedTopology_MixedNeutrals_Succeeds(t *testing.T) {
-	s := settingsWithTopology(config.TopologyBalanced, 4, 0)
+func TestGenerate_CirclesTopology_MixedNeutrals_Succeeds(t *testing.T) {
+	s := settingsWithTopology(config.TopologyCircles, 4, 0)
 	s.ZoneConfiguration.Advanced.Enabled = true
 	s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = 2
 	s.ZoneConfiguration.Advanced.NeutralMediumNoCastleCount = 2
@@ -1001,7 +1017,7 @@ func TestGenerate_BalancedTopology_MixedNeutrals_Succeeds(t *testing.T) {
 		t.Fatalf("zones = %d, want >= 10 (4 player + 6 neutral)", got)
 	}
 	if len(tmpl.Variants[0].Connections) == 0 {
-		t.Fatal("balanced topology produced no connections")
+		t.Fatal("circles topology produced no connections")
 	}
 }
 

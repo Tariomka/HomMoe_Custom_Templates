@@ -19,5 +19,9 @@ const (
 	TopologyChain       MapTopology = config_inner.TopologyChain
 	TopologySharedWeb   MapTopology = config_inner.TopologySharedWeb
 	TopologyRandom      MapTopology = config_inner.TopologyRandom
-	TopologyBalanced    MapTopology = config_inner.TopologyBalanced
+	TopologyCircles     MapTopology = config_inner.TopologyCircles
+	TopologySquare      MapTopology = config_inner.TopologySquare
+	TopologyGeometric   MapTopology = config_inner.TopologyGeometric
+	TopologyCross       MapTopology = config_inner.TopologyCross
+	TopologyFractal     MapTopology = config_inner.TopologyFractal
 )

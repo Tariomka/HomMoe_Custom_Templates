@@ -16,76 +16,86 @@ ready-to-drop-in `.rmg.json` template.
 
 ```
 .
-├── main.go                              # Process entry; calls internal.StartApplication
-├── go.mod                               # Go module + gioui.org dependency
+├── main.go                                  # Process entry; calls app/gui.StartApplication
+├── go.mod                                   # Go module (Gio, vdf, gofakeit, testify)
 ├── data/
-│   ├── ExampleTemplates/                # 57 reference .rmg.json templates
-│   └── GameData/GeneratorData/          # Game configuration & content pools
+│   ├── ExampleTemplates/                    # 57 reference .rmg.json templates
+│   └── GameData/GeneratorData/              # Game configuration & content pools
 │       ├── generator_config.json
 │       ├── generator_environment_assets.json
 │       ├── generator_stats_config.json
 │       ├── content_lists/
-│       ├── content_pools/               # quality tiers t2..t5
+│       ├── content_pools/
 │       ├── encounter_templates/
 │       └── zone_layouts/
+├── app/                                     # Front-ends (presentation only)
+│   ├── gui/                                 # Gio desktop GUI
+│   │   ├── program.go                       # Gio app bootstrap + event loop
+│   │   ├── editor/                          # Window, tabs, toolbar
+│   │   ├── panels/                          # General / Layout / Zone Content / Bonuses & Bans / preview / footer
+│   │   ├── dialogs/                         # Bonus, item/spell pickers, rule + zone editor dialogs
+│   │   ├── components/                      # Dropdown + segment-button widgets
+│   │   ├── widgets/                         # Reusable buttons, sliders, sections, textboxes…
+│   │   ├── drivers/                         # UI state, tabs, dialog host (calls handlers)
+│   │   ├── interfaces/                      # Panel / dialog interfaces
+│   │   ├── themes/                          # Color palette + Gio material theme (single color source)
+│   │   ├── constants/                       # UI-only constants
+│   │   └── utils/                           # Drawing, file IO, math, SID lookup
+│   ├── tui/                                 # Placeholder for a future terminal UI
+│   └── web/                                 # Placeholder for a future web UI
 ├── internal/
-│   ├── program.go                       # Gio app bootstrap + event loop
-│   ├── constants/                       # Stable string IDs (content, includes, groups, legend, UI)
-│   ├── gui/
-│   │   ├── window.go                    # Window layout: toolbar, tabs, preview, footer
-│   │   ├── components/
-│   │   │   ├── basicSetupPanel.go       # Tab 1: Map Setup
-│   │   │   ├── generationPanel.go       # Tab 2: Generation Options
-│   │   │   ├── rulesPanel.go            # Tab 3: Game Rules
-│   │   │   ├── zoneContentPanel.go      # Tab 4: Zone Content
-│   │   │   ├── previewPanel.go          # Live map preview sidebar
-│   │   │   ├── footerPanel.go           # Output dir, Generate, Save Template
-│   │   │   ├── toolbar.go               # New / Open / Save / Save As
-│   │   │   ├── tab.go, panel.go, state.go
-│   │   │   ├── content/                 # Dropdowns, segment buttons, zone-content rows
-│   │   │   ├── themes/                  # Color palette + Gio material theme
-│   │   │   └── widgets/                 # Reusable buttons, sliders, sections, etc.
-│   │   └── utils/                       # Drawing, file IO, math helpers
-│   ├── helpers/                         # Small shared utilities (e.g. SID lookup)
-│   ├── models/
-│   │   ├── settingsFile.go              # .gen.json persistence model
-│   │   ├── sidMapping.go
-│   │   ├── types.go                     # Re-exports of generator/template types
-│   │   ├── zoneContentItem.go
-│   │   ├── generator/                   # Inputs to the generator
-│   │   └── template/                    # Output schema for .rmg.json files
-│   └── services/
-│       ├── templateGenerator.go         # Generate(*GeneratorSettings) -> *RmgTemplate
-│       ├── templateWriter.go            # Marshal + write <Name>.rmg.json
-│       ├── settingsFileLoader.go        # Load/save .gen.json settings files
-│       ├── zoneContentManager.go        # Mandatory content per zone tier
-│       ├── previewLayout.go             # Computes preview zone geometry
-│       └── previewRenderer.go           # PNG export of the preview canvas
-└── test/
-    ├── models/template/                 # RmgTemplate round-trip tests
-    └── services/                        # Generator / topology / zone tests
+│   ├── handlers/                            # GUIHandler: orchestrates GUI ↔ services via DTOs
+│   ├── dtos/                                # Editor-state / template transfer objects
+│   ├── common/                              # Shared error values
+│   ├── constants/                           # Display-name catalogs (topologies, sizes, victories…)
+│   ├── registry/                            # Pure game SIDs / enum pools (items, spells, factions…)
+│   ├── helpers/                             # IO (Steam VDF detect), math, slice, string, linq
+│   ├── entities/                            # Read-only .rmg.json schema (template/ + re-export aliases)
+│   ├── models/                              # GeneratorConfig + settings, mappings, plans, tuning
+│   │   └── config/                          # GeneratorConfig (config_inner: topology, zone, hero, rules)
+│   └── services/                            # Business logic
+│       ├── template_generator/             # TemplateGenerator + providers (topology, builders, content…)
+│       ├── connection_editor/              # Manual zone/connection editing logic
+│       ├── content_rules/                  # Per-row content placement rules
+│       ├── zones/                          # Zone label provider
+│       ├── previewassets/                  # Embedded in-game-style preview sprites (PNG)
+│       ├── previewLayout.go                # Computes preview zone geometry
+│       ├── previewRenderer.go              # PNG export of the preview canvas
+│       ├── templateWriter.go               # Marshal + write <Name>.rmg.json
+│       └── settingsFileLoader.go           # Load/save .gen.json editor state
+└── test/                                    # Mirrors internal/ (models, services, helpers)
 ```
 
 ## Features
 
-- **Gio desktop GUI** (`gioui.org v0.9.0`) with four configuration tabs and a
-  live preview sidebar:
-  1. **Map Setup** — template name, game mode, players, map size, topology
-  2. **Generation Options** — roads, portals, footholds, player isolation,
-     advanced neutral-zone count breakdown by quality / castle presence
-  3. **Game Rules** — victory condition, hero counts, faction-laws &
-     astrology XP, gladiator arena, tournament rules, lost-city / city-hold
-  4. **Zone Content** — extra mandatory content seeded into player zones
-- **Live preview panel** — renders the generated topology (zones,
-  connections, hubs, portals) and can export a PNG snapshot.
-- **Settings persistence**: load/save `.gen.json` files (`models.SettingsFile`).
-- **Template generation**: emit `.rmg.json` files compatible with the in-game RMG.
-- **Five topologies**: Random (default), Ring, Hub-and-Spoke, Chain, Shared Web.
-- **Map sizes**: 64–240 tiles, plus an experimental range up to 512.
-- **Players**: 2–8.
-- **Quality-tiered neutral zones**: Low / Medium / High, with optional
-  fine-grained per-tier counts split by "with castle" / "without castle".
-- **Mandatory-content seeding** through `services.ZoneContentManager`.
+- **Gio desktop GUI** (`gioui.org v0.9.0`) with four configuration tabs, a
+  live preview sidebar and a generate/save footer:
+  1. **General** — template name, players, map size, game mode, hero counts,
+     faction-laws & astrology XP, victory condition and win/loss rules
+     (lost city/hero, hold city, gladiator arena, tournament).
+  2. **Layout** — topology, manual zone editor, connectivity (roads, portals,
+     footholds, player isolation, faction matching, neutral spacing), zone
+     sizes, difficulty/density, and advanced per-tier neutral-zone counts.
+  3. **Zone Content** — mandatory content seeded per zone tier (Player / Low /
+     Medium / High / Hub) across mines, utilities, treasures, recruitment,
+     banks and hero-improvement groups, each with optional placement rules.
+  4. **Bonuses & Bans** (experimental) — game-start bonuses, banned items,
+     banned spells and guard-value overrides, edited through picker dialogs.
+- **Layered architecture** — the GUI talks to `internal/handlers.GUIHandler`
+  through DTOs; all generation, IO and preview logic lives in
+  `internal/services`.
+- **Steam auto-detection** — on launch the app locates the game's
+  custom-template folder (or install `map_templates`) by parsing Steam's
+  `libraryfolders.vdf`, and falls back to the working directory. Works on
+  Windows and Linux/Steam Deck.
+- **Manual zone editor** — visually add, move and reconnect zones over a
+  generated template before saving.
+- **Live preview + PNG export** — renders the topology with in-game-style
+  sprites and writes a `<Name>.png` next to the template on save.
+- **Settings persistence** — load/save editor state as `.gen.json`; emit
+  `.rmg.json` templates compatible with the in-game RMG.
+- **Ten topologies**, map sizes 64–240 (experimental up to 512), 2–8 players,
+  quality-tiered neutral zones, and content-count limits.
 
 ## Building & Running
 
@@ -100,7 +110,7 @@ go build -o bin/template-gui.exe .
 .\bin\template-gui.exe
 
 # Run tests
-go test ./test/...
+go test ./...        # or: go test ./test/...
 ```
 
 Hot reload via [air](https://github.com/air-verse/air) is configured in
@@ -108,25 +118,33 @@ Hot reload via [air](https://github.com/air-verse/air) is configured in
 
 ## Workflow
 
-1. Launch the GUI (`go run .`).
-2. Configure the template across the four tabs. The preview panel updates
-   each time you click **Generate Template**.
-3. **Save** / **Save As…** writes a `.gen.json` settings file (your inputs).
-4. Pick an output folder in the footer, click **Generate Template** to
-   compute the template (and refresh the preview), then click
-   **Save Template** to write `<TemplateName>.rmg.json` into that folder.
-5. Drop the `.rmg.json` into the game's templates folder and pick it from
+1. Launch the GUI (`go run .`). On startup it tries to locate the game's
+   template folder via Steam and pre-fills the output directory.
+2. Configure the template across the **General**, **Layout**, **Zone Content**
+   and **Bonuses & Bans** tabs.
+3. (Optional) On the **Layout** tab open the **Manual zone editor** to tweak
+   the zones and connections of the last generated template.
+4. **Save** / **Save As…** writes a `.gen.json` settings file (your inputs).
+5. Click **Generate Template** to build the template and refresh the preview,
+   then **Save Template** to write `<TemplateName>.rmg.json` (plus a preview
+   `.png`) into the output folder.
+6. Drop the `.rmg.json` into the game's templates folder and pick it from
    the in-game RMG screen.
 
 ## Topologies
 
-| Topology      | Constant                          | Shape                                                        |
-|---------------|-----------------------------------|--------------------------------------------------------------|
-| Random        | `generator.TopologyRandom`        | Default. Random placement / Delaunay-style connections.      |
-| Ring          | `generator.TopologyDefault`       | Players in a circle, each connected to neighbors.            |
-| Hub-and-Spoke | `generator.TopologyHubAndSpoke`   | All players connect through a central hub neutral zone.      |
-| Chain         | `generator.TopologyChain`         | Linear arrangement of zones.                                 |
-| Shared Web    | `generator.TopologySharedWeb`     | Players connected through shared neutral zones.              |
+| Topology      | Constant                       | Shape                                                        |
+|---------------|--------------------------------|--------------------------------------------------------------|
+| Circles       | `config.TopologyCircles`       | Default. Concentric rings sorted by zone tier.               |
+| Random        | `config.TopologyRandom`        | Random placement / Delaunay-style connections.               |
+| Ring          | `config.TopologyDefault`       | Players in a circle, each connected to neighbors.            |
+| Hub-and-Spoke | `config.TopologyHubAndSpoke`   | All players connect through a central hub neutral zone.      |
+| Chain         | `config.TopologyChain`         | Linear arrangement of zones.                                 |
+| Shared Web    | `config.TopologySharedWeb`     | Players connected through shared neutral zones.              |
+| Square        | `config.TopologySquare`        | Players line the edges of a square; neutrals on edges and inside. |
+| Geometric     | `config.TopologyGeometric`     | Symmetric geometric shapes built around a central zone.      |
+| Cross         | `config.TopologyCross`         | Zones and connections radiate from a centre into cross arms. |
+| Fractal       | `config.TopologyFractal`       | Each player is the base of a fractal that branches inward (low tiers nearest, high tiers at the woven centre); players never border directly. |
 
 ## Game Modes & Victory Conditions
 
@@ -135,7 +153,7 @@ Game modes (UI exposes both, generator currently always emits `Classic`):
 - `Classic`
 - `SingleHero` (reserved)
 
-Victory condition IDs (`SettingsFile.VictoryCondition`):
+Victory condition IDs (`GameEndConditions.VictoryCondition`):
 
 | ID                 | UI label             |
 |--------------------|----------------------|
@@ -151,71 +169,70 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
 
 ### Layers
 
-1. **GUI** (`internal/gui/`) — Gio widgets, four-tab layout + preview
-   sidebar + footer, file dialogs, binds widget state into
-   `models.SettingsFile`.
-2. **Models** (`internal/models/`)
-   - `SettingsFile` — `.gen.json` persistence schema (the editor's source of truth).
-   - `models/generator/` — `GeneratorSettings`, `MapTopology`,
-     `ZoneConfiguration`, `AdvancedSettings`, `HeroSettings`,
-     `GameEndConditions`, `GladiatorArenaRules`, `TournamentRules`,
-     `NeutralZoneQuality`.
-   - `models/template/` — On-disk `.rmg.json` schema (`RmgTemplate`,
-     `Variant`, `Zone`, `GameRules`, `ContentPool`, `MandatoryContent`, …).
-   - `models/types.go` — Re-export aliases used by the GUI.
-3. **Services** (`internal/services/`)
-   - `Generate(*GeneratorSettings) (*RmgTemplate, error)` — turns settings
-     into a template.
-   - `templateWriter.go` — serializes a template to disk.
-   - `settingsFileLoader.go` — load/save `.gen.json` files.
-   - `ZoneContentManager` — builds per-tier mandatory content for player
-     zones and Low / Medium / High neutral zones, plus content count limits.
-   - `BuildPreviewLayout` / preview renderer — compute zone geometry for
-     the preview panel and export a PNG snapshot.
-4. **Constants** (`internal/constants/`) — stable string IDs for content
-   items, include lists, content groups, the preview legend and UI strings.
+1. **Front-ends** (`app/`) — `app/gui` is the Gio desktop UI (panels, dialogs,
+   widgets, themes, with view state in `drivers`). `app/tui` and `app/web` are
+   placeholders. The UI only renders and collects input; it delegates all
+   logic to handlers.
+2. **Handlers** (`internal/handlers`) — `GUIHandler` is the UI's entry point:
+   `GenerateTemplate`, `UpdateTemplate`, `SaveTemplate`, `LoadState`,
+   `SaveState`. It exchanges DTOs (`internal/dtos`) with the UI and calls
+   services.
+3. **Services** (`internal/services`) — generation (`template_generator` with
+   topology/content/rule providers), the manual `connection_editor`,
+   `content_rules`, `zones`, preview layout/rendering, and `.gen.json` /
+   `.rmg.json` IO (`SettingsToGenerator`, `WriteTemplate`, settings loader).
+4. **Models** (`internal/models`) — `config.GeneratorConfig` (the generator
+   input) plus mappings, neutral-zone plans, generation tuning and positions.
+5. **Entities** (`internal/entities`) — the on-disk `.rmg.json` schema
+   (`RmgTemplate`, `Variant`, `Zone`, `GameRules`, content pools…). Read-only;
+   guarantees game compatibility.
+6. **Registry & constants** (`internal/registry`, `internal/constants`) — pure
+   game SIDs / enum pools and the display-name catalogs that reference them.
+7. **Common & helpers** (`internal/common`, `internal/helpers`) — shared error
+   values and cross-cutting utilities, including Steam library detection.
 
 ### Generation Flow
 
 ```
-GUI widgets
-   │   (translated by services.SettingsToGenerator)
+app/gui (panels, drivers.State)
+   │   collects widget input into dtos.EditorStateDto
    ▼
-SettingsFile  ──►  GeneratorSettings
-                        │
-                        ▼
-                services.Generate
-                ├── buildNeutralZonePlan
-                ├── buildTopologyAdjacency
-                ├── buildGameRules
-                ├── buildVariant / buildZones
-                └── ZoneContentManager (mandatory content)
-                        │
-                        ▼
-                   RmgTemplate
-                   ├──► services.BuildPreviewLayout  (preview panel)
-                   └──► services template writer     ──►  <Name>.rmg.json
+handlers.GUIHandler.GenerateTemplate
+   │   services.SettingsToGenerator(stateDto) → config.GeneratorConfig
+   ▼
+template_generator.TemplateGenerator.Generate
+   ├── zones.ZoneLabelProvider          (player + neutral labels)
+   ├── providers.TopologyProvider       (variant: zones + connections)
+   ├── providers.GameRulesProvider      (win/loss, heroes, tournament…)
+   ├── providers.MandatoryContentProvider / ContentLimitProvider
+   └── providers.ZoneLayoutProvider
+   ▼
+entities.RmgTemplate
+   ├──► services.BuildPreviewLayout / preview renderer  (preview panel + PNG)
+   └──► services.WriteTemplate                          ──► <Name>.rmg.json
 ```
 
 ## Testing
 
 ```powershell
 # Full suite
-go test ./test/...
+go test ./...
 
-# Just the generator / services tests
+# Just the services tests
 go test ./test/services/...
 
-# A single test
-go test ./test/services/ -run TestGenerate_DefaultSettings_Succeeds
+# A single test (by name)
+go test ./test/models/ -run TestSettingsFile_RoundTrip
 ```
 
 ## Notes
 
 - Zones are labelled `A`–`AF` (up to 32 zones).
 - Default guard randomization is `0.05`.
-- Default connections-per-zone is `1`.
 - Player zones are emitted first (`A` onwards), neutral zones follow.
+- Read-only by design: the `.rmg.json` schema in
+  [internal/entities/template](internal/entities/template) and the game data
+  under [data/](data) are kept verbatim for game compatibility.
 - The generator and the example templates are kept in sync by the
   round-trip tests under [test/models/template](test/models/template).
 

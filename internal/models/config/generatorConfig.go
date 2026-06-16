@@ -73,7 +73,7 @@ func NewGeneratorConfig() *GeneratorConfig {
 		SpawnRemoteFootholds:  true,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,
-		Topology:              config_inner.TopologyBalanced,
+		Topology:              config_inner.TopologyCircles,
 		FactionLawsExpPercent: 100,
 		AstrologyExpPercent:   100,
 		ZoneConfiguration: ZoneConfig{
@@ -173,7 +173,7 @@ func (this *GeneratorConfig) CanHonorNeutralSeparation() bool {
 
 	neutralZoneCount := this.getNeutralZoneCount()
 	switch this.Topology {
-	case config_inner.TopologyDefault, config_inner.TopologyBalanced:
+	case config_inner.TopologyDefault, config_inner.TopologyCircles:
 		return neutralZoneCount >= this.PlayerCount*min
 	case config_inner.TopologyChain:
 		return neutralZoneCount >= (this.PlayerCount-1)*min

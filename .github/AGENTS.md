@@ -12,8 +12,8 @@ working on the **HomMoe Custom Templates** repository. Follow them strictly.
 - **UI:** Gio (`gioui.org v0.9.0`) — immediate-mode desktop GUI.
 - **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
   and Magic: Olden Era* and persist editor state as `.gen.json` files.
-- **Entry point:** [main.go](main.go) → [internal/gui/gui.go](internal/gui/gui.go).
-- **Core generation:** [internal/services/template_generator.go](internal/services/template_generator.go).
+- **Entry point:** [main.go](main.go) → [app/gui/program.go](app/gui/program.go) (`StartApplication`).
+- **Core generation:** [internal/services/template_generator/templateGenerator.go](internal/services/template_generator/templateGenerator.go).
 
 Always read [README.md](README.md) and the relevant package before making
 non-trivial changes.
@@ -30,7 +30,7 @@ renaming, reformatting, or "cleaning up" their contents will break the project
 in production:
 
 - [data/](data/) — including `ExampleTemplates/` and `GameData/GeneratorData/`
-- [internal/models/template/](internal/models/template/) — the `.rmg.json`
+- [internal/entities/template/](internal/entities/template/) — the `.rmg.json`
   output schema
 
 You **MUST NOT**:
@@ -96,7 +96,7 @@ The project must build and run on **both Windows and Linux**. Therefore:
 
 1. Run `go build ./...` and `go test ./test/...`.
 2. Report any new errors and fix them before handing back.
-3. Briefly summarise: files touched, behaviour changed, tests added.
+3. Briefly summarize: files touched, behaviour changed, tests added.
 
 ---
 
@@ -143,13 +143,13 @@ any file you *do* touch must leave the repo in conformance.
 
 Place new code in the package whose responsibility matches its role:
 
-| Kind of code                                              | Location                                                                                       |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| UI / rendering (Gio widgets, layouts, theming, input)     | [internal/gui/](internal/gui/)                                                                 |
-| Data structs / DTOs / factory functions (no behaviour)    | [internal/models/](internal/models/) — **except** the read-only `template/` subtree (see §2.1) |
-| Business logic, orchestrators, services                   | [internal/services/](internal/services/)                                                       |
-| Constants, IDs, immutable lookup tables                   | [internal/constants/](internal/constants/)                                                     |
-| Misc / cross-cutting utility functions                    | [internal/helpers/](internal/helpers/)                                                         |
+| Kind of code                                              | Location                                                                                                                                                                  |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI / rendering (Gio widgets, layouts, theming, input)     | [app/gui/](app/gui/)                                                                                                                                                      |
+| Data structs / DTOs / factory functions (no behaviour)    | [internal/models/](internal/models/) + [internal/dtos/](internal/dtos/); read-only `.rmg.json` schema in [internal/entities/](internal/entities/) (`template/`, see §2.1) |
+| Business logic, orchestrators, services                   | [internal/services/](internal/services/) + [internal/handlers/](internal/handlers/)                                                                                       |
+| Constants, IDs, immutable lookup tables                   | [internal/constants/](internal/constants/) + [internal/registry/](internal/registry/)                                                                                     |
+| Misc / cross-cutting utility functions                    | [internal/helpers/](internal/helpers/)                                                                                                                                    |
 
 - If a struct or function has dependencies (helper structs, private types)
   **that are not used anywhere else**, nest them in a sibling folder next to
@@ -158,7 +158,7 @@ Place new code in the package whose responsibility matches its role:
 
 ### 4.5 UI vs. business logic separation
 
-- Code under [internal/gui/](internal/gui/) **must contain only rendering
+- Code under [app/gui/](app/gui/) **must contain only rendering
   logic** — widget composition, layout, input handling, view state.
 - All business logic (validation, generation, transformation, persistence)
   lives in [internal/services/](internal/services/) (or `models/`,
@@ -221,7 +221,7 @@ The document **must** include the following sections, in this order:
     session that re-establishes context. It must:
     - Reference this `AGENTS.md` file ("Read `AGENTS.md` first").
     - Re-state the §2 hard rules in one sentence each.
-    - Summarise where work left off.
+    - Summarize where work left off.
     - Point to `./.agent/session-carry-forward.md` for the full handoff.
 
 The carry-forward document should be **self-contained** — a fresh agent with
@@ -263,6 +263,6 @@ no prior memory must be able to resume work from it alone.
 ---
 
 **TL;DR:** Don't touch [data/](data/) or
-[internal/models/template/](internal/models/template/). Stay cross-platform.
+[internal/entities/template/](internal/entities/template/). Stay cross-platform.
 Cover everything you write with tests. Cap sessions at 10–20 messages and
 hand off via `./.agent/session-carry-forward.md`.

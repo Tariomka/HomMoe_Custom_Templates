@@ -92,7 +92,7 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		HeroCountMin:                 4,
 		HeroCountMax:                 8,
 		HeroCountIncrement:           1,
-		Topology:                     config_inner.TopologyBalanced,
+		Topology:                     config_inner.TopologyCircles,
 		MaxPortalConnections:         32,
 		SpawnRemoteFootholds:         true,
 		GenerateRoads:                true,

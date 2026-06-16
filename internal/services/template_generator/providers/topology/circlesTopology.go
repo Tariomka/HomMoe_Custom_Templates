@@ -8,17 +8,17 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
-type RandomBalancedTopologyService struct {
+type CirclesTopologyService struct {
 	RandomTopologyService
 }
 
-func NewRandomBalancedTopologyService() *RandomBalancedTopologyService {
-	return &RandomBalancedTopologyService{
+func NewCirclesTopologyService() *CirclesTopologyService {
+	return &CirclesTopologyService{
 		RandomTopologyService: *NewRandomTopologyService(),
 	}
 }
 
-func (this *RandomBalancedTopologyService) CreateTopologyVariant(
+func (this *CirclesTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans,
@@ -31,7 +31,7 @@ func (this *RandomBalancedTopologyService) CreateTopologyVariant(
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones, 0)
 	positions := models.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
-	pairs := this.createBalancedPairs(positions.CreateDelaunayTriangulation(), allLabels, playerLabels, neutralZones)
+	pairs := this.createCirclesPairs(positions.CreateDelaunayTriangulation(), allLabels, playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
 	zones := this.createZones(configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
@@ -56,7 +56,7 @@ func (this *RandomBalancedTopologyService) CreateTopologyVariant(
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
-func (this *RandomBalancedTopologyService) createBalancedPairs(pairs [][2]int, allLabels, playerLabels []string, neutralZones models.NeutralZonePlans) [][2]int {
+func (this *CirclesTopologyService) createCirclesPairs(pairs [][2]int, allLabels, playerLabels []string, neutralZones models.NeutralZonePlans) [][2]int {
 	presentTiers := map[int]bool{}
 	for _, label := range allLabels {
 		tier := 0

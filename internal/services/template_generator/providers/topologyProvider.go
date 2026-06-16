@@ -44,8 +44,20 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	case config.TopologyRandom:
 		return topology.NewRandomTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyBalanced:
-		return topology.NewRandomBalancedTopologyService().
+	case config.TopologyCircles:
+		return topology.NewCirclesTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+	case config.TopologySquare:
+		return topology.NewSquareTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+	case config.TopologyGeometric:
+		return topology.NewGeometricTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+	case config.TopologyCross:
+		return topology.NewCrossTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+	case config.TopologyFractal:
+		return topology.NewFractalTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	default: // config.TopologyDefault
 		return topology.NewRingTopologyService().

@@ -11,7 +11,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 	return entities.RmgTemplate{
 		Name:                "Custom Template",
 		GameMode:            "Classic",
-		Description:         "Generated with Custom Template Editor: Balanced layout, no neutral zones, 1 castle per player zone.",
+		Description:         "Generated with Custom Template Editor: Circles layout, no neutral zones, 1 castle per player zone.",
 		DisplayWinCondition: "win_condition_1",
 		SizeX:               160,
 		SizeZ:               160,

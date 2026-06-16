@@ -338,10 +338,10 @@ func TestWhenRandomTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T
 	}
 }
 
-func TestWhenBalancedTopologySelected_SetsGeneratorRingOnAllZones(t *testing.T) {
+func TestWhenCirclesTopologySelected_SetsGeneratorRingOnAllZones(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyBalanced
+	configuration.Topology = config.TopologyCircles
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
@@ -353,6 +353,102 @@ func TestWhenBalancedTopologySelected_SetsGeneratorRingOnAllZones(t *testing.T) 
 	for _, zone := range actual.Variants[0].Zones {
 		assert.NotNil(t, zone.GeneratorRing, "zone %q should have a generator ring", zone.Name)
 	}
+}
+
+func TestWhenSquareTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySquare
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.NotNil(t, zone.GeneratorPosition, "zone %q should have a generator position", zone.Name)
+	}
+}
+
+func TestWhenGeometricTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyGeometric
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.NotNil(t, zone.GeneratorPosition, "zone %q should have a generator position", zone.Name)
+	}
+}
+
+func TestWhenCrossTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyCross
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.NotNil(t, zone.GeneratorPosition, "zone %q should have a generator position", zone.Name)
+	}
+}
+
+func TestWhenFractalTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyFractal
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.NotNil(t, zone.GeneratorPosition, "zone %q should have a generator position", zone.Name)
+	}
+}
+
+// TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign verifies
+// the fractal layout keeps players apart through its own structure — neighbouring
+// fractals meet only at neutral tips — even when NoDirectPlayerConnections is off.
+func TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign(t *testing.T) {
+	// Arrange
+	playerCount := gofakeit.Number(2, 6)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyFractal
+	configuration.PlayerCount = playerCount
+	// Enough neutral zones that every player anchors its own fractal, so the
+	// graph stays connected without any direct player-to-player bridge.
+	configuration.ZoneConfiguration.NeutralZoneCount = playerCount + gofakeit.Number(3, 8)
+	configuration.NoDirectPlayerConnections = false
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	directPlayerConnections := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x entities.Connection) bool {
+			return x.ConnectionType == "Direct" &&
+				strings.HasPrefix(x.From, "Spawn-") && strings.HasPrefix(x.To, "Spawn-")
+		}).
+		ToSlice()
+	assert.Empty(t, directPlayerConnections)
 }
 
 // ── Generate: connection-type behaviour ──────────────────────────────
@@ -768,10 +864,10 @@ func TestWhenTournamentEnabledWithChainTopology_CreatesChainGuardGroups(t *testi
 	assert.True(t, hasChainGuardGroup)
 }
 
-func TestWhenTournamentEnabledWithBalancedTopology_CreatesBalancedGuardGroups(t *testing.T) {
+func TestWhenTournamentEnabledWithCirclesTopology_CreatesBalancedGuardGroups(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyBalanced
+	configuration.Topology = config.TopologyCircles
 	configuration.PlayerCount = 2
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
 	configuration.TournamentRules = &config.TournamentRules{
@@ -1056,7 +1152,9 @@ func TestWhenNeutralZonesAreHighQuality_ProducesHigherBorderGuardValues(t *testi
 func TestWhenGeneratingForEachTopology_ProducesZones(t *testing.T) {
 	topologies := []config.MapTopology{
 		config.TopologyDefault, config.TopologyChain, config.TopologyHubAndSpoke,
-		config.TopologySharedWeb, config.TopologyRandom, config.TopologyBalanced,
+		config.TopologySharedWeb, config.TopologyRandom, config.TopologyCircles,
+		config.TopologySquare, config.TopologyGeometric, config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topology := range topologies {
 		t.Run(string(topology), func(t *testing.T) {
@@ -1222,10 +1320,10 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 			),
 		},
 		{
-			topology: config.TopologyBalanced,
+			topology: config.TopologyCircles,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Custom Template Editor: Balanced layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Circles layout, no neutral zones, 1 castle per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{{"Spawn-A", "Spawn-B", "Direct"}},
 				2,
@@ -1307,7 +1405,7 @@ func assertTemplateMatches(t *testing.T, expected expectedTemplate, actual *enti
 }
 
 func normalizeConnection(from, to, connectionType string) expectedConnection {
-	// Connections are conceptually undirected — normalise endpoints so callers
+	// Connections are conceptually undirected — normalize endpoints so callers
 	// don't have to anticipate the (non-deterministic) emission order.
 	if from > to {
 		from, to = to, from
