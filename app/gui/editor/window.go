@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
@@ -42,7 +43,9 @@ func NewWindow() *Window {
 
 func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	this.save()
-	this.state.AutoRegenerate()
+	if redrawAt, scheduleRedraw := this.state.AutoRegenerate(gtx.Now); scheduleRedraw {
+		gtx.Execute(op.InvalidateCmd{At: redrawAt})
+	}
 	this.handleClicks(gtx)
 
 	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())

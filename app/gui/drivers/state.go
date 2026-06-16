@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
 	"gioui.org/widget"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
@@ -49,6 +50,14 @@ type State struct {
 	manualZones       []entities.Zone
 	manualConnections []entities.Connection
 	hasManualEdits    bool
+
+	// pendingState / pendingDeadline implement debounced regeneration for
+	// non-preview option changes (most sliders and the template name).
+	// pendingState is the editor state observed when the debounce timer was
+	// last (re)armed; pendingDeadline is when it should fire. The timer is
+	// reset on every change so regeneration only runs once editing pauses.
+	pendingState    *dtos.EditorStateDto
+	pendingDeadline time.Time
 
 	// dialogs renders modal dialogs (rule editors, pickers, the connection
 	// editor) over the main UI.
@@ -244,16 +253,68 @@ func (this *State) Generate() {
 	this.SetStatus(status, false)
 }
 
-// AutoRegenerate regenerates the template whenever the live editor state has
-// changed since the last generation. Manual zone edits are reapplied when the
-// layout-defining options (player/zone counts, topology and connection
-// settings) are unchanged, so tweaks such as castle counts keep hand edits.
-// It is a no-op when nothing changed, keeping it cheap to call every frame.
-func (this *State) AutoRegenerate() {
+// autoRegenDebounce is how long the editor waits after the last non-preview
+// option change before regenerating, so dragging a slider (or typing in the
+// name field) does not regenerate on every frame.
+const autoRegenDebounce = 300 * time.Millisecond
+
+// AutoRegenerate regenerates the template when the live editor state has
+// changed since the last generation.
+//
+// Preview-affecting changes (player/zone counts, topology and connection
+// settings) regenerate immediately so the live preview tracks the control.
+// All other changes (non-structural sliders and the template name) are
+// debounced and only regenerate once editing has paused for autoRegenDebounce,
+// avoiding a regeneration on every frame while a slider is dragged.
+//
+// now is the current frame time. It returns the time at which the caller
+// should request another frame and whether such a redraw must be scheduled,
+// used to wake the UI back up once the debounce window elapses without further
+// input.
+func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
+	// Nothing changed since the last generation → cancel any pending debounce.
 	if this.lastGeneratedState != nil && reflect.DeepEqual(*this.lastGeneratedState, *this.stateDto) {
-		return
+		this.pendingState = nil
+		return time.Time{}, false
 	}
 
+	// First generation: populate the preview immediately on startup.
+	if this.lastGeneratedState == nil {
+		this.performAutoRegen()
+		return time.Time{}, false
+	}
+
+	// Preview-affecting changes regenerate immediately so the preview follows
+	// the control live.
+	if layoutDefiningOptionsChanged(this.lastGeneratedState, this.stateDto) {
+		this.pendingState = nil
+		this.performAutoRegen()
+		return time.Time{}, false
+	}
+
+	// Non-preview change: (re)arm the debounce timer whenever the state is
+	// still moving, and ask to be woken up when the timer is due.
+	if this.pendingState == nil || !reflect.DeepEqual(*this.pendingState, *this.stateDto) {
+		snapshot := *this.stateDto
+		this.pendingState = &snapshot
+		this.pendingDeadline = now.Add(autoRegenDebounce)
+		return this.pendingDeadline, true
+	}
+
+	// State has been stable since the last frame; keep waiting until due.
+	if now.Before(this.pendingDeadline) {
+		return this.pendingDeadline, true
+	}
+
+	// Editing paused long enough → regenerate now.
+	this.pendingState = nil
+	this.performAutoRegen()
+	return time.Time{}, false
+}
+
+// performAutoRegen runs the actual regeneration used by AutoRegenerate,
+// reapplying manual zone edits when the layout-defining options are unchanged.
+func (this *State) performAutoRegen() {
 	reapplyManual := this.lastGeneratedState != nil &&
 		this.hasManualEdits &&
 		!layoutDefiningOptionsChanged(this.lastGeneratedState, this.stateDto)
@@ -306,6 +367,7 @@ func (this *State) clearGeneratedState() {
 	this.lastGeneratedState = nil
 	this.lastTemplate = nil
 	this.connectionsModified = false
+	this.pendingState = nil
 	this.discardManualEdits()
 }
 
