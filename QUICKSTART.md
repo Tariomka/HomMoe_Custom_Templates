@@ -33,50 +33,58 @@ The window has four regions:
   settings-file path on the right (a trailing `*` marks unsaved edits).
 - **Tabs** (centre-left): the four configuration tabs listed below.
 - **Preview** (centre-right): live render of the most recently generated
-  template, with `Refresh` and `Save PNG` buttons.
+  template, with a `Refresh` button. The preview PNG is written automatically
+  when you **Save Template**.
 - **Footer** (bottom): output folder picker, `Browse…`, `Reveal`,
-  `Generate Template`, `Save Template`, plus a status line.
+  `Generate Template`, `Save Template`, plus a status line. The output folder
+  is pre-filled from your Steam install when it can be located.
 
 ### Tabs
 
-#### 1. Map Setup
-- **Template name** — used as the output filename (`<name>.rmg.json`).
-- **Game mode** — `Classic` or `SingleHero` (only `Classic` is currently emitted).
-- **Players** — 2..8.
-- **Map size** — slider in tile units (64..240). Tick
-  *"Allow experimental large map sizes (>240)"* to extend to 256..512.
-- **Topology** — `Random` (default), `Ring`, `Hub`, `Chain`, `Shared Web`.
+#### 1. General
+- **Template** — template name (used as the output filename), player count
+  (2–8), map size, and a toggle for non-official large sizes (>240).
+- **Hero Restrictions** — game mode (`Classic` / `SingleHero`) and hero count
+  min / max / increment (hidden for `SingleHero`).
+- **Rules** — faction-laws XP % and astrology XP % (25–200), a victory
+  condition (Standard / Lost Starting City / Hold City / Tournament) and the
+  matching win/loss toggles: lose-on-lost-city (+ grace days),
+  lose-on-lost-hero, hold-a-city (+ days to hold), gladiator arena (+ delay /
+  count days) and tournament (first day, interval, points, save army).
 
-#### 2. Generation Options
-- **Connectivity** — toggle roads, random portals (with max-portal slider),
-  remote footholds, experimental balanced placement, player isolation,
-  faction-matched player castles, minimum neutrals between players.
-- **Advanced neutral zones** — when enabled, set per-quality counts split
-  between *with castle* and *without castle* (Low / Medium / High).
-  When disabled, just set the total `Neutral zone count`.
-- **Zone sizes** — player / neutral / hub multipliers, hub castle count,
-  guard randomization.
-- **Content density** — resource and structure density percents
-  (independent or via the unified `Content density` knob).
+#### 2. Layout
+- **Topology** — pick one of ten layouts; a description line explains the
+  selected one.
+- **Manual zone editor** — opens the visual editor for the last generated
+  template (generate first).
+- **Connectivity** — roads, random portals (+ max connections), remote
+  footholds, player isolation, matching player castle factions, and minimum
+  neutrals between players.
+- **Zone sizes** — player / neutral size multipliers, plus hub size and hub
+  castles for the Hub topology.
+- **Difficulty & Density** — resource / structure density, neutral stack
+  strength, border-guard strength and guard randomization.
+- **Advanced zone control** — when enabled, set total neutral zones, castles
+  per zone, and per-tier (Low / Medium / High) counts split by with / without
+  castle.
 
-#### 3. Game Rules
-- **Victory condition** — Standard / Lost Starting City / Hold City / Tournament.
-  When Hold City is selected the generator also picks a neutral zone to
-  host the city-hold target.
-- **Heroes** — min, max, increment.
-- **Faction laws XP %** and **Astrology XP %** — 25..200 (100 = baseline).
-- **Lost-city / lost-hero / city-hold** day toggles.
-- **Gladiator arena** — start delay and counter day.
-- **Tournament** — first day, interval, points-to-win, save-army.
+#### 3. Zone Content
+Seed mandatory content per zone tier — **Player**, **Low**, **Medium**,
+**High Neutral** and **Hub** — across mines, utility structures, treasures,
+unit recruitment, resource banks and hero-improvement groups. Each row can
+open a **Manage Rules** dialog for placement constraints (distance to
+road/town, guarded, solo encounter, variant).
 
-#### 4. Zone Content
-Add extra mandatory content items to seed into player zones in addition
-to the defaults from `services.ZoneContentManager`.
+#### 4. Bonuses & Bans (experimental)
+Add game-start bonuses, banned items, banned spells and guard-value overrides.
+Entries are added through picker dialogs and removed per row. Effects only
+apply at generation time.
 
 ## 3. Save / Load Settings
 
-Settings are persisted as `.gen.json` files (the
-`models.SettingsFile` struct, handled by `services.settingsFileLoader`).
+Your editor state is persisted as `.gen.json` files (the
+`dtos.EditorStateDto` model, handled by `services.SaveSettingsFile` /
+`services.LoadSettingsFile`).
 
 - **Save / Save As…** — write the current widget state to disk.
 - **Open…** — load a `.gen.json` file back into the widgets.
@@ -87,18 +95,16 @@ and an asterisk when there are unsaved changes.
 
 ## 4. Generate a Template
 
-1. Pick an output folder in the footer (`Browse…` button next to the path).
+1. The output folder is pre-filled from your Steam install when it can be
+   found; otherwise pick one in the footer (`Browse…`).
 2. Click **Generate Template** — this builds the template in memory and
    refreshes the preview panel.
-3. Click **Save Template** — writes `<TemplateName>.rmg.json` into the
-   chosen folder.
-4. **Reveal** opens the output folder in Explorer.
+3. Click **Save Template** — writes `<TemplateName>.rmg.json` plus a preview
+   `<TemplateName>.png` into the chosen folder.
+4. **Reveal** opens the output folder in your file explorer.
 
 Drop the resulting `.rmg.json` into the game's templates directory and
 pick it from the in-game Random Map Generator screen.
-
-The preview panel's **Save PNG** button writes a snapshot of the current
-preview canvas next to the template.
 
 ## 5. Programmatic Use
 
@@ -108,31 +114,31 @@ If you want to call the generator from Go without the GUI:
 package main
 
 import (
-    "encoding/json"
-    "os"
+    "log"
 
-    "github.com/Tariomka/hommoe_custom_templates/internal/models/generator"
+    "github.com/Tariomka/hommoe_custom_templates/internal/models/config"
     "github.com/Tariomka/hommoe_custom_templates/internal/services"
+    "github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
 
 func main() {
-    s := generator.NewGeneratorSettings() // sensible defaults
-    s.TemplateName = "Programmatic Map"
-    s.PlayerCount = 4
-    s.MapSize = 160
-    s.Topology = generator.TopologyDefault // Ring
+    cfg := config.NewGeneratorConfig() // sensible defaults
+    cfg.TemplateName = "Programmatic Map"
+    cfg.PlayerCount = 4
+    cfg.MapSize = 160
+    cfg.Topology = config.TopologyDefault // Ring
 
-    tmpl, err := services.Generate(s)
+    template := template_generator.NewTemplateGenerator(cfg).Generate()
+
+    out, err := services.WriteTemplate(".", template)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
-
-    data, _ := json.MarshalIndent(tmpl, "", "  ")
-    _ = os.WriteFile("Programmatic Map.rmg.json", data, 0o644)
+    log.Println("wrote", out)
 }
 ```
 
-`generator.NewGeneratorSettings()` matches the GUI's defaults
+`config.NewGeneratorConfig()` matches the GUI's defaults
 (2 players, size 160, topology Circles, Classic mode, etc.).
 
 ## 6. Map Sizes
