@@ -617,6 +617,7 @@ func (this *TopologyBase) createOuterZoneRoads(
 	for i := 1; i < castleCount; i++ {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
+				WithStoneType().
 				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
 				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
 				Build())
