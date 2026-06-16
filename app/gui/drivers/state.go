@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+	"time"
 
 	"gioui.org/widget"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
@@ -34,6 +36,28 @@ type State struct {
 	// hand-edited in the visual editor, so a later regeneration can warn that
 	// those edits will be replaced.
 	connectionsModified bool
+
+	// lastGeneratedState is a copy of the editor state used for the most recent
+	// successful generation. Auto-regeneration compares the live state against
+	// it to detect option changes and to decide whether manual zone edits can
+	// be reapplied.
+	lastGeneratedState *dtos.EditorStateDto
+
+	// manualZones / manualConnections hold the latest zones and connections
+	// applied from the manual zone editor. When a regeneration leaves the
+	// layout-defining options unchanged, these are reapplied so hand edits
+	// survive option tweaks (e.g. changing a castle count).
+	manualZones       []entities.Zone
+	manualConnections []entities.Connection
+	hasManualEdits    bool
+
+	// pendingState / pendingDeadline implement debounced regeneration for
+	// non-preview option changes (most sliders and the template name).
+	// pendingState is the editor state observed when the debounce timer was
+	// last (re)armed; pendingDeadline is when it should fire. The timer is
+	// reset on every change so regeneration only runs once editing pauses.
+	pendingState    *dtos.EditorStateDto
+	pendingDeadline time.Time
 
 	// dialogs renders modal dialogs (rule editors, pickers, the connection
 	// editor) over the main UI.
@@ -102,6 +126,7 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 	})
 	this.lastTemplate = dto.Template
 	this.connectionsModified = true
+	this.rememberManualEdits(zones, connections)
 	if err != nil {
 		status := fmt.Sprintf(
 			"Applied %d zones and %d connections. \u26a0 Error: %v; fix before export.",
@@ -126,6 +151,7 @@ func (this *State) Reset() {
 	this.stateDto = &stateDto
 	this.currentPath = ""
 	this.unsaved = false
+	this.clearGeneratedState()
 	this.SetStatus("New settings file.", false)
 }
 
@@ -160,6 +186,7 @@ func (this *State) Load() {
 	this.stateDto = dto
 	this.currentPath = path
 	this.unsaved = false
+	this.clearGeneratedState()
 	this.SetStatus("Loaded "+path, false)
 }
 
@@ -214,14 +241,9 @@ func (this *State) Generate() {
 	}
 
 	wasModified := this.connectionsModified
-	this.connectionsModified = false
-	this.lastTemplate = dto.Template
-	zoneCount := 0
-	connectionCount := 0
-	if len(this.lastTemplate.Variants) > 0 {
-		zoneCount = len(this.lastTemplate.Variants[0].Zones)
-		connectionCount = len(this.lastTemplate.Variants[0].Connections)
-	}
+	this.applyGeneratedTemplate(dto.Template)
+	this.discardManualEdits()
+	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
 	status := fmt.Sprintf(
 		"Generated '%s' — %d zones, %d connections.",
 		this.lastTemplate.Name, zoneCount, connectionCount)
@@ -229,6 +251,190 @@ func (this *State) Generate() {
 		status += " (Manual connection edits were replaced by regeneration.)"
 	}
 	this.SetStatus(status, false)
+}
+
+// autoRegenDebounce is how long the editor waits after the last non-preview
+// option change before regenerating, so dragging a slider (or typing in the
+// name field) does not regenerate on every frame.
+const autoRegenDebounce = 300 * time.Millisecond
+
+// AutoRegenerate regenerates the template when the live editor state has
+// changed since the last generation.
+//
+// Preview-affecting changes (player/zone counts, topology and connection
+// settings) regenerate immediately so the live preview tracks the control.
+// All other changes (non-structural sliders and the template name) are
+// debounced and only regenerate once editing has paused for autoRegenDebounce,
+// avoiding a regeneration on every frame while a slider is dragged.
+//
+// now is the current frame time. It returns the time at which the caller
+// should request another frame and whether such a redraw must be scheduled,
+// used to wake the UI back up once the debounce window elapses without further
+// input.
+func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
+	// Nothing changed since the last generation → cancel any pending debounce.
+	if this.lastGeneratedState != nil && reflect.DeepEqual(*this.lastGeneratedState, *this.stateDto) {
+		this.pendingState = nil
+		return time.Time{}, false
+	}
+
+	// First generation: populate the preview immediately on startup.
+	if this.lastGeneratedState == nil {
+		this.performAutoRegen()
+		return time.Time{}, false
+	}
+
+	// Preview-affecting changes regenerate immediately so the preview follows
+	// the control live.
+	if layoutDefiningOptionsChanged(this.lastGeneratedState, this.stateDto) {
+		this.pendingState = nil
+		this.performAutoRegen()
+		return time.Time{}, false
+	}
+
+	// Non-preview change: (re)arm the debounce timer whenever the state is
+	// still moving, and ask to be woken up when the timer is due.
+	if this.pendingState == nil || !reflect.DeepEqual(*this.pendingState, *this.stateDto) {
+		snapshot := *this.stateDto
+		this.pendingState = &snapshot
+		this.pendingDeadline = now.Add(autoRegenDebounce)
+		return this.pendingDeadline, true
+	}
+
+	// State has been stable since the last frame; keep waiting until due.
+	if now.Before(this.pendingDeadline) {
+		return this.pendingDeadline, true
+	}
+
+	// Editing paused long enough → regenerate now.
+	this.pendingState = nil
+	this.performAutoRegen()
+	return time.Time{}, false
+}
+
+// performAutoRegen runs the actual regeneration used by AutoRegenerate,
+// reapplying manual zone edits when the layout-defining options are unchanged.
+func (this *State) performAutoRegen() {
+	reapplyManual := this.lastGeneratedState != nil &&
+		this.hasManualEdits &&
+		!layoutDefiningOptionsChanged(this.lastGeneratedState, this.stateDto)
+
+	dto, err := this.handler.GenerateTemplate(*this.stateDto)
+	if err != nil {
+		// Keep the previous template; only refresh the snapshot so we do not
+		// spin trying (and failing) to regenerate every frame for the same
+		// invalid state.
+		this.snapshotGeneratedState()
+		this.SetStatus(fmt.Sprintf("Auto-generation failed: %v.", err), true)
+		return
+	}
+
+	this.applyGeneratedTemplate(dto.Template)
+	if reapplyManual {
+		this.reapplyManualEdits()
+	} else {
+		this.discardManualEdits()
+	}
+
+	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
+	notice := fmt.Sprintf(
+		"Template regenerated with latest changes — %d zones, %d connections.",
+		zoneCount, connectionCount)
+	if reapplyManual {
+		notice += " (Manual zone edits reapplied.)"
+	}
+	this.SetStatus(notice, false)
+}
+
+// applyGeneratedTemplate stores a freshly generated template as the live one
+// and records the editor state that produced it.
+func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
+	this.connectionsModified = false
+	this.lastTemplate = template
+	this.snapshotGeneratedState()
+}
+
+// snapshotGeneratedState copies the current editor state so future changes can
+// be detected by AutoRegenerate.
+func (this *State) snapshotGeneratedState() {
+	snapshot := *this.stateDto
+	this.lastGeneratedState = &snapshot
+}
+
+// clearGeneratedState forgets the last generation and any manual edits, used
+// when a brand-new or loaded settings file replaces the current one.
+func (this *State) clearGeneratedState() {
+	this.lastGeneratedState = nil
+	this.lastTemplate = nil
+	this.connectionsModified = false
+	this.pendingState = nil
+	this.discardManualEdits()
+}
+
+// rememberManualEdits stores copies of the latest manually edited zones and
+// connections so they can be reapplied after a non-structural regeneration.
+func (this *State) rememberManualEdits(zones []entities.Zone, connections []entities.Connection) {
+	this.manualZones = append([]entities.Zone(nil), zones...)
+	this.manualConnections = append([]entities.Connection(nil), connections...)
+	this.hasManualEdits = true
+}
+
+// discardManualEdits drops any stored manual edits.
+func (this *State) discardManualEdits() {
+	this.manualZones = nil
+	this.manualConnections = nil
+	this.hasManualEdits = false
+}
+
+// reapplyManualEdits pushes the stored manual zones and connections back onto
+// the freshly generated template.
+func (this *State) reapplyManualEdits() {
+	if !this.hasManualEdits || this.lastTemplate == nil || len(this.lastTemplate.Variants) == 0 {
+		return
+	}
+	dto, _ := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
+		Template:    this.lastTemplate,
+		Zones:       append([]entities.Zone(nil), this.manualZones...),
+		Connections: append([]entities.Connection(nil), this.manualConnections...),
+	})
+	this.lastTemplate = dto.Template
+	this.connectionsModified = true
+}
+
+func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCount int) {
+	if this.lastTemplate != nil && len(this.lastTemplate.Variants) > 0 {
+		zoneCount = len(this.lastTemplate.Variants[0].Zones)
+		connectionCount = len(this.lastTemplate.Variants[0].Connections)
+	}
+	return zoneCount, connectionCount
+}
+
+// layoutDefiningOptionsChanged reports whether any option that changes the set
+// of zones or the connection graph differs between two editor states. When
+// these are unchanged, manual zone edits remain valid and can be reapplied.
+func layoutDefiningOptionsChanged(previous, current *dtos.EditorStateDto) bool {
+	return previous.PlayerCount != current.PlayerCount ||
+		previous.Topology != current.Topology ||
+		previous.GenerateRoads != current.GenerateRoads ||
+		previous.RandomPortals != current.RandomPortals ||
+		previous.NoDirectPlayerConn != current.NoDirectPlayerConn ||
+		previous.MaxPortalConnections != current.MaxPortalConnections ||
+		previous.MinNeutralZonesBetweenPlayers != current.MinNeutralZonesBetweenPlayers ||
+		previous.SpawnRemoteFootholds != current.SpawnRemoteFootholds ||
+		zoneCountOptionsChanged(previous, current)
+}
+
+// zoneCountOptionsChanged reports whether the number of neutral zones differs
+// between two editor states.
+func zoneCountOptionsChanged(previous, current *dtos.EditorStateDto) bool {
+	return previous.AdvancedMode != current.AdvancedMode ||
+		previous.NeutralZoneCount != current.NeutralZoneCount ||
+		previous.NeutralLowNoCastleCount != current.NeutralLowNoCastleCount ||
+		previous.NeutralLowCastleCount != current.NeutralLowCastleCount ||
+		previous.NeutralMediumNoCastleCount != current.NeutralMediumNoCastleCount ||
+		previous.NeutralMediumCastleCount != current.NeutralMediumCastleCount ||
+		previous.NeutralHighNoCastleCount != current.NeutralHighNoCastleCount ||
+		previous.NeutralHighCastleCount != current.NeutralHighCastleCount
 }
 
 // SaveTemplate writes the most recently generated template as .rmg.json.

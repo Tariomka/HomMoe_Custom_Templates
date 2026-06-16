@@ -121,7 +121,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 
 		template := this.state.GetLastTemplate()
 		if template == nil {
-			return widgets.NewCenteredMessageWidget(theme, "Press \"Generate Template\" to see the map layout.", canvasSize, outerSize)(gtx)
+			return widgets.NewCenteredMessageWidget(theme, "Adjust the options to generate the map layout.", canvasSize, outerSize)(gtx)
 		}
 
 		previewLayout := services.BuildPreviewLayout(template, this.state.GetStateData().Topology, float64(side))
