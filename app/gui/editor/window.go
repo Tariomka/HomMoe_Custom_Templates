@@ -42,6 +42,7 @@ func NewWindow() *Window {
 
 func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	this.save()
+	this.state.AutoRegenerate()
 	this.handleClicks(gtx)
 
 	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())

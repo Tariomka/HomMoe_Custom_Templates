@@ -71,7 +71,7 @@ func (this *FooterPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 					layout.Rigid(layout.Spacer{Width: unit.Dp(10)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(190)
-						return widgets.NewGoldButtonWidget(theme, "⚔  Generate Template", &this.btnGenerate, false)(gtx)
+						return widgets.NewGoldButtonWidget(theme, "⚔  Regenerate", &this.btnGenerate, false)(gtx)
 					}),
 					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
