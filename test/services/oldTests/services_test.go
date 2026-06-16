@@ -375,6 +375,7 @@ func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
 		config.TopologySquare,
 		config.TopologyGeometric,
 		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topo := range topos {
 		for _, players := range []int{2, 3, 4, 8} {
@@ -883,6 +884,7 @@ func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 		config.TopologySquare,
 		config.TopologyGeometric,
 		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 3)
@@ -930,6 +932,7 @@ func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 		config.TopologySquare,
 		config.TopologyGeometric,
 		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	playerCounts := []int{2, 3, 4, 6, 8}
 	for _, topo := range topologies {
@@ -981,6 +984,7 @@ func TestGenerate_AllConnections_ReferenceValidZones(t *testing.T) {
 		config.TopologySquare,
 		config.TopologyGeometric,
 		config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topo := range topos {
 		s := settingsWithTopology(topo, 3, 2)

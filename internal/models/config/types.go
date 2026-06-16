@@ -23,4 +23,5 @@ const (
 	TopologySquare      MapTopology = config_inner.TopologySquare
 	TopologyGeometric   MapTopology = config_inner.TopologyGeometric
 	TopologyCross       MapTopology = config_inner.TopologyCross
+	TopologyFractal     MapTopology = config_inner.TopologyFractal
 )

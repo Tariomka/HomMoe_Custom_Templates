@@ -20,6 +20,7 @@ var Topology = struct {
 	Square      TopologyDescriptor
 	Geometric   TopologyDescriptor
 	Cross       TopologyDescriptor
+	Fractal     TopologyDescriptor
 }{
 	Circles:     TopologyDescriptor{Type: config.TopologyCircles, Label: "Circles", Description: "Circles: layered concentric rings sorted by zone tier."},
 	Random:      TopologyDescriptor{Type: config.TopologyRandom, Label: "Random", Description: "Random: layout decided by the generator."},
@@ -30,6 +31,7 @@ var Topology = struct {
 	Square:      TopologyDescriptor{Type: config.TopologySquare, Label: "Square", Description: "Square: players line the edges of a square loop with neutral zones on the edges and inside."},
 	Geometric:   TopologyDescriptor{Type: config.TopologyGeometric, Label: "Geometric", Description: "Geometric: zones and connections form symmetric geometric shapes around a centre."},
 	Cross:       TopologyDescriptor{Type: config.TopologyCross, Label: "Cross", Description: "Cross: zones and connections radiate from a central hub into cross-shaped arms."},
+	Fractal:     TopologyDescriptor{Type: config.TopologyFractal, Label: "Fractal", Description: "Fractal: each player is the base of a fractal that branches inward through low, then high neutral tiers, weaving into a shared centre."},
 }
 
 var Topologies = []TopologyDescriptor{
@@ -42,6 +44,7 @@ var Topologies = []TopologyDescriptor{
 	Topology.Square,
 	Topology.Geometric,
 	Topology.Cross,
+	Topology.Fractal,
 }
 
 func GetTopologyDescriptor(topology config.MapTopology) TopologyDescriptor {

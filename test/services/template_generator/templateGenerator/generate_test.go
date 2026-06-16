@@ -406,6 +406,51 @@ func TestWhenCrossTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T)
 	}
 }
 
+func TestWhenFractalTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyFractal
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	for _, zone := range actual.Variants[0].Zones {
+		assert.NotNil(t, zone.GeneratorPosition, "zone %q should have a generator position", zone.Name)
+	}
+}
+
+// TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign verifies
+// the fractal layout keeps players apart through its own structure — neighbouring
+// fractals meet only at neutral tips — even when NoDirectPlayerConnections is off.
+func TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign(t *testing.T) {
+	// Arrange
+	playerCount := gofakeit.Number(2, 6)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyFractal
+	configuration.PlayerCount = playerCount
+	// Enough neutral zones that every player anchors its own fractal, so the
+	// graph stays connected without any direct player-to-player bridge.
+	configuration.ZoneConfiguration.NeutralZoneCount = playerCount + gofakeit.Number(3, 8)
+	configuration.NoDirectPlayerConnections = false
+	templateGenerator := template_generator.NewTemplateGenerator(configuration)
+
+	// Act
+	actual := templateGenerator.Generate()
+
+	// Assert
+	directPlayerConnections := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(x entities.Connection) bool {
+			return x.ConnectionType == "Direct" &&
+				strings.HasPrefix(x.From, "Spawn-") && strings.HasPrefix(x.To, "Spawn-")
+		}).
+		ToSlice()
+	assert.Empty(t, directPlayerConnections)
+}
+
 // ── Generate: connection-type behaviour ──────────────────────────────
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
@@ -1109,6 +1154,7 @@ func TestWhenGeneratingForEachTopology_ProducesZones(t *testing.T) {
 		config.TopologyDefault, config.TopologyChain, config.TopologyHubAndSpoke,
 		config.TopologySharedWeb, config.TopologyRandom, config.TopologyCircles,
 		config.TopologySquare, config.TopologyGeometric, config.TopologyCross,
+		config.TopologyFractal,
 	}
 	for _, topology := range topologies {
 		t.Run(string(topology), func(t *testing.T) {

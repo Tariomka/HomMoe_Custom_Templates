@@ -13,4 +13,5 @@ const (
 	TopologySquare      MapTopology = "Square"
 	TopologyGeometric   MapTopology = "Geometric"
 	TopologyCross       MapTopology = "Cross"
+	TopologyFractal     MapTopology = "Fractal"
 )

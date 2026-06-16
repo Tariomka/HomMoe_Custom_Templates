@@ -162,6 +162,7 @@ presets the slider snaps to:
 - **Square** (`TopologySquare`) — players line the edges of a square; neutrals on the edges and inside.
 - **Geometric** (`TopologyGeometric`) — symmetric geometric shapes built around a central zone.
 - **Cross** (`TopologyCross`) — zones and connections radiate from a centre into cross-shaped arms.
+- **Fractal** (`TopologyFractal`) — every player anchors a self-similar fractal that branches inward; low neutral zones sit nearest the player and high zones weave together at the centre, so no two players border directly.
 
 ## 8. Troubleshooting
 

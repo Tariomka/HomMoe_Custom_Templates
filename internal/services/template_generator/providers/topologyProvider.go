@@ -56,6 +56,9 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	case config.TopologyCross:
 		return topology.NewCrossTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
+	case config.TopologyFractal:
+		return topology.NewFractalTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	default: // config.TopologyDefault
 		return topology.NewRingTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)

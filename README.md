@@ -131,6 +131,7 @@ Hot reload via [air](https://github.com/air-verse/air) is configured in
 | Square        | `generator.TopologySquare`        | Players line the edges of a square; neutrals on edges and inside. |
 | Geometric     | `generator.TopologyGeometric`     | Symmetric geometric shapes built around a central zone.      |
 | Cross         | `generator.TopologyCross`         | Zones and connections radiate from a centre into cross arms. |
+| Fractal       | `generator.TopologyFractal`       | Each player is the base of a fractal that branches inward (low tiers nearest, high tiers at the woven centre); players never border directly. |
 
 ## Game Modes & Victory Conditions
 
