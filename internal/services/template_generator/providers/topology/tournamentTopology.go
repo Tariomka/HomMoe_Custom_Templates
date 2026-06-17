@@ -32,7 +32,7 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 		this.clusterService = tournament_variant.NewHubClusterService()
 	case config.TopologyCircles:
 		this.clusterService = tournament_variant.NewBalancedClusterService()
-	case config.TopologyDefault:
+	case config.TopologyRing:
 		this.clusterService = tournament_variant.NewRingClusterService()
 	default:
 		// Chain, SharedWeb, Random → chain-per-cluster fallback.

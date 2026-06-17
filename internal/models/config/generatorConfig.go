@@ -173,7 +173,7 @@ func (this *GeneratorConfig) CanHonorNeutralSeparation() bool {
 
 	neutralZoneCount := this.getNeutralZoneCount()
 	switch this.Topology {
-	case config_inner.TopologyDefault, config_inner.TopologyCircles:
+	case config_inner.TopologyRing, config_inner.TopologyCircles:
 		return neutralZoneCount >= this.PlayerCount*min
 	case config_inner.TopologyChain:
 		return neutralZoneCount >= (this.PlayerCount-1)*min

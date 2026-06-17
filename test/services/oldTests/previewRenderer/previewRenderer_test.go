@@ -32,7 +32,7 @@ func simpleTemplate(name string) *entities.RmgTemplate {
 // ── RenderPreviewImage ───────────────────────────────────────────────
 
 func TestRenderPreviewImage_ReturnsImageOfRequestedSize(t *testing.T) {
-	img := services.RenderPreviewImage(simpleTemplate("T"), config.TopologyDefault, 400)
+	img := services.RenderPreviewImage(simpleTemplate("T"), config.TopologyRing, 400)
 	if img == nil {
 		t.Fatal("nil image")
 	}
@@ -42,7 +42,7 @@ func TestRenderPreviewImage_ReturnsImageOfRequestedSize(t *testing.T) {
 }
 
 func TestRenderPreviewImage_EmptyTemplateReturnsBackgroundOnly(t *testing.T) {
-	img := services.RenderPreviewImage(&entities.RmgTemplate{}, config.TopologyDefault, 100)
+	img := services.RenderPreviewImage(&entities.RmgTemplate{}, config.TopologyRing, 100)
 	if img == nil {
 		t.Fatal("nil image")
 	}
@@ -56,7 +56,7 @@ func TestRenderPreviewImage_PortalConnectionRenders(t *testing.T) {
 	tmpl.Variants[0].Connections = append(tmpl.Variants[0].Connections,
 		entities.Connection{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"},
 	)
-	img := services.RenderPreviewImage(tmpl, config.TopologyDefault, 300)
+	img := services.RenderPreviewImage(tmpl, config.TopologyRing, 300)
 	if img == nil {
 		t.Fatal("nil image")
 	}
@@ -67,7 +67,7 @@ func TestRenderPreviewImage_CastleBadgeDrawn(t *testing.T) {
 	// Add an extra city on player A so it has multiple castles and a badge.
 	tmpl.Variants[0].Zones[0].MainObjects = append(tmpl.Variants[0].Zones[0].MainObjects,
 		entities.MainObject{Type: "City"})
-	img := services.RenderPreviewImage(tmpl, config.TopologyDefault, 300)
+	img := services.RenderPreviewImage(tmpl, config.TopologyRing, 300)
 	if img == nil {
 		t.Fatal("nil image")
 	}
@@ -83,7 +83,7 @@ func TestRenderPreviewImage_HubZoneRendered(t *testing.T) {
 			Connections: []entities.Connection{{From: "Hub", To: "Spawn-A", ConnectionType: "Direct"}},
 		}},
 	}
-	img := services.RenderPreviewImage(tmpl, config.TopologyDefault, 300)
+	img := services.RenderPreviewImage(tmpl, config.TopologyRing, 300)
 	if img == nil {
 		t.Fatal("nil image")
 	}
@@ -93,7 +93,7 @@ func TestRenderPreviewImage_HubZoneRendered(t *testing.T) {
 
 func TestWritePreviewPNG_WritesFileWithSanitisedName(t *testing.T) {
 	dir := t.TempDir()
-	path, err := services.WritePreviewPNG(dir, simpleTemplate("My/Preview"), config.TopologyDefault)
+	path, err := services.WritePreviewPNG(dir, simpleTemplate("My/Preview"), config.TopologyRing)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestWritePreviewPNG_WritesFileWithSanitisedName(t *testing.T) {
 
 func TestWritePreviewPNG_EmptyNameFallback(t *testing.T) {
 	dir := t.TempDir()
-	path, err := services.WritePreviewPNG(dir, simpleTemplate(""), config.TopologyDefault)
+	path, err := services.WritePreviewPNG(dir, simpleTemplate(""), config.TopologyRing)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +119,7 @@ func TestWritePreviewPNG_EmptyNameFallback(t *testing.T) {
 
 func TestWritePreviewPNG_CreatesMissingDirectory(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "nested", "preview")
-	if _, err := services.WritePreviewPNG(dir, simpleTemplate("T"), config.TopologyDefault); err != nil {
+	if _, err := services.WritePreviewPNG(dir, simpleTemplate("T"), config.TopologyRing); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(dir); err != nil {
@@ -132,7 +132,7 @@ func TestWritePreviewPNG_MkdirError(t *testing.T) {
 	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := services.WritePreviewPNG(filepath.Join(blocker, "x"), simpleTemplate("T"), config.TopologyDefault); err == nil {
+	if _, err := services.WritePreviewPNG(filepath.Join(blocker, "x"), simpleTemplate("T"), config.TopologyRing); err == nil {
 		t.Error("expected mkdir error")
 	}
 }
