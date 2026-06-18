@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
+	app_constants "github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
@@ -241,14 +242,14 @@ func (this *LayoutPanel) SaveToState() {
 
 func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Topology", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Topology", constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
+		widgets.NewLabeledRowWidget(theme, "Topology", app_constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
 			return this.topology.Layout(gtx, theme)
 		}),
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Body2(theme, this.getCurrentTopology().Description)
 			label.Color = themes.ColorTextDim
 			label.TextSize = unit.Sp(12)
-			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
+			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(app_constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
 		},
 	})
 }

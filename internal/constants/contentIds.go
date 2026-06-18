@@ -1,6 +1,11 @@
 package constants
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+)
+
+var interactableObjects = registry.GetMapObjectInteractableValues()
 
 // ContentIds enumerates every world-object SID known to the editor.
 var ContentIds = struct {
@@ -128,7 +133,7 @@ var ContentIds = struct {
 	AbandonedCorpse:     models.SidMapping{Sid: "abandoned_corpse", Name: "Abandoned Corpse"},
 	AbandonedMansion:    models.SidMapping{Sid: "abandoned_mansion", Name: "Abandoned Mansion"},
 	AbnormalStructure:   models.SidMapping{Sid: "abnormal_structure", Name: "Abnormal Structure"},
-	AlchemyLab:          models.SidMapping{Sid: "alchemy_lab", Name: "Alchemy Lab"},
+	AlchemyLab:          models.SidMapping{Sid: interactableObjects.AlchemyLab, Name: "Alchemy Lab"},
 	AltarOfMagic1:       models.SidMapping{Sid: "altar_of_magic_1", Name: "Nightshade Shrine"},
 	AltarOfMagic2:       models.SidMapping{Sid: "altar_of_magic_2", Name: "Daylight Shrine"},
 	AltarOfMagic3:       models.SidMapping{Sid: "altar_of_magic_3", Name: "Arcane Shrine"},
@@ -179,12 +184,12 @@ var ContentIds = struct {
 	Maze:                models.SidMapping{Sid: "maze", Name: "Maze"},
 	MercenaryGuild:      models.SidMapping{Sid: "mercenary_guild", Name: "Mercenary Guild"},
 	MereasShrine:        models.SidMapping{Sid: "mereas_shrine", Name: "Merea's Shrine"},
-	MineCrystals:        models.SidMapping{Sid: "mine_crystals", Name: "Mine Crystals"},
-	MineGemstones:       models.SidMapping{Sid: "mine_gemstones", Name: "Mine Gemstones"},
-	MineGold:            models.SidMapping{Sid: "mine_gold", Name: "Mine Gold"},
-	MineMercury:         models.SidMapping{Sid: "mine_mercury", Name: "Mine Mercury"},
-	MineOre:             models.SidMapping{Sid: "mine_ore", Name: "Ore Mine"},
-	MineWood:            models.SidMapping{Sid: "mine_wood", Name: "Sawmill"},
+	MineCrystals:        models.SidMapping{Sid: interactableObjects.CrystalMine, Name: "Mine Crystals"},
+	MineGemstones:       models.SidMapping{Sid: interactableObjects.GemstoneMine, Name: "Mine Gemstones"},
+	MineGold:            models.SidMapping{Sid: interactableObjects.GoldMine, Name: "Mine Gold"},
+	MineMercury:         models.SidMapping{Sid: interactableObjects.MercuryMine, Name: "Mine Mercury"},
+	MineOre:             models.SidMapping{Sid: interactableObjects.OreMine, Name: "Ore Mine"},
+	MineWood:            models.SidMapping{Sid: interactableObjects.WoodMine, Name: "Sawmill"},
 	Mirage:              models.SidMapping{Sid: "mirage", Name: "Mirage"},
 	MontyHall:           models.SidMapping{Sid: "monty_hall", Name: "Monty Hall"},
 	MysteriousStone:     models.SidMapping{Sid: "mysterious_stone", Name: "Mysterious Stone"},

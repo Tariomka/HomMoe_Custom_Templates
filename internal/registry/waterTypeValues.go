@@ -1,11 +1,23 @@
 package registry
 
 type waterTypes struct {
-	WaterGrass string
+	WaterDirt   string
+	WaterSand   string
+	WaterDeath  string
+	WaterSnow   string
+	WaterFallen string
+	Lava        string
+	WaterGrass  string
 }
 
 var waterTypeValues = waterTypes{
-	WaterGrass: "water grass",
+	WaterDirt:   "water dirt",
+	WaterSand:   "water sand",
+	WaterDeath:  "water death",
+	WaterSnow:   "water snow",
+	WaterFallen: "water fallen",
+	Lava:        "lava",
+	WaterGrass:  "water grass",
 }
 
 // GetWaterTypeValues returns the different water types used for

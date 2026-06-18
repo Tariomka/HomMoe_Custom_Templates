@@ -182,7 +182,8 @@ var spellSidValues = spellSids{
 
 // GetSpellSidValues returns the learnable spell SIDs used for
 //
-//	globalBans.magics
+//	gameRules.globalBans.magics
+//	gameRules.bonuses.parameters
 func GetSpellSidValues() spellSids {
 	return spellSidValues
 }

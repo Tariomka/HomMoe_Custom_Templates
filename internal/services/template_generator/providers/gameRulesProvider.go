@@ -4,6 +4,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+)
+
+var (
+	championSelectRules = registry.GetChampionSelectValues()
+	gameModes           = registry.GetGameModeValues()
+	mapBonuses          = registry.GetMapBonusesValues()
+	receiversFilters    = registry.GetReceiversFilterValues()
+	winConditionValues  = registry.GetWinningConditionValues()
 )
 
 type GameRulesProvider struct{}
@@ -24,7 +33,12 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 		FactionLawsExpModifier: percentToModifier(configuration.FactionLawsExpPercent),
 		AstrologyExpModifier:   percentToModifier(configuration.AstrologyExpPercent),
 		Bonuses: entities.BonusList{
-			{SID: "add_bonus_hero_stat", ReceiverSide: -1, ReceiverFilter: "all_heroes", Parameters: []string{"movementBonus", "0"}},
+			{
+				SID:            mapBonuses.HeroStat,
+				ReceiverSide:   -1,
+				ReceiverFilter: receiversFilters.AllHeroes,
+				Parameters:     []string{"movementBonus", "0"},
+			},
 		},
 		WinConditions: this.createAdvancedWinConditions(configuration),
 	}
@@ -36,7 +50,7 @@ func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.
 	gladiatorRules := configuration.GetGladiatorArenaRules()
 	tournamentRules := configuration.GetTournamentRules()
 
-	useGladiator := gladiatorRules.Enabled || victoryCondition == "win_condition_4"
+	useGladiator := gladiatorRules.Enabled || victoryCondition == winConditionValues.FinalBattle
 	winConditions := entities.WinConditions{
 		Classic:          true,
 		Desertion:        true,
@@ -44,10 +58,10 @@ func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.
 		DesertionValue:   3000,
 		HeroLighting:     true,
 		HeroLightingDay:  1,
-		LostStartCity:    gameEndConditions.LostStartCity || victoryCondition == "win_condition_3",
+		LostStartCity:    gameEndConditions.LostStartCity || victoryCondition == winConditionValues.CapitalHold,
 		LostStartCityDay: helpers.Clamp(gameEndConditions.LostStartCityDay, 1, 30),
-		LostStartHero:    gameEndConditions.LostStartHero || useGladiator || configuration.GameMode == "SingleHero",
-		CityHold:         gameEndConditions.CityHold || victoryCondition == "win_condition_5",
+		LostStartHero:    gameEndConditions.LostStartHero || useGladiator || configuration.GameMode == gameModes.SingleHero,
+		CityHold:         gameEndConditions.CityHold || victoryCondition == winConditionValues.CityHold,
 		CityHoldDays:     helpers.Clamp(gameEndConditions.CityHoldDays, 1, 30),
 	}
 	if useGladiator {
@@ -55,14 +69,14 @@ func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.
 		winConditions.GladiatorArenaRegistrationStartFight = true
 		winConditions.GladiatorArenaDaysDelayStart = helpers.Clamp(gladiatorRules.DaysDelayStart, 1, 60)
 		winConditions.GladiatorArenaCountDay = helpers.Clamp(gladiatorRules.CountDay, 1, 30)
-		winConditions.ChampionSelectRule = "StartHero"
+		winConditions.ChampionSelectRule = championSelectRules.StartHero
 	}
-	if tournamentRules.Enabled || victoryCondition == "win_condition_6" {
+	if tournamentRules.Enabled || victoryCondition == winConditionValues.Tournament {
 		firstDay := helpers.Clamp(tournamentRules.FirstTournamentDay, 3, 60)
 		interval := helpers.Clamp(tournamentRules.Interval, 3, 30)
 		pointsToWin := helpers.Clamp(tournamentRules.PointsToWin, 1, 10)
 		roundCount := pointsToWin*2 - 1
-		winConditions.ChampionSelectRule = "StartHero"
+		winConditions.ChampionSelectRule = championSelectRules.StartHero
 		winConditions.Tournament = true
 		winConditions.TournamentSaveArmy = true
 		winConditions.TournamentPointsToWin = pointsToWin

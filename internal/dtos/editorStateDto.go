@@ -3,6 +3,12 @@ package dtos
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+)
+
+var (
+	winConditions = registry.GetWinningConditionValues()
+	gameModes     = registry.GetGameModeValues()
 )
 
 // EditorStateDto is the serialized .gen.json file produced and consumed by the
@@ -80,7 +86,7 @@ type EditorStateDto struct {
 func NewDefaultEditorStateDto() EditorStateDto {
 	return EditorStateDto{
 		TemplateName:                 "Custom Template",
-		GameMode:                     "Classic",
+		GameMode:                     gameModes.Classic,
 		MapSize:                      160,
 		PlayerCount:                  2,
 		PlayerZoneCastles:            1,
@@ -101,7 +107,7 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		StructureDensityPercent:      100,
 		NeutralStackStrengthPercent:  100,
 		BorderGuardStrengthPercent:   100,
-		VictoryCondition:             "win_condition_1",
+		VictoryCondition:             winConditions.Standard,
 		FactionLawXpPercent:          100,
 		AstrologyXpPercent:           100,
 		LostStartCityDay:             3,

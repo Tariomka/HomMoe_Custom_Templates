@@ -5,10 +5,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 )
+
+var ruleTypes = registry.GetRuleTypeValues()
 
 type MandatoryContentProvider struct{}
 
@@ -139,7 +142,7 @@ func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.Mand
 		}
 		kept := items[i].Rules[:0]
 		for _, rule := range items[i].Rules {
-			if rule.Type == "MainObject" && len(rule.Args) > 0 {
+			if rule.Type == ruleTypes.MainObject && len(rule.Args) > 0 {
 				if arg, ok := rule.Args[0].(string); ok && arg == "0" {
 					continue
 				}
