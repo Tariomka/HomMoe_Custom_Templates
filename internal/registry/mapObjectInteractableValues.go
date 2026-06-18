@@ -3,20 +3,47 @@ package registry
 type objectInteractables struct {
 	interactableMines
 	interactableStorages
-	AlchemyLab string
+	interactableResourceBanks
+	interactableT1GuardedResourceBanks
+	interactableT2GuardedResourceBanks
+	interactableT3GuardedResourceBanks
+	interactableNonContents
+	interactableVisionBuildings
+	interactableMiscellaneous
+	interactableHeroExperienceBuildings
+	interactableMagicBuildings
+	interactableHeroBuffBuildings
+	interactableBuildings
+	interactableT1StatsAndSkillsBuildings
+	interactableT2StatsAndSkillsBuildings
+	interactableT3StatsAndSkillsBuildings
 }
 
 var objectInteractableValues = objectInteractables{
-	interactableMines:    interactableMineValues,
-	interactableStorages: interactableStorageValues,
-	AlchemyLab:           "alchemy_lab",
+	interactableMines:                     interactableMineValues,
+	interactableStorages:                  interactableStorageValues,
+	interactableResourceBanks:             interactableResourceBankValues,
+	interactableT1GuardedResourceBanks:    interactableT1GuardedResourceBankValues,
+	interactableT2GuardedResourceBanks:    interactableT2GuardedResourceBankValues,
+	interactableT3GuardedResourceBanks:    interactableT3GuardedResourceBankValues,
+	interactableNonContents:               interactableNonContentValues,
+	interactableVisionBuildings:           interactableVisionBuildingValues,
+	interactableMiscellaneous:             interactableMiscellaneousValues,
+	interactableHeroExperienceBuildings:   interactableHeroExpValues,
+	interactableMagicBuildings:            interactableMagicBuildingValues,
+	interactableHeroBuffBuildings:         interactableHeroBuffBuildingValues,
+	interactableBuildings:                 interactableBuildingValues,
+	interactableT1StatsAndSkillsBuildings: interactableT1StatsAndSkillsValues,
+	interactableT2StatsAndSkillsBuildings: interactableT2StatsAndSkillsValues,
+	interactableT3StatsAndSkillsBuildings: interactableT3StatsAndSkillsValues,
 }
 
-func GetMapObjectInteractableValues() objectInteractables {
+func GetMapObjectAllInteractableValues() objectInteractables {
 	return objectInteractableValues
 }
 
 type interactableMines struct {
+	AlchemyLab   string
 	GoldMine     string
 	WoodMine     string
 	OreMine      string
@@ -26,6 +53,7 @@ type interactableMines struct {
 }
 
 var interactableMineValues = interactableMines{
+	AlchemyLab:   "alchemy_lab",
 	GoldMine:     "mine_gold",
 	WoodMine:     "mine_wood",
 	OreMine:      "mine_ore",
@@ -54,160 +82,274 @@ var interactableStorageValues = interactableStorages{
 	DustStorage:     "storage_dust",
 }
 
-// "id": "custom_storage_ore",
-// "id": "custom_storage_gold",
-// "id": "custom_storage_gemstones",
-// "id": "custom_storage_crystals",
-// "id": "custom_storage_mercury",
-// "id": "custom_storage_dust",
+type interactableResourceBanks struct {
+	Gardener         string
+	Windmill         string
+	Village          string
+	GingerbreadHouse string
+	PeasantCart      string
+	AbandonedCorpse  string
+	CrowNest         string
+	GoblinCache      string
+	MontyHall        string
+	HerosCrypt       string
+}
 
-// "id": "gardener",
+var interactableResourceBankValues = interactableResourceBanks{
+	Gardener:         "gardener",
+	Windmill:         "windmill",
+	Village:          "village",
+	GingerbreadHouse: "gingerbread_house",
+	PeasantCart:      "peasant_cart",
+	AbandonedCorpse:  "abandoned_corpse",
+	CrowNest:         "crow_nest",
+	GoblinCache:      "goblin_cache",
 
-// "id": "custom_gardener",
+	MontyHall:  "monty_hall",
+	HerosCrypt: "heros_crypt",
+}
 
-// "id": "windmill",
-// "id": "custom_windmill",
+type interactableT1GuardedResourceBanks struct {
+	BlackTower       string
+	AbandonedMansion string
+	MereasShrine     string
+	ShadyDen         string
+}
 
-// "id": "shady_den",
+var interactableT1GuardedResourceBankValues = interactableT1GuardedResourceBanks{
+	BlackTower:       "black_tower",
+	AbandonedMansion: "abandoned_mansion",
+	MereasShrine:     "mereas_shrine",
+	ShadyDen:         "shady_den",
+}
 
-// "id": "custom_shady_den",
+type interactableT2GuardedResourceBanks struct {
+	RaidersCamp       string
+	OvergrownGrave    string
+	LegionsMemorial   string
+	AlvarsEye         string
+	CursedOldHouse    string
+	AbnormalStructure string
+	PrismaticLair     string
+	UncannyRite       string
+	CircleOfLife      string
+	IridescentAbbey   string
+}
 
-// "id": "village",
-// "id": "custom_village",
+var interactableT2GuardedResourceBankValues = interactableT2GuardedResourceBanks{
+	RaidersCamp:       "raiders_camp",
+	OvergrownGrave:    "overgrown_grave",
+	LegionsMemorial:   "legions_memorial",
+	AlvarsEye:         "alvars_eye",
+	CursedOldHouse:    "cursed_old_house",
+	AbnormalStructure: "abnormal_structure",
+	PrismaticLair:     "prismatic_lair",
+	UncannyRite:       "uncanny_rite",
+	CircleOfLife:      "circle_of_life",
+	IridescentAbbey:   "iridescent_abbey",
+}
 
-// "id": "gingerbread_house",
-// "id": "custom_gingerbread_house",
+type interactableT3GuardedResourceBanks struct {
+	TroglodyteThrone   string
+	TwilightBloom      string
+	UnstableRuins      string
+	DragonUtopia       string
+	ResearchLaboratory string
+}
 
-// "id": "stinging_sword",
-// "id": "armory_automaton",
-// "id": "magic_wheel",
-// "id": "knowledge_garden",
-// "id": "maze",
-// "id": "trial_scales",
-// "id": "fort",
-// "id": "orb_observatory",
-// "id": "college_of_wonder",
-// "id": "flattering_mirror",
-// "id": "beer_fountain",
-// "id": "mysterious_stone",
-// "id": "crystal_trail",
-// "id": "altar_of_magic_1",
-// "id": "custom_altar_of_magic_1",
-// "id": "altar_of_magic_2",
-// "id": "custom_altar_of_magic_2",
-// "id": "altar_of_magic_3",
-// "id": "custom_altar_of_magic_3",
-// "id": "altar_of_magic_4",
-// "id": "custom_altar_of_magic_4",
-// "id": "magic_amplifier_1",
-// "id": "magic_amplifier_2",
-// "id": "magic_amplifier_3",
-// "id": "magic_amplifier_4",
-// "id": "tree_of_knowledge",
-// "id": "huntsmans_camp",
+var interactableT3GuardedResourceBankValues = interactableT3GuardedResourceBanks{
+	TroglodyteThrone:   "troglodyte_throne",
+	TwilightBloom:      "twilight_bloom",
+	UnstableRuins:      "unstable_ruins",
+	DragonUtopia:       "dragon_utopia",
+	ResearchLaboratory: "research_laboratory",
+}
+
+type interactableNonContents struct {
+	Mirage           string
+	InsarasEye       string
+	RemoteFoothold   string
+	AbandonedOutpost string
+	Market           string
+	Forge            string
+	Tavern           string
+}
+
+var interactableNonContentValues = interactableNonContents{
+	Mirage:           "mirage",
+	InsarasEye:       "insaras_eye",
+	RemoteFoothold:   "remote_foothold",
+	AbandonedOutpost: "abandoned_outpost",
+	Market:           "market",
+	Forge:            "forge",
+	Tavern:           "tavern",
+}
+
+type interactableVisionBuildings struct {
+	FlatteringMirror string
+	Watchtower       string
+	WindRose         string
+}
+
+var interactableVisionBuildingValues = interactableVisionBuildings{
+	FlatteringMirror: "flattering_mirror",
+	Watchtower:       "watchtower",
+	WindRose:         "wind_rose",
+}
+
+type interactableMiscellaneous struct {
+	Prison   string
+	TownGate string
+}
+
+var interactableMiscellaneousValues = interactableMiscellaneous{
+	Prison:   "prison",
+	TownGate: "town_gate",
+}
+
+type interactableHeroExperienceBuildings struct {
+	LearningStone   string
+	LostLibrary     string
+	TreeOfKnowledge string
+}
+
+var interactableHeroExpValues = interactableHeroExperienceBuildings{
+	LearningStone:   "learning_stone",
+	LostLibrary:     "lost_library",
+	TreeOfKnowledge: "tree_of_knowledge",
+}
+
+type interactableMagicBuildings struct {
+	MysticalTower   string
+	CelestialSphere string
+	AltarOfMagic1   string
+	AltarOfMagic2   string
+	AltarOfMagic3   string
+	AltarOfMagic4   string
+	MagicAmplifier1 string
+	MagicAmplifier2 string
+	MagicAmplifier3 string
+	MagicAmplifier4 string
+}
+
+var interactableMagicBuildingValues = interactableMagicBuildings{
+	MysticalTower:   "mystical_tower",
+	CelestialSphere: "celestial_sphere",
+
+	AltarOfMagic1: "altar_of_magic_1",
+	AltarOfMagic2: "altar_of_magic_2",
+	AltarOfMagic3: "altar_of_magic_3",
+	AltarOfMagic4: "altar_of_magic_4",
+
+	MagicAmplifier1: "magic_amplifier_1",
+	MagicAmplifier2: "magic_amplifier_2",
+	MagicAmplifier3: "magic_amplifier_3",
+	MagicAmplifier4: "magic_amplifier_4",
+}
+
+type interactableHeroBuffBuildings struct {
+	ManaWell        string
+	Fountain        string
+	Fountain2       string
+	Stables         string
+	TearOfTruth     string
+	BeerFountain    string
+	QuixsPath       string
+	PileOfBooks     string
+	MysteriousStone string
+	CrystalTrail    string
+}
+
+var interactableHeroBuffBuildingValues = interactableHeroBuffBuildings{
+	ManaWell:        "mana_well",
+	Fountain:        "fountain",
+	Fountain2:       "fountain_2",
+	Stables:         "stables",
+	TearOfTruth:     "tear_of_truth",
+	BeerFountain:    "beer_fountain",
+	QuixsPath:       "quixs_path",
+	PileOfBooks:     "pile_of_books",
+	MysteriousStone: "mysterious_stone",
+	CrystalTrail:    "crystal_trail",
+}
+
+type interactableBuildings struct {
+	HuntsmanCamp      string
+	MercenaryGuild    string
+	SacrificialShrine string
+	Chimerologist     string
+	Arena             string
+	EternalDragon     string
+	FickleShrine      string
+	TreeOfAbundance   string
+}
+
+var interactableBuildingValues = interactableBuildings{
+	HuntsmanCamp: "huntsmans_camp",
+
+	MercenaryGuild:    "mercenary_guild",
+	SacrificialShrine: "sacrificial_shrine",
+	Chimerologist:     "chimerologist",
+	Arena:             "arena",
+
+	EternalDragon:   "eternal_dragon",
+	FickleShrine:    "fickle_shrine",
+	TreeOfAbundance: "tree_of_abundance",
+}
+
+type interactableT1StatsAndSkillsBuildings struct {
+	StingingSword   string
+	ArmoryAutomaton string
+	MagicWheel      string
+	KnowledgeGarden string
+	WiseOwl         string
+}
+
+var interactableT1StatsAndSkillsValues = interactableT1StatsAndSkillsBuildings{
+	StingingSword:   "stinging_sword",
+	ArmoryAutomaton: "armory_automaton",
+	MagicWheel:      "magic_wheel",
+	KnowledgeGarden: "knowledge_garden",
+	WiseOwl:         "wise_owl",
+}
+
+type interactableT2StatsAndSkillsBuildings struct {
+	Fort           string
+	OrbObservatory string
+	University     string
+	Circus         string
+	InfernalCirque string
+}
+
+var interactableT2StatsAndSkillsValues = interactableT2StatsAndSkillsBuildings{
+	Fort:           "fort",
+	OrbObservatory: "orb_observatory",
+	University:     "university",
+	Circus:         "circus",
+	InfernalCirque: "infernal_cirque",
+}
+
+type interactableT3StatsAndSkillsBuildings struct {
+	Maze            string
+	TrialScales     string
+	CollegeOfWonder string
+}
+
+var interactableT3StatsAndSkillsValues = interactableT3StatsAndSkillsBuildings{
+	Maze:            "maze",
+	TrialScales:     "trial_scales",
+	CollegeOfWonder: "college_of_wonder",
+}
+
 // "id": "temporary_camp",
-// "id": "wise_owl",
-// "id": "custom_wise_owl",
-// "id": "university",
-// "id": "custom_university",
-// "id": "circus",
-// "id": "watchtower",
-// "id": "wind_rose",
-// "id": "stables",
-// "id": "fountain",
-// "id": "fountain_2",
 
-// "id": "quixs_path",
-// "id": "learning_stone",
-// "id": "lost_library",
-// "id": "pile_of_books",
-// "id": "mereas_shrine",
-// "id": "fickle_shrine",
-// "id": "town_gate",
-// "id": "portal_1",
-// "id": "portal_1_2",
-// "id": "portal_1_3",
-// "id": "portal_2",
-// "id": "portal_2_2",
-// "id": "portal_2_3",
-// "id": "portal_3",
-// "id": "portal_3_2",
-// "id": "portal_3_3",
-// "id": "portal_4",
-// "id": "portal_4_2",
-// "id": "portal_4_3",
-// "id": "portal_5",
-// "id": "portal_5_2",
-// "id": "portal_5_3",
 // "id": "portal_magic",
-// "id": "market",
-// "id": "forge",
-// "id": "sacrificial_shrine",
-// "id": "chimerologist",
-// "id": "celestial_sphere",
-// "id": "mystical_tower",
-// "id": "tavern",
-// "id": "insaras_eye",
-// "id": "prison",
-// "id": "mana_well",
-// "id": "tear_of_truth",
-// "id": "arena",
-// "id": "goblin_cache",
-// "id": "custom_goblin_cache",
-// "id": "peasant_cart",
 
-// "id": "custom_peasant_cart",
-// "id": "abandoned_corpse",
-// "id": "custom_abandoned_corpse",
-// "id": "crow_nest",
-// "id": "custom_crow_nest",
-// "id": "monty_hall",
-// "id": "custom_monty_hall",
-// "id": "heros_crypt",
-// "id": "custom_heros_crypt",
-// "id": "raiders_camp",
-// "id": "custom_raiders_camp",
-// "id": "overgrown_grave",
-// "id": "custom_overgrown_grave",
-// "id": "legions_memorial",
-// "id": "custom_legions_memorial",
-// "id": "prismatic_lair",
-// "id": "custom_prismatic_lair",
-// "id": "uncanny_rite",
-// "id": "custom_uncanny_rite",
-// "id": "circle_of_life",
-// "id": "custom_circle_of_life",
-// "id": "iridescent_abbey",
-// "id": "custom_iridescent_abbey",
-// "id": "troglodyte_throne",
-// "id": "custom_troglodyte_throne",
-// "id": "unstable_ruins",
-// "id": "custom_unstable_ruins",
-// "id": "abnormal_structure",
-// "id": "custom_abnormal_structure",
 // "id": "testing_grounds",
 // "id": "custom_testing_grounds",
-// "id": "twilight_bloom",
-// "id": "custom_twilight_bloom",
-// "id": "dragon_utopia",
-// "id": "custom_dragon_utopia",
-// "id": "research_laboratory",
-// "id": "custom_research_laboratory",
+
 // "id": "underground_lair",
 // "id": "custom_underground_lair",
-// "id": "black_tower",
-// "id": "custom_black_tower",
-// "id": "abandoned_mansion",
-// "id": "custom_abandoned_mansion",
-// "id": "tree_of_abundance",
-// "id": "alvars_eye",
-// "id": "custom_alvars_eye",
-// "id": "cursed_old_house",
-// "id": "custom_cursed_old_house",
-// "id": "eternal_dragon",
-// "id": "infernal_cirque",
-// "id": "mirage",
-// "id": "mercenary_guild",
 // "id": "point_of_balance",
 // "id": "custom_point_of_balance",
 // "id": "jousting_range",
@@ -221,12 +363,9 @@ var interactableStorageValues = interactableStorages{
 // "id": "boreal_call",
 // "id": "custom_boreal_call",
 // "id": "the_gorge",
-// "id": "custom_the_gorge",
 // "id": "petrified_memorial",
 // "id": "custom_petrified_memorial",
-// "id": "remote_foothold",
 // "id": "pocket_dimension",
-// "id": "abandoned_outpost",
 // "id": "human_city",
 // "id": "undead_city",
 // "id": "dungeon_city",
@@ -303,26 +442,9 @@ var interactableStorageValues = interactableStorages{
 // "id": "learning_stone_old",
 // "id": "gladiator_arena",
 
-type interactableCustomStorages struct {
-	CustomWoodStorage     string
-	CustomOreStorage      string
-	CustomGoldStorage     string
-	CustomCrystalStorage  string
-	CustomMercuryStorage  string
-	CustomGemstoneStorage string
-	CustomDustStorage     string
-}
-
-var interactableCustomStorageValues = interactableCustomStorages{
-	CustomWoodStorage:     "custom_storage_wood",
-	CustomOreStorage:      "custom_storage_ore",
-	CustomGoldStorage:     "custom_storage_gold",
-	CustomCrystalStorage:  "custom_storage_crystals",
-	CustomMercuryStorage:  "custom_storage_mercury",
-	CustomGemstoneStorage: "custom_storage_gemstones",
-	CustomDustStorage:     "custom_storage_dust",
-}
-
+//
+//
+//
 // "id": "stinging_sword_campaign",
 // "id": "armory_automaton_campaign",
 // "id": "magic_wheel_campaign",
