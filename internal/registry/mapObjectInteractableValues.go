@@ -17,6 +17,8 @@ type objectInteractables struct {
 	interactableT1StatsAndSkillsBuildings
 	interactableT2StatsAndSkillsBuildings
 	interactableT3StatsAndSkillsBuildings
+	interactableNamedUnitBanks
+	interactableRandomUnitBanks
 }
 
 var objectInteractableValues = objectInteractables{
@@ -36,6 +38,8 @@ var objectInteractableValues = objectInteractables{
 	interactableT1StatsAndSkillsBuildings: interactableT1StatsAndSkillsValues,
 	interactableT2StatsAndSkillsBuildings: interactableT2StatsAndSkillsValues,
 	interactableT3StatsAndSkillsBuildings: interactableT3StatsAndSkillsValues,
+	interactableNamedUnitBanks:            interactableNamedUnitBankValues,
+	interactableRandomUnitBanks:           interactableRandomUnitBankValues,
 }
 
 func GetMapObjectAllInteractableValues() objectInteractables {
@@ -274,7 +278,7 @@ var interactableHeroBuffBuildingValues = interactableHeroBuffBuildings{
 }
 
 type interactableBuildings struct {
-	HuntsmanCamp      string
+	HuntsmansCamp     string
 	MercenaryGuild    string
 	SacrificialShrine string
 	Chimerologist     string
@@ -285,7 +289,7 @@ type interactableBuildings struct {
 }
 
 var interactableBuildingValues = interactableBuildings{
-	HuntsmanCamp: "huntsmans_camp",
+	HuntsmansCamp: "huntsmans_camp",
 
 	MercenaryGuild:    "mercenary_guild",
 	SacrificialShrine: "sacrificial_shrine",
@@ -341,30 +345,49 @@ var interactableT3StatsAndSkillsValues = interactableT3StatsAndSkillsBuildings{
 	CollegeOfWonder: "college_of_wonder",
 }
 
-// "id": "temporary_camp",
+type interactableNamedUnitBanks struct {
+	JoustingRange     string
+	UnforgottenGrave  string
+	PetrifiedMemorial string
+	RitualPyre        string
+	BorealCall        string
+	Gorge             string
+	PointOfBalance    string
+}
 
-// "id": "portal_magic",
+var interactableNamedUnitBankValues = interactableNamedUnitBanks{
+	JoustingRange:     "jousting_range",
+	UnforgottenGrave:  "unforgotten_grave",
+	PetrifiedMemorial: "petrified_memorial",
+	RitualPyre:        "ritual_pyre",
+	BorealCall:        "boreal_call",
+	Gorge:             "the_gorge",
+	PointOfBalance:    "point_of_balance",
+}
 
-// "id": "testing_grounds",
-// "id": "custom_testing_grounds",
+type interactableRandomUnitBanks struct {
+	RandomHireTier1 string
+	RandomHireTier2 string
+	RandomHireTier3 string
+	RandomHireTier4 string
+	RandomHireTier5 string
+	RandomHireTier6 string
+	RandomHireTier7 string
+}
 
+var interactableRandomUnitBankValues = interactableRandomUnitBanks{
+	RandomHireTier1: "random_hire_1",
+	RandomHireTier2: "random_hire_2",
+	RandomHireTier3: "random_hire_3",
+	RandomHireTier4: "random_hire_4",
+	RandomHireTier5: "random_hire_5",
+	RandomHireTier6: "random_hire_6",
+	RandomHireTier7: "random_hire_7",
+}
+
+// Below are SIDs currently unused
 // "id": "underground_lair",
-// "id": "custom_underground_lair",
-// "id": "point_of_balance",
-// "id": "custom_point_of_balance",
-// "id": "jousting_range",
-// "id": "custom_jousting_range",
 // "id": "vanguard",
-// "id": "custom_vanguard",
-// "id": "ritual_pyre",
-// "id": "custom_ritual_pyre",
-// "id": "unforgotten_grave",
-// "id": "custom_unforgotten_grave",
-// "id": "boreal_call",
-// "id": "custom_boreal_call",
-// "id": "the_gorge",
-// "id": "petrified_memorial",
-// "id": "custom_petrified_memorial",
 // "id": "pocket_dimension",
 // "id": "human_city",
 // "id": "undead_city",
@@ -441,70 +464,3 @@ var interactableT3StatsAndSkillsValues = interactableT3StatsAndSkillsBuildings{
 // "id": "fairy_ring",
 // "id": "learning_stone_old",
 // "id": "gladiator_arena",
-
-//
-//
-//
-// "id": "stinging_sword_campaign",
-// "id": "armory_automaton_campaign",
-// "id": "magic_wheel_campaign",
-// "id": "knowledge_garden_campaign",
-// "id": "maze_campaign",
-// "id": "fort_campaign",
-// "id": "orb_observatory_campaign",
-// "id": "college_of_wonder_campaign",
-// "id": "goblin_cache_campaign",
-// "id": "peasant_cart_campaign",
-// "id": "crow_nest_campaign",
-// "id": "shady_den_campaign",
-
-// "id": "block_campaign_tree_grass",
-// "id": "block_campaign_tree_autumn",
-// "id": "block_campaign_tree_dirt",
-// "id": "block_campaign_tree_dead",
-// "id": "block_campaign_tree_withered",
-// "id": "block_campaign_tree_snow",
-// "id": "block_campaign_mountain_dirt",
-// "id": "block_campaign",
-
-// "id": "campaign_stinging_sword",
-// "id": "campaign_armory_automaton",
-// "id": "campaign_magic_wheel",
-// "id": "campaign_knowledge_garden",
-// "id": "campaign_college_of_wonder",
-// "id": "campaign_fort",
-// "id": "campaign_orb_observatory",
-// "id": "campaign_maze",
-// "id": "campaign_trial_scales",
-// "id": "campaign_shady_den",
-// "id": "campaign_flattering_mirror",
-// "id": "campaign_gingerbread_house",
-// "id": "campaign_lost_library_empty",
-// "id": "campaign_M1_broken_bridge",
-// "id": "campaign_M2_shroom_tether",
-// "id": "campaign_M2_rockfall_1",
-// "id": "campaign_M2_rockfall_2",
-// "id": "campaign_M2_empty_mine",
-// "id": "campaign_M3_necro_altar",
-// "id": "campaign_M3_cage",
-// "id": "campaign_M4_burning_man",
-// "id": "campaign_M4_construction_site",
-// "id": "campaign_M4_diary",
-// "id": "campaign_M4_stargazer_tower",
-// "id": "campaign_M5_death_knight_house_empty",
-// "id": "campaign_M5_death_knight_house",
-// "id": "campaign_M6_mearea_shrine",
-// "id": "campaign_M6_cage",
-// "id": "campaign_M9_scientist_house",
-// "id": "campaign_M9_necromancy_amplifier",
-// "id": "campaign_M9_necromancy_amplifier_foundation",
-// "id": "campaign_M9_necromancy_amplifier_destroyed",
-// "id": "campaign_M9_block_angel1",
-// "id": "campaign_M9_block_angel2",
-// "id": "campaign_M9_block_angel3",
-// "id": "campaign_M9_block_angel4",
-// "id": "campaign_M9_sylvan_altar",
-// "id": "campaign_M9_phoenix_nest_shroom",
-// "id": "campaign_M9_phoenix_nest",
-// "id": "campaign_M9_phoenix_egg",
-// "id": "campaign_M9_tomb",
