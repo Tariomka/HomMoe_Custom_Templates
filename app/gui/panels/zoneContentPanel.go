@@ -158,7 +158,7 @@ func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 	for _, raw := range this.tierRows[tier] {
 		row := raw.Normalised()
 		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
-		if found, ok := utils.LookupSid(row.Sid); ok {
+		if found, ok := utils.GetSidMappingBySid(row.Sid); ok {
 			mapping = found
 		}
 		// Prefer the explicit rule list; otherwise migrate legacy flat fields,
