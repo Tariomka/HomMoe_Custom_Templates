@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -11,7 +10,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 )
 
-var ruleTypes = registry.GetRuleTypeValues()
+var (
+	ruleTypes         = registry.GetRuleTypeValues()
+	nonContentObjects = registry.GetMapObjectNonContentValues()
+)
 
 type MandatoryContentProvider struct{}
 
@@ -101,7 +103,7 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 
 func (this *MandatoryContentProvider) createFootholdContentItem(
 	castleCount int) entities.MandatoryContentItem {
-	return mandatory_content.NewContentBuilder(constants.ContentIds.RemoteFoothold.Sid).
+	return mandatory_content.NewContentBuilder(nonContentObjects.RemoteFoothold).
 		WithName("name_remote_foothold_1").
 		WithSoloEncounter().
 		WithRulesCallback(func() []entities.PlacementRule {

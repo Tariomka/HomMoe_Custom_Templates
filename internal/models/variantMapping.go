@@ -9,7 +9,7 @@ type VariantMapping struct {
 	// Content is the SID this mapping applies to.
 	Content SidMapping
 	// Variants maps each variant id to its human-readable description.
-	Variants map[int]string
+	Variants map[int]string // TODO: Does this need to be a map?
 }
 
 // NewVariantMapping builds a VariantMapping for the given content and variants.

@@ -4,7 +4,7 @@ package config_inner
 type MapTopology string
 
 const (
-	TopologyRing        MapTopology = "Default" // Ring
+	TopologyRing        MapTopology = "Default"
 	TopologyHubAndSpoke MapTopology = "HubAndSpoke"
 	TopologyChain       MapTopology = "Chain"
 	TopologySharedWeb   MapTopology = "SharedWeb"

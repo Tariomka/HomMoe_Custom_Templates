@@ -189,6 +189,10 @@ var interactableNonContentValues = interactableNonContents{
 	Tavern:           "tavern",
 }
 
+func GetMapObjectNonContentValues() interactableNonContents {
+	return interactableNonContentValues
+}
+
 type interactableVisionBuildings struct {
 	FlatteringMirror string
 	Watchtower       string
