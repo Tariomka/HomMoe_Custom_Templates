@@ -7,6 +7,7 @@ import (
 
 var (
 	interactableObjects = registry.GetMapObjectAllInteractableValues()
+	randomItemObjects   = registry.GetMapObjectRandomItemValues()
 	resourceObjects     = registry.GetMapObjectResourceValues()
 	scrollObjects       = registry.GetMapObjectScrollValues()
 )
@@ -217,10 +218,10 @@ var ContentIds = struct {
 	RandomHire5:         models.SidMapping{Sid: interactableObjects.RandomHireTier5, Name: "Random Hire Tier 5"},
 	RandomHire6:         models.SidMapping{Sid: interactableObjects.RandomHireTier6, Name: "Random Hire Tier 6"},
 	RandomHire7:         models.SidMapping{Sid: interactableObjects.RandomHireTier7, Name: "Random Hire Tier 7"},
-	RandomItemCommon:    models.SidMapping{Sid: interactableObjects.RandomItemCommon, Name: "Random Item Common"},
-	RandomItemEpic:      models.SidMapping{Sid: interactableObjects.RandomItemEpic, Name: "Random Item Epic"},
-	RandomItemLegendary: models.SidMapping{Sid: interactableObjects.RandomItemLegendary, Name: "Random Item Legendary"},
-	RandomItemRare:      models.SidMapping{Sid: interactableObjects.RandomItemRare, Name: "Random Item Rare"},
+	RandomItemCommon:    models.SidMapping{Sid: randomItemObjects.RandomItemCommon, Name: "Random Item Common"},
+	RandomItemEpic:      models.SidMapping{Sid: randomItemObjects.RandomItemEpic, Name: "Random Item Epic"},
+	RandomItemLegendary: models.SidMapping{Sid: randomItemObjects.RandomItemLegendary, Name: "Random Item Legendary"},
+	RandomItemRare:      models.SidMapping{Sid: randomItemObjects.RandomItemRare, Name: "Random Item Rare"},
 	RemoteFoothold:      models.SidMapping{Sid: interactableObjects.RemoteFoothold, Name: "Remote Foothold"},
 	ResearchLaboratory:  models.SidMapping{Sid: interactableObjects.ResearchLaboratory, Name: "Research Laboratory"},
 	RitualPyre:          models.SidMapping{Sid: interactableObjects.RitualPyre, Name: "Ritual Pyre"},

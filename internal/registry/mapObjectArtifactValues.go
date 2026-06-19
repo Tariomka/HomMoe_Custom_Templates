@@ -1,603 +1,89 @@
 package registry
 
 type objectArtifacts struct {
+	artifactScrolls
+	artifactRandomItems
 }
 
-var objectArtifactValues = objectArtifacts{}
+var objectArtifactValues = objectArtifacts{
+	artifactScrolls:     artifactScrollValues,
+	artifactRandomItems: artifactRandomItemValues,
+}
 
 func GetMapObjectAllArtifactValues() objectArtifacts {
 	return objectArtifactValues
 }
 
-type objectScrolls struct {
+type artifactScrolls struct {
 	ScrollBox          string
 	EnchantedScrollBox string
 	MythicScrollBox    string
 }
 
-var objectScrollValues = objectScrolls{
+var artifactScrollValues = artifactScrolls{
 	ScrollBox:          "scroll_box",
 	EnchantedScrollBox: "enchanted_scroll_box",
 	MythicScrollBox:    "mythic_scroll_box",
 }
 
-func GetMapObjectScrollValues() objectScrolls {
-	return objectScrollValues
+func GetMapObjectScrollValues() artifactScrolls {
+	return artifactScrollValues
 }
 
-// "id": "scroll_box",
-// 			"id": "enchanted_scroll_box",
-// 			"id": "mythic_scroll_box",
+type artifactRandomItems struct {
+	RandomItemCommon    string
+	RandomItemRare      string
+	RandomItemEpic      string
+	RandomItemLegendary string
+}
+
+var artifactRandomItemValues = artifactRandomItems{
+	RandomItemCommon:    "random_item_common",
+	RandomItemRare:      "random_item_rare",
+	RandomItemEpic:      "random_item_epic",
+	RandomItemLegendary: "random_item_legendary",
+}
+
+func GetMapObjectRandomItemValues() artifactRandomItems {
+	return artifactRandomItemValues
+}
 
 // 			"id": "resonant_sphere_orb_of_twilight_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/resonant_sphere_orb_of_twilight_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
 
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "resonant_sphere_orb_of_daylight_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/resonant_sphere_orb_of_daylight_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "resonant_sphere_orb_of_eternity_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/resonant_sphere_orb_of_eternity_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "resonant_sphere_primal_orb_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/resonant_sphere_primal_orb_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "tranquility_brightmind_tiara_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/tranquility_brightmind_tiara_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "tranquility_magic_mirror_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/tranquility_magic_mirror_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "tranquility_ring_of_serenity_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/tranquility_ring_of_serenity_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "shamaniac_soul_shaman_staff_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/shamaniac_soul_shaman_staff_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "shamaniac_soul_iridescent_cloak_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/shamaniac_soul_iridescent_cloak_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "shamaniac_soul_gemwood_mask_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/shamaniac_soul_gemwood_mask_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "shamaniac_soul_clutching_ring_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/shamaniac_soul_clutching_ring_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "knights_honor_drums_of_war_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/knights_honor_drums_of_war_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "knights_honor_lance_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/knights_honor_lance_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "knights_honor_misericorde_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/knights_honor_misericorde_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "knights_honor_plate_armor_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/knights_honor_plate_armor_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "knights_honor_armet_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/knights_honor_armet_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "ukhtabar_seal_ukh_seal_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/ukhtabar_seal_ukh_seal_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "ukhtabar_seal_tabar_seal_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/ukhtabar_seal_tabar_seal_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "milos_curse_golden_pig_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/milos_curse_golden_pig_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "milos_curse_golden_moth_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/milos_curse_golden_moth_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "milos_curse_skull_of_milos_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/milos_curse_skull_of_milos_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
 
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "paupers_glory_wooden_ring_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/paupers_glory_wooden_ring_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "paupers_glory_straw_hat_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/paupers_glory_straw_hat_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "paupers_glory_rope_belt_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/paupers_glory_rope_belt_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "paupers_glory_rags_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/paupers_glory_rags_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "paupers_glory_dumb_club_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/paupers_glory_dumb_club_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "paupers_glory_last_coin_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/paupers_glory_last_coin_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "angelic_alliance_sword_of_judgement_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/angelic_alliance_sword_of_judgement_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "angelic_alliance_celestial_sash_of_bliss_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/angelic_alliance_celestial_sash_of_bliss_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "angelic_alliance_lions_shield_of_courage_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/angelic_alliance_lions_shield_of_courage_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "angelic_alliance_armor_of_wonder_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/angelic_alliance_armor_of_wonder_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "angelic_alliance_helm_of_heavenly_enlightenment_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/angelic_alliance_helm_of_heavenly_enlightenment_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
 // 			"id": "angelic_alliance_sandals_of_the_saint_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/angelic_alliance_sandals_of_the_saint_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
 
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact",
 // 			"tag": "Artifact",
 // 			"isInteractable": true,
@@ -2347,306 +1833,16 @@ func GetMapObjectScrollValues() objectScrolls {
 
 // 		{
 // 			"id": "soulscaller_ring_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/soulscaller_ring_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "chain_link_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/chain_link_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "ring_of_neutrality_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/ring_of_neutrality_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "lords_ring_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/lords_ring_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_roph_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_roph_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_eridore_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_eridore_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_mearea_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_mearea_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_quix_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_quix_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_the_seven_magi_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_the_seven_magi_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_the_second_man_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_the_second_man_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_insara_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_insara_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "holy_sigil_of_uurdt_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/holy_sigil_of_uurdt_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "voodoosh_doll_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/voodoo_doll_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
 // 			"id": "demonic_heart_artifact",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/demonic_heart_artifact" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-
-// 		{
-// 			"id": "campaign_empty_crystal_item",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/book_artifact_grey" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
-// 			"id": "campaign_ichor_item",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/campaign_ichor" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		},
-// 		{
-// 			"id": "campaign_M9_phoenix_egg_item",
-// 			"tag": "Artifact",
-// 			"isInteractable": true,
-// 			"prefs": [ "artifact/book_artifact_grey" ],
-// 			"selectionUiPrefabID":"1x1",
-
-// 			"pivotX": 1, "pivotZ": 1,
-// 			"sizeX": 3, "sizeZ": 3,
-// 			"offsetX": 0, "offsetZ": 0,
-// 			"nodes":
-// 			[
-// 				2, 2, 2,
-// 				2, 1, 2,
-// 				2, 2, 2
-// 			]
-// 		}
-// 	]
-// }
