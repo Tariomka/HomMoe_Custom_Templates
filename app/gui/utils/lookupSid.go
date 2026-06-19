@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"strings"
+
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -8,7 +10,7 @@ import (
 // LookupSidByName returns the models.SidMapping whose Name matches name (case-insensitive).
 func LookupSidByName(name string) (models.SidMapping, bool) {
 	for _, m := range allSidMappings() {
-		if equalFold(m.Name, name) {
+		if strings.EqualFold(m.Name, name) {
 			return m, true
 		}
 	}
@@ -58,23 +60,4 @@ func allSidMappings() []models.SidMapping {
 		constants.IncludeListIds.ResourceBanksTier2,
 	)
 	return all
-}
-
-func equalFold(a, b string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := 0; i < len(a); i++ {
-		ca, cb := a[i], b[i]
-		if ca >= 'A' && ca <= 'Z' {
-			ca += 'a' - 'A'
-		}
-		if cb >= 'A' && cb <= 'Z' {
-			cb += 'a' - 'A'
-		}
-		if ca != cb {
-			return false
-		}
-	}
-	return true
 }
