@@ -113,6 +113,10 @@ var interactableResourceBankValues = interactableResourceBanks{
 	HerosCrypt: "heros_crypt",
 }
 
+func GetMapObjectResourceBankValues() interactableResourceBanks {
+	return interactableResourceBankValues
+}
+
 type interactableT1GuardedResourceBanks struct {
 	BlackTower       string
 	AbandonedMansion string
@@ -125,6 +129,10 @@ var interactableT1GuardedResourceBankValues = interactableT1GuardedResourceBanks
 	AbandonedMansion: "abandoned_mansion",
 	MereasShrine:     "mereas_shrine",
 	ShadyDen:         "shady_den",
+}
+
+func GetMapObjectT1GuardedResourceBankValues() interactableT1GuardedResourceBanks {
+	return interactableT1GuardedResourceBankValues
 }
 
 type interactableT2GuardedResourceBanks struct {
@@ -169,6 +177,10 @@ var interactableT3GuardedResourceBankValues = interactableT3GuardedResourceBanks
 	ResearchLaboratory: "research_laboratory",
 }
 
+func GetMapObjectT3GuardedResourceBankValues() interactableT3GuardedResourceBanks {
+	return interactableT3GuardedResourceBankValues
+}
+
 type interactableNonContents struct {
 	Mirage           string
 	InsarasEye       string
@@ -203,6 +215,10 @@ var interactableVisionBuildingValues = interactableVisionBuildings{
 	FlatteringMirror: "flattering_mirror",
 	Watchtower:       "watchtower",
 	WindRose:         "wind_rose",
+}
+
+func GetMapObjectVisionBuildingValues() interactableVisionBuildings {
+	return interactableVisionBuildingValues
 }
 
 type interactableMiscellaneous struct {
@@ -255,6 +271,10 @@ var interactableMagicBuildingValues = interactableMagicBuildings{
 	MagicAmplifier4: "magic_amplifier_4",
 }
 
+func GetMapObjectMagicBuildingValues() interactableMagicBuildings {
+	return interactableMagicBuildingValues
+}
+
 type interactableHeroBuffBuildings struct {
 	ManaWell        string
 	Fountain        string
@@ -281,6 +301,10 @@ var interactableHeroBuffBuildingValues = interactableHeroBuffBuildings{
 	CrystalTrail:    "crystal_trail",
 }
 
+func GetMapObjectHeroBuffBuildingValues() interactableHeroBuffBuildings {
+	return interactableHeroBuffBuildingValues
+}
+
 type interactableBuildings struct {
 	HuntsmansCamp     string
 	MercenaryGuild    string
@@ -305,6 +329,10 @@ var interactableBuildingValues = interactableBuildings{
 	TreeOfAbundance: "tree_of_abundance",
 }
 
+func GetMapObjectBuildingValues() interactableBuildings {
+	return interactableBuildingValues
+}
+
 type interactableT1StatsAndSkillsBuildings struct {
 	StingingSword   string
 	ArmoryAutomaton string
@@ -321,6 +349,10 @@ var interactableT1StatsAndSkillsValues = interactableT1StatsAndSkillsBuildings{
 	WiseOwl:         "wise_owl",
 }
 
+func GetMapObjectT1StatsAndSkillsValues() interactableT1StatsAndSkillsBuildings {
+	return interactableT1StatsAndSkillsValues
+}
+
 type interactableT2StatsAndSkillsBuildings struct {
 	Fort           string
 	OrbObservatory string
@@ -335,6 +367,10 @@ var interactableT2StatsAndSkillsValues = interactableT2StatsAndSkillsBuildings{
 	University:     "university",
 	Circus:         "circus",
 	InfernalCirque: "infernal_cirque",
+}
+
+func GetMapObjectT2StatsAndSkillsValues() interactableT2StatsAndSkillsBuildings {
+	return interactableT2StatsAndSkillsValues
 }
 
 type interactableT3StatsAndSkillsBuildings struct {
@@ -369,6 +405,10 @@ var interactableNamedUnitBankValues = interactableNamedUnitBanks{
 	PointOfBalance:    "point_of_balance",
 }
 
+func GetMapObjectNamedUnitBankValues() interactableNamedUnitBanks {
+	return interactableNamedUnitBankValues
+}
+
 type interactableRandomUnitBanks struct {
 	RandomHireTier1 string
 	RandomHireTier2 string
@@ -387,6 +427,10 @@ var interactableRandomUnitBankValues = interactableRandomUnitBanks{
 	RandomHireTier5: "random_hire_5",
 	RandomHireTier6: "random_hire_6",
 	RandomHireTier7: "random_hire_7",
+}
+
+func GetMapObjectRandomUnitBankValues() interactableRandomUnitBanks {
+	return interactableRandomUnitBankValues
 }
 
 // Below are SIDs currently unused

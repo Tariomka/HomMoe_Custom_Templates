@@ -5,10 +5,8 @@ import (
 	"os"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
 
@@ -24,31 +22,7 @@ func LoadSettingsFile(path string) (*dtos.EditorStateDto, error) {
 		return nil, err
 	}
 
-	migrateContentRowRules(&settingsFile)
-
 	return &settingsFile, nil
-}
-
-// migrateContentRowRules upgrades every zone's content rows from the deprecated
-// flat rule fields to the serialized Rules list, mirroring the C# load path
-// which restores rules for every row on load.
-func migrateContentRowRules(state *dtos.EditorStateDto) {
-	state.PlayerZoneContentRows = migrateContentRows(state.PlayerZoneContentRows)
-	state.LowNeutralContentRows = migrateContentRows(state.LowNeutralContentRows)
-	state.MediumNeutralContentRows = migrateContentRows(state.MediumNeutralContentRows)
-	state.HighNeutralContentRows = migrateContentRows(state.HighNeutralContentRows)
-	state.HubZoneContentRows = migrateContentRows(state.HubZoneContentRows)
-}
-
-func migrateContentRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
-	if len(rows) == 0 {
-		return rows
-	}
-	migrated := make([]models.ZoneContentRowSave, len(rows))
-	for i, row := range rows {
-		migrated[i] = content_rules.MigrateLegacyRow(row, models.SidMapping{Sid: row.Sid})
-	}
-	return migrated
 }
 
 // SaveSettingsFile writes a SettingsFile to disk as indented JSON.

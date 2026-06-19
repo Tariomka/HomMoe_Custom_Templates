@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type ContentLimitProvider struct{}
@@ -56,50 +56,63 @@ func (this *ContentLimitProvider) CreateContentCountLimits(settings config.Gener
 }
 
 func (this *ContentLimitProvider) createDefaultContentLimits() []entities.ContentLimit {
+	var (
+		buildingObjects           = registry.GetMapObjectBuildingValues()
+		heroBuffBuildings         = registry.GetMapObjectHeroBuffBuildingValues()
+		magicBuildings            = registry.GetMapObjectMagicBuildingValues()
+		nonContentObjects         = registry.GetMapObjectNonContentValues()
+		randomUnitBanks           = registry.GetMapObjectRandomUnitBankValues()
+		resourceObjects           = registry.GetMapObjectResourceValues()
+		t1GuardedResourceBanks    = registry.GetMapObjectT1GuardedResourceBankValues()
+		t1StatsAndSkillsBuildings = registry.GetMapObjectT1StatsAndSkillsValues()
+		t2StatsAndSkillsBuildings = registry.GetMapObjectT2StatsAndSkillsValues()
+		unitBanks                 = registry.GetMapObjectNamedUnitBankValues()
+		visionBuildings           = registry.GetMapObjectVisionBuildingValues()
+	)
 	return []entities.ContentLimit{
-		{SID: "black_tower", MaxCount: 0},
-		{SID: constants.ContentIds.Fountain.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.Fountain2.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.ManaWell.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.BeerFountain.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.Market.Sid, MaxCount: 1},
-		{SID: constants.ContentIds.Forge.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.Stables.Sid, MaxCount: 1},
-		{SID: constants.ContentIds.Watchtower.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.WindRose.Sid, MaxCount: 1},
-		{SID: constants.ContentIds.QuixsPath.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.CrystalTrail.Sid, MaxCount: 3},
-		{SID: constants.ContentIds.MysteriousStone.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.University.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.WiseOwl.Sid, MaxCount: 4},
-		{SID: constants.ContentIds.CelestialSphere.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.PileOfBooks.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.InsarasEye.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.TearOfTruth.Sid, MaxCount: 3},
-		{SID: constants.ContentIds.TreeOfAbundance.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.HuntsmansCamp.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.ShadyDen.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.RandomHire1.Sid, MaxCount: 6},
-		{SID: constants.ContentIds.RandomHire2.Sid, MaxCount: 6},
-		{SID: constants.ContentIds.RandomHire3.Sid, MaxCount: 6},
-		{SID: constants.ContentIds.RandomHire4.Sid, MaxCount: 6},
-		{SID: constants.ContentIds.RandomHire5.Sid, MaxCount: 6},
-		{SID: constants.ContentIds.RandomHire6.Sid, MaxCount: 6},
-		{SID: constants.ContentIds.RandomHire7.Sid, MaxCount: 6},
-		{SID: constants.ContentIds.Arena.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.SacrificialShrine.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.Chimerologist.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.Circus.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.InfernalCirque.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.FlatteringMirror.Sid, MaxCount: 2},
-		{SID: constants.ContentIds.FickleShrine.Sid, MaxCount: 1},
-		{SID: constants.ContentIds.PointOfBalance.Sid, MaxCount: 3},
-		{SID: constants.ContentIds.PandoraBox.Sid, MaxCount: 4},
-		{SID: constants.ContentIds.RitualPyre.Sid, MaxCount: 3},
-		{SID: constants.ContentIds.BorealCall.Sid, MaxCount: 3},
-		{SID: constants.ContentIds.JoustingRange.Sid, MaxCount: 1},
-		{SID: constants.ContentIds.UnforgottenGrave.Sid, MaxCount: 1},
-		{SID: constants.ContentIds.PetrifiedMemorial.Sid, MaxCount: 1},
-		{SID: constants.ContentIds.TheGorge.Sid, MaxCount: 1},
+		{SID: t1GuardedResourceBanks.BlackTower, MaxCount: 0},
+		{SID: heroBuffBuildings.Fountain, MaxCount: 2},
+		{SID: heroBuffBuildings.Fountain2, MaxCount: 2},
+		{SID: heroBuffBuildings.ManaWell, MaxCount: 2},
+		{SID: heroBuffBuildings.BeerFountain, MaxCount: 2},
+		{SID: nonContentObjects.Market, MaxCount: 1},
+		{SID: nonContentObjects.Forge, MaxCount: 2},
+		{SID: heroBuffBuildings.Stables, MaxCount: 1},
+		{SID: visionBuildings.Watchtower, MaxCount: 2},
+		{SID: visionBuildings.WindRose, MaxCount: 1},
+		{SID: heroBuffBuildings.QuixsPath, MaxCount: 2},
+		{SID: heroBuffBuildings.CrystalTrail, MaxCount: 3},
+		{SID: heroBuffBuildings.MysteriousStone, MaxCount: 2},
+		{SID: t2StatsAndSkillsBuildings.University, MaxCount: 2},
+		{SID: t1StatsAndSkillsBuildings.WiseOwl, MaxCount: 4},
+		{SID: magicBuildings.CelestialSphere, MaxCount: 2},
+		{SID: heroBuffBuildings.PileOfBooks, MaxCount: 2},
+		{SID: nonContentObjects.InsarasEye, MaxCount: 2},
+		{SID: heroBuffBuildings.TearOfTruth, MaxCount: 3},
+		{SID: buildingObjects.TreeOfAbundance, MaxCount: 2},
+		{SID: buildingObjects.HuntsmansCamp, MaxCount: 2},
+		{SID: t1GuardedResourceBanks.ShadyDen, MaxCount: 2},
+		{SID: randomUnitBanks.RandomHireTier1, MaxCount: 6},
+		{SID: randomUnitBanks.RandomHireTier2, MaxCount: 6},
+		{SID: randomUnitBanks.RandomHireTier3, MaxCount: 6},
+		{SID: randomUnitBanks.RandomHireTier4, MaxCount: 6},
+		{SID: randomUnitBanks.RandomHireTier5, MaxCount: 6},
+		{SID: randomUnitBanks.RandomHireTier6, MaxCount: 6},
+		{SID: randomUnitBanks.RandomHireTier7, MaxCount: 6},
+		{SID: buildingObjects.Arena, MaxCount: 2},
+		{SID: buildingObjects.SacrificialShrine, MaxCount: 2},
+		{SID: buildingObjects.Chimerologist, MaxCount: 2},
+		{SID: t2StatsAndSkillsBuildings.Circus, MaxCount: 2},
+		{SID: t2StatsAndSkillsBuildings.InfernalCirque, MaxCount: 2},
+		{SID: visionBuildings.FlatteringMirror, MaxCount: 2},
+		{SID: buildingObjects.FickleShrine, MaxCount: 1},
+		{SID: unitBanks.PointOfBalance, MaxCount: 3},
+		{SID: resourceObjects.PandoraBox, MaxCount: 4},
+		{SID: unitBanks.RitualPyre, MaxCount: 3},
+		{SID: unitBanks.BorealCall, MaxCount: 3},
+		{SID: unitBanks.JoustingRange, MaxCount: 1},
+		{SID: unitBanks.UnforgottenGrave, MaxCount: 1},
+		{SID: unitBanks.PetrifiedMemorial, MaxCount: 1},
+		{SID: unitBanks.Gorge, MaxCount: 1},
 	}
 }

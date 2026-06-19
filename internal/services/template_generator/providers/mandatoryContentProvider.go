@@ -63,7 +63,7 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 	}
 	var out []entities.MandatoryContentItem
 	for _, raw := range rows {
-		row := raw.Normalised()
+		row := raw.Normalized()
 		if row.Sid == "" {
 			continue
 		}
