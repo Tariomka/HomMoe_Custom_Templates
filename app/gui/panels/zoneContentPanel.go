@@ -12,7 +12,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
 // tierIndex is the position of a tier inside the tierRows cache. The
@@ -156,7 +155,7 @@ func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 	this.zcBanks.ClearRows()
 	this.zcHeroImprovement.ClearRows()
 	for _, raw := range this.tierRows[tier] {
-		row := raw.Normalised()
+		row := raw.Normalized()
 		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
 		if found, ok := utils.GetSidMappingBySid(row.Sid); ok {
 			mapping = found
@@ -167,8 +166,6 @@ func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 		switch {
 		case len(row.Rules) > 0:
 			rules = row.Rules
-		case row.HasLegacyRuleData():
-			rules = content_rules.MigrateLegacyRow(row, mapping).Rules
 		}
 		section := this.routeToSection(row.Sid, row.IsMine)
 		section.Add(mapping, row.Count, rules, row.IsGroup)
@@ -248,20 +245,105 @@ func cloneRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
 
 func defaultPlayerTierRows() []models.ZoneContentRowSave {
 	return []models.ZoneContentRowSave{
-		{Sid: constants.ContentIds.MineWood.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
-		{Sid: constants.ContentIds.MineOre.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
-		{Sid: constants.ContentIds.MineGold.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
-		{Sid: constants.ContentIds.MineCrystals.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.MineMercury.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.MineGemstones.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.AlchemyLab.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.PandoraBox.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any"},
-		{Sid: constants.ContentIds.RandomItemEpic.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any"},
-		{Sid: constants.IncludeListIds.RandomHiresLowTier.Sid, Count: 2, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.RandomHiresHighTier.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.RandomHiresAllTier.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.ResourceBanksTier1.Sid, Count: 2, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.ResourceBanksTier2.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
+		{
+			Sid:          constants.ContentIds.MineWood.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			NearCastle:   true,
+			RoadDistance: "Any",
+			IsMine:       true,
+		},
+		{
+			Sid:          constants.ContentIds.MineOre.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			NearCastle:   true,
+			RoadDistance: "Any",
+			IsMine:       true,
+		},
+		{
+			Sid:          constants.ContentIds.MineGold.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			NearCastle:   true,
+			RoadDistance: "Any",
+			IsMine:       true,
+		},
+		{
+			Sid:          constants.ContentIds.MineCrystals.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Next To",
+			IsMine:       true,
+		},
+		{
+			Sid:          constants.ContentIds.MineMercury.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Next To",
+			IsMine:       true,
+		},
+		{
+			Sid:          constants.ContentIds.MineGemstones.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Next To",
+			IsMine:       true,
+		},
+		{
+			Sid:          constants.ContentIds.AlchemyLab.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Next To",
+			IsMine:       true,
+		},
+		{
+			Sid:          constants.ContentIds.PandoraBox.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Any",
+		},
+		{
+			Sid:          constants.ContentIds.RandomItemEpic.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Any",
+		},
+		{
+			Sid:          constants.IncludeListIds.RandomHiresLowTier.Sid,
+			Count:        2,
+			IsGuarded:    true,
+			RoadDistance: "Any",
+			IsGroup:      true,
+		},
+		{
+			Sid:          constants.IncludeListIds.RandomHiresHighTier.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Any",
+			IsGroup:      true,
+		},
+		{
+			Sid:          constants.IncludeListIds.RandomHiresAllTier.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Any",
+			IsGroup:      true,
+		},
+		{
+			Sid:          constants.IncludeListIds.ResourceBanksTier1.Sid,
+			Count:        2,
+			IsGuarded:    true,
+			RoadDistance: "Any",
+			IsGroup:      true,
+		},
+		{
+			Sid:          constants.IncludeListIds.ResourceBanksTier2.Sid,
+			Count:        1,
+			IsGuarded:    true,
+			RoadDistance: "Any",
+			IsGroup:      true,
+		},
 	}
 }
 
