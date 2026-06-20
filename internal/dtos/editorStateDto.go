@@ -19,8 +19,10 @@ type EditorStateDto struct {
 	MapSize                       int    `json:"mapSize"`
 	PlayerCount                   int    `json:"playerCount"`
 	NeutralZoneCount              int    `json:"neutralZoneCount"`
+	PlayerOwnedCastles            int    `json:"playerOwnedCastles"`
 	PlayerZoneCastles             int    `json:"playerCastles"`
 	NeutralZoneCastles            int    `json:"neutralCastles"`
+	SpawnAbandonedOutposts        bool   `json:"spawnAbandonedOutposts"`
 	AdvancedMode                  bool   `json:"advancedMode"`
 	NeutralLowNoCastleCount       int    `json:"neutralLowNoCastle"`
 	NeutralLowCastleCount         int    `json:"neutralLowCastle"`

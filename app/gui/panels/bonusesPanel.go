@@ -76,7 +76,7 @@ func (this *BonusesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 // frame so the rows stay in sync with the underlying entry slices.
 func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	bonusRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add bonus…", &this.addBonusBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add bonus…", &this.addBonusBtn, false),
 	}
 	if len(this.bonuses) == 0 {
 		bonusRows = append(bonusRows, widgets.NewDimmedLabelWidget(theme, "(no bonuses)"))
@@ -91,7 +91,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	itemRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add banned item…", &this.pickItemsBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add banned item…", &this.pickItemsBtn, false),
 	}
 	if len(this.bannedItems) == 0 {
 		itemRows = append(itemRows, widgets.NewDimmedLabelWidget(theme, "(no banned items)"))
@@ -102,7 +102,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	spellRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add banned spell…", &this.pickSpellsBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add banned spell…", &this.pickSpellsBtn, false),
 	}
 	if len(this.bannedMagics) == 0 {
 		spellRows = append(spellRows, widgets.NewDimmedLabelWidget(theme, "(no banned spells)"))
@@ -113,7 +113,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	overrideRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add override…", &this.pickOverridesBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add override…", &this.pickOverridesBtn, false),
 	}
 	if len(this.valueOverrides) == 0 {
 		overrideRows = append(overrideRows, widgets.NewDimmedLabelWidget(theme, "(no overrides)"))
@@ -124,7 +124,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	return []layout.Widget{
-		widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Effects only apply on generation."),
+		// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Effects only apply on generation."),
 		widgets.NewSectionWidget(theme, "Game start bonuses", bonusRows),
 		widgets.NewSectionWidget(theme, "Banned items", itemRows),
 		widgets.NewSectionWidget(theme, "Banned spells", spellRows),
@@ -237,7 +237,7 @@ func (this *BonusesPanel) syncRemoveButtons() {
 
 func (this *BonusesPanel) LoadFromState() {
 	settings := this.state.GetStateData()
-	this.bonuses = config_inner.ParseBonusesJSON(settings.BonusesJSON)
+	this.bonuses = config_inner.DeserializeBonusEntries(settings.BonusesJSON)
 	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
 	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
 	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
@@ -246,7 +246,7 @@ func (this *BonusesPanel) LoadFromState() {
 
 func (this *BonusesPanel) SaveToState() {
 	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
-		settings.BonusesJSON = config_inner.SerializeBonuses(this.bonuses)
+		settings.BonusesJSON = config_inner.SerializeBonusEntries(this.bonuses)
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
 		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")

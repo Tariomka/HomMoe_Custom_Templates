@@ -46,6 +46,7 @@ var IncludeListIds = struct {
 	MagicBuildingsTier2             models.SidMapping
 	HeroImprovementUncommon         models.SidMapping
 	VisionBuildingsTier1            models.SidMapping
+	VisionBuildingsTier2            models.SidMapping
 	RandomPickupItems               models.SidMapping
 	MythicScrollBoxPickup           models.SidMapping
 	PandoraBoxArmyLowTier           models.SidMapping
@@ -77,6 +78,7 @@ var IncludeListIds = struct {
 	MagicBuildingsTier2:             models.SidMapping{Sid: basicMagicBuildings.BasicMagicBuildingsTier2, Name: "Random Magic Building Tier 2"},
 	HeroImprovementUncommon:         models.SidMapping{Sid: miscellaneous.UncommonHeroBanks, Name: "Uncommon Hero Improvement"},
 	VisionBuildingsTier1:            models.SidMapping{Sid: basicMiscellaneous.BasicVisionBuildingsTier1, Name: "Random Vision Building Tier 1"},
+	VisionBuildingsTier2:            models.SidMapping{Sid: basicMiscellaneous.BasicVisionBuildingsTier2, Name: "Random Vision Building Tier 2"},
 	RandomPickupItems:               models.SidMapping{Sid: basicMiscellaneous.BasicPickupRandomItems, Name: "Random Pickup Items"},
 	MythicScrollBoxPickup:           models.SidMapping{Sid: basicScrollBoxes.BasicPickupMythicScrollBox, Name: "Random Mythic Scroll Box"},
 	PandoraBoxArmyLowTier:           models.SidMapping{Sid: pandoraBoxes.PickupPandoraBoxArmyLowTier, Name: "Pandora Box Army (Low Tier)"},

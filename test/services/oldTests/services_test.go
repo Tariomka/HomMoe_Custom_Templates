@@ -478,6 +478,117 @@ func TestGenerate_CityHold_NeutralHasHoldCityFlag(t *testing.T) {
 	}
 }
 
+// ── Generate: abandoned outposts ─────────────────────────────────────
+
+func TestGenerate_AbandonedOutposts_NeutralCitiesBecomeOutposts(t *testing.T) {
+	makeSettings := func(spawnOutposts bool) *config.GeneratorConfig {
+		s := defaultSettings()
+		s.Topology = config.TopologyRing
+		s.PlayerCount = 2
+		s.ShufflePlayerZones = false
+		s.ZoneConfiguration.Advanced.Enabled = true
+		s.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1
+		s.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
+		s.ZoneConfiguration.SpawnAbandonedOutposts = spawnOutposts
+		return s
+	}
+
+	// Baseline: without the flag, neutral castle zones use City main objects.
+	baseline := template_generator.NewTemplateGenerator(makeSettings(false)).Generate()
+	cityCount := 0
+	for _, z := range baseline.Variants[0].Zones {
+		if !strings.HasPrefix(z.Name, "Neutral-") {
+			continue
+		}
+		for _, mo := range z.MainObjects {
+			switch mo.Type {
+			case "City":
+				cityCount++
+			case "AbandonedOutpost":
+				t.Errorf("zone %q has an AbandonedOutpost without the option enabled", z.Name)
+			}
+		}
+	}
+	if cityCount == 0 {
+		t.Fatal("baseline produced no neutral City main objects to compare against")
+	}
+
+	// With the flag, every neutral settlement becomes an AbandonedOutpost.
+	withOutposts := template_generator.NewTemplateGenerator(makeSettings(true)).Generate()
+	outpostCount := 0
+	for _, z := range withOutposts.Variants[0].Zones {
+		if !strings.HasPrefix(z.Name, "Neutral-") {
+			continue
+		}
+		for _, mo := range z.MainObjects {
+			switch mo.Type {
+			case "City":
+				t.Errorf("zone %q still has a City main object with abandoned outposts enabled", z.Name)
+			case "AbandonedOutpost":
+				outpostCount++
+			}
+		}
+	}
+	if outpostCount == 0 {
+		t.Error("expected at least one AbandonedOutpost main object with the option enabled")
+	}
+}
+
+// ── Generate: player-owned castles ───────────────────────────────────
+
+func TestGenerate_PlayerOwnedCastles_AddsPreOwnedCastles(t *testing.T) {
+	const ownedPerZone = 2
+
+	s := defaultSettings()
+	s.Topology = config.TopologyRing
+	s.PlayerCount = 2
+	s.ShufflePlayerZones = false
+	s.ZoneConfiguration.PlayerZoneCastles = 2 // 1 unclaimed extra castle per zone
+	s.ZoneConfiguration.PlayerOwnedCastles = ownedPerZone
+
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
+
+	spawnZones := 0
+	for _, z := range tmpl.Variants[0].Zones {
+		if !strings.HasPrefix(z.Name, "Spawn-") || len(z.MainObjects) == 0 {
+			continue
+		}
+		spawnZones++
+		spawnPlayer := z.MainObjects[0].Spawn
+
+		ownedCount := 0
+		unclaimedCount := 0
+		for _, mo := range z.MainObjects {
+			if mo.Type != "City" {
+				continue
+			}
+			if mo.Owner == "" {
+				unclaimedCount++
+				if mo.RemoveGuardIfHasOwner {
+					t.Errorf("zone %q: unclaimed castle should keep its guard", z.Name)
+				}
+				continue
+			}
+			ownedCount++
+			if mo.Owner != spawnPlayer {
+				t.Errorf("zone %q: owned castle owner = %q, want %q", z.Name, mo.Owner, spawnPlayer)
+			}
+			if !mo.RemoveGuardIfHasOwner {
+				t.Errorf("zone %q: owned castle should drop its guard once owned", z.Name)
+			}
+		}
+		if ownedCount != ownedPerZone {
+			t.Errorf("zone %q: owned castle count = %d, want %d", z.Name, ownedCount, ownedPerZone)
+		}
+		if unclaimedCount != 1 {
+			t.Errorf("zone %q: unclaimed castle count = %d, want 1", z.Name, unclaimedCount)
+		}
+	}
+	if spawnZones == 0 {
+		t.Fatal("expected at least one spawn zone")
+	}
+}
+
 // ── Generate: description ────────────────────────────────────────────
 
 func TestGenerate_Description_ContainsTopology(t *testing.T) {

@@ -1,6 +1,7 @@
 package previewLayout_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -371,6 +372,50 @@ func TestClassifyZoneTier_NameHighFallback(t *testing.T) {
 	z := entities.Zone{Name: "Neutral-high"}
 	if got := services.ClassifyZoneTier(z); got != 3 {
 		t.Errorf("got %d, want 3", got)
+	}
+}
+
+// ── BuildPreviewLayout: parallel connection fanning ──────────────────
+
+func TestBuildPreviewLayout_SingleEdgeRendersStraight(t *testing.T) {
+	zones := []entities.Zone{zonePos("Spawn-A", 0.2, 0.5), zonePos("Spawn-B", 0.8, 0.5)}
+	conns := []entities.Connection{conn("Spawn-A", "Spawn-B")}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRandom, 600)
+	if len(out.Connections) != 1 {
+		t.Fatalf("expected 1 preview connection, got %d", len(out.Connections))
+	}
+	c := out.Connections[0]
+	midX := float64(c.A.X+c.B.X) / 2.0
+	midY := float64(c.A.Y+c.B.Y) / 2.0
+	// A lone edge keeps its control point on the midpoint so it draws straight.
+	if math.Abs(float64(c.Ctrl.X)-midX) > 1 || math.Abs(float64(c.Ctrl.Y)-midY) > 1 {
+		t.Errorf("single-edge control point %v not on the midpoint (%.1f, %.1f)", c.Ctrl, midX, midY)
+	}
+}
+
+func TestBuildPreviewLayout_ParallelEdgesFanOut(t *testing.T) {
+	zones := []entities.Zone{zonePos("Spawn-A", 0.2, 0.5), zonePos("Spawn-B", 0.8, 0.5)}
+	conns := []entities.Connection{
+		conn("Spawn-A", "Spawn-B"),
+		conn("Spawn-A", "Spawn-B"),
+	}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRandom, 600)
+	if len(out.Connections) != 2 {
+		t.Fatalf("expected 2 preview connections, got %d", len(out.Connections))
+	}
+	first, second := out.Connections[0], out.Connections[1]
+	// Distinct control points: otherwise the two edges overlap into one line.
+	if first.Ctrl == second.Ctrl {
+		t.Fatalf("parallel edges share control point %v — they would overlap", first.Ctrl)
+	}
+	// Their control points straddle the midpoint symmetrically, so each edge
+	// bulges out to its own side.
+	midX := float64(first.A.X+first.B.X) / 2.0
+	midY := float64(first.A.Y+first.B.Y) / 2.0
+	avgX := float64(first.Ctrl.X+second.Ctrl.X) / 2.0
+	avgY := float64(first.Ctrl.Y+second.Ctrl.Y) / 2.0
+	if math.Abs(avgX-midX) > 1 || math.Abs(avgY-midY) > 1 {
+		t.Errorf("parallel control points not symmetric about midpoint: avg=(%.1f, %.1f) mid=(%.1f, %.1f)", avgX, avgY, midX, midY)
 	}
 }
 

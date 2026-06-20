@@ -19,7 +19,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
 type LayoutPanel struct {
@@ -31,6 +30,7 @@ type LayoutPanel struct {
 	chkFootholds           widget.Bool
 	chkPlayerIsolation     widget.Bool
 	chkMatchPlayerFactions widget.Bool
+	chkAbandonedOutposts   widget.Bool
 	sldMinNeutralBetween   widget.Float
 
 	chkAdvancedZones       widget.Bool
@@ -41,6 +41,7 @@ type LayoutPanel struct {
 	sldNeutralHighNoCastle widget.Float
 	sldNeutralHighCastle   widget.Float
 	sldNeutralCount        widget.Float
+	sldPlayerOwnedCastles  widget.Float
 	sldPlayerCastles       widget.Float
 	sldNeutralCastles      widget.Float
 	sldHubSize             widget.Float
@@ -95,6 +96,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
+			widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAbandonedOutposts, "Spawn abandoned outposts instead of neutral castles"),
 			widgets.NewLabeledRowWidget(theme, "Min neutrals between players", 200, widgets.NewLabeledSliderWidget(theme, &this.sldMinNeutralBetween, fmt.Sprintf("%d", utils.RoundedRange(this.sldMinNeutralBetween.Value, 0, 8)))),
 		}),
 		widgets.NewSectionWidget(theme, "Zone sizes", []layout.Widget{
@@ -121,8 +123,9 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	}
 	if this.chkAdvancedZones.Value {
 		widgetsList = append(widgetsList, widgets.NewSectionWidget(theme, "Zones (advanced)", []layout.Widget{
+			widgets.NewLabeledRowWidget(theme, "Player Owned castles per zone", 220, widgets.NewLabeledSliderWidget(theme, &this.sldPlayerOwnedCastles, fmt.Sprintf("%d", utils.RoundedRange(this.sldPlayerOwnedCastles.Value, 0, 4)))),
+			widgets.NewLabeledRowWidget(theme, "Player Unclaimed castles per zone", 220, widgets.NewLabeledSliderWidget(theme, &this.sldPlayerCastles, fmt.Sprintf("%d", utils.RoundedRange(this.sldPlayerCastles.Value, 0, 4)))),
 			widgets.NewLabeledRowWidget(theme, "Total neutral zones", 220, widgets.NewLabeledSliderWidget(theme, &this.sldNeutralCount, fmt.Sprintf("%d", utils.RoundedRange(this.sldNeutralCount.Value, 0, 16)))),
-			widgets.NewLabeledRowWidget(theme, "Player castles per zone", 220, widgets.NewLabeledSliderWidget(theme, &this.sldPlayerCastles, fmt.Sprintf("%d", utils.RoundedRange(this.sldPlayerCastles.Value, 0, 4)))),
 			widgets.NewLabeledRowWidget(theme, "Neutral castles per zone", 220, widgets.NewLabeledSliderWidget(theme, &this.sldNeutralCastles, fmt.Sprintf("%d", utils.RoundedRange(this.sldNeutralCastles.Value, 0, 4)))),
 			widgets.NewDimmedLabelWidget(theme, "Low tier"),
 			widgets.NewLabeledRowWidget(theme, "  no castle", 220, widgets.NewLabeledSliderWidget(theme, &this.sldNeutralLowNoCastle, fmt.Sprintf("%d", utils.RoundedRange(this.sldNeutralLowNoCastle.Value, 0, 8)))),
@@ -149,15 +152,14 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	if !this.editConnectionsBtn.Clicked(gtx) {
 		return
 	}
-	tmpl := this.state.GetLastTemplate()
-	if tmpl == nil || len(tmpl.Variants) == 0 {
+	lastTemplate := this.state.GetLastTemplate()
+	if lastTemplate == nil || len(lastTemplate.Variants) == 0 {
 		this.state.SetStatus("Generate a template first to edit its zones.", true)
 		return
 	}
-	activeVariant := tmpl.Variants[0]
+	activeVariant := lastTemplate.Variants[0]
 	settings := this.state.GetStateData()
-	// TODO: Use handler via state to get config
-	generatorConfig := services.SettingsToGenerator(&settings)
+	generatorConfig := this.state.GetGeneratorConfig()
 	tuning := models.NewGenerationTuning(generatorConfig, len(activeVariant.Zones))
 	this.state.Dialogs().Open(dialogs.NewZoneEditorDialog(
 		activeVariant.Zones,
@@ -182,10 +184,12 @@ func (this *LayoutPanel) LoadFromState() {
 	this.chkFootholds.Value = settings.SpawnRemoteFootholds
 	this.chkPlayerIsolation.Value = settings.NoDirectPlayerConn
 	this.chkMatchPlayerFactions.Value = settings.MatchPlayerCastleFactions
+	this.chkAbandonedOutposts.Value = settings.SpawnAbandonedOutposts
 	this.sldMinNeutralBetween.Value = utils.Normalize(float32(settings.MinNeutralZonesBetweenPlayers), 0, 8)
 
 	this.chkAdvancedZones.Value = settings.AdvancedMode
 	this.sldNeutralCount.Value = utils.Normalize(float32(settings.NeutralZoneCount), 0, 16)
+	this.sldPlayerOwnedCastles.Value = utils.Normalize(float32(settings.PlayerOwnedCastles), 0, 4)
 	this.sldPlayerCastles.Value = utils.Normalize(float32(settings.PlayerZoneCastles), 0, 4)
 	this.sldNeutralCastles.Value = utils.Normalize(float32(settings.NeutralZoneCastles), 0, 4)
 	this.sldNeutralLowNoCastle.Value = utils.Normalize(float32(settings.NeutralLowNoCastleCount), 0, 8)
@@ -216,10 +220,12 @@ func (this *LayoutPanel) SaveToState() {
 		settings.SpawnRemoteFootholds = this.chkFootholds.Value
 		settings.NoDirectPlayerConn = this.chkPlayerIsolation.Value
 		settings.MatchPlayerCastleFactions = this.chkMatchPlayerFactions.Value
+		settings.SpawnAbandonedOutposts = this.chkAbandonedOutposts.Value
 		settings.MinNeutralZonesBetweenPlayers = utils.RoundedRange(this.sldMinNeutralBetween.Value, 0, 8)
 
 		settings.AdvancedMode = this.chkAdvancedZones.Value
 		settings.NeutralZoneCount = utils.RoundedRange(this.sldNeutralCount.Value, 0, 16)
+		settings.PlayerOwnedCastles = utils.RoundedRange(this.sldPlayerOwnedCastles.Value, 0, 4)
 		settings.PlayerZoneCastles = utils.RoundedRange(this.sldPlayerCastles.Value, 0, 4)
 		settings.NeutralZoneCastles = utils.RoundedRange(this.sldNeutralCastles.Value, 0, 4)
 		settings.NeutralLowNoCastleCount = utils.RoundedRange(this.sldNeutralLowNoCastle.Value, 0, 8)

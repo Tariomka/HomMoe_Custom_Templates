@@ -42,7 +42,14 @@ var ContentItemGroup = struct {
 		ContentIds.CrystalTrail,
 		ContentIds.SacrificialShrine,
 		ContentIds.Chimerologist,
+		ContentIds.EternalDragon,
+		ContentIds.TreeOfAbundance,
+		ContentIds.FlatteringMirror,
 		IncludeListIds.VisionBuildingsTier1,
+		IncludeListIds.VisionBuildingsTier2,
+		ContentIds.InsarasEye,
+		ContentIds.RemoteFoothold,
+		ContentIds.TownGate,
 	},
 	Treasures: []models.SidMapping{
 		ContentIds.PandoraBox,
@@ -167,5 +174,8 @@ var ContentItemGroup = struct {
 		ContentIds.MagicAmplifier2,
 		ContentIds.MagicAmplifier3,
 		ContentIds.MagicAmplifier4,
+		ContentIds.HuntsmansCamp,
+		ContentIds.FickleShrine,
+		ContentIds.Arena,
 	},
 }

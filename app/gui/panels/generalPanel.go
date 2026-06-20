@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type GeneralPanel struct {
@@ -65,7 +66,7 @@ type GeneralPanel struct {
 func NewGeneralPanel(state *drivers.State) *GeneralPanel {
 	panel := &GeneralPanel{
 		templateName: widget.Editor{SingleLine: true},
-		gameMode:     components.NewSegmentButtonGroup([]string{"Classic", "SingleHero"}),
+		gameMode:     components.NewSegmentButtonGroup(registry.GetGameModeList()),
 		victorySelector: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
 			for _, victory := range constants.VictoryConditions {
@@ -137,12 +138,12 @@ func (this *GeneralPanel) LoadFromState() {
 	this.cityHoldDaysCount.Value = utils.Normalize(float32(settings.CityHoldDays), 1, 30)
 
 	this.checkGladiatorArena.Value = settings.GladiatorArena
-	this.gladiatorDelayCount.Value = utils.Normalize(float32(settings.GladiatorArenaDaysDelayStart), 1, 90)
-	this.gladiatorDayCount.Value = utils.Normalize(float32(settings.GladiatorArenaCountDay), 1, 14)
+	this.gladiatorDelayCount.Value = utils.Normalize(float32(settings.GladiatorArenaDaysDelayStart), 1, 60)
+	this.gladiatorDayCount.Value = utils.Normalize(float32(settings.GladiatorArenaCountDay), 1, 30)
 
 	this.checkTournament.Value = settings.Tournament
-	this.tournamentDayCount.Value = utils.Normalize(float32(settings.TournamentFirstTournamentDay), 1, 60)
-	this.tournamentIntervalCount.Value = utils.Normalize(float32(settings.TournamentInterval), 1, 30)
+	this.tournamentDayCount.Value = utils.Normalize(float32(settings.TournamentFirstTournamentDay), 3, 30)
+	this.tournamentIntervalCount.Value = utils.Normalize(float32(settings.TournamentInterval), 3, 30)
 	this.tournamentPointsCount.Value = utils.Normalize(float32(settings.TournamentPointsToWin), 1, 10)
 	this.checkTournamentSaveArmy.Value = settings.TournamentSaveArmy
 }
@@ -174,12 +175,12 @@ func (this *GeneralPanel) SaveToState() {
 		settings.CityHoldDays = utils.RoundedRange(this.cityHoldDaysCount.Value, 1, 30)
 
 		settings.GladiatorArena = this.checkGladiatorArena.Value
-		settings.GladiatorArenaDaysDelayStart = utils.RoundedRange(this.gladiatorDelayCount.Value, 1, 90)
-		settings.GladiatorArenaCountDay = utils.RoundedRange(this.gladiatorDayCount.Value, 1, 14)
+		settings.GladiatorArenaDaysDelayStart = utils.RoundedRange(this.gladiatorDelayCount.Value, 1, 60)
+		settings.GladiatorArenaCountDay = utils.RoundedRange(this.gladiatorDayCount.Value, 1, 30)
 
 		settings.Tournament = this.checkTournament.Value || this.victorySelector.GetSelectedIndex() == 3
-		settings.TournamentFirstTournamentDay = utils.RoundedRange(this.tournamentDayCount.Value, 1, 60)
-		settings.TournamentInterval = utils.RoundedRange(this.tournamentIntervalCount.Value, 1, 30)
+		settings.TournamentFirstTournamentDay = utils.RoundedRange(this.tournamentDayCount.Value, 3, 30)
+		settings.TournamentInterval = utils.RoundedRange(this.tournamentIntervalCount.Value, 3, 30)
 		settings.TournamentPointsToWin = utils.RoundedRange(this.tournamentPointsCount.Value, 1, 10)
 		settings.TournamentSaveArmy = this.checkTournamentSaveArmy.Value
 	})
@@ -249,10 +250,10 @@ func (this *GeneralPanel) getConditionOptionsWidget(theme *material.Theme) layou
 			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.checkTournament, "Enable tournament")),
 			layout.Rigid(widgets.NewLabeledRowWidget(
 				theme, "First tournament day", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.tournamentDayCount, utils.RoundedRangeString(this.tournamentDayCount.Value, 1, 60)))),
+				widgets.NewLabeledSliderWidget(theme, &this.tournamentDayCount, utils.RoundedRangeString(this.tournamentDayCount.Value, 3, 30)))),
 			layout.Rigid(widgets.NewLabeledRowWidget(
 				theme, "Interval (days)", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.tournamentIntervalCount, utils.RoundedRangeString(this.tournamentIntervalCount.Value, 1, 30)))),
+				widgets.NewLabeledSliderWidget(theme, &this.tournamentIntervalCount, utils.RoundedRangeString(this.tournamentIntervalCount.Value, 3, 30)))),
 			layout.Rigid(widgets.NewLabeledRowWidget(
 				theme, "Points to win", constants.DefaultLabelWidth,
 				widgets.NewLabeledSliderWidget(theme, &this.tournamentPointsCount, utils.RoundedRangeString(this.tournamentPointsCount.Value, 1, 10)))),
@@ -281,8 +282,8 @@ func (this *GeneralPanel) getConditionOptionsWidget(theme *material.Theme) layou
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Days delay start", constants.DefaultLabelWidth, widgets.NewLabeledSliderWidget(theme, &this.gladiatorDelayCount, fmt.Sprintf("%d", utils.RoundedRange(this.gladiatorDelayCount.Value, 1, 90))))),
-					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count days", constants.DefaultLabelWidth, widgets.NewLabeledSliderWidget(theme, &this.gladiatorDayCount, fmt.Sprintf("%d", utils.RoundedRange(this.gladiatorDayCount.Value, 1, 14))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Days delay start", constants.DefaultLabelWidth, widgets.NewLabeledSliderWidget(theme, &this.gladiatorDelayCount, fmt.Sprintf("%d", utils.RoundedRange(this.gladiatorDelayCount.Value, 1, 60))))),
+					layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count days", constants.DefaultLabelWidth, widgets.NewLabeledSliderWidget(theme, &this.gladiatorDayCount, fmt.Sprintf("%d", utils.RoundedRange(this.gladiatorDayCount.Value, 1, 30))))),
 				)
 			}))
 	}

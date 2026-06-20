@@ -3,6 +3,7 @@ package drivers
 import (
 	"fmt"
 	"iter"
+	"sort"
 	"strings"
 
 	"gioui.org/layout"
@@ -62,13 +63,20 @@ type ZoneContentSection struct {
 }
 
 func NewZoneContentSection(title string, items []models.SidMapping, maxCount int, showNear bool) *ZoneContentSection {
-	labels := make([]string, len(items))
-	for i, item := range items {
+	// Present the "add content" dropdown alphabetically by display name. Sort a
+	// copy so the shared ContentItemGroup global keeps its authored order.
+	sorted := make([]models.SidMapping, len(items))
+	copy(sorted, items)
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return strings.ToLower(sorted[i].Name) < strings.ToLower(sorted[j].Name)
+	})
+	labels := make([]string, len(sorted))
+	for i, item := range sorted {
 		labels[i] = item.Name
 	}
 	return &ZoneContentSection{
 		Title:     title,
-		Items:     items,
+		Items:     sorted,
 		MaxCount:  maxCount,
 		ShowNear:  showNear,
 		addPreset: components.NewDropdownSelector(labels),

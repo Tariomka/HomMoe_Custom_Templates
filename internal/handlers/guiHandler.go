@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
@@ -12,16 +13,18 @@ import (
 
 type GUIHandler struct {
 	templateGenerator *template_generator.TemplateGenerator
+	mapper            *mappers.GeneratorConfigMapper
 }
 
 func NewGuiHandler() *GUIHandler {
 	return &GUIHandler{
 		templateGenerator: template_generator.NewTemplateGenerator(nil),
+		mapper:            mappers.NewConfigMapper(),
 	}
 }
 
 func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	configuration := services.SettingsToGenerator(&stateDto)
+	configuration := this.mapper.FromEditorState(stateDto)
 	if configuration.TemplateName == "" {
 		return dtos.TemplateLoadDto{}, common.ErrNoTemplateName
 	}

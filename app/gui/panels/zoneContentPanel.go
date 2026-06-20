@@ -78,7 +78,6 @@ func NewZoneContentPanel(state *drivers.State) *ZoneContentPanel {
 
 func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		// Reset button is global to the currently-selected tier.
 		if this.btnZoneReset.Clicked(gtx) {
 			this.resetCurrentTier()
 		}
@@ -91,7 +90,7 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 		}
 
 		widgetsList := []layout.Widget{
-			widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Mandatory content per zone tier. Effects only apply on generation."),
+			// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Mandatory content per zone tier. Effects only apply on generation."),
 			func(gtx layout.Context) layout.Dimensions {
 				return this.tierSelector.Layout(gtx, theme)
 			},

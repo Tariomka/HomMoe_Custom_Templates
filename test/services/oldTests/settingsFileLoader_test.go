@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
 
@@ -26,7 +26,7 @@ func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
 		{Sid: "pandora_box", Count: 1},
 	}
 
-	configuration := services.SettingsToGenerator(&state)
+	configuration := mappers.NewConfigMapper().FromEditorState(state)
 	if configuration.BannedItems != "x" || configuration.BannedMagics != "y" || configuration.ValueOverridesText != "z" {
 		t.Errorf("banned/overrides not propagated: %+v", configuration)
 	}

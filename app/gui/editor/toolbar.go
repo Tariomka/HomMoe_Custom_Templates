@@ -51,8 +51,7 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 	// )
 
 	return func(gtx layout.Context) layout.Dimensions {
-		row := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}
-		return row.Layout(gtx,
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(widgets.NewButtonWidget(theme, "🗎 New", &this.buttonReset, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "🗀 Open…", &this.buttonOpen, false)),

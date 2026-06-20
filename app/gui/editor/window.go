@@ -53,7 +53,7 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 			return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(widgets.NewTitleBarWidget(theme, "Heroes: Olden Era — Custom Template Editor")),
 					layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 					layout.Rigid(this.toolbar.GetWidget(theme)),

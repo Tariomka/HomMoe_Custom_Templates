@@ -109,17 +109,17 @@ func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopol
 	for _, conn := range layout.Connections {
 		a := fitPt(conn.A)
 		b := fitPt(conn.B)
-		dx := float64(b.X - a.X)
-		dy := float64(b.Y - a.Y)
-		distance := math.Hypot(dx, dy)
-		if distance < 1 {
+		ctrl := fitPt(conn.Ctrl)
+		// Trim both ends back to the bubble outlines along the tangent toward
+		// the control point, then stroke the quadratic curve. A lone edge has
+		// its control point on the midpoint, so it renders as a straight line;
+		// parallel edges fan out into distinct curves.
+		ax, ay, ok1 := trimTowardPoint(a, ctrl, drawnRadius)
+		bx, by, ok2 := trimTowardPoint(b, ctrl, drawnRadius)
+		if !ok1 || !ok2 {
 			continue
 		}
-		ux := dx / distance
-		uy := dy / distance
-		ax := image.Pt(int(float64(a.X)+ux*drawnRadius), int(float64(a.Y)+uy*drawnRadius))
-		bx := image.Pt(int(float64(b.X)-ux*drawnRadius), int(float64(b.Y)-uy*drawnRadius))
-		drawThickLine(img, ax, bx, lineWidth, previewLineColor)
+		drawThickQuadratic(img, image.Pt(ax, ay), ctrl, image.Pt(bx, by), lineWidth, previewLineColor)
 	}
 
 	// Zones — non-player bubbles first, then the player bubbles on top,
@@ -141,6 +141,35 @@ func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopol
 		drawSpriteScaled(img, sprite, c.X, c.Y, previewSpriteCenter, previewSpriteCenter, scale)
 	}
 	return img
+}
+
+// trimTowardPoint returns `from` moved toward `toward` by `dist` pixels. ok is
+// false when the two points are coincident.
+func trimTowardPoint(from, toward image.Point, dist float64) (x, y int, ok bool) {
+	dx := float64(toward.X - from.X)
+	dy := float64(toward.Y - from.Y)
+	d := math.Hypot(dx, dy)
+	if d < 1 {
+		return 0, 0, false
+	}
+	return int(float64(from.X) + dx/d*dist), int(float64(from.Y) + dy/d*dist), true
+}
+
+// drawThickQuadratic rasterises a quadratic Bézier (start→ctrl→end) as a chain
+// of short thick line segments. With ctrl on the midpoint the samples are
+// collinear, so a lone edge is drawn as a straight line.
+func drawThickQuadratic(img *image.RGBA, start, ctrl, end image.Point, width int, lineColor color.NRGBA) {
+	const segments = 24
+	prev := start
+	for i := 1; i <= segments; i++ {
+		t := float64(i) / float64(segments)
+		mt := 1 - t
+		x := mt*mt*float64(start.X) + 2*mt*t*float64(ctrl.X) + t*t*float64(end.X)
+		y := mt*mt*float64(start.Y) + 2*mt*t*float64(ctrl.Y) + t*t*float64(end.Y)
+		curr := image.Pt(int(math.Round(x)), int(math.Round(y)))
+		drawThickLine(img, prev, curr, width, lineColor)
+		prev = curr
+	}
 }
 
 // drawThickLine draws a width-pixel-thick line via DDA with a square brush.

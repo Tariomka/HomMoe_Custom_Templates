@@ -16,3 +16,7 @@ var gameModeValues = gameModes{
 func GetGameModeValues() gameModes {
 	return gameModeValues
 }
+
+func GetGameModeList() []string {
+	return []string{gameModeValues.Classic, gameModeValues.SingleHero}
+}

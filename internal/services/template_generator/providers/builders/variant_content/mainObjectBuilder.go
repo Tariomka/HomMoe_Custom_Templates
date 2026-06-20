@@ -24,6 +24,9 @@ func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder {
 func (this *MainObjectBuilder) WithTypeCity() *MainObjectBuilder {
 	return this.withType(objectTypes.City)
 }
+func (this *MainObjectBuilder) WithTypeAbandonedOutpost() *MainObjectBuilder {
+	return this.withType(objectTypes.AbandonedOutpost)
+}
 func (this *MainObjectBuilder) WithSpawn(spawn string) *MainObjectBuilder {
 	this.item.Spawn = spawn
 	return this
