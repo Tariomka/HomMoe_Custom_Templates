@@ -19,11 +19,13 @@
         "isolateplayers",
         "linq",
         "Mereas",
+        "movepoints",
         "nring",
         "Quixs",
         "stretchr",
         "syscalls",
-        "Tariomka"
+        "Tariomka",
+        "uncommons"
     ],
     "gopls": {
         "ui.semanticTokens": true,
