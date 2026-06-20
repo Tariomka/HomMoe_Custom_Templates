@@ -1260,7 +1260,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 			topology: config.TopologyRing,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Custom Template Editor: Ring layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Ring layout, no neutral zones, 2 castles per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{
 					{"Spawn-A", "Spawn-B", "Direct"},
@@ -1273,7 +1273,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 			topology: config.TopologyChain,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Custom Template Editor: Chain layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Chain layout, no neutral zones, 2 castles per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{{"Spawn-A", "Spawn-B", "Direct"}},
 				2,
@@ -1283,7 +1283,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 			topology: config.TopologyHubAndSpoke,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Custom Template Editor: Hub layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Hub layout, no neutral zones, 2 castles per player zone.",
 				[]string{"Hub", "Spawn-A", "Spawn-B"},
 				[]expectedConnection{
 					{"Hub", "Spawn-B", "Direct"},
@@ -1300,7 +1300,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 			topology: config.TopologySharedWeb,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Custom Template Editor: Shared Web layout, 1 neutral zone, 1 castle per player zone, 1 castle per neutral zone.",
+				"Generated with Custom Template Editor: Shared Web layout, 1 neutral zone, 2 castles per player zone, 1 castle per neutral zone.",
 				[]string{"Neutral-C", "Spawn-A", "Spawn-B"},
 				[]expectedConnection{
 					{"Spawn-B", "Neutral-C", "Direct"},
@@ -1313,7 +1313,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 			topology: config.TopologyRandom,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Custom Template Editor: Random layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Random layout, no neutral zones, 2 castles per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{{"Spawn-B", "Spawn-A", "Direct"}},
 				2,
@@ -1323,7 +1323,7 @@ func TestWhenGeneratingForEachTopology_ReturnsExpectedTemplate(t *testing.T) {
 			topology: config.TopologyCircles,
 			want: mk(
 				"Custom Template", "Classic",
-				"Generated with Custom Template Editor: Circles layout, no neutral zones, 1 castle per player zone.",
+				"Generated with Custom Template Editor: Circles layout, no neutral zones, 2 castles per player zone.",
 				[]string{"Spawn-A", "Spawn-B"},
 				[]expectedConnection{{"Spawn-A", "Spawn-B", "Direct"}},
 				2,

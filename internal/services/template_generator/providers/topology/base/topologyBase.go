@@ -78,9 +78,9 @@ func (this *TopologyBase) CreateSpawnZone(
 		this.createPlayerSpawnCastle(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
 	}
 	mainObjects = append(mainObjects,
-		this.createPlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(2500), castleCount-1)...)
+		this.createPlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(5000), castleCount)...)
 	mainObjects = append(mainObjects,
-		this.createPlayerOwnedCastles(matchFactions, playerName, tuning.ScaleByNeutralGuardStrength(2500), tuning.PlayerOwnedCastles)...)
+		this.createPlayerOwnedCastles(matchFactions, playerName, tuning.PlayerOwnedCastles)...)
 
 	// Roads connect the spawn castle (main object 0) to every other castle in
 	// the zone; player-owned extras are road-linked just like unclaimed ones.
@@ -499,19 +499,14 @@ func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue 
 func (this *TopologyBase) createPlayerOwnedCastles(
 	matchPlayerFaction bool,
 	owner string,
-	guardValue, castleCount int) []entities.MainObject {
+	castleCount int) []entities.MainObject {
 	var castles []entities.MainObject
 	for range castleCount {
 		objectBuilder := variant_content.NewObjectBuilder().
 			WithTypeCity().
 			WithOwner(owner).
-			WithNoGuardWhenOwned().
-			WithGuardChance(1).
-			WithGuardValue(guardValue).
-			WithGuardWeeklyIncrement(0.10).
 			WithCastleQualityPoor().
-			WithPlacementUniform().
-			WithPlacementArgs("false", "-0.8", "3")
+			WithPlacementUniform()
 		if matchPlayerFaction {
 			objectBuilder = objectBuilder.WithFaction("Match", "0")
 		} else {
@@ -533,8 +528,8 @@ func (this *TopologyBase) createPlayerUnclaimedCastles(
 			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardValue(guardValue).
-			WithGuardWeeklyIncrement(0.10).
-			WithCastleQualityPoor().
+			WithGuardWeeklyIncrement(0.15).
+			WithCastleQualityMedium().
 			WithPlacementUniform().
 			WithPlacementArgs("false", "-0.8", "3")
 		if matchPlayerFaction {
@@ -659,12 +654,12 @@ func (this *TopologyBase) createOuterZoneRoads(
 	}
 
 	var roads []entities.Road
-	for i := 1; i < castleCount; i++ {
+	for i := range castleCount {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
 				WithStoneType().
 				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i+1))).
 				Build())
 	}
 	if includeFoothold {

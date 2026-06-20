@@ -82,7 +82,7 @@ func (this *TemplateGenerator) createTemplateDescription(neutralCount int) strin
 		constants.GetTopologyDescriptor(this.configuration.Topology).Label + " layout",
 		formatPhraseWithCount(neutralCount, "neutral zone", "neutral zones"),
 		formatPhraseWithCount(
-			this.configuration.ZoneConfiguration.PlayerZoneCastles,
+			1+this.configuration.ZoneConfiguration.PlayerZoneCastles+this.configuration.ZoneConfiguration.PlayerOwnedCastles,
 			"castle",
 			"castles") + " per player zone",
 	}

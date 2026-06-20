@@ -91,7 +91,6 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		GameMode:                     gameModes.Classic,
 		MapSize:                      160,
 		PlayerCount:                  2,
-		PlayerZoneCastles:            1,
 		NeutralZoneCastles:           1,
 		MatchPlayerCastleFactions:    true,
 		PlayerZoneSize:               1.0,
