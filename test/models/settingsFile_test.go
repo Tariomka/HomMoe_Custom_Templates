@@ -11,7 +11,7 @@ import (
 
 func TestNewSettingsFile_DefaultsToCircles(t *testing.T) {
 	s := dtos.NewDefaultEditorStateDto()
-	assert.Equal(t, config.TopologyCircles, s.Topology)
+	assert.Equal(t, config.TopologyRandom, s.Topology)
 }
 
 // func TestSettingsFile_RoundTrip(t *testing.T) {

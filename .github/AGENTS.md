@@ -29,9 +29,10 @@ guarantees compatibility with Heroes of Might and Magic: Olden Era**. Editing,
 renaming, reformatting, or "cleaning up" their contents will break the project
 in production:
 
-- [data/](data/) — including `ExampleTemplates/` and `GameData/GeneratorData/`
-- [internal/entities/template/](internal/entities/template/) — the `.rmg.json`
+- [data/](data/) - including `ExampleTemplates/` and `GameData/` and `Images/`
+- [internal/entities/template/](internal/entities/template/) - the `.rmg.json`
   output schema
+- [internal/registry/](internal/registry) - game map generation template values/constants
 
 You **MUST NOT**:
 

@@ -10,7 +10,7 @@ func NewZoneLayoutProvider() *ZoneLayoutProvider {
 
 func (this *ZoneLayoutProvider) CreateZoneLayouts() []entities.ZoneLayoutDef {
 	return []entities.ZoneLayoutDef{
-		this.createZoneLayout(zoneLayouts.Spawn, 0.24, 0.48, 0.30, 16, 0.16, 160, -0.30, 0.4, []int{20, 2, 1}),
+		this.createZoneLayout(zoneLayouts.Spawns, 0.24, 0.48, 0.30, 16, 0.16, 160, -0.30, 0.4, []int{20, 2, 1}),
 		this.createZoneLayout(zoneLayouts.Sides, 0.36, 0.50, 0.25, 16, 0.128, 128, -0.30, 0.3, []int{20, 2, 1}),
 		this.createZoneLayout(zoneLayouts.TreasureZone, 0.50, 0.50, 0.45, 12, 0.12, 96, -0.30, 0.3, []int{12, 3, 1}),
 		this.createZoneLayout(zoneLayouts.Center, 0.56, 0.60, 0.30, 10, 0.128, 96, -0.25, 0.3, []int{12, 4, 1}),
