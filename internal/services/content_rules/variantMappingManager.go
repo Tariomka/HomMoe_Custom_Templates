@@ -3,15 +3,14 @@ package content_rules
 import (
 	"sort"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants" // TODO: This should not exist
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var (
-	resourceBankObjects        = registry.GetMapObjectResourceBankValues()
-	guardedResourceBankObjects = registry.GetMapObjectT3GuardedResourceBankValues()
-)
+// var (
+// 	resourceBankObjects        = registry.GetMapObjectResourceBankValues()
+// 	guardedResourceBankObjects = registry.GetMapObjectT3GuardedResourceBankValues()
+// )
 
 // Predefined variant mappings, ported from the C# VariantMappingManager.
 var (

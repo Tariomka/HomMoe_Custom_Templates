@@ -8,13 +8,13 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
-	app_constants "github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	service_constants "github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -64,7 +64,7 @@ func NewLayoutPanel(state *drivers.State) *LayoutPanel {
 	panel := &LayoutPanel{
 		topology: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
-			for _, topology := range constants.Topologies {
+			for _, topology := range service_constants.Topologies {
 				labels = append(labels, topology.Label)
 			}
 			return labels
@@ -174,7 +174,7 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 func (this *LayoutPanel) LoadFromState() {
 	settings := this.state.GetStateData()
 
-	this.topology.SelectByName(constants.GetTopologyDescriptor(settings.Topology).Label)
+	this.topology.SelectByName(service_constants.GetTopologyDescriptor(settings.Topology).Label)
 
 	this.chkRoads.Value = settings.GenerateRoads
 	this.chkPortals.Value = settings.RandomPortals
@@ -242,18 +242,18 @@ func (this *LayoutPanel) SaveToState() {
 
 func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Topology", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Topology", app_constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
+		widgets.NewLabeledRowWidget(theme, "Topology", constants.DefaultLabelWidth, func(gtx layout.Context) layout.Dimensions {
 			return this.topology.Layout(gtx, theme)
 		}),
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Body2(theme, this.getCurrentTopology().Description)
 			label.Color = themes.ColorTextDim
 			label.TextSize = unit.Sp(12)
-			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(app_constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
+			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
 		},
 	})
 }
 
-func (this *LayoutPanel) getCurrentTopology() constants.TopologyDescriptor {
-	return constants.Topologies[this.topology.GetSelectedIndex()]
+func (this *LayoutPanel) getCurrentTopology() service_constants.TopologyDescriptor {
+	return service_constants.Topologies[this.topology.GetSelectedIndex()]
 }
