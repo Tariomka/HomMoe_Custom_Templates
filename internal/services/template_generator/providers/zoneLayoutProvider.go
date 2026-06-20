@@ -1,11 +1,6 @@
 package providers
 
-import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
-)
-
-var zoneLayouts = registry.GetLayoutValues()
+import "github.com/Tariomka/hommoe_custom_templates/internal/entities"
 
 type ZoneLayoutProvider struct{}
 

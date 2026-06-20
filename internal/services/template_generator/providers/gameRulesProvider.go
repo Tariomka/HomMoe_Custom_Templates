@@ -4,15 +4,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
-)
-
-var (
-	championSelectRules = registry.GetChampionSelectValues()
-	gameModes           = registry.GetGameModeValues()
-	mapBonuses          = registry.GetMapBonusesValues()
-	receiversFilters    = registry.GetReceiversFilterValues()
-	winConditionValues  = registry.GetWinningConditionValues()
 )
 
 type GameRulesProvider struct{}

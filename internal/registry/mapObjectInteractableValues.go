@@ -66,6 +66,10 @@ var interactableMineValues = interactableMines{
 	GemstoneMine: "mine_gemstones",
 }
 
+func GetMapObjectMineValues() interactableMines {
+	return interactableMineValues
+}
+
 type interactableStorages struct {
 	WoodStorage     string
 	OreStorage      string
@@ -231,6 +235,10 @@ var interactableMiscellaneousValues = interactableMiscellaneous{
 	TownGate: "town_gate",
 }
 
+func GetMapObjectMiscellaneousValues() interactableMiscellaneous {
+	return interactableMiscellaneousValues
+}
+
 type interactableHeroExperienceBuildings struct {
 	LearningStone   string
 	LostLibrary     string
@@ -241,6 +249,10 @@ var interactableHeroExpValues = interactableHeroExperienceBuildings{
 	LearningStone:   "learning_stone",
 	LostLibrary:     "lost_library",
 	TreeOfKnowledge: "tree_of_knowledge",
+}
+
+func GetMapObjectHeroExperienceBuildingValues() interactableHeroExperienceBuildings {
+	return interactableHeroExpValues
 }
 
 type interactableMagicBuildings struct {
@@ -369,7 +381,7 @@ var interactableT2StatsAndSkillsValues = interactableT2StatsAndSkillsBuildings{
 	InfernalCirque: "infernal_cirque",
 }
 
-func GetMapObjectT2StatsAndSkillsValues() interactableT2StatsAndSkillsBuildings {
+func GetMapObjectT2StatsAndSkillsBuildingValues() interactableT2StatsAndSkillsBuildings {
 	return interactableT2StatsAndSkillsValues
 }
 
@@ -383,6 +395,10 @@ var interactableT3StatsAndSkillsValues = interactableT3StatsAndSkillsBuildings{
 	Maze:            "maze",
 	TrialScales:     "trial_scales",
 	CollegeOfWonder: "college_of_wonder",
+}
+
+func GetMapObjectT3StatsAndSkillsBuildingValues() interactableT3StatsAndSkillsBuildings {
+	return interactableT3StatsAndSkillsValues
 }
 
 type interactableNamedUnitBanks struct {
