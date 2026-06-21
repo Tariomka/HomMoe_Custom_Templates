@@ -12,6 +12,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
@@ -59,7 +60,7 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 				border = themes.ColorAccent
 			}
 			rect := image.Rectangle{Max: dims.Size}
-			radius := gtx.Dp(4)
+			radius := gtx.Dp(constants.DefaultRoundnessLarge)
 			paint.FillShape(gtx.Ops, bgColor, clip.RRect{Rect: rect, NE: radius, NW: radius}.Op(gtx.Ops))
 			paint.FillShape(gtx.Ops, border, clip.Stroke{
 				Path:  clip.RRect{Rect: rect, NE: radius, NW: radius}.Path(gtx.Ops),

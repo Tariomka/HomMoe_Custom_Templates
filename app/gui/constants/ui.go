@@ -11,5 +11,7 @@ const (
 	DefaultPaddingLarge = unit.Dp(10) // +2 to the Default Padding
 	DefaultPaddingSmall = unit.Dp(6)  // -2 from the Default Padding
 
-	DefaultRoundness = unit.Dp(3)
+	DefaultRoundness             = unit.Dp(3)
+	DefaultRoundnessLarge        = unit.Dp(6)
+	DefaultRoundnessOverlineText = unit.Dp(10)
 )
