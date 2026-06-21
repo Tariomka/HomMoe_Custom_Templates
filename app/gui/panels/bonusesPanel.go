@@ -86,8 +86,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 			bonusDotColor(entry.PresetType),
 			bonusDisplayName(entry),
 			bonusReceiverLabel(entry),
-			&this.bonusRemoveBtns[i],
-		))
+			&this.bonusRemoveBtns[i]))
 	}
 
 	itemRows := []layout.Widget{
@@ -109,7 +108,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 	for i, sid := range this.bannedMagics {
 		name, school := bannedSpellLabel(sid)
-		spellRows = append(spellRows, this.entryRow(theme, dotMagic, name, school, &this.magicRemoveBtns[i]))
+		spellRows = append(spellRows, this.entryRow(theme, constants.GetSpellSchoolColorFromDisplayName(school), name, school, &this.magicRemoveBtns[i]))
 	}
 
 	overrideRows := []layout.Widget{
@@ -125,10 +124,21 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 
 	return []layout.Widget{
 		// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Effects only apply on generation."),
-		widgets.NewSectionWidget(theme, "Game start bonuses", bonusRows),
-		widgets.NewSectionWidget(theme, "Banned items", itemRows),
-		widgets.NewSectionWidget(theme, "Banned spells", spellRows),
-		widgets.NewSectionWidget(theme, "Guard value overrides", overrideRows),
+		widgets.NewHorizontallySplitWidget(theme,
+			func(theme *material.Theme) layout.Widget {
+				return func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(widgets.NewSectionWidget(theme, "Game start bonuses", bonusRows)),
+						layout.Rigid(widgets.NewSectionWidget(theme, "Guard value overrides", overrideRows)))
+				}
+			},
+			func(theme *material.Theme) layout.Widget {
+				return func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(widgets.NewSectionWidget(theme, "Banned items", itemRows)),
+						layout.Rigid(widgets.NewSectionWidget(theme, "Banned spells", spellRows)))
+				}
+			}),
 	}
 }
 
@@ -165,7 +175,7 @@ func (this *BonusesPanel) entryRow(theme *material.Theme, dot color.NRGBA, name,
 // dotWidget draws the small filled category circle.
 func dotWidget(col color.NRGBA) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		size := gtx.Dp(unit.Dp(8))
+		size := gtx.Dp(constants.DefaultRoundnessLarge)
 		paint.FillShape(gtx.Ops, col, clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
 		return layout.Dimensions{Size: image.Pt(size, size)}
 	}
@@ -255,8 +265,7 @@ func (this *BonusesPanel) SaveToState() {
 
 // ── display helpers ─────────────────────────────────────────────────────────
 
-// bonusDisplayName composes the human-readable label for a bonus entry,
-// mirroring the C# BonusEntry.DisplayName.
+// bonusDisplayName composes the human-readable label for a bonus entry
 func bonusDisplayName(entry config_inner.BonusEntry) string {
 	switch entry.PresetType {
 	case config_inner.BonusTownPortalFree:
@@ -288,8 +297,7 @@ func bonusDisplayName(entry config_inner.BonusEntry) string {
 	return entry.String()
 }
 
-// bonusReceiverLabel is the dim trailing text; hidden for resource bonuses,
-// matching the C# ShowReceiverLabel behaviour.
+// bonusReceiverLabel is the dim trailing text; hidden for resource bonuses
 func bonusReceiverLabel(entry config_inner.BonusEntry) string {
 	if entry.PresetType.IsResource() {
 		return ""

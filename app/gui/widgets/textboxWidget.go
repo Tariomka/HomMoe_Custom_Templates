@@ -23,7 +23,7 @@ func NewTextboxWidget(theme *material.Theme, textEditor *widget.Editor, hint str
 		textEditor.Color = themes.ColorText
 		textEditor.HintColor = themes.ColorTextDim
 		textEditor.TextSize = unit.Sp(12)
-		dims := layout.UniformInset(constants.DefaultPadding-2).Layout(gtx, textEditor.Layout)
+		dims := layout.UniformInset(constants.DefaultPaddingSmall).Layout(gtx, textEditor.Layout)
 
 		call := macro.Stop()
 		radius := gtx.Dp(constants.DefaultRoundness)

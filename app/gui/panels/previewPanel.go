@@ -3,6 +3,7 @@ package panels
 import (
 	"fmt"
 	"image"
+	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -27,6 +28,11 @@ type PreviewPanel struct {
 	pngStatus   string
 	pngStatusOK bool
 
+	btnGenerate     widget.Clickable
+	btnSaveTemplate widget.Clickable
+	btnPickOutput   widget.Clickable
+	btnRevealOutput widget.Clickable
+
 	state *drivers.State
 }
 
@@ -39,18 +45,58 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-					layout.Rigid(this.getHeaderWidget(theme)),
-					layout.Flexed(1, this.getTemplateNameWidget(theme)))
+					layout.Flexed(0.5, this.getHeaderWidget(theme)),
+					layout.Flexed(0.5, this.getTemplateNameWidget(theme)))
 			}),
 			layout.Flexed(1, this.getPreviewCanvasWidget(theme)),
-			layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 			layout.Rigid(this.getStatusMessageWidget(theme)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+						label := material.Body2(theme, "Output directory:")
+						label.Color = themes.ColorText
+						return label.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(widgets.NewButtonWidget(theme, "Browse", &this.btnPickOutput, false)),
+							layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+							layout.Rigid(widgets.NewButtonWidget(theme, "Reveal", &this.btnRevealOutput, false)),
+						)
+					}),
+				)
+			}),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, this.state.GetOutputPathEditor(), "Choose folder")))
+			}),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(0.5, widgets.NewGoldButtonWidget(theme, "Generate", &this.btnGenerate, false)),
+					widgets.NewDefaultComponentSpacer(),
+					layout.Flexed(0.5, widgets.NewGoldButtonWidget(
+						theme, "Save Template", &this.btnSaveTemplate,
+						this.state.GetLastTemplate() == nil)))
+			}),
 		)
 	})
 }
 
 func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
-	// TODO: add handling for generation and saving after footer is moved to the preview panel
+	if this.btnGenerate.Clicked(gtx) {
+		this.state.Generate()
+	}
+	if this.btnSaveTemplate.Clicked(gtx) {
+		this.state.SaveTemplate()
+	}
+	if this.btnPickOutput.Clicked(gtx) {
+		this.state.PickOutputDir()
+	}
+	if this.btnRevealOutput.Clicked(gtx) {
+		_ = utils.RevealInExplorer(strings.TrimSpace(this.state.GetOutputPath()))
+	}
 }
 
 func (this *PreviewPanel) getHeaderWidget(theme *material.Theme) layout.Widget {
@@ -78,25 +124,28 @@ func (this *PreviewPanel) getTemplateNameWidget(theme *material.Theme) layout.Wi
 
 func (this *PreviewPanel) getStatusMessageWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		// Reserve a fixed-height slot so the canvas above doesn't shift
-		// when the status message appears/disappears or grows from 1 to
-		// 2 lines. Height is sized for 2 lines of 11sp text + the
-		// bottom inset used below the legend separator.
 		reserved := gtx.Dp(unit.Dp(34))
 		gtx.Constraints.Min.Y = reserved
 		gtx.Constraints.Max.Y = reserved
-		if this.pngStatus == "" {
+
+		message, isError := this.state.GetStatus()
+		if message == "" {
 			return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, reserved)}
 		}
 
-		label := material.Overline(theme, this.pngStatus)
+		label := material.Caption(theme, message)
 		label.MaxLines = 2
 		label.Alignment = text.Middle
 		label.Color = themes.ColorTextDim
-		if !this.pngStatusOK {
+		if isError {
 			label.Color = themes.ColorError
 		}
-		return layout.Inset{Bottom: constants.DefaultPaddingSmall}.Layout(gtx, label.Layout)
+
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Bottom: constants.DefaultPaddingSmall}.Layout(gtx, label.Layout)
+			}),
+		)
 	}
 }
 

@@ -23,7 +23,6 @@ type Window struct {
 
 	toolbar      *Toolbar
 	previewPanel *panels.PreviewPanel
-	footerPanel  *panels.FooterPanel
 }
 
 func NewWindow() *Window {
@@ -36,7 +35,6 @@ func NewWindow() *Window {
 		drivers.NewTab("Bonuses & Bans", panels.NewBonusesPanel(window.state)),
 	}
 	window.previewPanel = panels.NewPreviewPanel(window.state)
-	window.footerPanel = panels.NewFooterPanel(window.state)
 	window.tabs[0].SetSelected(true)
 	return &window
 }
@@ -59,9 +57,7 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 					layout.Rigid(this.toolbar.GetWidget(theme)),
 					layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 					layout.Rigid(this.getTabsWidget(gtx, theme)),
-					layout.Flexed(1, this.getPanelsWidget(theme)),
-					layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-					layout.Rigid(this.footerPanel.GetPanelWidget(theme)))
+					layout.Flexed(1, this.getPanelsWidget(theme)))
 			})
 		}),
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
@@ -119,7 +115,6 @@ func (this *Window) updateTabSelection() {
 func (this *Window) handleClicks(gtx layout.Context) {
 	this.toolbar.HandleClicks(gtx)
 	this.previewPanel.HandleClicks(gtx)
-	this.footerPanel.HandleClicks(gtx)
 }
 
 func (this *Window) save() {
