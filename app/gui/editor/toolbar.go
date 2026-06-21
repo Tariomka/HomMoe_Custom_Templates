@@ -51,8 +51,7 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 	// )
 
 	return func(gtx layout.Context) layout.Dimensions {
-		row := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}
-		return row.Layout(gtx,
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(widgets.NewButtonWidget(theme, "🗎 New", &this.buttonReset, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "🗀 Open…", &this.buttonOpen, false)),
@@ -70,9 +69,8 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 					if this.state.IsUnsaved() {
 						path += " *"
 					}
-					label := material.Body2(theme, "File: "+path)
+					label := material.Caption(theme, "File: "+path)
 					label.Color = themes.ColorTextDim
-					label.TextSize = unit.Sp(11)
 					label.MaxLines = 1
 					label.Truncator = "…"
 					label.Alignment = text.End

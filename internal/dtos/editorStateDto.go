@@ -3,6 +3,12 @@ package dtos
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+)
+
+var (
+	winConditions = registry.GetWinningConditionValues()
+	gameModes     = registry.GetGameModeValues()
 )
 
 // EditorStateDto is the serialized .gen.json file produced and consumed by the
@@ -13,8 +19,10 @@ type EditorStateDto struct {
 	MapSize                       int    `json:"mapSize"`
 	PlayerCount                   int    `json:"playerCount"`
 	NeutralZoneCount              int    `json:"neutralZoneCount"`
+	PlayerOwnedCastles            int    `json:"playerOwnedCastles"`
 	PlayerZoneCastles             int    `json:"playerCastles"`
 	NeutralZoneCastles            int    `json:"neutralCastles"`
+	SpawnAbandonedOutposts        bool   `json:"spawnAbandonedOutposts"`
 	AdvancedMode                  bool   `json:"advancedMode"`
 	NeutralLowNoCastleCount       int    `json:"neutralLowNoCastle"`
 	NeutralLowCastleCount         int    `json:"neutralLowCastle"`
@@ -80,11 +88,11 @@ type EditorStateDto struct {
 func NewDefaultEditorStateDto() EditorStateDto {
 	return EditorStateDto{
 		TemplateName:                 "Custom Template",
-		GameMode:                     "Classic",
+		GameMode:                     gameModes.Classic,
 		MapSize:                      160,
 		PlayerCount:                  2,
-		PlayerZoneCastles:            1,
 		NeutralZoneCastles:           1,
+		MatchPlayerCastleFactions:    true,
 		PlayerZoneSize:               1.0,
 		NeutralZoneSize:              1.0,
 		HubZoneSize:                  1.0,
@@ -92,7 +100,7 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		HeroCountMin:                 4,
 		HeroCountMax:                 8,
 		HeroCountIncrement:           1,
-		Topology:                     config_inner.TopologyCircles,
+		Topology:                     config_inner.TopologyRandom,
 		MaxPortalConnections:         32,
 		SpawnRemoteFootholds:         true,
 		GenerateRoads:                true,
@@ -100,7 +108,7 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		StructureDensityPercent:      100,
 		NeutralStackStrengthPercent:  100,
 		BorderGuardStrengthPercent:   100,
-		VictoryCondition:             "win_condition_1",
+		VictoryCondition:             winConditions.Standard,
 		FactionLawXpPercent:          100,
 		AstrologyXpPercent:           100,
 		LostStartCityDay:             3,

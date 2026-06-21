@@ -39,10 +39,6 @@ func GetDistanceDisplayNames() []string {
 }
 
 // GetDistanceVariationByName resolves a display name to its variation.
-//
-// Unlike the C# version (which returns a degenerate zero value for unknown
-// names), this returns ok == false so callers can skip adding a phantom rule
-// for an unrecognised label.
 func GetDistanceVariationByName(name string) (DistanceVariation, bool) {
 	trimmed := strings.TrimSpace(name)
 	for _, variation := range allDistanceVariations {

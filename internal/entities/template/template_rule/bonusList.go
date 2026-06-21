@@ -4,7 +4,7 @@ import "encoding/json"
 
 // BonusList accepts either a single Bonus object or an array of Bonus objects.
 // The "Wastelands" template declares `bonuses` as a single object rather than an
-// array; this wrapper transparently normalises that case.
+// array; this wrapper transparently normalizes that case.
 type BonusList []Bonus
 
 // UnmarshalJSON allows decoding from either `{...}` or `[{...}, ...]`.

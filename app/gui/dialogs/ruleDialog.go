@@ -97,7 +97,7 @@ func NewManageRulesDialog(mapping models.SidMapping, rules []models.ContentRuleR
 }
 
 func (this *ManageRulesDialog) Title() string {
-	return "Content Rules — " + this.mapping.Name
+	return "Content Rules - " + this.mapping.Name
 }
 
 func (this *ManageRulesDialog) PreferredSize() (unit.Dp, unit.Dp) {

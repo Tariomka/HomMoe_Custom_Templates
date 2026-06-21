@@ -29,9 +29,10 @@ guarantees compatibility with Heroes of Might and Magic: Olden Era**. Editing,
 renaming, reformatting, or "cleaning up" their contents will break the project
 in production:
 
-- [data/](data/) — including `ExampleTemplates/` and `GameData/GeneratorData/`
-- [internal/entities/template/](internal/entities/template/) — the `.rmg.json`
+- [data/](data/) - including `ExampleTemplates/` and `GameData/` and `Images/`
+- [internal/entities/template/](internal/entities/template/) - the `.rmg.json`
   output schema
+- [internal/registry/](internal/registry) - game map generation template values/constants
 
 You **MUST NOT**:
 
@@ -73,11 +74,32 @@ The project must build and run on **both Windows and Linux**. Therefore:
 - Tests must also be cross-platform (no hard-coded paths, no `\` separators,
   no shell-outs that exist only on one OS).
 
+### 2.4 Real Work Planning
+
+Turn planning into a durable, resumable artifact. The plan file - not the conversation -
+is the source of truth: it records what to do, what's done, how it was verified,
+and how to deploy. Any future agent can resume from it with zero prior context.
+
+Use when planning multi-step / multi-session work that may outlive the
+current session. Skip for trivial single-session tasks.
+
 ---
 
 ## 3. Workflow Rules
 
 ### 3.1 Implementation discipline
+
+- Do not write the plan until scope is fully understood.
+  Relentlessly ask the user questions until you both share a complete
+  understanding with no gaps — treat an unasked question as a future bug.
+- Don't stop at the first round; keep going until no ambiguity, assumption,
+  or open decision remains. Probe edges: scope boundaries (in/out),
+  dependencies, constraints, success criteria, data, environments,
+  deployment, failure cases.
+- Surface every assumption for the user to confirm. If an answer opens a
+  new unknown, ask the follow-up — drill down recursively.
+- Use `AskUserQuestion` for concrete choices. When done, summarize the full
+  scope back and only proceed once the user confirms nothing is missing.
 
 - Make the change the user asked for — nothing more.
 - No drive-by refactors, no extra docstrings/comments on untouched code,
@@ -89,7 +111,8 @@ The project must build and run on **both Windows and Linux**. Therefore:
 
 1. Read the target file(s) and at least one caller.
 2. Confirm the change does not touch the read-only directories from §2.1.
-3. For Go changes, check for existing tests in [test/](test/) and plan how
+3. Create a plan, see §2.4 for plan requirements and §4.7 for details.
+4. For Go changes, check for existing tests in [test/](test/) and plan how
    you will extend them.
 
 ### 3.3 After editing
@@ -174,7 +197,53 @@ Place new code in the package whose responsibility matches its role:
   `test/models/bar/baz_test.go`.
 - Test files follow the same `camelCase` filename rule, with the `_test.go`
   suffix.
+- Tests must be written using `testify` library and AAA pattern(Arrange, Act, Assert).
+  If test data can be fuzzied, tests should be written with fuzzy data using `gofakeit` library.
 - See §2.3 for coverage requirements.
+
+### 4.7 Writing the Plan
+
+Save to `plans/<descriptive-name>.md` in the repository root (create `plans/` if needed).
+Use this self-documenting template:
+
+```markdown
+# <Work Title>
+
+<1-2 sentence goal and scope.>
+
+## For Future Agents
+As work proceeds: mark checkboxes `- [x]` as items complete; when a phase is done,
+set its status to `Complete` and write its **Phase Summary** (what was done, key
+decisions, anything needed to continue with zero context); run the phase's
+**Verification Plan** and record the result before moving on. When all phases are
+done, fill in **Final Recap** and **Deployment Plan**.
+
+## Phase 1: <Title>
+Status: Not started   <!-- Not started | In progress | Complete -->
+
+- [ ] <concrete, actionable item>
+- [ ] <concrete, actionable item>
+
+### Verification Plan
+- <command/check the agent can run autonomously, with expected result>
+
+### Phase Summary
+_(write when phase completes)_
+
+## Phase 2: <Title>
+Status: Not started
+- [ ] <actionable item>
+### Verification Plan
+- <autonomous check>
+### Phase Summary
+_(write when phase completes)_
+
+## Final Recap
+_(write when all phases complete: summary of the entire piece of work)_
+
+## Deployment Plan
+_(write when all phases complete: step-by-step deployment instructions)_
+```
 
 ---
 
@@ -255,7 +324,7 @@ no prior memory must be able to resume work from it alone.
 | -------------------------- | ------------------------------------------------------ |
 | Build                      | `go build ./...`                                       |
 | Run GUI                    | `go run .`                                             |
-| Run all tests              | `go test ./test/...`                                   |
+| Run all tests              | `go test ./test/... -count=1`                          |
 | Run with race detector     | `go test -race ./test/...`                             |
 | Format Go code             | `gofmt -w .` (never run on `data/`)                    |
 | Tidy modules               | `go mod tidy`                                          |

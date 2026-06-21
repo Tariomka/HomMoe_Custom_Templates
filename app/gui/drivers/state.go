@@ -14,10 +14,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 type State struct {
 	handler *handlers.GUIHandler
+	mapper  *mappers.GeneratorConfigMapper
 
 	// Persistent stateDto file model. Updated continuously from widgets.
 	stateDto *dtos.EditorStateDto
@@ -68,6 +71,7 @@ func NewUIState() *State {
 	stateDto := dtos.NewDefaultEditorStateDto()
 	state := &State{
 		handler:  handlers.NewGuiHandler(),
+		mapper:   mappers.NewConfigMapper(),
 		stateDto: &stateDto,
 	}
 	state.outputPath.SingleLine = true
@@ -99,6 +103,10 @@ func (this *State) Dialogs() *DialogHost {
 
 func (this *State) GetStateData() dtos.EditorStateDto {
 	return *this.stateDto
+}
+
+func (this *State) GetGeneratorConfig() *config.GeneratorConfig {
+	return this.mapper.FromEditorState(*this.stateDto)
 }
 
 func (this *State) GetCurrentPath() string {
@@ -476,6 +484,16 @@ func (this *State) PickOutputDir() {
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
 	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
 	updateFunc(this.stateDto)
+	if this.stateDto.AdvancedMode {
+		this.stateDto.NeutralZoneCount = 0
+	} else {
+		this.stateDto.NeutralLowNoCastleCount = 0
+		this.stateDto.NeutralLowCastleCount = 0
+		this.stateDto.NeutralMediumNoCastleCount = 0
+		this.stateDto.NeutralMediumCastleCount = 0
+		this.stateDto.NeutralHighNoCastleCount = 0
+		this.stateDto.NeutralHighCastleCount = 0
+	}
 }
 
 func (this *State) SetStatus(msg string, isErr bool) {

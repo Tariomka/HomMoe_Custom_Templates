@@ -10,6 +10,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
@@ -17,16 +18,15 @@ import (
 func NewTextboxWidget(theme *material.Theme, textEditor *widget.Editor, hint string) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)
-		inset := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}
-		dims := inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			textEditorStyle := material.Editor(theme, textEditor, hint)
-			textEditorStyle.Color = themes.ColorText
-			textEditorStyle.HintColor = themes.ColorTextDim
-			textEditorStyle.TextSize = unit.Sp(13)
-			return textEditorStyle.Layout(gtx)
-		})
+
+		textEditor := material.Editor(theme, textEditor, hint)
+		textEditor.Color = themes.ColorText
+		textEditor.HintColor = themes.ColorTextDim
+		textEditor.TextSize = unit.Sp(12)
+		dims := layout.UniformInset(constants.DefaultPaddingSmall).Layout(gtx, textEditor.Layout)
+
 		call := macro.Stop()
-		radius := gtx.Dp(2)
+		radius := gtx.Dp(constants.DefaultRoundness)
 		rect := image.Rectangle{Max: dims.Size}
 		paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 		paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{

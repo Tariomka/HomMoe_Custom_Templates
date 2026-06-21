@@ -1,7 +1,7 @@
 package registry
 
 type spellSids struct {
-	// Neutral
+	// High Neutral
 	NeutralPocketDimension string
 	NeutralSecondSight     string
 	NeutralShadowForm      string
@@ -9,7 +9,7 @@ type spellSids struct {
 	NeutralDimensionDoor   string
 	NeutralLightGate       string
 
-	// Day
+	// Daylight
 	DaySharpEdge      string
 	DayHaste          string
 	DayHealingWater   string
@@ -29,7 +29,7 @@ type spellSids struct {
 	DayArinasChosen   string
 	DayJudgement      string
 
-	// Night
+	// Nightshade
 	NightDespair         string
 	NightEnlargeShadow   string
 	NightFatalDecay      string
@@ -69,7 +69,7 @@ type spellSids struct {
 	PrimalHksmillasRampage    string
 	PrimalSummonPrimalRemnant string
 
-	// Space
+	// Arcane
 	SpaceEarlyStart        string
 	SpaceEnergyze          string
 	SpaceDecimate          string
@@ -91,7 +91,7 @@ type spellSids struct {
 }
 
 var spellSidValues = spellSids{
-	// Neutral
+	// High Neutral
 	NeutralPocketDimension: "neutral_magic_pocket_dimension",
 	NeutralSecondSight:     "neutral_magic_second_sight",
 	NeutralShadowForm:      "neutral_magic_shadow_form",
@@ -99,7 +99,7 @@ var spellSidValues = spellSids{
 	NeutralDimensionDoor:   "neutral_magic_dimension_door",
 	NeutralLightGate:       "neutral_magic_light_gate",
 
-	// Day
+	// Daylight
 	DaySharpEdge:      "day_2_magic_sharp_edge",
 	DayHaste:          "day_3_magic_haste",
 	DayHealingWater:   "day_1_magic_healing_water",
@@ -119,7 +119,7 @@ var spellSidValues = spellSids{
 	DayArinasChosen:   "day_16_magic_arinas_chosen",
 	DayJudgement:      "day_15_magic_judgement",
 
-	// Night
+	// Nightshade
 	NightDespair:         "night_4_magic_despair",
 	NightEnlargeShadow:   "night_3_magic_enlarge_shadow",
 	NightFatalDecay:      "night_7_magic_fatal_decay",
@@ -159,7 +159,7 @@ var spellSidValues = spellSids{
 	PrimalHksmillasRampage:    "primal_14_magic_hksmillas_rampage",
 	PrimalSummonPrimalRemnant: "primal_15_magic_summon_primal_remnant",
 
-	// Space
+	// Arcane
 	SpaceEarlyStart:        "space_1_magic_early_start",
 	SpaceEnergyze:          "space_3_magic_energyze",
 	SpaceDecimate:          "space_11_magic_decimate",
@@ -182,7 +182,8 @@ var spellSidValues = spellSids{
 
 // GetSpellSidValues returns the learnable spell SIDs used for
 //
-//	globalBans.magics
+//	gameRules.globalBans.magics
+//	gameRules.bonuses.parameters
 func GetSpellSidValues() spellSids {
 	return spellSidValues
 }

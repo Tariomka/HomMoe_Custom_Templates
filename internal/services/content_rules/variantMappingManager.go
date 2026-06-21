@@ -3,9 +3,14 @@ package content_rules
 import (
 	"sort"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants" // TODO: This should not exist
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
+
+// var (
+// 	resourceBankObjects        = registry.GetMapObjectResourceBankValues()
+// 	guardedResourceBankObjects = registry.GetMapObjectT3GuardedResourceBankValues()
+// )
 
 // Predefined variant mappings, ported from the C# VariantMappingManager.
 var (
@@ -64,11 +69,6 @@ var allVariantMappings = []models.VariantMapping{
 	UtopiaVariants,
 	PandoraBoxVariants,
 	MontyHallVariants,
-}
-
-// GetAllVariantMappings returns every defined variant mapping.
-func GetAllVariantMappings() []models.VariantMapping {
-	return allVariantMappings
 }
 
 // GetVariantsForContent returns one single-entry mapping per variant defined for

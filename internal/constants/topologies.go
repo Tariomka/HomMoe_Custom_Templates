@@ -24,7 +24,7 @@ var Topology = struct {
 }{
 	Circles:     TopologyDescriptor{Type: config.TopologyCircles, Label: "Circles", Description: "Circles: layered concentric rings sorted by zone tier."},
 	Random:      TopologyDescriptor{Type: config.TopologyRandom, Label: "Random", Description: "Random: layout decided by the generator."},
-	Default:     TopologyDescriptor{Type: config.TopologyDefault, Label: "Ring", Description: "Ring: each player borders two neighbors in a closed loop."},
+	Default:     TopologyDescriptor{Type: config.TopologyRing, Label: "Ring", Description: "Ring: each player borders two neighbors in a closed loop."},
 	HubAndSpoke: TopologyDescriptor{Type: config.TopologyHubAndSpoke, Label: "Hub", Description: "Hub: central neutral hub connects all player zones."},
 	Chain:       TopologyDescriptor{Type: config.TopologyChain, Label: "Chain", Description: "Chain: linear series, harder for outer players to interact."},
 	SharedWeb:   TopologyDescriptor{Type: config.TopologySharedWeb, Label: "Shared Web", Description: "Shared web: heavy interconnection through central neutral mesh."},

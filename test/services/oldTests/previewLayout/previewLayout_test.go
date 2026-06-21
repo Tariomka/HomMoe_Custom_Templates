@@ -1,6 +1,7 @@
 package previewLayout_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -37,21 +38,21 @@ func tmpl(zones []entities.Zone, conns []entities.Connection) *entities.RmgTempl
 // ── BuildPreviewLayout: edge cases ──────────────────────────────────
 
 func TestBuildPreviewLayout_NilTemplate(t *testing.T) {
-	out := services.BuildPreviewLayout(nil, config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(nil, config.TopologyRing, 600)
 	if len(out.Positions) != 0 || len(out.Zones) != 0 {
 		t.Errorf("expected empty layout, got %+v", out)
 	}
 }
 
 func TestBuildPreviewLayout_EmptyVariants(t *testing.T) {
-	out := services.BuildPreviewLayout(&entities.RmgTemplate{}, config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(&entities.RmgTemplate{}, config.TopologyRing, 600)
 	if len(out.Positions) != 0 {
 		t.Errorf("expected empty layout")
 	}
 }
 
 func TestBuildPreviewLayout_EmptyZones(t *testing.T) {
-	out := services.BuildPreviewLayout(tmpl(nil, nil), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(nil, nil), config.TopologyRing, 600)
 	if len(out.Positions) != 0 {
 		t.Errorf("expected empty layout")
 	}
@@ -62,7 +63,7 @@ func TestBuildPreviewLayout_EmptyZones(t *testing.T) {
 func TestBuildPreviewLayout_DefaultTopology_RingLayout(t *testing.T) {
 	zones := []entities.Zone{zone("Spawn-A"), zone("Spawn-B"), zone("Neutral-C")}
 	conns := []entities.Connection{conn("Spawn-A", "Spawn-B"), conn("Spawn-B", "Neutral-C")}
-	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	if len(out.Positions) != 3 {
 		t.Errorf("got %d positions, want 3", len(out.Positions))
 	}
@@ -73,7 +74,7 @@ func TestBuildPreviewLayout_DefaultTopology_RingLayout(t *testing.T) {
 
 func TestBuildPreviewLayout_SingleZoneCentredOnCanvas(t *testing.T) {
 	zones := []entities.Zone{zone("Spawn-A")}
-	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyRing, 600)
 	p, ok := out.Positions["Spawn-A"]
 	if !ok {
 		t.Fatal("missing position")
@@ -85,7 +86,7 @@ func TestBuildPreviewLayout_SingleZoneCentredOnCanvas(t *testing.T) {
 
 func TestBuildPreviewLayout_ExplicitHubGetsCentre(t *testing.T) {
 	zones := []entities.Zone{zone("Hub"), zone("Spawn-A"), zone("Spawn-B")}
-	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyRing, 600)
 	if p, ok := out.Positions["Hub"]; !ok || p.X != 300 || p.Y != 300 {
 		t.Errorf("Hub position = %+v, want (300,300)", p)
 	}
@@ -95,7 +96,7 @@ func TestBuildPreviewLayout_ImplicitHubGetsCentre(t *testing.T) {
 	// Neutral connected to both players, deg >= 2 → implicit hub.
 	zones := []entities.Zone{zone("Spawn-A"), zone("Spawn-B"), zone("Neutral-H")}
 	conns := []entities.Connection{conn("Neutral-H", "Spawn-A"), conn("Neutral-H", "Spawn-B")}
-	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	if p := out.Positions["Neutral-H"]; p.X != 300 || p.Y != 300 {
 		t.Errorf("implicit hub position = %+v, want (300,300)", p)
 	}
@@ -108,7 +109,7 @@ func TestBuildPreviewLayout_MultiHubFanLayout(t *testing.T) {
 		conn("Hub-B", "Spawn-B"),
 		conn("Hub-A", "Hub-B"),
 	}
-	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	if len(out.Positions) != 4 {
 		t.Errorf("expected 4 positions, got %d", len(out.Positions))
 	}
@@ -190,7 +191,7 @@ func TestBuildPreviewLayout_CirclesTopology_SingleZone(t *testing.T) {
 func TestBuildPreviewLayout_DirectConnectionsAreCollected(t *testing.T) {
 	zones := []entities.Zone{zone("Spawn-A"), zone("Spawn-B")}
 	conns := []entities.Connection{conn("Spawn-A", "Spawn-B")}
-	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	if len(out.Connections) != 1 || out.Connections[0].Portal {
 		t.Errorf("expected one direct connection, got %+v", out.Connections)
 	}
@@ -205,7 +206,7 @@ func TestBuildPreviewLayout_PortalConnectionsFlagged(t *testing.T) {
 		conn("Neutral-C", "Spawn-B"),
 		{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"},
 	}
-	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	portals := 0
 	for _, c := range out.Connections {
 		if c.Portal {
@@ -220,7 +221,7 @@ func TestBuildPreviewLayout_PortalConnectionsFlagged(t *testing.T) {
 func TestBuildPreviewLayout_ConnectionWithUnknownZoneSkipped(t *testing.T) {
 	zones := []entities.Zone{zone("Spawn-A"), zone("Spawn-B")}
 	conns := []entities.Connection{conn("Spawn-A", "Missing-X")}
-	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	if len(out.Connections) != 0 {
 		t.Errorf("expected no rendered connection, got %+v", out.Connections)
 	}
@@ -238,7 +239,7 @@ func TestBuildPreviewLayout_TwoComponentsKeepsOnlyFirstCluster(t *testing.T) {
 		conn("Spawn-A", "Neutral-X"),
 		conn("Spawn-B", "Neutral-Y"),
 	}
-	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	if len(out.Positions) != 2 {
 		t.Errorf("expected 2 positions after strip, got %d", len(out.Positions))
 	}
@@ -250,7 +251,7 @@ func TestBuildPreviewLayout_PlayerZoneFlagged(t *testing.T) {
 	zones := []entities.Zone{
 		{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
 	}
-	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyRing, 600)
 	if len(out.Zones) != 1 || !out.Zones[0].IsPlayer {
 		t.Errorf("expected player zone, got %+v", out.Zones)
 	}
@@ -263,7 +264,7 @@ func TestBuildPreviewLayout_CityMainObjectCounts(t *testing.T) {
 	zones := []entities.Zone{
 		{Name: "Neutral-Z", MainObjects: []entities.MainObject{{Type: "City"}, {Type: "City"}}},
 	}
-	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyDefault, 600)
+	out := services.BuildPreviewLayout(tmpl(zones, nil), config.TopologyRing, 600)
 	if out.Zones[0].Castles != 2 {
 		t.Errorf("expected 2 castles, got %d", out.Zones[0].Castles)
 	}
@@ -371,6 +372,50 @@ func TestClassifyZoneTier_NameHighFallback(t *testing.T) {
 	z := entities.Zone{Name: "Neutral-high"}
 	if got := services.ClassifyZoneTier(z); got != 3 {
 		t.Errorf("got %d, want 3", got)
+	}
+}
+
+// ── BuildPreviewLayout: parallel connection fanning ──────────────────
+
+func TestBuildPreviewLayout_SingleEdgeRendersStraight(t *testing.T) {
+	zones := []entities.Zone{zonePos("Spawn-A", 0.2, 0.5), zonePos("Spawn-B", 0.8, 0.5)}
+	conns := []entities.Connection{conn("Spawn-A", "Spawn-B")}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRandom, 600)
+	if len(out.Connections) != 1 {
+		t.Fatalf("expected 1 preview connection, got %d", len(out.Connections))
+	}
+	c := out.Connections[0]
+	midX := float64(c.A.X+c.B.X) / 2.0
+	midY := float64(c.A.Y+c.B.Y) / 2.0
+	// A lone edge keeps its control point on the midpoint so it draws straight.
+	if math.Abs(float64(c.Ctrl.X)-midX) > 1 || math.Abs(float64(c.Ctrl.Y)-midY) > 1 {
+		t.Errorf("single-edge control point %v not on the midpoint (%.1f, %.1f)", c.Ctrl, midX, midY)
+	}
+}
+
+func TestBuildPreviewLayout_ParallelEdgesFanOut(t *testing.T) {
+	zones := []entities.Zone{zonePos("Spawn-A", 0.2, 0.5), zonePos("Spawn-B", 0.8, 0.5)}
+	conns := []entities.Connection{
+		conn("Spawn-A", "Spawn-B"),
+		conn("Spawn-A", "Spawn-B"),
+	}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRandom, 600)
+	if len(out.Connections) != 2 {
+		t.Fatalf("expected 2 preview connections, got %d", len(out.Connections))
+	}
+	first, second := out.Connections[0], out.Connections[1]
+	// Distinct control points: otherwise the two edges overlap into one line.
+	if first.Ctrl == second.Ctrl {
+		t.Fatalf("parallel edges share control point %v — they would overlap", first.Ctrl)
+	}
+	// Their control points straddle the midpoint symmetrically, so each edge
+	// bulges out to its own side.
+	midX := float64(first.A.X+first.B.X) / 2.0
+	midY := float64(first.A.Y+first.B.Y) / 2.0
+	avgX := float64(first.Ctrl.X+second.Ctrl.X) / 2.0
+	avgY := float64(first.Ctrl.Y+second.Ctrl.Y) / 2.0
+	if math.Abs(avgX-midX) > 1 || math.Abs(avgY-midY) > 1 {
+		t.Errorf("parallel control points not symmetric about midpoint: avg=(%.1f, %.1f) mid=(%.1f, %.1f)", avgX, avgY, midX, midY)
 	}
 }
 

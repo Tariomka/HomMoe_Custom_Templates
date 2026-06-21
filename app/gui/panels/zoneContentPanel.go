@@ -2,17 +2,15 @@ package panels
 
 import (
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
 // tierIndex is the position of a tier inside the tierRows cache. The
@@ -79,7 +77,6 @@ func NewZoneContentPanel(state *drivers.State) *ZoneContentPanel {
 
 func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		// Reset button is global to the currently-selected tier.
 		if this.btnZoneReset.Clicked(gtx) {
 			this.resetCurrentTier()
 		}
@@ -92,16 +89,12 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 		}
 
 		widgetsList := []layout.Widget{
-			widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Mandatory content per zone tier. Effects only apply on generation."),
+			// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Mandatory content per zone tier. Effects only apply on generation."),
 			func(gtx layout.Context) layout.Dimensions {
-				return this.tierSelector.Layout(gtx, theme)
-			},
-			func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset this tier", &this.btnZoneReset, false)),
-					)
-				})
+				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.tierSelector.Layout(gtx, theme) }),
+					layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset this tier", &this.btnZoneReset, false)),
+				)
 			},
 			this.zcMines.Layout(theme),
 			this.zcUtilities.Layout(theme),
@@ -110,9 +103,10 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 			this.zcBanks.Layout(theme),
 			this.zcHeroImprovement.Layout(theme),
 		}
-		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
-			return widgetsList[index](gtx)
-		})
+
+		return material.List(theme, &this.scroll).Layout(
+			gtx, len(widgetsList),
+			func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
 	}
 }
 
@@ -156,9 +150,9 @@ func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 	this.zcBanks.ClearRows()
 	this.zcHeroImprovement.ClearRows()
 	for _, raw := range this.tierRows[tier] {
-		row := raw.Normalised()
+		row := raw.Normalized()
 		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
-		if found, ok := utils.LookupSid(row.Sid); ok {
+		if found, ok := utils.GetSidMappingBySid(row.Sid); ok {
 			mapping = found
 		}
 		// Prefer the explicit rule list; otherwise migrate legacy flat fields,
@@ -167,8 +161,6 @@ func (this *ZoneContentPanel) loadTierIntoSections(tier tierIndex) {
 		switch {
 		case len(row.Rules) > 0:
 			rules = row.Rules
-		case row.HasLegacyRuleData():
-			rules = content_rules.MigrateLegacyRow(row, mapping).Rules
 		}
 		section := this.routeToSection(row.Sid, row.IsMine)
 		section.Add(mapping, row.Count, rules, row.IsGroup)
@@ -247,21 +239,111 @@ func cloneRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
 }
 
 func defaultPlayerTierRows() []models.ZoneContentRowSave {
+	trueVal := true
 	return []models.ZoneContentRowSave{
-		{Sid: constants.ContentIds.MineWood.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
-		{Sid: constants.ContentIds.MineOre.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
-		{Sid: constants.ContentIds.MineGold.Sid, Count: 1, IsGuarded: true, NearCastle: true, RoadDistance: "Any", IsMine: true},
-		{Sid: constants.ContentIds.MineCrystals.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.MineMercury.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.MineGemstones.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.AlchemyLab.Sid, Count: 1, IsGuarded: true, RoadDistance: "Next To", IsMine: true},
-		{Sid: constants.ContentIds.PandoraBox.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any"},
-		{Sid: constants.ContentIds.RandomItemEpic.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any"},
-		{Sid: constants.IncludeListIds.RandomHiresLowTier.Sid, Count: 2, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.RandomHiresHighTier.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.RandomHiresAllTier.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.ResourceBanksTier1.Sid, Count: 2, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
-		{Sid: constants.IncludeListIds.ResourceBanksTier2.Sid, Count: 1, IsGuarded: true, RoadDistance: "Any", IsGroup: true},
+		{
+			Sid:    constants.ContentIds.MineWood.Sid,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to town", DistanceName: "Near"},
+			},
+		},
+		{
+			Sid:    constants.ContentIds.MineOre.Sid,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to town", DistanceName: "Near"},
+			},
+		},
+		{
+			Sid:    constants.ContentIds.MineGold.Sid,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to town", DistanceName: "Near"},
+			},
+		},
+		{
+			Sid:    constants.ContentIds.MineCrystals.Sid,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:    constants.ContentIds.MineMercury.Sid,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:    constants.ContentIds.MineGemstones.Sid,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:    constants.ContentIds.AlchemyLab.Sid,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:   constants.ContentIds.PandoraBox.Sid,
+			Count: 1,
+			Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:   constants.ContentIds.RandomItemEpic.Sid,
+			Count: 1,
+			Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     constants.IncludeListIds.RandomHiresLowTier.Sid,
+			Count:   2,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     constants.IncludeListIds.RandomHiresHighTier.Sid,
+			Count:   1,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     constants.IncludeListIds.RandomHiresAllTier.Sid,
+			Count:   1,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     constants.IncludeListIds.ResourceBanksTier1.Sid,
+			Count:   2,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     constants.IncludeListIds.ResourceBanksTier2.Sid,
+			Count:   1,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
 	}
 }
 

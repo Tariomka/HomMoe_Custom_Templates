@@ -5,11 +5,6 @@ import (
 	"os"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
 
 // LoadSettingsFile reads a .gen.json file and returns the parsed SettingsFile.
@@ -24,31 +19,7 @@ func LoadSettingsFile(path string) (*dtos.EditorStateDto, error) {
 		return nil, err
 	}
 
-	migrateContentRowRules(&settingsFile)
-
 	return &settingsFile, nil
-}
-
-// migrateContentRowRules upgrades every zone's content rows from the deprecated
-// flat rule fields to the serialized Rules list, mirroring the C# load path
-// which restores rules for every row on load.
-func migrateContentRowRules(state *dtos.EditorStateDto) {
-	state.PlayerZoneContentRows = migrateContentRows(state.PlayerZoneContentRows)
-	state.LowNeutralContentRows = migrateContentRows(state.LowNeutralContentRows)
-	state.MediumNeutralContentRows = migrateContentRows(state.MediumNeutralContentRows)
-	state.HighNeutralContentRows = migrateContentRows(state.HighNeutralContentRows)
-	state.HubZoneContentRows = migrateContentRows(state.HubZoneContentRows)
-}
-
-func migrateContentRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
-	if len(rows) == 0 {
-		return rows
-	}
-	migrated := make([]models.ZoneContentRowSave, len(rows))
-	for i, row := range rows {
-		migrated[i] = content_rules.MigrateLegacyRow(row, models.SidMapping{Sid: row.Sid})
-	}
-	return migrated
 }
 
 // SaveSettingsFile writes a SettingsFile to disk as indented JSON.
@@ -58,89 +29,4 @@ func SaveSettingsFile(path string, editorState *dtos.EditorStateDto) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0o644)
-}
-
-// SettingsToGenerator translates a SettingsFile (UI persistence model)
-// into a GeneratorSettings (generator input model).
-func SettingsToGenerator(editorState *dtos.EditorStateDto) *config.GeneratorConfig {
-	contentProvider := providers.NewMandatoryContentProvider()
-	generatorSettings := config.NewGeneratorConfig()
-	generatorSettings.TemplateName = editorState.TemplateName
-	generatorSettings.GameMode = editorState.GameMode
-	generatorSettings.PlayerCount = editorState.PlayerCount
-	generatorSettings.MapSize = editorState.MapSize
-	generatorSettings.Topology = editorState.Topology
-	generatorSettings.GenerateRoads = editorState.GenerateRoads
-	generatorSettings.RandomPortals = editorState.RandomPortals
-	generatorSettings.SpawnRemoteFootholds = editorState.SpawnRemoteFootholds
-	generatorSettings.NoDirectPlayerConnections = editorState.NoDirectPlayerConn
-	generatorSettings.MaxPortalConnections = editorState.MaxPortalConnections
-	generatorSettings.MinNeutralZonesBetweenPlayers = editorState.MinNeutralZonesBetweenPlayers
-	generatorSettings.MatchPlayerCastleFactions = editorState.MatchPlayerCastleFactions
-	generatorSettings.BannedItems = editorState.BannedItems
-	generatorSettings.BannedMagics = editorState.BannedMagics
-	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
-	generatorSettings.Bonuses = config_inner.ParseBonusesJSON(editorState.BonusesJSON)
-	generatorSettings.PlayerZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.PlayerZoneContentRows)
-	generatorSettings.LowNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.LowNeutralContentRows)
-	generatorSettings.MediumNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.MediumNeutralContentRows)
-	generatorSettings.HighNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HighNeutralContentRows)
-	generatorSettings.HubZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HubZoneContentRows)
-	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
-	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent
-
-	generatorSettings.ZoneConfiguration = config.ZoneConfig{
-		NeutralZoneCount:            editorState.NeutralZoneCount,
-		PlayerZoneCastles:           editorState.PlayerZoneCastles,
-		NeutralZoneCastles:          editorState.NeutralZoneCastles,
-		ResourceDensityPercent:      editorState.ResourceDensityPercent,
-		StructureDensityPercent:     editorState.StructureDensityPercent,
-		NeutralStackStrengthPercent: editorState.NeutralStackStrengthPercent,
-		BorderGuardStrengthPercent:  editorState.BorderGuardStrengthPercent,
-		HubZoneSize:                 editorState.HubZoneSize,
-		HubZoneCastles:              editorState.HubZoneCastles,
-		Advanced: config.AdvancedSettings{
-			Enabled:                    editorState.AdvancedMode,
-			NeutralLowNoCastleCount:    editorState.NeutralLowNoCastleCount,
-			NeutralLowCastleCount:      editorState.NeutralLowCastleCount,
-			NeutralMediumNoCastleCount: editorState.NeutralMediumNoCastleCount,
-			NeutralMediumCastleCount:   editorState.NeutralMediumCastleCount,
-			NeutralHighNoCastleCount:   editorState.NeutralHighNoCastleCount,
-			NeutralHighCastleCount:     editorState.NeutralHighCastleCount,
-			PlayerZoneSize:             editorState.PlayerZoneSize,
-			NeutralZoneSize:            editorState.NeutralZoneSize,
-			GuardRandomization:         editorState.GuardRandomization,
-		},
-	}
-
-	generatorSettings.HeroSettings = config.HeroSettings{
-		HeroCountMin:       editorState.HeroCountMin,
-		HeroCountMax:       editorState.HeroCountMax,
-		HeroCountIncrement: editorState.HeroCountIncrement,
-	}
-
-	generatorSettings.GameEndConditions = &config.GameEndConditions{
-		VictoryCondition: editorState.VictoryCondition,
-		CityHold:         editorState.CityHold || editorState.VictoryCondition == "win_condition_5",
-		CityHoldDays:     editorState.CityHoldDays,
-		LostStartCity:    editorState.LostStartCity,
-		LostStartCityDay: editorState.LostStartCityDay,
-		LostStartHero:    editorState.LostStartHero,
-	}
-
-	generatorSettings.GladiatorArenaRules = &config.GladiatorArenaRules{
-		Enabled:        editorState.GladiatorArena,
-		DaysDelayStart: editorState.GladiatorArenaDaysDelayStart,
-		CountDay:       editorState.GladiatorArenaCountDay,
-	}
-
-	generatorSettings.TournamentRules = &config.TournamentRules{
-		Enabled:            editorState.Tournament,
-		FirstTournamentDay: editorState.TournamentFirstTournamentDay,
-		Interval:           editorState.TournamentInterval,
-		PointsToWin:        editorState.TournamentPointsToWin,
-		SaveArmy:           editorState.TournamentSaveArmy,
-	}
-
-	return generatorSettings
 }

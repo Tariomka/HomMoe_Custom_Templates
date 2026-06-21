@@ -2,8 +2,10 @@ package config_inner
 
 type ZoneConfig struct {
 	NeutralZoneCount            int
+	PlayerOwnedCastles          int
 	PlayerZoneCastles           int
 	NeutralZoneCastles          int
+	SpawnAbandonedOutposts      bool
 	ResourceDensityPercent      int
 	StructureDensityPercent     int
 	NeutralStackStrengthPercent int

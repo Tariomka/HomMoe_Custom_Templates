@@ -14,7 +14,7 @@ type (
 )
 
 const (
-	TopologyDefault     MapTopology = config_inner.TopologyDefault
+	TopologyRing        MapTopology = config_inner.TopologyRing
 	TopologyHubAndSpoke MapTopology = config_inner.TopologyHubAndSpoke
 	TopologyChain       MapTopology = config_inner.TopologyChain
 	TopologySharedWeb   MapTopology = config_inner.TopologySharedWeb
@@ -24,4 +24,8 @@ const (
 	TopologyGeometric   MapTopology = config_inner.TopologyGeometric
 	TopologyCross       MapTopology = config_inner.TopologyCross
 	TopologyFractal     MapTopology = config_inner.TopologyFractal
+)
+
+var (
+	ParseBonusesJSON = config_inner.DeserializeBonusEntries
 )

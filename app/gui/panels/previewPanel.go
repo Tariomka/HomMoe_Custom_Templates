@@ -1,7 +1,9 @@
 package panels
 
 import (
+	"fmt"
 	"image"
+	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -26,6 +28,11 @@ type PreviewPanel struct {
 	pngStatus   string
 	pngStatusOK bool
 
+	btnGenerate     widget.Clickable
+	btnSaveTemplate widget.Clickable
+	btnPickOutput   widget.Clickable
+	btnRevealOutput widget.Clickable
+
 	state *drivers.State
 }
 
@@ -34,61 +41,112 @@ func NewPreviewPanel(state *drivers.State) *PreviewPanel {
 }
 
 func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
-	template := this.state.GetLastTemplate()
-	return widgets.NewPanelWidget(unit.Dp(8), func(gtx layout.Context) layout.Dimensions {
+	return widgets.NewPanelWidget(constants.DefaultPadding, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				label := material.H6(theme, "Preview")
-				label.Color = themes.ColorAccent
-				label.Font = font.Font{Weight: font.SemiBold}
-				label.TextSize = unit.Sp(15)
-				return label.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				name := "(no template generated yet)"
-				if template != nil {
-					name = template.Name
-				}
-				label := material.Body2(theme, name)
-				label.Color = themes.ColorTextDim
-				label.TextSize = unit.Sp(11)
-				label.MaxLines = 1
-				label.Truncator = "…"
-				return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(6)}.Layout(gtx, label.Layout)
+				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+					layout.Flexed(0.5, this.getHeaderWidget(theme)),
+					layout.Flexed(0.5, this.getTemplateNameWidget(theme)))
 			}),
 			layout.Flexed(1, this.getPreviewCanvasWidget(theme)),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
+			layout.Rigid(this.getStatusMessageWidget(theme)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				// Reserve a fixed-height slot so the canvas above doesn't shift
-				// when the status message appears/disappears or grows from 1 to
-				// 2 lines. Height is sized for 2 lines of 11sp text + the
-				// bottom inset used below the legend separator.
-				reserved := gtx.Dp(unit.Dp(34))
-				gtx.Constraints.Min.Y = reserved
-				gtx.Constraints.Max.Y = reserved
-				if this.pngStatus == "" {
-					return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, reserved)}
-				}
-				statusColor := themes.ColorTextDim
-				if !this.pngStatusOK {
-					statusColor = themes.ColorError
-				}
-				return layout.Inset{Bottom: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					label := material.Body2(theme, this.pngStatus)
-					label.Color = statusColor
-					label.TextSize = unit.Sp(11)
-					label.MaxLines = 2
-					label.Alignment = text.Middle
-					return label.Layout(gtx)
-				})
+				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+						label := material.Body2(theme, "Output directory:")
+						label.Color = themes.ColorText
+						return label.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(widgets.NewButtonWidget(theme, "Browse", &this.btnPickOutput, false)),
+							layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+							layout.Rigid(widgets.NewButtonWidget(theme, "Reveal", &this.btnRevealOutput, false)),
+						)
+					}),
+				)
 			}),
-			layout.Rigid(this.getLegendWidget(theme)),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, this.state.GetOutputPathEditor(), "Choose folder")))
+			}),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(0.5, widgets.NewGoldButtonWidget(theme, "Generate", &this.btnGenerate, false)),
+					widgets.NewDefaultComponentSpacer(),
+					layout.Flexed(0.5, widgets.NewGoldButtonWidget(
+						theme, "Save Template", &this.btnSaveTemplate,
+						this.state.GetLastTemplate() == nil)))
+			}),
 		)
 	})
 }
 
 func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
-	// TODO: add handling for generation and saving after footer is moved to the preview panel
+	if this.btnGenerate.Clicked(gtx) {
+		this.state.Generate()
+	}
+	if this.btnSaveTemplate.Clicked(gtx) {
+		this.state.SaveTemplate()
+	}
+	if this.btnPickOutput.Clicked(gtx) {
+		this.state.PickOutputDir()
+	}
+	if this.btnRevealOutput.Clicked(gtx) {
+		_ = utils.RevealInExplorer(strings.TrimSpace(this.state.GetOutputPath()))
+	}
+}
+
+func (this *PreviewPanel) getHeaderWidget(theme *material.Theme) layout.Widget {
+	label := material.Body1(theme, "Preview")
+	label.Color = themes.ColorAccent
+	label.Font = font.Font{Weight: font.SemiBold}
+	return label.Layout
+}
+
+func (this *PreviewPanel) getTemplateNameWidget(theme *material.Theme) layout.Widget {
+	template := this.state.GetLastTemplate()
+
+	name := "(no template generated yet)"
+	if template != nil {
+		name = fmt.Sprintf("Name: '%s'", template.Name)
+	}
+
+	label := material.Overline(theme, name)
+	label.Color = themes.ColorTextDim
+	label.MaxLines = 1
+	label.Truncator = "…"
+	label.Alignment = text.End
+	return label.Layout
+}
+
+func (this *PreviewPanel) getStatusMessageWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		reserved := gtx.Dp(unit.Dp(34))
+		gtx.Constraints.Min.Y = reserved
+		gtx.Constraints.Max.Y = reserved
+
+		message, isError := this.state.GetStatus()
+		if message == "" {
+			return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, reserved)}
+		}
+
+		label := material.Caption(theme, message)
+		label.MaxLines = 2
+		label.Alignment = text.Middle
+		label.Color = themes.ColorTextDim
+		if isError {
+			label.Color = themes.ColorError
+		}
+
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Bottom: constants.DefaultPaddingSmall}.Layout(gtx, label.Layout)
+			}),
+		)
+	}
 }
 
 // layoutPreviewCanvas draws the preview area. Always fills the available
@@ -96,81 +154,105 @@ func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
 // informational message inside the canvas when there is no template or no
 // computed layout yet.
 func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions {
+	getCanvasSizes := func(gtx layout.Context) (outerCanvasSize, innerCanvasSize image.Point) {
 		maxX := gtx.Constraints.Max.X
 		maxY := gtx.Constraints.Max.Y
-		outerSize := image.Pt(maxX, maxY)
-		side := max(min(maxY, maxX), 80)
-		canvasSize := image.Pt(side, side)
+		outerCanvasSize = image.Pt(maxX, maxY)
+		maxSize := max(min(outerCanvasSize.X, outerCanvasSize.Y), 80)
+		innerCanvasSize = image.Pt(maxSize, maxSize)
+		return
+	}
 
-		// Center the square canvas inside the available area.
-		offsetX := (maxX - side) / 2
-		offsetY := (maxY - side) / 2
-		defer op.Offset(image.Pt(offsetX, offsetY)).Push(gtx.Ops).Pop()
-
-		// Background.
+	renderCanvas := func(gtx layout.Context, canvasSize image.Point) {
 		paint.FillShape(gtx.Ops, themes.ColorPreviewBg, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
-
-		// Frame.
-		radius := gtx.Dp(unit.Dp(6))
-		frame := image.Rectangle{Min: image.Pt(4, 4), Max: image.Pt(side-4, side-4)}
 		paint.FillShape(gtx.Ops, themes.ColorPreviewFrame, clip.Stroke{
-			Path:  clip.UniformRRect(frame, radius).Path(gtx.Ops),
+			Path: clip.UniformRRect(
+				image.Rect(0, 0, canvasSize.X, canvasSize.Y),
+				gtx.Dp(constants.DefaultRoundnessLarge)).Path(gtx.Ops),
 			Width: 2,
 		}.Op())
+	}
 
-		template := this.state.GetLastTemplate()
-		if template == nil {
-			return widgets.NewCenteredMessageWidget(theme, "Adjust the options to generate the map layout.", canvasSize, outerSize)(gtx)
-		}
+	renderLegend := func(gtx layout.Context, canvasSize image.Point) {
+		legendMacro := op.Record(gtx.Ops)
+		contextCopy := gtx
+		contextCopy.Constraints.Min = image.Point{}
+		contextCopy.Constraints.Max.X = canvasSize.X
+		legendWidget := this.getLegendWidget(theme)(contextCopy)
+		legendCall := legendMacro.Stop()
+		legendOffset := op.Offset(image.Point{
+			X: (canvasSize.X - legendWidget.Size.X) / 2,
+			Y: canvasSize.Y + gtx.Dp(constants.DefaultPaddingSmall),
+		}).Push(gtx.Ops)
+		legendCall.Add(gtx.Ops)
+		legendOffset.Pop()
+	}
 
-		previewLayout := services.BuildPreviewLayout(template, this.state.GetStateData().Topology, float64(side))
-		if len(previewLayout.Positions) == 0 {
-			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerSize)(gtx)
-		}
-
+	renderTemplate := func(gtx layout.Context, previewLayout services.PreviewLayout) {
 		// Connections beneath zones.
-		for _, conn := range previewLayout.Connections {
-			utils.DrawConnection(gtx, conn, previewLayout.ZoneRadius)
+		for _, connection := range previewLayout.Connections {
+			utils.DrawConnection(gtx, connection, previewLayout.ZoneRadius)
 		}
 		// Non-spawn zones first, then spawn zones on top.
 		for _, zone := range previewLayout.Zones {
-			if zone.IsPlayer {
-				continue
+			if !zone.IsPlayer {
+				utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 			}
-			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
 		for _, zone := range previewLayout.Zones {
-			if !zone.IsPlayer {
-				continue
+			if zone.IsPlayer {
+				utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 			}
-			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
+		}
+	}
+
+	return func(gtx layout.Context) layout.Dimensions {
+		outerCanvasSize, canvasSize := getCanvasSizes(gtx)
+
+		// Center canvas
+		defer op.Offset(image.Point{
+			X: (gtx.Constraints.Max.X - canvasSize.X) / 2,
+			Y: (gtx.Constraints.Max.Y - canvasSize.Y) / 2,
+		}).Push(gtx.Ops).Pop()
+		renderCanvas(gtx, canvasSize)
+		renderLegend(gtx, canvasSize)
+
+		template := this.state.GetLastTemplate()
+		if template == nil {
+			return widgets.NewCenteredMessageWidget(
+				theme, "Adjust the options to generate the map layout.", canvasSize, outerCanvasSize)(gtx)
 		}
 
-		return layout.Dimensions{Size: outerSize}
+		previewLayout := services.BuildPreviewLayout(template, this.state.GetStateData().Topology, float64(canvasSize.X))
+		if len(previewLayout.Positions) == 0 {
+			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)
+		}
+
+		renderTemplate(gtx, previewLayout)
+
+		return layout.Dimensions{Size: outerCanvasSize}
 	}
 }
 
 func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		children := make([]layout.FlexChild, 0, len(constants.LegendItems)*2)
+		children := []layout.FlexChild{}
 		for i, item := range constants.LegendItems {
 			if i > 0 {
-				children = append(children, layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout))
+				children = append(children, layout.Rigid(widgets.NewHorizontalSpacerWidget(8)))
 			}
 			children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						side := gtx.Dp(unit.Dp(10))
+						side := gtx.Dp(constants.DefaultRoundnessOverlineText)
 						rect := image.Rect(0, 0, side, side)
 						paint.FillShape(gtx.Ops, item.Color, clip.UniformRRect(rect, side/2).Op(gtx.Ops))
 						return layout.Dimensions{Size: rect.Max}
 					}),
-					layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
+					layout.Rigid(widgets.NewHorizontalSpacerWidget(4)),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						label := material.Body2(theme, item.Label)
+						label := material.Overline(theme, item.Label)
 						label.Color = themes.ColorTextDim
-						label.TextSize = unit.Sp(10)
 						return label.Layout(gtx)
 					}),
 				)

@@ -359,7 +359,7 @@ func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids
 
 	makeFree := new(widget.Bool)
 	picker := newMultiSelectPicker("Pick Spells", entries, true)
-	picker.groupColor = spellSchoolColor
+	picker.groupColor = constants.GetSpellSchoolColorFromDisplayName
 	if showMakeFree {
 		picker.footer = func(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 			return widgets.NewLabeledCheckboxRowWidget(theme, makeFree, "Make spell(s) free")(gtx)
@@ -369,24 +369,6 @@ func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids
 		onApply(ids, makeFree.Value)
 	}
 	return picker
-}
-
-// spellSchoolColor maps a school display name to its accent colour, matching
-// the C# SpellPickerWindow palette.
-func spellSchoolColor(group string) color.NRGBA {
-	switch group {
-	case "Neutral":
-		return themes.ColorSchoolNeutral
-	case "Day":
-		return themes.ColorSchoolDay
-	case "Night":
-		return themes.ColorSchoolNight
-	case "Space":
-		return themes.ColorSchoolSpace
-	case "Primal":
-		return themes.ColorSchoolPrimal
-	}
-	return themes.ColorAccent
 }
 
 // ── Value-override picker ───────────────────────────────────────────────────

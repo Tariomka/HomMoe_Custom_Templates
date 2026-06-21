@@ -76,7 +76,7 @@ func (this *BonusesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 // frame so the rows stay in sync with the underlying entry slices.
 func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	bonusRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add bonus…", &this.addBonusBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add bonus…", &this.addBonusBtn, false),
 	}
 	if len(this.bonuses) == 0 {
 		bonusRows = append(bonusRows, widgets.NewDimmedLabelWidget(theme, "(no bonuses)"))
@@ -86,12 +86,11 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 			bonusDotColor(entry.PresetType),
 			bonusDisplayName(entry),
 			bonusReceiverLabel(entry),
-			&this.bonusRemoveBtns[i],
-		))
+			&this.bonusRemoveBtns[i]))
 	}
 
 	itemRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add banned item…", &this.pickItemsBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add banned item…", &this.pickItemsBtn, false),
 	}
 	if len(this.bannedItems) == 0 {
 		itemRows = append(itemRows, widgets.NewDimmedLabelWidget(theme, "(no banned items)"))
@@ -102,18 +101,18 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	spellRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add banned spell…", &this.pickSpellsBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add banned spell…", &this.pickSpellsBtn, false),
 	}
 	if len(this.bannedMagics) == 0 {
 		spellRows = append(spellRows, widgets.NewDimmedLabelWidget(theme, "(no banned spells)"))
 	}
 	for i, sid := range this.bannedMagics {
 		name, school := bannedSpellLabel(sid)
-		spellRows = append(spellRows, this.entryRow(theme, dotMagic, name, school, &this.magicRemoveBtns[i]))
+		spellRows = append(spellRows, this.entryRow(theme, constants.GetSpellSchoolColorFromDisplayName(school), name, school, &this.magicRemoveBtns[i]))
 	}
 
 	overrideRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "＋ Add override…", &this.pickOverridesBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add override…", &this.pickOverridesBtn, false),
 	}
 	if len(this.valueOverrides) == 0 {
 		overrideRows = append(overrideRows, widgets.NewDimmedLabelWidget(theme, "(no overrides)"))
@@ -124,11 +123,22 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	return []layout.Widget{
-		widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Effects only apply on generation."),
-		widgets.NewSectionWidget(theme, "Game start bonuses", bonusRows),
-		widgets.NewSectionWidget(theme, "Banned items", itemRows),
-		widgets.NewSectionWidget(theme, "Banned spells", spellRows),
-		widgets.NewSectionWidget(theme, "Guard value overrides", overrideRows),
+		// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Effects only apply on generation."),
+		widgets.NewHorizontallySplitWidget(theme,
+			func(theme *material.Theme) layout.Widget {
+				return func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(widgets.NewSectionWidget(theme, "Game start bonuses", bonusRows)),
+						layout.Rigid(widgets.NewSectionWidget(theme, "Guard value overrides", overrideRows)))
+				}
+			},
+			func(theme *material.Theme) layout.Widget {
+				return func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(widgets.NewSectionWidget(theme, "Banned items", itemRows)),
+						layout.Rigid(widgets.NewSectionWidget(theme, "Banned spells", spellRows)))
+				}
+			}),
 	}
 }
 
@@ -165,7 +175,7 @@ func (this *BonusesPanel) entryRow(theme *material.Theme, dot color.NRGBA, name,
 // dotWidget draws the small filled category circle.
 func dotWidget(col color.NRGBA) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		size := gtx.Dp(unit.Dp(8))
+		size := gtx.Dp(constants.DefaultRoundnessLarge)
 		paint.FillShape(gtx.Ops, col, clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
 		return layout.Dimensions{Size: image.Pt(size, size)}
 	}
@@ -237,7 +247,7 @@ func (this *BonusesPanel) syncRemoveButtons() {
 
 func (this *BonusesPanel) LoadFromState() {
 	settings := this.state.GetStateData()
-	this.bonuses = config_inner.ParseBonusesJSON(settings.BonusesJSON)
+	this.bonuses = config_inner.DeserializeBonusEntries(settings.BonusesJSON)
 	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
 	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
 	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
@@ -246,7 +256,7 @@ func (this *BonusesPanel) LoadFromState() {
 
 func (this *BonusesPanel) SaveToState() {
 	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
-		settings.BonusesJSON = config_inner.SerializeBonuses(this.bonuses)
+		settings.BonusesJSON = config_inner.SerializeBonusEntries(this.bonuses)
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
 		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")
@@ -255,8 +265,7 @@ func (this *BonusesPanel) SaveToState() {
 
 // ── display helpers ─────────────────────────────────────────────────────────
 
-// bonusDisplayName composes the human-readable label for a bonus entry,
-// mirroring the C# BonusEntry.DisplayName.
+// bonusDisplayName composes the human-readable label for a bonus entry
 func bonusDisplayName(entry config_inner.BonusEntry) string {
 	switch entry.PresetType {
 	case config_inner.BonusTownPortalFree:
@@ -267,7 +276,7 @@ func bonusDisplayName(entry config_inner.BonusEntry) string {
 		}
 		return "Spell: " + spellLabel(entry.Param)
 	case config_inner.BonusUnitMultiplier:
-		return "Unit multiplier ×" + entry.Param
+		return "Unit multiplier x" + entry.Param
 	case config_inner.BonusMovementBonus:
 		return "Movement bonus +" + entry.Param
 	case config_inner.BonusStartingItem:
@@ -288,8 +297,7 @@ func bonusDisplayName(entry config_inner.BonusEntry) string {
 	return entry.String()
 }
 
-// bonusReceiverLabel is the dim trailing text; hidden for resource bonuses,
-// matching the C# ShowReceiverLabel behaviour.
+// bonusReceiverLabel is the dim trailing text; hidden for resource bonuses
 func bonusReceiverLabel(entry config_inner.BonusEntry) string {
 	if entry.PresetType.IsResource() {
 		return ""
@@ -300,7 +308,7 @@ func bonusReceiverLabel(entry config_inner.BonusEntry) string {
 	return "start hero"
 }
 
-// bonusDotColor matches the C# BonusEntry.DotBrush colour coding.
+// bonusDotColor matches the C# BonusEntry.DotBrush color coding.
 func bonusDotColor(typ config_inner.BonusPresetType) color.NRGBA {
 	switch typ {
 	case config_inner.BonusTownPortalFree, config_inner.BonusSpell:
@@ -316,7 +324,7 @@ func bonusDotColor(typ config_inner.BonusPresetType) color.NRGBA {
 	}
 }
 
-// banCategoryColor matches the C# BanEntry.CategoryBrush colour coding.
+// banCategoryColor matches the C# BanEntry.CategoryBrush color coding.
 func banCategoryColor(category string) color.NRGBA {
 	switch category {
 	case "Movement":
@@ -410,7 +418,7 @@ func appendUnique(values, ids []string) []string {
 // splitNonEmptyLines returns the trimmed, non-empty lines of text.
 func splitNonEmptyLines(text string) []string {
 	var out []string
-	for _, line := range strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
+	for line := range strings.SplitSeq(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
 		line = strings.TrimSpace(line)
 		if line != "" {
 			out = append(out, line)
@@ -424,8 +432,8 @@ func splitNonEmptyLines(text string) []string {
 func overrideSids(lines []string) []string {
 	out := make([]string, 0, len(lines))
 	for _, line := range lines {
-		if idx := strings.IndexByte(line, '='); idx >= 0 {
-			out = append(out, strings.TrimSpace(line[:idx]))
+		if before, _, ok := strings.Cut(line, "="); ok {
+			out = append(out, strings.TrimSpace(before))
 		} else {
 			out = append(out, line)
 		}
@@ -438,9 +446,9 @@ func overrideSids(lines []string) []string {
 func overrideLabel(line string) (name, trailing string) {
 	sid := line
 	value := ""
-	if idx := strings.IndexByte(line, '='); idx >= 0 {
-		sid = strings.TrimSpace(line[:idx])
-		value = strings.TrimSpace(line[idx+1:])
+	if before, after, ok := strings.Cut(line, "="); ok {
+		sid = strings.TrimSpace(before)
+		value = strings.TrimSpace(after)
 	}
 	if value == "" {
 		return constants.SidToDisplayName(sid), sid

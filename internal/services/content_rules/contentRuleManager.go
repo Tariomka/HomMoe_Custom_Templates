@@ -77,52 +77,13 @@ func CreateRuleFromSavedRule(saved models.ContentRuleRowSave, content models.Sid
 func RestoreRulesFromRow(row models.ZoneContentRowSave, content models.SidMapping) []ContentRule {
 	var result []ContentRule
 
-	// New format: explicit serialized rules.
 	if len(row.Rules) > 0 {
 		for _, saved := range row.Rules {
 			if rule := CreateRuleFromSavedRule(saved, content); rule != nil {
 				result = append(result, rule)
 			}
 		}
-		return result
-	}
-
-	// Legacy fallback for old saves (0.7.1 and earlier only). People had to
-	// manually uncheck Guarded, so an unguarded rule is created to preserve
-	// their intent.
-	result = append(result, NewRuleGuarded(row.IsGuarded))
-
-	if distance := strings.TrimSpace(row.RoadDistance); distance != "" && !strings.EqualFold(distance, "Any") {
-		if variation, ok := GetDistanceVariationByName(distance); ok {
-			result = append(result, NewRuleDistanceToRoad(&variation))
-		}
-	}
-	if row.NearCastle {
-		near := DistanceNear
-		result = append(result, NewRuleDistanceToTown(&near))
 	}
 
 	return result
-}
-
-// MigrateLegacyRow upgrades a row to the new rules format, replacing the
-// deprecated flat fields with an equivalent serialized Rules list. Rows that
-// already use the new format are returned unchanged.
-func MigrateLegacyRow(row models.ZoneContentRowSave, content models.SidMapping) models.ZoneContentRowSave {
-	if len(row.Rules) > 0 {
-		return row
-	}
-
-	rules := RestoreRulesFromRow(row, content)
-	serialized := make([]models.ContentRuleRowSave, 0, len(rules))
-	for _, rule := range rules {
-		serialized = append(serialized, rule.SerializeToRowSave())
-	}
-
-	migrated := row
-	migrated.Rules = serialized
-	migrated.IsGuarded = false
-	migrated.NearCastle = false
-	migrated.RoadDistance = ""
-	return migrated
 }

@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -58,7 +57,7 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 	}
 	var out []entities.MandatoryContentItem
 	for _, raw := range rows {
-		row := raw.Normalised()
+		row := raw.Normalized()
 		if row.Sid == "" {
 			continue
 		}
@@ -98,7 +97,7 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 
 func (this *MandatoryContentProvider) createFootholdContentItem(
 	castleCount int) entities.MandatoryContentItem {
-	return mandatory_content.NewContentBuilder(constants.ContentIds.RemoteFoothold.Sid).
+	return mandatory_content.NewContentBuilder(nonContentObjects.RemoteFoothold).
 		WithName("name_remote_foothold_1").
 		WithSoloEncounter().
 		WithRulesCallback(func() []entities.PlacementRule {
@@ -139,7 +138,7 @@ func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.Mand
 		}
 		kept := items[i].Rules[:0]
 		for _, rule := range items[i].Rules {
-			if rule.Type == "MainObject" && len(rule.Args) > 0 {
+			if rule.Type == ruleTypes.MainObject && len(rule.Args) > 0 {
 				if arg, ok := rule.Args[0].(string); ok && arg == "0" {
 					continue
 				}

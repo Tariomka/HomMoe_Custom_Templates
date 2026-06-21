@@ -25,8 +25,13 @@ type PreviewZone struct {
 }
 
 // PreviewConnection is a drawn link between two zones on the preview canvas.
+// Ctrl is the quadratic Bézier control point used to draw the edge: a lone
+// edge keeps Ctrl on the midpoint (so it renders straight), while parallel
+// edges between the same pair of zones spread their control points to either
+// side so each connection stays individually visible.
 type PreviewConnection struct {
 	A, B   image.Point
+	Ctrl   image.Point
 	Portal bool
 }
 
@@ -136,18 +141,80 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 	}
 
 	// Connections — only render those whose endpoints survived the strip.
-	for _, conn := range variant.Connections {
-		a, okA := layout.Positions[conn.From]
-		b, okB := layout.Positions[conn.To]
-		if !okA || !okB {
+	// Parallel edges between the same unordered pair are fanned out into
+	// distinct curves (matching the manual zone editor); a lone edge keeps its
+	// control point on the midpoint and therefore renders straight.
+	layout.Connections = buildPreviewConnections(variant.Connections, layout.Positions)
+	return layout
+}
+
+// previewParallelGap is the perpendicular spacing between parallel preview
+// edges, matched to the manual zone editor's bulge spacing so both views fan
+// multiple connections out the same way.
+const previewParallelGap = 22.0
+
+// buildPreviewConnections turns the variant's connections into drawable preview
+// edges. Connections sharing the same unordered endpoint pair are grouped and
+// each is given a perpendicular bulge so they do not collapse onto a single
+// overlapping line.
+func buildPreviewConnections(connections []entities.Connection, positions map[string]image.Point) []PreviewConnection {
+	type pairKey struct{ a, b string }
+	groups := make(map[pairKey][]entities.Connection)
+	order := make([]pairKey, 0)
+	for _, conn := range connections {
+		if _, ok := positions[conn.From]; !ok {
 			continue
 		}
-		isPortal := len(conn.PortalPlacementRulesFrom) > 0 ||
-			len(conn.PortalPlacementRulesTo) > 0 ||
-			conn.ConnectionType == "Portal"
-		layout.Connections = append(layout.Connections, PreviewConnection{A: a, B: b, Portal: isPortal})
+		if _, ok := positions[conn.To]; !ok {
+			continue
+		}
+		a, b := conn.From, conn.To
+		if a > b {
+			a, b = b, a
+		}
+		key := pairKey{a, b}
+		if _, seen := groups[key]; !seen {
+			order = append(order, key)
+		}
+		groups[key] = append(groups[key], conn)
 	}
-	return layout
+
+	result := make([]PreviewConnection, 0, len(connections))
+	for _, key := range order {
+		group := groups[key]
+		count := len(group)
+		for index, conn := range group {
+			a := positions[conn.From]
+			b := positions[conn.To]
+			// Bulge off a canonical baseline (sorted endpoints) so every
+			// parallel edge fans out from the same side regardless of the
+			// direction in which it happens to be stored.
+			canonicalA, canonicalB := a, b
+			if conn.From > conn.To {
+				canonicalA, canonicalB = canonicalB, canonicalA
+			}
+			dx := float64(canonicalB.X - canonicalA.X)
+			dy := float64(canonicalB.Y - canonicalA.Y)
+			distance := math.Hypot(dx, dy)
+			if distance < 1 {
+				distance = 1
+			}
+			normalX := dy / distance
+			normalY := -dx / distance
+			spread := (float64(index) - float64(count-1)/2.0) * previewParallelGap
+			midX := float64(a.X+b.X) / 2.0
+			midY := float64(a.Y+b.Y) / 2.0
+			ctrl := image.Pt(
+				int(math.Round(midX+2.0*spread*normalX)),
+				int(math.Round(midY+2.0*spread*normalY)),
+			)
+			isPortal := len(conn.PortalPlacementRulesFrom) > 0 ||
+				len(conn.PortalPlacementRulesTo) > 0 ||
+				conn.ConnectionType == "Portal"
+			result = append(result, PreviewConnection{A: a, B: b, Ctrl: ctrl, Portal: isPortal})
+		}
+	}
+	return result
 }
 
 func stripFirstClusterIfTwo(zones []entities.Zone, conns []entities.Connection) ([]entities.Zone, []entities.Connection) {

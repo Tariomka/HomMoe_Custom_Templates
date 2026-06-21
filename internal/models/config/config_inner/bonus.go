@@ -100,9 +100,9 @@ func (b BonusEntry) String() string {
 	return b.PresetType.String() + "|" + b.ReceiverFilter + "|" + b.Param + "|" + b.Param2
 }
 
-// ParseBonusEntry deserializes a single line produced by BonusEntry.String.
+// DeserializeBonusEntry deserializes a single line produced by BonusEntry.String.
 // Returns ok=false for empty or malformed input.
-func ParseBonusEntry(s string) (BonusEntry, bool) {
+func DeserializeBonusEntry(s string) (BonusEntry, bool) {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return BonusEntry{}, false
@@ -123,15 +123,15 @@ func ParseBonusEntry(s string) (BonusEntry, bool) {
 	}, true
 }
 
-// ParseBonusesJSON splits the persisted BonusesJSON string (newline-separated
+// DeserializeBonusEntries splits the persisted BonusesJSON string (newline-separated
 // pipe-encoded entries) into individual BonusEntry values.
-func ParseBonusesJSON(s string) []BonusEntry {
+func DeserializeBonusEntries(s string) []BonusEntry {
 	if s == "" {
 		return nil
 	}
 	var out []BonusEntry
 	for line := range strings.SplitSeq(s, "\n") {
-		entry, ok := ParseBonusEntry(strings.TrimRight(line, "\r"))
+		entry, ok := DeserializeBonusEntry(strings.TrimRight(line, "\r"))
 		if ok {
 			out = append(out, entry)
 		}
@@ -139,9 +139,9 @@ func ParseBonusesJSON(s string) []BonusEntry {
 	return out
 }
 
-// SerializeBonuses joins a slice of bonus entries back to the canonical
+// SerializeBonusEntries joins a slice of bonus entries back to the canonical
 // newline-separated string used by BonusesJson.
-func SerializeBonuses(entries []BonusEntry) string {
+func SerializeBonusEntries(entries []BonusEntry) string {
 	if len(entries) == 0 {
 		return ""
 	}

@@ -4,10 +4,16 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 const (
 	defaultTemplateName = "Custom Template"
+)
+
+var (
+	winConditions = registry.GetWinningConditionValues()
+	gameModes     = registry.GetGameModeValues()
 )
 
 // GeneratorConfig is the input model for the template generator
@@ -57,7 +63,7 @@ type GeneratorConfig struct {
 	HighNeutralMandatoryContent   []entities.MandatoryContentItem
 	HubZoneMandatoryContent       []entities.MandatoryContentItem
 
-	// ShufflePlayerZones randomises which physical zone each player starts in.
+	// ShufflePlayerZones randomizes which physical zone each player starts in.
 	// Enabled by default so generated templates vary between runs; tests can
 	// disable it to obtain deterministic output.
 	ShufflePlayerZones bool
@@ -65,11 +71,15 @@ type GeneratorConfig struct {
 
 func NewGeneratorConfig() *GeneratorConfig {
 	return &GeneratorConfig{
-		TemplateName:          "Custom Template",
-		GameMode:              "Classic",
-		PlayerCount:           2,
-		MapSize:               160,
-		HeroSettings:          HeroSettings{HeroCountMin: 4, HeroCountMax: 8, HeroCountIncrement: 1},
+		TemplateName: defaultTemplateName,
+		GameMode:     gameModes.Classic,
+		PlayerCount:  2,
+		MapSize:      160,
+		HeroSettings: HeroSettings{
+			HeroCountMin:       4,
+			HeroCountMax:       8,
+			HeroCountIncrement: 1,
+		},
 		SpawnRemoteFootholds:  true,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,
@@ -90,21 +100,30 @@ func NewGeneratorConfig() *GeneratorConfig {
 				GuardRandomization: 0.05,
 			},
 		},
-		GameEndConditions:   &GameEndConditions{VictoryCondition: "win_condition_1", LostStartCityDay: 3, CityHoldDays: 6},
+		GameEndConditions: &GameEndConditions{
+			VictoryCondition: winConditions.Standard,
+			LostStartCityDay: 3,
+			CityHoldDays:     6,
+		},
 		GladiatorArenaRules: &GladiatorArenaRules{DaysDelayStart: 30, CountDay: 3},
-		TournamentRules:     &TournamentRules{FirstTournamentDay: 14, Interval: 7, PointsToWin: 2, SaveArmy: true},
-		ShufflePlayerZones:  true,
+		TournamentRules: &TournamentRules{
+			FirstTournamentDay: 14,
+			Interval:           7,
+			PointsToWin:        2,
+			SaveArmy:           true,
+		},
+		ShufflePlayerZones: true,
 	}
 }
 
 func (this *GeneratorConfig) IsTournamentMode() bool {
 	return (this.TournamentRules != nil && this.TournamentRules.Enabled) ||
-		(this.GameEndConditions != nil && this.GameEndConditions.VictoryCondition == "win_condition_6")
+		(this.GameEndConditions != nil && this.GameEndConditions.VictoryCondition == winConditions.Tournament)
 }
 
 func (this *GeneratorConfig) IsCityHoldMode() bool {
 	return this.GameEndConditions != nil &&
-		(this.GameEndConditions.CityHold || this.GameEndConditions.VictoryCondition == "win_condition_5")
+		(this.GameEndConditions.CityHold || this.GameEndConditions.VictoryCondition == winConditions.CityHold)
 }
 
 func (this *GeneratorConfig) IsHubCityToHold() bool {
@@ -112,7 +131,7 @@ func (this *GeneratorConfig) IsHubCityToHold() bool {
 }
 
 func (this *GeneratorConfig) IsSingleHeroMode() bool {
-	return this.GameMode == "SingleHero"
+	return this.GameMode == gameModes.SingleHero
 }
 
 func (this *GeneratorConfig) GetVictoryCondition() string {
@@ -120,7 +139,7 @@ func (this *GeneratorConfig) GetVictoryCondition() string {
 		return this.GameEndConditions.VictoryCondition
 	}
 
-	return "win_condition_1"
+	return winConditions.Standard
 }
 
 func (this *GeneratorConfig) GetHeroSettings() HeroSettings {
@@ -138,7 +157,11 @@ func (this *GeneratorConfig) GetGameEndConditions() GameEndConditions {
 	if this.GameEndConditions != nil {
 		return *this.GameEndConditions
 	}
-	return GameEndConditions{VictoryCondition: "win_condition_1", LostStartCityDay: 3, CityHoldDays: 6}
+	return GameEndConditions{
+		VictoryCondition: winConditions.Standard,
+		LostStartCityDay: 3,
+		CityHoldDays:     6,
+	}
 }
 
 func (this *GeneratorConfig) GetGladiatorArenaRules() GladiatorArenaRules {
@@ -173,7 +196,7 @@ func (this *GeneratorConfig) CanHonorNeutralSeparation() bool {
 
 	neutralZoneCount := this.getNeutralZoneCount()
 	switch this.Topology {
-	case config_inner.TopologyDefault, config_inner.TopologyCircles:
+	case config_inner.TopologyRing, config_inner.TopologyCircles:
 		return neutralZoneCount >= this.PlayerCount*min
 	case config_inner.TopologyChain:
 		return neutralZoneCount >= (this.PlayerCount-1)*min

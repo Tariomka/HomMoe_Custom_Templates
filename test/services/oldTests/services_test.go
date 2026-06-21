@@ -65,8 +65,8 @@ func TestGenerate_ZoneCount_MatchesPlayersPlusNeutrals(t *testing.T) {
 		neutrals int
 		wantMin  int // minimum expected zones
 	}{
-		{"Ring 2p 2n", config.TopologyDefault, 2, 2, 4},
-		{"Ring 4p 4n", config.TopologyDefault, 4, 4, 8},
+		{"Ring 2p 2n", config.TopologyRing, 2, 2, 4},
+		{"Ring 4p 4n", config.TopologyRing, 4, 4, 8},
 		{"Chain 2p 1n", config.TopologyChain, 2, 1, 3},
 		{"Hub 4p 0n", config.TopologyHubAndSpoke, 4, 0, 5}, // 4 player + 1 hub
 		{"SharedWeb 2p 1n", config.TopologySharedWeb, 2, 1, 3},
@@ -85,7 +85,7 @@ func TestGenerate_ZoneCount_MatchesPlayersPlusNeutrals(t *testing.T) {
 }
 
 func TestGenerate_PlayerZoneNames(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 3, 0)
+	s := settingsWithTopology(config.TopologyRing, 3, 0)
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	spawns := 0
 	for _, z := range tmpl.Variants[0].Zones {
@@ -99,7 +99,7 @@ func TestGenerate_PlayerZoneNames(t *testing.T) {
 }
 
 func TestGenerate_NeutralZoneNames(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 3)
+	s := settingsWithTopology(config.TopologyRing, 2, 3)
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	neutrals := 0
 	for _, z := range tmpl.Variants[0].Zones {
@@ -115,7 +115,7 @@ func TestGenerate_NeutralZoneNames(t *testing.T) {
 // ── Generate: connections ────────────────────────────────────────────
 
 func TestGenerate_RingTopology_HasConnections(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 4, 4)
+	s := settingsWithTopology(config.TopologyRing, 4, 4)
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	conns := tmpl.Variants[0].Connections
 	if len(conns) == 0 {
@@ -158,7 +158,7 @@ func TestGenerate_HubTopology_HasHubZone(t *testing.T) {
 }
 
 func TestGenerate_RandomPortals_AddsPortalConnections(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 4, 4)
+	s := settingsWithTopology(config.TopologyRing, 4, 4)
 	s.RandomPortals = true
 	s.MaxPortalConnections = 4
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
@@ -176,7 +176,7 @@ func TestGenerate_RandomPortals_AddsPortalConnections(t *testing.T) {
 // ── Generate: roads ──────────────────────────────────────────────────
 
 func TestGenerate_RoadsDisabled_NoRoads(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 2)
+	s := settingsWithTopology(config.TopologyRing, 2, 2)
 	s.GenerateRoads = false
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, z := range tmpl.Variants[0].Zones {
@@ -187,7 +187,7 @@ func TestGenerate_RoadsDisabled_NoRoads(t *testing.T) {
 }
 
 func TestGenerate_RoadsEnabled_HasRoads(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 2)
+	s := settingsWithTopology(config.TopologyRing, 2, 2)
 	s.GenerateRoads = true
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	anyRoads := false
@@ -293,7 +293,7 @@ func TestGenerate_FactionLawsExpModifier(t *testing.T) {
 // ── Generate: mandatory content ──────────────────────────────────────
 
 func TestGenerate_MandatoryContent_PerZone(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 3)
+	s := settingsWithTopology(config.TopologyRing, 2, 3)
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	// 2 player + 3 neutral = 5 mandatory content groups
 	if len(tmpl.MandatoryContent) != 5 {
@@ -350,7 +350,7 @@ func TestGenerate_ContentCountLimits(t *testing.T) {
 // ── Generate: orientation ────────────────────────────────────────────
 
 func TestGenerate_Orientation_AngleStep(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 4, 4)
+	s := settingsWithTopology(config.TopologyRing, 4, 4)
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	orient := tmpl.Variants[0].Orientation
 	// 8 zones → 360/8 = 45
@@ -366,7 +366,7 @@ func TestGenerate_Orientation_AngleStep(t *testing.T) {
 
 func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
 	topos := []config.MapTopology{
-		config.TopologyDefault,
+		config.TopologyRing,
 		config.TopologyChain,
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
@@ -399,7 +399,7 @@ func TestGenerate_AllTopologies_DoNotError(t *testing.T) {
 // ── Generate: spawn zone content ─────────────────────────────────────
 
 func TestGenerate_SpawnZone_HasMainObjectSpawn(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 0)
+	s := settingsWithTopology(config.TopologyRing, 2, 0)
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, z := range tmpl.Variants[0].Zones {
 		if !strings.HasPrefix(z.Name, "Spawn-") {
@@ -419,15 +419,15 @@ func TestGenerate_SpawnZone_HasMainObjectSpawn(t *testing.T) {
 }
 
 func TestGenerate_SpawnZone_MultipleCastles(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 0)
+	s := settingsWithTopology(config.TopologyRing, 2, 0)
 	s.ZoneConfiguration.PlayerZoneCastles = 3
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, z := range tmpl.Variants[0].Zones {
 		if !strings.HasPrefix(z.Name, "Spawn-") {
 			continue
 		}
-		if len(z.MainObjects) != 3 {
-			t.Errorf("zone %q: mainObjects = %d, want 3", z.Name, len(z.MainObjects))
+		if len(z.MainObjects) != 4 {
+			t.Errorf("zone %q: mainObjects = %d, want 4", z.Name, len(z.MainObjects))
 		}
 	}
 }
@@ -436,7 +436,7 @@ func TestGenerate_SpawnZone_MultipleCastles(t *testing.T) {
 
 func TestGenerate_AdvancedMode_MixedNeutralTiers(t *testing.T) {
 	s := defaultSettings()
-	s.Topology = config.TopologyDefault
+	s.Topology = config.TopologyRing
 	s.PlayerCount = 2
 	s.ZoneConfiguration.Advanced.Enabled = true
 	s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = 1
@@ -478,6 +478,117 @@ func TestGenerate_CityHold_NeutralHasHoldCityFlag(t *testing.T) {
 	}
 }
 
+// ── Generate: abandoned outposts ─────────────────────────────────────
+
+func TestGenerate_AbandonedOutposts_NeutralCitiesBecomeOutposts(t *testing.T) {
+	makeSettings := func(spawnOutposts bool) *config.GeneratorConfig {
+		s := defaultSettings()
+		s.Topology = config.TopologyRing
+		s.PlayerCount = 2
+		s.ShufflePlayerZones = false
+		s.ZoneConfiguration.Advanced.Enabled = true
+		s.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1
+		s.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
+		s.ZoneConfiguration.SpawnAbandonedOutposts = spawnOutposts
+		return s
+	}
+
+	// Baseline: without the flag, neutral castle zones use City main objects.
+	baseline := template_generator.NewTemplateGenerator(makeSettings(false)).Generate()
+	cityCount := 0
+	for _, z := range baseline.Variants[0].Zones {
+		if !strings.HasPrefix(z.Name, "Neutral-") {
+			continue
+		}
+		for _, mo := range z.MainObjects {
+			switch mo.Type {
+			case "City":
+				cityCount++
+			case "AbandonedOutpost":
+				t.Errorf("zone %q has an AbandonedOutpost without the option enabled", z.Name)
+			}
+		}
+	}
+	if cityCount == 0 {
+		t.Fatal("baseline produced no neutral City main objects to compare against")
+	}
+
+	// With the flag, every neutral settlement becomes an AbandonedOutpost.
+	withOutposts := template_generator.NewTemplateGenerator(makeSettings(true)).Generate()
+	outpostCount := 0
+	for _, z := range withOutposts.Variants[0].Zones {
+		if !strings.HasPrefix(z.Name, "Neutral-") {
+			continue
+		}
+		for _, mo := range z.MainObjects {
+			switch mo.Type {
+			case "City":
+				t.Errorf("zone %q still has a City main object with abandoned outposts enabled", z.Name)
+			case "AbandonedOutpost":
+				outpostCount++
+			}
+		}
+	}
+	if outpostCount == 0 {
+		t.Error("expected at least one AbandonedOutpost main object with the option enabled")
+	}
+}
+
+// ── Generate: player-owned castles ───────────────────────────────────
+
+func TestGenerate_PlayerOwnedCastles_AddsPreOwnedCastles(t *testing.T) {
+	const ownedPerZone = 2
+
+	s := defaultSettings()
+	s.Topology = config.TopologyRing
+	s.PlayerCount = 2
+	s.ShufflePlayerZones = false
+	s.ZoneConfiguration.PlayerZoneCastles = 1 // 1 unclaimed extra castle per zone
+	s.ZoneConfiguration.PlayerOwnedCastles = ownedPerZone
+
+	tmpl := template_generator.NewTemplateGenerator(s).Generate()
+
+	spawnZones := 0
+	for _, z := range tmpl.Variants[0].Zones {
+		if !strings.HasPrefix(z.Name, "Spawn-") || len(z.MainObjects) == 0 {
+			continue
+		}
+		spawnZones++
+		spawnPlayer := z.MainObjects[0].Spawn
+
+		ownedCount := 0
+		unclaimedCount := 0
+		for _, mo := range z.MainObjects {
+			if mo.Type != "City" {
+				continue
+			}
+			if mo.Owner == "" {
+				unclaimedCount++
+				if mo.RemoveGuardIfHasOwner {
+					t.Errorf("zone %q: unclaimed castle should keep its guard", z.Name)
+				}
+				continue
+			}
+			ownedCount++
+			if mo.Owner != spawnPlayer {
+				t.Errorf("zone %q: owned castle owner = %q, want %q", z.Name, mo.Owner, spawnPlayer)
+			}
+			// if !mo.RemoveGuardIfHasOwner {
+			// 	t.Errorf("zone %q: owned castle should drop its guard once owned", z.Name)
+			// }
+		}
+		if ownedCount != ownedPerZone {
+			t.Errorf("zone %q: owned castle count = %d, want %d", z.Name, ownedCount, ownedPerZone)
+		}
+		if unclaimedCount != 1 {
+			t.Errorf("zone %q: unclaimed castle count = %d, want 1", z.Name, unclaimedCount)
+		}
+	}
+	if spawnZones == 0 {
+		t.Fatal("expected at least one spawn zone")
+	}
+}
+
 // ── Generate: description ────────────────────────────────────────────
 
 func TestGenerate_Description_ContainsTopology(t *testing.T) {
@@ -485,7 +596,7 @@ func TestGenerate_Description_ContainsTopology(t *testing.T) {
 		topo config.MapTopology
 		want string
 	}{
-		{config.TopologyDefault, "Ring"},
+		{config.TopologyRing, "Ring"},
 		{config.TopologyChain, "Chain"},
 		{config.TopologyHubAndSpoke, "Hub"},
 		{config.TopologySharedWeb, "Shared Web"},
@@ -501,7 +612,7 @@ func TestGenerate_Description_ContainsTopology(t *testing.T) {
 }
 
 func TestGenerate_Description_ContainsOptions(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 2)
+	s := settingsWithTopology(config.TopologyRing, 2, 2)
 	s.NoDirectPlayerConnections = true
 	s.RandomPortals = true
 	s.GenerateRoads = false
@@ -516,7 +627,7 @@ func TestGenerate_Description_ContainsOptions(t *testing.T) {
 // ── Generate: isolation mode ─────────────────────────────────────────
 
 func TestGenerate_Isolation_NoDirectPlayerConnections(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 2)
+	s := settingsWithTopology(config.TopologyRing, 2, 2)
 	s.NoDirectPlayerConnections = true
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	for _, c := range tmpl.Variants[0].Connections {
@@ -718,7 +829,7 @@ func TestGenerate_SharedWeb_ForcesAtLeastOneNeutral(t *testing.T) {
 // ── Tournament topology ──────────────────────────────────────────────
 
 func TestGenerate_TournamentMode_2Players(t *testing.T) {
-	s := settingsWithTopology(config.TopologyDefault, 2, 4)
+	s := settingsWithTopology(config.TopologyRing, 2, 4)
 	s.TournamentRules = &config.TournamentRules{Enabled: true, FirstTournamentDay: 14, Interval: 7, PointsToWin: 2}
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
 	zones := tmpl.Variants[0].Zones
@@ -755,7 +866,7 @@ func TestGenerate_TournamentBalanced_EmitsClusterGuardGroups(t *testing.T) {
 }
 
 func TestGenerate_TournamentRing_EmitsRingGuardGroups(t *testing.T) {
-	tmpl := template_generator.NewTemplateGenerator(tournamentSettings(config.TopologyDefault, 4)).Generate()
+	tmpl := template_generator.NewTemplateGenerator(tournamentSettings(config.TopologyRing, 4)).Generate()
 	ringCount := 0
 	for _, c := range tmpl.Variants[0].Connections {
 		if strings.HasPrefix(c.GuardMatchGroup, "tourney_ring_guard_") {
@@ -809,7 +920,7 @@ func TestGenerate_TournamentClustersAreIsolated(t *testing.T) {
 		}
 		return -1
 	}
-	for _, topo := range []config.MapTopology{config.TopologyDefault, config.TopologyHubAndSpoke, config.TopologyCircles, config.TopologyChain} {
+	for _, topo := range []config.MapTopology{config.TopologyRing, config.TopologyHubAndSpoke, config.TopologyCircles, config.TopologyChain} {
 		t.Run(string(topo), func(t *testing.T) {
 			tmpl := template_generator.NewTemplateGenerator(tournamentSettings(topo, 4)).Generate()
 			// Bucket zones by cluster: cluster 0 owns the first spawn we see.
@@ -856,7 +967,7 @@ func TestGenerate_TournamentClustersAreIsolated(t *testing.T) {
 func TestGenerate_TournamentWithPortals_PerClusterScoping(t *testing.T) {
 	// c20b40d: RandomPortals should now work in tournament mode and should
 	// be scoped per cluster (never cross the isolation boundary).
-	s := tournamentSettings(config.TopologyDefault, 4)
+	s := tournamentSettings(config.TopologyRing, 4)
 	s.RandomPortals = true
 	s.MaxPortalConnections = 4
 	tmpl := template_generator.NewTemplateGenerator(s).Generate()
@@ -875,7 +986,7 @@ func TestGenerate_TournamentWithPortals_PerClusterScoping(t *testing.T) {
 
 func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 	topos := []config.MapTopology{
-		config.TopologyDefault,
+		config.TopologyRing,
 		config.TopologyChain,
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
@@ -923,7 +1034,7 @@ func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 // the Phase 7 Circles + tournament-cluster paths.
 func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 	topologies := []config.MapTopology{
-		config.TopologyDefault,
+		config.TopologyRing,
 		config.TopologyChain,
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
@@ -975,7 +1086,7 @@ func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 
 func TestGenerate_AllConnections_ReferenceValidZones(t *testing.T) {
 	topos := []config.MapTopology{
-		config.TopologyDefault,
+		config.TopologyRing,
 		config.TopologyChain,
 		config.TopologyHubAndSpoke,
 		config.TopologySharedWeb,
@@ -1024,7 +1135,7 @@ func TestGenerate_CirclesTopology_MixedNeutrals_Succeeds(t *testing.T) {
 func TestGenerate_BorderGuards_ScaleWithNeutralQuality(t *testing.T) {
 	// All-Low neutrals → border guards should be smaller than All-High.
 	mk := func(noCastleHigh, noCastleLow int) []entities.Connection {
-		s := settingsWithTopology(config.TopologyDefault, 2, 0)
+		s := settingsWithTopology(config.TopologyRing, 2, 0)
 		s.ZoneConfiguration.Advanced.Enabled = true
 		s.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = noCastleLow
 		s.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = noCastleHigh

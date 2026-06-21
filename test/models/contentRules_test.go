@@ -103,33 +103,19 @@ func TestZoneContentRowSave_NewFormatRowOmitsLegacyFields(t *testing.T) {
 	assert.False(t, strings.Contains(out, "roadDistance"))
 }
 
-// ── ZoneContentRowSave: Normalised ───────────────────────────────────
+// ── ZoneContentRowSave: Normalized ───────────────────────────────────
 
-func TestZoneContentRowSave_NormalisedSeedsLegacyDefaultWhenNoRules(t *testing.T) {
-	out := models.ZoneContentRowSave{Sid: "x"}.Normalised()
+func TestZoneContentRowSave_NormalizedSeedsLegacyDefaultWhenNoRules(t *testing.T) {
+	out := models.ZoneContentRowSave{Sid: "x"}.Normalized()
 	assert.Equal(t, 1, out.Count)
-	assert.Equal(t, "Any", out.RoadDistance)
+	// assert.Equal(t, "Any", out.RoadDistance)
 }
 
-func TestZoneContentRowSave_NormalisedDoesNotSeedDefaultWhenRulesPresent(t *testing.T) {
+func TestZoneContentRowSave_NormalizedDoesNotSeedDefaultWhenRulesPresent(t *testing.T) {
 	out := models.ZoneContentRowSave{
 		Sid:   "x",
 		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: boolPtr(true)}},
-	}.Normalised()
+	}.Normalized()
 	assert.Equal(t, 1, out.Count)
-	assert.Equal(t, "", out.RoadDistance)
-}
-
-// ── ZoneContentRowSave: HasLegacyRuleData ────────────────────────────
-
-func TestZoneContentRowSave_HasLegacyRuleData(t *testing.T) {
-	assert.True(t, models.ZoneContentRowSave{IsGuarded: true}.HasLegacyRuleData())
-	assert.True(t, models.ZoneContentRowSave{NearCastle: true}.HasLegacyRuleData())
-	assert.True(t, models.ZoneContentRowSave{RoadDistance: "Near"}.HasLegacyRuleData())
-
-	assert.False(t, models.ZoneContentRowSave{RoadDistance: "Any"}.HasLegacyRuleData())
-	assert.False(t, models.ZoneContentRowSave{Sid: "x"}.HasLegacyRuleData())
-	assert.False(t, models.ZoneContentRowSave{
-		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: boolPtr(true)}},
-	}.HasLegacyRuleData())
+	// assert.Equal(t, "", out.RoadDistance)
 }

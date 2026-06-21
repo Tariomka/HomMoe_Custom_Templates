@@ -77,9 +77,15 @@ func (this *TopologyBase) CreateSpawnZone(
 	mainObjects := []entities.MainObject{
 		this.createPlayerSpawnCastle(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
 	}
-	// TODO: add player owned castles
 	mainObjects = append(mainObjects,
-		this.createPlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(2500), castleCount-1)...)
+		this.createPlayerOwnedCastles(matchFactions, playerName, tuning.PlayerOwnedCastles)...)
+	mainObjects = append(mainObjects,
+		this.createPlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(5000), castleCount)...)
+
+	// Roads connect the spawn castle (main object 0) to every other castle in
+	// the zone; player-owned extras are road-linked just like unclaimed ones.
+	// A zone with no extra castles at all stays a pass-through connector.
+	roadCastleCount := castleCount + tuning.PlayerOwnedCastles
 
 	return variant_content.NewZoneBuilder().
 		WithName("Spawn-" + label).
@@ -105,7 +111,7 @@ func (this *TopologyBase) CreateSpawnZone(
 		WithMainObjects(mainObjects).
 		WithBiomeMatchMainObject("0").
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, spawnFootholds, generateRoads)).
+		WithRoads(this.createOuterZoneRoads(connectionNames, roadCastleCount, spawnFootholds, generateRoads)).
 		Build()
 }
 
@@ -260,8 +266,8 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 		}
 	}
 	var additionalConns []entities.Connection
-	for _, letter := range playerLabels {
-		zoneName := "Spawn-" + letter
+	for _, label := range playerLabels {
+		zoneName := "Spawn-" + label
 		zone, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == zoneName })
 		if !ok {
 			continue
@@ -278,12 +284,12 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 			continue
 		}
 
-		partner := linq.FromSlice(playerLabels).FirstOrDefault(func(x string) bool { return x != letter })
+		partner := linq.FromSlice(playerLabels).FirstOrDefault(func(x string) bool { return x != label })
 		if partner == "" {
 			continue
 		}
 
-		fallbackName := createFallbackConnName(letter, partner)
+		fallbackName := createFallbackConnName(label, partner)
 		if connNames[fallbackName] {
 			continue
 		}
@@ -291,11 +297,11 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 		additionalConns = append(additionalConns, entities.Connection{
 			Name: fallbackName, From: zoneName, To: "Spawn-" + partner,
 			ConnectionType: "Direct", GuardZone: zoneName, SimTurnSquad: true,
-			GuardValue: this.GetBorderGuardValue(letter, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
+			GuardValue: this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: "fallback_guard_" + fallbackName,
 		})
 		connNames[fallbackName] = true
-		for _, pl := range []string{letter, partner} {
+		for _, pl := range []string{label, partner} {
 			if pz, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
 				pz.Roads = append(pz.Roads, variant_content.NewRoadBuilder().
 					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
@@ -484,8 +490,32 @@ func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue 
 		Build()
 }
 
-// func (this *topologyBase) createPlayerOwnedCastles(playerIndex int, guardValue int, castleCount int) []entities.MainObject {  }
+// createPlayerOwnedCastles builds the extra City castles that the player owns
+// from the very start of the game. Because they already have an owner, their
+// guards are dropped immediately so the player can use them right away.
+func (this *TopologyBase) createPlayerOwnedCastles(
+	matchPlayerFaction bool,
+	owner string,
+	castleCount int) []entities.MainObject {
+	var castles []entities.MainObject
+	for range castleCount {
+		objectBuilder := variant_content.NewObjectBuilder().
+			WithTypeCity().
+			WithOwner(owner).
+			WithCastleQualityPoor().
+			WithPlacementUniform()
+		if matchPlayerFaction {
+			objectBuilder = objectBuilder.WithFaction("Match", "0")
+		} else {
+			objectBuilder = objectBuilder.WithFaction("Random")
+		}
+		castles = append(castles, objectBuilder.Build())
+	}
+	return castles
+}
 
+// createPlayerUnclaimedCastles builds the extra neutral City castles that sit
+// inside a player's zone but stay unowned until someone captures them.
 func (this *TopologyBase) createPlayerUnclaimedCastles(
 	matchPlayerFaction bool,
 	guardValue, castleCount int) []entities.MainObject {
@@ -495,14 +525,14 @@ func (this *TopologyBase) createPlayerUnclaimedCastles(
 			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardValue(guardValue).
-			WithGuardWeeklyIncrement(0.10).
-			WithCastleQualityPoor().
+			WithGuardWeeklyIncrement(0.15).
+			WithCastleQualityMedium().
 			WithPlacementUniform().
 			WithPlacementArgs("false", "-0.8", "3")
 		if matchPlayerFaction {
 			objectBuilder = objectBuilder.WithFaction("Match", "0")
 		} else {
-			objectBuilder = objectBuilder.WithFaction("Random") // TODO: is this valid?
+			objectBuilder = objectBuilder.WithFaction("Random")
 		}
 		castles = append(castles, objectBuilder.Build())
 	}
@@ -521,10 +551,16 @@ func CreateNeutralZoneCastles(
 
 	if castleCount > 0 {
 		objectBuilder := variant_content.NewObjectBuilder().
-			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardWeeklyIncrement(0.10).
 			WithFaction("FromList")
+
+		if tuning.SpawnAbandonedOutposts {
+			objectBuilder = objectBuilder.WithTypeAbandonedOutpost()
+		} else {
+			objectBuilder = objectBuilder.WithTypeCity()
+		}
+
 		if isHoldCityZone {
 			objectBuilder = objectBuilder.
 				WithGuardValue(tuning.ScaleByBorderGuardStrength(max(profile.PrimaryCityGuardValue, 20_000))).
@@ -538,21 +574,27 @@ func CreateNeutralZoneCastles(
 				WithPlacementUniform().
 				WithPlacementArgs("true", "0.8", "2")
 		}
+
 		castles = append(castles, objectBuilder.Build())
 	}
 
 	for range castleCount - 1 {
-		castles = append(castles,
-			variant_content.NewObjectBuilder().
-				WithTypeCity().
-				WithGuardChance(1).
-				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
-				WithGuardWeeklyIncrement(0.10).
-				WithCastleQuality(profile.ExtraBuildingsCSid).
-				WithFaction("FromList").
-				WithPlacementUniform().
-				WithPlacementArgs("false", "-0.8", "3").
-				Build())
+		objectBuilder := variant_content.NewObjectBuilder().
+			WithGuardChance(1).
+			WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
+			WithGuardWeeklyIncrement(0.10).
+			WithCastleQuality(profile.ExtraBuildingsCSid).
+			WithFaction("FromList").
+			WithPlacementUniform().
+			WithPlacementArgs("false", "-0.8", "3")
+
+		if tuning.SpawnAbandonedOutposts {
+			objectBuilder = objectBuilder.WithTypeAbandonedOutpost()
+		} else {
+			objectBuilder = objectBuilder.WithTypeCity()
+		}
+
+		castles = append(castles, objectBuilder.Build())
 	}
 
 	return castles
@@ -614,12 +656,12 @@ func (this *TopologyBase) createOuterZoneRoads(
 	}
 
 	var roads []entities.Road
-	for i := 1; i < castleCount; i++ {
+	for i := range castleCount {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
 				WithStoneType().
 				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i+1))).
 				Build())
 	}
 	if includeFoothold {

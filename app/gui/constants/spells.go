@@ -1,6 +1,11 @@
 package constants
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/registry"
+import (
+	"image/color"
+
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+)
 
 // SpellEntry pairs a learnable spell SID with its display name, magic school
 // and tier (used for sorting in the spell picker).
@@ -20,10 +25,10 @@ var SpellSchoolOrder = []string{"neutral", "day", "night", "space", "primal"}
 //
 //nolint:gochecknoglobals // semantic catalog
 var SpellSchoolDisplayNames = map[string]string{
-	"neutral": "Neutral",
-	"day":     "Day",
-	"night":   "Night",
-	"space":   "Space",
+	"neutral": "High Neutral",
+	"day":     "Daylight",
+	"night":   "Nightshade",
+	"space":   "Arcane",
 	"primal":  "Primal",
 }
 
@@ -37,7 +42,7 @@ var KnownSpells = buildKnownSpells()
 func buildKnownSpells() []SpellEntry {
 	sids := registry.GetSpellSidValues()
 	return []SpellEntry{
-		// Neutral
+		// High Neutral
 		{sids.NeutralPocketDimension, "Pocket Dimension", "neutral", 2},
 		{sids.NeutralSecondSight, "Second Sight", "neutral", 2},
 		{sids.NeutralShadowForm, "Shadowflight", "neutral", 3},
@@ -45,7 +50,7 @@ func buildKnownSpells() []SpellEntry {
 		{sids.NeutralDimensionDoor, "Dimension Door", "neutral", 4},
 		{sids.NeutralLightGate, "Gate of Light", "neutral", 4},
 
-		// Day
+		// Daylight
 		{sids.DaySharpEdge, "Blessing", "day", 1},
 		{sids.DayHaste, "Haste", "day", 1},
 		{sids.DayHealingWater, "Healing Water", "day", 1},
@@ -65,7 +70,7 @@ func buildKnownSpells() []SpellEntry {
 		{sids.DayArinasChosen, "Arina's Chosen", "day", 5},
 		{sids.DayJudgement, "Judgement", "day", 5},
 
-		// Night
+		// Nightshade
 		{sids.NightDespair, "Despair", "night", 1},
 		{sids.NightEnlargeShadow, "Enlarge Shadow", "night", 1},
 		{sids.NightFatalDecay, "Fatal Decay", "night", 1},
@@ -105,7 +110,7 @@ func buildKnownSpells() []SpellEntry {
 		{sids.PrimalHksmillasRampage, "Hksmilla's Rampage", "primal", 5},
 		{sids.PrimalSummonPrimalRemnant, "Summon Primal Remnant", "primal", 5},
 
-		// Space
+		// Arcane
 		{sids.SpaceEarlyStart, "Early Start", "space", 1},
 		{sids.SpaceEnergyze, "Energize", "space", 1},
 		{sids.SpaceDecimate, "Guillotine", "space", 1},
@@ -136,4 +141,38 @@ func FindSpell(sid string) (SpellEntry, bool) {
 		}
 	}
 	return SpellEntry{}, false
+}
+
+// GetSpellSchoolColorFromDisplayName maps a school display name to its accent color
+func GetSpellSchoolColorFromDisplayName(displayName string) color.NRGBA {
+	switch displayName {
+	case "High Neutral":
+		return themes.ColorSchoolHighNeutral
+	case "Daylight":
+		return themes.ColorSchoolDaylight
+	case "Nightshade":
+		return themes.ColorSchoolNightshade
+	case "Arcane":
+		return themes.ColorSchoolArcane
+	case "Primal":
+		return themes.ColorSchoolPrimal
+	}
+	return themes.ColorAccent
+}
+
+// GetSpellSchoolColor maps a school display name to its accent color
+func GetSpellSchoolColor(schoolName string) color.NRGBA {
+	switch schoolName {
+	case "neutral":
+		return themes.ColorSchoolHighNeutral
+	case "day":
+		return themes.ColorSchoolDaylight
+	case "night":
+		return themes.ColorSchoolNightshade
+	case "space":
+		return themes.ColorSchoolArcane
+	case "primal":
+		return themes.ColorSchoolPrimal
+	}
+	return themes.ColorAccent
 }

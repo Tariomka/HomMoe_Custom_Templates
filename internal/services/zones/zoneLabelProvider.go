@@ -273,7 +273,7 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 			}
 			adjacency.Link(orderedLabels[current], orderedLabels[next])
 		}
-	case config.TopologyDefault, config.TopologyCircles:
+	case config.TopologyRing, config.TopologyCircles:
 		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
 		for current := range orderedLabels {
 			next := (current + 1) % len(orderedLabels)

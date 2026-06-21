@@ -52,7 +52,7 @@ func (this *RuleVariant) DisplayText() string {
 	if description, ok := this.Mapping.Variants[this.VariantId]; ok {
 		return fmt.Sprintf("%s: %s", this.Name(), description)
 	}
-	return fmt.Sprintf("%s: ERROR - please show this on template generator discord :)", this.Name())
+	return fmt.Sprintf("%s: Unforeseen Error", this.Name())
 }
 
 func (this *RuleVariant) Apply(item *entities.MandatoryContentItem) {

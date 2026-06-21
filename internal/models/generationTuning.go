@@ -13,6 +13,8 @@ type GenerationTuning struct {
 	NeutralStackStrengthMultiplier float64
 	BorderGuardStrengthMultiplier  float64
 	GuardRandomization             float64
+	SpawnAbandonedOutposts         bool
+	PlayerOwnedCastles             int
 }
 
 // NewGenerationTuning builds the content/guard scaling factors for the given configuration
@@ -24,6 +26,8 @@ func NewGenerationTuning(configuration *config.GeneratorConfig, totalZoneCount i
 		NeutralStackStrengthMultiplier: float64(configuration.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
 		BorderGuardStrengthMultiplier:  float64(configuration.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
 		GuardRandomization:             configuration.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
+		SpawnAbandonedOutposts:         configuration.ZoneConfiguration.SpawnAbandonedOutposts,
+		PlayerOwnedCastles:             configuration.ZoneConfiguration.PlayerOwnedCastles,
 	}
 }
 
