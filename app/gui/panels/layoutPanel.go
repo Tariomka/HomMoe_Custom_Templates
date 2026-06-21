@@ -325,36 +325,36 @@ func (this *LayoutPanel) getAdvancedZonesWidget(theme *material.Theme) layout.Wi
 	return widgets.NewSectionWidget(theme, "Advanced options", []layout.Widget{
 		widgets.NewSectionWidget(theme, "Low tier", []layout.Widget{
 			widgets.NewLabeledRowWidget(
-				theme, "No castle", constants.DefaultLabelWidthLong,
+				theme, "No castle", constants.DefaultLabelWidthShort,
 				widgets.NewLabeledSliderWidget(
 					theme, &this.sldNeutralLowNoCastle,
 					utils.RoundedRangeString(this.sldNeutralLowNoCastle.Value, 0, 8))),
 			widgets.NewLabeledRowWidget(
-				theme, "With castle", constants.DefaultLabelWidthLong,
+				theme, "With castle", constants.DefaultLabelWidthShort,
 				widgets.NewLabeledSliderWidget(
 					theme, &this.sldNeutralLowCastle,
 					utils.RoundedRangeString(this.sldNeutralLowCastle.Value, 0, 8))),
 		}),
 		widgets.NewSectionWidget(theme, "Medium tier", []layout.Widget{
 			widgets.NewLabeledRowWidget(
-				theme, "No castle", constants.DefaultLabelWidthLong,
+				theme, "No castle", constants.DefaultLabelWidthShort,
 				widgets.NewLabeledSliderWidget(
 					theme, &this.sldNeutralMedNoCastle,
 					utils.RoundedRangeString(this.sldNeutralMedNoCastle.Value, 0, 8))),
 			widgets.NewLabeledRowWidget(
-				theme, "With castle", constants.DefaultLabelWidthLong,
+				theme, "With castle", constants.DefaultLabelWidthShort,
 				widgets.NewLabeledSliderWidget(
 					theme, &this.sldNeutralMedCastle,
 					utils.RoundedRangeString(this.sldNeutralMedCastle.Value, 0, 8))),
 		}),
 		widgets.NewSectionWidget(theme, "High tier", []layout.Widget{
 			widgets.NewLabeledRowWidget(
-				theme, "No castle", constants.DefaultLabelWidthLong,
+				theme, "No castle", constants.DefaultLabelWidthShort,
 				widgets.NewLabeledSliderWidget(
 					theme, &this.sldNeutralHighNoCastle,
 					utils.RoundedRangeString(this.sldNeutralHighNoCastle.Value, 0, 8))),
 			widgets.NewLabeledRowWidget(
-				theme, "With castle", constants.DefaultLabelWidthLong,
+				theme, "With castle", constants.DefaultLabelWidthShort,
 				widgets.NewLabeledSliderWidget(
 					theme, &this.sldNeutralHighCastle,
 					utils.RoundedRangeString(this.sldNeutralHighCastle.Value, 0, 8))),

@@ -9,7 +9,7 @@ func DenormalizeString(value, low, high float32) string {
 
 // RoundedRangeString returns [RoundedRange] result as a string
 func RoundedRangeString(value float32, min, max int) string {
-	return fmt.Sprintf("%d", RoundedRange(value, min, max))
+	return fmt.Sprintf("%d ", RoundedRange(value, min, max))
 }
 
 // RoundedRangePercentString returns [RoundedRange] result as a percentage string, e.g. "50%"

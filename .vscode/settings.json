@@ -26,6 +26,7 @@
         "syscalls",
         "Tariomka",
         "Themeless",
+        "Truncator",
         "uncommons"
     ],
     "gopls": {
