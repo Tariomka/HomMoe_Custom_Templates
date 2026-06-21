@@ -33,7 +33,12 @@ func RoundHalfAway(value float64) float64 {
 	return float64(int(value + 0.5))
 }
 
-// RoundedRange snaps a [0,1] slider value to the nearest integer in [low, high].
+// RoundedRange snaps a [0,1] slider value to the nearest integer in [low, high]
 func RoundedRange(value float32, low, high int) int {
 	return min(max(int(RoundHalfAway(float64(Denormalize(value, float32(low), float32(high))))), low), high)
+}
+
+// Multiplier returns a value that is a linear combination of the base and the value scaled by the factor
+func Multiplier(value, base, factor float32) float32 {
+	return value*factor + base
 }

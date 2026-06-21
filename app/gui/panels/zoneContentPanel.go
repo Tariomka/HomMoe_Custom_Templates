@@ -2,7 +2,6 @@ package panels
 
 import (
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
@@ -92,14 +91,10 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 		widgetsList := []layout.Widget{
 			// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Mandatory content per zone tier. Effects only apply on generation."),
 			func(gtx layout.Context) layout.Dimensions {
-				return this.tierSelector.Layout(gtx, theme)
-			},
-			func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset this tier", &this.btnZoneReset, false)),
-					)
-				})
+				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.tierSelector.Layout(gtx, theme) }),
+					layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset this tier", &this.btnZoneReset, false)),
+				)
 			},
 			this.zcMines.Layout(theme),
 			this.zcUtilities.Layout(theme),
@@ -108,9 +103,10 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 			this.zcBanks.Layout(theme),
 			this.zcHeroImprovement.Layout(theme),
 		}
-		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
-			return widgetsList[index](gtx)
-		})
+
+		return material.List(theme, &this.scroll).Layout(
+			gtx, len(widgetsList),
+			func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
 	}
 }
 

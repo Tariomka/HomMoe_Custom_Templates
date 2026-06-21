@@ -16,3 +16,7 @@ func NewVerticalSpacerWidget(height float32) layout.Widget {
 func NewHorizontalSpacerWidget(width float32) layout.Widget {
 	return layout.Spacer{Width: unit.Dp(width)}.Layout
 }
+
+func NewDefaultWidgetSpacer() layout.FlexChild {
+	return layout.Rigid(NewHorizontalSpacerWidget(12))
+}

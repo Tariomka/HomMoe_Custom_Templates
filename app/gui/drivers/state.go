@@ -484,6 +484,16 @@ func (this *State) PickOutputDir() {
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
 	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
 	updateFunc(this.stateDto)
+	if this.stateDto.AdvancedMode {
+		this.stateDto.NeutralZoneCount = 0
+	} else {
+		this.stateDto.NeutralLowNoCastleCount = 0
+		this.stateDto.NeutralLowCastleCount = 0
+		this.stateDto.NeutralMediumNoCastleCount = 0
+		this.stateDto.NeutralMediumCastleCount = 0
+		this.stateDto.NeutralHighNoCastleCount = 0
+		this.stateDto.NeutralHighCastleCount = 0
+	}
 }
 
 func (this *State) SetStatus(msg string, isErr bool) {

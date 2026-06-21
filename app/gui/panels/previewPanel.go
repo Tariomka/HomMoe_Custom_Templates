@@ -57,6 +57,7 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 				return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(6)}.Layout(gtx, label.Layout)
 			}),
 			layout.Flexed(1, this.getPreviewCanvasWidget(theme)),
+			layout.Rigid(this.getLegendWidget(theme)),
 			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				// Reserve a fixed-height slot so the canvas above doesn't shift
@@ -69,20 +70,17 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 				if this.pngStatus == "" {
 					return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, reserved)}
 				}
-				statusColor := themes.ColorTextDim
+
+				label := material.Body2(theme, this.pngStatus)
+				label.TextSize = unit.Sp(11)
+				label.MaxLines = 2
+				label.Alignment = text.Middle
+				label.Color = themes.ColorTextDim
 				if !this.pngStatusOK {
-					statusColor = themes.ColorError
+					label.Color = themes.ColorError
 				}
-				return layout.Inset{Bottom: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					label := material.Body2(theme, this.pngStatus)
-					label.Color = statusColor
-					label.TextSize = unit.Sp(11)
-					label.MaxLines = 2
-					label.Alignment = text.Middle
-					return label.Layout(gtx)
-				})
+				return layout.Inset{Bottom: unit.Dp(6)}.Layout(gtx, label.Layout)
 			}),
-			layout.Rigid(this.getLegendWidget(theme)),
 		)
 	})
 }
@@ -130,20 +128,22 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 		}
 
 		// Connections beneath zones.
-		for _, conn := range previewLayout.Connections {
-			utils.DrawConnection(gtx, conn, previewLayout.ZoneRadius)
+		for _, connection := range previewLayout.Connections {
+			utils.DrawConnection(gtx, connection, previewLayout.ZoneRadius)
 		}
 		// Non-spawn zones first, then spawn zones on top.
 		for _, zone := range previewLayout.Zones {
 			if zone.IsPlayer {
 				continue
 			}
+
 			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
 		for _, zone := range previewLayout.Zones {
 			if !zone.IsPlayer {
 				continue
 			}
+
 			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
 

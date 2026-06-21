@@ -13,13 +13,15 @@ type Victory struct {
 	Label string
 }
 
-var victoryConditionValues = struct {
+type victoryConditions struct {
 	Standard         Victory
 	LostStartingCity Victory
 	GuardianArena    Victory
 	HoldCity         Victory
 	Tournament       Victory
-}{
+}
+
+var victoryConditionValues = victoryConditions{
 	Standard:         Victory{ID: winConditions.Standard, Label: "Standard"},
 	LostStartingCity: Victory{ID: winConditions.CapitalHold, Label: "Lost Starting City"},
 	GuardianArena:    Victory{ID: winConditions.FinalBattle, Label: "Guardian Arena"},
@@ -35,11 +37,15 @@ var VictoryConditions = []Victory{
 	victoryConditionValues.Tournament,
 }
 
+func GetVictoryConditionValues() victoryConditions {
+	return victoryConditionValues
+}
+
 func GetVictoryCondition(id string) Victory {
 	for _, victory := range VictoryConditions {
 		if strings.EqualFold(victory.ID, id) {
 			return victory
 		}
 	}
-	return VictoryConditions[0]
+	return VictoryConditions[0] // TODO: probably should return empty Victory... suck it
 }

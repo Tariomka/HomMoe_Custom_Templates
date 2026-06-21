@@ -25,6 +25,7 @@
         "stretchr",
         "syscalls",
         "Tariomka",
+        "Themeless",
         "uncommons"
     ],
     "gopls": {
