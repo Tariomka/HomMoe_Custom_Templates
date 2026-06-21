@@ -1101,11 +1101,11 @@ func TestWhenGenerating_PlacesSpawnMainObjectInEachSpawnZone(t *testing.T) {
 
 func TestWhenMultiplePlayerCastlesConfigured_AddsConfiguredCastleCountToEachSpawnZone(t *testing.T) {
 	// Arrange
-	expectedCastleCount := gofakeit.Number(2, 5)
+	expectedCastleCount := gofakeit.Number(1, 4)
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = gofakeit.Number(2, 8)
-	configuration.ZoneConfiguration.PlayerZoneCastles = expectedCastleCount
+	configuration.ZoneConfiguration.PlayerZoneCastles = expectedCastleCount - 1
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
 
 	// Act

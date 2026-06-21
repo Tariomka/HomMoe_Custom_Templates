@@ -166,14 +166,14 @@ func (this *GeneralPanel) SaveToState() {
 
 		settings.LostStartHero = this.checkLostStartHero.Value
 
-		settings.CityHold = this.checkCityHold.Value || this.victorySelector.GetSelectedIndex() == 2
+		settings.CityHold = this.checkCityHold.Value || this.isHoldCity()
 		settings.CityHoldDays = utils.RoundedRange(this.cityHoldDaysCount.Value, 1, 30)
 
 		settings.GladiatorArena = this.checkGladiatorArena.Value
 		settings.GladiatorArenaDaysDelayStart = utils.RoundedRange(this.gladiatorDelayCount.Value, 1, 60)
 		settings.GladiatorArenaCountDay = utils.RoundedRange(this.gladiatorDayCount.Value, 1, 30)
 
-		settings.Tournament = this.checkTournament.Value || this.victorySelector.GetSelectedIndex() == 3
+		settings.Tournament = this.checkTournament.Value || this.isTournament()
 		settings.TournamentFirstTournamentDay = utils.RoundedRange(this.tournamentDayCount.Value, 3, 30)
 		settings.TournamentInterval = utils.RoundedRange(this.tournamentIntervalCount.Value, 3, 30)
 		settings.TournamentPointsToWin = utils.RoundedRange(this.tournamentPointsCount.Value, 1, 10)
@@ -329,8 +329,7 @@ func (this *GeneralPanel) getNonTournamentOptionsRigidWidgets(theme *material.Th
 					theme, "Count days", constants.DefaultLabelWidth,
 					widgets.NewLabeledSliderWidget(
 						theme, &this.gladiatorDayCount,
-						utils.RoundedRangeString(this.gladiatorDayCount.Value, 1, 30)))),
-			)
+						utils.RoundedRangeString(this.gladiatorDayCount.Value, 1, 30)))))
 		}),
 	}
 }
@@ -340,7 +339,7 @@ func (this *GeneralPanel) updateMapSizeSelector(gtx layout.Context) *components.
 		return this.mapSizeSelector
 	}
 
-	labels := make([]string, 0)
+	labels := []string{}
 	for _, mapSize := range constants.GetMapSizes(this.checkMoreMapSizes.Value) {
 		labels = append(labels, mapSize.Label)
 	}
