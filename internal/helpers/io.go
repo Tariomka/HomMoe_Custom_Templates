@@ -75,10 +75,8 @@ func getVDFContent() (map[string]any, error) {
 }
 
 func getVDFFilePath() (path string, err error) {
-	steamPath := ""
-	if runtime.GOOS == "windows" {
-		steamPath = windowsSteamPath
-	} else {
+	steamPath := windowsSteamPath
+	if runtime.GOOS != "windows" {
 		steamPath = unixSteamPath
 		if _, err := os.Stat(steamPath); os.IsNotExist(err) {
 			steamPath = unixSteamAltPath

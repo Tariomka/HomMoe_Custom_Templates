@@ -11,6 +11,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
@@ -22,19 +23,17 @@ func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickab
 		}
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					label := material.Body2(theme, label)
+			dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(10), Right: unit.Dp(10)}.
+				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					label := material.Caption(theme, label)
 					label.Color = themes.ColorText
-					label.TextSize = unit.Sp(12)
 					if disabled {
 						label.Color = themes.ColorTextDim
 					}
-					return label.Layout(gtx)
+					return layout.Center.Layout(gtx, label.Layout)
 				})
-			})
 			call := macro.Stop()
-			radius := gtx.Dp(3)
+			radius := gtx.Dp(constants.DefaultRoundness)
 			rect := image.Rectangle{Max: dims.Size}
 			paint.FillShape(gtx.Ops, themes.ColorButton,
 				clip.UniformRRect(rect, radius).Op(gtx.Ops))
@@ -63,14 +62,13 @@ func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.C
 				border = themes.ColorAccent
 			}
 			macro := op.Record(gtx.Ops)
-			dims := layout.UniformInset(unit.Dp(6)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, label)
+			dims := layout.UniformInset(constants.DefaultPaddingSmall).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				label := material.Caption(theme, label)
 				label.Color = fgColor
-				label.TextSize = unit.Sp(12)
 				return label.Layout(gtx)
 			})
 			call := macro.Stop()
-			radius := gtx.Dp(3)
+			radius := gtx.Dp(constants.DefaultRoundness)
 			rect := image.Rectangle{Max: dims.Size}
 			paint.FillShape(gtx.Ops, bgColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			paint.FillShape(gtx.Ops, border, clip.Stroke{
@@ -90,20 +88,17 @@ func NewGoldButtonWidget(theme *material.Theme, label string, button *widget.Cli
 		}
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					label := material.Body1(theme, label)
-					label.Color = themes.ColorAccentBright
-					label.TextSize = unit.Sp(14)
-					label.Font = font.Font{Weight: font.SemiBold}
-					if disabled {
-						label.Color = themes.ColorTextDim
-					}
-					return label.Layout(gtx)
-				})
+			dims := layout.UniformInset(constants.DefaultPaddingLarge).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				label := material.Body2(theme, label)
+				label.Font = font.Font{Weight: font.SemiBold}
+				label.Color = themes.ColorAccentBright
+				if disabled {
+					label.Color = themes.ColorTextDim
+				}
+				return layout.Center.Layout(gtx, label.Layout)
 			})
 			call := macro.Stop()
-			radius := gtx.Dp(3)
+			radius := gtx.Dp(constants.DefaultRoundness)
 			rect := image.Rectangle{Max: dims.Size}
 			bgColor := themes.ColorPrimaryButton
 			border := themes.ColorAccent

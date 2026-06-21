@@ -40,18 +40,17 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		return material.Clickable(gtx, &this.button, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.Inset{Top: unit.Dp(7), Bottom: unit.Dp(7), Left: unit.Dp(20), Right: unit.Dp(20)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body1(theme, this.name)
-				label.TextSize = unit.Sp(13)
-				label.Alignment = text.Middle
-				if this.isSelected {
-					label.Color = themes.ColorAccent
-					label.Font = font.Font{Weight: font.SemiBold}
-				} else {
+			dims := layout.Inset{Top: unit.Dp(7), Bottom: unit.Dp(7), Left: unit.Dp(20), Right: unit.Dp(20)}.
+				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					label := material.Body2(theme, this.name)
+					label.Alignment = text.Middle
 					label.Color = themes.ColorTextDim
-				}
-				return label.Layout(gtx)
-			})
+					if this.isSelected {
+						label.Color = themes.ColorAccent
+						label.Font = font.Font{Weight: font.SemiBold}
+					}
+					return label.Layout(gtx)
+				})
 			call := macro.Stop()
 			bgColor := themes.ColorInput
 			border := themes.ColorBorder

@@ -267,7 +267,7 @@ func bonusDisplayName(entry config_inner.BonusEntry) string {
 		}
 		return "Spell: " + spellLabel(entry.Param)
 	case config_inner.BonusUnitMultiplier:
-		return "Unit multiplier ×" + entry.Param
+		return "Unit multiplier x" + entry.Param
 	case config_inner.BonusMovementBonus:
 		return "Movement bonus +" + entry.Param
 	case config_inner.BonusStartingItem:
@@ -300,7 +300,7 @@ func bonusReceiverLabel(entry config_inner.BonusEntry) string {
 	return "start hero"
 }
 
-// bonusDotColor matches the C# BonusEntry.DotBrush colour coding.
+// bonusDotColor matches the C# BonusEntry.DotBrush color coding.
 func bonusDotColor(typ config_inner.BonusPresetType) color.NRGBA {
 	switch typ {
 	case config_inner.BonusTownPortalFree, config_inner.BonusSpell:
@@ -316,7 +316,7 @@ func bonusDotColor(typ config_inner.BonusPresetType) color.NRGBA {
 	}
 }
 
-// banCategoryColor matches the C# BanEntry.CategoryBrush colour coding.
+// banCategoryColor matches the C# BanEntry.CategoryBrush color coding.
 func banCategoryColor(category string) color.NRGBA {
 	switch category {
 	case "Movement":
@@ -410,7 +410,7 @@ func appendUnique(values, ids []string) []string {
 // splitNonEmptyLines returns the trimmed, non-empty lines of text.
 func splitNonEmptyLines(text string) []string {
 	var out []string
-	for _, line := range strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
+	for line := range strings.SplitSeq(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
 		line = strings.TrimSpace(line)
 		if line != "" {
 			out = append(out, line)
@@ -424,8 +424,8 @@ func splitNonEmptyLines(text string) []string {
 func overrideSids(lines []string) []string {
 	out := make([]string, 0, len(lines))
 	for _, line := range lines {
-		if idx := strings.IndexByte(line, '='); idx >= 0 {
-			out = append(out, strings.TrimSpace(line[:idx]))
+		if before, _, ok := strings.Cut(line, "="); ok {
+			out = append(out, strings.TrimSpace(before))
 		} else {
 			out = append(out, line)
 		}
@@ -438,9 +438,9 @@ func overrideSids(lines []string) []string {
 func overrideLabel(line string) (name, trailing string) {
 	sid := line
 	value := ""
-	if idx := strings.IndexByte(line, '='); idx >= 0 {
-		sid = strings.TrimSpace(line[:idx])
-		value = strings.TrimSpace(line[idx+1:])
+	if before, after, ok := strings.Cut(line, "="); ok {
+		sid = strings.TrimSpace(before)
+		value = strings.TrimSpace(after)
 	}
 	if value == "" {
 		return constants.SidToDisplayName(sid), sid

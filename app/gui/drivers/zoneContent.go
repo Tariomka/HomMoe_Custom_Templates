@@ -146,9 +146,8 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(120)
-						label := material.Body2(theme, "Add preset:")
+						label := material.Caption(theme, "Add preset:")
 						label.Color = themes.ColorTextDim
-						label.TextSize = unit.Sp(12)
 						return label.Layout(gtx)
 					}),
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
@@ -160,9 +159,8 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			},
 			func(gtx layout.Context) layout.Dimensions {
 				if len(this.rows) == 0 {
-					label := material.Body2(theme, "(no items)")
+					label := material.Caption(theme, "(no items)")
 					label.Color = themes.ColorTextDim
-					label.TextSize = unit.Sp(12)
 					return layout.Inset{Top: unit.Dp(4), Left: unit.Dp(4)}.Layout(gtx, label.Layout)
 				}
 				children := make([]layout.FlexChild, 0, len(this.rows)*2)

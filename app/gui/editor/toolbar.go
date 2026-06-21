@@ -69,9 +69,8 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 					if this.state.IsUnsaved() {
 						path += " *"
 					}
-					label := material.Body2(theme, "File: "+path)
+					label := material.Caption(theme, "File: "+path)
 					label.Color = themes.ColorTextDim
-					label.TextSize = unit.Sp(11)
 					label.MaxLines = 1
 					label.Truncator = "…"
 					label.Alignment = text.End

@@ -1,6 +1,7 @@
 package panels
 
 import (
+	"fmt"
 	"image"
 
 	"gioui.org/font"
@@ -35,30 +36,28 @@ func NewPreviewPanel(state *drivers.State) *PreviewPanel {
 
 func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	template := this.state.GetLastTemplate()
-	return widgets.NewPanelWidget(unit.Dp(8), func(gtx layout.Context) layout.Dimensions {
+	return widgets.NewPanelWidget(constants.DefaultPadding, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				label := material.H6(theme, "Preview")
+				label := material.Body1(theme, "Preview")
 				label.Color = themes.ColorAccent
 				label.Font = font.Font{Weight: font.SemiBold}
-				label.TextSize = unit.Sp(15)
 				return label.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				name := "(no template generated yet)"
 				if template != nil {
-					name = template.Name
+					name = fmt.Sprintf("Name: '%s'", template.Name)
 				}
-				label := material.Body2(theme, name)
+				label := material.Overline(theme, name)
 				label.Color = themes.ColorTextDim
-				label.TextSize = unit.Sp(11)
 				label.MaxLines = 1
 				label.Truncator = "…"
-				return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(6)}.Layout(gtx, label.Layout)
+				return layout.Inset{Top: unit.Dp(2), Bottom: constants.DefaultPaddingSmall}.Layout(gtx, label.Layout)
 			}),
 			layout.Flexed(1, this.getPreviewCanvasWidget(theme)),
 			layout.Rigid(this.getLegendWidget(theme)),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				// Reserve a fixed-height slot so the canvas above doesn't shift
 				// when the status message appears/disappears or grows from 1 to
@@ -71,15 +70,14 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 					return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, reserved)}
 				}
 
-				label := material.Body2(theme, this.pngStatus)
-				label.TextSize = unit.Sp(11)
+				label := material.Overline(theme, this.pngStatus)
 				label.MaxLines = 2
 				label.Alignment = text.Middle
 				label.Color = themes.ColorTextDim
 				if !this.pngStatusOK {
 					label.Color = themes.ColorError
 				}
-				return layout.Inset{Bottom: unit.Dp(6)}.Layout(gtx, label.Layout)
+				return layout.Inset{Bottom: constants.DefaultPaddingSmall}.Layout(gtx, label.Layout)
 			}),
 		)
 	})
@@ -111,7 +109,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 
 		// Frame.
 		radius := gtx.Dp(unit.Dp(6))
-		frame := image.Rectangle{Min: image.Pt(4, 4), Max: image.Pt(side-4, side-4)}
+		frame := image.Rect(4, 4, side-4, side-4)
 		paint.FillShape(gtx.Ops, themes.ColorPreviewFrame, clip.Stroke{
 			Path:  clip.UniformRRect(frame, radius).Path(gtx.Ops),
 			Width: 2,
@@ -133,18 +131,14 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 		}
 		// Non-spawn zones first, then spawn zones on top.
 		for _, zone := range previewLayout.Zones {
-			if zone.IsPlayer {
-				continue
+			if !zone.IsPlayer {
+				utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 			}
-
-			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
 		for _, zone := range previewLayout.Zones {
-			if !zone.IsPlayer {
-				continue
+			if zone.IsPlayer {
+				utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 			}
-
-			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
 
 		return layout.Dimensions{Size: outerSize}
@@ -153,10 +147,10 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 
 func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		children := make([]layout.FlexChild, 0, len(constants.LegendItems)*2)
+		children := []layout.FlexChild{}
 		for i, item := range constants.LegendItems {
 			if i > 0 {
-				children = append(children, layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout))
+				children = append(children, layout.Rigid(widgets.NewHorizontalSpacerWidget(8)))
 			}
 			children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -166,11 +160,10 @@ func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
 						paint.FillShape(gtx.Ops, item.Color, clip.UniformRRect(rect, side/2).Op(gtx.Ops))
 						return layout.Dimensions{Size: rect.Max}
 					}),
-					layout.Rigid(layout.Spacer{Width: unit.Dp(4)}.Layout),
+					layout.Rigid(widgets.NewHorizontalSpacerWidget(4)),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						label := material.Body2(theme, item.Label)
+						label := material.Overline(theme, item.Label)
 						label.Color = themes.ColorTextDim
-						label.TextSize = unit.Sp(10)
 						return label.Layout(gtx)
 					}),
 				)

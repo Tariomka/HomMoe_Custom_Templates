@@ -1,19 +1,21 @@
 package widgets
 
 import (
+	"gioui.org/font"
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
 // NewSectionWidget returns a Widget that renders a group of widgets in a bordered panel under a header
 func NewSectionWidget(theme *material.Theme, title string, rows []layout.Widget) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Bottom: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(NewSectionHeaderWidget(theme, title)),
-				layout.Rigid(NewPanelWidget(unit.Dp(8), func(gtx layout.Context) layout.Dimensions {
-					children := make([]layout.FlexChild, 0, len(rows)*2)
+				layout.Rigid(newSectionHeaderWidget(theme, title)),
+				layout.Rigid(NewPanelWidget(constants.DefaultPadding, func(gtx layout.Context) layout.Dimensions {
+					children := []layout.FlexChild{}
 					for i, rowWidget := range rows {
 						if i > 0 {
 							children = append(children, layout.Rigid(NewVerticalSpacerWidget(4)))
@@ -26,4 +28,12 @@ func NewSectionWidget(theme *material.Theme, title string, rows []layout.Widget)
 			)
 		})
 	}
+}
+
+// newSectionHeaderWidget returns a Widget that renders a section title
+func newSectionHeaderWidget(theme *material.Theme, title string) layout.Widget {
+	label := material.Body2(theme, "◆  "+title)
+	label.Color = themes.ColorAccent
+	label.Font = font.Font{Weight: font.SemiBold}
+	return label.Layout
 }

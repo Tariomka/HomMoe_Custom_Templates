@@ -185,9 +185,8 @@ func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.
 			theme, "Topology", constants.DefaultLabelWidth,
 			func(gtx layout.Context) layout.Dimensions { return this.topology.Layout(gtx, theme) }),
 		func(gtx layout.Context) layout.Dimensions {
-			label := material.Body2(theme, this.getCurrentTopology().Description)
+			label := material.Caption(theme, this.getCurrentTopology().Description)
 			label.Color = themes.ColorTextDim
-			label.TextSize = unit.Sp(12)
 			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
 		},
 	})
