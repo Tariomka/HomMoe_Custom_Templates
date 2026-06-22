@@ -25,7 +25,7 @@ Generated template preview:
 ```
 .
 ├── main.go                                  # Process entry
-├── go.mods
+├── go.mod
 ├── data/
 │   ├── ExampleTemplates/                    # 57 reference .rmg.json templates
 │   └── GameData/GeneratorData/              # Game configuration & content pools
