@@ -20,9 +20,10 @@ func StartApplication() {
 func eventLoop() {
 	window := new(app.Window)
 	window.Option(
-		app.Title("Olden Era - Custom Template Editor"),
+		app.Title("Olden Era - Custom Templates"),
 		app.Size(unit.Dp(1600), unit.Dp(900)),
 		app.MinSize(unit.Dp(1280), unit.Dp(800)))
+
 	if os.Getenv("HOT_RELOAD") == "1" {
 		window.Option(app.Minimized.Option())
 	}

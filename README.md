@@ -1,10 +1,12 @@
 # Heroes of Might and Magic: Olden Era - Custom Templates
 
 A desktop GUI for designing and generating `.rmg.json` random map templates for
-**Heroes of Might and Magic: Olden Era**. Written in Go using the
-[Gio](https://gioui.org) immediate-mode UI toolkit.
+**Heroes of Might and Magic: Olden Era**.
 
-DISCLAIMER: This is a semi-AI generated rewrite of the original [Olden Era - Template Generator](https://github.com/KhanDevelopsGames/Olden-Era---Template-Generator) for personal use, developing on Windows and using on Linux (SteamDeck). All credit and inspiration goes to the people behind that project. Don't use this project, instead go to the original.
+DISCLAIMER: This is a semi-AI generated rewrite of the original [Olden Era - Template Generator](https://github.com/KhanDevelopsGames/Olden-Era---Template-Generator)
+for personal use, developing on Windows and using on Linux (SteamDeck).
+All credit and inspiration goes to the people behind that project.
+Don't use this project, instead go to the original.
 
 The app lets you configure every knob the game's RMG exposes (players, map
 size, topology, zone counts, victory conditions, neutral zone quality
@@ -12,12 +14,18 @@ distribution, mandatory content, etc.), preview the resulting layout in a
 side panel, persist your work as a `.gen.json` settings file, and emit a
 ready-to-drop-in `.rmg.json` template.
 
+How it looks on SteamDeck:
+![UI on SteamDeck](docs/Screenshot_20260622_091243.png)
+
+Generated template preview:
+![Template preview](docs/Custom%20Template.png)
+
 ## Project Structure
 
 ```
 .
-├── main.go                                  # Process entry; calls app/gui.StartApplication
-├── go.mod                                   # Go module (Gio, vdf, gofakeit, testify)
+├── main.go                                  # Process entry
+├── go.mods
 ├── data/
 │   ├── ExampleTemplates/                    # 57 reference .rmg.json templates
 │   └── GameData/GeneratorData/              # Game configuration & content pools
@@ -54,15 +62,15 @@ ready-to-drop-in `.rmg.json` template.
 │   ├── models/                              # GeneratorConfig + settings, mappings, plans, tuning
 │   │   └── config/                          # GeneratorConfig (config_inner: topology, zone, hero, rules)
 │   └── services/                            # Business logic
-│       ├── template_generator/             # TemplateGenerator + providers (topology, builders, content…)
-│       ├── connection_editor/              # Manual zone/connection editing logic
-│       ├── content_rules/                  # Per-row content placement rules
-│       ├── zones/                          # Zone label provider
-│       ├── previewassets/                  # Embedded in-game-style preview sprites (PNG)
-│       ├── previewLayout.go                # Computes preview zone geometry
-│       ├── previewRenderer.go              # PNG export of the preview canvas
-│       ├── templateWriter.go               # Marshal + write <Name>.rmg.json
-│       └── settingsFileLoader.go           # Load/save .gen.json editor state
+│       ├── template_generator/              # TemplateGenerator + providers (topology, builders, content…)
+│       ├── connection_editor/               # Manual zone/connection editing logic
+│       ├── content_rules/                   # Per-row content placement rules
+│       ├── zones/                           # Zone label provider
+│       ├── previewassets/                   # Embedded in-game-style preview sprites (PNG)
+│       ├── previewLayout.go                 # Computes preview zone geometry
+│       ├── previewRenderer.go               # PNG export of the preview canvas
+│       ├── templateWriter.go                # Marshal + write <Name>.rmg.json
+│       └── settingsFileLoader.go            # Load/save .gen.json editor state
 └── test/                                    # Mirrors internal/ (models, services, helpers)
 ```
 
@@ -238,9 +246,10 @@ go test ./test/models/ -run TestSettingsFile_RoundTrip
 
 ## Related
 
-- [data/ExampleTemplates/](data/ExampleTemplates) — 57 reference templates
+- [data/ExampleTemplates/](data/ExampleTemplates) - 57 reference templates
   from the game itself, invaluable when reasoning about the on-disk schema.
-- [QUICKSTART.md](QUICKSTART.md) — short guide for first-time users.
+- [data/GameData/](data/GameData/) - fraction of in-game generator files extracted from `Core.zip`.
+- [QUICKSTART.md](QUICKSTART.md) - short guide for first-time users.
 
 ## License
 
