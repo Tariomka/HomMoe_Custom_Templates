@@ -227,10 +227,12 @@ func TestBuildPreviewLayout_ConnectionWithUnknownZoneSkipped(t *testing.T) {
 	}
 }
 
-// ── BuildPreviewLayout: two-cluster stripping (tournament) ───────────
+// ── BuildPreviewLayout: two-cluster tournament ───────────────────────
 
-func TestBuildPreviewLayout_TwoComponentsKeepsOnlyFirstCluster(t *testing.T) {
-	// Two disjoint clusters → render only the first.
+func TestBuildPreviewLayout_TwoClustersRenderAllZones(t *testing.T) {
+	// Two equally sized clusters (a tournament template) must render every
+	// zone - both players - at full canvas size rather than stripping one half
+	// or shrinking them into split sub-canvases.
 	zones := []entities.Zone{
 		zone("Spawn-A"), zone("Neutral-X"),
 		zone("Spawn-B"), zone("Neutral-Y"),
@@ -240,10 +242,11 @@ func TestBuildPreviewLayout_TwoComponentsKeepsOnlyFirstCluster(t *testing.T) {
 		conn("Spawn-B", "Neutral-Y"),
 	}
 	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
-	if len(out.Positions) != 2 {
-		t.Errorf("expected 2 positions after strip, got %d", len(out.Positions))
+	if len(out.Positions) != 4 {
+		t.Errorf("expected 4 positions (all zones from both clusters), got %d", len(out.Positions))
 	}
 }
+
 
 // ── BuildPreviewLayout: zone classification side-effects ─────────────
 

@@ -78,29 +78,17 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 		return layout
 	}
 
-	// Tournament single-cluster strip: if Direct-only adjacency has exactly two
-	// components, render only the first cluster at full canvas size so the
-	// preview reads like a non-tournament layout
-	zones, connections := stripFirstClusterIfTwo(variant.Zones, variant.Connections)
-
 	// Apply the optional ZeroAngleZone rotation so the first ring slot lines
-	// up with the template author's chosen anchor.
-	zones = orderZonesByZeroAngle(zones, variant.Orientation.ZeroAngleZone)
+	// up with the template author's chosen anchor, then lay out every zone with
+	// the topology-specific renderer. Tournament templates are not special-
+	// cased here: both player clusters are laid out together at full canvas
+	// size (the generator seeds the two halves with mirrored positions and, for
+	// hub topologies, layoutMultiHub fans the clusters out), so the preview and
+	// the zone editor share one consistent, fully reversible coordinate system.
+	zones := orderZonesByZeroAngle(variant.Zones, variant.Orientation.ZeroAngleZone)
+	connections := variant.Connections
 
-	// Dispatch to the topology-specific layout. Each path writes positions
-	// into `layout.Positions` and sets `layout.ZoneRadius`.
-	switch {
-	case allHaveManualPosition(zones):
-		layoutManualPositions(&layout, zones, side)
-	case (topology == config.TopologyCircles) && allHaveRing(zones):
-		layoutBalancedRings(&layout, zones, side)
-	case isFixedGeometryTopology(topology) && allHavePosition(zones):
-		layoutFixedPositions(&layout, zones, side)
-	case isScatterTopology(topology) && allHavePosition(zones):
-		layoutScatter(&layout, zones, connections, side)
-	default:
-		layoutRingOrHub(&layout, zones, connections, side)
-	}
+	dispatchClusterLayout(&layout, zones, connections, topology, side)
 
 	implicitHub := findImplicitHubName(zones, connections)
 	for _, zone := range variant.Zones {
@@ -217,72 +205,22 @@ func buildPreviewConnections(connections []entities.Connection, positions map[st
 	return result
 }
 
-func stripFirstClusterIfTwo(zones []entities.Zone, conns []entities.Connection) ([]entities.Zone, []entities.Connection) {
-	n := len(zones)
-	idx := make(map[string]int, n)
-	for i, z := range zones {
-		idx[z.Name] = i
+// dispatchClusterLayout writes positions for the given zones into the layout,
+// picking the topology-specific renderer. Each path sets layout.Positions and
+// layout.ZoneRadius.
+func dispatchClusterLayout(layout *PreviewLayout, zones []entities.Zone, connections []entities.Connection, topology config.MapTopology, side float64) {
+	switch {
+	case allHaveManualPosition(zones):
+		layoutManualPositions(layout, zones, side)
+	case (topology == config.TopologyCircles) && allHaveRing(zones):
+		layoutBalancedRings(layout, zones, side)
+	case isFixedGeometryTopology(topology) && allHavePosition(zones):
+		layoutFixedPositions(layout, zones, side)
+	case isScatterTopology(topology) && allHavePosition(zones):
+		layoutScatter(layout, zones, connections, side)
+	default:
+		layoutRingOrHub(layout, zones, connections, side)
 	}
-	adj := make([][]int, n)
-	for _, c := range conns {
-		if isStructuralIgnored(c.ConnectionType) {
-			continue
-		}
-		ai, ok1 := idx[c.From]
-		bi, ok2 := idx[c.To]
-		if !ok1 || !ok2 {
-			continue
-		}
-		adj[ai] = append(adj[ai], bi)
-		adj[bi] = append(adj[bi], ai)
-	}
-	compID := make([]int, n)
-	for i := range compID {
-		compID[i] = -1
-	}
-	var comps [][]int
-	for start := range n {
-		if compID[start] >= 0 {
-			continue
-		}
-		var comp []int
-		queue := []int{start}
-		compID[start] = len(comps)
-		for len(queue) > 0 {
-			u := queue[0]
-			queue = queue[1:]
-			comp = append(comp, u)
-			for _, v := range adj[u] {
-				if compID[v] < 0 {
-					compID[v] = len(comps)
-					queue = append(queue, v)
-				}
-			}
-		}
-		comps = append(comps, comp)
-	}
-	if len(comps) != 2 {
-		return zones, conns
-	}
-	keep := make(map[int]bool, len(comps[0]))
-	for _, i := range comps[0] {
-		keep[i] = true
-	}
-	keptZones := make([]entities.Zone, 0, len(comps[0]))
-	keptNames := make(map[string]bool, len(comps[0]))
-	for i, z := range zones {
-		if keep[i] {
-			keptZones = append(keptZones, z)
-			keptNames[z.Name] = true
-		}
-	}
-	keptConns := make([]entities.Connection, 0, len(conns))
-	for _, c := range conns {
-		if keptNames[c.From] && keptNames[c.To] {
-			keptConns = append(keptConns, c)
-		}
-	}
-	return keptZones, keptConns
 }
 
 func isStructuralIgnored(connectionType string) bool {

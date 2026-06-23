@@ -43,6 +43,11 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	for index, label := range orderedLabels {
 		position := positions[index]
 		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
+		// Seed the editor/preview layout with the mirrored position too, so the
+		// generated tournament opens as a full-size, two-sided mirror (honored
+		// by layoutManualPositions for every topology) while staying fully
+		// editable. ManualPosition is editor-only (json:"-") and is never saved.
+		zones[index].ManualPosition = &[2]float64{position.X, position.Y}
 		tier := allNeutralZonePlans.GetTier(label)
 		zones[index].GeneratorRing = &tier
 	}
@@ -61,9 +66,15 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 	spanX := math.Max(max.X-min.X, 0.001)
 	spanY := math.Max(max.Y-min.Y, 0.001)
 
+	// Player 0 fills the left half, player 1 the right half. Player 1 is laid
+	// out as a true mirror of player 0 - reflected on both the horizontal and
+	// vertical axes - so the generated tournament starts as a symmetric,
+	// mirrored layout for the two players.
 	xMin, xMax := 0.03, 0.43
+	xSign, ySign := 1.0, 1.0
 	if playerIndex != 0 {
 		xMin, xMax = 0.57, 0.97
+		xSign, ySign = -1.0, -1.0
 	}
 
 	scale := math.Min((xMax-xMin)/spanX, 0.9/spanY)
@@ -73,8 +84,8 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 	positions := models.Positions{}
 	for _, position := range rawPositions {
 		positions.Add(models.NewPosition(
-			xCentre+(position.X-(min.X+max.X)/2.0)*scale,
-			yCentre+(position.Y-(min.Y+max.Y)/2.0)*scale))
+			xCentre+xSign*(position.X-(min.X+max.X)/2.0)*scale,
+			yCentre+ySign*(position.Y-(min.Y+max.Y)/2.0)*scale))
 	}
 
 	return positions
