@@ -105,7 +105,7 @@ func NewGoldButtonWidget(theme *material.Theme, label string, button *widget.Cli
 				return layout.Center.Layout(gtx, label.Layout)
 			})
 			call := macro.Stop()
-			radius := gtx.Dp(constants.DefaultRoundness)
+			radius := gtx.Dp(constants.DefaultRoundnessLarge)
 			rect := image.Rectangle{Max: dims.Size}
 			bgColor := themes.ColorPrimaryButton
 			border := themes.ColorAccent
