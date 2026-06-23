@@ -74,6 +74,7 @@ func (this *SegmentButtonGroup) Layout(gtx layout.Context, theme *material.Theme
 	}
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
 }
+
 func drawSegment(gtx layout.Context, theme *material.Theme, label string, selected bool) layout.Dimensions {
 	bgColor := themes.ColorInput
 	fgColor := themes.ColorTextDim
@@ -85,9 +86,8 @@ func drawSegment(gtx layout.Context, theme *material.Theme, label string, select
 	}
 	macro := op.Record(gtx.Ops)
 	dims := layout.UniformInset(unit.Dp(6)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		label := material.Body2(theme, label)
+		label := material.Caption(theme, label)
 		label.Color = fgColor
-		label.TextSize = unit.Sp(12)
 		return label.Layout(gtx)
 	})
 	call := macro.Stop()
