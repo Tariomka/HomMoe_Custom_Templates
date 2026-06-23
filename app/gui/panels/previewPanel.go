@@ -68,7 +68,7 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, widgets.NewTextboxWidget(theme, this.state.GetOutputPathEditor(), "Choose folder")))
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, this.state.GetOutputPathEditor(), "Choose folder", true)))
 			}),
 			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {

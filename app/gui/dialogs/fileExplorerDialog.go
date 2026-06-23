@@ -87,6 +87,7 @@ type FileExplorerDialog struct {
 
 	filenameEd  widget.Editor
 	newFolderEd widget.Editor
+	pathEd      widget.Editor
 
 	onPick func(path string)
 	onSave func(path string)
@@ -101,6 +102,7 @@ func newFileExplorerDialog(mode fileDialogMode, title string) *FileExplorerDialo
 	dialog.list.Axis = layout.Vertical
 	dialog.filenameEd.SingleLine = true
 	dialog.newFolderEd.SingleLine = true
+	dialog.pathEd.SingleLine = true
 	return dialog
 }
 

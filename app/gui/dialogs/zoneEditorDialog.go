@@ -717,18 +717,18 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, func(gtx layout.Context) layout.Dimensions {
 			return this.guardDropdown.Layout(gtx, theme)
 		}),
-		widgets.NewLabeledRowWidget(theme, "Guard value", 110, widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value")),
+		widgets.NewLabeledRowWidget(theme, "Guard value", 110, widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false)),
 		widgets.NewVerticalSpacerWidget(4),
 		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, func(gtx layout.Context) layout.Dimensions {
 			return this.weeklyDropdown.Layout(gtx, theme)
 		}),
-		widgets.NewLabeledRowWidget(theme, "Increment", 110, widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15")),
+		widgets.NewLabeledRowWidget(theme, "Increment", 110, widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false)),
 		widgets.NewVerticalSpacerWidget(6),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.advancedBool, "Advanced options"),
 	)
 	if this.advancedBool.Value {
 		rows = append(rows,
-			widgets.NewLabeledRowWidget(theme, "Match group", 110, widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_...")),
+			widgets.NewLabeledRowWidget(theme, "Match group", 110, widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_...", false)),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.escapeBool, "Guard escape"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.simSquadBool, "Sim turn squad"),
 		)
@@ -989,10 +989,10 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 	}
 	rows = append(rows,
 		widgets.NewVerticalSpacerWidget(6),
-		widgets.NewLabeledRowWidget(theme, "Size", 110, widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 - 2.0")),
+		widgets.NewLabeledRowWidget(theme, "Size", 110, widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 - 2.0", false)),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(theme, "Guard ×", 110, widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier")),
-		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15")),
+		widgets.NewLabeledRowWidget(theme, "Guard x", 110, widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier", false)),
+		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15", false)),
 	)
 	if isNeutral {
 		rows = append(rows,

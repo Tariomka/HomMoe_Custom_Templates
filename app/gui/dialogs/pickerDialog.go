@@ -89,9 +89,7 @@ func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 	rows := this.buildRows(theme, filter)
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return widgets.NewTextboxWidget(theme, &this.search, "Search...")(gtx)
-		}),
+		layout.Rigid(widgets.NewTextboxWidget(theme, &this.search, "Search...", false)),
 		layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			if len(rows) == 0 {
@@ -402,14 +400,11 @@ func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(100))
-				label := material.Body2(theme, "Guard value")
+				label := material.Caption(theme, "Guard value")
 				label.Color = themes.ColorTextDim
-				label.TextSize = unit.Sp(12)
 				return label.Layout(gtx)
 			}),
-			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				return widgets.NewTextboxWidget(theme, guardEdit, "5000")(gtx)
-			}),
+			layout.Flexed(1, widgets.NewTextboxWidget(theme, guardEdit, "5000", false)),
 		)
 	}
 	picker.onApply = func(ids []string) {

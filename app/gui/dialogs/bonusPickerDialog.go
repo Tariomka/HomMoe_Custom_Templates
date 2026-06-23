@@ -210,7 +210,7 @@ func (this *BonusPickerDialog) layoutEditor(gtx layout.Context, theme *material.
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.spellEdit, "use Pick spell...")),
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.spellEdit, "use Pick spell...", false)),
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 					layout.Rigid(widgets.NewButtonWidget(theme, "Pick spell", &this.pickSpellBtn, this.opener == nil)),
 				)
@@ -219,17 +219,17 @@ func (this *BonusPickerDialog) layoutEditor(gtx layout.Context, theme *material.
 			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.makeFree, "Make spell free")),
 		)
 	case config_inner.BonusUnitMultiplier:
-		return widgets.NewLabeledRowWidget(theme, "Multiplier", 90, widgets.NewTextboxWidget(theme, &this.multiplierEdit, "2"))(gtx)
+		return widgets.NewLabeledRowWidget(theme, "Multiplier", 90, widgets.NewTextboxWidget(theme, &this.multiplierEdit, "2", false))(gtx)
 	case config_inner.BonusMovementBonus:
-		return widgets.NewLabeledRowWidget(theme, "Movement", 90, widgets.NewTextboxWidget(theme, &this.movementEdit, "0"))(gtx)
+		return widgets.NewLabeledRowWidget(theme, "Movement", 90, widgets.NewTextboxWidget(theme, &this.movementEdit, "0", false))(gtx)
 	case config_inner.BonusStartingItem:
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...")),
+			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...", false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
 		)
 	default: // resources
-		return widgets.NewLabeledRowWidget(theme, "Amount", 90, widgets.NewTextboxWidget(theme, &this.resourceEdit, "0"))(gtx)
+		return widgets.NewLabeledRowWidget(theme, "Amount", 90, widgets.NewTextboxWidget(theme, &this.resourceEdit, "0", false))(gtx)
 	}
 }
 

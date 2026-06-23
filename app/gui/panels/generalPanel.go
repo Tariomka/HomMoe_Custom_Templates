@@ -185,7 +185,7 @@ func (this *GeneralPanel) getTemplateSectionWidget(theme *material.Theme) layout
 	return widgets.NewSectionWidget(theme, "Template", []layout.Widget{
 		widgets.NewLabeledRowWidget(
 			theme, "Template name", constants.DefaultLabelWidth,
-			widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name")),
+			widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name", false)),
 		widgets.NewLabeledRowWidget(
 			theme, "Players", constants.DefaultLabelWidth,
 			widgets.NewLabeledSliderWidget(theme, &this.playerCount, utils.RoundedRangeString(this.playerCount.Value, 2, 8))),

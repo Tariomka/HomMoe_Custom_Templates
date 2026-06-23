@@ -44,20 +44,18 @@ func (this *FileExplorerDialog) layoutContent(gtx layout.Context, theme *materia
 
 func (this *FileExplorerDialog) layoutHeader(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	upDisabled := this.parentDir() == this.currentDir
-	pathText := this.currentDir
-	if pathText == "" {
-		pathText = "This PC"
+	if this.pathEd.Text() != this.currentDir {
+		if this.currentDir == "" {
+			this.pathEd.SetText("This PC")
+		} else {
+			this.pathEd.SetText(this.currentDir)
+		}
 	}
+
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(widgets.NewButtonWidget(theme, "Up", &this.upBtn, upDisabled)),
 		layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			label := material.Body2(theme, pathText)
-			label.Color = themes.ColorText
-			label.MaxLines = 1
-			label.Truncator = "..."
-			return label.Layout(gtx)
-		}),
+		layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.pathEd, "Current directory", true)),
 		layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 		layout.Rigid(widgets.NewToggleButtonWidget(theme, "Show hidden", &this.hiddenToggle, this.showHidden)),
 	)
@@ -145,7 +143,7 @@ func (this *FileExplorerDialog) layoutSaveRow(gtx layout.Context, theme *materia
 				return label.Layout(gtx)
 			}),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, "filename"+saveFileSuffix)),
+			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, "filename"+saveFileSuffix, false)),
 		)
 	})
 }
@@ -164,7 +162,7 @@ func (this *FileExplorerDialog) layoutNewFolderRow(gtx layout.Context, theme *ma
 						return label.Layout(gtx)
 					}),
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name")),
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 					layout.Rigid(widgets.NewButtonWidget(theme, "Create", &this.createFolderBtn, false)),
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
