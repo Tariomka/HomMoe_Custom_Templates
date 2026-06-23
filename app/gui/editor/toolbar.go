@@ -53,13 +53,13 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(widgets.NewButtonWidget(theme, "🗎 New", &this.buttonReset, false)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "New", &this.buttonReset, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			layout.Rigid(widgets.NewButtonWidget(theme, "🗀 Open…", &this.buttonOpen, false)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "Load", &this.buttonOpen, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			layout.Rigid(widgets.NewButtonWidget(theme, "🖫 Save", &this.buttonSave, false)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "Save", &this.buttonSave, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			layout.Rigid(widgets.NewButtonWidget(theme, "🖫 Save As…", &this.buttonSaveAs, false)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "Save As", &this.buttonSaveAs, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Exit", &this.buttonExit, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(12)),

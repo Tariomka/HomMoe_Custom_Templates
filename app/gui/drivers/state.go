@@ -1,6 +1,7 @@
 package drivers
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"gioui.org/widget"
+	"gioui.org/x/explorer"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -21,8 +23,9 @@ import (
 const autoRegenDebounce = 300 * time.Millisecond
 
 type State struct {
-	handler *handlers.GUIHandler
-	mapper  *mappers.GeneratorConfigMapper
+	handler      *handlers.GUIHandler
+	mapper       *mappers.GeneratorConfigMapper
+	fileExplorer *explorer.Explorer
 
 	// Persistent stateDto file model. Updated continuously from widgets.
 	stateDto *dtos.EditorStateDto
@@ -69,12 +72,13 @@ type State struct {
 	dialogs *DialogHost
 }
 
-func NewUIState() *State {
+func NewUIState(fileExplorer *explorer.Explorer) *State {
 	stateDto := dtos.NewDefaultEditorStateDto()
 	state := &State{
-		handler:  handlers.NewGuiHandler(),
-		mapper:   mappers.NewConfigMapper(),
-		stateDto: &stateDto,
+		handler:      handlers.NewGuiHandler(),
+		mapper:       mappers.NewConfigMapper(),
+		fileExplorer: fileExplorer,
+		stateDto:     &stateDto,
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
@@ -165,35 +169,34 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-func (this *State) SuggestDirectory() string {
-	if this.currentPath != "" {
-		return filepath.Dir(this.currentPath)
-	}
-	if outputDir := strings.TrimSpace(this.outputPath.Text()); outputDir != "" {
-		return outputDir
-	}
-	workingDir, _ := os.Getwd()
-	return workingDir
-}
-
 func (this *State) Load() {
-	path, err := utils.PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.SuggestDirectory())
+	// TODO: this block should be a func (path, dto, err)
+	fileReader, err := this.fileExplorer.ChooseFile("gen.json") // TODO: this is blocking, so probably should be run in a goroutine
 	if err != nil {
-		this.SetStatus(fmt.Sprintf("Open dialog failed: %v.", err), true)
+		this.SetStatus(fmt.Sprintf("Load dialog failed: %v.", err), true)
 		return
 	}
+	defer fileReader.Close()
+	path := func() string {
+		file, ok := fileReader.(*os.File)
+		if !ok {
+			return ""
+		}
+		return file.Name()
+	}()
 
 	if path == "" {
+		this.SetStatus("Load failed: path not found.", true)
 		return
 	}
 
-	dto, err := this.handler.LoadState(path)
-	if err != nil {
+	dto := dtos.NewDefaultEditorStateDto()
+	if err := json.NewDecoder(fileReader).Decode(&dto); err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
 		return
 	}
 
-	this.stateDto = dto
+	this.stateDto = &dto
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()
@@ -219,21 +222,35 @@ func (this *State) Save() {
 }
 
 func (this *State) SaveAs(templateName string) {
+	// TODO: this block should be a func (path, err)
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
-	path, err := utils.PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.SuggestDirectory(), defaultName)
+	fileWriter, err := this.fileExplorer.CreateFile(defaultName) // TODO: this is blocking, so probably should be run in a goroutine
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Save dialog failed: %v.", err), true)
 		return
 	}
+	defer fileWriter.Close()
+	path := func() string {
+		file, ok := fileWriter.(*os.File)
+		if !ok {
+			return ""
+		}
+		return file.Name()
+	}()
 
 	if path == "" {
+		this.SetStatus("Save failed: path not found.", true)
 		return
 	}
 
-	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
-		State:      this.stateDto,
-		OutputPath: path,
-	}); err != nil {
+	data, err := json.MarshalIndent(this.stateDto, "", "\t")
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	}
+
+	count, err := fmt.Fprintln(fileWriter, string(data))
+	if err != nil || count <= 0 {
 		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
 		return
 	}
@@ -476,4 +493,15 @@ func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCo
 		connectionCount = len(this.lastTemplate.Variants[0].Connections)
 	}
 	return zoneCount, connectionCount
+}
+
+func (this *State) suggestDirectory() string {
+	if this.currentPath != "" {
+		return filepath.Dir(this.currentPath)
+	}
+	if outputDir := strings.TrimSpace(this.outputPath.Text()); outputDir != "" {
+		return outputDir
+	}
+	workingDir, _ := os.Getwd()
+	return workingDir
 }
