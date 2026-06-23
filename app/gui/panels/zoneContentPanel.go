@@ -89,7 +89,7 @@ func (this *ZoneContentPanel) GetPanelWidget(theme *material.Theme) layout.Widge
 		}
 
 		widgetsList := []layout.Widget{
-			// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Mandatory content per zone tier. Effects only apply on generation."),
+			// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL - Mandatory content per zone tier. Effects only apply on generation."),
 			func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions { return this.tierSelector.Layout(gtx, theme) }),
@@ -173,7 +173,7 @@ func (this *ZoneContentPanel) cacheCurrentSections() {
 	this.tierRows[this.currentTier] = this.collectSectionRows()
 }
 
-// resetCurrentTier reverts the active tier to its defaults — that means
+// resetCurrentTier reverts the active tier to its defaults - that means
 // the historical seeded defaults for Player, and an empty list for the
 // other four tiers
 func (this *ZoneContentPanel) resetCurrentTier() {

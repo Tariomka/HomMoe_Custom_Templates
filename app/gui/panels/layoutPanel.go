@@ -283,7 +283,7 @@ func (this *LayoutPanel) getDifficultyAndDensityWidget(theme *material.Theme) la
 
 func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Manual zone editing", []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "Manual zone editor…", &this.editConnectionsBtn, false),
+		widgets.NewGoldButtonWidget(theme, "Manual zone editor...", &this.editConnectionsBtn, false),
 		widgets.NewDimmedLabelWidget(theme, "Visually add, move and edit zones and connections on the generated map."),
 	})
 }

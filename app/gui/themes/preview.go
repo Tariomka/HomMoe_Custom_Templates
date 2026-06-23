@@ -4,8 +4,8 @@ import "image/color"
 
 // Map-preview palette. Zone tiers keep their meaningful metallic identities
 // (bronze / silver / gold / spawn-green / hub-blue) so the legend stays
-// readable, while the chrome around them — background, frame, connection
-// lines, labels — follows the Crimson Night theme.
+// readable, while the chrome around them - background, frame, connection
+// lines, labels - follows the Crimson Night theme.
 var (
 	ColorPreviewBg    = color.NRGBA{R: 0x19, G: 0x16, B: 0x1A, A: 0xFF} // #19161A canvas
 	ColorPreviewFrame = color.NRGBA{R: 0x9C, G: 0x2E, B: 0x42, A: 0xFF} // #9C2E42 crimson frame
@@ -30,7 +30,7 @@ var (
 
 // Zone-editor canvas accents.
 var (
-	ColorEditorEdgeSelected = color.NRGBA{R: 0xFF, G: 0x9E, B: 0x2E, A: 0xFF} // selected connection — amber pops against crimson roads
+	ColorEditorEdgeSelected = color.NRGBA{R: 0xFF, G: 0x9E, B: 0x2E, A: 0xFF} // selected connection - amber pops against crimson roads
 	ColorEditorUserAddedDot = color.NRGBA{R: 0xFF, G: 0xB3, B: 0xC0, A: 0xFF} // marker on user-added zones
 	ColorEditorGuardLabel   = color.NRGBA{R: 0xEF, G: 0xE8, B: 0xD6, A: 0xFF} // guard-value text on edges
 )

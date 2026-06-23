@@ -76,7 +76,7 @@ func TestT019c_CancelledAdd_LeavesListUnchanged(t *testing.T) {
 		{From: "Spawn-A", To: "Neutral-1"},
 	}
 	countBefore := len(connections)
-	// Simulate "Cancel" — nothing is added.
+	// Simulate "Cancel" - nothing is added.
 	assert.Equal(t, countBefore, len(connections))
 }
 

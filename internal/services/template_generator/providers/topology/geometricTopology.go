@@ -56,7 +56,7 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 // base on one side, around the outer rim, to the base on the other side) with
 // the player zone sitting at the outer tip in the middle of that order.
 type petal struct {
-	ring   []int // ordered base → … → tip(player) → … → base
+	ring   []int // ordered base → ... → tip(player) → ... → base
 	player int
 }
 
@@ -64,7 +64,7 @@ type petal struct {
 // one petal per player. Each petal is a fat teardrop (leaf) that fans out from
 // the centre to fill the player's whole angular sector, reaching almost to the
 // canvas edge where the player zone sits at the tip. The neutrals trace the two
-// bowed edges of the leaf so the lobes are large and space-filling — like the
+// bowed edges of the leaf so the lobes are large and space-filling - like the
 // example templates (Shamrock, One for All, Nuclear, Kerberos, Infinity) which
 // are built purely from player and neutral zones with no dedicated hub.
 func (this *GeometricTopologyService) createGeometricLayout(
@@ -83,7 +83,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	var positions models.Positions
 
 	// Centre: the first neutral zone anchors the middle of the flower. It is a
-	// regular neutral zone — never a dedicated hub — so it only ever borders the
+	// regular neutral zone - never a dedicated hub - so it only ever borders the
 	// petals' base neutrals, not the players.
 	centreIndex := -1
 	neutralCursor := 0
@@ -180,7 +180,7 @@ func (this *GeometricTopologyService) createGeometricPairs(
 			continue
 		}
 
-		// Anchor the petal to the centre through its base neutrals — the rim ends
+		// Anchor the petal to the centre through its base neutrals - the rim ends
 		// nearest the centre gap. The centre must never border a player tip, or
 		// it would connect to every player and read as a dedicated hub, so a base
 		// that is the player itself (a petal with no neutrals on that side) is

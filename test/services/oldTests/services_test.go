@@ -792,7 +792,7 @@ func TestGenerate_Isolation_NoDirectPlayerConnections(t *testing.T) {
 
 // func TestBuildAllContentCountLimits_UserContentLiftsLimit(t *testing.T) {
 // 	s := defaultSettings()
-// 	// Add 5 pandora boxes — should lift the default limit (4)
+// 	// Add 5 pandora boxes - should lift the default limit (4)
 // 	for i := 0; i < 5; i++ {
 // 		s.PlayerZoneMandatoryContent = append(s.PlayerZoneMandatoryContent, template.MandatoryContentItem{SID: constants.ContentIds.PandoraBox.Sid})
 // 	}
@@ -1026,7 +1026,7 @@ func TestGenerate_AllZones_HaveRequiredFields(t *testing.T) {
 	}
 }
 
-// ── Phase 7 — preview smoke ─────────────────────────────────────────
+// ── Phase 7 - preview smoke ─────────────────────────────────────────
 
 // TestRenderPreviewImage_DoesNotPanic_AllTopologies ensures the preview
 // renderer succeeds for every supported topology across a representative

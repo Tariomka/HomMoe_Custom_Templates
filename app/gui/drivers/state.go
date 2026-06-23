@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"gioui.org/widget"
-	"gioui.org/x/explorer"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -23,9 +22,8 @@ import (
 const autoRegenDebounce = 300 * time.Millisecond
 
 type State struct {
-	handler      *handlers.GUIHandler
-	mapper       *mappers.GeneratorConfigMapper
-	fileExplorer *explorer.Explorer
+	handler *handlers.GUIHandler
+	mapper  *mappers.GeneratorConfigMapper
 
 	// Persistent stateDto file model. Updated continuously from widgets.
 	stateDto *dtos.EditorStateDto
@@ -72,13 +70,12 @@ type State struct {
 	dialogs *DialogHost
 }
 
-func NewUIState(fileExplorer *explorer.Explorer) *State {
+func NewUIState() *State {
 	stateDto := dtos.NewDefaultEditorStateDto()
 	state := &State{
-		handler:      handlers.NewGuiHandler(),
-		mapper:       mappers.NewConfigMapper(),
-		fileExplorer: fileExplorer,
-		stateDto:     &stateDto,
+		handler:  handlers.NewGuiHandler(),
+		mapper:   mappers.NewConfigMapper(),
+		stateDto: &stateDto,
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
@@ -170,37 +167,26 @@ func (this *State) Reset() {
 }
 
 func (this *State) Load() {
-	// TODO: this block should be a func (path, dto, err)
-	fileReader, err := this.fileExplorer.ChooseFile("gen.json") // TODO: this is blocking, so probably should be run in a goroutine
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Load dialog failed: %v.", err), true)
-		return
-	}
-	defer fileReader.Close()
-	path := func() string {
-		file, ok := fileReader.(*os.File)
-		if !ok {
-			return ""
+	dir := this.suggestDirectory()
+	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{".gen.json"}, func(path string) {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
+			return
 		}
-		return file.Name()
-	}()
 
-	if path == "" {
-		this.SetStatus("Load failed: path not found.", true)
-		return
-	}
+		dto := dtos.NewDefaultEditorStateDto()
+		if err := json.Unmarshal(data, &dto); err != nil {
+			this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
+			return
+		}
 
-	dto := dtos.NewDefaultEditorStateDto()
-	if err := json.NewDecoder(fileReader).Decode(&dto); err != nil {
-		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-		return
-	}
-
-	this.stateDto = &dto
-	this.currentPath = path
-	this.unsaved = false
-	this.clearGeneratedState()
-	this.SetStatus("Loaded "+path, false)
+		this.stateDto = &dto
+		this.currentPath = path
+		this.unsaved = false
+		this.clearGeneratedState()
+		this.SetStatus("Loaded "+path, false)
+	}))
 }
 
 func (this *State) Save() {
@@ -222,42 +208,24 @@ func (this *State) Save() {
 }
 
 func (this *State) SaveAs(templateName string) {
-	// TODO: this block should be a func (path, err)
+	dir := this.suggestDirectory()
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
-	fileWriter, err := this.fileExplorer.CreateFile(defaultName) // TODO: this is blocking, so probably should be run in a goroutine
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Save dialog failed: %v.", err), true)
-		return
-	}
-	defer fileWriter.Close()
-	path := func() string {
-		file, ok := fileWriter.(*os.File)
-		if !ok {
-			return ""
+	this.dialogs.Open(dialogs.NewSaveFileDialog(dir, defaultName, func(path string) {
+		data, err := json.MarshalIndent(this.stateDto, "", "\t")
+		if err != nil {
+			this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+			return
 		}
-		return file.Name()
-	}()
 
-	if path == "" {
-		this.SetStatus("Save failed: path not found.", true)
-		return
-	}
+		if err := os.WriteFile(path, append(data, '\n'), 0o644); err != nil {
+			this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+			return
+		}
 
-	data, err := json.MarshalIndent(this.stateDto, "", "\t")
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	}
-
-	count, err := fmt.Fprintln(fileWriter, string(data))
-	if err != nil || count <= 0 {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	}
-
-	this.currentPath = path
-	this.unsaved = false
-	this.SetStatus("Saved "+path, false)
+		this.currentPath = path
+		this.unsaved = false
+		this.SetStatus("Saved "+path, false)
+	}))
 }
 
 func (this *State) Generate() {
@@ -272,7 +240,7 @@ func (this *State) Generate() {
 	this.discardManualEdits()
 	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
 	status := fmt.Sprintf(
-		"Generated '%s' — %d zones, %d connections.",
+		"Generated '%s' - %d zones, %d connections.",
 		this.lastTemplate.Name, zoneCount, connectionCount)
 	if wasModified {
 		status += " (Manual connection edits were replaced by regeneration.)"
@@ -311,24 +279,17 @@ func (this *State) SaveTemplate() {
 // PickOutputDir presents a folder picker for the template output directory.
 func (this *State) PickOutputDir() {
 	cur := strings.TrimSpace(this.outputPath.Text())
-	dir, err := utils.PickFolder("Select output directory", cur)
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Folder dialog failed: %v.", err), true)
-		return
-	}
-
-	if dir == "" {
-		return
-	}
-
-	this.outputPath.SetText(dir)
+	this.dialogs.Open(dialogs.NewPickFolderDialog(cur, func(dir string) {
+		if dir != "" {
+			this.outputPath.SetText(dir)
+		}
+	}))
 }
 
+// RevealOutputDir opens the in-app explorer in read-only Browse mode at the
+// configured output directory.
 func (this *State) RevealOutputDir() {
-	err := utils.RevealInExplorer(strings.TrimSpace(this.outputPath.Text()))
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Reveal failed: %v.", err), true)
-	}
+	this.dialogs.Open(dialogs.NewBrowseDialog(strings.TrimSpace(this.outputPath.Text())))
 }
 
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
@@ -399,7 +360,7 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 		return this.pendingDeadline, true
 	}
 
-	// Editing paused long enough → regenerate now.
+	// Editing paused long enough -> regenerate now.
 	this.pendingState = nil
 	this.performAutoRegen()
 	return time.Time{}, false
@@ -431,7 +392,7 @@ func (this *State) performAutoRegen() {
 
 	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
 	notice := fmt.Sprintf(
-		"Template regenerated with latest changes — %d zones, %d connections.",
+		"Template regenerated with latest changes - %d zones, %d connections.",
 		zoneCount, connectionCount)
 	if reapplyManual {
 		notice += " (Manual zone edits reapplied.)"

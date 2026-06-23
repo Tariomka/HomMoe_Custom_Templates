@@ -116,7 +116,7 @@ func (this *PreviewPanel) getTemplateNameWidget(theme *material.Theme) layout.Wi
 	label := material.Overline(theme, name)
 	label.Color = themes.ColorTextDim
 	label.MaxLines = 1
-	label.Truncator = "…"
+	label.Truncator = "..."
 	label.Alignment = text.End
 	return label.Layout
 }

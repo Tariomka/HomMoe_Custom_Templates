@@ -90,7 +90,7 @@ func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return widgets.NewTextboxWidget(theme, &this.search, "Search…")(gtx)
+			return widgets.NewTextboxWidget(theme, &this.search, "Search...")(gtx)
 		}),
 		layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {

@@ -95,7 +95,7 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 						label.Color = themes.ColorText
 						label.TextSize = unit.Sp(13)
 						label.MaxLines = 1
-						label.Truncator = "…"
+						label.Truncator = "..."
 						return label.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -158,7 +158,7 @@ func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selec
 		label.Color = themes.ColorText
 		label.TextSize = unit.Sp(13)
 		label.MaxLines = 1
-		label.Truncator = "…"
+		label.Truncator = "..."
 		if selected {
 			label.Color = themes.ColorAccent
 			label.Font = font.Font{Weight: font.SemiBold}

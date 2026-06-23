@@ -424,8 +424,8 @@ func TestWhenFractalTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.
 }
 
 // TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign verifies
-// the fractal layout keeps players apart through its own structure — neighbouring
-// fractals meet only at neutral tips — even when NoDirectPlayerConnections is off.
+// the fractal layout keeps players apart through its own structure - neighbouring
+// fractals meet only at neutral tips - even when NoDirectPlayerConnections is off.
 func TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign(t *testing.T) {
 	// Arrange
 	playerCount := gofakeit.Number(2, 6)
@@ -1405,7 +1405,7 @@ func assertTemplateMatches(t *testing.T, expected expectedTemplate, actual *enti
 }
 
 func normalizeConnection(from, to, connectionType string) expectedConnection {
-	// Connections are conceptually undirected — normalize endpoints so callers
+	// Connections are conceptually undirected - normalize endpoints so callers
 	// don't have to anticipate the (non-deterministic) emission order.
 	if from > to {
 		from, to = to, from

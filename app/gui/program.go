@@ -9,8 +9,6 @@ import (
 	"gioui.org/app"
 	"gioui.org/op"
 	"gioui.org/unit"
-	"gioui.org/x/explorer"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
@@ -23,9 +21,7 @@ func StartApplication() {
 // eventLoop is a blocking function and needs to executed concurrently
 func eventLoop() {
 	window := getAndConfigureWindow()
-	fileExplorer := explorer.NewExplorer(window)
-	state := drivers.NewUIState(fileExplorer)
-	windowLayout := editor.NewWindow(state)
+	windowLayout := editor.NewWindow()
 	theme := themes.NewTheme()
 
 	var ops op.Ops

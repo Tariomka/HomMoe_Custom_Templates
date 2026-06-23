@@ -406,7 +406,7 @@ func TestBuildPreviewLayout_ParallelEdgesFanOut(t *testing.T) {
 	first, second := out.Connections[0], out.Connections[1]
 	// Distinct control points: otherwise the two edges overlap into one line.
 	if first.Ctrl == second.Ctrl {
-		t.Fatalf("parallel edges share control point %v — they would overlap", first.Ctrl)
+		t.Fatalf("parallel edges share control point %v - they would overlap", first.Ctrl)
 	}
 	// Their control points straddle the midpoint symmetrically, so each edge
 	// bulges out to its own side.

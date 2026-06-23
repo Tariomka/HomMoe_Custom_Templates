@@ -18,7 +18,7 @@ var (
 
 // GeneratorConfig is the input model for the template generator
 //
-// All values here describe a single template generation request — the GUI and
+// All values here describe a single template generation request - the GUI and
 // CLI build one of these and hand it to services.Generate.
 type GeneratorConfig struct {
 	TemplateName string

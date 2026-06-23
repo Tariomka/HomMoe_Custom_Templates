@@ -10,12 +10,12 @@ import (
 
 // FractalTopologyService grows one self-similar fractal per player. Every player
 // zone is the base of its fractal and sits on the outer ring; its neutral zones
-// branch inward toward the centre in nested tiers — low zones nearest the player
+// branch inward toward the centre in nested tiers - low zones nearest the player
 // fan out widely, then merge into fewer medium zones, then into the high zones
 // that gather near the centre (the farthest point from any player). The innermost
 // tips of neighbouring fractals are woven into a shared central ring, so the
 // player sectors integrate seamlessly into one rotationally symmetric pattern and
-// no two players ever border each other — the design itself keeps them apart,
+// no two players ever border each other - the design itself keeps them apart,
 // without relying on the NoDirectPlayerConnections flag.
 type FractalTopologyService struct {
 	RandomTopologyService
@@ -67,7 +67,7 @@ type fractalTree struct {
 // slices. Players are evenly spaced on the outer ring and each one anchors a
 // fractal whose neutral tiers nest inward: the band of each tier narrows as the
 // radius shrinks, so the wide spray of low zones funnels into the tight cluster
-// of high zones at the centre — a self-similar, converging branch per player.
+// of high zones at the centre - a self-similar, converging branch per player.
 func (this *FractalTopologyService) createFractalLayout(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
@@ -186,7 +186,7 @@ func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) [][2
 			}
 		}
 
-		// The representative tip is the middle zone of the innermost tier — the
+		// The representative tip is the middle zone of the innermost tier - the
 		// point where this fractal reaches toward its neighbours.
 		deepest := chain[len(chain)-1]
 		tips[treeIndex] = deepest[len(deepest)/2]

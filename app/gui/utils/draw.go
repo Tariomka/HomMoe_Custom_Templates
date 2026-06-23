@@ -140,7 +140,7 @@ func zoneLabel(zone services.PreviewZone) string {
 		if zone.Owner > 0 {
 			return fmt.Sprintf("P%d", zone.Owner)
 		}
-		// Spawn-1 / Spawn-2 → "P1"…
+		// Spawn-1 / Spawn-2 → "P1"...
 		if strings.HasPrefix(zone.Name, "Spawn-") {
 			return "P" + zone.Name[len("Spawn-"):]
 		}

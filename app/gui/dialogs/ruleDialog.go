@@ -156,7 +156,7 @@ func (this *ManageRulesDialog) buildContentWidgets(theme *material.Theme) []layo
 	rows := []layout.Widget{this.sectionLabel(theme, "Applied rules")}
 
 	if len(this.rules) == 0 {
-		rows = append(rows, this.dimLabel(theme, "(no rules — add one below)"))
+		rows = append(rows, this.dimLabel(theme, "(no rules - add one below)"))
 	} else {
 		for i := range this.rules {
 			rows = append(rows, this.layoutRuleRow(theme, i))

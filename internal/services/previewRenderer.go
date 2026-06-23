@@ -122,7 +122,7 @@ func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopol
 		drawThickQuadratic(img, image.Pt(ax, ay), ctrl, image.Pt(bx, by), lineWidth, previewLineColor)
 	}
 
-	// Zones — non-player bubbles first, then the player bubbles on top,
+	// Zones - non-player bubbles first, then the player bubbles on top,
 	// exactly like the official overview images layer them.
 	for _, zone := range layout.Zones {
 		if zone.IsPlayer {

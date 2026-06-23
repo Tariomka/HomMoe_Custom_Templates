@@ -6,20 +6,20 @@ type Zone struct {
 
 	// GeneratorPosition is an optional normalized [0,1]×[0,1] hint stamped by
 	// the generator for the position-driven layouts (Random, Circles, Square,
-	// Geometric, Cross). It is NOT serialized — the
+	// Geometric, Cross). It is NOT serialized - the
 	// preview renderer uses it to reproduce the same geometry that drove
 	// connection generation
 	GeneratorPosition *[2]float64 `json:"-"`
 
 	// GeneratorRing is the concentric-ring index (0 = outermost player ring,
 	// increasing toward centre) stamped by the generator for Circles layouts.
-	// Not serialized — used only by the preview renderer to snap zones onto
+	// Not serialized - used only by the preview renderer to snap zones onto
 	// the correct ring
 	GeneratorRing *int `json:"-"`
 
 	// ManualPosition is a normalized [0,1]×[0,1] position assigned when the
 	// user moves or adds zones in the manual zone editor. It is NOT serialized
-	// — when every zone has one, the preview renderer honours these positions
+	// - when every zone has one, the preview renderer honours these positions
 	// verbatim instead of computing a topology layout
 	ManualPosition *[2]float64 `json:"-"`
 

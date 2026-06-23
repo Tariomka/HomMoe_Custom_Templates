@@ -75,7 +75,7 @@ func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
 					label := material.Caption(theme, "File: "+path)
 					label.Color = themes.ColorTextDim
 					label.MaxLines = 1
-					label.Truncator = "…"
+					label.Truncator = "..."
 					label.Alignment = text.End
 					return label.Layout(gtx)
 				})

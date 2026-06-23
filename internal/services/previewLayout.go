@@ -50,7 +50,7 @@ const (
 	csZoneRadiusMax  = 38.0
 	csHubRadiusMin   = 28.0
 	csMinGap         = 6.0
-	csConnectionGap  = 26.0 // ring layout — visible chord clearance between zones
+	csConnectionGap  = 26.0 // ring layout - visible chord clearance between zones
 	csClusterGap     = 20.0
 	scatterIdealMult = 3.2
 	scatterMinDist   = 3.8
@@ -140,7 +140,7 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 		layout.Zones = append(layout.Zones, preview)
 	}
 
-	// Connections — only render those whose endpoints survived the strip.
+	// Connections - only render those whose endpoints survived the strip.
 	// Parallel edges between the same unordered pair are fanned out into
 	// distinct curves (matching the manual zone editor); a lone edge keeps its
 	// control point on the midpoint and therefore renders straight.
@@ -509,7 +509,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []entities.Zone, side floa
 	}
 
 	if ringCount < 2 {
-		// All zones in a single ring — degenerate; fall back to the ring path.
+		// All zones in a single ring - degenerate; fall back to the ring path.
 		layoutRingOrHub(layout, zones, nil, side)
 		return
 	}
