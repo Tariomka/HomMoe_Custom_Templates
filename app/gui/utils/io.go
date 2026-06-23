@@ -18,41 +18,6 @@ func RevealInExplorer(path string) error {
 	}
 }
 
-// PickOpenFile shows a native file open dialog and returns the chosen path
-// (empty string if cancelled). filter is a comma-separated "Description|*.ext"
-// pair list, e.g. "Settings (*.gen.json)|*.gen.json|All files|*.*".
-func PickOpenFile(title, filter, initialDir string) (string, error) {
-	if runtime.GOOS != "windows" {
-		return "", nil // unsupported on non-Windows builds
-	}
-	script := `
-Add-Type -AssemblyName System.Windows.Forms | Out-Null
-$d = New-Object System.Windows.Forms.OpenFileDialog
-$d.Title = '` + escapePS(title) + `'
-$d.Filter = '` + escapePS(filter) + `'
-$d.InitialDirectory = '` + escapePS(initialDir) + `'
-if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.FileName }
-`
-	return runPowerShell(script)
-}
-
-// PickSaveFile shows a native file save dialog and returns the chosen path.
-func PickSaveFile(title, filter, initialDir, defaultName string) (string, error) {
-	if runtime.GOOS != "windows" {
-		return "", nil
-	}
-	script := `
-Add-Type -AssemblyName System.Windows.Forms | Out-Null
-$d = New-Object System.Windows.Forms.SaveFileDialog
-$d.Title = '` + escapePS(title) + `'
-$d.Filter = '` + escapePS(filter) + `'
-$d.InitialDirectory = '` + escapePS(initialDir) + `'
-$d.FileName = '` + escapePS(defaultName) + `'
-if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.FileName }
-`
-	return runPowerShell(script)
-}
-
 // PickFolder shows a native folder picker and returns the chosen path.
 func PickFolder(title, initialDir string) (string, error) {
 	if runtime.GOOS != "windows" {
