@@ -247,7 +247,6 @@ func TestBuildPreviewLayout_TwoClustersRenderAllZones(t *testing.T) {
 	}
 }
 
-
 // ── BuildPreviewLayout: zone classification side-effects ─────────────
 
 func TestBuildPreviewLayout_PlayerZoneFlagged(t *testing.T) {
