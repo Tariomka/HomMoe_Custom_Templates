@@ -115,6 +115,9 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 			rect := image.Rectangle{Max: dims.Size}
 			paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			border := themes.ColorBorder
+			if this.toggle.Hovered() {
+				border = themes.ColorHover
+			}
 			if this.isOpen {
 				border = themes.ColorAccent
 			}
@@ -134,7 +137,7 @@ func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.The
 	for i, item := range this.items {
 		rows = append(rows, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return material.Clickable(gtx, &item.row, func(gtx layout.Context) layout.Dimensions {
-				return drawComboRow(gtx, theme, item.label, i == this.selectedIndex)
+				return drawComboRow(gtx, theme, item.label, i == this.selectedIndex, item.row.Hovered())
 			})
 		}))
 	}
@@ -151,7 +154,7 @@ func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.The
 	return dims
 }
 
-func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selected bool) layout.Dimensions {
+func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selected bool, hovered bool) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
 	dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		label := material.Body1(theme, label)
@@ -168,6 +171,9 @@ func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selec
 	call := macro.Stop()
 	if selected {
 		paint.FillShape(gtx.Ops, themes.ColorSelection,
+			clip.Rect{Max: dims.Size}.Op())
+	} else if hovered {
+		paint.FillShape(gtx.Ops, themes.ColorHover,
 			clip.Rect{Max: dims.Size}.Op())
 	}
 	call.Add(gtx.Ops)

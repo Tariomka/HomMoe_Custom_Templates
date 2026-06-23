@@ -112,6 +112,8 @@ func (this *FileExplorerDialog) entryRow(gtx layout.Context, theme *material.The
 		call := macro.Stop()
 		if selected {
 			paint.FillShape(gtx.Ops, themes.ColorSelection, clip.Rect{Max: dims.Size}.Op())
+		} else if clk.Hovered() {
+			paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
 		}
 		call.Add(gtx.Ops)
 		return dims

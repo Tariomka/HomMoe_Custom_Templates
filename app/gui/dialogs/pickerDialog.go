@@ -249,6 +249,8 @@ func (this *multiSelectPicker) leafRow(theme *material.Theme, entry pickerEntry)
 			call := macro.Stop()
 			if checked {
 				paint.FillShape(gtx.Ops, checkedRowBg, clip.Rect{Max: dims.Size}.Op())
+			} else if clk.Hovered() {
+				paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
 			}
 			call.Add(gtx.Ops)
 			return dims

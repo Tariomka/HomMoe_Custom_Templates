@@ -55,6 +55,9 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 			call := macro.Stop()
 			bgColor := themes.ColorInput
 			border := themes.ColorBorder
+			if this.button.Hovered() && !this.isSelected {
+				border = themes.ColorHover
+			}
 			if this.isSelected {
 				bgColor = themes.ColorPanel
 				border = themes.ColorAccent

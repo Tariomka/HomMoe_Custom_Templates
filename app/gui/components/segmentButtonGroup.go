@@ -67,7 +67,7 @@ func (this *SegmentButtonGroup) Layout(gtx layout.Context, theme *material.Theme
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return material.Clickable(gtx, &button.button, func(gtx layout.Context) layout.Dimensions {
 				return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return drawSegment(gtx, theme, button.label, this.selectedIndex == i)
+					return drawSegment(gtx, theme, button.label, this.selectedIndex == i, button.button.Hovered())
 				})
 			})
 		}))
@@ -75,10 +75,13 @@ func (this *SegmentButtonGroup) Layout(gtx layout.Context, theme *material.Theme
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
 }
 
-func drawSegment(gtx layout.Context, theme *material.Theme, label string, selected bool) layout.Dimensions {
+func drawSegment(gtx layout.Context, theme *material.Theme, label string, selected bool, hovered bool) layout.Dimensions {
 	bgColor := themes.ColorInput
 	fgColor := themes.ColorTextDim
 	border := themes.ColorBorder
+	if hovered && !selected {
+		border = themes.ColorHover
+	}
 	if selected {
 		bgColor = themes.ColorPrimaryButton
 		fgColor = themes.ColorAccentBright

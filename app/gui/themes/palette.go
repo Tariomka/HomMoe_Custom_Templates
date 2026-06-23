@@ -69,5 +69,6 @@ var (
 	ColorButtonDisabled = color.NRGBA{R: 0x2A, G: 0x23, B: 0x26, A: 0xFF} // #2A2326 disabled fill
 	ColorBorderDisabled = color.NRGBA{R: 0x41, G: 0x37, B: 0x3B, A: 0xFF} // #41373B disabled outline
 	ColorSelection      = swatchWine                                      // checked picker rows, dropdown selection
+	ColorHover          = swatchCrimsonDim                                // hovered control border highlight
 	ColorScrim          = color.NRGBA{A: 0xB0}                            // modal backdrop dimmer
 )

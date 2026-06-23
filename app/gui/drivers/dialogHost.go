@@ -152,6 +152,9 @@ func (this *DialogHost) layoutHeader(theme *material.Theme) layout.Widget {
 					return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						label := material.Body1(theme, "✕")
 						label.Color = themes.ColorTextDim
+						if this.closeBtn.Hovered() {
+							label.Color = themes.ColorAccentBright
+						}
 						label.TextSize = unit.Sp(16)
 						return label.Layout(gtx)
 					})
