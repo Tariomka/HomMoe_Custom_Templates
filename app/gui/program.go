@@ -3,6 +3,8 @@ package gui
 import (
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"gioui.org/app"
 	"gioui.org/op"
@@ -18,16 +20,7 @@ func StartApplication() {
 
 // eventLoop is a blocking function and needs to executed concurrently
 func eventLoop() {
-	window := new(app.Window)
-	window.Option(
-		app.Title("Olden Era - Custom Templates"),
-		app.Size(unit.Dp(1600), unit.Dp(900)),
-		app.MinSize(unit.Dp(1280), unit.Dp(800)))
-
-	if os.Getenv("HOT_RELOAD") == "1" {
-		window.Option(app.Minimized.Option())
-	}
-
+	window := getAndConfigureWindow()
 	theme := themes.NewTheme()
 	windowLayout := editor.NewWindow()
 
@@ -46,4 +39,52 @@ func eventLoop() {
 			event.Frame(gtx.Ops)
 		}
 	}
+}
+
+func getAndConfigureWindow() *app.Window {
+	window := new(app.Window)
+	configuration := []app.Option{
+		app.Title("Olden Era - Custom Templates"),
+		app.MinSize(unit.Dp(1280), unit.Dp(800)),
+	}
+
+	windowWidth, windowHeight := 1600, 900
+	for _, arg := range os.Args[1:] {
+		switch arg {
+		case "-minimized":
+			configuration = append(configuration, app.Minimized.Option())
+			continue
+		case "-fullscreen":
+			configuration = append(configuration, app.Fullscreen.Option())
+			continue
+		}
+
+		if strings.ContainsRune(arg, '=') {
+			split := strings.Split(arg, "=")
+			if len(split) < 2 {
+				log.Printf("Value for argument %s is missing", split[0])
+			}
+
+			switch split[0] {
+			case "-w":
+				if width, err := strconv.Atoi(split[1]); err == nil {
+					windowWidth = width
+				}
+				continue
+			case "-h":
+				if height, err := strconv.Atoi(split[1]); err == nil {
+					windowHeight = height
+				}
+				continue
+			}
+		}
+	}
+
+	configuration = append(
+		// Order matters: Minimized / Fullscreen get overridden by Size
+		[]app.Option{app.Size(unit.Dp(windowWidth), unit.Dp(windowHeight))},
+		configuration...,
+	)
+	window.Option(configuration...)
+	return window
 }
