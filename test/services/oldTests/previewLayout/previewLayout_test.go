@@ -93,12 +93,36 @@ func TestBuildPreviewLayout_ExplicitHubGetsCentre(t *testing.T) {
 }
 
 func TestBuildPreviewLayout_ImplicitHubGetsCentre(t *testing.T) {
-	// Neutral connected to both players, deg >= 2 → implicit hub.
-	zones := []entities.Zone{zone("Spawn-A"), zone("Spawn-B"), zone("Neutral-H")}
-	conns := []entities.Connection{conn("Neutral-H", "Spawn-A"), conn("Neutral-H", "Spawn-B")}
+	// Neutral connected to all THREE players → genuine implicit hub.
+	zones := []entities.Zone{
+		zone("Spawn-A"), zone("Spawn-B"), zone("Spawn-C"), zone("Neutral-H"),
+	}
+	conns := []entities.Connection{
+		conn("Neutral-H", "Spawn-A"),
+		conn("Neutral-H", "Spawn-B"),
+		conn("Neutral-H", "Spawn-C"),
+	}
 	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
 	if p := out.Positions["Neutral-H"]; p.X != 300 || p.Y != 300 {
 		t.Errorf("implicit hub position = %+v, want (300,300)", p)
+	}
+	for _, z := range out.Zones {
+		if z.Name == "Neutral-H" && !z.IsHub {
+			t.Errorf("expected Neutral-H to be flagged as hub")
+		}
+	}
+}
+
+func TestBuildPreviewLayout_TwoPlayerConnectorIsNotHub(t *testing.T) {
+	// A neutral that merely connects the two spawns (e.g. 2 players + 1 neutral
+	// on Ring) must NOT be promoted to a hub - there is no hub in such a layout.
+	zones := []entities.Zone{zone("Spawn-A"), zone("Spawn-B"), zone("Neutral-H")}
+	conns := []entities.Connection{conn("Neutral-H", "Spawn-A"), conn("Neutral-H", "Spawn-B")}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
+	for _, z := range out.Zones {
+		if z.IsHub {
+			t.Errorf("expected no hub zones, but %q was flagged as hub", z.Name)
+		}
 	}
 }
 

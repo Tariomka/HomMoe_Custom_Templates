@@ -981,7 +981,12 @@ func findImplicitHubName(zones []entities.Zone, conns []entities.Connection) str
 			playerNames[z.Name] = true
 		}
 	}
-	if len(playerNames) == 0 {
+	// A hub-and-spoke centre only reads as a hub when at least three players
+	// radiate from it. With two (or fewer) players, a neutral that touches
+	// "all players" is just an ordinary connector sitting between the two
+	// spawns (common in Ring/Random layouts), not a hub - so it must not be
+	// promoted to one. Explicitly named "Hub"/"Hub-*" zones are unaffected.
+	if len(playerNames) < 3 {
 		return ""
 	}
 	neighbours := make(map[string]map[string]bool, len(zones))
