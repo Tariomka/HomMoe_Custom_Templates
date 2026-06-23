@@ -324,6 +324,13 @@ func (this *State) PickOutputDir() {
 	this.outputPath.SetText(dir)
 }
 
+func (this *State) RevealOutputDir() {
+	err := utils.RevealInExplorer(strings.TrimSpace(this.outputPath.Text()))
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Reveal failed: %v.", err), true)
+	}
+}
+
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
 	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
 	updateFunc(this.stateDto)

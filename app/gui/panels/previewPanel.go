@@ -3,7 +3,6 @@ package panels
 import (
 	"fmt"
 	"image"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -95,7 +94,7 @@ func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
 		this.state.PickOutputDir()
 	}
 	if this.btnRevealOutput.Clicked(gtx) {
-		_ = utils.RevealInExplorer(strings.TrimSpace(this.state.GetOutputPath()))
+		this.state.RevealOutputDir()
 	}
 }
 
