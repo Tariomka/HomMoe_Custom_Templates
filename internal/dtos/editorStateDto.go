@@ -121,3 +121,31 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		TournamentSaveArmy:           true,
 	}
 }
+
+// LayoutDefiningOptionsChanged reports whether any option that changes the set
+// of zones or the connection graph differs between two editor states. When
+// these are unchanged, manual zone edits remain valid and can be reapplied.
+func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDto) bool {
+	return this.PlayerCount != incoming.PlayerCount ||
+		this.Topology != incoming.Topology ||
+		this.GenerateRoads != incoming.GenerateRoads ||
+		this.RandomPortals != incoming.RandomPortals ||
+		this.NoDirectPlayerConn != incoming.NoDirectPlayerConn ||
+		this.MaxPortalConnections != incoming.MaxPortalConnections ||
+		this.MinNeutralZonesBetweenPlayers != incoming.MinNeutralZonesBetweenPlayers ||
+		this.SpawnRemoteFootholds != incoming.SpawnRemoteFootholds ||
+		this.zoneCountOptionsChanged(incoming)
+}
+
+// zoneCountOptionsChanged reports whether the number of neutral zones differs
+// between two editor states.
+func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bool {
+	return this.AdvancedMode != incoming.AdvancedMode ||
+		this.NeutralZoneCount != incoming.NeutralZoneCount ||
+		this.NeutralLowNoCastleCount != incoming.NeutralLowNoCastleCount ||
+		this.NeutralLowCastleCount != incoming.NeutralLowCastleCount ||
+		this.NeutralMediumNoCastleCount != incoming.NeutralMediumNoCastleCount ||
+		this.NeutralMediumCastleCount != incoming.NeutralMediumCastleCount ||
+		this.NeutralHighNoCastleCount != incoming.NeutralHighNoCastleCount ||
+		this.NeutralHighCastleCount != incoming.NeutralHighCastleCount
+}

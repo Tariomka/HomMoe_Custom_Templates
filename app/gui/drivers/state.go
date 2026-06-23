@@ -1,6 +1,7 @@
 package drivers
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"gioui.org/widget"
+	"gioui.org/x/explorer"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -18,9 +20,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
+const autoRegenDebounce = 300 * time.Millisecond
+
 type State struct {
-	handler *handlers.GUIHandler
-	mapper  *mappers.GeneratorConfigMapper
+	handler      *handlers.GUIHandler
+	mapper       *mappers.GeneratorConfigMapper
+	fileExplorer *explorer.Explorer
 
 	// Persistent stateDto file model. Updated continuously from widgets.
 	stateDto *dtos.EditorStateDto
@@ -67,12 +72,13 @@ type State struct {
 	dialogs *DialogHost
 }
 
-func NewUIState() *State {
+func NewUIState(fileExplorer *explorer.Explorer) *State {
 	stateDto := dtos.NewDefaultEditorStateDto()
 	state := &State{
-		handler:  handlers.NewGuiHandler(),
-		mapper:   mappers.NewConfigMapper(),
-		stateDto: &stateDto,
+		handler:      handlers.NewGuiHandler(),
+		mapper:       mappers.NewConfigMapper(),
+		fileExplorer: fileExplorer,
+		stateDto:     &stateDto,
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
@@ -163,35 +169,34 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-func (this *State) SuggestDirectory() string {
-	if this.currentPath != "" {
-		return filepath.Dir(this.currentPath)
-	}
-	if outputDir := strings.TrimSpace(this.outputPath.Text()); outputDir != "" {
-		return outputDir
-	}
-	workingDir, _ := os.Getwd()
-	return workingDir
-}
-
 func (this *State) Load() {
-	path, err := utils.PickOpenFile("Open settings", "Settings (*.gen.json)|*.gen.json|All files|*.*", this.SuggestDirectory())
+	// TODO: this block should be a func (path, dto, err)
+	fileReader, err := this.fileExplorer.ChooseFile("gen.json") // TODO: this is blocking, so probably should be run in a goroutine
 	if err != nil {
-		this.SetStatus(fmt.Sprintf("Open dialog failed: %v.", err), true)
+		this.SetStatus(fmt.Sprintf("Load dialog failed: %v.", err), true)
 		return
 	}
+	defer fileReader.Close()
+	path := func() string {
+		file, ok := fileReader.(*os.File)
+		if !ok {
+			return ""
+		}
+		return file.Name()
+	}()
 
 	if path == "" {
+		this.SetStatus("Load failed: path not found.", true)
 		return
 	}
 
-	dto, err := this.handler.LoadState(path)
-	if err != nil {
+	dto := dtos.NewDefaultEditorStateDto()
+	if err := json.NewDecoder(fileReader).Decode(&dto); err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
 		return
 	}
 
-	this.stateDto = dto
+	this.stateDto = &dto
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()
@@ -217,21 +222,35 @@ func (this *State) Save() {
 }
 
 func (this *State) SaveAs(templateName string) {
+	// TODO: this block should be a func (path, err)
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
-	path, err := utils.PickSaveFile("Save settings as", "Settings (*.gen.json)|*.gen.json", this.SuggestDirectory(), defaultName)
+	fileWriter, err := this.fileExplorer.CreateFile(defaultName) // TODO: this is blocking, so probably should be run in a goroutine
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Save dialog failed: %v.", err), true)
 		return
 	}
+	defer fileWriter.Close()
+	path := func() string {
+		file, ok := fileWriter.(*os.File)
+		if !ok {
+			return ""
+		}
+		return file.Name()
+	}()
 
 	if path == "" {
+		this.SetStatus("Save failed: path not found.", true)
 		return
 	}
 
-	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
-		State:      this.stateDto,
-		OutputPath: path,
-	}); err != nil {
+	data, err := json.MarshalIndent(this.stateDto, "", "\t")
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	}
+
+	count, err := fmt.Fprintln(fileWriter, string(data))
+	if err != nil || count <= 0 {
 		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
 		return
 	}
@@ -261,10 +280,69 @@ func (this *State) Generate() {
 	this.SetStatus(status, false)
 }
 
-// autoRegenDebounce is how long the editor waits after the last non-preview
-// option change before regenerating, so dragging a slider (or typing in the
-// name field) does not regenerate on every frame.
-const autoRegenDebounce = 300 * time.Millisecond
+func (this *State) Exit() {
+	// if this.unsaved {
+	// 	this.SetStatus("Unsaved changes exist; save before exiting.", true)
+	// 	return
+	// }
+	os.Exit(0)
+}
+
+// SaveTemplate writes the most recently generated template as .rmg.json.
+func (this *State) SaveTemplate() {
+	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
+		Template:   this.GetLastTemplate(),
+		Topology:   this.stateDto.Topology,
+		OutputPath: strings.TrimSpace(this.outputPath.Text()),
+	})
+	if err != nil && savedPath == "" {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	} else if err != nil {
+		this.SetStatus(
+			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
+			true)
+		return
+	}
+
+	this.SetStatus("Saved template to "+savedPath, false)
+}
+
+// PickOutputDir presents a folder picker for the template output directory.
+func (this *State) PickOutputDir() {
+	cur := strings.TrimSpace(this.outputPath.Text())
+	dir, err := utils.PickFolder("Select output directory", cur)
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Folder dialog failed: %v.", err), true)
+		return
+	}
+
+	if dir == "" {
+		return
+	}
+
+	this.outputPath.SetText(dir)
+}
+
+func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
+	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
+	updateFunc(this.stateDto)
+	if this.stateDto.AdvancedMode {
+		this.stateDto.NeutralZoneCount = 0
+	} else {
+		this.stateDto.NeutralLowNoCastleCount = 0
+		this.stateDto.NeutralLowCastleCount = 0
+		this.stateDto.NeutralMediumNoCastleCount = 0
+		this.stateDto.NeutralMediumCastleCount = 0
+		this.stateDto.NeutralHighNoCastleCount = 0
+		this.stateDto.NeutralHighCastleCount = 0
+	}
+}
+
+func (this *State) SetStatus(msg string, isErr bool) {
+	this.statusMsg = msg
+	this.statusErr = isErr
+}
 
 // AutoRegenerate regenerates the template when the live editor state has
 // changed since the last generation.
@@ -294,7 +372,7 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 
 	// Preview-affecting changes regenerate immediately so the preview follows
 	// the control live.
-	if layoutDefiningOptionsChanged(this.lastGeneratedState, this.stateDto) {
+	if this.lastGeneratedState.LayoutDefiningOptionsChanged(this.stateDto) {
 		this.pendingState = nil
 		this.performAutoRegen()
 		return time.Time{}, false
@@ -325,7 +403,7 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 func (this *State) performAutoRegen() {
 	reapplyManual := this.lastGeneratedState != nil &&
 		this.hasManualEdits &&
-		!layoutDefiningOptionsChanged(this.lastGeneratedState, this.stateDto)
+		!this.lastGeneratedState.LayoutDefiningOptionsChanged(this.stateDto)
 
 	dto, err := this.handler.GenerateTemplate(*this.stateDto)
 	if err != nil {
@@ -417,86 +495,13 @@ func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCo
 	return zoneCount, connectionCount
 }
 
-// layoutDefiningOptionsChanged reports whether any option that changes the set
-// of zones or the connection graph differs between two editor states. When
-// these are unchanged, manual zone edits remain valid and can be reapplied.
-func layoutDefiningOptionsChanged(previous, current *dtos.EditorStateDto) bool {
-	return previous.PlayerCount != current.PlayerCount ||
-		previous.Topology != current.Topology ||
-		previous.GenerateRoads != current.GenerateRoads ||
-		previous.RandomPortals != current.RandomPortals ||
-		previous.NoDirectPlayerConn != current.NoDirectPlayerConn ||
-		previous.MaxPortalConnections != current.MaxPortalConnections ||
-		previous.MinNeutralZonesBetweenPlayers != current.MinNeutralZonesBetweenPlayers ||
-		previous.SpawnRemoteFootholds != current.SpawnRemoteFootholds ||
-		zoneCountOptionsChanged(previous, current)
-}
-
-// zoneCountOptionsChanged reports whether the number of neutral zones differs
-// between two editor states.
-func zoneCountOptionsChanged(previous, current *dtos.EditorStateDto) bool {
-	return previous.AdvancedMode != current.AdvancedMode ||
-		previous.NeutralZoneCount != current.NeutralZoneCount ||
-		previous.NeutralLowNoCastleCount != current.NeutralLowNoCastleCount ||
-		previous.NeutralLowCastleCount != current.NeutralLowCastleCount ||
-		previous.NeutralMediumNoCastleCount != current.NeutralMediumNoCastleCount ||
-		previous.NeutralMediumCastleCount != current.NeutralMediumCastleCount ||
-		previous.NeutralHighNoCastleCount != current.NeutralHighNoCastleCount ||
-		previous.NeutralHighCastleCount != current.NeutralHighCastleCount
-}
-
-// SaveTemplate writes the most recently generated template as .rmg.json.
-func (this *State) SaveTemplate() {
-	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
-		Template:   this.GetLastTemplate(),
-		Topology:   this.stateDto.Topology,
-		OutputPath: strings.TrimSpace(this.outputPath.Text()),
-	})
-	if err != nil && savedPath == "" {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	} else if err != nil {
-		this.SetStatus(
-			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
-			true)
-		return
+func (this *State) suggestDirectory() string {
+	if this.currentPath != "" {
+		return filepath.Dir(this.currentPath)
 	}
-
-	this.SetStatus("Saved template to "+savedPath, false)
-}
-
-// PickOutputDir presents a folder picker for the template output directory.
-func (this *State) PickOutputDir() {
-	cur := strings.TrimSpace(this.outputPath.Text())
-	dir, err := utils.PickFolder("Select output directory", cur)
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Folder dialog failed: %v.", err), true)
-		return
+	if outputDir := strings.TrimSpace(this.outputPath.Text()); outputDir != "" {
+		return outputDir
 	}
-
-	if dir == "" {
-		return
-	}
-
-	this.outputPath.SetText(dir)
-}
-
-func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
-	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
-	updateFunc(this.stateDto)
-	if this.stateDto.AdvancedMode {
-		this.stateDto.NeutralZoneCount = 0
-	} else {
-		this.stateDto.NeutralLowNoCastleCount = 0
-		this.stateDto.NeutralLowCastleCount = 0
-		this.stateDto.NeutralMediumNoCastleCount = 0
-		this.stateDto.NeutralMediumCastleCount = 0
-		this.stateDto.NeutralHighNoCastleCount = 0
-		this.stateDto.NeutralHighCastleCount = 0
-	}
-}
-
-func (this *State) SetStatus(msg string, isErr bool) {
-	this.statusMsg = msg
-	this.statusErr = isErr
+	workingDir, _ := os.Getwd()
+	return workingDir
 }
