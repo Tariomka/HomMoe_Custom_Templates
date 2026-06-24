@@ -489,6 +489,8 @@ func TestGenerate_AbandonedOutposts_AddedAlongsideNeutralCities(t *testing.T) {
 		s.ZoneConfiguration.Advanced.Enabled = true
 		s.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1
 		s.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
+		s.ZoneConfiguration.Advanced.NeutralLowCastlesPerZone = 1
+		s.ZoneConfiguration.Advanced.NeutralMediumCastlesPerZone = 1
 		s.ZoneConfiguration.SpawnAbandonedOutposts = spawnOutposts
 		return s
 	}
