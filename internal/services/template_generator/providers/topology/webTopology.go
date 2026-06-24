@@ -123,9 +123,9 @@ func (this *SharedWebTopologyService) createZones(
 			FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label })
 		zone := this.CreateNeutralZone(
 			zonePlan, neutralConnNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-			configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning,
+			tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning,
 			label == holdCityNeutralLabel)
-		if zonePlan.CastleCount == 0 {
+		if zonePlan.CastleCount == 0 && tuning.AbandonedOutpostCount == 0 {
 			zone.Roads = this.CreateConnectorZoneRoads(neutralConnNames, configuration.GenerateRoads)
 		}
 		zones = append(zones, zone)
@@ -136,7 +136,7 @@ func (this *SharedWebTopologyService) createZones(
 			this.CreateSpawnZone(
 				label, fmt.Sprintf("Player%d", i+1), playerSpokes[label], configuration.ZoneConfiguration.PlayerZoneCastles,
 				configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-				configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
+				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
 	}
 
 	return zones

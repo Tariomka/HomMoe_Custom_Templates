@@ -384,7 +384,7 @@ func TestRowsToMandatoryContent_GroupRoutesToIncludeLists(t *testing.T) {
 
 // func TestBuildAllContentCountLimits_UserCountBelowCapKeepsDefault(t *testing.T) {
 // 	s := cfg()
-// 	// One pandora — default cap is 4, should stay at 4.
+// 	// One pandora - default cap is 4, should stay at 4.
 // 	s.PlayerZoneMandatoryContent = []template.MandatoryContentItem{{SID: constants.ContentIds.PandoraBox.Sid}}
 // 	limits := services.BuildAllContentCountLimits(s)
 // 	for _, g := range limits {

@@ -50,7 +50,7 @@ const (
 	csZoneRadiusMax  = 38.0
 	csHubRadiusMin   = 28.0
 	csMinGap         = 6.0
-	csConnectionGap  = 26.0 // ring layout — visible chord clearance between zones
+	csConnectionGap  = 26.0 // ring layout - visible chord clearance between zones
 	csClusterGap     = 20.0
 	scatterIdealMult = 3.2
 	scatterMinDist   = 3.8
@@ -78,40 +78,29 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 		return layout
 	}
 
-	// Tournament single-cluster strip: if Direct-only adjacency has exactly two
-	// components, render only the first cluster at full canvas size so the
-	// preview reads like a non-tournament layout
-	zones, connections := stripFirstClusterIfTwo(variant.Zones, variant.Connections)
-
 	// Apply the optional ZeroAngleZone rotation so the first ring slot lines
-	// up with the template author's chosen anchor.
-	zones = orderZonesByZeroAngle(zones, variant.Orientation.ZeroAngleZone)
+	// up with the template author's chosen anchor, then lay out every zone with
+	// the topology-specific renderer. Tournament templates are not special-
+	// cased here: both player clusters are laid out together at full canvas
+	// size (the generator seeds the two halves with mirrored positions and, for
+	// hub topologies, layoutMultiHub fans the clusters out), so the preview and
+	// the zone editor share one consistent, fully reversible coordinate system.
+	zones := orderZonesByZeroAngle(variant.Zones, variant.Orientation.ZeroAngleZone)
+	connections := variant.Connections
 
-	// Dispatch to the topology-specific layout. Each path writes positions
-	// into `layout.Positions` and sets `layout.ZoneRadius`.
-	switch {
-	case allHaveManualPosition(zones):
-		layoutManualPositions(&layout, zones, side)
-	case (topology == config.TopologyCircles) && allHaveRing(zones):
-		layoutBalancedRings(&layout, zones, side)
-	case isFixedGeometryTopology(topology) && allHavePosition(zones):
-		layoutFixedPositions(&layout, zones, side)
-	case isScatterTopology(topology) && allHavePosition(zones):
-		layoutScatter(&layout, zones, connections, side)
-	default:
-		layoutRingOrHub(&layout, zones, connections, side)
-	}
+	dispatchClusterLayout(&layout, zones, connections, topology, side)
 
-	implicitHub := findImplicitHubName(zones, connections)
 	for _, zone := range variant.Zones {
 		pos, ok := layout.Positions[zone.Name]
 		if !ok {
 			continue
 		}
+		// A zone is only drawn as a hub when the template actually contains a
+		// hub zone (named "Hub" or "Hub-*"). Connectivity-based guesses are not
+		// used here: in topologies like Random or Circles an ordinary neutral
+		// can happen to touch every spawn without being a hub, which previously
+		// made the hub marker appear (and flicker) on non-hub zones.
 		isHub := strings.EqualFold(zone.Name, "Hub") || strings.HasPrefix(zone.Name, "Hub-")
-		if implicitHub != "" && zone.Name == implicitHub {
-			isHub = true
-		}
 		preview := PreviewZone{
 			Name:     zone.Name,
 			Letter:   ExtractZoneLetter(zone.Name),
@@ -140,7 +129,7 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 		layout.Zones = append(layout.Zones, preview)
 	}
 
-	// Connections — only render those whose endpoints survived the strip.
+	// Connections - only render those whose endpoints survived the strip.
 	// Parallel edges between the same unordered pair are fanned out into
 	// distinct curves (matching the manual zone editor); a lone edge keeps its
 	// control point on the midpoint and therefore renders straight.
@@ -217,72 +206,22 @@ func buildPreviewConnections(connections []entities.Connection, positions map[st
 	return result
 }
 
-func stripFirstClusterIfTwo(zones []entities.Zone, conns []entities.Connection) ([]entities.Zone, []entities.Connection) {
-	n := len(zones)
-	idx := make(map[string]int, n)
-	for i, z := range zones {
-		idx[z.Name] = i
+// dispatchClusterLayout writes positions for the given zones into the layout,
+// picking the topology-specific renderer. Each path sets layout.Positions and
+// layout.ZoneRadius.
+func dispatchClusterLayout(layout *PreviewLayout, zones []entities.Zone, connections []entities.Connection, topology config.MapTopology, side float64) {
+	switch {
+	case allHaveManualPosition(zones):
+		layoutManualPositions(layout, zones, side)
+	case (topology == config.TopologyCircles) && allHaveRing(zones):
+		layoutBalancedRings(layout, zones, side)
+	case isFixedGeometryTopology(topology) && allHavePosition(zones):
+		layoutFixedPositions(layout, zones, side)
+	case isScatterTopology(topology) && allHavePosition(zones):
+		layoutScatter(layout, zones, connections, side)
+	default:
+		layoutRingOrHub(layout, zones, connections, side)
 	}
-	adj := make([][]int, n)
-	for _, c := range conns {
-		if isStructuralIgnored(c.ConnectionType) {
-			continue
-		}
-		ai, ok1 := idx[c.From]
-		bi, ok2 := idx[c.To]
-		if !ok1 || !ok2 {
-			continue
-		}
-		adj[ai] = append(adj[ai], bi)
-		adj[bi] = append(adj[bi], ai)
-	}
-	compID := make([]int, n)
-	for i := range compID {
-		compID[i] = -1
-	}
-	var comps [][]int
-	for start := range n {
-		if compID[start] >= 0 {
-			continue
-		}
-		var comp []int
-		queue := []int{start}
-		compID[start] = len(comps)
-		for len(queue) > 0 {
-			u := queue[0]
-			queue = queue[1:]
-			comp = append(comp, u)
-			for _, v := range adj[u] {
-				if compID[v] < 0 {
-					compID[v] = len(comps)
-					queue = append(queue, v)
-				}
-			}
-		}
-		comps = append(comps, comp)
-	}
-	if len(comps) != 2 {
-		return zones, conns
-	}
-	keep := make(map[int]bool, len(comps[0]))
-	for _, i := range comps[0] {
-		keep[i] = true
-	}
-	keptZones := make([]entities.Zone, 0, len(comps[0]))
-	keptNames := make(map[string]bool, len(comps[0]))
-	for i, z := range zones {
-		if keep[i] {
-			keptZones = append(keptZones, z)
-			keptNames[z.Name] = true
-		}
-	}
-	keptConns := make([]entities.Connection, 0, len(conns))
-	for _, c := range conns {
-		if keptNames[c.From] && keptNames[c.To] {
-			keptConns = append(keptConns, c)
-		}
-	}
-	return keptZones, keptConns
 }
 
 func isStructuralIgnored(connectionType string) bool {
@@ -509,7 +448,7 @@ func layoutBalancedRings(layout *PreviewLayout, zones []entities.Zone, side floa
 	}
 
 	if ringCount < 2 {
-		// All zones in a single ring — degenerate; fall back to the ring path.
+		// All zones in a single ring - degenerate; fall back to the ring path.
 		layoutRingOrHub(layout, zones, nil, side)
 		return
 	}
@@ -749,11 +688,11 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 	minDist := zoneRadius * scatterMinDist
 	edgeClear := zoneRadius * scatterEdgeClear
 
-	for pass := 0; pass < 500; pass++ {
+	for range 500 {
 		moved := false
 
 		// A: hard floor.
-		for i := 0; i < n; i++ {
+		for i := range n {
 			for j := i + 1; j < n; j++ {
 				dx := px[i] - px[j]
 				dy := py[i] - py[j]
@@ -774,7 +713,7 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 		}
 
 		// B: edge clearance.
-		for a := 0; a < n; a++ {
+		for a := range n {
 			for _, b := range adj[a] {
 				if b <= a {
 					continue
@@ -870,24 +809,14 @@ func layoutRingOrHub(layout *PreviewLayout, zones []entities.Zone, conns []entit
 		return
 	}
 
-	// Hub detection: explicit "Hub" zone, or a single non-player zone
-	// connected to every player zone (implicit hub-and-spoke).
+	// Hub detection: only an explicitly named "Hub" zone is treated as a hub.
+	// The preview is a faithful representation of the template data, so
+	// connectivity is never used to guess an implicit hub.
 	hubIdx := -1
 	for i, z := range zones {
 		if z.Name == "Hub" {
 			hubIdx = i
 			break
-		}
-	}
-	if hubIdx < 0 {
-		hubName := findImplicitHubName(zones, conns)
-		if hubName != "" {
-			for i, z := range zones {
-				if z.Name == hubName {
-					hubIdx = i
-					break
-				}
-			}
 		}
 	}
 
@@ -897,10 +826,7 @@ func layoutRingOrHub(layout *PreviewLayout, zones []entities.Zone, conns []entit
 			outer = append(outer, i)
 		}
 	}
-	outerN := len(outer)
-	if outerN < 1 {
-		outerN = 1
-	}
+	outerN := max(len(outer), 1)
 	ringRadius0 := side/2.0 - margin
 	sinA := 1.0
 	if outerN > 1 {
@@ -1033,71 +959,16 @@ func layoutMultiHub(layout *PreviewLayout, zones []entities.Zone, conns []entiti
 	}
 }
 
-// findImplicitHubName returns the single non-player zone connected (Direct
-// edges) to every player zone, or "" if no such zone exists. Used to render
-// shared hubs that were not literally named "Hub".
-func findImplicitHubName(zones []entities.Zone, conns []entities.Connection) string {
-	playerNames := map[string]bool{}
-	for _, z := range zones {
-		if strings.HasPrefix(z.Name, "Spawn-") {
-			playerNames[z.Name] = true
-		}
-	}
-	if len(playerNames) == 0 {
-		return ""
-	}
-	neighbours := make(map[string]map[string]bool, len(zones))
-	for _, c := range conns {
-		if isStructuralIgnored(c.ConnectionType) {
-			continue
-		}
-		if neighbours[c.From] == nil {
-			neighbours[c.From] = map[string]bool{}
-		}
-		if neighbours[c.To] == nil {
-			neighbours[c.To] = map[string]bool{}
-		}
-		neighbours[c.From][c.To] = true
-		neighbours[c.To][c.From] = true
-	}
-	bestName := ""
-	bestDeg := -1
-	for _, z := range zones {
-		if strings.HasPrefix(z.Name, "Spawn-") {
-			continue
-		}
-		nb := neighbours[z.Name]
-		if len(nb) < 2 {
-			continue
-		}
-		connectsAll := true
-		for p := range playerNames {
-			if !nb[p] {
-				connectsAll = false
-				break
-			}
-		}
-		if !connectsAll {
-			continue
-		}
-		if len(nb) > bestDeg {
-			bestDeg = len(nb)
-			bestName = z.Name
-		}
-	}
-	return bestName
-}
-
 // ── Tier / letter helpers (kept for compatibility) ────────────────────────
 
 // ExtractZoneLetter returns the trailing letter portion of a zone name like
 // "Spawn-A" → "A" or "Neutral-C" → "C". Plain names (e.g. "Hub") pass through.
 func ExtractZoneLetter(zoneName string) string {
-	if strings.HasPrefix(zoneName, "Spawn-") {
-		return strings.TrimPrefix(zoneName, "Spawn-")
+	if after, ok := strings.CutPrefix(zoneName, "Spawn-"); ok {
+		return after
 	}
-	if strings.HasPrefix(zoneName, "Neutral-") {
-		return strings.TrimPrefix(zoneName, "Neutral-")
+	if after, ok := strings.CutPrefix(zoneName, "Neutral-"); ok {
+		return after
 	}
 	return zoneName
 }
@@ -1168,7 +1039,7 @@ func connectedComponents(n int, adj [][]int) [][]int {
 		id[i] = -1
 	}
 	var comps [][]int
-	for start := 0; start < n; start++ {
+	for start := range n {
 		if id[start] >= 0 {
 			continue
 		}

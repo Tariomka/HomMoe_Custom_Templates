@@ -226,7 +226,7 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 	return func(gtx layout.Context) layout.Dimensions {
 		addLabel := "Add connection"
 		if this.addMode {
-			addLabel = "Adding… (click empty to cancel)"
+			addLabel = "Adding... (click empty to cancel)"
 		}
 		hasSelection := this.selected != nil || this.selectedZone != ""
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -247,7 +247,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 	return func(gtx layout.Context) layout.Dimensions {
 		connections := derefConnections(this.working)
 		if connection_editor.ComputeHasErrors(this.zones, connections) {
-			label := material.Body2(theme, "⚠ A connection references a missing zone — fix before export.")
+			label := material.Body2(theme, "⚠ A connection references a missing zone - fix before export.")
 			label.Color = themes.ColorError
 			label.TextSize = unit.Sp(12)
 			label.MaxLines = 2
@@ -304,7 +304,7 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	}.Op())
 
 	if len(this.zones) == 0 {
-		return widgets.NewCenteredMessageWidget(theme, "No zones to edit — generate a template first.", canvasSize, outer)(gtx)
+		return widgets.NewCenteredMessageWidget(theme, "No zones to edit - generate a template first.", canvasSize, outer)(gtx)
 	}
 
 	this.recomputeGeometry(side)
@@ -682,7 +682,7 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Click a zone to edit its size, quality and guards — drag it to move it.")),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Click a zone to edit its size, quality and guards - drag it to move it.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Click a connection line to edit its guard, type and growth.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
@@ -717,18 +717,18 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, func(gtx layout.Context) layout.Dimensions {
 			return this.guardDropdown.Layout(gtx, theme)
 		}),
-		widgets.NewLabeledRowWidget(theme, "Guard value", 110, widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value")),
+		widgets.NewLabeledRowWidget(theme, "Guard value", 110, widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false)),
 		widgets.NewVerticalSpacerWidget(4),
 		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, func(gtx layout.Context) layout.Dimensions {
 			return this.weeklyDropdown.Layout(gtx, theme)
 		}),
-		widgets.NewLabeledRowWidget(theme, "Increment", 110, widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15")),
+		widgets.NewLabeledRowWidget(theme, "Increment", 110, widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false)),
 		widgets.NewVerticalSpacerWidget(6),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.advancedBool, "Advanced options"),
 	)
 	if this.advancedBool.Value {
 		rows = append(rows,
-			widgets.NewLabeledRowWidget(theme, "Match group", 110, widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_…")),
+			widgets.NewLabeledRowWidget(theme, "Match group", 110, widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_...", false)),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.escapeBool, "Guard escape"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.simSquadBool, "Sim turn squad"),
 		)
@@ -933,7 +933,7 @@ func (this *ZoneEditorDialog) manualPositions() [][2]float64 {
 func (this *ZoneEditorDialog) addZone() {
 	label := connection_editor.NextFreeZoneLabel(this.zones)
 	if label == "" {
-		this.hint = "Zone label pool exhausted — cannot add more zones."
+		this.hint = "Zone label pool exhausted - cannot add more zones."
 		return
 	}
 	this.ensureManualPositions()
@@ -945,14 +945,14 @@ func (this *ZoneEditorDialog) addZone() {
 	this.pendingFrom = ""
 	this.selectZone(zone.Name)
 	this.syncedZoneFor = ""
-	this.hint = fmt.Sprintf("Added %s — drag it into place, then connect it with “Add connection”.", zone.Name)
+	this.hint = fmt.Sprintf("Added %s - drag it into place, then connect it with “Add connection”.", zone.Name)
 }
 
 // deleteZone removes a zone and every connection referencing it. Spawn zones
 // are protected; player count is managed in the General tab.
 func (this *ZoneEditorDialog) deleteZone(name string) {
 	if !connection_editor.CanDeleteZone(name, this.playerZones) {
-		this.hint = "Spawn zones can't be deleted — change player count in the General tab."
+		this.hint = "Spawn zones can't be deleted - change player count in the General tab."
 		return
 	}
 	zones, connections := connection_editor.RemoveZone(this.zones, derefConnections(this.working), name)
@@ -983,16 +983,16 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 		},
 	}
 	if isSpawn {
-		rows = append(rows, widgets.NewDimmedLabelWidget(theme, "Player spawn zone — content is managed by the generator."))
+		rows = append(rows, widgets.NewDimmedLabelWidget(theme, "Player spawn zone - content is managed by the generator."))
 	} else if !isNeutral {
 		rows = append(rows, widgets.NewDimmedLabelWidget(theme, "Quality presets apply to neutral zones only."))
 	}
 	rows = append(rows,
 		widgets.NewVerticalSpacerWidget(6),
-		widgets.NewLabeledRowWidget(theme, "Size", 110, widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 – 2.0")),
+		widgets.NewLabeledRowWidget(theme, "Size", 110, widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 - 2.0", false)),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(theme, "Guard ×", 110, widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier")),
-		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15")),
+		widgets.NewLabeledRowWidget(theme, "Guard x", 110, widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier", false)),
+		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15", false)),
 	)
 	if isNeutral {
 		rows = append(rows,

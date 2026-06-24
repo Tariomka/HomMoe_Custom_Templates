@@ -25,13 +25,12 @@ type Window struct {
 	previewPanel *panels.PreviewPanel
 }
 
-func NewWindow(state *drivers.State) *Window {
-	window := Window{state: state}
+func NewWindow() *Window {
+	window := Window{state: drivers.NewUIState()}
 	window.toolbar = NewToolbar(window.state, window.reset)
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),
-		drivers.NewTab("Layout", panels.NewLayoutPanel(window.state)),
-		drivers.NewTab("Zone Content", panels.NewZoneContentPanel(window.state)),
+		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state)),
 		drivers.NewTab("Bonuses & Bans", panels.NewBonusesPanel(window.state)),
 	}
 	window.previewPanel = panels.NewPreviewPanel(window.state)

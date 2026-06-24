@@ -68,7 +68,7 @@ var ContentItemGroup = struct {
 		IncludeListIds.PandoraBoxArmyHighTier,
 	},
 	UnitRecruitment: []models.SidMapping{
-		// Random hires — matching the player faction.
+		// Random hires - matching the player faction.
 		IncludeListIds.RandomHiresLowTier,
 		ContentIds.RandomHire1,
 		ContentIds.RandomHire2,

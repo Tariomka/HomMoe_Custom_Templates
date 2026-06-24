@@ -18,7 +18,7 @@ var (
 
 // GeneratorConfig is the input model for the template generator
 //
-// All values here describe a single template generation request — the GUI and
+// All values here describe a single template generation request - the GUI and
 // CLI build one of these and hand it to services.Generate.
 type GeneratorConfig struct {
 	TemplateName string
@@ -32,6 +32,7 @@ type GeneratorConfig struct {
 	RandomPortals                 bool
 	MaxPortalConnections          int
 	SpawnRemoteFootholds          bool
+	RemoteFootholdCount           int
 	GenerateRoads                 bool
 	MatchPlayerCastleFactions     bool
 	MinNeutralZonesBetweenPlayers int
@@ -81,6 +82,7 @@ func NewGeneratorConfig() *GeneratorConfig {
 			HeroCountIncrement: 1,
 		},
 		SpawnRemoteFootholds:  true,
+		RemoteFootholdCount:   1,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,
 		Topology:              config_inner.TopologyCircles,
@@ -89,6 +91,7 @@ func NewGeneratorConfig() *GeneratorConfig {
 		ZoneConfiguration: ZoneConfig{
 			PlayerZoneCastles:           1,
 			NeutralZoneCastles:          1,
+			AbandonedOutpostCount:       1,
 			ResourceDensityPercent:      100,
 			StructureDensityPercent:     100,
 			NeutralStackStrengthPercent: 100,

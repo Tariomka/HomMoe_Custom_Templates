@@ -7,16 +7,19 @@ import (
 )
 
 type AdvancedSettings struct {
-	Enabled                    bool
-	NeutralLowNoCastleCount    int
-	NeutralLowCastleCount      int
-	NeutralMediumNoCastleCount int
-	NeutralMediumCastleCount   int
-	NeutralHighNoCastleCount   int
-	NeutralHighCastleCount     int
-	PlayerZoneSize             float64
-	NeutralZoneSize            float64
-	GuardRandomization         float64
+	Enabled                     bool
+	NeutralLowNoCastleCount     int
+	NeutralLowCastleCount       int
+	NeutralMediumNoCastleCount  int
+	NeutralMediumCastleCount    int
+	NeutralHighNoCastleCount    int
+	NeutralHighCastleCount      int
+	NeutralLowCastlesPerZone    int
+	NeutralMediumCastlesPerZone int
+	NeutralHighCastlesPerZone   int
+	PlayerZoneSize              float64
+	NeutralZoneSize             float64
+	GuardRandomization          float64
 }
 
 func (this AdvancedSettings) GetEffectiveGuardRandomization() float64 {

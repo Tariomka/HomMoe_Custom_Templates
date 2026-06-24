@@ -92,13 +92,57 @@ func TestBuildPreviewLayout_ExplicitHubGetsCentre(t *testing.T) {
 	}
 }
 
-func TestBuildPreviewLayout_ImplicitHubGetsCentre(t *testing.T) {
-	// Neutral connected to both players, deg >= 2 → implicit hub.
+func TestBuildPreviewLayout_ConnectedNeutralIsNotImplicitHub(t *testing.T) {
+	// A neutral connected to every spawn is NOT treated as an implicit hub:
+	// the preview only reflects template data, so it is neither flagged as a
+	// hub nor pinned to the centre - it sits on the ring like any other zone.
+	zones := []entities.Zone{
+		zone("Spawn-A"), zone("Spawn-B"), zone("Spawn-C"), zone("Neutral-H"),
+	}
+	conns := []entities.Connection{
+		conn("Neutral-H", "Spawn-A"),
+		conn("Neutral-H", "Spawn-B"),
+		conn("Neutral-H", "Spawn-C"),
+	}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
+	if p := out.Positions["Neutral-H"]; p.X == 300 && p.Y == 300 {
+		t.Errorf("expected Neutral-H on the ring, but it was centred at %+v", p)
+	}
+	for _, z := range out.Zones {
+		if z.IsHub {
+			t.Errorf("expected no hub flag on unnamed zone, but %q was flagged", z.Name)
+		}
+	}
+}
+
+func TestBuildPreviewLayout_TwoPlayerConnectorIsNotHub(t *testing.T) {
+	// A neutral that merely connects the two spawns (e.g. 2 players + 1 neutral
+	// on Ring) must NOT be promoted to a hub - there is no hub in such a layout.
 	zones := []entities.Zone{zone("Spawn-A"), zone("Spawn-B"), zone("Neutral-H")}
 	conns := []entities.Connection{conn("Neutral-H", "Spawn-A"), conn("Neutral-H", "Spawn-B")}
 	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
-	if p := out.Positions["Neutral-H"]; p.X != 300 || p.Y != 300 {
-		t.Errorf("implicit hub position = %+v, want (300,300)", p)
+	for _, z := range out.Zones {
+		if z.IsHub {
+			t.Errorf("expected no hub zones, but %q was flagged as hub", z.Name)
+		}
+	}
+}
+
+func TestBuildPreviewLayout_NamedHubIsFlagged(t *testing.T) {
+	// Only an explicitly named hub zone is rendered as a hub.
+	zones := []entities.Zone{zone("Hub"), zone("Spawn-A"), zone("Spawn-B")}
+	conns := []entities.Connection{conn("Hub", "Spawn-A"), conn("Hub", "Spawn-B")}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
+	var hubFlagged bool
+	for _, z := range out.Zones {
+		if z.Name == "Hub" {
+			hubFlagged = z.IsHub
+		} else if z.IsHub {
+			t.Errorf("expected only the named Hub to be flagged, but %q was too", z.Name)
+		}
+	}
+	if !hubFlagged {
+		t.Errorf("expected named Hub zone to be flagged as hub")
 	}
 }
 
@@ -227,10 +271,12 @@ func TestBuildPreviewLayout_ConnectionWithUnknownZoneSkipped(t *testing.T) {
 	}
 }
 
-// ── BuildPreviewLayout: two-cluster stripping (tournament) ───────────
+// ── BuildPreviewLayout: two-cluster tournament ───────────────────────
 
-func TestBuildPreviewLayout_TwoComponentsKeepsOnlyFirstCluster(t *testing.T) {
-	// Two disjoint clusters → render only the first.
+func TestBuildPreviewLayout_TwoClustersRenderAllZones(t *testing.T) {
+	// Two equally sized clusters (a tournament template) must render every
+	// zone - both players - at full canvas size rather than stripping one half
+	// or shrinking them into split sub-canvases.
 	zones := []entities.Zone{
 		zone("Spawn-A"), zone("Neutral-X"),
 		zone("Spawn-B"), zone("Neutral-Y"),
@@ -240,8 +286,8 @@ func TestBuildPreviewLayout_TwoComponentsKeepsOnlyFirstCluster(t *testing.T) {
 		conn("Spawn-B", "Neutral-Y"),
 	}
 	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
-	if len(out.Positions) != 2 {
-		t.Errorf("expected 2 positions after strip, got %d", len(out.Positions))
+	if len(out.Positions) != 4 {
+		t.Errorf("expected 4 positions (all zones from both clusters), got %d", len(out.Positions))
 	}
 }
 
@@ -406,7 +452,7 @@ func TestBuildPreviewLayout_ParallelEdgesFanOut(t *testing.T) {
 	first, second := out.Connections[0], out.Connections[1]
 	// Distinct control points: otherwise the two edges overlap into one line.
 	if first.Ctrl == second.Ctrl {
-		t.Fatalf("parallel edges share control point %v — they would overlap", first.Ctrl)
+		t.Fatalf("parallel edges share control point %v - they would overlap", first.Ctrl)
 	}
 	// Their control points straddle the midpoint symmetrically, so each edge
 	// bulges out to its own side.

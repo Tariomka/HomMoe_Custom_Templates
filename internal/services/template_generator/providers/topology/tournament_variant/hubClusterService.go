@@ -63,14 +63,14 @@ func (this *HubClusterService) createZones(
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", playerIndex+1), connectionNames,
 					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.Advanced.PlayerZoneSize, configuration.SpawnRemoteFootholds,
+					configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
 					configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(allNeutralZonePlans).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
 					connectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, false))
+					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
 	}
 	return zones

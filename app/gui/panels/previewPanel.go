@@ -3,7 +3,6 @@ package panels
 import (
 	"fmt"
 	"image"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -69,7 +68,7 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, widgets.NewTextboxWidget(theme, this.state.GetOutputPathEditor(), "Choose folder")))
+					layout.Flexed(1, widgets.NewTextboxWidget(theme, this.state.GetOutputPathEditor(), "Choose folder", true)))
 			}),
 			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -95,7 +94,7 @@ func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
 		this.state.PickOutputDir()
 	}
 	if this.btnRevealOutput.Clicked(gtx) {
-		_ = utils.RevealInExplorer(strings.TrimSpace(this.state.GetOutputPath()))
+		this.state.RevealOutputDir()
 	}
 }
 
@@ -117,7 +116,7 @@ func (this *PreviewPanel) getTemplateNameWidget(theme *material.Theme) layout.Wi
 	label := material.Overline(theme, name)
 	label.Color = themes.ColorTextDim
 	label.MaxLines = 1
-	label.Truncator = "…"
+	label.Truncator = "..."
 	label.Alignment = text.End
 	return label.Layout
 }
@@ -235,29 +234,49 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 }
 
 func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions {
-		children := []layout.FlexChild{}
-		for i, item := range constants.LegendItems {
-			if i > 0 {
-				children = append(children, layout.Rigid(widgets.NewHorizontalSpacerWidget(8)))
+	renderRow := func(items []constants.LegendItem) layout.Widget {
+		return func(gtx layout.Context) layout.Dimensions {
+			children := []layout.FlexChild{}
+			for i, item := range items {
+				if i > 0 {
+					children = append(children, layout.Rigid(widgets.NewHorizontalSpacerWidget(8)))
+				}
+				children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							if item.Line {
+								width := gtx.Dp(constants.DefaultRoundnessOverlineText) * 2
+								height := gtx.Dp(unit.Dp(2))
+								rect := image.Rect(0, 0, width, height)
+								paint.FillShape(gtx.Ops, item.Color, clip.Rect(rect).Op())
+								return layout.Dimensions{Size: rect.Max}
+							}
+							side := gtx.Dp(constants.DefaultRoundnessOverlineText)
+							rect := image.Rect(0, 0, side, side)
+							paint.FillShape(gtx.Ops, item.Color, clip.UniformRRect(rect, side/2).Op(gtx.Ops))
+							return layout.Dimensions{Size: rect.Max}
+						}),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(4)),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							label := material.Overline(theme, item.Label)
+							label.Color = themes.ColorTextDim
+							return label.Layout(gtx)
+						}),
+					)
+				}))
 			}
-			children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						side := gtx.Dp(constants.DefaultRoundnessOverlineText)
-						rect := image.Rect(0, 0, side, side)
-						paint.FillShape(gtx.Ops, item.Color, clip.UniformRRect(rect, side/2).Op(gtx.Ops))
-						return layout.Dimensions{Size: rect.Max}
-					}),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(4)),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						label := material.Overline(theme, item.Label)
-						label.Color = themes.ColorTextDim
-						return label.Layout(gtx)
-					}),
-				)
-			}))
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)
 		}
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)
+	}
+
+	return func(gtx layout.Context) layout.Dimensions {
+		rows := []layout.FlexChild{}
+		for i, row := range constants.LegendRows {
+			if i > 0 {
+				rows = append(rows, layout.Rigid(widgets.NewVerticalSpacerWidget(4)))
+			}
+			rows = append(rows, layout.Rigid(renderRow(row)))
+		}
+		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx, rows...)
 	}
 }

@@ -76,7 +76,7 @@ func (this *BonusesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 // frame so the rows stay in sync with the underlying entry slices.
 func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	bonusRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "+ Add bonus…", &this.addBonusBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add bonus...", &this.addBonusBtn, false),
 	}
 	if len(this.bonuses) == 0 {
 		bonusRows = append(bonusRows, widgets.NewDimmedLabelWidget(theme, "(no bonuses)"))
@@ -90,7 +90,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	itemRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "+ Add banned item…", &this.pickItemsBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add banned item...", &this.pickItemsBtn, false),
 	}
 	if len(this.bannedItems) == 0 {
 		itemRows = append(itemRows, widgets.NewDimmedLabelWidget(theme, "(no banned items)"))
@@ -101,7 +101,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	spellRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "+ Add banned spell…", &this.pickSpellsBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add banned spell...", &this.pickSpellsBtn, false),
 	}
 	if len(this.bannedMagics) == 0 {
 		spellRows = append(spellRows, widgets.NewDimmedLabelWidget(theme, "(no banned spells)"))
@@ -112,7 +112,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	overrideRows := []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "+ Add override…", &this.pickOverridesBtn, false),
+		widgets.NewGoldButtonWidget(theme, "+ Add override...", &this.pickOverridesBtn, false),
 	}
 	if len(this.valueOverrides) == 0 {
 		overrideRows = append(overrideRows, widgets.NewDimmedLabelWidget(theme, "(no overrides)"))
@@ -123,7 +123,7 @@ func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
 	}
 
 	return []layout.Widget{
-		// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL — Effects only apply on generation."),
+		// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL - Effects only apply on generation."),
 		widgets.NewHorizontallySplitWidget(theme,
 			func(theme *material.Theme) layout.Widget {
 				return func(gtx layout.Context) layout.Dimensions {

@@ -15,11 +15,12 @@ import (
 )
 
 // NewTextboxWidget returns a Widget that renders a text editor box
-func NewTextboxWidget(theme *material.Theme, textEditor *widget.Editor, hint string) layout.Widget {
+func NewTextboxWidget(theme *material.Theme, textEditor *widget.Editor, hint string, readonly bool) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)
 
 		textEditor := material.Editor(theme, textEditor, hint)
+		textEditor.Editor.ReadOnly = readonly
 		textEditor.Color = themes.ColorText
 		textEditor.HintColor = themes.ColorTextDim
 		textEditor.TextSize = unit.Sp(12)

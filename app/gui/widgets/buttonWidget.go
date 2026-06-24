@@ -37,7 +37,11 @@ func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickab
 			rect := image.Rectangle{Max: dims.Size}
 			paint.FillShape(gtx.Ops, themes.ColorButton,
 				clip.UniformRRect(rect, radius).Op(gtx.Ops))
-			paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
+			border := themes.ColorBorder
+			if !disabled && button.Hovered() {
+				border = themes.ColorHover
+			}
+			paint.FillShape(gtx.Ops, border, clip.Stroke{
 				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 				Width: float32(gtx.Dp(1)),
 			}.Op())
@@ -56,6 +60,9 @@ func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.C
 			bgColor := themes.ColorInput
 			fgColor := themes.ColorTextDim
 			border := themes.ColorBorder
+			if button.Hovered() && !active {
+				border = themes.ColorHover
+			}
 			if active {
 				bgColor = themes.ColorPrimaryButton
 				fgColor = themes.ColorAccentBright
@@ -98,13 +105,15 @@ func NewGoldButtonWidget(theme *material.Theme, label string, button *widget.Cli
 				return layout.Center.Layout(gtx, label.Layout)
 			})
 			call := macro.Stop()
-			radius := gtx.Dp(constants.DefaultRoundness)
+			radius := gtx.Dp(constants.DefaultRoundnessLarge)
 			rect := image.Rectangle{Max: dims.Size}
 			bgColor := themes.ColorPrimaryButton
 			border := themes.ColorAccent
 			if disabled {
 				bgColor = themes.ColorButtonDisabled
 				border = themes.ColorBorderDisabled
+			} else if button.Hovered() {
+				border = themes.ColorAccentBright
 			}
 			paint.FillShape(gtx.Ops, bgColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			paint.FillShape(gtx.Ops, border, clip.Stroke{

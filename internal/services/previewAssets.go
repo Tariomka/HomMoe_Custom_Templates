@@ -86,13 +86,7 @@ func neutralSpriteFor(assets *previewAssets, zone PreviewZone) image.Image {
 
 // playerSpriteFor maps a player zone to its numbered bubble sprite.
 func playerSpriteFor(assets *previewAssets, zone PreviewZone) image.Image {
-	owner := zone.Owner
-	if owner < 1 {
-		owner = 1
-	}
-	if owner > 8 {
-		owner = 8
-	}
+	owner := min(max(zone.Owner, 1), 8)
 	return assets.players[owner-1]
 }
 

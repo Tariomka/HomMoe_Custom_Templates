@@ -6,6 +6,7 @@ type ZoneConfig struct {
 	PlayerZoneCastles           int
 	NeutralZoneCastles          int
 	SpawnAbandonedOutposts      bool
+	AbandonedOutpostCount       int
 	ResourceDensityPercent      int
 	StructureDensityPercent     int
 	NeutralStackStrengthPercent int

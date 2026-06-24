@@ -2,7 +2,7 @@ package models
 
 // ZoneContentRowSave is the lightweight serialisation record for a single
 // mandatory-content UI row. It preserves the row exactly as the user
-// configured it, including the Count slider — so e.g. two separate sawmill
+// configured it, including the Count slider - so e.g. two separate sawmill
 // rows stay as two rows after a round-trip.
 type ZoneContentRowSave struct {
 	// SID of the content item or include-list.
