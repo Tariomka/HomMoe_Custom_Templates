@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"fmt"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -20,12 +22,16 @@ func (this *MandatoryContentProvider) CreateContents(
 	playerLabels []string,
 	neutralZones models.NeutralZonePlans) []entities.MandatoryContent {
 	var groups []entities.MandatoryContent
+	footholdCount := 0
+	if configuration.SpawnRemoteFootholds {
+		footholdCount = configuration.RemoteFootholdCount
+	}
 	for _, letter := range playerLabels {
 		groups = append(groups, entities.MandatoryContent{
 			Name: "mandatory_content_side_" + letter,
 			Content: this.createContentItemsWithFoothold(
 				configuration.PlayerZoneMandatoryContent,
-				configuration.SpawnRemoteFootholds,
+				footholdCount,
 				configuration.ZoneConfiguration.PlayerZoneCastles),
 		})
 	}
@@ -44,7 +50,7 @@ func (this *MandatoryContentProvider) CreateContents(
 		}
 		groups = append(groups, entities.MandatoryContent{
 			Name:    "mandatory_content_neutral_" + neutralZone.Label,
-			Content: this.createContentItemsWithFoothold(content, configuration.SpawnRemoteFootholds, neutralZone.CastleCount),
+			Content: this.createContentItemsWithFoothold(content, footholdCount, neutralZone.CastleCount),
 		})
 	}
 	return groups
@@ -85,20 +91,21 @@ func (this *MandatoryContentProvider) createContentItemFrom(
 
 func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 	rows []entities.MandatoryContentItem,
-	addFoothold bool,
+	footholdCount int,
 	castleCount int) []entities.MandatoryContentItem {
 	var content []entities.MandatoryContentItem
-	if addFoothold {
-		content = append(content, this.createFootholdContentItem(castleCount))
+	for i := 1; i <= footholdCount; i++ {
+		content = append(content, this.createFootholdContentItem(i, castleCount))
 	}
 	content = append(content, rows...)
 	return content
 }
 
 func (this *MandatoryContentProvider) createFootholdContentItem(
+	index int,
 	castleCount int) entities.MandatoryContentItem {
 	return mandatory_content.NewContentBuilder(nonContentObjects.RemoteFoothold).
-		WithName("name_remote_foothold_1").
+		WithName(fmt.Sprintf("name_remote_foothold_%d", index)).
 		WithSoloEncounter().
 		WithRulesCallback(func() []entities.PlacementRule {
 			rules := []entities.PlacementRule{

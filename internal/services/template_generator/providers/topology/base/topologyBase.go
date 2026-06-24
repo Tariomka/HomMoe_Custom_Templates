@@ -71,7 +71,7 @@ func (this *TopologyBase) CreateSpawnZone(
 	castleCount int,
 	matchFactions bool,
 	zoneSize float64,
-	spawnFootholds,
+	footholdCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
 	mainObjects := []entities.MainObject{
@@ -111,7 +111,7 @@ func (this *TopologyBase) CreateSpawnZone(
 		WithMainObjects(mainObjects).
 		WithBiomeMatchMainObject("0").
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, roadCastleCount, spawnFootholds, generateRoads)).
+		WithRoads(this.createOuterZoneRoads(connectionNames, roadCastleCount, footholdCount, generateRoads)).
 		Build()
 }
 
@@ -119,13 +119,20 @@ func (this *TopologyBase) CreateNeutralZone(
 	plan models.NeutralZonePlan,
 	connectionNames []string,
 	zoneSize float64,
-	spawnFootholds, generateRoads bool,
+	footholdCount int,
+	generateRoads bool,
 	tuning models.GenerationTuning,
 	isHoldCity bool) entities.Zone {
 	if isHoldCity && plan.CastleCount < 1 {
 		plan.CastleCount = 1
 	}
 	profile := models.NewNeutralZoneProfile(plan.Quality)
+
+	// Abandoned outposts are spawned in addition to the zone's castles, with
+	// their own count slider instead of being tied to the castle count.
+	mainObjects := CreateNeutralZoneCastles(profile, tuning, plan.CastleCount, isHoldCity)
+	mainObjects = append(mainObjects, createAbandonedOutposts(profile, tuning, tuning.AbandonedOutpostCount)...)
+	totalMainObjects := plan.CastleCount + tuning.AbandonedOutpostCount
 
 	zoneBuilder := variant_content.NewZoneBuilder().
 		WithName("Neutral-" + plan.Label).
@@ -148,11 +155,11 @@ func (this *TopologyBase) CreateNeutralZone(
 		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
 		WithResourcesValue(tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)).
 		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithMainObjects(CreateNeutralZoneCastles(profile, tuning, plan.CastleCount, isHoldCity)).
+		WithMainObjects(mainObjects).
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, plan.CastleCount, spawnFootholds, generateRoads))
+		WithRoads(this.createOuterZoneRoads(connectionNames, totalMainObjects, footholdCount, generateRoads))
 
-	if plan.CastleCount > 0 {
+	if totalMainObjects > 0 {
 		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
 	} else {
 		zoneBuilder = zoneBuilder.WithBiomeMatchZone()
@@ -194,7 +201,7 @@ func (this *TopologyBase) CreateHubZone(
 		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale))).
 		WithMainObjects(this.createHubZoneCastles(tuning, castleCount, isHoldCity)).
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, false, generateRoads))
+		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, 0, generateRoads))
 
 	if castleCount > 0 {
 		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
@@ -551,15 +558,10 @@ func CreateNeutralZoneCastles(
 
 	if castleCount > 0 {
 		objectBuilder := variant_content.NewObjectBuilder().
+			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardWeeklyIncrement(0.10).
 			WithFaction("FromList")
-
-		if tuning.SpawnAbandonedOutposts {
-			objectBuilder = objectBuilder.WithTypeAbandonedOutpost()
-		} else {
-			objectBuilder = objectBuilder.WithTypeCity()
-		}
 
 		if isHoldCityZone {
 			objectBuilder = objectBuilder.
@@ -580,6 +582,7 @@ func CreateNeutralZoneCastles(
 
 	for range castleCount - 1 {
 		objectBuilder := variant_content.NewObjectBuilder().
+			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
 			WithGuardWeeklyIncrement(0.10).
@@ -588,16 +591,34 @@ func CreateNeutralZoneCastles(
 			WithPlacementUniform().
 			WithPlacementArgs("false", "-0.8", "3")
 
-		if tuning.SpawnAbandonedOutposts {
-			objectBuilder = objectBuilder.WithTypeAbandonedOutpost()
-		} else {
-			objectBuilder = objectBuilder.WithTypeCity()
-		}
-
 		castles = append(castles, objectBuilder.Build())
 	}
 
 	return castles
+}
+
+// createAbandonedOutposts builds extra AbandonedOutpost main objects that sit
+// in a neutral zone alongside its City castles. The number of outposts is
+// driven by the dedicated count rather than the zone's castle count.
+func createAbandonedOutposts(
+	profile models.NeutralZoneProfile,
+	tuning models.GenerationTuning,
+	count int) []entities.MainObject {
+	var outposts []entities.MainObject
+	for range count {
+		outposts = append(outposts,
+			variant_content.NewObjectBuilder().
+				WithTypeAbandonedOutpost().
+				WithGuardChance(1).
+				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
+				WithGuardWeeklyIncrement(0.10).
+				WithCastleQuality(profile.ExtraBuildingsCSid).
+				WithFaction("FromList").
+				WithPlacementUniform().
+				WithPlacementArgs("false", "-0.8", "3").
+				Build())
+	}
+	return outposts
 }
 
 func (this *TopologyBase) createHubZoneCastles(
@@ -646,7 +667,7 @@ func (this *TopologyBase) createHubZoneCastles(
 func (this *TopologyBase) createOuterZoneRoads(
 	connectionNames []string,
 	castleCount int,
-	includeFoothold, generateRoads bool) []entities.Road {
+	footholdCount int, generateRoads bool) []entities.Road {
 	if !generateRoads {
 		return nil
 	}
@@ -664,11 +685,11 @@ func (this *TopologyBase) createOuterZoneRoads(
 				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i+1))).
 				Build())
 	}
-	if includeFoothold {
+	for i := 1; i <= footholdCount; i++ {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
 				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMandatoryContentType("name_remote_foothold_1")).
+				WithTo(variant_content.NewRefBuilder().BuildMandatoryContentType(fmt.Sprintf("name_remote_foothold_%d", i))).
 				Build())
 	}
 	for _, name := range connectionNames {

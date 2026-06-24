@@ -480,7 +480,7 @@ func TestGenerate_CityHold_NeutralHasHoldCityFlag(t *testing.T) {
 
 // ── Generate: abandoned outposts ─────────────────────────────────────
 
-func TestGenerate_AbandonedOutposts_NeutralCitiesBecomeOutposts(t *testing.T) {
+func TestGenerate_AbandonedOutposts_AddedAlongsideNeutralCities(t *testing.T) {
 	makeSettings := func(spawnOutposts bool) *config.GeneratorConfig {
 		s := defaultSettings()
 		s.Topology = config.TopologyRing
@@ -513,8 +513,10 @@ func TestGenerate_AbandonedOutposts_NeutralCitiesBecomeOutposts(t *testing.T) {
 		t.Fatal("baseline produced no neutral City main objects to compare against")
 	}
 
-	// With the flag, every neutral settlement becomes an AbandonedOutpost.
+	// With the flag, abandoned outposts are added alongside the neutral cities
+	// rather than replacing them.
 	withOutposts := template_generator.NewTemplateGenerator(makeSettings(true)).Generate()
+	withCityCount := 0
 	outpostCount := 0
 	for _, z := range withOutposts.Variants[0].Zones {
 		if !strings.HasPrefix(z.Name, "Neutral-") {
@@ -523,11 +525,14 @@ func TestGenerate_AbandonedOutposts_NeutralCitiesBecomeOutposts(t *testing.T) {
 		for _, mo := range z.MainObjects {
 			switch mo.Type {
 			case "City":
-				t.Errorf("zone %q still has a City main object with abandoned outposts enabled", z.Name)
+				withCityCount++
 			case "AbandonedOutpost":
 				outpostCount++
 			}
 		}
+	}
+	if withCityCount != cityCount {
+		t.Errorf("expected neutral cities to remain (%d) when outposts are enabled, got %d", cityCount, withCityCount)
 	}
 	if outpostCount == 0 {
 		t.Error("expected at least one AbandonedOutpost main object with the option enabled")

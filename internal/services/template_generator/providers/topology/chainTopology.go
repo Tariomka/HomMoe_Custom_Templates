@@ -81,13 +81,13 @@ func (this *ChainTopologyService) createZones(
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", playerIndex+1), tempConnectionNames, configuration.ZoneConfiguration.PlayerZoneCastles,
 					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning))
+					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
 					tempConnectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-					configuration.SpawnRemoteFootholds, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
+					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
 	}
 	return zones

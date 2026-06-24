@@ -23,6 +23,7 @@ type EditorStateDto struct {
 	PlayerZoneCastles             int    `json:"playerCastles"`
 	NeutralZoneCastles            int    `json:"neutralCastles"`
 	SpawnAbandonedOutposts        bool   `json:"spawnAbandonedOutposts"`
+	AbandonedOutpostCount         int    `json:"abandonedOutpostCount"`
 	AdvancedMode                  bool   `json:"advancedMode"`
 	NeutralLowNoCastleCount       int    `json:"neutralLowNoCastle"`
 	NeutralLowCastleCount         int    `json:"neutralLowCastle"`
@@ -46,6 +47,7 @@ type EditorStateDto struct {
 	RandomPortals                bool                     `json:"randomPortals"`
 	MaxPortalConnections         int                      `json:"maxPortalConns"`
 	SpawnRemoteFootholds         bool                     `json:"spawnFootholds"`
+	RemoteFootholdCount          int                      `json:"remoteFootholdCount"`
 	GenerateRoads                bool                     `json:"generateRoads"`
 	NoDirectPlayerConn           bool                     `json:"isolateplayers"`
 	ResourceDensityPercent       int                      `json:"resourceDensity"`
@@ -103,6 +105,8 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		Topology:                     config_inner.TopologyRandom,
 		MaxPortalConnections:         32,
 		SpawnRemoteFootholds:         true,
+		RemoteFootholdCount:          1,
+		AbandonedOutpostCount:        1,
 		GenerateRoads:                true,
 		ResourceDensityPercent:       100,
 		StructureDensityPercent:      100,
@@ -134,6 +138,9 @@ func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDt
 		this.MaxPortalConnections != incoming.MaxPortalConnections ||
 		this.MinNeutralZonesBetweenPlayers != incoming.MinNeutralZonesBetweenPlayers ||
 		this.SpawnRemoteFootholds != incoming.SpawnRemoteFootholds ||
+		this.RemoteFootholdCount != incoming.RemoteFootholdCount ||
+		this.SpawnAbandonedOutposts != incoming.SpawnAbandonedOutposts ||
+		this.AbandonedOutpostCount != incoming.AbandonedOutpostCount ||
 		this.zoneCountOptionsChanged(incoming)
 }
 

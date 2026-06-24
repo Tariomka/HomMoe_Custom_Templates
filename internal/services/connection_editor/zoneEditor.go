@@ -50,7 +50,7 @@ func NewDefaultNeutralZone(
 	tuning models.GenerationTuning) entities.Zone {
 	topology := base.NewTopologyBase()
 	plan := models.NeutralZonePlan{Label: label, Quality: quality, CastleCount: castleCount}
-	zone := topology.CreateNeutralZone(plan, nil, 1.0, false, generateRoads, tuning, false)
+	zone := topology.CreateNeutralZone(plan, nil, 1.0, tuning.RemoteFootholdCount, generateRoads, tuning, false)
 	zone.MandatoryContent = nil
 	return zone
 }

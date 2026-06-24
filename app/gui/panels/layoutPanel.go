@@ -26,9 +26,11 @@ type LayoutPanel struct {
 	chkPortals             widget.Bool
 	sldMaxPortals          widget.Float
 	chkFootholds           widget.Bool
+	sldRemoteFootholds     widget.Float
 	chkPlayerIsolation     widget.Bool
 	chkMatchPlayerFactions widget.Bool
 	chkAbandonedOutposts   widget.Bool
+	sldAbandonedOutposts   widget.Float
 	sldMinNeutralBetween   widget.Float
 
 	chkAdvancedZones       widget.Bool
@@ -115,9 +117,11 @@ func (this *LayoutPanel) LoadFromState() {
 	this.chkPortals.Value = settings.RandomPortals
 	this.sldMaxPortals.Value = utils.Normalize(float32(settings.MaxPortalConnections), 1, 32)
 	this.chkFootholds.Value = settings.SpawnRemoteFootholds
+	this.sldRemoteFootholds.Value = utils.Normalize(float32(settings.RemoteFootholdCount), 0, 4)
 	this.chkPlayerIsolation.Value = settings.NoDirectPlayerConn
 	this.chkMatchPlayerFactions.Value = settings.MatchPlayerCastleFactions
 	this.chkAbandonedOutposts.Value = settings.SpawnAbandonedOutposts
+	this.sldAbandonedOutposts.Value = utils.Normalize(float32(settings.AbandonedOutpostCount), 0, 4)
 	this.sldMinNeutralBetween.Value = utils.Normalize(float32(settings.MinNeutralZonesBetweenPlayers), 0, 8)
 
 	this.chkAdvancedZones.Value = settings.AdvancedMode
@@ -151,9 +155,11 @@ func (this *LayoutPanel) SaveToState() {
 		settings.RandomPortals = this.chkPortals.Value
 		settings.MaxPortalConnections = utils.RoundedRange(this.sldMaxPortals.Value, 1, 32)
 		settings.SpawnRemoteFootholds = this.chkFootholds.Value
+		settings.RemoteFootholdCount = utils.RoundedRange(this.sldRemoteFootholds.Value, 0, 4)
 		settings.NoDirectPlayerConn = this.chkPlayerIsolation.Value
 		settings.MatchPlayerCastleFactions = this.chkMatchPlayerFactions.Value
 		settings.SpawnAbandonedOutposts = this.chkAbandonedOutposts.Value
+		settings.AbandonedOutpostCount = utils.RoundedRange(this.sldAbandonedOutposts.Value, 0, 4)
 		settings.MinNeutralZonesBetweenPlayers = utils.RoundedRange(this.sldMinNeutralBetween.Value, 0, 8)
 
 		settings.AdvancedMode = this.chkAdvancedZones.Value
@@ -210,7 +216,29 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
-		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAbandonedOutposts, "Spawn abandoned outposts instead of neutral castles"),
+		func(gtx layout.Context) layout.Dimensions {
+			if !this.chkFootholds.Value {
+				return layout.Dimensions{}
+			}
+
+			return widgets.NewLabeledRowWidget(
+				theme, "Remote footholds", constants.DefaultLabelWidth,
+				widgets.NewLabeledSliderWidget(
+					theme, &this.sldRemoteFootholds,
+					utils.RoundedRangeString(this.sldRemoteFootholds.Value, 0, 4)))(gtx)
+		},
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAbandonedOutposts, "Spawn abandoned outposts alongside neutral castles"),
+		func(gtx layout.Context) layout.Dimensions {
+			if !this.chkAbandonedOutposts.Value {
+				return layout.Dimensions{}
+			}
+
+			return widgets.NewLabeledRowWidget(
+				theme, "Abandoned outposts", constants.DefaultLabelWidth,
+				widgets.NewLabeledSliderWidget(
+					theme, &this.sldAbandonedOutposts,
+					utils.RoundedRangeString(this.sldAbandonedOutposts.Value, 0, 4)))(gtx)
+		},
 		// TODO: Investigate this. Is it used? How does it work? Seems like it does not do anything
 		// or at minimum does not work as expected. Also if it works, range needs to be dynamic
 		// based on current neutral and player zone counts

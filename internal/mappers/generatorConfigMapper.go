@@ -30,6 +30,7 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.GenerateRoads = editorState.GenerateRoads
 	generatorSettings.RandomPortals = editorState.RandomPortals
 	generatorSettings.SpawnRemoteFootholds = editorState.SpawnRemoteFootholds
+	generatorSettings.RemoteFootholdCount = editorState.RemoteFootholdCount
 	generatorSettings.NoDirectPlayerConnections = editorState.NoDirectPlayerConn
 	generatorSettings.MaxPortalConnections = editorState.MaxPortalConnections
 	generatorSettings.MinNeutralZonesBetweenPlayers = editorState.MinNeutralZonesBetweenPlayers
@@ -52,6 +53,7 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 		PlayerZoneCastles:           editorState.PlayerZoneCastles,
 		NeutralZoneCastles:          editorState.NeutralZoneCastles,
 		SpawnAbandonedOutposts:      editorState.SpawnAbandonedOutposts,
+		AbandonedOutpostCount:       editorState.AbandonedOutpostCount,
 		ResourceDensityPercent:      editorState.ResourceDensityPercent,
 		StructureDensityPercent:     editorState.StructureDensityPercent,
 		NeutralStackStrengthPercent: editorState.NeutralStackStrengthPercent,
