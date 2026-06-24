@@ -11,6 +11,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
@@ -91,27 +92,25 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 			dims := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						label := material.Body1(theme, this.value())
+						label := material.Caption(theme, this.value())
 						label.Color = themes.ColorText
-						label.TextSize = unit.Sp(13)
 						label.MaxLines = 1
 						label.Truncator = "..."
 						return label.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						arrow := "▾"
+						arrow := "▼"
 						if this.isOpen {
-							arrow = "▴"
+							arrow = "▲"
 						}
-						label := material.Body1(theme, arrow)
+						label := material.Overline(theme, arrow)
 						label.Color = themes.ColorAccentDim
-						label.TextSize = unit.Sp(11)
 						return label.Layout(gtx)
 					}),
 				)
 			})
 			call := macro.Stop()
-			radius := gtx.Dp(2)
+			radius := gtx.Dp(constants.DefaultRoundness)
 			rect := image.Rectangle{Max: dims.Size}
 			paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			border := themes.ColorBorder
@@ -133,7 +132,7 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 
 func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
-	rows := make([]layout.FlexChild, 0, len(this.items))
+	rows := []layout.FlexChild{}
 	for i, item := range this.items {
 		rows = append(rows, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return material.Clickable(gtx, &item.row, func(gtx layout.Context) layout.Dimensions {
@@ -143,7 +142,7 @@ func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.The
 	}
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx, rows...)
 	call := macro.Stop()
-	radius := gtx.Dp(2)
+	radius := gtx.Dp(constants.DefaultRoundness)
 	rect := image.Rectangle{Max: dims.Size}
 	paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 	paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
@@ -157,9 +156,8 @@ func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.The
 func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selected bool, hovered bool) layout.Dimensions {
 	macro := op.Record(gtx.Ops)
 	dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		label := material.Body1(theme, label)
+		label := material.Caption(theme, label)
 		label.Color = themes.ColorText
-		label.TextSize = unit.Sp(13)
 		label.MaxLines = 1
 		label.Truncator = "..."
 		if selected {
