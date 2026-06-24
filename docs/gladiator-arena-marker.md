@@ -117,15 +117,21 @@ connector line masked out) and matched to the existing 96x96 sprite format
 | File                         | Contents                                              |
 | ---------------------------- | ----------------------------------------------------- |
 | `gladiator_arena.png`        | Crossed swords only, transparent background           |
-| `neutral_low_arena.png`      | Crossed swords over a **low** neutral zone bubble     |
-| `neutral_medium_arena.png`   | Crossed swords over a **medium** neutral zone bubble  |
-| `neutral_high_arena.png`     | Crossed swords over a **high** neutral zone bubble    |
+| `neutral_none_arena.png`     | Crossed swords over a **none** (open-ring) zone bubble |
+| `neutral_low_arena.png`      | Crossed swords over a **low** (bronze) zone bubble    |
+| `neutral_medium_arena.png`   | Crossed swords over a **medium** (silver) zone bubble |
+| `neutral_high_arena.png`     | Crossed swords over a **high** (gold) zone bubble     |
 
 Notes:
 
-- `gladiator_arena.png` is the master glyph; it is composited (scaled to sit
-  inside the ring) onto the existing `neutral_{low,medium,high}.png` bubbles to
-  produce the three zone-background variants.
+- `gladiator_arena.png` is the master glyph (solid, fully opaque swords). It is
+  composited at ~0.85 scale (so the swords are about as big as the zone's outer
+  ring, matching the Blitz preview) onto the `neutral_{none,low,medium,high}.png`
+  bubbles to produce the zone-background variants.
+- The neutral-zone quality bubbles are: **none** = open ring (transparent
+  centre), **low** = light bronze, **medium** = silver, **high** = gold. The
+  bronze **low** bubble is derived from the gold **high** bubble by recolouring
+  the fill (keeping the ring and shading).
 - The **medium** variant has no official source (no official template places an
   arena in a medium zone); it is synthesised from the master glyph for
   completeness of the sprite set.
