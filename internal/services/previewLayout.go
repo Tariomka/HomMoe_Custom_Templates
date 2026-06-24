@@ -688,11 +688,11 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 	minDist := zoneRadius * scatterMinDist
 	edgeClear := zoneRadius * scatterEdgeClear
 
-	for pass := 0; pass < 500; pass++ {
+	for range 500 {
 		moved := false
 
 		// A: hard floor.
-		for i := 0; i < n; i++ {
+		for i := range n {
 			for j := i + 1; j < n; j++ {
 				dx := px[i] - px[j]
 				dy := py[i] - py[j]
@@ -713,7 +713,7 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 		}
 
 		// B: edge clearance.
-		for a := 0; a < n; a++ {
+		for a := range n {
 			for _, b := range adj[a] {
 				if b <= a {
 					continue
@@ -826,10 +826,7 @@ func layoutRingOrHub(layout *PreviewLayout, zones []entities.Zone, conns []entit
 			outer = append(outer, i)
 		}
 	}
-	outerN := len(outer)
-	if outerN < 1 {
-		outerN = 1
-	}
+	outerN := max(len(outer), 1)
 	ringRadius0 := side/2.0 - margin
 	sinA := 1.0
 	if outerN > 1 {
@@ -967,11 +964,11 @@ func layoutMultiHub(layout *PreviewLayout, zones []entities.Zone, conns []entiti
 // ExtractZoneLetter returns the trailing letter portion of a zone name like
 // "Spawn-A" → "A" or "Neutral-C" → "C". Plain names (e.g. "Hub") pass through.
 func ExtractZoneLetter(zoneName string) string {
-	if strings.HasPrefix(zoneName, "Spawn-") {
-		return strings.TrimPrefix(zoneName, "Spawn-")
+	if after, ok := strings.CutPrefix(zoneName, "Spawn-"); ok {
+		return after
 	}
-	if strings.HasPrefix(zoneName, "Neutral-") {
-		return strings.TrimPrefix(zoneName, "Neutral-")
+	if after, ok := strings.CutPrefix(zoneName, "Neutral-"); ok {
+		return after
 	}
 	return zoneName
 }
@@ -1042,7 +1039,7 @@ func connectedComponents(n int, adj [][]int) [][]int {
 		id[i] = -1
 	}
 	var comps [][]int
-	for start := 0; start < n; start++ {
+	for start := range n {
 		if id[start] >= 0 {
 			continue
 		}
