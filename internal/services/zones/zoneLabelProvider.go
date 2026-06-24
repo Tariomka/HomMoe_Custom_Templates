@@ -35,7 +35,6 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 	configuration config.GeneratorConfig) models.NeutralZonePlans {
 	var plans models.NeutralZonePlans
 	maxNeutral := max(0, len(this.zoneLabels)-configuration.PlayerCount)
-	castleZoneCastleCount := helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 1, 4)
 
 	add := func(requested int, quality models.NeutralZoneQuality, castleCount int) {
 		count := helpers.Clamp(requested, 0, 30)                // TODO: Clamp up to labelCount - playerCount
@@ -49,12 +48,15 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 		advanced.NeutralMediumNoCastleCount + advanced.NeutralMediumCastleCount +
 		advanced.NeutralHighNoCastleCount + advanced.NeutralHighCastleCount
 	if advancedTotal > 0 {
+		lowCastlesPerZone := helpers.Clamp(advanced.NeutralLowCastlesPerZone, 0, 4)
+		medCastlesPerZone := helpers.Clamp(advanced.NeutralMediumCastlesPerZone, 0, 4)
+		highCastlesPerZone := helpers.Clamp(advanced.NeutralHighCastlesPerZone, 0, 4)
 		add(advanced.NeutralLowNoCastleCount, models.QualityLow, 0)
-		add(advanced.NeutralLowCastleCount, models.QualityLow, castleZoneCastleCount)
+		add(advanced.NeutralLowCastleCount, models.QualityLow, lowCastlesPerZone)
 		add(advanced.NeutralMediumNoCastleCount, models.QualityMedium, 0)
-		add(advanced.NeutralMediumCastleCount, models.QualityMedium, castleZoneCastleCount)
+		add(advanced.NeutralMediumCastleCount, models.QualityMedium, medCastlesPerZone)
 		add(advanced.NeutralHighNoCastleCount, models.QualityHigh, 0)
-		add(advanced.NeutralHighCastleCount, models.QualityHigh, castleZoneCastleCount)
+		add(advanced.NeutralHighCastleCount, models.QualityHigh, highCastlesPerZone)
 	} else {
 		castleCount := helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 0, 4)
 		add(configuration.ZoneConfiguration.NeutralZoneCount, models.QualityMedium, castleCount)

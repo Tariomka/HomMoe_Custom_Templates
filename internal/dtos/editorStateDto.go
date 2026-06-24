@@ -31,6 +31,9 @@ type EditorStateDto struct {
 	NeutralMediumCastleCount      int    `json:"neutralMediumCastle"`
 	NeutralHighNoCastleCount      int    `json:"neutralHighNoCastle"`
 	NeutralHighCastleCount        int    `json:"neutralHighCastle"`
+	NeutralLowCastlesPerZone      int    `json:"neutralLowCastlesPerZone"`
+	NeutralMediumCastlesPerZone   int    `json:"neutralMedCastlesPerZone"`
+	NeutralHighCastlesPerZone     int    `json:"neutralHighCastlesPerZone"`
 	MatchPlayerCastleFactions     bool   `json:"matchPlayerCastleFactions"`
 	MinNeutralZonesBetweenPlayers int    `json:"minNeutralZonesBetweenPlayers"`
 
@@ -94,6 +97,9 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		MapSize:                      160,
 		PlayerCount:                  2,
 		NeutralZoneCastles:           1,
+		NeutralLowCastlesPerZone:     1,
+		NeutralMediumCastlesPerZone:  1,
+		NeutralHighCastlesPerZone:    1,
 		MatchPlayerCastleFactions:    true,
 		PlayerZoneSize:               1.0,
 		NeutralZoneSize:              1.0,
@@ -123,6 +129,126 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		TournamentInterval:           7,
 		TournamentPointsToWin:        2,
 		TournamentSaveArmy:           true,
+		PlayerZoneContentRows:        DefaultPlayerZoneContentRows(),
+	}
+}
+
+// DefaultPlayerZoneContentRows returns the historical default mandatory-content
+// rows seeded into every player zone: the six basic mines plus an alchemy lab,
+// a couple of guarded treasures, random hires and resource banks.
+func DefaultPlayerZoneContentRows() []models.ZoneContentRowSave {
+	interactable := registry.GetMapObjectAllInteractableValues()
+	resources := registry.GetMapObjectResourceValues()
+	randomItems := registry.GetMapObjectRandomItemValues()
+	randomHires := registry.GetMandatoryContentRandomHiresBuildingValues()
+	basicRandomHires := registry.GetMandatoryContentBasicRandomHiresBuildingValues()
+	basicResourceBanks := registry.GetMandatoryContentBasicResourceBanksBuildingValues()
+
+	trueVal := true
+	return []models.ZoneContentRowSave{
+		{
+			Sid:    interactable.WoodMine,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to town", DistanceName: "Near"},
+			},
+		},
+		{
+			Sid:    interactable.OreMine,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to town", DistanceName: "Near"},
+			},
+		},
+		{
+			Sid:    interactable.GoldMine,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to town", DistanceName: "Near"},
+			},
+		},
+		{
+			Sid:    interactable.CrystalMine,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:    interactable.MercuryMine,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:    interactable.GemstoneMine,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:    interactable.AlchemyLab,
+			Count:  1,
+			IsMine: true,
+			Rules: []models.ContentRuleRowSave{
+				{Name: "Guarded", IsGuarded: &trueVal},
+				{Name: "Distance to road", DistanceName: "Next To"},
+			},
+		},
+		{
+			Sid:   resources.PandoraBox,
+			Count: 1,
+			Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:   randomItems.RandomItemEpic,
+			Count: 1,
+			Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     randomHires.RandomHiresLowTier,
+			Count:   2,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     randomHires.RandomHiresHighTier,
+			Count:   1,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     basicRandomHires.BasicRandomHires,
+			Count:   1,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     basicResourceBanks.BasicResourceBanksTier1,
+			Count:   2,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
+		{
+			Sid:     basicResourceBanks.BasicResourceBanksTier2,
+			Count:   1,
+			IsGroup: true,
+			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+		},
 	}
 }
 

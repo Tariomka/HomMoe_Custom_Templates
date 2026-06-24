@@ -1,4 +1,4 @@
-package drivers
+package dialogs
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
@@ -20,9 +19,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
-// zoneContentRow is one editable item inside a zone-content section. The legacy
-// flat fields (guarded / near-castle / road-distance) are replaced by a
-// polymorphic rule list edited through the Manage Rules dialog.
+// zoneContentRow is one editable item inside a zone-content section
 type zoneContentRow struct {
 	Mapping models.SidMapping
 	Count   int
@@ -190,7 +187,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 		// callback bound to this exact row across frames/reorders.
 		if row.manageBtn.Clicked(gtx) && this.openDialog != nil {
 			captured := row
-			this.openDialog(dialogs.NewManageRulesDialog(captured.Mapping, captured.rules, func(updated []models.ContentRuleRowSave) {
+			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules, func(updated []models.ContentRuleRowSave) {
 				captured.rules = updated
 			}))
 		}
