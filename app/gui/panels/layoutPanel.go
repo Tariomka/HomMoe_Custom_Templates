@@ -207,9 +207,9 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 					theme, &this.sldMaxPortals,
 					utils.RoundedRangeString(this.sldMaxPortals.Value, 1, 32)))(gtx)
 		},
-		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAbandonedOutposts, "Spawn abandoned outposts instead of neutral castles"),
 		// TODO: Investigate this. Is it used? How does it work? Seems like it does not do anything
 		// or at minimum does not work as expected. Also if it works, range needs to be dynamic
