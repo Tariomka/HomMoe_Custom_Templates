@@ -90,16 +90,17 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 
 	dispatchClusterLayout(&layout, zones, connections, topology, side)
 
-	implicitHub := findImplicitHubName(zones, connections)
 	for _, zone := range variant.Zones {
 		pos, ok := layout.Positions[zone.Name]
 		if !ok {
 			continue
 		}
+		// A zone is only drawn as a hub when the template actually contains a
+		// hub zone (named "Hub" or "Hub-*"). Connectivity-based guesses are not
+		// used here: in topologies like Random or Circles an ordinary neutral
+		// can happen to touch every spawn without being a hub, which previously
+		// made the hub marker appear (and flicker) on non-hub zones.
 		isHub := strings.EqualFold(zone.Name, "Hub") || strings.HasPrefix(zone.Name, "Hub-")
-		if implicitHub != "" && zone.Name == implicitHub {
-			isHub = true
-		}
 		preview := PreviewZone{
 			Name:     zone.Name,
 			Letter:   ExtractZoneLetter(zone.Name),
@@ -808,24 +809,14 @@ func layoutRingOrHub(layout *PreviewLayout, zones []entities.Zone, conns []entit
 		return
 	}
 
-	// Hub detection: explicit "Hub" zone, or a single non-player zone
-	// connected to every player zone (implicit hub-and-spoke).
+	// Hub detection: only an explicitly named "Hub" zone is treated as a hub.
+	// The preview is a faithful representation of the template data, so
+	// connectivity is never used to guess an implicit hub.
 	hubIdx := -1
 	for i, z := range zones {
 		if z.Name == "Hub" {
 			hubIdx = i
 			break
-		}
-	}
-	if hubIdx < 0 {
-		hubName := findImplicitHubName(zones, conns)
-		if hubName != "" {
-			for i, z := range zones {
-				if z.Name == hubName {
-					hubIdx = i
-					break
-				}
-			}
 		}
 	}
 
@@ -969,66 +960,6 @@ func layoutMultiHub(layout *PreviewLayout, zones []entities.Zone, conns []entiti
 			layout.Positions[z.Name] = image.Pt(int(cx), int(cy))
 		}
 	}
-}
-
-// findImplicitHubName returns the single non-player zone connected (Direct
-// edges) to every player zone, or "" if no such zone exists. Used to render
-// shared hubs that were not literally named "Hub".
-func findImplicitHubName(zones []entities.Zone, conns []entities.Connection) string {
-	playerNames := map[string]bool{}
-	for _, z := range zones {
-		if strings.HasPrefix(z.Name, "Spawn-") {
-			playerNames[z.Name] = true
-		}
-	}
-	// A hub-and-spoke centre only reads as a hub when at least three players
-	// radiate from it. With two (or fewer) players, a neutral that touches
-	// "all players" is just an ordinary connector sitting between the two
-	// spawns (common in Ring/Random layouts), not a hub - so it must not be
-	// promoted to one. Explicitly named "Hub"/"Hub-*" zones are unaffected.
-	if len(playerNames) < 3 {
-		return ""
-	}
-	neighbours := make(map[string]map[string]bool, len(zones))
-	for _, c := range conns {
-		if isStructuralIgnored(c.ConnectionType) {
-			continue
-		}
-		if neighbours[c.From] == nil {
-			neighbours[c.From] = map[string]bool{}
-		}
-		if neighbours[c.To] == nil {
-			neighbours[c.To] = map[string]bool{}
-		}
-		neighbours[c.From][c.To] = true
-		neighbours[c.To][c.From] = true
-	}
-	bestName := ""
-	bestDeg := -1
-	for _, z := range zones {
-		if strings.HasPrefix(z.Name, "Spawn-") {
-			continue
-		}
-		nb := neighbours[z.Name]
-		if len(nb) < 2 {
-			continue
-		}
-		connectsAll := true
-		for p := range playerNames {
-			if !nb[p] {
-				connectsAll = false
-				break
-			}
-		}
-		if !connectsAll {
-			continue
-		}
-		if len(nb) > bestDeg {
-			bestDeg = len(nb)
-			bestName = z.Name
-		}
-	}
-	return bestName
 }
 
 // ── Tier / letter helpers (kept for compatibility) ────────────────────────

@@ -92,8 +92,10 @@ func TestBuildPreviewLayout_ExplicitHubGetsCentre(t *testing.T) {
 	}
 }
 
-func TestBuildPreviewLayout_ImplicitHubGetsCentre(t *testing.T) {
-	// Neutral connected to all THREE players → genuine implicit hub.
+func TestBuildPreviewLayout_ConnectedNeutralIsNotImplicitHub(t *testing.T) {
+	// A neutral connected to every spawn is NOT treated as an implicit hub:
+	// the preview only reflects template data, so it is neither flagged as a
+	// hub nor pinned to the centre - it sits on the ring like any other zone.
 	zones := []entities.Zone{
 		zone("Spawn-A"), zone("Spawn-B"), zone("Spawn-C"), zone("Neutral-H"),
 	}
@@ -103,12 +105,12 @@ func TestBuildPreviewLayout_ImplicitHubGetsCentre(t *testing.T) {
 		conn("Neutral-H", "Spawn-C"),
 	}
 	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
-	if p := out.Positions["Neutral-H"]; p.X != 300 || p.Y != 300 {
-		t.Errorf("implicit hub position = %+v, want (300,300)", p)
+	if p := out.Positions["Neutral-H"]; p.X == 300 && p.Y == 300 {
+		t.Errorf("expected Neutral-H on the ring, but it was centred at %+v", p)
 	}
 	for _, z := range out.Zones {
-		if z.Name == "Neutral-H" && !z.IsHub {
-			t.Errorf("expected Neutral-H to be flagged as hub")
+		if z.IsHub {
+			t.Errorf("expected no hub flag on unnamed zone, but %q was flagged", z.Name)
 		}
 	}
 }
@@ -123,6 +125,24 @@ func TestBuildPreviewLayout_TwoPlayerConnectorIsNotHub(t *testing.T) {
 		if z.IsHub {
 			t.Errorf("expected no hub zones, but %q was flagged as hub", z.Name)
 		}
+	}
+}
+
+func TestBuildPreviewLayout_NamedHubIsFlagged(t *testing.T) {
+	// Only an explicitly named hub zone is rendered as a hub.
+	zones := []entities.Zone{zone("Hub"), zone("Spawn-A"), zone("Spawn-B")}
+	conns := []entities.Connection{conn("Hub", "Spawn-A"), conn("Hub", "Spawn-B")}
+	out := services.BuildPreviewLayout(tmpl(zones, conns), config.TopologyRing, 600)
+	var hubFlagged bool
+	for _, z := range out.Zones {
+		if z.Name == "Hub" {
+			hubFlagged = z.IsHub
+		} else if z.IsHub {
+			t.Errorf("expected only the named Hub to be flagged, but %q was too", z.Name)
+		}
+	}
+	if !hubFlagged {
+		t.Errorf("expected named Hub zone to be flagged as hub")
 	}
 }
 
