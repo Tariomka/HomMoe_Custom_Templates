@@ -1,7 +1,6 @@
 package drivers
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,8 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"gioui.org/layout"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -95,34 +97,22 @@ func NewUIState() *State {
 	return state
 }
 
-func (this *State) GetStatus() (msg string, isErr bool) {
-	return this.statusMsg, this.statusErr
-}
+func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg, this.statusErr }
 
 // Dialogs returns the modal host used to open and render dialogs.
-func (this *State) Dialogs() *DialogHost {
-	return this.dialogs
-}
+func (this *State) Dialogs() *DialogHost { return this.dialogs }
 
-func (this *State) GetStateData() dtos.EditorStateDto {
-	return *this.stateDto
-}
+func (this *State) GetStateData() dtos.EditorStateDto { return *this.stateDto }
 
 func (this *State) GetGeneratorConfig() *config.GeneratorConfig {
 	return this.mapper.FromEditorState(*this.stateDto)
 }
 
-func (this *State) GetCurrentPath() string {
-	return this.currentPath
-}
+func (this *State) GetCurrentPath() string { return this.currentPath }
 
-func (this *State) IsUnsaved() bool {
-	return this.unsaved
-}
+func (this *State) IsUnsaved() bool { return this.unsaved }
 
-func (this *State) GetLastTemplate() *entities.RmgTemplate {
-	return this.lastTemplate
-}
+func (this *State) GetLastTemplate() *entities.RmgTemplate { return this.lastTemplate }
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
 // editor back into the live template and flags that manual edits now exist.
@@ -149,12 +139,10 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 	this.SetStatus(fmt.Sprintf("Applied %d zones and %d connections from the editor.", len(zones), len(connections)), false)
 }
 
-func (this *State) GetOutputPath() string {
-	return this.outputPath.Text()
-}
+func (this *State) GetOutputPath() string { return this.outputPath.Text() }
 
-func (this *State) GetOutputPathEditor() *widget.Editor {
-	return &this.outputPath
+func (this *State) GetOutputPathWidget(theme *material.Theme) layout.Widget {
+	return widgets.NewTextboxWidget(theme, &this.outputPath, "Choose folder", true)
 }
 
 func (this *State) Reset() {
@@ -167,25 +155,12 @@ func (this *State) Reset() {
 }
 
 func (this *State) Load() {
-	dir := this.suggestDirectory()
+	dir, err := os.Getwd()
+	if err != nil {
+		dir = this.suggestDirectory()
+	}
 	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{".gen.json"}, func(path string) {
-		data, err := os.ReadFile(path)
-		if err != nil {
-			this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-			return
-		}
-
-		dto := dtos.NewDefaultEditorStateDto()
-		if err := json.Unmarshal(data, &dto); err != nil {
-			this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-			return
-		}
-
-		this.stateDto = &dto
-		this.currentPath = path
-		this.unsaved = false
-		this.clearGeneratedState()
-		this.SetStatus("Loaded "+path, false)
+		this.handleLoadConfig(path)
 	}))
 }
 
@@ -195,36 +170,18 @@ func (this *State) Save() {
 		return
 	}
 
-	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
-		State:      this.stateDto,
-		OutputPath: this.currentPath,
-	}); err != nil {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	}
-
-	this.unsaved = false
-	this.SetStatus("Saved "+this.currentPath, false)
+	this.handleSaveConfig(this.currentPath)
 }
 
 func (this *State) SaveAs(templateName string) {
-	dir := this.suggestDirectory()
+	dir, err := os.Getwd()
+	if err != nil {
+		dir = this.suggestDirectory()
+	}
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
 	this.dialogs.Open(dialogs.NewSaveFileDialog(dir, defaultName, func(path string) {
-		data, err := json.MarshalIndent(this.stateDto, "", "\t")
-		if err != nil {
-			this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-			return
-		}
-
-		if err := os.WriteFile(path, append(data, '\n'), 0o644); err != nil {
-			this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-			return
-		}
-
+		this.handleSaveConfig(path)
 		this.currentPath = path
-		this.unsaved = false
-		this.SetStatus("Saved "+path, false)
 	}))
 }
 
@@ -257,32 +214,18 @@ func (this *State) Exit() {
 }
 
 // SaveTemplate writes the most recently generated template as .rmg.json.
-func (this *State) SaveTemplate() {
-	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
-		Template:   this.GetLastTemplate(),
-		Topology:   this.stateDto.Topology,
-		OutputPath: strings.TrimSpace(this.outputPath.Text()),
-	})
-	if err != nil && savedPath == "" {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	} else if err != nil {
-		this.SetStatus(
-			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
-			true)
-		return
-	}
-
-	this.SetStatus("Saved template to "+savedPath, false)
-}
+func (this *State) SaveTemplate() { this.handleSaveTemplate() }
 
 // PickOutputDir presents a folder picker for the template output directory.
 func (this *State) PickOutputDir() {
-	cur := strings.TrimSpace(this.outputPath.Text())
-	this.dialogs.Open(dialogs.NewPickFolderDialog(cur, func(dir string) {
-		if dir != "" {
-			this.outputPath.SetText(dir)
+	this.dialogs.Open(dialogs.NewPickFolderDialog(this.outputPath.Text(), func(path string) {
+		if path == "" {
+			this.SetStatus("No output directory selected.", true)
+			return
 		}
+
+		path = strings.TrimSpace(path)
+		this.outputPath.SetText(path)
 	}))
 }
 
@@ -397,6 +340,7 @@ func (this *State) performAutoRegen() {
 	if reapplyManual {
 		notice += " (Manual zone edits reapplied.)"
 	}
+	notice += fmt.Sprintf("\n%s", time.Now().Format("15:04:05"))
 	this.SetStatus(notice, false)
 }
 
@@ -472,4 +416,50 @@ func (this *State) suggestDirectory() string {
 	}
 	workingDir, _ := os.Getwd()
 	return workingDir
+}
+
+func (this *State) handleSaveConfig(path string) {
+	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+		State:      this.stateDto,
+		OutputPath: path,
+	}); err != nil {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	}
+
+	this.unsaved = false
+	this.SetStatus("Saved "+path, false)
+}
+
+func (this *State) handleLoadConfig(path string) {
+	dto, err := this.handler.LoadState(path)
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
+		return
+	}
+
+	this.stateDto = dto
+	this.currentPath = path
+	this.unsaved = false
+	this.clearGeneratedState()
+	this.SetStatus("Loaded "+path, false)
+}
+
+func (this *State) handleSaveTemplate() {
+	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
+		Template:   this.GetLastTemplate(),
+		Topology:   this.stateDto.Topology,
+		OutputPath: strings.TrimSpace(this.outputPath.Text()),
+	})
+	if err != nil && savedPath == "" {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	} else if err != nil {
+		this.SetStatus(
+			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
+			true)
+		return
+	}
+
+	this.SetStatus("Saved template to "+savedPath, false)
 }

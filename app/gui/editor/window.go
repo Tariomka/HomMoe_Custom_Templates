@@ -27,7 +27,7 @@ type Window struct {
 
 func NewWindow() *Window {
 	window := Window{state: drivers.NewUIState()}
-	window.toolbar = NewToolbar(window.state, window.reset)
+	window.toolbar = NewToolbar(window.state, window.load)
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),
 		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state)),
@@ -126,9 +126,4 @@ func (this *Window) load() {
 	for _, tab := range this.tabs {
 		tab.LoadFromState()
 	}
-}
-
-func (this *Window) reset() {
-	this.state.Reset()
-	this.load()
 }

@@ -1,0 +1,294 @@
+{
+	"templateName": "Colosseum",
+	"gameMode": "Classic",
+	"mapSize": 352,
+	"playerCount": 6,
+	"neutralZoneCount": 0,
+	"playerOwnedCastles": 1,
+	"playerCastles": 1,
+	"neutralCastles": 1,
+	"spawnAbandonedOutposts": true,
+	"abandonedOutpostCount": 1,
+	"advancedMode": true,
+	"neutralLowNoCastle": 0,
+	"neutralLowCastle": 0,
+	"neutralMediumNoCastle": 0,
+	"neutralMediumCastle": 7,
+	"neutralHighNoCastle": 0,
+	"neutralHighCastle": 6,
+	"neutralLowCastlesPerZone": 1,
+	"neutralMedCastlesPerZone": 2,
+	"neutralHighCastlesPerZone": 3,
+	"matchPlayerCastleFactions": true,
+	"minNeutralZonesBetweenPlayers": 0,
+	"experimentalMapSizes": true,
+	"playerZoneSize": 1,
+	"neutralZoneSize": 1,
+	"hubZoneSize": 1,
+	"hubCastles": 0,
+	"guardRandomization": 0.05000000074505806,
+	"heroMin": 1,
+	"heroMax": 12,
+	"heroIncrement": 1,
+	"topology": "Geometric",
+	"randomPortals": false,
+	"maxPortalConns": 32,
+	"spawnFootholds": true,
+	"remoteFootholdCount": 1,
+	"generateRoads": true,
+	"isolateplayers": true,
+	"resourceDensity": 100,
+	"structureDensity": 100,
+	"neutralStackStrength": 100,
+	"borderGuardStrength": 140,
+	"victoryCondition": "win_condition_1",
+	"factionLawsExp": 115,
+	"astrologyExp": 115,
+	"lostStartCity": false,
+	"lostStartCityDay": 3,
+	"lostStartHero": false,
+	"cityHold": false,
+	"cityHoldDays": 6,
+	"gladiatorArena": false,
+	"gladiatorArenaDaysDelayStart": 30,
+	"gladiatorArenaCountDay": 3,
+	"tournament": false,
+	"tournamentFirstTournamentDay": 14,
+	"tournamentInterval": 7,
+	"tournamentPointsToWin": 2,
+	"tournamentSaveArmy": true,
+	"bannedItems": "",
+	"bannedMagics": "",
+	"valueOverrides": "",
+	"bonuses": "UnitMultiplier|start_hero|2|",
+	"playerZoneContentRows": [
+		{
+			"sid": "mine_wood",
+			"count": 1,
+			"isGroup": false,
+			"isMine": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to town",
+					"distanceName": "Near"
+				}
+			]
+		},
+		{
+			"sid": "mine_ore",
+			"count": 1,
+			"isGroup": false,
+			"isMine": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to town",
+					"distanceName": "Near"
+				}
+			]
+		},
+		{
+			"sid": "mine_gold",
+			"count": 1,
+			"isGroup": false,
+			"isMine": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to town",
+					"distanceName": "Near"
+				}
+			]
+		},
+		{
+			"sid": "mine_crystals",
+			"count": 1,
+			"isGroup": false,
+			"isMine": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to road",
+					"distanceName": "Next To"
+				}
+			]
+		},
+		{
+			"sid": "mine_mercury",
+			"count": 1,
+			"isGroup": false,
+			"isMine": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to road",
+					"distanceName": "Next To"
+				}
+			]
+		},
+		{
+			"sid": "mine_gemstones",
+			"count": 1,
+			"isGroup": false,
+			"isMine": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to road",
+					"distanceName": "Next To"
+				}
+			]
+		},
+		{
+			"sid": "alchemy_lab",
+			"count": 1,
+			"isGroup": false,
+			"isMine": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to road",
+					"distanceName": "Next To"
+				}
+			]
+		},
+		{
+			"sid": "pandora_box",
+			"count": 6,
+			"isGroup": false,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "random_item_epic",
+			"count": 6,
+			"isGroup": false,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "random_item_legendary",
+			"count": 6,
+			"isGroup": false,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "content_list_building_random_hires_low_tier",
+			"count": 1,
+			"isGroup": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "content_list_building_random_hires_high_tier",
+			"count": 3,
+			"isGroup": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "basic_content_list_building_random_hires",
+			"count": 2,
+			"isGroup": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "basic_content_list_building_resource_banks_tier_1",
+			"count": 2,
+			"isGroup": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "basic_content_list_building_resource_banks_tier_2",
+			"count": 1,
+			"isGroup": true,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		},
+		{
+			"sid": "university",
+			"count": 6,
+			"isGroup": false,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				}
+			]
+		}
+	],
+	"mediumNeutralContentRows": [
+		{
+			"sid": "university",
+			"count": 3,
+			"isGroup": false,
+			"rules": [
+				{
+					"name": "Guarded",
+					"isGuarded": true
+				},
+				{
+					"name": "Distance to road",
+					"distanceName": "Next To"
+				}
+			]
+		}
+	]
+}
