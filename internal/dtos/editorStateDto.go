@@ -1,6 +1,8 @@
 package dtos
 
 import (
+	"reflect"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -88,6 +90,27 @@ type EditorStateDto struct {
 	MediumNeutralContentRows []models.ZoneContentRowSave `json:"mediumNeutralContentRows,omitempty"`
 	HighNeutralContentRows   []models.ZoneContentRowSave `json:"highNeutralContentRows,omitempty"`
 	HubZoneContentRows       []models.ZoneContentRowSave `json:"hubZoneContentRows,omitempty"`
+
+	// ── Manual zone editor edits ─────────────────────────────────────────
+	// When the user hand-edits the layout in the manual zone editor, the
+	// resulting zones and connections are persisted here so the hand-made
+	// layout survives a save/load round-trip and is reapplied after the loaded
+	// template is regenerated.
+	HasManualEdits    bool                   `json:"hasManualEdits,omitempty"`
+	ManualZones       []ManualZoneSave       `json:"manualZones,omitempty"`
+	ManualConnections []ManualConnectionSave `json:"manualConnections,omitempty"`
+}
+
+// EqualsIgnoringManualEdits reports whether two editor states are equal when
+// the manual-edit fields are disregarded. Manual zones and connections are
+// reapplied to the generated template through a separate path, so they must
+// not trigger an automatic regeneration on their own.
+func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) bool {
+	left := *this
+	right := *other
+	left.HasManualEdits, left.ManualZones, left.ManualConnections = false, nil, nil
+	right.HasManualEdits, right.ManualZones, right.ManualConnections = false, nil, nil
+	return reflect.DeepEqual(left, right)
 }
 
 func NewDefaultEditorStateDto() EditorStateDto {
