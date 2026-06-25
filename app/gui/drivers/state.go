@@ -160,7 +160,7 @@ func (this *State) Load() {
 		dir = this.suggestDirectory()
 	}
 	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{".gen.json"}, func(path string) {
-		this.handleLoadConfig(path)
+		this.handleLoadState(path)
 	}))
 }
 
@@ -170,7 +170,7 @@ func (this *State) Save() {
 		return
 	}
 
-	this.handleSaveConfig(this.currentPath)
+	this.handleSaveState(this.currentPath)
 }
 
 func (this *State) SaveAs(templateName string) {
@@ -180,7 +180,7 @@ func (this *State) SaveAs(templateName string) {
 	}
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
 	this.dialogs.Open(dialogs.NewSaveFileDialog(dir, defaultName, func(path string) {
-		this.handleSaveConfig(path)
+		this.handleSaveState(path)
 		this.currentPath = path
 	}))
 }
@@ -418,7 +418,7 @@ func (this *State) suggestDirectory() string {
 	return workingDir
 }
 
-func (this *State) handleSaveConfig(path string) {
+func (this *State) handleSaveState(path string) {
 	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
 		State:      this.stateDto,
 		OutputPath: path,
@@ -431,7 +431,7 @@ func (this *State) handleSaveConfig(path string) {
 	this.SetStatus("Saved "+path, false)
 }
 
-func (this *State) handleLoadConfig(path string) {
+func (this *State) handleLoadState(path string) {
 	dto, err := this.handler.LoadState(path)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
