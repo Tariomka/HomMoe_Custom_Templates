@@ -130,7 +130,7 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 	this.rememberManualEdits(zones, connections)
 	if err != nil {
 		status := fmt.Sprintf(
-			"Applied %d zones and %d connections. \u26a0 Error: %v; fix before export.",
+			"Applied %d zones and %d connections. ⚠ Error: %v; fix before export.",
 			len(zones), len(connections), err)
 		this.SetStatus(status, true)
 		return
