@@ -53,7 +53,7 @@ func (r *headlessRenderer) frame() {
 }
 
 func (r *headlessRenderer) frames(n int) {
-	for i := 0; i < n; i++ {
+	for range n {
 		r.frame()
 	}
 }
