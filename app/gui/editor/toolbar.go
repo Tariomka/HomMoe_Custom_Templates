@@ -90,7 +90,9 @@ func (this *Toolbar) HandleClicks(gtx layout.Context) {
 		this.resetCallback()
 	}
 	if this.buttonOpen.Clicked(gtx) {
-		this.state.Load()
+		// Defer the panel resync until the file is actually chosen and the new
+		// state is installed; the file picker is asynchronous.
+		this.state.Load(this.resetCallback)
 	}
 	if this.buttonSave.Clicked(gtx) {
 		this.state.Save()

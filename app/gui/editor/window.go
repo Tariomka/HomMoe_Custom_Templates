@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
 type Window struct {
@@ -27,7 +28,7 @@ type Window struct {
 
 func NewWindow() *Window {
 	window := Window{state: drivers.NewUIState()}
-	window.toolbar = NewToolbar(window.state, window.reset)
+	window.toolbar = NewToolbar(window.state, window.load)
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),
 		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state)),
@@ -128,7 +129,22 @@ func (this *Window) load() {
 	}
 }
 
-func (this *Window) reset() {
-	this.state.Reset()
-	this.load()
+// LoadStateFromFile loads a saved editor state from path and resynchronises the
+// panels, mirroring what happens when the user picks a file in the Load dialog
+// (but without the interactive picker). Exposed for programmatic loads and
+// integration tests.
+func (this *Window) LoadStateFromFile(path string) error {
+	return this.state.LoadStateFromFile(path, this.load)
+}
+
+// SaveStateToFile writes the current editor state, including manual zone edits,
+// to path. Exposed for programmatic saves and integration tests.
+func (this *Window) SaveStateToFile(path string) error {
+	this.save()
+	return this.state.SaveStateToFile(path)
+}
+
+// CurrentState returns a copy of the live editor state. Exposed for tests.
+func (this *Window) CurrentState() dtos.EditorStateDto {
+	return this.state.GetStateData()
 }

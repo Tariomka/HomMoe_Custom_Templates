@@ -1,16 +1,17 @@
 package drivers
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
+	"gioui.org/layout"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -57,6 +58,13 @@ type State struct {
 	manualConnections []entities.Connection
 	hasManualEdits    bool
 
+	// pendingManualReapply requests that the stored manual edits be reapplied on
+	// the next regeneration even though there is no prior generated state to
+	// compare against. It is set when a saved state with manual edits is loaded
+	// so the hand-made layout is restored once the loaded template is
+	// regenerated.
+	pendingManualReapply bool
+
 	// pendingState / pendingDeadline implement debounced regeneration for
 	// non-preview option changes (most sliders and the template name).
 	// pendingState is the editor state observed when the debounce timer was
@@ -95,34 +103,22 @@ func NewUIState() *State {
 	return state
 }
 
-func (this *State) GetStatus() (msg string, isErr bool) {
-	return this.statusMsg, this.statusErr
-}
+func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg, this.statusErr }
 
 // Dialogs returns the modal host used to open and render dialogs.
-func (this *State) Dialogs() *DialogHost {
-	return this.dialogs
-}
+func (this *State) Dialogs() *DialogHost { return this.dialogs }
 
-func (this *State) GetStateData() dtos.EditorStateDto {
-	return *this.stateDto
-}
+func (this *State) GetStateData() dtos.EditorStateDto { return *this.stateDto }
 
 func (this *State) GetGeneratorConfig() *config.GeneratorConfig {
 	return this.mapper.FromEditorState(*this.stateDto)
 }
 
-func (this *State) GetCurrentPath() string {
-	return this.currentPath
-}
+func (this *State) GetCurrentPath() string { return this.currentPath }
 
-func (this *State) IsUnsaved() bool {
-	return this.unsaved
-}
+func (this *State) IsUnsaved() bool { return this.unsaved }
 
-func (this *State) GetLastTemplate() *entities.RmgTemplate {
-	return this.lastTemplate
-}
+func (this *State) GetLastTemplate() *entities.RmgTemplate { return this.lastTemplate }
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
 // editor back into the live template and flags that manual edits now exist.
@@ -140,7 +136,7 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 	this.rememberManualEdits(zones, connections)
 	if err != nil {
 		status := fmt.Sprintf(
-			"Applied %d zones and %d connections. \u26a0 Error: %v; fix before export.",
+			"Applied %d zones and %d connections. ⚠ Error: %v; fix before export.",
 			len(zones), len(connections), err)
 		this.SetStatus(status, true)
 		return
@@ -149,12 +145,10 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 	this.SetStatus(fmt.Sprintf("Applied %d zones and %d connections from the editor.", len(zones), len(connections)), false)
 }
 
-func (this *State) GetOutputPath() string {
-	return this.outputPath.Text()
-}
+func (this *State) GetOutputPath() string { return this.outputPath.Text() }
 
-func (this *State) GetOutputPathEditor() *widget.Editor {
-	return &this.outputPath
+func (this *State) GetOutputPathWidget(theme *material.Theme) layout.Widget {
+	return widgets.NewTextboxWidget(theme, &this.outputPath, "Choose folder", true)
 }
 
 func (this *State) Reset() {
@@ -166,26 +160,17 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-func (this *State) Load() {
-	dir := this.suggestDirectory()
+// Load opens the file picker and, once the user chooses a file, loads it and
+// invokes onLoaded. onLoaded runs only after the new editor state has been
+// installed, so the UI panels resynchronise from the freshly loaded state
+// rather than from the stale one that existed when the dialog was opened.
+func (this *State) Load(onLoaded func()) {
+	dir, err := os.Getwd()
+	if err != nil {
+		dir = this.suggestDirectory()
+	}
 	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{".gen.json"}, func(path string) {
-		data, err := os.ReadFile(path)
-		if err != nil {
-			this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-			return
-		}
-
-		dto := dtos.NewDefaultEditorStateDto()
-		if err := json.Unmarshal(data, &dto); err != nil {
-			this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-			return
-		}
-
-		this.stateDto = &dto
-		this.currentPath = path
-		this.unsaved = false
-		this.clearGeneratedState()
-		this.SetStatus("Loaded "+path, false)
+		this.LoadStateFromFile(path, onLoaded)
 	}))
 }
 
@@ -195,36 +180,18 @@ func (this *State) Save() {
 		return
 	}
 
-	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
-		State:      this.stateDto,
-		OutputPath: this.currentPath,
-	}); err != nil {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	}
-
-	this.unsaved = false
-	this.SetStatus("Saved "+this.currentPath, false)
+	this.handleSaveState(this.currentPath)
 }
 
 func (this *State) SaveAs(templateName string) {
-	dir := this.suggestDirectory()
+	dir, err := os.Getwd()
+	if err != nil {
+		dir = this.suggestDirectory()
+	}
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
 	this.dialogs.Open(dialogs.NewSaveFileDialog(dir, defaultName, func(path string) {
-		data, err := json.MarshalIndent(this.stateDto, "", "\t")
-		if err != nil {
-			this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-			return
-		}
-
-		if err := os.WriteFile(path, append(data, '\n'), 0o644); err != nil {
-			this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-			return
-		}
-
+		this.handleSaveState(path)
 		this.currentPath = path
-		this.unsaved = false
-		this.SetStatus("Saved "+path, false)
 	}))
 }
 
@@ -257,32 +224,18 @@ func (this *State) Exit() {
 }
 
 // SaveTemplate writes the most recently generated template as .rmg.json.
-func (this *State) SaveTemplate() {
-	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
-		Template:   this.GetLastTemplate(),
-		Topology:   this.stateDto.Topology,
-		OutputPath: strings.TrimSpace(this.outputPath.Text()),
-	})
-	if err != nil && savedPath == "" {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	} else if err != nil {
-		this.SetStatus(
-			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
-			true)
-		return
-	}
-
-	this.SetStatus("Saved template to "+savedPath, false)
-}
+func (this *State) SaveTemplate() { this.handleSaveTemplate() }
 
 // PickOutputDir presents a folder picker for the template output directory.
 func (this *State) PickOutputDir() {
-	cur := strings.TrimSpace(this.outputPath.Text())
-	this.dialogs.Open(dialogs.NewPickFolderDialog(cur, func(dir string) {
-		if dir != "" {
-			this.outputPath.SetText(dir)
+	this.dialogs.Open(dialogs.NewPickFolderDialog(this.outputPath.Text(), func(path string) {
+		if path == "" {
+			this.SetStatus("No output directory selected.", true)
+			return
 		}
+
+		path = strings.TrimSpace(path)
+		this.outputPath.SetText(path)
 	}))
 }
 
@@ -327,7 +280,7 @@ func (this *State) SetStatus(msg string, isErr bool) {
 // input.
 func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
 	// Nothing changed since the last generation → cancel any pending debounce.
-	if this.lastGeneratedState != nil && reflect.DeepEqual(*this.lastGeneratedState, *this.stateDto) {
+	if this.lastGeneratedState != nil && this.lastGeneratedState.EqualsIgnoringManualEdits(this.stateDto) {
 		this.pendingState = nil
 		return time.Time{}, false
 	}
@@ -348,7 +301,7 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 
 	// Non-preview change: (re)arm the debounce timer whenever the state is
 	// still moving, and ask to be woken up when the timer is due.
-	if this.pendingState == nil || !reflect.DeepEqual(*this.pendingState, *this.stateDto) {
+	if this.pendingState == nil || !this.pendingState.EqualsIgnoringManualEdits(this.stateDto) {
 		snapshot := *this.stateDto
 		this.pendingState = &snapshot
 		this.pendingDeadline = now.Add(autoRegenDebounce)
@@ -369,9 +322,10 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 // performAutoRegen runs the actual regeneration used by AutoRegenerate,
 // reapplying manual zone edits when the layout-defining options are unchanged.
 func (this *State) performAutoRegen() {
-	reapplyManual := this.lastGeneratedState != nil &&
-		this.hasManualEdits &&
-		!this.lastGeneratedState.LayoutDefiningOptionsChanged(this.stateDto)
+	reapplyManual := this.hasManualEdits &&
+		(this.pendingManualReapply ||
+			(this.lastGeneratedState != nil &&
+				!this.lastGeneratedState.LayoutDefiningOptionsChanged(this.stateDto)))
 
 	dto, err := this.handler.GenerateTemplate(*this.stateDto)
 	if err != nil {
@@ -389,6 +343,7 @@ func (this *State) performAutoRegen() {
 	} else {
 		this.discardManualEdits()
 	}
+	this.pendingManualReapply = false
 
 	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
 	notice := fmt.Sprintf(
@@ -397,6 +352,7 @@ func (this *State) performAutoRegen() {
 	if reapplyManual {
 		notice += " (Manual zone edits reapplied.)"
 	}
+	notice += fmt.Sprintf("\n%s", time.Now().Format("15:04:05"))
 	this.SetStatus(notice, false)
 }
 
@@ -438,6 +394,35 @@ func (this *State) discardManualEdits() {
 	this.manualZones = nil
 	this.manualConnections = nil
 	this.hasManualEdits = false
+	this.pendingManualReapply = false
+}
+
+// syncManualEditsToDto mirrors the in-memory manual edits onto the persistent
+// editor state so they are written to the .gen.json file. When no manual edits
+// exist the persisted fields are cleared.
+func (this *State) syncManualEditsToDto() {
+	if !this.hasManualEdits {
+		this.stateDto.HasManualEdits = false
+		this.stateDto.ManualZones = nil
+		this.stateDto.ManualConnections = nil
+		return
+	}
+	this.stateDto.HasManualEdits = true
+	this.stateDto.ManualZones = dtos.ToManualZoneSaves(this.manualZones)
+	this.stateDto.ManualConnections = dtos.ToManualConnectionSaves(this.manualConnections)
+}
+
+// restoreManualEdits loads any persisted manual edits from a freshly loaded
+// editor state back into memory and arms a reapply so the hand-made layout is
+// restored once the loaded template is regenerated.
+func (this *State) restoreManualEdits(dto *dtos.EditorStateDto) {
+	if dto == nil || !dto.HasManualEdits || len(dto.ManualZones) == 0 {
+		return
+	}
+	this.manualZones = dtos.FromManualZoneSaves(dto.ManualZones)
+	this.manualConnections = dtos.FromManualConnectionSaves(dto.ManualConnections)
+	this.hasManualEdits = true
+	this.pendingManualReapply = true
 }
 
 // reapplyManualEdits pushes the stored manual zones and connections back onto
@@ -472,4 +457,65 @@ func (this *State) suggestDirectory() string {
 	}
 	workingDir, _ := os.Getwd()
 	return workingDir
+}
+
+func (this *State) handleSaveState(path string) { _ = this.SaveStateToFile(path) }
+
+// SaveStateToFile writes the current editor state, including any manual zone
+// edits, to path as a .gen.json file. It is shared by the Save / Save As
+// dialogs and by callers that already have a destination path.
+func (this *State) SaveStateToFile(path string) error {
+	this.syncManualEditsToDto()
+	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+		State:      this.stateDto,
+		OutputPath: path,
+	}); err != nil {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return err
+	}
+
+	this.unsaved = false
+	this.SetStatus("Saved "+path, false)
+	return nil
+}
+
+// LoadStateFromFile loads the editor state at path, restores any persisted
+// manual zone edits, and invokes onLoaded so the UI can resynchronise. It is
+// shared by the Load dialog and by callers that already have a path.
+func (this *State) LoadStateFromFile(path string, onLoaded func()) error {
+	dto, err := this.handler.LoadState(path)
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
+		return err
+	}
+
+	this.stateDto = dto
+	this.currentPath = path
+	this.unsaved = false
+	this.clearGeneratedState()
+	this.restoreManualEdits(dto)
+	if onLoaded != nil {
+		onLoaded()
+	}
+	this.SetStatus("Loaded "+path, false)
+	return nil
+}
+
+func (this *State) handleSaveTemplate() {
+	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
+		Template:   this.GetLastTemplate(),
+		Topology:   this.stateDto.Topology,
+		OutputPath: strings.TrimSpace(this.outputPath.Text()),
+	})
+	if err != nil && savedPath == "" {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	} else if err != nil {
+		this.SetStatus(
+			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
+			true)
+		return
+	}
+
+	this.SetStatus("Saved template to "+savedPath, false)
 }

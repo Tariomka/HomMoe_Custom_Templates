@@ -114,7 +114,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	ctrlDist := tipRadius * (0.82 + 0.30*math.Min(1.0, sectorHalf/(math.Pi/3.0)))
 
 	petals := make([]petal, playerCount)
-	for index := 0; index < playerCount; index++ {
+	for index := range playerCount {
 		axis := startAngle + 2.0*math.Pi*float64(index)/float64(playerCount)
 		tipX := centreX + math.Cos(axis)*tipRadius
 		tipY := centreY + math.Sin(axis)*tipRadius
