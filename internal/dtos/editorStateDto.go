@@ -286,10 +286,6 @@ func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDt
 		this.NoDirectPlayerConn != incoming.NoDirectPlayerConn ||
 		this.MaxPortalConnections != incoming.MaxPortalConnections ||
 		this.MinNeutralZonesBetweenPlayers != incoming.MinNeutralZonesBetweenPlayers ||
-		this.SpawnRemoteFootholds != incoming.SpawnRemoteFootholds ||
-		this.RemoteFootholdCount != incoming.RemoteFootholdCount ||
-		this.SpawnAbandonedOutposts != incoming.SpawnAbandonedOutposts ||
-		this.AbandonedOutpostCount != incoming.AbandonedOutpostCount ||
 		this.zoneCountOptionsChanged(incoming)
 }
 
