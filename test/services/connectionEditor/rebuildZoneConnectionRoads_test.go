@@ -77,3 +77,39 @@ func TestRebuildZoneConnectionRoads_AddsRoadsToAllConnectionsAndKeepsFoothold(t 
 		t.Error("Neutral-C has no road to Rnd-A-C")
 	}
 }
+
+// Connections added in the manual zone editor start nameless; the rebuild must
+// give them a name and create roads on both endpoint zones.
+func TestRebuildZoneConnectionRoads_NamesAndRoadsNamelessManualConnections(t *testing.T) {
+	mainObjectZero := entities.TypedRef{Type: "MainObject", Args: []string{"0"}}
+	zones := []entities.Zone{
+		{
+			Name:        "Spawn-E",
+			MainObjects: []entities.MainObject{{Type: "Spawn"}, {Type: "City"}},
+			Roads:       []entities.Road{{Type: "Stone", From: mainObjectZero, To: entities.TypedRef{Type: "MainObject", Args: []string{"1"}}}},
+		},
+		{
+			Name:        "Neutral-M",
+			MainObjects: []entities.MainObject{{Type: "City"}},
+			Roads:       []entities.Road{{Type: "Stone", From: mainObjectZero, To: entities.TypedRef{Type: "MainObject", Args: []string{"1"}}}},
+		},
+	}
+	// A nameless, user-added connection, exactly as produced by the editor.
+	connections := []entities.Connection{
+		{From: "Spawn-E", To: "Neutral-M", ConnectionType: "Direct", IsUserAdded: true},
+	}
+
+	connection_editor.RebuildZoneConnectionRoads(zones, connections)
+
+	if connections[0].Name == "" {
+		t.Fatal("nameless manual connection was not assigned a name")
+	}
+	name := connections[0].Name
+
+	if !roadTargets(zones[0], "Connection")[name] {
+		t.Errorf("Spawn-E has no road to manual connection %q", name)
+	}
+	if !roadTargets(zones[1], "Connection")[name] {
+		t.Errorf("Neutral-M has no road to manual connection %q", name)
+	}
+}

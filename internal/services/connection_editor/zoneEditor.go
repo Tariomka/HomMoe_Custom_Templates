@@ -4,6 +4,7 @@
 package connection_editor
 
 import (
+	"fmt"
 	"math"
 	"strings"
 
@@ -17,6 +18,33 @@ import (
 // zone connection.
 const connectionRefType = "Connection"
 
+// EnsureConnectionNames assigns a unique name to every connection that does not
+// already have one. Connections added in the manual zone editor start nameless,
+// but a road can only target a connection by name, so an unnamed connection can
+// never receive a road. Names are mutated in place.
+func EnsureConnectionNames(connections []entities.Connection) {
+	used := make(map[string]bool, len(connections))
+	for _, connection := range connections {
+		if connection.Name != "" {
+			used[connection.Name] = true
+		}
+	}
+	for i := range connections {
+		if connections[i].Name != "" {
+			continue
+		}
+		prefix := fmt.Sprintf("Manual-%s-%s",
+			ZoneLetterFromName(connections[i].From),
+			ZoneLetterFromName(connections[i].To))
+		name := prefix
+		for suffix := 2; used[name]; suffix++ {
+			name = fmt.Sprintf("%s-%d", prefix, suffix)
+		}
+		connections[i].Name = name
+		used[name] = true
+	}
+}
+
 // RebuildZoneConnectionRoads recomputes each zone's roads to connections so that
 // every connection touching a zone has a matching road. Non-connection roads -
 // the castle roads (MainObject↔MainObject) and the remote-foothold roads
@@ -26,10 +54,10 @@ const connectionRefType = "Connection"
 // The manual zone editor only edits the connection list; without this, zones
 // keep their generation-time roads and any connection added in the editor ends
 // up without a road.
-//
-// TODO: This might be completely useless, need to manually recheck it.
 func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Connection) {
 	topology := base.NewTopologyBase()
+
+	EnsureConnectionNames(connections)
 
 	connectionsByZone := make(map[string][]string)
 	for _, connection := range connections {
