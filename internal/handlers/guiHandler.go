@@ -46,6 +46,10 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	templateDto.Template.Variants[0].Zones = templateDto.Zones
 	templateDto.Template.Variants[0].Connections = templateDto.Connections
 
+	connection_editor.RebuildZoneConnectionRoads(
+		templateDto.Template.Variants[0].Zones,
+		templateDto.Template.Variants[0].Connections)
+
 	var err error
 	if connection_editor.ComputeHasErrors(templateDto.Zones, templateDto.Connections) {
 		err = common.ErrZonesMissing

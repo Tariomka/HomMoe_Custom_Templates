@@ -9,8 +9,64 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
+
+// connectionRefType is the TypedRef.Type used for a road endpoint that targets a
+// zone connection.
+const connectionRefType = "Connection"
+
+// RebuildZoneConnectionRoads recomputes each zone's roads to connections so that
+// every connection touching a zone has a matching road. Non-connection roads -
+// the castle roads (MainObject↔MainObject) and the remote-foothold roads
+// (MainObject↔MandatoryContent) - are preserved untouched, so footholds keep
+// their road in addition to the connection roads rather than replacing them.
+//
+// The manual zone editor only edits the connection list; without this, zones
+// keep their generation-time roads and any connection added in the editor ends
+// up without a road.
+func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Connection) {
+	topology := base.NewTopologyBase()
+
+	connectionsByZone := make(map[string][]string)
+	for _, connection := range connections {
+		if connection.Name == "" {
+			continue
+		}
+		connectionsByZone[connection.From] = append(connectionsByZone[connection.From], connection.Name)
+		if connection.To != connection.From {
+			connectionsByZone[connection.To] = append(connectionsByZone[connection.To], connection.Name)
+		}
+	}
+
+	for i := range zones {
+		zone := &zones[i]
+
+		preserved := make([]entities.Road, 0, len(zone.Roads))
+		for _, road := range zone.Roads {
+			if road.From.Type == connectionRefType || road.To.Type == connectionRefType {
+				continue
+			}
+			preserved = append(preserved, road)
+		}
+
+		names := connectionsByZone[zone.Name]
+		if len(zone.MainObjects) > 0 {
+			for _, name := range names {
+				preserved = append(preserved,
+					variant_content.NewRoadBuilder().
+						WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+						WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
+						Build())
+			}
+		} else {
+			preserved = append(preserved, topology.CreateConnectorZoneRoads(names, true)...)
+		}
+
+		zone.Roads = preserved
+	}
+}
 
 // zoneLabels mirrors the generator's label pool (zones.ZoneLabelProvider).
 var zoneLabels = []string{
