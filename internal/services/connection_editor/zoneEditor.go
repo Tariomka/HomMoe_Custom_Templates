@@ -26,6 +26,8 @@ const connectionRefType = "Connection"
 // The manual zone editor only edits the connection list; without this, zones
 // keep their generation-time roads and any connection added in the editor ends
 // up without a road.
+//
+// TODO: This might be completely useless, need to manually recheck it.
 func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Connection) {
 	topology := base.NewTopologyBase()
 
