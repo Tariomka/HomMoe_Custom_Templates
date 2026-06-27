@@ -130,6 +130,7 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 		Template:    this.lastTemplate,
 		Zones:       zones,
 		Connections: connections,
+		Config:      this.GetGeneratorConfig(),
 	})
 	this.lastTemplate = dto.Template
 	this.connectionsModified = true
@@ -435,6 +436,7 @@ func (this *State) reapplyManualEdits() {
 		Template:    this.lastTemplate,
 		Zones:       append([]entities.Zone(nil), this.manualZones...),
 		Connections: append([]entities.Connection(nil), this.manualConnections...),
+		Config:      this.GetGeneratorConfig(),
 	})
 	this.lastTemplate = dto.Template
 	this.connectionsModified = true

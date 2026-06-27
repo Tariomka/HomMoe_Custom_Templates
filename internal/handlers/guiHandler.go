@@ -9,17 +9,20 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
 
 type GUIHandler struct {
 	templateGenerator *template_generator.TemplateGenerator
 	mapper            *mappers.GeneratorConfigMapper
+	contentProvider   *providers.MandatoryContentProvider
 }
 
 func NewGuiHandler() *GUIHandler {
 	return &GUIHandler{
 		templateGenerator: template_generator.NewTemplateGenerator(nil),
 		mapper:            mappers.NewConfigMapper(),
+		contentProvider:   providers.NewMandatoryContentProvider(),
 	}
 }
 
@@ -50,6 +53,14 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	connection_editor.RebuildZoneConnectionRoads(
 		templateDto.Template.Variants[0].Zones,
 		templateDto.Template.Variants[0].Connections)
+
+	// Rebuild mandatory content from the final zones so a zone re-tiered in the
+	// manual editor (e.g. Medium -> High) gets the content of its new quality
+	// instead of keeping the content keyed to its original generation tier.
+	if templateDto.Config != nil {
+		templateDto.Template.MandatoryContent = this.contentProvider.CreateContentsForZones(
+			*templateDto.Config, templateDto.Template.Variants[0].Zones)
+	}
 
 	var err error
 	if connection_editor.ComputeHasErrors(templateDto.Zones, templateDto.Connections) {
