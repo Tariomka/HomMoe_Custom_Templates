@@ -55,7 +55,27 @@ func (this *MandatoryContentProvider) CreateContents(
 			Content: this.createContentItemsWithFoothold(content, footholdCount, neutralZone.CastleCount),
 		})
 	}
+	if hub, ok := this.hubContentGroup(configuration); ok {
+		groups = append(groups, hub)
+	}
 	return groups
+}
+
+// hubContentGroup builds the hub zone's mandatory-content group from the
+// configured hub rows. It only exists for the Hub & Spoke topology and only
+// when the user actually configured hub content, matching the parallel C#
+// editor which references "mandatory_content_hub" only when hub rows are set.
+// The hub zone has no remote-foothold roads, so no foothold item is added.
+func (this *MandatoryContentProvider) hubContentGroup(
+	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
+	if configuration.Topology != config.TopologyHubAndSpoke || len(configuration.HubZoneMandatoryContent) == 0 {
+		return entities.MandatoryContent{}, false
+	}
+	content := cloneContentItems(configuration.HubZoneMandatoryContent)
+	if configuration.ZoneConfiguration.HubZoneCastles == 0 {
+		content = stripNearCastleRules(content)
+	}
+	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
 }
 
 // CreateContentsForZones rebuilds the mandatory-content groups from the final
@@ -74,6 +94,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 	}
 
 	var groups []entities.MandatoryContent
+	hubGroupAdded := false
 	for _, zone := range zones {
 		switch {
 		case strings.HasPrefix(zone.Name, "Spawn-"):
@@ -94,6 +115,17 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 				Name:    "mandatory_content_neutral_" + strings.TrimPrefix(zone.Name, "Neutral-"),
 				Content: this.createContentItemsWithFoothold(content, footholdCount, castleCount),
 			})
+		case zone.Name == "Hub" || strings.HasPrefix(zone.Name, "Hub-"):
+			// One shared hub group even if several hub zones exist (tournament).
+			if hubGroupAdded || len(configuration.HubZoneMandatoryContent) == 0 {
+				continue
+			}
+			content := cloneContentItems(configuration.HubZoneMandatoryContent)
+			if countCityMainObjects(zone) == 0 {
+				content = stripNearCastleRules(content)
+			}
+			groups = append(groups, entities.MandatoryContent{Name: "mandatory_content_hub", Content: content})
+			hubGroupAdded = true
 		}
 	}
 	return groups

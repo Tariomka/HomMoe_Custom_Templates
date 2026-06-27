@@ -59,6 +59,8 @@ func (this *TemplateGenerator) Generate() *template.RmgTemplate {
 		DisplayWinCondition: this.configuration.GetVictoryCondition(),
 		SizeX:               this.configuration.MapSize,
 		SizeZ:               this.configuration.MapSize,
+		ValueOverrides:      this.gameRulesProvider.CreateValueOverrides(*this.configuration),
+		GlobalBans:          this.gameRulesProvider.CreateGlobalBans(*this.configuration),
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
 		Variants: []entities.Variant{
 			this.topologyProvider.

@@ -66,9 +66,13 @@ func (this *HubTopologyService) createZones(
 	for index, label := range outerLabels {
 		hubConns[index] = "Hub-" + label
 	}
+	hubContentName := ""
+	if len(configuration.HubZoneMandatoryContent) > 0 {
+		hubContentName = "mandatory_content_hub"
+	}
 	zones := []entities.Zone{this.CreateHubZone(
 		hubConns, tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
-		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads)}
+		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
 
 	for _, label := range outerLabels {
 		spokeConnectionNames := []string{"Hub-" + label}

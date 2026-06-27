@@ -14,6 +14,7 @@ var (
 	receiversFilters          = registry.GetReceiversFilterValues()
 	resourceObjects           = registry.GetMapObjectResourceValues()
 	ruleTypes                 = registry.GetRuleTypeValues()
+	spellSids                 = registry.GetSpellSidValues()
 	t1GuardedResourceBanks    = registry.GetMapObjectT1GuardedResourceBankValues()
 	t1StatsAndSkillsBuildings = registry.GetMapObjectT1StatsAndSkillsValues()
 	t2StatsAndSkillsBuildings = registry.GetMapObjectT2StatsAndSkillsBuildingValues()

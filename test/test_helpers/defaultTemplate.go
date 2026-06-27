@@ -25,12 +25,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 			HeroHireBan:        false,
 			EncounterHoles:     false,
 			TournamentRules:    false,
-			Bonuses: entities.BonusList{{
-				SID:            "add_bonus_hero_stat",
-				ReceiverSide:   -1,
-				ReceiverFilter: "all_heroes",
-				Parameters:     []string{"movementBonus", "0"},
-			}},
+			Bonuses:            entities.BonusList{},
 			WinConditions: entities.WinConditions{
 				Classic:                              true,
 				Desertion:                            true,

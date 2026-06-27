@@ -29,6 +29,16 @@ func sids(items []entities.MandatoryContentItem) []string {
 	return out
 }
 
+func countGroups(groups []entities.MandatoryContent, name string) int {
+	count := 0
+	for _, group := range groups {
+		if group.Name == name {
+			count++
+		}
+	}
+	return count
+}
+
 // CreateContents must copy the configured per-tier rows into each neutral zone's
 // mandatory content. The original implementation used copy() into a nil slice,
 // silently dropping every row - this guards that regression.
@@ -99,4 +109,50 @@ func TestCreateContentsForZones_ZeroCastleZoneKeepsRows(t *testing.T) {
 
 	assert.Equal(t, []string{"treasure"},
 		sids(contentNamed(groups, "mandatory_content_neutral_H")))
+}
+
+// The hub content group is created only for the Hub & Spoke topology and only
+// when the user configured hub rows, matching the parallel C# editor.
+func TestCreateContents_HubGroupOnlyForHubTopologyWithContent(t *testing.T) {
+	provider := providers.NewMandatoryContentProvider()
+	hubRows := []entities.MandatoryContentItem{{SID: "hub_treasure"}}
+
+	withContent := config.NewGeneratorConfig()
+	withContent.Topology = config.TopologyHubAndSpoke
+	withContent.SpawnRemoteFootholds = false
+	withContent.HubZoneMandatoryContent = hubRows
+	groups := provider.CreateContents(*withContent, nil, nil)
+	assert.Equal(t, []string{"hub_treasure"}, sids(contentNamed(groups, "mandatory_content_hub")),
+		"hub topology with hub rows must emit the hub group")
+
+	noContent := config.NewGeneratorConfig()
+	noContent.Topology = config.TopologyHubAndSpoke
+	assert.Equal(t, 0, countGroups(provider.CreateContents(*noContent, nil, nil), "mandatory_content_hub"),
+		"hub topology without hub rows must not emit the hub group")
+
+	nonHub := config.NewGeneratorConfig()
+	nonHub.Topology = config.TopologyRing
+	nonHub.HubZoneMandatoryContent = hubRows
+	assert.Equal(t, 0, countGroups(provider.CreateContents(*nonHub, nil, nil), "mandatory_content_hub"),
+		"non-hub topology must not emit the hub group even with hub rows")
+}
+
+// The manual-edit path must give the hub zone its content too, emitting a single
+// shared group even when several hub zones exist (tournament clusters).
+func TestCreateContentsForZones_HubZoneGetsSingleHubGroup(t *testing.T) {
+	provider := providers.NewMandatoryContentProvider()
+	configuration := config.NewGeneratorConfig()
+	configuration.SpawnRemoteFootholds = false
+	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
+
+	zones := []entities.Zone{
+		{Name: "Hub", MainObjects: []entities.MainObject{{Type: "City"}}},
+		{Name: "Hub-B"},
+	}
+
+	groups := provider.CreateContentsForZones(*configuration, zones)
+
+	assert.Equal(t, 1, countGroups(groups, "mandatory_content_hub"),
+		"several hub zones must still share one hub group")
+	assert.Equal(t, []string{"hub_treasure"}, sids(contentNamed(groups, "mandatory_content_hub")))
 }

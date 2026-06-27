@@ -50,9 +50,13 @@ func (this *HubClusterService) createZones(
 	hubName string,
 	playerIndex int) []entities.Zone {
 	var zones []entities.Zone
+	hubContentName := ""
+	if len(configuration.HubZoneMandatoryContent) > 0 {
+		hubContentName = "mandatory_content_hub"
+	}
 	hubZone := this.CreateHubZone(
 		spokeConnNames, tuning, false, configuration.ZoneConfiguration.HubZoneSize,
-		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads)
+		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads, hubContentName)
 	hubZone.Name = hubName
 	zones = append(zones, hubZone)
 

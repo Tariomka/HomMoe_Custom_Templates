@@ -180,7 +180,8 @@ func (this *TopologyBase) CreateHubZone(
 	isHoldCity bool,
 	size float64,
 	castleCount int,
-	generateRoads bool) entities.Zone {
+	generateRoads bool,
+	mandatoryContentName string) entities.Zone {
 	if isHoldCity && castleCount < 1 {
 		castleCount = 1
 	}
@@ -208,6 +209,10 @@ func (this *TopologyBase) CreateHubZone(
 		WithMainObjects(this.createHubZoneCastles(tuning, castleCount, isHoldCity)).
 		WithCrossroadsPosition(0).
 		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, 0, generateRoads))
+
+	if mandatoryContentName != "" {
+		zoneBuilder = zoneBuilder.WithMandatoryContent(mandatoryContentName)
+	}
 
 	if castleCount > 0 {
 		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")

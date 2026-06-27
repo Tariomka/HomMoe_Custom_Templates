@@ -5,12 +5,27 @@ import "github.com/Tariomka/hommoe_custom_templates/internal/models/config/confi
 type (
 	AdvancedSettings    = config_inner.AdvancedSettings
 	BonusEntry          = config_inner.BonusEntry
+	BonusPresetType     = config_inner.BonusPresetType
 	GameEndConditions   = config_inner.GameEndConditions
 	GladiatorArenaRules = config_inner.GladiatorArenaRules
 	HeroSettings        = config_inner.HeroSettings
 	MapTopology         = config_inner.MapTopology
 	TournamentRules     = config_inner.TournamentRules
 	ZoneConfig          = config_inner.ZoneConfig
+)
+
+const (
+	BonusTownPortalFree   = config_inner.BonusTownPortalFree
+	BonusSpell            = config_inner.BonusSpell
+	BonusUnitMultiplier   = config_inner.BonusUnitMultiplier
+	BonusMovementBonus    = config_inner.BonusMovementBonus
+	BonusStartingItem     = config_inner.BonusStartingItem
+	BonusStartingGold     = config_inner.BonusStartingGold
+	BonusStartingGems     = config_inner.BonusStartingGems
+	BonusStartingCrystals = config_inner.BonusStartingCrystals
+	BonusStartingMercury  = config_inner.BonusStartingMercury
+	BonusStartingWood     = config_inner.BonusStartingWood
+	BonusStartingOre      = config_inner.BonusStartingOre
 )
 
 const (
