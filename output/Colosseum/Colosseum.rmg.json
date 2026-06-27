@@ -13,12 +13,11 @@
     "encounterHoles": false,
     "bonuses": [
       {
-        "sid": "add_bonus_hero_stat",
+        "sid": "add_bonus_hero_unit_multipler",
         "receiverSide": -1,
-        "receiverFilter": "all_heroes",
+        "receiverFilter": "start_hero",
         "parameters": [
-          "movementBonus",
-          "0"
+          "2"
         ]
       }
     ],
@@ -208,6 +207,36 @@
           },
           "crossroadsPosition": 0,
           "roads": [
+            {
+              "type": "Stone",
+              "from": {
+                "type": "MainObject",
+                "args": [
+                  "0"
+                ]
+              },
+              "to": {
+                "type": "MainObject",
+                "args": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "type": "Stone",
+              "from": {
+                "type": "MainObject",
+                "args": [
+                  "0"
+                ]
+              },
+              "to": {
+                "type": "MainObject",
+                "args": [
+                  "2"
+                ]
+              }
+            },
             {
               "type": "",
               "from": {
@@ -889,36 +918,6 @@
           "crossroadsPosition": 0,
           "roads": [
             {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
               "type": "",
               "from": {
                 "type": "MainObject",
@@ -1126,36 +1125,6 @@
                 "type": "MainObject",
                 "args": [
                   "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
                 ]
               }
             },
@@ -1453,36 +1422,6 @@
           },
           "crossroadsPosition": 0,
           "roads": [
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
             {
               "type": "",
               "from": {
@@ -1861,36 +1800,6 @@
           "crossroadsPosition": 0,
           "roads": [
             {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
               "type": "",
               "from": {
                 "type": "MainObject",
@@ -2098,36 +2007,6 @@
                 "type": "MainObject",
                 "args": [
                   "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
                 ]
               }
             },
@@ -2425,36 +2304,6 @@
           },
           "crossroadsPosition": 0,
           "roads": [
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
             {
               "type": "",
               "from": {
@@ -2833,36 +2682,6 @@
           "crossroadsPosition": 0,
           "roads": [
             {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
               "type": "",
               "from": {
                 "type": "MainObject",
@@ -3070,36 +2889,6 @@
                 "type": "MainObject",
                 "args": [
                   "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
                 ]
               }
             },
@@ -3397,36 +3186,6 @@
           },
           "crossroadsPosition": 0,
           "roads": [
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
             {
               "type": "",
               "from": {
@@ -3805,51 +3564,6 @@
           "crossroadsPosition": 0,
           "roads": [
             {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
-                ]
-              }
-            },
-            {
               "type": "",
               "from": {
                 "type": "MainObject",
@@ -4057,36 +3771,6 @@
                 "type": "MainObject",
                 "args": [
                   "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
                 ]
               }
             },
@@ -4384,36 +4068,6 @@
           },
           "crossroadsPosition": 0,
           "roads": [
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
             {
               "type": "",
               "from": {
@@ -4838,36 +4492,6 @@
               }
             },
             {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
-                ]
-              }
-            },
-            {
               "type": "",
               "from": {
                 "type": "MainObject",
@@ -5032,51 +4656,6 @@
           },
           "crossroadsPosition": 0,
           "roads": [
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
-                ]
-              }
-            },
             {
               "type": "",
               "from": {
@@ -5386,36 +4965,6 @@
           },
           "crossroadsPosition": 0,
           "roads": [
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
             {
               "type": "",
               "from": {
@@ -5840,36 +5389,6 @@
               }
             },
             {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "2"
-                ]
-              }
-            },
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "3"
-                ]
-              }
-            },
-            {
               "type": "",
               "from": {
                 "type": "MainObject",
@@ -6031,21 +5550,6 @@
           },
           "crossroadsPosition": 0,
           "roads": [
-            {
-              "type": "Stone",
-              "from": {
-                "type": "MainObject",
-                "args": [
-                  "0"
-                ]
-              },
-              "to": {
-                "type": "MainObject",
-                "args": [
-                  "1"
-                ]
-              }
-            },
             {
               "type": "",
               "from": {
@@ -6691,7 +6195,7 @@
   ],
   "mandatoryContent": [
     {
-      "name": "mandatory_content_side_A",
+      "name": "mandatory_content_neutral_G",
       "content": [
         {
           "sid": "remote_foothold",
@@ -6712,103 +6216,71 @@
               "targetMin": 0.2,
               "targetMax": 0.4,
               "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "1"
+              ],
+              "targetMin": 0.5,
+              "targetMax": 0.5,
+              "weight": 2
             }
           ],
           "soloEncounter": true
         },
         {
-          "sid": "mine_wood",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.1,
-              "targetMax": 0.25,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_ore",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.1,
-              "targetMax": 0.25,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_gold",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.1,
-              "targetMax": 0.25,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_crystals",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "Road",
-              "args": null,
-              "targetMin": 0.05,
-              "targetMax": 0.1,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_mercury",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "Road",
-              "args": null,
-              "targetMin": 0.05,
-              "targetMax": 0.1,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_gemstones",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "Road",
-              "args": null,
-              "targetMin": 0.05,
-              "targetMax": 0.1,
-              "weight": 1
-            }
-          ]
-        },
-        {
           "sid": "alchemy_lab",
           "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "basic_content_list_rare_mines",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
           "isGuarded": true,
           "rules": [
             {
@@ -6821,135 +6293,35 @@
           ]
         },
         {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_epic",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_epic",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_epic",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
+          "sid": "university",
           "isGuarded": true,
-          "includeLists": [
-            "content_list_building_random_hires_low_tier"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "content_list_building_random_hires_low_tier"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "content_list_building_random_hires_high_tier"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_random_hires"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_resource_banks_tier_1"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_resource_banks_tier_1"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_resource_banks_tier_2"
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
           ]
         },
         {
           "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
         }
       ]
     },
     {
-      "name": "mandatory_content_side_B",
+      "name": "mandatory_content_neutral_H",
       "content": [
         {
           "sid": "remote_foothold",
@@ -6975,56 +6347,48 @@
           "soloEncounter": true
         },
         {
-          "sid": "mine_wood",
-          "isMine": true,
+          "sid": "university",
           "isGuarded": true,
           "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_N",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
             {
               "type": "MainObject",
               "args": [
                 "0"
               ],
-              "targetMin": 0.1,
-              "targetMax": 0.25,
-              "weight": 1
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
             }
-          ]
+          ],
+          "soloEncounter": true
         },
         {
-          "sid": "mine_ore",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.1,
-              "targetMax": 0.25,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_gold",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.1,
-              "targetMax": 0.25,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_crystals",
-          "isMine": true,
+          "sid": "university",
           "isGuarded": true,
           "rules": [
             {
@@ -7035,174 +6399,6 @@
               "weight": 1
             }
           ]
-        },
-        {
-          "sid": "mine_mercury",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "Road",
-              "args": null,
-              "targetMin": 0.05,
-              "targetMax": 0.1,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "mine_gemstones",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "Road",
-              "args": null,
-              "targetMin": 0.05,
-              "targetMax": 0.1,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "alchemy_lab",
-          "isMine": true,
-          "isGuarded": true,
-          "rules": [
-            {
-              "type": "Road",
-              "args": null,
-              "targetMin": 0.05,
-              "targetMax": 0.1,
-              "weight": 1
-            }
-          ]
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "pandora_box",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_epic",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_epic",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_epic",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "sid": "random_item_legendary",
-          "isGuarded": true
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "content_list_building_random_hires_low_tier"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "content_list_building_random_hires_low_tier"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "content_list_building_random_hires_high_tier"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_random_hires"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_resource_banks_tier_1"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_resource_banks_tier_1"
-          ]
-        },
-        {
-          "isGuarded": true,
-          "includeLists": [
-            "basic_content_list_building_resource_banks_tier_2"
-          ]
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
-        },
-        {
-          "sid": "university",
-          "isGuarded": true
         }
       ]
     },
@@ -7465,6 +6661,255 @@
       ]
     },
     {
+      "name": "mandatory_content_neutral_T",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_Z",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "1"
+              ],
+              "targetMin": 0.5,
+              "targetMax": 0.5,
+              "weight": 2
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "basic_content_list_rare_mines",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_I",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_O",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "mandatory_content_side_D",
       "content": [
         {
@@ -7723,7 +7168,256 @@
       ]
     },
     {
-      "name": "mandatory_content_side_E",
+      "name": "mandatory_content_neutral_U",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_AA",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "1"
+              ],
+              "targetMin": 0.5,
+              "targetMax": 0.5,
+              "weight": 2
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "basic_content_list_rare_mines",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_J",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_P",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_side_B",
       "content": [
         {
           "sid": "remote_foothold",
@@ -7977,6 +7671,255 @@
         {
           "sid": "university",
           "isGuarded": true
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_V",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_AB",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "1"
+              ],
+              "targetMin": 0.5,
+              "targetMax": 0.5,
+              "weight": 2
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "basic_content_list_rare_mines",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_K",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_Q",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
         }
       ]
     },
@@ -8239,454 +8182,6 @@
       ]
     },
     {
-      "name": "mandatory_content_neutral_G",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_H",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_I",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_J",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_K",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_L",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_M",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_N",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_O",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_P",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_Q",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_R",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_S",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_T",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_U",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_V",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
       "name": "mandatory_content_neutral_W",
       "content": [
         {
@@ -8708,203 +8203,22 @@
               "targetMin": 0.2,
               "targetMax": 0.4,
               "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
             }
           ],
           "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_X",
-      "content": [
+        },
         {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
+          "sid": "university",
+          "isGuarded": true,
           "rules": [
             {
-              "type": "Crossroads",
+              "type": "Road",
               "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
             }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_Y",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_Z",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_AA",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
-        }
-      ]
-    },
-    {
-      "name": "mandatory_content_neutral_AB",
-      "content": [
-        {
-          "sid": "remote_foothold",
-          "name": "name_remote_foothold_1",
-          "rules": [
-            {
-              "type": "Crossroads",
-              "args": null,
-              "targetMin": 0.2,
-              "targetMax": 0.3,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "0"
-              ],
-              "targetMin": 0.2,
-              "targetMax": 0.4,
-              "weight": 0
-            },
-            {
-              "type": "MainObject",
-              "args": [
-                "1"
-              ],
-              "targetMin": 0.5,
-              "targetMax": 0.5,
-              "weight": 2
-            }
-          ],
-          "soloEncounter": true
+          ]
         }
       ]
     },
@@ -8942,11 +8256,440 @@
             }
           ],
           "soloEncounter": true
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "basic_content_list_rare_mines",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
         }
       ]
     },
     {
-      "name": "mandatory_content_neutral_AD",
+      "name": "mandatory_content_neutral_L",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_R",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_side_E",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "mine_wood",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.1,
+              "targetMax": 0.25,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_ore",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.1,
+              "targetMax": 0.25,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_gold",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.1,
+              "targetMax": 0.25,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_crystals",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_mercury",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_gemstones",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "content_list_building_random_hires_low_tier"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "content_list_building_random_hires_low_tier"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "content_list_building_random_hires_high_tier"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_random_hires"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_resource_banks_tier_1"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_resource_banks_tier_1"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_resource_banks_tier_2"
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_X",
       "content": [
         {
           "sid": "remote_foothold",
@@ -8979,6 +8722,643 @@
             }
           ],
           "soloEncounter": true
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "basic_content_list_rare_mines",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_AD",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_M",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_S",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_side_A",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "mine_wood",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.1,
+              "targetMax": 0.25,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_ore",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.1,
+              "targetMax": 0.25,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_gold",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.1,
+              "targetMax": 0.25,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_crystals",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_mercury",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "mine_gemstones",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "pandora_box",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "content_list_building_random_hires_low_tier"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "content_list_building_random_hires_low_tier"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "content_list_building_random_hires_high_tier"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_random_hires"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_resource_banks_tier_1"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_resource_banks_tier_1"
+          ]
+        },
+        {
+          "isGuarded": true,
+          "includeLists": [
+            "basic_content_list_building_resource_banks_tier_2"
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_Y",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "1"
+              ],
+              "targetMin": 0.5,
+              "targetMax": 0.5,
+              "weight": 2
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "alchemy_lab",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "basic_content_list_rare_mines",
+          "isMine": true,
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_legendary",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_item_epic",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "random_hire_7",
+          "isGuarded": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mandatory_content_neutral_AE",
+      "content": [
+        {
+          "sid": "remote_foothold",
+          "name": "name_remote_foothold_1",
+          "rules": [
+            {
+              "type": "Crossroads",
+              "args": null,
+              "targetMin": 0.2,
+              "targetMax": 0.3,
+              "weight": 0
+            },
+            {
+              "type": "MainObject",
+              "args": [
+                "0"
+              ],
+              "targetMin": 0.2,
+              "targetMax": 0.4,
+              "weight": 0
+            }
+          ],
+          "soloEncounter": true
+        },
+        {
+          "sid": "university",
+          "isGuarded": true,
+          "rules": [
+            {
+              "type": "Road",
+              "args": null,
+              "targetMin": 0.05,
+              "targetMax": 0.1,
+              "weight": 1
+            }
+          ]
         }
       ]
     }
@@ -9041,7 +9421,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -9222,7 +9602,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -9403,7 +9783,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -9584,7 +9964,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -9765,7 +10145,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -9946,7 +10326,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -10127,7 +10507,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -10308,7 +10688,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -10489,7 +10869,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -10670,7 +11050,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -10851,7 +11231,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -11032,7 +11412,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -11213,7 +11593,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -11394,7 +11774,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -11575,7 +11955,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -11756,7 +12136,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",
@@ -11937,7 +12317,7 @@
         },
         {
           "sid": "university",
-          "maxCount": 9
+          "maxCount": 10
         },
         {
           "sid": "wise_owl",

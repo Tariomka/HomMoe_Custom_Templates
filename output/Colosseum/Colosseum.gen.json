@@ -60,7 +60,7 @@
   "bannedItems": "",
   "bannedMagics": "",
   "valueOverrides": "",
-  "bonuses": "",
+  "bonuses": "UnitMultiplier|start_hero|2|",
   "playerZoneContentRows": [
     {
       "sid": "mine_wood",
@@ -274,7 +274,48 @@
       ]
     }
   ],
+  "mediumNeutralContentRows": [
+    {
+      "sid": "university",
+      "count": 1,
+      "isGroup": false,
+      "rules": [
+        {
+          "name": "Guarded",
+          "isGuarded": true
+        },
+        {
+          "name": "Distance to road",
+          "distanceName": "Next To"
+        }
+      ]
+    }
+  ],
   "highNeutralContentRows": [
+    {
+      "sid": "alchemy_lab",
+      "count": 1,
+      "isGroup": false,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "isGuarded": true
+        }
+      ]
+    },
+    {
+      "sid": "basic_content_list_rare_mines",
+      "count": 1,
+      "isGroup": false,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "isGuarded": true
+        }
+      ]
+    },
     {
       "sid": "random_item_legendary",
       "count": 4,
@@ -289,6 +330,17 @@
     {
       "sid": "random_item_epic",
       "count": 4,
+      "isGroup": false,
+      "rules": [
+        {
+          "name": "Guarded",
+          "isGuarded": true
+        }
+      ]
+    },
+    {
+      "sid": "random_hire_7",
+      "count": 2,
       "isGroup": false,
       "rules": [
         {
