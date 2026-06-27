@@ -4,7 +4,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 )
 
 type GameRulesProvider struct{}
@@ -88,37 +87,7 @@ func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.
 }
 
 func (this *GameRulesProvider) createBonuses(bonusEntries []config.BonusEntry) entities.BonusList {
-	if len(bonusEntries) == 0 {
-		return entities.BonusList{
-			{
-				SID:            mapBonuses.HeroStat,
-				ReceiverSide:   -1,
-				ReceiverFilter: receiversFilters.AllHeroes,
-				Parameters:     []string{"movementBonus", "0"},
-			},
-		}
-	}
-
 	bonuses := entities.BonusList{}
-	// TODO: This is janky and only one bonus is applied, need to add builders for
-	// this shit and handle all current bonuses. Also need validation. Also also need registry entries.
-	// Also also also need documentation for what goes where with what
-	for _, entry := range bonusEntries {
-		sid := ""
-		params := []string{}
-		if entry.PresetType == config_inner.BonusMovementBonus {
-			sid = mapBonuses.HeroStat
-			params = append(params, "movementBonus", entry.Param)
-		}
-		bonus := entities.Bonus{
-			SID:            sid,
-			ReceiverSide:   -1,
-			ReceiverFilter: entry.ReceiverFilter,
-			Parameters:     params,
-		}
-		bonuses = append(bonuses, bonus)
-
-	}
 	return bonuses
 }
 
