@@ -113,3 +113,68 @@ func TestRebuildZoneConnectionRoads_NamesAndRoadsNamelessManualConnections(t *te
 		t.Errorf("Neutral-M has no road to manual connection %q", name)
 	}
 }
+
+// A zone whose castle count grew (e.g. re-tiered in the editor) but which never
+// had castle<->castle roads must get fresh stone roads linking each new castle
+// to the primary one. Regression test for the missing roads to extra castles.
+func TestRebuildZoneConnectionRoads_RegeneratesCastleRoadsForAddedCastles(t *testing.T) {
+	mainObjectZero := entities.TypedRef{Type: "MainObject", Args: []string{"0"}}
+	zones := []entities.Zone{
+		{
+			Name:        "Neutral-G",
+			MainObjects: []entities.MainObject{{Type: "City"}, {Type: "City"}, {Type: "City"}},
+			// Only connection roads exist - no castle roads at all, mirroring a
+			// connector zone that had castles added to it.
+			Roads: []entities.Road{
+				{From: mainObjectZero, To: entities.TypedRef{Type: "Connection", Args: []string{"Rnd-G-H"}}},
+			},
+		},
+	}
+	connections := []entities.Connection{
+		{Name: "Rnd-G-H", From: "Neutral-G", To: "Neutral-H", ConnectionType: "Direct"},
+	}
+
+	connection_editor.RebuildZoneConnectionRoads(zones, connections)
+
+	castleTargets := castleRoadTargets(zones[0])
+	if len(castleTargets) != 2 || castleTargets[0] != "1" || castleTargets[1] != "2" {
+		t.Errorf("expected stone roads 0->1 and 0->2, got %v", castleTargets)
+	}
+	if !roadTargets(zones[0], "Connection")["Rnd-G-H"] {
+		t.Error("Neutral-G lost its connection road after rebuild")
+	}
+}
+
+// A zone whose castle count shrank must not keep dangling castle roads that
+// point at main objects that no longer exist.
+func TestRebuildZoneConnectionRoads_DropsDanglingCastleRoads(t *testing.T) {
+	mainObjectZero := entities.TypedRef{Type: "MainObject", Args: []string{"0"}}
+	zones := []entities.Zone{
+		{
+			Name:        "Neutral-G",
+			MainObjects: []entities.MainObject{{Type: "City"}},
+			Roads: []entities.Road{
+				{Type: "Stone", From: mainObjectZero, To: entities.TypedRef{Type: "MainObject", Args: []string{"1"}}},
+				{Type: "Stone", From: mainObjectZero, To: entities.TypedRef{Type: "MainObject", Args: []string{"2"}}},
+			},
+		},
+	}
+
+	connection_editor.RebuildZoneConnectionRoads(zones, nil)
+
+	if targets := castleRoadTargets(zones[0]); len(targets) != 0 {
+		t.Errorf("single-castle zone should have no castle roads, got %v", targets)
+	}
+}
+
+// castleRoadTargets returns the MainObject indices linked by the zone's stone
+// castle<->castle roads from the primary main object.
+func castleRoadTargets(zone entities.Zone) []string {
+	var targets []string
+	for _, road := range zone.Roads {
+		if road.From.Type == "MainObject" && road.To.Type == "MainObject" && len(road.To.Args) > 0 {
+			targets = append(targets, road.To.Args[0])
+		}
+	}
+	return targets
+}

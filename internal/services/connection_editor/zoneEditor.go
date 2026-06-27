@@ -18,6 +18,34 @@ import (
 // zone connection.
 const connectionRefType = "Connection"
 
+// mainObjectRefType is the TypedRef.Type used for a road endpoint that targets a
+// zone main object (a castle, abandoned outpost, etc.).
+const mainObjectRefType = "MainObject"
+
+// isCastleRoad reports whether a road connects two of the zone's own main
+// objects (the stone castle<->castle roads). These must be regenerated whenever
+// the zone's main-object count changes, otherwise added castles end up with no
+// road and removed castles leave dangling roads.
+func isCastleRoad(road entities.Road) bool {
+	return road.From.Type == mainObjectRefType && road.To.Type == mainObjectRefType
+}
+
+// buildCastleRoads returns the stone roads linking the primary main object
+// (index 0) to every other main object, matching the generator's
+// castle<->castle roads. Returns nil for zones with fewer than two main objects.
+func buildCastleRoads(mainObjectCount int) []entities.Road {
+	var roads []entities.Road
+	for i := 1; i < mainObjectCount; i++ {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithStoneType().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
+				Build())
+	}
+	return roads
+}
+
 // EnsureConnectionNames assigns a unique name to every connection that does not
 // already have one. Connections added in the manual zone editor start nameless,
 // but a road can only target a connection by name, so an unnamed connection can
@@ -45,15 +73,19 @@ func EnsureConnectionNames(connections []entities.Connection) {
 	}
 }
 
-// RebuildZoneConnectionRoads recomputes each zone's roads to connections so that
-// every connection touching a zone has a matching road. Non-connection roads -
-// the castle roads (MainObject↔MainObject) and the remote-foothold roads
-// (MainObject↔MandatoryContent) - are preserved untouched, so footholds keep
-// their road in addition to the connection roads rather than replacing them.
+// RebuildZoneConnectionRoads recomputes each zone's roads so that every
+// connection touching a zone has a matching road and every main object is
+// road-linked to the primary one. The castle<->castle roads (MainObject↔
+// MainObject) are regenerated from the zone's current main objects - so castles
+// added or removed in the editor get correct roads - while other non-connection
+// roads (e.g. the remote-foothold roads MainObject↔MandatoryContent) are
+// preserved untouched, so footholds keep their road in addition to the
+// connection roads rather than replacing them.
 //
-// The manual zone editor only edits the connection list; without this, zones
-// keep their generation-time roads and any connection added in the editor ends
-// up without a road.
+// The manual zone editor only edits the connection list and the per-zone
+// quality/castle count; without this, zones keep their generation-time roads and
+// any connection added in the editor - or castle added by re-tiering a zone -
+// ends up without a road.
 func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Connection) {
 	topology := base.NewTopologyBase()
 
@@ -73,28 +105,39 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 	for i := range zones {
 		zone := &zones[i]
 
+		// Keep every road except the connection roads (rebuilt below to match the
+		// current connection list) and the castle<->castle roads (regenerated
+		// below to match the current main-object count).
 		preserved := make([]entities.Road, 0, len(zone.Roads))
 		for _, road := range zone.Roads {
 			if road.From.Type == connectionRefType || road.To.Type == connectionRefType {
 				continue
 			}
+			if isCastleRoad(road) {
+				continue
+			}
 			preserved = append(preserved, road)
 		}
+
+		// Regenerate the castle<->castle roads first so they keep the leading
+		// position the generator gives them.
+		roads := buildCastleRoads(len(zone.MainObjects))
+		roads = append(roads, preserved...)
 
 		names := connectionsByZone[zone.Name]
 		if len(zone.MainObjects) > 0 {
 			for _, name := range names {
-				preserved = append(preserved,
+				roads = append(roads,
 					variant_content.NewRoadBuilder().
 						WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
 						WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
 						Build())
 			}
 		} else {
-			preserved = append(preserved, topology.CreateConnectorZoneRoads(names, true)...)
+			roads = append(roads, topology.CreateConnectorZoneRoads(names, true)...)
 		}
 
-		zone.Roads = preserved
+		zone.Roads = roads
 	}
 }
 
@@ -190,6 +233,18 @@ func ApplyNeutralZoneQuality(
 	zone.ResourcesValue = tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)
 	zone.ResourcesValuePerArea = tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))
 	zone.MainObjects = base.CreateNeutralZoneCastles(profile, tuning, castleCount, false)
+
+	// Regenerate the castle<->castle roads so the rebuilt castles are
+	// road-connected. Other roads (connection and foothold roads) are left for
+	// RebuildZoneConnectionRoads to finalise once the edit is applied.
+	keptRoads := make([]entities.Road, 0, len(zone.Roads))
+	for _, road := range zone.Roads {
+		if isCastleRoad(road) {
+			continue
+		}
+		keptRoads = append(keptRoads, road)
+	}
+	zone.Roads = append(buildCastleRoads(len(zone.MainObjects)), keptRoads...)
 }
 
 // CanDeleteZone reports whether the zone may be removed in the editor. Spawn

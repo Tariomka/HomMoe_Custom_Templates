@@ -84,8 +84,14 @@ func (this *TopologyBase) CreateSpawnZone(
 
 	// Roads connect the spawn castle (main object 0) to every other castle in
 	// the zone; player-owned extras are road-linked just like unclaimed ones.
-	// A zone with no extra castles at all stays a pass-through connector.
+	// A zone with no extra castles at all stays a pass-through connector, so
+	// pass 0 main objects in that case; otherwise pass the full main-object
+	// count so every extra castle gets a road.
 	roadCastleCount := castleCount + tuning.PlayerOwnedCastles
+	roadMainObjectCount := 0
+	if roadCastleCount > 0 {
+		roadMainObjectCount = len(mainObjects)
+	}
 
 	return variant_content.NewZoneBuilder().
 		WithName("Spawn-" + label).
@@ -111,7 +117,7 @@ func (this *TopologyBase) CreateSpawnZone(
 		WithMainObjects(mainObjects).
 		WithBiomeMatchMainObject("0").
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, roadCastleCount, footholdCount, generateRoads)).
+		WithRoads(this.createOuterZoneRoads(connectionNames, roadMainObjectCount, footholdCount, generateRoads)).
 		Build()
 }
 
@@ -664,25 +670,30 @@ func (this *TopologyBase) createHubZoneCastles(
 	return castles
 }
 
+// createOuterZoneRoads builds a castle zone's roads: a stone road from the
+// primary main object (index 0) to every other main object, a road to each
+// remote foothold, and a road to each connection. mainObjectCount is the TOTAL
+// number of main objects in the zone; a zone with none (mainObjectCount == 0)
+// is a pure pass-through connector instead.
 func (this *TopologyBase) createOuterZoneRoads(
 	connectionNames []string,
-	castleCount int,
+	mainObjectCount int,
 	footholdCount int, generateRoads bool) []entities.Road {
 	if !generateRoads {
 		return nil
 	}
 
-	if castleCount == 0 {
+	if mainObjectCount == 0 {
 		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
 	}
 
 	var roads []entities.Road
-	for i := range castleCount {
+	for i := 1; i < mainObjectCount; i++ {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
 				WithStoneType().
 				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i+1))).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
 				Build())
 	}
 	for i := 1; i <= footholdCount; i++ {

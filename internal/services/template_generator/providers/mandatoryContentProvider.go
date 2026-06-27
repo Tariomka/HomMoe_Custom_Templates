@@ -2,6 +2,8 @@ package providers
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -39,11 +41,11 @@ func (this *MandatoryContentProvider) CreateContents(
 		var content []entities.MandatoryContentItem
 		switch neutralZone.Quality {
 		case models.QualityLow:
-			copy(content, configuration.LowNeutralMandatoryContent)
+			content = cloneContentItems(configuration.LowNeutralMandatoryContent)
 		case models.QualityMedium:
-			copy(content, configuration.MediumNeutralMandatoryContent)
+			content = cloneContentItems(configuration.MediumNeutralMandatoryContent)
 		case models.QualityHigh:
-			copy(content, configuration.HighNeutralMandatoryContent)
+			content = cloneContentItems(configuration.HighNeutralMandatoryContent)
 		}
 		if neutralZone.CastleCount == 0 {
 			content = stripNearCastleRules(content)
@@ -52,6 +54,47 @@ func (this *MandatoryContentProvider) CreateContents(
 			Name:    "mandatory_content_neutral_" + neutralZone.Label,
 			Content: this.createContentItemsWithFoothold(content, footholdCount, neutralZone.CastleCount),
 		})
+	}
+	return groups
+}
+
+// CreateContentsForZones rebuilds the mandatory-content groups from the final
+// zones (after any manual edits) instead of from the original generation plan.
+// A zone whose quality or castle count was changed in the manual zone editor no
+// longer matches its plan, so keying content off the plan (as CreateContents
+// does) would give a re-tiered zone the wrong content - e.g. a zone manually
+// promoted to High would keep its original Medium mandatory content. Detecting
+// the quality and castle count from the zone itself keeps the two in sync.
+func (this *MandatoryContentProvider) CreateContentsForZones(
+	configuration config.GeneratorConfig,
+	zones []entities.Zone) []entities.MandatoryContent {
+	footholdCount := 0
+	if configuration.SpawnRemoteFootholds {
+		footholdCount = configuration.RemoteFootholdCount
+	}
+
+	var groups []entities.MandatoryContent
+	for _, zone := range zones {
+		switch {
+		case strings.HasPrefix(zone.Name, "Spawn-"):
+			groups = append(groups, entities.MandatoryContent{
+				Name: "mandatory_content_side_" + strings.TrimPrefix(zone.Name, "Spawn-"),
+				Content: this.createContentItemsWithFoothold(
+					cloneContentItems(configuration.PlayerZoneMandatoryContent),
+					footholdCount,
+					configuration.ZoneConfiguration.PlayerZoneCastles),
+			})
+		case strings.HasPrefix(zone.Name, "Neutral-"):
+			castleCount := countCityMainObjects(zone)
+			content := cloneContentItems(neutralRowsForQuality(configuration, detectZoneQuality(zone)))
+			if castleCount == 0 {
+				content = stripNearCastleRules(content)
+			}
+			groups = append(groups, entities.MandatoryContent{
+				Name:    "mandatory_content_neutral_" + strings.TrimPrefix(zone.Name, "Neutral-"),
+				Content: this.createContentItemsWithFoothold(content, footholdCount, castleCount),
+			})
+		}
 	}
 	return groups
 }
@@ -155,4 +198,66 @@ func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.Mand
 		items[i].Rules = kept
 	}
 	return items
+}
+
+// cloneContentItems deep-copies the mandatory-content items (including each
+// item's Rules slice) so callers like stripNearCastleRules can mutate the copy
+// without corrupting the shared per-tier rows held on the configuration. The
+// original CreateContents used copy() into a nil slice, which silently dropped
+// every row; cloning preserves them while keeping the per-zone isolation that
+// copy() was meant to provide.
+func cloneContentItems(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]entities.MandatoryContentItem, len(items))
+	for i, item := range items {
+		item.Rules = slices.Clone(item.Rules)
+		out[i] = item
+	}
+	return out
+}
+
+// neutralRowsForQuality returns the configured mandatory-content rows matching a
+// neutral zone's quality tier.
+func neutralRowsForQuality(
+	configuration config.GeneratorConfig,
+	quality models.NeutralZoneQuality) []entities.MandatoryContentItem {
+	switch quality {
+	case models.QualityLow:
+		return configuration.LowNeutralMandatoryContent
+	case models.QualityHigh:
+		return configuration.HighNeutralMandatoryContent
+	default:
+		return configuration.MediumNeutralMandatoryContent
+	}
+}
+
+// detectZoneQuality infers a neutral zone's quality tier from its guarded
+// content pool, mirroring connection_editor.QualityOfZone so manual re-tiering
+// in the zone editor is reflected when rebuilding mandatory content.
+func detectZoneQuality(zone entities.Zone) models.NeutralZoneQuality {
+	pool := ""
+	if len(zone.GuardedContentPool) > 0 {
+		pool = zone.GuardedContentPool[0]
+	}
+	if strings.Contains(pool, "_t4_") || strings.Contains(pool, "_t5_") {
+		return models.QualityHigh
+	}
+	if strings.Contains(pool, "_t1_") || strings.Contains(pool, "_t2_") {
+		return models.QualityLow
+	}
+	return models.QualityMedium
+}
+
+// countCityMainObjects returns the number of City main objects (castles) in a
+// zone, ignoring abandoned outposts and other object types.
+func countCityMainObjects(zone entities.Zone) int {
+	count := 0
+	for _, mainObject := range zone.MainObjects {
+		if strings.EqualFold(mainObject.Type, "City") {
+			count++
+		}
+	}
+	return count
 }
