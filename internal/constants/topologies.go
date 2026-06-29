@@ -1,6 +1,8 @@
 package constants
 
 import (
+	"iter"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
@@ -10,10 +12,10 @@ type TopologyDescriptor struct {
 	Description string
 }
 
-var Topology = struct {
+type TopologyDescriptors struct {
+	Default     TopologyDescriptor
 	Circles     TopologyDescriptor
 	Random      TopologyDescriptor
-	Default     TopologyDescriptor
 	HubAndSpoke TopologyDescriptor
 	Chain       TopologyDescriptor
 	SharedWeb   TopologyDescriptor
@@ -21,10 +23,12 @@ var Topology = struct {
 	Geometric   TopologyDescriptor
 	Cross       TopologyDescriptor
 	Fractal     TopologyDescriptor
-}{
+}
+
+var descriptorValues = TopologyDescriptors{
+	Default:     TopologyDescriptor{Type: config.TopologyRing, Label: "Ring", Description: "Ring: each player borders two neighbors in a closed loop."},
 	Circles:     TopologyDescriptor{Type: config.TopologyCircles, Label: "Circles", Description: "Circles: layered concentric rings sorted by zone tier."},
 	Random:      TopologyDescriptor{Type: config.TopologyRandom, Label: "Random", Description: "Random: layout decided by the generator."},
-	Default:     TopologyDescriptor{Type: config.TopologyRing, Label: "Ring", Description: "Ring: each player borders two neighbors in a closed loop."},
 	HubAndSpoke: TopologyDescriptor{Type: config.TopologyHubAndSpoke, Label: "Hub", Description: "Hub: central neutral hub connects all player zones."},
 	Chain:       TopologyDescriptor{Type: config.TopologyChain, Label: "Chain", Description: "Chain: linear series, harder for outer players to interact."},
 	SharedWeb:   TopologyDescriptor{Type: config.TopologySharedWeb, Label: "Shared Web", Description: "Shared web: heavy interconnection through central neutral mesh."},
@@ -34,24 +38,47 @@ var Topology = struct {
 	Fractal:     TopologyDescriptor{Type: config.TopologyFractal, Label: "Fractal", Description: "Fractal: each player is the base of a fractal that branches inward through low, then high neutral tiers, weaving into a shared centre."},
 }
 
-var Topologies = []TopologyDescriptor{
-	Topology.Circles,
-	Topology.Random,
-	Topology.Default,
-	Topology.HubAndSpoke,
-	Topology.Chain,
-	Topology.SharedWeb,
-	Topology.Square,
-	Topology.Geometric,
-	Topology.Cross,
-	Topology.Fractal,
+var topologies = []TopologyDescriptor{
+	descriptorValues.Default,
+	descriptorValues.Circles,
+	descriptorValues.Random,
+	descriptorValues.HubAndSpoke,
+	descriptorValues.Chain,
+	descriptorValues.SharedWeb,
+	descriptorValues.Square,
+	descriptorValues.Geometric,
+	descriptorValues.Cross,
+	descriptorValues.Fractal,
 }
 
-func GetTopologyDescriptor(topology config.MapTopology) TopologyDescriptor {
-	for _, value := range Topologies {
+func GetTopologyDescriptors() TopologyDescriptors {
+	return descriptorValues
+}
+
+func GetTopologyDescriptorSeq() iter.Seq[TopologyDescriptor] {
+	return func(yield func(TopologyDescriptor) bool) {
+		for _, value := range topologies {
+			if !yield(value) {
+				return
+			}
+		}
+	}
+}
+
+func GetTopologyDescriptorFromType(topology config.MapTopology) TopologyDescriptor {
+	for value := range GetTopologyDescriptorSeq() {
 		if value.Type == topology {
 			return value
 		}
 	}
-	return Topologies[0]
+
+	return topologies[0]
+}
+
+func GetTopologyDescriptorFromIndex(index int) TopologyDescriptor {
+	if index >= 0 && index < len(topologies) {
+		return topologies[index]
+	}
+
+	return topologies[0]
 }

@@ -75,7 +75,7 @@ func NewLayoutPanel(state *drivers.State) *LayoutPanel {
 	panel := &LayoutPanel{
 		topology: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
-			for _, topology := range service_constants.Topologies {
+			for topology := range service_constants.GetTopologyDescriptorSeq() {
 				labels = append(labels, topology.Label)
 			}
 			return labels
@@ -122,7 +122,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 func (this *LayoutPanel) LoadFromState() {
 	settings := this.state.GetStateData()
 
-	this.topology.SelectByName(service_constants.GetTopologyDescriptor(settings.Topology).Label)
+	this.topology.SelectByName(service_constants.GetTopologyDescriptorFromType(settings.Topology).Label)
 
 	this.chkRoads.Value = settings.GenerateRoads
 	this.chkPortals.Value = settings.RandomPortals
@@ -422,7 +422,7 @@ func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.W
 }
 
 func (this *LayoutPanel) getCurrentTopology() service_constants.TopologyDescriptor {
-	return service_constants.Topologies[this.topology.GetSelectedIndex()]
+	return service_constants.GetTopologyDescriptorFromIndex(this.topology.GetSelectedIndex())
 }
 
 // handleConnectionEditorClick opens the manual zone editor over the most

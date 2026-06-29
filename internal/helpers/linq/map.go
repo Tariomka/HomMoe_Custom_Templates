@@ -72,7 +72,7 @@ func (this QueryMap[TKey, TValue]) SelectValues() Query[TValue] {
 }
 
 func (this QueryMap[TKey, TValue]) ToMap() map[TKey]TValue {
-	var result map[TKey]TValue
+	result := make(map[TKey]TValue)
 
 	this.Iterate(func(key TKey, value TValue) bool {
 		result[key] = value
