@@ -247,7 +247,7 @@ func (this *BonusesPanel) syncRemoveButtons() {
 
 func (this *BonusesPanel) LoadFromState() {
 	settings := this.state.GetStateData()
-	this.bonuses = config_inner.DeserializeBonusEntries(settings.BonusesJSON)
+	this.bonuses = settings.BonusesJSON
 	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
 	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
 	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
@@ -256,7 +256,7 @@ func (this *BonusesPanel) LoadFromState() {
 
 func (this *BonusesPanel) SaveToState() {
 	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
-		settings.BonusesJSON = config_inner.SerializeBonusEntries(this.bonuses)
+		settings.BonusesJSON = this.bonuses
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
 		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")
@@ -294,7 +294,7 @@ func bonusDisplayName(entry config_inner.BonusEntry) string {
 	case config_inner.BonusStartingOre:
 		return "Starting ore: " + entry.Param
 	}
-	return entry.String()
+	return ""
 }
 
 // bonusReceiverLabel is the dim trailing text; hidden for resource bonuses

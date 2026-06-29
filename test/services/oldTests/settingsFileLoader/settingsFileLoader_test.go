@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 )
 
@@ -258,7 +259,9 @@ func TestSettingsToGenerator_MandatoryContentRowsExpandedAcrossAllZones(t *testi
 
 func TestSettingsToGenerator_BonusesParsedFromJSON(t *testing.T) {
 	state := dtos.NewDefaultEditorStateDto()
-	state.BonusesJSON = "StartingWood|start_hero|5|"
+	state.BonusesJSON = []config_inner.BonusEntry{
+		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "5"},
+	}
 
 	gs := mappers.NewConfigMapper().FromEditorState(state)
 	if len(gs.Bonuses) != 1 {

@@ -18,7 +18,9 @@ func TestSettingsToGenerator_PopulatesNewFields(t *testing.T) {
 	state.BannedItems = "x"
 	state.BannedMagics = "y"
 	state.ValueOverridesText = "z"
-	state.BonusesJSON = "StartingWood|start_hero|7|"
+	state.BonusesJSON = []config_inner.BonusEntry{
+		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "7"},
+	}
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{
 		{Sid: "mine_gold", Count: 2, IsMine: true},
 	}

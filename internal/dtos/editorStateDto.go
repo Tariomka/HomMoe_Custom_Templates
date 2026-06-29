@@ -82,7 +82,7 @@ type EditorStateDto struct {
 	ValueOverridesText string `json:"valueOverrides"`
 	// BonusesJSON stores configurable bonuses as a newline-separated list of
 	// `BonusEntry.String()` lines (see ParseBonusesJSON).
-	BonusesJSON string `json:"bonuses"`
+	BonusesJSON []config_inner.BonusEntry `json:"bonuses"`
 
 	// ── Mandatory content rows per zone type ─────────────────────────────
 	PlayerZoneContentRows    []models.ZoneContentRowSave `json:"playerZoneContentRows,omitempty"`

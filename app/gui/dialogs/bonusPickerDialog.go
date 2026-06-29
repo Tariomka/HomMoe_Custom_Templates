@@ -86,7 +86,7 @@ func NewBonusPickerDialog(existing []config_inner.BonusEntry, opener interfaces.
 	keys := make(map[string]bool, len(existing))
 	var spellIds []string
 	for _, entry := range existing {
-		keys[entry.String()] = true
+		keys[entry.GetHash()] = true
 		if entry.PresetType == config_inner.BonusSpell && entry.Param != "" {
 			spellIds = append(spellIds, entry.Param)
 		}
@@ -137,7 +137,7 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 	}
 	if this.addBtn.Clicked(gtx) {
 		if entry, ok := this.buildEntry(); ok {
-			if this.existingKeys[entry.String()] {
+			if this.existingKeys[entry.GetHash()] {
 				this.errorText = "That bonus already exists."
 			} else {
 				if this.onApply != nil {

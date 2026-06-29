@@ -38,7 +38,7 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.BannedItems = editorState.BannedItems
 	generatorSettings.BannedMagics = editorState.BannedMagics
 	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
-	generatorSettings.Bonuses = config.ParseBonusesJSON(editorState.BonusesJSON)
+	generatorSettings.Bonuses = editorState.BonusesJSON
 	generatorSettings.PlayerZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.PlayerZoneContentRows)
 	generatorSettings.LowNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.LowNeutralContentRows)
 	generatorSettings.MediumNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.MediumNeutralContentRows)

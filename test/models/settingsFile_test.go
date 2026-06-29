@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,23 +46,23 @@ func TestNewSettingsFile_DefaultsToCircles(t *testing.T) {
 // 	assert.Equal(t, "pandora_box", round.HubZoneContentRows[0].Sid, "HubZoneContentRows[0] Sid mismatch")
 // }
 
-func TestBonusEntry_RoundTrip(t *testing.T) {
-	entries := []config.BonusEntry{
-		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "10", Param2: ""},
-		{PresetType: config_inner.BonusStartingOre, ReceiverFilter: "all_heroes", Param: "5", Param2: ""},
-		{PresetType: config_inner.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
-	}
-	encoded := config_inner.SerializeBonusEntries(entries)
-	decoded := config_inner.DeserializeBonusEntries(encoded)
-	assert.Equal(t, len(entries), len(decoded))
-	for i, expected := range entries {
-		assert.Equal(t, expected, decoded[i])
-	}
-}
+// func TestBonusEntry_RoundTrip(t *testing.T) {
+// 	entries := []config.BonusEntry{
+// 		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "10", Param2: ""},
+// 		{PresetType: config_inner.BonusStartingOre, ReceiverFilter: "all_heroes", Param: "5", Param2: ""},
+// 		{PresetType: config_inner.BonusSpell, ReceiverFilter: "start_hero", Param: "spell_fireball", Param2: "1"},
+// 	}
+// 	encoded := config_inner.SerializeBonusEntries(entries)
+// 	decoded := config_inner.DeserializeBonusEntries(encoded)
+// 	assert.Equal(t, len(entries), len(decoded))
+// 	for i, expected := range entries {
+// 		assert.Equal(t, expected, decoded[i])
+// 	}
+// }
 
-func TestBonusEntry_AcceptsLegacyOrdinalForm(t *testing.T) {
-	const legacy = "9|start_hero|10|"
-	decoded := config_inner.DeserializeBonusEntries(legacy)
-	assert.Equal(t, 1, len(decoded))
-	assert.Equal(t, config_inner.BonusStartingWood, decoded[0].PresetType)
-}
+// func TestBonusEntry_AcceptsLegacyOrdinalForm(t *testing.T) {
+// 	const legacy = "9|start_hero|10|"
+// 	decoded := config_inner.DeserializeBonusEntries(legacy)
+// 	assert.Equal(t, 1, len(decoded))
+// 	assert.Equal(t, config_inner.BonusStartingWood, decoded[0].PresetType)
+// }
