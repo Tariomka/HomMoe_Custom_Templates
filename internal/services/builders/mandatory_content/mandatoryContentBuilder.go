@@ -2,7 +2,7 @@ package mandatory_content
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 )
 
 type MandatoryContentBuilder struct {

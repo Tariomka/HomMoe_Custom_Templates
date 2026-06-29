@@ -6,7 +6,7 @@ type Distance struct{ Min, Max float64 }
 
 var (
 	DistanceNextTo  = Distance{Min: 0.05, Max: 0.1}
-	DistanceNear    = Distance{Min: 0.0, Max: 0.35}
+	DistanceNear    = Distance{Min: 0.075, Max: 0.35}
 	DistanceMedium  = Distance{Min: 0.25, Max: 0.5}
 	DistanceFar     = Distance{Min: 0.5, Max: 0.75}
 	DistanceVeryFar = Distance{Min: 0.75, Max: 0.9}

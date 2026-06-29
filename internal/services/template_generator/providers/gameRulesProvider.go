@@ -190,7 +190,7 @@ func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorCo
 // parseSidLines splits a newline-separated SID list into trimmed, non-empty SIDs.
 func parseSidLines(raw string) []string {
 	var sids []string
-	for _, line := range strings.Split(raw, "\n") {
+	for line := range strings.SplitSeq(raw, "\n") {
 		if line = strings.TrimSpace(line); line != "" {
 			sids = append(sids, line)
 		}

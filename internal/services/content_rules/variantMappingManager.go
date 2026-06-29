@@ -12,7 +12,6 @@ import (
 // 	guardedResourceBankObjects = registry.GetMapObjectT3GuardedResourceBankValues()
 // )
 
-// Predefined variant mappings, ported from the C# VariantMappingManager.
 var (
 	// UtopiaVariants enumerates the guard-strength variants of a Dragon Utopia.
 	UtopiaVariants = models.NewVariantMapping(constants.ContentIds.DragonUtopia, map[int]string{

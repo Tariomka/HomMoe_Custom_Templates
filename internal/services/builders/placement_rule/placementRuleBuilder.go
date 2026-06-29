@@ -55,11 +55,20 @@ func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight 
 		Build()
 }
 
+func (this *PlacementRuleBuilder) BuildCastleRule(distance Distance, weight int) entities.PlacementRule {
+	return this.
+		WithTypeMainObject().
+		WithArgs("0").
+		WithDistance(distance).
+		WithWeight(weight).
+		Build()
+}
+
 func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) entities.PlacementRule {
 	return this.
 		WithTypeMainObject().
 		WithArgs("0").
-		WithDistance(Distance{Min: 0.1, Max: 0.3}).
+		WithDistance(DistanceNear).
 		WithWeight(weight).
 		Build()
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 )
 
 // Rule metadata constants for the distance-to-town rule.
@@ -38,7 +39,8 @@ func (this *RuleDistanceToTown) DisplayText() string {
 }
 
 func (this *RuleDistanceToTown) Apply(item *entities.MandatoryContentItem) {
-	item.Rules = append(item.Rules, TownDistance(this.Distance, 1))
+	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().
+		BuildCastleRule(placement_rule.Distance{Min: this.Distance.Min, Max: this.Distance.Max}, 1))
 }
 
 func (this *RuleDistanceToTown) SerializeToRowSave() models.ContentRuleRowSave {

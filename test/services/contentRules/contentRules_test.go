@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 )
@@ -39,7 +40,15 @@ func TestGetDistanceVariationByName_KnownAndUnknown(t *testing.T) {
 // ── Rule presets ─────────────────────────────────────────────────────
 
 func TestRulePresets_RoadDistance(t *testing.T) {
-	rule := content_rules.RoadDistance(content_rules.DistanceNear, 1)
+	// arrange
+	builder := placement_rule.NewPlacementRuleBuilder()
+
+	// act
+	rule := builder.BuildRoadRule(
+		placement_rule.Distance{Min: content_rules.DistanceNear.Min, Max: content_rules.DistanceNear.Max},
+		1)
+
+	// assert
 	assert.Equal(t, "Road", rule.Type)
 	assert.Equal(t, 0.1, rule.TargetMin)
 	assert.Equal(t, 0.25, rule.TargetMax)
@@ -47,7 +56,15 @@ func TestRulePresets_RoadDistance(t *testing.T) {
 }
 
 func TestRulePresets_TownDistance(t *testing.T) {
-	rule := content_rules.TownDistance(content_rules.DistanceNear, 1)
+	// arrange
+	builder := placement_rule.NewPlacementRuleBuilder()
+
+	// act
+	rule := builder.BuildCastleRule(
+		placement_rule.Distance{Min: content_rules.DistanceNear.Min, Max: content_rules.DistanceNear.Max},
+		1)
+
+	// assert
 	assert.Equal(t, "MainObject", rule.Type)
 	assert.Equal(t, []any{"0"}, rule.Args)
 	assert.Equal(t, 0.1, rule.TargetMin)
@@ -55,7 +72,15 @@ func TestRulePresets_TownDistance(t *testing.T) {
 }
 
 func TestRulePresets_CrossroadsDistance(t *testing.T) {
-	rule := content_rules.CrossroadsDistance(content_rules.DistanceMedium, 2)
+	// arrange
+	builder := placement_rule.NewPlacementRuleBuilder()
+
+	// act
+	rule := builder.BuildCrossroadsRule(
+		placement_rule.Distance{Min: content_rules.DistanceMedium.Min, Max: content_rules.DistanceMedium.Max},
+		2)
+
+	// assert
 	assert.Equal(t, "Crossroads", rule.Type)
 	assert.Equal(t, 0.25, rule.TargetMin)
 	assert.Equal(t, 0.5, rule.TargetMax)
