@@ -19,10 +19,10 @@ var (
 // GeneratorConfig is the input model for the template generator
 //
 // All values here describe a single template generation request - the GUI and
-// CLI build one of these and hand it to services.Generate.
+// CLI build one of these and hand it to TemplateGenerator.
 type GeneratorConfig struct {
 	TemplateName string
-	GameMode     string // "Classic"/"SingleHero"
+	GameMode     string // [registry.gameModes]
 	PlayerCount  int    // 1..8
 	MapSize      int    // raw map size in tiles (e.g. 160). sizeX = sizeZ = MapSize.
 
@@ -37,7 +37,6 @@ type GeneratorConfig struct {
 	MatchPlayerCastleFactions     bool
 	MinNeutralZonesBetweenPlayers int
 
-	// Banned content & overrides (raw strings as edited in the UI).
 	BannedItems        string
 	BannedMagics       string
 	ValueOverridesText string
