@@ -8,9 +8,9 @@ import (
 // BonusEntry is the editor-side view-model for a single configurable game-start bonus
 type BonusEntry struct {
 	PresetType     BonusPresetType `json:"presetType"`
-	ReceiverFilter string          `json:"receiverFilter"` // "start_hero" or "all_heroes".
-	Param          string          `json:"param"`          // Spell sid / item sid / numeric value depending on type.
-	Param2         string          `json:"param2"`         // For Spell: "1" = free, "0" = normal. Unused for other types.
+	ReceiverFilter string          `json:"receiverFilter"`   // "start_hero" or "all_heroes".
+	Param          string          `json:"param,omitempty"`  // Spell sid / item sid / numeric value depending on type.
+	Param2         string          `json:"param2,omitempty"` // For Spell: "1" = free, "0" = normal. Unused for other types.
 }
 
 func (this BonusEntry) GetHash() string {
