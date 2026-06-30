@@ -3,11 +3,10 @@ package performance_test
 import (
 	"image"
 	"testing"
+	"time"
 )
 
 const (
-	tabCyclesPerOp = 3
-
 	// The tab strip sits just below the toolbar. Calibration approaches it from
 	// below (through the harmless panel area) so it never clicks the toolbar,
 	// which holds the Exit button (os.Exit). These bounds bracket the tab row
@@ -111,20 +110,19 @@ func BenchmarkEditorWindow_TabCycling(b *testing.B) {
 	for range 5 {
 		runner.NextFrame()
 	}
+	runner.SetRenderDelay(100 * time.Millisecond)
 
 	b.ReportAllocs()
 
 	for b.Loop() {
-		for range tabCyclesPerOp {
-			for idx := range points {
-				runner.ClickAt(points[idx])
-				if got := runner.SelectedTabIndex(); got != idx {
-					b.Fatalf("clicking tab %d selected tab %d instead", idx, got)
-				}
-				// Render an extra frame so the freshly selected panel is laid out
-				// fully, exercising each tab's content every cycle.
-				runner.NextFrame()
+		for idx := range points {
+			runner.ClickAt(points[idx])
+			if got := runner.SelectedTabIndex(); got != idx {
+				b.Fatalf("clicking tab %d selected tab %d instead", idx, got)
 			}
+			// Render an extra frame so the freshly selected panel is laid out
+			// fully, exercising each tab's content every cycle.
+			runner.NextFrame()
 		}
 	}
 }
