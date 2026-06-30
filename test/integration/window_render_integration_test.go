@@ -26,7 +26,7 @@ import (
 // widget tests (build a layout.Context backed by an input.Router, lay out, then
 // commit the frame).
 type headlessRenderer struct {
-	window *editor.Window
+	window *editor.WindowForTests
 	theme  *material.Theme
 	router input.Router
 	ops    op.Ops
@@ -34,7 +34,7 @@ type headlessRenderer struct {
 
 func newHeadlessRenderer() *headlessRenderer {
 	return &headlessRenderer{
-		window: editor.NewWindow(),
+		window: editor.NewWindowForTests(),
 		theme:  themes.NewTheme(),
 	}
 }
