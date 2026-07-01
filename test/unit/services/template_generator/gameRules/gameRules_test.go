@@ -25,7 +25,8 @@ func bonusesFor(entries ...config.BonusEntry) entities.BonusList {
 
 func loadExampleTemplate(t *testing.T, name string) entities.RmgTemplate {
 	t.Helper()
-	path := filepath.Join("..", "..", "..", "..", "data", "ExampleTemplates", name)
+	path, err := filepath.Abs(filepath.Join("..", "..", "..", "..", "..", "data", "ExampleTemplates", name))
+	require.NoError(t, err)
 	raw, err := os.ReadFile(path)
 	require.NoError(t, err)
 	var tpl entities.RmgTemplate

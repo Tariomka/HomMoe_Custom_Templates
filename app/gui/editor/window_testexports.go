@@ -3,18 +3,20 @@
 package editor
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
 // LoadStateFromFile ONLY FOR INTEGRATION TEST USE
-func (this *Window) LoadStateFromFile(path string) error {
-	return this.state.LoadStateFromFile(path, this.load)
+func (this *Window) LoadStateFromFile(path string) {
+	this.state.LoadStateFromFile(path)
+	this.load()
 }
 
-// SaveStateToFile  ONLY FOR INTEGRATION TEST USE
-func (this *Window) SaveStateToFile(path string) error {
+// SaveStateToFile ONLY FOR INTEGRATION TEST USE
+func (this *Window) SaveStateToFile(path string) {
 	this.save()
-	return this.state.SaveStateToFile(path)
+	this.state.SaveStateToFile(path)
 }
 
 // CurrentState ONLY FOR INTEGRATION TEST USE
@@ -40,4 +42,9 @@ func (this *Window) DialogsOpen() bool {
 // CloseTopDialog ONLY FOR INTEGRATION TEST USE
 func (this *Window) CloseTopDialog() {
 	this.state.Dialogs().Close()
+}
+
+// GetStateDriver ONLY FOR INTEGRATION TEST USE
+func (this *Window) GetStateDriver() *drivers.State {
+	return this.state
 }

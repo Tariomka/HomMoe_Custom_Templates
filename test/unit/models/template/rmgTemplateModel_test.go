@@ -15,7 +15,7 @@ import (
 // TestRmgTemplate_RoundTripAllExamples decodes every bundled example template,
 // re-encodes it, and decodes again to verify the model captures every field.
 func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
-	root, err := filepath.Abs(filepath.Join("..", "..", "..", "data", "ExampleTemplates"))
+	root, err := filepath.Abs(filepath.Join("..", "..", "..", "..", "data", "ExampleTemplates"))
 	assert.NoError(t, err, "resolve example dir")
 
 	entries, err := os.ReadDir(root)

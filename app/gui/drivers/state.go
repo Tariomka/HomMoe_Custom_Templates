@@ -161,17 +161,13 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-// Load opens the file picker and, once the user chooses a file, loads it and
-// invokes onLoaded. onLoaded runs only after the new editor state has been
-// installed, so the UI panels resynchronise from the freshly loaded state
-// rather than from the stale one that existed when the dialog was opened.
-func (this *State) Load(onLoaded func()) {
+func (this *State) Load() {
 	dir, err := os.Getwd()
 	if err != nil {
 		dir = this.suggestDirectory()
 	}
 	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{".gen.json"}, func(path string) {
-		this.LoadStateFromFile(path, onLoaded)
+		this.handleLoadState(path)
 	}))
 }
 
@@ -461,34 +457,25 @@ func (this *State) suggestDirectory() string {
 	return workingDir
 }
 
-func (this *State) handleSaveState(path string) { _ = this.SaveStateToFile(path) }
-
-// SaveStateToFile writes the current editor state, including any manual zone
-// edits, to path as a .gen.json file. It is shared by the Save / Save As
-// dialogs and by callers that already have a destination path.
-func (this *State) SaveStateToFile(path string) error {
+func (this *State) handleSaveState(path string) {
 	this.syncManualEditsToDto()
 	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
 		State:      this.stateDto,
 		OutputPath: path,
 	}); err != nil {
 		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return err
+		return
 	}
 
 	this.unsaved = false
 	this.SetStatus("Saved "+path, false)
-	return nil
 }
 
-// LoadStateFromFile loads the editor state at path, restores any persisted
-// manual zone edits, and invokes onLoaded so the UI can resynchronise. It is
-// shared by the Load dialog and by callers that already have a path.
-func (this *State) LoadStateFromFile(path string, onLoaded func()) error {
+func (this *State) handleLoadState(path string) {
 	dto, err := this.handler.LoadState(path)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-		return err
+		return
 	}
 
 	this.stateDto = dto
@@ -496,11 +483,7 @@ func (this *State) LoadStateFromFile(path string, onLoaded func()) error {
 	this.unsaved = false
 	this.clearGeneratedState()
 	this.restoreManualEdits(dto)
-	if onLoaded != nil {
-		onLoaded()
-	}
 	this.SetStatus("Loaded "+path, false)
-	return nil
 }
 
 func (this *State) handleSaveTemplate() {

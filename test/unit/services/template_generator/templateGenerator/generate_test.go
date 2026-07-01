@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +19,7 @@ func TestWhenValidConfig_ReturnsExpectedResult(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.ShufflePlayerZones = false // Deterministic player-zone ordering for a stable golden comparison.
 	templateGenerator := template_generator.NewTemplateGenerator(configuration)
-	expected := test_helpers.GetDefaultTemplate()
+	expected := helpers.GetDefaultTemplate()
 
 	// Act
 	actual := templateGenerator.Generate()
