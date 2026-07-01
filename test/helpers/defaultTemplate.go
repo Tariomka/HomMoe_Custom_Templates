@@ -1,11 +1,12 @@
-package test_helpers
+package helpers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
 )
 
-func intPtr(i int) *int { return &i }
+//go:fix inline
+func intPtr(i int) *int { return new(i) }
 
 func GetDefaultTemplate() entities.RmgTemplate {
 	return entities.RmgTemplate{
