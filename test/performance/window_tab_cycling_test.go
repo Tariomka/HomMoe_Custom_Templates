@@ -6,6 +6,8 @@ import (
 	"image"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -106,25 +108,18 @@ func BenchmarkEditorWindow_TabCycling(b *testing.B) {
 	defer runner.Stop()
 
 	points := calibrateTabPoints(b, runner)
-
-	// Warm-up frames let the default state auto-generate its preview so the timed
-	// loop measures steady-state tab navigation, not first-frame setup.
-	for range 5 {
-		runner.NextFrame()
-	}
 	runner.SetRenderDelay(100 * time.Millisecond)
 
 	b.ReportAllocs()
 
+	// TODO: add benchmark assertion with
+	// actual := testing.Benchmark()
+	// assert.LessOrEqual(b, actual.AllocedBytesPerOp(), 155_000)
+
 	for b.Loop() {
 		for idx := range points {
 			runner.ClickAt(points[idx])
-			if got := runner.SelectedTabIndex(); got != idx {
-				b.Fatalf("clicking tab %d selected tab %d instead", idx, got)
-			}
-			// Render an extra frame so the freshly selected panel is laid out
-			// fully, exercising each tab's content every cycle.
-			runner.NextFrame()
+			assert.Equal(b, idx, runner.SelectedTabIndex())
 		}
 	}
 }

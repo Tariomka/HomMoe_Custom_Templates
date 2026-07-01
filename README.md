@@ -107,18 +107,30 @@ Generated template preview:
 
 ## Building & Running
 
-Requires **Go 1.25.8** or later (see [go.mod](go.mod)).
+Requires **Go 1.26.3** or later (see [go.mod](go.mod)).
 
 ```powershell
 # Run directly
 go run .
 
 # Build a binary
-go build -o bin/template-gui.exe .
-.\bin\template-gui.exe
+go build .
+.\hommoe_custom_templates.exe
 
-# Run tests
-go test ./...        # or: go test ./test/...
+# Run unit tests
+go test ./test/... -count=1
+
+# Run integration tests
+go test -tags integration_test ./test/integration/... -count=1
+
+# Run performance tests
+go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
+
+# Run performance tests with UI
+go test -tags integration_test ./test/performance/... -bench . -benchtime 3x -timeout 30s -args headed
+
+# Run performance tests with UI and profiling
+go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s -args headed
 ```
 
 Hot reload via [air](https://github.com/air-verse/air) is configured in
