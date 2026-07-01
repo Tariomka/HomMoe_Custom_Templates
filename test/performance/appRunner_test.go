@@ -1,3 +1,5 @@
+//go:build integration_test
+
 // Package performance_test benchmarks the editor.Window UI. The SAME benchmark
 // runs in one of two modes selected at runtime:
 //
@@ -78,7 +80,7 @@ func TestMain(m *testing.M) {
 // laying out the shared editor.Window. Because that widget tree is also laid out
 // by the render goroutine in windowed mode, every access to it is guarded by mu.
 type AppRunner struct {
-	App   *editor.WindowForTests
+	App   *editor.Window
 	theme *material.Theme
 
 	// aux router: the single source of truth for synthetic input in both modes.
@@ -101,7 +103,7 @@ type AppRunner struct {
 // nil window marks the runner headless.
 func NewAppRunner() *AppRunner {
 	runner := &AppRunner{
-		App:   editor.NewWindowForTests(),
+		App:   editor.NewWindow(),
 		theme: themes.NewTheme(),
 	}
 	if !isHeadless() {

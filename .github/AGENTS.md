@@ -71,6 +71,10 @@ The project must build and run on **both Windows and Linux**. Therefore:
   for it as part of the change.
 - Run `go test ./test/...` (and, when sensible, `go test ./...`) before
   declaring a task complete.
+- The integration and performance suites are gated behind the `integration_test`
+  build tag and are skipped by a plain `go test ./...`; run them explicitly
+  with `go test -tags=integration_test ./test/integration/... ./test/performance/...`
+  (see §4.6.1). Never make `integration_test` a global/default test tag.
 - Tests must also be cross-platform (no hard-coded paths, no `\` separators,
   no shell-outs that exist only on one OS).
 
@@ -118,8 +122,11 @@ current session. Skip for trivial single-session tasks.
 ### 3.3 After editing
 
 1. Run `go build ./...` and `go test ./test/...`.
-2. Report any new errors and fix them before handing back.
-3. Briefly summarize: files touched, behaviour changed, tests added.
+2. If you touched editor internals or the gated suites, also run
+   `go test -tags=integration_test ./test/integration/... ./test/performance/...`
+   (see §4.6.1).
+3. Report any new errors and fix them before handing back.
+4. Briefly summarize: files touched, behaviour changed, tests added.
 
 ---
 
@@ -200,6 +207,49 @@ Place new code in the package whose responsibility matches its role:
 - Tests must be written using `testify` library and AAA pattern(Arrange, Act, Assert).
   If test data can be fuzzied, tests should be written with fuzzy data using `gofakeit` library.
 - See §2.3 for coverage requirements.
+
+### 4.6.1 The `integration_test` build tag (integration & performance only)
+
+Some out-of-package tests need access to `editor.Window` internals (tab count,
+selected tab, dialog state, programmatic load/save). Because those tests live in
+a **different directory** than the `editor` package, the standard
+`export_test.go` mechanism cannot reach them, and exposing the accessors as
+normal methods would leak them into the production API.
+
+The accessors therefore live in `*_testexports.go` files (e.g.
+[app/gui/editor/window_testexports.go](app/gui/editor/window_testexports.go)),
+guarded by `//go:build integration_test`. They compile **only** when the
+`integration_test` tag is passed, so production builds (`go build ./...`) never
+include them.
+
+**Scope — this tag is for integration and performance tests ONLY:**
+
+- The tag is used exclusively by the suites under [test/integration/](test/integration/)
+  and [test/performance/](test/performance/). Every test file in those two
+  directories carries `//go:build integration_test` at the top.
+- **Do NOT** run the whole suite with the tag, and **do NOT** set it as a global
+  `go.testTags`/`go.buildTags`. A normal `go test ./...` must stay tag-free; the
+  two gated directories then compile to "[no test files]" and are skipped rather
+  than failing.
+- Only files under those two directories may reference the `integration_test`
+  accessors. If another package needs an internal, do not widen this tag — add a
+  test beside the code (`package X_test` in the same directory) instead.
+
+**Running them:**
+
+```powershell
+# Default run — everything EXCEPT the gated dirs (no tag):
+go test ./... -count=1
+
+# Integration + performance only (tag scoped to these two dirs):
+go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1
+```
+
+In VS Code use the tasks in [.vscode/tasks.json](.vscode/tasks.json): *"go: test
+(default, no integration_test)"* and *"go: test integration+performance
+(integration_test)"*. gopls is configured with `-tags=integration_test` for
+**analysis only** so the gated files still get IntelliSense — that does not cause
+them to run.
 
 ### 4.7 Writing the Plan
 

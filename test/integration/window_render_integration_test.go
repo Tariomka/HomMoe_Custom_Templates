@@ -1,3 +1,5 @@
+//go:build integration_test
+
 package integration_test
 
 import (
@@ -26,7 +28,7 @@ import (
 // widget tests (build a layout.Context backed by an input.Router, lay out, then
 // commit the frame).
 type headlessRenderer struct {
-	window *editor.WindowForTests
+	window *editor.Window
 	theme  *material.Theme
 	router input.Router
 	ops    op.Ops
@@ -34,7 +36,7 @@ type headlessRenderer struct {
 
 func newHeadlessRenderer() *headlessRenderer {
 	return &headlessRenderer{
-		window: editor.NewWindowForTests(),
+		window: editor.NewWindow(),
 		theme:  themes.NewTheme(),
 	}
 }
