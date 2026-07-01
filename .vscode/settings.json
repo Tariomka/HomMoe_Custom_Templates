@@ -32,13 +32,6 @@
         "Truncator",
         "uncommons"
     ],
-    // NOTE: The "integration_test" build tag is intentionally NOT set as a
-    // global go.testTags/go.buildTags, so a normal test run does NOT compile
-    // with it. Only gopls uses it below (analysis only) so the tagged
-    // integration/performance test files still get IntelliSense. Actually
-    // RUNNING those tagged tests is done via the dedicated task in
-    // .vscode/tasks.json, which scopes -tags=integration_test to
-    // ./test/integration and ./test/performance only.
     "gopls": {
         "build.buildFlags": ["-tags=integration_test"],
         "ui.semanticTokens": true,
