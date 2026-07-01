@@ -116,21 +116,6 @@ go run .
 # Build a binary
 go build .
 .\hommoe_custom_templates.exe
-
-# Run unit tests
-go test ./test/... -count=1
-
-# Run integration tests
-go test -tags integration_test ./test/integration/... -count=1
-
-# Run performance tests
-go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
-
-# Run performance tests with UI
-go test -tags integration_test ./test/performance/... -bench . -benchtime 3x -timeout 30s -args headed
-
-# Run performance tests with UI and profiling
-go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s -args headed
 ```
 
 Hot reload via [air](https://github.com/air-verse/air) is configured in
@@ -236,13 +221,25 @@ entities.RmgTemplate
 
 ```powershell
 # Full suite
-go test ./...
+go test ./test/... -count=1
 
 # Just the services tests
 go test ./test/services/...
 
 # A single test (by name)
 go test ./test/models/ -run TestSettingsFile_RoundTrip
+
+# Integration tests
+go test -tags integration_test ./test/integration/... -count=1
+
+# Performance tests
+go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
+
+# Performance tests with UI
+go test -tags integration_test ./test/performance/... -bench . -benchtime 3x -timeout 30s -args headed
+
+# Performance tests with UI and profiling
+go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s -args headed
 ```
 
 ## Notes
