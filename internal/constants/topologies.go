@@ -39,9 +39,9 @@ var descriptorValues = TopologyDescriptors{
 }
 
 var topologies = []TopologyDescriptor{
+	descriptorValues.Random,
 	descriptorValues.Default,
 	descriptorValues.Circles,
-	descriptorValues.Random,
 	descriptorValues.HubAndSpoke,
 	descriptorValues.Chain,
 	descriptorValues.SharedWeb,

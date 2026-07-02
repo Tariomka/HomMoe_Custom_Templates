@@ -14,4 +14,7 @@ const (
 	DefaultRoundness             = unit.Dp(4)
 	DefaultRoundnessLarge        = unit.Dp(6)
 	DefaultRoundnessOverlineText = unit.Dp(10)
+
+	DefaultPreviewWidthMinimum = 380
+	DefaultPreviewWidthMaximum = 440
 )

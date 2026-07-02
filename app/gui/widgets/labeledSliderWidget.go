@@ -2,7 +2,7 @@ package widgets
 
 import (
 	"gioui.org/layout"
-	"gioui.org/unit"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
@@ -17,14 +17,10 @@ func NewLabeledSliderWidget(theme *material.Theme, slider *widget.Float, value s
 				slider.Color = themes.ColorAccent
 				return slider.Layout(gtx)
 			}),
-			layout.Rigid(layout.Spacer{Width: unit.Dp(6)}.Layout),
+			layout.Rigid(NewHorizontalSpacerWidget(6)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Min.X = gtx.Dp(32)
-				label := material.Body1(theme, value)
-				label.Color = themes.ColorAccent
-				label.TextSize = unit.Sp(13)
-				label.Alignment = 1
-				return label.Layout(gtx)
+				return NewAlignedLabelWidget(theme, value, themes.ColorAccent, text.End)(gtx)
 			}),
 		)
 	}

@@ -5,8 +5,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
@@ -17,14 +15,9 @@ import (
 func NewCenteredMessageWidget(theme *material.Theme, message string, innerCanvasSize, outerCanvasSize image.Point) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)
-		gtxLocal := gtx
-		gtxLocal.Constraints.Min = image.Point{}
-		gtxLocal.Constraints.Max = innerCanvasSize
-		label := material.Body2(theme, message)
-		label.Color = themes.ColorTextDim
-		label.TextSize = unit.Sp(12)
-		label.Alignment = text.Middle
-		dims := label.Layout(gtxLocal)
+		gtx.Constraints.Min = image.Point{}
+		gtx.Constraints.Max = innerCanvasSize
+		dims := NewLabelWidget(theme, message, themes.ColorTextDim)(gtx)
 		call := macro.Stop()
 
 		tx := (innerCanvasSize.X - dims.Size.X) / 2

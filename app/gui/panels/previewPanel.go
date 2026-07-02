@@ -73,9 +73,9 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(0.5, widgets.NewBrightButtonWidget(theme, "Generate", &this.btnGenerate, false)),
+					layout.Flexed(0.5, widgets.NewBrightButtonLargeWidget(theme, "Generate", &this.btnGenerate, false)),
 					widgets.NewDefaultComponentSpacer(),
-					layout.Flexed(0.5, widgets.NewBrightButtonWidget(
+					layout.Flexed(0.5, widgets.NewBrightButtonLargeWidget(
 						theme, "Save Template", &this.btnSaveTemplate,
 						this.state.GetLastTemplate() == nil)))
 			}),
