@@ -33,4 +33,6 @@ var (
 	ColorEditorEdgeSelected = color.NRGBA{R: 0xFF, G: 0x9E, B: 0x2E, A: 0xFF} // selected connection - amber pops against crimson roads
 	ColorEditorUserAddedDot = color.NRGBA{R: 0xFF, G: 0xB3, B: 0xC0, A: 0xFF} // marker on user-added zones
 	ColorEditorGuardLabel   = color.NRGBA{R: 0xEF, G: 0xE8, B: 0xD6, A: 0xFF} // guard-value text on edges
+	ColorEditorGridLine     = color.NRGBA{R: 0xF2, G: 0xEE, B: 0xF2, A: 0x0E} // faint snapping-grid dots on the editor canvas
+	ColorEditorSnapGuide    = color.NRGBA{R: 0x50, G: 0xDC, B: 0x78, A: 0xB4} // green alignment guide while a zone snaps to another zone
 )
