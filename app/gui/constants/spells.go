@@ -17,13 +17,9 @@ type SpellEntry struct {
 }
 
 // SpellSchoolOrder gives the canonical display order of the magic schools.
-//
-//nolint:gochecknoglobals // semantic catalog
 var SpellSchoolOrder = []string{"neutral", "day", "night", "space", "primal"}
 
 // SpellSchoolDisplayNames maps a school key to its display label.
-//
-//nolint:gochecknoglobals // semantic catalog
 var SpellSchoolDisplayNames = map[string]string{
 	"neutral": "High Neutral",
 	"day":     "Daylight",
@@ -35,8 +31,6 @@ var SpellSchoolDisplayNames = map[string]string{
 // KnownSpells is the catalog of learnable spells. SIDs come from the
 // registry; names, schools and tiers are editor-side labels. Grouped
 // logically by school; consumers sort by tier within each school as needed.
-//
-//nolint:gochecknoglobals // semantic catalog
 var KnownSpells = buildKnownSpells()
 
 func buildKnownSpells() []SpellEntry {
