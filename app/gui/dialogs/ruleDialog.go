@@ -134,7 +134,7 @@ func (this *ManageRulesDialog) Body(gtx layout.Context, theme *material.Theme) (
 				}),
 				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
 				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-				layout.Rigid(widgets.NewGoldButtonWidget(theme, "Apply", &this.applyBtn, false)),
+				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Apply", &this.applyBtn, false)),
 			)
 		}),
 	), false

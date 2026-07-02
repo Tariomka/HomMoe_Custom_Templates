@@ -128,7 +128,7 @@ func (this *multiSelectPicker) layoutButtons(gtx layout.Context, theme *material
 		}),
 		layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
 		layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-		layout.Rigid(widgets.NewGoldButtonWidget(theme, addText, &this.addBtn, count == 0)),
+		layout.Rigid(widgets.NewBrightButtonWidget(theme, addText, &this.addBtn, count == 0)),
 	)
 }
 

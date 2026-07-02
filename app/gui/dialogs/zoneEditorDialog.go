@@ -324,7 +324,7 @@ func (this *ZoneEditorDialog) layoutFooter(theme *material.Theme) layout.Widget 
 			}),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Rigid(widgets.NewGoldButtonWidget(theme, "Apply changes", &this.applyBtn, false)),
+			layout.Rigid(widgets.NewBrightButtonWidget(theme, "Apply changes", &this.applyBtn, false)),
 		)
 	}
 }

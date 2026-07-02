@@ -213,7 +213,7 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 				}),
 				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
 				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-				layout.Rigid(widgets.NewGoldButtonWidget(theme, "Add", &this.addBtn, false)),
+				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Add", &this.addBtn, false)),
 			)
 		}),
 	), false

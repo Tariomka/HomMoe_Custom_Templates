@@ -321,7 +321,7 @@ func (this *LayoutPanel) getDifficultyAndDensityWidget(theme *material.Theme) la
 
 func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Manual zone editing", []layout.Widget{
-		widgets.NewGoldButtonWidget(theme, "Manual zone editor...", &this.editConnectionsBtn, false),
+		widgets.NewBrightButtonWidget(theme, "Manual zone editor...", &this.editConnectionsBtn, false),
 		widgets.NewDimmedLabelWidget(theme, "Visually add, move and edit zones and connections on the generated map."),
 	})
 }
@@ -338,7 +338,7 @@ func (this *LayoutPanel) getZonesWidget(theme *material.Theme) layout.Widget {
 			widgets.NewLabeledSliderWidget(
 				theme, &this.sldPlayerCastles,
 				utils.RoundedRangeString(this.sldPlayerCastles.Value, 0, 4))),
-		widgets.NewGoldButtonWidget(theme, "Edit player zone content...", &this.btnPlayerContent, false),
+		widgets.NewBrightButtonWidget(theme, "Edit player zone content...", &this.btnPlayerContent, false),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAdvancedZones, "Advanced zone control (split low / medium / high tiers)"),
 		func(gtx layout.Context) layout.Dimensions {
 			if !this.chkAdvancedZones.Value {
@@ -397,7 +397,7 @@ func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, titl
 			widgets.NewLabeledSliderWidget(
 				theme, castlesPerZone,
 				utils.RoundedRangeString(castlesPerZone.Value, 0, 4))),
-		widgets.NewGoldButtonWidget(theme, "Edit zone content...", contentBtn, false),
+		widgets.NewBrightButtonWidget(theme, "Edit zone content...", contentBtn, false),
 	})
 }
 
@@ -416,7 +416,7 @@ func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.W
 				widgets.NewLabeledSliderWidget(
 					theme, &this.sldHubCastles,
 					utils.RoundedRangeString(this.sldHubCastles.Value, 0, 4))),
-			widgets.NewGoldButtonWidget(theme, "Edit zone content...", &this.btnHubContent, false),
+			widgets.NewBrightButtonWidget(theme, "Edit zone content...", &this.btnHubContent, false),
 		})(gtx)
 	}
 }

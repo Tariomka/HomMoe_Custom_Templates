@@ -199,7 +199,7 @@ func (this *FileExplorerDialog) layoutFooter(gtx layout.Context, theme *material
 			}),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.overwriteCancelBtn, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Rigid(widgets.NewGoldButtonWidget(theme, "Overwrite", &this.overwriteConfirmBtn, false)),
+			layout.Rigid(widgets.NewBrightButtonWidget(theme, "Overwrite", &this.overwriteConfirmBtn, false)),
 		)
 	}
 
@@ -220,7 +220,7 @@ func (this *FileExplorerDialog) layoutFooter(gtx layout.Context, theme *material
 	if showConfirm {
 		children = append(children,
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Rigid(widgets.NewGoldButtonWidget(theme, confirmLabel, &this.confirmBtn, confirmDisabled)),
+			layout.Rigid(widgets.NewBrightButtonWidget(theme, confirmLabel, &this.confirmBtn, confirmDisabled)),
 		)
 	}
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)

@@ -88,7 +88,7 @@ func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.C
 	}
 }
 
-func NewGoldButtonWidget(theme *material.Theme, label string, button *widget.Clickable, disabled bool) layout.Widget {
+func NewBrightButtonWidget(theme *material.Theme, label string, button *widget.Clickable, disabled bool) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		if disabled {
 			gtx = gtx.Disabled()
