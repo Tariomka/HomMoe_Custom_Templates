@@ -193,6 +193,7 @@ func (this *State) SaveAs(templateName string) {
 }
 
 func (this *State) Generate() {
+	reapplyManual := this.shouldReapplyManualEdits()
 	dto, err := this.handler.GenerateTemplate(*this.stateDto)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
@@ -201,12 +202,19 @@ func (this *State) Generate() {
 
 	wasModified := this.connectionsModified
 	this.applyGeneratedTemplate(dto.Template)
-	this.discardManualEdits()
+	if reapplyManual {
+		this.reapplyManualEdits()
+	} else {
+		this.discardManualEdits()
+	}
+	this.pendingManualReapply = false
 	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
 	status := fmt.Sprintf(
 		"Generated '%s' - %d zones, %d connections.",
 		this.lastTemplate.Name, zoneCount, connectionCount)
-	if wasModified {
+	if reapplyManual {
+		status += " (Manual zone edits reapplied.)"
+	} else if wasModified {
 		status += " (Manual connection edits were replaced by regeneration.)"
 	}
 	this.SetStatus(status, false)
@@ -316,13 +324,21 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 	return time.Time{}, false
 }
 
-// performAutoRegen runs the actual regeneration used by AutoRegenerate,
-// reapplying manual zone edits when the layout-defining options are unchanged.
-func (this *State) performAutoRegen() {
-	reapplyManual := this.hasManualEdits &&
+// shouldReapplyManualEdits reports whether stored manual zone edits should be
+// pushed back onto a freshly generated template: either a loaded state armed a
+// reapply, or the layout-defining options are unchanged since the last
+// generation.
+func (this *State) shouldReapplyManualEdits() bool {
+	return this.hasManualEdits &&
 		(this.pendingManualReapply ||
 			(this.lastGeneratedState != nil &&
 				!this.lastGeneratedState.LayoutDefiningOptionsChanged(this.stateDto)))
+}
+
+// performAutoRegen runs the actual regeneration used by AutoRegenerate,
+// reapplying manual zone edits when the layout-defining options are unchanged.
+func (this *State) performAutoRegen() {
+	reapplyManual := this.shouldReapplyManualEdits()
 
 	dto, err := this.handler.GenerateTemplate(*this.stateDto)
 	if err != nil {

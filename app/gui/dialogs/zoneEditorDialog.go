@@ -77,6 +77,7 @@ type ZoneEditorDialog struct {
 	selected      *entities.Connection
 	selectedZone  string
 	addMode       bool
+	addZoneMode   bool
 	pendingFrom   string
 	dragging      bool
 	dragPos       image.Point
@@ -184,18 +185,34 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 	}
 	if this.addBtn.Clicked(gtx) {
 		this.addMode = !this.addMode
+		this.addZoneMode = false
 		this.pendingFrom = ""
 		this.dragging = false
 		this.hint = ""
 	}
 	if this.addZoneBtn.Clicked(gtx) {
-		this.addZone()
+		this.addZoneMode = !this.addZoneMode
+		this.addMode = false
+		this.pendingFrom = ""
+		this.dragging = false
+		this.hint = ""
 	}
 	if this.deleteBtn.Clicked(gtx) {
 		if this.selected != nil {
 			this.deleteConnection(this.selected)
 		} else if this.selectedZone != "" {
 			this.deleteZone(this.selectedZone)
+		}
+	}
+	// The side-panel delete buttons must be polled BEFORE their Clickables are
+	// laid out - Clickable.Layout consumes the click, so a check after layout
+	// never fires.
+	if this.sidePropDelete.Clicked(gtx) && this.selected != nil {
+		this.deleteConnection(this.selected)
+	}
+	if this.sideZoneDelete.Clicked(gtx) {
+		if zone := this.selectedZoneRef(); zone != nil {
+			this.deleteZone(zone.Name)
 		}
 	}
 	if this.resetBtn.Clicked(gtx) {
@@ -226,13 +243,17 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 	return func(gtx layout.Context) layout.Dimensions {
 		addLabel := "Add connection"
 		if this.addMode {
-			addLabel = "Adding... (click empty to cancel)"
+			addLabel = "Adding... (click empty to stop)"
+		}
+		addZoneLabel := "Add zone"
+		if this.addZoneMode {
+			addZoneLabel = "Placing... (click a zone to stop)"
 		}
 		hasSelection := this.selected != nil || this.selectedZone != ""
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(widgets.NewToggleButtonWidget(theme, addLabel, &this.addBtn, this.addMode)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			layout.Rigid(widgets.NewToggleButtonWidget(theme, "Add zone", &this.addZoneBtn, false)),
+			layout.Rigid(widgets.NewToggleButtonWidget(theme, addZoneLabel, &this.addZoneBtn, this.addZoneMode)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Delete selected", &this.deleteBtn, !hasSelection)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
@@ -257,7 +278,9 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 		if this.hint != "" {
 			message = this.hint
 		} else if this.addMode {
-			message = "Add mode: press a zone and drag to another to connect."
+			message = "Add mode: press a zone and drag to another to connect. Repeat to add more."
+		} else if this.addZoneMode {
+			message = "Add zone mode: click an empty spot to place a zone. Repeat to add more."
 		} else if isolated := connection_editor.FindIsolatedZones(this.zones, connections); len(isolated) > 0 {
 			message = fmt.Sprintf("%d zones · %d connections · %d isolated zone(s)", len(this.zones), len(connections), len(isolated))
 		}
@@ -307,12 +330,16 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 		return widgets.NewCenteredMessageWidget(theme, "No zones to edit - generate a template first.", canvasSize, outer)(gtx)
 	}
 
-	this.recomputeGeometry(side)
-
 	area := clip.Rect{Max: canvasSize}.Push(gtx.Ops)
 	event.Op(gtx.Ops, &this.canvasTag)
 	area.Pop()
+	// Handle pointer input BEFORE recomputing geometry so edits (new
+	// connections/zones, drags) are reflected in this very frame. Hit testing
+	// uses the previous frame's geometry, which is exactly what is on screen.
+	this.side = side
 	this.handlePointer(gtx)
+
+	this.recomputeGeometry(side)
 
 	if len(this.positions) == 0 {
 		return layout.Dimensions{Size: outer}
@@ -370,6 +397,14 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 		}
 		return
 	}
+	if this.addZoneMode {
+		if node == "" {
+			this.addZoneAt(pos)
+		} else {
+			this.addZoneMode = false
+		}
+		return
+	}
 	if node != "" {
 		this.selectZone(node)
 		this.zoneDragName = node
@@ -401,8 +436,9 @@ func (this *ZoneEditorDialog) onRelease(pos image.Point) {
 	}
 	target := this.hitTestNode(pos)
 	if target != "" && from != "" && target != from {
+		// Stay in add mode so several connections can be chained without
+		// re-clicking the toolbar button.
 		this.addConnection(from, target)
-		this.addMode = false
 	}
 }
 
@@ -688,7 +724,7 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add connection”, then drag from one zone to another to create a link.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add zone” to add a neutral zone. Right-click a line to delete it.")),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.")),
 	)
 }
 
@@ -776,10 +812,6 @@ func (this *ZoneEditorDialog) writebackProps(gtx layout.Context) {
 	if connection == nil {
 		return
 	}
-	if this.sidePropDelete.Clicked(gtx) {
-		this.deleteConnection(connection)
-		return
-	}
 	typeItems := connection_editor.UserCreatableConnectionTypes()
 	if index := this.typeDropdown.GetSelectedIndex(); index >= 0 && index < len(typeItems) {
 		connection.ConnectionType = typeItems[index]
@@ -841,6 +873,7 @@ func (this *ZoneEditorDialog) resetToOriginal() {
 	this.selectedZone = ""
 	this.syncedZoneFor = ""
 	this.addMode = false
+	this.addZoneMode = false
 	this.pendingFrom = ""
 	this.dragging = false
 	this.zoneDragName = ""
@@ -929,8 +962,13 @@ func (this *ZoneEditorDialog) manualPositions() [][2]float64 {
 	return out
 }
 
-// addZone appends a new medium-quality neutral zone at an open spot.
-func (this *ZoneEditorDialog) addZone() {
+// addZoneAt appends a new medium-quality neutral zone at the clicked canvas
+// position. The add-zone mode stays active so several zones can be placed
+// without re-clicking the toolbar button.
+func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
+	if this.side <= 0 {
+		return
+	}
 	label := connection_editor.NextFreeZoneLabel(this.zones)
 	if label == "" {
 		this.hint = "Zone label pool exhausted - cannot add more zones."
@@ -938,14 +976,13 @@ func (this *ZoneEditorDialog) addZone() {
 	}
 	this.ensureManualPositions()
 	zone := connection_editor.NewDefaultNeutralZone(label, models.QualityMedium, 1, this.generateRoads, this.tuning)
-	position := connection_editor.FindOpenPosition(this.manualPositions())
-	zone.ManualPosition = &position
+	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
+	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
+	zone.ManualPosition = &[2]float64{x, y}
 	this.zones = append(this.zones, zone)
-	this.addMode = false
-	this.pendingFrom = ""
 	this.selectZone(zone.Name)
 	this.syncedZoneFor = ""
-	this.hint = fmt.Sprintf("Added %s - drag it into place, then connect it with “Add connection”.", zone.Name)
+	this.hint = fmt.Sprintf("Added %s - connect it with “Add connection”.", zone.Name)
 }
 
 // deleteZone removes a zone and every connection referencing it. Spawn zones
@@ -1031,10 +1068,6 @@ func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 // writebackZoneProps copies the zone widget state back into the selected zone
 // after the panel has been laid out for this frame.
 func (this *ZoneEditorDialog) writebackZoneProps(gtx layout.Context, zone *entities.Zone) {
-	if this.sideZoneDelete.Clicked(gtx) {
-		this.deleteZone(zone.Name)
-		return
-	}
 	if value, err := strconv.ParseFloat(strings.TrimSpace(this.zoneSizeEdit.Text()), 64); err == nil {
 		zone.Size = math.Round(math.Min(math.Max(value, 0.1), 2.0)*100) / 100
 	}

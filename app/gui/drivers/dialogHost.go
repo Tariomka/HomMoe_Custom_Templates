@@ -127,6 +127,10 @@ func (this *DialogHost) layoutPanel(gtx layout.Context, theme *material.Theme) l
 				dims, done := active.Body(gtx, theme)
 				if done {
 					this.Close()
+					// Schedule an immediate redraw so the dialog underneath (or
+					// the main UI) reflects the applied changes without waiting
+					// for the next input event.
+					gtx.Execute(op.InvalidateCmd{})
 				}
 				return dims
 			}),
