@@ -92,25 +92,8 @@ type EditorStateDto struct {
 	HubZoneContentRows       []models.ZoneContentRowSave `json:"hubZoneContentRows,omitempty"`
 
 	// ── Manual zone editor edits ─────────────────────────────────────────
-	// When the user hand-edits the layout in the manual zone editor, the
-	// resulting zones and connections are persisted here so the hand-made
-	// layout survives a save/load round-trip and is reapplied after the loaded
-	// template is regenerated.
-	HasManualEdits    bool                   `json:"hasManualEdits,omitempty"`
 	ManualZones       []ManualZoneSave       `json:"manualZones,omitempty"`
 	ManualConnections []ManualConnectionSave `json:"manualConnections,omitempty"`
-}
-
-// EqualsIgnoringManualEdits reports whether two editor states are equal when
-// the manual-edit fields are disregarded. Manual zones and connections are
-// reapplied to the generated template through a separate path, so they must
-// not trigger an automatic regeneration on their own.
-func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) bool {
-	left := *this
-	right := *other
-	left.HasManualEdits, left.ManualZones, left.ManualConnections = false, nil, nil
-	right.HasManualEdits, right.ManualZones, right.ManualConnections = false, nil, nil
-	return reflect.DeepEqual(left, right)
 }
 
 func NewDefaultEditorStateDto() EditorStateDto {
@@ -154,6 +137,49 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		TournamentSaveArmy:           true,
 		PlayerZoneContentRows:        DefaultPlayerZoneContentRows(),
 	}
+}
+
+// LayoutDefiningOptionsChanged reports whether any option that changes the set
+// of zones or the connection graph differs between two editor states. When
+// these are unchanged, manual zone edits remain valid and can be reapplied.
+func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDto) bool {
+	return this.PlayerCount != incoming.PlayerCount ||
+		this.Topology != incoming.Topology ||
+		this.GenerateRoads != incoming.GenerateRoads ||
+		this.RandomPortals != incoming.RandomPortals ||
+		this.NoDirectPlayerConn != incoming.NoDirectPlayerConn ||
+		this.MaxPortalConnections != incoming.MaxPortalConnections ||
+		this.MinNeutralZonesBetweenPlayers != incoming.MinNeutralZonesBetweenPlayers ||
+		this.zoneCountOptionsChanged(incoming)
+}
+
+// zoneCountOptionsChanged reports whether the number of neutral zones differs
+// between two editor states.
+func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bool {
+	return this.AdvancedMode != incoming.AdvancedMode ||
+		this.NeutralZoneCount != incoming.NeutralZoneCount ||
+		this.NeutralLowNoCastleCount != incoming.NeutralLowNoCastleCount ||
+		this.NeutralLowCastleCount != incoming.NeutralLowCastleCount ||
+		this.NeutralMediumNoCastleCount != incoming.NeutralMediumNoCastleCount ||
+		this.NeutralMediumCastleCount != incoming.NeutralMediumCastleCount ||
+		this.NeutralHighNoCastleCount != incoming.NeutralHighNoCastleCount ||
+		this.NeutralHighCastleCount != incoming.NeutralHighCastleCount
+}
+
+// EqualsIgnoringManualEdits reports whether two editor states are equal when
+// the manual-edit fields are disregarded. Manual zones and connections are
+// reapplied to the generated template through a separate path, so they must
+// not trigger an automatic regeneration on their own.
+func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) bool {
+	left := *this
+	right := *other
+	left.ManualZones, left.ManualConnections = nil, nil
+	right.ManualZones, right.ManualConnections = nil, nil
+	return reflect.DeepEqual(left, right)
+}
+
+func (this *EditorStateDto) HasManualEdits() bool {
+	return len(this.ManualZones) > 0 || len(this.ManualConnections) > 0
 }
 
 // DefaultPlayerZoneContentRows returns the historical default mandatory-content
@@ -273,31 +299,4 @@ func DefaultPlayerZoneContentRows() []models.ZoneContentRowSave {
 			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
 		},
 	}
-}
-
-// LayoutDefiningOptionsChanged reports whether any option that changes the set
-// of zones or the connection graph differs between two editor states. When
-// these are unchanged, manual zone edits remain valid and can be reapplied.
-func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDto) bool {
-	return this.PlayerCount != incoming.PlayerCount ||
-		this.Topology != incoming.Topology ||
-		this.GenerateRoads != incoming.GenerateRoads ||
-		this.RandomPortals != incoming.RandomPortals ||
-		this.NoDirectPlayerConn != incoming.NoDirectPlayerConn ||
-		this.MaxPortalConnections != incoming.MaxPortalConnections ||
-		this.MinNeutralZonesBetweenPlayers != incoming.MinNeutralZonesBetweenPlayers ||
-		this.zoneCountOptionsChanged(incoming)
-}
-
-// zoneCountOptionsChanged reports whether the number of neutral zones differs
-// between two editor states.
-func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bool {
-	return this.AdvancedMode != incoming.AdvancedMode ||
-		this.NeutralZoneCount != incoming.NeutralZoneCount ||
-		this.NeutralLowNoCastleCount != incoming.NeutralLowNoCastleCount ||
-		this.NeutralLowCastleCount != incoming.NeutralLowCastleCount ||
-		this.NeutralMediumNoCastleCount != incoming.NeutralMediumNoCastleCount ||
-		this.NeutralMediumCastleCount != incoming.NeutralMediumCastleCount ||
-		this.NeutralHighNoCastleCount != incoming.NeutralHighNoCastleCount ||
-		this.NeutralHighCastleCount != incoming.NeutralHighCastleCount
 }

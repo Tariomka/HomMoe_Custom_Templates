@@ -138,7 +138,6 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	var onDisk dtos.EditorStateDto
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 
-	assert.True(t, onDisk.HasManualEdits, "gen.json did not flag manual edits")
 	require.Len(t, onDisk.ManualZones, len(zones), "gen.json did not persist all manual zones")
 	require.NotEmpty(t, onDisk.ManualConnections, "gen.json did not persist manual connections")
 
@@ -199,7 +198,6 @@ func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 
 	var onDisk dtos.EditorStateDto
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
-	assert.False(t, onDisk.HasManualEdits)
 	assert.Empty(t, onDisk.ManualZones)
 	assert.Empty(t, onDisk.ManualConnections)
 }
