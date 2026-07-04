@@ -769,21 +769,13 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 	}
 	rows = append(rows,
 		widgets.NewVerticalSpacerWidget(6),
-		widgets.NewLabeledRowWidget(theme, "Type", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.typeDropdown.Layout(gtx, theme)
-		}),
-		widgets.NewLabeledRowWidget(theme, "Guard zone", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.guardZoneDropdown.Layout(gtx, theme)
-		}),
+		widgets.NewLabeledRowWidget(theme, "Type", 110, this.typeDropdown.GetWidget(theme)),
+		widgets.NewLabeledRowWidget(theme, "Guard zone", 110, this.guardZoneDropdown.GetWidget(theme)),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.guardDropdown.Layout(gtx, theme)
-		}),
+		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, this.guardDropdown.GetWidget(theme)),
 		widgets.NewLabeledRowWidget(theme, "Guard value", 110, widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false)),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.weeklyDropdown.Layout(gtx, theme)
-		}),
+		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, this.weeklyDropdown.GetWidget(theme)),
 		widgets.NewLabeledRowWidget(theme, "Increment", 110, widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false)),
 		widgets.NewVerticalSpacerWidget(6),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.advancedBool, "Advanced options"),
@@ -1185,12 +1177,8 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 	if isNeutral {
 		rows = append(rows,
 			widgets.NewVerticalSpacerWidget(4),
-			widgets.NewLabeledRowWidget(theme, "Quality", 110, func(gtx layout.Context) layout.Dimensions {
-				return this.qualityDropdown.Layout(gtx, theme)
-			}),
-			widgets.NewLabeledRowWidget(theme, "Castles", 110, func(gtx layout.Context) layout.Dimensions {
-				return this.castleDropdown.Layout(gtx, theme)
-			}),
+			widgets.NewLabeledRowWidget(theme, "Quality", 110, this.qualityDropdown.GetWidget(theme)),
+			widgets.NewLabeledRowWidget(theme, "Castles", 110, this.castleDropdown.GetWidget(theme)),
 			widgets.NewDimmedLabelWidget(theme, "Changing quality or castles regenerates the zone's content."),
 		)
 	}

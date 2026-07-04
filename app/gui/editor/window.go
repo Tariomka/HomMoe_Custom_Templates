@@ -58,9 +58,7 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 					layout.Flexed(1, this.getPanelsWidget(theme)))
 			})
 		}),
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return this.state.Dialogs().Layout(gtx, theme)
-		}),
+		layout.Expanded(this.state.Dialogs().GetActiveDialogWidget(theme)),
 	)
 }
 

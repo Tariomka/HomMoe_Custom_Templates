@@ -192,7 +192,9 @@ func (this *GeneralPanel) getTemplateSectionWidget(theme *material.Theme) layout
 			widgets.NewLabeledSliderWidget(theme, &this.playerCount, utils.RoundedRangeString(this.playerCount.Value, 2, 8))),
 		widgets.NewLabeledRowWidget(
 			theme, "Map size", constants.DefaultLabelWidth,
-			func(gtx layout.Context) layout.Dimensions { return this.updateMapSizeSelector(gtx).Layout(gtx, theme) }),
+			func(gtx layout.Context) layout.Dimensions {
+				return this.updateMapSizeSelector(gtx).GetWidget(theme)(gtx)
+			}),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkMoreMapSizes, "Allow non official larger map sizes (>240)"),
 	})
 }
@@ -243,7 +245,7 @@ func (this *GeneralPanel) getRulesWidget(theme *material.Theme) layout.Widget {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Flexed(0.5, widgets.NewLabeledRowWidget(
 						theme, "Victory", constants.DefaultLabelWidth,
-						func(gtx layout.Context) layout.Dimensions { return this.victorySelector.Layout(gtx, theme) })),
+						this.victorySelector.GetWidget(theme))),
 					widgets.NewDefaultWidgetSpacer(),
 					layout.Flexed(0.5, this.getConditionOptionsWidget(theme)))
 			},

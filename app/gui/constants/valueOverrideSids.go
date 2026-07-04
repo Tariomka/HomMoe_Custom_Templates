@@ -1,6 +1,11 @@
 package constants
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/registry"
+import (
+	"slices"
+	"strings"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+)
 
 // ValueOverrideSids are the known object / encounter SIDs offered by the
 // guard-value-override picker. SIDs come from the registry; they reference
@@ -99,4 +104,12 @@ func buildValueOverrideSids() []string {
 		visionBuildings.WindRose,
 		t1StatsAndSkillsObjects.WiseOwl,
 	}
+}
+
+func GetValueOverrideSidsWithExclusions(excluded []string) []string {
+	sids := slices.DeleteFunc(
+		buildValueOverrideSids(),
+		func(sid string) bool { return slices.Contains(excluded, sid) })
+	slices.SortStableFunc(sids, strings.Compare)
+	return sids
 }

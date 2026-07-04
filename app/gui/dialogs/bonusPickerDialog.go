@@ -129,17 +129,113 @@ func (this *BonusPickerDialog) PreferredSize() (unit.Dp, unit.Dp) {
 }
 
 func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
+	if this.handleClicks(gtx) {
+		return layout.Dimensions{Size: gtx.Constraints.Min}, true
+	}
+	this.handleSubPickers(gtx)
+
+	presetType := this.getSelectedType()
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			dims := widgets.NewLabeledRowWidget(theme, "Type", 90, this.typeDropdown.GetWidget(theme))(gtx)
+			if this.typeDropdown.WasUpdated {
+				this.applyTypeDefaults(presetType)
+			}
+			return dims
+		}),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			if presetType.IsResource() {
+				return layout.Dimensions{}
+			}
+
+			return widgets.NewLabeledRowWidget(theme, "Receiver", 90, this.receiverDropdown.GetWidget(theme))(gtx)
+		}),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+		layout.Rigid(this.getEditorWidget(theme, presetType)),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			if this.errorText == "" {
+				return layout.Dimensions{}
+			}
+
+			return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				label := material.Body2(theme, this.errorText)
+				label.Color = themes.ColorError
+				label.TextSize = unit.Sp(12)
+				return label.Layout(gtx)
+			})
+		}),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(12)),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+					return layout.Dimensions{Size: gtx.Constraints.Min}
+				}),
+				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
+				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Add", &this.addBtn, false)),
+			)
+		}),
+	), false
+}
+
+func (this *BonusPickerDialog) getEditorWidget(theme *material.Theme, presetType config_inner.BonusPresetType) layout.Widget {
+	switch presetType {
+	case config_inner.BonusTownPortalFree:
+		return widgets.NewDimmedLabelWidget(theme, "Grants free town portal to the selected hero(es). No extra parameters.")
+	case config_inner.BonusSpell:
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, spellCountLabel(len(this.selectedSpells)))),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+						layout.Rigid(widgets.NewButtonWidget(
+							theme, "Pick spells...", &this.pickSpellBtn, this.opener == nil)),
+					)
+				}),
+				layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
+				layout.Rigid(this.getSpellListWidget(theme)),
+				layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
+				layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.makeFree, "Make spell(s) free")),
+			)
+		}
+	case config_inner.BonusUnitMultiplier:
+		return widgets.NewLabeledRowWidget(theme, "Multiplier", 90,
+			widgets.NewTextboxWidget(theme, &this.multiplierEdit, "2", false))
+	case config_inner.BonusMovementBonus:
+		return widgets.NewLabeledRowWidget(theme, "Movement", 90,
+			widgets.NewTextboxWidget(theme, &this.movementEdit, "0", false))
+	case config_inner.BonusStartingItem:
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...", false)),
+				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
+			)
+		}
+	default: // resources
+		return widgets.NewLabeledRowWidget(theme, "Amount", 90,
+			widgets.NewTextboxWidget(theme, &this.resourceEdit, "0", false))
+	}
+}
+
+// handleClicks polls the clickable buttons and returns true if the dialog should close.
+func (this *BonusPickerDialog) handleClicks(gtx layout.Context) bool {
 	// A multi-selection sub-picker queued several bonuses; emit and close.
 	if this.hasPending {
 		this.hasPending = false
 		if this.onApply != nil {
 			this.onApply(this.pending)
 		}
-		return layout.Dimensions{Size: gtx.Constraints.Min}, true
+		return true
 	}
+
 	if this.cancelBtn.Clicked(gtx) {
-		return layout.Dimensions{Size: gtx.Constraints.Min}, true
+		return true
 	}
+
 	// Poll the per-row remove buttons BEFORE they are laid out - Clickable.Layout
 	// consumes the click, so a check after layout never fires.
 	for i := range this.spellRemoveBtns {
@@ -149,6 +245,7 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 			break
 		}
 	}
+
 	if this.addBtn.Clicked(gtx) {
 		if entries, ok := this.buildEntries(); ok {
 			fresh := make([]config_inner.BonusEntry, 0, len(entries))
@@ -163,103 +260,12 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 				if this.onApply != nil {
 					this.onApply(fresh)
 				}
-				return layout.Dimensions{Size: gtx.Constraints.Min}, true
+				return true
 			}
 		}
 	}
-	this.handleSubPickers(gtx)
 
-	selectedType := this.selectedType()
-
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			dims := widgets.NewLabeledRowWidget(theme, "Type", 90, func(gtx layout.Context) layout.Dimensions {
-				return this.typeDropdown.Layout(gtx, theme)
-			})(gtx)
-			if this.typeDropdown.WasUpdated {
-				this.applyTypeDefaults(this.selectedType())
-			}
-			return dims
-		}),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if this.selectedType().IsResource() {
-				return layout.Dimensions{}
-			}
-			return widgets.NewLabeledRowWidget(theme, "Receiver", 90, func(gtx layout.Context) layout.Dimensions {
-				return this.receiverDropdown.Layout(gtx, theme)
-			})(gtx)
-		}),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutEditor(gtx, theme, selectedType)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if this.errorText == "" {
-				return layout.Dimensions{}
-			}
-			return layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, this.errorText)
-				label.Color = themes.ColorError
-				label.TextSize = unit.Sp(12)
-				return label.Layout(gtx)
-			})
-		}),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					return layout.Dimensions{Size: gtx.Constraints.Min}
-				}),
-				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Add", &this.addBtn, false)),
-			)
-		}),
-	), false
-}
-
-func (this *BonusPickerDialog) layoutEditor(gtx layout.Context, theme *material.Theme, typ config_inner.BonusPresetType) layout.Dimensions {
-	switch typ {
-	case config_inner.BonusTownPortalFree:
-		label := material.Body2(theme, "Grants free town portal to the selected hero(es). No extra parameters.")
-		label.Color = themes.ColorTextDim
-		label.TextSize = unit.Sp(12)
-		return label.Layout(gtx)
-	case config_inner.BonusSpell:
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						label := material.Body2(theme, spellCountLabel(len(this.selectedSpells)))
-						label.Color = themes.ColorTextDim
-						label.TextSize = unit.Sp(12)
-						return label.Layout(gtx)
-					}),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-					layout.Rigid(widgets.NewButtonWidget(theme, "Pick spells...", &this.pickSpellBtn, this.opener == nil)),
-				)
-			}),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return this.layoutSpellList(gtx, theme)
-			}),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
-			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.makeFree, "Make spell(s) free")),
-		)
-	case config_inner.BonusUnitMultiplier:
-		return widgets.NewLabeledRowWidget(theme, "Multiplier", 90, widgets.NewTextboxWidget(theme, &this.multiplierEdit, "2", false))(gtx)
-	case config_inner.BonusMovementBonus:
-		return widgets.NewLabeledRowWidget(theme, "Movement", 90, widgets.NewTextboxWidget(theme, &this.movementEdit, "0", false))(gtx)
-	case config_inner.BonusStartingItem:
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...", false)),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
-		)
-	default: // resources
-		return widgets.NewLabeledRowWidget(theme, "Amount", 90, widgets.NewTextboxWidget(theme, &this.resourceEdit, "0", false))(gtx)
-	}
+	return false
 }
 
 // handleSubPickers reacts to the "Pick spell" / "Pick item" buttons by pushing
@@ -268,6 +274,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	if this.opener == nil {
 		return
 	}
+
 	if this.pickSpellBtn.Clicked(gtx) {
 		excluded := append(append([]string{}, this.existingSpellIds...), this.selectedSpells...)
 		this.opener(NewSpellPickerDialog(excluded, false, func(ids []string, _ bool) {
@@ -276,6 +283,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 				if id == "" || containsString(this.selectedSpells, id) {
 					continue
 				}
+
 				this.selectedSpells = append(this.selectedSpells, id)
 			}
 			for len(this.spellRemoveBtns) < len(this.selectedSpells) {
@@ -283,15 +291,18 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 			}
 		}))
 	}
+
 	if this.pickItemBtn.Clicked(gtx) {
 		this.opener(NewItemPickerDialog("Pick Starting Item", nil, func(ids []string) {
 			if len(ids) == 0 {
 				return
 			}
+
 			if len(ids) == 1 {
 				this.itemEdit.SetText(ids[0])
 				return
 			}
+
 			receiver := this.receiver()
 			entries := make([]config_inner.BonusEntry, 0, len(ids))
 			for _, id := range ids {
@@ -309,11 +320,11 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 
 func (this *BonusPickerDialog) buildEntries() ([]config_inner.BonusEntry, bool) {
 	this.errorText = ""
-	typ := this.selectedType()
+	presetType := this.getSelectedType()
 	receiver := this.receiver()
-	switch typ {
+	switch presetType {
 	case config_inner.BonusTownPortalFree:
-		return []config_inner.BonusEntry{{PresetType: typ, ReceiverFilter: receiver}}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver}}, true
 	case config_inner.BonusSpell:
 		if len(this.selectedSpells) == 0 {
 			this.errorText = "Pick at least one spell."
@@ -325,7 +336,8 @@ func (this *BonusPickerDialog) buildEntries() ([]config_inner.BonusEntry, bool) 
 		}
 		entries := make([]config_inner.BonusEntry, 0, len(this.selectedSpells))
 		for _, id := range this.selectedSpells {
-			entries = append(entries, config_inner.BonusEntry{PresetType: typ, ReceiverFilter: receiver, Param: id, Param2: param2})
+			entries = append(entries,
+				config_inner.BonusEntry{PresetType: presetType, ReceiverFilter: receiver, Param: id, Param2: param2})
 		}
 		return entries, true
 	case config_inner.BonusUnitMultiplier:
@@ -334,36 +346,37 @@ func (this *BonusPickerDialog) buildEntries() ([]config_inner.BonusEntry, bool) 
 			this.errorText = "Enter a numeric multiplier."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: typ, ReceiverFilter: receiver, Param: value}}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
 	case config_inner.BonusMovementBonus:
 		value := strings.TrimSpace(this.movementEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric movement value."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: typ, ReceiverFilter: receiver, Param: value}}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
 	case config_inner.BonusStartingItem:
 		id := strings.TrimSpace(this.itemEdit.Text())
 		if id == "" {
 			this.errorText = "Pick or enter an item."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: typ, ReceiverFilter: receiver, Param: id}}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: id}}, true
 	default:
 		value := strings.TrimSpace(this.resourceEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric amount."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: typ, ReceiverFilter: receiver, Param: value}}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
 	}
 }
 
-func (this *BonusPickerDialog) selectedType() config_inner.BonusPresetType {
+func (this *BonusPickerDialog) getSelectedType() config_inner.BonusPresetType {
 	index := this.typeDropdown.GetSelectedIndex()
 	if index < 0 || index >= len(bonusTypeOptions) {
 		return config_inner.BonusTownPortalFree
 	}
+
 	return bonusTypeOptions[index].typ
 }
 
@@ -372,6 +385,7 @@ func (this *BonusPickerDialog) receiver() string {
 	if index < 0 || index >= len(bonusReceiverOptions) {
 		return bonusReceiverOptions[0]
 	}
+
 	return bonusReceiverOptions[index]
 }
 
@@ -381,53 +395,48 @@ func (this *BonusPickerDialog) applyTypeDefaults(typ config_inner.BonusPresetTyp
 	}
 }
 
-func isNumeric(value string) bool {
-	if value == "" {
-		return false
-	}
-	_, err := strconv.ParseFloat(value, 64)
-	return err == nil
-}
-
-// layoutSpellList renders the picked spells as removable rows with a
+// getSpellListWidget renders the picked spells as removable rows with a
 // school-coloured bubble and the spell's display name.
-func (this *BonusPickerDialog) layoutSpellList(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *BonusPickerDialog) getSpellListWidget(theme *material.Theme) layout.Widget {
 	if len(this.selectedSpells) == 0 {
-		return widgets.NewDimmedLabelWidget(theme, "(no spells picked - use Pick spells...)")(gtx)
+		return widgets.NewDimmedLabelWidget(theme, "(no spells picked - use Pick spells...)")
 	}
-	gtx.Constraints.Max.Y = min(gtx.Constraints.Max.Y, gtx.Dp(unit.Dp(150)))
-	return material.List(theme, &this.spellScroll).Layout(gtx, len(this.selectedSpells), func(gtx layout.Context, index int) layout.Dimensions {
-		return this.layoutSpellRow(gtx, theme, index)
-	})
+
+	return func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Max.Y = min(gtx.Constraints.Max.Y, gtx.Dp(unit.Dp(150)))
+		return material.List(theme, &this.spellScroll).Layout(gtx, len(this.selectedSpells),
+			func(gtx layout.Context, index int) layout.Dimensions {
+				return this.getSpellRowWidget(theme, index)(gtx)
+			})
+	}
 }
 
-func (this *BonusPickerDialog) layoutSpellRow(gtx layout.Context, theme *material.Theme, index int) layout.Dimensions {
+func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index int) layout.Widget {
 	sid := this.selectedSpells[index]
 	name, school := spellNameAndSchool(sid)
-	return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(2)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				size := gtx.Dp(constants.DefaultRoundnessLarge)
-				paint.FillShape(gtx.Ops, constants.GetSpellSchoolColorFromDisplayName(school), clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
-				return layout.Dimensions{Size: image.Pt(size, size)}
-			}),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				label := material.Body1(theme, name)
-				label.Color = themes.ColorText
-				label.TextSize = unit.Sp(13)
-				return label.Layout(gtx)
-			}),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, school)
-				label.Color = themes.ColorTextDim
-				label.TextSize = unit.Sp(11)
-				return label.Layout(gtx)
-			}),
-			layout.Rigid(widgets.NewButtonWidget(theme, "✕", &this.spellRemoveBtns[index], false)),
-		)
-	})
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(2)}.
+			Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						size := gtx.Dp(constants.DefaultRoundnessLarge)
+						paint.FillShape(gtx.Ops,
+							constants.GetSpellSchoolColorFromDisplayName(school),
+							clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
+						return layout.Dimensions{Size: image.Pt(size, size)}
+					}),
+					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						label := material.Body2(theme, name)
+						label.Color = themes.ColorText
+						return label.Layout(gtx)
+					}),
+					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+					layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, school)),
+					layout.Rigid(widgets.NewButtonWidget(theme, "✕", &this.spellRemoveBtns[index], false)),
+				)
+			})
+	}
 }
 
 // spellNameAndSchool resolves a spell SID to its display name and school
@@ -461,4 +470,13 @@ func containsString(values []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func isNumeric(value string) bool {
+	if value == "" {
+		return false
+	}
+
+	_, err := strconv.ParseFloat(value, 64)
+	return err == nil
 }

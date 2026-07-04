@@ -204,9 +204,7 @@ func (this *ManageRulesDialog) layoutTypeRow(theme *material.Theme) layout.Widge
 				gtx.Constraints.Min.X = gtx.Dp(90)
 				return this.dimLabel(theme, "Rule type")(gtx)
 			}),
-			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				return this.typeDropdown.Layout(gtx, theme)
-			}),
+			layout.Flexed(1, this.typeDropdown.GetWidget(theme)),
 		)
 	}
 }
@@ -220,19 +218,16 @@ func (this *ManageRulesDialog) layoutEditor(theme *material.Theme) layout.Widget
 		return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			switch kind {
 			case editorDistance:
-				return this.labeledControl(theme, "Distance", func(gtx layout.Context) layout.Dimensions {
-					return this.distanceDropdown.Layout(gtx, theme)
-				})(gtx)
+				return this.labeledControl(theme, "Distance", this.distanceDropdown.GetWidget(theme))(gtx)
 			case editorGuarded:
 				return widgets.NewLabeledCheckboxRowWidget(theme, &this.guardedBool, "Guarded")(gtx)
 			case editorSolo:
 				return widgets.NewLabeledCheckboxRowWidget(theme, &this.soloBool, "Solo encounter")(gtx)
 			case editorVariant:
-				return this.labeledControl(theme, "Variant", func(gtx layout.Context) layout.Dimensions {
-					return this.variantDropdown.Layout(gtx, theme)
-				})(gtx)
+				return this.labeledControl(theme, "Variant", this.variantDropdown.GetWidget(theme))(gtx)
+			default:
+				return layout.Dimensions{}
 			}
-			return layout.Dimensions{}
 		})
 	}
 }

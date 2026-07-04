@@ -69,20 +69,17 @@ func (this *DropdownSelector) SelectByName(name string) bool {
 	return false
 }
 
-func (this *DropdownSelector) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	this.update(gtx)
-	flex := layout.Flex{Axis: layout.Vertical}
-	children := []layout.FlexChild{
-		layout.Rigid(this.getTriggerWidget(theme)),
+func (this *DropdownSelector) GetWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		this.update(gtx)
+		children := []layout.FlexChild{layout.Rigid(this.getTriggerWidget(theme))}
+		if this.isOpen && len(this.items) > 0 {
+			children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Top: unit.Dp(2)}.Layout(gtx, this.getListWidget(theme))
+			}))
+		}
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
 	}
-	if this.isOpen && len(this.items) > 0 {
-		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Top: unit.Dp(2)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return this.layoutList(gtx, theme)
-			})
-		}))
-	}
-	return flex.Layout(gtx, children...)
 }
 
 func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Widget {
@@ -130,55 +127,28 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 	}
 }
 
-func (this *DropdownSelector) layoutList(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	macro := op.Record(gtx.Ops)
-	rows := []layout.FlexChild{}
-	for i, item := range this.items {
-		rows = append(rows, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return material.Clickable(gtx, &item.row, func(gtx layout.Context) layout.Dimensions {
-				return drawComboRow(gtx, theme, item.label, i == this.selectedIndex, item.row.Hovered())
-			})
-		}))
-	}
-	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx, rows...)
-	call := macro.Stop()
-	radius := gtx.Dp(constants.DefaultRoundness)
-	rect := image.Rectangle{Max: dims.Size}
-	paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
-		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-		Width: float32(gtx.Dp(1)),
-	}.Op())
-	call.Add(gtx.Ops)
-	return dims
-}
-
-func drawComboRow(gtx layout.Context, theme *material.Theme, label string, selected bool, hovered bool) layout.Dimensions {
-	macro := op.Record(gtx.Ops)
-	dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		label := material.Caption(theme, label)
-		label.Color = themes.ColorText
-		label.MaxLines = 1
-		label.Truncator = "..."
-		if selected {
-			label.Color = themes.ColorAccent
-			label.Font = font.Font{Weight: font.SemiBold}
+func (this *DropdownSelector) getListWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		macro := op.Record(gtx.Ops)
+		rows := []layout.FlexChild{}
+		for i, item := range this.items {
+			rows = append(rows, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return material.Clickable(gtx, &item.row,
+					newComboRowWidget(theme, item.label, i == this.selectedIndex, item.row.Hovered()))
+			}))
 		}
-		return label.Layout(gtx)
-	})
-	call := macro.Stop()
-	if selected {
-		paint.FillShape(gtx.Ops, themes.ColorSelection,
-			clip.Rect{Max: dims.Size}.Op())
-	} else if hovered {
-		paint.FillShape(gtx.Ops, themes.ColorHover,
-			clip.Rect{Max: dims.Size}.Op())
+		dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx, rows...)
+		call := macro.Stop()
+		radius := gtx.Dp(constants.DefaultRoundness)
+		rect := image.Rectangle{Max: dims.Size}
+		paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+		paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
+			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
+			Width: float32(gtx.Dp(1)),
+		}.Op())
+		call.Add(gtx.Ops)
+		return dims
 	}
-	call.Add(gtx.Ops)
-	if dims.Size.X < gtx.Constraints.Min.X {
-		dims.Size.X = gtx.Constraints.Min.X
-	}
-	return dims
 }
 
 // update returns true if the selection changed this frame.
@@ -205,4 +175,33 @@ func (this *DropdownSelector) value() string {
 		return this.items[this.selectedIndex].label
 	}
 	return ""
+}
+
+func newComboRowWidget(theme *material.Theme, label string, selected bool, hovered bool) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		macro := op.Record(gtx.Ops)
+		dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.
+			Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				label := material.Caption(theme, label)
+				label.Color = themes.ColorText
+				label.MaxLines = 1
+				label.Truncator = "..."
+				if selected {
+					label.Color = themes.ColorAccent
+					label.Font = font.Font{Weight: font.SemiBold}
+				}
+				return label.Layout(gtx)
+			})
+		call := macro.Stop()
+		if selected {
+			paint.FillShape(gtx.Ops, themes.ColorSelection, clip.Rect{Max: dims.Size}.Op())
+		} else if hovered {
+			paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
+		}
+		call.Add(gtx.Ops)
+		if dims.Size.X < gtx.Constraints.Min.X {
+			dims.Size.X = gtx.Constraints.Min.X
+		}
+		return dims
+	}
 }

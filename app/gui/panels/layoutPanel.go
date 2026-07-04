@@ -146,9 +146,9 @@ func (this *LayoutPanel) LoadFromState() {
 	this.sldNeutralMedCastle.Value = utils.Normalize(float32(settings.NeutralMediumCastleCount), 0, 8)
 	this.sldNeutralHighNoCastle.Value = utils.Normalize(float32(settings.NeutralHighNoCastleCount), 0, 8)
 	this.sldNeutralHighCastle.Value = utils.Normalize(float32(settings.NeutralHighCastleCount), 0, 8)
-	this.sldNeutralLowCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralLowCastlesPerZone), 0, 4)
-	this.sldNeutralMedCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralMediumCastlesPerZone), 0, 4)
-	this.sldNeutralHighCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralHighCastlesPerZone), 0, 4)
+	this.sldNeutralLowCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralLowCastlesPerZone), 1, 4)
+	this.sldNeutralMedCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralMediumCastlesPerZone), 1, 4)
+	this.sldNeutralHighCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralHighCastlesPerZone), 1, 4)
 	this.sldHubSize.Value = float32((settings.HubZoneSize - 0.5) / 1.5)
 	this.sldHubCastles.Value = utils.Normalize(float32(settings.HubZoneCastles), 0, 4)
 	this.sldPlayerZoneSize.Value = float32((settings.PlayerZoneSize - 0.5) / 1.5)
@@ -187,9 +187,9 @@ func (this *LayoutPanel) SaveToState() {
 		settings.NeutralMediumCastleCount = utils.RoundedRange(this.sldNeutralMedCastle.Value, 0, 8)
 		settings.NeutralHighNoCastleCount = utils.RoundedRange(this.sldNeutralHighNoCastle.Value, 0, 8)
 		settings.NeutralHighCastleCount = utils.RoundedRange(this.sldNeutralHighCastle.Value, 0, 8)
-		settings.NeutralLowCastlesPerZone = utils.RoundedRange(this.sldNeutralLowCastlesPerZone.Value, 0, 4)
-		settings.NeutralMediumCastlesPerZone = utils.RoundedRange(this.sldNeutralMedCastlesPerZone.Value, 0, 4)
-		settings.NeutralHighCastlesPerZone = utils.RoundedRange(this.sldNeutralHighCastlesPerZone.Value, 0, 4)
+		settings.NeutralLowCastlesPerZone = utils.RoundedRange(this.sldNeutralLowCastlesPerZone.Value, 1, 4)
+		settings.NeutralMediumCastlesPerZone = utils.RoundedRange(this.sldNeutralMedCastlesPerZone.Value, 1, 4)
+		settings.NeutralHighCastlesPerZone = utils.RoundedRange(this.sldNeutralHighCastlesPerZone.Value, 1, 4)
 		settings.HubZoneSize = float64(0.5 + this.sldHubSize.Value*1.5)
 		settings.HubZoneCastles = utils.RoundedRange(this.sldHubCastles.Value, 0, 4)
 		settings.PlayerZoneSize = float64(0.5 + this.sldPlayerZoneSize.Value*1.5)
@@ -204,9 +204,7 @@ func (this *LayoutPanel) SaveToState() {
 
 func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Topology", []layout.Widget{
-		widgets.NewLabeledRowWidget(
-			theme, "Topology", constants.DefaultLabelWidth,
-			func(gtx layout.Context) layout.Dimensions { return this.topology.Layout(gtx, theme) }),
+		widgets.NewLabeledRowWidget(theme, "Topology", constants.DefaultLabelWidth, this.topology.GetWidget(theme)),
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Caption(theme, this.getCurrentTopology().Description)
 			label.Color = themes.ColorTextDim
@@ -396,7 +394,7 @@ func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, titl
 			theme, "Neutral castles per zone", constants.DefaultLabelWidth,
 			widgets.NewLabeledSliderWidget(
 				theme, castlesPerZone,
-				utils.RoundedRangeString(castlesPerZone.Value, 0, 4))),
+				utils.RoundedRangeString(castlesPerZone.Value, 1, 4))),
 		widgets.NewBrightButtonLargeWidget(theme, "Edit zone content...", contentBtn, false),
 	})
 }

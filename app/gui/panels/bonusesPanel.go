@@ -30,10 +30,6 @@ var (
 	dotDefault  = themes.ColorDotDefault
 )
 
-// BonusesPanel mirrors the parallel C# editor's bonuses & bans tab: bonuses,
-// bans and guard value overrides are shown as read-only lists with
-// human-readable names; entries are added through picker dialogs and removed
-// with per-row buttons.
 type BonusesPanel struct {
 	bonuses        []config_inner.BonusEntry
 	bannedItems    []string
@@ -156,7 +152,7 @@ func (this *BonusesPanel) entryRow(theme *material.Theme, dot color.NRGBA, name,
 					label.TextSize = unit.Sp(13)
 					return label.Layout(gtx)
 				}),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				widgets.NewDefaultComponentSpacer(),
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					if trailing == "" {
 						return layout.Dimensions{}

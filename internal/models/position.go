@@ -95,15 +95,13 @@ func (this *Positions) CreateDelaunayTriangulation() []ConnectionIndexes {
 	}
 	minPos, maxPos := this.GetMinAndMaxPositions()
 	delta := max(maxPos.X-minPos.X, maxPos.Y-minPos.Y) * 10
+
 	superPts := make([]Position, count+3)
-	for i, p := range *this {
-		superPts[i] = data.NewVec2(p.X, p.Y)
-	}
+	copy(superPts, *this)
 	superPts[count] = data.NewVec2(minPos.X-delta, minPos.Y-delta*3)
 	superPts[count+1] = data.NewVec2(minPos.X+delta*3, minPos.Y-delta)
 	superPts[count+2] = data.NewVec2(minPos.X, minPos.Y+delta*3)
 
-	type tri struct{ i0, i1, i2 int }
 	trianglesIndexes := []data.Vec3[int]{data.NewVec3(count, count+1, count+2)}
 
 	normalizeEdge := func(a, b int) ConnectionIndexes {
@@ -113,12 +111,6 @@ func (this *Positions) CreateDelaunayTriangulation() []ConnectionIndexes {
 		return data.NewVec2(a, b)
 	}
 
-	// triangle := [3]Position{
-	// 	data.NewVec2(minPos.X-delta, minPos.Y-delta*3),
-	// 	data.NewVec2(minPos.X+delta*3, minPos.Y-delta),
-	// 	data.NewVec2(minPos.X, minPos.Y+delta*3),
-	// }
-
 	for index := range *this {
 		point := superPts[index]
 		// Split triangles into "bad" ones (circumscribed circle contains the
@@ -126,14 +118,18 @@ func (this *Positions) CreateDelaunayTriangulation() []ConnectionIndexes {
 		// once form its boundary; re-triangulate the cavity from those.
 		edgeCount := map[ConnectionIndexes]int{}
 		var kept []data.Vec3[int]
-		for _, t := range trianglesIndexes {
-			triangle := [3]Position{superPts[t.X], superPts[t.Y], superPts[t.Z]}
+		for _, triangleIndexes := range trianglesIndexes {
+			triangle := [3]Position{
+				superPts[triangleIndexes.X],
+				superPts[triangleIndexes.Y],
+				superPts[triangleIndexes.Z],
+			}
 			if inCircumscribedCircle(triangle, point) {
-				edgeCount[normalizeEdge(t.X, t.Y)]++
-				edgeCount[normalizeEdge(t.Y, t.Z)]++
-				edgeCount[normalizeEdge(t.Z, t.X)]++
+				edgeCount[normalizeEdge(triangleIndexes.X, triangleIndexes.Y)]++
+				edgeCount[normalizeEdge(triangleIndexes.Y, triangleIndexes.Z)]++
+				edgeCount[normalizeEdge(triangleIndexes.Z, triangleIndexes.X)]++
 			} else {
-				kept = append(kept, t)
+				kept = append(kept, triangleIndexes)
 			}
 		}
 		for e, occurrences := range edgeCount {
@@ -171,8 +167,7 @@ func (this *Positions) GetMinAndMaxPositions() (minPos, maxPos Position) {
 	return
 }
 
-// inCircumscribedCircle checks if "point" lies strictly inside the circumcircle of
-// triangle ABC(points[0], points[1], points[2]).
+// inCircumscribedCircle checks if "point" lies strictly inside the circumcircle of triangle ABC.
 //
 // The condition is satisfied if the following 4x4 determinant is positive:
 //
@@ -203,7 +198,7 @@ func (this *Positions) GetMinAndMaxPositions() (minPos, maxPos Position) {
 //	⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⡰⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢆⠀⠀⠀⠀⠀⠀⠀⠀⢸
 //	⠀⡇⠀⠀⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠀⠀⠀⠀⠀⠀⠀⢸
 //	⠀⡇⠀⠀⠀⠀⠀⢀⡜⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢣⡀⠀⠀⠀⠀⠀⢸
-//	⠀⡇⠀⠀⠀⠀⢀⡞⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⡀⠀⠀⠀⠀⢸
+//	⠀⡇⠀⠀⠀⠀⢀⡞⠀⠀⠀⠀⠀. point⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⡀⠀⠀⠀⠀⢸
 //	⠀⢹⠀⠀⠀⢠⠎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠱⡄⠀⠀⠀⡏
 //	⠀⠈⢧⠀⢠⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⡄⠀⡼
 //	⠀⠀⠈⢶⣃⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣘⡶⠁
@@ -213,10 +208,10 @@ func (this *Positions) GetMinAndMaxPositions() (minPos, maxPos Position) {
 //	⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠢⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡤⠔⠋⠁
 //	⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠙⠒⠒⠒⠒⠒⠒⠒⠒⠋⠉
 //	```
-func inCircumscribedCircle(points [3]Position, point Position) bool {
-	deltaA := points[0].Subtract(point)
-	deltaB := points[1].Subtract(point)
-	deltaC := points[2].Subtract(point)
+func inCircumscribedCircle(triangle [3]Position, point Position) bool {
+	deltaA := triangle[0].Subtract(point)
+	deltaB := triangle[1].Subtract(point)
+	deltaC := triangle[2].Subtract(point)
 	determinant := deltaA.X*(deltaB.Y*deltaC.SquaredLength()-deltaC.Y*deltaB.SquaredLength()) -
 		deltaA.Y*(deltaB.X*deltaC.SquaredLength()-deltaC.X*deltaB.SquaredLength()) +
 		deltaA.SquaredLength()*deltaB.CrossProduct(deltaC)

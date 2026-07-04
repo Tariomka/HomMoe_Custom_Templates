@@ -1,7 +1,9 @@
 package constants
 
 import (
+	"cmp"
 	"image/color"
+	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -126,6 +128,14 @@ func buildKnownSpells() []SpellEntry {
 	}
 }
 
+func GetKnownSpellsWithExclusions(excluded []string) []SpellEntry {
+	spells := slices.DeleteFunc(
+		buildKnownSpells(),
+		func(spell SpellEntry) bool { return slices.Contains(excluded, spell.Sid) })
+	slices.SortStableFunc(spells, CompareSpellEntries)
+	return spells
+}
+
 // FindSpell returns the catalog entry for a spell SID, or ok=false when the
 // SID is not in the catalog.
 func FindSpell(sid string) (SpellEntry, bool) {
@@ -169,4 +179,25 @@ func GetSpellSchoolColor(schoolName string) color.NRGBA {
 		return themes.ColorSchoolPrimal
 	}
 	return themes.ColorAccent
+}
+
+func CompareSpellEntries(a, b SpellEntry) int {
+	schoolIndexA, schoolIndexB := 99, 99
+	for i, school := range SpellSchoolOrder {
+		if a.School == school {
+			schoolIndexA = i
+		}
+		if b.School == school {
+			schoolIndexB = i
+		}
+	}
+	if comparison := cmp.Compare(schoolIndexA, schoolIndexB); comparison != 0 {
+		return comparison
+	}
+
+	if comparison := cmp.Compare(a.Tier, b.Tier); comparison != 0 {
+		return comparison
+	}
+
+	return cmp.Compare(a.Name, b.Name)
 }
