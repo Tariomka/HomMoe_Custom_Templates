@@ -69,8 +69,7 @@ The project must build and run on **both Windows and Linux**. Therefore:
   or modify a function, add or update a test in [test/](test/) to cover it.
 - If you discover existing untested code adjacent to your change, add tests
   for it as part of the change.
-- Run `go test ./test/...` (and, when sensible, `go test ./...`) before
-  declaring a task complete.
+- Run `go test ./test/... -count=1` before declaring a task complete.
 - The integration and performance suites are gated behind the `integration_test`
   build tag and are skipped by a plain `go test ./...`; run them explicitly
   with `go test -tags=integration_test ./test/integration/... ./test/performance/...`

@@ -166,6 +166,27 @@ func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bo
 		this.NeutralHighCastleCount != incoming.NeutralHighCastleCount
 }
 
+// DiffCastleSettings compares the castle-count options of this state (the one
+// behind the last generation) against the incoming current state. AdvancedMode
+// gates which neutral options are relevant; it cannot flip between the two
+// states here because such a flip is layout-defining and discards manual edits
+// before castle propagation is ever considered.
+func (this *EditorStateDto) DiffCastleSettings(incoming *EditorStateDto) CastleSettingChanges {
+	changes := CastleSettingChanges{
+		PlayerCastles: this.PlayerZoneCastles != incoming.PlayerZoneCastles ||
+			this.PlayerOwnedCastles != incoming.PlayerOwnedCastles,
+		Hub: this.HubZoneCastles != incoming.HubZoneCastles,
+	}
+	if incoming.AdvancedMode {
+		changes.NeutralLow = this.NeutralLowCastlesPerZone != incoming.NeutralLowCastlesPerZone
+		changes.NeutralMedium = this.NeutralMediumCastlesPerZone != incoming.NeutralMediumCastlesPerZone
+		changes.NeutralHigh = this.NeutralHighCastlesPerZone != incoming.NeutralHighCastlesPerZone
+	} else {
+		changes.NeutralSimple = this.NeutralZoneCastles != incoming.NeutralZoneCastles
+	}
+	return changes
+}
+
 // EqualsIgnoringManualEdits reports whether two editor states are equal when
 // the manual-edit fields are disregarded. Manual zones and connections are
 // reapplied to the generated template through a separate path, so they must
