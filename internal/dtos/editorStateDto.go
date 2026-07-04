@@ -3,6 +3,7 @@ package dtos
 import (
 	"reflect"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -92,8 +93,8 @@ type EditorStateDto struct {
 	HubZoneContentRows       []models.ZoneContentRowSave `json:"hubZoneContentRows,omitempty"`
 
 	// ── Manual zone editor edits ─────────────────────────────────────────
-	ManualZones       []ManualZoneSave       `json:"manualZones,omitempty"`
-	ManualConnections []ManualConnectionSave `json:"manualConnections,omitempty"`
+	ManualZones       []editor_state_dto.ManualZoneSave       `json:"manualZones,omitempty"`
+	ManualConnections []editor_state_dto.ManualConnectionSave `json:"manualConnections,omitempty"`
 }
 
 func NewDefaultEditorStateDto() EditorStateDto {
@@ -171,8 +172,8 @@ func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bo
 // gates which neutral options are relevant; it cannot flip between the two
 // states here because such a flip is layout-defining and discards manual edits
 // before castle propagation is ever considered.
-func (this *EditorStateDto) DiffCastleSettings(incoming *EditorStateDto) CastleSettingChanges {
-	changes := CastleSettingChanges{
+func (this *EditorStateDto) DiffCastleSettings(incoming *EditorStateDto) editor_state_dto.CastleSettingChanges {
+	changes := editor_state_dto.CastleSettingChanges{
 		PlayerCastles: this.PlayerZoneCastles != incoming.PlayerZoneCastles ||
 			this.PlayerOwnedCastles != incoming.PlayerOwnedCastles,
 		Hub: this.HubZoneCastles != incoming.HubZoneCastles,

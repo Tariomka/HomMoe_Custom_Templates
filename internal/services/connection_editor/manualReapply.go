@@ -7,7 +7,7 @@ package connection_editor
 import (
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -32,7 +32,7 @@ func IsNeutralZoneName(name string) bool { return strings.HasPrefix(name, "Neutr
 //     no-castle plan.
 func ApplyCastleSettingChanges(
 	zones []entities.Zone,
-	changes dtos.CastleSettingChanges,
+	changes editor_state_dto.CastleSettingChanges,
 	configuration *config.GeneratorConfig) {
 	if !changes.Any() {
 		return
@@ -64,7 +64,7 @@ func ApplyCastleSettingChanges(
 // to with-castle zones of the matching quality.
 func neutralCastleTarget(
 	zone entities.Zone,
-	changes dtos.CastleSettingChanges,
+	changes editor_state_dto.CastleSettingChanges,
 	configuration *config.GeneratorConfig) (int, bool) {
 	zoneConfiguration := configuration.ZoneConfiguration
 	if changes.NeutralSimple {

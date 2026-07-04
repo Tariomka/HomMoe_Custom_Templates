@@ -1,4 +1,4 @@
-package dtos
+package editor_state_dto
 
 // CastleSettingChanges reports which castle-count options differ between two
 // editor states. These are the only generator options that override manual

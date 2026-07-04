@@ -1,4 +1,4 @@
-package dtos
+package editor_state_dto
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/entities"
 

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -129,7 +130,7 @@ func TestApplyCastleSettingChanges_NoChanges_LeavesZonesUntouched(t *testing.T) 
 	configuration := config.NewGeneratorConfig()
 	zones := []entities.Zone{makeNeutralZone("G", models.QualityMedium, 1)}
 
-	connection_editor.ApplyCastleSettingChanges(zones, dtos.CastleSettingChanges{}, configuration)
+	connection_editor.ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
 
 	assert.Equal(t, 1, connection_editor.CountZoneCastles(zones[0]))
 }
@@ -145,7 +146,7 @@ func TestApplyCastleSettingChanges_SimpleMode_UpdatesEveryNeutralZone(t *testing
 	spawnCastlesBefore := len(zones[2].MainObjects)
 
 	connection_editor.ApplyCastleSettingChanges(
-		zones, dtos.CastleSettingChanges{NeutralSimple: true}, configuration)
+		zones, editor_state_dto.CastleSettingChanges{NeutralSimple: true}, configuration)
 
 	assert.Equal(t, 2, connection_editor.CountZoneCastles(zones[0]))
 	assert.Equal(t, 2, connection_editor.CountZoneCastles(zones[1]))
@@ -165,7 +166,7 @@ func TestApplyCastleSettingChanges_AdvancedMode_MatchesManualQuality(t *testing.
 	}
 
 	connection_editor.ApplyCastleSettingChanges(
-		zones, dtos.CastleSettingChanges{NeutralHigh: true}, configuration)
+		zones, editor_state_dto.CastleSettingChanges{NeutralHigh: true}, configuration)
 
 	assert.Equal(t, 3, connection_editor.CountZoneCastles(zones[0]))
 	assert.Equal(t, 1, connection_editor.CountZoneCastles(zones[1]))
@@ -182,7 +183,7 @@ func TestApplyCastleSettingChanges_PlayerCastles_RebuildsSpawnZone(t *testing.T)
 	}
 
 	connection_editor.ApplyCastleSettingChanges(
-		zones, dtos.CastleSettingChanges{PlayerCastles: true}, configuration)
+		zones, editor_state_dto.CastleSettingChanges{PlayerCastles: true}, configuration)
 
 	spawn := zones[0]
 	// Spawn castle + 1 owned + 2 unclaimed.
@@ -208,7 +209,7 @@ func TestApplyCastleSettingChanges_Hub_RebuildsHubZone(t *testing.T) {
 	}
 
 	connection_editor.ApplyCastleSettingChanges(
-		zones, dtos.CastleSettingChanges{Hub: true}, configuration)
+		zones, editor_state_dto.CastleSettingChanges{Hub: true}, configuration)
 
 	assert.Equal(t, 3, connection_editor.CountZoneCastles(zones[0]))
 }
@@ -219,7 +220,7 @@ func TestApplyCastleSettingChanges_RebuildsCastleRoads(t *testing.T) {
 	zones := []entities.Zone{makeNeutralZone("G", models.QualityMedium, 1)}
 
 	connection_editor.ApplyCastleSettingChanges(
-		zones, dtos.CastleSettingChanges{NeutralSimple: true}, configuration)
+		zones, editor_state_dto.CastleSettingChanges{NeutralSimple: true}, configuration)
 
 	castleRoads := 0
 	for _, road := range zones[0].Roads {

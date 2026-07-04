@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 )
 
@@ -120,8 +121,8 @@ func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEd
 // snapshot. Manual fields are ignored by the state-equality checks, so this
 // never triggers an automatic regeneration by itself.
 func (this *EditorState) SetManualEdits(zones []entities.Zone, connections []entities.Connection) {
-	this.current.ManualZones = dtos.ToManualZoneSaves(zones)
-	this.current.ManualConnections = dtos.ToManualConnectionSaves(connections)
+	this.current.ManualZones = editor_state_dto.ToManualZoneSaves(zones)
+	this.current.ManualConnections = editor_state_dto.ToManualConnectionSaves(connections)
 }
 
 // ClearManualEdits drops the manual snapshot, used when a layout-defining
@@ -132,11 +133,11 @@ func (this *EditorState) ClearManualEdits() {
 }
 
 func (this *EditorState) GetManualZones() []entities.Zone {
-	return dtos.FromManualZoneSaves(this.current.ManualZones)
+	return editor_state_dto.FromManualZoneSaves(this.current.ManualZones)
 }
 
 func (this *EditorState) GetManualConnections() []entities.Connection {
-	return dtos.FromManualConnectionSaves(this.current.ManualConnections)
+	return editor_state_dto.FromManualConnectionSaves(this.current.ManualConnections)
 }
 
 // ShouldReapplyManualEdits reports whether the stored manual edits are still
@@ -154,9 +155,9 @@ func (this *EditorState) ShouldReapplyManualEdits() bool {
 // CastleSettingsChangedSinceGeneration reports which castle-count options
 // changed since the last generated state - the only option changes that are
 // pushed into the manual snapshot. Zero-value when nothing was generated yet.
-func (this *EditorState) CastleSettingsChangedSinceGeneration() dtos.CastleSettingChanges {
+func (this *EditorState) CastleSettingsChangedSinceGeneration() editor_state_dto.CastleSettingChanges {
 	if !this.HasPreviousState() {
-		return dtos.CastleSettingChanges{}
+		return editor_state_dto.CastleSettingChanges{}
 	}
 	return this.previous.DiffCastleSettings(this.current)
 }

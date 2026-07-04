@@ -68,8 +68,7 @@ func (this *Toolbar) HandleClicks(gtx layout.Context) {
 		this.resetCallback()
 	}
 	if this.buttonOpen.Clicked(gtx) {
-		this.state.Load()
-		this.resetCallback()
+		this.state.Load(this.resetCallback)
 	}
 	if this.buttonSave.Clicked(gtx) {
 		this.state.Save()

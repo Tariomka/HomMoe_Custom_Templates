@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
@@ -121,13 +122,19 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-func (this *State) Load() {
+// Load opens the file picker and installs the picked .gen.json editor state.
+// The picker is asynchronous, so callers must NOT resync their widgets at
+// call time - onLoaded runs inside the pick handler, after the loaded state
+// has been installed and only when loading succeeded.
+func (this *State) Load(onLoaded func()) {
 	dir, err := os.Getwd()
 	if err != nil {
 		dir = this.suggestDirectory()
 	}
 	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{configFileExtension}, func(path string) {
-		this.handleLoadState(path)
+		if this.handleLoadState(path) && onLoaded != nil {
+			onLoaded()
+		}
 	}))
 }
 
@@ -264,11 +271,11 @@ func (this *State) handleSaveState(path string) {
 	this.SetStatus("Saved "+path, false)
 }
 
-func (this *State) handleLoadState(path string) {
+func (this *State) handleLoadState(path string) bool {
 	dto, err := this.handler.LoadState(path)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-		return
+		return false
 	}
 
 	this.innerState.OverrideState(*dto)
@@ -276,6 +283,7 @@ func (this *State) handleLoadState(path string) {
 	this.unsaved = false
 	this.clearGeneratedState()
 	this.SetStatus("Loaded "+path, false)
+	return true
 }
 
 func (this *State) handleSaveTemplate() {
@@ -361,7 +369,7 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 // last generation - the only generator options that override manual edits -
 // the new counts are first pushed into the snapshot and the updated snapshot
 // is stored back so later regenerations and saves carry it.
-func (this *State) reapplyManualEdits(castleChanges dtos.CastleSettingChanges) {
+func (this *State) reapplyManualEdits(castleChanges editor_state_dto.CastleSettingChanges) {
 	zones := this.innerState.GetManualZones()
 	connections := this.innerState.GetManualConnections()
 	if castleChanges.Any() {
