@@ -56,7 +56,10 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
-func (this *CirclesTopologyService) createCirclesPairs(pairs [][2]int, allLabels, playerLabels []string, neutralZones models.NeutralZonePlans) [][2]int {
+func (this *CirclesTopologyService) createCirclesPairs(
+	pairs []models.ConnectionIndexes,
+	allLabels, playerLabels []string,
+	neutralZones models.NeutralZonePlans) []models.ConnectionIndexes {
 	presentTiers := map[int]bool{}
 	for _, label := range allLabels {
 		tier := 0
@@ -66,15 +69,15 @@ func (this *CirclesTopologyService) createCirclesPairs(pairs [][2]int, allLabels
 		presentTiers[tier] = true
 	}
 
-	var filtered [][2]int
+	var filtered []models.ConnectionIndexes
 	for _, pair := range pairs {
 		tierA := 0
-		if !slices.Contains(playerLabels, allLabels[pair[0]]) {
-			tierA = neutralZones.GetTier(allLabels[pair[0]])
+		if !slices.Contains(playerLabels, allLabels[pair.X]) {
+			tierA = neutralZones.GetTier(allLabels[pair.X])
 		}
 		tierB := 0
-		if !slices.Contains(playerLabels, allLabels[pair[1]]) {
-			tierB = neutralZones.GetTier(allLabels[pair[1]])
+		if !slices.Contains(playerLabels, allLabels[pair.Y]) {
+			tierB = neutralZones.GetTier(allLabels[pair.Y])
 		}
 		low, high := tierA, tierB
 		if low > high {

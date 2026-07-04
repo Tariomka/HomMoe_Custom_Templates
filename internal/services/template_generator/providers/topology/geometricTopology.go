@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
@@ -69,7 +70,7 @@ type petal struct {
 // are built purely from player and neutral zones with no dedicated hub.
 func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
+	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		centreX    = 0.5
 		centreY    = 0.5
@@ -90,7 +91,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	if neutralCount >= 1 {
 		centreIndex = len(allLabels)
 		allLabels = append(allLabels, neutralZones[0].Label)
-		positions.Add(models.NewPosition(centreX, centreY))
+		positions.Add(data.NewVec2(centreX, centreY))
 		neutralCursor = 1
 	}
 
@@ -126,17 +127,17 @@ func (this *GeometricTopologyService) createGeometricLayout(
 
 		// leafPoint samples the bowed leaf edge on the given side at fraction t
 		// (0 = centre, 1 = tip) via a quadratic Bézier centre→control→tip.
-		leafPoint := func(ctrlAngle, t float64) models.Vector2 {
+		leafPoint := func(ctrlAngle, t float64) models.Position {
 			mt := 1.0 - t
 			p1x := centreX + math.Cos(ctrlAngle)*ctrlDist
 			p1y := centreY + math.Sin(ctrlAngle)*ctrlDist
-			return models.NewPosition(
+			return data.NewVec2(
 				mt*mt*centreX+2*mt*t*p1x+t*t*tipX,
 				mt*mt*centreY+2*mt*t*p1y+t*t*tipY)
 		}
 
 		var ring []int
-		addNode := func(planIndex int, point models.Vector2) {
+		addNode := func(planIndex int, point models.Position) {
 			ring = append(ring, len(allLabels))
 			allLabels = append(allLabels, neutralZones[planIndex].Label)
 			positions.Add(point)
@@ -150,7 +151,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 		// Tip: the player zone, almost at the canvas edge.
 		playerIndex := len(allLabels)
 		allLabels = append(allLabels, playerLabels[index])
-		positions.Add(models.NewPosition(tipX, tipY))
+		positions.Add(data.NewVec2(tipX, tipY))
 		ring = append(ring, playerIndex)
 		// Right edge: from the tip back down to the base near the centre.
 		for j := rightCount; j >= 1; j-- {
@@ -168,7 +169,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 func (this *GeometricTopologyService) createGeometricPairs(
 	centreIndex int,
 	petals []petal,
-	playerCount int) [][2]int {
+	playerCount int) []models.ConnectionIndexes {
 	builder := newPairBuilder()
 
 	for _, p := range petals {

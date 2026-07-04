@@ -382,12 +382,12 @@ func (this *TopologyBase) CreateMissingConnections(
 	var additionalConns []entities.Connection
 	for {
 		components := adjacency.FindIndexes(len(allLabels))
-		bestIndexA, bestIndexB, ok := positions.GetShortestDistanceIndex(components)
+		bestIndexes, ok := positions.GetShortestDistanceIndex(components)
 		if !ok {
 			break
 		}
 
-		labelA, labelB := allLabels[bestIndexA], allLabels[bestIndexB]
+		labelA, labelB := allLabels[bestIndexes.X], allLabels[bestIndexes.Y]
 		if labelA > labelB {
 			labelA, labelB = labelB, labelA
 		}
@@ -396,8 +396,8 @@ func (this *TopologyBase) CreateMissingConnections(
 			continue
 		}
 
-		zoneFrom := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexA], playerLabels)
-		zoneTo := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexB], playerLabels)
+		zoneFrom := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexes.X], playerLabels)
+		zoneTo := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexes.Y], playerLabels)
 		additionalConns = append(additionalConns, variant_content.NewConnectionBuilder().
 			WithName(bridgeName).
 			WithFrom(zoneFrom).
@@ -432,7 +432,7 @@ func (this *TopologyBase) CreateMissingConnections(
 			}
 		}
 
-		adjacency.Link(bestIndexA, bestIndexB)
+		adjacency.Link(bestIndexes.X, bestIndexes.Y)
 	}
 
 	return additionalConns

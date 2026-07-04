@@ -111,10 +111,11 @@ func (this *GeneralPanel) LoadFromState() {
 
 	this.templateName.SetText(settings.TemplateName)
 	this.playerCount.Value = utils.Normalize(float32(settings.PlayerCount), 2, 8)
-	this.mapSizeSelector.SelectByName(constants.GetMapSize(settings.MapSize).Label)
 	this.checkMoreMapSizes.Value = settings.ExperimentalMapSizes
+	this.updateMapSizeSelectorItems()
+	this.mapSizeSelector.SelectByName(constants.GetMapSize(settings.MapSize).Label)
 
-	this.gameMode.SetSelectedIndex(0)
+	this.gameMode.SetSelectedIndex(0) // TODO: here is a bug where gameMode will not be loaded
 	this.heroMinimumCount.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 12)
 	this.heroMaximumCount.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
 	this.heroIncrementPerCastle.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 10)
@@ -339,14 +340,17 @@ func (this *GeneralPanel) updateMapSizeSelector(gtx layout.Context) *components.
 		return this.mapSizeSelector
 	}
 
+	this.updateMapSizeSelectorItems()
+	return this.mapSizeSelector
+}
+
+func (this *GeneralPanel) updateMapSizeSelectorItems() {
 	labels := []string{}
 	for _, mapSize := range constants.GetMapSizes(this.checkMoreMapSizes.Value) {
 		labels = append(labels, mapSize.Label)
 	}
 	this.mapSizeSelector.SetItems(labels)
 	this.mapSizeSelector.SelectByName(constants.GetMapSize(this.state.GetStateData().MapSize).Label)
-
-	return this.mapSizeSelector
 }
 
 func (this *GeneralPanel) updateConditionOptions() {
