@@ -37,6 +37,20 @@ var (
 	colorGuardLabel   = themes.ColorEditorGuardLabel
 )
 
+// Snapping tunables - adjust the feel of the snap toggle here.
+const (
+	// gridCellsPerZoneDiameter sets the snap-grid density: the distance
+	// between adjacent grid lines is (zone diameter) / gridCellsPerZoneDiameter.
+	gridCellsPerZoneDiameter = 7.0
+	// gridSnapThresholdPx is the "light" hold distance (canvas px) within
+	// which a dragged zone's edges/centre stick to a grid line.
+	gridSnapThresholdPx = 4.0
+	// zoneSnapThresholdPx is the "heavier" hold distance (canvas px) within
+	// which a dragged zone's edges/centre stick to the horizontal or vertical
+	// extension of another zone's edge or centre.
+	zoneSnapThresholdPx = 9.0
+)
+
 // connEdgeGeom is the per-frame drawn geometry of one connection: a quadratic
 // Bézier from p0 to p1 bulged through ctrl, with mid the curve's midpoint used
 // for the guard-value label and the user-added marker.
@@ -77,6 +91,7 @@ type ZoneEditorDialog struct {
 	selected      *entities.Connection
 	selectedZone  string
 	addMode       bool
+	addZoneMode   bool
 	pendingFrom   string
 	dragging      bool
 	dragPos       image.Point
@@ -85,11 +100,19 @@ type ZoneEditorDialog struct {
 	pressPos      image.Point
 	hint          string
 
+	// Active zone-alignment snap guides (canvas px), valid while a zone is
+	// being dragged and holding onto another zone's edge/centre extension.
+	snapGuideX       float64
+	snapGuideY       float64
+	snapGuideXActive bool
+	snapGuideYActive bool
+
 	// Toolbar / footer.
 	addBtn     widget.Clickable
 	addZoneBtn widget.Clickable
 	deleteBtn  widget.Clickable
 	resetBtn   widget.Clickable
+	snapBool   widget.Bool
 	applyBtn   widget.Clickable
 	cancelBtn  widget.Clickable
 
@@ -184,18 +207,34 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 	}
 	if this.addBtn.Clicked(gtx) {
 		this.addMode = !this.addMode
+		this.addZoneMode = false
 		this.pendingFrom = ""
 		this.dragging = false
 		this.hint = ""
 	}
 	if this.addZoneBtn.Clicked(gtx) {
-		this.addZone()
+		this.addZoneMode = !this.addZoneMode
+		this.addMode = false
+		this.pendingFrom = ""
+		this.dragging = false
+		this.hint = ""
 	}
 	if this.deleteBtn.Clicked(gtx) {
 		if this.selected != nil {
 			this.deleteConnection(this.selected)
 		} else if this.selectedZone != "" {
 			this.deleteZone(this.selectedZone)
+		}
+	}
+	// The side-panel delete buttons must be polled BEFORE their Clickables are
+	// laid out - Clickable.Layout consumes the click, so a check after layout
+	// never fires.
+	if this.sidePropDelete.Clicked(gtx) && this.selected != nil {
+		this.deleteConnection(this.selected)
+	}
+	if this.sideZoneDelete.Clicked(gtx) {
+		if zone := this.selectedZoneRef(); zone != nil {
+			this.deleteZone(zone.Name)
 		}
 	}
 	if this.resetBtn.Clicked(gtx) {
@@ -226,17 +265,23 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 	return func(gtx layout.Context) layout.Dimensions {
 		addLabel := "Add connection"
 		if this.addMode {
-			addLabel = "Adding... (click empty to cancel)"
+			addLabel = "Adding... (click empty to stop)"
+		}
+		addZoneLabel := "Add zone"
+		if this.addZoneMode {
+			addZoneLabel = "Placing... (click a zone to stop)"
 		}
 		hasSelection := this.selected != nil || this.selectedZone != ""
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(widgets.NewToggleButtonWidget(theme, addLabel, &this.addBtn, this.addMode)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			layout.Rigid(widgets.NewToggleButtonWidget(theme, "Add zone", &this.addZoneBtn, false)),
+			layout.Rigid(widgets.NewToggleButtonWidget(theme, addZoneLabel, &this.addZoneBtn, this.addZoneMode)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Delete selected", &this.deleteBtn, !hasSelection)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Reset to generated", &this.resetBtn, false)),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(10)),
+			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.snapBool, "Snap")),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(12)),
 			layout.Flexed(1, this.layoutStatus(theme)),
 		)
@@ -257,7 +302,9 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 		if this.hint != "" {
 			message = this.hint
 		} else if this.addMode {
-			message = "Add mode: press a zone and drag to another to connect."
+			message = "Add mode: press a zone and drag to another to connect. Repeat to add more."
+		} else if this.addZoneMode {
+			message = "Add zone mode: click an empty spot to place a zone. Repeat to add more."
 		} else if isolated := connection_editor.FindIsolatedZones(this.zones, connections); len(isolated) > 0 {
 			message = fmt.Sprintf("%d zones · %d connections · %d isolated zone(s)", len(this.zones), len(connections), len(isolated))
 		}
@@ -277,7 +324,7 @@ func (this *ZoneEditorDialog) layoutFooter(theme *material.Theme) layout.Widget 
 			}),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Rigid(widgets.NewGoldButtonWidget(theme, "Apply changes", &this.applyBtn, false)),
+			layout.Rigid(widgets.NewBrightButtonWidget(theme, "Apply changes", &this.applyBtn, false)),
 		)
 	}
 }
@@ -307,20 +354,26 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 		return widgets.NewCenteredMessageWidget(theme, "No zones to edit - generate a template first.", canvasSize, outer)(gtx)
 	}
 
-	this.recomputeGeometry(side)
-
 	area := clip.Rect{Max: canvasSize}.Push(gtx.Ops)
 	event.Op(gtx.Ops, &this.canvasTag)
 	area.Pop()
+	// Handle pointer input BEFORE recomputing geometry so edits (new
+	// connections/zones, drags) are reflected in this very frame. Hit testing
+	// uses the previous frame's geometry, which is exactly what is on screen.
+	this.side = side
 	this.handlePointer(gtx)
+
+	this.recomputeGeometry(side)
 
 	if len(this.positions) == 0 {
 		return layout.Dimensions{Size: outer}
 	}
 
+	this.drawSnapGrid(gtx)
 	this.drawEdges(gtx, theme)
 	this.drawRubberBand(gtx)
 	this.drawNodes(gtx, theme)
+	this.drawSnapGuides(gtx)
 	return layout.Dimensions{Size: outer}
 }
 
@@ -370,6 +423,14 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 		}
 		return
 	}
+	if this.addZoneMode {
+		if node == "" {
+			this.addZoneAt(pos)
+		} else {
+			this.addZoneMode = false
+		}
+		return
+	}
 	if node != "" {
 		this.selectZone(node)
 		this.zoneDragName = node
@@ -401,8 +462,9 @@ func (this *ZoneEditorDialog) onRelease(pos image.Point) {
 	}
 	target := this.hitTestNode(pos)
 	if target != "" && from != "" && target != from {
+		// Stay in add mode so several connections can be chained without
+		// re-clicking the toolbar button.
 		this.addConnection(from, target)
-		this.addMode = false
 	}
 }
 
@@ -688,7 +750,7 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add connection”, then drag from one zone to another to create a link.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add zone” to add a neutral zone. Right-click a line to delete it.")),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.")),
 	)
 }
 
@@ -707,21 +769,13 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 	}
 	rows = append(rows,
 		widgets.NewVerticalSpacerWidget(6),
-		widgets.NewLabeledRowWidget(theme, "Type", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.typeDropdown.Layout(gtx, theme)
-		}),
-		widgets.NewLabeledRowWidget(theme, "Guard zone", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.guardZoneDropdown.Layout(gtx, theme)
-		}),
+		widgets.NewLabeledRowWidget(theme, "Type", 110, this.typeDropdown.GetWidget(theme)),
+		widgets.NewLabeledRowWidget(theme, "Guard zone", 110, this.guardZoneDropdown.GetWidget(theme)),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.guardDropdown.Layout(gtx, theme)
-		}),
+		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, this.guardDropdown.GetWidget(theme)),
 		widgets.NewLabeledRowWidget(theme, "Guard value", 110, widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false)),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, func(gtx layout.Context) layout.Dimensions {
-			return this.weeklyDropdown.Layout(gtx, theme)
-		}),
+		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, this.weeklyDropdown.GetWidget(theme)),
 		widgets.NewLabeledRowWidget(theme, "Increment", 110, widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false)),
 		widgets.NewVerticalSpacerWidget(6),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.advancedBool, "Advanced options"),
@@ -774,10 +828,6 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 func (this *ZoneEditorDialog) writebackProps(gtx layout.Context) {
 	connection := this.selected
 	if connection == nil {
-		return
-	}
-	if this.sidePropDelete.Clicked(gtx) {
-		this.deleteConnection(connection)
 		return
 	}
 	typeItems := connection_editor.UserCreatableConnectionTypes()
@@ -841,6 +891,7 @@ func (this *ZoneEditorDialog) resetToOriginal() {
 	this.selectedZone = ""
 	this.syncedZoneFor = ""
 	this.addMode = false
+	this.addZoneMode = false
 	this.pendingFrom = ""
 	this.dragging = false
 	this.zoneDragName = ""
@@ -891,9 +942,134 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos image.Point) {
 	if zone == nil {
 		return
 	}
+	pos = this.snapDraggedPosition(pos)
 	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
 	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
+}
+
+// gridStep returns the snapping-grid cell size in canvas pixels.
+func (this *ZoneEditorDialog) gridStep() float64 {
+	return float64(this.radius) * 2.0 / gridCellsPerZoneDiameter
+}
+
+// drawSnapGrid paints faint dots at the snapping-grid intersections behind
+// edges and nodes while the snap toggle is on.
+func (this *ZoneEditorDialog) drawSnapGrid(gtx layout.Context) {
+	if !this.snapBool.Value {
+		return
+	}
+	step := this.gridStep()
+	if step < 3 {
+		return
+	}
+	half := float32(gtx.Dp(unit.Dp(1)))
+	// All dots go into a single path so the grid costs one fill op per frame.
+	var path clip.Path
+	path.Begin(gtx.Ops)
+	for x := step; x < float64(this.side); x += step {
+		for y := step; y < float64(this.side); y += step {
+			fx, fy := float32(x), float32(y)
+			path.MoveTo(f32.Pt(fx-half, fy-half))
+			path.LineTo(f32.Pt(fx+half, fy-half))
+			path.LineTo(f32.Pt(fx+half, fy+half))
+			path.LineTo(f32.Pt(fx-half, fy+half))
+			path.Close()
+		}
+	}
+	paint.FillShape(gtx.Ops, themes.ColorEditorGridLine, clip.Outline{Path: path.End()}.Op())
+}
+
+// drawSnapGuides draws thin green lines across the canvas where the dragged
+// zone is currently holding onto another zone's edge/centre extension. Only
+// visible while a zone is being moved.
+func (this *ZoneEditorDialog) drawSnapGuides(gtx layout.Context) {
+	if this.zoneDragName == "" || !this.zoneDragMoved {
+		return
+	}
+	if this.snapGuideXActive {
+		guide := int(math.Round(this.snapGuideX))
+		line := clip.Rect{Min: image.Pt(guide, 0), Max: image.Pt(guide+1, this.side)}
+		paint.FillShape(gtx.Ops, themes.ColorEditorSnapGuide, line.Op())
+	}
+	if this.snapGuideYActive {
+		guide := int(math.Round(this.snapGuideY))
+		line := clip.Rect{Min: image.Pt(0, guide), Max: image.Pt(this.side, guide+1)}
+		paint.FillShape(gtx.Ops, themes.ColorEditorSnapGuide, line.Op())
+	}
+}
+
+// snapDraggedPosition nudges the dragged zone's centre so that its edges or
+// centre "hold on" to nearby guides: heavier onto other zones' edge/centre
+// extension lines, lighter onto the background grid. It never pulls from afar -
+// only positions already within the threshold stick.
+func (this *ZoneEditorDialog) snapDraggedPosition(pos image.Point) image.Point {
+	this.snapGuideXActive = false
+	this.snapGuideYActive = false
+	if !this.snapBool.Value || this.radius <= 0 {
+		return pos
+	}
+	radius := float64(this.radius)
+	// The dragged zone's own snap points on each axis: leading edge, centre,
+	// trailing edge.
+	offsets := [3]float64{-radius, 0, radius}
+	guidesX, guidesY := this.otherZoneGuides(radius)
+	x, guideX, hitX := snapAxis(float64(pos.X), offsets, guidesX, this.gridStep())
+	y, guideY, hitY := snapAxis(float64(pos.Y), offsets, guidesY, this.gridStep())
+	if hitX {
+		this.snapGuideX, this.snapGuideXActive = guideX, true
+	}
+	if hitY {
+		this.snapGuideY, this.snapGuideYActive = guideY, true
+	}
+	return image.Pt(int(math.Round(x)), int(math.Round(y)))
+}
+
+// otherZoneGuides collects the horizontal and vertical guide coordinates
+// (edge / centre / edge) of every zone except the dragged one.
+func (this *ZoneEditorDialog) otherZoneGuides(radius float64) (guidesX, guidesY []float64) {
+	for name, center := range this.positions {
+		if name == this.zoneDragName {
+			continue
+		}
+		cx, cy := float64(center.X), float64(center.Y)
+		guidesX = append(guidesX, cx-radius, cx, cx+radius)
+		guidesY = append(guidesY, cy-radius, cy, cy+radius)
+	}
+	return guidesX, guidesY
+}
+
+// snapAxis snaps a single axis value. Zone-alignment guides win over the grid;
+// within each class the smallest correction wins. When a zone guide is hit its
+// coordinate is returned so the caller can draw an alignment indicator.
+func snapAxis(value float64, offsets [3]float64, guides []float64, gridStep float64) (snapped float64, guide float64, zoneGuideHit bool) {
+	best := math.MaxFloat64
+	bestGuide := 0.0
+	for _, offset := range offsets {
+		point := value + offset
+		for _, g := range guides {
+			if delta := g - point; math.Abs(delta) < math.Abs(best) {
+				best = delta
+				bestGuide = g
+			}
+		}
+	}
+	if math.Abs(best) <= zoneSnapThresholdPx {
+		return value + best, bestGuide, true
+	}
+	if gridStep > 0 {
+		best = math.MaxFloat64
+		for _, offset := range offsets {
+			point := value + offset
+			if delta := math.Round(point/gridStep)*gridStep - point; math.Abs(delta) < math.Abs(best) {
+				best = delta
+			}
+		}
+		if math.Abs(best) <= gridSnapThresholdPx {
+			return value + best, 0, false
+		}
+	}
+	return value, 0, false
 }
 
 // ensureManualPositions freezes the current generated layout into manual
@@ -929,8 +1105,13 @@ func (this *ZoneEditorDialog) manualPositions() [][2]float64 {
 	return out
 }
 
-// addZone appends a new medium-quality neutral zone at an open spot.
-func (this *ZoneEditorDialog) addZone() {
+// addZoneAt appends a new medium-quality neutral zone at the clicked canvas
+// position. The add-zone mode stays active so several zones can be placed
+// without re-clicking the toolbar button.
+func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
+	if this.side <= 0 {
+		return
+	}
 	label := connection_editor.NextFreeZoneLabel(this.zones)
 	if label == "" {
 		this.hint = "Zone label pool exhausted - cannot add more zones."
@@ -938,14 +1119,13 @@ func (this *ZoneEditorDialog) addZone() {
 	}
 	this.ensureManualPositions()
 	zone := connection_editor.NewDefaultNeutralZone(label, models.QualityMedium, 1, this.generateRoads, this.tuning)
-	position := connection_editor.FindOpenPosition(this.manualPositions())
-	zone.ManualPosition = &position
+	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
+	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
+	zone.ManualPosition = &[2]float64{x, y}
 	this.zones = append(this.zones, zone)
-	this.addMode = false
-	this.pendingFrom = ""
 	this.selectZone(zone.Name)
 	this.syncedZoneFor = ""
-	this.hint = fmt.Sprintf("Added %s - drag it into place, then connect it with “Add connection”.", zone.Name)
+	this.hint = fmt.Sprintf("Added %s - connect it with “Add connection”.", zone.Name)
 }
 
 // deleteZone removes a zone and every connection referencing it. Spawn zones
@@ -997,12 +1177,8 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 	if isNeutral {
 		rows = append(rows,
 			widgets.NewVerticalSpacerWidget(4),
-			widgets.NewLabeledRowWidget(theme, "Quality", 110, func(gtx layout.Context) layout.Dimensions {
-				return this.qualityDropdown.Layout(gtx, theme)
-			}),
-			widgets.NewLabeledRowWidget(theme, "Castles", 110, func(gtx layout.Context) layout.Dimensions {
-				return this.castleDropdown.Layout(gtx, theme)
-			}),
+			widgets.NewLabeledRowWidget(theme, "Quality", 110, this.qualityDropdown.GetWidget(theme)),
+			widgets.NewLabeledRowWidget(theme, "Castles", 110, this.castleDropdown.GetWidget(theme)),
 			widgets.NewDimmedLabelWidget(theme, "Changing quality or castles regenerates the zone's content."),
 		)
 	}
@@ -1031,10 +1207,6 @@ func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 // writebackZoneProps copies the zone widget state back into the selected zone
 // after the panel has been laid out for this frame.
 func (this *ZoneEditorDialog) writebackZoneProps(gtx layout.Context, zone *entities.Zone) {
-	if this.sideZoneDelete.Clicked(gtx) {
-		this.deleteZone(zone.Name)
-		return
-	}
 	if value, err := strconv.ParseFloat(strings.TrimSpace(this.zoneSizeEdit.Text()), 64); err == nil {
 		zone.Size = math.Round(math.Min(math.Max(value, 0.1), 2.0)*100) / 100
 	}

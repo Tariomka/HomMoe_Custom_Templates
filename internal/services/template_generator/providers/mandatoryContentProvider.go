@@ -8,9 +8,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/mandatory_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
 )
 
 type MandatoryContentProvider struct{}

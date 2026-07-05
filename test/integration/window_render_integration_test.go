@@ -1,3 +1,5 @@
+//go:build integration_test
+
 package integration_test
 
 import (
@@ -84,7 +86,10 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 		s.PlayerCount = 5
 		s.Topology = config.TopologyCross
 	})
-	require.NoError(t, author.SaveStateToFile(savedPath))
+	author.SaveStateToFile(savedPath)
+	message, irError := author.GetStatus()
+	require.False(t, irError)
+	assert.Equal(t, "Saved "+savedPath, message)
 
 	renderer := newHeadlessRenderer()
 
@@ -93,7 +98,10 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	require.Equal(t, 2, renderer.window.CurrentState().PlayerCount)
 
 	// Load the saved state, mirroring the Load dialog picking a file.
-	require.NoError(t, renderer.window.LoadStateFromFile(savedPath))
+	renderer.window.LoadStateFromFile(savedPath)
+	message, irError = renderer.window.GetStateDriver().GetStatus()
+	require.False(t, irError)
+	assert.Equal(t, "Loaded "+savedPath, message)
 
 	// Render several more frames. Each frame runs the window's save() (panels →
 	// state); the loaded values must survive instead of being overwritten.

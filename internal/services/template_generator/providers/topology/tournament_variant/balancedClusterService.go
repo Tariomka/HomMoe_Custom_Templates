@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -83,7 +84,7 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 
 	positions := models.Positions{}
 	for _, position := range rawPositions {
-		positions.Add(models.NewPosition(
+		positions.Add(data.NewVec2(
 			xCentre+xSign*(position.X-(min.X+max.X)/2.0)*scale,
 			yCentre+ySign*(position.Y-(min.Y+max.Y)/2.0)*scale))
 	}
@@ -132,8 +133,8 @@ func (this *BalancedClusterService) createSortedPairs(
 		if nn < 3 {
 			continue
 		}
-		for j := range nn {
-			pairSet.Add(sorted[j], sorted[(j+1)%nn])
+		for i := range sorted {
+			pairSet.Add(sorted[i], sorted[(i+1)%nn])
 		}
 	}
 

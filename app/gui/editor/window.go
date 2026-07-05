@@ -9,11 +9,11 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
 type Window struct {
@@ -52,17 +52,13 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 			return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(widgets.NewTitleBarWidget(theme, "Heroes: Olden Era - Custom Templates")),
-					layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
 					layout.Rigid(this.toolbar.GetWidget(theme)),
 					layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 					layout.Rigid(this.getTabsWidget(gtx, theme)),
 					layout.Flexed(1, this.getPanelsWidget(theme)))
 			})
 		}),
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return this.state.Dialogs().Layout(gtx, theme)
-		}),
+		layout.Expanded(this.state.Dialogs().GetActiveDialogWidget(theme)),
 	)
 }
 
@@ -82,12 +78,13 @@ func (this *Window) getPanelsWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(1, widgets.NewPanelWidget(unit.Dp(0), func(gtx layout.Context) layout.Dimensions {
-				return layout.UniformInset(unit.Dp(10)).Layout(gtx, this.getSelectedPanelWidget(theme))
+				return layout.UniformInset(constants.DefaultPaddingLarge).
+					Layout(gtx, this.getSelectedPanelWidget(theme))
 			})),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			widgets.NewDefaultWidgetSpacer(),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(380))
-				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(440))
+				gtx.Constraints.Min.X = gtx.Dp(constants.DefaultPreviewWidthMinimum)
+				gtx.Constraints.Max.X = gtx.Dp(constants.DefaultPreviewWidthMaximum)
 				return this.previewPanel.GetPanelWidget(theme)(gtx)
 			}))
 	}
@@ -127,24 +124,4 @@ func (this *Window) load() {
 	for _, tab := range this.tabs {
 		tab.LoadFromState()
 	}
-}
-
-// LoadStateFromFile loads a saved editor state from path and resynchronises the
-// panels, mirroring what happens when the user picks a file in the Load dialog
-// (but without the interactive picker). Exposed for programmatic loads and
-// integration tests.
-func (this *Window) LoadStateFromFile(path string) error {
-	return this.state.LoadStateFromFile(path, this.load)
-}
-
-// SaveStateToFile writes the current editor state, including manual zone edits,
-// to path. Exposed for programmatic saves and integration tests.
-func (this *Window) SaveStateToFile(path string) error {
-	this.save()
-	return this.state.SaveStateToFile(path)
-}
-
-// CurrentState returns a copy of the live editor state. Exposed for tests.
-func (this *Window) CurrentState() dtos.EditorStateDto {
-	return this.state.GetStateData()
 }

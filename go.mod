@@ -1,6 +1,6 @@
 module github.com/Tariomka/hommoe_custom_templates
 
-go 1.25.8
+go 1.26.3
 
 require (
 	gioui.org v0.10.0

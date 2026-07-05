@@ -107,18 +107,15 @@ Generated template preview:
 
 ## Building & Running
 
-Requires **Go 1.25.8** or later (see [go.mod](go.mod)).
+Requires **Go 1.26.3** or later (see [go.mod](go.mod)).
 
 ```powershell
 # Run directly
 go run .
 
 # Build a binary
-go build -o bin/template-gui.exe .
-.\bin\template-gui.exe
-
-# Run tests
-go test ./...        # or: go test ./test/...
+go build .
+.\hommoe_custom_templates.exe
 ```
 
 Hot reload via [air](https://github.com/air-verse/air) is configured in
@@ -224,13 +221,25 @@ entities.RmgTemplate
 
 ```powershell
 # Full suite
-go test ./...
+go test ./test/... -count=1
 
 # Just the services tests
 go test ./test/services/...
 
 # A single test (by name)
 go test ./test/models/ -run TestSettingsFile_RoundTrip
+
+# Integration tests
+go test -tags integration_test ./test/integration/... -count=1
+
+# Performance tests
+go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
+
+# Performance tests with UI
+go test -tags integration_test ./test/performance/... -bench . -benchtime 3x -timeout 30s -args headed
+
+# Performance tests with UI and profiling
+go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s -args headed
 ```
 
 ## Notes

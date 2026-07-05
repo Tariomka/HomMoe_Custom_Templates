@@ -1,14 +1,19 @@
 package dialogs
 
 import (
+	"image"
+	"slices"
 	"strconv"
 	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
@@ -46,10 +51,10 @@ var bonusResourceDefaults = map[config_inner.BonusPresetType]string{
 	config_inner.BonusStartingOre:      "20",
 }
 
-// BonusPickerDialog composes a single game-start bonus. For Spell and
-// StartingItem types it can launch the spell / item pickers (via opener); when
-// those return more than one selection it emits one bonus per id and closes.
-// Implements widgets.Dialog.
+// BonusPickerDialog composes one or more game-start bonuses. For the Spell
+// type it keeps a removable list of picked spells (the spell picker appends to
+// it) and emits one bonus per spell; for StartingItem it can launch the item
+// picker (via opener). Implements widgets.Dialog.
 type BonusPickerDialog struct {
 	existingKeys     map[string]bool
 	existingSpellIds []string
@@ -59,9 +64,11 @@ type BonusPickerDialog struct {
 	typeDropdown     *components.DropdownSelector
 	receiverDropdown *components.DropdownSelector
 
-	spellEdit    widget.Editor
-	makeFree     widget.Bool
-	pickSpellBtn widget.Clickable
+	selectedSpells  []string
+	spellRemoveBtns []widget.Clickable
+	spellScroll     widget.List
+	makeFree        widget.Bool
+	pickSpellBtn    widget.Clickable
 
 	multiplierEdit widget.Editor
 	movementEdit   widget.Editor
@@ -86,7 +93,7 @@ func NewBonusPickerDialog(existing []config_inner.BonusEntry, opener interfaces.
 	keys := make(map[string]bool, len(existing))
 	var spellIds []string
 	for _, entry := range existing {
-		keys[entry.String()] = true
+		keys[entry.GetHash()] = true
 		if entry.PresetType == config_inner.BonusSpell && entry.Param != "" {
 			spellIds = append(spellIds, entry.Param)
 		}
@@ -105,8 +112,7 @@ func NewBonusPickerDialog(existing []config_inner.BonusEntry, opener interfaces.
 		typeDropdown:     components.NewDropdownSelector(labels),
 		receiverDropdown: components.NewDropdownSelector(append([]string{}, bonusReceiverOptions...)),
 	}
-	dialog.spellEdit.SingleLine = true
-	dialog.spellEdit.ReadOnly = true
+	dialog.spellScroll.Axis = layout.Vertical
 	dialog.multiplierEdit.SingleLine = true
 	dialog.multiplierEdit.SetText("2")
 	dialog.movementEdit.SingleLine = true
@@ -124,113 +130,137 @@ func (this *BonusPickerDialog) PreferredSize() (unit.Dp, unit.Dp) {
 }
 
 func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
+	if this.handleClicks(gtx) {
+		return layout.Dimensions{Size: gtx.Constraints.Min}, true
+	}
+	this.handleSubPickers(gtx)
+
+	presetType := this.getSelectedType()
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			dims := widgets.NewLabeledRowWidget(theme, "Type", 90, this.typeDropdown.GetWidget(theme))(gtx)
+			if this.typeDropdown.WasUpdated {
+				this.applyTypeDefaults(presetType)
+			}
+			return dims
+		}),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			if presetType.IsResource() {
+				return layout.Dimensions{}
+			}
+
+			return widgets.NewLabeledRowWidget(theme, "Receiver", 90, this.receiverDropdown.GetWidget(theme))(gtx)
+		}),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+		layout.Rigid(this.getEditorWidget(theme, presetType)),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			if this.errorText == "" {
+				return layout.Dimensions{}
+			}
+
+			return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx,
+				widgets.NewLabelWidget(theme, this.errorText, themes.ColorError))
+		}),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(12)),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Flexed(1, widgets.NewMinimumConstraintsWidget()),
+				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
+				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Add", &this.addBtn, false)),
+			)
+		}),
+	), false
+}
+
+func (this *BonusPickerDialog) getEditorWidget(theme *material.Theme, presetType config_inner.BonusPresetType) layout.Widget {
+	switch presetType {
+	case config_inner.BonusTownPortalFree:
+		return widgets.NewDimmedLabelWidget(theme, "Grants free town portal to the selected hero(es). No extra parameters.")
+	case config_inner.BonusSpell:
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, spellCountLabel(len(this.selectedSpells)))),
+						widgets.NewDefaultComponentSpacer(),
+						layout.Rigid(widgets.NewButtonWidget(
+							theme, "Pick spells...", &this.pickSpellBtn, this.opener == nil)),
+					)
+				}),
+				layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
+				layout.Rigid(this.getSpellListWidget(theme)),
+				layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
+				layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.makeFree, "Make spell(s) free")),
+			)
+		}
+	case config_inner.BonusUnitMultiplier:
+		return widgets.NewLabeledRowWidget(theme, "Multiplier", 90,
+			widgets.NewTextboxWidget(theme, &this.multiplierEdit, "2", false))
+	case config_inner.BonusMovementBonus:
+		return widgets.NewLabeledRowWidget(theme, "Movement", 90,
+			widgets.NewTextboxWidget(theme, &this.movementEdit, "0", false))
+	case config_inner.BonusStartingItem:
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...", false)),
+				widgets.NewDefaultComponentSpacer(),
+				layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
+			)
+		}
+	default: // resources
+		return widgets.NewLabeledRowWidget(theme, "Amount", 90,
+			widgets.NewTextboxWidget(theme, &this.resourceEdit, "0", false))
+	}
+}
+
+// handleClicks polls the clickable buttons and returns true if the dialog should close.
+func (this *BonusPickerDialog) handleClicks(gtx layout.Context) bool {
 	// A multi-selection sub-picker queued several bonuses; emit and close.
 	if this.hasPending {
 		this.hasPending = false
 		if this.onApply != nil {
 			this.onApply(this.pending)
 		}
-		return layout.Dimensions{Size: gtx.Constraints.Min}, true
+		return true
 	}
+
 	if this.cancelBtn.Clicked(gtx) {
-		return layout.Dimensions{Size: gtx.Constraints.Min}, true
+		return true
 	}
+
+	// Poll the per-row remove buttons BEFORE they are laid out - Clickable.Layout
+	// consumes the click, so a check after layout never fires.
+	for i := range this.spellRemoveBtns {
+		if this.spellRemoveBtns[i].Clicked(gtx) {
+			this.selectedSpells = append(this.selectedSpells[:i:i], this.selectedSpells[i+1:]...)
+			this.spellRemoveBtns = this.spellRemoveBtns[:len(this.selectedSpells)]
+			break
+		}
+	}
+
 	if this.addBtn.Clicked(gtx) {
-		if entry, ok := this.buildEntry(); ok {
-			if this.existingKeys[entry.String()] {
+		if entries, ok := this.buildEntries(); ok {
+			fresh := make([]config_inner.BonusEntry, 0, len(entries))
+			for _, entry := range entries {
+				if !this.existingKeys[entry.GetHash()] {
+					fresh = append(fresh, entry)
+				}
+			}
+			if len(fresh) == 0 {
 				this.errorText = "That bonus already exists."
 			} else {
 				if this.onApply != nil {
-					this.onApply([]config_inner.BonusEntry{entry})
+					this.onApply(fresh)
 				}
-				return layout.Dimensions{Size: gtx.Constraints.Min}, true
+				return true
 			}
 		}
 	}
-	this.handleSubPickers(gtx)
 
-	selectedType := this.selectedType()
-
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			dims := widgets.NewLabeledRowWidget(theme, "Type", 90, func(gtx layout.Context) layout.Dimensions {
-				return this.typeDropdown.Layout(gtx, theme)
-			})(gtx)
-			if this.typeDropdown.WasUpdated {
-				this.applyTypeDefaults(this.selectedType())
-			}
-			return dims
-		}),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if this.selectedType().IsResource() {
-				return layout.Dimensions{}
-			}
-			return widgets.NewLabeledRowWidget(theme, "Receiver", 90, func(gtx layout.Context) layout.Dimensions {
-				return this.receiverDropdown.Layout(gtx, theme)
-			})(gtx)
-		}),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutEditor(gtx, theme, selectedType)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if this.errorText == "" {
-				return layout.Dimensions{}
-			}
-			return layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, this.errorText)
-				label.Color = themes.ColorError
-				label.TextSize = unit.Sp(12)
-				return label.Layout(gtx)
-			})
-		}),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					return layout.Dimensions{Size: gtx.Constraints.Min}
-				}),
-				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-				layout.Rigid(widgets.NewGoldButtonWidget(theme, "Add", &this.addBtn, false)),
-			)
-		}),
-	), false
-}
-
-func (this *BonusPickerDialog) layoutEditor(gtx layout.Context, theme *material.Theme, typ config_inner.BonusPresetType) layout.Dimensions {
-	switch typ {
-	case config_inner.BonusTownPortalFree:
-		label := material.Body2(theme, "Grants free town portal to the selected hero(es). No extra parameters.")
-		label.Color = themes.ColorTextDim
-		label.TextSize = unit.Sp(12)
-		return label.Layout(gtx)
-	case config_inner.BonusSpell:
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.spellEdit, "use Pick spell...", false)),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-					layout.Rigid(widgets.NewButtonWidget(theme, "Pick spell", &this.pickSpellBtn, this.opener == nil)),
-				)
-			}),
-			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
-			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.makeFree, "Make spell free")),
-		)
-	case config_inner.BonusUnitMultiplier:
-		return widgets.NewLabeledRowWidget(theme, "Multiplier", 90, widgets.NewTextboxWidget(theme, &this.multiplierEdit, "2", false))(gtx)
-	case config_inner.BonusMovementBonus:
-		return widgets.NewLabeledRowWidget(theme, "Movement", 90, widgets.NewTextboxWidget(theme, &this.movementEdit, "0", false))(gtx)
-	case config_inner.BonusStartingItem:
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...", false)),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
-		)
-	default: // resources
-		return widgets.NewLabeledRowWidget(theme, "Amount", 90, widgets.NewTextboxWidget(theme, &this.resourceEdit, "0", false))(gtx)
-	}
+	return false
 }
 
 // handleSubPickers reacts to the "Pick spell" / "Pick item" buttons by pushing
@@ -239,43 +269,33 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	if this.opener == nil {
 		return
 	}
+
 	if this.pickSpellBtn.Clicked(gtx) {
-		this.opener(NewSpellPickerDialog(this.existingSpellIds, true, func(ids []string, makeFree bool) {
-			if len(ids) == 0 {
-				return
-			}
-			if len(ids) == 1 {
-				this.spellEdit.SetText(ids[0])
-				this.makeFree.Value = makeFree
-				return
-			}
-			param2 := "0"
-			if makeFree {
-				param2 = "1"
-			}
-			receiver := this.receiver()
-			entries := make([]config_inner.BonusEntry, 0, len(ids))
+		excluded := append(append([]string{}, this.existingSpellIds...), this.selectedSpells...)
+		this.opener(NewSpellPickerDialog(excluded, false, func(ids []string, _ bool) {
+			// Append to (never overwrite) the current selection.
 			for _, id := range ids {
-				entries = append(entries, config_inner.BonusEntry{
-					PresetType:     config_inner.BonusSpell,
-					ReceiverFilter: receiver,
-					Param:          id,
-					Param2:         param2,
-				})
+				if id != "" && !slices.Contains(this.selectedSpells, id) {
+					this.selectedSpells = append(this.selectedSpells, id)
+				}
 			}
-			this.pending = entries
-			this.hasPending = true
+			for len(this.spellRemoveBtns) < len(this.selectedSpells) {
+				this.spellRemoveBtns = append(this.spellRemoveBtns, widget.Clickable{})
+			}
 		}))
 	}
+
 	if this.pickItemBtn.Clicked(gtx) {
 		this.opener(NewItemPickerDialog("Pick Starting Item", nil, func(ids []string) {
 			if len(ids) == 0 {
 				return
 			}
+
 			if len(ids) == 1 {
 				this.itemEdit.SetText(ids[0])
 				return
 			}
+
 			receiver := this.receiver()
 			entries := make([]config_inner.BonusEntry, 0, len(ids))
 			for _, id := range ids {
@@ -291,60 +311,65 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	}
 }
 
-func (this *BonusPickerDialog) buildEntry() (config_inner.BonusEntry, bool) {
+func (this *BonusPickerDialog) buildEntries() ([]config_inner.BonusEntry, bool) {
 	this.errorText = ""
-	typ := this.selectedType()
+	presetType := this.getSelectedType()
 	receiver := this.receiver()
-	switch typ {
+	switch presetType {
 	case config_inner.BonusTownPortalFree:
-		return config_inner.BonusEntry{PresetType: typ, ReceiverFilter: receiver}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver}}, true
 	case config_inner.BonusSpell:
-		id := strings.TrimSpace(this.spellEdit.Text())
-		if id == "" {
-			this.errorText = "Pick or enter a spell."
-			return config_inner.BonusEntry{}, false
+		if len(this.selectedSpells) == 0 {
+			this.errorText = "Pick at least one spell."
+			return nil, false
 		}
 		param2 := "0"
 		if this.makeFree.Value {
 			param2 = "1"
 		}
-		return config_inner.BonusEntry{PresetType: typ, ReceiverFilter: receiver, Param: id, Param2: param2}, true
+		entries := make([]config_inner.BonusEntry, 0, len(this.selectedSpells))
+		for _, id := range this.selectedSpells {
+			entries = append(entries,
+				config_inner.BonusEntry{PresetType: presetType, ReceiverFilter: receiver, Param: id, Param2: param2})
+		}
+		return entries, true
 	case config_inner.BonusUnitMultiplier:
 		value := strings.TrimSpace(this.multiplierEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric multiplier."
-			return config_inner.BonusEntry{}, false
+			return nil, false
 		}
-		return config_inner.BonusEntry{PresetType: typ, ReceiverFilter: receiver, Param: value}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
 	case config_inner.BonusMovementBonus:
 		value := strings.TrimSpace(this.movementEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric movement value."
-			return config_inner.BonusEntry{}, false
+			return nil, false
 		}
-		return config_inner.BonusEntry{PresetType: typ, ReceiverFilter: receiver, Param: value}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
 	case config_inner.BonusStartingItem:
 		id := strings.TrimSpace(this.itemEdit.Text())
 		if id == "" {
 			this.errorText = "Pick or enter an item."
-			return config_inner.BonusEntry{}, false
+			return nil, false
 		}
-		return config_inner.BonusEntry{PresetType: typ, ReceiverFilter: receiver, Param: id}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: id}}, true
 	default:
 		value := strings.TrimSpace(this.resourceEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric amount."
-			return config_inner.BonusEntry{}, false
+			return nil, false
 		}
-		return config_inner.BonusEntry{PresetType: typ, ReceiverFilter: receiver, Param: value}, true
+		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
 	}
 }
 
-func (this *BonusPickerDialog) selectedType() config_inner.BonusPresetType {
+func (this *BonusPickerDialog) getSelectedType() config_inner.BonusPresetType {
 	index := this.typeDropdown.GetSelectedIndex()
 	if index < 0 || index >= len(bonusTypeOptions) {
 		return config_inner.BonusTownPortalFree
 	}
+
 	return bonusTypeOptions[index].typ
 }
 
@@ -353,6 +378,7 @@ func (this *BonusPickerDialog) receiver() string {
 	if index < 0 || index >= len(bonusReceiverOptions) {
 		return bonusReceiverOptions[0]
 	}
+
 	return bonusReceiverOptions[index]
 }
 
@@ -362,10 +388,75 @@ func (this *BonusPickerDialog) applyTypeDefaults(typ config_inner.BonusPresetTyp
 	}
 }
 
+// getSpellListWidget renders the picked spells as removable rows with a
+// school-coloured bubble and the spell's display name.
+func (this *BonusPickerDialog) getSpellListWidget(theme *material.Theme) layout.Widget {
+	if len(this.selectedSpells) == 0 {
+		return widgets.NewDimmedLabelWidget(theme, "(no spells picked - use Pick spells...)")
+	}
+
+	return func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Max.Y = min(gtx.Constraints.Max.Y, gtx.Dp(unit.Dp(150)))
+		return material.List(theme, &this.spellScroll).Layout(gtx, len(this.selectedSpells),
+			func(gtx layout.Context, index int) layout.Dimensions {
+				return this.getSpellRowWidget(theme, index)(gtx)
+			})
+	}
+}
+
+func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index int) layout.Widget {
+	sid := this.selectedSpells[index]
+	name, school := spellNameAndSchool(sid)
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(2)}.
+			Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						size := gtx.Dp(constants.DefaultRoundnessLarge)
+						paint.FillShape(gtx.Ops,
+							constants.GetSpellSchoolColorFromDisplayName(school),
+							clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
+						return layout.Dimensions{Size: image.Pt(size, size)}
+					}),
+					widgets.NewDefaultComponentSpacer(),
+					layout.Rigid(widgets.NewLabelBuilder(theme).WithSizeBig().WithText(name).WithColorDefault().Build),
+					widgets.NewDefaultComponentSpacer(),
+					layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, school)),
+					layout.Rigid(widgets.NewButtonWidget(theme, "✕", &this.spellRemoveBtns[index], false)),
+				)
+			})
+	}
+}
+
+// spellNameAndSchool resolves a spell SID to its display name and school
+// label, with a sentence-case fallback for unknown SIDs.
+func spellNameAndSchool(sid string) (name, school string) {
+	if spell, ok := constants.FindSpell(sid); ok {
+		label := constants.SpellSchoolDisplayNames[spell.School]
+		if label == "" {
+			label = spell.School
+		}
+		return spell.Name, label
+	}
+	return constants.SidToDisplayName(sid), "Spell"
+}
+
+func spellCountLabel(count int) string {
+	switch count {
+	case 0:
+		return "Spells"
+	case 1:
+		return "1 spell picked"
+	default:
+		return strconv.Itoa(count) + " spells picked"
+	}
+}
+
 func isNumeric(value string) bool {
 	if value == "" {
 		return false
 	}
+
 	_, err := strconv.ParseFloat(value, 64)
 	return err == nil
 }

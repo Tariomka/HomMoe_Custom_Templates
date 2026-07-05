@@ -1,16 +1,10 @@
 package components
 
 import (
-	"image"
-
 	"gioui.org/layout"
-	"gioui.org/op"
-	"gioui.org/op/clip"
-	"gioui.org/op/paint"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
 // segmentButton represents a single selectable option in a row of segments.
@@ -60,47 +54,14 @@ func (this *SegmentButtonGroup) Update(gtx layout.Context) bool {
 	return changed
 }
 
-func (this *SegmentButtonGroup) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	this.Update(gtx)
-	children := make([]layout.FlexChild, 0, len(this.buttons))
-	for i, button := range this.buttons {
-		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return material.Clickable(gtx, &button.button, func(gtx layout.Context) layout.Dimensions {
-				return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return drawSegment(gtx, theme, button.label, this.selectedIndex == i, button.button.Hovered())
-				})
-			})
-		}))
+func (this *SegmentButtonGroup) GetWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		this.Update(gtx)
+		children := make([]layout.FlexChild, 0, len(this.buttons))
+		for i, button := range this.buttons {
+			children = append(children, layout.Rigid(
+				widgets.NewSegmentButtonWidget(theme, button.label, &button.button, this.selectedIndex == i)))
+		}
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
 	}
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
-}
-
-func drawSegment(gtx layout.Context, theme *material.Theme, label string, selected bool, hovered bool) layout.Dimensions {
-	bgColor := themes.ColorInput
-	fgColor := themes.ColorTextDim
-	border := themes.ColorBorder
-	if hovered && !selected {
-		border = themes.ColorHover
-	}
-	if selected {
-		bgColor = themes.ColorPrimaryButton
-		fgColor = themes.ColorAccentBright
-		border = themes.ColorAccent
-	}
-	macro := op.Record(gtx.Ops)
-	dims := layout.UniformInset(unit.Dp(6)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		label := material.Caption(theme, label)
-		label.Color = fgColor
-		return label.Layout(gtx)
-	})
-	call := macro.Stop()
-	radius := gtx.Dp(3)
-	rect := image.Rectangle{Max: dims.Size}
-	paint.FillShape(gtx.Ops, bgColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, border, clip.Stroke{
-		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-		Width: float32(gtx.Dp(1)),
-	}.Op())
-	call.Add(gtx.Ops)
-	return dims
 }

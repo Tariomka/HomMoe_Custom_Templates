@@ -1,6 +1,7 @@
 package dialogs
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"strconv"
@@ -43,7 +44,7 @@ type multiSelectPicker struct {
 	grouped      bool
 	groupColor   func(group string) color.NRGBA
 	addLabel     string
-	footer       func(gtx layout.Context, theme *material.Theme) layout.Dimensions
+	footerWidget func(theme *material.Theme) layout.Widget
 	onApply      func(ids []string)
 
 	search    widget.Editor
@@ -81,60 +82,60 @@ func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 		}
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
+
 	if this.cancelBtn.Clicked(gtx) {
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
 
 	filter := strings.ToLower(strings.TrimSpace(this.search.Text()))
-	rows := this.buildRows(theme, filter)
+	rows := this.getRowWidgets(theme, filter)
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(widgets.NewTextboxWidget(theme, &this.search, "Search...", false)),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			if len(rows) == 0 {
 				label := material.Body2(theme, "(no matches)")
 				label.Color = themes.ColorTextDim
-				return layout.Inset{Top: unit.Dp(4)}.Layout(gtx, label.Layout)
+				return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.Layout(gtx, label.Layout)
 			}
-			return material.List(theme, &this.scroll).Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
-				return rows[index](gtx)
-			})
+
+			return material.List(theme, &this.scroll).Layout(gtx, len(rows),
+				func(gtx layout.Context, index int) layout.Dimensions { return rows[index](gtx) })
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if this.footer == nil {
+			if this.footerWidget == nil {
 				return layout.Dimensions{}
 			}
-			return layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return this.footer(gtx, theme)
-			})
+
+			return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, this.footerWidget(theme))
 		}),
-		layout.Rigid(layout.Spacer{Height: unit.Dp(10)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutButtons(gtx, theme)
-		}),
+		layout.Rigid(widgets.NewVerticalSpacerWidget(10)),
+		layout.Rigid(this.getButtonsWidget(theme)),
 	), false
 }
 
-func (this *multiSelectPicker) layoutButtons(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *multiSelectPicker) getButtonsWidget(theme *material.Theme) layout.Widget {
 	count := len(this.selectedIds())
 	addText := this.addLabel
 	if count > 1 {
-		addText = this.addLabel + " (" + strconv.Itoa(count) + ")"
+		addText = fmt.Sprintf("%s (%d)", this.addLabel, count)
 	}
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, 0)}
-		}),
-		layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
-		layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-		layout.Rigid(widgets.NewGoldButtonWidget(theme, addText, &this.addBtn, count == 0)),
-	)
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, 0)}
+			}),
+			layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
+			widgets.NewDefaultComponentSpacer(),
+			layout.Rigid(widgets.NewBrightButtonWidget(theme, addText, &this.addBtn, count == 0)),
+		)
+	}
 }
 
-// buildRows flattens the filtered entries into a list of group headers and leaf
+// getRowWidgets flattens the filtered entries into a list of group headers and leaf
 // rows, preserving the entry order (so callers control grouping/sorting).
-func (this *multiSelectPicker) buildRows(theme *material.Theme, filter string) []layout.Widget {
+func (this *multiSelectPicker) getRowWidgets(theme *material.Theme, filter string) []layout.Widget {
 	var rows []layout.Widget
 	emitted := map[string]bool{}
 
@@ -142,58 +143,53 @@ func (this *multiSelectPicker) buildRows(theme *material.Theme, filter string) [
 		// Count matching entries in this group for the header badge.
 		count := 0
 		for _, entry := range this.entries {
-			if entry.group == group && this.matches(entry, filter) {
+			if entry.group == group && strings.Contains(entry.haystack, filter) {
 				count++
 			}
 		}
-		rows = append(rows, this.groupHeader(theme, group, count))
+		rows = append(rows, this.getGroupHeaderWidget(theme, group, count))
 	}
 
 	for _, entry := range this.entries {
-		if !this.matches(entry, filter) {
+		if !strings.Contains(entry.haystack, filter) {
 			continue
 		}
 		if this.grouped && !emitted[entry.group] {
 			emitted[entry.group] = true
 			appendGroup(entry.group)
 		}
-		rows = append(rows, this.leafRow(theme, entry))
+		rows = append(rows, this.getLeafRowWidget(theme, entry))
 	}
 	return rows
 }
 
-func (this *multiSelectPicker) matches(entry pickerEntry, filter string) bool {
-	return filter == "" || strings.Contains(entry.haystack, filter)
-}
-
-func (this *multiSelectPicker) groupHeader(theme *material.Theme, group string, count int) layout.Widget {
-	col := themes.ColorAccent
+func (this *multiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group string, count int) layout.Widget {
+	groupTextColor := themes.ColorAccent
 	if this.groupColor != nil {
-		col = this.groupColor(group)
+		groupTextColor = this.groupColor(group)
 	}
 	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(2)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					label := material.Body1(theme, group)
-					label.Color = col
-					label.TextSize = unit.Sp(13)
-					label.Font = font.Font{Weight: font.SemiBold}
-					return label.Layout(gtx)
-				}),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					label := material.Body2(theme, "("+strconv.Itoa(count)+")")
-					label.Color = themes.ColorTextDim
-					label.TextSize = unit.Sp(11)
-					return label.Layout(gtx)
-				}),
-			)
-		})
+		return layout.Inset{Top: constants.DefaultPaddingSmall, Bottom: constants.DefaultPaddingSmall - 4}.
+			Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						label := material.Body2(theme, group)
+						label.Color = groupTextColor
+						label.Font = font.Font{Weight: font.SemiBold}
+						return label.Layout(gtx)
+					}),
+					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						label := material.Overline(theme, fmt.Sprintf("(%d)", count))
+						label.Color = themes.ColorTextDim
+						return label.Layout(gtx)
+					}),
+				)
+			})
 	}
 }
 
-func (this *multiSelectPicker) leafRow(theme *material.Theme, entry pickerEntry) layout.Widget {
+func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pickerEntry) layout.Widget {
 	clk := this.clickFor(entry.id)
 	return func(gtx layout.Context) layout.Dimensions {
 		if clk.Clicked(gtx) {
@@ -206,46 +202,46 @@ func (this *multiSelectPicker) leafRow(theme *material.Theme, entry pickerEntry)
 		checked := this.selected[entry.id]
 		return material.Clickable(gtx, clk, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.Inset{Top: unit.Dp(3), Bottom: unit.Dp(3), Left: unit.Dp(4), Right: unit.Dp(4)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						gtx.Constraints.Min.X = gtx.Dp(unit.Dp(16))
-						mark := " "
-						if checked {
-							mark = "✓"
-						}
-						label := material.Body1(theme, mark)
-						label.Color = themes.ColorAccentBright
-						label.Font = font.Font{Weight: font.Bold}
-						return label.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if entry.badge == "" {
-							return layout.Dimensions{}
-						}
-						gtx.Constraints.Min.X = gtx.Dp(unit.Dp(34))
-						label := material.Body2(theme, entry.badge)
-						label.Color = themes.ColorTextDim
-						label.TextSize = unit.Sp(11)
-						return label.Layout(gtx)
-					}),
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						label := material.Body1(theme, entry.label)
-						label.Color = themes.ColorText
-						label.TextSize = unit.Sp(13)
-						return label.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if entry.trailing == "" {
-							return layout.Dimensions{}
-						}
-						label := material.Body2(theme, entry.trailing)
-						label.Color = themes.ColorTextDim
-						label.TextSize = unit.Sp(11)
-						return label.Layout(gtx)
-					}),
-				)
-			})
+			dims := layout.UniformInset(constants.DefaultPaddingSmall-2).
+				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(16))
+							mark := " "
+							if checked {
+								mark = "v"
+							}
+							label := material.Body1(theme, mark)
+							label.Color = themes.ColorAccentBright
+							label.Font = font.Font{Weight: font.Bold, Style: font.Italic}
+							return label.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							if entry.badge == "" {
+								return layout.Dimensions{}
+							}
+
+							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(34))
+							label := material.Overline(theme, entry.badge)
+							label.Color = themes.ColorTextDim
+							return label.Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+							label := material.Body2(theme, entry.label)
+							label.Color = themes.ColorText
+							return label.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							if entry.trailing == "" {
+								return layout.Dimensions{}
+							}
+
+							label := material.Overline(theme, entry.trailing)
+							label.Color = themes.ColorTextDim
+							return label.Layout(gtx)
+						}),
+					)
+				})
 			call := macro.Stop()
 			if checked {
 				paint.FillShape(gtx.Ops, checkedRowBg, clip.Rect{Max: dims.Size}.Op())
@@ -283,19 +279,7 @@ func (this *multiSelectPicker) selectedIds() []string {
 // are hidden (already-banned / already-chosen). onApply receives the selected
 // artifact SIDs.
 func NewItemPickerDialog(title string, excluded []string, onApply func(ids []string)) *multiSelectPicker {
-	skip := toSet(excluded)
-	visible := make([]constants.BannableItemEntry, 0, len(constants.BannableItems))
-	for _, item := range constants.BannableItems {
-		if !skip[item.Sid] {
-			visible = append(visible, item)
-		}
-	}
-	sortStable(visible, func(a, b constants.BannableItemEntry) bool {
-		if a.Category != b.Category {
-			return a.Category < b.Category
-		}
-		return a.Name < b.Name
-	})
+	visible := constants.GetBannableItemsWithExclusions(excluded)
 
 	entries := make([]pickerEntry, 0, len(visible))
 	for _, item := range visible {
@@ -303,7 +287,6 @@ func NewItemPickerDialog(title string, excluded []string, onApply func(ids []str
 			id:       item.Sid,
 			group:    item.Category,
 			label:    item.Name,
-			trailing: item.Sid,
 			haystack: strings.ToLower(item.Name + " " + item.Sid + " " + item.Category),
 		})
 	}
@@ -319,28 +302,7 @@ func NewItemPickerDialog(title string, excluded []string, onApply func(ids []str
 // excluded ids are hidden. When showMakeFree is true a "make free" toggle is
 // shown. onApply receives the selected spell SIDs and the make-free flag.
 func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids []string, makeFree bool)) *multiSelectPicker {
-	skip := toSet(excluded)
-	schoolRank := map[string]int{}
-	for i, school := range constants.SpellSchoolOrder {
-		schoolRank[school] = i
-	}
-
-	visible := make([]constants.SpellEntry, 0, len(constants.KnownSpells))
-	for _, spell := range constants.KnownSpells {
-		if !skip[spell.Sid] {
-			visible = append(visible, spell)
-		}
-	}
-	sortStable(visible, func(a, b constants.SpellEntry) bool {
-		ra, rb := rankOf(schoolRank, a.School), rankOf(schoolRank, b.School)
-		if ra != rb {
-			return ra < rb
-		}
-		if a.Tier != b.Tier {
-			return a.Tier < b.Tier
-		}
-		return a.Name < b.Name
-	})
+	visible := constants.GetKnownSpellsWithExclusions(excluded)
 
 	entries := make([]pickerEntry, 0, len(visible))
 	for _, spell := range visible {
@@ -352,7 +314,7 @@ func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids
 			id:       spell.Sid,
 			group:    label,
 			label:    spell.Name,
-			badge:    "[T" + strconv.Itoa(spell.Tier) + "]",
+			badge:    fmt.Sprintf("[T%d]", spell.Tier),
 			haystack: strings.ToLower(spell.Name + " " + spell.Sid + " " + spell.School),
 		})
 	}
@@ -361,8 +323,8 @@ func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids
 	picker := newMultiSelectPicker("Pick Spells", entries, true)
 	picker.groupColor = constants.GetSpellSchoolColorFromDisplayName
 	if showMakeFree {
-		picker.footer = func(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-			return widgets.NewLabeledCheckboxRowWidget(theme, makeFree, "Make spell(s) free")(gtx)
+		picker.footerWidget = func(theme *material.Theme) layout.Widget {
+			return widgets.NewLabeledCheckboxRowWidget(theme, makeFree, "Make spell(s) free")
 		}
 	}
 	picker.onApply = func(ids []string) {
@@ -377,14 +339,7 @@ func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids
 // value applied to every selection. excluded SIDs are hidden. onApply receives
 // "sid=guardValue" lines.
 func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *multiSelectPicker {
-	skip := toSet(excluded)
-	sids := make([]string, 0, len(constants.ValueOverrideSids))
-	for _, sid := range constants.ValueOverrideSids {
-		if !skip[sid] {
-			sids = append(sids, sid)
-		}
-	}
-	sortStable(sids, func(a, b string) bool { return a < b })
+	sids := constants.GetValueOverrideSidsWithExclusions(excluded)
 
 	entries := make([]pickerEntry, 0, len(sids))
 	for _, sid := range sids {
@@ -398,16 +353,17 @@ func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string
 	guardEdit := &widget.Editor{SingleLine: true}
 	guardEdit.SetText("5000")
 	picker := newMultiSelectPicker("Pick Value Overrides", entries, false)
-	picker.footer = func(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(100))
-				label := material.Caption(theme, "Guard value")
-				label.Color = themes.ColorTextDim
-				return label.Layout(gtx)
-			}),
-			layout.Flexed(1, widgets.NewTextboxWidget(theme, guardEdit, "5000", false)),
-		)
+	picker.footerWidget = func(theme *material.Theme) layout.Widget {
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Min.X = gtx.Dp(unit.Dp(100))
+					label := material.Caption(theme, "Guard value")
+					label.Color = themes.ColorTextDim
+					return label.Layout(gtx)
+				}),
+				layout.Flexed(1, widgets.NewTextboxWidget(theme, guardEdit, "5000", false)))
+		}
 	}
 	picker.onApply = func(ids []string) {
 		guard := 5000
@@ -416,37 +372,9 @@ func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string
 		}
 		lines := make([]string, 0, len(ids))
 		for _, sid := range ids {
-			lines = append(lines, sid+"="+strconv.Itoa(guard))
+			lines = append(lines, fmt.Sprintf("%s=%d", sid, guard))
 		}
 		onApply(lines)
 	}
 	return picker
-}
-
-// ── small helpers ───────────────────────────────────────────────────────────
-
-func toSet(values []string) map[string]bool {
-	set := make(map[string]bool, len(values))
-	for _, value := range values {
-		set[value] = true
-	}
-	return set
-}
-
-func rankOf(ranks map[string]int, key string) int {
-	if rank, ok := ranks[key]; ok {
-		return rank
-	}
-	return 99
-}
-
-// sortStable is a tiny insertion sort that keeps the original order of equal
-// elements; the picker lists are small (<200) so this is more than adequate and
-// avoids pulling generics gymnastics through the sort package.
-func sortStable[T any](items []T, less func(a, b T) bool) {
-	for i := 1; i < len(items); i++ {
-		for j := i; j > 0 && less(items[j], items[j-1]); j-- {
-			items[j], items[j-1] = items[j-1], items[j]
-		}
-	}
 }

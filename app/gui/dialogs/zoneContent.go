@@ -147,10 +147,8 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 						label.Color = themes.ColorTextDim
 						return label.Layout(gtx)
 					}),
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return this.addPreset.Layout(gtx, theme)
-					}),
-					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
+					layout.Flexed(1, this.addPreset.GetWidget(theme)),
+					widgets.NewDefaultComponentSpacer(),
 					layout.Rigid(widgets.NewButtonWidget(theme, "+ Add", &this.addBtn, false)),
 				)
 			},

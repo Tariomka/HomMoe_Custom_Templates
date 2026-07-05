@@ -12,6 +12,7 @@ import "image/color"
 // ─── Raw palette ────────────────────────────────────────────────────────────
 // The primitive swatches of Crimson Night. Prefer the semantic names below;
 // these exist so every tone is defined exactly once.
+
 var (
 	// Surfaces - darkest to lightest. Charcoal with a faint warm-violet cast
 	// so the UI reads "dark" rather than "black".
@@ -41,6 +42,7 @@ var (
 
 // ─── Semantic theme colors ──────────────────────────────────────────────────
 // Use these throughout the UI; they map intent onto the raw palette.
+
 var (
 	// Surfaces.
 	ColorBackground = swatchNight    // window background

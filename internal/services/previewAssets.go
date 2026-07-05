@@ -51,7 +51,7 @@ func loadPreviewAssets() *previewAssets {
 		}
 		a := &previewAssets{neutral: map[string]image.Image{}}
 		a.background = decode("background.png")
-		for i := 0; i < 8; i++ {
+		for i := range 8 {
 			a.players[i] = decode(fmt.Sprintf("player_%d.png", i+1))
 		}
 		for _, name := range []string{

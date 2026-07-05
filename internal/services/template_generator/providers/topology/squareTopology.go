@@ -2,6 +2,7 @@ package topology
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
@@ -53,7 +54,7 @@ func (this *SquareTopologyService) CreateTopologyVariant(
 // the interior neutral zones.
 func (this *SquareTopologyService) createSquareLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
+	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		centreX = 0.5
 		centreY = 0.5
@@ -86,9 +87,9 @@ func (this *SquareTopologyService) createSquareLayout(
 	// when there is only one) so they read as being inside the perimeter.
 	interiorHalf := half * 0.45
 	for i, plan := range interiorPlans {
-		var point models.Vector2
+		var point models.Position
 		if len(interiorPlans) == 1 {
-			point = models.NewPosition(centreX, centreY)
+			point = data.NewVec2(centreX, centreY)
 		} else {
 			point = squarePerimeterPoint(float64(i)/float64(len(interiorPlans)), centreX, centreY, interiorHalf)
 		}
@@ -100,7 +101,7 @@ func (this *SquareTopologyService) createSquareLayout(
 	return allLabels, positions, pairs
 }
 
-func (this *SquareTopologyService) createSquarePairs(perimeterCount int, positions models.Positions) [][2]int {
+func (this *SquareTopologyService) createSquarePairs(perimeterCount int, positions models.Positions) []models.ConnectionIndexes {
 	builder := newPairBuilder()
 
 	// Perimeter loop draws the square outline.

@@ -8,13 +8,14 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
-// NewPanelWidget return a Widget that renders content in a rounded border panel
+// NewPanelWidget return a Widget that renders content in a rounded border panel.
 func NewPanelWidget(padding unit.Dp, content layout.Widget) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		radius := gtx.Dp(4)
+		radius := gtx.Dp(constants.DefaultRoundness)
 		macro := op.Record(gtx.Ops)
 		dims := layout.UniformInset(padding).Layout(gtx, content)
 		call := macro.Stop()

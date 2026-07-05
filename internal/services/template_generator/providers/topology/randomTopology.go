@@ -6,10 +6,11 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
@@ -38,8 +39,8 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 	labelCount := len(allLabels)
 	rand.Shuffle(labelCount, func(i, j int) { allLabels[i], allLabels[j] = allLabels[j], allLabels[i] })
 	var positions models.Positions
-	for i := 0; i < labelCount; i++ {
-		positions.Add(models.NewPosition(rand.Float64()*0.9+0.05, rand.Float64()*0.9+0.05))
+	for range labelCount {
+		positions.Add(data.NewVec2(rand.Float64()*0.9+0.05, rand.Float64()*0.9+0.05))
 	}
 	pairs := positions.CreateDelaunayTriangulation()
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
@@ -63,11 +64,11 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 
 func (this *RandomTopologyService) createConnectionNames(
 	playerLabels, allLabels []string,
-	triangulationPairs [][2]int,
+	triangulationPairs []models.ConnectionIndexes,
 	isIsolated bool) map[int][]string {
 	connectionNamesByZone := make(map[int][]string, len(allLabels))
 	for _, pair := range triangulationPairs {
-		indexA, indexB := pair[0], pair[1]
+		indexA, indexB := pair.X, pair.Y
 		labelFrom := allLabels[indexA]
 		labelTo := allLabels[indexB]
 		if isIsolated && slices.Contains(playerLabels, labelFrom) && slices.Contains(playerLabels, labelTo) {
@@ -115,12 +116,12 @@ func (this *RandomTopologyService) createConnections(
 	isIsolated bool,
 	neutralZones models.NeutralZonePlans,
 	connectionNames map[int][]string,
-	triangulationPairs [][2]int) []entities.Connection {
+	triangulationPairs []models.ConnectionIndexes) []entities.Connection {
 	nameLookup := make(map[int]int, len(allLabels))
 
 	var connections []entities.Connection
 	for _, pair := range triangulationPairs {
-		indexA, indexB := pair[0], pair[1]
+		indexA, indexB := pair.X, pair.Y
 		labelFrom := allLabels[indexA]
 		labelTo := allLabels[indexB]
 		if isIsolated && slices.Contains(playerLabels, labelFrom) && slices.Contains(playerLabels, labelTo) {

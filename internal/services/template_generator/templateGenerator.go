@@ -81,7 +81,7 @@ func (this *TemplateGenerator) createGenerationTuning(totalZoneCount int) models
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {
 	parts := []string{
-		constants.GetTopologyDescriptor(this.configuration.Topology).Label + " layout",
+		constants.GetTopologyDescriptorFromType(this.configuration.Topology).Label + " layout",
 		formatPhraseWithCount(neutralCount, "neutral zone", "neutral zones"),
 		formatPhraseWithCount(
 			1+this.configuration.ZoneConfiguration.PlayerZoneCastles+this.configuration.ZoneConfiguration.PlayerOwnedCastles,

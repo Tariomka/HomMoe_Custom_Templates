@@ -10,7 +10,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
@@ -237,14 +237,7 @@ func ApplyNeutralZoneQuality(
 	// Regenerate the castle<->castle roads so the rebuilt castles are
 	// road-connected. Other roads (connection and foothold roads) are left for
 	// RebuildZoneConnectionRoads to finalise once the edit is applied.
-	keptRoads := make([]entities.Road, 0, len(zone.Roads))
-	for _, road := range zone.Roads {
-		if isCastleRoad(road) {
-			continue
-		}
-		keptRoads = append(keptRoads, road)
-	}
-	zone.Roads = append(buildCastleRoads(len(zone.MainObjects)), keptRoads...)
+	rebuildCastleRoads(zone)
 }
 
 // CanDeleteZone reports whether the zone may be removed in the editor. Spawn

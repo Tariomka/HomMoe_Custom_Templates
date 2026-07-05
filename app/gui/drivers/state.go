@@ -11,23 +11,28 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
-const autoRegenDebounce = 300 * time.Millisecond
+const (
+	autoRegenDebounce   = 300 * time.Millisecond
+	configFileExtension = ".gen.json"
+)
 
 type State struct {
 	handler *handlers.GUIHandler
 	mapper  *mappers.GeneratorConfigMapper
 
-	// Persistent stateDto file model. Updated continuously from widgets.
-	stateDto *dtos.EditorStateDto
+	innerState *models.EditorState
 
 	// File state
 	currentPath string
@@ -39,39 +44,9 @@ type State struct {
 	statusMsg    string
 	statusErr    bool
 
-	// connectionsModified records that the live template's connections were
-	// hand-edited in the visual editor, so a later regeneration can warn that
-	// those edits will be replaced.
-	connectionsModified bool
+	confirmExit bool
 
-	// lastGeneratedState is a copy of the editor state used for the most recent
-	// successful generation. Auto-regeneration compares the live state against
-	// it to detect option changes and to decide whether manual zone edits can
-	// be reapplied.
-	lastGeneratedState *dtos.EditorStateDto
-
-	// manualZones / manualConnections hold the latest zones and connections
-	// applied from the manual zone editor. When a regeneration leaves the
-	// layout-defining options unchanged, these are reapplied so hand edits
-	// survive option tweaks (e.g. changing a castle count).
-	manualZones       []entities.Zone
-	manualConnections []entities.Connection
-	hasManualEdits    bool
-
-	// pendingManualReapply requests that the stored manual edits be reapplied on
-	// the next regeneration even though there is no prior generated state to
-	// compare against. It is set when a saved state with manual edits is loaded
-	// so the hand-made layout is restored once the loaded template is
-	// regenerated.
-	pendingManualReapply bool
-
-	// pendingState / pendingDeadline implement debounced regeneration for
-	// non-preview option changes (most sliders and the template name).
-	// pendingState is the editor state observed when the debounce timer was
-	// last (re)armed; pendingDeadline is when it should fire. The timer is
-	// reset on every change so regeneration only runs once editing pauses.
-	pendingState    *dtos.EditorStateDto
-	pendingDeadline time.Time
+	applyNextStateAt time.Time
 
 	// dialogs renders modal dialogs (rule editors, pickers, the connection
 	// editor) over the main UI.
@@ -79,11 +54,10 @@ type State struct {
 }
 
 func NewUIState() *State {
-	stateDto := dtos.NewDefaultEditorStateDto()
 	state := &State{
-		handler:  handlers.NewGuiHandler(),
-		mapper:   mappers.NewConfigMapper(),
-		stateDto: &stateDto,
+		handler:    handlers.NewGuiHandler(),
+		mapper:     mappers.NewConfigMapper(),
+		innerState: models.NewEditorState(),
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
@@ -95,6 +69,7 @@ func NewUIState() *State {
 		} else {
 			state.SetStatus("Failed to find game template directory, using fallback directory.", false)
 		}
+
 		if workingDir, err := os.Getwd(); err == nil {
 			templateDir = workingDir
 		}
@@ -108,10 +83,10 @@ func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg,
 // Dialogs returns the modal host used to open and render dialogs.
 func (this *State) Dialogs() *DialogHost { return this.dialogs }
 
-func (this *State) GetStateData() dtos.EditorStateDto { return *this.stateDto }
+func (this *State) GetStateData() dtos.EditorStateDto { return this.innerState.GetCurrentState() }
 
 func (this *State) GetGeneratorConfig() *config.GeneratorConfig {
-	return this.mapper.FromEditorState(*this.stateDto)
+	return this.mapper.FromEditorState(this.innerState.GetCurrentState())
 }
 
 func (this *State) GetCurrentPath() string { return this.currentPath }
@@ -121,29 +96,16 @@ func (this *State) IsUnsaved() bool { return this.unsaved }
 func (this *State) GetLastTemplate() *entities.RmgTemplate { return this.lastTemplate }
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
-// editor back into the live template and flags that manual edits now exist.
+// editor back into the live template and stores them in the editor state as
+// the authoritative manual snapshot, reapplied on later regenerations and
+// saved with the rest of the .gen.json state.
 func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entities.Connection) {
-	if this.lastTemplate == nil || len(this.lastTemplate.Variants) == 0 {
-		return
-	}
-	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
-		Template:    this.lastTemplate,
-		Zones:       zones,
-		Connections: connections,
-		Config:      this.GetGeneratorConfig(),
-	})
-	this.lastTemplate = dto.Template
-	this.connectionsModified = true
-	this.rememberManualEdits(zones, connections)
-	if err != nil {
-		status := fmt.Sprintf(
-			"Applied %d zones and %d connections. ⚠ Error: %v; fix before export.",
-			len(zones), len(connections), err)
-		this.SetStatus(status, true)
+	if !this.hasTemplateVariants() {
 		return
 	}
 
-	this.SetStatus(fmt.Sprintf("Applied %d zones and %d connections from the editor.", len(zones), len(connections)), false)
+	this.handleUpdateTemplate(zones, connections)
+	this.innerState.SetManualEdits(zones, connections)
 }
 
 func (this *State) GetOutputPath() string { return this.outputPath.Text() }
@@ -153,31 +115,32 @@ func (this *State) GetOutputPathWidget(theme *material.Theme) layout.Widget {
 }
 
 func (this *State) Reset() {
-	stateDto := dtos.NewDefaultEditorStateDto()
-	this.stateDto = &stateDto
+	this.innerState.ResetState()
 	this.currentPath = ""
 	this.unsaved = false
 	this.clearGeneratedState()
 	this.SetStatus("New settings file.", false)
 }
 
-// Load opens the file picker and, once the user chooses a file, loads it and
-// invokes onLoaded. onLoaded runs only after the new editor state has been
-// installed, so the UI panels resynchronise from the freshly loaded state
-// rather than from the stale one that existed when the dialog was opened.
+// Load opens the file picker and installs the picked .gen.json editor state.
+// The picker is asynchronous, so callers must NOT resync their widgets at
+// call time - onLoaded runs inside the pick handler, after the loaded state
+// has been installed and only when loading succeeded.
 func (this *State) Load(onLoaded func()) {
 	dir, err := os.Getwd()
 	if err != nil {
 		dir = this.suggestDirectory()
 	}
-	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{".gen.json"}, func(path string) {
-		this.LoadStateFromFile(path, onLoaded)
+	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{configFileExtension}, func(path string) {
+		if this.handleLoadState(path) && onLoaded != nil {
+			onLoaded()
+		}
 	}))
 }
 
 func (this *State) Save() {
 	if this.currentPath == "" {
-		this.SaveAs(this.stateDto.TemplateName)
+		this.SaveAs(this.innerState.GetCurrentState().TemplateName)
 		return
 	}
 
@@ -189,40 +152,27 @@ func (this *State) SaveAs(templateName string) {
 	if err != nil {
 		dir = this.suggestDirectory()
 	}
-	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + ".gen.json"
+	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + configFileExtension
 	this.dialogs.Open(dialogs.NewSaveFileDialog(dir, defaultName, func(path string) {
 		this.handleSaveState(path)
 		this.currentPath = path
 	}))
 }
 
-func (this *State) Generate() {
-	dto, err := this.handler.GenerateTemplate(*this.stateDto)
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
+func (this *State) Exit() {
+	// Give State an onExit func() callback (injected from program.go).
+	// In program.go, pass func() { window.Perform(system.ActionClose) } so the normal app.DestroyEvent path runs.
+	if this.unsaved && !this.confirmExit {
+		this.SetStatus("Unsaved changes exist - save first or press Exit again.", true)
+		this.confirmExit = true // reset if not selected right after
 		return
 	}
+	// this.onExit()
 
-	wasModified := this.connectionsModified
-	this.applyGeneratedTemplate(dto.Template)
-	this.discardManualEdits()
-	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
-	status := fmt.Sprintf(
-		"Generated '%s' - %d zones, %d connections.",
-		this.lastTemplate.Name, zoneCount, connectionCount)
-	if wasModified {
-		status += " (Manual connection edits were replaced by regeneration.)"
-	}
-	this.SetStatus(status, false)
-}
-
-func (this *State) Exit() {
-	// if this.unsaved {
-	// 	this.SetStatus("Unsaved changes exist; save before exiting.", true)
-	// 	return
-	// }
 	os.Exit(0)
 }
+
+func (this *State) Generate() { this.handleGenerateTemplate(false) }
 
 // SaveTemplate writes the most recently generated template as .rmg.json.
 func (this *State) SaveTemplate() { this.handleSaveTemplate() }
@@ -247,17 +197,9 @@ func (this *State) RevealOutputDir() {
 }
 
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
-	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
-	updateFunc(this.stateDto)
-	if this.stateDto.AdvancedMode {
-		this.stateDto.NeutralZoneCount = 0
-	} else {
-		this.stateDto.NeutralLowNoCastleCount = 0
-		this.stateDto.NeutralLowCastleCount = 0
-		this.stateDto.NeutralMediumNoCastleCount = 0
-		this.stateDto.NeutralMediumCastleCount = 0
-		this.stateDto.NeutralHighNoCastleCount = 0
-		this.stateDto.NeutralHighCastleCount = 0
+	this.innerState.UpdateCurrentState(updateFunc)
+	if this.innerState.WasStateChanged() {
+		this.unsaved = true
 	}
 }
 
@@ -281,243 +223,198 @@ func (this *State) SetStatus(msg string, isErr bool) {
 // input.
 func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
 	// Nothing changed since the last generation → cancel any pending debounce.
-	if this.lastGeneratedState != nil && this.lastGeneratedState.EqualsIgnoringManualEdits(this.stateDto) {
-		this.pendingState = nil
+	if this.innerState.ResetNextStateIfStateWasNotChanged() {
 		return time.Time{}, false
 	}
 
 	// First generation: populate the preview immediately on startup.
-	if this.lastGeneratedState == nil {
-		this.performAutoRegen()
+	if !this.innerState.HasPreviousState() {
+		this.handleGenerateTemplate(true)
 		return time.Time{}, false
 	}
 
 	// Preview-affecting changes regenerate immediately so the preview follows
 	// the control live.
-	if this.lastGeneratedState.LayoutDefiningOptionsChanged(this.stateDto) {
-		this.pendingState = nil
-		this.performAutoRegen()
+	if this.innerState.ResetNextStateIfLayoutChanged() {
+		this.handleGenerateTemplate(true)
 		return time.Time{}, false
 	}
 
 	// Non-preview change: (re)arm the debounce timer whenever the state is
 	// still moving, and ask to be woken up when the timer is due.
-	if this.pendingState == nil || !this.pendingState.EqualsIgnoringManualEdits(this.stateDto) {
-		snapshot := *this.stateDto
-		this.pendingState = &snapshot
-		this.pendingDeadline = now.Add(autoRegenDebounce)
-		return this.pendingDeadline, true
+	if this.innerState.SetNextFromCurrentIfStateIsBeingUpdated() {
+		this.applyNextStateAt = now.Add(autoRegenDebounce)
+		return this.applyNextStateAt, true
 	}
 
 	// State has been stable since the last frame; keep waiting until due.
-	if now.Before(this.pendingDeadline) {
-		return this.pendingDeadline, true
+	if now.Before(this.applyNextStateAt) {
+		return this.applyNextStateAt, true
 	}
 
 	// Editing paused long enough -> regenerate now.
-	this.pendingState = nil
-	this.performAutoRegen()
+	this.innerState.ResetNextState()
+	this.handleGenerateTemplate(true)
 	return time.Time{}, false
 }
 
-// performAutoRegen runs the actual regeneration used by AutoRegenerate,
-// reapplying manual zone edits when the layout-defining options are unchanged.
-func (this *State) performAutoRegen() {
-	reapplyManual := this.hasManualEdits &&
-		(this.pendingManualReapply ||
-			(this.lastGeneratedState != nil &&
-				!this.lastGeneratedState.LayoutDefiningOptionsChanged(this.stateDto)))
+func (this *State) handleSaveState(path string) {
+	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+		State:      new(this.innerState.GetCurrentState()),
+		OutputPath: path,
+	}); err != nil {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
+		return
+	}
 
-	dto, err := this.handler.GenerateTemplate(*this.stateDto)
+	this.unsaved = false
+	this.SetStatus("Saved "+path, false)
+}
+
+func (this *State) handleLoadState(path string) bool {
+	dto, err := this.handler.LoadState(path)
 	if err != nil {
-		// Keep the previous template; only refresh the snapshot so we do not
-		// spin trying (and failing) to regenerate every frame for the same
-		// invalid state.
-		this.snapshotGeneratedState()
-		this.SetStatus(fmt.Sprintf("Auto-generation failed: %v.", err), true)
+		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
+		return false
+	}
+
+	this.innerState.OverrideState(*dto)
+	this.currentPath = path
+	this.unsaved = false
+	this.clearGeneratedState()
+	this.SetStatus("Loaded "+path, false)
+	return true
+}
+
+func (this *State) handleSaveTemplate() {
+	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
+		Template:   this.GetLastTemplate(),
+		Topology:   this.innerState.GetCurrentState().Topology,
+		OutputPath: strings.TrimSpace(this.outputPath.Text()),
+	})
+
+	if err == nil {
+		this.SetStatus("Saved template to "+savedPath, false)
 		return
 	}
 
-	this.applyGeneratedTemplate(dto.Template)
-	if reapplyManual {
-		this.reapplyManualEdits()
-	} else {
-		this.discardManualEdits()
-	}
-	this.pendingManualReapply = false
-
-	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
-	notice := fmt.Sprintf(
-		"Template regenerated with latest changes - %d zones, %d connections.",
-		zoneCount, connectionCount)
-	if reapplyManual {
-		notice += " (Manual zone edits reapplied.)"
-	}
-	notice += fmt.Sprintf("\n%s", time.Now().Format("15:04:05"))
-	this.SetStatus(notice, false)
-}
-
-// applyGeneratedTemplate stores a freshly generated template as the live one
-// and records the editor state that produced it.
-func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
-	this.connectionsModified = false
-	this.lastTemplate = template
-	this.snapshotGeneratedState()
-}
-
-// snapshotGeneratedState copies the current editor state so future changes can
-// be detected by AutoRegenerate.
-func (this *State) snapshotGeneratedState() {
-	snapshot := *this.stateDto
-	this.lastGeneratedState = &snapshot
-}
-
-// clearGeneratedState forgets the last generation and any manual edits, used
-// when a brand-new or loaded settings file replaces the current one.
-func (this *State) clearGeneratedState() {
-	this.lastGeneratedState = nil
-	this.lastTemplate = nil
-	this.connectionsModified = false
-	this.pendingState = nil
-	this.discardManualEdits()
-}
-
-// rememberManualEdits stores copies of the latest manually edited zones and
-// connections so they can be reapplied after a non-structural regeneration.
-func (this *State) rememberManualEdits(zones []entities.Zone, connections []entities.Connection) {
-	this.manualZones = append([]entities.Zone(nil), zones...)
-	this.manualConnections = append([]entities.Connection(nil), connections...)
-	this.hasManualEdits = true
-}
-
-// discardManualEdits drops any stored manual edits.
-func (this *State) discardManualEdits() {
-	this.manualZones = nil
-	this.manualConnections = nil
-	this.hasManualEdits = false
-	this.pendingManualReapply = false
-}
-
-// syncManualEditsToDto mirrors the in-memory manual edits onto the persistent
-// editor state so they are written to the .gen.json file. When no manual edits
-// exist the persisted fields are cleared.
-func (this *State) syncManualEditsToDto() {
-	if !this.hasManualEdits {
-		this.stateDto.HasManualEdits = false
-		this.stateDto.ManualZones = nil
-		this.stateDto.ManualConnections = nil
+	if savedPath == "" {
+		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
 		return
 	}
-	this.stateDto.HasManualEdits = true
-	this.stateDto.ManualZones = dtos.ToManualZoneSaves(this.manualZones)
-	this.stateDto.ManualConnections = dtos.ToManualConnectionSaves(this.manualConnections)
+
+	this.SetStatus(
+		fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
+		true)
 }
 
-// restoreManualEdits loads any persisted manual edits from a freshly loaded
-// editor state back into memory and arms a reapply so the hand-made layout is
-// restored once the loaded template is regenerated.
-func (this *State) restoreManualEdits(dto *dtos.EditorStateDto) {
-	if dto == nil || !dto.HasManualEdits || len(dto.ManualZones) == 0 {
-		return
-	}
-	this.manualZones = dtos.FromManualZoneSaves(dto.ManualZones)
-	this.manualConnections = dtos.FromManualConnectionSaves(dto.ManualConnections)
-	this.hasManualEdits = true
-	this.pendingManualReapply = true
-}
-
-// reapplyManualEdits pushes the stored manual zones and connections back onto
-// the freshly generated template.
-func (this *State) reapplyManualEdits() {
-	if !this.hasManualEdits || this.lastTemplate == nil || len(this.lastTemplate.Variants) == 0 {
-		return
-	}
-	dto, _ := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
+func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []entities.Connection) {
+	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    this.lastTemplate,
-		Zones:       append([]entities.Zone(nil), this.manualZones...),
-		Connections: append([]entities.Connection(nil), this.manualConnections...),
+		Zones:       zones,
+		Connections: connections,
 		Config:      this.GetGeneratorConfig(),
 	})
 	this.lastTemplate = dto.Template
-	this.connectionsModified = true
+
+	if err != nil {
+		this.SetStatus(
+			fmt.Sprintf(
+				"Applied %d zones and %d connections. ⚠ Error: %v; fix before export.",
+				len(zones), len(connections), err),
+			true)
+		return
+	}
+
+	this.SetStatus(
+		fmt.Sprintf("Applied %d zones and %d connections from the editor.", len(zones), len(connections)),
+		false)
 }
 
-func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCount int) {
-	if this.lastTemplate != nil && len(this.lastTemplate.Variants) > 0 {
-		zoneCount = len(this.lastTemplate.Variants[0].Zones)
-		connectionCount = len(this.lastTemplate.Variants[0].Connections)
+func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
+	dto, err := this.handler.GenerateTemplate(this.innerState.GetCurrentState())
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
+		if createStateSnapshotOnFailure {
+			this.innerState.SnapshotCurrentState()
+		}
+		return
 	}
-	return zoneCount, connectionCount
+
+	// The reapply decision and the castle-option diff both compare against the
+	// state of the LAST generation, so they must be taken before
+	// applyGeneratedTemplate snapshots the current state.
+	reapplyManual := this.innerState.ShouldReapplyManualEdits()
+	castleChanges := this.innerState.CastleSettingsChangedSinceGeneration()
+	this.applyGeneratedTemplate(dto.Template)
+	if reapplyManual && this.hasTemplateVariants() {
+		this.reapplyManualEdits(castleChanges)
+	} else if !reapplyManual {
+		this.innerState.ClearManualEdits()
+	}
+
+	zoneCount, connectionCount := this.lastTemplateZoneAndConnectionCount()
+	status := fmt.Sprintf(
+		"Template '%s' generated with latest changes - %d zones, %d connections.",
+		this.lastTemplate.Name, zoneCount, connectionCount)
+	if reapplyManual {
+		status += " (Manual zone edits reapplied.)"
+	}
+	status += fmt.Sprintf("\n%s", time.Now().Format("15:04:05"))
+	this.SetStatus(status, false)
+}
+
+// reapplyManualEdits restores the manual zone/connection snapshot over the
+// freshly generated template. When castle-count options changed since the
+// last generation - the only generator options that override manual edits -
+// the new counts are first pushed into the snapshot and the updated snapshot
+// is stored back so later regenerations and saves carry it.
+func (this *State) reapplyManualEdits(castleChanges editor_state_dto.CastleSettingChanges) {
+	zones := this.innerState.GetManualZones()
+	connections := this.innerState.GetManualConnections()
+	if castleChanges.Any() {
+		connection_editor.ApplyCastleSettingChanges(zones, castleChanges, this.GetGeneratorConfig())
+		this.innerState.SetManualEdits(zones, connections)
+	}
+	this.handleUpdateTemplate(zones, connections)
 }
 
 func (this *State) suggestDirectory() string {
 	if this.currentPath != "" {
 		return filepath.Dir(this.currentPath)
 	}
+
 	if outputDir := strings.TrimSpace(this.outputPath.Text()); outputDir != "" {
 		return outputDir
 	}
+
 	workingDir, _ := os.Getwd()
 	return workingDir
 }
 
-func (this *State) handleSaveState(path string) { _ = this.SaveStateToFile(path) }
-
-// SaveStateToFile writes the current editor state, including any manual zone
-// edits, to path as a .gen.json file. It is shared by the Save / Save As
-// dialogs and by callers that already have a destination path.
-func (this *State) SaveStateToFile(path string) error {
-	this.syncManualEditsToDto()
-	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
-		State:      this.stateDto,
-		OutputPath: path,
-	}); err != nil {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return err
-	}
-
-	this.unsaved = false
-	this.SetStatus("Saved "+path, false)
-	return nil
+// applyGeneratedTemplate stores a freshly generated template as the live one
+// and records the editor state that produced it.
+func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
+	this.lastTemplate = template
+	this.innerState.SnapshotCurrentState()
 }
 
-// LoadStateFromFile loads the editor state at path, restores any persisted
-// manual zone edits, and invokes onLoaded so the UI can resynchronise. It is
-// shared by the Load dialog and by callers that already have a path.
-func (this *State) LoadStateFromFile(path string, onLoaded func()) error {
-	dto, err := this.handler.LoadState(path)
-	if err != nil {
-		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
-		return err
-	}
-
-	this.stateDto = dto
-	this.currentPath = path
-	this.unsaved = false
-	this.clearGeneratedState()
-	this.restoreManualEdits(dto)
-	if onLoaded != nil {
-		onLoaded()
-	}
-	this.SetStatus("Loaded "+path, false)
-	return nil
+// clearGeneratedState forgets the last generated template, used when a
+// brand-new or loaded settings file replaces the current one. Manual edits
+// need no separate handling: they live inside the editor state itself, which
+// the caller is replacing.
+func (this *State) clearGeneratedState() {
+	this.lastTemplate = nil
 }
 
-func (this *State) handleSaveTemplate() {
-	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
-		Template:   this.GetLastTemplate(),
-		Topology:   this.stateDto.Topology,
-		OutputPath: strings.TrimSpace(this.outputPath.Text()),
-	})
-	if err != nil && savedPath == "" {
-		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return
-	} else if err != nil {
-		this.SetStatus(
-			fmt.Sprintf("Saved template to %s, but failed to write preview PNG with error: %v.", savedPath, err),
-			true)
-		return
-	}
+func (this *State) hasTemplateVariants() bool {
+	return this.lastTemplate != nil && len(this.lastTemplate.Variants) > 0
+}
 
-	this.SetStatus("Saved template to "+savedPath, false)
+func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCount int) {
+	if this.hasTemplateVariants() {
+		zoneCount = len(this.lastTemplate.Variants[0].Zones)
+		connectionCount = len(this.lastTemplate.Variants[0].Connections)
+	}
+	return
 }

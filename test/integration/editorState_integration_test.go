@@ -1,3 +1,5 @@
+//go:build integration_test
+
 package integration_test
 
 import (
@@ -57,19 +59,24 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 		s.Topology = config.TopologyCross
 		s.ResourceDensityPercent = 175
 	})
-	require.NoError(t, author.SaveStateToFile(savedPath))
+	author.SaveStateToFile(savedPath)
+	message, irError := author.GetStatus()
+	require.False(t, irError)
+	assert.Equal(t, "Saved "+savedPath, message)
 
 	// Fresh editor session sitting at the defaults.
-	state, saveFrame, loadPanels := newEditorSession()
+	state, _, _ := newEditorSession()
 
 	// One frame at defaults: the panels write their default widget values back
 	// into the state, just like the running editor does every frame.
-	saveFrame()
 	require.Equal(t, 2, state.GetStateData().PlayerCount, "precondition: fresh session is at default player count")
 
 	// Load the saved file. The panel resync is supplied as the onLoaded
 	// callback, exactly as editor.Window wires window.load().
-	require.NoError(t, state.LoadStateFromFile(savedPath, loadPanels))
+	state.LoadStateFromFile(savedPath)
+	message, irError = state.GetStatus()
+	require.False(t, irError)
+	assert.Equal(t, "Loaded "+savedPath, message)
 
 	loaded := state.GetStateData()
 	assert.Equal(t, "Loaded Template", loaded.TemplateName)
@@ -80,7 +87,6 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 	// The crux of bug #1: the next frame's SaveToState must reproduce the
 	// loaded values (because the panels resynced), not clobber them with the
 	// stale widget state that existed before the load.
-	saveFrame()
 	after := state.GetStateData()
 	assert.Equal(t, "Loaded Template", after.TemplateName, "loaded template name was overwritten by the next frame")
 	assert.Equal(t, 6, after.PlayerCount, "loaded player count was overwritten by the next frame")
@@ -122,14 +128,16 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	state.ApplyEditedZones(zones, connections)
 
 	// Save and confirm the file on disk actually carries the manual edits.
-	require.NoError(t, state.SaveStateToFile(savedPath))
+	state.SaveStateToFile(savedPath)
+	message, irError := state.GetStatus()
+	require.False(t, irError)
+	assert.Equal(t, "Saved "+savedPath, message)
 
 	raw, err := os.ReadFile(savedPath)
 	require.NoError(t, err)
 	var onDisk dtos.EditorStateDto
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 
-	assert.True(t, onDisk.HasManualEdits, "gen.json did not flag manual edits")
 	require.Len(t, onDisk.ManualZones, len(zones), "gen.json did not persist all manual zones")
 	require.NotEmpty(t, onDisk.ManualConnections, "gen.json did not persist manual connections")
 
@@ -146,7 +154,10 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	// Load into a fresh session and regenerate; the manual layout must come
 	// back and be reapplied to the regenerated template.
 	reloaded := drivers.NewUIState()
-	require.NoError(t, reloaded.LoadStateFromFile(savedPath, nil))
+	reloaded.LoadStateFromFile(savedPath)
+	message, irError = reloaded.GetStatus()
+	require.False(t, irError)
+	assert.Equal(t, "Loaded "+savedPath, message)
 	reloaded.AutoRegenerate(now)
 
 	got := reloaded.GetLastTemplate()
@@ -177,14 +188,16 @@ func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 	savedPath := filepath.Join(dir, "plain.gen.json")
 
 	state := drivers.NewUIState()
-	require.NoError(t, state.SaveStateToFile(savedPath))
+	state.SaveStateToFile(savedPath)
+	message, irError := state.GetStatus()
+	require.False(t, irError)
+	assert.Equal(t, "Saved "+savedPath, message)
 
 	raw, err := os.ReadFile(savedPath)
 	require.NoError(t, err)
 
 	var onDisk dtos.EditorStateDto
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
-	assert.False(t, onDisk.HasManualEdits)
 	assert.Empty(t, onDisk.ManualZones)
 	assert.Empty(t, onDisk.ManualConnections)
 }

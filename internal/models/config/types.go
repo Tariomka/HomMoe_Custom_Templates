@@ -40,7 +40,3 @@ const (
 	TopologyCross       MapTopology = config_inner.TopologyCross
 	TopologyFractal     MapTopology = config_inner.TopologyFractal
 )
-
-var (
-	ParseBonusesJSON = config_inner.DeserializeBonusEntries
-)

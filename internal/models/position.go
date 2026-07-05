@@ -3,21 +3,14 @@ package models
 import (
 	"math"
 	"slices"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 )
 
-type Vector2 struct {
-	X, Y float64
-}
+type Position = data.Vec2[float64]
+type ConnectionIndexes = data.Vec2[int]
 
-func NewPosition(x, y float64) Vector2 {
-	return Vector2{X: x, Y: y}
-}
-
-type Positions []Vector2
-
-func newPositions(size int) Positions {
-	return make(Positions, size)
-}
+type Positions []Position
 
 func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZonePlans NeutralZonePlans) Positions {
 	count := len(orderedLabels)
@@ -25,7 +18,7 @@ func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZoneP
 		return nil
 	}
 
-	tierRadius := func(tier int) float64 {
+	getTierRadius := func(tier int) float64 {
 		switch tier {
 		case 0:
 			return 0.38
@@ -38,7 +31,7 @@ func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZoneP
 		}
 	}
 
-	byTier := map[int][]int{}
+	byTier := make(map[int][]int)
 	for i, label := range orderedLabels {
 		tier := 0
 		if !slices.Contains(playerLabels, label) {
@@ -47,173 +40,147 @@ func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZoneP
 		byTier[tier] = append(byTier[tier], i)
 	}
 
-	positions := newPositions(count)
+	positions := make(Positions, count)
 	for tier, indices := range byTier {
-		radius := tierRadius(tier)
-		nn := len(indices)
-		offset := float64(tier) * math.Pi / math.Max(1, float64(nn))
+		radius := getTierRadius(tier)
+		nn := float64(len(indices))
+		offset := float64(tier) * math.Pi / nn
 		for i, idx := range indices {
-			angle := 2*math.Pi*float64(i)/float64(nn) + offset
+			angle := 2*math.Pi*float64(i)/nn + offset
 			jitter := float64(i%3-1) * 0.008
-			positions[idx] = Vector2{
-				X: math.Max(0.05, math.Min(0.95, 0.5+math.Cos(angle+jitter)*radius)),
-				Y: math.Max(0.05, math.Min(0.95, 0.5+math.Sin(angle+jitter)*radius)),
-			}
+			positions[idx] = data.NewVec2(
+				max(0.05, min(0.95, 0.5+math.Cos(angle+jitter)*radius)),
+				max(0.05, min(0.95, 0.5+math.Sin(angle+jitter)*radius)))
 		}
 	}
 	return positions
 }
 
-func (this *Positions) Add(position Vector2) { *this = append(*this, position) }
+func (this *Positions) Add(position Position) { *this = append(*this, position) }
 
-func (this *Positions) GetShortestDistanceIndex(adjacencyIndexes [][]int) (indexA, indexB int, ok bool) {
-	indexA, indexB = -1, -1
-	ok = false
+func (this *Positions) GetShortestDistanceIndex(adjacencyIndexes [][]int) (indices ConnectionIndexes, ok bool) {
+	indices = data.NewVec2(-1, -1)
 	if len(adjacencyIndexes) <= 1 {
 		return
 	}
 
-	mainComp := map[int]bool{}
-	for _, idx := range adjacencyIndexes[0] {
-		mainComp[idx] = true
-	}
 	bestDist := math.MaxFloat64
-	for _, a := range adjacencyIndexes[0] {
-		for ci := 1; ci < len(adjacencyIndexes); ci++ {
-			for _, b := range adjacencyIndexes[ci] {
-				dx := (*this)[a].X - (*this)[b].X
-				dy := (*this)[a].Y - (*this)[b].Y
-				d := dx*dx + dy*dy
-				if d < bestDist {
-					bestDist = d
-					indexA, indexB = a, b
+	for _, start := range adjacencyIndexes[0] {
+		for _, indexes := range adjacencyIndexes[1:] {
+			for _, end := range indexes {
+				delta := (*this)[start].Subtract((*this)[end])
+				distance := delta.SquaredLength()
+				if distance < bestDist {
+					bestDist = distance
+					indices = data.NewVec2(start, end)
 					ok = true
 				}
 			}
 		}
 	}
-	return indexA, indexB, ok
+	return indices, ok
 }
 
 // CreateDelaunayTriangulation creates a Delaunay triangulation of the positions,
 // which divides the positions into a mesh of contiguous, non-overlapping triangles,
 // and returns the edges as pairs of indexes. Delaunay triangulation ensures that no point
 // falls inside the circumscribed circle (the circle that touches all three vertices) of any triangle.
-func (this *Positions) CreateDelaunayTriangulation() [][2]int {
+func (this *Positions) CreateDelaunayTriangulation() []ConnectionIndexes {
 	count := len(*this)
 	if count <= 1 {
 		return nil
 	}
 	if count == 2 {
-		return [][2]int{{0, 1}}
+		return []ConnectionIndexes{data.NewVec2(0, 1)}
 	}
-	min, max := this.GetMinAndMaxPositions()
-	deltaX, deltaY := max.X-min.X, max.Y-min.Y
-	delta := math.Max(deltaX, deltaY) * 10
-	superPts := make([][2]float64, count+3)
-	for i, p := range *this {
-		superPts[i] = [2]float64{p.X, p.Y}
-	}
-	superPts[count] = [2]float64{min.X - delta, min.Y - delta*3}
-	superPts[count+1] = [2]float64{min.X + delta*3, min.Y - delta}
-	superPts[count+2] = [2]float64{min.X, min.Y + delta*3}
+	minPos, maxPos := this.GetMinAndMaxPositions()
+	delta := max(maxPos.X-minPos.X, maxPos.Y-minPos.Y) * 10
 
-	type tri struct{ i0, i1, i2 int }
-	triangles := []tri{{count, count + 1, count + 2}}
+	superPts := make([]Position, count+3)
+	copy(superPts, *this)
+	superPts[count] = data.NewVec2(minPos.X-delta, minPos.Y-delta*3)
+	superPts[count+1] = data.NewVec2(minPos.X+delta*3, minPos.Y-delta)
+	superPts[count+2] = data.NewVec2(minPos.X, minPos.Y+delta*3)
+
+	trianglesIndexes := []data.Vec3[int]{data.NewVec3(count, count+1, count+2)}
+
+	normalizeEdge := func(a, b int) ConnectionIndexes {
+		if a > b {
+			a, b = b, a
+		}
+		return data.NewVec2(a, b)
+	}
 
 	for index := range *this {
-		px, py := superPts[index][0], superPts[index][1]
-		var bad []tri
-		for _, t := range triangles {
-			if inCircumscribedCircle(superPts, t.i0, t.i1, t.i2, px, py) {
-				bad = append(bad, t)
+		point := superPts[index]
+		// Split triangles into "bad" ones (circumscribed circle contains the
+		// point) and kept ones. Edges of the bad region that appear exactly
+		// once form its boundary; re-triangulate the cavity from those.
+		edgeCount := map[ConnectionIndexes]int{}
+		var kept []data.Vec3[int]
+		for _, triangleIndexes := range trianglesIndexes {
+			triangle := [3]Position{
+				superPts[triangleIndexes.X],
+				superPts[triangleIndexes.Y],
+				superPts[triangleIndexes.Z],
+			}
+			if inCircumscribedCircle(triangle, point) {
+				edgeCount[normalizeEdge(triangleIndexes.X, triangleIndexes.Y)]++
+				edgeCount[normalizeEdge(triangleIndexes.Y, triangleIndexes.Z)]++
+				edgeCount[normalizeEdge(triangleIndexes.Z, triangleIndexes.X)]++
+			} else {
+				kept = append(kept, triangleIndexes)
 			}
 		}
-		type edge struct{ a, b int }
-		var boundary []edge
-		for _, t := range bad {
-			edges := [3]edge{{t.i0, t.i1}, {t.i1, t.i2}, {t.i2, t.i0}}
-			for _, e := range edges {
-				shared := false
-				for _, o := range bad {
-					if o == t {
-						continue
-					}
-					if (o.i0 == e.a && o.i1 == e.b) || (o.i1 == e.a && o.i0 == e.b) ||
-						(o.i1 == e.a && o.i2 == e.b) || (o.i2 == e.a && o.i1 == e.b) ||
-						(o.i2 == e.a && o.i0 == e.b) || (o.i0 == e.a && o.i2 == e.b) {
-						shared = true
-						break
-					}
-				}
-				if !shared {
-					boundary = append(boundary, e)
-				}
+		for e, occurrences := range edgeCount {
+			if occurrences == 1 {
+				kept = append(kept, data.NewVec3(e.X, e.Y, index))
 			}
 		}
-		badSet := map[tri]bool{}
-		for _, t := range bad {
-			badSet[t] = true
-		}
-		var newTris []tri
-		for _, t := range triangles {
-			if !badSet[t] {
-				newTris = append(newTris, t)
-			}
-		}
-		for _, e := range boundary {
-			newTris = append(newTris, tri{e.a, e.b, index})
-		}
-		triangles = newTris
+		trianglesIndexes = kept
 	}
 
-	var realTris []tri
-	for _, t := range triangles {
-		if t.i0 < count && t.i1 < count && t.i2 < count {
-			realTris = append(realTris, t)
+	edgeSet := map[ConnectionIndexes]bool{}
+	for _, t := range trianglesIndexes {
+		if t.X < count && t.Y < count && t.Z < count {
+			edgeSet[normalizeEdge(t.X, t.Y)] = true
+			edgeSet[normalizeEdge(t.Y, t.Z)] = true
+			edgeSet[normalizeEdge(t.Z, t.X)] = true
 		}
 	}
-	edgeSet := map[[2]int]bool{}
-	for _, t := range realTris {
-		addEdge := func(a, b int) {
-			if a > b {
-				a, b = b, a
-			}
-			edgeSet[[2]int{a, b}] = true
-		}
-		addEdge(t.i0, t.i1)
-		addEdge(t.i1, t.i2)
-		addEdge(t.i2, t.i0)
-	}
-	result := make([][2]int, 0, len(edgeSet))
+	result := make([]ConnectionIndexes, 0, len(edgeSet))
 	for e := range edgeSet {
 		result = append(result, e)
 	}
 	return result
 }
 
-func (this *Positions) GetMinAndMaxPositions() (min, max Vector2) {
-	min = (*this)[0]
-	max = (*this)[0]
+func (this *Positions) GetMinAndMaxPositions() (minPos, maxPos Position) {
+	minPos = (*this)[0]
+	maxPos = (*this)[0]
 	for _, position := range (*this)[1:] {
-		if position.X < min.X {
-			min.X = position.X
-		}
-		if position.Y < min.Y {
-			min.Y = position.Y
-		}
-		if position.X > max.X {
-			max.X = position.X
-		}
-		if position.Y > max.Y {
-			max.Y = position.Y
-		}
+		minPos.X = min(minPos.X, position.X)
+		minPos.Y = min(minPos.Y, position.Y)
+		maxPos.X = max(maxPos.X, position.X)
+		maxPos.Y = max(maxPos.Y, position.Y)
 	}
 	return
 }
 
-// inCircumscribedCircle reports whether (px,py) lies strictly inside the
-// circumscribed circle of the triangle (pts[i0], pts[i1], pts[i2]).
+// inCircumscribedCircle checks if "point" lies strictly inside the circumcircle of triangle ABC.
+//
+// The condition is satisfied if the following 4x4 determinant is positive:
+//
+//	| A_x      A_y      A_x²     + A_y²      1 |
+//	| B_x      B_y      B_x²     + B_y²      1 |
+//	| C_x      C_y      C_x²     + C_y²      1 | > 0
+//	| point_x  point_y  point_x² + point_y²  1 |
+//
+// By subtracting the last row from the first three, it reduces to:
+//
+//	| A_x - point_x  A_y - point_y  (A_x - point_x)² + (A_y - point_y)² |
+//	| B_x - point_x  B_y - point_y  (B_x - point_x)² + (B_y - point_y)² | > 0
+//	| C_x - point_x  C_y - point_y  (C_x - point_x)² + (C_y - point_y)² |
 //
 // The circumscribed circle of a triangle is the unique circle that passes
 // through all three vertices. Below: an equilateral triangle inscribed in its
@@ -230,25 +197,30 @@ func (this *Positions) GetMinAndMaxPositions() (min, max Vector2) {
 //	⠀⣸⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⣇
 //	⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⡰⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢆⠀⠀⠀⠀⠀⠀⠀⠀⢸
 //	⠀⡇⠀⠀⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠀⠀⠀⠀⠀⠀⠀⢸
-//	⠀⡇⠀⠀⠀⠀⠀⢀⡜⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢣⡀⠀⠀⠀⠀⠀⢸⠁
-//	⠀⡇⠀⠀⠀⠀⢀⡞⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⡀⠀⠀⠀⠀⢸
+//	⠀⡇⠀⠀⠀⠀⠀⢀⡜⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢣⡀⠀⠀⠀⠀⠀⢸
+//	⠀⡇⠀⠀⠀⠀⢀⡞⠀⠀⠀⠀⠀. point⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⡀⠀⠀⠀⠀⢸
 //	⠀⢹⠀⠀⠀⢠⠎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠱⡄⠀⠀⠀⡏
-//	⠀⠈⢧⠀⢠⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⡄⠀⡼⠁
+//	⠀⠈⢧⠀⢠⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⡄⠀⡼
 //	⠀⠀⠈⢶⣃⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣘⡶⠁
 //	⠀⠀⠀⠈⢣⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡜⠁
 //	⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⠋
 //	⠀⠀⠀⠀⠀⠀⠀⠙⠦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠴⠋
 //	⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠢⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡤⠔⠋⠁
-//	⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠙⠒⠒⠒⠒⠖⠒⠒⠒⠋⠉⠁
+//	⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠙⠒⠒⠒⠒⠒⠒⠒⠒⠋⠉
 //	```
-func inCircumscribedCircle(pts [][2]float64, i0, i1, i2 int, px, py float64) bool {
-	ax, ay := pts[i0][0]-px, pts[i0][1]-py
-	bx, by := pts[i1][0]-px, pts[i1][1]-py
-	cx, cy := pts[i2][0]-px, pts[i2][1]-py
-	det := ax*(by*(cx*cx+cy*cy)-cy*(bx*bx+by*by)) -
-		ay*(bx*(cx*cx+cy*cy)-cx*(bx*bx+by*by)) +
-		(ax*ax+ay*ay)*(bx*cy-by*cx)
-	return det > 0
+func inCircumscribedCircle(triangle [3]Position, point Position) bool {
+	deltaA := triangle[0].Subtract(point)
+	deltaB := triangle[1].Subtract(point)
+	deltaC := triangle[2].Subtract(point)
+	determinant := deltaA.X*(deltaB.Y*deltaC.SquaredLength()-deltaC.Y*deltaB.SquaredLength()) -
+		deltaA.Y*(deltaB.X*deltaC.SquaredLength()-deltaC.X*deltaB.SquaredLength()) +
+		deltaA.SquaredLength()*deltaB.CrossProduct(deltaC)
+
+	// The determinant's sign flips with the triangle's winding order;
+	// multiply by the orientation so the test is winding-independent.
+	orientation := (deltaB.X-deltaA.X)*(deltaC.Y-deltaA.Y) - (deltaB.Y-deltaA.Y)*(deltaC.X-deltaA.X)
+
+	return determinant*orientation > 0
 }
 
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀

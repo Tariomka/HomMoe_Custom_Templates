@@ -14,8 +14,8 @@ Requires Go **1.25.8+**.
 go run .
 
 # Or build a binary first
-go build -o bin/template-gui.exe .
-.\bin\template-gui.exe
+go build .
+.\hommoe_custom_templates.exe
 ```
 
 For iterative work the project ships an [air](https://github.com/air-verse/air)

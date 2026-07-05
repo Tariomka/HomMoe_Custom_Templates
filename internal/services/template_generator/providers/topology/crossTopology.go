@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
@@ -53,7 +54,7 @@ func (this *CrossTopologyService) CreateTopologyVariant(
 // centre outward laying its neutral zones followed by the player at the tip.
 func (this *CrossTopologyService) createCrossLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
+	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		centreX      = 0.5
 		centreY      = 0.5
@@ -73,7 +74,7 @@ func (this *CrossTopologyService) createCrossLayout(
 	if neutralCount >= 1 {
 		centreIndex = len(allLabels)
 		allLabels = append(allLabels, neutralZones[0].Label)
-		positions.Add(models.NewPosition(centreX, centreY))
+		positions.Add(data.NewVec2(centreX, centreY))
 	}
 
 	// Distribute the remaining neutral zones across the arms, round-robin.
@@ -84,7 +85,7 @@ func (this *CrossTopologyService) createCrossLayout(
 
 	armIndices := make([][]int, playerCount)
 	nextNeutral := 1
-	for arm := 0; arm < playerCount; arm++ {
+	for arm := range playerCount {
 		angle := startAngle
 		if playerCount > 0 {
 			angle += 2.0 * math.Pi * float64(arm) / float64(playerCount)
@@ -116,10 +117,10 @@ func (this *CrossTopologyService) createCrossLayout(
 func (this *CrossTopologyService) createCrossPairs(
 	centreIndex int,
 	armIndices [][]int,
-	playerCount int) [][2]int {
+	playerCount int) []models.ConnectionIndexes {
 	builder := newPairBuilder()
 
-	for arm := 0; arm < playerCount; arm++ {
+	for arm := range playerCount {
 		indices := armIndices[arm]
 		if len(indices) == 0 {
 			continue
@@ -137,7 +138,7 @@ func (this *CrossTopologyService) createCrossPairs(
 	// Without a centre zone (no neutral zones) join the player tips in a ring so
 	// they still form a closed, cross-like outline.
 	if centreIndex < 0 && playerCount >= 2 {
-		for i := 0; i < playerCount; i++ {
+		for i := range playerCount {
 			tip := armIndices[i][len(armIndices[i])-1]
 			nextTip := armIndices[(i+1)%playerCount][len(armIndices[(i+1)%playerCount])-1]
 			builder.add(tip, nextTip)

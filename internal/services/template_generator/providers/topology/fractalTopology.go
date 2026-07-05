@@ -70,7 +70,7 @@ type fractalTree struct {
 // of high zones at the centre - a self-similar, converging branch per player.
 func (this *FractalTopologyService) createFractalLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, [][2]int) {
+	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		centreX      = 0.5
 		centreY      = 0.5
@@ -116,7 +116,7 @@ func (this *FractalTopologyService) createFractalLayout(
 	var positions models.Positions
 	trees := make([]fractalTree, playerCount)
 
-	for player := 0; player < playerCount; player++ {
+	for player := range playerCount {
 		axis := startAngle + 2.0*math.Pi*float64(player)/float64(playerCount)
 
 		// Player zone: the base of this fractal on the outer ring.
@@ -149,7 +149,7 @@ func (this *FractalTopologyService) createFractalLayout(
 
 // createFractalPairs wires each fractal from the player outward through its tiers
 // and then stitches the fractals together at their centre-facing tips.
-func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) [][2]int {
+func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) []models.ConnectionIndexes {
 	builder := newPairBuilder()
 
 	tips := make([]int, len(trees))

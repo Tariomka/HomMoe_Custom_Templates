@@ -11,8 +11,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/placement_rule"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
@@ -78,9 +78,9 @@ func (this *TopologyBase) CreateSpawnZone(
 		this.createPlayerSpawnCastle(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
 	}
 	mainObjects = append(mainObjects,
-		this.createPlayerOwnedCastles(matchFactions, playerName, tuning.PlayerOwnedCastles)...)
+		this.CreatePlayerOwnedCastles(matchFactions, playerName, tuning.PlayerOwnedCastles)...)
 	mainObjects = append(mainObjects,
-		this.createPlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(5000), castleCount)...)
+		this.CreatePlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(5000), castleCount)...)
 
 	// Roads connect the spawn castle (main object 0) to every other castle in
 	// the zone; player-owned extras are road-linked just like unclaimed ones.
@@ -206,7 +206,7 @@ func (this *TopologyBase) CreateHubZone(
 		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(600 * math.Sqrt(tuning.ContentScale))).
 		WithResourcesValue(tuning.ScaleByResourceDensity(80000 * tuning.ContentScale)).
 		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale))).
-		WithMainObjects(this.createHubZoneCastles(tuning, castleCount, isHoldCity)).
+		WithMainObjects(this.CreateHubZoneCastles(tuning, castleCount, isHoldCity)).
 		WithCrossroadsPosition(0).
 		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, 0, generateRoads))
 
@@ -382,12 +382,12 @@ func (this *TopologyBase) CreateMissingConnections(
 	var additionalConns []entities.Connection
 	for {
 		components := adjacency.FindIndexes(len(allLabels))
-		bestIndexA, bestIndexB, ok := positions.GetShortestDistanceIndex(components)
+		bestIndexes, ok := positions.GetShortestDistanceIndex(components)
 		if !ok {
 			break
 		}
 
-		labelA, labelB := allLabels[bestIndexA], allLabels[bestIndexB]
+		labelA, labelB := allLabels[bestIndexes.X], allLabels[bestIndexes.Y]
 		if labelA > labelB {
 			labelA, labelB = labelB, labelA
 		}
@@ -396,8 +396,8 @@ func (this *TopologyBase) CreateMissingConnections(
 			continue
 		}
 
-		zoneFrom := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexA], playerLabels)
-		zoneTo := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexB], playerLabels)
+		zoneFrom := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexes.X], playerLabels)
+		zoneTo := this.ZoneLabelProvider.CreateZoneName(allLabels[bestIndexes.Y], playerLabels)
 		additionalConns = append(additionalConns, variant_content.NewConnectionBuilder().
 			WithName(bridgeName).
 			WithFrom(zoneFrom).
@@ -432,7 +432,7 @@ func (this *TopologyBase) CreateMissingConnections(
 			}
 		}
 
-		adjacency.Link(bestIndexA, bestIndexB)
+		adjacency.Link(bestIndexes.X, bestIndexes.Y)
 	}
 
 	return additionalConns
@@ -508,10 +508,12 @@ func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue 
 		Build()
 }
 
-// createPlayerOwnedCastles builds the extra City castles that the player owns
+// CreatePlayerOwnedCastles builds the extra City castles that the player owns
 // from the very start of the game. Because they already have an owner, their
 // guards are dropped immediately so the player can use them right away.
-func (this *TopologyBase) createPlayerOwnedCastles(
+// Exported so the manual zone editor can rebuild a spawn zone's castles when
+// the player-castle options change after manual editing.
+func (this *TopologyBase) CreatePlayerOwnedCastles(
 	matchPlayerFaction bool,
 	owner string,
 	castleCount int) []entities.MainObject {
@@ -532,9 +534,11 @@ func (this *TopologyBase) createPlayerOwnedCastles(
 	return castles
 }
 
-// createPlayerUnclaimedCastles builds the extra neutral City castles that sit
+// CreatePlayerUnclaimedCastles builds the extra neutral City castles that sit
 // inside a player's zone but stay unowned until someone captures them.
-func (this *TopologyBase) createPlayerUnclaimedCastles(
+// Exported so the manual zone editor can rebuild a spawn zone's castles when
+// the player-castle options change after manual editing.
+func (this *TopologyBase) CreatePlayerUnclaimedCastles(
 	matchPlayerFaction bool,
 	guardValue, castleCount int) []entities.MainObject {
 	var castles []entities.MainObject
@@ -632,7 +636,10 @@ func createAbandonedOutposts(
 	return outposts
 }
 
-func (this *TopologyBase) createHubZoneCastles(
+// CreateHubZoneCastles builds the City main objects of a hub zone. Exported
+// so the manual zone editor can rebuild hub castles when the hub-castle
+// option changes after manual editing.
+func (this *TopologyBase) CreateHubZoneCastles(
 	tuning models.GenerationTuning,
 	castleCount int,
 	isHoldCityZone bool) []entities.MainObject {

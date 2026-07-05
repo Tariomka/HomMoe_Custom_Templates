@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            // Runs ONLY the integration + performance suites, which are gated
+            // behind the "integration_test" build tag (they access Window
+            // internals via app/gui/editor/window_testexports.go). The tag is
+            // scoped to these two directories on purpose; do not add it to a
+            // global test run.
+            "label": "go: test integration+performance (integration_test)",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-tags=integration_test",
+                "-count=1",
+                "./test/integration/...",
+                "./test/performance/..."
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
+            // Normal test run for everything else. No "integration_test" tag, so
+            // the integration/performance packages compile to "[no test files]"
+            // and are skipped rather than failing.
+            "label": "go: test (default, no integration_test)",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-count=1",
+                "./..."
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": "$go"
+        }
+    ]
+}

@@ -1,6 +1,8 @@
 package constants
 
 import (
+	"cmp"
+	"slices"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -241,6 +243,14 @@ func buildBannableItems() []BannableItemEntry {
 	}
 }
 
+func GetBannableItemsWithExclusions(excluded []string) []BannableItemEntry {
+	items := slices.DeleteFunc(
+		buildBannableItems(),
+		func(item BannableItemEntry) bool { return slices.Contains(excluded, item.Sid) })
+	slices.SortStableFunc(items, CompareBannableItems)
+	return items
+}
+
 // FindBannableItem returns the catalog entry for an artifact SID, or ok=false
 // when the SID is not in the catalog (e.g. a custom/modded artifact).
 func FindBannableItem(sid string) (BannableItemEntry, bool) {
@@ -261,4 +271,12 @@ func SidToDisplayName(sid string) string {
 		return sid
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func CompareBannableItems(a, b BannableItemEntry) int {
+	if comparison := cmp.Compare(a.Category, b.Category); comparison != 0 {
+		return comparison
+	}
+
+	return cmp.Compare(a.Name, b.Name)
 }
