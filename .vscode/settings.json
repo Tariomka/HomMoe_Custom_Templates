@@ -38,10 +38,21 @@
         "ui.semanticTokens": true,
     },
     "go.lintTool": "golangci-lint-v2",
+    "go.lintFlags": [
+        "--path-mode=abs",
+        "--fast-only",
+        "--fix",
+    ],
+    "go.formatTool": "custom",
+    "go.alternateTools": {
+        "customFormatter": "golangci-lint-v2"
+    },
+    "go.formatFlags": ["fmt", "--stdin"],
     // "go.coverOnSave": true, // TODO: this is good but a shit ton of code will be red currently
     "go.inlayHints.assignVariableTypes": true,
     "go.inlayHints.constantValues": true,
     "go.inlayHints.ignoredError": true,
     "go.inlayHints.rangeVariableTypes": true,
     "go.testExplorer.packageDisplayMode": "nested",
+    "go.lintOnSave": "file",
 }
