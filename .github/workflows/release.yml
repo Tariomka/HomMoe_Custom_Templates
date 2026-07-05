@@ -14,6 +14,7 @@ on:
 env:
   windows_binary: HeroesOldenEra_CustomTemplates_win_x64.exe
   linux_binary: HeroesOldenEra_CustomTemplates_linux_x64
+  GO_VERSION: 1.26.3
 
 jobs:
   build:
@@ -33,13 +34,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: '1.25.8'
-          cache: true
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Install Gio UI system dependencies (Linux build)
         if: matrix.goos == 'linux'
