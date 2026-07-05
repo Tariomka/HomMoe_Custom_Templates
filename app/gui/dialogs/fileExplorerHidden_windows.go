@@ -15,6 +15,7 @@ func hasHiddenAttr(info os.FileInfo) bool {
 	if !ok {
 		return false
 	}
+
 	const hiddenOrSystem = syscall.FILE_ATTRIBUTE_HIDDEN | syscall.FILE_ATTRIBUTE_SYSTEM
 	return data.FileAttributes&hiddenOrSystem != 0
 }

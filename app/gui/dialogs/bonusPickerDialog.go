@@ -2,6 +2,7 @@ package dialogs
 
 import (
 	"image"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -184,7 +185,7 @@ func (this *BonusPickerDialog) getEditorWidget(theme *material.Theme, presetType
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, spellCountLabel(len(this.selectedSpells)))),
-						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+						widgets.NewDefaultComponentSpacer(),
 						layout.Rigid(widgets.NewButtonWidget(
 							theme, "Pick spells...", &this.pickSpellBtn, this.opener == nil)),
 					)
@@ -205,7 +206,7 @@ func (this *BonusPickerDialog) getEditorWidget(theme *material.Theme, presetType
 		return func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...", false)),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				widgets.NewDefaultComponentSpacer(),
 				layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
 			)
 		}
@@ -274,11 +275,9 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 		this.opener(NewSpellPickerDialog(excluded, false, func(ids []string, _ bool) {
 			// Append to (never overwrite) the current selection.
 			for _, id := range ids {
-				if id == "" || containsString(this.selectedSpells, id) {
-					continue
+				if id != "" && !slices.Contains(this.selectedSpells, id) {
+					this.selectedSpells = append(this.selectedSpells, id)
 				}
-
-				this.selectedSpells = append(this.selectedSpells, id)
 			}
 			for len(this.spellRemoveBtns) < len(this.selectedSpells) {
 				this.spellRemoveBtns = append(this.spellRemoveBtns, widget.Clickable{})
@@ -419,9 +418,9 @@ func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index in
 							clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
 						return layout.Dimensions{Size: image.Pt(size, size)}
 					}),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+					widgets.NewDefaultComponentSpacer(),
 					layout.Rigid(widgets.NewLabelBuilder(theme).WithSizeBig().WithText(name).WithColorDefault().Build),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+					widgets.NewDefaultComponentSpacer(),
 					layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, school)),
 					layout.Rigid(widgets.NewButtonWidget(theme, "✕", &this.spellRemoveBtns[index], false)),
 				)
@@ -451,15 +450,6 @@ func spellCountLabel(count int) string {
 	default:
 		return strconv.Itoa(count) + " spells picked"
 	}
-}
-
-func containsString(values []string, value string) bool {
-	for _, candidate := range values {
-		if candidate == value {
-			return true
-		}
-	}
-	return false
 }
 
 func isNumeric(value string) bool {

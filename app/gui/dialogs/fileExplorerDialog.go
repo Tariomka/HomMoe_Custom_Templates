@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 
 	"gioui.org/font"
@@ -238,9 +238,9 @@ func (this *FileExplorerDialog) getHeaderWidget(theme *material.Theme) layout.Wi
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(widgets.NewButtonWidget(theme, "Up", &this.upBtn, upDisabled)),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			widgets.NewDefaultComponentSpacer(),
 			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.pathEd, "Current directory", true)),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			widgets.NewDefaultComponentSpacer(),
 			layout.Rigid(widgets.NewToggleButtonWidget(theme, "Show hidden", &this.hiddenToggle, this.showHidden)),
 		)
 	}
@@ -325,7 +325,7 @@ func (this *FileExplorerDialog) getSaveRowWidget(theme *material.Theme) layout.W
 		return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(widgets.NewLabelBigWidget(theme, "Save as:", themes.ColorTextDim)),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				widgets.NewDefaultComponentSpacer(),
 				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, hint, false)),
 			)
 		})
@@ -343,11 +343,11 @@ func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) lay
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(widgets.NewLabelBigWidget(theme, "New folder:", themes.ColorTextDim)),
-						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+						widgets.NewDefaultComponentSpacer(),
 						layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
-						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+						widgets.NewDefaultComponentSpacer(),
 						layout.Rigid(widgets.NewButtonWidget(theme, "Create", &this.createFolderBtn, false)),
-						layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+						widgets.NewDefaultComponentSpacer(),
 						layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelFolderBtn, false)),
 					)
 				}),
@@ -372,7 +372,7 @@ func (this *FileExplorerDialog) getFooterWidget(theme *material.Theme) layout.Wi
 				layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
 					WithText("File already exists. Overwrite?").WithColor(themes.ColorWarnText).WithMaxLines(1).Build),
 				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.overwriteCancelBtn, false)),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				widgets.NewDefaultComponentSpacer(),
 				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Overwrite", &this.overwriteConfirmBtn, false)),
 			)
 		}
@@ -394,7 +394,7 @@ func (this *FileExplorerDialog) getFooterWidget(theme *material.Theme) layout.Wi
 	children = append(children, layout.Rigid(widgets.NewButtonWidget(theme, cancelLabel, &this.cancelBtn, false)))
 	if showConfirm {
 		children = append(children,
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			widgets.NewDefaultComponentSpacer(),
 			layout.Rigid(widgets.NewBrightButtonWidget(theme, confirmLabel, &this.confirmBtn, confirmDisabled)),
 		)
 	}
@@ -446,6 +446,7 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 					}
 					return true
 				}
+
 				// Filename was cleared while the prompt was up; abandon it.
 				this.overwriteActive = false
 			}
@@ -454,7 +455,7 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 			}
 		} else if this.confirmBtn.Clicked(gtx) {
 			if path, ok := this.resolveSaveTarget(); ok {
-				if pathExists(path) {
+				if _, err := os.Stat(path); err == nil {
 					this.overwriteActive = true
 				} else {
 					if this.onSave != nil {
@@ -465,6 +466,7 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 			}
 		}
 	}
+
 	return false
 }
 
@@ -516,11 +518,11 @@ func (this *FileExplorerDialog) loadDir(dir string) {
 		}
 		files = append(files, fileEntry{name: name, path: full, isDir: false})
 	}
-	sort.SliceStable(dirs, func(i, j int) bool {
-		return strings.ToLower(dirs[i].name) < strings.ToLower(dirs[j].name)
+	slices.SortStableFunc(dirs, func(a, b fileEntry) int {
+		return strings.Compare(strings.ToLower(a.name), strings.ToLower(b.name))
 	})
-	sort.SliceStable(files, func(i, j int) bool {
-		return strings.ToLower(files[i].name) < strings.ToLower(files[j].name)
+	slices.SortStableFunc(files, func(a, b fileEntry) int {
+		return strings.Compare(strings.ToLower(a.name), strings.ToLower(b.name))
 	})
 
 	this.currentDir = dir
@@ -535,10 +537,12 @@ func (this *FileExplorerDialog) isHidden(name string, entry os.DirEntry) bool {
 	if strings.HasPrefix(name, ".") {
 		return true
 	}
+
 	info, err := entry.Info()
 	if err != nil {
 		return false
 	}
+
 	return hasHiddenAttr(info)
 }
 
@@ -546,12 +550,14 @@ func (this *FileExplorerDialog) matchesFilter(name string) bool {
 	if len(this.filterSuffixes) == 0 {
 		return true
 	}
+
 	lower := strings.ToLower(name)
 	for _, suffix := range this.filterSuffixes {
 		if strings.HasSuffix(lower, strings.ToLower(suffix)) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -562,13 +568,16 @@ func (this *FileExplorerDialog) parentDir() string {
 	if this.currentDir == "" {
 		return ""
 	}
+
 	parent := filepath.Dir(this.currentDir)
 	if parent == this.currentDir {
 		if runtime.GOOS == "windows" {
 			return ""
 		}
+
 		return this.currentDir
 	}
+
 	return parent
 }
 
@@ -582,6 +591,7 @@ func (this *FileExplorerDialog) onEntryClicked(entry fileEntry) {
 		this.requestNav(entry.path)
 		return
 	}
+
 	switch this.mode {
 	case modeOpenFile:
 		this.selectedPath = entry.path
@@ -599,10 +609,12 @@ func (this *FileExplorerDialog) resolveSaveTarget() (string, bool) {
 	if name == "" {
 		return "", false
 	}
+
 	name = filepath.Base(name)
 	if name == "." || name == ".." || name == string(os.PathSeparator) {
 		return "", false
 	}
+
 	if !strings.HasSuffix(strings.ToLower(name), saveFileSuffix) {
 		name += saveFileSuffix
 	}
@@ -615,6 +627,7 @@ func (this *FileExplorerDialog) tryCreateFolder() {
 		this.newFolderErr = "Enter a folder name."
 		return
 	}
+
 	if name == "." || name == ".." ||
 		strings.ContainsRune(name, '/') ||
 		strings.ContainsRune(name, os.PathSeparator) ||
@@ -622,11 +635,13 @@ func (this *FileExplorerDialog) tryCreateFolder() {
 		this.newFolderErr = "Invalid folder name."
 		return
 	}
+
 	target := filepath.Join(this.currentDir, name)
 	if err := os.Mkdir(target, 0o755); err != nil {
 		this.newFolderErr = err.Error()
 		return
 	}
+
 	this.newFolderActive = false
 	this.newFolderErr = ""
 	this.loadDir(target)
@@ -678,25 +693,25 @@ func resolveInitialDir(dir string) string {
 			if info, err := os.Stat(candidate); err == nil && info.IsDir() {
 				return candidate
 			}
+
 			parent := filepath.Dir(candidate)
 			if parent == candidate {
 				break
 			}
+
 			candidate = parent
 		}
 	}
+
 	if home, err := os.UserHomeDir(); err == nil {
 		if info, err := os.Stat(home); err == nil && info.IsDir() {
 			return home
 		}
 	}
+
 	if workingDir, err := os.Getwd(); err == nil {
 		return workingDir
 	}
-	return "."
-}
 
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+	return "."
 }
