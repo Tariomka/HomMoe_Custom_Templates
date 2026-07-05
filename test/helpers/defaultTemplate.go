@@ -5,9 +5,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
 )
 
-//go:fix inline
-func intPtr(i int) *int { return new(i) }
-
 func GetDefaultTemplate() entities.RmgTemplate {
 	return entities.RmgTemplate{
 		Name:                "Custom Template",
@@ -83,7 +80,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 				{
 					Name:                                "Spawn-A",
 					GeneratorPosition:                   &[2]float64{0.8799878400648531, 0.4969600324265629}, // Most likely this is random
-					GeneratorRing:                       intPtr(0),
+					GeneratorRing:                       new(0),
 					Size:                                1,
 					Layout:                              "zone_layout_spawns",
 					GuardCutoffValue:                    2_000,
@@ -181,7 +178,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 					ZoneBiome:          entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
 					ContentBiome:       entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
 					MetaObjectsBiome:   entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
-					CrossroadsPosition: intPtr(0),
+					CrossroadsPosition: new(0),
 					Roads: []entities.Road{
 						{
 							Type:                 "Stone",
@@ -215,7 +212,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 				{
 					Name:                                "Spawn-B",
 					GeneratorPosition:                   &[2]float64{0.12, 0.5},
-					GeneratorRing:                       intPtr(0),
+					GeneratorRing:                       new(0),
 					Size:                                1,
 					Layout:                              "zone_layout_spawns",
 					GuardCutoffValue:                    2_000,
@@ -313,7 +310,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 					ZoneBiome:          entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
 					ContentBiome:       entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
 					MetaObjectsBiome:   entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}},
-					CrossroadsPosition: intPtr(0),
+					CrossroadsPosition: new(0),
 					Roads: []entities.Road{
 						{
 							Type:                 "Stone",
