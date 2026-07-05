@@ -12,35 +12,79 @@ env:
   GO_VERSION: 1.26.3
 
 jobs:
-  # Check if there is any dirty change for go mod tidy
-  go-mod:
+  check-go-mod:
+    name: Check for dirty changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout code
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-go@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
+
       - name: Check go mod
         run: |
           go mod tidy
           git diff --exit-code go.mod
           git diff --exit-code go.sum
 
-  test:
-    name: Run Go tests
+  run-gci-lint:
+    name: Run Golangci-lint
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v9
+
+  check-build:
+    name: Check Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build .
+
+  run-unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Install Gio UI system dependencies
         run: |
@@ -66,11 +110,47 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Build
-        run: go build .
-
       - name: Run unit tests
         run: go test -v ./test/...
+
+  run-integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install Gio UI system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgles2-mesa-dev \
+            libegl1-mesa-dev \
+            libffi-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libvulkan-dev \
+            libwayland-dev \
+            libx11-dev \
+            libx11-xcb-dev \
+            libxcb1-dev \
+            libxcursor-dev \
+            libxfixes-dev \
+            libxrandr-dev \
+            libxinerama-dev \
+            libxi-dev \
+            xorg-dev
+
+      - name: Download dependencies
+        run: go mod download
 
       - name: Run integration tests
         run: go test -v -tags integration_test ./test/integration/...
