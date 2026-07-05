@@ -10,6 +10,8 @@ on:
 
 env:
   GO_VERSION: 1.26.3
+  coverage_file: coverage.txt
+  coverage_artifact: code-coverage
 
 jobs:
   check-go-mod:
@@ -119,7 +121,42 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run unit tests
-        run: go test -v ./test/...
+        run: go test -v -cover -coverprofile=${{ env.coverage_file }} ./...
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.coverage_artifact }}
+          path: ${{ env.coverage_file }} # Make sure to use the same file name you chose for the "-coverprofile" in the "Test" step
+
+  code_coverage:
+    name: Code coverage report
+    if: github.event_name == 'pull_request' # Do not run when workflow is triggered by push to main branch
+    runs-on: ubuntu-latest
+    needs: run-unit-tests
+    permissions:
+      contents:      read
+      actions:       read  # to download code coverage results from unit test job
+      pull-requests: write # write permission needed to comment on PR
+    steps:
+      - name: Coverage report
+        uses: fgrosse/go-coverage-report@v1.3.0
+        id: coverage
+        with:
+          coverage-artifact-name: ${{ env.coverage_artifact }}
+          coverage-file-name: ${{ env.coverage_file }}
+          exclude: "test/*"
+
+      - name: Fail if coverage drops
+        if: ${{ steps.coverage.outputs.coverage_trend == 'decreased' }}
+        run: echo "Coverage decreased!" && exit 1
+
+      - name: Enforce minimum coverage
+        run: |
+          COV="${{ steps.coverage.outputs.total_coverage }}"
+          if (( $(echo "$COV < 80.0" | bc -l) )); then
+            echo "Coverage $COV% is below 80%" && exit 1
+          fi
 
   run-integration-tests:
     name: Run Integration Tests
