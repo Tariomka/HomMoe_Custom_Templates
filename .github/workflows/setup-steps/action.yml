@@ -1,0 +1,52 @@
+name: Setup Project
+description: Sets up the project environment for building and testing Go code
+
+inputs:
+  go-version:
+    description: The Go version to use
+    required: false
+    default: 1.26.3
+  os:
+    description: 'The operating system to build for (linux or windows)'
+    required: false 
+    default: 'linux'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - name: Install Gio UI system dependencies
+      if: ${{ inputs.os == 'linux' }}
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgles2-mesa-dev \
+          libegl1-mesa-dev \
+          libffi-dev \
+          libxkbcommon-dev \
+          libxkbcommon-x11-dev \
+          libvulkan-dev \
+          libwayland-dev \
+          libx11-dev \
+          libx11-xcb-dev \
+          libxcb1-dev \
+          libxcursor-dev \
+          libxfixes-dev \
+          libxrandr-dev \
+          libxinerama-dev \
+          libxi-dev \
+          xorg-dev
+
+    - name: Download dependencies
+      shell: cmd
+      run: go mod download
