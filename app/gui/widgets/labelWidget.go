@@ -62,22 +62,22 @@ func (this *LabelBuilder) WithMaxLines(lineCount int) *LabelBuilder {
 
 func (this *LabelBuilder) Build(gtx layout.Context) layout.Dimensions { return this.item.Layout(gtx) }
 
-// NewLabelWidget returns a Widget that renders a small text line
+// NewLabelWidget returns a Widget that renders a small text line.
 func NewLabelWidget(theme *material.Theme, text string, color color.NRGBA) layout.Widget {
 	return NewLabelBuilder(theme).WithSizeDefault().WithText(text).WithColor(color).Build
 }
 
-// NewLabelBigWidget returns a Widget like [NewLabelWidget] but one size bigger
+// NewLabelBigWidget returns a Widget like [NewLabelWidget] but one size bigger.
 func NewLabelBigWidget(theme *material.Theme, text string, color color.NRGBA) layout.Widget {
 	return NewLabelBuilder(theme).WithSizeBig().WithText(text).WithColor(color).Build
 }
 
-// NewStyledLabelWidget returns a Widget that renders a small text line with a specific style
+// NewStyledLabelWidget returns a Widget that renders a small text line with a specific style.
 func NewStyledLabelWidget(theme *material.Theme, text string, color color.NRGBA, style font.Font) layout.Widget {
 	return NewLabelBuilder(theme).WithSizeDefault().WithText(text).WithColor(color).WithFont(style).Build
 }
 
-// NewDimmedLabelWidget returns a Widget that renders a small dimmed text line
+// NewDimmedLabelWidget returns a Widget that renders a small dimmed text line.
 func NewDimmedLabelWidget(theme *material.Theme, text string) layout.Widget {
 	return NewLabelBuilder(theme).WithSizeDefault().WithText(text).WithColorDim().Build
 }

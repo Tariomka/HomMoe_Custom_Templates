@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
-// NewLabeledCheckboxRowWidget returns a Widget that renders a checkbox with a label as a clickable row
+// NewLabeledCheckboxRowWidget returns a Widget that renders a checkbox with a label as a clickable row.
 func NewLabeledCheckboxRowWidget(theme *material.Theme, boolValue *widget.Bool, label string) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: unit.Dp(3), Bottom: unit.Dp(3)}.

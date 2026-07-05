@@ -14,7 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
-// NewTextboxWidget returns a Widget that renders a text editor box
+// NewTextboxWidget returns a Widget that renders a text editor box.
 func NewTextboxWidget(theme *material.Theme, textEditor *widget.Editor, hint string, readonly bool) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)

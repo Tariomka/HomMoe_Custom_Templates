@@ -12,7 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
-// NewWarningBannerWidget returns a Widget that renders a warning banner
+// NewWarningBannerWidget returns a Widget that renders a warning banner.
 func NewWarningBannerWidget(theme *material.Theme, message string) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)

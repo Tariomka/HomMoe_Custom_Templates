@@ -7,7 +7,7 @@ import (
 
 type ThemelessWidget = func(theme *material.Theme) layout.Widget
 
-// NewHorizontallySplitWidget returns a Widget that renders multiple widgets in a horizontal split layout
+// NewHorizontallySplitWidget returns a Widget that renders multiple widgets in a horizontal split layout.
 func NewHorizontallySplitWidget(theme *material.Theme, columns ...ThemelessWidget) layout.Widget {
 	flexBase := layout.Flex{Axis: layout.Horizontal}
 	if len(columns) == 0 {

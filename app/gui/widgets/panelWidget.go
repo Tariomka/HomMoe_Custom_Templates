@@ -12,7 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
-// NewPanelWidget return a Widget that renders content in a rounded border panel
+// NewPanelWidget return a Widget that renders content in a rounded border panel.
 func NewPanelWidget(padding unit.Dp, content layout.Widget) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		radius := gtx.Dp(constants.DefaultRoundness)

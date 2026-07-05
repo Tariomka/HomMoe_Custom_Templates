@@ -15,7 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 )
 
-// NewButtonWidget returns a Widget that renders a button with the given text
+// NewButtonWidget returns a Widget that renders a button with the given text.
 func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickable, disabled bool) layout.Widget {
 	textColor := themes.ColorText
 	backgroundColor := themes.ColorButton
@@ -118,7 +118,11 @@ func NewSegmentButtonWidget(theme *material.Theme, label string, button *widget.
 
 // NewDropdownRowButtonWidget returns a Widget that renders a dropdown row button with the given text.
 // If the button is active, it looks like a selected label widget, otherwise it looks like a normal label widget.
-func NewDropdownRowButtonWidget(theme *material.Theme, label string, button *widget.Clickable, active bool) layout.Widget {
+func NewDropdownRowButtonWidget(
+	theme *material.Theme,
+	label string,
+	button *widget.Clickable,
+	active bool) layout.Widget {
 	textColor := themes.ColorText
 	textFont := font.Font{Weight: font.Normal}
 	backgroundColor := themes.ColorInput
@@ -183,7 +187,11 @@ func NewBrightButtonWidget(theme *material.Theme, label string, button *widget.C
 	}
 }
 
-func NewBrightButtonLargeWidget(theme *material.Theme, label string, button *widget.Clickable, disabled bool) layout.Widget {
+func NewBrightButtonLargeWidget(
+	theme *material.Theme,
+	label string,
+	button *widget.Clickable,
+	disabled bool) layout.Widget {
 	textColor := themes.ColorAccentBright
 	backgroundColor := themes.ColorPrimaryButton
 	borderColor := themes.ColorAccent

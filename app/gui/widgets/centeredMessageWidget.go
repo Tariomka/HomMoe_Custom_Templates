@@ -12,7 +12,10 @@ import (
 // NewCenteredMessageWidget renders a Body2 label centered inside the given canvas
 // area. Uses the same material.Label approach as the (former) empty-state
 // view so text renders reliably (unlike drawCenteredText for longer strings).
-func NewCenteredMessageWidget(theme *material.Theme, message string, innerCanvasSize, outerCanvasSize image.Point) layout.Widget {
+func NewCenteredMessageWidget(
+	theme *material.Theme,
+	message string,
+	innerCanvasSize, outerCanvasSize image.Point) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		macro := op.Record(gtx.Ops)
 		gtx.Constraints.Min = image.Point{}

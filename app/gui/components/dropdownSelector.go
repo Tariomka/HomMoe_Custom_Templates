@@ -95,13 +95,14 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 		}
 		return material.Clickable(gtx, &this.toggle, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.UniformInset(constants.DefaultPaddingSmall).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Flexed(1, widgets.NewLabelBuilder(theme).
-						WithSizeDefault().WithText(this.value()).WithColorDefault().WithMaxLines(1).Build),
-					layout.Rigid(widgets.NewLabelBuilder(theme).
-						WithSize(10).WithText(arrowText).WithColor(themes.ColorAccentDim).Build))
-			})
+			dims := layout.UniformInset(constants.DefaultPaddingSmall).Layout(gtx,
+				func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Flexed(1, widgets.NewLabelBuilder(theme).
+							WithSizeDefault().WithText(this.value()).WithColorDefault().WithMaxLines(1).Build),
+						layout.Rigid(widgets.NewLabelBuilder(theme).
+							WithSize(10).WithText(arrowText).WithColor(themes.ColorAccentDim).Build))
+				})
 			call := macro.Stop()
 			radius := gtx.Dp(constants.DefaultRoundness)
 			rect := image.Rectangle{Max: dims.Size}
@@ -161,5 +162,6 @@ func (this *DropdownSelector) value() string {
 	if this.selectedIndex >= 0 && this.selectedIndex < len(this.items) {
 		return this.items[this.selectedIndex].label
 	}
+
 	return ""
 }

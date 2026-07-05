@@ -90,7 +90,6 @@ linters:
     - tparallel # detects inappropriate usage of t.Parallel() method in your Go test codes
     - unconvert # removes unnecessary type conversions
     - unparam # reports unused function parameters
-    - unqueryvet # detects SELECT * in SQL queries and SQL builders, encouraging explicit column selection
     - unused # checks for unused constants, variables, functions and types
     - usestdlibvars # detects the possibility to use variables/constants from the Go standard library
     - usetesting # reports uses of functions with replacement inside the testing package
@@ -259,13 +258,7 @@ linters:
       struct-method: false
 
     funlen:
-      # Checks the number of lines in a function.
-      # If lower than 0, disable the check.
-      # Default: 60
-      lines: 100
-      # Checks the number of statements in a function.
-      # If lower than 0, disable the check.
-      # Default: 40
+      lines: 60
       statements: 50
 
     gochecksumtype:
