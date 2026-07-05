@@ -18,6 +18,7 @@ runs:
       uses: actions/setup-go@v6
       with:
         go-version: ${{ inputs.go-version }}
+        cache: true
 
     - name: Install Gio UI system dependencies
       if: ${{ inputs.os == 'linux' }}

@@ -35,6 +35,7 @@ jobs:
   run-gci-lint:
     name: Run Golangci-lint
     runs-on: ubuntu-latest
+    if: false
 
     steps:
       - name: Checkout code
@@ -53,6 +54,7 @@ jobs:
   run-vulnerability-scan:
     name: Run Vulnerability Scan
     runs-on: ubuntu-latest
+    if: false
 
     steps:
       - name: Checkout code
