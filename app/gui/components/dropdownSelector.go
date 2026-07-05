@@ -3,7 +3,6 @@ package components
 import (
 	"image"
 
-	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -13,6 +12,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
 type dropdownItem struct {
@@ -84,40 +84,29 @@ func (this *DropdownSelector) GetWidget(theme *material.Theme) layout.Widget {
 
 func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
+		arrowText := "▼"
+		borderColor := themes.ColorBorder
+		if this.toggle.Hovered() {
+			borderColor = themes.ColorHover
+		}
+		if this.isOpen {
+			arrowText = "▲"
+			borderColor = themes.ColorAccent
+		}
 		return material.Clickable(gtx, &this.toggle, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.Inset{Top: unit.Dp(6), Bottom: unit.Dp(6), Left: unit.Dp(8), Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			dims := layout.UniformInset(constants.DefaultPaddingSmall).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						label := material.Caption(theme, this.value())
-						label.Color = themes.ColorText
-						label.MaxLines = 1
-						label.Truncator = "..."
-						return label.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						arrow := "▼"
-						if this.isOpen {
-							arrow = "▲"
-						}
-						label := material.Overline(theme, arrow)
-						label.Color = themes.ColorAccentDim
-						return label.Layout(gtx)
-					}),
-				)
+					layout.Flexed(1, widgets.NewLabelBuilder(theme).
+						WithSizeDefault().WithText(this.value()).WithColorDefault().WithMaxLines(1).Build),
+					layout.Rigid(widgets.NewLabelBuilder(theme).
+						WithSize(10).WithText(arrowText).WithColor(themes.ColorAccentDim).Build))
 			})
 			call := macro.Stop()
 			radius := gtx.Dp(constants.DefaultRoundness)
 			rect := image.Rectangle{Max: dims.Size}
 			paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-			border := themes.ColorBorder
-			if this.toggle.Hovered() {
-				border = themes.ColorHover
-			}
-			if this.isOpen {
-				border = themes.ColorAccent
-			}
-			paint.FillShape(gtx.Ops, border, clip.Stroke{
+			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
 				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 				Width: float32(gtx.Dp(1)),
 			}.Op())
@@ -132,10 +121,8 @@ func (this *DropdownSelector) getListWidget(theme *material.Theme) layout.Widget
 		macro := op.Record(gtx.Ops)
 		rows := []layout.FlexChild{}
 		for i, item := range this.items {
-			rows = append(rows, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return material.Clickable(gtx, &item.row,
-					newComboRowWidget(theme, item.label, i == this.selectedIndex, item.row.Hovered()))
-			}))
+			rows = append(rows, layout.Rigid(
+				widgets.NewDropdownRowButtonWidget(theme, item.label, &item.row, i == this.selectedIndex)))
 		}
 		dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx, rows...)
 		call := macro.Stop()
@@ -175,33 +162,4 @@ func (this *DropdownSelector) value() string {
 		return this.items[this.selectedIndex].label
 	}
 	return ""
-}
-
-func newComboRowWidget(theme *material.Theme, label string, selected bool, hovered bool) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions {
-		macro := op.Record(gtx.Ops)
-		dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.
-			Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				label := material.Caption(theme, label)
-				label.Color = themes.ColorText
-				label.MaxLines = 1
-				label.Truncator = "..."
-				if selected {
-					label.Color = themes.ColorAccent
-					label.Font = font.Font{Weight: font.SemiBold}
-				}
-				return label.Layout(gtx)
-			})
-		call := macro.Stop()
-		if selected {
-			paint.FillShape(gtx.Ops, themes.ColorSelection, clip.Rect{Max: dims.Size}.Op())
-		} else if hovered {
-			paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
-		}
-		call.Add(gtx.Ops)
-		if dims.Size.X < gtx.Constraints.Min.X {
-			dims.Size.X = gtx.Constraints.Min.X
-		}
-		return dims
-	}
 }

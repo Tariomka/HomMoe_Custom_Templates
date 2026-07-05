@@ -189,21 +189,21 @@ func (this *GeneralPanel) getTemplateSectionWidget(theme *material.Theme) layout
 			widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name", false)),
 		widgets.NewLabeledRowWidget(
 			theme, "Players", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.playerCount, utils.RoundedRangeString(this.playerCount.Value, 2, 8))),
+			widgets.NewLabeledSliderWidget(theme, &this.playerCount,
+				utils.RoundedRangeString(this.playerCount.Value, 2, 8))),
 		widgets.NewLabeledRowWidget(
 			theme, "Map size", constants.DefaultLabelWidth,
 			func(gtx layout.Context) layout.Dimensions {
 				return this.updateMapSizeSelector(gtx).GetWidget(theme)(gtx)
 			}),
-		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkMoreMapSizes, "Allow non official larger map sizes (>240)"),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkMoreMapSizes,
+			"Allow non official larger map sizes (>240)"),
 	})
 }
 
 func (this *GeneralPanel) getMapSectionWidget(theme *material.Theme) layout.Widget {
 	widgetList := []layout.Widget{
-		widgets.NewLabeledRowWidget(
-			theme, "Game mode", constants.DefaultLabelWidth,
-			func(gtx layout.Context) layout.Dimensions { return this.gameMode.Layout(gtx, theme) }),
+		widgets.NewLabeledRowWidget(theme, "Game mode", constants.DefaultLabelWidth, this.gameMode.GetWidget(theme)),
 	}
 
 	if !this.isSingleHero() {

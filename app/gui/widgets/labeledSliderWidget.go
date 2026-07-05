@@ -20,7 +20,9 @@ func NewLabeledSliderWidget(theme *material.Theme, slider *widget.Float, value s
 			layout.Rigid(NewHorizontalSpacerWidget(6)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Min.X = gtx.Dp(32)
-				return NewAlignedLabelWidget(theme, value, themes.ColorAccent, text.End)(gtx)
+				return NewLabelBuilder(theme).
+					WithSizeDefault().WithText(value).WithColor(themes.ColorAccent).WithAlignment(text.End).
+					Build(gtx)
 			}),
 		)
 	}

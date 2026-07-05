@@ -159,19 +159,13 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 				return layout.Dimensions{}
 			}
 
-			return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, this.errorText)
-				label.Color = themes.ColorError
-				label.TextSize = unit.Sp(12)
-				return label.Layout(gtx)
-			})
+			return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx,
+				widgets.NewLabelWidget(theme, this.errorText, themes.ColorError))
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(12)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					return layout.Dimensions{Size: gtx.Constraints.Min}
-				}),
+				layout.Flexed(1, widgets.NewMinimumConstraintsWidget()),
 				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelBtn, false)),
 				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Add", &this.addBtn, false)),
@@ -426,11 +420,7 @@ func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index in
 						return layout.Dimensions{Size: image.Pt(size, size)}
 					}),
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						label := material.Body2(theme, name)
-						label.Color = themes.ColorText
-						return label.Layout(gtx)
-					}),
+					layout.Rigid(widgets.NewLabelBuilder(theme).WithSizeBig().WithText(name).WithColorDefault().Build),
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 					layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, school)),
 					layout.Rigid(widgets.NewButtonWidget(theme, "✕", &this.spellRemoveBtns[index], false)),

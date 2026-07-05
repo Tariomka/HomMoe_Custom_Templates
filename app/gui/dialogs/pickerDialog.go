@@ -100,8 +100,8 @@ func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 				return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.Layout(gtx, label.Layout)
 			}
 
-			return material.List(theme, &this.scroll).
-				Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions { return rows[index](gtx) })
+			return material.List(theme, &this.scroll).Layout(gtx, len(rows),
+				func(gtx layout.Context, index int) layout.Dimensions { return rows[index](gtx) })
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if this.footerWidget == nil {

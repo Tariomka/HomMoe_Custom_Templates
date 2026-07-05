@@ -1,6 +1,7 @@
 package dialogs
 
 import (
+	"fmt"
 	"image"
 	"os"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
@@ -203,37 +205,27 @@ func (this *FileExplorerDialog) Body(gtx layout.Context, theme *material.Theme) 
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
 
-	return this.layoutContent(gtx, theme), false
+	return this.getContentWidget(theme)(gtx), false
 }
 
-// layoutContent stacks the header, the scrollable listing, an optional error
+// getContentWidget stacks the header, the scrollable listing, an optional error
 // line, the mode-specific input rows and the footer.
-func (this *FileExplorerDialog) layoutContent(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutHeader(gtx, theme)
-		}),
-		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return this.layoutList(gtx, theme)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutErrorLine(gtx, theme)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutSaveRow(gtx, theme)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutNewFolderRow(gtx, theme)
-		}),
-		layout.Rigid(widgets.NewVerticalSpacerWidget(10)),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return this.layoutFooter(gtx, theme)
-		}),
-	)
+func (this *FileExplorerDialog) getContentWidget(theme *material.Theme) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(this.getHeaderWidget(theme)),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
+			layout.Flexed(1, this.getListWidget(theme)),
+			layout.Rigid(this.getErrorLineWidget(theme)),
+			layout.Rigid(this.getSaveRowWidget(theme)),
+			layout.Rigid(this.getNewFolderRowWidget(theme)),
+			layout.Rigid(widgets.NewVerticalSpacerWidget(10)),
+			layout.Rigid(this.getFooterWidget(theme)),
+		)
+	}
 }
 
-func (this *FileExplorerDialog) layoutHeader(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *FileExplorerDialog) getHeaderWidget(theme *material.Theme) layout.Widget {
 	upDisabled := this.parentDir() == this.currentDir
 	if this.pathEd.Text() != this.currentDir {
 		if this.currentDir == "" {
@@ -243,156 +235,147 @@ func (this *FileExplorerDialog) layoutHeader(gtx layout.Context, theme *material
 		}
 	}
 
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(widgets.NewButtonWidget(theme, "Up", &this.upBtn, upDisabled)),
-		layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-		layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.pathEd, "Current directory", true)),
-		layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-		layout.Rigid(widgets.NewToggleButtonWidget(theme, "Show hidden", &this.hiddenToggle, this.showHidden)),
-	)
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(widgets.NewButtonWidget(theme, "Up", &this.upBtn, upDisabled)),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.pathEd, "Current directory", true)),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			layout.Rigid(widgets.NewToggleButtonWidget(theme, "Show hidden", &this.hiddenToggle, this.showHidden)),
+		)
+	}
 }
 
-func (this *FileExplorerDialog) layoutList(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *FileExplorerDialog) getListWidget(theme *material.Theme) layout.Widget {
 	if len(this.entries) == 0 {
 		message := "(empty folder)"
 		if this.listErr != "" {
 			message = "(unable to read folder)"
 		}
-		label := material.Body2(theme, message)
-		label.Color = themes.ColorTextDim
-		return layout.Center.Layout(gtx, label.Layout)
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Center.Layout(gtx, widgets.NewLabelBigWidget(theme, message, themes.ColorTextDim))
+		}
 	}
 
-	return material.List(theme, &this.list).Layout(gtx, len(this.entries), func(gtx layout.Context, index int) layout.Dimensions {
-		return this.entryRow(gtx, theme, this.entries[index])
-	})
+	return func(gtx layout.Context) layout.Dimensions {
+		return material.List(theme, &this.list).Layout(gtx, len(this.entries),
+			func(gtx layout.Context, index int) layout.Dimensions {
+				return this.getEntryRowWidget(theme, this.entries[index])(gtx)
+			})
+	}
 }
 
-func (this *FileExplorerDialog) entryRow(gtx layout.Context, theme *material.Theme, entry fileEntry) layout.Dimensions {
-	clk := this.clickFor(entry.path)
-	if clk.Clicked(gtx) {
-		this.onEntryClicked(entry)
+func (this *FileExplorerDialog) getEntryRowWidget(theme *material.Theme, entry fileEntry) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		clk := this.clickFor(entry.path)
+		if clk.Clicked(gtx) {
+			this.onEntryClicked(entry)
+		}
+		selected := !entry.isDir && entry.path == this.selectedPath
+		badgeText := ""
+		textColor := themes.ColorText
+		if entry.isDir {
+			badgeText = "DIR"
+			textColor = themes.ColorAccentBright
+		}
+		return material.Clickable(gtx, clk, func(gtx layout.Context) layout.Dimensions {
+			macro := op.Record(gtx.Ops)
+			dims := layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4), Left: unit.Dp(6), Right: unit.Dp(6)}.
+				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(38))
+							return widgets.NewStyledLabelWidget(
+								theme, badgeText, themes.ColorAccent, font.Font{Weight: font.SemiBold})(gtx)
+						}),
+						layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
+							WithText(entry.name).WithColor(textColor).WithMaxLines(1).Build))
+				})
+			call := macro.Stop()
+			if selected {
+				paint.FillShape(gtx.Ops, themes.ColorSelection, clip.Rect{Max: dims.Size}.Op())
+			} else if clk.Hovered() {
+				paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
+			}
+			call.Add(gtx.Ops)
+			return dims
+		})
 	}
-	selected := !entry.isDir && entry.path == this.selectedPath
-	return material.Clickable(gtx, clk, func(gtx layout.Context) layout.Dimensions {
-		macro := op.Record(gtx.Ops)
-		dims := layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4), Left: unit.Dp(6), Right: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+}
+
+func (this *FileExplorerDialog) getErrorLineWidget(theme *material.Theme) layout.Widget {
+	if this.listErr == "" {
+		return widgets.NewEmptyWidget()
+	}
+
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Top: constants.DefaultPaddingSmall}.
+			Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
+				WithText(this.listErr).WithColor(themes.ColorError).WithMaxLines(2).Build)
+	}
+}
+
+func (this *FileExplorerDialog) getSaveRowWidget(theme *material.Theme) layout.Widget {
+	if this.mode != modeSaveFile {
+		return widgets.NewEmptyWidget()
+	}
+
+	hint := fmt.Sprintf("filename%s", saveFileSuffix)
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(widgets.NewLabelBigWidget(theme, "Save as:", themes.ColorTextDim)),
+				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, hint, false)),
+			)
+		})
+	}
+}
+
+func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) layout.Widget {
+	if !this.canModify() || !this.newFolderActive {
+		return widgets.NewEmptyWidget()
+	}
+
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					gtx.Constraints.Min.X = gtx.Dp(unit.Dp(38))
-					badge := ""
-					if entry.isDir {
-						badge = "DIR"
-					}
-					label := material.Caption(theme, badge)
-					label.Color = themes.ColorAccent
-					label.Font = font.Font{Weight: font.SemiBold}
-					return label.Layout(gtx)
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(widgets.NewLabelBigWidget(theme, "New folder:", themes.ColorTextDim)),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+						layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+						layout.Rigid(widgets.NewButtonWidget(theme, "Create", &this.createFolderBtn, false)),
+						layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+						layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelFolderBtn, false)),
+					)
 				}),
-				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					label := material.Body2(theme, entry.name)
-					label.Color = themes.ColorText
-					if entry.isDir {
-						label.Color = themes.ColorAccentBright
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if this.newFolderErr == "" {
+						return layout.Dimensions{}
 					}
-					label.MaxLines = 1
-					label.Truncator = "..."
-					return label.Layout(gtx)
+
+					return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.
+						Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
+							WithText(this.newFolderErr).WithColor(themes.ColorError).WithMaxLines(2).Build)
 				}),
 			)
 		})
-		call := macro.Stop()
-		if selected {
-			paint.FillShape(gtx.Ops, themes.ColorSelection, clip.Rect{Max: dims.Size}.Op())
-		} else if clk.Hovered() {
-			paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
-		}
-		call.Add(gtx.Ops)
-		return dims
-	})
-}
-
-func (this *FileExplorerDialog) layoutErrorLine(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	if this.listErr == "" {
-		return layout.Dimensions{}
 	}
-	return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		label := material.Caption(theme, this.listErr)
-		label.Color = themes.ColorError
-		label.MaxLines = 2
-		label.Truncator = "..."
-		return label.Layout(gtx)
-	})
 }
 
-func (this *FileExplorerDialog) layoutSaveRow(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	if this.mode != modeSaveFile {
-		return layout.Dimensions{}
-	}
-	return layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, "Save as:")
-				label.Color = themes.ColorTextDim
-				return label.Layout(gtx)
-			}),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, "filename"+saveFileSuffix, false)),
-		)
-	})
-}
-
-func (this *FileExplorerDialog) layoutNewFolderRow(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	if !this.canModify() || !this.newFolderActive {
-		return layout.Dimensions{}
-	}
-	return layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						label := material.Body2(theme, "New folder:")
-						label.Color = themes.ColorTextDim
-						return label.Layout(gtx)
-					}),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-					layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-					layout.Rigid(widgets.NewButtonWidget(theme, "Create", &this.createFolderBtn, false)),
-					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-					layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelFolderBtn, false)),
-				)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				if this.newFolderErr == "" {
-					return layout.Dimensions{}
-				}
-				return layout.Inset{Top: unit.Dp(4)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					label := material.Caption(theme, this.newFolderErr)
-					label.Color = themes.ColorError
-					label.MaxLines = 2
-					label.Truncator = "..."
-					return label.Layout(gtx)
-				})
-			}),
-		)
-	})
-}
-
-func (this *FileExplorerDialog) layoutFooter(gtx layout.Context, theme *material.Theme) layout.Dimensions {
+func (this *FileExplorerDialog) getFooterWidget(theme *material.Theme) layout.Widget {
 	if this.mode == modeSaveFile && this.overwriteActive {
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				label := material.Body2(theme, "File already exists. Overwrite?")
-				label.Color = themes.ColorWarnText
-				label.MaxLines = 1
-				label.Truncator = "..."
-				return label.Layout(gtx)
-			}),
-			layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.overwriteCancelBtn, false)),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
-			layout.Rigid(widgets.NewBrightButtonWidget(theme, "Overwrite", &this.overwriteConfirmBtn, false)),
-		)
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
+					WithText("File already exists. Overwrite?").WithColor(themes.ColorWarnText).WithMaxLines(1).Build),
+				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.overwriteCancelBtn, false)),
+				layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Overwrite", &this.overwriteConfirmBtn, false)),
+			)
+		}
 	}
 
 	confirmLabel, showConfirm, confirmDisabled := this.confirmButtonState()
@@ -415,7 +398,9 @@ func (this *FileExplorerDialog) layoutFooter(gtx layout.Context, theme *material
 			layout.Rigid(widgets.NewBrightButtonWidget(theme, confirmLabel, &this.confirmBtn, confirmDisabled)),
 		)
 	}
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)
+	}
 }
 
 // confirmButtonState returns the primary button's label, whether it is shown at
