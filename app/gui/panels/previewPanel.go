@@ -51,11 +51,7 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			layout.Rigid(this.getStatusMessageWidget(theme)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						label := material.Body2(theme, "Output directory:")
-						label.Color = themes.ColorText
-						return label.Layout(gtx)
-					}),
+					layout.Flexed(1, widgets.NewLabelBigWidget(theme, "Output directory:", themes.ColorText)),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(widgets.NewButtonWidget(theme, "Browse", &this.btnPickOutput, false)),
@@ -76,8 +72,7 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 					layout.Flexed(0.5, widgets.NewBrightButtonLargeWidget(theme, "Generate", &this.btnGenerate, false)),
 					widgets.NewDefaultComponentSpacer(),
 					layout.Flexed(0.5, widgets.NewBrightButtonLargeWidget(
-						theme, "Save Template", &this.btnSaveTemplate,
-						this.state.GetLastTemplate() == nil)))
+						theme, "Save Template", &this.btnSaveTemplate, this.state.GetLastTemplate() == nil)))
 			}),
 		)
 	})
@@ -154,12 +149,10 @@ func (this *PreviewPanel) getStatusMessageWidget(theme *material.Theme) layout.W
 // computed layout yet.
 func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.Widget {
 	getCanvasSizes := func(gtx layout.Context) (outerCanvasSize, innerCanvasSize image.Point) {
-		maxX := gtx.Constraints.Max.X
-		maxY := gtx.Constraints.Max.Y
-		outerCanvasSize = image.Pt(maxX, maxY)
+		outerCanvasSize = gtx.Constraints.Max
 		maxSize := max(min(outerCanvasSize.X, outerCanvasSize.Y), 80)
 		innerCanvasSize = image.Pt(maxSize, maxSize)
-		return
+		return outerCanvasSize, innerCanvasSize
 	}
 
 	renderCanvas := func(gtx layout.Context, canvasSize image.Point) {
@@ -209,10 +202,8 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 		outerCanvasSize, canvasSize := getCanvasSizes(gtx)
 
 		// Center canvas
-		defer op.Offset(image.Point{
-			X: (gtx.Constraints.Max.X - canvasSize.X) / 2,
-			Y: (gtx.Constraints.Max.Y - canvasSize.Y) / 2,
-		}).Push(gtx.Ops).Pop()
+		defer op.Offset(image.Pt((gtx.Constraints.Max.X-canvasSize.X)/2, (gtx.Constraints.Max.Y-canvasSize.Y)/2)).
+			Push(gtx.Ops).Pop()
 		renderCanvas(gtx, canvasSize)
 		renderLegend(gtx, canvasSize)
 
@@ -222,7 +213,8 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 				theme, "Adjust the options to generate the map layout.", canvasSize, outerCanvasSize)(gtx)
 		}
 
-		previewLayout := services.BuildPreviewLayout(template, this.state.GetStateData().Topology, float64(canvasSize.X))
+		previewLayout := services.BuildPreviewLayout(
+			template, this.state.GetStateData().Topology, float64(canvasSize.X))
 		if len(previewLayout.Positions) == 0 {
 			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)
 		}
@@ -239,7 +231,7 @@ func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
 			children := []layout.FlexChild{}
 			for i, item := range items {
 				if i > 0 {
-					children = append(children, layout.Rigid(widgets.NewHorizontalSpacerWidget(8)))
+					children = append(children, widgets.NewDefaultComponentSpacer())
 				}
 				children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -251,6 +243,7 @@ func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
 								paint.FillShape(gtx.Ops, item.Color, clip.Rect(rect).Op())
 								return layout.Dimensions{Size: rect.Max}
 							}
+
 							side := gtx.Dp(constants.DefaultRoundnessOverlineText)
 							rect := image.Rect(0, 0, side, side)
 							paint.FillShape(gtx.Ops, item.Color, clip.UniformRRect(rect, side/2).Op(gtx.Ops))

@@ -113,8 +113,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		this.handleConnectionEditorClick(gtx)
 		this.handleZoneContentDialogClicks(gtx)
-		return material.List(theme, &this.scroll).Layout(
-			gtx, len(widgetsList),
+		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList),
 			func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
 	}
 }
@@ -208,7 +207,8 @@ func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Caption(theme, this.getCurrentTopology().Description)
 			label.Color = themes.ColorTextDim
-			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.Layout(gtx, label.Layout)
+			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.
+				Layout(gtx, label.Layout)
 		},
 	})
 }
@@ -222,13 +222,12 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(
-				theme, "Max portal connections", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(
-					theme, &this.sldMaxPortals,
+			return widgets.NewLabeledRowWidget(theme, "Max portal connections", constants.DefaultLabelWidth,
+				widgets.NewLabeledSliderWidget(theme, &this.sldMaxPortals,
 					utils.RoundedRangeString(this.sldMaxPortals.Value, 1, 32)))(gtx)
 		},
-		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation, "Disallow direct player-to-player connections"),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation,
+			"Disallow direct player-to-player connections"),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkMatchPlayerFactions, "Match player castle factions"),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkFootholds, "Spawn remote footholds"),
 		func(gtx layout.Context) layout.Dimensions {
@@ -236,22 +235,19 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(
-				theme, "Remote footholds", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(
-					theme, &this.sldRemoteFootholds,
+			return widgets.NewLabeledRowWidget(theme, "Remote footholds", constants.DefaultLabelWidth,
+				widgets.NewLabeledSliderWidget(theme, &this.sldRemoteFootholds,
 					utils.RoundedRangeString(this.sldRemoteFootholds.Value, 0, 4)))(gtx)
 		},
-		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAbandonedOutposts, "Spawn abandoned outposts alongside neutral castles"),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAbandonedOutposts,
+			"Spawn abandoned outposts alongside neutral castles"),
 		func(gtx layout.Context) layout.Dimensions {
 			if !this.chkAbandonedOutposts.Value {
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(
-				theme, "Abandoned outposts", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(
-					theme, &this.sldAbandonedOutposts,
+			return widgets.NewLabeledRowWidget(theme, "Abandoned outposts", constants.DefaultLabelWidth,
+				widgets.NewLabeledSliderWidget(theme, &this.sldAbandonedOutposts,
 					utils.RoundedRangeString(this.sldAbandonedOutposts.Value, 0, 4)))(gtx)
 		},
 		// TODO: Investigate this. Is it used? How does it work? Seems like it does not do anything
@@ -263,25 +259,19 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 
 func (this *LayoutPanel) getZoneSizesWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Zone sizes", []layout.Widget{
-		widgets.NewLabeledRowWidget(
-			theme, "Player zone size", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldPlayerZoneSize,
+		widgets.NewLabeledRowWidget(theme, "Player zone size", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, &this.sldPlayerZoneSize,
 				utils.MultiplierString(this.sldPlayerZoneSize.Value, 0.5, 1.5))),
-		widgets.NewLabeledRowWidget(
-			theme, "Neutral zone size", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldNeutralZoneSize,
+		widgets.NewLabeledRowWidget(theme, "Neutral zone size", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, &this.sldNeutralZoneSize,
 				utils.MultiplierString(this.sldNeutralZoneSize.Value, 0.5, 1.5))),
 		func(gtx layout.Context) layout.Dimensions {
 			if this.state.GetStateData().Topology != config.TopologyHubAndSpoke {
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(
-				theme, "Hub zone size", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(
-					theme, &this.sldHubSize,
+			return widgets.NewLabeledRowWidget(theme, "Hub zone size", constants.DefaultLabelWidth,
+				widgets.NewLabeledSliderWidget(theme, &this.sldHubSize,
 					utils.MultiplierString(this.sldHubSize.Value, 0.5, 1.5)))(gtx)
 		},
 	})
@@ -289,30 +279,20 @@ func (this *LayoutPanel) getZoneSizesWidget(theme *material.Theme) layout.Widget
 
 func (this *LayoutPanel) getDifficultyAndDensityWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Difficulty & Density", []layout.Widget{
-		widgets.NewLabeledRowWidget(
-			theme, "Resource density", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldResourceDensity,
+		widgets.NewLabeledRowWidget(theme, "Resource density", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, &this.sldResourceDensity,
 				utils.RoundedRangePercentString(this.sldResourceDensity.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(
-			theme, "Structure density", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldStructureDensity,
+		widgets.NewLabeledRowWidget(theme, "Structure density", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, &this.sldStructureDensity,
 				utils.RoundedRangePercentString(this.sldStructureDensity.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(
-			theme, "Neutral stack strength", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldNeutralStack,
+		widgets.NewLabeledRowWidget(theme, "Neutral stack strength", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, &this.sldNeutralStack,
 				utils.RoundedRangePercentString(this.sldNeutralStack.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(
-			theme, "Border guard strength", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldBorderGuard,
+		widgets.NewLabeledRowWidget(theme, "Border guard strength", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, &this.sldBorderGuard,
 				utils.RoundedRangePercentString(this.sldBorderGuard.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(
-			theme, "Guard randomization", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldGuardRandom,
+		widgets.NewLabeledRowWidget(theme, "Guard randomization", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, &this.sldGuardRandom,
 				utils.DenormalizeString(this.sldGuardRandom.Value, 0, 0.5))),
 	})
 }
@@ -326,32 +306,26 @@ func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.W
 
 func (this *LayoutPanel) getZonesWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Zones", []layout.Widget{
-		widgets.NewLabeledRowWidget(
-			theme, "Player Owned castles per zone", constants.DefaultLabelWidthLong,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldPlayerOwnedCastles,
+		widgets.NewLabeledRowWidget(theme, "Player Owned castles per zone", constants.DefaultLabelWidthLong,
+			widgets.NewLabeledSliderWidget(theme, &this.sldPlayerOwnedCastles,
 				utils.RoundedRangeString(this.sldPlayerOwnedCastles.Value, 0, 4))),
-		widgets.NewLabeledRowWidget(
-			theme, "Player Unclaimed castles per zone", constants.DefaultLabelWidthLong,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.sldPlayerCastles,
+		widgets.NewLabeledRowWidget(theme, "Player Unclaimed castles per zone", constants.DefaultLabelWidthLong,
+			widgets.NewLabeledSliderWidget(theme, &this.sldPlayerCastles,
 				utils.RoundedRangeString(this.sldPlayerCastles.Value, 0, 4))),
 		widgets.NewBrightButtonLargeWidget(theme, "Edit player zone content...", &this.btnPlayerContent, false),
-		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAdvancedZones, "Advanced zone control (split low / medium / high tiers)"),
+		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAdvancedZones,
+			"Advanced zone control (split low / medium / high tiers)"),
 		func(gtx layout.Context) layout.Dimensions {
 			if !this.chkAdvancedZones.Value {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(widgets.NewLabeledRowWidget(
-						theme, "Total neutral zones", constants.DefaultLabelWidthLong,
-						widgets.NewLabeledSliderWidget(
-							theme, &this.sldNeutralCount,
-							utils.RoundedRangeString(this.sldNeutralCount.Value, 0, 16)))),
-					layout.Rigid(widgets.NewLabeledRowWidget(
-						theme, "Neutral castles per zone", constants.DefaultLabelWidthLong,
-						widgets.NewLabeledSliderWidget(
-							theme, &this.sldNeutralCastles,
-							utils.RoundedRangeString(this.sldNeutralCastles.Value, 0, 4)))),
-				)
+					layout.Rigid(
+						widgets.NewLabeledRowWidget(theme, "Total neutral zones", constants.DefaultLabelWidthLong,
+							widgets.NewLabeledSliderWidget(theme, &this.sldNeutralCount,
+								utils.RoundedRangeString(this.sldNeutralCount.Value, 0, 16)))),
+					layout.Rigid(
+						widgets.NewLabeledRowWidget(theme, "Neutral castles per zone", constants.DefaultLabelWidthLong,
+							widgets.NewLabeledSliderWidget(theme, &this.sldNeutralCastles,
+								utils.RoundedRangeString(this.sldNeutralCastles.Value, 0, 4)))))
 			}
 
 			return this.getAdvancedZonesWidget(theme)(gtx)
@@ -380,20 +354,14 @@ func (this *LayoutPanel) getAdvancedZonesWidget(theme *material.Theme) layout.Wi
 func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, title string,
 	noCastle, withCastle, castlesPerZone *widget.Float, contentBtn *widget.Clickable) layout.Widget {
 	return widgets.NewSectionWidget(theme, title, []layout.Widget{
-		widgets.NewLabeledRowWidget(
-			theme, "No castle", constants.DefaultLabelWidthShort,
-			widgets.NewLabeledSliderWidget(
-				theme, noCastle,
+		widgets.NewLabeledRowWidget(theme, "No castle", constants.DefaultLabelWidthShort,
+			widgets.NewLabeledSliderWidget(theme, noCastle,
 				utils.RoundedRangeString(noCastle.Value, 0, 8))),
-		widgets.NewLabeledRowWidget(
-			theme, "With castle", constants.DefaultLabelWidthShort,
-			widgets.NewLabeledSliderWidget(
-				theme, withCastle,
+		widgets.NewLabeledRowWidget(theme, "With castle", constants.DefaultLabelWidthShort,
+			widgets.NewLabeledSliderWidget(theme, withCastle,
 				utils.RoundedRangeString(withCastle.Value, 0, 8))),
-		widgets.NewLabeledRowWidget(
-			theme, "Neutral castles per zone", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, castlesPerZone,
+		widgets.NewLabeledRowWidget(theme, "Neutral castles per zone", constants.DefaultLabelWidth,
+			widgets.NewLabeledSliderWidget(theme, castlesPerZone,
 				utils.RoundedRangeString(castlesPerZone.Value, 1, 4))),
 		widgets.NewBrightButtonLargeWidget(theme, "Edit zone content...", contentBtn, false),
 	})
@@ -409,10 +377,8 @@ func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.W
 		}
 
 		return widgets.NewSectionWidget(theme, "Hub", []layout.Widget{
-			widgets.NewLabeledRowWidget(
-				theme, "Hub zone castles", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(
-					theme, &this.sldHubCastles,
+			widgets.NewLabeledRowWidget(theme, "Hub zone castles", constants.DefaultLabelWidth,
+				widgets.NewLabeledSliderWidget(theme, &this.sldHubCastles,
 					utils.RoundedRangeString(this.sldHubCastles.Value, 0, 4))),
 			widgets.NewBrightButtonLargeWidget(theme, "Edit zone content...", &this.btnHubContent, false),
 		})(gtx)
@@ -479,8 +445,7 @@ func (this *LayoutPanel) openZoneContentDialog(
 	title string,
 	isPlayerTier bool,
 	rows []models.ZoneContentRowSave,
-	set func(*dtos.EditorStateDto, []models.ZoneContentRowSave),
-) {
+	set func(*dtos.EditorStateDto, []models.ZoneContentRowSave)) {
 	this.state.Dialogs().Open(dialogs.NewZoneContentDialog(
 		title, isPlayerTier, rows, this.state.Dialogs().Open,
 		func(updated []models.ZoneContentRowSave) {

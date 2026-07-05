@@ -161,21 +161,3 @@ func (this *EditorState) CastleSettingsChangedSinceGeneration() editor_state_dto
 	}
 	return this.previous.DiffCastleSettings(this.current)
 }
-
-// func (this *EditorState) Undo() {
-// 	if this.previous != nil {
-// 		nextState := *this.current
-// 		this.next = &nextState
-// 		this.current = this.previous
-// 		this.previous = nil
-// 	}
-// }
-
-// func (this *EditorState) Redo() {
-// 	if this.next != nil {
-// 		previousState := *this.current
-// 		this.previous = &previousState
-// 		this.current = this.next
-// 		this.next = nil
-// 	}
-// }

@@ -3,11 +3,10 @@ package editor
 import (
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
@@ -98,20 +97,15 @@ func (this *Toolbar) getButtonsWidget(theme *material.Theme) layout.Widget {
 
 func (this *Toolbar) getStateStatusWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Inset{Left: unit.Dp(12)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			path := this.state.GetCurrentPath()
-			if path == "" {
-				path = "(unsaved)"
-			}
-			if this.state.IsUnsaved() {
-				path += " *"
-			}
-			label := material.Caption(theme, "File: "+path)
-			label.Color = themes.ColorTextDim
-			label.MaxLines = 1
-			label.Truncator = "..."
-			label.Alignment = text.End
-			return label.Layout(gtx)
-		})
+		path := this.state.GetCurrentPath()
+		if path == "" {
+			path = "(unsaved)"
+		}
+		if this.state.IsUnsaved() {
+			path += " *"
+		}
+		return layout.Inset{Left: constants.DefaultPaddingLarge + 2}.Layout(gtx,
+			widgets.NewLabelBuilder(theme).WithSizeDefault().WithText("File: "+path).WithColorDim().
+				WithMaxLines(1).WithAlignment(text.End).Build)
 	}
 }

@@ -81,7 +81,7 @@ func (this *Window) getPanelsWidget(theme *material.Theme) layout.Widget {
 				return layout.UniformInset(constants.DefaultPaddingLarge).
 					Layout(gtx, this.getSelectedPanelWidget(theme))
 			})),
-			layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
+			widgets.NewDefaultWidgetSpacer(),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Min.X = gtx.Dp(constants.DefaultPreviewWidthMinimum)
 				gtx.Constraints.Max.X = gtx.Dp(constants.DefaultPreviewWidthMaximum)

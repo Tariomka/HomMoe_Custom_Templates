@@ -17,7 +17,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 // Category dot colors come from the central theme palette.
@@ -31,7 +31,7 @@ var (
 )
 
 type BonusesPanel struct {
-	bonuses        []config_inner.BonusEntry
+	bonuses        []config.BonusEntry
 	bannedItems    []string
 	bannedMagics   []string
 	valueOverrides []string
@@ -62,118 +62,135 @@ func (this *BonusesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		this.processClicks(gtx)
 		widgetsList := this.buildWidgets(theme)
-		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList), func(gtx layout.Context, index int) layout.Dimensions {
-			return widgetsList[index](gtx)
-		})
+		return material.List(theme, &this.scroll).Layout(gtx, len(widgetsList),
+			func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
 	}
 }
 
 // buildWidgets assembles the section list for the current frame; rebuilt every
 // frame so the rows stay in sync with the underlying entry slices.
 func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
-	bonusRows := []layout.Widget{
-		widgets.NewBrightButtonLargeWidget(theme, "+ Add bonus...", &this.addBonusBtn, false),
-	}
-	if len(this.bonuses) == 0 {
-		bonusRows = append(bonusRows, widgets.NewDimmedLabelWidget(theme, "(no bonuses)"))
-	}
-	for i, entry := range this.bonuses {
-		bonusRows = append(bonusRows, this.entryRow(theme,
-			bonusDotColor(entry.PresetType),
-			bonusDisplayName(entry),
-			bonusReceiverLabel(entry),
-			&this.bonusRemoveBtns[i]))
-	}
-
-	itemRows := []layout.Widget{
-		widgets.NewBrightButtonLargeWidget(theme, "+ Add banned item...", &this.pickItemsBtn, false),
-	}
-	if len(this.bannedItems) == 0 {
-		itemRows = append(itemRows, widgets.NewDimmedLabelWidget(theme, "(no banned items)"))
-	}
-	for i, sid := range this.bannedItems {
-		name, category := bannedItemLabel(sid)
-		itemRows = append(itemRows, this.entryRow(theme, banCategoryColor(category), name, category, &this.itemRemoveBtns[i]))
-	}
-
-	spellRows := []layout.Widget{
-		widgets.NewBrightButtonLargeWidget(theme, "+ Add banned spell...", &this.pickSpellsBtn, false),
-	}
-	if len(this.bannedMagics) == 0 {
-		spellRows = append(spellRows, widgets.NewDimmedLabelWidget(theme, "(no banned spells)"))
-	}
-	for i, sid := range this.bannedMagics {
-		name, school := bannedSpellLabel(sid)
-		spellRows = append(spellRows, this.entryRow(theme, constants.GetSpellSchoolColorFromDisplayName(school), name, school, &this.magicRemoveBtns[i]))
-	}
-
-	overrideRows := []layout.Widget{
-		widgets.NewBrightButtonLargeWidget(theme, "+ Add override...", &this.pickOverridesBtn, false),
-	}
-	if len(this.valueOverrides) == 0 {
-		overrideRows = append(overrideRows, widgets.NewDimmedLabelWidget(theme, "(no overrides)"))
-	}
-	for i, line := range this.valueOverrides {
-		name, value := overrideLabel(line)
-		overrideRows = append(overrideRows, this.entryRow(theme, dotResource, name, value, &this.overrideRemoveBtns[i]))
-	}
-
 	return []layout.Widget{
 		// widgets.NewWarningBannerWidget(theme, "EXPERIMENTAL - Effects only apply on generation."),
 		widgets.NewHorizontallySplitWidget(theme,
 			func(theme *material.Theme) layout.Widget {
 				return func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(widgets.NewSectionWidget(theme, "Game start bonuses", bonusRows)),
-						layout.Rigid(widgets.NewSectionWidget(theme, "Guard value overrides", overrideRows)))
+						layout.Rigid(widgets.NewSectionWidget(theme, "Game start bonuses",
+							this.getStartBonusesWidgets(theme))),
+						layout.Rigid(widgets.NewSectionWidget(theme, "Guard value overrides",
+							this.getValueOverridesWidgets(theme))))
 				}
 			},
 			func(theme *material.Theme) layout.Widget {
 				return func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(widgets.NewSectionWidget(theme, "Banned items", itemRows)),
-						layout.Rigid(widgets.NewSectionWidget(theme, "Banned spells", spellRows)))
+						layout.Rigid(widgets.NewSectionWidget(theme, "Banned items",
+							this.getBannedItemsWidgets(theme))),
+						layout.Rigid(widgets.NewSectionWidget(theme, "Banned spells",
+							this.getBannedSpellsWidgets(theme))))
 				}
 			}),
 	}
 }
 
-// entryRow renders one read-only list row: category dot, primary label, dim
-// trailing label, and a remove button.
-func (this *BonusesPanel) entryRow(theme *material.Theme, dot color.NRGBA, name, trailing string, removeBtn *widget.Clickable) layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(2)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(dotWidget(dot)),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					label := material.Body1(theme, name)
-					label.Color = themes.ColorText
-					label.TextSize = unit.Sp(13)
-					return label.Layout(gtx)
-				}),
-				widgets.NewDefaultComponentSpacer(),
-				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					if trailing == "" {
-						return layout.Dimensions{}
-					}
-					label := material.Body2(theme, trailing)
-					label.Color = themes.ColorTextDim
-					label.TextSize = unit.Sp(11)
-					return label.Layout(gtx)
-				}),
-				layout.Rigid(widgets.NewButtonWidget(theme, "✕", removeBtn, false)),
-			)
-		})
+func (this *BonusesPanel) getStartBonusesWidgets(theme *material.Theme) []layout.Widget {
+	bonusRows := []layout.Widget{
+		widgets.NewBrightButtonLargeWidget(theme, "+ Add bonus...", &this.addBonusBtn, false),
 	}
+	if len(this.bonuses) == 0 {
+		return append(bonusRows, widgets.NewDimmedLabelWidget(theme, "(no bonuses)"))
+	}
+
+	for i, entry := range this.bonuses {
+		bonusRows = append(bonusRows, this.getEntryRowWidget(theme,
+			bonusDotColor(entry.PresetType),
+			bonusDisplayName(entry),
+			bonusReceiverLabel(entry),
+			&this.bonusRemoveBtns[i]))
+	}
+	return bonusRows
 }
 
-// dotWidget draws the small filled category circle.
-func dotWidget(col color.NRGBA) layout.Widget {
+func (this *BonusesPanel) getBannedItemsWidgets(theme *material.Theme) []layout.Widget {
+	itemRows := []layout.Widget{
+		widgets.NewBrightButtonLargeWidget(theme, "+ Add banned item...", &this.pickItemsBtn, false),
+	}
+	if len(this.bannedItems) == 0 {
+		return append(itemRows, widgets.NewDimmedLabelWidget(theme, "(no banned items)"))
+	}
+
+	for i, sid := range this.bannedItems {
+		name, category := bannedItemLabel(sid)
+		itemRows = append(itemRows,
+			this.getEntryRowWidget(theme, banCategoryColor(category), name, category, &this.itemRemoveBtns[i]))
+	}
+	return itemRows
+}
+
+func (this *BonusesPanel) getBannedSpellsWidgets(theme *material.Theme) []layout.Widget {
+	spellRows := []layout.Widget{
+		widgets.NewBrightButtonLargeWidget(theme, "+ Add banned spell...", &this.pickSpellsBtn, false),
+	}
+	if len(this.bannedMagics) == 0 {
+		return append(spellRows, widgets.NewDimmedLabelWidget(theme, "(no banned spells)"))
+	}
+
+	for i, sid := range this.bannedMagics {
+		name, school := bannedSpellLabel(sid)
+		spellRows = append(spellRows, this.getEntryRowWidget(theme,
+			constants.GetSpellSchoolColorFromDisplayName(school), name, school, &this.magicRemoveBtns[i]),
+		)
+	}
+	return spellRows
+}
+
+func (this *BonusesPanel) getValueOverridesWidgets(theme *material.Theme) []layout.Widget {
+	overrideRows := []layout.Widget{
+		widgets.NewBrightButtonLargeWidget(theme, "+ Add override...", &this.pickOverridesBtn, false),
+	}
+	if len(this.valueOverrides) == 0 {
+		return append(overrideRows, widgets.NewDimmedLabelWidget(theme, "(no overrides)"))
+	}
+
+	for i, line := range this.valueOverrides {
+		name, value := overrideLabel(line)
+		overrideRows = append(overrideRows,
+			this.getEntryRowWidget(theme, dotResource, name, value, &this.overrideRemoveBtns[i]))
+	}
+	return overrideRows
+}
+
+// getEntryRowWidget renders one read-only list row: category dot, primary label, dim
+// trailing label, and a remove button.
+func (this *BonusesPanel) getEntryRowWidget(
+	theme *material.Theme,
+	dotColor color.NRGBA,
+	name, trailing string,
+	removeBtn *widget.Clickable) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		size := gtx.Dp(constants.DefaultRoundnessLarge)
-		paint.FillShape(gtx.Ops, col, clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
-		return layout.Dimensions{Size: image.Pt(size, size)}
+		return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(2)}.Layout(gtx,
+			func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						size := gtx.Dp(constants.DefaultRoundnessLarge)
+						paint.FillShape(gtx.Ops, dotColor, clip.Ellipse{Max: image.Pt(size, size)}.Op(gtx.Ops))
+						return layout.Dimensions{Size: image.Pt(size, size)}
+					}),
+					widgets.NewDefaultComponentSpacer(),
+					layout.Rigid(widgets.NewLabelBigWidget(theme, name, themes.ColorText)),
+					widgets.NewDefaultComponentSpacer(),
+					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+						if trailing == "" {
+							return layout.Dimensions{}
+						}
+
+						return widgets.NewDimmedLabelWidget(theme, trailing)(gtx)
+					}),
+					layout.Rigid(widgets.NewButtonWidget(theme, "✕", removeBtn, false)),
+				)
+			},
+		)
 	}
 }
 
@@ -182,7 +199,7 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	opener := this.state.Dialogs().Open
 
 	if this.addBonusBtn.Clicked(gtx) {
-		opener(dialogs.NewBonusPickerDialog(this.bonuses, opener, func(entries []config_inner.BonusEntry) {
+		opener(dialogs.NewBonusPickerDialog(this.bonuses, opener, func(entries []config.BonusEntry) {
 			this.bonuses = append(this.bonuses, entries...)
 			this.syncRemoveButtons()
 			this.SaveToState()
@@ -261,59 +278,61 @@ func (this *BonusesPanel) SaveToState() {
 
 // ── display helpers ─────────────────────────────────────────────────────────
 
-// bonusDisplayName composes the human-readable label for a bonus entry
-func bonusDisplayName(entry config_inner.BonusEntry) string {
+// bonusDisplayName composes the human-readable label for a bonus entry.
+func bonusDisplayName(entry config.BonusEntry) string {
 	switch entry.PresetType {
-	case config_inner.BonusTownPortalFree:
+	case config.BonusTownPortalFree:
 		return "Town Portal (free)"
-	case config_inner.BonusSpell:
+	case config.BonusSpell:
 		if entry.Param2 == "1" {
 			return "Spell (free): " + spellLabel(entry.Param)
 		}
 		return "Spell: " + spellLabel(entry.Param)
-	case config_inner.BonusUnitMultiplier:
+	case config.BonusUnitMultiplier:
 		return "Unit multiplier x" + entry.Param
-	case config_inner.BonusMovementBonus:
+	case config.BonusMovementBonus:
 		return "Movement bonus +" + entry.Param
-	case config_inner.BonusStartingItem:
+	case config.BonusStartingItem:
 		return "Starting item: " + itemLabel(entry.Param)
-	case config_inner.BonusStartingGold:
+	case config.BonusStartingGold:
 		return "Starting gold: " + entry.Param
-	case config_inner.BonusStartingGems:
+	case config.BonusStartingGems:
 		return "Starting gems: " + entry.Param
-	case config_inner.BonusStartingCrystals:
+	case config.BonusStartingCrystals:
 		return "Starting crystals: " + entry.Param
-	case config_inner.BonusStartingMercury:
+	case config.BonusStartingMercury:
 		return "Starting mercury: " + entry.Param
-	case config_inner.BonusStartingWood:
+	case config.BonusStartingWood:
 		return "Starting wood: " + entry.Param
-	case config_inner.BonusStartingOre:
+	case config.BonusStartingOre:
 		return "Starting ore: " + entry.Param
 	}
 	return ""
 }
 
-// bonusReceiverLabel is the dim trailing text; hidden for resource bonuses
-func bonusReceiverLabel(entry config_inner.BonusEntry) string {
+// bonusReceiverLabel is the dim trailing text; hidden for resource bonuses.
+func bonusReceiverLabel(entry config.BonusEntry) string {
 	if entry.PresetType.IsResource() {
 		return ""
 	}
+
 	if entry.ReceiverFilter == "all_heroes" {
 		return "all heroes"
 	}
+
 	return "start hero"
 }
 
 // bonusDotColor matches the C# BonusEntry.DotBrush color coding.
-func bonusDotColor(typ config_inner.BonusPresetType) color.NRGBA {
+func bonusDotColor(typ config.BonusPresetType) color.NRGBA {
 	switch typ {
-	case config_inner.BonusTownPortalFree, config_inner.BonusSpell:
+	case config.BonusTownPortalFree, config.BonusSpell:
 		return dotMagic
-	case config_inner.BonusUnitMultiplier:
+	case config.BonusUnitMultiplier:
 		return dotCombat
-	case config_inner.BonusMovementBonus:
+	case config.BonusMovementBonus:
 		return dotMovement
-	case config_inner.BonusStartingItem:
+	case config.BonusStartingItem:
 		return dotSet
 	default:
 		return dotResource
@@ -343,6 +362,7 @@ func spellLabel(sid string) string {
 	if spell, ok := constants.FindSpell(sid); ok {
 		return spell.Name
 	}
+
 	return constants.SidToDisplayName(sid)
 }
 
@@ -352,6 +372,7 @@ func itemLabel(sid string) string {
 	if item, ok := constants.FindBannableItem(sid); ok {
 		return item.Name
 	}
+
 	return constants.SidToDisplayName(sid)
 }
 
@@ -360,6 +381,7 @@ func bannedItemLabel(sid string) (name, category string) {
 	if item, ok := constants.FindBannableItem(sid); ok {
 		return item.Name, item.Category
 	}
+
 	return constants.SidToDisplayName(sid), "Misc"
 }
 
@@ -372,6 +394,7 @@ func bannedSpellLabel(sid string) (name, school string) {
 		}
 		return spell.Name, label
 	}
+
 	return constants.SidToDisplayName(sid), "Spell"
 }
 
@@ -384,6 +407,7 @@ func clickedIndex(gtx layout.Context, buttons []widget.Clickable) int {
 			return i
 		}
 	}
+
 	return -1
 }
 
@@ -405,6 +429,7 @@ func appendUnique(values, ids []string) []string {
 		if id == "" || seen[id] {
 			continue
 		}
+
 		seen[id] = true
 		values = append(values, id)
 	}
@@ -449,5 +474,6 @@ func overrideLabel(line string) (name, trailing string) {
 	if value == "" {
 		return constants.SidToDisplayName(sid), sid
 	}
+
 	return constants.SidToDisplayName(sid), "guard value: " + value
 }
