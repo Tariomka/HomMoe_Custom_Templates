@@ -33,6 +33,11 @@ jobs:
             cgo: '1'
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Setup Project
         uses: ./.github/workflows/setup-steps
         with:

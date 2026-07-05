@@ -37,6 +37,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Setup Project
         uses: ./.github/workflows/setup-steps
         with:
@@ -50,6 +55,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Project
+        uses: ./.github/workflows/setup-steps
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
       - name: Check UI for vulnerabilities
         uses: golang/govulncheck-action@v1
         with:
@@ -73,6 +88,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Setup Project
         uses: ./.github/workflows/setup-steps
         with:
@@ -86,6 +106,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Setup Project
         uses: ./.github/workflows/setup-steps
         with:
@@ -99,6 +124,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Setup Project
         uses: ./.github/workflows/setup-steps
         with:

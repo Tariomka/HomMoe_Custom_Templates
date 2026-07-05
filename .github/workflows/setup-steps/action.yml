@@ -7,18 +7,13 @@ inputs:
     required: false
     default: 1.26.3
   os:
-    description: 'The operating system to build for (linux or windows)'
+    description: The operating system to build for
     required: false 
     default: 'linux'
 
 runs:
   using: 'composite'
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v7
-      with:
-        persist-credentials: false
-
     - name: Set up Go
       uses: actions/setup-go@v6
       with:
