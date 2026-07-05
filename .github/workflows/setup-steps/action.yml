@@ -43,5 +43,5 @@ runs:
           xorg-dev
 
     - name: Download dependencies
-      shell: cmd
+      shell: bash
       run: go mod download
