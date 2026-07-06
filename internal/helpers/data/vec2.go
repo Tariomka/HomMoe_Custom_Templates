@@ -4,6 +4,10 @@ type Vec2[T Numeric] struct{ X, Y T }
 
 func NewVec2[T Numeric](x, y T) Vec2[T] { return Vec2[T]{X: x, Y: y} }
 
+func Transform[TOld, TNew Numeric](vector Vec2[TOld]) Vec2[TNew] {
+	return NewVec2(TNew(vector.X), TNew(vector.Y))
+}
+
 func (this Vec2[T]) Add(other Vec2[T]) Vec2[T] {
 	this.X += other.X
 	this.Y += other.Y

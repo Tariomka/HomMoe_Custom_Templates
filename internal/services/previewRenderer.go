@@ -8,9 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/asset_provider"
 )
 
 // previewLineColor is the connection-line color sampled from the official
@@ -21,7 +22,7 @@ var previewLineColor = color.NRGBA{R: 0x39, G: 0x11, B: 0x14, A: 0xFF}
 // WritePreviewPNG rasterize the given template and writes it as a PNG into
 // dir/<safeName>.png at the requested side length. The directory is created
 // if missing. Returns the final path on success.
-func WritePreviewPNG(dir string, template *template.RmgTemplate, topology config.MapTopology) (string, error) {
+func WritePreviewPNG(dir string, template *entities.RmgTemplate, topology config.MapTopology) (string, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
@@ -46,14 +47,18 @@ func WritePreviewPNG(dir string, template *template.RmgTemplate, topology config
 // in-game template overview images: the parchment background, the zone
 // bubbles and the connection lines are composited from sprite assets
 // extracted from those images.
-func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopology, side int) *image.RGBA {
-	assets := loadPreviewAssets()
-	img := image.NewRGBA(image.Rect(0, 0, side, side))
-	drawBackgroundScaled(img, assets.background)
+func RenderPreviewImage(template *entities.RmgTemplate, topology config.MapTopology, side int) *image.RGBA {
+	assetProvider, err := asset_provider.NewAssetProvider()
+	if err != nil {
+		return nil
+	}
+	side = 700
+	canvas := image.NewRGBA(image.Rect(0, 0, side, side))
+	assetProvider.DrawBackground(canvas)
 
 	layout := BuildPreviewLayout(template, topology, float64(side))
 	if len(layout.Positions) == 0 {
-		return img
+		return canvas
 	}
 
 	// Sprite scale: follow the layout's zone radius for dense maps, but cap
@@ -122,18 +127,10 @@ func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopol
 			continue
 		}
 		if conn.Portal {
-			drawDashedQuadratic(
-				img,
-				image.Pt(ax, ay),
-				ctrl,
-				image.Pt(bx, by),
-				lineWidth,
-				previewLineColor,
-				dashOn,
-				dashOff,
-			)
+			drawDashedQuadratic(canvas,
+				image.Pt(ax, ay), ctrl, image.Pt(bx, by), lineWidth, previewLineColor, dashOn, dashOff)
 		} else {
-			drawThickQuadratic(img, image.Pt(ax, ay), ctrl, image.Pt(bx, by), lineWidth, previewLineColor)
+			drawThickQuadratic(canvas, image.Pt(ax, ay), ctrl, image.Pt(bx, by), lineWidth, previewLineColor)
 		}
 	}
 
@@ -143,19 +140,17 @@ func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopol
 		if zone.IsPlayer {
 			continue
 		}
-		sprite := neutralSpriteFor(assets, zone)
-		c := fitPt(zone.Center)
-		drawSpriteScaled(img, sprite, c.X, c.Y, previewSpriteCenter, previewSpriteCenter, scale)
+
+		assetProvider.DrawNeutralZone(canvas, zone, fitPt(zone.Center), scale)
 	}
 	for _, zone := range layout.Zones {
 		if !zone.IsPlayer {
 			continue
 		}
-		sprite := playerSpriteFor(assets, zone)
-		c := fitPt(zone.Center)
-		drawSpriteScaled(img, sprite, c.X, c.Y, previewSpriteCenter, previewSpriteCenter, scale)
+
+		assetProvider.DrawPlayerZone(canvas, zone, fitPt(zone.Center), scale)
 	}
-	return img
+	return canvas
 }
 
 // trimTowardPoint returns `from` moved toward `toward` by `dist` pixels. ok is

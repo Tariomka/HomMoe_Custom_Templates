@@ -29,6 +29,7 @@
         "stretchr",
         "syscalls",
         "Tariomka",
+        "texel",
         "Themeless",
         "Truncator",
         "uncommons"
@@ -49,10 +50,10 @@
     },
     "go.formatFlags": ["fmt", "--stdin"],
     // "go.coverOnSave": true, // TODO: this is good but a shit ton of code will be red currently
-    "go.inlayHints.assignVariableTypes": true,
-    "go.inlayHints.constantValues": true,
+    "go.inlayHints.assignVariableTypes": false,
+    "go.inlayHints.constantValues": false,
     "go.inlayHints.ignoredError": true,
-    "go.inlayHints.rangeVariableTypes": true,
+    "go.inlayHints.rangeVariableTypes": false,
     "go.testExplorer.packageDisplayMode": "nested",
     "go.lintOnSave": "file",
 }
