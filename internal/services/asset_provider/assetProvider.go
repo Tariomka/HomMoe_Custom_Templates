@@ -17,6 +17,7 @@ const (
 	assetCenter     = 48        // all assets are 96x96
 	assetFolder     = "assets/" // all asserts are stored inside ./assets folder
 	backgroundAsset = "background.png"
+	playerCount     = 8
 )
 
 var (
@@ -77,8 +78,7 @@ func (this *AssetProvider) DrawPlayerZone(
 	scale float64) {
 	this.ensureAssetsAreLoaded()
 
-	sprite := this.getPlayerAsset(zone)
-	this.drawSpriteScaled(canvas, sprite, center, scale)
+	this.drawAsset(canvas, this.getPlayerAsset(zone), center, scale)
 }
 
 func (this *AssetProvider) DrawNeutralZone(
@@ -88,31 +88,27 @@ func (this *AssetProvider) DrawNeutralZone(
 	scale float64) {
 	this.ensureAssetsAreLoaded()
 
-	sprite := this.getNeutralZoneAsset(zone)
-	this.drawSpriteScaled(canvas, sprite, center, scale)
+	this.drawAsset(canvas, this.getNeutralZoneAsset(zone), center, scale)
 }
 
-// drawSpriteScaled alpha-composites a sprite onto dst so that the sprite
-// anchor (anchorX, anchorY) lands on dst point (cx, cy), scaled by the given
-// factor. Bilinear sampling keeps the artwork smooth at non-integer scales.
-func (this *AssetProvider) drawSpriteScaled(
+// drawAsset draws an asset onto canvas so that the asset lands on canvas point (center), scaled by the given factor.
+func (this *AssetProvider) drawAsset(
 	canvas *image.RGBA,
 	asset image.Image,
 	center image.Point,
-	scale float64,
-) {
+	scale float64) {
 	assetBounds := asset.Bounds()
 	const roundness = 2
 
-	// Destination rectangle covered by the scaled sprite, clipped to dst.
+	// Destination rectangle covered by the scaled asset, clipped to canvas.
 	left := int(float64(center.X) - assetCenter*scale)
 	top := int(float64(center.Y) - assetCenter*scale)
-	width := int(float64(assetBounds.Dx())*scale) + roundness // +2 covers rounding at both edges
+	width := int(float64(assetBounds.Dx())*scale) + roundness
 	height := int(float64(assetBounds.Dy())*scale) + roundness
-	rect := image.Rect(left, top, left+width, top+height).Intersect(canvas.Bounds())
+	intersection := image.Rect(left, top, left+width, top+height).Intersect(canvas.Bounds())
 
-	for y := rect.Min.Y; y < rect.Max.Y; y++ {
-		for x := rect.Min.X; x < rect.Max.X; x++ {
+	for y := intersection.Min.Y; y < intersection.Max.Y; y++ {
+		for x := intersection.Min.X; x < intersection.Max.X; x++ {
 			normalizedPosition := data.NewVec2(
 				(float64(x)-float64(center.X))/scale+assetCenter,
 				(float64(y)-float64(center.Y))/scale+assetCenter)
@@ -121,7 +117,7 @@ func (this *AssetProvider) drawSpriteScaled(
 				continue
 			}
 
-			// Src-over blend: out = src*alpha + dst*(1-alpha).
+			// Src-over blend: out = source*alpha + destination*(1-alpha).
 			offset := canvas.PixOffset(x, y)
 			alpha, keep := int(interpolatedColor.A), 255-int(interpolatedColor.A)
 			canvas.Pix[offset+0] = uint8((int(interpolatedColor.R)*alpha + int(canvas.Pix[offset+0])*keep) / 255)
@@ -138,6 +134,7 @@ func (this *AssetProvider) calculateBilinearInterpolation(asset image.Image, pos
 		if !image.Pt(pixel.X, pixel.Y).In(asset.Bounds()) {
 			return data.Vec4[float64]{}
 		}
+
 		red, green, blue, alpha := asset.At(pixel.X, pixel.Y).RGBA()
 		return data.NewVec4(float64(red>>8), float64(green>>8), float64(blue>>8), float64(alpha>>8))
 	}
@@ -193,8 +190,8 @@ func (this *AssetProvider) getNeutralZoneAsset(zone preview.PreviewZone) image.I
 }
 
 func (this *AssetProvider) getPlayerAsset(zone preview.PreviewZone) image.Image {
-	owner := min(max(zone.Owner, 1), 8)
-	return this.players[owner-1]
+	playerIndex := min(max(zone.Owner, 1), playerCount) - 1
+	return this.players[playerIndex]
 }
 
 func (this *AssetProvider) loadAssets() error {
@@ -221,9 +218,9 @@ func (this *AssetProvider) loadAssets() error {
 			return
 		}
 
-		for i := range 8 {
-			if assetProvider.players[i], err = decode(fmt.Sprintf("player_%d.png", i+1)); err != nil {
-				providerErr = fmt.Errorf("failed to load player %d: %v", i+1, err)
+		for index := range playerCount {
+			if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
+				providerErr = fmt.Errorf("failed to load player %d: %v", index+1, err)
 				return
 			}
 		}

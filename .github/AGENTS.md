@@ -127,6 +127,47 @@ current session. Skip for trivial single-session tasks.
 3. Report any new errors and fix them before handing back.
 4. Briefly summarize: files touched, behaviour changed, tests added.
 
+### 3.4 Picking the right models for workflows and subagents
+
+When orchestrating subagents, pick the model per task using these ratings
+(0–10, higher is better):
+
+- **Cost** — relative cost to the user (higher = cheaper to run).
+- **Intelligence** — how hard a problem you can hand the model unsupervised.
+- **Taste** — code quality, API design, UI/UX and other subjective decisions.
+
+| model    | cost | intelligence | taste |
+|----------|------|--------------|-------|
+| fable-5  | 3    | 9            | 9     |
+| gpt-5.5  | 7    | 8            | 5     |
+| opus-4.8 | 4    | 7            | 8     |
+| sonnet-5 | 5    | 5            | 7     |
+
+Application directives:
+
+- These are defaults, not limits: if a cheaper model's output doesn't meet
+  standards, rerun or redo the work with a smarter model without asking.
+  Judge the output, not the price tag.
+- Don't let cost prevent you from using the right model for the job.
+  Instead, take advantage of cheaper options to gather information and try
+  things before moving the work to a more expensive option.
+- Anything user-facing (UI, API design, copy) or project-maintainability
+  related requires taste > 7.
+- Review of plans/implementations must be done by fable-5 or opus-4.8;
+  optionally add gpt-5.5 as an extra independent perspective.
+- **Never use Haiku models.**
+- Match model to task shape: use cheap, high-cost-rating models (gpt-5.5,
+  sonnet-5) for read-only exploration, searching, summarizing, and
+  mechanical/repetitive edits; reserve fable-5/opus-4.8 for design
+  decisions, tricky debugging, and final review.
+- Parallelize independent exploration across cheap subagents rather than
+  serializing everything through one expensive model.
+- Give each subagent a self-contained brief (goal, constraints, expected
+  output format) — subagents are stateless, and a weaker model with a
+  precise brief beats a stronger model with a vague one.
+- Escalate at most once per task; if two model tiers fail the same task,
+  the brief is the problem — rewrite it instead of burning more runs.
+
 ---
 
 ## 4. Code Style
@@ -151,7 +192,7 @@ any file you *do* touch must leave the repo in conformance.
 - **No single-letter variables** and **no cryptic abbreviations**. Use
   descriptive names (`zoneIndex`, `playerCount`, `templatePath`).
 - **Allowed exceptions** — only the well-established Go idioms:
-  - `i`, `j`, `k` for loop indices
+  - `i`, `j` for loop indices only, but if a single for loop better use `index`
   - `err` for errors
   - `ok` for the comma-ok idiom
   - `ctx` for `context.Context`
@@ -238,7 +279,7 @@ include them.
 
 ```powershell
 # Default run — everything EXCEPT the gated dirs (no tag):
-go test ./... -count=1
+go test ./test/... -count=1
 
 # Integration + performance only (tag scoped to these two dirs):
 go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1
