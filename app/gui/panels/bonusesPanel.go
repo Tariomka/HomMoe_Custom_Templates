@@ -196,7 +196,7 @@ func (this *BonusesPanel) getEntryRowWidget(
 
 // processClicks handles add-dialog launches and per-row removals.
 func (this *BonusesPanel) processClicks(gtx layout.Context) {
-	opener := this.state.Dialogs().Open
+	opener := this.state.GetDialogHost().Open
 
 	if this.addBonusBtn.Clicked(gtx) {
 		opener(dialogs.NewBonusPickerDialog(this.bonuses, opener, func(entries []config.BonusEntry) {

@@ -1,4 +1,4 @@
-package services
+package asset_provider
 
 import (
 	"bytes"
@@ -11,67 +11,52 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
-// The 15 sprite assets extracted from the official in-game template overview
-// images by tools/assetgen: the parchment background, the eight numbered
-// player bubbles and the six neutral zone bubbles (low/medium/high quality,
-// each with and without the castle glyph).
-//
-//go:embed asset_provider/assets/*.png
-var previewAssetsFS embed.FS
+const (
+	// previewSpriteCenter is the bubble centre inside every (96x96) marker
+	// sprite, matching cropSize/2 in tools/assetgen.
+	previewSpriteCenter = 48
 
-// previewSpriteCenter is the bubble centre inside every (96x96) marker
-// sprite, matching cropSize/2 in tools/assetgen.
-const previewSpriteCenter = 48
+	// previewSpriteRadius is the bubble outline radius inside the marker
+	// sprites (the official bubbles are ~21 px in a 700 px canvas).
+	previewSpriteRadius = 21.0
 
-// previewSpriteRadius is the bubble outline radius inside the marker
-// sprites (the official bubbles are ~21 px in a 700 px canvas).
-const previewSpriteRadius = 21.0
+	assetFolder     = "assets/"
+	backgroundAsset = "background.png"
+)
 
-type previewAssets struct {
+var (
+	//go:embed assets/*.png
+	assetFileSystem embed.FS
+
+	providerOnce      sync.Once
+	providerSingleton *AssetProvider
+	providerErr       error
+
+	neutralAssets = []string{
+		"neutral_low", "neutral_low_castle",
+		"neutral_medium", "neutral_medium_castle",
+		"neutral_high", "neutral_high_castle",
+	}
+)
+
+type AssetProvider struct {
 	background image.Image
 	players    [8]image.Image // players[i] is the "i+1" bubble
 	neutral    map[string]image.Image
 }
 
-var (
-	previewAssetsOnce sync.Once
-	previewAssetsData *previewAssets
-)
+func NewAssetProvider() (*AssetProvider, error) {
+	if err := loadAssets(); err != nil {
+		return nil, fmt.Errorf("failed to load assets: %v", err)
+	}
 
-func loadPreviewAssets() *previewAssets {
-	previewAssetsOnce.Do(func() {
-		decode := func(name string) image.Image {
-			data, err := previewAssetsFS.ReadFile("asset_provider/assets/" + name)
-			if err != nil {
-				panic(fmt.Sprintf("preview asset %s: %v", name, err))
-			}
-			img, err := png.Decode(bytes.NewReader(data))
-			if err != nil {
-				panic(fmt.Sprintf("preview asset %s: %v", name, err))
-			}
-			return img
-		}
-		a := &previewAssets{neutral: map[string]image.Image{}}
-		a.background = decode("background.png")
-		for i := range 8 {
-			a.players[i] = decode(fmt.Sprintf("player_%d.png", i+1))
-		}
-		for _, name := range []string{
-			"neutral_low", "neutral_low_castle",
-			"neutral_medium", "neutral_medium_castle",
-			"neutral_high", "neutral_high_castle",
-		} {
-			a.neutral[name] = decode(name + ".png")
-		}
-		previewAssetsData = a
-	})
-	return previewAssetsData
+	return providerSingleton, nil
 }
 
 // neutralSpriteFor maps a zone to its neutral bubble sprite: the zone tier
 // picks the quality fill (gold/silver/none) and the castle glyph marks
 // zones holding a city.
-func neutralSpriteFor(assets *previewAssets, zone preview.PreviewZone) image.Image {
+func (this *AssetProvider) neutralSpriteFor(zone preview.PreviewZone) image.Image {
 	quality := "low"
 	switch zone.Tier {
 	case 3:
@@ -83,13 +68,13 @@ func neutralSpriteFor(assets *previewAssets, zone preview.PreviewZone) image.Ima
 	if zone.HasCastle {
 		name += "_castle"
 	}
-	return assets.neutral[name]
+	return this.neutral[name]
 }
 
 // playerSpriteFor maps a player zone to its numbered bubble sprite.
-func playerSpriteFor(assets *previewAssets, zone preview.PreviewZone) image.Image {
+func (this *AssetProvider) playerSpriteFor(zone preview.PreviewZone) image.Image {
 	owner := min(max(zone.Owner, 1), 8)
-	return assets.players[owner-1]
+	return this.players[owner-1]
 }
 
 // drawSpriteScaled alpha-composites a sprite onto dst so that the sprite
@@ -195,4 +180,48 @@ func drawBackgroundScaled(dst *image.RGBA, bg image.Image) {
 			dst.Pix[off+3] = 255
 		}
 	}
+}
+
+func loadAssets() error {
+	providerOnce.Do(func() {
+		decode := func(name string) (image.Image, error) {
+			data, err := assetFileSystem.ReadFile(assetFolder + name)
+			if err != nil {
+				return nil, fmt.Errorf("preview asset %s: %v", name, err)
+			}
+
+			img, err := png.Decode(bytes.NewReader(data))
+			if err != nil {
+				return nil, fmt.Errorf("preview asset %s: %v", name, err)
+			}
+
+			return img, nil
+		}
+
+		assetProvider := &AssetProvider{neutral: map[string]image.Image{}}
+		var err error
+
+		if assetProvider.background, err = decode(backgroundAsset); err != nil {
+			providerErr = fmt.Errorf("failed to load background: %v", err)
+			return
+		}
+
+		for i := range 8 {
+			if assetProvider.players[i], err = decode(fmt.Sprintf("player_%d.png", i+1)); err != nil {
+				providerErr = fmt.Errorf("failed to load player %d: %v", i+1, err)
+				return
+			}
+		}
+
+		for _, name := range neutralAssets {
+			if assetProvider.neutral[name], err = decode(name + ".png"); err != nil {
+				providerErr = fmt.Errorf("failed to load neutral asset %s: %v", name, err)
+				return
+			}
+		}
+
+		providerSingleton = assetProvider
+	})
+
+	return providerErr
 }

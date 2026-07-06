@@ -122,7 +122,16 @@ func RenderPreviewImage(template *template.RmgTemplate, topology config.MapTopol
 			continue
 		}
 		if conn.Portal {
-			drawDashedQuadratic(img, image.Pt(ax, ay), ctrl, image.Pt(bx, by), lineWidth, previewLineColor, dashOn, dashOff)
+			drawDashedQuadratic(
+				img,
+				image.Pt(ax, ay),
+				ctrl,
+				image.Pt(bx, by),
+				lineWidth,
+				previewLineColor,
+				dashOn,
+				dashOff,
+			)
 		} else {
 			drawThickQuadratic(img, image.Pt(ax, ay), ctrl, image.Pt(bx, by), lineWidth, previewLineColor)
 		}
@@ -182,7 +191,13 @@ func drawThickQuadratic(img *image.RGBA, start, ctrl, end image.Point, width int
 // perforated line: it walks the curve in fine steps, accumulating arc length,
 // and only strokes the "on" portions of the dashOn/dashOff dash pattern. Used
 // for portal connections so they read differently from solid direct lines.
-func drawDashedQuadratic(img *image.RGBA, start, ctrl, end image.Point, width int, lineColor color.NRGBA, dashOn, dashOff float64) {
+func drawDashedQuadratic(
+	img *image.RGBA,
+	start, ctrl, end image.Point,
+	width int,
+	lineColor color.NRGBA,
+	dashOn, dashOff float64,
+) {
 	if dashOn <= 0 {
 		drawThickQuadratic(img, start, ctrl, end, width, lineColor)
 		return

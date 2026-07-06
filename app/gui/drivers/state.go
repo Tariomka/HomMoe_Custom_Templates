@@ -34,11 +34,9 @@ type State struct {
 
 	innerState *models.EditorState
 
-	// File state
 	currentPath string
 	unsaved     bool
 
-	// Output / status
 	outputPath   widget.Editor
 	lastTemplate *entities.RmgTemplate
 	statusMsg    string
@@ -80,8 +78,7 @@ func NewUIState() *State {
 
 func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg, this.statusErr }
 
-// Dialogs returns the modal host used to open and render dialogs.
-func (this *State) Dialogs() *DialogHost { return this.dialogs }
+func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
 func (this *State) GetStateData() dtos.EditorStateDto { return this.innerState.GetCurrentState() }
 
@@ -416,5 +413,5 @@ func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCo
 		zoneCount = len(this.lastTemplate.Variants[0].Zones)
 		connectionCount = len(this.lastTemplate.Variants[0].Connections)
 	}
-	return
+	return zoneCount, connectionCount
 }

@@ -9,38 +9,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
-
-// PreviewZone is one zone laid out on the preview canvas.
-type PreviewZone struct {
-	Name      string
-	Letter    string
-	Center    image.Point
-	IsPlayer  bool
-	IsHub     bool
-	Tier      int // 0 unknown, 1 bronze, 2 silver, 3 gold
-	Owner     int
-	HasCastle bool
-	Castles   int
-}
-
-// PreviewConnection is a drawn link between two zones on the preview canvas.
-// Ctrl is the quadratic Bézier control point used to draw the edge: a lone
-// edge keeps Ctrl on the midpoint (so it renders straight), while parallel
-// edges between the same pair of zones spread their control points to either
-// side so each connection stays individually visible.
-type PreviewConnection struct {
-	A, B   image.Point
-	Ctrl   image.Point
-	Portal bool
-}
 
 // PreviewLayout is the full geometry of a preview rendered into a square
 // canvas of the requested side length.
 type PreviewLayout struct {
 	Positions   map[string]image.Point
-	Zones       []PreviewZone
-	Connections []PreviewConnection
+	Zones       []preview.PreviewZone
+	Connections []preview.PreviewConnection
 	ZoneRadius  int
 }
 
@@ -101,7 +78,7 @@ func BuildPreviewLayout(template *template.RmgTemplate, topology config.MapTopol
 		// can happen to touch every spawn without being a hub, which previously
 		// made the hub marker appear (and flicker) on non-hub zones.
 		isHub := strings.EqualFold(zone.Name, "Hub") || strings.HasPrefix(zone.Name, "Hub-")
-		preview := PreviewZone{
+		preview := preview.PreviewZone{
 			Name:     zone.Name,
 			Letter:   ExtractZoneLetter(zone.Name),
 			Center:   pos,
@@ -146,7 +123,9 @@ const previewParallelGap = 22.0
 // edges. Connections sharing the same unordered endpoint pair are grouped and
 // each is given a perpendicular bulge so they do not collapse onto a single
 // overlapping line.
-func buildPreviewConnections(connections []entities.Connection, positions map[string]image.Point) []PreviewConnection {
+func buildPreviewConnections(
+	connections []entities.Connection,
+	positions map[string]image.Point) []preview.PreviewConnection {
 	type pairKey struct{ a, b string }
 	groups := make(map[pairKey][]entities.Connection)
 	order := make([]pairKey, 0)
@@ -168,7 +147,7 @@ func buildPreviewConnections(connections []entities.Connection, positions map[st
 		groups[key] = append(groups[key], conn)
 	}
 
-	result := make([]PreviewConnection, 0, len(connections))
+	result := make([]preview.PreviewConnection, 0, len(connections))
 	for _, key := range order {
 		group := groups[key]
 		count := len(group)
@@ -200,7 +179,7 @@ func buildPreviewConnections(connections []entities.Connection, positions map[st
 			isPortal := len(conn.PortalPlacementRulesFrom) > 0 ||
 				len(conn.PortalPlacementRulesTo) > 0 ||
 				conn.ConnectionType == "Portal"
-			result = append(result, PreviewConnection{A: a, B: b, Ctrl: ctrl, Portal: isPortal})
+			result = append(result, preview.PreviewConnection{A: a, B: b, Ctrl: ctrl, Portal: isPortal})
 		}
 	}
 	return result
@@ -209,7 +188,12 @@ func buildPreviewConnections(connections []entities.Connection, positions map[st
 // dispatchClusterLayout writes positions for the given zones into the layout,
 // picking the topology-specific renderer. Each path sets layout.Positions and
 // layout.ZoneRadius.
-func dispatchClusterLayout(layout *PreviewLayout, zones []entities.Zone, connections []entities.Connection, topology config.MapTopology, side float64) {
+func dispatchClusterLayout(
+	layout *PreviewLayout,
+	zones []entities.Zone,
+	connections []entities.Connection,
+	topology config.MapTopology,
+	side float64) {
 	switch {
 	case allHaveManualPosition(zones):
 		layoutManualPositions(layout, zones, side)
@@ -860,7 +844,13 @@ func layoutRingOrHub(layout *PreviewLayout, zones []entities.Zone, conns []entit
 	}
 }
 
-func layoutMultiHub(layout *PreviewLayout, zones []entities.Zone, conns []entities.Connection, hubIndices []int, side float64) {
+func layoutMultiHub(
+	layout *PreviewLayout,
+	zones []entities.Zone,
+	conns []entities.Connection,
+	hubIndices []int,
+	side float64,
+) {
 	scale := canvasScale(side)
 	margin := csMargin * scale
 	minGap := csMinGap * scale

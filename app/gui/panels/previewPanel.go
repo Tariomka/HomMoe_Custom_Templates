@@ -201,9 +201,8 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 	return func(gtx layout.Context) layout.Dimensions {
 		outerCanvasSize, canvasSize := getCanvasSizes(gtx)
 
-		// Center canvas
 		defer op.Offset(image.Pt((gtx.Constraints.Max.X-canvasSize.X)/2, (gtx.Constraints.Max.Y-canvasSize.Y)/2)).
-			Push(gtx.Ops).Pop()
+			Push(gtx.Ops).Pop() // Center canvas
 		renderCanvas(gtx, canvasSize)
 		renderLegend(gtx, canvasSize)
 

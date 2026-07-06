@@ -16,10 +16,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
-func DrawConnection(gtx layout.Context, conn services.PreviewConnection, zoneRadius int) {
+func DrawConnection(gtx layout.Context, conn preview.PreviewConnection, zoneRadius int) {
 	// Trim both ends back to the circle outlines along the tangent toward the
 	// control point so the edge doesn't overlap the zone fill, then stroke the
 	// quadratic curve. A lone edge has its control point on the midpoint and so
@@ -56,7 +56,7 @@ func trimToward(from, toward image.Point, dist float64) (x, y float64, ok bool) 
 	return float64(from.X) + dx/d*dist, float64(from.Y) + dy/d*dist, true
 }
 
-func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone services.PreviewZone, zoneRadius int) {
+func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.PreviewZone, zoneRadius int) {
 	radius := zoneRadius
 	if zone.IsHub && radius < 28 {
 		radius = 28
@@ -80,7 +80,14 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone services.Pr
 		// Small badge in lower right.
 		badgeX := cx + radius/2
 		badgeY := cy + radius/2
-		drawOffsetText(gtx, theme, image.Pt(badgeX, badgeY), fmt.Sprintf("⌂%d", zone.Castles), 10, themes.ColorPreviewCastleBadge)
+		drawOffsetText(
+			gtx,
+			theme,
+			image.Pt(badgeX, badgeY),
+			fmt.Sprintf("⌂%d", zone.Castles),
+			10,
+			themes.ColorPreviewCastleBadge,
+		)
 	}
 }
 
@@ -98,7 +105,13 @@ func drawCurve(gtx layout.Context, start, ctrl, end image.Point, width float32, 
 	}.Op())
 }
 
-func drawOffsetText(gtx layout.Context, theme *material.Theme, offset image.Point, text string, sizeSp int, textColor color.NRGBA) {
+func drawOffsetText(
+	gtx layout.Context,
+	theme *material.Theme,
+	offset image.Point,
+	text string,
+	sizeSp int,
+	textColor color.NRGBA) {
 	macro := op.Record(gtx.Ops)
 	dims := func() layout.Dimensions {
 		gtxLocal := gtx
@@ -118,7 +131,7 @@ func drawOffsetText(gtx layout.Context, theme *material.Theme, offset image.Poin
 	stack.Pop()
 }
 
-func zoneColors(zone services.PreviewZone) (fill, edge color.NRGBA) {
+func zoneColors(zone preview.PreviewZone) (fill, edge color.NRGBA) {
 	switch {
 	case zone.IsPlayer:
 		return themes.ColorPreviewSpawnFill, themes.ColorPreviewSpawnEdge
@@ -135,7 +148,7 @@ func zoneColors(zone services.PreviewZone) (fill, edge color.NRGBA) {
 	}
 }
 
-func zoneLabel(zone services.PreviewZone) string {
+func zoneLabel(zone preview.PreviewZone) string {
 	if zone.IsPlayer {
 		if zone.Owner > 0 {
 			return fmt.Sprintf("P%d", zone.Owner)
