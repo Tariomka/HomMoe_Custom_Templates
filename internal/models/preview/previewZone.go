@@ -14,3 +14,12 @@ type PreviewZone struct {
 	HasCastle bool
 	Castles   int
 }
+
+type ZoneTier int
+
+const (
+	TierUnknown ZoneTier = iota
+	TierBronze
+	TierSilver
+	TierGold
+)
