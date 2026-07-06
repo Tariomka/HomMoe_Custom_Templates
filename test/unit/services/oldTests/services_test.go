@@ -1066,8 +1066,8 @@ func TestRenderPreviewImage_DoesNotPanic_AllTopologies(t *testing.T) {
 					t.Fatalf("RenderPreviewImage returned nil for %s/%dp", topo, pc)
 				}
 				bounds := img.Bounds()
-				if bounds.Dx() != 600 || bounds.Dy() != 600 {
-					t.Fatalf("expected 600x600 image, got %dx%d", bounds.Dx(), bounds.Dy())
+				if bounds.Dx() != 700 || bounds.Dy() != 700 {
+					t.Fatalf("expected 700x700 image, got %dx%d", bounds.Dx(), bounds.Dy())
 				}
 			})
 			t.Run(string(topo)+"-tournament-"+strconv.Itoa(pc), func(t *testing.T) {

@@ -19,6 +19,10 @@ import (
 // zone bubbles).
 var previewLineColor = color.NRGBA{R: 0x39, G: 0x11, B: 0x14, A: 0xFF}
 
+// previewSpriteRadius is the bubble outline radius inside the marker
+// sprites (the official bubbles are ~21 px in a 700 px canvas).
+const previewSpriteRadius = 21.0
+
 // WritePreviewPNG rasterize the given template and writes it as a PNG into
 // dir/<safeName>.png at the requested side length. The directory is created
 // if missing. Returns the final path on success.

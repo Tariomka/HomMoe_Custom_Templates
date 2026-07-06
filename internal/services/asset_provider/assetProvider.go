@@ -14,15 +14,8 @@ import (
 )
 
 const (
-	// previewSpriteCenter is the bubble centre inside every (96x96) marker
-	// sprite, matching cropSize/2 in tools/assetgen.
-	previewSpriteCenter = 48
-
-	// previewSpriteRadius is the bubble outline radius inside the marker
-	// sprites (the official bubbles are ~21 px in a 700 px canvas).
-	previewSpriteRadius = 21.0
-
-	assetFolder     = "assets/"
+	assetCenter     = 48        // all assets are 96x96
+	assetFolder     = "assets/" // all asserts are stored inside ./assets folder
 	backgroundAsset = "background.png"
 )
 
@@ -34,7 +27,7 @@ var (
 	providerSingleton *AssetProvider
 	providerErr       error
 
-	neutralAssets = []string{
+	neutralAssetNames = []string{
 		"neutral_low", "neutral_low_castle",
 		"neutral_medium", "neutral_medium_castle",
 		"neutral_high", "neutral_high_castle",
@@ -112,8 +105,8 @@ func (this *AssetProvider) drawSpriteScaled(
 	const roundness = 2
 
 	// Destination rectangle covered by the scaled sprite, clipped to dst.
-	left := int(float64(center.X) - previewSpriteCenter*scale)
-	top := int(float64(center.Y) - previewSpriteCenter*scale)
+	left := int(float64(center.X) - assetCenter*scale)
+	top := int(float64(center.Y) - assetCenter*scale)
 	width := int(float64(assetBounds.Dx())*scale) + roundness // +2 covers rounding at both edges
 	height := int(float64(assetBounds.Dy())*scale) + roundness
 	rect := image.Rect(left, top, left+width, top+height).Intersect(canvas.Bounds())
@@ -121,8 +114,8 @@ func (this *AssetProvider) drawSpriteScaled(
 	for y := rect.Min.Y; y < rect.Max.Y; y++ {
 		for x := rect.Min.X; x < rect.Max.X; x++ {
 			normalizedPosition := data.NewVec2(
-				(float64(x)-float64(center.X))/scale+previewSpriteCenter,
-				(float64(y)-float64(center.Y))/scale+previewSpriteCenter)
+				(float64(x)-float64(center.X))/scale+assetCenter,
+				(float64(y)-float64(center.Y))/scale+assetCenter)
 			interpolatedColor := this.calculateBilinearInterpolation(asset, normalizedPosition)
 			if interpolatedColor.A == 0 {
 				continue
@@ -235,7 +228,7 @@ func (this *AssetProvider) loadAssets() error {
 			}
 		}
 
-		for _, name := range neutralAssets {
+		for _, name := range neutralAssetNames {
 			if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
 				providerErr = fmt.Errorf("failed to load neutral asset %s: %v", name, err)
 				return

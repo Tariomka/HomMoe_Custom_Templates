@@ -36,7 +36,7 @@ func TestRenderPreviewImage_ReturnsImageOfRequestedSize(t *testing.T) {
 	if img == nil {
 		t.Fatal("nil image")
 	}
-	if img.Bounds() != image.Rect(0, 0, 400, 400) {
+	if img.Bounds() != image.Rect(0, 0, 700, 700) {
 		t.Errorf("bounds = %v", img.Bounds())
 	}
 }
@@ -46,7 +46,7 @@ func TestRenderPreviewImage_EmptyTemplateReturnsBackgroundOnly(t *testing.T) {
 	if img == nil {
 		t.Fatal("nil image")
 	}
-	if img.Bounds().Dx() != 100 {
+	if img.Bounds().Dx() != 700 {
 		t.Errorf("size = %d", img.Bounds().Dx())
 	}
 }
@@ -132,7 +132,11 @@ func TestWritePreviewPNG_MkdirError(t *testing.T) {
 	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := services.WritePreviewPNG(filepath.Join(blocker, "x"), simpleTemplate("T"), config.TopologyRing); err == nil {
+	if _, err := services.WritePreviewPNG(
+		filepath.Join(blocker, "x"),
+		simpleTemplate("T"),
+		config.TopologyRing,
+	); err == nil {
 		t.Error("expected mkdir error")
 	}
 }
