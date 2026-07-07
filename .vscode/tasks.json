@@ -53,7 +53,7 @@
         {
             "label": "Go: Unit test coverage report",
             "type": "shell",
-            "command": "go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...; go tool cover '-html=coverage.txt' -o coverage.html",
+            "command": "go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...; go tool cover '-html=coverage.txt' -o coverage.html; gcov2lcov '-infile=coverage.txt' '-outfile=lcov.info'",
             "group": "test",
             "problemMatcher": "$go"
         }
