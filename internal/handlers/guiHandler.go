@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -97,9 +96,8 @@ func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, 
 	}
 
 	if this.previewGenerator != nil {
-		// previewImage := previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
-		// _, err = this.fileService.SavePreviewImage(outputPath, previewImage, templateDto.Template.Name)
-		_, err = services.WritePreviewPNG(outputPath, templateDto.Template, templateDto.Topology)
+		previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
+		_, err = this.fileService.SavePreviewImage(outputPath, previewImage, templateDto.Template.Name)
 		if err != nil {
 			return out, err
 		}

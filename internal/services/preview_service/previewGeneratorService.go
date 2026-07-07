@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/asset_provider"
@@ -15,6 +16,10 @@ const (
 	canvasSize         = 700.0
 	assetRadius        = 21.0 // Zone bubbles are ~21 px in 700 px canvas
 	connectorLineWidth = 4
+
+	segmentsSolid       = 24
+	segmentsDashed      = 96
+	dashLength, dashGap = 9.0, 13.0
 )
 
 var connectorLineColor = color.RGBA{R: 0x39, G: 0x11, B: 0x14, A: 0xFF}
@@ -74,87 +79,76 @@ func (this *PreviewGeneratorService) drawConnections(
 		}
 
 		if conn.Portal {
-			drawDashedQuadratic(canvas, startPoint, controlPoint, endPoint)
+			this.drawDashedLine(canvas, startPoint, controlPoint, endPoint)
 		} else {
-			drawThickQuadratic(canvas, startPoint, controlPoint, endPoint)
+			this.drawSolidLine(canvas, startPoint, controlPoint, endPoint)
 		}
 	}
 }
 
-// drawThickQuadratic rasterises a quadratic Bézier (start→ctrl→end) as a chain
-// of short thick line segments. With ctrl on the midpoint the samples are
-// collinear, so a lone edge is drawn as a straight line.
-func drawThickQuadratic(img *image.RGBA, start, ctrl, end image.Point) {
-	const segments = 24
-	prev := start
-	for i := 1; i <= segments; i++ {
-		t := float64(i) / float64(segments)
-		mt := 1 - t
-		x := mt*mt*float64(start.X) + 2*mt*t*float64(ctrl.X) + t*t*float64(end.X)
-		y := mt*mt*float64(start.Y) + 2*mt*t*float64(ctrl.Y) + t*t*float64(end.Y)
-		curr := image.Pt(int(math.Round(x)), int(math.Round(y)))
-		drawThickLine(img, prev, curr)
-		prev = curr
+func (this *PreviewGeneratorService) drawSolidLine(canvas *image.RGBA, start, ctrl, end image.Point) {
+	previousPoint := start
+	for i := range segmentsSolid {
+		t := float64(i+1) / segmentsSolid
+		currentPoint := this.getPointOnQuadraticBezierCurve(start, ctrl, end, t)
+		this.drawLine(canvas, previousPoint, currentPoint)
+		previousPoint = currentPoint
 	}
 }
 
-// drawDashedQuadratic rasterises a quadratic Bézier (start→ctrl→end) as a
-// perforated line: it walks the curve in fine steps, accumulating arc length,
-// and only strokes the "on" portions of the dashOn/dashOff dash pattern. Used
-// for portal connections so they read differently from solid direct lines.
-func drawDashedQuadratic(img *image.RGBA, start, ctrl, end image.Point) {
-	const dashOn, dashOff = 9.0, 13.0
-	const segments = 96
-	period := dashOn + dashOff
+func (this *PreviewGeneratorService) drawDashedLine(canvas *image.RGBA, start, ctrl, end image.Point) {
+	period := dashLength + dashGap
 	traveled := 0.0
-	prev := start
-	for i := 1; i <= segments; i++ {
-		t := float64(i) / float64(segments)
-		mt := 1 - t
-		x := mt*mt*float64(start.X) + 2*mt*t*float64(ctrl.X) + t*t*float64(end.X)
-		y := mt*mt*float64(start.Y) + 2*mt*t*float64(ctrl.Y) + t*t*float64(end.Y)
-		curr := image.Pt(int(math.Round(x)), int(math.Round(y)))
-		segLen := math.Hypot(float64(curr.X-prev.X), float64(curr.Y-prev.Y))
-		// A short segment is fully "on" or "off" based on its midpoint phase;
-		// the fine sampling keeps the dashes visually even.
-		phase := math.Mod(traveled+segLen/2, period)
-		if phase < dashOn {
-			drawThickLine(img, prev, curr)
+	previousPoint := start
+	for i := range segmentsDashed {
+		t := float64(i+1) / segmentsDashed
+		currentPoint := this.getPointOnQuadraticBezierCurve(start, ctrl, end, t)
+		segmentLength := math.Hypot(
+			float64(currentPoint.X-previousPoint.X),
+			float64(currentPoint.Y-previousPoint.Y))
+		if math.Mod(traveled+segmentLength/2, period) < dashLength {
+			this.drawLine(canvas, previousPoint, currentPoint)
 		}
-		traveled += segLen
-		prev = curr
+		traveled += segmentLength
+		previousPoint = currentPoint
 	}
 }
 
-// drawThickLine draws a width-pixel-thick line via DDA with a square brush.
-func drawThickLine(img *image.RGBA, a, b image.Point) {
-	dx := b.X - a.X
-	dy := b.Y - a.Y
-	steps := max(-dy, max(dy, max(-dx, dx)))
+func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, a, b image.Point) {
+	delta := b.Sub(a)
+	steps := max(math.Abs(float64(delta.X)), math.Abs(float64(delta.Y)))
 	if steps <= 0 {
 		return
 	}
-	xinc := float64(dx) / float64(steps)
-	yinc := float64(dy) / float64(steps)
-	x := float64(a.X)
-	y := float64(a.Y)
+
+	increment := data.Vec2FromPoint[float64](delta).DivideScalar(steps)
 	half := connectorLineWidth / 2
-	for i := 0; i <= steps; i++ {
-		px := int(math.Round(x))
-		py := int(math.Round(y))
-		for oy := -half; oy <= half; oy++ {
-			for ox := -half; ox <= half; ox++ {
-				xx := px + ox
-				yy := py + oy
-				if xx < 0 || yy < 0 || xx >= img.Rect.Max.X || yy >= img.Rect.Max.Y {
-					continue
-				}
-				img.SetRGBA(xx, yy, connectorLineColor)
+	for i := range int(steps) {
+		center := data.Vec2FromPoint[float64](a).
+			Add(increment.MultiplyScalar(float64(i))).
+			ToPointRounded()
+		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
+			Intersect(canvas.Bounds()) // Square brush around the centre, clipped to the canvas.
+		for y := brush.Min.Y; y < brush.Max.Y; y++ {
+			for x := brush.Min.X; x < brush.Max.X; x++ {
+				canvas.SetRGBA(x, y, connectorLineColor)
 			}
 		}
-		x += xinc
-		y += yinc
 	}
+}
+
+// getPointOnQuadraticBezierCurve evaluates the quadratic Bézier (start(P0)→ctrl(P1)→end(P2)) at
+// the point along the curve t in [0,1] by applying this formula:
+//
+// B(t) = (1-t)²*P0 + 2*(1-t)*t*P1 + t²*P2.
+func (this *PreviewGeneratorService) getPointOnQuadraticBezierCurve(
+	start, ctrl, end image.Point,
+	t float64) image.Point {
+	mt := 1 - t
+	point := data.Vec2FromPoint[float64](start).MultiplyScalar(mt * mt).
+		Add(data.Vec2FromPoint[float64](ctrl).MultiplyScalar(2 * mt * t)).
+		Add(data.Vec2FromPoint[float64](end).MultiplyScalar(t * t))
+	return image.Pt(int(math.Round(point.X)), int(math.Round(point.Y)))
 }
 
 // movePointTowards returns `from` moved toward `toward` by `distance` pixels.
