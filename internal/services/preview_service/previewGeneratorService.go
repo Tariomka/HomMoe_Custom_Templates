@@ -116,8 +116,8 @@ func (this *PreviewGeneratorService) drawDashedLine(canvas *image.RGBA, start, c
 	}
 }
 
-func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, a, b image.Point) {
-	delta := b.Sub(a)
+func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end image.Point) {
+	delta := end.Sub(start)
 	steps := max(math.Abs(float64(delta.X)), math.Abs(float64(delta.Y)))
 	if steps <= 0 {
 		return
@@ -126,7 +126,7 @@ func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, a, b image.Poi
 	increment := data.Vec2FromPoint[float64](delta).DivideScalar(steps)
 	half := connectorLineWidth / 2
 	for i := range int(steps) {
-		center := data.Vec2FromPoint[float64](a).
+		center := data.Vec2FromPoint[float64](start).
 			Add(increment.MultiplyScalar(float64(i))).
 			ToPointRounded()
 		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
