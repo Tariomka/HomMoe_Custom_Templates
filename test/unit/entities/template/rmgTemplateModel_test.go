@@ -1,4 +1,4 @@
-package template
+package template_test
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,17 +22,17 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 	assert.NoError(t, err, "read example dir")
 
 	count := 0
-	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".rmg.json") {
+	for _, entity := range entries {
+		if entity.IsDir() || !strings.HasSuffix(entity.Name(), ".rmg.json") {
 			continue
 		}
-		name := e.Name()
+		name := entity.Name()
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(root, name)
 			raw, err := os.ReadFile(path)
 			assert.NoError(t, err, "read file")
 
-			var tpl template.RmgTemplate
+			var tpl entities.RmgTemplate
 			dec := json.NewDecoder(strings.NewReader(string(raw)))
 			dec.DisallowUnknownFields()
 			err = dec.Decode(&tpl)
@@ -45,7 +45,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 			// Re-encode and decode again to confirm the model is self-consistent.
 			out, err := json.Marshal(&tpl)
 			assert.NoError(t, err, "re-encode")
-			var tpl2 template.RmgTemplate
+			var tpl2 entities.RmgTemplate
 			err = json.Unmarshal(out, &tpl2)
 			assert.NoError(t, err, "re-decode")
 		})
