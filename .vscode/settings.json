@@ -50,7 +50,14 @@
         "customFormatter": "golangci-lint-v2"
     },
     "go.formatFlags": ["fmt", "--stdin"],
-    // "go.coverOnSave": true, // TODO: this is good but a shit ton of code will be red currently
+    // Coverage: use Test Explorer "Run with coverage" for gutter highlights.
+    // -coverpkg is required because tests live in test/ while code lives in internal/ and app/.
+    // (coverOnSave can't work here: source packages contain no tests.)
+    "go.testFlags": [
+        "-count=1",
+        "-v",
+        "-coverpkg=github.com/Tariomka/hommoe_custom_templates/internal/...,github.com/Tariomka/hommoe_custom_templates/app/..."
+    ],
     "go.inlayHints.assignVariableTypes": false,
     "go.inlayHints.constantValues": false,
     "go.inlayHints.ignoredError": true,
