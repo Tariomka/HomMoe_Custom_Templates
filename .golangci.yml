@@ -256,9 +256,10 @@ linters:
       allow-empty-returns: true
 
     funcorder:
-      # Checks if the exported methods of a structure are placed before the non-exported ones.
-      # Default: true
-      struct-method: false
+      constructor: true # Checks that constructors are placed after the structure declaration.
+      struct-method: true # Checks if the exported methods of a structure are placed before the unexported ones.
+      alphabetical: false # Checks if the constructors and/or structure methods are sorted alphabetically.
+      function: true # Checks that exported functions are placed before unexported functions.
 
     funlen:
       lines: 60
