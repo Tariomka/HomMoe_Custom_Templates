@@ -828,3 +828,23 @@ func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCentre(t *testing.T) {
 	// Assert
 	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
 }
+
+func TestWhenHubSpokeConnectionIsDuplicated_PlacesTheSpokeOnce(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		namedZone("Hub-A"), namedZone("Hub-B"),
+		namedZone("Spawn-A"), namedZone("Spawn-B"),
+	}
+	singleConnections := []entities.Connection{
+		directConnection("Hub-A", "Spawn-A"),
+		directConnection("Hub-B", "Spawn-B"),
+	}
+	duplicatedConnections := append([]entities.Connection{directConnection("Hub-A", "Spawn-A")}, singleConnections...)
+	singleLayout := services.BuildPreviewLayout(templateWith(zones, singleConnections), config.TopologyHubAndSpoke, 600)
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, duplicatedConnections), config.TopologyHubAndSpoke, 600)
+
+	// Assert
+	assert.Equal(t, singleLayout.Positions, layout.Positions)
+}

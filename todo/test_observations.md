@@ -18,6 +18,28 @@ Format: `path` — reason — suggested action.
 - `internal/models/config/config_inner/bonusEntry.go` `GetHash` — the fallback branch when `json.Marshal`
   fails is unreachable: `BonusEntry` holds only string/int fields, so marshalling never errors. Capped at 80%.
   Suggested action: none (defensive guard).
+- `internal/services/previewLayout.go` — several branches are unreachable via `BuildPreviewLayout` (the only
+  public entry that drives the private layout code):
+  - the `!ok { continue }` guard in the zone loop (line ~72): every dispatch path positions every zone
+    (layoutMultiHub sweeps stragglers to the canvas centre), so a variant zone is never absent from Positions;
+  - the `n == 0` guards in `layoutFixedPositions`, `layoutBalancedRings`, `layoutScatter` and
+    `layoutRingOrHub`: BuildPreviewLayout early-returns when the variant has no zones and every internal
+    caller passes a non-empty slice — consequently `scaledInt` (only called from those guards) stays 0%;
+  - the `cnt == 0 { continue }` in the balanced-rings placement loop: every ring index maps to a present
+    GeneratorRing tier which by construction holds at least one zone;
+  - `relaxPasses` Pass B `elen2 < 1e-3 { continue }`: Pass A in the same iteration pushes any coincident
+    connected pair apart to minDist (≥30 px) before Pass B runs;
+  - `layoutMultiHub` `numHubs == 1` spoke-base branch: the function is only invoked with ≥2 hub zones;
+  - `positionCentroid`/`minMax` empty-input guards: all callers pass ≥1 element.
+  Suggested action: none (defensive guards).
+- `internal/services/previewRenderer.go` — unreachable branches:
+  - `WritePreviewPNG` `png.Encode` error return: encoding a valid RGBA into a freshly created file cannot
+    fail without I/O fault injection;
+  - `RenderPreviewImage` `NewAssetProvider` error return: preview assets are embedded PNGs that always decode;
+  - the `allowed < 1 { continue }` guard in the border-fit loop: side is forced to 700 so allowed ≥ ~280;
+  - `drawDashedQuadratic` `dashOn <= 0` / `dashOff < 0` guards: the sole caller passes fixed dashOn=9,
+    dashOff=13 (scaled).
+  Suggested action: none (defensive guards / fault-injection-only paths).
 
 ## Gio-UI-heavy files (covered by integration suite, not unit-testable)
 
