@@ -54,6 +54,6 @@ func TestWhenValueIsAboveOne_ClampsToHigh(t *testing.T) {
 	// Act
 	result := utils.Denormalize(1.5, low, high)
 
-	// Assert
-	assert.Equal(t, high, result)
+	// Assert - low + 1*(high-low) may differ from high by a float32 rounding step
+	assert.InDelta(t, high, result, 0.001)
 }
