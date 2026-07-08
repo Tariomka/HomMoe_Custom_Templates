@@ -1,0 +1,51 @@
+package zoneContentRowSave_test
+
+import (
+	"encoding/json"
+	"testing"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func rowBoolPointer(value bool) *bool { return &value }
+func rowIntPointer(value int) *int    { return &value }
+
+func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
+	// Arrange
+	original := models.ZoneContentRowSave{
+		Sid:   "dragon_utopia",
+		Count: 2,
+		Rules: []models.ContentRuleRowSave{
+			{Name: "Guarded", IsGuarded: rowBoolPointer(true)},
+			{Name: "Distance to road", DistanceName: "Far"},
+			{Name: "Variant", VariantId: rowIntPointer(1)},
+		},
+	}
+	data, err := json.Marshal(original)
+	require.NoError(t, err)
+
+	// Act
+	var roundTripped models.ZoneContentRowSave
+	require.NoError(t, json.Unmarshal(data, &roundTripped))
+
+	// Assert
+	assert.Equal(t, original.Rules, roundTripped.Rules)
+}
+
+func TestWhenRowIsSerialized_UsesRulesFormatWithoutLegacyFlatFields(t *testing.T) {
+	// Arrange
+	row := models.ZoneContentRowSave{
+		Sid:   "x",
+		Count: 1,
+		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: rowBoolPointer(true)}},
+	}
+
+	// Act
+	data, err := json.Marshal(row)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, `{"sid":"x","count":1,"isGroup":false,"rules":[{"name":"Guarded","isGuarded":true}]}`, string(data))
+}

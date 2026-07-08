@@ -155,6 +155,7 @@ linters:
         no-ui-from-internal:
           files:
             - "**/internal/**"
+            - "!$test"
           deny:
             - pkg: github.com/Tariomka/hommoe_custom_templates/app
               desc: internal/* must not import app/*
@@ -162,6 +163,7 @@ linters:
         config-inner-private:
           files:
             - "!**/internal/models/config/**"
+            - "!$test"
           deny:
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner
               desc: import internal/models/config instead
@@ -169,6 +171,7 @@ linters:
         template-inner-private:
           files:
             - "!**/internal/entities/**"
+            - "!$test"
           deny:
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/entities/template
               desc: import internal/entities instead
