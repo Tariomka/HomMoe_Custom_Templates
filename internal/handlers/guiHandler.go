@@ -57,27 +57,28 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 		return dtos.TemplateLoadDto{}, common.ErrProvidedTemplateInvalid
 	}
 
-	templateDto.Template.Variants[0].Zones = templateDto.Zones
-	templateDto.Template.Variants[0].Connections = templateDto.Connections
+	newTemplate := *templateDto.Template
+	newTemplate.Variants[0].Zones = templateDto.Zones
+	newTemplate.Variants[0].Connections = templateDto.Connections
 
 	connection_editor.RebuildZoneConnectionRoads(
-		templateDto.Template.Variants[0].Zones,
-		templateDto.Template.Variants[0].Connections)
+		newTemplate.Variants[0].Zones,
+		newTemplate.Variants[0].Connections)
 
 	// Rebuild mandatory content from the final zones so a zone re-tiered in the
 	// manual editor (e.g. Medium -> High) gets the content of its new quality
 	// instead of keeping the content keyed to its original generation tier.
 	if templateDto.Config != nil {
-		templateDto.Template.MandatoryContent = this.contentProvider.CreateContentsForZones(
-			*templateDto.Config, templateDto.Template.Variants[0].Zones)
+		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(
+			*templateDto.Config, newTemplate.Variants[0].Zones)
 	}
 
 	var err error
-	if connection_editor.ComputeHasErrors(templateDto.Zones, templateDto.Connections) {
+	if connection_editor.ComputeHasErrors(newTemplate.Variants[0].Zones, newTemplate.Variants[0].Connections) {
 		err = common.ErrZonesMissing
 	}
 
-	return dtos.TemplateLoadDto{Template: templateDto.Template}, err
+	return dtos.TemplateLoadDto{Template: &newTemplate}, err
 }
 
 func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {

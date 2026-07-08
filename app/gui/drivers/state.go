@@ -1,6 +1,7 @@
 package drivers
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -194,6 +196,7 @@ func (this *State) RevealOutputDir() {
 }
 
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
+	// validators.ValidateEditorState(updateFunc, this.innerState.GetCurrentState())
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
 		this.unsaved = true
@@ -312,8 +315,15 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 		Connections: connections,
 		Config:      this.GetGeneratorConfig(),
 	})
-	this.lastTemplate = dto.Template
 
+	if err != nil && errors.Is(err, common.ErrProvidedTemplateInvalid) {
+		this.SetStatus(
+			fmt.Sprintf("Unable to update template, possibly because template was not generated. ⚠ Error: %v", err),
+			true)
+		return
+	}
+
+	this.lastTemplate = dto.Template
 	if err != nil {
 		this.SetStatus(
 			fmt.Sprintf(

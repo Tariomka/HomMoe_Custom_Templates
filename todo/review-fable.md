@@ -116,46 +116,6 @@ func (this *State) Exit() {
 (A tiny two-press confirm avoids building a confirm dialog; if you prefer a dialog, open one via
 `this.dialogs.Open(...)` — the infrastructure already exists.)
 
-### 1.5 🟠 Panics in library code
-- [internal/services/previewAssets.go](../internal/services/previewAssets.go#L44) (twice): a failed
-  embedded-PNG decode panics inside `sync.Once` during preview rendering. Embedded assets failing is
-  a build-time bug, so a panic is *defensible*, but it will take the whole app down mid-frame with
-  no message. Wrap: make `loadPreviewAssets() (*previewAssets, error)`, propagate through
-  `RenderPreviewImage`/`WritePreviewPNG` (both already return `error`), and keep a `sync.OnceValues`
-  memoization.
-- [internal/models/neutralZoneProfile.go](../internal/models/neutralZoneProfile.go#L33):
-  `panic("invalid quality")` on an enum the UI can never produce today — but the manual zone editor
-  writes qualities too. Return `(NeutralZoneProfile, error)` or, minimally, fall back to the low
-  profile and log.
-
-### 1.6 🟠 `GUIHandler.UpdateTemplate` conflates "warning" with "error" and mutates its input
-[internal/handlers/guiHandler.go](../internal/handlers/guiHandler.go#L45-L73)
-
-- It writes into `templateDto.Template.Variants[0]` in place and *also* returns the same pointer in
-  the DTO. Callers cannot tell whether to trust the returned value or the argument; combined with
-  1.1, an "error" result still contains a fully updated template. Pick one contract:
-  **pure-function style** — deep-copy the template, mutate the copy, return it; or **command style**
-  — return only `error` and document in-place mutation. Recommended: keep in-place (cheap) but
-  change the signature to `UpdateTemplate(dto dtos.TemplateUpdateDto) error` and delete the
-  misleading `TemplateLoadDto` return.
-- The `ComputeHasErrors → ErrZonesMissing` result is a *validation warning* about user data, not a
-  failure of the operation. Model it as a typed result:
-
-```go
-type UpdateResult struct{ DanglingConnections []string }
-func (h *GUIHandler) UpdateTemplate(dto dtos.TemplateUpdateDto) (UpdateResult, error)
-```
-
-- Line 52 TODO ("might not be needed") on `RebuildZoneConnectionRoads`: it *is* needed — it
-  self-heals stale roads from already-saved `.gen.json` files. Replace the TODO with that sentence.
-
-### 1.7 🟡 `go.mod` Go version vs CI mismatch
-[go.mod](../go.mod#L3) says `go 1.26.3`; [.github/workflows/pr-validation.yml](../.github/workflows/pr-validation.yml)
-pins `go-version: '1.25.8'`. `go build` with a toolchain older than the `go` directive fails (or
-auto-downloads a toolchain, depending on `GOTOOLCHAIN`). Align them: either bump the workflow to
-`1.26.x` or lower the directive to the minimum you actually need (`go 1.25`) — the directive should
-be a *minimum*, not your current toolchain patch version.
-
 ### 1.8 🟡 `internal/registry/temp_bannableItemSidValues.go` is live code wearing a "delete me" sign
 The file starts with `// remove/update`, is named `temp_…`, yet defines
 `GetBannableItemSidValues()` which **is the production registry** used by
@@ -190,9 +150,6 @@ and call it from `UpdateState`, surfacing problems via `SetStatus`.
 ### 1.10 ⚪ Rejected findings (checked, **not** bugs — do not "fix")
 For the record, these look suspicious but are correct:
 
-- `zoneEditorDialog.deleteZone` (line ~999) `kept := connections[i]; append(..., &kept)` — each
-  iteration creates a fresh variable; the pointers are valid. (Could still be simplified to
-  `&connections[i]`, but it is not a bug.)
 - `linq.QueryMap.ToMap()` ([internal/helpers/linq/map.go](../internal/helpers/linq/map.go#L74)) does
   `make(...)` correctly. It has **zero callers**, though — see §4.6 dead code.
 - `buildNonAdjacentDerangement` (topologyBase.go tail) has a deterministic shift fallback after 100

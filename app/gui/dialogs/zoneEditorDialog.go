@@ -1201,8 +1201,7 @@ func (this *ZoneEditorDialog) deleteZone(name string) {
 	this.zones = zones
 	this.working = this.working[:0]
 	for i := range connections {
-		kept := connections[i]
-		this.working = append(this.working, &kept)
+		this.working = append(this.working, &connections[i])
 	}
 	this.selected = nil
 	this.syncedFor = nil

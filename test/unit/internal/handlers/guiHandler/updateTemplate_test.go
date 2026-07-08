@@ -93,7 +93,7 @@ func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testin
 
 	// Assert
 	require.NoError(t, err)
-	assert.Same(t, template, loadDto.Template)
+	assert.Equal(t, *template, *loadDto.Template)
 }
 
 func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {

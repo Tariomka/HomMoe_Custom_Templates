@@ -54,14 +54,3 @@ func TestWhenQualityVaries_SelectsMatchingCityGuardValues(t *testing.T) {
 		})
 	}
 }
-
-func TestWhenQualityIsInvalid_Panics(t *testing.T) {
-	// Arrange
-	invalidQuality := models.NeutralZoneQuality(99)
-
-	// Act
-	buildProfile := func() { models.NewNeutralZoneProfile(invalidQuality) }
-
-	// Assert
-	assert.Panics(t, buildProfile)
-}

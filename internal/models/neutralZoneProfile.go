@@ -23,14 +23,12 @@ type NeutralZoneProfile struct {
 
 func NewNeutralZoneProfile(quality NeutralZoneQuality) NeutralZoneProfile {
 	switch quality {
-	case QualityLow:
-		return newNeutralZoneProfileLowQuality()
-	case QualityMedium:
-		return newNeutralZoneProfileMediumQuality()
 	case QualityHigh:
 		return newNeutralZoneProfileHighQuality()
-	default:
-		panic("invalid quality")
+	case QualityMedium:
+		return newNeutralZoneProfileMediumQuality()
+	default: // QualityLow
+		return newNeutralZoneProfileLowQuality()
 	}
 }
 
@@ -78,11 +76,15 @@ func newNeutralZoneProfileMediumQuality() NeutralZoneProfile {
 
 func newNeutralZoneProfileHighQuality() NeutralZoneProfile {
 	return NeutralZoneProfile{
-		Layout:                       "zone_layout_treasure_zone",
-		GuardReactionDistribution:    []int{0, 10, 10, 20, 10, 0},
-		GuardMultiplier:              1.8,
-		GuardedContentPool:           append(registry.GetGuardedContentPoolT4List(), registry.GetGuardedContentPoolT5List()...),
-		UnguardedContentPool:         append(registry.GetUnguardedContentPoolT4List(), registry.GetUnguardedContentPoolT5List()...),
+		Layout:                    "zone_layout_treasure_zone",
+		GuardReactionDistribution: []int{0, 10, 10, 20, 10, 0},
+		GuardMultiplier:           1.8,
+		GuardedContentPool: append(
+			registry.GetGuardedContentPoolT4List(),
+			registry.GetGuardedContentPoolT5List()...),
+		UnguardedContentPool: append(
+			registry.GetUnguardedContentPoolT4List(),
+			registry.GetUnguardedContentPoolT5List()...),
 		ResourcesContentPool:         []string{registry.GetResourcesContentPoolValues().StartZoneRich},
 		GuardedContentValue:          480000,
 		GuardedContentValuePerArea:   3000,

@@ -22,11 +22,8 @@ const (
 
 var (
 	//go:embed assets/*.png
-	assetFileSystem embed.FS
-
-	providerOnce      sync.Once
-	providerSingleton *AssetProvider
-	errProvider       error
+	assetFileSystem      embed.FS
+	assetProviderFactory func() (*AssetProvider, error)
 
 	neutralAssetNames = []string{
 		"neutral_low", "neutral_low_castle",
@@ -42,16 +39,10 @@ type AssetProvider struct {
 }
 
 func NewAssetProvider() (*AssetProvider, error) {
-	if err := providerSingleton.loadAssets(); err != nil {
-		return nil, fmt.Errorf("failed to load assets: %w", err)
-	}
-
-	return providerSingleton, nil
+	return getAssetProviderFactory()()
 }
 
 func (this *AssetProvider) DrawBackground(canvas *image.RGBA) {
-	this.ensureAssetsAreLoaded()
-
 	canvasBounds := canvas.Bounds()
 	backgroundBounds := this.background.Bounds()
 	scaledPosition := data.NewVec2(
@@ -72,31 +63,18 @@ func (this *AssetProvider) DrawBackground(canvas *image.RGBA) {
 }
 
 func (this *AssetProvider) DrawPlayerZone(
-	canvas *image.RGBA,
-	zone preview.PreviewZone,
-	center image.Point,
-	scale float64) {
-	this.ensureAssetsAreLoaded()
-
+	canvas *image.RGBA, zone preview.PreviewZone, center image.Point, scale float64) {
 	this.drawAsset(canvas, this.getPlayerAsset(zone), center, scale)
 }
 
 func (this *AssetProvider) DrawNeutralZone(
-	canvas *image.RGBA,
-	zone preview.PreviewZone,
-	center image.Point,
-	scale float64) {
-	this.ensureAssetsAreLoaded()
-
+	canvas *image.RGBA, zone preview.PreviewZone, center image.Point, scale float64) {
 	this.drawAsset(canvas, this.getNeutralZoneAsset(zone), center, scale)
 }
 
 // drawAsset draws an asset onto canvas so that the asset lands on canvas point (center), scaled by the given factor.
 func (this *AssetProvider) drawAsset(
-	canvas *image.RGBA,
-	asset image.Image,
-	center image.Point,
-	scale float64) {
+	canvas *image.RGBA, asset image.Image, center image.Point, scale float64) {
 	assetBounds := asset.Bounds()
 	const roundness = 2
 
@@ -194,51 +172,45 @@ func (this *AssetProvider) getPlayerAsset(zone preview.PreviewZone) image.Image 
 	return this.players[playerIndex]
 }
 
-func (this *AssetProvider) loadAssets() error {
-	providerOnce.Do(func() {
-		decode := func(name string) (image.Image, error) {
-			data, err := assetFileSystem.ReadFile(assetFolder + name)
-			if err != nil {
-				return nil, fmt.Errorf("preview asset %s: %w", name, err)
+func getAssetProviderFactory() func() (*AssetProvider, error) {
+	if assetProviderFactory == nil {
+		assetProviderFactory = sync.OnceValues(func() (*AssetProvider, error) {
+			decode := func(name string) (image.Image, error) {
+				data, err := assetFileSystem.ReadFile(assetFolder + name)
+				if err != nil {
+					return nil, fmt.Errorf("preview asset %s: %w", name, err)
+				}
+
+				img, err := png.Decode(bytes.NewReader(data))
+				if err != nil {
+					return nil, fmt.Errorf("preview asset %s: %w", name, err)
+				}
+
+				return img, nil
 			}
 
-			img, err := png.Decode(bytes.NewReader(data))
-			if err != nil {
-				return nil, fmt.Errorf("preview asset %s: %w", name, err)
+			assetProvider := &AssetProvider{neutralZones: map[string]image.Image{}}
+			var err error
+
+			if assetProvider.background, err = decode(backgroundAsset); err != nil {
+				return nil, fmt.Errorf("failed to load background: %w", err)
 			}
 
-			return img, nil
-		}
-
-		assetProvider := &AssetProvider{neutralZones: map[string]image.Image{}}
-		var err error
-
-		if assetProvider.background, err = decode(backgroundAsset); err != nil {
-			errProvider = fmt.Errorf("failed to load background: %w", err)
-			return
-		}
-
-		for index := range playerCount {
-			if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
-				errProvider = fmt.Errorf("failed to load player %d: %w", index+1, err)
-				return
+			for index := range playerCount {
+				if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
+					return nil, fmt.Errorf("failed to load player %d: %w", index+1, err)
+				}
 			}
-		}
 
-		for _, name := range neutralAssetNames {
-			if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
-				errProvider = fmt.Errorf("failed to load neutral asset %s: %w", name, err)
-				return
+			for _, name := range neutralAssetNames {
+				if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
+					return nil, fmt.Errorf("failed to load neutral asset %s: %w", name, err)
+				}
 			}
-		}
 
-		providerSingleton = assetProvider
-	})
-	return errProvider
-}
-
-func (this *AssetProvider) ensureAssetsAreLoaded() {
-	if providerSingleton == nil && this.loadAssets() != nil {
-		panic("failed to load assets: " + errProvider.Error())
+			return assetProvider, nil
+		})
 	}
+
+	return assetProviderFactory
 }
