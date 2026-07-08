@@ -1,0 +1,73 @@
+# Plan: Unit Test Suite Complete Refactoring
+
+## User decisions (confirmed via questions)
+- FULL scope: restructure existing tests AND write new tests for every logic file (internal/ + app/gui pure-logic)
+- Gio-heavy app/gui files (~41): document in todo/test_observations.md as unit-untestable; integration suite covers them
+- Single assert.Equal on whole struct/slice = one assert; require.* preconditions allowed in Arrange
+- Table-driven tests ALLOWED with named t.Run subtests (subtest names follow When{Scenario}_{Behavior})
+- Phased by package, each phase independently verifiable (coverage gate + commit)
+
+## Target structure rules (from user requirements)
+- Mirror impl path: `internal/services/settingsFileLoader.go` → `test/unit/internal/services/settingsFileLoader/{funcName}_test.go`
+- One folder per impl file; one _test.go per public function/method (lowerCamel: `loadSettingsFile_test.go`)
+- Package per folder: `{implFileName}_test` (Go: one package per dir)
+- Test names: `Test{Scenario}_{ExpectedBehavior}` — deepest relevant condition in scenario
+- AAA comments: // Arrange, // Act, // Assert (pre-act guard asserts OK in Arrange)
+- One logical assert per test (whole-struct equality counts as one)
+- testify only (assert/require/mock); gofakeit for fuzzing wherever possible
+- NO tests for: pure data structs, internal/registry/, *_testexports.go (integration_test tag) — must never be imported by unit tests
+- Private code tested only via public entry points; NO test-only helpers added to implementation
+- Unreachable code → document in todo/test_observations.md (do NOT modify impl)
+
+## Further-consideration answers (user, 2026-07-08)
+1. entities logic IS tested: template_rule UnmarshalJSON (BonusList, GameRules), WinConditions.MergeWinConditionsIfDoesNotExist → test folders under test/unit/internal/entities/template/template_rule/{bonusList,gameRules,winConditions}/ (impl stays untouched — read-only dir rule holds). Add to Phase 2.
+2. coverage_baseline.txt: repo root, UNTRACKED (add to .gitignore if not already ignored), deleted at Phase 8.
+
+## Baseline (Phase 0)
+- Run task "Go: Unit test coverage report" (cmd: go test -count=1 -coverpkg=./internal/...,./app/... -coverprofile=coverage.txt ./test/unit/...)
+- Snapshot baseline: copy coverage.txt → coverage_baseline.txt (root, keep until done); record `go tool cover -func` total % + per-file %
+- coverage.txt/lcov.info/coverage.html at root are STALE — regenerate first
+
+## Current state (audited)
+- 17 test files under test/unit/ (test/unit/services/... + test/unit/models/...) — WRONG paths (missing internal/ segment)
+- test/unit/services/oldTests/ = 7 stale legacy files, raw t.Errorf, no AAA, some testing pre-reorg APIs (services.BuildPreviewLayout etc. may no longer exist) — absorb scenarios then DELETE
+- Existing conforming-ish: connectionEditor (4 files), contentRules, template_generator (3 files), models (2 files) — testify used, naming mostly OK, AAA inconsistent (30-60%), multi-assert common, gofakeit only in generate_test
+- Non-conforming names: TestT015a_* (requirement IDs), commented-out dead tests (settingsFile_test ~15, zoneContentManager ~40)
+- Shared fixture: test/helpers/defaultTemplate.go GetDefaultTemplate()
+- go.mod: testify v1.11.1, gofakeit/v7 v7.15.0 ✓
+- internal/handlers has ZERO test refs; mappers/helpers only via oldTests
+
+## Inventory highlights (~72 logic files internal/, 7 pure-logic app/)
+- internal/helpers: string, slice, math, io (VDF/Steam — partially untestable, env/init-time reads), data/vec2|3|4, linq/map|slice (linq.ToMap = dead code, note in observations)
+- internal/models: generationTuning, neutralZonePlan, contentRuleRowSave, zoneAdjacency, sidMapping, variantMapping, config/generatorConfig, config_inner/bonusEntry
+- internal/dtos: editorStateDto (LayoutDefiningOptionsChanged, DiffCastleSettings, EqualsIgnoringManualEdits, HasManualEdits, NewDefault...), editor_state_dto/manualZoneSave+manualConnectionSave converters, castleSettingChanges.Any
+- internal/mappers: generatorConfigMapper.FromEditorState
+- internal/handlers: guiHandler (concrete deps → test with real services + t.TempDir)
+- internal/services root: settingsFileLoader, templateWriter, previewRenderer(?), previewLayout (verify current API — oldTests may reference removed funcs)
+- services subpkgs: file_service, preview_service (3), asset_provider, zones (+utils), content_rules (9), connection_editor (3), builders (placement_rule, mandatory_content, variant_content ×8), template_generator (+utils, providers ×6, topology ×12 + base + tournament_variant ×5 + misc)
+- app/gui pure logic: models/editorState.go, utils/math.go, utils/string.go, utils/lookupSid.go
+- app/gui Gio-heavy (observations doc): program.go, widgets ×14, dialogs ×9, panels ×4, components ×2, editor ×2, drivers ×3 (state.AutoRegenerate maybe testable — evaluate), utils/draw.go, themes+constants = data catalogs (no tests needed)
+
+## Phases
+0. Baseline coverage snapshot + scaffold conventions doc entry in AGENTS.md (§4.6 rewrite) + create todo/test_observations.md skeleton
+1. Migrate existing conforming tests into test/unit/internal/... layout, split per-function files, fix naming/AAA/asserts, testify+gofakeit, absorb & delete oldTests + delete old tree
+2. internal/helpers (all) + internal/dtos + internal/models + internal/mappers
+3. internal/services root files + file_service + connection_editor + content_rules (restructure + fill gaps)
+4. services/builders + services/zones + template_generator core + providers
+5. topology (12 + base + geometryHelpers) + tournament_variant + misc
+6. preview_service + asset_provider + handlers/guiHandler
+7. app/gui pure logic (models/editorState, utils/math|string|lookupSid) + evaluate drivers/state.AutoRegenerate
+8. Finalize: test_observations.md complete, AGENTS.md finalized, final coverage run vs baseline (must be ≥), remove coverage_baseline.txt
+
+## Per-phase verification
+- go test ./test/unit/... -count=1 green
+- Coverage task run; total % ≥ baseline; per-file: each impl file addressed in phase has its own test folder
+- go build ./... still green; plain `go test ./...` (no tag) green
+
+## Gotchas / conventions to respect
+- CRLF line endings for new files; receiver `this`; one struct per file; AGENTS.md §4 style
+- Unit tests must NOT use -tags=integration_test
+- helpers/io.go: USERNAME/HOME read at package init; FindOldenEraTemplatesDir needs Steam VDF — largely untestable → observations
+- previewassets embedded PNGs: deterministic, assert dims/pixels
+- oldTests may reference removed APIs — map scenarios to CURRENT impl (preview logic now in preview_service)
+- test/helpers fixture package stays (shared golden template)

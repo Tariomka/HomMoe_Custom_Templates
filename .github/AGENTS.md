@@ -69,6 +69,16 @@ The project must build and run on **both Windows and Linux**. Therefore:
   or modify a function, add or update a test in [test/](test/) to cover it.
 - If you discover existing untested code adjacent to your change, add tests
   for it as part of the change.
+- **Every code change (new feature, fix, refactor) must check unit test code
+  coverage.** Run the *"Go: Unit test coverage report"* task (or the command
+  below) before and after the change and verify that every branch and logical
+  unit of the code in question is covered, and that total coverage did not drop:
+
+  ```powershell
+  go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...
+  go tool cover '-func=coverage.txt'
+  ```
+
 - Run `go test ./test/... -count=1` before declaring a task complete.
 - The integration and performance suites are gated behind the `integration_test`
   build tag and are skipped by a plain `go test ./...`; run them explicitly
@@ -238,15 +248,62 @@ Place new code in the package whose responsibility matches its role:
 
 ### 4.6 Tests
 
-- Tests live under [test/](test/) and **mirror the structure of
-  `internal/`**. A file at `internal/services/foo.go` is tested by
-  `test/services/foo_test.go`; `internal/models/bar/baz.go` by
-  `test/models/bar/baz_test.go`.
-- Test files follow the same `camelCase` filename rule, with the `_test.go`
-  suffix.
-- Tests must be written using `testify` library and AAA pattern(Arrange, Act, Assert).
-  If test data can be fuzzied, tests should be written with fuzzy data using `gofakeit` library.
-- See §2.3 for coverage requirements.
+**Unit test layout** — unit tests live under [test/unit/](test/unit/) and
+mirror the full repository path of the implementation file:
+
+- Each implementation `.go` file gets its **own folder** named after the file
+  (without extension), located at `test/unit/<full/impl/path>/<fileName>/`.
+- Each **public function or method** of that file gets its **own test file**
+  named `<functionName>_test.go` (lower-camel).
+- Example — `internal/services/settingsFileLoader.go` with functions
+  `LoadSettingsFile` and `SaveSettingsFile`:
+
+  ```
+  test/unit/internal/services/settingsFileLoader/loadSettingsFile_test.go
+  test/unit/internal/services/settingsFileLoader/saveSettingsFile_test.go
+  ```
+
+- The Go package for such a folder is `<fileName>_test`
+  (e.g. `package settingsFileLoader_test`).
+
+**Test naming** — `Test{Scenario}_{ExpectedBehavior}`, e.g.
+`TestWhenFileIsMissing_ReturnsError`, `TestWhenTopologyIsHubAndSpoke_CreatesHubZone`.
+For nested conditions X→Y→Z, name after the deepest relevant condition (Z);
+if ambiguous, add the next-higher condition. Do not encode requirement IDs or
+method names in test names — the folder/file already identify the method.
+
+**Test body — triple-A**: every test contains `// Arrange`, `// Act`,
+`// Assert` sections in that order. Pre-execution guard assertions
+(e.g. `require.NoError` on setup) may live in the Arrange section.
+
+**One unit per test**: each test verifies a single unit — a return value, or a
+single expected interaction (mock called with expected values). Generally one
+assertion per test; a single `assert.Equal` on a whole struct/slice counts as
+one assertion. If a scenario allows several independent assertions, write a
+separate test per assertion. Table-driven tests are allowed when each case
+runs in a named `t.Run` subtest whose name follows the same
+`{Scenario}_{ExpectedBehavior}` convention.
+
+**Libraries**: only `testify` (`assert`, `require`, `mock`) for assertions and
+mocking; use `gofakeit` for fuzzed input data wherever possible.
+
+**Scope rules**:
+
+- Pure data structs (no methods/logic) need no tests.
+- [internal/registry/](internal/registry/) needs no tests (game-data constants).
+- Private code is tested indirectly through public entry points — never add
+  helpers/seams to implementation code just to make it testable. If code is
+  unreachable through public APIs, record it in
+  [todo/test_observations.md](todo/test_observations.md) instead.
+- Code that is exercised indirectly by other tests still requires its **own**
+  test folder with dedicated tests, so coverage can be assessed per file.
+- `*_testexports.go` files (`//go:build integration_test`) must never be used
+  by or tested in unit tests (see §4.6.1).
+- Gio-UI-heavy code (widgets, dialogs, panels, window/event-loop code) that
+  requires a `layout.Context`/window is covered by the integration suite, not
+  unit tests; list such files in [todo/test_observations.md](todo/test_observations.md).
+
+See §2.3 for coverage requirements.
 
 ### 4.6.1 The `integration_test` build tag (integration & performance only)
 
