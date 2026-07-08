@@ -1,6 +1,7 @@
 package fileService_test
 
 import (
+	"encoding/json"
 	"math"
 	"os"
 	"path/filepath"
@@ -92,6 +93,24 @@ func TestWhenTemplateIsSaved_ProducesIndentedJson(t *testing.T) {
 	assert.Contains(t, string(data), "\n  ")
 }
 
+func TestWhenWrittenFileIsRead_ParsesBackIntoTemplate(t *testing.T) {
+	// Arrange
+	outputDir := t.TempDir()
+	rmgTemplate := &entities.RmgTemplate{Name: "T", SizeX: 10}
+	writtenPath, err := file_service.NewFileService().SaveTemplate(outputDir, rmgTemplate)
+	require.NoError(t, err)
+	data, err := os.ReadFile(writtenPath)
+	require.NoError(t, err)
+
+	// Act
+	var parsed entities.RmgTemplate
+	parseErr := json.Unmarshal(data, &parsed)
+
+	// Assert
+	require.NoError(t, parseErr)
+	assert.Equal(t, *rmgTemplate, parsed)
+}
+
 func TestWhenTemplateContainsNaNValue_ReturnsError(t *testing.T) {
 	// Arrange
 	outputDir := t.TempDir()
@@ -114,6 +133,19 @@ func TestWhenTemplateParentPathIsAFile_ReturnsError(t *testing.T) {
 	blockerPath := filepath.Join(t.TempDir(), "blocker")
 	require.NoError(t, os.WriteFile(blockerPath, []byte("x"), 0o644))
 	outputDir := filepath.Join(blockerPath, "child")
+	rmgTemplate := &entities.RmgTemplate{Name: "T"}
+
+	// Act
+	_, err := file_service.NewFileService().SaveTemplate(outputDir, rmgTemplate)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestWhenTargetPathIsOccupiedByDirectory_ReturnsError(t *testing.T) {
+	// Arrange
+	outputDir := t.TempDir()
+	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.rmg.json"), 0o755))
 	rmgTemplate := &entities.RmgTemplate{Name: "T"}
 
 	// Act

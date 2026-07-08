@@ -379,7 +379,7 @@ func TestWhenBonusEntriesProvided_CopiesBonuses(t *testing.T) {
 	bonuses := []config_inner.BonusEntry{
 		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "7"},
 	}
-	state.BonusesJSON = bonuses
+	state.Bonuses = bonuses
 
 	// Act
 	configuration := mappers.NewConfigMapper().FromEditorState(state)

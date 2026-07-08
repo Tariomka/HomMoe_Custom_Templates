@@ -117,27 +117,11 @@ not by unit tests:
   (`test/integration/manualCastleReapply_integration_test.go` drives `AutoRegenerate(now)` /
   `AutoRegenerate(now+1s)`). Suggested action: none.
 
-
 ## Dead code found while testing
 
-- `internal/services/settingsFileLoader.go` (`LoadSettingsFile`/`SaveSettingsFile`),
-  `internal/services/templateWriter.go` (`WriteTemplate`) and
-  `internal/services/previewRenderer.go` (`RenderPreviewImage`/`WritePreviewPNG`) — ZERO production callers.
-  They are legacy duplicates superseded by `internal/services/file_service.FileService` and
-  `internal/services/preview_service.PreviewGeneratorService` (used by `internal/handlers/guiHandler.go`).
-  They still have unit tests (per-file coverage rule) but should be DELETED together with their test folders
-  once confirmed obsolete.
 - `internal/services/previewLayout.go` vs `internal/services/preview_service/previewLayoutService.go` —
   the preview-layout logic exists TWICE (near-identical `BuildPreviewLayout`, `ExtractZoneLetter`,
   `ClassifyZoneTier` + private layout dispatch). The old `services` copy is still LIVE
   (`app/gui/panels/previewPanel.go`, `app/gui/dialogs/zoneEditorDialog.go` call `services.BuildPreviewLayout`),
   while `preview_service` is used via `guiHandler`. Consolidate to one implementation, then drop the
   duplicate and its duplicated test folders (both are currently unit-tested separately).
-- `internal/helpers/linq/map.go` `QueryMap.ToMap` — zero production callers; tested anyway per the
-  full-coverage rule. Suggested action: delete or start using.
-
-- `internal/models/config/config_inner/bonusPresetType.go` `parseBonusPresetType` — private function with
-  ZERO callers anywhere in the repo (the old `ParseBonusesJSON`/`SerializeBonuses` string round-trip it served
-  was removed when `EditorStateDto.BonusesJSON` became `[]config_inner.BonusEntry` serialized via std json).
-  Unreachable from any public entry point, stays 0%. Suggested action: delete the function (and the stale
-  "see ParseBonusesJSON" comment in `internal/dtos/editorStateDto.go`).

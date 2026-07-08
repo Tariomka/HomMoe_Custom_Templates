@@ -78,12 +78,10 @@ type EditorStateDto struct {
 	TournamentSaveArmy           bool               `json:"tournamentSaveArmy"`
 
 	// ── Banned content / overrides / bonuses ─────────────────────────────
-	BannedItems        string `json:"bannedItems"`
-	BannedMagics       string `json:"bannedMagics"`
-	ValueOverridesText string `json:"valueOverrides"`
-	// BonusesJSON stores configurable bonuses as a newline-separated list of
-	// `BonusEntry.String()` lines (see ParseBonusesJSON).
-	BonusesJSON []config.BonusEntry `json:"bonuses"`
+	BannedItems        string              `json:"bannedItems"`
+	BannedMagics       string              `json:"bannedMagics"`
+	ValueOverridesText string              `json:"valueOverrides"`
+	Bonuses            []config.BonusEntry `json:"bonuses"`
 
 	// ── Mandatory content rows per zone type ─────────────────────────────
 	PlayerZoneContentRows    []models.ZoneContentRowSave `json:"playerZoneContentRows,omitempty"`

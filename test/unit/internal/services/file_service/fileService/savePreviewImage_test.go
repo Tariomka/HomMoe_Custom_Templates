@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func previewImage() *image.RGBA {
+func newPreviewImage() *image.RGBA {
 	return image.NewRGBA(image.Rect(0, 0, 16, 16))
 }
 
@@ -21,17 +21,31 @@ func TestWhenPreviewNameContainsSlash_ReturnsPathWithSanitizedName(t *testing.T)
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, previewImage(), "My/Preview")
+	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "My/Preview")
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, filepath.Join(outputDir, "My_Preview.png"), writtenPath)
 }
 
+func TestWhenPreviewIsWritten_CreatesNonEmptyFile(t *testing.T) {
+	// Arrange
+	outputDir := t.TempDir()
+	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "Preview")
+	require.NoError(t, err)
+
+	// Act
+	fileInfo, statErr := os.Stat(writtenPath)
+
+	// Assert
+	require.NoError(t, statErr)
+	assert.Positive(t, fileInfo.Size())
+}
+
 func TestWhenPreviewIsSaved_WritesDecodablePng(t *testing.T) {
 	// Arrange
 	outputDir := t.TempDir()
-	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, previewImage(), "Preview")
+	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "Preview")
 	require.NoError(t, err)
 	file, err := os.Open(writtenPath)
 	require.NoError(t, err)
@@ -49,7 +63,7 @@ func TestWhenPreviewNameIsEmpty_FallsBackToGeneratedTemplateFileName(t *testing.
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, previewImage(), "")
+	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "")
 
 	// Assert
 	require.NoError(t, err)
@@ -61,7 +75,7 @@ func TestWhenPreviewDirectoryIsMissing_CreatesIt(t *testing.T) {
 	outputDir := filepath.Join(t.TempDir(), "nested", "preview")
 
 	// Act
-	_, err := file_service.NewFileService().SavePreviewImage(outputDir, previewImage(), "T")
+	_, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "T")
 
 	// Assert
 	require.NoError(t, err)
@@ -75,7 +89,7 @@ func TestWhenPreviewParentPathIsAFile_ReturnsError(t *testing.T) {
 	outputDir := filepath.Join(blockerPath, "child")
 
 	// Act
-	_, err := file_service.NewFileService().SavePreviewImage(outputDir, previewImage(), "T")
+	_, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "T")
 
 	// Assert
 	assert.Error(t, err)
@@ -87,7 +101,7 @@ func TestWhenPreviewTargetPathIsADirectory_ReturnsError(t *testing.T) {
 	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.png"), 0o755))
 
 	// Act
-	_, err := file_service.NewFileService().SavePreviewImage(outputDir, previewImage(), "T")
+	_, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "T")
 
 	// Assert
 	assert.Error(t, err)

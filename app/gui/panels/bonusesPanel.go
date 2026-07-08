@@ -260,7 +260,7 @@ func (this *BonusesPanel) syncRemoveButtons() {
 
 func (this *BonusesPanel) LoadFromState() {
 	settings := this.state.GetStateData()
-	this.bonuses = settings.BonusesJSON
+	this.bonuses = settings.Bonuses
 	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
 	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
 	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
@@ -269,7 +269,7 @@ func (this *BonusesPanel) LoadFromState() {
 
 func (this *BonusesPanel) SaveToState() {
 	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
-		settings.BonusesJSON = this.bonuses
+		settings.Bonuses = this.bonuses
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
 		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")

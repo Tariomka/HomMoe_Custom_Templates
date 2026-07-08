@@ -1,9 +1,6 @@
 package config_inner
 
-import (
-	"strconv"
-	"strings"
-)
+import "strconv"
 
 // BonusPresetType enumerates the configurable game-start bonus presets.
 type BonusPresetType int
@@ -50,37 +47,4 @@ func (this BonusPresetType) String() string {
 	return strconv.Itoa(int(this))
 }
 
-func (this BonusPresetType) IsResource() bool {
-	return this >= BonusStartingGold
-}
-
-func parseBonusPresetType(s string) (BonusPresetType, bool) {
-	if n, err := strconv.Atoi(s); err == nil {
-		return BonusPresetType(n), true
-	}
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "townportalfree":
-		return BonusTownPortalFree, true
-	case "spell":
-		return BonusSpell, true
-	case "unitmultiplier":
-		return BonusUnitMultiplier, true
-	case "movementbonus":
-		return BonusMovementBonus, true
-	case "startingitem":
-		return BonusStartingItem, true
-	case "startinggold":
-		return BonusStartingGold, true
-	case "startinggems":
-		return BonusStartingGems, true
-	case "startingcrystals":
-		return BonusStartingCrystals, true
-	case "startingmercury":
-		return BonusStartingMercury, true
-	case "startingwood":
-		return BonusStartingWood, true
-	case "startingore":
-		return BonusStartingOre, true
-	}
-	return 0, false
-}
+func (this BonusPresetType) IsResource() bool { return this >= BonusStartingGold }
