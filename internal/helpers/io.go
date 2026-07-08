@@ -9,28 +9,22 @@ import (
 	"github.com/andygrunwald/vdf"
 )
 
-var (
-	libraryFoldersVDFRelativePath = filepath.Join("steamapps", "libraryfolders.vdf")
-	windowsSteamPath              = filepath.Join("C:", "Program Files (x86)", "Steam")
-	unixHomePath                  = os.Getenv("HOME")
-	unixSteamPath                 = filepath.Join(unixHomePath, ".local", "share", "Steam")
-	unixSteamAltPath              = filepath.Join(unixHomePath, ".steam", "steam")
+const oldenEraID = "3105440"
 
-	oldenEraID                   = "3105440"
-	oldenEraTemplateRelativePath = filepath.Join("steamapps", "common", "Heroes of Might and Magic Olden Era", "HeroesOldenEra_Data", "StreamingAssets", "map_templates")
-
-	windowsUserPath            = filepath.Join("C:", "Users", os.Getenv("USERNAME"))
-	unixCompatUserRelativePath = filepath.Join("steamapps", "compatdata", oldenEraID, "pfx", "drive_c", "users", "steamuser")
-	customTemplateRelativeGlob = filepath.Join("AppData", "LocalLow", "Unfrozen", "HeroesOldenEra", "users", "*", "my_map_templates")
-)
+var customTemplateRelativeGlob = filepath.Join(
+	"AppData", "LocalLow", "Unfrozen", "HeroesOldenEra", "users", "*", "my_map_templates")
 
 // FindOldenEraTemplatesDir tries to locate a template folder in common directories.
 // Depending on the useInstallDir flag, it either looks for the official Steam install directory
 // or tries to find the user directory and tries to resolve the custom template path from there.
-// Returns "" if it cannot be located
 func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 	if !useInstallDir && runtime.GOOS == "windows" {
-		templatePathPattern := filepath.Join(windowsUserPath, customTemplateRelativeGlob)
+		userPath, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+
+		templatePathPattern := filepath.Join(userPath, customTemplateRelativeGlob)
 		return resolveGlob(templatePathPattern)
 	}
 
@@ -45,11 +39,20 @@ func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 	}
 
 	if !useInstallDir /*&& runtime.GOOS != "windows" is redundant here*/ {
-		templatePathPattern := filepath.Join(directory, unixCompatUserRelativePath, customTemplateRelativeGlob)
+		templatePathPattern := filepath.Join(
+			directory,
+			"steamapps", "compatdata", oldenEraID, "pfx", "drive_c", "users", "steamuser",
+			customTemplateRelativeGlob)
 		return resolveGlob(templatePathPattern)
 	}
 
-	directory = filepath.Join(directory, oldenEraTemplateRelativePath)
+	directory = filepath.Join(directory,
+		"steamapps",
+		"common",
+		"Heroes of Might and Magic Olden Era",
+		"HeroesOldenEra_Data",
+		"StreamingAssets",
+		"map_templates")
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		return "", err
 	}
@@ -75,22 +78,44 @@ func getVDFContent() (map[string]any, error) {
 }
 
 func getVDFFilePath() (path string, err error) {
-	steamPath := windowsSteamPath
-	if runtime.GOOS != "windows" {
-		steamPath = unixSteamPath
-		if _, err := os.Stat(steamPath); os.IsNotExist(err) {
-			steamPath = unixSteamAltPath
-		}
-	}
-	vdfPath := filepath.Join(steamPath, libraryFoldersVDFRelativePath)
+	steamPath := getSteamPath()
+	vdfPath := filepath.Join(steamPath, "steamapps", "libraryfolders.vdf")
 	if _, err := os.Stat(vdfPath); os.IsNotExist(err) {
 		return "", err
 	}
 	return vdfPath, nil
 }
 
+func getSteamPath() string {
+	switch runtime.GOOS {
+	case "windows":
+		if programFilesPath := os.Getenv("ProgramFiles(x86)"); programFilesPath != "" {
+			return filepath.Join(programFilesPath, "Steam")
+		}
+
+		return `C:\Program Files (x86)\Steam`
+
+	default:
+		userPath, err := os.UserHomeDir()
+		if err != nil {
+			return ""
+		}
+
+		steamPath := filepath.Join(userPath, ".local", "share", "Steam")
+		if _, err := os.Stat(steamPath); os.IsNotExist(err) {
+			steamPath = filepath.Join(userPath, ".steam", "steam")
+		}
+		return steamPath
+	}
+}
+
 func getBasePath(vdfContent map[string]any) string {
-	for _, data := range vdfContent["libraryfolders"].(map[string]any) {
+	content, ok := vdfContent["content"].(map[string]any)
+	if !ok {
+		return ""
+	}
+
+	for _, data := range content {
 		library, ok := data.(map[string]any)
 		if !ok {
 			continue

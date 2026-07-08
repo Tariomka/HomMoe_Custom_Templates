@@ -81,33 +81,6 @@ this.connectionsModified = true
 The same pattern must be audited everywhere `_` receives an error: `grep -n ", _ :=" app/gui internal`
 and justify or fix each hit.
 
-### 1.2 🔴 The `unsaved` flag is write-only — the documented feature is dead
-[app/gui/drivers/state.go](../app/gui/drivers/state.go#L34) declares `unsaved bool`; it is set to
-`false` in three places (lines ~159, ~486, ~499) and **never set to `true`**. Consequences:
-
-- The toolbar asterisk (`toolbar.go` line 72, `this.state.IsUnsaved()`) never renders.
-- QUICKSTART.md documents "a trailing `*` marks unsaved edits" — the feature does not work.
-- The commented-out exit guard in `Exit()` (state.go lines 224–227) could never have worked.
-
-**Fix (exact):** set `unsaved = true` in the single mutation funnel `State.UpdateState`
-(state.go line ~253) *when the update actually changed something*, and after
-`ApplyEditedZones`:
-
-```go
-func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
-    before := *this.stateDto
-    updateFunc(this.stateDto)
-    // ... existing AdvancedMode normalization ...
-    if !before.EqualsIgnoringManualEdits(this.stateDto) {
-        this.unsaved = true
-    }
-}
-```
-
-Then re-enable the exit guard (see 1.3). Cheaper alternative if the per-call compare is too hot
-(UpdateState is called from click handlers, not per-frame, so it is not): set `unsaved = true`
-unconditionally in `UpdateState` and accept rare false positives.
-
 ### 1.3 🔴 `State.Exit` calls `os.Exit(0)` with the safety check commented out
 [app/gui/drivers/state.go](../app/gui/drivers/state.go#L223-L229)
 
@@ -142,54 +115,6 @@ func (this *State) Exit() {
 
 (A tiny two-press confirm avoids building a confirm dialog; if you prefer a dialog, open one via
 `this.dialogs.Open(...)` — the infrastructure already exists.)
-
-### 1.4 🔴 Windows drive-relative paths in `internal/helpers/io.go`
-[internal/helpers/io.go](../internal/helpers/io.go#L13-L24)
-
-```go
-windowsSteamPath = filepath.Join("C:", "Program Files (x86)", "Steam")
-windowsUserPath  = filepath.Join("C:", "Users", os.Getenv("USERNAME"))
-```
-
-Since Go 1.20, `filepath.Join("C:", "a")` deliberately returns **`C:a`** (a *drive-relative* path),
-not `C:\a`, to avoid turning a relative path absolute. `os.Stat("C:Program Files (x86)\Steam")`
-resolves against the process's per-drive working directory — it usually works by accident (the C:
-CWD defaults to `C:\`), but breaks whenever the process or a parent shell has changed the C: drive
-CWD. Three more problems in the same file:
-
-- 🔴 `getBasePath` (line ~92): `vdfContent["libraryfolders"].(map[string]any)` — unchecked type
-  assertion; a corrupt/old-format `libraryfolders.vdf` panics the app at startup
-  (`NewUIState` calls `FindOldenEraTemplatesDir` on line ~92 of state.go).
-- 🟠 `os.Getenv("USERNAME")`/`os.Getenv("HOME")` are read at package-init into package vars — wrong
-  for redirected profiles, untestable, and evaluated even when never needed.
-- 🟠 Hardcoded `C:` breaks Steam installs on other drives; the Windows registry
-  (`HKCU\Software\Valve\Steam\SteamPath`) or `%ProgramFiles(x86)%` is authoritative.
-
-**Fix (exact):**
-
-```go
-func windowsSteamPath() string {
-    if pf := os.Getenv("ProgramFiles(x86)"); pf != "" {
-        return filepath.Join(pf, "Steam")
-    }
-    return `C:\Program Files (x86)\Steam`
-}
-
-func windowsUserPath() (string, error) {
-    return os.UserHomeDir() // handles redirected profiles, no USERNAME guessing
-}
-
-func getBasePath(vdfContent map[string]any) string {
-    folders, ok := vdfContent["libraryfolders"].(map[string]any)
-    if !ok {
-        return ""
-    }
-    for _, data := range folders { ... } // rest unchanged
-}
-```
-
-Convert all the package-level `var` path strings into lazily-called functions (they are each used in
-exactly one place); this also makes the package testable with `t.Setenv`.
 
 ### 1.5 🟠 Panics in library code
 - [internal/services/previewAssets.go](../internal/services/previewAssets.go#L44) (twice): a failed

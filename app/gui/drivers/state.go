@@ -161,7 +161,7 @@ func (this *State) Exit() {
 	// In program.go, pass func() { window.Perform(system.ActionClose) } so the normal app.DestroyEvent path runs.
 	if this.unsaved && !this.confirmExit {
 		this.SetStatus("Unsaved changes exist - save first or press Exit again.", true)
-		this.confirmExit = true // reset if not selected right after
+		this.confirmExit = true // TODO: reset if not selected right after
 		return
 	}
 	// this.onExit()

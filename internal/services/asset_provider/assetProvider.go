@@ -26,7 +26,7 @@ var (
 
 	providerOnce      sync.Once
 	providerSingleton *AssetProvider
-	providerErr       error
+	errProvider       error
 
 	neutralAssetNames = []string{
 		"neutral_low", "neutral_low_castle",
@@ -43,7 +43,7 @@ type AssetProvider struct {
 
 func NewAssetProvider() (*AssetProvider, error) {
 	if err := providerSingleton.loadAssets(); err != nil {
-		return nil, fmt.Errorf("failed to load assets: %v", err)
+		return nil, fmt.Errorf("failed to load assets: %w", err)
 	}
 
 	return providerSingleton, nil
@@ -199,12 +199,12 @@ func (this *AssetProvider) loadAssets() error {
 		decode := func(name string) (image.Image, error) {
 			data, err := assetFileSystem.ReadFile(assetFolder + name)
 			if err != nil {
-				return nil, fmt.Errorf("preview asset %s: %v", name, err)
+				return nil, fmt.Errorf("preview asset %s: %w", name, err)
 			}
 
 			img, err := png.Decode(bytes.NewReader(data))
 			if err != nil {
-				return nil, fmt.Errorf("preview asset %s: %v", name, err)
+				return nil, fmt.Errorf("preview asset %s: %w", name, err)
 			}
 
 			return img, nil
@@ -214,31 +214,31 @@ func (this *AssetProvider) loadAssets() error {
 		var err error
 
 		if assetProvider.background, err = decode(backgroundAsset); err != nil {
-			providerErr = fmt.Errorf("failed to load background: %v", err)
+			errProvider = fmt.Errorf("failed to load background: %w", err)
 			return
 		}
 
 		for index := range playerCount {
 			if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
-				providerErr = fmt.Errorf("failed to load player %d: %v", index+1, err)
+				errProvider = fmt.Errorf("failed to load player %d: %w", index+1, err)
 				return
 			}
 		}
 
 		for _, name := range neutralAssetNames {
 			if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
-				providerErr = fmt.Errorf("failed to load neutral asset %s: %v", name, err)
+				errProvider = fmt.Errorf("failed to load neutral asset %s: %w", name, err)
 				return
 			}
 		}
 
 		providerSingleton = assetProvider
 	})
-	return providerErr
+	return errProvider
 }
 
 func (this *AssetProvider) ensureAssetsAreLoaded() {
 	if providerSingleton == nil && this.loadAssets() != nil {
-		panic("failed to load assets: " + providerErr.Error())
+		panic("failed to load assets: " + errProvider.Error())
 	}
 }
