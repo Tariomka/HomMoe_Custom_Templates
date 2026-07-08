@@ -22,6 +22,7 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 	mapSize := gofakeit.Number(96, 224)
 	maxPortals := gofakeit.Number(1, 16)
 	minNeutralsBetween := gofakeit.Number(1, 4)
+	remoteFootholds := gofakeit.Number(1, 4)
 	factionLawXp := gofakeit.Number(50, 200)
 	astrologyXp := gofakeit.Number(50, 200)
 
@@ -89,6 +90,24 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 			"WhenMatchPlayerCastleFactionsEnabled_CopiesFlag",
 			func(state *dtos.EditorStateDto) { state.MatchPlayerCastleFactions = true },
 			func(configuration *config.GeneratorConfig) any { return configuration.MatchPlayerCastleFactions },
+			true,
+		},
+		{
+			"WhenSpawnRemoteFootholdsDisabled_CopiesFlag",
+			func(state *dtos.EditorStateDto) { state.SpawnRemoteFootholds = false },
+			func(configuration *config.GeneratorConfig) any { return configuration.SpawnRemoteFootholds },
+			false,
+		},
+		{
+			"WhenRemoteFootholdCountProvided_CopiesCount",
+			func(state *dtos.EditorStateDto) { state.RemoteFootholdCount = remoteFootholds },
+			func(configuration *config.GeneratorConfig) any { return configuration.RemoteFootholdCount },
+			remoteFootholds,
+		},
+		{
+			"WhenNoDirectPlayerConnEnabled_CopiesFlagToNoDirectPlayerConnections",
+			func(state *dtos.EditorStateDto) { state.NoDirectPlayerConn = true },
+			func(configuration *config.GeneratorConfig) any { return configuration.NoDirectPlayerConnections },
 			true,
 		},
 		{
