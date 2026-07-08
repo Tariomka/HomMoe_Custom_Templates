@@ -99,6 +99,54 @@ func TestWhenTemplateContainsHubZone_RendersWithoutPanic(t *testing.T) {
 	assert.NotNil(t, img)
 }
 
+func manualPositionTemplate(positionA, positionB [2]float64, connectionType string) *entities.RmgTemplate {
+	return &entities.RmgTemplate{
+		Name: "T",
+		Variants: []entities.Variant{{
+			Zones: []entities.Zone{
+				{Name: "Spawn-A", ManualPosition: &positionA},
+				{Name: "Spawn-B", ManualPosition: &positionB},
+			},
+			Connections: []entities.Connection{
+				{From: "Spawn-A", To: "Spawn-B", ConnectionType: connectionType},
+			},
+		}},
+	}
+}
+
+func TestWhenConnectedZonesShareOnePixel_SkipsDegenerateLineWithoutPanic(t *testing.T) {
+	// Arrange
+	rmgTemplate := manualPositionTemplate([2]float64{0.5, 0.5}, [2]float64{0.5, 0.5}, "Direct")
+
+	// Act
+	img := services.RenderPreviewImage(rmgTemplate, config.TopologyRing, 700)
+
+	// Assert
+	assert.NotNil(t, img)
+}
+
+func TestWhenConnectedZonesAreNearlyTouching_RendersShortLineWithoutPanic(t *testing.T) {
+	// Arrange
+	rmgTemplate := manualPositionTemplate([2]float64{0.5, 0.5}, [2]float64{0.505, 0.5}, "Direct")
+
+	// Act
+	img := services.RenderPreviewImage(rmgTemplate, config.TopologyRing, 700)
+
+	// Assert
+	assert.NotNil(t, img)
+}
+
+func TestWhenPortalConnectsNearbyZones_RendersDashedLineWithoutPanic(t *testing.T) {
+	// Arrange
+	rmgTemplate := manualPositionTemplate([2]float64{0.5, 0.5}, [2]float64{0.51, 0.5}, "Portal")
+
+	// Act
+	img := services.RenderPreviewImage(rmgTemplate, config.TopologyRing, 700)
+
+	// Assert
+	assert.NotNil(t, img)
+}
+
 func TestWhenGeneratedTemplatesAreRendered_EveryTopologyProducesFullSizeCanvas(t *testing.T) {
 	topologies := []config.MapTopology{
 		config.TopologyRing,

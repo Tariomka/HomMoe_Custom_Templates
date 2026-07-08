@@ -510,3 +510,229 @@ func TestWhenParallelEdgesConnectSamePair_BulgesThemSymmetricallyAboutMidpoint(t
 	averageDistanceFromMidpoint := math.Hypot(averageX-midX, averageY-midY)
 	assert.LessOrEqual(t, averageDistanceFromMidpoint, 1.5)
 }
+
+// ── fixed-geometry (Square/Geometric/Cross/Fractal) dispatch ─────────
+
+func TestWhenFixedGeometryTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{positionedZone("Spawn-A", 0.3, 0.7)}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologySquare, 600)
+
+	// Assert
+	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+}
+
+func TestWhenFixedGeometryZonesShareOnePosition_PositionsBothAtSamePoint(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.5, 0.5),
+		positionedZone("Spawn-B", 0.5, 0.5),
+	}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologySquare, 600)
+
+	// Assert
+	assert.Equal(t, layout.Positions["Spawn-A"], layout.Positions["Spawn-B"])
+}
+
+func TestWhenFixedGeometryZonesLackPositions_FallsBackToRingLayout(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologySquare, 600)
+
+	// Assert
+	assert.Len(t, layout.Positions, 3)
+}
+
+// ── circles ring edge cases ──────────────────────────────────────────
+
+func TestWhenCirclesZoneLacksRingStamp_StillPositionsEveryZone(t *testing.T) {
+	// Arrange
+	missingRingZone := positionedZone("Neutral-C", 0.5, 0.5)
+	zones := []entities.Zone{
+		ringedZone("Spawn-A", 0, 0.1, 0.1),
+		ringedZone("Spawn-B", 0, 0.9, 0.1),
+		missingRingZone,
+	}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyCircles, 600)
+
+	// Assert
+	assert.Len(t, layout.Positions, 3)
+}
+
+func TestWhenCirclesOuterRingHasSingleZone_PositionsEveryZone(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		ringedZone("Neutral-C", 1, 0.4, 0.4),
+		ringedZone("Neutral-D", 1, 0.6, 0.4),
+		ringedZone("Neutral-E", 1, 0.5, 0.6),
+		ringedZone("Spawn-A", 0, 0.5, 0.9),
+	}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyCircles, 600)
+
+	// Assert
+	assert.Len(t, layout.Positions, 4)
+}
+
+// ── scatter edge cases ───────────────────────────────────────────────
+
+func TestWhenRandomTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{positionedZone("Spawn-A", 0.2, 0.8)}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
+
+	// Assert
+	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+}
+
+func TestWhenConnectedScatterZonesShareOnePosition_PositionsBothZones(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.5, 0.5),
+		positionedZone("Spawn-B", 0.5, 0.5),
+	}
+	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRandom, 600)
+
+	// Assert
+	assert.Len(t, layout.Positions, 2)
+}
+
+func TestWhenUnconnectedZoneLiesFarFromTightPair_KeepsEveryZoneInsideCanvas(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.0, 0.0),
+		positionedZone("Spawn-B", 0.001, 0.0),
+		positionedZone("Neutral-C", 1.0, 1.0),
+	}
+	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRandom, 600)
+
+	// Assert
+	outOfBounds := []string{}
+	for name, point := range layout.Positions {
+		if point.X < 0 || point.Y < 0 || point.X > 600 || point.Y > 600 {
+			outOfBounds = append(outOfBounds, name)
+		}
+	}
+	assert.Empty(t, outOfBounds)
+}
+
+func TestWhenThirdZoneLiesOnConnectionLine_NudgesItOffTheLine(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.1, 0.5),
+		positionedZone("Spawn-B", 0.9, 0.5),
+		positionedZone("Neutral-C", 0.5, 0.5),
+	}
+	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRandom, 600)
+
+	// Assert
+	assert.NotEqual(t, layout.Positions["Spawn-A"].Y, layout.Positions["Neutral-C"].Y)
+}
+
+// ── manual-position dispatch ─────────────────────────────────────────
+
+func manualZone(name string, x, y float64) entities.Zone {
+	zone := namedZone(name)
+	zone.ManualPosition = position(x, y)
+	return zone
+}
+
+func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		manualZone("Spawn-A", 0.25, 0.5),
+		manualZone("Spawn-B", 0.75, 0.5),
+	}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, 600)
+
+	// Assert
+	assert.Equal(t, image.Pt(150, 300), layout.Positions["Spawn-A"])
+}
+
+func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		manualZone("Spawn-A", 0.5, 0.5),
+		manualZone("Spawn-B", 0.5, 0.5),
+	}
+	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Equal(t, layout.Connections[0].A, layout.Connections[0].Ctrl)
+}
+
+// ── further connection edge cases ────────────────────────────────────
+
+func TestWhenConnectionSourceIsUnknownZone_SkipsIt(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
+	connections := []entities.Connection{directConnection("Missing-X", "Spawn-B")}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
+
+	// Assert
+	assert.Empty(t, layout.Connections)
+}
+
+// ── multi-hub edge cases ─────────────────────────────────────────────
+
+func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCentre(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		namedZone("Hub-A"), namedZone("Hub-B"),
+		namedZone("Spawn-A"), namedZone("Neutral-X"),
+	}
+	connections := []entities.Connection{directConnection("Hub-A", "Spawn-A")}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, connections), config.TopologyHubAndSpoke, 600)
+
+	// Assert
+	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
+}
+
+// ── zero-angle-zone rotation ─────────────────────────────────────────
+
+func TestWhenZeroAngleZoneIsSet_RotatesThatZoneToFirstRingSlot(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+	rmgTemplate := &entities.RmgTemplate{
+		Variants: []entities.Variant{{
+			Zones:       zones,
+			Orientation: entities.Orientation{ZeroAngleZone: "Spawn-B"},
+		}},
+	}
+
+	// Act
+	layout := services.BuildPreviewLayout(rmgTemplate, config.TopologyRing, 600)
+
+	// Assert
+	assert.Equal(t, image.Pt(300, 48), layout.Positions["Spawn-B"])
+}

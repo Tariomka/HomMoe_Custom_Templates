@@ -1,6 +1,7 @@
 package settingsFileLoader_test
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -50,6 +51,19 @@ func TestWhenTargetDirectoryDoesNotExist_ReturnsError(t *testing.T) {
 
 	// Act
 	err := services.SaveSettingsFile(missingDirPath, &state)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestWhenStateContainsNaNValue_ReturnsError(t *testing.T) {
+	// Arrange
+	settingsPath := filepath.Join(t.TempDir(), "nan.gen.json")
+	state := dtos.NewDefaultEditorStateDto()
+	state.PlayerZoneSize = math.NaN()
+
+	// Act
+	err := services.SaveSettingsFile(settingsPath, &state)
 
 	// Assert
 	assert.Error(t, err)

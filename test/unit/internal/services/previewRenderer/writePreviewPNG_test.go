@@ -78,3 +78,16 @@ func TestWhenParentPathIsAFile_ReturnsError(t *testing.T) {
 	// Assert
 	assert.Error(t, err)
 }
+
+func TestWhenTargetPathIsOccupiedByDirectory_ReturnsError(t *testing.T) {
+	// Arrange
+	outputDir := t.TempDir()
+	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.png"), 0o755))
+	rmgTemplate := simpleTemplate("T")
+
+	// Act
+	_, err := services.WritePreviewPNG(outputDir, rmgTemplate, config.TopologyRing)
+
+	// Assert
+	assert.Error(t, err)
+}

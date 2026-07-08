@@ -2,10 +2,12 @@ package templateWriter_test
 
 import (
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/stretchr/testify/assert"
@@ -115,6 +117,23 @@ func TestWhenParentPathIsAFile_ReturnsError(t *testing.T) {
 	require.NoError(t, os.WriteFile(blockerPath, []byte("x"), 0o644))
 	outputDir := filepath.Join(blockerPath, "child")
 	rmgTemplate := &template.RmgTemplate{Name: "T"}
+
+	// Act
+	_, err := services.WriteTemplate(outputDir, rmgTemplate)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestWhenTemplateContainsNaNValue_ReturnsError(t *testing.T) {
+	// Arrange
+	outputDir := t.TempDir()
+	rmgTemplate := &template.RmgTemplate{
+		Name: "T",
+		Variants: []entities.Variant{{
+			Connections: []entities.Connection{{From: "A", To: "B", GuardWeeklyIncrement: math.NaN()}},
+		}},
+	}
 
 	// Act
 	_, err := services.WriteTemplate(outputDir, rmgTemplate)
