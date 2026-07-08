@@ -15,11 +15,11 @@ import (
 // TestRmgTemplate_RoundTripAllExamples decodes every bundled example template,
 // re-encodes it, and decodes again to verify the model captures every field.
 func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
-	root, err := filepath.Abs(filepath.Join("..", "..", "..", "..", "data", "ExampleTemplates"))
+	root, err := filepath.Abs(filepath.Join("..", "..", "data", "ExampleTemplates"))
 	assert.NoError(t, err, "resolve example dir")
 
 	entries, err := os.ReadDir(root)
-	assert.NoError(t, err, "read example dir")
+	assert.NoError(t, err, "read example dir: "+root)
 
 	count := 0
 	for _, entity := range entries {
@@ -30,7 +30,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(root, name)
 			raw, err := os.ReadFile(path)
-			assert.NoError(t, err, "read file")
+			assert.NoError(t, err, "read file: "+path)
 
 			var tpl entities.RmgTemplate
 			dec := json.NewDecoder(strings.NewReader(string(raw)))
@@ -44,10 +44,10 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 
 			// Re-encode and decode again to confirm the model is self-consistent.
 			out, err := json.Marshal(&tpl)
-			assert.NoError(t, err, "re-encode")
+			assert.NoError(t, err, "re-encode: "+path)
 			var tpl2 entities.RmgTemplate
 			err = json.Unmarshal(out, &tpl2)
-			assert.NoError(t, err, "re-decode")
+			assert.NoError(t, err, "re-decode: "+path)
 		})
 		count++
 	}
