@@ -1,0 +1,51 @@
+package math_test
+
+import (
+	stdmath "math"
+	"testing"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
+	testCases := []struct {
+		name     string
+		zoneSize float64
+		expected float64
+	}{
+		{"WhenSizeIsNaN_ReturnsDefaultSize", stdmath.NaN(), 1.0},
+		{"WhenSizeIsPositiveInfinity_ReturnsDefaultSize", stdmath.Inf(1), 1.0},
+		{"WhenSizeIsNegativeInfinity_ReturnsDefaultSize", stdmath.Inf(-1), 1.0},
+		{"WhenSizeIsBelowMinimum_ClampsToMinimum", 0.01, 0.1},
+		{"WhenSizeIsNegative_ClampsToMinimum", -3.5, 0.1},
+		{"WhenSizeExceedsMaximum_ClampsToMaximum", 5.0, 2.0},
+		{"WhenSizeIsWithinRange_KeepsValue", 0.75, 0.75},
+		{"WhenSizeHasExtraPrecision_RoundsToTwoDecimals", 1.234567, 1.23},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Arrange handled by the table entry.
+
+			// Act
+			normalized := utils.NormalizeZoneSize(testCase.zoneSize)
+
+			// Assert
+			assert.Equal(t, testCase.expected, normalized)
+		})
+	}
+}
+
+func TestWhenArbitraryFiniteSizeIsProvided_ResultStaysWithinClampBounds(t *testing.T) {
+	// Arrange
+	zoneSize := gofakeit.Float64Range(-10, 10)
+
+	// Act
+	normalized := utils.NormalizeZoneSize(zoneSize)
+
+	// Assert
+	assert.True(t, normalized >= 0.1 && normalized <= 2.0,
+		"normalized size %v for input %v escaped the [0.1, 2.0] range", normalized, zoneSize)
+}

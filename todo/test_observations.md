@@ -40,6 +40,16 @@ Format: `path` — reason — suggested action.
   - `drawDashedQuadratic` `dashOn <= 0` / `dashOff < 0` guards: the sole caller passes fixed dashOn=9,
     dashOff=13 (scaled).
   Suggested action: none (defensive guards / fault-injection-only paths).
+- `internal/services/template_generator/providers/topology/geometryHelpers.go` — every function/type in the
+  file is private (`circlePoint`, `squarePerimeterPoint`, `nearestIndexInRange`, `pairBuilder`), so no
+  dedicated test folder is possible; the helpers are covered indirectly through the topology service tests
+  (circles/square/geometric/cross/fractal). Suggested action: none, unless the helpers are ever exported.
+- `internal/services/template_generator/providers/topology/base/topologyBase.go` `CreateMissingConnections` /
+  `CreateMissingPlayerConnections` — both append the fallback/bridge roads to `linq.FromSlice(zones).First(...)`
+  results, which are VALUE COPIES of the zone structs; the road mutations are silently lost and never reach the
+  caller's zones. Unit tests can therefore only assert the returned connections, not the road side-effect.
+  Suggested action: investigate — either mutate `zones[i]` via index or document that roads are intentionally
+  not added.
 
 ## Gio-UI-heavy files (covered by integration suite, not unit-testable)
 
