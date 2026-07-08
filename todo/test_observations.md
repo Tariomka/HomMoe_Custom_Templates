@@ -55,6 +55,17 @@ Format: `path` — reason — suggested action.
 
 (populated in phase 8)
 
+- `app/gui/drivers/state.go` — evaluated for unit tests (Phase 7) and SKIPPED: the only constructor
+  `NewUIState()` is machine-dependent — it probes the Steam library via `helpers.FindOldenEraTemplatesDir`
+  (host filesystem + `USERNAME`/`HOME` read at package init) and falls back to `os.Getwd()`, so the initial
+  status message and output path differ per host. A zero-value `drivers.State{}` bypasses invariants
+  (nil `innerState`/`handler` panics in `AutoRegenerate`/`UpdateState`/`SetStatus`-adjacent flows), and adding
+  a test-only constructor seam is forbidden. `AutoRegenerate` debounce and `GetStatus`/`SetStatus` are already
+  exercised end-to-end by the gated integration suite
+  (`test/integration/manualCastleReapply_integration_test.go` drives `AutoRegenerate(now)` /
+  `AutoRegenerate(now+1s)`). Suggested action: none.
+
+
 ## Dead code found while testing
 
 (populated during the unit test refactoring)
