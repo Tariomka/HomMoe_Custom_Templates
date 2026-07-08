@@ -1,0 +1,107 @@
+package topologyBase_test
+
+import (
+	"testing"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestWhenBothLabelsArePlayers_GuardValueIsPlayerBorderStrength(t *testing.T) {
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	guardValue := topologyBase.GetBorderGuardValue(
+		"A", "B", []string{"A", "B"}, nil, newUnitTuning())
+
+	// Assert
+	assert.Equal(t, 30000, guardValue)
+}
+
+func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
+	// Arrange
+	neutralPlans := models.NeutralZonePlans{
+		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
+		{Label: "D", Quality: models.QualityHigh, CastleCount: 0},
+	}
+	testCases := []struct {
+		name       string
+		firstLabel string
+		otherLabel string
+	}{
+		{name: "WhenSecondLabelHasHigherQuality_ItsGuardIsUsed", firstLabel: "C", otherLabel: "D"},
+		{name: "WhenFirstLabelHasHigherQuality_ItsGuardIsUsed", firstLabel: "D", otherLabel: "C"},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Arrange
+			topologyBase := base.NewTopologyBase()
+
+			// Act
+			guardValue := topologyBase.GetBorderGuardValue(
+				testCase.firstLabel, testCase.otherLabel, []string{"A", "B"}, neutralPlans, newUnitTuning())
+
+			// Assert
+			assert.Equal(t, 25000, guardValue)
+		})
+	}
+}
+
+func TestWhenOnlyFirstLabelIsPlayer_NeutralSecondLabelQualityDrivesGuard(t *testing.T) {
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+	neutralPlans := models.NeutralZonePlans{
+		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
+	}
+
+	// Act
+	guardValue := topologyBase.GetBorderGuardValue(
+		"A", "C", []string{"A", "B"}, neutralPlans, newUnitTuning())
+
+	// Assert
+	assert.Equal(t, 15000, guardValue)
+}
+
+func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *testing.T) {
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+	neutralPlans := models.NeutralZonePlans{
+		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
+	}
+
+	// Act
+	guardValue := topologyBase.GetBorderGuardValue(
+		"C", "A", []string{"A", "B"}, neutralPlans, newUnitTuning())
+
+	// Assert
+	assert.Equal(t, 15000, guardValue)
+}
+
+func TestWhenNeutralLabelHasNoPlan_MediumQualityGuardIsUsed(t *testing.T) {
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	guardValue := topologyBase.GetBorderGuardValue(
+		"A", "Z", []string{"A", "B"}, nil, newUnitTuning())
+
+	// Assert
+	assert.Equal(t, 20000, guardValue)
+}
+
+func TestWhenBorderGuardMultiplierIsDoubled_PlayerBorderGuardIsScaled(t *testing.T) {
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+	tuning := newUnitTuning()
+	tuning.BorderGuardStrengthMultiplier = 2.0
+
+	// Act
+	guardValue := topologyBase.GetBorderGuardValue(
+		"A", "B", []string{"A", "B"}, nil, tuning)
+
+	// Assert
+	assert.Equal(t, 60000, guardValue)
+}
