@@ -1,0 +1,145 @@
+package squareTopology_test
+
+import (
+	"testing"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestWhenTwoPlayersAndSixNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySquare
+	playerLabels := []string{"A", "B"}
+	neutralZones := models.NeutralZonePlans{}
+	neutralZones.AddPlan("N1", models.QualityLow, 0)
+	neutralZones.AddPlan("N2", models.QualityLow, 0)
+	neutralZones.AddPlan("N3", models.QualityMedium, 1)
+	neutralZones.AddPlan("N4", models.QualityMedium, 1)
+	neutralZones.AddPlan("N5", models.QualityHigh, 1)
+	neutralZones.AddPlan("N6", models.QualityHigh, 1)
+	tuning := models.NewGenerationTuning(configuration, 8)
+	service := topology.NewSquareTopologyService()
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	assert.Len(t, variant.Zones, 8)
+}
+
+func TestWhenSquareIsLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySquare
+	playerLabels := []string{"A", "B"}
+	neutralZones := models.NeutralZonePlans{}
+	neutralZones.AddPlan("N1", models.QualityLow, 0)
+	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	neutralZones.AddPlan("N3", models.QualityMedium, 1)
+	neutralZones.AddPlan("N4", models.QualityHigh, 1)
+	neutralZones.AddPlan("N5", models.QualityHigh, 1)
+	neutralZones.AddPlan("N6", models.QualityHigh, 1)
+	tuning := models.NewGenerationTuning(configuration, 8)
+	service := topology.NewSquareTopologyService()
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	assert.Empty(t, zonesWithoutValidPosition(variant))
+}
+
+func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCentre(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySquare
+	playerLabels := []string{"A", "B"}
+	neutralZones := models.NeutralZonePlans{}
+	neutralZones.AddPlan("N1", models.QualityLow, 0)
+	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	neutralZones.AddPlan("N3", models.QualityHigh, 1)
+	tuning := models.NewGenerationTuning(configuration, 5)
+	service := topology.NewSquareTopologyService()
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	var interiorZone entities.Zone
+	for _, zone := range variant.Zones {
+		if zone.Name == "Neutral-N3" {
+			interiorZone = zone
+			break
+		}
+	}
+	require.NotNil(t, interiorZone.GeneratorPosition)
+	assert.Equal(t, [2]float64{0.5, 0.5}, *interiorZone.GeneratorPosition)
+}
+
+func TestWhenSquareIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySquare
+	playerLabels := []string{"A", "B"}
+	neutralZones := models.NeutralZonePlans{}
+	neutralZones.AddPlan("N1", models.QualityLow, 0)
+	neutralZones.AddPlan("N2", models.QualityLow, 0)
+	neutralZones.AddPlan("N3", models.QualityMedium, 1)
+	neutralZones.AddPlan("N4", models.QualityMedium, 1)
+	neutralZones.AddPlan("N5", models.QualityHigh, 1)
+	neutralZones.AddPlan("N6", models.QualityHigh, 1)
+	tuning := models.NewGenerationTuning(configuration, 8)
+	service := topology.NewSquareTopologyService()
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	assert.Empty(t, danglingConnectionNames(variant))
+}
+
+func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySquare
+	configuration.NoDirectPlayerConnections = true
+	playerLabels := []string{"A", "B"}
+	neutralZones := models.NeutralZonePlans{}
+	neutralZones.AddPlan("N1", models.QualityMedium, 1)
+	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	tuning := models.NewGenerationTuning(configuration, 4)
+	service := topology.NewSquareTopologyService()
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	assert.Empty(t, directSpawnToSpawnNames(variant, "Rnd-"))
+}
+
+func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologySquare
+	configuration.RandomPortals = true
+	playerLabels := []string{"A", "B"}
+	neutralZones := models.NeutralZonePlans{}
+	neutralZones.AddPlan("N1", models.QualityLow, 0)
+	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	neutralZones.AddPlan("N3", models.QualityMedium, 1)
+	neutralZones.AddPlan("N4", models.QualityHigh, 1)
+	tuning := models.NewGenerationTuning(configuration, 6)
+	service := topology.NewSquareTopologyService()
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	assert.NotZero(t, countPortalConnections(variant))
+}
