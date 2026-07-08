@@ -125,6 +125,19 @@ func TestWhenParentPathIsAFile_ReturnsError(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestWhenTargetPathIsOccupiedByDirectory_ReturnsError(t *testing.T) {
+	// Arrange
+	outputDir := t.TempDir()
+	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.rmg.json"), 0o755))
+	rmgTemplate := &template.RmgTemplate{Name: "T"}
+
+	// Act
+	_, err := services.WriteTemplate(outputDir, rmgTemplate)
+
+	// Assert
+	assert.Error(t, err)
+}
+
 func TestWhenTemplateContainsNaNValue_ReturnsError(t *testing.T) {
 	// Arrange
 	outputDir := t.TempDir()

@@ -147,6 +147,30 @@ func TestWhenPortalConnectsNearbyZones_RendersDashedLineWithoutPanic(t *testing.
 	assert.NotNil(t, img)
 }
 
+func TestWhenParallelEdgesFanBeyondCanvasEdge_ClipsLinesWithoutPanic(t *testing.T) {
+	// Arrange - two zones hug the top border and fourteen parallel edges fan
+	// their control points far off-canvas, forcing the line rasteriser to clip.
+	rmgTemplate := &entities.RmgTemplate{
+		Name: "T",
+		Variants: []entities.Variant{{
+			Zones: []entities.Zone{
+				{Name: "Neutral-A", ManualPosition: &[2]float64{0.35, 0.01}},
+				{Name: "Neutral-B", ManualPosition: &[2]float64{0.65, 0.01}},
+			},
+		}},
+	}
+	for index := 0; index < 14; index++ {
+		rmgTemplate.Variants[0].Connections = append(rmgTemplate.Variants[0].Connections,
+			entities.Connection{From: "Neutral-A", To: "Neutral-B", ConnectionType: "Direct"})
+	}
+
+	// Act
+	img := services.RenderPreviewImage(rmgTemplate, config.TopologyRing, 700)
+
+	// Assert
+	assert.NotNil(t, img)
+}
+
 func TestWhenGeneratedTemplatesAreRendered_EveryTopologyProducesFullSizeCanvas(t *testing.T) {
 	topologies := []config.MapTopology{
 		config.TopologyRing,

@@ -736,3 +736,95 @@ func TestWhenZeroAngleZoneIsSet_RotatesThatZoneToFirstRingSlot(t *testing.T) {
 	// Assert
 	assert.Equal(t, image.Pt(300, 48), layout.Positions["Spawn-B"])
 }
+
+// ── crowded circles ring ─────────────────────────────────────────────
+
+func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *testing.T) {
+	// Arrange - 23 zones on one ring force the ring circumference past the
+	// draw radius at the maximum zone size, so the binary search must shrink.
+	zones := []entities.Zone{ringedZone("Neutral-Centre", 1, 0.5, 0.5)}
+	for index := 0; index < 23; index++ {
+		angle := 2.0 * math.Pi * float64(index) / 23.0
+		zones = append(zones, ringedZone(
+			"Neutral-"+string(rune('A'+index)), 0,
+			0.5+0.4*math.Cos(angle), 0.5+0.4*math.Sin(angle)))
+	}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyCircles, 600)
+
+	// Assert
+	assert.Less(t, layout.ZoneRadius, 33)
+}
+
+// ── scatter adjacency filtering ──────────────────────────────────────
+
+func TestWhenScatterConnectionIsPortal_IgnoresItForAdjacency(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.2, 0.2),
+		positionedZone("Spawn-B", 0.8, 0.8),
+		positionedZone("Neutral-C", 0.5, 0.5),
+	}
+	portalOnly := []entities.Connection{{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"}}
+	unconnectedLayout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, portalOnly), config.TopologyRandom, 600)
+
+	// Assert
+	assert.Equal(t, unconnectedLayout.Positions, layout.Positions)
+}
+
+func TestWhenScatterConnectionReferencesUnknownZone_IgnoresItForAdjacency(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.2, 0.2),
+		positionedZone("Spawn-B", 0.8, 0.8),
+	}
+	danglingOnly := []entities.Connection{directConnection("Spawn-A", "Missing-X")}
+	unconnectedLayout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, danglingOnly), config.TopologyRandom, 600)
+
+	// Assert
+	assert.Equal(t, unconnectedLayout.Positions, layout.Positions)
+}
+
+func TestWhenScatterConnectionIsSelfLoop_IgnoresItForAdjacency(t *testing.T) {
+	// Arrange
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.2, 0.2),
+		positionedZone("Spawn-B", 0.8, 0.8),
+	}
+	selfLoopOnly := []entities.Connection{directConnection("Spawn-A", "Spawn-A")}
+	unconnectedLayout := services.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, selfLoopOnly), config.TopologyRandom, 600)
+
+	// Assert
+	assert.Equal(t, unconnectedLayout.Positions, layout.Positions)
+}
+
+// ── multi-hub structural connection filtering ────────────────────────
+
+func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCentre(t *testing.T) {
+	// Arrange - portal connections never count as spokes, so the zone
+	// collapses to the canvas centre as a straggler.
+	zones := []entities.Zone{
+		namedZone("Hub-A"), namedZone("Hub-B"),
+		namedZone("Spawn-A"), namedZone("Neutral-X"),
+	}
+	connections := []entities.Connection{
+		directConnection("Hub-A", "Spawn-A"),
+		{From: "Hub-B", To: "Neutral-X", ConnectionType: "Portal"},
+	}
+
+	// Act
+	layout := services.BuildPreviewLayout(templateWith(zones, connections), config.TopologyHubAndSpoke, 600)
+
+	// Assert
+	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
+}
