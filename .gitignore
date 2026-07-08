@@ -14,8 +14,7 @@
 coverage.txt
 coverage.html
 lcov.info
-coverage_baseline.txt
-coverage_baseline_func.txt
+/*.txt
 
 # Dependency directories
 vendor/
