@@ -133,7 +133,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.coverage_artifact }}
-          path: ${{ env.coverage_file }} # Make sure to use the same file name you chose for the "-coverprofile" in the "Test" step
+          path: ${{ env.coverage_file }}
 
   code_coverage:
     name: Code coverage report

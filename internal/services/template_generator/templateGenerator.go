@@ -6,7 +6,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
@@ -45,14 +44,14 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 	}
 }
 
-func (this *TemplateGenerator) Generate() *template.RmgTemplate {
+func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
 	this.configuration.EnsureNameExists()
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
 	tuning := this.createGenerationTuning(this.configuration.PlayerCount + len(neutralZones))
 
-	return &template.RmgTemplate{
+	return &entities.RmgTemplate{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
 		Description:         this.createTemplateDescription(len(neutralZones)),
@@ -84,9 +83,9 @@ func (this *TemplateGenerator) createTemplateDescription(neutralCount int) strin
 		constants.GetTopologyDescriptorFromType(this.configuration.Topology).Label + " layout",
 		formatPhraseWithCount(neutralCount, "neutral zone", "neutral zones"),
 		formatPhraseWithCount(
-			1+this.configuration.ZoneConfiguration.PlayerZoneCastles+this.configuration.ZoneConfiguration.PlayerOwnedCastles,
-			"castle",
-			"castles") + " per player zone",
+			1+this.configuration.ZoneConfiguration.PlayerZoneCastles+
+				this.configuration.ZoneConfiguration.PlayerOwnedCastles,
+			"castle", "castles") + " per player zone",
 	}
 	if neutralCount > 0 {
 		if this.configuration.ZoneConfiguration.Advanced.Enabled {

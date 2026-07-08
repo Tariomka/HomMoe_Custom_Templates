@@ -1,9 +1,6 @@
 package helpers
 
-import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
-)
+import "github.com/Tariomka/hommoe_custom_templates/internal/entities"
 
 func GetDefaultTemplate() entities.RmgTemplate {
 	return entities.RmgTemplate{
@@ -78,8 +75,11 @@ func GetDefaultTemplate() entities.RmgTemplate {
 			},
 			Zones: []entities.Zone{
 				{
-					Name:                                "Spawn-A",
-					GeneratorPosition:                   &[2]float64{0.8799878400648531, 0.4969600324265629}, // Most likely this is random
+					Name: "Spawn-A",
+					GeneratorPosition: &[2]float64{
+						0.8799878400648531,
+						0.4969600324265629,
+					}, // Most likely this is random
 					GeneratorRing:                       new(0),
 					Size:                                1,
 					Layout:                              "zone_layout_spawns",
@@ -165,7 +165,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 							GuardRandomization:        0,
 							GuardWeeklyIncrement:      0.15,
 							BuildingsConstructionSid:  "medium_buildings_construction",
-							Faction:                   &template_variant.TypedRef{Type: "Random"},
+							Faction:                   &entities.TypedRef{Type: "Random"},
 							Factions:                  nil,
 							Placement:                 "Uniform",
 							PlacementArgs:             []string{"false", "-0.8", "3"},
@@ -190,9 +190,12 @@ func GetDefaultTemplate() entities.RmgTemplate {
 							GuardWeeklyIncrement: 0,
 						},
 						{
-							Type:                 "",
-							From:                 entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+							Type: "",
+							From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+							To: entities.TypedRef{
+								Type: "MandatoryContent",
+								Args: []string{"name_remote_foothold_1"},
+							},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,
@@ -243,8 +246,8 @@ func GetDefaultTemplate() entities.RmgTemplate {
 						"classic_template_pool_random_unguarded_t2_magic",
 					},
 					ResourcesContentPool: []string{"content_pool_general_resources_start_zone_poor"},
-					MandatoryContent:     template_variant.StringList{"mandatory_content_side_B"},
-					ContentCountLimits: template_variant.StringList{
+					MandatoryContent:     entities.StringList{"mandatory_content_side_B"},
+					ContentCountLimits: entities.StringList{
 						"content_limits_side_1_2",
 						"content_limits_side_1_3",
 						"content_limits_side_1_4",
@@ -297,7 +300,7 @@ func GetDefaultTemplate() entities.RmgTemplate {
 							GuardRandomization:        0,
 							GuardWeeklyIncrement:      0.15,
 							BuildingsConstructionSid:  "medium_buildings_construction",
-							Faction:                   &template_variant.TypedRef{Type: "Random"},
+							Faction:                   &entities.TypedRef{Type: "Random"},
 							Factions:                  nil,
 							Placement:                 "Uniform",
 							PlacementArgs:             []string{"false", "-0.8", "3"},
@@ -322,9 +325,12 @@ func GetDefaultTemplate() entities.RmgTemplate {
 							GuardWeeklyIncrement: 0,
 						},
 						{
-							Type:                 "",
-							From:                 entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-							To:                   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+							Type: "",
+							From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+							To: entities.TypedRef{
+								Type: "MandatoryContent",
+								Args: []string{"name_remote_foothold_1"},
+							},
 							Road:                 nil,
 							SimTurnSquad:         false,
 							GuardValue:           0,

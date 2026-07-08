@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
@@ -37,7 +36,7 @@ func canvasScale(side float64) float64 { return side / csCanvasSide }
 // passes; all other topologies fall back to the classic ring / hub-and-spoke
 // renderer.
 func BuildPreviewLayout(
-	template *template.RmgTemplate,
+	template *entities.RmgTemplate,
 	topology config.MapTopology,
 	side float64,
 ) preview.PreviewLayout {
