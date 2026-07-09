@@ -31,7 +31,7 @@ func NewRuleVariant(mapping *models.VariantMapping, variantId *int) (*RuleVarian
 		resolved = *mapping
 	}
 
-	id := 0
+	var id int
 	if variantId != nil {
 		id = *variantId
 	} else {

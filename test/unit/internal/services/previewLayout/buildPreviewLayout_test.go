@@ -20,8 +20,6 @@ func position(x, y float64) *[2]float64 {
 	return &point
 }
 
-func ringIndex(value int) *int { return &value }
-
 func namedZone(name string) entities.Zone { return entities.Zone{Name: name} }
 
 func positionedZone(name string, x, y float64) entities.Zone {
@@ -32,7 +30,7 @@ func positionedZone(name string, x, y float64) entities.Zone {
 
 func ringedZone(name string, ring int, x, y float64) entities.Zone {
 	zone := positionedZone(name, x, y)
-	zone.GeneratorRing = ringIndex(ring)
+	zone.GeneratorRing = new(ring)
 	return zone
 }
 
@@ -743,7 +741,7 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 	// Arrange - 23 zones on one ring force the ring circumference past the
 	// draw radius at the maximum zone size, so the binary search must shrink.
 	zones := []entities.Zone{ringedZone("Neutral-Centre", 1, 0.5, 0.5)}
-	for index := 0; index < 23; index++ {
+	for index := range 23 {
 		angle := 2.0 * math.Pi * float64(index) / 23.0
 		zones = append(zones, ringedZone(
 			"Neutral-"+string(rune('A'+index)), 0,

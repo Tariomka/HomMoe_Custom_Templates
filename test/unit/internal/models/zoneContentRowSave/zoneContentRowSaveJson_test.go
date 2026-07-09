@@ -9,18 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func rowBoolPointer(value bool) *bool { return &value }
-func rowIntPointer(value int) *int    { return &value }
-
 func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
 	// Arrange
 	original := models.ZoneContentRowSave{
 		Sid:   "dragon_utopia",
 		Count: 2,
 		Rules: []models.ContentRuleRowSave{
-			{Name: "Guarded", IsGuarded: rowBoolPointer(true)},
+			{Name: "Guarded", IsGuarded: new(true)},
 			{Name: "Distance to road", DistanceName: "Far"},
-			{Name: "Variant", VariantId: rowIntPointer(1)},
+			{Name: "Variant", VariantId: new(1)},
 		},
 	}
 	data, err := json.Marshal(original)
@@ -39,7 +36,7 @@ func TestWhenRowIsSerialized_UsesRulesFormatWithoutLegacyFlatFields(t *testing.T
 	row := models.ZoneContentRowSave{
 		Sid:   "x",
 		Count: 1,
-		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: rowBoolPointer(true)}},
+		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: new(true)}},
 	}
 
 	// Act
@@ -47,5 +44,9 @@ func TestWhenRowIsSerialized_UsesRulesFormatWithoutLegacyFlatFields(t *testing.T
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, `{"sid":"x","count":1,"isGroup":false,"rules":[{"name":"Guarded","isGuarded":true}]}`, string(data))
+	assert.JSONEq(
+		t,
+		`{"sid":"x","count":1,"isGroup":false,"rules":[{"name":"Guarded","isGuarded":true}]}`,
+		string(data),
+	)
 }
