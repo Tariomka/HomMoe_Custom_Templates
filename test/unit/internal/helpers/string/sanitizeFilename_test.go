@@ -77,7 +77,7 @@ func TestWhenNameIsEmpty_ReturnsEmptyString(t *testing.T) {
 	sanitized := helpers.SanitizeFilename(name)
 
 	// Assert
-	assert.Equal(t, "", sanitized)
+	assert.Empty(t, sanitized)
 }
 
 func TestWhenNameIsOnlyWhitespace_ReturnsEmptyString(t *testing.T) {
@@ -88,5 +88,5 @@ func TestWhenNameIsOnlyWhitespace_ReturnsEmptyString(t *testing.T) {
 	sanitized := helpers.SanitizeFilename(name)
 
 	// Assert
-	assert.Equal(t, "", sanitized)
+	assert.Empty(t, sanitized)
 }

@@ -18,7 +18,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
+
+var receiversFilters = registry.GetReceiversFilterValues()
 
 // bonusTypeOption pairs a friendly dropdown label with its preset type.
 type bonusTypeOption struct {
@@ -40,7 +43,7 @@ var bonusTypeOptions = []bonusTypeOption{
 	{"Starting Ore", config.BonusStartingOre},
 }
 
-var bonusReceiverOptions = []string{"start_hero", "all_heroes"}
+var bonusReceiverOptions = []string{receiversFilters.StartingHero, receiversFilters.AllHeroes}
 
 var bonusResourceDefaults = map[config.BonusPresetType]string{
 	config.BonusStartingGold:     "10000",

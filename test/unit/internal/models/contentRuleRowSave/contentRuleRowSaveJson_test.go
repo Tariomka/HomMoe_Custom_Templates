@@ -9,9 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func boolPointer(value bool) *bool { return &value }
-func intPointer(value int) *int    { return &value }
-
 func TestWhenAllFieldsAreEmpty_SerializesToEmptyObject(t *testing.T) {
 	// Arrange
 	rule := models.ContentRuleRowSave{}
@@ -33,12 +30,12 @@ func TestWhenOnlyNameAndDistanceAreSet_SerializesOnlyThoseFields(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, `{"name":"Distance to road","distanceName":"Far"}`, string(data))
+	assert.JSONEq(t, `{"name":"Distance to road","distanceName":"Far"}`, string(data))
 }
 
 func TestWhenPointerFieldIsSetToFalse_StillSerializesField(t *testing.T) {
 	// Arrange
-	rule := models.ContentRuleRowSave{Name: "Guarded", IsGuarded: boolPointer(false)}
+	rule := models.ContentRuleRowSave{Name: "Guarded", IsGuarded: new(false)}
 
 	// Act
 	data, err := json.Marshal(rule)
@@ -53,9 +50,9 @@ func TestWhenSerializedRuleIsDeserialized_RoundTripsAllFields(t *testing.T) {
 	original := models.ContentRuleRowSave{
 		Name:            "Variant",
 		DistanceName:    "Near",
-		IsGuarded:       boolPointer(true),
-		IsSoloEncounter: boolPointer(false),
-		VariantId:       intPointer(3),
+		IsGuarded:       new(true),
+		IsSoloEncounter: new(false),
+		VariantId:       new(3),
 	}
 	data, err := json.Marshal(original)
 	require.NoError(t, err)

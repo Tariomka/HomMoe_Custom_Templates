@@ -23,10 +23,6 @@ import (
 
 // PreviewPanel holds the layout cache + buttons for the preview panel.
 type PreviewPanel struct {
-	btnRefresh  widget.Clickable
-	pngStatus   string
-	pngStatusOK bool
-
 	btnGenerate     widget.Clickable
 	btnSaveTemplate widget.Clickable
 	btnPickOutput   widget.Clickable

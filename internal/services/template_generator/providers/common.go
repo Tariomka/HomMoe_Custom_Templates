@@ -11,7 +11,6 @@ var (
 	mapBonuses                = registry.GetMapBonusesValues()
 	nonContentObjects         = registry.GetMapObjectNonContentValues()
 	randomUnitBanks           = registry.GetMapObjectRandomUnitBankValues()
-	receiversFilters          = registry.GetReceiversFilterValues()
 	resourceObjects           = registry.GetMapObjectResourceValues()
 	ruleTypes                 = registry.GetRuleTypeValues()
 	spellSids                 = registry.GetSpellSidValues()

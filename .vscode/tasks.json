@@ -61,7 +61,7 @@
             "label": "Go: Run full linter",
             "type": "shell",
             "command": "golangci-lint-v2",
-            "args": [ "run", "./...", "--issues-exit-code=0" ],
+            "args": [ "run", "./...", "--issues-exit-code=0", "--fix" ],
             "problemMatcher": {
                 "owner": "go",
                 "fileLocation": ["relative", "${workspaceFolder}"],
