@@ -1,7 +1,6 @@
 package crossTopology_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
