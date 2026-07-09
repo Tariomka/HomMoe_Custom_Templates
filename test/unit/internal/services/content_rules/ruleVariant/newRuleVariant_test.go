@@ -33,7 +33,7 @@ func TestWhenVariantIdIsNil_UsesSmallestDefinedId(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, 2, rule.VariantId)
+	assert.Equal(t, 2, rule.VariantID)
 }
 
 func TestWhenVariantIdIsSupplied_StoresIt(t *testing.T) {
@@ -45,7 +45,7 @@ func TestWhenVariantIdIsSupplied_StoresIt(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, 2, rule.VariantId)
+	assert.Equal(t, 2, rule.VariantID)
 }
 
 func TestWhenVariantIdIsNotInMapping_ReturnsError(t *testing.T) {

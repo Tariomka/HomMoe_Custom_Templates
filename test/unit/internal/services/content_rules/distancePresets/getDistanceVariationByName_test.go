@@ -15,11 +15,27 @@ func TestWhenPresetNameIsKnown_ReturnsItsVariation(t *testing.T) {
 		lookupName string
 		expected   content_rules.DistanceVariation
 	}{
-		{"WhenNameIsNextTo_ReturnsNextToBounds", "Next To", content_rules.DistanceVariation{Name: "Next To", Min: 0.05, Max: 0.1}},
-		{"WhenNameIsNear_ReturnsNearBounds", "Near", content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}},
-		{"WhenNameIsMedium_ReturnsMediumBounds", "Medium", content_rules.DistanceVariation{Name: "Medium", Min: 0.25, Max: 0.5}},
+		{
+			"WhenNameIsNextTo_ReturnsNextToBounds",
+			"Next To",
+			content_rules.DistanceVariation{Name: "Next To", Min: 0.05, Max: 0.1},
+		},
+		{
+			"WhenNameIsNear_ReturnsNearBounds",
+			"Near",
+			content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25},
+		},
+		{
+			"WhenNameIsMedium_ReturnsMediumBounds",
+			"Medium",
+			content_rules.DistanceVariation{Name: "Medium", Min: 0.25, Max: 0.5},
+		},
 		{"WhenNameIsFar_ReturnsFarBounds", "Far", content_rules.DistanceVariation{Name: "Far", Min: 0.5, Max: 0.75}},
-		{"WhenNameIsVeryFar_ReturnsVeryFarBounds", "Very Far", content_rules.DistanceVariation{Name: "Very Far", Min: 0.75, Max: 0.9}},
+		{
+			"WhenNameIsVeryFar_ReturnsVeryFarBounds",
+			"Very Far",
+			content_rules.DistanceVariation{Name: "Very Far", Min: 0.75, Max: 0.9},
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

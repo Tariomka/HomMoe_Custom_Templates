@@ -24,14 +24,17 @@ func GetEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 		}
 		remaining -= reserved
 	}
-	for i := 0; i < remaining; i++ {
+	for i := range remaining {
 		gap := int(math.Floor((float64(i) + 0.5) * float64(gapCount) / float64(remaining)))
 		capacities[helpers.Clamp(gap, 0, gapCount-1)]++
 	}
 	return capacities
 }
 
-func AssignNeutralZonesToGaps(neutralZones models.NeutralZonePlans, capacities []int, preferInterior bool) []models.NeutralZonePlans {
+func AssignNeutralZonesToGaps(
+	neutralZones models.NeutralZonePlans,
+	capacities []int,
+	preferInterior bool) []models.NeutralZonePlans {
 	gaps := make([]models.NeutralZonePlans, len(capacities))
 	loads := make([]float64, len(capacities))
 	sortedZones := models.NewNeutralZonePlansSortedByBalance(neutralZones)

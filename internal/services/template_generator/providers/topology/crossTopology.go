@@ -96,7 +96,7 @@ func (this *CrossTopologyService) createCrossLayout(
 
 		// Arm neutral zones from the centre outward.
 		count := armNeutralCounts[arm]
-		for k := 0; k < count; k++ {
+		for k := range count {
 			radius := (armNear + armFar) / 2.0
 			if count > 1 {
 				radius = armNear + (armFar-armNear)*float64(k)/float64(count-1)

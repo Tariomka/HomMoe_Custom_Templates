@@ -534,8 +534,18 @@ func TestWhenTownPortalFreeBonusConfigured_ExpandsToSpellAndFreeCostBonuses(t *t
 
 	// Assert
 	assert.Equal(t, entities.BonusList{
-		{SID: "add_bonus_hero_spell", ReceiverSide: -1, ReceiverFilter: "start_hero", Parameters: []string{"neutral_magic_town_portal"}},
-		{SID: "add_bonus_hero_stat", ReceiverSide: -1, ReceiverFilter: "start_hero", Parameters: []string{"magicCostSidSet", "neutral_magic_town_portal", "-999", "0"}},
+		{
+			SID:            "add_bonus_hero_spell",
+			ReceiverSide:   -1,
+			ReceiverFilter: "start_hero",
+			Parameters:     []string{"neutral_magic_town_portal"},
+		},
+		{
+			SID:            "add_bonus_hero_stat",
+			ReceiverSide:   -1,
+			ReceiverFilter: "start_hero",
+			Parameters:     []string{"magicCostSidSet", "neutral_magic_town_portal", "-999", "0"},
+		},
 	}, actual)
 }
 
@@ -553,8 +563,18 @@ func TestWhenFreeSpellBonusConfigured_ExpandsToSpellAndCostOverrideBonuses(t *te
 
 	// Assert
 	assert.Equal(t, entities.BonusList{
-		{SID: "add_bonus_hero_spell", ReceiverSide: -1, ReceiverFilter: "all_heroes", Parameters: []string{"magic_fireball"}},
-		{SID: "add_bonus_hero_stat", ReceiverSide: -1, ReceiverFilter: "all_heroes", Parameters: []string{"magicCostSidSet", "magic_fireball", "-999", "0"}},
+		{
+			SID:            "add_bonus_hero_spell",
+			ReceiverSide:   -1,
+			ReceiverFilter: "all_heroes",
+			Parameters:     []string{"magic_fireball"},
+		},
+		{
+			SID:            "add_bonus_hero_stat",
+			ReceiverSide:   -1,
+			ReceiverFilter: "all_heroes",
+			Parameters:     []string{"magicCostSidSet", "magic_fireball", "-999", "0"},
+		},
 	}, actual)
 }
 
@@ -572,7 +592,12 @@ func TestWhenPaidSpellBonusConfigured_ProducesOnlySpellBonus(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, entities.BonusList{
-		{SID: "add_bonus_hero_spell", ReceiverSide: -1, ReceiverFilter: "all_heroes", Parameters: []string{"magic_fireball"}},
+		{
+			SID:            "add_bonus_hero_spell",
+			ReceiverSide:   -1,
+			ReceiverFilter: "all_heroes",
+			Parameters:     []string{"magic_fireball"},
+		},
 	}, actual)
 }
 
@@ -584,15 +609,69 @@ func TestWhenSingleBonusPresetConfigured_ProducesExpectedBonus(t *testing.T) {
 		expectedSID        string
 		expectedParameters []string
 	}{
-		{"WhenUnitMultiplierConfigured_ProducesHeroUnitMultiplierBonus", config.BonusUnitMultiplier, "2", "add_bonus_hero_unit_multipler", []string{"2"}},
-		{"WhenMovementBonusConfigured_ProducesHeroStatBonus", config.BonusMovementBonus, "300", "add_bonus_hero_stat", []string{"movementBonus", "300"}},
-		{"WhenStartingItemConfigured_ProducesHeroItemBonus", config.BonusStartingItem, "some_item", "add_bonus_hero_item", []string{"some_item"}},
-		{"WhenStartingGoldConfigured_ProducesResourceBonus", config.BonusStartingGold, "1000", "add_bonus_res", []string{"gold", "1000"}},
-		{"WhenStartingGemsConfigured_ProducesResourceBonus", config.BonusStartingGems, "5", "add_bonus_res", []string{"gemstones", "5"}},
-		{"WhenStartingCrystalsConfigured_ProducesResourceBonus", config.BonusStartingCrystals, "5", "add_bonus_res", []string{"crystals", "5"}},
-		{"WhenStartingMercuryConfigured_ProducesResourceBonus", config.BonusStartingMercury, "5", "add_bonus_res", []string{"mercury", "5"}},
-		{"WhenStartingWoodConfigured_ProducesResourceBonus", config.BonusStartingWood, "10", "add_bonus_res", []string{"wood", "10"}},
-		{"WhenStartingOreConfigured_ProducesResourceBonus", config.BonusStartingOre, "10", "add_bonus_res", []string{"ore", "10"}},
+		{
+			"WhenUnitMultiplierConfigured_ProducesHeroUnitMultiplierBonus",
+			config.BonusUnitMultiplier,
+			"2",
+			"add_bonus_hero_unit_multipler",
+			[]string{"2"},
+		},
+		{
+			"WhenMovementBonusConfigured_ProducesHeroStatBonus",
+			config.BonusMovementBonus,
+			"300",
+			"add_bonus_hero_stat",
+			[]string{"movementBonus", "300"},
+		},
+		{
+			"WhenStartingItemConfigured_ProducesHeroItemBonus",
+			config.BonusStartingItem,
+			"some_item",
+			"add_bonus_hero_item",
+			[]string{"some_item"},
+		},
+		{
+			"WhenStartingGoldConfigured_ProducesResourceBonus",
+			config.BonusStartingGold,
+			"1000",
+			"add_bonus_res",
+			[]string{"gold", "1000"},
+		},
+		{
+			"WhenStartingGemsConfigured_ProducesResourceBonus",
+			config.BonusStartingGems,
+			"5",
+			"add_bonus_res",
+			[]string{"gemstones", "5"},
+		},
+		{
+			"WhenStartingCrystalsConfigured_ProducesResourceBonus",
+			config.BonusStartingCrystals,
+			"5",
+			"add_bonus_res",
+			[]string{"crystals", "5"},
+		},
+		{
+			"WhenStartingMercuryConfigured_ProducesResourceBonus",
+			config.BonusStartingMercury,
+			"5",
+			"add_bonus_res",
+			[]string{"mercury", "5"},
+		},
+		{
+			"WhenStartingWoodConfigured_ProducesResourceBonus",
+			config.BonusStartingWood,
+			"10",
+			"add_bonus_res",
+			[]string{"wood", "10"},
+		},
+		{
+			"WhenStartingOreConfigured_ProducesResourceBonus",
+			config.BonusStartingOre,
+			"10",
+			"add_bonus_res",
+			[]string{"ore", "10"},
+		},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {

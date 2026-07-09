@@ -75,7 +75,6 @@
             },
             "group": {
                 "kind": "build",
-                "isDefault": true
             },
             "presentation": {
                 "echo": true,
@@ -90,7 +89,16 @@
             "label": "Go: Get Linter Results",
             "type": "shell",
             "command": "golangci-lint-v2",
-            "args": ["run", "./...", "--issues-exit-code=0"],
+            "args": [
+                "run",
+                "./...",
+                "--issues-exit-code=0",
+                "--output.text.path=stdout",
+                "--output.html.path=${cwd}/tmp/lint-report.html",
+                "--cpu-profile-path=${cwd}/tmp/lint-cpu.prof",
+                "--mem-profile-path=${cwd}/tmp/lint-mem.prof",
+                "--trace-path=${cwd}/tmp/lint-trace.out",
+            ], 
             "problemMatcher": {
                 "owner": "go",
                 "fileLocation": ["relative", "${workspaceFolder}"],
@@ -112,7 +120,7 @@
                 "focus": false,
                 "panel": "shared",
                 "showReuseMessage": true,
-                "clear": false
+                "clear": true
             }
         }
     ]

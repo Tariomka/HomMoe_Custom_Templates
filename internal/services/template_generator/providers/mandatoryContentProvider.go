@@ -142,7 +142,7 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 		if row.Sid == "" {
 			continue
 		}
-		for i := 0; i < row.Count; i++ {
+		for range row.Count {
 			out = append(out, this.createContentItemFrom(row))
 		}
 	}
@@ -212,7 +212,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 
 // stripNearCastleRules removes placement rules that anchor an item near
 // the zone's main castle. Used when a zone has no castle so the rule
-// would never be satisfiable
+// would never be satisfiable.
 func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
 	for i := range items {
 		if len(items[i].Rules) == 0 {

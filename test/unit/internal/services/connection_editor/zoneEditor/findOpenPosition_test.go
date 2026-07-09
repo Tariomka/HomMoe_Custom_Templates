@@ -14,8 +14,13 @@ func TestWhenBoardIsEmpty_PicksCornerFarthestFromCenter(t *testing.T) {
 	position := connection_editor.FindOpenPosition(nil)
 
 	// Assert
-	assert.InDeltaSlice(t, []float64{0.9, 0.9}, position[:], 0.0001,
-		"with no occupied positions a grid corner maximizes the distance to the center; float rounding favors the last corner")
+	assert.InDeltaSlice(
+		t,
+		[]float64{0.9, 0.9},
+		position[:],
+		0.0001,
+		"with no occupied positions a grid corner maximizes the distance to the center; float rounding favors the last corner",
+	)
 }
 
 func TestWhenCornerIsCrowded_PicksPositionAwayFromIt(t *testing.T) {

@@ -39,10 +39,14 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.BannedMagics = editorState.BannedMagics
 	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
 	generatorSettings.Bonuses = editorState.Bonuses
-	generatorSettings.PlayerZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.PlayerZoneContentRows)
-	generatorSettings.LowNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.LowNeutralContentRows)
-	generatorSettings.MediumNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.MediumNeutralContentRows)
-	generatorSettings.HighNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HighNeutralContentRows)
+	generatorSettings.PlayerZoneMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.PlayerZoneContentRows)
+	generatorSettings.LowNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.LowNeutralContentRows)
+	generatorSettings.MediumNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.MediumNeutralContentRows)
+	generatorSettings.HighNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.HighNeutralContentRows)
 	generatorSettings.HubZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HubZoneContentRows)
 	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
 	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent

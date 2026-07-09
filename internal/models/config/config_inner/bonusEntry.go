@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-// BonusEntry is the editor-side view-model for a single configurable game-start bonus
+// BonusEntry is the editor-side view-model for a single configurable game-start bonus.
 type BonusEntry struct {
 	PresetType     BonusPresetType `json:"presetType"`
 	ReceiverFilter string          `json:"receiverFilter"`   // "start_hero" or "all_heroes".

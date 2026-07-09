@@ -25,7 +25,7 @@ func TestWhenVariantIdIsKnown_ShowsVariantDescription(t *testing.T) {
 // mismatched id, since the constructor validates the id against the mapping.
 func TestWhenVariantIdIsUnknown_ShowsUnforeseenError(t *testing.T) {
 	// Arrange
-	rule := content_rules.RuleVariant{Mapping: content_rules.UtopiaVariants, VariantId: 99}
+	rule := content_rules.RuleVariant{Mapping: content_rules.UtopiaVariants, VariantID: 99}
 
 	// Act
 	displayText := rule.DisplayText()

@@ -27,7 +27,11 @@ func TestWhenEntriesAreIdentical_ProducesSameHash(t *testing.T) {
 
 func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
 	// Arrange
-	entry := config_inner.BonusEntry{PresetType: config_inner.BonusStartingGold, ReceiverFilter: "all_heroes", Param: "500"}
+	entry := config_inner.BonusEntry{
+		PresetType:     config_inner.BonusStartingGold,
+		ReceiverFilter: "all_heroes",
+		Param:          "500",
+	}
 	other := entry
 	other.Param = "700"
 
@@ -40,7 +44,11 @@ func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
 
 func TestWhenEntriesDifferInPresetType_ProducesDifferentHashes(t *testing.T) {
 	// Arrange
-	entry := config_inner.BonusEntry{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "7"}
+	entry := config_inner.BonusEntry{
+		PresetType:     config_inner.BonusStartingWood,
+		ReceiverFilter: "start_hero",
+		Param:          "7",
+	}
 	other := entry
 	other.PresetType = config_inner.BonusStartingOre
 

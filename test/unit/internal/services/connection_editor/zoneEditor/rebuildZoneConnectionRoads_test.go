@@ -18,8 +18,15 @@ func buildFootholdScenario() ([]entities.Zone, []entities.Connection) {
 			Name:        "Spawn-A",
 			MainObjects: []entities.MainObject{{Type: "Spawn"}, {Type: "City"}},
 			Roads: []entities.Road{
-				{Type: "Stone", From: mainObjectZeroRef(), To: entities.TypedRef{Type: "MainObject", Args: []string{"1"}}},
-				{From: mainObjectZeroRef(), To: entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}}},
+				{
+					Type: "Stone",
+					From: mainObjectZeroRef(),
+					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+				},
+				{
+					From: mainObjectZeroRef(),
+					To:   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+				},
 				{From: mainObjectZeroRef(), To: entities.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}}},
 			},
 		},
@@ -27,7 +34,11 @@ func buildFootholdScenario() ([]entities.Zone, []entities.Connection) {
 			Name:        "Spawn-B",
 			MainObjects: []entities.MainObject{{Type: "Spawn"}, {Type: "City"}},
 			Roads: []entities.Road{
-				{Type: "Stone", From: mainObjectZeroRef(), To: entities.TypedRef{Type: "MainObject", Args: []string{"1"}}},
+				{
+					Type: "Stone",
+					From: mainObjectZeroRef(),
+					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+				},
 				{From: mainObjectZeroRef(), To: entities.TypedRef{Type: "Connection", Args: []string{"Rnd-A-B"}}},
 			},
 		},
@@ -199,8 +210,16 @@ func TestWhenCastleCountShrank_DropsDanglingCastleRoads(t *testing.T) {
 			Name:        "Neutral-G",
 			MainObjects: []entities.MainObject{{Type: "City"}},
 			Roads: []entities.Road{
-				{Type: "Stone", From: mainObjectZeroRef(), To: entities.TypedRef{Type: "MainObject", Args: []string{"1"}}},
-				{Type: "Stone", From: mainObjectZeroRef(), To: entities.TypedRef{Type: "MainObject", Args: []string{"2"}}},
+				{
+					Type: "Stone",
+					From: mainObjectZeroRef(),
+					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+				},
+				{
+					Type: "Stone",
+					From: mainObjectZeroRef(),
+					To:   entities.TypedRef{Type: "MainObject", Args: []string{"2"}},
+				},
 			},
 		},
 	}

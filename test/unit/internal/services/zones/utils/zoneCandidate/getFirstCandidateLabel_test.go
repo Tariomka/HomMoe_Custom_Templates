@@ -16,7 +16,7 @@ func TestWhenNoCandidatesExist_ReturnsEmptyString(t *testing.T) {
 	label := candidates.GetFirstCandidateLabel()
 
 	// Assert
-	assert.Equal(t, "", label)
+	assert.Empty(t, label)
 }
 
 func TestWhenCandidatesExist_ReturnsFirstCandidateLetter(t *testing.T) {

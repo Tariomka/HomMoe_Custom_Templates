@@ -87,9 +87,21 @@ func TestWhenNoNeutralZonesExist_JoinsPlayerTipsInARing(t *testing.T) {
 		playerLabels      []string
 		expectedRingEdges int
 	}{
-		{name: "WhenTwoPlayersHaveNoNeutrals_CreatesSingleTipEdge", playerLabels: []string{"A", "B"}, expectedRingEdges: 1},
-		{name: "WhenThreePlayersHaveNoNeutrals_CreatesTipEdgePerPlayer", playerLabels: []string{"A", "B", "C"}, expectedRingEdges: 3},
-		{name: "WhenFourPlayersHaveNoNeutrals_CreatesTipEdgePerPlayer", playerLabels: []string{"A", "B", "C", "D"}, expectedRingEdges: 4},
+		{
+			name:              "WhenTwoPlayersHaveNoNeutrals_CreatesSingleTipEdge",
+			playerLabels:      []string{"A", "B"},
+			expectedRingEdges: 1,
+		},
+		{
+			name:              "WhenThreePlayersHaveNoNeutrals_CreatesTipEdgePerPlayer",
+			playerLabels:      []string{"A", "B", "C"},
+			expectedRingEdges: 3,
+		},
+		{
+			name:              "WhenFourPlayersHaveNoNeutrals_CreatesTipEdgePerPlayer",
+			playerLabels:      []string{"A", "B", "C", "D"},
+			expectedRingEdges: 4,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -106,7 +118,7 @@ func TestWhenNoNeutralZonesExist_JoinsPlayerTipsInARing(t *testing.T) {
 
 			// Assert
 			assert.Len(t, spawnToSpawnNamesWithPrefix(variant, "Rnd-"), testCase.expectedRingEdges,
-				fmt.Sprintf("player tips of a %d-player cross must close into a ring", len(testCase.playerLabels)))
+				"player tips of a %d-player cross must close into a ring", len(testCase.playerLabels))
 		})
 	}
 }

@@ -22,7 +22,7 @@ func TestWhenRulesArePresentAndCountIsUnset_StillNormalizesCountToOne(t *testing
 	// Arrange
 	row := models.ZoneContentRowSave{
 		Sid:   "x",
-		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: rowBoolPointer(true)}},
+		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: new(true)}},
 	}
 
 	// Act

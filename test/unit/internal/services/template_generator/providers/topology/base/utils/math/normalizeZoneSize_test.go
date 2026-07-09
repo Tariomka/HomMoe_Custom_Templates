@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
+	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +34,7 @@ func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
 			normalized := utils.NormalizeZoneSize(testCase.zoneSize)
 
 			// Assert
-			assert.Equal(t, testCase.expected, normalized)
+			assert.InDelta(t, testCase.expected, normalized, helpers.Delta)
 		})
 	}
 }
@@ -46,6 +47,6 @@ func TestWhenArbitraryFiniteSizeIsProvided_ResultStaysWithinClampBounds(t *testi
 	normalized := utils.NormalizeZoneSize(zoneSize)
 
 	// Assert
-	assert.True(t, normalized >= 0.1 && normalized <= 2.0,
-		"normalized size %v for input %v escaped the [0.1, 2.0] range", normalized, zoneSize)
+	assert.GreaterOrEqual(t, normalized, 0.1)
+	assert.LessOrEqual(t, normalized, 2.0)
 }

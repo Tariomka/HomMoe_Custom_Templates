@@ -118,7 +118,9 @@ func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testi
 			var invalidReferences []string
 			for _, connection := range actual.Variants[0].Connections {
 				if !zoneNames[connection.From] {
-					invalidReferences = append(invalidReferences, connection.Name+": unknown From zone "+connection.From)
+					invalidReferences = append(
+						invalidReferences,
+						connection.Name+": unknown From zone "+connection.From)
 				}
 				if !zoneNames[connection.To] {
 					invalidReferences = append(invalidReferences, connection.Name+": unknown To zone "+connection.To)

@@ -4,10 +4,9 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
+	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
 	"github.com/stretchr/testify/assert"
 )
-
-const delta = 0.0000001
 
 func TestWhenZoneAreaEqualsReferenceArea_ReturnsOne(t *testing.T) {
 	// Arrange
@@ -18,7 +17,7 @@ func TestWhenZoneAreaEqualsReferenceArea_ReturnsOne(t *testing.T) {
 	actual := utils.ComputeContentScale(mapSize, totalZones)
 
 	// Assert
-	assert.InDelta(t, 1.0, actual, delta)
+	assert.InDelta(t, 1.0, actual, helpers.Delta)
 }
 
 func TestWhenZoneAreaIsFourTimesReferenceArea_ReturnsTwo(t *testing.T) {
@@ -30,7 +29,7 @@ func TestWhenZoneAreaIsFourTimesReferenceArea_ReturnsTwo(t *testing.T) {
 	actual := utils.ComputeContentScale(mapSize, totalZones)
 
 	// Assert
-	assert.InDelta(t, 2.0, actual, delta)
+	assert.InDelta(t, 2.0, actual, helpers.Delta)
 }
 
 func TestWhenZoneAreaIsTiny_ClampsScaleToMinimumHalf(t *testing.T) {
@@ -42,7 +41,7 @@ func TestWhenZoneAreaIsTiny_ClampsScaleToMinimumHalf(t *testing.T) {
 	actual := utils.ComputeContentScale(mapSize, totalZones)
 
 	// Assert
-	assert.InDelta(t, 0.5, actual, delta)
+	assert.InDelta(t, 0.5, actual, helpers.Delta)
 }
 
 func TestWhenZoneAreaIsHuge_ClampsScaleToMaximumTwoAndHalf(t *testing.T) {
@@ -54,7 +53,7 @@ func TestWhenZoneAreaIsHuge_ClampsScaleToMaximumTwoAndHalf(t *testing.T) {
 	actual := utils.ComputeContentScale(mapSize, totalZones)
 
 	// Assert
-	assert.InDelta(t, 2.5, actual, delta)
+	assert.InDelta(t, 2.5, actual, helpers.Delta)
 }
 
 func TestWhenTotalZonesIsZero_TreatsZoneCountAsOne(t *testing.T) {
@@ -66,5 +65,5 @@ func TestWhenTotalZonesIsZero_TreatsZoneCountAsOne(t *testing.T) {
 	actual := utils.ComputeContentScale(mapSize, totalZones)
 
 	// Assert
-	assert.InDelta(t, 2.0, actual, delta)
+	assert.InDelta(t, 2.0, actual, helpers.Delta)
 }

@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand/v2"
 	"slices"
+	"strconv"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
@@ -706,7 +707,7 @@ func (this *TopologyBase) createOuterZoneRoads(
 			variant_content.NewRoadBuilder().
 				WithStoneType().
 				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i))).
 				Build())
 	}
 	for i := 1; i <= footholdCount; i++ {

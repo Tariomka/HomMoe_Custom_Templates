@@ -108,11 +108,11 @@ func GetVariantsForContent(content models.SidMapping) []models.VariantMapping {
 	return []models.VariantMapping{}
 }
 
-// GetVariantForContentById returns the single-entry mapping for the given
+// GetVariantForContentByID returns the single-entry mapping for the given
 // content and variant id, or ok == false when none matches.
-func GetVariantForContentById(content models.SidMapping, variantId int) (models.VariantMapping, bool) {
+func GetVariantForContentByID(content models.SidMapping, variantID int) (models.VariantMapping, bool) {
 	for _, mapping := range GetVariantsForContent(content) {
-		if _, ok := mapping.Variants[variantId]; ok {
+		if _, ok := mapping.Variants[variantID]; ok {
 			return mapping, true
 		}
 	}

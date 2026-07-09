@@ -29,7 +29,9 @@ func TestWhenDataIsSingleObject_WrapsBonusIntoSingleElementList(t *testing.T) {
 
 func TestWhenDataIsArray_DecodesEveryBonus(t *testing.T) {
 	// Arrange
-	data := []byte(`[{"sid":"first","receiverSide":0,"parameters":[]},{"sid":"second","receiverSide":1,"parameters":["7"]}]`)
+	data := []byte(
+		`[{"sid":"first","receiverSide":0,"parameters":[]},{"sid":"second","receiverSide":1,"parameters":["7"]}]`,
+	)
 	expected := template_rule.BonusList{
 		{SID: "first", ReceiverSide: 0, Parameters: []string{}},
 		{SID: "second", ReceiverSide: 1, Parameters: []string{"7"}},

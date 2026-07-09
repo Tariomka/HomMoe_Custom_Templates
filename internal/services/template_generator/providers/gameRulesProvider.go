@@ -31,7 +31,8 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 	}
 }
 
-func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.GeneratorConfig) entities.WinConditions {
+func (this *GameRulesProvider) createAdvancedWinConditions(
+	configuration config.GeneratorConfig) entities.WinConditions {
 	victoryCondition := configuration.GetVictoryCondition()
 	gameEndConditions := configuration.GetGameEndConditions()
 	gladiatorRules := configuration.GetGladiatorArenaRules()
@@ -47,9 +48,11 @@ func (this *GameRulesProvider) createAdvancedWinConditions(configuration config.
 		HeroLightingDay:  1,
 		LostStartCity:    gameEndConditions.LostStartCity || victoryCondition == winConditionValues.CapitalHold,
 		LostStartCityDay: helpers.Clamp(gameEndConditions.LostStartCityDay, 1, 30),
-		LostStartHero:    gameEndConditions.LostStartHero || useGladiator || configuration.GameMode == gameModes.SingleHero,
-		CityHold:         gameEndConditions.CityHold || victoryCondition == winConditionValues.CityHold,
-		CityHoldDays:     helpers.Clamp(gameEndConditions.CityHoldDays, 1, 30),
+		LostStartHero: gameEndConditions.LostStartHero ||
+			useGladiator ||
+			configuration.GameMode == gameModes.SingleHero,
+		CityHold:     gameEndConditions.CityHold || victoryCondition == winConditionValues.CityHold,
+		CityHoldDays: helpers.Clamp(gameEndConditions.CityHoldDays, 1, 30),
 	}
 	if useGladiator {
 		winConditions.GladiatorArena = true
@@ -150,7 +153,7 @@ func expandBonusEntry(entry config.BonusEntry) []entities.Bonus {
 // unparseable lines are skipped. Variant -1 applies the override to all variants.
 func (this *GameRulesProvider) CreateValueOverrides(configuration config.GeneratorConfig) []entities.ValueOverride {
 	var overrides []entities.ValueOverride
-	for _, line := range strings.Split(configuration.ValueOverridesText, "\n") {
+	for line := range strings.SplitSeq(configuration.ValueOverridesText, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

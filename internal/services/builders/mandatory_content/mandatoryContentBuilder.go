@@ -39,6 +39,7 @@ func (this *MandatoryContentBuilder) WithRulesCallback(
 }
 func (this *MandatoryContentBuilder) Build() entities.MandatoryContentItem { return this.item }
 
-func (this *MandatoryContentBuilder) WithRoadDistance(distance placement_rule.Distance) *MandatoryContentBuilder { // TODO: probably not needed
+func (this *MandatoryContentBuilder) WithRoadDistance(
+	distance placement_rule.Distance) *MandatoryContentBuilder { // TODO: probably not needed
 	return this.WithRules(placement_rule.NewPlacementRuleBuilder().BuildRoadRule(distance, 1))
 }

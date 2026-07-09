@@ -20,8 +20,16 @@ func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 		original content_rules.ContentRule
 		content  models.SidMapping
 	}{
-		{"WhenRuleIsRoadDistance_RoundTrips", content_rules.NewRuleDistanceToRoad(&content_rules.DistanceFar), models.SidMapping{Sid: "x"}},
-		{"WhenRuleIsTownDistance_RoundTrips", content_rules.NewRuleDistanceToTown(&content_rules.DistanceNear), models.SidMapping{Sid: "x"}},
+		{
+			"WhenRuleIsRoadDistance_RoundTrips",
+			content_rules.NewRuleDistanceToRoad(&content_rules.DistanceFar),
+			models.SidMapping{Sid: "x"},
+		},
+		{
+			"WhenRuleIsTownDistance_RoundTrips",
+			content_rules.NewRuleDistanceToTown(&content_rules.DistanceNear),
+			models.SidMapping{Sid: "x"},
+		},
 		{"WhenRuleIsGuarded_RoundTrips", content_rules.NewRuleGuarded(true), models.SidMapping{Sid: "x"}},
 		{"WhenRuleIsUnguarded_RoundTrips", content_rules.NewRuleGuarded(false), models.SidMapping{Sid: "x"}},
 		{"WhenRuleIsSoloEncounter_RoundTrips", content_rules.NewRuleSoloEncounter(true), models.SidMapping{Sid: "x"}},
@@ -66,9 +74,18 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 		{"WhenGuardedValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Guarded"}},
 		{"WhenSoloEncounterValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Solo Encounter"}},
 		{"WhenVariantIdIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Variant"}},
-		{"WhenRoadDistanceNameIsUnknown_ReturnsNil", models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Whatever"}},
-		{"WhenTownDistanceNameIsUnknown_ReturnsNil", models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Whatever"}},
-		{"WhenVariantIdIsNotDefinedForContent_ReturnsNil", models.ContentRuleRowSave{Name: "Variant", VariantId: &invalidVariantId}},
+		{
+			"WhenRoadDistanceNameIsUnknown_ReturnsNil",
+			models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Whatever"},
+		},
+		{
+			"WhenTownDistanceNameIsUnknown_ReturnsNil",
+			models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Whatever"},
+		},
+		{
+			"WhenVariantIdIsNotDefinedForContent_ReturnsNil",
+			models.ContentRuleRowSave{Name: "Variant", VariantId: &invalidVariantId},
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

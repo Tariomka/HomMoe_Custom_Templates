@@ -17,5 +17,5 @@ func TestWhenMarkerIsQueried_ReturnsEmptyBadge(t *testing.T) {
 	marker := rule.Marker()
 
 	// Assert
-	assert.Equal(t, "", marker)
+	assert.Empty(t, marker)
 }

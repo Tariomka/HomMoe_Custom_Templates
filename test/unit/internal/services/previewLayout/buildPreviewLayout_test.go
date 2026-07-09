@@ -660,6 +660,7 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testin
 	zones := []entities.Zone{
 		manualZone("Spawn-A", 0.25, 0.5),
 		manualZone("Spawn-B", 0.75, 0.5),
+		manualZone("Spawn-C", 0.5, 0.25),
 	}
 
 	// Act
@@ -667,6 +668,8 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testin
 
 	// Assert
 	assert.Equal(t, image.Pt(150, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, image.Pt(450, 300), layout.Positions["Spawn-B"])
+	assert.Equal(t, image.Pt(300, 150), layout.Positions["Spawn-C"])
 }
 
 func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {

@@ -58,7 +58,7 @@ func CreateRuleFromSavedRule(saved models.ContentRuleRowSave, content models.Sid
 		if saved.VariantId == nil {
 			return nil
 		}
-		mapping, ok := GetVariantForContentById(content, *saved.VariantId)
+		mapping, ok := GetVariantForContentByID(content, *saved.VariantId)
 		if !ok {
 			return nil
 		}

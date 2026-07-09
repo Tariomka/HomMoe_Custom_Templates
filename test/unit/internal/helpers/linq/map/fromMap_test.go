@@ -1,6 +1,7 @@
 package map_test
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -15,10 +16,7 @@ func TestWhenSourceMapGiven_IterationYieldsAllPairs(t *testing.T) {
 	source := map[string]int{"first": firstValue, "second": secondValue}
 
 	// Act
-	collected := make(map[string]int)
-	for key, value := range linq.FromMap(source).Iterate {
-		collected[key] = value
-	}
+	collected := maps.Collect(linq.FromMap(source).Iterate)
 
 	// Assert
 	assert.Equal(t, map[string]int{"first": firstValue, "second": secondValue}, collected)

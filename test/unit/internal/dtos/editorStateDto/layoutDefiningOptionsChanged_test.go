@@ -14,20 +14,59 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 		mutate      func(state *dtos.EditorStateDto)
 	}{
 		{"WhenPlayerCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.PlayerCount++ }},
-		{"WhenTopologyChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.Topology = config.TopologyChain }},
-		{"WhenGenerateRoadsFlips_ReportsChanged", func(state *dtos.EditorStateDto) { state.GenerateRoads = !state.GenerateRoads }},
-		{"WhenRandomPortalsFlips_ReportsChanged", func(state *dtos.EditorStateDto) { state.RandomPortals = !state.RandomPortals }},
-		{"WhenNoDirectPlayerConnFlips_ReportsChanged", func(state *dtos.EditorStateDto) { state.NoDirectPlayerConn = !state.NoDirectPlayerConn }},
-		{"WhenMaxPortalConnectionsChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.MaxPortalConnections++ }},
-		{"WhenMinNeutralZonesBetweenPlayersChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.MinNeutralZonesBetweenPlayers++ }},
-		{"WhenAdvancedModeFlips_ReportsChanged", func(state *dtos.EditorStateDto) { state.AdvancedMode = !state.AdvancedMode }},
+		{
+			"WhenTopologyChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.Topology = config.TopologyChain },
+		},
+		{
+			"WhenGenerateRoadsFlips_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.GenerateRoads = !state.GenerateRoads },
+		},
+		{
+			"WhenRandomPortalsFlips_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.RandomPortals = !state.RandomPortals },
+		},
+		{
+			"WhenNoDirectPlayerConnFlips_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.NoDirectPlayerConn = !state.NoDirectPlayerConn },
+		},
+		{
+			"WhenMaxPortalConnectionsChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.MaxPortalConnections++ },
+		},
+		{
+			"WhenMinNeutralZonesBetweenPlayersChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.MinNeutralZonesBetweenPlayers++ },
+		},
+		{
+			"WhenAdvancedModeFlips_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.AdvancedMode = !state.AdvancedMode },
+		},
 		{"WhenNeutralZoneCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralZoneCount++ }},
-		{"WhenNeutralLowNoCastleCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralLowNoCastleCount++ }},
-		{"WhenNeutralLowCastleCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralLowCastleCount++ }},
-		{"WhenNeutralMediumNoCastleCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralMediumNoCastleCount++ }},
-		{"WhenNeutralMediumCastleCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralMediumCastleCount++ }},
-		{"WhenNeutralHighNoCastleCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralHighNoCastleCount++ }},
-		{"WhenNeutralHighCastleCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralHighCastleCount++ }},
+		{
+			"WhenNeutralLowNoCastleCountChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.NeutralLowNoCastleCount++ },
+		},
+		{
+			"WhenNeutralLowCastleCountChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.NeutralLowCastleCount++ },
+		},
+		{
+			"WhenNeutralMediumNoCastleCountChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.NeutralMediumNoCastleCount++ },
+		},
+		{
+			"WhenNeutralMediumCastleCountChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.NeutralMediumCastleCount++ },
+		},
+		{
+			"WhenNeutralHighNoCastleCountChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.NeutralHighNoCastleCount++ },
+		},
+		{
+			"WhenNeutralHighCastleCountChanges_ReportsChanged",
+			func(state *dtos.EditorStateDto) { state.NeutralHighCastleCount++ },
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {

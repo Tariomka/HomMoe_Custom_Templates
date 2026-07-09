@@ -80,7 +80,9 @@ func TestWhenGladiatorArenaIsFlatSibling_MirrorsIntoWinConditions(t *testing.T) 
 
 func TestWhenScalarRuleFieldsProvided_DecodesWholeGameRules(t *testing.T) {
 	// Arrange
-	data := []byte(`{"heroCountMin":4,"heroCountMax":8,"heroCountIncrement":1,"heroHireBan":true,"encounterHoles":true,"tournamentRules":true}`)
+	data := []byte(
+		`{"heroCountMin":4,"heroCountMax":8,"heroCountIncrement":1,"heroHireBan":true,"encounterHoles":true,"tournamentRules":true}`,
+	)
 	expected := template_rule.GameRules{
 		HeroCountMin:       4,
 		HeroCountMax:       8,

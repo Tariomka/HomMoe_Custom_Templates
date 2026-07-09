@@ -3,6 +3,7 @@ package services
 import (
 	"image"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 
@@ -368,7 +369,7 @@ func layoutFixedPositions(layout *PreviewLayout, zones []entities.Zone, side flo
 
 	// Radius from the closest pair so neighbouring zones never overlap.
 	minDist := math.MaxFloat64
-	for i := 0; i < n; i++ {
+	for i := range n {
 		for j := i + 1; j < n; j++ {
 			minDist = math.Min(minDist, math.Hypot(px[i]-px[j], py[i]-py[j]))
 		}
@@ -540,10 +541,8 @@ func layoutScatter(layout *PreviewLayout, zones []entities.Zone, conns []entitie
 	// Direct-only adjacency drives both the radius heuristic and Pass B.
 	adj := make([][]int, n)
 	addAdj := func(a, b int) {
-		for _, v := range adj[a] {
-			if v == b {
-				return
-			}
+		if slices.Contains(adj[a], b) {
+			return
 		}
 		adj[a] = append(adj[a], b)
 		adj[b] = append(adj[b], a)
@@ -581,7 +580,7 @@ func layoutScatter(layout *PreviewLayout, zones []entities.Zone, conns []entitie
 	// Scale raw [0,1] generator positions so the mean direct-edge length
 	// matches the ideal. Empty graphs fall back to spanning the draw area.
 	rawEdgeSum, rawEdgeCount := 0.0, 0
-	for i := 0; i < n; i++ {
+	for i := range n {
 		for _, j := range adj[i] {
 			if j <= i {
 				continue
@@ -621,7 +620,7 @@ func layoutScatter(layout *PreviewLayout, zones []entities.Zone, conns []entitie
 	if rawMaxY-rawMinY > drawH && rawMaxY-rawMinY > 1e-3 {
 		fitScale = math.Min(fitScale, drawH/(rawMaxY-rawMinY))
 	}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		px[i] = cx + px[i]*fitScale
 		py[i] = cy + py[i]*fitScale
 	}
@@ -635,7 +634,7 @@ func layoutScatter(layout *PreviewLayout, zones []entities.Zone, conns []entitie
 	finalMinY, finalMaxY := minMax(py)
 	finalCx := (finalMinX + finalMaxX) / 2.0
 	finalCy := (finalMinY + finalMaxY) / 2.0
-	for i := 0; i < n; i++ {
+	for i := range n {
 		px[i] += cx - finalCx
 		py[i] += cy - finalCy
 	}
@@ -653,7 +652,7 @@ func layoutScatter(layout *PreviewLayout, zones []entities.Zone, conns []entitie
 		shrink = math.Min(shrink, allowH/spanY)
 	}
 	if shrink < 1.0 {
-		for i := 0; i < n; i++ {
+		for i := range n {
 			px[i] = cx + (px[i]-cx)*shrink
 			py[i] = cy + (py[i]-cy)*shrink
 		}
@@ -708,7 +707,7 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 					continue
 				}
 				elenInv := 1.0 / math.Sqrt(elen2)
-				for c := 0; c < n; c++ {
+				for c := range n {
 					if c == a || c == b {
 						continue
 					}

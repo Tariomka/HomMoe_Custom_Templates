@@ -65,7 +65,10 @@ func TestWhenGuardedPoolContainsTierTwoMarker_ReturnsBronzeTier(t *testing.T) {
 
 func TestWhenOnlyUnguardedPoolHasTierMarker_FallsBackToUnguardedPool(t *testing.T) {
 	// Arrange
-	zone := entities.Zone{Name: "Neutral-A", UnguardedContentPool: []string{"classic_template_pool_random_unguarded_t3_item"}}
+	zone := entities.Zone{
+		Name:                 "Neutral-A",
+		UnguardedContentPool: []string{"classic_template_pool_random_unguarded_t3_item"},
+	}
 
 	// Act
 	tier := services.ClassifyZoneTier(zone)

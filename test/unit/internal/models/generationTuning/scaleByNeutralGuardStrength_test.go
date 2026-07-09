@@ -16,10 +16,10 @@ func TestWhenValueIsPositive_ScalesByNeutralStackStrengthMultiplier(t *testing.T
 	expected := int(float64(value) * multiplier)
 
 	// Act
-	scaled := tuning.ScaleByNeutralGuardStrength(value)
+	actual := tuning.ScaleByNeutralGuardStrength(value)
 
 	// Assert
-	assert.Equal(t, expected, scaled)
+	assert.Equal(t, expected, actual)
 }
 
 func TestWhenScaledNeutralGuardValueIsNegative_ClampsToZero(t *testing.T) {
@@ -27,8 +27,8 @@ func TestWhenScaledNeutralGuardValueIsNegative_ClampsToZero(t *testing.T) {
 	tuning := models.GenerationTuning{NeutralStackStrengthMultiplier: 1.0}
 
 	// Act
-	scaled := tuning.ScaleByNeutralGuardStrength(-gofakeit.Number(1, 100000))
+	actual := tuning.ScaleByNeutralGuardStrength(-gofakeit.Number(1, 100000))
 
 	// Assert
-	assert.Equal(t, 0, scaled)
+	assert.Equal(t, 0, actual)
 }

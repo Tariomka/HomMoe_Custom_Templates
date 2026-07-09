@@ -26,7 +26,7 @@ func TestWhenNoNeutralPlansExist_ReturnsEmptyLabel(t *testing.T) {
 	label := provider.GetHoldCityLabel(configuration, []string{"A", "B"}, models.NeutralZonePlans{})
 
 	// Assert
-	assert.Equal(t, "", label)
+	assert.Empty(t, label)
 }
 
 func TestWhenTopologyIsNotHubAndSpoke_ReturnsEmptyLabel(t *testing.T) {
@@ -40,7 +40,7 @@ func TestWhenTopologyIsNotHubAndSpoke_ReturnsEmptyLabel(t *testing.T) {
 	label := provider.GetHoldCityLabel(configuration, []string{"A", "B"}, plans)
 
 	// Assert
-	assert.Equal(t, "", label)
+	assert.Empty(t, label)
 }
 
 func TestWhenCityHoldModeIsOff_ReturnsEmptyLabel(t *testing.T) {
@@ -54,7 +54,7 @@ func TestWhenCityHoldModeIsOff_ReturnsEmptyLabel(t *testing.T) {
 	label := provider.GetHoldCityLabel(configuration, []string{"A", "B"}, plans)
 
 	// Assert
-	assert.Equal(t, "", label)
+	assert.Empty(t, label)
 }
 
 func TestWhenDistancesAndVariancesTie_PicksHigherQualityNeutral(t *testing.T) {

@@ -29,7 +29,7 @@ func TestWhenNoElementMatches_ReturnsZeroValue(t *testing.T) {
 	found := linq.FromSlice(source).FirstOrDefault(matchesNothing)
 
 	// Assert
-	assert.Equal(t, "", found)
+	assert.Empty(t, found)
 }
 
 func TestWhenSourceIsEmpty_ReturnsZeroValue(t *testing.T) {

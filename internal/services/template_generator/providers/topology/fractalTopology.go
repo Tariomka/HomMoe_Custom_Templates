@@ -129,7 +129,7 @@ func (this *FractalTopologyService) createFractalLayout(
 
 		var tree fractalTree
 		tree.player = playerIndex
-		for tier := 0; tier < 3; tier++ {
+		for tier := range 3 {
 			plan := perPlayerTier[tier][player]
 			half := sectorHalf * tierSpread[tier]
 			radius := tierRadius[tier]
@@ -159,7 +159,7 @@ func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) []mo
 	for treeIndex, tree := range trees {
 		// Collect the tiers that actually received zones, outermost first.
 		chain := make([][]int, 0, len(tree.levels))
-		for tier := 0; tier < len(tree.levels); tier++ {
+		for tier := range len(tree.levels) {
 			if len(tree.levels[tier]) > 0 {
 				chain = append(chain, tree.levels[tier])
 			}

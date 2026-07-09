@@ -112,7 +112,7 @@ func (this Query[T]) First(predicate Predicate[T]) (result T, ok bool) {
 		return true
 	})
 
-	return // result, ok
+	return result, ok
 }
 
 func (this Query[T]) Any() bool {

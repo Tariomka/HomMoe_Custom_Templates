@@ -52,5 +52,5 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 		count++
 	}
 
-	assert.NotEqual(t, count, 0, "no .rmg.json files found")
+	assert.NotEqual(t, 0, count, "no .rmg.json files found")
 }

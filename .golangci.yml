@@ -318,14 +318,8 @@ linters:
       max-func-lines: 0 # Make an issue if func has more lines of code than this setting, and it has naked returns.
 
     nolintlint:
-      # Exclude following linters from requiring an explanation.
-      # Default: []
       allow-no-explanation: [ funlen, gocognit, golines ]
-      # Enable to require an explanation of nonzero length after each nolint directive.
-      # Default: false
       require-explanation: true
-      # Enable to require nolint directives to mention the specific linter being suppressed.
-      # Default: false
       require-specific: true
 
     perfsprint:
@@ -343,6 +337,8 @@ linters:
           disabled: false
           exclude:
             - "~internal/registry/"
+        - name: receiver-naming
+          disabled: true
 
     sloglint:
       no-global: all # Report the use of global loggers.
@@ -362,21 +358,14 @@ linters:
         - -ST1000
 
     usetesting:
-      # Enable/disable `os.TempDir()` detections.
-      # Default: false
-      os-temp-dir: true
+      os-temp-dir: true # Enable/disable `os.TempDir()` detections.
 
   exclusions:
-    # Log a warning if an exclusion rule is unused.
-    # Default: false
-    warn-unused: true
-    # Predefined exclusion rules.
-    # Default: []
-    presets:
+    warn-unused: true # Log a warning if an exclusion rule is unused.
+    presets: # Predefined exclusion rules.
       - std-error-handling
       - common-false-positives
-    # Excluding configuration per-path, per-linter, per-text and per-source.
-    rules:
+    rules: # Excluding configuration per-path, per-linter, per-text and per-source.
       - source: 'TODO'
         linters: [ godot ]
       - text: 'should have a package comment'
@@ -390,12 +379,6 @@ linters:
         source: '// ?(nolint|TODO)'
         linters: [ revive, staticcheck ]
       - path: '_test\.go'
-        linters:
-          - bodyclose
-          - dupl
-          - errcheck
-          - funlen
-          - goconst
-          - gosec
-          - noctx
-          - wrapcheck
+        linters: [ "bodyclose", "dupl", "errcheck", "funlen", "goconst", "gosec", "noctx", "wrapcheck" ]
+      - path: '(app/gui/themes|internal/registry|internal/services/content_rules)/'
+        linters: [ dupl ]

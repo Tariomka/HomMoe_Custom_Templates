@@ -15,7 +15,9 @@ func TestWhenDescriptionIsQueried_ExplainsSoloEncounterBehavior(t *testing.T) {
 	description := rule.Description()
 
 	// Assert
-	assert.Equal(t,
+	assert.Equal(
+		t,
 		"Solo encounter means that the content item will be spawned without any additional content items around, enforcing consistent guard strength. Setting to false will make it more likely to be spawned with other content items, but will not always guarantee it.",
-		description)
+		description,
+	)
 }
