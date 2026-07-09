@@ -45,7 +45,8 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 	pairs := positions.CreateDelaunayTriangulation()
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
-	zones := this.createZones(configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
+	zones := this.createZones(
+		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
 	for index := range zones {
 		position := positions[index]
 		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
@@ -53,12 +54,14 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 
 	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	conns = append(conns, this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
+	conns = append(conns,
+		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
 	return this.CreateVariant(playerLabels, allLabels[0], labelCount, zones, conns)
 }
 
@@ -96,13 +99,15 @@ func (this *RandomTopologyService) createZones(
 		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
 			zones = append(zones,
 				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
-					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
+					label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
+					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
+					configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					linq.FromSlice(neutralZones).
+						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
 					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}

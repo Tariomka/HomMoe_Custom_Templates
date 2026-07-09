@@ -44,15 +44,18 @@ func NewZoneContentDialog(
 	onApply func([]models.ZoneContentRowSave),
 ) *ZoneContentDialog {
 	dialog := &ZoneContentDialog{
-		zcMines:           NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
-		zcUtilities:       NewZoneContentSection("Utility Structures", constants.ContentItemGroup.UtilityStructures, 10, false),
-		zcTreasures:       NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
-		zcHires:           NewZoneContentSection("Unit Recruitment", constants.ContentItemGroup.UnitRecruitment, 10, false),
-		zcBanks:           NewZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
-		zcHeroImprovement: NewZoneContentSection("Hero Improvement", constants.ContentItemGroup.HeroImprovementStructures, 10, false),
-		title:             title,
-		isPlayerTier:      isPlayerTier,
-		onApply:           onApply,
+		zcMines: NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
+		zcUtilities: NewZoneContentSection("Utility Structures",
+			constants.ContentItemGroup.UtilityStructures, 10, false),
+		zcTreasures: NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
+		zcHires: NewZoneContentSection("Unit Recruitment",
+			constants.ContentItemGroup.UnitRecruitment, 10, false),
+		zcBanks: NewZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
+		zcHeroImprovement: NewZoneContentSection("Hero Improvement",
+			constants.ContentItemGroup.HeroImprovementStructures, 10, false),
+		title:        title,
+		isPlayerTier: isPlayerTier,
+		onApply:      onApply,
 	}
 	dialog.scroll.Axis = layout.Vertical
 

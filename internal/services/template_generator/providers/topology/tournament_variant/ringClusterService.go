@@ -44,7 +44,9 @@ func (this *RingClusterService) CreateClusterVariant(
 	return zones, connections
 }
 
-func (this *RingClusterService) createLabels(playerNeutralZonePlans models.NeutralZonePlans, playerLabel string) []string {
+func (this *RingClusterService) createLabels(
+	playerNeutralZonePlans models.NeutralZonePlans,
+	playerLabel string) []string {
 	sortedNeutralZonePlans := models.NeutralZonePlans{}
 	sortedNeutralZonePlans.AddPlans(playerNeutralZonePlans...)
 	sortedNeutralZonePlans.SortByBalanceScoreAscending()
@@ -89,14 +91,16 @@ func (this *RingClusterService) createZones(
 		}
 		if index == 0 {
 			zones = append(zones, this.CreateSpawnZone(
-				label, fmt.Sprintf("Player%d", playerIndex+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
-				configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
+				label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
+				configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
+				configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+				configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones, this.CreateNeutralZone(
-				linq.FromSlice(allNeutralZonePlans).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
-				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, tuning.RemoteFootholdCount,
-				configuration.GenerateRoads, tuning, false))
+				linq.FromSlice(allNeutralZonePlans).
+					FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
 	}
 	return zones

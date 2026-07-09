@@ -31,7 +31,8 @@ func (this *SquareTopologyService) CreateTopologyVariant(
 	allLabels, positions, pairs := this.createSquareLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
-	zones := this.createZones(configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
+	zones := this.createZones(
+		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
 	for index := range zones {
 		position := positions[index]
 		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
@@ -39,12 +40,14 @@ func (this *SquareTopologyService) CreateTopologyVariant(
 
 	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	conns = append(conns, this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
+	conns = append(conns,
+		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
@@ -101,12 +104,14 @@ func (this *SquareTopologyService) createSquareLayout(
 	return allLabels, positions, pairs
 }
 
-func (this *SquareTopologyService) createSquarePairs(perimeterCount int, positions models.Positions) []models.ConnectionIndexes {
+func (this *SquareTopologyService) createSquarePairs(
+	perimeterCount int,
+	positions models.Positions) []models.ConnectionIndexes {
 	builder := newPairBuilder()
 
 	// Perimeter loop draws the square outline.
 	if perimeterCount >= 2 {
-		for i := 0; i < perimeterCount; i++ {
+		for i := range perimeterCount {
 			builder.add(i, (i+1)%perimeterCount)
 		}
 	}
@@ -114,7 +119,7 @@ func (this *SquareTopologyService) createSquarePairs(perimeterCount int, positio
 	// Interior loop keeps the inner neutral zones connected to one another.
 	interiorCount := len(positions) - perimeterCount
 	if interiorCount >= 2 {
-		for i := 0; i < interiorCount; i++ {
+		for i := range interiorCount {
 			builder.add(perimeterCount+i, perimeterCount+(i+1)%interiorCount)
 		}
 	}

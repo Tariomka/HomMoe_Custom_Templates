@@ -386,7 +386,10 @@ func (this *FileExplorerDialog) getFooterWidget(theme *material.Theme) layout.Wi
 
 	children := make([]layout.FlexChild, 0, 5)
 	if this.canModify() {
-		children = append(children, layout.Rigid(widgets.NewButtonWidget(theme, "New Folder", &this.newFolderBtn, false)))
+		children = append(
+			children,
+			layout.Rigid(widgets.NewButtonWidget(theme, "New Folder", &this.newFolderBtn, false)),
+		)
 	}
 	children = append(children, layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{Size: image.Pt(gtx.Constraints.Min.X, 0)}

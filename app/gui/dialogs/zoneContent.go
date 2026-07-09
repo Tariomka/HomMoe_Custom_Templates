@@ -19,7 +19,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
-// zoneContentRow is one editable item inside a zone-content section
+// zoneContentRow is one editable item inside a zone-content section.
 type zoneContentRow struct {
 	Mapping models.SidMapping
 	Count   int
@@ -32,7 +32,11 @@ type zoneContentRow struct {
 	dupBtn    widget.Clickable
 }
 
-func newZoneContentRow(mapping models.SidMapping, count int, rules []models.ContentRuleRowSave, isGroup bool) *zoneContentRow {
+func newZoneContentRow(
+	mapping models.SidMapping,
+	count int,
+	rules []models.ContentRuleRowSave,
+	isGroup bool) *zoneContentRow {
 	return &zoneContentRow{
 		Mapping: mapping,
 		Count:   count,
@@ -87,7 +91,11 @@ func (this *ZoneContentSection) SetDialogOpener(opener interfaces.DialogOpener) 
 }
 
 // Add appends a new row using the given mapping and rule list.
-func (this *ZoneContentSection) Add(mapping models.SidMapping, count int, rules []models.ContentRuleRowSave, group bool) {
+func (this *ZoneContentSection) Add(
+	mapping models.SidMapping,
+	count int,
+	rules []models.ContentRuleRowSave,
+	group bool) {
 	if count < 1 {
 		count = 1
 	}
@@ -185,9 +193,8 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 		// callback bound to this exact row across frames/reorders.
 		if row.manageBtn.Clicked(gtx) && this.openDialog != nil {
 			captured := row
-			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules, func(updated []models.ContentRuleRowSave) {
-				captured.rules = updated
-			}))
+			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules,
+				func(updated []models.ContentRuleRowSave) { captured.rules = updated }))
 		}
 
 		return widgets.NewPanelWidget(unit.Dp(6), func(gtx layout.Context) layout.Dimensions {
@@ -208,9 +215,12 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(widgets.NewVerticalSpacerWidget(4)),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(0.6, widgets.NewLabeledRowWidget(theme, "Count", 60, widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
+						layout.Flexed(0.6,
+							widgets.NewLabeledRowWidget(theme, "Count", 60,
+								widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
-						layout.Flexed(0.4, widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),
+						layout.Flexed(0.4,
+							widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(8)),
 						layout.Rigid(widgets.NewButtonWidget(theme, "Manage Rules", &row.manageBtn, false)),
 					)

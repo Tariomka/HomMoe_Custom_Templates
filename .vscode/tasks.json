@@ -56,6 +56,35 @@
             "command": "go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...; go tool cover '-html=coverage.txt' -o coverage.html; gcov2lcov '-infile=coverage.txt' '-outfile=lcov.info'",
             "group": "test",
             "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Run full linter",
+            "type": "shell",
+            "command": "golangci-lint-v2",
+            "args": [ "run", "./...", "--issues-exit-code=0" ],
+            "problemMatcher": {
+                "owner": "go",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^([^\\s].*):(\\d+):(\\d+):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
         }
     ]
 }

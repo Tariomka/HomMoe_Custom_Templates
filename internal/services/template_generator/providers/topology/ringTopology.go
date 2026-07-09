@@ -31,10 +31,13 @@ func (this *RingTopologyService) CreateTopologyVariant(
 	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 
-	zones := this.createZones(configuration, playerLabels, orderedLabels, tuning, isIsolated, neutralZones, holdCityNeutralLabel)
+	zones := this.createZones(
+		configuration, playerLabels, orderedLabels, tuning, isIsolated, neutralZones, holdCityNeutralLabel)
 	conns := this.createConnections(playerLabels, orderedLabels, tuning, isIsolated, neutralZones)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, orderedLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(
+				playerLabels, orderedLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
@@ -49,14 +52,15 @@ func (this *RingTopologyService) createZones(
 	isIsolated bool,
 	neutralZones models.NeutralZonePlans,
 	holdCityNeutralLabel string) []entities.Zone {
-
 	labelCount := len(orderedLabels)
 
 	ringConnRight := make([]string, labelCount)
 	ringConnLeft := make([]string, labelCount)
 	for i := range labelCount {
 		next := (i + 1) % labelCount
-		if isIsolated && slices.Contains(playerLabels, orderedLabels[i]) && slices.Contains(playerLabels, orderedLabels[next]) {
+		if isIsolated &&
+			slices.Contains(playerLabels, orderedLabels[i]) &&
+			slices.Contains(playerLabels, orderedLabels[next]) {
 			continue
 		}
 		name := fmt.Sprintf("Ring-%s-%s", orderedLabels[i], orderedLabels[next])
@@ -82,7 +86,8 @@ func (this *RingTopologyService) createZones(
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					linq.FromSlice(neutralZones).
+						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
 					connNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}

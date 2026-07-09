@@ -11,6 +11,7 @@ import (
 
 type TournamentTopologyService struct {
 	base.TopologyBase
+
 	clusterService tournament_variant.IClusterService
 }
 
@@ -58,7 +59,9 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 			clusterLabels := linq.FromSlice(perPlayerNeutralZones[playerIndex]).
 				SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
 				ToSlice()
-			conns = append(conns, this.CreateRandomPortalConnections(playerLabels, clusterLabels, tuning, configuration.MaxPortalConnections)...)
+			conns = append(conns,
+				this.CreateRandomPortalConnections(
+					playerLabels, clusterLabels, tuning, configuration.MaxPortalConnections)...)
 		}
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(zones), zones, conns)
@@ -66,7 +69,8 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 
 // createPerPlayerNeutralZonePlans splits neutral zone plans into two per-player lists
 // in a balanced round-robin so that quality tiers are split evenly across the two players.
-func (this *TournamentTopologyService) createPerPlayerNeutralZonePlans(neutralZones models.NeutralZonePlans) [2]models.NeutralZonePlans {
+func (this *TournamentTopologyService) createPerPlayerNeutralZonePlans(
+	neutralZones models.NeutralZonePlans) [2]models.NeutralZonePlans {
 	perPlayerNeutralZones := [2]models.NeutralZonePlans{}
 
 	sorted := models.NewNeutralZonePlansSorted(neutralZones)

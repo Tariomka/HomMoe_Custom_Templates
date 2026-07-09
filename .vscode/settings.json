@@ -38,6 +38,12 @@
     "gopls": {
         "build.buildFlags": ["-tags=integration_test"],
         "ui.semanticTokens": true,
+        "ui.diagnostic.staticcheck": true,
+        "ui.diagnostic.analyses": {
+            "ST1000": false,
+            "ST1003": false,
+            "ST1006": false
+        }
     },
     "go.lintTool": "golangci-lint-v2",
     "go.lintFlags": [
@@ -46,9 +52,7 @@
         "--fix",
     ],
     "go.formatTool": "custom",
-    "go.alternateTools": {
-        "customFormatter": "golangci-lint-v2"
-    },
+    "go.alternateTools": { "customFormatter": "golangci-lint-v2" },
     "go.formatFlags": ["fmt", "--stdin"],
     "go.testFlags": [ "-count=1", "-v", ],
     "go.inlayHints.assignVariableTypes": false,

@@ -301,7 +301,10 @@ func NewItemPickerDialog(title string, excluded []string, onApply func(ids []str
 // NewSpellPickerDialog builds a school-grouped, tier-sorted spell picker.
 // excluded ids are hidden. When showMakeFree is true a "make free" toggle is
 // shown. onApply receives the selected spell SIDs and the make-free flag.
-func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids []string, makeFree bool)) *multiSelectPicker {
+func NewSpellPickerDialog(
+	excluded []string,
+	showMakeFree bool,
+	onApply func(ids []string, makeFree bool)) *multiSelectPicker {
 	visible := constants.GetKnownSpellsWithExclusions(excluded)
 
 	entries := make([]pickerEntry, 0, len(visible))

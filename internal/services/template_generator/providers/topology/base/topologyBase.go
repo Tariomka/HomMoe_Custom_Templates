@@ -424,7 +424,8 @@ func (this *TopologyBase) CreateMissingConnections(
 						connectionName = bridgeName
 					}
 					zone.Roads = append(zone.Roads,
-						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(connectionName)).Build())
+						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(connectionName)).
+							Build())
 				} else {
 					zone.Roads = append(zone.Roads,
 						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())

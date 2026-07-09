@@ -754,7 +754,6 @@ migrating the five `oldTests` (§7.1), convert their manual `if err != nil { t.F
 
 | Item | Action |
 |---|---|
-| 🔴 `hommoe_custom_templates.exe` committed at root | `git rm --cached hommoe_custom_templates.exe`; ensure `.gitignore` has `*.exe` (it does — the file predates it) |
 | 🟠 `Custom Template.gen.json`, `Initial.gen.json` at root | Move to `data/ExampleSettings/` (they are user-facing examples) or `test/testdata/fixtures/` if only tests use them; update any hardcoded paths |
 | 🟠 `output/Colosseum/*` committed | Generated artifacts: `git rm -r --cached output/` and add `output/` to `.gitignore` |
 | 🟡 `README.md` stale paths | Still references the old `internal/gui/` layout in the structure section — regenerate the tree from the current repo |
