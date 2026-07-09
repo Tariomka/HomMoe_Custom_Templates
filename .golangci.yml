@@ -274,23 +274,14 @@ linters:
       min-complexity: 30
 
     gocritic:
-      # Settings passed to gocritic.
-      # The settings key is the name of a supported gocritic checker.
-      # The list of supported checkers can be found at https://go-critic.com/overview.
       settings:
         captLocal:
-          # Whether to restrict checker to params only.
-          # Default: true
-          paramsOnly: false
+          paramsOnly: false # Whether to restrict checker to params only.
         underef:
-          # Whether to skip (*x).method() calls where x is a pointer receiver.
-          # Default: true
-          skipRecvDeref: false
+          skipRecvDeref: false # Whether to skip (*x).method() calls where x is a pointer receiver.
 
     godoclint:
-      # List of rules to enable in addition to the default set.
-      # Default: empty
-      enable:
+      enable: # List of rules to enable in addition to the default set.
         # Assert no unused link in godocs.
         # https://github.com/godoc-lint/godoc-lint?tab=readme-ov-file#no-unused-link
         - no-unused-link
@@ -299,33 +290,18 @@ linters:
         - require-stdlib-doclink
 
     govet:
-      # Enable all analyzers.
-      # Default: false
       enable-all: true
-      # Disable analyzers by name.
-      # Run `GL_DEBUG=govet golangci-lint run --enable=govet` to see default, all available analyzers, and enabled analyzers.
-      # Default: []
       disable:
         - fieldalignment # too strict
-      # Settings per analyzer.
       settings:
         shadow:
-          # Whether to be strict about shadowing; can be noisy.
-          # Default: false
-          strict: true
+          strict: true # Whether to be strict about shadowing; can be noisy.
 
     inamedparam:
-      # Skips check for interface methods with only a single parameter.
-      # Default: false
-      skip-single-param: true
+      skip-single-param: true # Skips check for interface methods with only a single parameter.
 
     mnd:
-      # List of function patterns to exclude from analysis.
-      # Values always ignored: `time.Date`,
-      # `strconv.FormatInt`, `strconv.FormatUint`, `strconv.FormatFloat`,
-      # `strconv.ParseInt`, `strconv.ParseUint`, `strconv.ParseFloat`.
-      # Default: []
-      ignored-functions:
+      ignored-functions: # List of function patterns to exclude from analysis.
         - args.Error
         - flag.Arg
         - flag.Duration.*
@@ -340,9 +316,7 @@ linters:
         - prometheus.LinearBuckets
 
     nakedret:
-      # Make an issue if func has more lines of code than this setting, and it has naked returns.
-      # Default: 30
-      max-func-lines: 0
+      max-func-lines: 0 # Make an issue if func has more lines of code than this setting, and it has naked returns.
 
     nolintlint:
       # Exclude following linters from requiring an explanation.
@@ -356,16 +330,20 @@ linters:
       require-specific: true
 
     perfsprint:
-      # Optimizes into strings concatenation.
-      # Default: true
-      strconcat: false
+      strconcat: false # Optimizes into strings concatenation.
 
     reassign:
-      # Patterns for global variable names that are checked for reassignment.
-      # See https://github.com/curioswitch/go-reassign#usage
-      # Default: ["EOF", "Err.*"]
-      patterns:
+      patterns: # Patterns for global variable names that are checked for reassignment.
         - ".*"
+
+    revive:
+      enable-default-rules: true
+      rules:
+        - name: unexported-return
+          severity: warning
+          disabled: false
+          exclude:
+            - "~internal/registry/"
 
     rowserrcheck:
       # database/sql is always checked.
@@ -374,16 +352,8 @@ linters:
         - github.com/jmoiron/sqlx
 
     sloglint:
-      # Report the use of global loggers.
-      # https://github.com/go-simpler/sloglint#no-global-logger
-      # Values: "all", "default"
-      # Default: "" (disabled)
-      no-global: all
-      # Report the use of functions without a context.Context.
-      # https://github.com/go-simpler/sloglint#context-only
-      # Values: "all", "scope"
-      # Default: "" (disabled)
-      context: scope
+      no-global: all # Report the use of global loggers.
+      context: scope # Report the use of functions without a context.Context.
 
     staticcheck:
       checks:
