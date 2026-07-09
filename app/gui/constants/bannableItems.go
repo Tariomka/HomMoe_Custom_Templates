@@ -143,9 +143,17 @@ func buildBannableItems() []BannableItemEntry {
 		{sids.GiftsOfDwarvenLordsProtectiveBelt, "Dwarven Gifts: Protective Belt", "Set"},
 		{sids.GiftsOfDwarvenLordsProtectiveBeltAlt, "Dwarven Gifts: Protective Belt (Alt)", "Set"},
 		{sids.GiftsOfDwarvenLordsCrimsonResonanceController, "Dwarven Gifts: Crimson Resonance Controller", "Set"},
-		{sids.GiftsOfDwarvenLordsCrimsonResonanceControllerAlt, "Dwarven Gifts: Crimson Resonance Controller (Alt)", "Set"},
+		{
+			sids.GiftsOfDwarvenLordsCrimsonResonanceControllerAlt,
+			"Dwarven Gifts: Crimson Resonance Controller (Alt)",
+			"Set",
+		},
 		{sids.GiftsOfDwarvenLordsEmeraldResonanceController, "Dwarven Gifts: Emerald Resonance Controller", "Set"},
-		{sids.GiftsOfDwarvenLordsEmeraldResonanceControllerAlt, "Dwarven Gifts: Emerald Resonance Controller (Alt)", "Set"},
+		{
+			sids.GiftsOfDwarvenLordsEmeraldResonanceControllerAlt,
+			"Dwarven Gifts: Emerald Resonance Controller (Alt)",
+			"Set",
+		},
 
 		// Set: Elixir of Life
 		{sids.ElixirOfLifeFlaskOfOblivion, "Elixir of Life: Flask of Oblivion", "Set"},

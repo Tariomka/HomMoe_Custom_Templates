@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"io"
 	"log/slog"
 	"os"
 	"strconv"
@@ -49,7 +48,7 @@ func getAndConfigureWindow() *app.Window {
 		app.MinSize(unit.Dp(1280), unit.Dp(800)),
 	}
 
-	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	slog.SetDefault(slog.New(slog.DiscardHandler))
 
 	windowWidth, windowHeight := 1600, 900
 	for _, arg := range os.Args[1:] {

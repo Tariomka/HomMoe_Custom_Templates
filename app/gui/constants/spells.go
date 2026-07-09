@@ -147,7 +147,7 @@ func FindSpell(sid string) (SpellEntry, bool) {
 	return SpellEntry{}, false
 }
 
-// GetSpellSchoolColorFromDisplayName maps a school display name to its accent color
+// GetSpellSchoolColorFromDisplayName maps a school display name to its accent color.
 func GetSpellSchoolColorFromDisplayName(displayName string) color.NRGBA {
 	switch displayName {
 	case "High Neutral":
@@ -164,7 +164,7 @@ func GetSpellSchoolColorFromDisplayName(displayName string) color.NRGBA {
 	return themes.ColorAccent
 }
 
-// GetSpellSchoolColor maps a school display name to its accent color
+// GetSpellSchoolColor maps a school display name to its accent color.
 func GetSpellSchoolColor(schoolName string) color.NRGBA {
 	switch schoolName {
 	case "neutral":

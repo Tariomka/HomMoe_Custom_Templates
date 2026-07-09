@@ -1,9 +1,9 @@
 package dialogs
 
 import (
-	"fmt"
 	"iter"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gioui.org/layout"
@@ -217,7 +217,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(0.6,
 							widgets.NewLabeledRowWidget(theme, "Count", 60,
-								widgets.NewLabeledSliderWidget(theme, &row.countSld, fmt.Sprintf("%d", liveCount)))),
+								widgets.NewLabeledSliderWidget(theme, &row.countSld, strconv.Itoa(liveCount)))),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
 						layout.Flexed(0.4,
 							widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),

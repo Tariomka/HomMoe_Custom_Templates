@@ -499,7 +499,7 @@ func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection 
 	bestDistance := 9.0
 	for i := range this.edges {
 		edge := this.edges[i]
-		for step := 0; step <= 20; step++ {
+		for step := range 21 {
 			t := float64(step) / 20.0
 			mt := 1 - t
 			bx := mt*mt*float64(edge.p0.X) + 2*mt*t*float64(edge.ctrl.X) + t*t*float64(edge.p1.X)
@@ -1274,10 +1274,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 	quality := connection_editor.QualityOfZone(*zone)
 	this.qualityDropdown.SelectByName(connection_editor.QualityLabels[int(quality)])
-	castles := connection_editor.CountZoneCastles(*zone)
-	if castles > 4 {
-		castles = 4
-	}
+	castles := min(connection_editor.CountZoneCastles(*zone), 4)
 	this.castleDropdown.SelectByName(strconv.Itoa(castles))
 	this.zoneSizeEdit.SetText(strconv.FormatFloat(zone.Size, 'f', -1, 64))
 	this.zoneGuardEdit.SetText(strconv.FormatFloat(zone.GuardMultiplier, 'f', -1, 64))
