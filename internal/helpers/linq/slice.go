@@ -16,8 +16,8 @@ type Iterable[T any] interface {
 //		// use value
 //	}
 //
-//	linq.FromSlice(mySlice).Iterate(func(item T) bool {
-//		// use item
+//	linq.FromSlice(mySlice).Iterate(func(value T) bool {
+//		// use value
 //		return true // to continue iteration
 //		return false // to stop iteration
 //	})
