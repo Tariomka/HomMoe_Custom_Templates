@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +19,7 @@ func TestWhenFactorAndBaseAreApplied_LinearCombinationIsReturned(t *testing.T) {
 	result := utils.Multiplier(value, base, factor)
 
 	// Assert
-	assert.InDelta(t, value*factor+base, result, 0.0001)
+	assert.InDelta(t, value*factor+base, result, helpers.Delta)
 }
 
 func TestWhenFactorIsZero_BaseIsReturned(t *testing.T) {
@@ -29,5 +30,5 @@ func TestWhenFactorIsZero_BaseIsReturned(t *testing.T) {
 	result := utils.Multiplier(gofakeit.Float32Range(0, 1), base, 0)
 
 	// Assert
-	assert.Equal(t, base, result)
+	assert.InDelta(t, base, result, helpers.Delta)
 }

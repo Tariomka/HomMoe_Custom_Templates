@@ -470,8 +470,7 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 				}
 			}
 		}
-	case modeBrowse:
-		// No confirm button in browse mode.
+	case modeBrowse: // noop
 	}
 
 	return false
@@ -645,7 +644,7 @@ func (this *FileExplorerDialog) tryCreateFolder() {
 	}
 
 	target := filepath.Join(this.currentDir, name)
-	if err := os.Mkdir(target, 0o755); err != nil {
+	if err := os.Mkdir(target, 0o744); err != nil {
 		this.newFolderErr = err.Error()
 		return
 	}

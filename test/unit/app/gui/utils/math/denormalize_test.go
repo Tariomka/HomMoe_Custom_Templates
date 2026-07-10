@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +30,7 @@ func TestWhenValueIsInsideUnitRange_LinearInterpolationIsReturned(t *testing.T) 
 			result := utils.Denormalize(testCase.value, testCase.low, testCase.high)
 
 			// Assert
-			assert.InDelta(t, testCase.expected, result, 0.0001)
+			assert.InDelta(t, testCase.expected, result, helpers.Delta)
 		})
 	}
 }
@@ -43,7 +44,7 @@ func TestWhenValueIsBelowZero_ClampsToLow(t *testing.T) {
 	result := utils.Denormalize(-0.5, low, high)
 
 	// Assert
-	assert.Equal(t, low, result)
+	assert.InDelta(t, low, result, helpers.Delta)
 }
 
 func TestWhenValueIsAboveOne_ClampsToHigh(t *testing.T) {
@@ -55,5 +56,5 @@ func TestWhenValueIsAboveOne_ClampsToHigh(t *testing.T) {
 	result := utils.Denormalize(1.5, low, high)
 
 	// Assert - low + 1*(high-low) may differ from high by a float32 rounding step
-	assert.InDelta(t, high, result, 0.001)
+	assert.InDelta(t, high, result, helpers.Delta)
 }

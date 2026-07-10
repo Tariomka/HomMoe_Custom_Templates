@@ -173,44 +173,46 @@ func (this *AssetProvider) getPlayerAsset(zone preview.PreviewZone) image.Image 
 }
 
 func getAssetProviderFactory() func() (*AssetProvider, error) {
-	if assetProviderFactory == nil {
-		assetProviderFactory = sync.OnceValues(func() (*AssetProvider, error) {
-			decode := func(name string) (image.Image, error) {
-				data, err := assetFileSystem.ReadFile(assetFolder + name)
-				if err != nil {
-					return nil, fmt.Errorf("preview asset %s: %w", name, err)
-				}
-
-				img, err := png.Decode(bytes.NewReader(data))
-				if err != nil {
-					return nil, fmt.Errorf("preview asset %s: %w", name, err)
-				}
-
-				return img, nil
-			}
-
-			assetProvider := &AssetProvider{neutralZones: map[string]image.Image{}}
-			var err error
-
-			if assetProvider.background, err = decode(backgroundAsset); err != nil {
-				return nil, fmt.Errorf("failed to load background: %w", err)
-			}
-
-			for index := range playerCount {
-				if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
-					return nil, fmt.Errorf("failed to load player %d: %w", index+1, err)
-				}
-			}
-
-			for _, name := range neutralAssetNames {
-				if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
-					return nil, fmt.Errorf("failed to load neutral asset %s: %w", name, err)
-				}
-			}
-
-			return assetProvider, nil
-		})
+	if assetProviderFactory != nil {
+		return assetProviderFactory
 	}
+
+	assetProviderFactory = sync.OnceValues(func() (*AssetProvider, error) {
+		decode := func(name string) (image.Image, error) {
+			data, err := assetFileSystem.ReadFile(assetFolder + name)
+			if err != nil {
+				return nil, fmt.Errorf("preview asset %s: %w", name, err)
+			}
+
+			img, err := png.Decode(bytes.NewReader(data))
+			if err != nil {
+				return nil, fmt.Errorf("preview asset %s: %w", name, err)
+			}
+
+			return img, nil
+		}
+
+		assetProvider := &AssetProvider{neutralZones: map[string]image.Image{}}
+		var err error
+
+		if assetProvider.background, err = decode(backgroundAsset); err != nil {
+			return nil, fmt.Errorf("failed to load background: %w", err)
+		}
+
+		for index := range playerCount {
+			if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
+				return nil, fmt.Errorf("failed to load player %d: %w", index+1, err)
+			}
+		}
+
+		for _, name := range neutralAssetNames {
+			if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
+				return nil, fmt.Errorf("failed to load neutral asset %s: %w", name, err)
+			}
+		}
+
+		return assetProvider, nil
+	})
 
 	return assetProviderFactory
 }

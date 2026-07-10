@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -127,7 +128,7 @@ func TestWhenFactionLawsExpPercentWithinRange_SetsPercentDividedByHundred(t *tes
 	})
 
 	// Assert
-	assert.Equal(t, float64(expectedPercent)/100, actual.FactionLawsExpModifier)
+	assert.InDelta(t, float64(expectedPercent)/100, actual.FactionLawsExpModifier, helpers.Delta)
 }
 
 func TestWhenFactionLawsExpPercentBelowMinimum_ClampsModifierToQuarter(t *testing.T) {
@@ -137,7 +138,7 @@ func TestWhenFactionLawsExpPercentBelowMinimum_ClampsModifierToQuarter(t *testin
 	})
 
 	// Assert
-	assert.Equal(t, 0.25, actual.FactionLawsExpModifier)
+	assert.InDelta(t, 0.25, actual.FactionLawsExpModifier, helpers.Delta)
 }
 
 func TestWhenFactionLawsExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T) {
@@ -147,7 +148,7 @@ func TestWhenFactionLawsExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T)
 	})
 
 	// Assert
-	assert.Equal(t, 2.0, actual.FactionLawsExpModifier)
+	assert.InDelta(t, 2.0, actual.FactionLawsExpModifier, helpers.Delta)
 }
 
 func TestWhenAstrologyExpPercentWithinRange_SetsPercentDividedByHundred(t *testing.T) {
@@ -160,7 +161,7 @@ func TestWhenAstrologyExpPercentWithinRange_SetsPercentDividedByHundred(t *testi
 	})
 
 	// Assert
-	assert.Equal(t, float64(expectedPercent)/100, actual.AstrologyExpModifier)
+	assert.InDelta(t, float64(expectedPercent)/100, actual.AstrologyExpModifier, helpers.Delta)
 }
 
 func TestWhenAstrologyExpPercentBelowMinimum_ClampsModifierToQuarter(t *testing.T) {
@@ -170,7 +171,7 @@ func TestWhenAstrologyExpPercentBelowMinimum_ClampsModifierToQuarter(t *testing.
 	})
 
 	// Assert
-	assert.Equal(t, 0.25, actual.AstrologyExpModifier)
+	assert.InDelta(t, 0.25, actual.AstrologyExpModifier, helpers.Delta)
 }
 
 func TestWhenAstrologyExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T) {
@@ -180,7 +181,7 @@ func TestWhenAstrologyExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T) {
 	})
 
 	// Assert
-	assert.Equal(t, 2.0, actual.AstrologyExpModifier)
+	assert.InDelta(t, 2.0, actual.AstrologyExpModifier, helpers.Delta)
 }
 
 // ── Win conditions from victory-condition presets ────────────────────

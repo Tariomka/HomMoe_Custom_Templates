@@ -63,7 +63,7 @@ func TestWhenDefaultConfigurationWithShuffleDisabled_ReturnsGoldenTemplate(t *te
 	actual := generator.Generate()
 
 	// Assert
-	assert.EqualValues(t, expected, *actual)
+	assert.Equal(t, expected, *actual)
 }
 
 func TestWhenTemplateNameIsEmpty_SetsDefaultName(t *testing.T) {

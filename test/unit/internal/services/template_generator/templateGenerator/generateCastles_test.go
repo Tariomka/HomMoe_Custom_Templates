@@ -123,7 +123,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AddsOwnedCityPerCountInEachSpawnZone(t
 
 func TestWhenPlayerOwnedCastlesConfigured_AssignsSpawnPlayerAsOwner(t *testing.T) {
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(2))
+	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
 	actual := generator.Generate()
@@ -143,7 +143,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AssignsSpawnPlayerAsOwner(t *testing.T
 
 func TestWhenPlayerOwnedCastlesConfigured_KeepsConfiguredUnclaimedCastleCount(t *testing.T) {
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(2))
+	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
 	actual := generator.Generate()
@@ -159,7 +159,7 @@ func TestWhenPlayerOwnedCastlesConfigured_KeepsConfiguredUnclaimedCastleCount(t 
 
 func TestWhenPlayerOwnedCastlesConfigured_UnclaimedCastlesKeepGuards(t *testing.T) {
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(2))
+	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
 	actual := generator.Generate()
@@ -178,7 +178,7 @@ func TestWhenPlayerOwnedCastlesConfigured_UnclaimedCastlesKeepGuards(t *testing.
 
 func TestWhenPlayerZoneCastlesConfigured_CreatesSpawnPlusConfiguredCastleMainObjects(t *testing.T) {
 	// Arrange
-	const extraCastles = 3
+	extraCastles := gofakeit.Number(1, 5)
 	playerCount := gofakeit.Number(2, 8)
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing

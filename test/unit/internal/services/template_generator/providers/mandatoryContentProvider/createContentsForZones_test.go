@@ -142,7 +142,7 @@ func TestWhenMultipleHubZonesProvided_EmitsSingleHubGroup(t *testing.T) {
 	groups := provider.CreateContentsForZones(*configuration, zones)
 
 	// Assert
-	assert.Equal(t, 1, countGroupsNamed(groups, "mandatory_content_hub"),
+	assert.Equal(t, 1, countMandatoryContentHubs(groups),
 		"several hub zones must still share one hub group")
 }
 
@@ -174,5 +174,5 @@ func TestWhenHubZoneProvidedWithoutHubRows_OmitsHubGroup(t *testing.T) {
 	groups := provider.CreateContentsForZones(*configuration, zones)
 
 	// Assert
-	assert.Equal(t, 0, countGroupsNamed(groups, "mandatory_content_hub"))
+	assert.Equal(t, 0, countMandatoryContentHubs(groups))
 }

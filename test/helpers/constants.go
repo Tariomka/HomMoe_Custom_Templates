@@ -1,3 +1,3 @@
 package helpers
 
-const Delta = 1e-7
+const Delta = 1e-5

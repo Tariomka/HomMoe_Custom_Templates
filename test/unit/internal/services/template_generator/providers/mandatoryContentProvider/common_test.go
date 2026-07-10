@@ -24,11 +24,10 @@ func itemSids(items []entities.MandatoryContentItem) []string {
 	return out
 }
 
-// countGroupsNamed counts how many groups carry the given name.
-func countGroupsNamed(groups []entities.MandatoryContent, name string) int {
+func countMandatoryContentHubs(groups []entities.MandatoryContent) int {
 	count := 0
 	for _, group := range groups {
-		if group.Name == name {
+		if group.Name == "mandatory_content_hub" {
 			count++
 		}
 	}

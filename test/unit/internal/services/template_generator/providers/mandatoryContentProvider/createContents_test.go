@@ -214,7 +214,7 @@ func TestWhenHubTopologyWithoutHubRows_OmitsHubGroup(t *testing.T) {
 	groups := provider.CreateContents(*configuration, nil, nil)
 
 	// Assert
-	assert.Equal(t, 0, countGroupsNamed(groups, "mandatory_content_hub"))
+	assert.Equal(t, 0, countMandatoryContentHubs(groups))
 }
 
 func TestWhenNonHubTopologyWithHubRows_OmitsHubGroup(t *testing.T) {
@@ -228,5 +228,5 @@ func TestWhenNonHubTopologyWithHubRows_OmitsHubGroup(t *testing.T) {
 	groups := provider.CreateContents(*configuration, nil, nil)
 
 	// Assert
-	assert.Equal(t, 0, countGroupsNamed(groups, "mandatory_content_hub"))
+	assert.Equal(t, 0, countMandatoryContentHubs(groups))
 }

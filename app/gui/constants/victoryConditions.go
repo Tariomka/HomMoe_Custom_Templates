@@ -6,8 +6,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var winConditions = registry.GetWinningConditionValues()
-
 type Victory struct {
 	ID    string
 	Label string
@@ -21,13 +19,16 @@ type victoryConditions struct {
 	Tournament       Victory
 }
 
-var victoryConditionValues = victoryConditions{
-	Standard:         Victory{ID: winConditions.Standard, Label: "Standard"},
-	LostStartingCity: Victory{ID: winConditions.CapitalHold, Label: "Lost Starting City"},
-	GuardianArena:    Victory{ID: winConditions.FinalBattle, Label: "Guardian Arena"},
-	HoldCity:         Victory{ID: winConditions.CityHold, Label: "Hold City"},
-	Tournament:       Victory{ID: winConditions.Tournament, Label: "Tournament"},
-}
+var victoryConditionValues = func() victoryConditions {
+	winConditions := registry.GetWinningConditionValues()
+	return victoryConditions{
+		Standard:         Victory{ID: winConditions.Standard, Label: "Standard"},
+		LostStartingCity: Victory{ID: winConditions.CapitalHold, Label: "Lost Starting City"},
+		GuardianArena:    Victory{ID: winConditions.FinalBattle, Label: "Guardian Arena"},
+		HoldCity:         Victory{ID: winConditions.CityHold, Label: "Hold City"},
+		Tournament:       Victory{ID: winConditions.Tournament, Label: "Tournament"},
+	}
+}()
 
 var VictoryConditions = []Victory{
 	victoryConditionValues.Standard,
