@@ -37,8 +37,8 @@ func buildKnownSpells() []SpellEntry {
 	spells = append(spells, buildHighNeutralSpells()...)
 	spells = append(spells, buildDaylightSpells()...)
 	spells = append(spells, buildNightshadeSpells()...)
-	spells = append(spells, buildPrimalSpells()...)
 	spells = append(spells, buildArcaneSpells()...)
+	spells = append(spells, buildPrimalSpells()...)
 	return spells
 }
 
@@ -105,31 +105,6 @@ func buildNightshadeSpells() []SpellEntry {
 	}
 }
 
-func buildPrimalSpells() []SpellEntry {
-	spells := registry.GetPrimalSpellSidValues()
-	spellSchoolValues := registry.GetSpellSchoolTypeValues()
-	return []SpellEntry{
-		{spells.Groundsight, "Groundsight", spellSchoolValues.Primal, 1},
-		{spells.Thunderbolt, "Lightning Bolt", spellSchoolValues.Primal, 1},
-		{spells.ThickHide, "Thick Hide", spellSchoolValues.Primal, 1},
-		{spells.CrystalCrown, "Crystal Crown", spellSchoolValues.Primal, 2},
-		{spells.FireGlobe, "Fireball", spellSchoolValues.Primal, 2},
-		{spells.IceBolt, "Ice Bolt", spellSchoolValues.Primal, 2},
-		{spells.Wean, "Wean", spellSchoolValues.Primal, 2},
-		{spells.CaveIn, "Cave In", spellSchoolValues.Primal, 3},
-		{spells.EarthsRage, "Earth's Rage", spellSchoolValues.Primal, 3},
-		{spells.WallOfFlame, "Firewall", spellSchoolValues.Primal, 3},
-		{spells.StoneFangs, "Stone Fangs", spellSchoolValues.Primal, 3},
-		{spells.PrimordialPurity, "Anti-Magic", spellSchoolValues.Primal, 4},
-		{spells.ChainLightning, "Chain Lightning", spellSchoolValues.Primal, 4},
-		{spells.Avalanche, "Circle of Winter", spellSchoolValues.Primal, 4},
-		{spells.PrimordialChaos, "Primordial Chaos", spellSchoolValues.Primal, 4},
-		{spells.Armageddon, "Armageddon", spellSchoolValues.Primal, 5},
-		{spells.HksmillasRampage, "Hksmilla's Rampage", spellSchoolValues.Primal, 5},
-		{spells.SummonPrimalRemnant, "Summon Primal Remnant", spellSchoolValues.Primal, 5},
-	}
-}
-
 func buildArcaneSpells() []SpellEntry {
 	spells := registry.GetArcaneSpellSidValues()
 	spellSchoolValues := registry.GetSpellSchoolTypeValues()
@@ -152,6 +127,31 @@ func buildArcaneSpells() []SpellEntry {
 		{spells.BlackHole, "Black Hole", spellSchoolValues.Arcane, 5},
 		{spells.DoreathsTide, "Doreath's Tide", spellSchoolValues.Arcane, 5},
 		{spells.RealityDistortion, "Reality Distortion", spellSchoolValues.Arcane, 5},
+	}
+}
+
+func buildPrimalSpells() []SpellEntry {
+	spells := registry.GetPrimalSpellSidValues()
+	spellSchoolValues := registry.GetSpellSchoolTypeValues()
+	return []SpellEntry{
+		{spells.Groundsight, "Groundsight", spellSchoolValues.Primal, 1},
+		{spells.Thunderbolt, "Lightning Bolt", spellSchoolValues.Primal, 1},
+		{spells.ThickHide, "Thick Hide", spellSchoolValues.Primal, 1},
+		{spells.CrystalCrown, "Crystal Crown", spellSchoolValues.Primal, 2},
+		{spells.FireGlobe, "Fireball", spellSchoolValues.Primal, 2},
+		{spells.IceBolt, "Ice Bolt", spellSchoolValues.Primal, 2},
+		{spells.Wean, "Wean", spellSchoolValues.Primal, 2},
+		{spells.CaveIn, "Cave In", spellSchoolValues.Primal, 3},
+		{spells.EarthsRage, "Earth's Rage", spellSchoolValues.Primal, 3},
+		{spells.WallOfFlame, "Firewall", spellSchoolValues.Primal, 3},
+		{spells.StoneFangs, "Stone Fangs", spellSchoolValues.Primal, 3},
+		{spells.PrimordialPurity, "Anti-Magic", spellSchoolValues.Primal, 4},
+		{spells.ChainLightning, "Chain Lightning", spellSchoolValues.Primal, 4},
+		{spells.Avalanche, "Circle of Winter", spellSchoolValues.Primal, 4},
+		{spells.PrimordialChaos, "Primordial Chaos", spellSchoolValues.Primal, 4},
+		{spells.Armageddon, "Armageddon", spellSchoolValues.Primal, 5},
+		{spells.HksmillasRampage, "Hksmilla's Rampage", spellSchoolValues.Primal, 5},
+		{spells.SummonPrimalRemnant, "Summon Primal Remnant", spellSchoolValues.Primal, 5},
 	}
 }
 

@@ -4,8 +4,8 @@ type spellSids struct {
 	HighNeutral highNeutralSpellSids
 	Daylight    daylightSpellSids
 	Nightshade  nightshadeSpellSids
-	Primal      primalSpellSids
 	Arcane      arcaneSpellSids
+	Primal      primalSpellSids
 }
 
 // GetSpellSidValues returns the learnable spell SIDs used for
@@ -17,8 +17,8 @@ func GetSpellSidValues() spellSids {
 		HighNeutral: GetHighNeutralSpellSidValues(),
 		Daylight:    GetDaylightSpellSidValues(),
 		Nightshade:  GetNightshadeSpellSidValues(),
-		Primal:      GetPrimalSpellSidValues(),
 		Arcane:      GetArcaneSpellSidValues(),
+		Primal:      GetPrimalSpellSidValues(),
 	}
 }
 
@@ -130,50 +130,6 @@ func GetNightshadeSpellSidValues() nightshadeSpellSids {
 	}
 }
 
-type primalSpellSids struct {
-	Groundsight         string
-	Thunderbolt         string
-	ThickHide           string
-	CrystalCrown        string
-	FireGlobe           string
-	IceBolt             string
-	Wean                string
-	CaveIn              string
-	EarthsRage          string
-	WallOfFlame         string
-	StoneFangs          string
-	PrimordialPurity    string
-	ChainLightning      string
-	Avalanche           string
-	PrimordialChaos     string
-	Armageddon          string
-	HksmillasRampage    string
-	SummonPrimalRemnant string
-}
-
-func GetPrimalSpellSidValues() primalSpellSids {
-	return primalSpellSids{
-		Groundsight:         "primal_17_magic_groundsight",
-		Thunderbolt:         "primal_1_magic_thunderbolt",
-		ThickHide:           "primal_2_magic_thick_hide",
-		CrystalCrown:        "primal_5_magic_crystal_crown",
-		FireGlobe:           "primal_4_magic_fire_globe",
-		IceBolt:             "primal_6_magic_ice_bolt",
-		Wean:                "primal_3_magic_wean",
-		CaveIn:              "primal_8_magic_cave_in",
-		EarthsRage:          "primal_9_magic_earths_rage",
-		WallOfFlame:         "primal_7_magic_wall_of_flame",
-		StoneFangs:          "primal_16_magic_stone_fangs",
-		PrimordialPurity:    "primal_10_magic_primordial_purity",
-		ChainLightning:      "primal_12_magic_chain_lightning",
-		Avalanche:           "primal_13_magic_avalanche",
-		PrimordialChaos:     "primal_18_magic_primordial_chaos",
-		Armageddon:          "primal_11_magic_armageddon",
-		HksmillasRampage:    "primal_14_magic_hksmillas_rampage",
-		SummonPrimalRemnant: "primal_15_magic_summon_primal_remnant",
-	}
-}
-
 type arcaneSpellSids struct {
 	EarlyStart        string
 	Energyze          string
@@ -215,5 +171,49 @@ func GetArcaneSpellSidValues() arcaneSpellSids {
 		BlackHole:         "space_13_magic_black_hole",
 		DoreathsTide:      "space_14_magic_doreaths_tide",
 		RealityDistortion: "space_16_magic_reality_distortion",
+	}
+}
+
+type primalSpellSids struct {
+	Groundsight         string
+	Thunderbolt         string
+	ThickHide           string
+	CrystalCrown        string
+	FireGlobe           string
+	IceBolt             string
+	Wean                string
+	CaveIn              string
+	EarthsRage          string
+	WallOfFlame         string
+	StoneFangs          string
+	PrimordialPurity    string
+	ChainLightning      string
+	Avalanche           string
+	PrimordialChaos     string
+	Armageddon          string
+	HksmillasRampage    string
+	SummonPrimalRemnant string
+}
+
+func GetPrimalSpellSidValues() primalSpellSids {
+	return primalSpellSids{
+		Groundsight:         "primal_17_magic_groundsight",
+		Thunderbolt:         "primal_1_magic_thunderbolt",
+		ThickHide:           "primal_2_magic_thick_hide",
+		CrystalCrown:        "primal_5_magic_crystal_crown",
+		FireGlobe:           "primal_4_magic_fire_globe",
+		IceBolt:             "primal_6_magic_ice_bolt",
+		Wean:                "primal_3_magic_wean",
+		CaveIn:              "primal_8_magic_cave_in",
+		EarthsRage:          "primal_9_magic_earths_rage",
+		WallOfFlame:         "primal_7_magic_wall_of_flame",
+		StoneFangs:          "primal_16_magic_stone_fangs",
+		PrimordialPurity:    "primal_10_magic_primordial_purity",
+		ChainLightning:      "primal_12_magic_chain_lightning",
+		Avalanche:           "primal_13_magic_avalanche",
+		PrimordialChaos:     "primal_18_magic_primordial_chaos",
+		Armageddon:          "primal_11_magic_armageddon",
+		HksmillasRampage:    "primal_14_magic_hksmillas_rampage",
+		SummonPrimalRemnant: "primal_15_magic_summon_primal_remnant",
 	}
 }
