@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
-	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +34,7 @@ func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
 			normalized := utils.NormalizeZoneSize(testCase.zoneSize)
 
 			// Assert
-			assert.InDelta(t, testCase.expected, normalized, helpers.Delta)
+			assert.InDelta(t, testCase.expected, normalized, test_helpers.Delta)
 		})
 	}
 }

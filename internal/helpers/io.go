@@ -11,13 +11,13 @@ import (
 
 const oldenEraID = "3105440"
 
-var customTemplateRelativeGlob = filepath.Join(
-	"AppData", "LocalLow", "Unfrozen", "HeroesOldenEra", "users", "*", "my_map_templates")
-
 // FindOldenEraTemplatesDir tries to locate a template folder in common directories.
 // Depending on the useInstallDir flag, it either looks for the official Steam install directory
 // or tries to find the user directory and tries to resolve the custom template path from there.
 func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
+	customTemplateRelativeGlob := filepath.Join(
+		"AppData", "LocalLow", "Unfrozen", "HeroesOldenEra", "users", "*", "my_map_templates")
+
 	if !useInstallDir && runtime.GOOS == "windows" {
 		userPath, err := os.UserHomeDir()
 		if err != nil {

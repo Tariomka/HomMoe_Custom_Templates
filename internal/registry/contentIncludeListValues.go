@@ -36,19 +36,19 @@ type contentIncludeLists struct {
 //	mandatoryContent.content.includeLists
 func GetMandatoryContentIncludeListValues() contentIncludeLists {
 	return contentIncludeLists{
-		contentRandomHiresBuildings:        contentRandomHiresBuildingValues,
-		contentResourceBanksBuildings:      contentResourceBanksBuildingValues,
-		contentResources:                   contentResourcesValues,
-		contentMines:                       contentMinesValues,
-		contentInteractables:               contentInteractablesValues,
-		contentHeroStatsAndSkillsBuildings: contentHeroStatsAndSkillsBuildingValues,
-		contentScrollBoxes:                 contentScrollBoxValues,
-		contentEnchantedScrollBoxes:        contentEnchantedScrollBoxValues,
-		contentMythicScrollBoxes:           contentMythicScrollBoxValues,
-		contentPandoraBoxes:                contentPandoraBoxValues,
-		contentGuardedUnitBanks:            contentGuardedUnitBanksValues,
-		contentMagicBuildings:              contentMagicBuildingValues,
-		contentMiscellaneous:               contentMiscellaneousValues,
+		contentRandomHiresBuildings:        GetMandatoryContentRandomHiresBuildingValues(),
+		contentResourceBanksBuildings:      GetMandatoryContentResourceBanksBuildingValues(),
+		contentResources:                   GetMandatoryContentResourcesValues(),
+		contentMines:                       GetMandatoryContentMinesValues(),
+		contentInteractables:               GetMandatoryContentInteractablesValues(),
+		contentHeroStatsAndSkillsBuildings: GetMandatoryContentHeroStatsAndSkillsBuildingValues(),
+		contentScrollBoxes:                 GetMandatoryContentScrollBoxValues(),
+		contentEnchantedScrollBoxes:        GetMandatoryContentEnchantedScrollBoxValues(),
+		contentMythicScrollBoxes:           GetMandatoryContentMythicScrollBoxValues(),
+		contentPandoraBoxes:                GetMandatoryContentPandoraBoxValues(),
+		contentGuardedUnitBanks:            GetMandatoryContentGuardedUnitBanksValues(),
+		contentMagicBuildings:              GetMandatoryContentMagicBuildingValues(),
+		contentMiscellaneous:               GetMandatoryContentMiscellaneousValues(),
 	}
 }
 
@@ -58,14 +58,12 @@ type contentRandomHiresBuildings struct {
 	RandomHiresHighTier string
 }
 
-var contentRandomHiresBuildingValues = contentRandomHiresBuildings{
-	RandomHires:         "content_list_building_random_hires",
-	RandomHiresLowTier:  "content_list_building_random_hires_low_tier",
-	RandomHiresHighTier: "content_list_building_random_hires_high_tier",
-}
-
 func GetMandatoryContentRandomHiresBuildingValues() contentRandomHiresBuildings {
-	return contentRandomHiresBuildingValues
+	return contentRandomHiresBuildings{
+		RandomHires:         "content_list_building_random_hires",
+		RandomHiresLowTier:  "content_list_building_random_hires_low_tier",
+		RandomHiresHighTier: "content_list_building_random_hires_high_tier",
+	}
 }
 
 type contentResourceBanksBuildings struct {
@@ -77,17 +75,15 @@ type contentResourceBanksBuildings struct {
 	GuardedResourceBanksEpic      string
 }
 
-var contentResourceBanksBuildingValues = contentResourceBanksBuildings{
-	ResourceBanksCommon:           "content_list_building_common_resource_banks",
-	ResourceBanksUncommon:         "content_list_building_uncommon_resource_banks",
-	ResourceBanksUncommonFix:      "content_list_building_uncommon_resource_banks_fix",
-	GuardedResourceBanksCommonFix: "content_list_building_common_guarded_resource_bank_fix",
-	GuardedResourceBanksUncommon:  "content_list_building_uncommon_guarded_resource_banks",
-	GuardedResourceBanksEpic:      "content_list_building_epic_guarded_resource_banks",
-}
-
 func GetMandatoryContentResourceBanksBuildingValues() contentResourceBanksBuildings {
-	return contentResourceBanksBuildingValues
+	return contentResourceBanksBuildings{
+		ResourceBanksCommon:           "content_list_building_common_resource_banks",
+		ResourceBanksUncommon:         "content_list_building_uncommon_resource_banks",
+		ResourceBanksUncommonFix:      "content_list_building_uncommon_resource_banks_fix",
+		GuardedResourceBanksCommonFix: "content_list_building_common_guarded_resource_bank_fix",
+		GuardedResourceBanksUncommon:  "content_list_building_uncommon_guarded_resource_banks",
+		GuardedResourceBanksEpic:      "content_list_building_epic_guarded_resource_banks",
+	}
 }
 
 type contentResources struct {
@@ -96,10 +92,12 @@ type contentResources struct {
 	ResourcesSpecial string
 }
 
-var contentResourcesValues = contentResources{
-	ResourcesBasic:   "content_list_basic_resources",
-	ResourcesRare:    "content_list_rare_resources",
-	ResourcesSpecial: "content_list_special_resources",
+func GetMandatoryContentResourcesValues() contentResources {
+	return contentResources{
+		ResourcesBasic:   "content_list_basic_resources",
+		ResourcesRare:    "content_list_rare_resources",
+		ResourcesSpecial: "content_list_special_resources",
+	}
 }
 
 type contentMines struct {
@@ -108,10 +106,12 @@ type contentMines struct {
 	MinesSpecial string
 }
 
-var contentMinesValues = contentMines{
-	MinesBasic:   "content_list_basic_mines",
-	MinesRare:    "content_list_rare_mines",
-	MinesSpecial: "content_list_special_mines",
+func GetMandatoryContentMinesValues() contentMines {
+	return contentMines{
+		MinesBasic:   "content_list_basic_mines",
+		MinesRare:    "content_list_rare_mines",
+		MinesSpecial: "content_list_special_mines",
+	}
 }
 
 type contentInteractables struct {
@@ -120,10 +120,12 @@ type contentInteractables struct {
 	InteractablesUncommon       string
 }
 
-var contentInteractablesValues = contentInteractables{
-	InteractablesCommon:         "content_list_building_common_interact",
-	InteractablesCommonBalanced: "content_list_building_common_interact_no_imbalance",
-	InteractablesUncommon:       "content_list_building_uncommon_interact",
+func GetMandatoryContentInteractablesValues() contentInteractables {
+	return contentInteractables{
+		InteractablesCommon:         "content_list_building_common_interact",
+		InteractablesCommonBalanced: "content_list_building_common_interact_no_imbalance",
+		InteractablesUncommon:       "content_list_building_uncommon_interact",
+	}
 }
 
 type contentHeroStatsAndSkillsBuildings struct {
@@ -131,9 +133,11 @@ type contentHeroStatsAndSkillsBuildings struct {
 	HeroStatsAndSkillsUncommon string
 }
 
-var contentHeroStatsAndSkillsBuildingValues = contentHeroStatsAndSkillsBuildings{
-	HeroStatsAndSkillsCommon:   "content_list_building_common_hero_stats",
-	HeroStatsAndSkillsUncommon: "content_list_building_uncommon_hero_stats",
+func GetMandatoryContentHeroStatsAndSkillsBuildingValues() contentHeroStatsAndSkillsBuildings {
+	return contentHeroStatsAndSkillsBuildings{
+		HeroStatsAndSkillsCommon:   "content_list_building_common_hero_stats",
+		HeroStatsAndSkillsUncommon: "content_list_building_uncommon_hero_stats",
+	}
 }
 
 type contentScrollBoxes struct {
@@ -145,13 +149,15 @@ type contentScrollBoxes struct {
 	PickupScrollBoxTier5 string
 }
 
-var contentScrollBoxValues = contentScrollBoxes{
-	PickupScrollBox:      "content_list_pickup_scroll_box",
-	PickupScrollBoxTier1: "content_list_pickup_scroll_box_tier_1",
-	PickupScrollBoxTier2: "content_list_pickup_scroll_box_tier_2",
-	PickupScrollBoxTier3: "content_list_pickup_scroll_box_tier_3",
-	PickupScrollBoxTier4: "content_list_pickup_scroll_box_tier_4",
-	PickupScrollBoxTier5: "content_list_pickup_scroll_box_tier_5",
+func GetMandatoryContentScrollBoxValues() contentScrollBoxes {
+	return contentScrollBoxes{
+		PickupScrollBox:      "content_list_pickup_scroll_box",
+		PickupScrollBoxTier1: "content_list_pickup_scroll_box_tier_1",
+		PickupScrollBoxTier2: "content_list_pickup_scroll_box_tier_2",
+		PickupScrollBoxTier3: "content_list_pickup_scroll_box_tier_3",
+		PickupScrollBoxTier4: "content_list_pickup_scroll_box_tier_4",
+		PickupScrollBoxTier5: "content_list_pickup_scroll_box_tier_5",
+	}
 }
 
 type contentEnchantedScrollBoxes struct {
@@ -164,22 +170,26 @@ type contentEnchantedScrollBoxes struct {
 	PickupEnchantedScrollBoxControlSpells string
 }
 
-var contentEnchantedScrollBoxValues = contentEnchantedScrollBoxes{
-	PickupEnchantedScrollBox:              "content_list_pickup_enchanted_scroll_box",
-	PickupEnchantedScrollBoxTier1:         "content_list_pickup_enchanted_scroll_box_tier_1",
-	PickupEnchantedScrollBoxTier2:         "content_list_pickup_enchanted_scroll_box_tier_2",
-	PickupEnchantedScrollBoxTier3:         "content_list_pickup_enchanted_scroll_box_tier_3",
-	PickupEnchantedScrollBoxTier4:         "content_list_pickup_enchanted_scroll_box_tier_4",
-	PickupEnchantedScrollBoxTier5:         "content_list_pickup_enchanted_scroll_box_tier_5",
-	PickupEnchantedScrollBoxControlSpells: "content_list_pickup_enchanted_scroll_box_control_spells",
+func GetMandatoryContentEnchantedScrollBoxValues() contentEnchantedScrollBoxes {
+	return contentEnchantedScrollBoxes{
+		PickupEnchantedScrollBox:              "content_list_pickup_enchanted_scroll_box",
+		PickupEnchantedScrollBoxTier1:         "content_list_pickup_enchanted_scroll_box_tier_1",
+		PickupEnchantedScrollBoxTier2:         "content_list_pickup_enchanted_scroll_box_tier_2",
+		PickupEnchantedScrollBoxTier3:         "content_list_pickup_enchanted_scroll_box_tier_3",
+		PickupEnchantedScrollBoxTier4:         "content_list_pickup_enchanted_scroll_box_tier_4",
+		PickupEnchantedScrollBoxTier5:         "content_list_pickup_enchanted_scroll_box_tier_5",
+		PickupEnchantedScrollBoxControlSpells: "content_list_pickup_enchanted_scroll_box_control_spells",
+	}
 }
 
 type contentMythicScrollBoxes struct {
 	PickupMythicScrollBox string
 }
 
-var contentMythicScrollBoxValues = contentMythicScrollBoxes{
-	PickupMythicScrollBox: "content_list_pickup_mythic_scroll_box",
+func GetMandatoryContentMythicScrollBoxValues() contentMythicScrollBoxes {
+	return contentMythicScrollBoxes{
+		PickupMythicScrollBox: "content_list_pickup_mythic_scroll_box",
+	}
 }
 
 type contentPandoraBoxes struct {
@@ -191,17 +201,15 @@ type contentPandoraBoxes struct {
 	PickupPandoraBoxGold         string
 }
 
-var contentPandoraBoxValues = contentPandoraBoxes{
-	PickupPandoraBox:             "content_list_pickup_pandora_box",
-	PickupPandoraBoxArmy:         "content_list_pickup_pandora_box_army",
-	PickupPandoraBoxArmyLowTier:  "content_list_pickup_pandora_box_army_low_tier",
-	PickupPandoraBoxArmyHighTier: "content_list_pickup_pandora_box_army_high_tier",
-	PickupPandoraBoxExperience:   "content_list_pickup_pandora_box_exp",
-	PickupPandoraBoxGold:         "content_list_pickup_pandora_box_gold",
-}
-
 func GetMandatoryContentPandoraBoxValues() contentPandoraBoxes {
-	return contentPandoraBoxValues
+	return contentPandoraBoxes{
+		PickupPandoraBox:             "content_list_pickup_pandora_box",
+		PickupPandoraBoxArmy:         "content_list_pickup_pandora_box_army",
+		PickupPandoraBoxArmyLowTier:  "content_list_pickup_pandora_box_army_low_tier",
+		PickupPandoraBoxArmyHighTier: "content_list_pickup_pandora_box_army_high_tier",
+		PickupPandoraBoxExperience:   "content_list_pickup_pandora_box_exp",
+		PickupPandoraBoxGold:         "content_list_pickup_pandora_box_gold",
+	}
 }
 
 type contentGuardedUnitBanks struct {
@@ -209,9 +217,11 @@ type contentGuardedUnitBanks struct {
 	GuardedUnitsBanksUncommonEqual string
 }
 
-var contentGuardedUnitBanksValues = contentGuardedUnitBanks{
-	GuardedUnitsBanksUncommon:      "content_list_building_uncommon_guarded_units_banks",
-	GuardedUnitsBanksUncommonEqual: "content_list_building_uncommon_guarded_units_banks_equal",
+func GetMandatoryContentGuardedUnitBanksValues() contentGuardedUnitBanks {
+	return contentGuardedUnitBanks{
+		GuardedUnitsBanksUncommon:      "content_list_building_uncommon_guarded_units_banks",
+		GuardedUnitsBanksUncommonEqual: "content_list_building_uncommon_guarded_units_banks_equal",
+	}
 }
 
 type contentMagicBuildings struct {
@@ -219,9 +229,11 @@ type contentMagicBuildings struct {
 	MagicBuildingsUncommon string
 }
 
-var contentMagicBuildingValues = contentMagicBuildings{
-	MagicBuildingsCommon:   "content_list_building_commons_magic",
-	MagicBuildingsUncommon: "content_list_building_uncommons_magic",
+func GetMandatoryContentMagicBuildingValues() contentMagicBuildings {
+	return contentMagicBuildings{
+		MagicBuildingsCommon:   "content_list_building_commons_magic",
+		MagicBuildingsUncommon: "content_list_building_uncommons_magic",
+	}
 }
 
 type contentMiscellaneous struct {
@@ -238,22 +250,20 @@ type contentMiscellaneous struct {
 	UncommonHeroBanks       string
 }
 
-var contentMiscellaneousValues = contentMiscellaneous{
-	Storage:                 "content_list_basic_storage",
-	SpecialBuilding:         "content_list_building_special",
-	BasicBuildings:          "content_list_basic_buildings",
-	VisionBuildings:         "content_list_vision_buildings",
-	PickupRandomItems:       "content_list_pickup_random_items",
-	PickupPrison:            "content_list_pickup_prison",
-	UtopiaBuilding:          "content_list_building_utopia",
-	TownGates:               "content_list_town_gates",
-	BuffMovePointsBuilding:  "content_list_building_buff_movepoints",
-	CommonHeroBuffsBuilding: "content_list_building_common_hero_buffs",
-	UncommonHeroBanks:       "content_list_building_uncommon_hero_banks",
-}
-
 func GetMandatoryContentMiscellaneousValues() contentMiscellaneous {
-	return contentMiscellaneousValues
+	return contentMiscellaneous{
+		Storage:                 "content_list_basic_storage",
+		SpecialBuilding:         "content_list_building_special",
+		BasicBuildings:          "content_list_basic_buildings",
+		VisionBuildings:         "content_list_vision_buildings",
+		PickupRandomItems:       "content_list_pickup_random_items",
+		PickupPrison:            "content_list_pickup_prison",
+		UtopiaBuilding:          "content_list_building_utopia",
+		TownGates:               "content_list_town_gates",
+		BuffMovePointsBuilding:  "content_list_building_buff_movepoints",
+		CommonHeroBuffsBuilding: "content_list_building_common_hero_buffs",
+		UncommonHeroBanks:       "content_list_building_uncommon_hero_banks",
+	}
 }
 
 type basicContentLists struct {
@@ -276,13 +286,13 @@ type basicContentLists struct {
 //	mandatoryContent.content.includeLists
 func GetMandatoryContentBasicIncludeListValues() basicContentLists {
 	return basicContentLists{
-		basicContentRandomHiresBuildings:        basicContentRandomHiresBuildingValues,
-		basicContentResourceBanksBuildings:      basicContentResourceBanksBuildingValues,
-		basicContentResources:                   basicContentResourcesValues,
-		basicContentMines:                       basicContentMinesValues,
-		basicContentInteractables:               basicContentInteractablesValues,
-		basicContentHeroStatsAndSkillsBuildings: basicContentHeroStatsAndSkillsBuildingValues,
-		basicContentScrollBoxes:                 basicContentScrollBoxValues,
+		basicContentRandomHiresBuildings:        GetMandatoryContentBasicRandomHiresBuildingValues(),
+		basicContentResourceBanksBuildings:      GetMandatoryContentBasicResourceBanksBuildingValues(),
+		basicContentResources:                   GetMandatoryContentBasicResourcesValues(),
+		basicContentMines:                       GetMandatoryContentBasicMinesValues(),
+		basicContentInteractables:               GetMandatoryContentBasicInteractablesValues(),
+		basicContentHeroStatsAndSkillsBuildings: GetMandatoryContentBasicHeroStatsAndSkillsBuildingValues(),
+		basicContentScrollBoxes:                 GetMandatoryContentBasicScrollBoxValues(),
 		basicContentPandoraBoxes:                GetMandatoryContentBasicPandoraBoxValues(),
 		basicContentGuardedUnitBanks:            GetMandatoryContentBasicGuardedUnitBankValues(),
 		basicContentMagicBuildings:              GetMandatoryContentBasicMagicBuildingValues(),
@@ -295,12 +305,10 @@ type basicContentRandomHiresBuildings struct {
 	BasicRandomHires string
 }
 
-var basicContentRandomHiresBuildingValues = basicContentRandomHiresBuildings{
-	BasicRandomHires: "basic_content_list_building_random_hires",
-}
-
 func GetMandatoryContentBasicRandomHiresBuildingValues() basicContentRandomHiresBuildings {
-	return basicContentRandomHiresBuildingValues
+	return basicContentRandomHiresBuildings{
+		BasicRandomHires: "basic_content_list_building_random_hires",
+	}
 }
 
 type basicContentResourceBanksBuildings struct {
@@ -312,17 +320,15 @@ type basicContentResourceBanksBuildings struct {
 	BasicGuardedResourceBanksTier3              string
 }
 
-var basicContentResourceBanksBuildingValues = basicContentResourceBanksBuildings{
-	BasicResourceBanksTier1:                     "basic_content_list_building_resource_banks_tier_1",
-	BasicResourceBanksTier2:                     "basic_content_list_building_resource_banks_tier_2",
-	BasicGuardedResourceBanksTier1:              "basic_content_list_building_guarded_resource_banks_tier_1",
-	BasicGuardedResourceBanksTier2:              "basic_content_list_building_guarded_resource_banks_tier_2",
-	BasicGuardedResourceBanksTier2NoRestriction: "basic_content_list_building_guarded_resource_banks_tier_2_no_biome_restriction",
-	BasicGuardedResourceBanksTier3:              "basic_content_list_building_guarded_resource_banks_tier_3",
-}
-
 func GetMandatoryContentBasicResourceBanksBuildingValues() basicContentResourceBanksBuildings {
-	return basicContentResourceBanksBuildingValues
+	return basicContentResourceBanksBuildings{
+		BasicResourceBanksTier1:                     "basic_content_list_building_resource_banks_tier_1",
+		BasicResourceBanksTier2:                     "basic_content_list_building_resource_banks_tier_2",
+		BasicGuardedResourceBanksTier1:              "basic_content_list_building_guarded_resource_banks_tier_1",
+		BasicGuardedResourceBanksTier2:              "basic_content_list_building_guarded_resource_banks_tier_2",
+		BasicGuardedResourceBanksTier2NoRestriction: "basic_content_list_building_guarded_resource_banks_tier_2_no_biome_restriction",
+		BasicGuardedResourceBanksTier3:              "basic_content_list_building_guarded_resource_banks_tier_3",
+	}
 }
 
 type basicContentResources struct {
@@ -331,10 +337,12 @@ type basicContentResources struct {
 	BasicResourcesSpecial string
 }
 
-var basicContentResourcesValues = basicContentResources{
-	BasicResourcesBasic:   "basic_content_list_basic_resources",
-	BasicResourcesRare:    "basic_content_list_rare_resources",
-	BasicResourcesSpecial: "basic_content_list_special_resources",
+func GetMandatoryContentBasicResourcesValues() basicContentResources {
+	return basicContentResources{
+		BasicResourcesBasic:   "basic_content_list_basic_resources",
+		BasicResourcesRare:    "basic_content_list_rare_resources",
+		BasicResourcesSpecial: "basic_content_list_special_resources",
+	}
 }
 
 type basicContentMines struct {
@@ -344,15 +352,13 @@ type basicContentMines struct {
 	BasicMinesSpecial             string
 }
 
-var basicContentMinesValues = basicContentMines{
-	BasicMinesBasic:               "basic_content_list_basic_mines",
-	BasicMinesRare:                "basic_content_list_rare_mines",
-	BasicMinesRareBiomeRestricted: "basic_content_list_rare_mines_by_biome",
-	BasicMinesSpecial:             "basic_content_list_special_mines",
-}
-
 func GetMandatoryContentBasicMinesValues() basicContentMines {
-	return basicContentMinesValues
+	return basicContentMines{
+		BasicMinesBasic:               "basic_content_list_basic_mines",
+		BasicMinesRare:                "basic_content_list_rare_mines",
+		BasicMinesRareBiomeRestricted: "basic_content_list_rare_mines_by_biome",
+		BasicMinesSpecial:             "basic_content_list_special_mines",
+	}
 }
 
 type basicContentInteractables struct {
@@ -360,9 +366,11 @@ type basicContentInteractables struct {
 	BasicInteractablesEpic     string
 }
 
-var basicContentInteractablesValues = basicContentInteractables{
-	BasicInteractablesUncommon: "basic_content_list_building_uncommon_interact",
-	BasicInteractablesEpic:     "basic_content_list_building_epic_interact",
+func GetMandatoryContentBasicInteractablesValues() basicContentInteractables {
+	return basicContentInteractables{
+		BasicInteractablesUncommon: "basic_content_list_building_uncommon_interact",
+		BasicInteractablesEpic:     "basic_content_list_building_epic_interact",
+	}
 }
 
 type basicContentHeroStatsAndSkillsBuildings struct {
@@ -371,14 +379,12 @@ type basicContentHeroStatsAndSkillsBuildings struct {
 	BasicHeroStatsAndSkillsTier3 string
 }
 
-var basicContentHeroStatsAndSkillsBuildingValues = basicContentHeroStatsAndSkillsBuildings{
-	BasicHeroStatsAndSkillsTier1: "basic_content_list_building_hero_stats_and_skills_tier_1",
-	BasicHeroStatsAndSkillsTier2: "basic_content_list_building_hero_stats_and_skills_tier_2",
-	BasicHeroStatsAndSkillsTier3: "basic_content_list_building_hero_stats_and_skills_tier_3",
-}
-
 func GetMandatoryContentBasicHeroStatsAndSkillsBuildingValues() basicContentHeroStatsAndSkillsBuildings {
-	return basicContentHeroStatsAndSkillsBuildingValues
+	return basicContentHeroStatsAndSkillsBuildings{
+		BasicHeroStatsAndSkillsTier1: "basic_content_list_building_hero_stats_and_skills_tier_1",
+		BasicHeroStatsAndSkillsTier2: "basic_content_list_building_hero_stats_and_skills_tier_2",
+		BasicHeroStatsAndSkillsTier3: "basic_content_list_building_hero_stats_and_skills_tier_3",
+	}
 }
 
 type basicContentScrollBoxes struct {
@@ -387,14 +393,12 @@ type basicContentScrollBoxes struct {
 	BasicPickupMythicScrollBox    string
 }
 
-var basicContentScrollBoxValues = basicContentScrollBoxes{
-	BasicPickupScrollBox:          "basic_content_list_pickup_scroll_box",
-	BasicPickupEnchantedScrollBox: "basic_content_list_pickup_enchanted_scroll_box",
-	BasicPickupMythicScrollBox:    "basic_content_list_pickup_mythic_scroll_box",
-}
-
 func GetMandatoryContentBasicScrollBoxValues() basicContentScrollBoxes {
-	return basicContentScrollBoxValues
+	return basicContentScrollBoxes{
+		BasicPickupScrollBox:          "basic_content_list_pickup_scroll_box",
+		BasicPickupEnchantedScrollBox: "basic_content_list_pickup_enchanted_scroll_box",
+		BasicPickupMythicScrollBox:    "basic_content_list_pickup_mythic_scroll_box",
+	}
 }
 
 type basicContentPandoraBoxes struct {

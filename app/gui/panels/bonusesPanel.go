@@ -67,6 +67,24 @@ func (this *BonusesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 	}
 }
 
+func (this *BonusesPanel) LoadFromState() {
+	settings := this.state.GetStateData()
+	this.bonuses = settings.Bonuses
+	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
+	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
+	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
+	this.syncRemoveButtons()
+}
+
+func (this *BonusesPanel) SaveToState() {
+	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
+		settings.Bonuses = this.bonuses
+		settings.BannedItems = strings.Join(this.bannedItems, "\n")
+		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
+		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")
+	})
+}
+
 // buildWidgets assembles the section list for the current frame; rebuilt every
 // frame so the rows stay in sync with the underlying entry slices.
 func (this *BonusesPanel) buildWidgets(theme *material.Theme) []layout.Widget {
@@ -256,24 +274,6 @@ func (this *BonusesPanel) syncRemoveButtons() {
 	this.itemRemoveBtns = resizeClickables(this.itemRemoveBtns, len(this.bannedItems))
 	this.magicRemoveBtns = resizeClickables(this.magicRemoveBtns, len(this.bannedMagics))
 	this.overrideRemoveBtns = resizeClickables(this.overrideRemoveBtns, len(this.valueOverrides))
-}
-
-func (this *BonusesPanel) LoadFromState() {
-	settings := this.state.GetStateData()
-	this.bonuses = settings.Bonuses
-	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
-	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
-	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
-	this.syncRemoveButtons()
-}
-
-func (this *BonusesPanel) SaveToState() {
-	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
-		settings.Bonuses = this.bonuses
-		settings.BannedItems = strings.Join(this.bannedItems, "\n")
-		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
-		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")
-	})
 }
 
 // ── display helpers ─────────────────────────────────────────────────────────

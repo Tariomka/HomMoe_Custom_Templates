@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,10 +15,10 @@ func TestWhenValueHasMoreDecimalsThanPrecision_RoundsToPrecision(t *testing.T) {
 	value := 1.23456
 
 	// Act
-	rounded := helpers.RoundWithPrecision(value, 2)
+	actual := helpers.RoundWithPrecision(value, 2)
 
 	// Assert
-	assert.Equal(t, 1.23, rounded)
+	assert.InDelta(t, 1.23, actual, test_helpers.Delta)
 }
 
 func TestWhenDecimalIsHalfway_RoundsAwayFromZero(t *testing.T) {
@@ -25,10 +26,10 @@ func TestWhenDecimalIsHalfway_RoundsAwayFromZero(t *testing.T) {
 	value := 0.125
 
 	// Act
-	rounded := helpers.RoundWithPrecision(value, 2)
+	actual := helpers.RoundWithPrecision(value, 2)
 
 	// Assert
-	assert.Equal(t, 0.13, rounded)
+	assert.InDelta(t, 0.13, actual, test_helpers.Delta)
 }
 
 func TestWhenPrecisionIsZero_RoundsToNearestInteger(t *testing.T) {
@@ -36,10 +37,10 @@ func TestWhenPrecisionIsZero_RoundsToNearestInteger(t *testing.T) {
 	value := gofakeit.Float64Range(-1000, 1000)
 
 	// Act
-	rounded := helpers.RoundWithPrecision(value, 0)
+	actual := helpers.RoundWithPrecision(value, 0)
 
 	// Assert
-	assert.Equal(t, stdmath.Round(value), rounded)
+	assert.InDelta(t, stdmath.Round(value), actual, test_helpers.Delta)
 }
 
 func TestWhenValueIsFuzzed_MatchesIndependentRoundingFormula(t *testing.T) {
@@ -50,10 +51,10 @@ func TestWhenValueIsFuzzed_MatchesIndependentRoundingFormula(t *testing.T) {
 	expected := stdmath.Round(value*multiplier) / multiplier
 
 	// Act
-	rounded := helpers.RoundWithPrecision(value, decimalPrecision)
+	actual := helpers.RoundWithPrecision(value, decimalPrecision)
 
 	// Assert
-	assert.Equal(t, expected, rounded)
+	assert.InDelta(t, expected, actual, test_helpers.Delta)
 }
 
 func TestWhenValueIsNegative_RoundsToPrecision(t *testing.T) {
@@ -61,8 +62,8 @@ func TestWhenValueIsNegative_RoundsToPrecision(t *testing.T) {
 	value := -2.71828
 
 	// Act
-	rounded := helpers.RoundWithPrecision(value, 3)
+	actual := helpers.RoundWithPrecision(value, 3)
 
 	// Assert
-	assert.Equal(t, -2.718, rounded)
+	assert.InDelta(t, -2.718, actual, test_helpers.Delta)
 }

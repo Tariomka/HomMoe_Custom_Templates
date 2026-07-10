@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,7 @@ func TestWhenQualityVaries_SelectsMatchingProfileGuardMultiplier(t *testing.T) {
 			profile := models.NewNeutralZoneProfile(quality)
 
 			// Assert
-			assert.InDelta(t, testCase.expectedMultiplier, profile.GuardMultiplier, helpers.Delta)
+			assert.InDelta(t, testCase.expectedMultiplier, profile.GuardMultiplier, test_helpers.Delta)
 		})
 	}
 }

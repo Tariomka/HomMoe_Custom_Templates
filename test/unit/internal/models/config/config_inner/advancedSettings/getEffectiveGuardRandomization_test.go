@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
-	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -64,7 +64,7 @@ func TestWhenRandomizationInputVaries_ReturnsEffectiveValue(t *testing.T) {
 			actual := testCase.settings.GetEffectiveGuardRandomization()
 
 			// Assert
-			assert.InDelta(t, testCase.expected, actual, helpers.Delta)
+			assert.InDelta(t, testCase.expected, actual, test_helpers.Delta)
 		})
 	}
 }

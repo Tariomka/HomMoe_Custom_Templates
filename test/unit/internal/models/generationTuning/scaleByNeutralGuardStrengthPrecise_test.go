@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,5 +21,5 @@ func TestWhenValueIsScaledPrecisely_RoundsToThreeDecimalPlaces(t *testing.T) {
 	actual := tuning.ScaleByNeutralGuardStrengthPrecise(value)
 
 	// Assert
-	assert.InDelta(t, expected, actual, helpers.Delta)
+	assert.InDelta(t, expected, actual, test_helpers.Delta)
 }

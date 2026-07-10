@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
-	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -90,5 +90,5 @@ func TestWhenAdvancedSettingsAreEnabled_UsesConfiguredGuardRandomization(t *test
 	tuning := models.NewGenerationTuning(configuration, 5)
 
 	// Assert
-	assert.InDelta(t, 0.2, tuning.GuardRandomization, helpers.Delta)
+	assert.InDelta(t, 0.2, tuning.GuardRandomization, test_helpers.Delta)
 }

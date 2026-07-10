@@ -10,7 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
-	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -57,7 +57,7 @@ func TestWhenDefaultConfigurationWithShuffleDisabled_ReturnsGoldenTemplate(t *te
 	configuration := config.NewGeneratorConfig()
 	configuration.ShufflePlayerZones = false // Deterministic player-zone ordering for a stable golden comparison.
 	generator := template_generator.NewTemplateGenerator(configuration)
-	expected := helpers.GetDefaultTemplate()
+	expected := test_helpers.GetDefaultTemplate()
 
 	// Act
 	actual := generator.Generate()

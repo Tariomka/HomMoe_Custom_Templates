@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
-	"github.com/Tariomka/hommoe_custom_templates/test/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +31,7 @@ func TestWhenValueIsRounded_HalvesGoAwayFromZero(t *testing.T) {
 			result := utils.RoundHalfAway(testCase.value)
 
 			// Assert
-			assert.InDelta(t, testCase.expected, result, helpers.Delta)
+			assert.InDelta(t, testCase.expected, result, test_helpers.Delta)
 		})
 	}
 }
