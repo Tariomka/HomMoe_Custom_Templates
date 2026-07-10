@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenMultipliedByScalar_ScalesBothComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Float64Range(-100, 100)
 	yComponent := gofakeit.Float64Range(-100, 100)
@@ -23,6 +24,7 @@ func TestWhenMultipliedByScalar_ScalesBothComponents(t *testing.T) {
 }
 
 func TestWhenMultipliedByZeroScalar_ReturnsZeroVector(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(gofakeit.Float64Range(-100, 100), gofakeit.Float64Range(-100, 100))
 

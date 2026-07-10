@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenVectorsMultipliedComponentWise_ReturnsComponentWiseProduct(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstX := gofakeit.Float64Range(-100, 100)
 	firstY := gofakeit.Float64Range(-100, 100)
@@ -25,6 +26,7 @@ func TestWhenVectorsMultipliedComponentWise_ReturnsComponentWiseProduct(t *testi
 }
 
 func TestWhenMultipliedByOnesVector_ReturnsReceiverUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Float64Range(-100, 100)
 	yComponent := gofakeit.Float64Range(-100, 100)

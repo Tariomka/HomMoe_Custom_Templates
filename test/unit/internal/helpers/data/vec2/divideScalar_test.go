@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenDividedByScalar_DividesBothComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Float64Range(-100, 100)
 	yComponent := gofakeit.Float64Range(-100, 100)
@@ -23,6 +24,7 @@ func TestWhenDividedByScalar_DividesBothComponents(t *testing.T) {
 }
 
 func TestWhenIntVectorDividedByScalar_TruncatesQuotients(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(9, 5)
 

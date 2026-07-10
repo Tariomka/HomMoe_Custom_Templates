@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenComponentsAreFuzzed_ReturnsDifferenceOfCrossComponentProducts(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstX := gofakeit.Float64Range(-100, 100)
 	firstY := gofakeit.Float64Range(-100, 100)
@@ -26,6 +27,7 @@ func TestWhenComponentsAreFuzzed_ReturnsDifferenceOfCrossComponentProducts(t *te
 }
 
 func TestWhenVectorsAreParallel_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Float64Range(1, 100)
 	yComponent := gofakeit.Float64Range(1, 100)

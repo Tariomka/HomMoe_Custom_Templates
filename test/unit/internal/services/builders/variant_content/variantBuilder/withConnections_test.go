@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenConnectionsAreProvidedTwice_AppendsAllConnectionsOnBuiltVariant(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstConnection := entities.Connection{Name: gofakeit.Word()}
 	secondConnection := entities.Connection{Name: gofakeit.Word()}

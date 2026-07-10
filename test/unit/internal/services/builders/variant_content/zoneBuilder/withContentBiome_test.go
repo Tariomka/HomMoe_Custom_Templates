@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenContentBiomeIsProvided_SetsOnlyContentBiomeOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedBiome := entities.TypedRef{Type: gofakeit.Word(), Args: []string{gofakeit.Word()}}
 	builder := variant_content.NewZoneBuilder()

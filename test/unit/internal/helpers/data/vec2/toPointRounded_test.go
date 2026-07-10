@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenFractionIsAboveHalf_RoundsComponentsUp(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(4.6, 2.7)
 
@@ -20,6 +21,7 @@ func TestWhenFractionIsAboveHalf_RoundsComponentsUp(t *testing.T) {
 }
 
 func TestWhenFractionIsBelowHalf_RoundsComponentsDown(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(4.4, 2.2)
 
@@ -31,6 +33,7 @@ func TestWhenFractionIsBelowHalf_RoundsComponentsDown(t *testing.T) {
 }
 
 func TestWhenFractionIsExactlyHalf_RoundsComponentsAwayFromZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(4.5, -2.5)
 

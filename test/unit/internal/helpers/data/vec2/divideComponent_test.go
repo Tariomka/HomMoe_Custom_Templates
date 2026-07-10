@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenVectorsDividedComponentWise_ReturnsComponentWiseQuotient(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstX := gofakeit.Float64Range(-100, 100)
 	firstY := gofakeit.Float64Range(-100, 100)
@@ -25,6 +26,7 @@ func TestWhenVectorsDividedComponentWise_ReturnsComponentWiseQuotient(t *testing
 }
 
 func TestWhenIntVectorDividedComponentWise_TruncatesQuotients(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstVector := data.NewVec2(7, 9)
 	secondVector := data.NewVec2(2, 4)

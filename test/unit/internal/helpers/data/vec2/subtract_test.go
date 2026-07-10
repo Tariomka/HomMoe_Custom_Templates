@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenVectorSubtracted_ReturnsComponentWiseDifference(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstX := gofakeit.Float64Range(-1000, 1000)
 	firstY := gofakeit.Float64Range(-1000, 1000)
@@ -25,6 +26,7 @@ func TestWhenVectorSubtracted_ReturnsComponentWiseDifference(t *testing.T) {
 }
 
 func TestWhenVectorSubtractedFromItself_ReturnsZeroVector(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(gofakeit.Float64Range(-1000, 1000), gofakeit.Float64Range(-1000, 1000))
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenTwoVectorsAdded_ReturnsComponentWiseSum(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstX := gofakeit.Float64Range(-1000, 1000)
 	firstY := gofakeit.Float64Range(-1000, 1000)
@@ -25,6 +26,7 @@ func TestWhenTwoVectorsAdded_ReturnsComponentWiseSum(t *testing.T) {
 }
 
 func TestWhenVectorAdded_DoesNotMutateReceiver(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstX := gofakeit.Float64Range(-1000, 1000)
 	firstY := gofakeit.Float64Range(-1000, 1000)

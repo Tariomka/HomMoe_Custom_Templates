@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenBuilderIsFreshlyCreated_ProducesEmptyZone(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	builder := variant_content.NewZoneBuilder()
 

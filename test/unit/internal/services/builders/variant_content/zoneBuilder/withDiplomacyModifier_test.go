@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenDiplomacyModifierIsProvided_SetsDiplomacyModifierOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedModifier := gofakeit.Float64Range(0.01, 5)
 	builder := variant_content.NewZoneBuilder()

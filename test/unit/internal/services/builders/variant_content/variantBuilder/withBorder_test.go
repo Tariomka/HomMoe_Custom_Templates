@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenBorderIsProvided_SetsBorderOnBuiltVariant(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedBorder := entities.Border{
 		CornerRadius:   gofakeit.Float64Range(0.01, 1),

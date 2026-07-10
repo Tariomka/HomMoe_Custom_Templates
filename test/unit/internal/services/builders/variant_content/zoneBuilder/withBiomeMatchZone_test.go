@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMatchZoneBiomeIsChosen_SetsAllThreeBiomesToMatchZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedArgument := gofakeit.Word()
 	expectedBiome := entities.TypedRef{Type: "MatchZone", Args: []string{expectedArgument}}

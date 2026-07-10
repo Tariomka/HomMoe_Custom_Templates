@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenComponentsAreFuzzed_ReturnsSumOfSquaredComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Float64Range(-100, 100)
 	yComponent := gofakeit.Float64Range(-100, 100)
@@ -23,6 +24,7 @@ func TestWhenComponentsAreFuzzed_ReturnsSumOfSquaredComponents(t *testing.T) {
 }
 
 func TestWhenVectorIsZero_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(0.0, 0.0)
 

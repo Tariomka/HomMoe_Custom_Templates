@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenPointGiven_ReturnsFloatVectorWithConvertedComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xCoordinate := gofakeit.Number(-1000, 1000)
 	yCoordinate := gofakeit.Number(-1000, 1000)
@@ -23,6 +24,7 @@ func TestWhenPointGiven_ReturnsFloatVectorWithConvertedComponents(t *testing.T) 
 }
 
 func TestWhenPointGiven_ReturnsIntVectorWithSameComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xCoordinate := gofakeit.Number(-1000, 1000)
 	yCoordinate := gofakeit.Number(-1000, 1000)

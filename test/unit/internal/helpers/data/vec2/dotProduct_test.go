@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenComponentsAreFuzzed_ReturnsSumOfComponentProducts(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstX := gofakeit.Float64Range(-100, 100)
 	firstY := gofakeit.Float64Range(-100, 100)
@@ -26,6 +27,7 @@ func TestWhenComponentsAreFuzzed_ReturnsSumOfComponentProducts(t *testing.T) {
 }
 
 func TestWhenVectorsArePerpendicular_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	component := gofakeit.Float64Range(1, 100)
 	firstVector := data.NewVec2(component, 0.0)

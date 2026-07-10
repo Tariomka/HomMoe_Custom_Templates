@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsZoneWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.Word()
 	expectedSize := gofakeit.Float64Range(0.1, 10)

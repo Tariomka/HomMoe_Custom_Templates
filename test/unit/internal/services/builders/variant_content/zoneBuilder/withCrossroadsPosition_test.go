@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenCrossroadsPositionIsProvided_SetsCrossroadsPositionPointerOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedPosition := gofakeit.Number(0, 10)
 	builder := variant_content.NewZoneBuilder()

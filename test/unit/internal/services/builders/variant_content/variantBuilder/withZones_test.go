@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenZonesAreProvidedTwice_AppendsAllZonesOnBuiltVariant(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstZone := entities.Zone{Name: gofakeit.Word()}
 	secondZone := entities.Zone{Name: gofakeit.Word()}

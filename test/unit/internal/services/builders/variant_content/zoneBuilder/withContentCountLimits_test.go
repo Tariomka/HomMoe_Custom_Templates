@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenContentCountLimitsAreProvided_SetsContentCountLimitsOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedLimits := []string{gofakeit.Word(), gofakeit.Word()}
 	builder := variant_content.NewZoneBuilder()

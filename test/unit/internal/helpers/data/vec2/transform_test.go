@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenFloatVectorTransformedToInt_TruncatesComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	vector := data.NewVec2(7.9, -3.2)
 
@@ -20,6 +21,7 @@ func TestWhenFloatVectorTransformedToInt_TruncatesComponents(t *testing.T) {
 }
 
 func TestWhenIntVectorTransformedToFloat_KeepsComponentValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Number(-1000, 1000)
 	yComponent := gofakeit.Number(-1000, 1000)

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenEncounterHolesSettingsAreProvided_SetsEncounterHolesSettingsPointerOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSettings := entities.EncounterHolesSettings{
 		AffectedEncounters: gofakeit.Float64Range(0.01, 1),

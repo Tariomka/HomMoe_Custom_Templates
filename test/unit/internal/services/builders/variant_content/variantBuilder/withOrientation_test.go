@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenOrientationIsProvided_SetsOrientationOnBuiltVariant(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedOrientation := entities.Orientation{
 		Mode:          gofakeit.Word(),
