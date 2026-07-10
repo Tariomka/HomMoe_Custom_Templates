@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenZeroAngleZoneIsProvided_SetsZeroAngleZoneOnBuiltOrientation(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedZone := gofakeit.Word()
 	builder := variant_content.NewOrientationBuilder()

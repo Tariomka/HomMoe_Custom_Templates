@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenAllFieldsAreEmpty_SerializesToEmptyObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := models.ContentRuleRowSave{}
 
@@ -22,6 +23,7 @@ func TestWhenAllFieldsAreEmpty_SerializesToEmptyObject(t *testing.T) {
 }
 
 func TestWhenOnlyNameAndDistanceAreSet_SerializesOnlyThoseFields(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Far"}
 
@@ -34,6 +36,7 @@ func TestWhenOnlyNameAndDistanceAreSet_SerializesOnlyThoseFields(t *testing.T) {
 }
 
 func TestWhenPointerFieldIsSetToFalse_StillSerializesField(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := models.ContentRuleRowSave{Name: "Guarded", IsGuarded: new(false)}
 
@@ -46,13 +49,14 @@ func TestWhenPointerFieldIsSetToFalse_StillSerializesField(t *testing.T) {
 }
 
 func TestWhenSerializedRuleIsDeserialized_RoundTripsAllFields(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	original := models.ContentRuleRowSave{
 		Name:            "Variant",
 		DistanceName:    "Near",
 		IsGuarded:       new(true),
 		IsSoloEncounter: new(false),
-		VariantId:       new(3),
+		VariantID:       new(3),
 	}
 	data, err := json.Marshal(original)
 	require.NoError(t, err)

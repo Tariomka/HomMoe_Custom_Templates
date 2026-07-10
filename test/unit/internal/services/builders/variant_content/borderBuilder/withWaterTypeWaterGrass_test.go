@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenWaterGrassTypeIsChosen_SetsWaterGrassTypeOnBuiltBorder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewBorderBuilder()
 

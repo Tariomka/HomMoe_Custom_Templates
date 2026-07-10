@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRandomAngleAmplitudeIsProvided_SetsRandomAngleAmplitudeOnBuiltOrientation(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedAmplitude := gofakeit.Number(1, 180)
 	builder := variant_content.NewOrientationBuilder()

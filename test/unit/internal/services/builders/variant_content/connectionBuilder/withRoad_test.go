@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRoadFlagIsProvided_SetsRoadPointerOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedRoad := gofakeit.Bool()
 	builder := variant_content.NewConnectionBuilder()

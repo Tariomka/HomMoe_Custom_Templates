@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenDistanceIsFar_ShowsRuleNameWithDistanceName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	distance := content_rules.DistanceFar
 	rule := content_rules.NewRuleDistanceToRoad(&distance)

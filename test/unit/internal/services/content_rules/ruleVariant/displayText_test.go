@@ -9,9 +9,10 @@ import (
 )
 
 func TestWhenVariantIdIsKnown_ShowsVariantDescription(t *testing.T) {
+	t.Parallel()
 	// Arrange
-	variantId := 2
-	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantId)
+	variantID := 2
+	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
 	require.NoError(t, err)
 
 	// Act
@@ -24,6 +25,7 @@ func TestWhenVariantIdIsKnown_ShowsVariantDescription(t *testing.T) {
 // The error branch is only reachable by constructing the rule directly with a
 // mismatched id, since the constructor validates the id against the mapping.
 func TestWhenVariantIdIsUnknown_ShowsUnforeseenError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.RuleVariant{Mapping: content_rules.UtopiaVariants, VariantID: 99}
 

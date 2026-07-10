@@ -17,7 +17,7 @@ func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
 		Rules: []models.ContentRuleRowSave{
 			{Name: "Guarded", IsGuarded: new(true)},
 			{Name: "Distance to road", DistanceName: "Far"},
-			{Name: "Variant", VariantId: new(1)},
+			{Name: "Variant", VariantID: new(1)},
 		},
 	}
 	data, err := json.Marshal(original)

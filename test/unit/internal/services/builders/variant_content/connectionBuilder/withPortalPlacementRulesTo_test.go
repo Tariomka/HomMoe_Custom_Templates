@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenToPortalRulesAreProvidedTwice_AppendsAllToRulesOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstRule := entities.PlacementRule{Type: "Road", Weight: gofakeit.Number(1, 100)}
 	secondRule := entities.PlacementRule{Type: "Crossroads", Weight: gofakeit.Number(1, 100)}

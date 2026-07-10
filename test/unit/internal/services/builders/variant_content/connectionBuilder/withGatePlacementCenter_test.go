@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenCenterGatePlacementIsChosen_SetsCenterGatePlacementOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewConnectionBuilder()
 

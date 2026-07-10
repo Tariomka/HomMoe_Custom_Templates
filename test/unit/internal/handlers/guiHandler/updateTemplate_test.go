@@ -1,6 +1,7 @@
 package guiHandler_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestWhenTemplateIsNil_ReturnsProvidedTemplateInvalidError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	templateDto := dtos.TemplateUpdateDto{Template: nil}
@@ -26,6 +28,7 @@ func TestWhenTemplateIsNil_ReturnsProvidedTemplateInvalidError(t *testing.T) {
 }
 
 func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	templateDto := dtos.TemplateUpdateDto{
@@ -40,6 +43,7 @@ func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testin
 }
 
 func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	template := generateDefaultTemplate(t, handler)
@@ -57,10 +61,12 @@ func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.
 }
 
 func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	template := generateDefaultTemplate(t, handler)
-	brokenConnections := append(template.Variants[0].Connections, entities.Connection{
+	brokenConnections := slices.Clone(template.Variants[0].Connections)
+	brokenConnections = append(brokenConnections, entities.Connection{
 		Name: gofakeit.ProductName(),
 		From: "No-Such-Zone",
 		To:   "Another-Missing-Zone",
@@ -79,6 +85,7 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 }
 
 func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	template := generateDefaultTemplate(t, handler)
@@ -97,6 +104,7 @@ func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testin
 }
 
 func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	template := generateDefaultTemplate(t, handler)
@@ -116,6 +124,7 @@ func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
 }
 
 func TestWhenConfigIsProvided_MandatoryContentIsRebuiltFromZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	template := generateDefaultTemplate(t, handler)
@@ -137,6 +146,7 @@ func TestWhenConfigIsProvided_MandatoryContentIsRebuiltFromZones(t *testing.T) {
 }
 
 func TestWhenConfigIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	template := generateDefaultTemplate(t, handler)

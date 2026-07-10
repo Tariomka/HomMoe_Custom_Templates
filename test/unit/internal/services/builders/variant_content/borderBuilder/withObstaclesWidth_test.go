@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenObstaclesWidthIsProvided_SetsObstaclesWidthOnBuiltBorder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedWidth := gofakeit.Number(1, 20)
 	builder := variant_content.NewBorderBuilder()

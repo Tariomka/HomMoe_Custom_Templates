@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenRuleIsApplied_AppendsRoadPlacementRuleWithDistanceBounds(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	distance := content_rules.DistanceNear
 	rule := content_rules.NewRuleDistanceToRoad(&distance)
@@ -24,6 +25,7 @@ func TestWhenRuleIsApplied_AppendsRoadPlacementRuleWithDistanceBounds(t *testing
 }
 
 func TestWhenItemAlreadyHasRules_AppendsAfterExisting(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleDistanceToRoad(nil)
 	item := entities.MandatoryContentItem{

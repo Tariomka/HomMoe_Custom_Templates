@@ -64,7 +64,7 @@ func (this *RuleVariant) SerializeToRowSave() models.ContentRuleRowSave {
 	id := this.VariantID
 	return models.ContentRuleRowSave{
 		Name:      this.Name(),
-		VariantId: &id,
+		VariantID: &id,
 	}
 }
 

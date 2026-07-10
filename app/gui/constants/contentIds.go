@@ -128,8 +128,8 @@ type contentIDs struct {
 	WiseOwl             models.SidMapping
 }
 
-// ContentIds enumerates every world-object SID known to the editor.
-var ContentIds = func() contentIDs {
+// ContentIDs enumerates every world-object SID known to the editor.
+var ContentIDs = func() contentIDs {
 	interactableObjects := registry.GetMapObjectAllInteractableValues()
 	randomItemObjects := registry.GetMapObjectRandomItemValues()
 	resourceObjects := registry.GetMapObjectResourceValues()

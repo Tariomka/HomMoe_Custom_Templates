@@ -369,7 +369,7 @@ linters:
       - path: '_test\.go'
         linters: [ "bodyclose", "dupl", "errcheck", "funlen", "goconst", "gosec", "noctx", "wrapcheck" ]
 
-      - path: '(app/gui/themes|internal/registry|internal/services/content_rules)/'
+      - path: '(app/gui/themes|app/gui/constants|internal/registry|internal/services/content_rules)/'
         linters: [ dupl ]
 
 severity:

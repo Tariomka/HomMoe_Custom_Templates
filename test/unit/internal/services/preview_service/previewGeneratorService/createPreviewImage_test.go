@@ -38,6 +38,7 @@ func ringTemplate() *entities.RmgTemplate {
 }
 
 func TestWhenTemplateIsRendered_ReturnsFullSizeCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
 
@@ -49,6 +50,7 @@ func TestWhenTemplateIsRendered_ReturnsFullSizeCanvas(t *testing.T) {
 }
 
 func TestWhenTemplateIsNil_ReturnsBackgroundOnlyCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
 	backgroundOnly := generator.CreatePreviewImage(&entities.RmgTemplate{}, config.TopologyRing)
@@ -61,6 +63,7 @@ func TestWhenTemplateIsNil_ReturnsBackgroundOnlyCanvas(t *testing.T) {
 }
 
 func TestWhenTemplateHasZones_DrawsThemOverTheBackground(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
 	backgroundOnly := generator.CreatePreviewImage(&entities.RmgTemplate{}, config.TopologyRing)
@@ -73,6 +76,7 @@ func TestWhenTemplateHasZones_DrawsThemOverTheBackground(t *testing.T) {
 }
 
 func TestWhenTemplateHasConnections_DrawsLinesBetweenZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
 	disconnectedTemplate := ringTemplate()
@@ -87,6 +91,7 @@ func TestWhenTemplateHasConnections_DrawsLinesBetweenZones(t *testing.T) {
 }
 
 func TestWhenConnectionIsPortal_DrawsDashedLineDifferentFromSolid(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
 	solidTemplate := ringTemplate()
@@ -104,6 +109,7 @@ func TestWhenConnectionIsPortal_DrawsDashedLineDifferentFromSolid(t *testing.T) 
 }
 
 func TestWhenSameTemplateIsRenderedTwice_ProducesIdenticalImages(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
 	firstRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenMarkerIsQueried_ReturnsR(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleDistanceToRoad(nil)
 

@@ -17,6 +17,7 @@ func newPreviewImage() *image.RGBA {
 }
 
 func TestWhenPreviewNameContainsSlash_ReturnsPathWithSanitizedName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 
@@ -29,6 +30,7 @@ func TestWhenPreviewNameContainsSlash_ReturnsPathWithSanitizedName(t *testing.T)
 }
 
 func TestWhenPreviewIsWritten_CreatesNonEmptyFile(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "Preview")
@@ -43,6 +45,7 @@ func TestWhenPreviewIsWritten_CreatesNonEmptyFile(t *testing.T) {
 }
 
 func TestWhenPreviewIsSaved_WritesDecodablePng(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	writtenPath, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "Preview")
@@ -59,6 +62,7 @@ func TestWhenPreviewIsSaved_WritesDecodablePng(t *testing.T) {
 }
 
 func TestWhenPreviewNameIsEmpty_FallsBackToGeneratedTemplateFileName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 
@@ -71,6 +75,7 @@ func TestWhenPreviewNameIsEmpty_FallsBackToGeneratedTemplateFileName(t *testing.
 }
 
 func TestWhenPreviewDirectoryIsMissing_CreatesIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := filepath.Join(t.TempDir(), "nested", "preview")
 
@@ -83,6 +88,7 @@ func TestWhenPreviewDirectoryIsMissing_CreatesIt(t *testing.T) {
 }
 
 func TestWhenPreviewParentPathIsAFile_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	blockerPath := filepath.Join(t.TempDir(), "blocker")
 	require.NoError(t, os.WriteFile(blockerPath, []byte("x"), 0o644))
@@ -96,9 +102,10 @@ func TestWhenPreviewParentPathIsAFile_ReturnsError(t *testing.T) {
 }
 
 func TestWhenPreviewTargetPathIsADirectory_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
-	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.png"), 0o755))
+	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.png"), 0o750))
 
 	// Act
 	_, err := file_service.NewFileService().SavePreviewImage(outputDir, newPreviewImage(), "T")

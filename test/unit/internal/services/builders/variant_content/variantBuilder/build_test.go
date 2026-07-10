@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsVariantWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedOrientation := entities.Orientation{Mode: gofakeit.Word()}
 	expectedBorder := entities.Border{CornerRadius: gofakeit.Float64Range(0.01, 1)}

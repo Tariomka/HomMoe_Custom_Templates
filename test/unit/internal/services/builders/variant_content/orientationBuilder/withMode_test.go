@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenModeIsProvided_SetsModeOnBuiltOrientation(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedMode := gofakeit.Word()
 	builder := variant_content.NewOrientationBuilder()

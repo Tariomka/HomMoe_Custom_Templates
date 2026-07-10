@@ -27,6 +27,7 @@ func allGeneratorTopologies() []config.MapTopology {
 }
 
 func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlannedZone(t *testing.T) {
+	t.Parallel()
 	for _, topology := range allGeneratorTopologies() {
 		for _, playerCount := range []int{2, 3, 4, 8} {
 			for _, neutralZoneCount := range []int{0, 1, 4} {
@@ -34,6 +35,7 @@ func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlan
 					"When%sTopologyWith%dPlayersAnd%dNeutrals_CreatesZoneForEveryPlannedZone",
 					topology, playerCount, neutralZoneCount)
 				t.Run(subtestName, func(t *testing.T) {
+					t.Parallel()
 					// Arrange
 					configuration := config.NewGeneratorConfig()
 					configuration.Topology = topology
@@ -53,9 +55,11 @@ func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlan
 }
 
 func TestWhenAnyTopologySelected_EveryZoneHasAllRequiredFields(t *testing.T) {
+	t.Parallel()
 	for _, topology := range allGeneratorTopologies() {
 		subtestName := fmt.Sprintf("When%sTopologySelected_EveryZoneHasAllRequiredFields", topology)
 		t.Run(subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			configuration := config.NewGeneratorConfig()
 			configuration.Topology = topology
@@ -97,9 +101,11 @@ func TestWhenAnyTopologySelected_EveryZoneHasAllRequiredFields(t *testing.T) {
 }
 
 func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	for _, topology := range allGeneratorTopologies() {
 		subtestName := fmt.Sprintf("When%sTopologySelected_EveryConnectionReferencesExistingZones", topology)
 		t.Run(subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			configuration := config.NewGeneratorConfig()
 			configuration.Topology = topology

@@ -14,6 +14,7 @@ import (
 )
 
 func TestWhenTemplateNameContainsSlash_ReturnsPathWithSanitizedName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	rmgTemplate := &entities.RmgTemplate{Name: "My/Template"}
@@ -27,6 +28,7 @@ func TestWhenTemplateNameContainsSlash_ReturnsPathWithSanitizedName(t *testing.T
 }
 
 func TestWhenTemplateIsSaved_CreatesFileOnDisk(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	rmgTemplate := &entities.RmgTemplate{Name: "Plain"}
@@ -40,6 +42,7 @@ func TestWhenTemplateIsSaved_CreatesFileOnDisk(t *testing.T) {
 }
 
 func TestWhenTemplateNameIsEmpty_FallsBackToGeneratedTemplateFileName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	rmgTemplate := &entities.RmgTemplate{Name: ""}
@@ -53,6 +56,7 @@ func TestWhenTemplateNameIsEmpty_FallsBackToGeneratedTemplateFileName(t *testing
 }
 
 func TestWhenTemplateNameIsOnlyWhitespace_FallsBackToGeneratedTemplateFileName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	rmgTemplate := &entities.RmgTemplate{Name: "   "}
@@ -66,6 +70,7 @@ func TestWhenTemplateNameIsOnlyWhitespace_FallsBackToGeneratedTemplateFileName(t
 }
 
 func TestWhenTemplateDirectoryIsMissing_CreatesIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := filepath.Join(t.TempDir(), "a", "b", "c")
 	rmgTemplate := &entities.RmgTemplate{Name: "T"}
@@ -79,6 +84,7 @@ func TestWhenTemplateDirectoryIsMissing_CreatesIt(t *testing.T) {
 }
 
 func TestWhenTemplateIsSaved_ProducesIndentedJson(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	rmgTemplate := &entities.RmgTemplate{Name: "T", SizeX: 10}
@@ -94,6 +100,7 @@ func TestWhenTemplateIsSaved_ProducesIndentedJson(t *testing.T) {
 }
 
 func TestWhenWrittenFileIsRead_ParsesBackIntoTemplate(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	rmgTemplate := &entities.RmgTemplate{Name: "T", SizeX: 10}
@@ -112,6 +119,7 @@ func TestWhenWrittenFileIsRead_ParsesBackIntoTemplate(t *testing.T) {
 }
 
 func TestWhenTemplateContainsNaNValue_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	rmgTemplate := &entities.RmgTemplate{
@@ -129,6 +137,7 @@ func TestWhenTemplateContainsNaNValue_ReturnsError(t *testing.T) {
 }
 
 func TestWhenTemplateParentPathIsAFile_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	blockerPath := filepath.Join(t.TempDir(), "blocker")
 	require.NoError(t, os.WriteFile(blockerPath, []byte("x"), 0o644))
@@ -143,6 +152,7 @@ func TestWhenTemplateParentPathIsAFile_ReturnsError(t *testing.T) {
 }
 
 func TestWhenTargetPathIsOccupiedByDirectory_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
 	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.rmg.json"), 0o755))

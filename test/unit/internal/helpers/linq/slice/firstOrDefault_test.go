@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenMultipleElementsMatch_ReturnsFirstMatchingElement(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{1, 4, 6, 8}
 	isEven := func(number int) bool { return number%2 == 0 }
@@ -21,9 +22,10 @@ func TestWhenMultipleElementsMatch_ReturnsFirstMatchingElement(t *testing.T) {
 }
 
 func TestWhenNoElementMatches_ReturnsZeroValue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []string{gofakeit.Word(), gofakeit.Word()}
-	matchesNothing := func(word string) bool { return false }
+	matchesNothing := func(string) bool { return false }
 
 	// Act
 	found := linq.FromSlice(source).FirstOrDefault(matchesNothing)
@@ -33,9 +35,10 @@ func TestWhenNoElementMatches_ReturnsZeroValue(t *testing.T) {
 }
 
 func TestWhenSourceIsEmpty_ReturnsZeroValue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{}
-	matchesEverything := func(number int) bool { return true }
+	matchesEverything := func(int) bool { return true }
 
 	// Act
 	found := linq.FromSlice(source).FirstOrDefault(matchesEverything)

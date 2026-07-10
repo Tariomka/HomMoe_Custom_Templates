@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardMatchGroupIsProvided_SetsGuardMatchGroupOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedGroup := gofakeit.Word()
 	builder := variant_content.NewConnectionBuilder()

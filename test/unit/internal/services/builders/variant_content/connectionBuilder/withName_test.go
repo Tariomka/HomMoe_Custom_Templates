@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNameIsProvided_SetsNameOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.Word()
 	builder := variant_content.NewConnectionBuilder()

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenProximityTypeIsChosen_SetsProximityConnectionTypeOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewConnectionBuilder()
 

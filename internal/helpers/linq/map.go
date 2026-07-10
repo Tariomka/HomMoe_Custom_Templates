@@ -54,7 +54,7 @@ func (this QueryMap[TKey, TValue]) Where(predicate PredicateMap[TKey, TValue]) Q
 func (this QueryMap[TKey, TValue]) SelectKeys() Query[TKey] {
 	return Query[TKey]{
 		Iterate: func(yield Predicate[TKey]) {
-			this.Iterate(func(key TKey, value TValue) bool {
+			this.Iterate(func(key TKey, _ TValue) bool {
 				return yield(key)
 			})
 		},
@@ -64,7 +64,7 @@ func (this QueryMap[TKey, TValue]) SelectKeys() Query[TKey] {
 func (this QueryMap[TKey, TValue]) SelectValues() Query[TValue] {
 	return Query[TValue]{
 		Iterate: func(yield Predicate[TValue]) {
-			this.Iterate(func(key TKey, value TValue) bool {
+			this.Iterate(func(_ TKey, value TValue) bool {
 				return yield(value)
 			})
 		},

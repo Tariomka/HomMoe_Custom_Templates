@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -28,6 +29,7 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesZonePerLabel(t *testing
 }
 
 func TestWhenRingIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -46,6 +48,7 @@ func TestWhenRingIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 }
 
 func TestWhenFourLabelsFormTheRing_CreatesRingConnectionPerAdjacentPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -64,6 +67,7 @@ func TestWhenFourLabelsFormTheRing_CreatesRingConnectionPerAdjacentPair(t *testi
 }
 
 func TestWhenSinglePlayerHasNoNeutralZones_CreatesNoConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -81,6 +85,7 @@ func TestWhenSinglePlayerHasNoNeutralZones_CreatesNoConnections(t *testing.T) {
 }
 
 func TestWhenPlayerConnectionsAreForbidden_NoRingConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -99,6 +104,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRingConnectionJoinsTwoSpawnZones(t 
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing

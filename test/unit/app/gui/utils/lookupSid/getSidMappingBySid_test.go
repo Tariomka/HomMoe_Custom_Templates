@@ -13,7 +13,7 @@ import (
 
 func TestWhenSidMatches_MappingIsReturned(t *testing.T) {
 	// Arrange
-	expected := constants.ContentIds.DragonUtopia
+	expected := constants.ContentIDs.DragonUtopia
 
 	// Act
 	mapping, _ := utils.GetSidMappingBySid(expected.Sid)
@@ -24,7 +24,7 @@ func TestWhenSidMatches_MappingIsReturned(t *testing.T) {
 
 func TestWhenSidMatches_LookupReportsFound(t *testing.T) {
 	// Arrange
-	sid := constants.ContentIds.DragonUtopia.Sid
+	sid := constants.ContentIDs.DragonUtopia.Sid
 
 	// Act
 	_, found := utils.GetSidMappingBySid(sid)
@@ -46,7 +46,7 @@ func TestWhenSidBelongsToIncludeList_MappingIsReturned(t *testing.T) {
 
 func TestWhenSidCaseDiffers_LookupReportsNotFound(t *testing.T) {
 	// Arrange - sid comparison is case-sensitive, unlike the name lookup
-	upperCasedSid := strings.ToUpper(constants.ContentIds.DragonUtopia.Sid)
+	upperCasedSid := strings.ToUpper(constants.ContentIDs.DragonUtopia.Sid)
 
 	// Act
 	_, found := utils.GetSidMappingBySid(upperCasedSid)

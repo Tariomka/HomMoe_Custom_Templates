@@ -34,7 +34,7 @@ func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 		{"WhenRuleIsGuarded_RoundTrips", content_rules.NewRuleGuarded(true), models.SidMapping{Sid: "x"}},
 		{"WhenRuleIsUnguarded_RoundTrips", content_rules.NewRuleGuarded(false), models.SidMapping{Sid: "x"}},
 		{"WhenRuleIsSoloEncounter_RoundTrips", content_rules.NewRuleSoloEncounter(true), models.SidMapping{Sid: "x"}},
-		{"WhenRuleIsVariant_RoundTrips", utopiaVariantRule, constants.ContentIds.DragonUtopia},
+		{"WhenRuleIsVariant_RoundTrips", utopiaVariantRule, constants.ContentIDs.DragonUtopia},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -88,7 +88,7 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 		},
 		{
 			"WhenVariantIdIsNotDefinedForContent_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Variant", VariantId: &invalidVariantID},
+			models.ContentRuleRowSave{Name: "Variant", VariantID: &invalidVariantID},
 		},
 	}
 	for _, testCase := range testCases {
@@ -97,7 +97,7 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 			// Arrange
 
 			// Act
-			restored := content_rules.CreateRuleFromSavedRule(testCase.saved, constants.ContentIds.DragonUtopia)
+			restored := content_rules.CreateRuleFromSavedRule(testCase.saved, constants.ContentIDs.DragonUtopia)
 
 			// Assert
 			assert.Nil(t, restored)
@@ -107,7 +107,7 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 	t.Run("WhenContentHasNoVariants_ReturnsNil", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		saved := models.ContentRuleRowSave{Name: "Variant", VariantId: &someVariantID}
+		saved := models.ContentRuleRowSave{Name: "Variant", VariantID: &someVariantID}
 
 		// Act
 		restored := content_rules.CreateRuleFromSavedRule(saved, models.SidMapping{Sid: "x"})

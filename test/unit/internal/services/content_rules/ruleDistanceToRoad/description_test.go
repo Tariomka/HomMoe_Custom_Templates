@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenDescriptionIsQueried_ExplainsRoadDistance(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleDistanceToRoad(nil)
 

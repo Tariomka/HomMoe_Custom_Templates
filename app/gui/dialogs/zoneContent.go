@@ -252,11 +252,11 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 // with the chosen variant's description appended when a Variant rule applies.
 func rowDisplayName(row *zoneContentRow) string {
 	for _, saved := range row.rules {
-		if saved.VariantId == nil || !strings.EqualFold(saved.Name, content_rules.RuleVariantName) {
+		if saved.VariantID == nil || !strings.EqualFold(saved.Name, content_rules.RuleVariantName) {
 			continue
 		}
 		for _, variant := range content_rules.GetVariantsForContent(row.Mapping) {
-			if description, ok := variant.Variants[*saved.VariantId]; ok {
+			if description, ok := variant.Variants[*saved.VariantID]; ok {
 				return row.Mapping.Name + " (" + description + ")"
 			}
 		}

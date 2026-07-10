@@ -60,7 +60,7 @@ var bonusResourceDefaults = map[config.BonusPresetType]string{
 // picker (via opener). Implements widgets.Dialog.
 type BonusPickerDialog struct {
 	existingKeys     map[string]bool
-	existingSpellIds []string
+	existingSpellIDs []string
 	opener           interfaces.DialogOpener
 	onApply          func(entries []config.BonusEntry)
 
@@ -97,11 +97,11 @@ func NewBonusPickerDialog(
 	opener interfaces.DialogOpener,
 	onApply func(entries []config.BonusEntry)) *BonusPickerDialog {
 	keys := make(map[string]bool, len(existing))
-	var spellIds []string
+	var spellIDs []string
 	for _, entry := range existing {
 		keys[entry.GetHash()] = true
 		if entry.PresetType == config.BonusSpell && entry.Param != "" {
-			spellIds = append(spellIds, entry.Param)
+			spellIDs = append(spellIDs, entry.Param)
 		}
 	}
 
@@ -112,7 +112,7 @@ func NewBonusPickerDialog(
 
 	dialog := &BonusPickerDialog{
 		existingKeys:     keys,
-		existingSpellIds: spellIds,
+		existingSpellIDs: spellIDs,
 		opener:           opener,
 		onApply:          onApply,
 		typeDropdown:     components.NewDropdownSelector(labels),
@@ -284,7 +284,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	}
 
 	if this.pickSpellBtn.Clicked(gtx) {
-		excluded := append(append([]string{}, this.existingSpellIds...), this.selectedSpells...)
+		excluded := append(append([]string{}, this.existingSpellIDs...), this.selectedSpells...)
 		this.opener(NewSpellPickerDialog(excluded, false, func(ids []string, _ bool) {
 			// Append to (never overwrite) the current selection.
 			for _, id := range ids {

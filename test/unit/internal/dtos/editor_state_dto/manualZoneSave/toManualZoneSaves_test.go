@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneListIsEmpty_ReturnsNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	var zones []entities.Zone
 
@@ -20,6 +21,7 @@ func TestWhenZoneListIsEmpty_ReturnsNil(t *testing.T) {
 }
 
 func TestWhenZonesHaveManualPositions_PreservesEachPositionInSave(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstPosition := &[2]float64{0.25, 0.75}
 	secondPosition := &[2]float64{0.5, 0.5}
@@ -40,6 +42,7 @@ func TestWhenZonesHaveManualPositions_PreservesEachPositionInSave(t *testing.T) 
 }
 
 func TestWhenZoneHasNoManualPosition_SavesNilPosition(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{{Name: "Zone A"}}
 

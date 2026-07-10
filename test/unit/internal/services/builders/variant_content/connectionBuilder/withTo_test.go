@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenToZoneIsProvided_SetsToOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedTo := gofakeit.Word()
 	builder := variant_content.NewConnectionBuilder()

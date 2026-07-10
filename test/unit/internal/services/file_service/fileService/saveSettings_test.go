@@ -14,6 +14,7 @@ import (
 )
 
 func TestWhenStateIsSaved_WritesIndentedJson(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	settingsPath := filepath.Join(t.TempDir(), "out.gen.json")
 	state := dtos.NewDefaultEditorStateDto()
@@ -29,6 +30,7 @@ func TestWhenStateIsSaved_WritesIndentedJson(t *testing.T) {
 }
 
 func TestWhenSavedStateIsLoaded_RoundTripsState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	settingsPath := filepath.Join(t.TempDir(), "roundtrip.gen.json")
 	service := file_service.NewFileService()
@@ -46,6 +48,7 @@ func TestWhenSavedStateIsLoaded_RoundTripsState(t *testing.T) {
 }
 
 func TestWhenSettingsDirectoryDoesNotExist_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	missingDirPath := filepath.Join(t.TempDir(), "missing_dir", "x.gen.json")
 	state := dtos.NewDefaultEditorStateDto()
@@ -58,6 +61,7 @@ func TestWhenSettingsDirectoryDoesNotExist_ReturnsError(t *testing.T) {
 }
 
 func TestWhenStateContainsNaNValue_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	settingsPath := filepath.Join(t.TempDir(), "nan.gen.json")
 	state := dtos.NewDefaultEditorStateDto()

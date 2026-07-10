@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenWaterNoiseIsProvided_SetsSingleWaterNoiseOnBuiltBorder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedAmplitude := gofakeit.Float64Range(0.01, 5)
 	expectedFrequency := gofakeit.Number(1, 20)

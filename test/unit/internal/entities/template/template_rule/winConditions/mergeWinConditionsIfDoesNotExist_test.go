@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenDestinationIsEmpty_CopiesEverySourceField(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	destination := template_rule.WinConditions{}
 	source := template_rule.WinConditions{Classic: true, CityHold: true, CityHoldDays: 9}
@@ -20,6 +21,7 @@ func TestWhenDestinationIsEmpty_CopiesEverySourceField(t *testing.T) {
 }
 
 func TestWhenDestinationFieldIsSet_KeepsDestinationValue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	destination := template_rule.WinConditions{CityHoldDays: 6}
 	source := template_rule.WinConditions{CityHoldDays: 9}
@@ -32,6 +34,7 @@ func TestWhenDestinationFieldIsSet_KeepsDestinationValue(t *testing.T) {
 }
 
 func TestWhenSourceIsEmpty_LeavesDestinationUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	destination := template_rule.WinConditions{Classic: true, DesertionDay: 3}
 	expected := destination
@@ -44,6 +47,7 @@ func TestWhenSourceIsEmpty_LeavesDestinationUnchanged(t *testing.T) {
 }
 
 func TestWhenFieldsOverlapPartially_FillsOnlyMissingFields(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	destination := template_rule.WinConditions{CityHoldDays: 6}
 	source := template_rule.WinConditions{CityHoldDays: 9, Desertion: true, DesertionDay: 3}
@@ -57,6 +61,7 @@ func TestWhenFieldsOverlapPartially_FillsOnlyMissingFields(t *testing.T) {
 }
 
 func TestWhenSourceHasTournamentDaySlices_CopiesSlices(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	destination := template_rule.WinConditions{}
 	source := template_rule.WinConditions{
@@ -73,6 +78,7 @@ func TestWhenSourceHasTournamentDaySlices_CopiesSlices(t *testing.T) {
 }
 
 func TestWhenSourceHasOnlyFieldsPresentInDestination_LeavesDestinationUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange - every source key already exists in destination, so nothing changes.
 	destination := template_rule.WinConditions{Classic: true, CityHoldDays: 6}
 	expected := destination

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMappingIsNil_DefaultsToUtopiaMapping(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -21,6 +22,7 @@ func TestWhenMappingIsNil_DefaultsToUtopiaMapping(t *testing.T) {
 }
 
 func TestWhenVariantIdIsNil_UsesSmallestDefinedId(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapping := models.NewVariantMapping(models.SidMapping{Sid: "x"}, map[int]string{
 		5: "Five",
@@ -37,11 +39,12 @@ func TestWhenVariantIdIsNil_UsesSmallestDefinedId(t *testing.T) {
 }
 
 func TestWhenVariantIdIsSupplied_StoresIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
-	variantId := 2
+	variantID := 2
 
 	// Act
-	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantId)
+	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
 
 	// Assert
 	require.NoError(t, err)
@@ -49,11 +52,12 @@ func TestWhenVariantIdIsSupplied_StoresIt(t *testing.T) {
 }
 
 func TestWhenVariantIdIsNotInMapping_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
-	variantId := 99
+	variantID := 99
 
 	// Act
-	_, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantId)
+	_, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
 
 	// Assert
 	assert.Error(t, err)

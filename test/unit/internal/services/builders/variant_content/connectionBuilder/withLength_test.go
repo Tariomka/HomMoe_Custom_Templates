@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenLengthIsProvided_SetsLengthOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedLength := gofakeit.Float64Range(0.1, 3)
 	builder := variant_content.NewConnectionBuilder()

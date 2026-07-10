@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRoadDistanceRuleIsApplied_AppendsRoadPlacementRule(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	item := entities.MandatoryContentItem{SID: "x"}
 	near := content_rules.DistanceNear
@@ -26,6 +27,7 @@ func TestWhenRoadDistanceRuleIsApplied_AppendsRoadPlacementRule(t *testing.T) {
 }
 
 func TestWhenTownDistanceRuleIsApplied_AppendsMainObjectPlacementRule(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	item := entities.MandatoryContentItem{SID: "x"}
 	near := content_rules.DistanceNear
@@ -42,6 +44,7 @@ func TestWhenTownDistanceRuleIsApplied_AppendsMainObjectPlacementRule(t *testing
 }
 
 func TestWhenGuardedRuleIsApplied_SetsIsGuarded(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	item := entities.MandatoryContentItem{SID: "x"}
 
@@ -55,6 +58,7 @@ func TestWhenGuardedRuleIsApplied_SetsIsGuarded(t *testing.T) {
 }
 
 func TestWhenGuardedRuleIsApplied_AddsNoPlacementRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	item := entities.MandatoryContentItem{SID: "x"}
 
@@ -68,6 +72,7 @@ func TestWhenGuardedRuleIsApplied_AddsNoPlacementRules(t *testing.T) {
 }
 
 func TestWhenSoloEncounterRuleIsApplied_SetsSoloEncounter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	item := entities.MandatoryContentItem{SID: "x"}
 
@@ -81,10 +86,11 @@ func TestWhenSoloEncounterRuleIsApplied_SetsSoloEncounter(t *testing.T) {
 }
 
 func TestWhenVariantRuleIsApplied_SetsVariantId(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	item := entities.MandatoryContentItem{SID: "dragon_utopia"}
-	variantId := 3
-	variantRule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantId)
+	variantID := 3
+	variantRule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
 	require.NoError(t, err)
 
 	// Act
@@ -96,6 +102,7 @@ func TestWhenVariantRuleIsApplied_SetsVariantId(t *testing.T) {
 }
 
 func TestWhenRuleListContainsNil_SkipsItWithoutPanicking(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	item := entities.MandatoryContentItem{SID: "x"}
 

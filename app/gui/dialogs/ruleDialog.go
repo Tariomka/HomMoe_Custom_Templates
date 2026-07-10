@@ -42,7 +42,7 @@ type ManageRulesDialog struct {
 	onApply func([]models.ContentRuleRowSave)
 
 	types         []ruleTypeOption
-	variantIds    []int
+	variantIDs    []int
 	variantLabels []string
 
 	scroll           widget.List
@@ -80,11 +80,11 @@ func NewManageRulesDialog(
 
 	for _, variant := range content_rules.GetVariantsForContent(mapping) {
 		for id, description := range variant.Variants {
-			dialog.variantIds = append(dialog.variantIds, id)
+			dialog.variantIDs = append(dialog.variantIDs, id)
 			dialog.variantLabels = append(dialog.variantLabels, description)
 		}
 	}
-	if len(dialog.variantIds) > 0 {
+	if len(dialog.variantIDs) > 0 {
 		dialog.types = append(dialog.types, ruleTypeOption{content_rules.RuleVariantName, editorVariant})
 	}
 
@@ -311,11 +311,11 @@ func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRowSave,
 		return models.ContentRuleRowSave{Name: content_rules.RuleSoloEncounterName, IsSoloEncounter: &value}, true
 	case editorVariant:
 		variantIdx := this.variantDropdown.GetSelectedIndex()
-		if variantIdx < 0 || variantIdx >= len(this.variantIds) {
+		if variantIdx < 0 || variantIdx >= len(this.variantIDs) {
 			return models.ContentRuleRowSave{}, false
 		}
-		id := this.variantIds[variantIdx]
-		return models.ContentRuleRowSave{Name: content_rules.RuleVariantName, VariantId: &id}, true
+		id := this.variantIDs[variantIdx]
+		return models.ContentRuleRowSave{Name: content_rules.RuleVariantName, VariantID: &id}, true
 	}
 	return models.ContentRuleRowSave{}, false
 }

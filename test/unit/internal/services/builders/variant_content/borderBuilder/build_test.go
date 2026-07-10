@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsBorderWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedRadius := gofakeit.Float64Range(0.01, 1)
 	expectedObstaclesWidth := gofakeit.Number(1, 20)

@@ -57,7 +57,7 @@ func (this *DialogHost) GetActiveDialogWidget(theme *material.Theme) layout.Widg
 		// Scrim: a darkened, click-absorbing barrier over the entire window so the
 		// underlying UI cannot be interacted with while the modal is open.
 		paint.FillShape(gtx.Ops, themes.ColorScrim, clip.Rect{Max: full}.Op())
-		this.scrim.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		this.scrim.Layout(gtx, func(layout.Context) layout.Dimensions {
 			return layout.Dimensions{Size: full}
 		})
 		this.scrim.Clicked(gtx) // drain; clicking the scrim is intentionally a no-op.

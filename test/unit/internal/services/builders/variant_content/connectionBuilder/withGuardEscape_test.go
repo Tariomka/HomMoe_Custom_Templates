@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardEscapeIsProvided_SetsGuardEscapeOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedGuardEscape := gofakeit.Bool()
 	builder := variant_content.NewConnectionBuilder()

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSourceSliceGiven_IterationYieldsAllElementsInOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstWord := gofakeit.Word() + "-first"
 	secondWord := gofakeit.Word() + "-second"
@@ -26,6 +27,7 @@ func TestWhenSourceSliceGiven_IterationYieldsAllElementsInOrder(t *testing.T) {
 }
 
 func TestWhenYieldReturnsFalse_IterationStopsEarly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{1, 2, 3, 4}
 
@@ -41,12 +43,13 @@ func TestWhenYieldReturnsFalse_IterationStopsEarly(t *testing.T) {
 }
 
 func TestWhenSourceSliceIsEmpty_IterationYieldsNothing(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{}
 
 	// Act
 	yieldCount := 0
-	linq.FromSlice(source).Iterate(func(item int) bool {
+	linq.FromSlice(source).Iterate(func(int) bool {
 		yieldCount++
 		return true
 	})

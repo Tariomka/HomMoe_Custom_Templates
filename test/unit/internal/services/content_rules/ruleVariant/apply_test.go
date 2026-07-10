@@ -10,9 +10,10 @@ import (
 )
 
 func TestWhenRuleIsApplied_SetsItemVariantId(t *testing.T) {
+	t.Parallel()
 	// Arrange
-	variantId := 3
-	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantId)
+	variantID := 3
+	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
 	require.NoError(t, err)
 	item := entities.MandatoryContentItem{SID: "dragon_utopia"}
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSimTurnSquadIsChosen_MarksBuiltConnectionAsSimTurnSquad(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewConnectionBuilder()
 

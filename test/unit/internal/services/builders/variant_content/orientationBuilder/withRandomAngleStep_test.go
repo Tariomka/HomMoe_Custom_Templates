@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRandomAngleStepIsProvided_SetsRandomAngleStepOnBuiltOrientation(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedStep := gofakeit.Number(1, 90)
 	builder := variant_content.NewOrientationBuilder()

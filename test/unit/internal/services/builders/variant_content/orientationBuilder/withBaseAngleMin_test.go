@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMinimumBaseAngleIsProvided_SetsBaseAngleMinOnBuiltOrientation(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedAngle := gofakeit.Number(1, 359)
 	builder := variant_content.NewOrientationBuilder()

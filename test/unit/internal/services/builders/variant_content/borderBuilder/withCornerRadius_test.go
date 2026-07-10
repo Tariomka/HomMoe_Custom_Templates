@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenCornerRadiusIsProvided_SetsCornerRadiusOnBuiltBorder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedRadius := gofakeit.Float64Range(0.01, 1)
 	builder := variant_content.NewBorderBuilder()

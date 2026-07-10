@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenEmbeddedAssetsAreValid_ReturnsNoError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -19,6 +20,7 @@ func TestWhenEmbeddedAssetsAreValid_ReturnsNoError(t *testing.T) {
 }
 
 func TestWhenEmbeddedAssetsAreValid_ReturnsGenerator(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act

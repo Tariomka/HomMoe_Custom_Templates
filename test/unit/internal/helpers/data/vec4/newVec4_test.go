@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenFloatComponentsGiven_ReturnsVectorWithThoseComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Float64Range(-1000, 1000)
 	yComponent := gofakeit.Float64Range(-1000, 1000)
@@ -23,6 +24,7 @@ func TestWhenFloatComponentsGiven_ReturnsVectorWithThoseComponents(t *testing.T)
 }
 
 func TestWhenIntComponentsGiven_ReturnsVectorWithThoseComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	xComponent := gofakeit.Number(-1000, 1000)
 	yComponent := gofakeit.Number(-1000, 1000)

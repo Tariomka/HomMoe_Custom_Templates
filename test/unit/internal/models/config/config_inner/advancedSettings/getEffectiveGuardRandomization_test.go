@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRandomizationInputVaries_ReturnsEffectiveValue(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		settings    config_inner.AdvancedSettings
@@ -58,6 +59,7 @@ func TestWhenRandomizationInputVaries_ReturnsEffectiveValue(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange - settings provided by the test case.
 
 			// Act

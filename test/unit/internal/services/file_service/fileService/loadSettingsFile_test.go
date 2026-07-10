@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenSettingsFileIsMissing_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	missingPath := filepath.Join(t.TempDir(), "missing.gen.json")
 
@@ -23,6 +24,7 @@ func TestWhenSettingsFileIsMissing_ReturnsError(t *testing.T) {
 }
 
 func TestWhenSettingsFileContainsInvalidJson_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	settingsPath := filepath.Join(t.TempDir(), "bad.gen.json")
 	require.NoError(t, os.WriteFile(settingsPath, []byte("{not json"), 0o644))
@@ -35,6 +37,7 @@ func TestWhenSettingsFileContainsInvalidJson_ReturnsError(t *testing.T) {
 }
 
 func TestWhenSettingsFileContainsValidJson_OverridesPersistedFieldsOnDefaults(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	settingsPath := filepath.Join(t.TempDir(), "ok.gen.json")
 	body := `{"templateName":"X","playerCount":4,"mapSize":192}`

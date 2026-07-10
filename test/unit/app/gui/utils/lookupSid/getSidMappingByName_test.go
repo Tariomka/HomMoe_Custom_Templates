@@ -13,7 +13,7 @@ import (
 
 func TestWhenNameMatchesExactly_MappingIsReturned(t *testing.T) {
 	// Arrange
-	expected := constants.ContentIds.AlchemyLab
+	expected := constants.ContentIDs.AlchemyLab
 
 	// Act
 	mapping, _ := utils.GetSidMappingByName(expected.Name)
@@ -24,7 +24,7 @@ func TestWhenNameMatchesExactly_MappingIsReturned(t *testing.T) {
 
 func TestWhenNameMatchesExactly_LookupReportsFound(t *testing.T) {
 	// Arrange
-	name := constants.ContentIds.AlchemyLab.Name
+	name := constants.ContentIDs.AlchemyLab.Name
 
 	// Act
 	_, found := utils.GetSidMappingByName(name)
@@ -35,7 +35,7 @@ func TestWhenNameMatchesExactly_LookupReportsFound(t *testing.T) {
 
 func TestWhenNameDiffersOnlyByCase_MappingIsReturned(t *testing.T) {
 	// Arrange
-	expected := constants.ContentIds.WiseOwl
+	expected := constants.ContentIDs.WiseOwl
 	upperCasedName := strings.ToUpper(expected.Name)
 
 	// Act

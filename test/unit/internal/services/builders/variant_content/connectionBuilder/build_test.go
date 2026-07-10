@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsConnectionWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.Word()
 	expectedFrom := gofakeit.Word()

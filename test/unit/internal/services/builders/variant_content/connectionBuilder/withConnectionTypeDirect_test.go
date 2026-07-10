@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenDirectTypeIsChosen_SetsDirectConnectionTypeOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewConnectionBuilder()
 

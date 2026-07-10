@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenServiceIsConstructed_ReturnsNonNilInstance(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act

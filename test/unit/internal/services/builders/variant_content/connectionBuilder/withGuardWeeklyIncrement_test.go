@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardWeeklyIncrementIsProvided_SetsGuardWeeklyIncrementOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedIncrement := gofakeit.Float64Range(0.01, 1)
 	builder := variant_content.NewConnectionBuilder()

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardValueIsProvided_SetsGuardValueOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedGuardValue := gofakeit.Number(1, 60000)
 	builder := variant_content.NewConnectionBuilder()

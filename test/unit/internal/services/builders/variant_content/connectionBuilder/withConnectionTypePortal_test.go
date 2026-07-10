@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenPortalTypeIsChosen_SetsPortalConnectionTypeOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewConnectionBuilder()
 

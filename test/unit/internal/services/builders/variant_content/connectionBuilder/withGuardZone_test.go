@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardZoneIsProvided_SetsGuardZoneOnBuiltConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedGuardZone := gofakeit.Word()
 	builder := variant_content.NewConnectionBuilder()

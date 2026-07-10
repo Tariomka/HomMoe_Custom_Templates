@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsOrientationWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedMode := gofakeit.Word()
 	expectedZone := gofakeit.Word()
