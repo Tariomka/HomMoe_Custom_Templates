@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenSingleFlagIsSet_ReportsAnyChange(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		changes     editor_state_dto.CastleSettingChanges
@@ -21,6 +22,7 @@ func TestWhenSingleFlagIsSet_ReportsAnyChange(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			changes := testCase.changes
 
@@ -34,6 +36,7 @@ func TestWhenSingleFlagIsSet_ReportsAnyChange(t *testing.T) {
 }
 
 func TestWhenNoFlagIsSet_ReportsNoChange(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	changes := editor_state_dto.CastleSettingChanges{}
 

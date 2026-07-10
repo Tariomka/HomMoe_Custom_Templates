@@ -5,7 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-type contentIds struct {
+type contentIDs struct {
 	AbandonedCorpse     models.SidMapping
 	AbandonedMansion    models.SidMapping
 	AbnormalStructure   models.SidMapping
@@ -129,13 +129,13 @@ type contentIds struct {
 }
 
 // ContentIds enumerates every world-object SID known to the editor.
-var ContentIds = func() contentIds {
+var ContentIds = func() contentIDs {
 	interactableObjects := registry.GetMapObjectAllInteractableValues()
 	randomItemObjects := registry.GetMapObjectRandomItemValues()
 	resourceObjects := registry.GetMapObjectResourceValues()
 	scrollObjects := registry.GetMapObjectScrollValues()
 
-	return contentIds{
+	return contentIDs{
 		AbandonedCorpse:    models.SidMapping{Sid: interactableObjects.AbandonedCorpse, Name: "Forgotten Remains"},
 		AbandonedMansion:   models.SidMapping{Sid: interactableObjects.AbandonedMansion, Name: "Abandoned Mansion"},
 		AbnormalStructure:  models.SidMapping{Sid: interactableObjects.AbnormalStructure, Name: "Abnormal Structure"},

@@ -28,7 +28,7 @@ func TestWhenYieldReturnsFalse_IterationStopsEarly(t *testing.T) {
 
 	// Act
 	yieldCount := 0
-	linq.FromMap(source).Iterate(func(key string, value int) bool {
+	linq.FromMap(source).Iterate(func(string, int) bool {
 		yieldCount++
 		return false
 	})
@@ -43,7 +43,7 @@ func TestWhenSourceMapIsEmpty_IterationYieldsNothing(t *testing.T) {
 
 	// Act
 	yieldCount := 0
-	linq.FromMap(source).Iterate(func(key string, value int) bool {
+	linq.FromMap(source).Iterate(func(string, int) bool {
 		yieldCount++
 		return true
 	})

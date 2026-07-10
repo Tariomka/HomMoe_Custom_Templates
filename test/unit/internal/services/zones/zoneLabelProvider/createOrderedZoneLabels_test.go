@@ -27,6 +27,7 @@ func orderingConfig(topology config.MapTopology, playerCount, neutralCount, sepa
 }
 
 func TestWhenSeparationIsZero_AppendsNeutralsAfterPlayers(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyRing, 2, 2, 0)
@@ -39,6 +40,7 @@ func TestWhenSeparationIsZero_AppendsNeutralsAfterPlayers(t *testing.T) {
 }
 
 func TestWhenRandomPortalsAreEnabled_IgnoresSeparation(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyRing, 2, 2, 1)
@@ -52,6 +54,7 @@ func TestWhenRandomPortalsAreEnabled_IgnoresSeparation(t *testing.T) {
 }
 
 func TestWhenSeparationCannotBeHonored_AppendsNeutralsAfterPlayers(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyRing, 2, 1, 5)
@@ -64,6 +67,7 @@ func TestWhenSeparationCannotBeHonored_AppendsNeutralsAfterPlayers(t *testing.T)
 }
 
 func TestWhenRingSeparationIsHonored_InterleavesNeutralsBetweenPlayers(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyRing, 2, 2, 1)
@@ -76,6 +80,7 @@ func TestWhenRingSeparationIsHonored_InterleavesNeutralsBetweenPlayers(t *testin
 }
 
 func TestWhenChainSeparationIsHonored_LeavesTrailingPlayerWithoutSeparator(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyChain, 2, 1, 1)
@@ -88,6 +93,7 @@ func TestWhenChainSeparationIsHonored_LeavesTrailingPlayerWithoutSeparator(t *te
 }
 
 func TestWhenMoreNeutralsThanSeparationSlots_AppendsLeftoversAtEnd(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyRing, 2, 3, 1)
@@ -100,6 +106,7 @@ func TestWhenMoreNeutralsThanSeparationSlots_AppendsLeftoversAtEnd(t *testing.T)
 }
 
 func TestWhenNoLabelsProvidedWithSeparation_ReturnsEmptySlice(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyRing, 0, 0, 1)
@@ -112,6 +119,7 @@ func TestWhenNoLabelsProvidedWithSeparation_ReturnsEmptySlice(t *testing.T) {
 }
 
 func TestWhenCirclesTopologyIsRing_DelegatesToBalancedRingOrdering(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyCircles, 2, 2, 0)
@@ -124,6 +132,7 @@ func TestWhenCirclesTopologyIsRing_DelegatesToBalancedRingOrdering(t *testing.T)
 }
 
 func TestWhenCirclesTopologyIsChain_DelegatesToBalancedChainOrdering(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyCircles, 1, 1, 0)
@@ -136,6 +145,7 @@ func TestWhenCirclesTopologyIsChain_DelegatesToBalancedChainOrdering(t *testing.
 }
 
 func TestWhenCirclesSeparationIsHonored_KeepsNeutralsBetweenPlayers(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyCircles, 2, 2, 1)

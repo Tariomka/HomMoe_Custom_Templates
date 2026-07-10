@@ -19,6 +19,7 @@ func hubCityHoldConfig(playerCount int) config.GeneratorConfig {
 }
 
 func TestWhenNoNeutralPlansExist_ReturnsEmptyLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
@@ -31,6 +32,7 @@ func TestWhenNoNeutralPlansExist_ReturnsEmptyLabel(t *testing.T) {
 }
 
 func TestWhenTopologyIsNotHubAndSpoke_ReturnsEmptyLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
@@ -45,6 +47,7 @@ func TestWhenTopologyIsNotHubAndSpoke_ReturnsEmptyLabel(t *testing.T) {
 }
 
 func TestWhenCityHoldModeIsOff_ReturnsEmptyLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
@@ -59,6 +62,7 @@ func TestWhenCityHoldModeIsOff_ReturnsEmptyLabel(t *testing.T) {
 }
 
 func TestWhenDistancesAndVariancesTie_PicksHigherQualityNeutral(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
@@ -75,6 +79,7 @@ func TestWhenDistancesAndVariancesTie_PicksHigherQualityNeutral(t *testing.T) {
 }
 
 func TestWhenQualityAlsoTies_PicksNeutralWithCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))

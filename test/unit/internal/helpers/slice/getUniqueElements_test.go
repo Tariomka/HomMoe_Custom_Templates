@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSliceContainsDuplicates_ReturnsFirstOccurrencesInOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	inputSlice := []int{3, 1, 3, 2, 1, 3}
 
@@ -20,6 +21,7 @@ func TestWhenSliceContainsDuplicates_ReturnsFirstOccurrencesInOrder(t *testing.T
 }
 
 func TestWhenSliceHasNoDuplicates_ReturnsItUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstWord := gofakeit.Word() + "-first"
 	secondWord := gofakeit.Word() + "-second"
@@ -34,6 +36,7 @@ func TestWhenSliceHasNoDuplicates_ReturnsItUnchanged(t *testing.T) {
 }
 
 func TestWhenAllElementsAreEqual_ReturnsSingleElement(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	repeatedNumber := gofakeit.Number(1, 1000)
 	inputSlice := []int{repeatedNumber, repeatedNumber, repeatedNumber}
@@ -46,6 +49,7 @@ func TestWhenAllElementsAreEqual_ReturnsSingleElement(t *testing.T) {
 }
 
 func TestWhenSliceIsEmpty_ReturnsEmptySlice(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	inputSlice := []int{}
 
@@ -57,6 +61,7 @@ func TestWhenSliceIsEmpty_ReturnsEmptySlice(t *testing.T) {
 }
 
 func TestWhenSliceIsNil_ReturnsEmptySlice(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	var inputSlice []string
 

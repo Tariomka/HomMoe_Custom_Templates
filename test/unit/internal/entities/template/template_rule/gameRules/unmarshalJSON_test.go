@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenWinConditionsAreNested_DecodesNestedBlock(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`{"heroCountMin":2,"winConditions":{"classic":true,"cityHold":true,"cityHoldDays":6}}`)
 	expected := template_rule.WinConditions{Classic: true, CityHold: true, CityHoldDays: 6}
@@ -24,7 +25,8 @@ func TestWhenWinConditionsAreNested_DecodesNestedBlock(t *testing.T) {
 }
 
 func TestWhenWinConditionsAreFlatSiblings_PopulatesWinConditions(t *testing.T) {
-	// Arrange - Zookeeper-style template: win-condition keys flat inside gameRules.
+	t.Parallel()
+	// Arrange
 	data := []byte(`{"heroCountMin":2,"classic":true,"cityHold":true,"cityHoldDays":9}`)
 	expected := template_rule.WinConditions{Classic: true, CityHold: true, CityHoldDays: 9}
 	var rules template_rule.GameRules
@@ -38,6 +40,7 @@ func TestWhenWinConditionsAreFlatSiblings_PopulatesWinConditions(t *testing.T) {
 }
 
 func TestWhenNestedAndFlatDeclareSameField_NestedValueWins(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`{"cityHoldDays":9,"winConditions":{"cityHoldDays":6}}`)
 	var rules template_rule.GameRules
@@ -51,6 +54,7 @@ func TestWhenNestedAndFlatDeclareSameField_NestedValueWins(t *testing.T) {
 }
 
 func TestWhenFlatFieldIsMissingFromNestedBlock_FillsItFromFlatSibling(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`{"desertionDay":3,"winConditions":{"classic":true}}`)
 	expected := template_rule.WinConditions{Classic: true, DesertionDay: 3}
@@ -65,7 +69,8 @@ func TestWhenFlatFieldIsMissingFromNestedBlock_FillsItFromFlatSibling(t *testing
 }
 
 func TestWhenGladiatorArenaIsFlatSibling_MirrorsIntoWinConditions(t *testing.T) {
-	// Arrange - Symmetry/Jebus Outcast style: gladiator fields as siblings of winConditions.
+	t.Parallel()
+	// Arrange
 	data := []byte(`{"gladiatorArena":true,"gladiatorArenaCountDay":3,"winConditions":{}}`)
 	expected := template_rule.WinConditions{GladiatorArena: true, GladiatorArenaCountDay: 3}
 	var rules template_rule.GameRules
@@ -79,6 +84,7 @@ func TestWhenGladiatorArenaIsFlatSibling_MirrorsIntoWinConditions(t *testing.T) 
 }
 
 func TestWhenScalarRuleFieldsProvided_DecodesWholeGameRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(
 		`{"heroCountMin":4,"heroCountMax":8,"heroCountIncrement":1,"heroHireBan":true,"encounterHoles":true,"tournamentRules":true}`,
@@ -102,6 +108,7 @@ func TestWhenScalarRuleFieldsProvided_DecodesWholeGameRules(t *testing.T) {
 }
 
 func TestWhenGameRuleFieldHasInvalidType_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`{"heroCountMin":"notANumber"}`)
 	var rules template_rule.GameRules
@@ -114,6 +121,7 @@ func TestWhenGameRuleFieldHasInvalidType_ReturnsError(t *testing.T) {
 }
 
 func TestWhenFlatWinConditionDecodeFails_ReturnsNoError(t *testing.T) {
+	t.Parallel()
 	// Arrange - desertionDay is unknown to GameRules but ill-typed for WinConditions.
 	data := []byte(`{"heroCountMin":4,"desertionDay":"notANumber"}`)
 	var rules template_rule.GameRules
@@ -126,6 +134,7 @@ func TestWhenFlatWinConditionDecodeFails_ReturnsNoError(t *testing.T) {
 }
 
 func TestWhenFlatWinConditionDecodeFails_LeavesWinConditionsEmpty(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`{"heroCountMin":4,"desertionDay":"notANumber"}`)
 	var rules template_rule.GameRules

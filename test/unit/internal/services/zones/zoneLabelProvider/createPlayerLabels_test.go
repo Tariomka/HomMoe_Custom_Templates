@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenThreePlayersRequested_ReturnsFirstThreeAlphabetLetters(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -20,6 +21,7 @@ func TestWhenThreePlayersRequested_ReturnsFirstThreeAlphabetLetters(t *testing.T
 }
 
 func TestWhenZeroPlayersRequested_ReturnsEmptySlice(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -31,6 +33,7 @@ func TestWhenZeroPlayersRequested_ReturnsEmptySlice(t *testing.T) {
 }
 
 func TestWhenArbitraryPlayerCountRequested_ReturnsThatManyLabels(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	playerCount := gofakeit.Number(1, 8)

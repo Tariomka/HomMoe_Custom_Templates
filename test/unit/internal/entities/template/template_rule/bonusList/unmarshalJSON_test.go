@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenDataIsSingleObject_WrapsBonusIntoSingleElementList(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	bonusSid := gofakeit.Word()
 	data := []byte(`{"sid":"` + bonusSid + `","receiverSide":-1,"parameters":["1"]}`)
@@ -28,6 +29,7 @@ func TestWhenDataIsSingleObject_WrapsBonusIntoSingleElementList(t *testing.T) {
 }
 
 func TestWhenDataIsArray_DecodesEveryBonus(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(
 		`[{"sid":"first","receiverSide":0,"parameters":[]},{"sid":"second","receiverSide":1,"parameters":["7"]}]`,
@@ -47,6 +49,7 @@ func TestWhenDataIsArray_DecodesEveryBonus(t *testing.T) {
 }
 
 func TestWhenDataIsNull_SetsListToNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	list := template_rule.BonusList{{SID: gofakeit.Word()}}
 
@@ -59,6 +62,7 @@ func TestWhenDataIsNull_SetsListToNil(t *testing.T) {
 }
 
 func TestWhenDataIsEmpty_SetsListToNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	list := template_rule.BonusList{{SID: gofakeit.Word()}}
 
@@ -71,6 +75,7 @@ func TestWhenDataIsEmpty_SetsListToNil(t *testing.T) {
 }
 
 func TestWhenSingleObjectHasInvalidFieldType_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`{"receiverSide":"notANumber"}`)
 	var list template_rule.BonusList
@@ -83,6 +88,7 @@ func TestWhenSingleObjectHasInvalidFieldType_ReturnsError(t *testing.T) {
 }
 
 func TestWhenArrayElementHasInvalidFieldType_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`[{"receiverSide":"notANumber"}]`)
 	var list template_rule.BonusList

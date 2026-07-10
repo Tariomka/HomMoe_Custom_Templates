@@ -35,7 +35,7 @@ func TestWhenSidMatches_LookupReportsFound(t *testing.T) {
 
 func TestWhenSidBelongsToIncludeList_MappingIsReturned(t *testing.T) {
 	// Arrange
-	expected := constants.IncludeListIds.ResourceBanksTier2
+	expected := constants.IncludeListIDs.ResourceBanksTier2
 
 	// Act
 	mapping, _ := utils.GetSidMappingBySid(expected.Sid)

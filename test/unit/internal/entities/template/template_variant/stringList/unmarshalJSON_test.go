@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenDataIsSingleString_WrapsIntoSingleElementList(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Word()
 	data := []byte(`"` + value + `"`)
@@ -25,6 +26,7 @@ func TestWhenDataIsSingleString_WrapsIntoSingleElementList(t *testing.T) {
 }
 
 func TestWhenDataIsArray_DecodesEveryString(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`["first","second"]`)
 	var list template_variant.StringList
@@ -38,6 +40,7 @@ func TestWhenDataIsArray_DecodesEveryString(t *testing.T) {
 }
 
 func TestWhenDataIsNull_SetsListToNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	list := template_variant.StringList{gofakeit.Word()}
 
@@ -50,6 +53,7 @@ func TestWhenDataIsNull_SetsListToNil(t *testing.T) {
 }
 
 func TestWhenDataIsEmpty_SetsListToNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	list := template_variant.StringList{gofakeit.Word()}
 
@@ -62,6 +66,7 @@ func TestWhenDataIsEmpty_SetsListToNil(t *testing.T) {
 }
 
 func TestWhenSingleStringIsUnterminated_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	list := template_variant.StringList{}
 
@@ -73,6 +78,7 @@ func TestWhenSingleStringIsUnterminated_ReturnsError(t *testing.T) {
 }
 
 func TestWhenArrayHoldsNonStringElements_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	data := []byte(`[1,2]`)
 	var list template_variant.StringList

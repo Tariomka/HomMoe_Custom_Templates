@@ -47,7 +47,7 @@ func TestWhenNameDiffersOnlyByCase_MappingIsReturned(t *testing.T) {
 
 func TestWhenNameBelongsToIncludeList_MappingIsReturned(t *testing.T) {
 	// Arrange
-	expected := constants.IncludeListIds.RandomHiresLowTier
+	expected := constants.IncludeListIDs.RandomHiresLowTier
 
 	// Act
 	mapping, _ := utils.GetSidMappingByName(expected.Name)

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenCalled_ReturnsSameProviderForChaining(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewTopologyProvider()
 
@@ -21,6 +22,7 @@ func TestWhenCalled_ReturnsSameProviderForChaining(t *testing.T) {
 }
 
 func TestWhenShuffleEnabled_DoesNotMutateInputLabels(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	playerLabels := []string{"A", "B", "C", "D", "E", "F", "G", "H"}
 	expectedLabels := slices.Clone(playerLabels)
@@ -37,6 +39,7 @@ func TestWhenShuffleEnabled_DoesNotMutateInputLabels(t *testing.T) {
 }
 
 func TestWhenShuffleEnabled_PreservesSpawnZoneNameSet(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	playerLabels := []string{"A", "B", "C", "D"}
 	configuration := config.NewGeneratorConfig()

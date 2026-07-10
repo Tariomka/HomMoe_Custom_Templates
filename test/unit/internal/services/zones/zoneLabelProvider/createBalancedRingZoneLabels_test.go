@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNoPlayerLabelsProvided_ReturnsBalancedNeutralRing(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -19,6 +20,7 @@ func TestWhenNoPlayerLabelsProvided_ReturnsBalancedNeutralRing(t *testing.T) {
 }
 
 func TestWhenNoNeutralZonesProvided_ReturnsPlayerLabelsUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -30,6 +32,7 @@ func TestWhenNoNeutralZonesProvided_ReturnsPlayerLabelsUnchanged(t *testing.T) {
 }
 
 func TestWhenPlayersAndNeutralsProvided_InterleavesNeutralsIntoGaps(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 

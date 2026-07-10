@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNoPlayerLabelsProvided_ReturnsNeutralLabelsOnly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -19,6 +20,7 @@ func TestWhenNoPlayerLabelsProvided_ReturnsNeutralLabelsOnly(t *testing.T) {
 }
 
 func TestWhenSinglePlayerProvided_DistributesNeutralsAcrossEdgeGaps(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -30,6 +32,7 @@ func TestWhenSinglePlayerProvided_DistributesNeutralsAcrossEdgeGaps(t *testing.T
 }
 
 func TestWhenMinimumSeparationIsSet_PlacesRequiredNeutralsBetweenPlayers(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -41,6 +44,7 @@ func TestWhenMinimumSeparationIsSet_PlacesRequiredNeutralsBetweenPlayers(t *test
 }
 
 func TestWhenNeutralsExceedSeparationNeeds_KeepsChainEndsOnPlayers(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -52,6 +56,7 @@ func TestWhenNeutralsExceedSeparationNeeds_KeepsChainEndsOnPlayers(t *testing.T)
 }
 
 func TestWhenSeparationCannotBeFilled_DistributesNeutralsInsideChain(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 

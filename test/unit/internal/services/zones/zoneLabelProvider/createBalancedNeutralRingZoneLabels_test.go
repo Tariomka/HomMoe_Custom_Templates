@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNoNeutralZonesProvided_ReturnsEmptySlice(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -19,6 +20,7 @@ func TestWhenNoNeutralZonesProvided_ReturnsEmptySlice(t *testing.T) {
 }
 
 func TestWhenSingleNeutralZoneProvided_ReturnsItsLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -30,6 +32,7 @@ func TestWhenSingleNeutralZoneProvided_ReturnsItsLabel(t *testing.T) {
 }
 
 func TestWhenMultipleNeutralZonesProvided_ReturnsEveryLabelExactlyOnce(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 

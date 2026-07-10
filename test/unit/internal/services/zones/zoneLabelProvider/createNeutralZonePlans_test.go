@@ -19,6 +19,7 @@ func simpleCountConfig(playerCount, neutralCount, castleCount int) config.Genera
 }
 
 func TestWhenSimpleCountIsUsed_CreatesMediumPlansStartingAfterPlayerLabels(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, 3, 2)
@@ -36,6 +37,7 @@ func TestWhenSimpleCountIsUsed_CreatesMediumPlansStartingAfterPlayerLabels(t *te
 }
 
 func TestWhenSimpleCastleCountExceedsFour_ClampsCastlesToFour(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, 1, 9)
@@ -48,6 +50,7 @@ func TestWhenSimpleCastleCountExceedsFour_ClampsCastlesToFour(t *testing.T) {
 }
 
 func TestWhenAdvancedCountsAreSet_CreatesPlansInTierOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, 0, 0)
@@ -77,6 +80,7 @@ func TestWhenAdvancedCountsAreSet_CreatesPlansInTierOrder(t *testing.T) {
 }
 
 func TestWhenAdvancedCastlesPerZoneExceedsFour_ClampsCastlesToFour(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, 0, 0)
@@ -91,6 +95,7 @@ func TestWhenAdvancedCastlesPerZoneExceedsFour_ClampsCastlesToFour(t *testing.T)
 }
 
 func TestWhenTopologyIsSharedWebAndNoNeutralsRequested_AddsSingleMediumPlan(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, 0, 1)
@@ -104,6 +109,7 @@ func TestWhenTopologyIsSharedWebAndNoNeutralsRequested_AddsSingleMediumPlan(t *t
 }
 
 func TestWhenRequestedCountExceedsLabelPool_CapsPlansAtAvailableLabels(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(30, 5, 0)
@@ -116,6 +122,7 @@ func TestWhenRequestedCountExceedsLabelPool_CapsPlansAtAvailableLabels(t *testin
 }
 
 func TestWhenRequestedCountIsNegative_CreatesNoPlans(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, -3, 0)

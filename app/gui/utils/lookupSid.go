@@ -99,9 +99,9 @@ var allSidMappings = []models.SidMapping{
 	constants.ContentIds.WindRose,
 	constants.ContentIds.WiseOwl,
 
-	constants.IncludeListIds.RandomHiresLowTier,
-	constants.IncludeListIds.RandomHiresHighTier,
-	constants.IncludeListIds.RandomHiresAllTier,
-	constants.IncludeListIds.ResourceBanksTier1,
-	constants.IncludeListIds.ResourceBanksTier2,
+	constants.IncludeListIDs.RandomHiresLowTier,
+	constants.IncludeListIDs.RandomHiresHighTier,
+	constants.IncludeListIDs.RandomHiresAllTier,
+	constants.IncludeListIDs.ResourceBanksTier1,
+	constants.IncludeListIDs.ResourceBanksTier2,
 }

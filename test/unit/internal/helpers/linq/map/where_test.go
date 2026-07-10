@@ -8,9 +8,10 @@ import (
 )
 
 func TestWhenPredicateMatchesSomePairs_KeepsOnlyMatchingOnes(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{"first": 1, "second": 2, "third": 3, "fourth": 4}
-	hasEvenValue := func(key string, value int) bool { return value%2 == 0 }
+	hasEvenValue := func(_ string, value int) bool { return value%2 == 0 }
 
 	// Act
 	filtered := linq.FromMap(source).Where(hasEvenValue).ToMap()
@@ -20,9 +21,10 @@ func TestWhenPredicateMatchesSomePairs_KeepsOnlyMatchingOnes(t *testing.T) {
 }
 
 func TestWhenPredicateMatchesNoPairs_ReturnsEmptyMap(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{"first": 1, "third": 3}
-	hasEvenValue := func(key string, value int) bool { return value%2 == 0 }
+	hasEvenValue := func(_ string, value int) bool { return value%2 == 0 }
 
 	// Act
 	filtered := linq.FromMap(source).Where(hasEvenValue).ToMap()
@@ -32,9 +34,10 @@ func TestWhenPredicateMatchesNoPairs_ReturnsEmptyMap(t *testing.T) {
 }
 
 func TestWhenPredicateUsesKey_KeepsOnlyPairsWithMatchingKeys(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{"keep-first": 1, "drop-second": 2, "keep-third": 3}
-	keyStartsWithKeep := func(key string, value int) bool { return key[:4] == "keep" }
+	keyStartsWithKeep := func(key string, _ int) bool { return key[:4] == "keep" }
 
 	// Act
 	filtered := linq.FromMap(source).Where(keyStartsWithKeep).ToMap()

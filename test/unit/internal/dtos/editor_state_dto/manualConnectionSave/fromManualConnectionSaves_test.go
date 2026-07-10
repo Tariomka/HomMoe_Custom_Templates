@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSaveListIsEmpty_ReturnsNilConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	var saves []editor_state_dto.ManualConnectionSave
 
@@ -20,6 +21,7 @@ func TestWhenSaveListIsEmpty_ReturnsNilConnections(t *testing.T) {
 }
 
 func TestWhenSavesCarryUserAddedFlags_RestoresEachFlagOntoConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	saves := []editor_state_dto.ManualConnectionSave{
 		{Connection: entities.Connection{Name: "A-B", From: "Zone A", To: "Zone B"}, IsUserAdded: true},
@@ -38,6 +40,7 @@ func TestWhenSavesCarryUserAddedFlags_RestoresEachFlagOntoConnection(t *testing.
 }
 
 func TestWhenSaveFlagDiffersFromEmbeddedConnectionFlag_SaveFlagWins(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	saves := []editor_state_dto.ManualConnectionSave{
 		{Connection: entities.Connection{Name: "A-B", IsUserAdded: false}, IsUserAdded: true},

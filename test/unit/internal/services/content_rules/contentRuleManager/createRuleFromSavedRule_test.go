@@ -11,8 +11,9 @@ import (
 )
 
 func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
-	utopiaVariantId := 1
-	utopiaVariantRule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &utopiaVariantId)
+	t.Parallel()
+	utopiaVariantID := 1
+	utopiaVariantRule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &utopiaVariantID)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -37,6 +38,7 @@ func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			saved := testCase.original.SerializeToRowSave()
 
@@ -51,6 +53,7 @@ func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 }
 
 func TestWhenSavedNameDiffersOnlyByCase_RestoresRule(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	isGuarded := true
 	saved := models.ContentRuleRowSave{Name: "gUaRdEd", IsGuarded: &isGuarded}
@@ -63,8 +66,9 @@ func TestWhenSavedNameDiffersOnlyByCase_RestoresRule(t *testing.T) {
 }
 
 func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
-	invalidVariantId := 99
-	someVariantId := 0
+	t.Parallel()
+	invalidVariantID := 99
+	someVariantID := 0
 
 	testCases := []struct {
 		name  string
@@ -84,11 +88,12 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 		},
 		{
 			"WhenVariantIdIsNotDefinedForContent_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Variant", VariantId: &invalidVariantId},
+			models.ContentRuleRowSave{Name: "Variant", VariantId: &invalidVariantID},
 		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act
@@ -100,8 +105,9 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 	}
 
 	t.Run("WhenContentHasNoVariants_ReturnsNil", func(t *testing.T) {
+		t.Parallel()
 		// Arrange
-		saved := models.ContentRuleRowSave{Name: "Variant", VariantId: &someVariantId}
+		saved := models.ContentRuleRowSave{Name: "Variant", VariantId: &someVariantID}
 
 		// Act
 		restored := content_rules.CreateRuleFromSavedRule(saved, models.SidMapping{Sid: "x"})

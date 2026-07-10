@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNameIsAlreadyClean_ReturnsItUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	name := "clean_name-1"
 
@@ -19,6 +20,7 @@ func TestWhenNameIsAlreadyClean_ReturnsItUnchanged(t *testing.T) {
 }
 
 func TestWhenNameHasSurroundingWhitespace_TrimsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	name := "   spaced   "
 
@@ -30,6 +32,7 @@ func TestWhenNameHasSurroundingWhitespace_TrimsIt(t *testing.T) {
 }
 
 func TestWhenNameContainsUnsafeRune_ReplacesItWithUnderscore(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		input       string
@@ -46,6 +49,7 @@ func TestWhenNameContainsUnsafeRune_ReplacesItWithUnderscore(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			name := testCase.input
 
@@ -59,6 +63,7 @@ func TestWhenNameContainsUnsafeRune_ReplacesItWithUnderscore(t *testing.T) {
 }
 
 func TestWhenNameContainsEveryUnsafeRune_ReplacesAllOfThem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	name := `bad/\*?":<>|name`
 
@@ -70,6 +75,7 @@ func TestWhenNameContainsEveryUnsafeRune_ReplacesAllOfThem(t *testing.T) {
 }
 
 func TestWhenNameIsEmpty_ReturnsEmptyString(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	name := ""
 
@@ -81,6 +87,7 @@ func TestWhenNameIsEmpty_ReturnsEmptyString(t *testing.T) {
 }
 
 func TestWhenNameIsOnlyWhitespace_ReturnsEmptyString(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	name := "   "
 

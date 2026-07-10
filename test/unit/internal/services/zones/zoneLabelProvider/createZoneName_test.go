@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenLabelBelongsToPlayer_PrefixesSpawn(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
@@ -19,6 +20,7 @@ func TestWhenLabelBelongsToPlayer_PrefixesSpawn(t *testing.T) {
 }
 
 func TestWhenLabelIsNotAPlayerLabel_PrefixesNeutral(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 

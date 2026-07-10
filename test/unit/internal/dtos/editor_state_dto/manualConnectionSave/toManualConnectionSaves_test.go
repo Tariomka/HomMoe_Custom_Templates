@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenConnectionListIsEmpty_ReturnsNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	var connections []entities.Connection
 
@@ -20,6 +21,7 @@ func TestWhenConnectionListIsEmpty_ReturnsNil(t *testing.T) {
 }
 
 func TestWhenConnectionsCarryUserAddedFlags_PreservesEachFlagInSave(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true},

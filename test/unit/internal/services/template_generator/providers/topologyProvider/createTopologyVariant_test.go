@@ -34,6 +34,7 @@ func spawnZoneNames(variant entities.Variant) []string {
 }
 
 func TestWhenRingTopologySelected_CreatesZonePerLabelAndNeutralPlan(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -52,6 +53,7 @@ func TestWhenRingTopologySelected_CreatesZonePerLabelAndNeutralPlan(t *testing.T
 }
 
 func TestWhenHubAndSpokeTopologySelected_CreatesHubZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
@@ -75,6 +77,7 @@ func TestWhenHubAndSpokeTopologySelected_CreatesHubZone(t *testing.T) {
 }
 
 func TestWhenTournamentModeWithTwoPlayerLabels_CreatesTournamentVariant(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -106,6 +109,7 @@ func TestWhenTournamentModeWithTwoPlayerLabels_CreatesTournamentVariant(t *testi
 }
 
 func TestWhenTournamentModeWithThreePlayerLabels_UsesSelectedTopology(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke

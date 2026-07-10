@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenEntriesAreIdentical_ProducesSameHash(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entry := config_inner.BonusEntry{
 		PresetType:     config_inner.BonusSpell,
@@ -26,6 +27,7 @@ func TestWhenEntriesAreIdentical_ProducesSameHash(t *testing.T) {
 }
 
 func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entry := config_inner.BonusEntry{
 		PresetType:     config_inner.BonusStartingGold,
@@ -43,6 +45,7 @@ func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
 }
 
 func TestWhenEntriesDifferInPresetType_ProducesDifferentHashes(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entry := config_inner.BonusEntry{
 		PresetType:     config_inner.BonusStartingWood,
@@ -60,6 +63,7 @@ func TestWhenEntriesDifferInPresetType_ProducesDifferentHashes(t *testing.T) {
 }
 
 func TestWhenHashIsComputed_ReturnsSha256DigestLength(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entry := config_inner.BonusEntry{
 		PresetType:     config_inner.BonusTownPortalFree,

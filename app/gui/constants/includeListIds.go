@@ -5,7 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-type includeListIds struct {
+type includeListIDs struct {
 	RandomHiresLowTier              models.SidMapping
 	RandomHiresHighTier             models.SidMapping
 	RandomHiresAllTier              models.SidMapping
@@ -39,9 +39,9 @@ type includeListIds struct {
 	GuardedUnitBanksNoBiome         models.SidMapping
 }
 
-// IncludeListIds enumerates the named include-list SIDs (group references
+// IncludeListDs enumerates the named include-list SIDs (group references
 // that resolve to many concrete content items at generation time).
-var IncludeListIds = func() includeListIds {
+var IncludeListIDs = func() includeListIDs {
 	randomHiresBuildings := registry.GetMandatoryContentRandomHiresBuildingValues()
 	resourceBanksBuildings := registry.GetMandatoryContentResourceBanksBuildingValues()
 	pandoraBoxes := registry.GetMandatoryContentPandoraBoxValues()
@@ -56,7 +56,7 @@ var IncludeListIds = func() includeListIds {
 	basicHeroExpBuildings := registry.GetMandatoryContentBasicHeroExperienceBuildingValues()
 	basicMiscellaneous := registry.GetMandatoryContentBasicMiscellaneousValues()
 
-	return includeListIds{
+	return includeListIDs{
 		RandomHiresLowTier: models.SidMapping{
 			Sid:  randomHiresBuildings.RandomHiresLowTier,
 			Name: "Random Hires Low Tier",
