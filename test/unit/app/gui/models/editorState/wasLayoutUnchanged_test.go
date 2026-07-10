@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNoSnapshotExists_DoesNotReportLayoutUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -20,6 +21,7 @@ func TestWhenNoSnapshotExists_DoesNotReportLayoutUnchanged(t *testing.T) {
 }
 
 func TestWhenPlayerCountChangedSinceSnapshot_DoesNotReportLayoutUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -33,6 +35,7 @@ func TestWhenPlayerCountChangedSinceSnapshot_DoesNotReportLayoutUnchanged(t *tes
 }
 
 func TestWhenOnlyHeroCountChangedSinceSnapshot_ReportsLayoutUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

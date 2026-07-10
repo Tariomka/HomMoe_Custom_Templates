@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenNameMatchesExactly_MappingIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.ContentIDs.AlchemyLab
 
@@ -23,6 +24,7 @@ func TestWhenNameMatchesExactly_MappingIsReturned(t *testing.T) {
 }
 
 func TestWhenNameMatchesExactly_LookupReportsFound(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	name := constants.ContentIDs.AlchemyLab.Name
 
@@ -34,6 +36,7 @@ func TestWhenNameMatchesExactly_LookupReportsFound(t *testing.T) {
 }
 
 func TestWhenNameDiffersOnlyByCase_MappingIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.ContentIDs.WiseOwl
 	upperCasedName := strings.ToUpper(expected.Name)
@@ -46,6 +49,7 @@ func TestWhenNameDiffersOnlyByCase_MappingIsReturned(t *testing.T) {
 }
 
 func TestWhenNameBelongsToIncludeList_MappingIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.IncludeListIDs.RandomHiresLowTier
 
@@ -57,6 +61,7 @@ func TestWhenNameBelongsToIncludeList_MappingIsReturned(t *testing.T) {
 }
 
 func TestWhenNameIsUnknown_LookupReportsNotFound(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	unknownName := gofakeit.UUID()
 
@@ -68,6 +73,7 @@ func TestWhenNameIsUnknown_LookupReportsNotFound(t *testing.T) {
 }
 
 func TestWhenNameIsUnknown_ZeroMappingIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	unknownName := gofakeit.UUID()
 

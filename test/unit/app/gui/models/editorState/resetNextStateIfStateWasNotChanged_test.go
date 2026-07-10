@@ -22,6 +22,7 @@ func changedStateWithNext() *models.EditorState {
 }
 
 func TestWhenStateStillMatchesSnapshot_ReportsReset(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := unchangedStateWithNext()
 
@@ -33,6 +34,7 @@ func TestWhenStateStillMatchesSnapshot_ReportsReset(t *testing.T) {
 }
 
 func TestWhenStateStillMatchesSnapshot_NextStateIsCleared(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := unchangedStateWithNext()
 
@@ -44,6 +46,7 @@ func TestWhenStateStillMatchesSnapshot_NextStateIsCleared(t *testing.T) {
 }
 
 func TestWhenStateDiffersFromSnapshot_ReportsNoReset(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := changedStateWithNext()
 
@@ -55,6 +58,7 @@ func TestWhenStateDiffersFromSnapshot_ReportsNoReset(t *testing.T) {
 }
 
 func TestWhenStateDiffersFromSnapshot_NextStateIsKept(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := changedStateWithNext()
 
@@ -66,6 +70,7 @@ func TestWhenStateDiffersFromSnapshot_NextStateIsKept(t *testing.T) {
 }
 
 func TestWhenNoSnapshotExistsYet_ReportsNoReset(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextState(state.GetCurrentState())

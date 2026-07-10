@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenValueHasMoreDecimalsThanPrecision_RoundsToPrecision(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := 1.23456
 
@@ -22,6 +23,7 @@ func TestWhenValueHasMoreDecimalsThanPrecision_RoundsToPrecision(t *testing.T) {
 }
 
 func TestWhenDecimalIsHalfway_RoundsAwayFromZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := 0.125
 
@@ -33,6 +35,7 @@ func TestWhenDecimalIsHalfway_RoundsAwayFromZero(t *testing.T) {
 }
 
 func TestWhenPrecisionIsZero_RoundsToNearestInteger(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float64Range(-1000, 1000)
 
@@ -44,6 +47,7 @@ func TestWhenPrecisionIsZero_RoundsToNearestInteger(t *testing.T) {
 }
 
 func TestWhenValueIsFuzzed_MatchesIndependentRoundingFormula(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float64Range(-1000, 1000)
 	decimalPrecision := gofakeit.Number(1, 6)
@@ -58,6 +62,7 @@ func TestWhenValueIsFuzzed_MatchesIndependentRoundingFormula(t *testing.T) {
 }
 
 func TestWhenValueIsNegative_RoundsToPrecision(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := -2.71828
 

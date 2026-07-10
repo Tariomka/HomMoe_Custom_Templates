@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenSidMatches_MappingIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.ContentIDs.DragonUtopia
 
@@ -23,6 +24,7 @@ func TestWhenSidMatches_MappingIsReturned(t *testing.T) {
 }
 
 func TestWhenSidMatches_LookupReportsFound(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	sid := constants.ContentIDs.DragonUtopia.Sid
 
@@ -34,6 +36,7 @@ func TestWhenSidMatches_LookupReportsFound(t *testing.T) {
 }
 
 func TestWhenSidBelongsToIncludeList_MappingIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.IncludeListIDs.ResourceBanksTier2
 
@@ -45,7 +48,8 @@ func TestWhenSidBelongsToIncludeList_MappingIsReturned(t *testing.T) {
 }
 
 func TestWhenSidCaseDiffers_LookupReportsNotFound(t *testing.T) {
-	// Arrange - sid comparison is case-sensitive, unlike the name lookup
+	t.Parallel()
+	// Arrange
 	upperCasedSid := strings.ToUpper(constants.ContentIDs.DragonUtopia.Sid)
 
 	// Act
@@ -56,6 +60,7 @@ func TestWhenSidCaseDiffers_LookupReportsNotFound(t *testing.T) {
 }
 
 func TestWhenSidIsUnknown_LookupReportsNotFound(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	unknownSid := gofakeit.UUID()
 
@@ -67,6 +72,7 @@ func TestWhenSidIsUnknown_LookupReportsNotFound(t *testing.T) {
 }
 
 func TestWhenSidIsUnknown_ZeroMappingIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	unknownSid := gofakeit.UUID()
 

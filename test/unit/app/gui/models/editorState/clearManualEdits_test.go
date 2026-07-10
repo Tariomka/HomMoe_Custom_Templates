@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenStoredManualEditsAreCleared_NoManualEditsRemain(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetManualEdits(

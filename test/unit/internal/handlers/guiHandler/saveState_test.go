@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	stateSaveDto := dtos.EditorStateSaveDto{
@@ -27,6 +28,7 @@ func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 }
 
 func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
@@ -40,6 +42,7 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 }
 
 func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
@@ -53,6 +56,7 @@ func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing
 }
 
 func TestWhenStateAndOutputPathAreValid_ReturnsOutputPath(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "valid-state.gen.json")
@@ -68,6 +72,7 @@ func TestWhenStateAndOutputPathAreValid_ReturnsOutputPath(t *testing.T) {
 }
 
 func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "written-state.gen.json")
@@ -83,6 +88,7 @@ func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 }
 
 func TestWhenStateOutputDirectoryDoesNotExist_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "no-such-directory", "state.gen.json")

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenTopologyChangedSinceSnapshot_ReportsLayoutChanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -23,6 +24,7 @@ func TestWhenTopologyChangedSinceSnapshot_ReportsLayoutChanged(t *testing.T) {
 }
 
 func TestWhenOnlyDensityChangedSinceSnapshot_ReportsLayoutNotChanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

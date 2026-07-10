@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenFactorAndBaseAreApplied_LinearCombinationIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float32Range(0, 1)
 	base := gofakeit.Float32Range(-10, 10)
@@ -23,6 +24,7 @@ func TestWhenFactorAndBaseAreApplied_LinearCombinationIsReturned(t *testing.T) {
 }
 
 func TestWhenFactorIsZero_BaseIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	base := gofakeit.Float32Range(-10, 10)
 

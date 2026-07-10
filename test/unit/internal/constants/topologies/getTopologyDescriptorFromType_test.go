@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenTypeIsKnown_ReturnsMatchingDescriptor(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.GetTopologyDescriptors().Fractal
 
@@ -20,6 +21,7 @@ func TestWhenTypeIsKnown_ReturnsMatchingDescriptor(t *testing.T) {
 }
 
 func TestWhenTypeIsUnknown_ReturnsFirstTopology(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.GetTopologyDescriptors().Random
 

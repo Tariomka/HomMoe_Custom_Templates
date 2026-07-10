@@ -15,6 +15,7 @@ import (
 )
 
 func TestWhenTemplateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	templateDto := dtos.TemplateSaveDto{Template: nil, OutputPath: t.TempDir()}
@@ -27,6 +28,7 @@ func TestWhenTemplateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 }
 
 func TestWhenTemplateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	templateDto := dtos.TemplateSaveDto{
@@ -42,6 +44,7 @@ func TestWhenTemplateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 }
 
 func TestWhenTemplateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	templateDto := dtos.TemplateSaveDto{
@@ -57,6 +60,7 @@ func TestWhenTemplateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *test
 }
 
 func TestWhenTemplateAndOutputPathAreValid_ReturnsTemplateFilePath(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputDirectory := t.TempDir()
@@ -77,6 +81,7 @@ func TestWhenTemplateAndOutputPathAreValid_ReturnsTemplateFilePath(t *testing.T)
 }
 
 func TestWhenTemplateAndOutputPathAreValid_WritesTemplateFile(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputDirectory := t.TempDir()
@@ -97,6 +102,7 @@ func TestWhenTemplateAndOutputPathAreValid_WritesTemplateFile(t *testing.T) {
 }
 
 func TestWhenTemplateAndOutputPathAreValid_WritesPreviewImage(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputDirectory := t.TempDir()
@@ -117,6 +123,7 @@ func TestWhenTemplateAndOutputPathAreValid_WritesPreviewImage(t *testing.T) {
 }
 
 func TestWhenTemplateOutputPathPointsToExistingFile_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	blockingFile := filepath.Join(t.TempDir(), "not-a-directory.txt")
@@ -136,6 +143,7 @@ func TestWhenTemplateOutputPathPointsToExistingFile_ReturnsError(t *testing.T) {
 }
 
 func TestWhenPreviewImageCannotBeWritten_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputDirectory := t.TempDir()
@@ -156,6 +164,7 @@ func TestWhenPreviewImageCannotBeWritten_ReturnsError(t *testing.T) {
 }
 
 func TestWhenPreviewImageCannotBeWritten_StillReturnsTemplateFilePath(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	outputDirectory := t.TempDir()

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNoNextStateExists_ReportsNoPendingChanges(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -20,6 +21,7 @@ func TestWhenNoNextStateExists_ReportsNoPendingChanges(t *testing.T) {
 }
 
 func TestWhenNextStateEqualsCurrent_ReportsNoPendingChanges(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextState(state.GetCurrentState())
@@ -32,6 +34,7 @@ func TestWhenNextStateEqualsCurrent_ReportsNoPendingChanges(t *testing.T) {
 }
 
 func TestWhenNextStateDiffersFromCurrent_ReportsPendingChanges(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextState(state.GetCurrentState())

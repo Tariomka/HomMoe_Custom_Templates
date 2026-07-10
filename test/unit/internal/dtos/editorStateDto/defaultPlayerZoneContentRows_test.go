@@ -8,7 +8,8 @@ import (
 )
 
 func TestWhenDefaultRowsAreBuilt_ReturnsFourteenRows(t *testing.T) {
-	// Arrange - defaults require no setup.
+	t.Parallel()
+	// Arrange
 
 	// Act
 	rows := dtos.DefaultPlayerZoneContentRows()
@@ -18,6 +19,7 @@ func TestWhenDefaultRowsAreBuilt_ReturnsFourteenRows(t *testing.T) {
 }
 
 func TestWhenDefaultRowsAreBuilt_MarksOnlyFirstSevenRowsAsMines(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedMineFlags := []bool{
 		true, true, true, true, true, true, true,
@@ -36,7 +38,8 @@ func TestWhenDefaultRowsAreBuilt_MarksOnlyFirstSevenRowsAsMines(t *testing.T) {
 }
 
 func TestWhenDefaultRowsAreBuilt_GuardsEveryRow(t *testing.T) {
-	// Arrange - defaults require no setup.
+	t.Parallel()
+	// Arrange
 
 	// Act
 	rows := dtos.DefaultPlayerZoneContentRows()

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNothingWasGeneratedYet_NoCastleChangesAreReported(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerZoneCastles++ })
@@ -22,6 +23,7 @@ func TestWhenNothingWasGeneratedYet_NoCastleChangesAreReported(t *testing.T) {
 }
 
 func TestWhenPlayerCastleCountChangedSinceSnapshot_PlayerCastleChangeIsReported(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -35,6 +37,7 @@ func TestWhenPlayerCastleCountChangedSinceSnapshot_PlayerCastleChangeIsReported(
 }
 
 func TestWhenCastleCountsAreUnchangedSinceSnapshot_NoCastleChangesAreReported(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

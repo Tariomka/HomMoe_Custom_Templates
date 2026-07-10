@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNothingWasModified_DefaultStateIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -21,6 +22,7 @@ func TestWhenNothingWasModified_DefaultStateIsReturned(t *testing.T) {
 }
 
 func TestWhenReturnedStateIsMutated_StoredStateStaysUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	copyOfState := state.GetCurrentState()

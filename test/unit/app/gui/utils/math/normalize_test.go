@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenValueIsInsideRange_RatioIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tests := []struct {
 		name     string
@@ -26,6 +27,7 @@ func TestWhenValueIsInsideRange_RatioIsReturned(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Act
 			actual := utils.Normalize(testCase.value, testCase.low, testCase.high)
 
@@ -36,6 +38,7 @@ func TestWhenValueIsInsideRange_RatioIsReturned(t *testing.T) {
 }
 
 func TestWhenLowEqualsHigh_ZeroIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	bound := gofakeit.Float32Range(-100, 100)
 
@@ -47,6 +50,7 @@ func TestWhenLowEqualsHigh_ZeroIsReturned(t *testing.T) {
 }
 
 func TestWhenValueIsBelowRange_ClampsToZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	low := gofakeit.Float32Range(0, 10)
 	high := gofakeit.Float32Range(20, 100)
@@ -59,6 +63,7 @@ func TestWhenValueIsBelowRange_ClampsToZero(t *testing.T) {
 }
 
 func TestWhenValueIsAboveRange_ClampsToOne(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	low := gofakeit.Float32Range(0, 10)
 	high := gofakeit.Float32Range(20, 100)

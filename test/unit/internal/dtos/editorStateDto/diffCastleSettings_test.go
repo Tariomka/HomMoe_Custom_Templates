@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNothingChanged_ReportsNoChanges(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	previous := dtos.NewDefaultEditorStateDto()
 	current := previous
@@ -21,6 +22,7 @@ func TestWhenNothingChanged_ReportsNoChanges(t *testing.T) {
 }
 
 func TestWhenSimpleModeNeutralCountChanges_FlagsNeutralSimpleOnly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	previous := dtos.NewDefaultEditorStateDto()
 	current := previous
@@ -35,6 +37,7 @@ func TestWhenSimpleModeNeutralCountChanges_FlagsNeutralSimpleOnly(t *testing.T) 
 }
 
 func TestWhenAdvancedModeHighCountChanges_FlagsNeutralHighOnly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	previous := dtos.NewDefaultEditorStateDto()
 	previous.AdvancedMode = true
@@ -50,6 +53,7 @@ func TestWhenAdvancedModeHighCountChanges_FlagsNeutralHighOnly(t *testing.T) {
 }
 
 func TestWhenPlayerAndHubCountsChange_FlagsPlayerCastlesAndHub(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	previous := dtos.NewDefaultEditorStateDto()
 	current := previous

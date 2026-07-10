@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenQueryContainsDuplicates_KeepsFirstOccurrencesInOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{5, 1, 5, 2, 1}
 
@@ -20,6 +21,7 @@ func TestWhenQueryContainsDuplicates_KeepsFirstOccurrencesInOrder(t *testing.T) 
 }
 
 func TestWhenQueryHasNoDuplicates_ReturnsAllElements(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstWord := gofakeit.Word() + "-first"
 	secondWord := gofakeit.Word() + "-second"
@@ -33,6 +35,7 @@ func TestWhenQueryHasNoDuplicates_ReturnsAllElements(t *testing.T) {
 }
 
 func TestWhenQueryIsEmpty_ReturnsEmptyResult(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{}
 

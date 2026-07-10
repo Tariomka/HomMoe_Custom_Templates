@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenSliderValueIsSnapped_NearestIntegerInRangeIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tests := []struct {
 		name     string
@@ -27,6 +28,7 @@ func TestWhenSliderValueIsSnapped_NearestIntegerInRangeIsReturned(t *testing.T) 
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Act
 			result := utils.RoundedRange(testCase.value, testCase.low, testCase.high)
 

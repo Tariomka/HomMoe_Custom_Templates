@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPredicateMatchesSomeElements_KeepsOnlyMatchingOnesInOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{1, 2, 3, 4, 5, 6}
 	isEven := func(number int) bool { return number%2 == 0 }
@@ -20,6 +21,7 @@ func TestWhenPredicateMatchesSomeElements_KeepsOnlyMatchingOnesInOrder(t *testin
 }
 
 func TestWhenPredicateMatchesNoElements_ReturnsEmptyResult(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{1, 3, 5}
 	isEven := func(number int) bool { return number%2 == 0 }
@@ -32,6 +34,7 @@ func TestWhenPredicateMatchesNoElements_ReturnsEmptyResult(t *testing.T) {
 }
 
 func TestWhenPredicateMatchesAllElements_ReturnsAllOfThem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{2, 4, 6}
 	isEven := func(number int) bool { return number%2 == 0 }
@@ -44,6 +47,7 @@ func TestWhenPredicateMatchesAllElements_ReturnsAllOfThem(t *testing.T) {
 }
 
 func TestWhenDownstreamStopsIteration_FilteredIterationStopsEarly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{1, 2, 3, 4, 5, 6}
 	isEven := func(number int) bool { return number%2 == 0 }

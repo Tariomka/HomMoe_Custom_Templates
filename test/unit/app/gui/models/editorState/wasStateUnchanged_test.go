@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNoSnapshotExists_DoesNotReportUnchangedState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -20,6 +21,7 @@ func TestWhenNoSnapshotExists_DoesNotReportUnchangedState(t *testing.T) {
 }
 
 func TestWhenStateEqualsSnapshot_ReportsUnchangedState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -32,6 +34,7 @@ func TestWhenStateEqualsSnapshot_ReportsUnchangedState(t *testing.T) {
 }
 
 func TestWhenStateDivergedFromSnapshot_DoesNotReportUnchangedState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

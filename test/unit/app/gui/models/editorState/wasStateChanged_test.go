@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNoSnapshotExists_ReportsStateNotChanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
@@ -22,6 +23,7 @@ func TestWhenNoSnapshotExists_ReportsStateNotChanged(t *testing.T) {
 }
 
 func TestWhenStateDivergedFromSnapshot_ReportsStateChanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -35,6 +37,7 @@ func TestWhenStateDivergedFromSnapshot_ReportsStateChanged(t *testing.T) {
 }
 
 func TestWhenStateEqualsSnapshot_ReportsStateNotChanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -47,6 +50,7 @@ func TestWhenStateEqualsSnapshot_ReportsStateNotChanged(t *testing.T) {
 }
 
 func TestWhenOnlyManualEditsDifferFromSnapshot_ReportsStateNotChanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenStateIsOverridden_CurrentStateMatchesProvidedState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	incoming := dtos.NewDefaultEditorStateDto()
@@ -25,6 +26,7 @@ func TestWhenStateIsOverridden_CurrentStateMatchesProvidedState(t *testing.T) {
 }
 
 func TestWhenStateWithSnapshotIsOverridden_PreviousStateIsDropped(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -38,6 +40,7 @@ func TestWhenStateWithSnapshotIsOverridden_PreviousStateIsDropped(t *testing.T) 
 }
 
 func TestWhenStateWithNextStateIsOverridden_NextStateIsDropped(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextState(state.GetCurrentState())

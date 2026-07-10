@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenValueIsRounded_HalvesGoAwayFromZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tests := []struct {
 		name     string
@@ -27,6 +28,7 @@ func TestWhenValueIsRounded_HalvesGoAwayFromZero(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Act
 			result := utils.RoundHalfAway(testCase.value)
 

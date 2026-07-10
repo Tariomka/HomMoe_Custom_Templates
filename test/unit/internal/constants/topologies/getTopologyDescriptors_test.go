@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenCatalogIsRequested_EveryDescriptorCarriesItsOwnType(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := []config.MapTopology{
 		config.TopologyRing,

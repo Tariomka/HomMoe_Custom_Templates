@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNoNextStateExistsYet_ReportsCapture(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -20,6 +21,7 @@ func TestWhenNoNextStateExistsYet_ReportsCapture(t *testing.T) {
 }
 
 func TestWhenNoNextStateExistsYet_NextStateIsSet(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -31,6 +33,7 @@ func TestWhenNoNextStateExistsYet_NextStateIsSet(t *testing.T) {
 }
 
 func TestWhenNextStateAlreadyMatchesCurrent_ReportsNoCapture(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextFromCurrentIfStateIsBeingUpdated()
@@ -43,6 +46,7 @@ func TestWhenNextStateAlreadyMatchesCurrent_ReportsNoCapture(t *testing.T) {
 }
 
 func TestWhenCurrentStateMovedPastNextState_ReportsCapture(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextFromCurrentIfStateIsBeingUpdated()
@@ -56,6 +60,7 @@ func TestWhenCurrentStateMovedPastNextState_ReportsCapture(t *testing.T) {
 }
 
 func TestWhenCurrentStateMovedPastNextState_PendingChangesAreCleared(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextFromCurrentIfStateIsBeingUpdated()

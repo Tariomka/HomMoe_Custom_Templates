@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenQueryHasElements_ReturnsThemAsSliceInOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstWord := gofakeit.Word() + "-first"
 	secondWord := gofakeit.Word() + "-second"
@@ -22,6 +23,7 @@ func TestWhenQueryHasElements_ReturnsThemAsSliceInOrder(t *testing.T) {
 }
 
 func TestWhenResultSliceIsMutated_SourceSliceStaysUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{10, 20, 30}
 
@@ -34,6 +36,7 @@ func TestWhenResultSliceIsMutated_SourceSliceStaysUnchanged(t *testing.T) {
 }
 
 func TestWhenQueryIsEmpty_ReturnsNilSlice(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{}
 

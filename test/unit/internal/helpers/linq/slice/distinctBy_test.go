@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenSelectorKeysCollide_KeepsFirstElementPerKeyInOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []string{"apple", "avocado", "banana", "cherry", "citrus"}
 	firstLetter := func(word string) any { return word[0] }
@@ -20,6 +21,7 @@ func TestWhenSelectorKeysCollide_KeepsFirstElementPerKeyInOrder(t *testing.T) {
 }
 
 func TestWhenAllSelectorKeysAreUnique_ReturnsAllElements(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{10, 21, 32}
 	moduloTen := func(number int) any { return number % 10 }
@@ -32,6 +34,7 @@ func TestWhenAllSelectorKeysAreUnique_ReturnsAllElements(t *testing.T) {
 }
 
 func TestWhenQueryIsEmptyAndSelectorProvided_ReturnsEmptyResult(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{}
 	identity := func(number int) any { return number }

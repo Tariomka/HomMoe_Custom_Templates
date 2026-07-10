@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenSourceMapGiven_IterationYieldsAllPairs(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstValue := gofakeit.Number(1, 1000)
 	secondValue := gofakeit.Number(1, 1000)
@@ -23,6 +24,7 @@ func TestWhenSourceMapGiven_IterationYieldsAllPairs(t *testing.T) {
 }
 
 func TestWhenYieldReturnsFalse_IterationStopsEarly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{"first": 1, "second": 2, "third": 3}
 
@@ -38,6 +40,7 @@ func TestWhenYieldReturnsFalse_IterationStopsEarly(t *testing.T) {
 }
 
 func TestWhenSourceMapIsEmpty_IterationYieldsNothing(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{}
 

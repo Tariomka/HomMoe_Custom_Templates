@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNextStateIsAssigned_NextStateExists(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -20,6 +21,7 @@ func TestWhenNextStateIsAssigned_NextStateExists(t *testing.T) {
 }
 
 func TestWhenAssignedNextStateDiffersFromCurrent_PendingChangesAreReported(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	divergent := dtos.NewDefaultEditorStateDto()

@@ -9,7 +9,8 @@ import (
 )
 
 func TestWhenDefaultStateIsCreated_UsesRandomTopology(t *testing.T) {
-	// Arrange - defaults require no setup.
+	t.Parallel()
+	// Arrange
 
 	// Act
 	state := dtos.NewDefaultEditorStateDto()

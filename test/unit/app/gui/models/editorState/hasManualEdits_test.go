@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNoManualEditsWereSet_ReportsNoManualEdits(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -20,6 +21,7 @@ func TestWhenNoManualEditsWereSet_ReportsNoManualEdits(t *testing.T) {
 }
 
 func TestWhenManualZonesWereStored_ReportsManualEdits(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetManualEdits([]entities.Zone{{Name: "Zone A"}}, nil)

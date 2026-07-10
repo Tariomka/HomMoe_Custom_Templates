@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNextStateWasNeverSet_ReportsNoNextState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -19,6 +20,7 @@ func TestWhenNextStateWasNeverSet_ReportsNoNextState(t *testing.T) {
 }
 
 func TestWhenNextStateWasSet_ReportsNextState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextState(state.GetCurrentState())

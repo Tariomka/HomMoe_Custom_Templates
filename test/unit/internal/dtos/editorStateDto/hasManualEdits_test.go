@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNoManualDataIsPresent_ReportsNoManualEdits(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 
@@ -21,6 +22,7 @@ func TestWhenNoManualDataIsPresent_ReportsNoManualEdits(t *testing.T) {
 }
 
 func TestWhenOnlyManualZonesArePresent_ReportsManualEdits(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.ManualZones = []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
@@ -33,6 +35,7 @@ func TestWhenOnlyManualZonesArePresent_ReportsManualEdits(t *testing.T) {
 }
 
 func TestWhenOnlyManualConnectionsArePresent_ReportsManualEdits(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.ManualConnections = []editor_state_dto.ManualConnectionSave{

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		mutate      func(state *dtos.EditorStateDto)
@@ -70,6 +71,7 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			previous := dtos.NewDefaultEditorStateDto()
 			incoming := previous
@@ -85,6 +87,7 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 }
 
 func TestWhenStatesAreIdentical_ReportsUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	previous := dtos.NewDefaultEditorStateDto()
 	incoming := previous
@@ -97,6 +100,7 @@ func TestWhenStatesAreIdentical_ReportsUnchanged(t *testing.T) {
 }
 
 func TestWhenOnlyNonLayoutOptionsChange_ReportsUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	previous := dtos.NewDefaultEditorStateDto()
 	incoming := previous

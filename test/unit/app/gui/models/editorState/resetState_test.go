@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenModifiedStateIsReset_DefaultValuesAreRestored(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) {
@@ -26,6 +27,7 @@ func TestWhenModifiedStateIsReset_DefaultValuesAreRestored(t *testing.T) {
 }
 
 func TestWhenStateWithSnapshotIsReset_PreviousStateIsDropped(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()
@@ -39,6 +41,7 @@ func TestWhenStateWithSnapshotIsReset_PreviousStateIsDropped(t *testing.T) {
 }
 
 func TestWhenStateWithNextStateIsReset_NextStateIsDropped(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextState(state.GetCurrentState())

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenQueryHasElements_ReturnsTrue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []string{gofakeit.Word()}
 
@@ -20,6 +21,7 @@ func TestWhenQueryHasElements_ReturnsTrue(t *testing.T) {
 }
 
 func TestWhenQueryIsEmpty_ReturnsFalse(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []string{}
 
@@ -31,6 +33,7 @@ func TestWhenQueryIsEmpty_ReturnsFalse(t *testing.T) {
 }
 
 func TestWhenFilteredQueryHasNoMatches_ReturnsFalse(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{1, 3, 5}
 	isEven := func(number int) bool { return number%2 == 0 }

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenSelectorGiven_ProjectsEveryElementToString(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstNumber := gofakeit.Number(1, 1000)
 	secondNumber := gofakeit.Number(1, 1000)
@@ -23,6 +24,7 @@ func TestWhenSelectorGiven_ProjectsEveryElementToString(t *testing.T) {
 }
 
 func TestWhenSourceIsEmpty_ProjectionYieldsNothing(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := []int{}
 

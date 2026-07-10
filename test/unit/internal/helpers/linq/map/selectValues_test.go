@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenMapHasPairs_ReturnsQueryOverAllValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{"alpha": 10, "beta": 20, "gamma": 30}
 
@@ -21,6 +22,7 @@ func TestWhenMapHasPairs_ReturnsQueryOverAllValues(t *testing.T) {
 }
 
 func TestWhenMapIsEmpty_ValueQueryYieldsNothing(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{}
 

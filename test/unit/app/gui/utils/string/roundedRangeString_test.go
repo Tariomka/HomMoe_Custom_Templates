@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenSnappedValueIsFormatted_IntegerWithTrailingSpaceIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(0.5)
 
@@ -19,6 +20,7 @@ func TestWhenSnappedValueIsFormatted_IntegerWithTrailingSpaceIsReturned(t *testi
 }
 
 func TestWhenSliderIsAtOne_HighBoundWithTrailingSpaceIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(1)
 

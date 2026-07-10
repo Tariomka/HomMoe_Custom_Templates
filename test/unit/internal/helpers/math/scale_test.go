@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenProductIsPositive_ReturnsTruncatedProduct(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float64Range(1, 500)
 	multiplier := gofakeit.Float64Range(0.1, 10)
@@ -22,6 +23,7 @@ func TestWhenProductIsPositive_ReturnsTruncatedProduct(t *testing.T) {
 }
 
 func TestWhenProductIsNegative_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float64Range(1, 500)
 	multiplier := -gofakeit.Float64Range(0.1, 10)
@@ -34,6 +36,7 @@ func TestWhenProductIsNegative_ReturnsZero(t *testing.T) {
 }
 
 func TestWhenProductIsFractionBelowOne_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := 0.4
 	multiplier := 2.0
@@ -46,6 +49,7 @@ func TestWhenProductIsFractionBelowOne_ReturnsZero(t *testing.T) {
 }
 
 func TestWhenValueIsZero_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	multiplier := gofakeit.Float64Range(0.1, 10)
 

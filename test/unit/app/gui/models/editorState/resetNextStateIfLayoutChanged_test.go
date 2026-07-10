@@ -26,6 +26,7 @@ func nonLayoutChangedStateWithNext() *models.EditorState {
 }
 
 func TestWhenLayoutOptionChangedSinceSnapshot_ReportsReset(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := layoutChangedStateWithNext()
 
@@ -37,6 +38,7 @@ func TestWhenLayoutOptionChangedSinceSnapshot_ReportsReset(t *testing.T) {
 }
 
 func TestWhenLayoutOptionChangedSinceSnapshot_NextStateIsCleared(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := layoutChangedStateWithNext()
 
@@ -48,6 +50,7 @@ func TestWhenLayoutOptionChangedSinceSnapshot_NextStateIsCleared(t *testing.T) {
 }
 
 func TestWhenOnlyNonLayoutOptionChangedSinceSnapshot_ReportsNoReset(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := nonLayoutChangedStateWithNext()
 
@@ -59,6 +62,7 @@ func TestWhenOnlyNonLayoutOptionChangedSinceSnapshot_ReportsNoReset(t *testing.T
 }
 
 func TestWhenOnlyNonLayoutOptionChangedSinceSnapshot_NextStateIsKept(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := nonLayoutChangedStateWithNext()
 

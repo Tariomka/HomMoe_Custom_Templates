@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenStatesAreFullyIdentical_ReportsEqual(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	left := dtos.NewDefaultEditorStateDto()
 	right := left
@@ -22,6 +23,7 @@ func TestWhenStatesAreFullyIdentical_ReportsEqual(t *testing.T) {
 }
 
 func TestWhenOnlyManualEditFieldsDiffer_ReportsEqual(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	left := dtos.NewDefaultEditorStateDto()
 	right := left
@@ -38,6 +40,7 @@ func TestWhenOnlyManualEditFieldsDiffer_ReportsEqual(t *testing.T) {
 }
 
 func TestWhenNonManualFieldDiffers_ReportsNotEqual(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	left := dtos.NewDefaultEditorStateDto()
 	right := left

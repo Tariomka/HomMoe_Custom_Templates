@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
@@ -25,6 +26,7 @@ func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
 }
 
 func TestWhenStateIsDefault_ReturnsNoError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
@@ -37,6 +39,7 @@ func TestWhenStateIsDefault_ReturnsNoError(t *testing.T) {
 }
 
 func TestWhenStateIsDefault_ReturnsGeneratedTemplate(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
@@ -50,6 +53,7 @@ func TestWhenStateIsDefault_ReturnsGeneratedTemplate(t *testing.T) {
 }
 
 func TestWhenStateCarriesCustomName_GeneratedTemplateUsesThatName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
@@ -64,6 +68,7 @@ func TestWhenStateCarriesCustomName_GeneratedTemplateUsesThatName(t *testing.T) 
 }
 
 func TestWhenStateIsDefault_GeneratedTemplateHasOneVariant(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenManualConnectionsWereStored_ConnectionsRoundTripWithUserAddedFlag(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	connections := []entities.Connection{
@@ -26,6 +27,7 @@ func TestWhenManualConnectionsWereStored_ConnectionsRoundTripWithUserAddedFlag(t
 }
 
 func TestWhenNoManualConnectionsWereStored_NilConnectionsAreReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 

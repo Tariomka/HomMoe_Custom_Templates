@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenSnappedValueIsFormatted_PercentSuffixIsAppended(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(0.5)
 
@@ -19,6 +20,7 @@ func TestWhenSnappedValueIsFormatted_PercentSuffixIsAppended(t *testing.T) {
 }
 
 func TestWhenSliderIsAtZero_LowBoundPercentIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(0)
 

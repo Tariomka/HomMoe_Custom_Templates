@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenStateIsConstructed_CurrentStateIsDefault(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := dtos.NewDefaultEditorStateDto()
 
@@ -20,6 +21,7 @@ func TestWhenStateIsConstructed_CurrentStateIsDefault(t *testing.T) {
 }
 
 func TestWhenStateIsConstructed_ThereIsNoPreviousState(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	state := models.NewEditorState()
 
@@ -28,6 +30,7 @@ func TestWhenStateIsConstructed_ThereIsNoPreviousState(t *testing.T) {
 }
 
 func TestWhenStateIsConstructed_ThereIsNoNextState(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	state := models.NewEditorState()
 

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenHandlerIsConstructed_ReturnsNonNilHandler(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act

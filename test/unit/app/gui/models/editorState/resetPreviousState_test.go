@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenExistingSnapshotIsReset_PreviousStateIsGone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

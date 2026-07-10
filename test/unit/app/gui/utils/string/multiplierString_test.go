@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenMultiplierIsFormatted_XPrefixAndTwoDecimalsAreUsed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(0.5)
 
@@ -19,6 +20,7 @@ func TestWhenMultiplierIsFormatted_XPrefixAndTwoDecimalsAreUsed(t *testing.T) {
 }
 
 func TestWhenFactorIsZero_BaseIsFormatted(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(0.75)
 

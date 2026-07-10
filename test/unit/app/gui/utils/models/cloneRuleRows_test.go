@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRuleListIsNil_NilIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	cloned := utils.CloneRuleRows(nil)
 
@@ -18,6 +19,7 @@ func TestWhenRuleListIsNil_NilIsReturned(t *testing.T) {
 }
 
 func TestWhenRuleListIsEmpty_NilIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rules := []models.ContentRuleRowSave{}
 
@@ -29,6 +31,7 @@ func TestWhenRuleListIsEmpty_NilIsReturned(t *testing.T) {
 }
 
 func TestWhenRulesArePresent_EqualCopyIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	isGuarded := gofakeit.Bool()
 	rules := []models.ContentRuleRowSave{
@@ -44,6 +47,7 @@ func TestWhenRulesArePresent_EqualCopyIsReturned(t *testing.T) {
 }
 
 func TestWhenCloneIsMutated_OriginalRulesStayUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rules := []models.ContentRuleRowSave{{Name: "Guarded"}}
 	cloned := utils.CloneRuleRows(rules)

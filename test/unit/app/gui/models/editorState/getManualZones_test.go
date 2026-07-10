@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenManualZonesWereStored_ZonesRoundTripWithManualPositions(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	zones := []entities.Zone{
@@ -30,6 +31,7 @@ func TestWhenManualZonesWereStored_ZonesRoundTripWithManualPositions(t *testing.
 }
 
 func TestWhenNoManualZonesWereStored_NilZonesAreReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 

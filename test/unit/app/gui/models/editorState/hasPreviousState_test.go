@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNoSnapshotWasTaken_ReportsNoPreviousState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -19,6 +20,7 @@ func TestWhenNoSnapshotWasTaken_ReportsNoPreviousState(t *testing.T) {
 }
 
 func TestWhenSnapshotWasTaken_ReportsPreviousState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

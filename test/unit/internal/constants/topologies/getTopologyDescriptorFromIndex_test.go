@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenIndexIsWithinRange_ReturnsDescriptorAtIndex(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.GetTopologyDescriptors().Circles
 
@@ -19,6 +20,7 @@ func TestWhenIndexIsWithinRange_ReturnsDescriptorAtIndex(t *testing.T) {
 }
 
 func TestWhenIndexIsNegative_ReturnsFirstTopology(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.GetTopologyDescriptors().Random
 
@@ -30,6 +32,7 @@ func TestWhenIndexIsNegative_ReturnsFirstTopology(t *testing.T) {
 }
 
 func TestWhenIndexIsBeyondRange_ReturnsFirstTopology(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := constants.GetTopologyDescriptors().Random
 

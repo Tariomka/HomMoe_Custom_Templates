@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenUpdateChangesPlayerCount_ChangeIsApplied(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	playerCount := gofakeit.Number(3, 8)
@@ -22,6 +23,7 @@ func TestWhenUpdateChangesPlayerCount_ChangeIsApplied(t *testing.T) {
 }
 
 func TestWhenUpdateEnablesAdvancedMode_SimpleNeutralZoneCountIsZeroed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -36,6 +38,7 @@ func TestWhenUpdateEnablesAdvancedMode_SimpleNeutralZoneCountIsZeroed(t *testing
 }
 
 func TestWhenUpdateStaysInSimpleMode_AdvancedNeutralCountsAreZeroed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 

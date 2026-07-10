@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenQueryHasPairs_ReturnsMapWithAllOfThem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstValue := gofakeit.Number(1, 1000)
 	secondValue := gofakeit.Number(1, 1000)
@@ -22,6 +23,7 @@ func TestWhenQueryHasPairs_ReturnsMapWithAllOfThem(t *testing.T) {
 }
 
 func TestWhenResultMapIsMutated_SourceMapStaysUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{"first": 10, "second": 20}
 
@@ -34,6 +36,7 @@ func TestWhenResultMapIsMutated_SourceMapStaysUnchanged(t *testing.T) {
 }
 
 func TestWhenQueryIsEmpty_ReturnsEmptyNonNilMap(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	source := map[string]int{}
 

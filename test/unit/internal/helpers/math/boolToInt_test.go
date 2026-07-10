@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenBooleanIsTrue_ReturnsOne(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	boolean := true
 
@@ -19,6 +20,7 @@ func TestWhenBooleanIsTrue_ReturnsOne(t *testing.T) {
 }
 
 func TestWhenBooleanIsFalse_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	boolean := false
 

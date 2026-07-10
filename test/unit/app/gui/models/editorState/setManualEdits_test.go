@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenZonesAreApplied_ManualZoneSavesAreStoredInCurrentState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	position := &[2]float64{gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1)}
@@ -26,6 +27,7 @@ func TestWhenZonesAreApplied_ManualZoneSavesAreStoredInCurrentState(t *testing.T
 }
 
 func TestWhenConnectionsAreApplied_ManualConnectionSavesAreStoredInCurrentState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	connection := entities.Connection{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true}

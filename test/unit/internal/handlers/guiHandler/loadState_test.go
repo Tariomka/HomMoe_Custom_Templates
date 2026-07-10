@@ -14,6 +14,7 @@ import (
 )
 
 func TestWhenStateFilePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 
@@ -25,6 +26,7 @@ func TestWhenStateFilePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 }
 
 func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 
@@ -36,6 +38,7 @@ func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T
 }
 
 func TestWhenStateFileDoesNotExist_ReturnsNotExistError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	missingPath := filepath.Join(t.TempDir(), "missing-state.gen.json")
@@ -48,6 +51,7 @@ func TestWhenStateFileDoesNotExist_ReturnsNotExistError(t *testing.T) {
 }
 
 func TestWhenStateFileContainsInvalidJson_ReturnsError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	corruptPath := filepath.Join(t.TempDir(), "corrupt-state.gen.json")
@@ -61,6 +65,7 @@ func TestWhenStateFileContainsInvalidJson_ReturnsError(t *testing.T) {
 }
 
 func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "roundtrip-state.gen.json")

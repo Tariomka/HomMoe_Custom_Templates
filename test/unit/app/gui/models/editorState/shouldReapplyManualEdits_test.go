@@ -17,6 +17,7 @@ func stateWithManualEdits() *models.EditorState {
 }
 
 func TestWhenNoManualEditsExist_ReapplyIsRefused(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -28,6 +29,7 @@ func TestWhenNoManualEditsExist_ReapplyIsRefused(t *testing.T) {
 }
 
 func TestWhenManualEditsExistWithoutSnapshot_ReapplyIsAllowed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := stateWithManualEdits()
 
@@ -39,6 +41,7 @@ func TestWhenManualEditsExistWithoutSnapshot_ReapplyIsAllowed(t *testing.T) {
 }
 
 func TestWhenLayoutChangedAfterManualEdits_ReapplyIsRefused(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := stateWithManualEdits()
 	state.SnapshotCurrentState()
@@ -52,6 +55,7 @@ func TestWhenLayoutChangedAfterManualEdits_ReapplyIsRefused(t *testing.T) {
 }
 
 func TestWhenOnlyNonLayoutOptionsChangedAfterManualEdits_ReapplyIsAllowed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := stateWithManualEdits()
 	state.SnapshotCurrentState()

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenValueIsFormatted_PlusMinusPrefixAndTwoDecimalsAreUsed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(0.5)
 
@@ -19,6 +20,7 @@ func TestWhenValueIsFormatted_PlusMinusPrefixAndTwoDecimalsAreUsed(t *testing.T)
 }
 
 func TestWhenValueExceedsOne_ClampedHighBoundIsFormatted(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := float32(1.5)
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenExistingNextStateIsReset_NextStateIsGone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SetNextState(state.GetCurrentState())

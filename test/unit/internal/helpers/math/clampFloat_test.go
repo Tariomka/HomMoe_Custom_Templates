@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenFloatValueIsBelowLowest_ReturnsLowest(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Float64Range(0, 100)
 	highest := lowest + gofakeit.Float64Range(1, 100)
@@ -23,6 +24,7 @@ func TestWhenFloatValueIsBelowLowest_ReturnsLowest(t *testing.T) {
 }
 
 func TestWhenFloatValueIsAboveHighest_ReturnsHighest(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Float64Range(0, 100)
 	highest := lowest + gofakeit.Float64Range(1, 100)
@@ -36,6 +38,7 @@ func TestWhenFloatValueIsAboveHighest_ReturnsHighest(t *testing.T) {
 }
 
 func TestWhenFloatValueIsWithinBounds_ReturnsValueUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Float64Range(0, 100)
 	highest := lowest + gofakeit.Float64Range(2, 100)
@@ -49,6 +52,7 @@ func TestWhenFloatValueIsWithinBounds_ReturnsValueUnchanged(t *testing.T) {
 }
 
 func TestWhenFloatValueEqualsLowest_ReturnsValueUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Float64Range(0, 100)
 	highest := lowest + gofakeit.Float64Range(1, 100)
@@ -61,6 +65,7 @@ func TestWhenFloatValueEqualsLowest_ReturnsValueUnchanged(t *testing.T) {
 }
 
 func TestWhenFloatValueEqualsHighest_ReturnsValueUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Float64Range(0, 100)
 	highest := lowest + gofakeit.Float64Range(1, 100)

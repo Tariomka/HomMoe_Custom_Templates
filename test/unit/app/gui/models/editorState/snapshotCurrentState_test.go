@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSnapshotIsTaken_PreviousStateExists(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 
@@ -20,6 +21,7 @@ func TestWhenSnapshotIsTaken_PreviousStateExists(t *testing.T) {
 }
 
 func TestWhenCurrentStateChangesAfterSnapshot_SnapshotKeepsOldValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := models.NewEditorState()
 	state.SnapshotCurrentState()

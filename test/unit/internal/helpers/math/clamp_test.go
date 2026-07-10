@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenValueIsBelowLowest_ReturnsLowest(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Number(0, 100)
 	highest := lowest + gofakeit.Number(1, 100)
@@ -22,6 +23,7 @@ func TestWhenValueIsBelowLowest_ReturnsLowest(t *testing.T) {
 }
 
 func TestWhenValueIsAboveHighest_ReturnsHighest(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Number(0, 100)
 	highest := lowest + gofakeit.Number(1, 100)
@@ -35,6 +37,7 @@ func TestWhenValueIsAboveHighest_ReturnsHighest(t *testing.T) {
 }
 
 func TestWhenValueIsWithinBounds_ReturnsValueUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Number(0, 100)
 	highest := lowest + gofakeit.Number(2, 100)
@@ -48,6 +51,7 @@ func TestWhenValueIsWithinBounds_ReturnsValueUnchanged(t *testing.T) {
 }
 
 func TestWhenValueEqualsLowest_ReturnsValueUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Number(0, 100)
 	highest := lowest + gofakeit.Number(1, 100)
@@ -60,6 +64,7 @@ func TestWhenValueEqualsLowest_ReturnsValueUnchanged(t *testing.T) {
 }
 
 func TestWhenValueEqualsHighest_ReturnsValueUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowest := gofakeit.Number(0, 100)
 	highest := lowest + gofakeit.Number(1, 100)

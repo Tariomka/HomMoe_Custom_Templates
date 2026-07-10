@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenValueIsInsideUnitRange_LinearInterpolationIsReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tests := []struct {
 		name     string
@@ -26,6 +27,7 @@ func TestWhenValueIsInsideUnitRange_LinearInterpolationIsReturned(t *testing.T) 
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Act
 			result := utils.Denormalize(testCase.value, testCase.low, testCase.high)
 
@@ -36,6 +38,7 @@ func TestWhenValueIsInsideUnitRange_LinearInterpolationIsReturned(t *testing.T) 
 }
 
 func TestWhenValueIsBelowZero_ClampsToLow(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	low := gofakeit.Float32Range(-100, 0)
 	high := gofakeit.Float32Range(1, 100)
@@ -48,6 +51,7 @@ func TestWhenValueIsBelowZero_ClampsToLow(t *testing.T) {
 }
 
 func TestWhenValueIsAboveOne_ClampsToHigh(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	low := gofakeit.Float32Range(-100, 0)
 	high := gofakeit.Float32Range(1, 100)
