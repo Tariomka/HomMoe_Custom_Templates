@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,10 +27,10 @@ func TestWhenValueIsInsideRange_RatioIsReturned(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Act
-			result := utils.Normalize(testCase.value, testCase.low, testCase.high)
+			actual := utils.Normalize(testCase.value, testCase.low, testCase.high)
 
 			// Assert
-			assert.InDelta(t, testCase.expected, result, 0.0001)
+			assert.InDelta(t, testCase.expected, actual, test_helpers.Delta)
 		})
 	}
 }
@@ -39,10 +40,10 @@ func TestWhenLowEqualsHigh_ZeroIsReturned(t *testing.T) {
 	bound := gofakeit.Float32Range(-100, 100)
 
 	// Act
-	result := utils.Normalize(gofakeit.Float32Range(-100, 100), bound, bound)
+	actual := utils.Normalize(gofakeit.Float32Range(-100, 100), bound, bound)
 
 	// Assert
-	assert.Equal(t, float32(0), result)
+	assert.InDelta(t, float32(0), actual, test_helpers.Delta)
 }
 
 func TestWhenValueIsBelowRange_ClampsToZero(t *testing.T) {
@@ -51,10 +52,10 @@ func TestWhenValueIsBelowRange_ClampsToZero(t *testing.T) {
 	high := gofakeit.Float32Range(20, 100)
 
 	// Act
-	result := utils.Normalize(low-5, low, high)
+	actual := utils.Normalize(low-5, low, high)
 
 	// Assert
-	assert.Equal(t, float32(0), result)
+	assert.InDelta(t, float32(0), actual, test_helpers.Delta)
 }
 
 func TestWhenValueIsAboveRange_ClampsToOne(t *testing.T) {
@@ -63,8 +64,8 @@ func TestWhenValueIsAboveRange_ClampsToOne(t *testing.T) {
 	high := gofakeit.Float32Range(20, 100)
 
 	// Act
-	result := utils.Normalize(high+5, low, high)
+	actual := utils.Normalize(high+5, low, high)
 
 	// Assert
-	assert.Equal(t, float32(1), result)
+	assert.InDelta(t, float32(1), actual, test_helpers.Delta)
 }

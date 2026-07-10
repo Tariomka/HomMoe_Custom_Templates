@@ -736,7 +736,7 @@ func (this *ZoneEditorDialog) layoutSidePanel(gtx layout.Context, theme *materia
 				Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
 					return rows[index](gtx)
 				})
-			this.writebackZoneProps(gtx, zone)
+			this.writebackZoneProps(zone)
 			return dims
 		}
 		if this.selected == nil {
@@ -751,7 +751,7 @@ func (this *ZoneEditorDialog) layoutSidePanel(gtx layout.Context, theme *materia
 			Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
 				return rows[index](gtx)
 			})
-		this.writebackProps(gtx)
+		this.writebackProps()
 		return dims
 	})
 	return layout.Dimensions{Size: size}
@@ -882,7 +882,7 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 
 // writebackProps copies the property widget state back into the selected
 // connection after the panel has been laid out for this frame.
-func (this *ZoneEditorDialog) writebackProps(gtx layout.Context) {
+func (this *ZoneEditorDialog) writebackProps() {
 	connection := this.selected
 	if connection == nil {
 		return
@@ -1284,7 +1284,7 @@ func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 
 // writebackZoneProps copies the zone widget state back into the selected zone
 // after the panel has been laid out for this frame.
-func (this *ZoneEditorDialog) writebackZoneProps(gtx layout.Context, zone *entities.Zone) {
+func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 	if value, err := strconv.ParseFloat(strings.TrimSpace(this.zoneSizeEdit.Text()), 64); err == nil {
 		zone.Size = math.Round(math.Min(math.Max(value, 0.1), 2.0)*100) / 100
 	}

@@ -33,96 +33,125 @@ var SpellSchoolDisplayNames = map[string]string{
 var KnownSpells = buildKnownSpells()
 
 func buildKnownSpells() []SpellEntry {
-	sids := registry.GetSpellSidValues()
+	spells := []SpellEntry{}
+	spells = append(spells, buildHighNeutralSpells()...)
+	spells = append(spells, buildDaylightSpells()...)
+	spells = append(spells, buildNightshadeSpells()...)
+	spells = append(spells, buildPrimalSpells()...)
+	spells = append(spells, buildArcaneSpells()...)
+	return spells
+}
+
+func buildHighNeutralSpells() []SpellEntry {
+	spells := registry.GetHighNeutralSpellSidValues()
 	spellSchoolValues := registry.GetSpellSchoolTypeValues()
 	return []SpellEntry{
-		// High Neutral
-		{sids.NeutralPocketDimension, "Pocket Dimension", spellSchoolValues.HighNeutral, 2},
-		{sids.NeutralSecondSight, "Second Sight", spellSchoolValues.HighNeutral, 2},
-		{sids.NeutralShadowForm, "Shadowflight", spellSchoolValues.HighNeutral, 3},
-		{sids.NeutralTownPortal, "Town Portal", spellSchoolValues.HighNeutral, 3},
-		{sids.NeutralDimensionDoor, "Dimension Door", spellSchoolValues.HighNeutral, 4},
-		{sids.NeutralLightGate, "Gate of Light", spellSchoolValues.HighNeutral, 4},
+		{spells.PocketDimension, "Pocket Dimension", spellSchoolValues.HighNeutral, 2},
+		{spells.SecondSight, "Second Sight", spellSchoolValues.HighNeutral, 2},
+		{spells.ShadowForm, "Shadowflight", spellSchoolValues.HighNeutral, 3},
+		{spells.TownPortal, "Town Portal", spellSchoolValues.HighNeutral, 3},
+		{spells.DimensionDoor, "Dimension Door", spellSchoolValues.HighNeutral, 4},
+		{spells.LightGate, "Gate of Light", spellSchoolValues.HighNeutral, 4},
+	}
+}
 
-		// Daylight
-		{sids.DaySharpEdge, "Blessing", spellSchoolValues.Daylight, 1},
-		{sids.DayHaste, "Haste", spellSchoolValues.Daylight, 1},
-		{sids.DayHealingWater, "Healing Water", spellSchoolValues.Daylight, 1},
-		{sids.DayShortenShadow, "Shorten Shadow", spellSchoolValues.Daylight, 1},
-		{sids.DayFavorableWind, "Favorable Wind", spellSchoolValues.Daylight, 2},
-		{sids.DayClearView, "From a Bird's Eye", spellSchoolValues.Daylight, 2},
-		{sids.DayInnerLight, "Inner Light", spellSchoolValues.Daylight, 2},
-		{sids.DayCleansingRay, "Weakening Ray", spellSchoolValues.Daylight, 2},
-		{sids.DayArinasHymn, "Arina's Touch", spellSchoolValues.Daylight, 3},
-		{sids.DayMasterfulParry, "Riposte", spellSchoolValues.Daylight, 3},
-		{sids.DaySecondSong, "Song of Power", spellSchoolValues.Daylight, 3},
-		{sids.DayTaunt, "Taunt", spellSchoolValues.Daylight, 3},
-		{sids.DayFarsight, "Clear Fog", spellSchoolValues.Daylight, 4},
-		{sids.DayHolyArms, "Heavenly Blades", spellSchoolValues.Daylight, 4},
-		{sids.DayRadiantArmor, "Radiant Armor", spellSchoolValues.Daylight, 4},
-		{sids.DayVengeance, "Vengeance", spellSchoolValues.Daylight, 4},
-		{sids.DayArinasChosen, "Arina's Chosen", spellSchoolValues.Daylight, 5},
-		{sids.DayJudgement, "Judgement", spellSchoolValues.Daylight, 5},
+func buildDaylightSpells() []SpellEntry {
+	spells := registry.GetDaylightSpellSidValues()
+	spellSchoolValues := registry.GetSpellSchoolTypeValues()
+	return []SpellEntry{
+		{spells.SharpEdge, "Blessing", spellSchoolValues.Daylight, 1},
+		{spells.Haste, "Haste", spellSchoolValues.Daylight, 1},
+		{spells.HealingWater, "Healing Water", spellSchoolValues.Daylight, 1},
+		{spells.ShortenShadow, "Shorten Shadow", spellSchoolValues.Daylight, 1},
+		{spells.FavorableWind, "Favorable Wind", spellSchoolValues.Daylight, 2},
+		{spells.ClearView, "From a Bird's Eye", spellSchoolValues.Daylight, 2},
+		{spells.InnerLight, "Inner Light", spellSchoolValues.Daylight, 2},
+		{spells.CleansingRay, "Weakening Ray", spellSchoolValues.Daylight, 2},
+		{spells.ArinasHymn, "Arina's Touch", spellSchoolValues.Daylight, 3},
+		{spells.MasterfulParry, "Riposte", spellSchoolValues.Daylight, 3},
+		{spells.SecondSong, "Song of Power", spellSchoolValues.Daylight, 3},
+		{spells.Taunt, "Taunt", spellSchoolValues.Daylight, 3},
+		{spells.Farsight, "Clear Fog", spellSchoolValues.Daylight, 4},
+		{spells.HolyArms, "Heavenly Blades", spellSchoolValues.Daylight, 4},
+		{spells.RadiantArmor, "Radiant Armor", spellSchoolValues.Daylight, 4},
+		{spells.Vengeance, "Vengeance", spellSchoolValues.Daylight, 4},
+		{spells.ArinasChosen, "Arina's Chosen", spellSchoolValues.Daylight, 5},
+		{spells.Judgement, "Judgement", spellSchoolValues.Daylight, 5},
+	}
+}
 
-		// Nightshade
-		{sids.NightDespair, "Despair", spellSchoolValues.Nightshade, 1},
-		{sids.NightEnlargeShadow, "Enlarge Shadow", spellSchoolValues.Nightshade, 1},
-		{sids.NightFatalDecay, "Fatal Decay", spellSchoolValues.Nightshade, 1},
-		{sids.NightUnnaturalCalm, "Unnatural Calm", spellSchoolValues.Nightshade, 1},
-		{sids.NightReadMinds, "Read Minds", spellSchoolValues.Nightshade, 2},
-		{sids.NightShadeCloak, "Shade Cloak", spellSchoolValues.Nightshade, 2},
-		{sids.NightDeathsGrip, "Umbral Grip", spellSchoolValues.Nightshade, 2},
-		{sids.NightWeb, "Web", spellSchoolValues.Nightshade, 2},
-		{sids.NightNairasVeil, "Naira's Veil", spellSchoolValues.Nightshade, 3},
-		{sids.NightSilence, "Silence", spellSchoolValues.Nightshade, 3},
-		{sids.NightSleep, "Sleep", spellSchoolValues.Nightshade, 3},
-		{sids.NightTwilight, "Twilight", spellSchoolValues.Nightshade, 3},
-		{sids.NightBerserker, "Berserk", spellSchoolValues.Nightshade, 4},
-		{sids.NightSummonStarchild, "Summon Starchild", spellSchoolValues.Nightshade, 4},
-		{sids.NightVulnerability, "Vulnerability", spellSchoolValues.Nightshade, 4},
-		{sids.NightDeathsCall, "Coup de Grace", spellSchoolValues.Nightshade, 5},
-		{sids.NightNairasKiss, "Naira's Kiss", spellSchoolValues.Nightshade, 5},
-		{sids.NightShadowArmy, "Shadow Army", spellSchoolValues.Nightshade, 5},
+func buildNightshadeSpells() []SpellEntry {
+	spells := registry.GetNightshadeSpellSidValues()
+	spellSchoolValues := registry.GetSpellSchoolTypeValues()
+	return []SpellEntry{
+		{spells.Despair, "Despair", spellSchoolValues.Nightshade, 1},
+		{spells.EnlargeShadow, "Enlarge Shadow", spellSchoolValues.Nightshade, 1},
+		{spells.FatalDecay, "Fatal Decay", spellSchoolValues.Nightshade, 1},
+		{spells.UnnaturalCalm, "Unnatural Calm", spellSchoolValues.Nightshade, 1},
+		{spells.ReadMinds, "Read Minds", spellSchoolValues.Nightshade, 2},
+		{spells.ShadeCloak, "Shade Cloak", spellSchoolValues.Nightshade, 2},
+		{spells.DeathsGrip, "Umbral Grip", spellSchoolValues.Nightshade, 2},
+		{spells.Web, "Web", spellSchoolValues.Nightshade, 2},
+		{spells.NairasVeil, "Naira's Veil", spellSchoolValues.Nightshade, 3},
+		{spells.Silence, "Silence", spellSchoolValues.Nightshade, 3},
+		{spells.Sleep, "Sleep", spellSchoolValues.Nightshade, 3},
+		{spells.Twilight, "Twilight", spellSchoolValues.Nightshade, 3},
+		{spells.Berserker, "Berserk", spellSchoolValues.Nightshade, 4},
+		{spells.SummonStarchild, "Summon Starchild", spellSchoolValues.Nightshade, 4},
+		{spells.Vulnerability, "Vulnerability", spellSchoolValues.Nightshade, 4},
+		{spells.DeathsCall, "Coup de Grace", spellSchoolValues.Nightshade, 5},
+		{spells.NairasKiss, "Naira's Kiss", spellSchoolValues.Nightshade, 5},
+		{spells.ShadowArmy, "Shadow Army", spellSchoolValues.Nightshade, 5},
+	}
+}
 
-		// Primal
-		{sids.PrimalGroundsight, "Groundsight", spellSchoolValues.Primal, 1},
-		{sids.PrimalThunderbolt, "Lightning Bolt", spellSchoolValues.Primal, 1},
-		{sids.PrimalThickHide, "Thick Hide", spellSchoolValues.Primal, 1},
-		{sids.PrimalCrystalCrown, "Crystal Crown", spellSchoolValues.Primal, 2},
-		{sids.PrimalFireGlobe, "Fireball", spellSchoolValues.Primal, 2},
-		{sids.PrimalIceBolt, "Ice Bolt", spellSchoolValues.Primal, 2},
-		{sids.PrimalWean, "Wean", spellSchoolValues.Primal, 2},
-		{sids.PrimalCaveIn, "Cave In", spellSchoolValues.Primal, 3},
-		{sids.PrimalEarthsRage, "Earth's Rage", spellSchoolValues.Primal, 3},
-		{sids.PrimalWallOfFlame, "Firewall", spellSchoolValues.Primal, 3},
-		{sids.PrimalStoneFangs, "Stone Fangs", spellSchoolValues.Primal, 3},
-		{sids.PrimalPrimordialPurity, "Anti-Magic", spellSchoolValues.Primal, 4},
-		{sids.PrimalChainLightning, "Chain Lightning", spellSchoolValues.Primal, 4},
-		{sids.PrimalAvalanche, "Circle of Winter", spellSchoolValues.Primal, 4},
-		{sids.PrimalPrimordialChaos, "Primordial Chaos", spellSchoolValues.Primal, 4},
-		{sids.PrimalArmageddon, "Armageddon", spellSchoolValues.Primal, 5},
-		{sids.PrimalHksmillasRampage, "Hksmilla's Rampage", spellSchoolValues.Primal, 5},
-		{sids.PrimalSummonPrimalRemnant, "Summon Primal Remnant", spellSchoolValues.Primal, 5},
+func buildPrimalSpells() []SpellEntry {
+	spells := registry.GetPrimalSpellSidValues()
+	spellSchoolValues := registry.GetSpellSchoolTypeValues()
+	return []SpellEntry{
+		{spells.Groundsight, "Groundsight", spellSchoolValues.Primal, 1},
+		{spells.Thunderbolt, "Lightning Bolt", spellSchoolValues.Primal, 1},
+		{spells.ThickHide, "Thick Hide", spellSchoolValues.Primal, 1},
+		{spells.CrystalCrown, "Crystal Crown", spellSchoolValues.Primal, 2},
+		{spells.FireGlobe, "Fireball", spellSchoolValues.Primal, 2},
+		{spells.IceBolt, "Ice Bolt", spellSchoolValues.Primal, 2},
+		{spells.Wean, "Wean", spellSchoolValues.Primal, 2},
+		{spells.CaveIn, "Cave In", spellSchoolValues.Primal, 3},
+		{spells.EarthsRage, "Earth's Rage", spellSchoolValues.Primal, 3},
+		{spells.WallOfFlame, "Firewall", spellSchoolValues.Primal, 3},
+		{spells.StoneFangs, "Stone Fangs", spellSchoolValues.Primal, 3},
+		{spells.PrimordialPurity, "Anti-Magic", spellSchoolValues.Primal, 4},
+		{spells.ChainLightning, "Chain Lightning", spellSchoolValues.Primal, 4},
+		{spells.Avalanche, "Circle of Winter", spellSchoolValues.Primal, 4},
+		{spells.PrimordialChaos, "Primordial Chaos", spellSchoolValues.Primal, 4},
+		{spells.Armageddon, "Armageddon", spellSchoolValues.Primal, 5},
+		{spells.HksmillasRampage, "Hksmilla's Rampage", spellSchoolValues.Primal, 5},
+		{spells.SummonPrimalRemnant, "Summon Primal Remnant", spellSchoolValues.Primal, 5},
+	}
+}
 
-		// Arcane
-		{sids.SpaceEarlyStart, "Early Start", spellSchoolValues.Arcane, 1},
-		{sids.SpaceEnergyze, "Energize", spellSchoolValues.Arcane, 1},
-		{sids.SpaceDecimate, "Guillotine", spellSchoolValues.Arcane, 1},
-		{sids.SpaceOpticalIllusion, "Optical Illusion", spellSchoolValues.Arcane, 1},
-		{sids.SpaceBlink, "Blink", spellSchoolValues.Arcane, 2},
-		{sids.SpaceCarapace, "Carapace", spellSchoolValues.Arcane, 2},
-		{sids.SpaceEnergyExplosion, "Energy Explosion", spellSchoolValues.Arcane, 2},
-		{sids.SpaceReinforcements, "Reinforcements", spellSchoolValues.Arcane, 2},
-		{sids.SpaceAssemble, "Assemble!", spellSchoolValues.Arcane, 3},
-		{sids.SpaceImpendingFate, "Impending Fate", spellSchoolValues.Arcane, 3},
-		{sids.SpaceShackles, "Shackles", spellSchoolValues.Arcane, 3},
-		{sids.SpaceTrapJaws, "Temporal Spheres", spellSchoolValues.Arcane, 3},
-		{sids.SpaceMirrorCopy, "Mirror Copy", spellSchoolValues.Arcane, 4},
-		{sids.SpaceRewind, "Rewind Life", spellSchoolValues.Arcane, 4},
-		{sids.SpaceTrapSnare, "Spatial Snare", spellSchoolValues.Arcane, 4},
-		{sids.SpaceBlackHole, "Black Hole", spellSchoolValues.Arcane, 5},
-		{sids.SpaceDoreathsTide, "Doreath's Tide", spellSchoolValues.Arcane, 5},
-		{sids.SpaceRealityDistortion, "Reality Distortion", spellSchoolValues.Arcane, 5},
+func buildArcaneSpells() []SpellEntry {
+	spells := registry.GetArcaneSpellSidValues()
+	spellSchoolValues := registry.GetSpellSchoolTypeValues()
+	return []SpellEntry{
+		{spells.EarlyStart, "Early Start", spellSchoolValues.Arcane, 1},
+		{spells.Energyze, "Energize", spellSchoolValues.Arcane, 1},
+		{spells.Decimate, "Guillotine", spellSchoolValues.Arcane, 1},
+		{spells.OpticalIllusion, "Optical Illusion", spellSchoolValues.Arcane, 1},
+		{spells.Blink, "Blink", spellSchoolValues.Arcane, 2},
+		{spells.Carapace, "Carapace", spellSchoolValues.Arcane, 2},
+		{spells.EnergyExplosion, "Energy Explosion", spellSchoolValues.Arcane, 2},
+		{spells.Reinforcements, "Reinforcements", spellSchoolValues.Arcane, 2},
+		{spells.Assemble, "Assemble!", spellSchoolValues.Arcane, 3},
+		{spells.ImpendingFate, "Impending Fate", spellSchoolValues.Arcane, 3},
+		{spells.Shackles, "Shackles", spellSchoolValues.Arcane, 3},
+		{spells.TrapJaws, "Temporal Spheres", spellSchoolValues.Arcane, 3},
+		{spells.MirrorCopy, "Mirror Copy", spellSchoolValues.Arcane, 4},
+		{spells.Rewind, "Rewind Life", spellSchoolValues.Arcane, 4},
+		{spells.TrapSnare, "Spatial Snare", spellSchoolValues.Arcane, 4},
+		{spells.BlackHole, "Black Hole", spellSchoolValues.Arcane, 5},
+		{spells.DoreathsTide, "Doreath's Tide", spellSchoolValues.Arcane, 5},
+		{spells.RealityDistortion, "Reality Distortion", spellSchoolValues.Arcane, 5},
 	}
 }
 

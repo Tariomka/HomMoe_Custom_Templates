@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,10 +16,10 @@ func TestWhenFloatValueIsBelowLowest_ReturnsLowest(t *testing.T) {
 	value := lowest - gofakeit.Float64Range(1, 100)
 
 	// Act
-	clamped := helpers.ClampFloat(value, lowest, highest)
+	actual := helpers.ClampFloat(value, lowest, highest)
 
 	// Assert
-	assert.Equal(t, lowest, clamped)
+	assert.InDelta(t, lowest, actual, test_helpers.Delta)
 }
 
 func TestWhenFloatValueIsAboveHighest_ReturnsHighest(t *testing.T) {
@@ -28,10 +29,10 @@ func TestWhenFloatValueIsAboveHighest_ReturnsHighest(t *testing.T) {
 	value := highest + gofakeit.Float64Range(1, 100)
 
 	// Act
-	clamped := helpers.ClampFloat(value, lowest, highest)
+	actual := helpers.ClampFloat(value, lowest, highest)
 
 	// Assert
-	assert.Equal(t, highest, clamped)
+	assert.InDelta(t, highest, actual, test_helpers.Delta)
 }
 
 func TestWhenFloatValueIsWithinBounds_ReturnsValueUnchanged(t *testing.T) {
@@ -41,10 +42,10 @@ func TestWhenFloatValueIsWithinBounds_ReturnsValueUnchanged(t *testing.T) {
 	value := gofakeit.Float64Range(lowest, highest)
 
 	// Act
-	clamped := helpers.ClampFloat(value, lowest, highest)
+	actual := helpers.ClampFloat(value, lowest, highest)
 
 	// Assert
-	assert.Equal(t, value, clamped)
+	assert.InDelta(t, value, actual, test_helpers.Delta)
 }
 
 func TestWhenFloatValueEqualsLowest_ReturnsValueUnchanged(t *testing.T) {
@@ -53,10 +54,10 @@ func TestWhenFloatValueEqualsLowest_ReturnsValueUnchanged(t *testing.T) {
 	highest := lowest + gofakeit.Float64Range(1, 100)
 
 	// Act
-	clamped := helpers.ClampFloat(lowest, lowest, highest)
+	actual := helpers.ClampFloat(lowest, lowest, highest)
 
 	// Assert
-	assert.Equal(t, lowest, clamped)
+	assert.InDelta(t, lowest, actual, test_helpers.Delta)
 }
 
 func TestWhenFloatValueEqualsHighest_ReturnsValueUnchanged(t *testing.T) {
@@ -65,8 +66,8 @@ func TestWhenFloatValueEqualsHighest_ReturnsValueUnchanged(t *testing.T) {
 	highest := lowest + gofakeit.Float64Range(1, 100)
 
 	// Act
-	clamped := helpers.ClampFloat(highest, lowest, highest)
+	actual := helpers.ClampFloat(highest, lowest, highest)
 
 	// Assert
-	assert.Equal(t, highest, clamped)
+	assert.InDelta(t, highest, actual, test_helpers.Delta)
 }

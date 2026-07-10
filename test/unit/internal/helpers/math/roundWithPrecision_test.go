@@ -1,7 +1,7 @@
 package math_test
 
 import (
-	stdmath "math"
+	"math"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
@@ -40,15 +40,15 @@ func TestWhenPrecisionIsZero_RoundsToNearestInteger(t *testing.T) {
 	actual := helpers.RoundWithPrecision(value, 0)
 
 	// Assert
-	assert.InDelta(t, stdmath.Round(value), actual, test_helpers.Delta)
+	assert.InDelta(t, math.Round(value), actual, test_helpers.Delta)
 }
 
 func TestWhenValueIsFuzzed_MatchesIndependentRoundingFormula(t *testing.T) {
 	// Arrange
 	value := gofakeit.Float64Range(-1000, 1000)
 	decimalPrecision := gofakeit.Number(1, 6)
-	multiplier := stdmath.Pow(10, float64(decimalPrecision))
-	expected := stdmath.Round(value*multiplier) / multiplier
+	multiplier := math.Pow(10, float64(decimalPrecision))
+	expected := math.Round(value*multiplier) / multiplier
 
 	// Act
 	actual := helpers.RoundWithPrecision(value, decimalPrecision)

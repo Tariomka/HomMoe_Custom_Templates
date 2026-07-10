@@ -152,19 +152,6 @@ func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDt
 		this.zoneCountOptionsChanged(incoming)
 }
 
-// zoneCountOptionsChanged reports whether the number of neutral zones differs
-// between two editor states.
-func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bool {
-	return this.AdvancedMode != incoming.AdvancedMode ||
-		this.NeutralZoneCount != incoming.NeutralZoneCount ||
-		this.NeutralLowNoCastleCount != incoming.NeutralLowNoCastleCount ||
-		this.NeutralLowCastleCount != incoming.NeutralLowCastleCount ||
-		this.NeutralMediumNoCastleCount != incoming.NeutralMediumNoCastleCount ||
-		this.NeutralMediumCastleCount != incoming.NeutralMediumCastleCount ||
-		this.NeutralHighNoCastleCount != incoming.NeutralHighNoCastleCount ||
-		this.NeutralHighCastleCount != incoming.NeutralHighCastleCount
-}
-
 // DiffCastleSettings compares the castle-count options of this state (the one
 // behind the last generation) against the incoming current state. AdvancedMode
 // gates which neutral options are relevant; it cannot flip between the two
@@ -200,6 +187,19 @@ func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) boo
 
 func (this *EditorStateDto) HasManualEdits() bool {
 	return len(this.ManualZones) > 0 || len(this.ManualConnections) > 0
+}
+
+// zoneCountOptionsChanged reports whether the number of neutral zones differs
+// between two editor states.
+func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bool {
+	return this.AdvancedMode != incoming.AdvancedMode ||
+		this.NeutralZoneCount != incoming.NeutralZoneCount ||
+		this.NeutralLowNoCastleCount != incoming.NeutralLowNoCastleCount ||
+		this.NeutralLowCastleCount != incoming.NeutralLowCastleCount ||
+		this.NeutralMediumNoCastleCount != incoming.NeutralMediumNoCastleCount ||
+		this.NeutralMediumCastleCount != incoming.NeutralMediumCastleCount ||
+		this.NeutralHighNoCastleCount != incoming.NeutralHighNoCastleCount ||
+		this.NeutralHighCastleCount != incoming.NeutralHighCastleCount
 }
 
 // DefaultPlayerZoneContentRows returns the historical default mandatory-content

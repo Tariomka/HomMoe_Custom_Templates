@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,7 +43,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
 	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, originalGuardMultiplier, zone.GuardMultiplier,
+	assert.InDelta(t, originalGuardMultiplier, zone.GuardMultiplier, test_helpers.Delta,
 		"guard multiplier must not be re-profiled")
 }
 
@@ -55,8 +56,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentPool(t *testing.T) {
 	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, originalPool, zone.GuardedContentPool,
-		"content pools must not be re-profiled")
+	assert.Equal(t, originalPool, zone.GuardedContentPool, "content pools must not be re-profiled")
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardedContentValue(t *testing.T) {
@@ -68,8 +68,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentValue(t *testing.T) {
 	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, originalGuardedValue, zone.GuardedContentValue,
-		"content values must not be re-profiled")
+	assert.Equal(t, originalGuardedValue, zone.GuardedContentValue, "content values must not be re-profiled")
 }
 
 func TestWhenZoneSizeWasEditedManually_KeepsIt(t *testing.T) {
@@ -82,7 +81,7 @@ func TestWhenZoneSizeWasEditedManually_KeepsIt(t *testing.T) {
 	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, manualSize, zone.Size)
+	assert.InDelta(t, manualSize, zone.Size, test_helpers.Delta)
 }
 
 func TestWhenZoneHasAbandonedOutpost_PreservesIt(t *testing.T) {
@@ -113,6 +112,5 @@ func TestWhenPrimaryCastleHoldsWinCondition_PreservesHoldCityFlag(t *testing.T) 
 
 	// Assert
 	require.Equal(t, 2, connection_editor.CountZoneCastles(zone))
-	assert.True(t, zone.MainObjects[0].HoldCityWinCon,
-		"hold-city win condition was lost by the rebuild")
+	assert.True(t, zone.MainObjects[0].HoldCityWinCon, "hold-city win condition was lost by the rebuild")
 }

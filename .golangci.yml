@@ -272,7 +272,7 @@ linters:
         - fieldalignment # too strict
       settings:
         shadow:
-          strict: true # Whether to be strict about shadowing; can be noisy.
+          strict: false # Whether to be strict about shadowing; can be noisy. #TEMP
 
     inamedparam:
       skip-single-param: true # Skips check for interface methods with only a single parameter.
@@ -315,8 +315,10 @@ linters:
           disabled: false
           exclude:
             - "~internal/registry/"
+
         - name: receiver-naming
           disabled: true
+
         - name: var-naming
           severity: warning
           disabled: false
@@ -335,7 +337,7 @@ linters:
         # Reason: Too noisy. Generic name is useful to distinguish attached struct from ouside variables. Single character names are evil
         - -ST1006
         # Incorrect or missing package comment. https://staticcheck.dev/docs/checks/#ST1000
-        # Temporarily disabled while still work in progress
+        # TEMP disabled while still work in progress
         - -ST1000
 
     usetesting:

@@ -118,10 +118,7 @@ func (this Query[T]) First(predicate Predicate[T]) (result T, ok bool) {
 func (this Query[T]) Any() bool {
 	found := false
 
-	this.Iterate(func(item T) bool {
-		found = true
-		return false
-	})
+	this.Iterate(func(T) bool { found = true; return false })
 
 	return found
 }

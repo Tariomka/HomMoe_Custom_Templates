@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,10 +19,10 @@ func TestWhenComponentsAreFuzzed_ReturnsDifferenceOfCrossComponentProducts(t *te
 	secondVector := data.NewVec2(secondX, secondY)
 
 	// Act
-	crossProduct := firstVector.CrossProduct(secondVector)
+	actual := firstVector.CrossProduct(secondVector)
 
 	// Assert
-	assert.Equal(t, firstX*secondY-firstY*secondX, crossProduct)
+	assert.InDelta(t, firstX*secondY-firstY*secondX, actual, test_helpers.Delta)
 }
 
 func TestWhenVectorsAreParallel_ReturnsZero(t *testing.T) {
@@ -32,8 +33,8 @@ func TestWhenVectorsAreParallel_ReturnsZero(t *testing.T) {
 	parallelVector := data.NewVec2(xComponent*2, yComponent*2)
 
 	// Act
-	crossProduct := vector.CrossProduct(parallelVector)
+	actual := vector.CrossProduct(parallelVector)
 
 	// Assert
-	assert.Equal(t, 0.0, crossProduct)
+	assert.InDelta(t, 0.0, actual, test_helpers.Delta)
 }

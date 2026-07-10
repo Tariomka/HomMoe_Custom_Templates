@@ -1,183 +1,11 @@
 package registry
 
 type spellSids struct {
-	// High Neutral
-	NeutralPocketDimension string
-	NeutralSecondSight     string
-	NeutralShadowForm      string
-	NeutralTownPortal      string
-	NeutralDimensionDoor   string
-	NeutralLightGate       string
-
-	// Daylight
-	DaySharpEdge      string
-	DayHaste          string
-	DayHealingWater   string
-	DayShortenShadow  string
-	DayFavorableWind  string
-	DayClearView      string
-	DayInnerLight     string
-	DayCleansingRay   string
-	DayArinasHymn     string
-	DayMasterfulParry string
-	DaySecondSong     string
-	DayTaunt          string
-	DayFarsight       string
-	DayHolyArms       string
-	DayRadiantArmor   string
-	DayVengeance      string
-	DayArinasChosen   string
-	DayJudgement      string
-
-	// Nightshade
-	NightDespair         string
-	NightEnlargeShadow   string
-	NightFatalDecay      string
-	NightUnnaturalCalm   string
-	NightReadMinds       string
-	NightShadeCloak      string
-	NightDeathsGrip      string
-	NightWeb             string
-	NightNairasVeil      string
-	NightSilence         string
-	NightSleep           string
-	NightTwilight        string
-	NightBerserker       string
-	NightSummonStarchild string
-	NightVulnerability   string
-	NightDeathsCall      string
-	NightNairasKiss      string
-	NightShadowArmy      string
-
-	// Primal
-	PrimalGroundsight         string
-	PrimalThunderbolt         string
-	PrimalThickHide           string
-	PrimalCrystalCrown        string
-	PrimalFireGlobe           string
-	PrimalIceBolt             string
-	PrimalWean                string
-	PrimalCaveIn              string
-	PrimalEarthsRage          string
-	PrimalWallOfFlame         string
-	PrimalStoneFangs          string
-	PrimalPrimordialPurity    string
-	PrimalChainLightning      string
-	PrimalAvalanche           string
-	PrimalPrimordialChaos     string
-	PrimalArmageddon          string
-	PrimalHksmillasRampage    string
-	PrimalSummonPrimalRemnant string
-
-	// Arcane
-	SpaceEarlyStart        string
-	SpaceEnergyze          string
-	SpaceDecimate          string
-	SpaceOpticalIllusion   string
-	SpaceBlink             string
-	SpaceCarapace          string
-	SpaceEnergyExplosion   string
-	SpaceReinforcements    string
-	SpaceAssemble          string
-	SpaceImpendingFate     string
-	SpaceShackles          string
-	SpaceTrapJaws          string
-	SpaceMirrorCopy        string
-	SpaceRewind            string
-	SpaceTrapSnare         string
-	SpaceBlackHole         string
-	SpaceDoreathsTide      string
-	SpaceRealityDistortion string
-}
-
-var spellSidValues = spellSids{
-	// High Neutral
-	NeutralPocketDimension: "neutral_magic_pocket_dimension",
-	NeutralSecondSight:     "neutral_magic_second_sight",
-	NeutralShadowForm:      "neutral_magic_shadow_form",
-	NeutralTownPortal:      "neutral_magic_town_portal",
-	NeutralDimensionDoor:   "neutral_magic_dimension_door",
-	NeutralLightGate:       "neutral_magic_light_gate",
-
-	// Daylight
-	DaySharpEdge:      "day_2_magic_sharp_edge",
-	DayHaste:          "day_3_magic_haste",
-	DayHealingWater:   "day_1_magic_healing_water",
-	DayShortenShadow:  "day_5_magic_shorten_shadow",
-	DayFavorableWind:  "day_4_magic_favorable_wind",
-	DayClearView:      "day_17_magic_clear_view",
-	DayInnerLight:     "day_7_magic_inner_light",
-	DayCleansingRay:   "day_6_magic_cleansing_ray",
-	DayArinasHymn:     "day_9_magic_arinas_hymn",
-	DayMasterfulParry: "day_11_magic_masterful_parry",
-	DaySecondSong:     "day_10_magic_second_song",
-	DayTaunt:          "day_8_magic_taunt",
-	DayFarsight:       "day_18_magic_farsight",
-	DayHolyArms:       "day_13_magic_holy_arms",
-	DayRadiantArmor:   "day_12_magic_radiant_armor",
-	DayVengeance:      "day_14_magic_vengeance",
-	DayArinasChosen:   "day_16_magic_arinas_chosen",
-	DayJudgement:      "day_15_magic_judgement",
-
-	// Nightshade
-	NightDespair:         "night_4_magic_despair",
-	NightEnlargeShadow:   "night_3_magic_enlarge_shadow",
-	NightFatalDecay:      "night_7_magic_fatal_decay",
-	NightUnnaturalCalm:   "night_1_magic_unnatural_calm",
-	NightReadMinds:       "night_17_magic_read_minds",
-	NightShadeCloak:      "night_5_magic_shade_cloak",
-	NightDeathsGrip:      "night_6_magic_deaths_grip",
-	NightWeb:             "night_2_magic_web",
-	NightNairasVeil:      "night_18_magic_nairas_veil",
-	NightSilence:         "night_10_magic_silence",
-	NightSleep:           "night_8_magic_sleep",
-	NightTwilight:        "night_9_magic_twilight",
-	NightBerserker:       "night_13_magic_berserker",
-	NightSummonStarchild: "night_12_magic_summon_starchild",
-	NightVulnerability:   "night_11_magic_vulnerability",
-	NightDeathsCall:      "night_15_magic_deaths_call",
-	NightNairasKiss:      "night_14_magic_nairas_kiss",
-	NightShadowArmy:      "night_16_magic_shadow_army",
-
-	// Primal
-	PrimalGroundsight:         "primal_17_magic_groundsight",
-	PrimalThunderbolt:         "primal_1_magic_thunderbolt",
-	PrimalThickHide:           "primal_2_magic_thick_hide",
-	PrimalCrystalCrown:        "primal_5_magic_crystal_crown",
-	PrimalFireGlobe:           "primal_4_magic_fire_globe",
-	PrimalIceBolt:             "primal_6_magic_ice_bolt",
-	PrimalWean:                "primal_3_magic_wean",
-	PrimalCaveIn:              "primal_8_magic_cave_in",
-	PrimalEarthsRage:          "primal_9_magic_earths_rage",
-	PrimalWallOfFlame:         "primal_7_magic_wall_of_flame",
-	PrimalStoneFangs:          "primal_16_magic_stone_fangs",
-	PrimalPrimordialPurity:    "primal_10_magic_primordial_purity",
-	PrimalChainLightning:      "primal_12_magic_chain_lightning",
-	PrimalAvalanche:           "primal_13_magic_avalanche",
-	PrimalPrimordialChaos:     "primal_18_magic_primordial_chaos",
-	PrimalArmageddon:          "primal_11_magic_armageddon",
-	PrimalHksmillasRampage:    "primal_14_magic_hksmillas_rampage",
-	PrimalSummonPrimalRemnant: "primal_15_magic_summon_primal_remnant",
-
-	// Arcane
-	SpaceEarlyStart:        "space_1_magic_early_start",
-	SpaceEnergyze:          "space_3_magic_energyze",
-	SpaceDecimate:          "space_11_magic_decimate",
-	SpaceOpticalIllusion:   "space_4_magic_optical_illusion",
-	SpaceBlink:             "space_6_magic_blink",
-	SpaceCarapace:          "space_8_magic_carapace",
-	SpaceEnergyExplosion:   "space_2_magic_energy_explosion",
-	SpaceReinforcements:    "space_17_magic_reinforcements",
-	SpaceAssemble:          "space_18_magic_assemble",
-	SpaceImpendingFate:     "space_9_magic_impending_fate",
-	SpaceShackles:          "space_7_magic_shackles",
-	SpaceTrapJaws:          "space_5_magic_trap_jaws",
-	SpaceMirrorCopy:        "space_10_magic_mirror_copy",
-	SpaceRewind:            "space_12_magic_rewind",
-	SpaceTrapSnare:         "space_15_magic_trap_snare",
-	SpaceBlackHole:         "space_13_magic_black_hole",
-	SpaceDoreathsTide:      "space_14_magic_doreaths_tide",
-	SpaceRealityDistortion: "space_16_magic_reality_distortion",
+	HighNeutral highNeutralSpellSids
+	Daylight    daylightSpellSids
+	Nightshade  nightshadeSpellSids
+	Primal      primalSpellSids
+	Arcane      arcaneSpellSids
 }
 
 // GetSpellSidValues returns the learnable spell SIDs used for
@@ -185,5 +13,207 @@ var spellSidValues = spellSids{
 //	gameRules.globalBans.magics
 //	gameRules.bonuses.parameters
 func GetSpellSidValues() spellSids {
-	return spellSidValues
+	return spellSids{
+		HighNeutral: GetHighNeutralSpellSidValues(),
+		Daylight:    GetDaylightSpellSidValues(),
+		Nightshade:  GetNightshadeSpellSidValues(),
+		Primal:      GetPrimalSpellSidValues(),
+		Arcane:      GetArcaneSpellSidValues(),
+	}
+}
+
+type highNeutralSpellSids struct {
+	PocketDimension string
+	SecondSight     string
+	ShadowForm      string
+	TownPortal      string
+	DimensionDoor   string
+	LightGate       string
+}
+
+func GetHighNeutralSpellSidValues() highNeutralSpellSids {
+	return highNeutralSpellSids{
+		PocketDimension: "neutral_magic_pocket_dimension",
+		SecondSight:     "neutral_magic_second_sight",
+		ShadowForm:      "neutral_magic_shadow_form",
+		TownPortal:      "neutral_magic_town_portal",
+		DimensionDoor:   "neutral_magic_dimension_door",
+		LightGate:       "neutral_magic_light_gate",
+	}
+}
+
+type daylightSpellSids struct {
+	SharpEdge      string
+	Haste          string
+	HealingWater   string
+	ShortenShadow  string
+	FavorableWind  string
+	ClearView      string
+	InnerLight     string
+	CleansingRay   string
+	ArinasHymn     string
+	MasterfulParry string
+	SecondSong     string
+	Taunt          string
+	Farsight       string
+	HolyArms       string
+	RadiantArmor   string
+	Vengeance      string
+	ArinasChosen   string
+	Judgement      string
+}
+
+func GetDaylightSpellSidValues() daylightSpellSids {
+	return daylightSpellSids{
+		SharpEdge:      "day_2_magic_sharp_edge",
+		Haste:          "day_3_magic_haste",
+		HealingWater:   "day_1_magic_healing_water",
+		ShortenShadow:  "day_5_magic_shorten_shadow",
+		FavorableWind:  "day_4_magic_favorable_wind",
+		ClearView:      "day_17_magic_clear_view",
+		InnerLight:     "day_7_magic_inner_light",
+		CleansingRay:   "day_6_magic_cleansing_ray",
+		ArinasHymn:     "day_9_magic_arinas_hymn",
+		MasterfulParry: "day_11_magic_masterful_parry",
+		SecondSong:     "day_10_magic_second_song",
+		Taunt:          "day_8_magic_taunt",
+		Farsight:       "day_18_magic_farsight",
+		HolyArms:       "day_13_magic_holy_arms",
+		RadiantArmor:   "day_12_magic_radiant_armor",
+		Vengeance:      "day_14_magic_vengeance",
+		ArinasChosen:   "day_16_magic_arinas_chosen",
+		Judgement:      "day_15_magic_judgement",
+	}
+}
+
+type nightshadeSpellSids struct {
+	Despair         string
+	EnlargeShadow   string
+	FatalDecay      string
+	UnnaturalCalm   string
+	ReadMinds       string
+	ShadeCloak      string
+	DeathsGrip      string
+	Web             string
+	NairasVeil      string
+	Silence         string
+	Sleep           string
+	Twilight        string
+	Berserker       string
+	SummonStarchild string
+	Vulnerability   string
+	DeathsCall      string
+	NairasKiss      string
+	ShadowArmy      string
+}
+
+func GetNightshadeSpellSidValues() nightshadeSpellSids {
+	return nightshadeSpellSids{
+		Despair:         "night_4_magic_despair",
+		EnlargeShadow:   "night_3_magic_enlarge_shadow",
+		FatalDecay:      "night_7_magic_fatal_decay",
+		UnnaturalCalm:   "night_1_magic_unnatural_calm",
+		ReadMinds:       "night_17_magic_read_minds",
+		ShadeCloak:      "night_5_magic_shade_cloak",
+		DeathsGrip:      "night_6_magic_deaths_grip",
+		Web:             "night_2_magic_web",
+		NairasVeil:      "night_18_magic_nairas_veil",
+		Silence:         "night_10_magic_silence",
+		Sleep:           "night_8_magic_sleep",
+		Twilight:        "night_9_magic_twilight",
+		Berserker:       "night_13_magic_berserker",
+		SummonStarchild: "night_12_magic_summon_starchild",
+		Vulnerability:   "night_11_magic_vulnerability",
+		DeathsCall:      "night_15_magic_deaths_call",
+		NairasKiss:      "night_14_magic_nairas_kiss",
+		ShadowArmy:      "night_16_magic_shadow_army",
+	}
+}
+
+type primalSpellSids struct {
+	Groundsight         string
+	Thunderbolt         string
+	ThickHide           string
+	CrystalCrown        string
+	FireGlobe           string
+	IceBolt             string
+	Wean                string
+	CaveIn              string
+	EarthsRage          string
+	WallOfFlame         string
+	StoneFangs          string
+	PrimordialPurity    string
+	ChainLightning      string
+	Avalanche           string
+	PrimordialChaos     string
+	Armageddon          string
+	HksmillasRampage    string
+	SummonPrimalRemnant string
+}
+
+func GetPrimalSpellSidValues() primalSpellSids {
+	return primalSpellSids{
+		Groundsight:         "primal_17_magic_groundsight",
+		Thunderbolt:         "primal_1_magic_thunderbolt",
+		ThickHide:           "primal_2_magic_thick_hide",
+		CrystalCrown:        "primal_5_magic_crystal_crown",
+		FireGlobe:           "primal_4_magic_fire_globe",
+		IceBolt:             "primal_6_magic_ice_bolt",
+		Wean:                "primal_3_magic_wean",
+		CaveIn:              "primal_8_magic_cave_in",
+		EarthsRage:          "primal_9_magic_earths_rage",
+		WallOfFlame:         "primal_7_magic_wall_of_flame",
+		StoneFangs:          "primal_16_magic_stone_fangs",
+		PrimordialPurity:    "primal_10_magic_primordial_purity",
+		ChainLightning:      "primal_12_magic_chain_lightning",
+		Avalanche:           "primal_13_magic_avalanche",
+		PrimordialChaos:     "primal_18_magic_primordial_chaos",
+		Armageddon:          "primal_11_magic_armageddon",
+		HksmillasRampage:    "primal_14_magic_hksmillas_rampage",
+		SummonPrimalRemnant: "primal_15_magic_summon_primal_remnant",
+	}
+}
+
+type arcaneSpellSids struct {
+	EarlyStart        string
+	Energyze          string
+	Decimate          string
+	OpticalIllusion   string
+	Blink             string
+	Carapace          string
+	EnergyExplosion   string
+	Reinforcements    string
+	Assemble          string
+	ImpendingFate     string
+	Shackles          string
+	TrapJaws          string
+	MirrorCopy        string
+	Rewind            string
+	TrapSnare         string
+	BlackHole         string
+	DoreathsTide      string
+	RealityDistortion string
+}
+
+func GetArcaneSpellSidValues() arcaneSpellSids {
+	return arcaneSpellSids{
+		EarlyStart:        "space_1_magic_early_start",
+		Energyze:          "space_3_magic_energyze",
+		Decimate:          "space_11_magic_decimate",
+		OpticalIllusion:   "space_4_magic_optical_illusion",
+		Blink:             "space_6_magic_blink",
+		Carapace:          "space_8_magic_carapace",
+		EnergyExplosion:   "space_2_magic_energy_explosion",
+		Reinforcements:    "space_17_magic_reinforcements",
+		Assemble:          "space_18_magic_assemble",
+		ImpendingFate:     "space_9_magic_impending_fate",
+		Shackles:          "space_7_magic_shackles",
+		TrapJaws:          "space_5_magic_trap_jaws",
+		MirrorCopy:        "space_10_magic_mirror_copy",
+		Rewind:            "space_12_magic_rewind",
+		TrapSnare:         "space_15_magic_trap_snare",
+		BlackHole:         "space_13_magic_black_hole",
+		DoreathsTide:      "space_14_magic_doreaths_tide",
+		RealityDistortion: "space_16_magic_reality_distortion",
+	}
 }

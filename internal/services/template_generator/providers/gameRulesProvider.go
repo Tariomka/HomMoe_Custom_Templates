@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type GameRulesProvider struct{}
@@ -29,6 +30,48 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 		Bonuses:                this.createBonuses(configuration.Bonuses),
 		WinConditions:          this.createAdvancedWinConditions(configuration),
 	}
+}
+
+// CreateValueOverrides parses the newline-separated "sid=guardValue" overrides
+// edited in the UI into ValueOverride entries (one per valid line). Blank or
+// unparseable lines are skipped. Variant -1 applies the override to all variants.
+func (this *GameRulesProvider) CreateValueOverrides(configuration config.GeneratorConfig) []entities.ValueOverride {
+	var overrides []entities.ValueOverride
+	for line := range strings.SplitSeq(configuration.ValueOverridesText, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		equals := strings.Index(line, "=")
+		if equals <= 0 {
+			continue
+		}
+		sid := strings.TrimSpace(line[:equals])
+		if sid == "" {
+			continue
+		}
+		guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
+		if err != nil {
+			continue
+		}
+		overrides = append(overrides, entities.ValueOverride{
+			SID:        sid,
+			Variant:    -1,
+			GuardValue: guardValue,
+		})
+	}
+	return overrides
+}
+
+// CreateGlobalBans turns the newline-separated banned item / magic SIDs edited
+// in the UI into a GlobalBans block, or nil when nothing is banned.
+func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorConfig) *entities.GlobalBans {
+	items := parseSidLines(configuration.BannedItems)
+	magics := parseSidLines(configuration.BannedMagics)
+	if len(items) == 0 && len(magics) == 0 {
+		return nil
+	}
+	return &entities.GlobalBans{Items: items, Magics: magics}
 }
 
 func (this *GameRulesProvider) createAdvancedWinConditions(
@@ -114,11 +157,13 @@ func expandBonusEntry(entry config.BonusEntry) []entities.Bonus {
 		}
 	}
 
+	mapBonuses := registry.GetMapBonusesValues()
 	switch entry.PresetType {
 	case config.BonusTownPortalFree:
+		highNeutralSpells := registry.GetHighNeutralSpellSidValues()
 		return []entities.Bonus{
-			bonus(mapBonuses.HeroSpell, spellSids.NeutralTownPortal),
-			bonus(mapBonuses.HeroStat, "magicCostSidSet", spellSids.NeutralTownPortal, "-999", "0"),
+			bonus(mapBonuses.HeroSpell, highNeutralSpells.TownPortal),
+			bonus(mapBonuses.HeroStat, "magicCostSidSet", highNeutralSpells.TownPortal, "-999", "0"),
 		}
 	case config.BonusSpell:
 		bonuses := []entities.Bonus{bonus(mapBonuses.HeroSpell, entry.Param)}
@@ -146,48 +191,6 @@ func expandBonusEntry(entry config.BonusEntry) []entities.Bonus {
 		return []entities.Bonus{bonus(mapBonuses.Resource, "ore", entry.Param)}
 	}
 	return nil
-}
-
-// CreateValueOverrides parses the newline-separated "sid=guardValue" overrides
-// edited in the UI into ValueOverride entries (one per valid line). Blank or
-// unparseable lines are skipped. Variant -1 applies the override to all variants.
-func (this *GameRulesProvider) CreateValueOverrides(configuration config.GeneratorConfig) []entities.ValueOverride {
-	var overrides []entities.ValueOverride
-	for line := range strings.SplitSeq(configuration.ValueOverridesText, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		equals := strings.Index(line, "=")
-		if equals <= 0 {
-			continue
-		}
-		sid := strings.TrimSpace(line[:equals])
-		if sid == "" {
-			continue
-		}
-		guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
-		if err != nil {
-			continue
-		}
-		overrides = append(overrides, entities.ValueOverride{
-			SID:        sid,
-			Variant:    -1,
-			GuardValue: guardValue,
-		})
-	}
-	return overrides
-}
-
-// CreateGlobalBans turns the newline-separated banned item / magic SIDs edited
-// in the UI into a GlobalBans block, or nil when nothing is banned.
-func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorConfig) *entities.GlobalBans {
-	items := parseSidLines(configuration.BannedItems)
-	magics := parseSidLines(configuration.BannedMagics)
-	if len(items) == 0 && len(magics) == 0 {
-		return nil
-	}
-	return &entities.GlobalBans{Items: items, Magics: magics}
 }
 
 // parseSidLines splits a newline-separated SID list into trimmed, non-empty SIDs.

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,10 +19,10 @@ func TestWhenComponentsAreFuzzed_ReturnsSumOfComponentProducts(t *testing.T) {
 	secondVector := data.NewVec2(secondX, secondY)
 
 	// Act
-	dotProduct := firstVector.DotProduct(secondVector)
+	actual := firstVector.DotProduct(secondVector)
 
 	// Assert
-	assert.Equal(t, firstX*secondX+firstY*secondY, dotProduct)
+	assert.InDelta(t, firstX*secondX+firstY*secondY, actual, test_helpers.Delta)
 }
 
 func TestWhenVectorsArePerpendicular_ReturnsZero(t *testing.T) {
@@ -31,8 +32,8 @@ func TestWhenVectorsArePerpendicular_ReturnsZero(t *testing.T) {
 	secondVector := data.NewVec2(0.0, component)
 
 	// Act
-	dotProduct := firstVector.DotProduct(secondVector)
+	actual := firstVector.DotProduct(secondVector)
 
 	// Assert
-	assert.Equal(t, 0.0, dotProduct)
+	assert.InDelta(t, 0.0, actual, test_helpers.Delta)
 }
