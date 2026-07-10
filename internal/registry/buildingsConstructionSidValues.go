@@ -22,37 +22,35 @@ type buildingsConstructionSids struct {
 	UltraRich    string
 }
 
-var buildingsConstructionSidValues = buildingsConstructionSids{
-	Default: "default_buildings_construction",
-
-	ExtraPoor: "extra_poor_buildings_construction",
-	Poor:      "poor_buildings_construction",
-	Medium:    "medium_buildings_construction",
-	Rich:      "rich_buildings_construction",
-	ExtraRich: "extra_rich_buildings_construction",
-	UltraRich: "ultra_rich_buildings_construction",
-
-	Army:  "army_buildings_construction",
-	Siege: "siege_buildings_construction",
-
-	Full: "full_buildings_construction",
-
-	Arcade: "arcade_buildings_construction",
-
-	ChosenOne:    "chosen_one_buildings_construction",
-	ChosenOneUp1: "chosen_one_buildings_construction_up_1",
-	ChosenOneUp2: "chosen_one_buildings_construction_up_2",
-	ChosenOneUp3: "chosen_one_buildings_construction_up_3",
-
-	Massacre:    "massacre_buildings_construction",
-	MassacreUp1: "massacre_buildings_construction_up_1",
-	MassacreUp2: "massacre_buildings_construction_up_2",
-	MassacreUp3: "massacre_buildings_construction_up_3",
-}
-
 // GetBuildingsConstructionSidValues returns the SIDs used for
 //
 //	variants.zones.mainObjects.buildingsConstructionSid
 func GetBuildingsConstructionSidValues() buildingsConstructionSids {
-	return buildingsConstructionSidValues
+	return buildingsConstructionSids{
+		Default: "default_buildings_construction",
+
+		ExtraPoor: "extra_poor_buildings_construction",
+		Poor:      "poor_buildings_construction",
+		Medium:    "medium_buildings_construction",
+		Rich:      "rich_buildings_construction",
+		ExtraRich: "extra_rich_buildings_construction",
+		UltraRich: "ultra_rich_buildings_construction",
+
+		Army:  "army_buildings_construction",
+		Siege: "siege_buildings_construction",
+
+		Full: "full_buildings_construction",
+
+		Arcade: "arcade_buildings_construction",
+
+		ChosenOne:    "chosen_one_buildings_construction",
+		ChosenOneUp1: "chosen_one_buildings_construction_up_1",
+		ChosenOneUp2: "chosen_one_buildings_construction_up_2",
+		ChosenOneUp3: "chosen_one_buildings_construction_up_3",
+
+		Massacre:    "massacre_buildings_construction",
+		MassacreUp1: "massacre_buildings_construction_up_1",
+		MassacreUp2: "massacre_buildings_construction_up_2",
+		MassacreUp3: "massacre_buildings_construction_up_3",
+	}
 }

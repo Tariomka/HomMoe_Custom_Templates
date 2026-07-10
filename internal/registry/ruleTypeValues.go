@@ -7,16 +7,14 @@ type ruleTypes struct {
 	Sid        string
 }
 
-var ruleTypeValues = ruleTypes{
-	Crossroads: "Crossroads",
-	MainObject: "MainObject",
-	Road:       "Road",
-	Sid:        "Sid",
-}
-
 // GetRuleTypeValues returns the rule types used for
 //
 //	mandatoryContent.content.rules.type
 func GetRuleTypeValues() ruleTypes {
-	return ruleTypeValues
+	return ruleTypes{
+		Crossroads: "Crossroads",
+		MainObject: "MainObject",
+		Road:       "Road",
+		Sid:        "Sid",
+	}
 }

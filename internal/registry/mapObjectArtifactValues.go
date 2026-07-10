@@ -5,13 +5,11 @@ type objectArtifacts struct {
 	artifactRandomItems
 }
 
-var objectArtifactValues = objectArtifacts{
-	artifactScrolls:     artifactScrollValues,
-	artifactRandomItems: artifactRandomItemValues,
-}
-
 func GetMapObjectAllArtifactValues() objectArtifacts {
-	return objectArtifactValues
+	return objectArtifacts{
+		artifactScrolls:     GetMapObjectScrollValues(),
+		artifactRandomItems: GetMapObjectRandomItemValues(),
+	}
 }
 
 type artifactScrolls struct {
@@ -20,14 +18,12 @@ type artifactScrolls struct {
 	MythicScrollBox    string
 }
 
-var artifactScrollValues = artifactScrolls{
-	ScrollBox:          "scroll_box",
-	EnchantedScrollBox: "enchanted_scroll_box",
-	MythicScrollBox:    "mythic_scroll_box",
-}
-
 func GetMapObjectScrollValues() artifactScrolls {
-	return artifactScrollValues
+	return artifactScrolls{
+		ScrollBox:          "scroll_box",
+		EnchantedScrollBox: "enchanted_scroll_box",
+		MythicScrollBox:    "mythic_scroll_box",
+	}
 }
 
 type artifactRandomItems struct {
@@ -37,15 +33,13 @@ type artifactRandomItems struct {
 	RandomItemLegendary string
 }
 
-var artifactRandomItemValues = artifactRandomItems{
-	RandomItemCommon:    "random_item_common",
-	RandomItemRare:      "random_item_rare",
-	RandomItemEpic:      "random_item_epic",
-	RandomItemLegendary: "random_item_legendary",
-}
-
 func GetMapObjectRandomItemValues() artifactRandomItems {
-	return artifactRandomItemValues
+	return artifactRandomItems{
+		RandomItemCommon:    "random_item_common",
+		RandomItemRare:      "random_item_rare",
+		RandomItemEpic:      "random_item_epic",
+		RandomItemLegendary: "random_item_legendary",
+	}
 }
 
 // 			"id": "resonant_sphere_orb_of_twilight_artifact",

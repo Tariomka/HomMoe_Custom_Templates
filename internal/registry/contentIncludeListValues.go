@@ -1,23 +1,21 @@
 package registry
 
 type allContentLists struct {
-	contentLists
+	contentIncludeLists
 	basicContentLists
-}
-
-var allContentIncludeListValues = allContentLists{
-	contentLists:      contentIncludeListValues,
-	basicContentLists: basicContentIncludeListValues,
 }
 
 // GetAllMandatoryContentIncludeListValues returns all of the content group names used for
 //
 //	mandatoryContent.content.includeLists
 func GetAllMandatoryContentIncludeListValues() allContentLists {
-	return allContentIncludeListValues
+	return allContentLists{
+		contentIncludeLists: GetMandatoryContentIncludeListValues(),
+		basicContentLists:   GetMandatoryContentBasicIncludeListValues(),
+	}
 }
 
-type contentLists struct {
+type contentIncludeLists struct {
 	contentRandomHiresBuildings
 	contentResourceBanksBuildings
 	contentResources
@@ -33,27 +31,25 @@ type contentLists struct {
 	contentMiscellaneous
 }
 
-var contentIncludeListValues = contentLists{
-	contentRandomHiresBuildings:        contentRandomHiresBuildingValues,
-	contentResourceBanksBuildings:      contentResourceBanksBuildingValues,
-	contentResources:                   contentResourcesValues,
-	contentMines:                       contentMinesValues,
-	contentInteractables:               contentInteractablesValues,
-	contentHeroStatsAndSkillsBuildings: contentHeroStatsAndSkillsBuildingValues,
-	contentScrollBoxes:                 contentScrollBoxValues,
-	contentEnchantedScrollBoxes:        contentEnchantedScrollBoxValues,
-	contentMythicScrollBoxes:           contentMythicScrollBoxValues,
-	contentPandoraBoxes:                contentPandoraBoxValues,
-	contentGuardedUnitBanks:            contentGuardedUnitBanksValues,
-	contentMagicBuildings:              contentMagicBuildingValues,
-	contentMiscellaneous:               contentMiscellaneousValues,
-}
-
 // GetMandatoryContentIncludeListValues returns the "content_list_*" content group names used for
 //
 //	mandatoryContent.content.includeLists
-func GetMandatoryContentIncludeListValues() contentLists {
-	return contentIncludeListValues
+func GetMandatoryContentIncludeListValues() contentIncludeLists {
+	return contentIncludeLists{
+		contentRandomHiresBuildings:        contentRandomHiresBuildingValues,
+		contentResourceBanksBuildings:      contentResourceBanksBuildingValues,
+		contentResources:                   contentResourcesValues,
+		contentMines:                       contentMinesValues,
+		contentInteractables:               contentInteractablesValues,
+		contentHeroStatsAndSkillsBuildings: contentHeroStatsAndSkillsBuildingValues,
+		contentScrollBoxes:                 contentScrollBoxValues,
+		contentEnchantedScrollBoxes:        contentEnchantedScrollBoxValues,
+		contentMythicScrollBoxes:           contentMythicScrollBoxValues,
+		contentPandoraBoxes:                contentPandoraBoxValues,
+		contentGuardedUnitBanks:            contentGuardedUnitBanksValues,
+		contentMagicBuildings:              contentMagicBuildingValues,
+		contentMiscellaneous:               contentMiscellaneousValues,
+	}
 }
 
 type contentRandomHiresBuildings struct {
@@ -275,26 +271,24 @@ type basicContentLists struct {
 	basicContentMiscellaneous
 }
 
-var basicContentIncludeListValues = basicContentLists{
-	basicContentRandomHiresBuildings:        basicContentRandomHiresBuildingValues,
-	basicContentResourceBanksBuildings:      basicContentResourceBanksBuildingValues,
-	basicContentResources:                   basicContentResourcesValues,
-	basicContentMines:                       basicContentMinesValues,
-	basicContentInteractables:               basicContentInteractablesValues,
-	basicContentHeroStatsAndSkillsBuildings: basicContentHeroStatsAndSkillsBuildingValues,
-	basicContentScrollBoxes:                 basicContentScrollBoxValues,
-	basicContentPandoraBoxes:                basicContentPandoraBoxValues,
-	basicContentGuardedUnitBanks:            basicContentGuardedUnitBanksValues,
-	basicContentMagicBuildings:              basicContentMagicBuildingValues,
-	basicContentHeroExperienceBuildings:     basicContentHeroExperienceBuildingValues,
-	basicContentMiscellaneous:               basicContentMiscellaneousValues,
-}
-
 // GetMandatoryContentBasicIncludeListValues returns the "basic_content_list_*" content group names used for
 //
 //	mandatoryContent.content.includeLists
 func GetMandatoryContentBasicIncludeListValues() basicContentLists {
-	return basicContentIncludeListValues
+	return basicContentLists{
+		basicContentRandomHiresBuildings:        basicContentRandomHiresBuildingValues,
+		basicContentResourceBanksBuildings:      basicContentResourceBanksBuildingValues,
+		basicContentResources:                   basicContentResourcesValues,
+		basicContentMines:                       basicContentMinesValues,
+		basicContentInteractables:               basicContentInteractablesValues,
+		basicContentHeroStatsAndSkillsBuildings: basicContentHeroStatsAndSkillsBuildingValues,
+		basicContentScrollBoxes:                 basicContentScrollBoxValues,
+		basicContentPandoraBoxes:                GetMandatoryContentBasicPandoraBoxValues(),
+		basicContentGuardedUnitBanks:            GetMandatoryContentBasicGuardedUnitBankValues(),
+		basicContentMagicBuildings:              GetMandatoryContentBasicMagicBuildingValues(),
+		basicContentHeroExperienceBuildings:     GetMandatoryContentBasicHeroExperienceBuildingValues(),
+		basicContentMiscellaneous:               GetMandatoryContentBasicMiscellaneousValues(),
+	}
 }
 
 type basicContentRandomHiresBuildings struct {
@@ -407,8 +401,10 @@ type basicContentPandoraBoxes struct {
 	BasicPickupPandoraBox string
 }
 
-var basicContentPandoraBoxValues = basicContentPandoraBoxes{
-	BasicPickupPandoraBox: "basic_content_list_pickup_pandora_box",
+func GetMandatoryContentBasicPandoraBoxValues() basicContentPandoraBoxes {
+	return basicContentPandoraBoxes{
+		BasicPickupPandoraBox: "basic_content_list_pickup_pandora_box",
+	}
 }
 
 type basicContentGuardedUnitBanks struct {
@@ -417,14 +413,12 @@ type basicContentGuardedUnitBanks struct {
 	BasicGuardedUnitBanksBiomeRestricted string
 }
 
-var basicContentGuardedUnitBanksValues = basicContentGuardedUnitBanks{
-	BasicGuardedUnitBanks:                "basic_content_list_building_guarded_units_banks",
-	BasicGuardedUnitBanksNotRestricted:   "basic_content_list_building_guarded_units_banks_no_biome_restriction",
-	BasicGuardedUnitBanksBiomeRestricted: "basic_content_list_building_guarded_units_banks_only_biome_restriction",
-}
-
 func GetMandatoryContentBasicGuardedUnitBankValues() basicContentGuardedUnitBanks {
-	return basicContentGuardedUnitBanksValues
+	return basicContentGuardedUnitBanks{
+		BasicGuardedUnitBanks:                "basic_content_list_building_guarded_units_banks",
+		BasicGuardedUnitBanksNotRestricted:   "basic_content_list_building_guarded_units_banks_no_biome_restriction",
+		BasicGuardedUnitBanksBiomeRestricted: "basic_content_list_building_guarded_units_banks_only_biome_restriction",
+	}
 }
 
 type basicContentMagicBuildings struct {
@@ -432,13 +426,11 @@ type basicContentMagicBuildings struct {
 	BasicMagicBuildingsTier2 string
 }
 
-var basicContentMagicBuildingValues = basicContentMagicBuildings{
-	BasicMagicBuildingsTier1: "basic_content_list_building_magic_tier_1",
-	BasicMagicBuildingsTier2: "basic_content_list_building_magic_tier_2",
-}
-
 func GetMandatoryContentBasicMagicBuildingValues() basicContentMagicBuildings {
-	return basicContentMagicBuildingValues
+	return basicContentMagicBuildings{
+		BasicMagicBuildingsTier1: "basic_content_list_building_magic_tier_1",
+		BasicMagicBuildingsTier2: "basic_content_list_building_magic_tier_2",
+	}
 }
 
 type basicContentHeroExperienceBuildings struct {
@@ -446,13 +438,11 @@ type basicContentHeroExperienceBuildings struct {
 	BasicHeroExperienceBuildingTier2 string
 }
 
-var basicContentHeroExperienceBuildingValues = basicContentHeroExperienceBuildings{
-	BasicHeroExperienceBuildingTier1: "basic_content_list_building_hero_exp_tier_1",
-	BasicHeroExperienceBuildingTier2: "basic_content_list_building_hero_exp_tier_2",
-}
-
 func GetMandatoryContentBasicHeroExperienceBuildingValues() basicContentHeroExperienceBuildings {
-	return basicContentHeroExperienceBuildingValues
+	return basicContentHeroExperienceBuildings{
+		BasicHeroExperienceBuildingTier1: "basic_content_list_building_hero_exp_tier_1",
+		BasicHeroExperienceBuildingTier2: "basic_content_list_building_hero_exp_tier_2",
+	}
 }
 
 type basicContentMiscellaneous struct {
@@ -465,16 +455,14 @@ type basicContentMiscellaneous struct {
 	BasicHeroBuffBuildingTier1 string
 }
 
-var basicContentMiscellaneousValues = basicContentMiscellaneous{
-	BasicStorage:               "basic_content_list_basic_storage",
-	BasicNonContent:            "basic_content_list_non_content",
-	BasicVisionBuildingsTier1:  "basic_content_list_vision_buildings_tier_1",
-	BasicVisionBuildingsTier2:  "basic_content_list_vision_buildings_tier_2",
-	BasicPickupRandomItems:     "basic_content_list_pickup_random_items",
-	BasicPickupPrison:          "basic_content_list_pickup_prison",
-	BasicHeroBuffBuildingTier1: "basic_content_list_building_hero_buff_tier_1",
-}
-
 func GetMandatoryContentBasicMiscellaneousValues() basicContentMiscellaneous {
-	return basicContentMiscellaneousValues
+	return basicContentMiscellaneous{
+		BasicStorage:               "basic_content_list_basic_storage",
+		BasicNonContent:            "basic_content_list_non_content",
+		BasicVisionBuildingsTier1:  "basic_content_list_vision_buildings_tier_1",
+		BasicVisionBuildingsTier2:  "basic_content_list_vision_buildings_tier_2",
+		BasicPickupRandomItems:     "basic_content_list_pickup_random_items",
+		BasicPickupPrison:          "basic_content_list_pickup_prison",
+		BasicHeroBuffBuildingTier1: "basic_content_list_building_hero_buff_tier_1",
+	}
 }

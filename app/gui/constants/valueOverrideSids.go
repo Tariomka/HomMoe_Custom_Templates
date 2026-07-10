@@ -25,7 +25,7 @@ func buildValueOverrideSids() []string {
 	resourceBanks := registry.GetMapObjectResourceBankValues()
 	resourceObjects := registry.GetMapObjectResourceValues()
 	scrollObjects := registry.GetMapObjectScrollValues()
-	t1StatsAndSkillsObjects := registry.GetMapObjectT1StatsAndSkillsValues()
+	t1StatsAndSkillsObjects := registry.GetMapObjectT1StatsAndSkillsBuildingValues()
 	t2StatsAndSkillsObjects := registry.GetMapObjectT2StatsAndSkillsBuildingValues()
 	t3StatsAndSkillsObjects := registry.GetMapObjectT3StatsAndSkillsBuildingValues()
 	t1GuardedResourceBanks := registry.GetMapObjectT1GuardedResourceBankValues()

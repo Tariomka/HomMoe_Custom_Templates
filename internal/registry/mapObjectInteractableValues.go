@@ -21,29 +21,27 @@ type objectInteractables struct {
 	interactableRandomUnitBanks
 }
 
-var objectInteractableValues = objectInteractables{
-	interactableMines:                     interactableMineValues,
-	interactableStorages:                  interactableStorageValues,
-	interactableResourceBanks:             interactableResourceBankValues,
-	interactableT1GuardedResourceBanks:    interactableT1GuardedResourceBankValues,
-	interactableT2GuardedResourceBanks:    interactableT2GuardedResourceBankValues,
-	interactableT3GuardedResourceBanks:    interactableT3GuardedResourceBankValues,
-	interactableNonContents:               interactableNonContentValues,
-	interactableVisionBuildings:           interactableVisionBuildingValues,
-	interactableMiscellaneous:             interactableMiscellaneousValues,
-	interactableHeroExperienceBuildings:   interactableHeroExpValues,
-	interactableMagicBuildings:            interactableMagicBuildingValues,
-	interactableHeroBuffBuildings:         interactableHeroBuffBuildingValues,
-	interactableBuildings:                 interactableBuildingValues,
-	interactableT1StatsAndSkillsBuildings: interactableT1StatsAndSkillsValues,
-	interactableT2StatsAndSkillsBuildings: interactableT2StatsAndSkillsValues,
-	interactableT3StatsAndSkillsBuildings: interactableT3StatsAndSkillsValues,
-	interactableNamedUnitBanks:            interactableNamedUnitBankValues,
-	interactableRandomUnitBanks:           interactableRandomUnitBankValues,
-}
-
 func GetMapObjectAllInteractableValues() objectInteractables {
-	return objectInteractableValues
+	return objectInteractables{
+		interactableMines:                     GetMapObjectMineValues(),
+		interactableStorages:                  GetMapObjectStorageValues(),
+		interactableResourceBanks:             GetMapObjectResourceBankValues(),
+		interactableT1GuardedResourceBanks:    GetMapObjectT1GuardedResourceBankValues(),
+		interactableT2GuardedResourceBanks:    GetMapObjectT2GuardedResourceBankValues(),
+		interactableT3GuardedResourceBanks:    GetMapObjectT3GuardedResourceBankValues(),
+		interactableNonContents:               GetMapObjectNonContentValues(),
+		interactableVisionBuildings:           GetMapObjectVisionBuildingValues(),
+		interactableMiscellaneous:             GetMapObjectMiscellaneousValues(),
+		interactableHeroExperienceBuildings:   GetMapObjectHeroExperienceBuildingValues(),
+		interactableMagicBuildings:            GetMapObjectMagicBuildingValues(),
+		interactableHeroBuffBuildings:         GetMapObjectHeroBuffBuildingValues(),
+		interactableBuildings:                 GetMapObjectBuildingValues(),
+		interactableT1StatsAndSkillsBuildings: GetMapObjectT1StatsAndSkillsBuildingValues(),
+		interactableT2StatsAndSkillsBuildings: GetMapObjectT2StatsAndSkillsBuildingValues(),
+		interactableT3StatsAndSkillsBuildings: GetMapObjectT3StatsAndSkillsBuildingValues(),
+		interactableNamedUnitBanks:            GetMapObjectNamedUnitBankValues(),
+		interactableRandomUnitBanks:           GetMapObjectRandomUnitBankValues(),
+	}
 }
 
 type interactableMines struct {
@@ -56,18 +54,16 @@ type interactableMines struct {
 	GemstoneMine string
 }
 
-var interactableMineValues = interactableMines{
-	AlchemyLab:   "alchemy_lab",
-	GoldMine:     "mine_gold",
-	WoodMine:     "mine_wood",
-	OreMine:      "mine_ore",
-	CrystalMine:  "mine_crystals",
-	MercuryMine:  "mine_mercury",
-	GemstoneMine: "mine_gemstones",
-}
-
 func GetMapObjectMineValues() interactableMines {
-	return interactableMineValues
+	return interactableMines{
+		AlchemyLab:   "alchemy_lab",
+		GoldMine:     "mine_gold",
+		WoodMine:     "mine_wood",
+		OreMine:      "mine_ore",
+		CrystalMine:  "mine_crystals",
+		MercuryMine:  "mine_mercury",
+		GemstoneMine: "mine_gemstones",
+	}
 }
 
 type interactableStorages struct {
@@ -80,14 +76,16 @@ type interactableStorages struct {
 	DustStorage     string
 }
 
-var interactableStorageValues = interactableStorages{
-	WoodStorage:     "storage_wood",
-	OreStorage:      "storage_ore",
-	GoldStorage:     "storage_gold",
-	CrystalStorage:  "storage_crystals",
-	MercuryStorage:  "storage_mercury",
-	GemstoneStorage: "storage_gemstones",
-	DustStorage:     "storage_dust",
+func GetMapObjectStorageValues() interactableStorages {
+	return interactableStorages{
+		WoodStorage:     "storage_wood",
+		OreStorage:      "storage_ore",
+		GoldStorage:     "storage_gold",
+		CrystalStorage:  "storage_crystals",
+		MercuryStorage:  "storage_mercury",
+		GemstoneStorage: "storage_gemstones",
+		DustStorage:     "storage_dust",
+	}
 }
 
 type interactableResourceBanks struct {
@@ -103,22 +101,20 @@ type interactableResourceBanks struct {
 	HerosCrypt       string
 }
 
-var interactableResourceBankValues = interactableResourceBanks{
-	Gardener:         "gardener",
-	Windmill:         "windmill",
-	Village:          "village",
-	GingerbreadHouse: "gingerbread_house",
-	PeasantCart:      "peasant_cart",
-	AbandonedCorpse:  "abandoned_corpse",
-	CrowNest:         "crow_nest",
-	GoblinCache:      "goblin_cache",
-
-	MontyHall:  "monty_hall",
-	HerosCrypt: "heros_crypt",
-}
-
 func GetMapObjectResourceBankValues() interactableResourceBanks {
-	return interactableResourceBankValues
+	return interactableResourceBanks{
+		Gardener:         "gardener",
+		Windmill:         "windmill",
+		Village:          "village",
+		GingerbreadHouse: "gingerbread_house",
+		PeasantCart:      "peasant_cart",
+		AbandonedCorpse:  "abandoned_corpse",
+		CrowNest:         "crow_nest",
+		GoblinCache:      "goblin_cache",
+
+		MontyHall:  "monty_hall",
+		HerosCrypt: "heros_crypt",
+	}
 }
 
 type interactableT1GuardedResourceBanks struct {
@@ -128,15 +124,13 @@ type interactableT1GuardedResourceBanks struct {
 	ShadyDen         string
 }
 
-var interactableT1GuardedResourceBankValues = interactableT1GuardedResourceBanks{
-	BlackTower:       "black_tower",
-	AbandonedMansion: "abandoned_mansion",
-	MereasShrine:     "mereas_shrine",
-	ShadyDen:         "shady_den",
-}
-
 func GetMapObjectT1GuardedResourceBankValues() interactableT1GuardedResourceBanks {
-	return interactableT1GuardedResourceBankValues
+	return interactableT1GuardedResourceBanks{
+		BlackTower:       "black_tower",
+		AbandonedMansion: "abandoned_mansion",
+		MereasShrine:     "mereas_shrine",
+		ShadyDen:         "shady_den",
+	}
 }
 
 type interactableT2GuardedResourceBanks struct {
@@ -152,17 +146,19 @@ type interactableT2GuardedResourceBanks struct {
 	IridescentAbbey   string
 }
 
-var interactableT2GuardedResourceBankValues = interactableT2GuardedResourceBanks{
-	RaidersCamp:       "raiders_camp",
-	OvergrownGrave:    "overgrown_grave",
-	LegionsMemorial:   "legions_memorial",
-	AlvarsEye:         "alvars_eye",
-	CursedOldHouse:    "cursed_old_house",
-	AbnormalStructure: "abnormal_structure",
-	PrismaticLair:     "prismatic_lair",
-	UncannyRite:       "uncanny_rite",
-	CircleOfLife:      "circle_of_life",
-	IridescentAbbey:   "iridescent_abbey",
+func GetMapObjectT2GuardedResourceBankValues() interactableT2GuardedResourceBanks {
+	return interactableT2GuardedResourceBanks{
+		RaidersCamp:       "raiders_camp",
+		OvergrownGrave:    "overgrown_grave",
+		LegionsMemorial:   "legions_memorial",
+		AlvarsEye:         "alvars_eye",
+		CursedOldHouse:    "cursed_old_house",
+		AbnormalStructure: "abnormal_structure",
+		PrismaticLair:     "prismatic_lair",
+		UncannyRite:       "uncanny_rite",
+		CircleOfLife:      "circle_of_life",
+		IridescentAbbey:   "iridescent_abbey",
+	}
 }
 
 type interactableT3GuardedResourceBanks struct {
@@ -173,16 +169,14 @@ type interactableT3GuardedResourceBanks struct {
 	ResearchLaboratory string
 }
 
-var interactableT3GuardedResourceBankValues = interactableT3GuardedResourceBanks{
-	TroglodyteThrone:   "troglodyte_throne",
-	TwilightBloom:      "twilight_bloom",
-	UnstableRuins:      "unstable_ruins",
-	DragonUtopia:       "dragon_utopia",
-	ResearchLaboratory: "research_laboratory",
-}
-
 func GetMapObjectT3GuardedResourceBankValues() interactableT3GuardedResourceBanks {
-	return interactableT3GuardedResourceBankValues
+	return interactableT3GuardedResourceBanks{
+		TroglodyteThrone:   "troglodyte_throne",
+		TwilightBloom:      "twilight_bloom",
+		UnstableRuins:      "unstable_ruins",
+		DragonUtopia:       "dragon_utopia",
+		ResearchLaboratory: "research_laboratory",
+	}
 }
 
 type interactableNonContents struct {
@@ -195,18 +189,16 @@ type interactableNonContents struct {
 	Tavern           string
 }
 
-var interactableNonContentValues = interactableNonContents{
-	Mirage:           "mirage",
-	InsarasEye:       "insaras_eye",
-	RemoteFoothold:   "remote_foothold",
-	AbandonedOutpost: "abandoned_outpost",
-	Market:           "market",
-	Forge:            "forge",
-	Tavern:           "tavern",
-}
-
 func GetMapObjectNonContentValues() interactableNonContents {
-	return interactableNonContentValues
+	return interactableNonContents{
+		Mirage:           "mirage",
+		InsarasEye:       "insaras_eye",
+		RemoteFoothold:   "remote_foothold",
+		AbandonedOutpost: "abandoned_outpost",
+		Market:           "market",
+		Forge:            "forge",
+		Tavern:           "tavern",
+	}
 }
 
 type interactableVisionBuildings struct {
@@ -215,14 +207,12 @@ type interactableVisionBuildings struct {
 	WindRose         string
 }
 
-var interactableVisionBuildingValues = interactableVisionBuildings{
-	FlatteringMirror: "flattering_mirror",
-	Watchtower:       "watchtower",
-	WindRose:         "wind_rose",
-}
-
 func GetMapObjectVisionBuildingValues() interactableVisionBuildings {
-	return interactableVisionBuildingValues
+	return interactableVisionBuildings{
+		FlatteringMirror: "flattering_mirror",
+		Watchtower:       "watchtower",
+		WindRose:         "wind_rose",
+	}
 }
 
 type interactableMiscellaneous struct {
@@ -230,13 +220,11 @@ type interactableMiscellaneous struct {
 	TownGate string
 }
 
-var interactableMiscellaneousValues = interactableMiscellaneous{
-	Prison:   "prison",
-	TownGate: "town_gate",
-}
-
 func GetMapObjectMiscellaneousValues() interactableMiscellaneous {
-	return interactableMiscellaneousValues
+	return interactableMiscellaneous{
+		Prison:   "prison",
+		TownGate: "town_gate",
+	}
 }
 
 type interactableHeroExperienceBuildings struct {
@@ -245,14 +233,12 @@ type interactableHeroExperienceBuildings struct {
 	TreeOfKnowledge string
 }
 
-var interactableHeroExpValues = interactableHeroExperienceBuildings{
-	LearningStone:   "learning_stone",
-	LostLibrary:     "lost_library",
-	TreeOfKnowledge: "tree_of_knowledge",
-}
-
 func GetMapObjectHeroExperienceBuildingValues() interactableHeroExperienceBuildings {
-	return interactableHeroExpValues
+	return interactableHeroExperienceBuildings{
+		LearningStone:   "learning_stone",
+		LostLibrary:     "lost_library",
+		TreeOfKnowledge: "tree_of_knowledge",
+	}
 }
 
 type interactableMagicBuildings struct {
@@ -268,23 +254,21 @@ type interactableMagicBuildings struct {
 	MagicAmplifier4 string
 }
 
-var interactableMagicBuildingValues = interactableMagicBuildings{
-	MysticalTower:   "mystical_tower",
-	CelestialSphere: "celestial_sphere",
-
-	AltarOfMagic1: "altar_of_magic_1",
-	AltarOfMagic2: "altar_of_magic_2",
-	AltarOfMagic3: "altar_of_magic_3",
-	AltarOfMagic4: "altar_of_magic_4",
-
-	MagicAmplifier1: "magic_amplifier_1",
-	MagicAmplifier2: "magic_amplifier_2",
-	MagicAmplifier3: "magic_amplifier_3",
-	MagicAmplifier4: "magic_amplifier_4",
-}
-
 func GetMapObjectMagicBuildingValues() interactableMagicBuildings {
-	return interactableMagicBuildingValues
+	return interactableMagicBuildings{
+		MysticalTower:   "mystical_tower",
+		CelestialSphere: "celestial_sphere",
+
+		AltarOfMagic1: "altar_of_magic_1",
+		AltarOfMagic2: "altar_of_magic_2",
+		AltarOfMagic3: "altar_of_magic_3",
+		AltarOfMagic4: "altar_of_magic_4",
+
+		MagicAmplifier1: "magic_amplifier_1",
+		MagicAmplifier2: "magic_amplifier_2",
+		MagicAmplifier3: "magic_amplifier_3",
+		MagicAmplifier4: "magic_amplifier_4",
+	}
 }
 
 type interactableHeroBuffBuildings struct {
@@ -300,21 +284,19 @@ type interactableHeroBuffBuildings struct {
 	CrystalTrail    string
 }
 
-var interactableHeroBuffBuildingValues = interactableHeroBuffBuildings{
-	ManaWell:        "mana_well",
-	Fountain:        "fountain",
-	Fountain2:       "fountain_2",
-	Stables:         "stables",
-	TearOfTruth:     "tear_of_truth",
-	BeerFountain:    "beer_fountain",
-	QuixsPath:       "quixs_path",
-	PileOfBooks:     "pile_of_books",
-	MysteriousStone: "mysterious_stone",
-	CrystalTrail:    "crystal_trail",
-}
-
 func GetMapObjectHeroBuffBuildingValues() interactableHeroBuffBuildings {
-	return interactableHeroBuffBuildingValues
+	return interactableHeroBuffBuildings{
+		ManaWell:        "mana_well",
+		Fountain:        "fountain",
+		Fountain2:       "fountain_2",
+		Stables:         "stables",
+		TearOfTruth:     "tear_of_truth",
+		BeerFountain:    "beer_fountain",
+		QuixsPath:       "quixs_path",
+		PileOfBooks:     "pile_of_books",
+		MysteriousStone: "mysterious_stone",
+		CrystalTrail:    "crystal_trail",
+	}
 }
 
 type interactableBuildings struct {
@@ -328,21 +310,19 @@ type interactableBuildings struct {
 	TreeOfAbundance   string
 }
 
-var interactableBuildingValues = interactableBuildings{
-	HuntsmansCamp: "huntsmans_camp",
-
-	MercenaryGuild:    "mercenary_guild",
-	SacrificialShrine: "sacrificial_shrine",
-	Chimerologist:     "chimerologist",
-	Arena:             "arena",
-
-	EternalDragon:   "eternal_dragon",
-	FickleShrine:    "fickle_shrine",
-	TreeOfAbundance: "tree_of_abundance",
-}
-
 func GetMapObjectBuildingValues() interactableBuildings {
-	return interactableBuildingValues
+	return interactableBuildings{
+		HuntsmansCamp: "huntsmans_camp",
+
+		MercenaryGuild:    "mercenary_guild",
+		SacrificialShrine: "sacrificial_shrine",
+		Chimerologist:     "chimerologist",
+		Arena:             "arena",
+
+		EternalDragon:   "eternal_dragon",
+		FickleShrine:    "fickle_shrine",
+		TreeOfAbundance: "tree_of_abundance",
+	}
 }
 
 type interactableT1StatsAndSkillsBuildings struct {
@@ -353,16 +333,14 @@ type interactableT1StatsAndSkillsBuildings struct {
 	WiseOwl         string
 }
 
-var interactableT1StatsAndSkillsValues = interactableT1StatsAndSkillsBuildings{
-	StingingSword:   "stinging_sword",
-	ArmoryAutomaton: "armory_automaton",
-	MagicWheel:      "magic_wheel",
-	KnowledgeGarden: "knowledge_garden",
-	WiseOwl:         "wise_owl",
-}
-
-func GetMapObjectT1StatsAndSkillsValues() interactableT1StatsAndSkillsBuildings {
-	return interactableT1StatsAndSkillsValues
+func GetMapObjectT1StatsAndSkillsBuildingValues() interactableT1StatsAndSkillsBuildings {
+	return interactableT1StatsAndSkillsBuildings{
+		StingingSword:   "stinging_sword",
+		ArmoryAutomaton: "armory_automaton",
+		MagicWheel:      "magic_wheel",
+		KnowledgeGarden: "knowledge_garden",
+		WiseOwl:         "wise_owl",
+	}
 }
 
 type interactableT2StatsAndSkillsBuildings struct {
@@ -373,16 +351,14 @@ type interactableT2StatsAndSkillsBuildings struct {
 	InfernalCirque string
 }
 
-var interactableT2StatsAndSkillsValues = interactableT2StatsAndSkillsBuildings{
-	Fort:           "fort",
-	OrbObservatory: "orb_observatory",
-	University:     "university",
-	Circus:         "circus",
-	InfernalCirque: "infernal_cirque",
-}
-
 func GetMapObjectT2StatsAndSkillsBuildingValues() interactableT2StatsAndSkillsBuildings {
-	return interactableT2StatsAndSkillsValues
+	return interactableT2StatsAndSkillsBuildings{
+		Fort:           "fort",
+		OrbObservatory: "orb_observatory",
+		University:     "university",
+		Circus:         "circus",
+		InfernalCirque: "infernal_cirque",
+	}
 }
 
 type interactableT3StatsAndSkillsBuildings struct {
@@ -391,14 +367,12 @@ type interactableT3StatsAndSkillsBuildings struct {
 	CollegeOfWonder string
 }
 
-var interactableT3StatsAndSkillsValues = interactableT3StatsAndSkillsBuildings{
-	Maze:            "maze",
-	TrialScales:     "trial_scales",
-	CollegeOfWonder: "college_of_wonder",
-}
-
 func GetMapObjectT3StatsAndSkillsBuildingValues() interactableT3StatsAndSkillsBuildings {
-	return interactableT3StatsAndSkillsValues
+	return interactableT3StatsAndSkillsBuildings{
+		Maze:            "maze",
+		TrialScales:     "trial_scales",
+		CollegeOfWonder: "college_of_wonder",
+	}
 }
 
 type interactableNamedUnitBanks struct {
@@ -411,18 +385,16 @@ type interactableNamedUnitBanks struct {
 	PointOfBalance    string
 }
 
-var interactableNamedUnitBankValues = interactableNamedUnitBanks{
-	JoustingRange:     "jousting_range",
-	UnforgottenGrave:  "unforgotten_grave",
-	PetrifiedMemorial: "petrified_memorial",
-	RitualPyre:        "ritual_pyre",
-	BorealCall:        "boreal_call",
-	Gorge:             "the_gorge",
-	PointOfBalance:    "point_of_balance",
-}
-
 func GetMapObjectNamedUnitBankValues() interactableNamedUnitBanks {
-	return interactableNamedUnitBankValues
+	return interactableNamedUnitBanks{
+		JoustingRange:     "jousting_range",
+		UnforgottenGrave:  "unforgotten_grave",
+		PetrifiedMemorial: "petrified_memorial",
+		RitualPyre:        "ritual_pyre",
+		BorealCall:        "boreal_call",
+		Gorge:             "the_gorge",
+		PointOfBalance:    "point_of_balance",
+	}
 }
 
 type interactableRandomUnitBanks struct {
@@ -435,18 +407,16 @@ type interactableRandomUnitBanks struct {
 	RandomHireTier7 string
 }
 
-var interactableRandomUnitBankValues = interactableRandomUnitBanks{
-	RandomHireTier1: "random_hire_1",
-	RandomHireTier2: "random_hire_2",
-	RandomHireTier3: "random_hire_3",
-	RandomHireTier4: "random_hire_4",
-	RandomHireTier5: "random_hire_5",
-	RandomHireTier6: "random_hire_6",
-	RandomHireTier7: "random_hire_7",
-}
-
 func GetMapObjectRandomUnitBankValues() interactableRandomUnitBanks {
-	return interactableRandomUnitBankValues
+	return interactableRandomUnitBanks{
+		RandomHireTier1: "random_hire_1",
+		RandomHireTier2: "random_hire_2",
+		RandomHireTier3: "random_hire_3",
+		RandomHireTier4: "random_hire_4",
+		RandomHireTier5: "random_hire_5",
+		RandomHireTier6: "random_hire_6",
+		RandomHireTier7: "random_hire_7",
+	}
 }
 
 // Below are SIDs currently unused

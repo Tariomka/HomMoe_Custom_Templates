@@ -1,8 +1,9 @@
+package connection_editor
+
 // Manual-edit reapply support: pushing changed castle-count options into the
 // manually edited zone snapshot. The snapshot itself is authoritative on
 // regeneration - castle counts are the ONLY generator options that override
 // manual edits, and only when they changed since the last generation.
-package connection_editor
 
 import (
 	"strings"

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
@@ -25,7 +25,9 @@ type GUIHandler struct {
 func NewGuiHandler() *GUIHandler {
 	previewGenerator, err := preview_service.NewPreviewGenerator()
 	if err != nil {
-		fmt.Printf("Preview Generator failed to initialize, preview images will not be generated. Error: %v\n", err)
+		slog.Error(
+			"Preview Generator failed to initialize, preview images will not be generated",
+			slog.String("error", err.Error()))
 	}
 
 	return &GUIHandler{

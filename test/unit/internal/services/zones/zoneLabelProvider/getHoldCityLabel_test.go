@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +21,7 @@ func hubCityHoldConfig(playerCount int) config.GeneratorConfig {
 func TestWhenNoNeutralPlansExist_ReturnsEmptyLabel(t *testing.T) {
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
-	configuration := hubCityHoldConfig(2)
+	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
 
 	// Act
 	label := provider.GetHoldCityLabel(configuration, []string{"A", "B"}, models.NeutralZonePlans{})
@@ -32,7 +33,7 @@ func TestWhenNoNeutralPlansExist_ReturnsEmptyLabel(t *testing.T) {
 func TestWhenTopologyIsNotHubAndSpoke_ReturnsEmptyLabel(t *testing.T) {
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
-	configuration := hubCityHoldConfig(2)
+	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
 	configuration.Topology = config.TopologyRing
 	plans := models.NeutralZonePlans{{Label: "C", Quality: models.QualityMedium, CastleCount: 1}}
 
@@ -46,7 +47,7 @@ func TestWhenTopologyIsNotHubAndSpoke_ReturnsEmptyLabel(t *testing.T) {
 func TestWhenCityHoldModeIsOff_ReturnsEmptyLabel(t *testing.T) {
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
-	configuration := hubCityHoldConfig(2)
+	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
 	configuration.GameEndConditions.CityHold = false
 	plans := models.NeutralZonePlans{{Label: "C", Quality: models.QualityMedium, CastleCount: 1}}
 
@@ -60,7 +61,7 @@ func TestWhenCityHoldModeIsOff_ReturnsEmptyLabel(t *testing.T) {
 func TestWhenDistancesAndVariancesTie_PicksHigherQualityNeutral(t *testing.T) {
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
-	configuration := hubCityHoldConfig(2)
+	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
 	plans := models.NeutralZonePlans{
 		{Label: "C", Quality: models.QualityMedium, CastleCount: 1},
 		{Label: "D", Quality: models.QualityLow, CastleCount: 0},
@@ -76,7 +77,7 @@ func TestWhenDistancesAndVariancesTie_PicksHigherQualityNeutral(t *testing.T) {
 func TestWhenQualityAlsoTies_PicksNeutralWithCastle(t *testing.T) {
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
-	configuration := hubCityHoldConfig(2)
+	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
 	plans := models.NeutralZonePlans{
 		{Label: "C", Quality: models.QualityMedium, CastleCount: 0},
 		{Label: "D", Quality: models.QualityMedium, CastleCount: 1},

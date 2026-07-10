@@ -411,6 +411,7 @@ func (this *ZoneEditorDialog) handlePointer(gtx layout.Context) {
 			this.moveDraggedZone(pos)
 		case pointer.Release:
 			this.onRelease(pos)
+		case pointer.Cancel, pointer.Enter, pointer.Leave, pointer.Move, pointer.Scroll: // noop
 		}
 	}
 }

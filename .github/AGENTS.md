@@ -146,12 +146,13 @@ When orchestrating subagents, pick the model per task using these ratings
 - **Intelligence** — how hard a problem you can hand the model unsupervised.
 - **Taste** — code quality, API design, UI/UX and other subjective decisions.
 
-| model    | cost | intelligence | taste |
-|----------|------|--------------|-------|
-| fable-5  | 3    | 9            | 9     |
-| gpt-5.5  | 7    | 8            | 5     |
-| opus-4.8 | 4    | 7            | 8     |
-| sonnet-5 | 5    | 5            | 7     |
+| model           | cost | intelligence | taste |
+|-----------------|------|--------------|-------|
+| claude-fable-5  | 3    | 9            | 9     |
+| gpt-5.6-sol     | 7    | 7            | 6     |
+| gpt-5.5         | 7    | 6            | 5     |
+| claude-opus-4.8 | 4    | 7            | 8     |
+| sonnet-5        | 5    | 5            | 7     |
 
 Application directives:
 

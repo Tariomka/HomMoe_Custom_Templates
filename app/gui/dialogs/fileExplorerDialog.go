@@ -416,6 +416,8 @@ func (this *FileExplorerDialog) confirmButtonState() (label string, show bool, d
 		return "Save", true, len(this.filenameEd.Text()) == 0
 	case modePickFolder:
 		return "Select This Folder", true, this.currentDir == ""
+	case modeBrowse:
+		fallthrough
 	default:
 		return "", false, false
 	}
@@ -468,6 +470,8 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 				}
 			}
 		}
+	case modeBrowse:
+		// No confirm button in browse mode.
 	}
 
 	return false
@@ -601,6 +605,7 @@ func (this *FileExplorerDialog) onEntryClicked(entry fileEntry) {
 	case modeSaveFile:
 		this.filenameEd.SetText(entry.name)
 		this.overwriteActive = false
+	case modePickFolder, modeBrowse: // noop
 	}
 }
 

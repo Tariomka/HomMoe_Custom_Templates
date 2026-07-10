@@ -82,7 +82,7 @@ func (this *CrossTopologyService) createCrossLayout(
 
 	// Distribute the remaining neutral zones across the arms, round-robin.
 	armNeutralCounts := make([]int, playerCount)
-	for i := 0; i < neutralCount-1; i++ {
+	for i := range neutralCount - 1 {
 		armNeutralCounts[i%max(1, playerCount)]++
 	}
 

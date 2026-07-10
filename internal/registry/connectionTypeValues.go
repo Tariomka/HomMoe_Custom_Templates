@@ -8,17 +8,15 @@ type connectionTypes struct {
 	Proximity      string
 }
 
-var connectionTypeValues = connectionTypes{
-	Default:        "Default",
-	Direct:         "Direct",
-	GladiatorArena: "GladiatorArena",
-	Portal:         "Portal",
-	Proximity:      "Proximity",
-}
-
 // GetConnectionTypeValues returns the connection type values used for
 //
 //	variants.connections.connectionType
 func GetConnectionTypeValues() connectionTypes {
-	return connectionTypeValues
+	return connectionTypes{
+		Default:        "Default",
+		Direct:         "Direct",
+		GladiatorArena: "GladiatorArena",
+		Portal:         "Portal",
+		Proximity:      "Proximity",
+	}
 }

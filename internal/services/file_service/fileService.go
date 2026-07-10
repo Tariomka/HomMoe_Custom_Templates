@@ -31,7 +31,7 @@ func (this *FileService) LoadSettingsFile(filepath string) (*dtos.EditorStateDto
 	}
 
 	settingsFile := dtos.NewDefaultEditorStateDto()
-	if err := json.Unmarshal(data, &settingsFile); err != nil {
+	if err = json.Unmarshal(data, &settingsFile); err != nil {
 		return nil, err
 	}
 
@@ -66,7 +66,7 @@ func (this *FileService) SaveTemplate(directory string, template *entities.RmgTe
 		return "", err
 	}
 
-	if err := os.WriteFile(out, data, fileReadWritePermission); err != nil {
+	if err = os.WriteFile(out, data, fileReadWritePermission); err != nil {
 		return "", err
 	}
 
@@ -92,7 +92,7 @@ func (this *FileService) SavePreviewImage(directory string, image *image.RGBA, t
 	}
 
 	defer file.Close()
-	if err := png.Encode(file, image); err != nil {
+	if err = png.Encode(file, image); err != nil {
 		return "", err
 	}
 
