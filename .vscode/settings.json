@@ -8,12 +8,16 @@
         "Chimerologist",
         "circumcircle",
         "Clickables",
+        "cyclop",
+        "depguard",
         "docstrings",
         "dtos",
         "gioui",
         "gofakeit",
         "gofmt",
         "gofont",
+        "golines",
+        "govet",
         "heros",
         "hommoe",
         "Huntsmans",
@@ -24,6 +28,7 @@
         "linq",
         "Mereas",
         "movepoints",
+        "nolint",
         "nring",
         "Quixs",
         "Regen",
@@ -40,9 +45,10 @@
         "ui.semanticTokens": true,
         "ui.diagnostic.staticcheck": true,
         "ui.diagnostic.analyses": {
-            "ST1000": false,
-            "ST1003": false,
-            "ST1006": false
+            "ST1000": false, // Temporary
+            "ST1003": false, // disabled by choice, see .golangci.yml for more details
+            "ST1006": false, // disabled by choice, see .golangci.yml for more details
+            "unusedwrite": false, // golangci-lint already handles this at error level
         }
     },
     "go.lintTool": "golangci-lint-v2",

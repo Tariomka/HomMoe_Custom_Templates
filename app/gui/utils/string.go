@@ -8,13 +8,13 @@ func DenormalizeString(value, low, high float32) string {
 }
 
 // RoundedRangeString returns [RoundedRange] result as a string.
-func RoundedRangeString(value float32, min, max int) string {
-	return fmt.Sprintf("%d ", RoundedRange(value, min, max))
+func RoundedRangeString(value float32, minRange, maxRange int) string {
+	return fmt.Sprintf("%d ", RoundedRange(value, minRange, maxRange))
 }
 
 // RoundedRangePercentString returns [RoundedRange] result as a percentage string, e.g. "50%".
-func RoundedRangePercentString(value float32, min, max int) string {
-	return fmt.Sprintf("%d%%", RoundedRange(value, min, max))
+func RoundedRangePercentString(value float32, minRange, maxRange int) string {
+	return fmt.Sprintf("%d%%", RoundedRange(value, minRange, maxRange))
 }
 
 // MultiplierString returns [Multiplier] result as a string with a "x" prefix, e.g. "x 1.50".

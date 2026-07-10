@@ -1,7 +1,8 @@
+package connection_editor
+
 // Zone-mutation logic of the Manual Zone Editor: adding, deleting and
 // re-profiling zones. The visual canvas lives in the GUI layer; everything
 // testable lives here.
-package connection_editor
 
 import (
 	"fmt"

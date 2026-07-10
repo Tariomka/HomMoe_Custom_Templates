@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
@@ -74,8 +75,8 @@ func (this *PreviewGeneratorService) drawConnections(
 	zoneRadius float64) {
 	for _, conn := range connections {
 		controlPoint := fitterCallback(conn.Ctrl) // Bézier control point
-		startPoint, ok1 := this.movePointTowards(fitterCallback(conn.A), controlPoint, zoneRadius)
-		endPoint, ok2 := this.movePointTowards(fitterCallback(conn.B), controlPoint, zoneRadius)
+		startPoint, ok1 := helpers.CalculatePointTowards(fitterCallback(conn.A), controlPoint, zoneRadius)
+		endPoint, ok2 := helpers.CalculatePointTowards(fitterCallback(conn.B), controlPoint, zoneRadius)
 		if !ok1 || !ok2 {
 			continue
 		}
@@ -151,21 +152,4 @@ func (this *PreviewGeneratorService) getPointOnQuadraticBezierCurve(
 		Add(data.Vec2FromPoint[float64](ctrl).MultiplyScalar(2 * mt * t)).
 		Add(data.Vec2FromPoint[float64](end).MultiplyScalar(t * t))
 	return image.Pt(int(math.Round(point.X)), int(math.Round(point.Y)))
-}
-
-// movePointTowards returns `from` moved toward `toward` by `distance` pixels.
-// ok is false when the two points are coincident.
-func (this *PreviewGeneratorService) movePointTowards(
-	from, toward image.Point,
-	distance float64) (movedPoint image.Point, ok bool) {
-	deltaX := float64(toward.X - from.X)
-	deltaY := float64(toward.Y - from.Y)
-	deltaDistance := math.Hypot(deltaX, deltaY)
-	if deltaDistance < 1 {
-		return movedPoint, false
-	}
-
-	movedPoint.X = int(float64(from.X) + deltaX/deltaDistance*distance)
-	movedPoint.Y = int(float64(from.Y) + deltaY/deltaDistance*distance)
-	return movedPoint, true
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math"
 	"strings"
 
 	"gioui.org/f32"
@@ -16,17 +15,14 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
 func DrawConnection(gtx layout.Context, conn preview.PreviewConnection, zoneRadius int) {
-	// Trim both ends back to the circle outlines along the tangent toward the
-	// control point so the edge doesn't overlap the zone fill, then stroke the
-	// quadratic curve. A lone edge has its control point on the midpoint and so
-	// renders as a straight line; parallel edges fan out into distinct curves.
 	radius := float64(zoneRadius)
-	startX, startY, ok1 := trimToward(conn.A, conn.Ctrl, radius)
-	endX, endY, ok2 := trimToward(conn.B, conn.Ctrl, radius)
+	start, ok1 := helpers.CalculatePointTowards(conn.A, conn.Ctrl, radius)
+	end, ok2 := helpers.CalculatePointTowards(conn.B, conn.Ctrl, radius)
 	if !ok1 || !ok2 {
 		return
 	}
@@ -37,23 +33,7 @@ func DrawConnection(gtx layout.Context, conn preview.PreviewConnection, zoneRadi
 		lineColor = themes.ColorPreviewPortalLine
 		lineWidth = float32(gtx.Dp(unit.Dp(1.5)))
 	}
-	drawCurve(gtx,
-		image.Pt(int(startX), int(startY)),
-		conn.Ctrl,
-		image.Pt(int(endX), int(endY)),
-		lineWidth, lineColor)
-}
-
-// trimToward returns the point moved from `from` toward `toward` by `dist`
-// pixels. ok is false when the two points are coincident.
-func trimToward(from, toward image.Point, dist float64) (x, y float64, ok bool) {
-	dx := float64(toward.X - from.X)
-	dy := float64(toward.Y - from.Y)
-	d := math.Hypot(dx, dy)
-	if d < 1 {
-		return 0, 0, false
-	}
-	return float64(from.X) + dx/d*dist, float64(from.Y) + dy/d*dist, true
+	drawCurve(gtx, start, conn.Ctrl, end, lineWidth, lineColor)
 }
 
 func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.PreviewZone, zoneRadius int) {

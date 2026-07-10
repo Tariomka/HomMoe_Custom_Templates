@@ -71,18 +71,22 @@ func neutralCastleTarget(
 	if changes.NeutralSimple {
 		return helpers.Clamp(zoneConfiguration.NeutralZoneCastles, 0, 4), true
 	}
+
 	if CountZoneCastles(zone) == 0 {
 		return 0, false
 	}
+
 	switch QualityOfZone(zone) {
-	case models.QualityLow:
-		if changes.NeutralLow {
-			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowCastlesPerZone, 0, 4), true
-		}
 	case models.QualityHigh:
 		if changes.NeutralHigh {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralHighCastlesPerZone, 0, 4), true
 		}
+	case models.QualityLow:
+		if changes.NeutralLow {
+			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowCastlesPerZone, 0, 4), true
+		}
+	case models.QualityMedium:
+		fallthrough
 	default:
 		if changes.NeutralMedium {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralMediumCastlesPerZone, 0, 4), true

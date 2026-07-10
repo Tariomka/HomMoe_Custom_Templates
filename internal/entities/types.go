@@ -10,7 +10,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
 )
 
-// Re-exported aliases so external callers can keep using template.Border, template.Variant, etc.
 type (
 	RmgTemplate = template.RmgTemplate
 

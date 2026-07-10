@@ -27,14 +27,18 @@ func NewNeutralZoneProfile(quality NeutralZoneQuality) NeutralZoneProfile {
 		return newNeutralZoneProfileHighQuality()
 	case QualityMedium:
 		return newNeutralZoneProfileMediumQuality()
-	default: // QualityLow
+	case QualityLow:
+		fallthrough
+	default:
 		return newNeutralZoneProfileLowQuality()
 	}
 }
 
 func newNeutralZoneProfileLowQuality() NeutralZoneProfile {
+	layoutValues := registry.GetLayoutValues()
+	constructionValues := registry.GetBuildingsConstructionSidValues()
 	return NeutralZoneProfile{
-		Layout:                       "zone_layout_sides",
+		Layout:                       layoutValues.Sides,
 		GuardReactionDistribution:    []int{0, 10, 10, 10, 10, 0},
 		GuardMultiplier:              1.1,
 		GuardedContentPool:           registry.GetGuardedContentPoolT2List(),
@@ -48,14 +52,16 @@ func newNeutralZoneProfileLowQuality() NeutralZoneProfile {
 		ResourcesValuePerArea:        240,
 		PrimaryCityGuardValue:        4000,
 		ExtraCityGuardValue:          2000,
-		PrimaryBuildingsCSid:         "poor_buildings_construction",
-		ExtraBuildingsCSid:           "poor_buildings_construction",
+		PrimaryBuildingsCSid:         constructionValues.Poor,
+		ExtraBuildingsCSid:           constructionValues.Poor,
 	}
 }
 
 func newNeutralZoneProfileMediumQuality() NeutralZoneProfile {
+	layoutValues := registry.GetLayoutValues()
+	constructionValues := registry.GetBuildingsConstructionSidValues()
 	return NeutralZoneProfile{
-		Layout:                       "zone_layout_treasure_zone",
+		Layout:                       layoutValues.TreasureZone,
 		GuardReactionDistribution:    []int{0, 10, 10, 10, 10, 0},
 		GuardMultiplier:              1.4,
 		GuardedContentPool:           registry.GetGuardedContentPoolT3List(),
@@ -69,14 +75,16 @@ func newNeutralZoneProfileMediumQuality() NeutralZoneProfile {
 		ResourcesValuePerArea:        420,
 		PrimaryCityGuardValue:        8000,
 		ExtraCityGuardValue:          4000,
-		PrimaryBuildingsCSid:         "rich_buildings_construction",
-		ExtraBuildingsCSid:           "poor_buildings_construction",
+		PrimaryBuildingsCSid:         constructionValues.Rich,
+		ExtraBuildingsCSid:           constructionValues.Poor,
 	}
 }
 
 func newNeutralZoneProfileHighQuality() NeutralZoneProfile {
+	layoutValues := registry.GetLayoutValues()
+	constructionValues := registry.GetBuildingsConstructionSidValues()
 	return NeutralZoneProfile{
-		Layout:                    "zone_layout_treasure_zone",
+		Layout:                    layoutValues.TreasureZone,
 		GuardReactionDistribution: []int{0, 10, 10, 20, 10, 0},
 		GuardMultiplier:           1.8,
 		GuardedContentPool: append(
@@ -94,7 +102,7 @@ func newNeutralZoneProfileHighQuality() NeutralZoneProfile {
 		ResourcesValuePerArea:        580,
 		PrimaryCityGuardValue:        16000,
 		ExtraCityGuardValue:          8000,
-		PrimaryBuildingsCSid:         "rich_buildings_construction",
-		ExtraBuildingsCSid:           "rich_buildings_construction",
+		PrimaryBuildingsCSid:         constructionValues.Rich,
+		ExtraBuildingsCSid:           constructionValues.Rich,
 	}
 }

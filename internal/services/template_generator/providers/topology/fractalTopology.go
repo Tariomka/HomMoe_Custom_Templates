@@ -98,6 +98,8 @@ func (this *FractalTopologyService) createFractalLayout(
 			tierBuckets[2] = append(tierBuckets[2], index)
 		case models.QualityMedium:
 			tierBuckets[1] = append(tierBuckets[1], index)
+		case models.QualityLow:
+			fallthrough
 		default:
 			tierBuckets[0] = append(tierBuckets[0], index)
 		}

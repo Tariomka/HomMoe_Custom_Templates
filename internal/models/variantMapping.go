@@ -32,7 +32,7 @@ func (this VariantMapping) DisplayText() string {
 	return this.Variants[keys[0]]
 }
 
-// String implements fmt.Stringer so a VariantMapping renders as its display text.
+// String implements [fmt.Stringer] so a VariantMapping renders as its display text.
 func (this VariantMapping) String() string {
 	return this.DisplayText()
 }

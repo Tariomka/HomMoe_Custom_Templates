@@ -44,29 +44,24 @@ var (
 // Use these throughout the UI; they map intent onto the raw palette.
 
 var (
-	// Surfaces.
 	ColorBackground = swatchNight    // window background
 	ColorPanel      = swatchCoal     // panels, cards, dialogs
 	ColorInput      = swatchGraphite // text inputs, dropdown bodies, wells
 	ColorButton     = swatchSlate    // standard button fill
 	ColorBorder     = swatchMulberry // default border / outline
 
-	// Accent - crimson everywhere something is interactive or highlighted.
 	ColorAccent       = swatchCrimson       // headers, focus, active borders
 	ColorAccentDim    = swatchCrimsonDim    // de-emphasised accent
 	ColorAccentBright = swatchCrimsonBright // active labels, hot highlights
 
-	// Text.
 	ColorText    = swatchInk
 	ColorTextDim = swatchInkDim
 
-	// Status.
 	ColorError          = swatchEmber
 	ColorWarnBackground = swatchAmberShade
 	ColorWarnBorder     = swatchAmberDark
 	ColorWarnText       = swatchAmber
 
-	// Controls.
 	ColorPrimaryButton  = swatchCrimsonDeep                               // generate / confirm fill
 	ColorButtonDisabled = color.NRGBA{R: 0x2A, G: 0x23, B: 0x26, A: 0xFF} // #2A2326 disabled fill
 	ColorBorderDisabled = color.NRGBA{R: 0x41, G: 0x37, B: 0x3B, A: 0xFF} // #41373B disabled outline

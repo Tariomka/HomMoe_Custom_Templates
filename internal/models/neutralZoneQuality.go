@@ -15,7 +15,9 @@ func (this NeutralZoneQuality) GetGuardValue() int {
 		return 25_000
 	case QualityMedium:
 		return 20_000
-	default: // QualityLow
+	case QualityLow:
+		fallthrough
+	default:
 		return 15_000
 	}
 }
