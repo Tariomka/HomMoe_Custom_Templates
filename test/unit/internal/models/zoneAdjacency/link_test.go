@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenTwoLabelsAreLinked_CreatesSymmetricAdjacency(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	adjacency := models.ZoneAdjacency{}
 	expected := models.ZoneAdjacency{
@@ -23,6 +24,7 @@ func TestWhenTwoLabelsAreLinked_CreatesSymmetricAdjacency(t *testing.T) {
 }
 
 func TestWhenLabelIsLinkedTwice_KeepsBothNeighbours(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	adjacency := models.ZoneAdjacency{}
 	adjacency.Link("A", "B")

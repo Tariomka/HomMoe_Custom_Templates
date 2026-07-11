@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenEveryConnectionEndpointExists_ReturnsFalse(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}}
 	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
@@ -21,6 +22,7 @@ func TestWhenEveryConnectionEndpointExists_ReturnsFalse(t *testing.T) {
 }
 
 func TestWhenFromZoneIsMissing_ReturnsTrue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{{Name: "Neutral-1"}}
 	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
@@ -33,6 +35,7 @@ func TestWhenFromZoneIsMissing_ReturnsTrue(t *testing.T) {
 }
 
 func TestWhenToZoneIsMissing_ReturnsTrue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{{Name: "Spawn-A"}}
 	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-99"}}

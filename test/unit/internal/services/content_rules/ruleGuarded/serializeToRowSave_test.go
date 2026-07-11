@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenGuardedRuleIsSerialized_WritesNameAndTrueState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(true)
 	isGuarded := true
@@ -21,6 +22,7 @@ func TestWhenGuardedRuleIsSerialized_WritesNameAndTrueState(t *testing.T) {
 }
 
 func TestWhenUnguardedRuleIsSerialized_WritesNameAndFalseState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(false)
 	isGuarded := false

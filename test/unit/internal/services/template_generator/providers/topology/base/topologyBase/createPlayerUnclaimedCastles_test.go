@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenUnclaimedCastleCountIsZero_NoUnclaimedCastlesAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -21,6 +22,7 @@ func TestWhenUnclaimedCastleCountIsZero_NoUnclaimedCastlesAreCreated(t *testing.
 }
 
 func TestWhenFactionsMatchPlayer_UnclaimedCastleIsGuardedMediumCityWithMatchFaction(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedCastles := []entities.MainObject{
@@ -44,6 +46,7 @@ func TestWhenFactionsMatchPlayer_UnclaimedCastleIsGuardedMediumCityWithMatchFact
 }
 
 func TestWhenFactionsDoNotMatchPlayer_UnclaimedCastleFactionIsRandom(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedCastles := []entities.MainObject{
@@ -67,6 +70,7 @@ func TestWhenFactionsDoNotMatchPlayer_UnclaimedCastleFactionIsRandom(t *testing.
 }
 
 func TestWhenGuardValueIsProvided_UnclaimedCastleCarriesItVerbatim(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	guardValue := gofakeit.Number(1000, 50000)
@@ -79,6 +83,7 @@ func TestWhenGuardValueIsProvided_UnclaimedCastleCarriesItVerbatim(t *testing.T)
 }
 
 func TestWhenMultipleUnclaimedCastlesAreRequested_CastleCountMatchesRequest(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	castleCount := gofakeit.Number(2, 5)

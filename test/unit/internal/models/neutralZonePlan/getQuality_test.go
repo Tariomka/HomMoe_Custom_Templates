@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPlanListIsEmpty_ReturnsMediumQuality(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{}
 
@@ -19,6 +20,7 @@ func TestWhenPlanListIsEmpty_ReturnsMediumQuality(t *testing.T) {
 }
 
 func TestWhenLabelIsNotFound_ReturnsMediumQuality(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{{Label: "A", Quality: models.QualityHigh}}
 
@@ -30,6 +32,7 @@ func TestWhenLabelIsNotFound_ReturnsMediumQuality(t *testing.T) {
 }
 
 func TestWhenLabelIsFound_ReturnsThatPlanQuality(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "A", Quality: models.QualityHigh},

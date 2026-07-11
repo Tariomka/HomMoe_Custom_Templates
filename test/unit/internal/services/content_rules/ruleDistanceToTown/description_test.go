@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenDescriptionIsQueried_ExplainsTownDistance(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleDistanceToTown(nil)
 

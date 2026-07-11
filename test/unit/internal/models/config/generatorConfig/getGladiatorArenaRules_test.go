@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenGladiatorArenaRulesAreSet_ReturnsTheirCopy(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := config.GladiatorArenaRules{
 		Enabled:        true,
@@ -26,6 +27,7 @@ func TestWhenGladiatorArenaRulesAreSet_ReturnsTheirCopy(t *testing.T) {
 }
 
 func TestWhenGladiatorArenaRulesAreNil_ReturnsZeroRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.GladiatorArenaRules = nil

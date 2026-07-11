@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenIndexAdjacencyIsCreated_AllocatesEmptyNeighbourSetPerIndex(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	size := gofakeit.Number(1, 10)
 	expected := map[int]map[int]bool{}

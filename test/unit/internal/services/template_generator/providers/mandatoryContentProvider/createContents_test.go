@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenPlayerLabelsProvided_CreatesGroupPerPlayerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -29,6 +30,7 @@ func TestWhenPlayerLabelsProvided_CreatesGroupPerPlayerLabel(t *testing.T) {
 }
 
 func TestWhenRemoteFootholdsEnabled_PrependsFootholdItemPerCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	footholdSid := registry.GetMapObjectNonContentValues().RemoteFoothold
 	provider := providers.NewMandatoryContentProvider()
@@ -46,6 +48,7 @@ func TestWhenRemoteFootholdsEnabled_PrependsFootholdItemPerCount(t *testing.T) {
 }
 
 func TestWhenRemoteFootholdsDisabled_AddsNoFootholdItems(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -60,6 +63,7 @@ func TestWhenRemoteFootholdsDisabled_AddsNoFootholdItems(t *testing.T) {
 }
 
 func TestWhenLowTierRowsConfigured_CopiesRowsIntoLowNeutralZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -76,6 +80,7 @@ func TestWhenLowTierRowsConfigured_CopiesRowsIntoLowNeutralZone(t *testing.T) {
 }
 
 func TestWhenMediumTierRowsConfigured_CopiesRowsIntoMediumNeutralZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -95,6 +100,7 @@ func TestWhenMediumTierRowsConfigured_CopiesRowsIntoMediumNeutralZone(t *testing
 // mandatory content. The original implementation used copy() into a nil slice,
 // silently dropping every row - this guards that regression.
 func TestWhenHighTierRowsConfigured_CopiesRowsIntoHighNeutralZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -116,6 +122,7 @@ func TestWhenHighTierRowsConfigured_CopiesRowsIntoHighNeutralZone(t *testing.T) 
 }
 
 func TestWhenNeutralZoneHasNoCastles_StripsNearCastlePlacementRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	ruleTypeMainObject := registry.GetRuleTypeValues().MainObject
 	provider := providers.NewMandatoryContentProvider()
@@ -141,6 +148,7 @@ func TestWhenNeutralZoneHasNoCastles_StripsNearCastlePlacementRules(t *testing.T
 }
 
 func TestWhenNeutralZoneHasCastles_KeepsNearCastlePlacementRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	ruleTypeMainObject := registry.GetRuleTypeValues().MainObject
 	provider := providers.NewMandatoryContentProvider()
@@ -164,6 +172,7 @@ func TestWhenNeutralZoneHasCastles_KeepsNearCastlePlacementRules(t *testing.T) {
 // Guards the cloneContentItems fix: stripping rules for a 0-castle zone must not
 // corrupt the shared per-tier rows held on the configuration.
 func TestWhenZeroCastleZoneStripsRules_DoesNotMutateConfiguredRows(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	ruleTypeMainObject := registry.GetRuleTypeValues().MainObject
 	provider := providers.NewMandatoryContentProvider()
@@ -190,6 +199,7 @@ func TestWhenZeroCastleZoneStripsRules_DoesNotMutateConfiguredRows(t *testing.T)
 // The hub content group is created only for the Hub & Spoke topology and only
 // when the user configured hub rows, matching the parallel C# editor.
 func TestWhenHubTopologyWithHubRows_EmitsHubGroupWithConfiguredRows(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -205,6 +215,7 @@ func TestWhenHubTopologyWithHubRows_EmitsHubGroupWithConfiguredRows(t *testing.T
 }
 
 func TestWhenHubTopologyWithoutHubRows_OmitsHubGroup(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -218,6 +229,7 @@ func TestWhenHubTopologyWithoutHubRows_OmitsHubGroup(t *testing.T) {
 }
 
 func TestWhenNonHubTopologyWithHubRows_OmitsHubGroup(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()

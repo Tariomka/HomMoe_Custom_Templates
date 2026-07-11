@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "main-road"},
@@ -23,6 +24,7 @@ func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
 }
 
 func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "Main-Road"},
@@ -37,6 +39,7 @@ func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
 }
 
 func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "alpha"},
@@ -51,6 +54,7 @@ func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
 }
 
 func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "alpha"},
@@ -64,6 +68,7 @@ func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
 }
 
 func TestWhenCurrentNameIsEmpty_ReturnsFalse(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: ""},

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenSeparationConstraintsVary_ReportsHonorabilityAccordingly(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		mutate      func(configuration *config.GeneratorConfig)
@@ -140,6 +141,7 @@ func TestWhenSeparationConstraintsVary_ReportsHonorabilityAccordingly(t *testing
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			configuration := config.NewGeneratorConfig()
 			testCase.mutate(configuration)

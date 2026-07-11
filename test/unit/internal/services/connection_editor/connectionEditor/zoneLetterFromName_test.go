@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNameIsParsed_ReturnsPartAfterFirstDash(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		zoneName string
@@ -20,6 +21,7 @@ func TestWhenNameIsParsed_ReturnsPartAfterFirstDash(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act

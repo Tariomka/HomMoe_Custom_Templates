@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenTypeAndArgumentsAreChained_ReturnsReferenceWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedType := gofakeit.Word()
 	expectedArgument := gofakeit.Word()

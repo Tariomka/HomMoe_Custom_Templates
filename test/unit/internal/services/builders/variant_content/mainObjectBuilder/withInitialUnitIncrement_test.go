@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenInitialUnitIncrementIsProvided_SetsInitialUnitIncrementOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedIncrement := gofakeit.Number(1, 100)
 	builder := variant_content.NewObjectBuilder()

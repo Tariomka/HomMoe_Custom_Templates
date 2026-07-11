@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenQualityVaries_SelectsMatchingProfileGuardMultiplier(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName        string
 		quality            models.NeutralZoneQuality
@@ -20,6 +21,7 @@ func TestWhenQualityVaries_SelectsMatchingProfileGuardMultiplier(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			quality := testCase.quality
 
@@ -33,6 +35,7 @@ func TestWhenQualityVaries_SelectsMatchingProfileGuardMultiplier(t *testing.T) {
 }
 
 func TestWhenQualityVaries_SelectsMatchingCityGuardValues(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName          string
 		quality              models.NeutralZoneQuality
@@ -44,6 +47,7 @@ func TestWhenQualityVaries_SelectsMatchingCityGuardValues(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			quality := testCase.quality
 

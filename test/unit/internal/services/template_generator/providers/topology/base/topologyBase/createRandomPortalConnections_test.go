@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenFewerThanTwoLabelsExist_NoPortalsAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -21,6 +22,7 @@ func TestWhenFewerThanTwoLabelsExist_NoPortalsAreCreated(t *testing.T) {
 }
 
 func TestWhenMaxCountIsBelowLabelCount_PortalCountEqualsMaxCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	orderedLabels := []string{"A", "B", "C", "D", "E"}
@@ -34,6 +36,7 @@ func TestWhenMaxCountIsBelowLabelCount_PortalCountEqualsMaxCount(t *testing.T) {
 }
 
 func TestWhenMaxCountExceedsLabelCount_EveryLabelGetsOnePortal(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	orderedLabels := []string{"A", "B", "C", "D"}
@@ -47,6 +50,7 @@ func TestWhenMaxCountExceedsLabelCount_EveryLabelGetsOnePortal(t *testing.T) {
 }
 
 func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	portalRoad := true
@@ -77,6 +81,7 @@ func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
 }
 
 func TestWhenManyLabelsArePortalLinked_NoPortalLinksZoneToItself(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	orderedLabels := []string{"A", "B", "C", "D", "E", "F"}
@@ -96,6 +101,7 @@ func TestWhenManyLabelsArePortalLinked_NoPortalLinksZoneToItself(t *testing.T) {
 }
 
 func TestWhenLabelsMixPlayersAndNeutrals_PortalEndpointsUseMatchingZonePrefixes(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedZoneNames := []string{"Spawn-A", "Spawn-B", "Neutral-C", "Neutral-D"}

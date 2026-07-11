@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNameIsProvided_SetsNameOnBuiltItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 	expectedName := gofakeit.Word()

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenWeeklyUnitIncrementIsChosen_EnablesWeeklyUnitIncrementOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

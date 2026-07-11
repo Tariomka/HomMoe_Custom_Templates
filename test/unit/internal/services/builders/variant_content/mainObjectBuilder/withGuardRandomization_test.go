@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardRandomizationIsProvided_SetsGuardRandomizationOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedRandomization := gofakeit.Float64Range(0.01, 1)
 	builder := variant_content.NewObjectBuilder()

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenBiomeFromListReferenceIsBuilt_SetsFromListTypeWithArguments(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstBiome := gofakeit.Word()
 	secondBiome := gofakeit.Word()

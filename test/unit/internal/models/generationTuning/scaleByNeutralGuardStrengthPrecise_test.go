@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenValueIsScaledPrecisely_RoundsToThreeDecimalPlaces(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float64Range(0.001, 10000)
 	multiplier := gofakeit.Float64Range(0.1, 3)

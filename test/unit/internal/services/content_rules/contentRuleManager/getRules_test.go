@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenRulesAreListed_ReturnsEveryKnownRuleInManagerOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := []string{
 		"Distance to road",

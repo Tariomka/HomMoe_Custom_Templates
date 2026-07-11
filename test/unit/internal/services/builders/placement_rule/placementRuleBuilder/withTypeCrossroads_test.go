@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenCrossroadsTypeIsChosen_SetsCrossroadsTypeOnBuiltRule(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := placement_rule.NewPlacementRuleBuilder()
 

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenDescriptionIsQueried_ExplainsSoloEncounterBehavior(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(true)
 

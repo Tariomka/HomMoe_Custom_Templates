@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenResourcesContentPoolIsProvided_SetsResourcesContentPoolOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedPool := []string{gofakeit.Word(), gofakeit.Word()}
 	builder := variant_content.NewZoneBuilder()

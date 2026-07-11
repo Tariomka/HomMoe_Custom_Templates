@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardReactionDistributionIsProvided_SetsGuardReactionDistributionOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedDistribution := []int{gofakeit.Number(1, 100), gofakeit.Number(1, 100)}
 	builder := variant_content.NewZoneBuilder()

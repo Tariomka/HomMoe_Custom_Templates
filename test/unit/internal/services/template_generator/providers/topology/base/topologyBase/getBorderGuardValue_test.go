@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenBothLabelsArePlayers_GuardValueIsPlayerBorderStrength(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -21,6 +22,7 @@ func TestWhenBothLabelsArePlayers_GuardValueIsPlayerBorderStrength(t *testing.T)
 }
 
 func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	neutralPlans := models.NeutralZonePlans{
 		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
@@ -37,6 +39,7 @@ func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			topologyBase := base.NewTopologyBase()
 
@@ -51,6 +54,7 @@ func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
 }
 
 func TestWhenOnlyFirstLabelIsPlayer_NeutralSecondLabelQualityDrivesGuard(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	neutralPlans := models.NeutralZonePlans{
@@ -66,6 +70,7 @@ func TestWhenOnlyFirstLabelIsPlayer_NeutralSecondLabelQualityDrivesGuard(t *test
 }
 
 func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	neutralPlans := models.NeutralZonePlans{
@@ -81,6 +86,7 @@ func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *test
 }
 
 func TestWhenNeutralLabelHasNoPlan_MediumQualityGuardIsUsed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -93,6 +99,7 @@ func TestWhenNeutralLabelHasNoPlan_MediumQualityGuardIsUsed(t *testing.T) {
 }
 
 func TestWhenBorderGuardMultiplierIsDoubled_PlayerBorderGuardIsScaled(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	tuning := newUnitTuning()

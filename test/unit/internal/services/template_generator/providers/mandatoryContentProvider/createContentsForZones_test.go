@@ -13,6 +13,7 @@ import (
 // re-tiered in the manual editor (Medium plan -> High zone) gets High content.
 // Regression test for the manually-promoted centre zone showing no high content.
 func TestWhenZoneManuallyPromotedToHighTier_UsesHighTierRows(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -39,6 +40,7 @@ func TestWhenZoneManuallyPromotedToHighTier_UsesHighTierRows(t *testing.T) {
 }
 
 func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -59,6 +61,7 @@ func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 }
 
 func TestWhenZonePoolIsUnrecognized_FallsBackToMediumTierRows(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -79,6 +82,7 @@ func TestWhenZonePoolIsUnrecognized_FallsBackToMediumTierRows(t *testing.T) {
 // A castle-less neutral zone must still receive content (with near-castle rules
 // stripped), confirming the clone path does not drop rows for 0-castle zones.
 func TestWhenZoneHasNoCastles_KeepsConfiguredRows(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -97,6 +101,7 @@ func TestWhenZoneHasNoCastles_KeepsConfiguredRows(t *testing.T) {
 }
 
 func TestWhenSpawnZoneProvided_CreatesPlayerGroupNamedAfterZoneSuffix(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -112,6 +117,7 @@ func TestWhenSpawnZoneProvided_CreatesPlayerGroupNamedAfterZoneSuffix(t *testing
 }
 
 func TestWhenZoneNameIsUnrecognized_SkipsZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -128,6 +134,7 @@ func TestWhenZoneNameIsUnrecognized_SkipsZone(t *testing.T) {
 // The manual-edit path must give the hub zone its content too, emitting a single
 // shared group even when several hub zones exist (tournament clusters).
 func TestWhenMultipleHubZonesProvided_EmitsSingleHubGroup(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -147,6 +154,7 @@ func TestWhenMultipleHubZonesProvided_EmitsSingleHubGroup(t *testing.T) {
 }
 
 func TestWhenMultipleHubZonesProvided_SharedHubGroupContainsConfiguredRows(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
@@ -165,6 +173,7 @@ func TestWhenMultipleHubZonesProvided_SharedHubGroupContainsConfiguredRows(t *te
 }
 
 func TestWhenHubZoneProvidedWithoutHubRows_OmitsHubGroup(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()

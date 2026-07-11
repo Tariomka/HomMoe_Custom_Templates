@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenHubZoneIsCreated_NameIsHub(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -20,6 +21,7 @@ func TestWhenHubZoneIsCreated_NameIsHub(t *testing.T) {
 }
 
 func TestWhenHoldCityHubHasNoCastles_ForcesSingleCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -31,6 +33,7 @@ func TestWhenHoldCityHubHasNoCastles_ForcesSingleCastle(t *testing.T) {
 }
 
 func TestWhenHubIsHoldCity_PrimaryCastleCarriesHoldCityWinCondition(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -42,6 +45,7 @@ func TestWhenHubIsHoldCity_PrimaryCastleCarriesHoldCityWinCondition(t *testing.T
 }
 
 func TestWhenMandatoryContentNameProvided_ZoneReferencesIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -53,6 +57,7 @@ func TestWhenMandatoryContentNameProvided_ZoneReferencesIt(t *testing.T) {
 }
 
 func TestWhenMandatoryContentNameIsEmpty_ZoneHasNoMandatoryContent(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -64,6 +69,7 @@ func TestWhenMandatoryContentNameIsEmpty_ZoneHasNoMandatoryContent(t *testing.T)
 }
 
 func TestWhenHubHasNoCastlesAndIsNotHoldCity_BiomeMatchesZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -75,6 +81,7 @@ func TestWhenHubHasNoCastlesAndIsNotHoldCity_BiomeMatchesZone(t *testing.T) {
 }
 
 func TestWhenHubHasMultipleCastles_MainObjectCountMatchesCastleCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardedIsChosen_MarksBuiltItemAsGuarded(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 	builder := mandatory_content.NewContentBuilder(expectedSid)

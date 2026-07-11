@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenMultiplePlansAreAdded_AppendsAllInOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{{Label: "A", Quality: models.QualityLow}}
 	added := []models.NeutralZonePlan{

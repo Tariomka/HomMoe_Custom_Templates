@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNameIsQueried_ReturnsVariant(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule, err := content_rules.NewRuleVariant(nil, nil)
 	require.NoError(t, err)

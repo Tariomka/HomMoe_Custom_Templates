@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenStateIsSupplied_StoresIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	isSoloEncounter := gofakeit.Bool()
 

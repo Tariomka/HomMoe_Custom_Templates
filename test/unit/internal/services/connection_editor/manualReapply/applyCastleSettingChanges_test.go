@@ -13,6 +13,7 @@ import (
 )
 
 func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	zones := []entities.Zone{makeNeutralZone("G", models.QualityMedium, 1)}
@@ -40,6 +41,7 @@ func applySimpleModeChange() []entities.Zone {
 }
 
 func TestWhenSimpleModeCountChanges_UpdatesCastledNeutralZone(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applySimpleModeChange()
 
@@ -48,6 +50,7 @@ func TestWhenSimpleModeCountChanges_UpdatesCastledNeutralZone(t *testing.T) {
 }
 
 func TestWhenSimpleModeCountChanges_UpdatesCastleLessNeutralZoneToo(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applySimpleModeChange()
 
@@ -56,6 +59,7 @@ func TestWhenSimpleModeCountChanges_UpdatesCastleLessNeutralZoneToo(t *testing.T
 }
 
 func TestWhenSimpleModeCountChanges_LeavesSpawnZoneUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applySimpleModeChange()
 
@@ -79,6 +83,7 @@ func applyAdvancedHighChange() []entities.Zone {
 }
 
 func TestWhenHighTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyAdvancedHighChange()
 
@@ -87,6 +92,7 @@ func TestWhenHighTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
 }
 
 func TestWhenHighTierCountChanges_LeavesOtherQualityZoneUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyAdvancedHighChange()
 
@@ -95,6 +101,7 @@ func TestWhenHighTierCountChanges_LeavesOtherQualityZoneUntouched(t *testing.T) 
 }
 
 func TestWhenHighTierCountChanges_KeepsCastleLessZoneWithoutCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyAdvancedHighChange()
 
@@ -118,6 +125,7 @@ func applyPlayerCastleChange() []entities.Zone {
 }
 
 func TestWhenPlayerCastlesChange_RebuildsSpawnZoneWithSpawnPlusThreeCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyPlayerCastleChange()
 
@@ -126,6 +134,7 @@ func TestWhenPlayerCastlesChange_RebuildsSpawnZoneWithSpawnPlusThreeCastles(t *t
 }
 
 func TestWhenPlayerCastlesChange_KeepsSpawnCastlePrimary(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyPlayerCastleChange()
 
@@ -136,6 +145,7 @@ func TestWhenPlayerCastlesChange_KeepsSpawnCastlePrimary(t *testing.T) {
 }
 
 func TestWhenPlayerCastlesChange_KeepsPlayerAssignment(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyPlayerCastleChange()
 
@@ -145,6 +155,7 @@ func TestWhenPlayerCastlesChange_KeepsPlayerAssignment(t *testing.T) {
 }
 
 func TestWhenPlayerCastlesChange_MakesEveryExtraMainObjectACity(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyPlayerCastleChange()
 
@@ -159,6 +170,7 @@ func TestWhenPlayerCastlesChange_MakesEveryExtraMainObjectACity(t *testing.T) {
 }
 
 func TestWhenPlayerCastlesChange_CreatesExactlyOneOwnedCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyPlayerCastleChange()
 
@@ -173,6 +185,7 @@ func TestWhenPlayerCastlesChange_CreatesExactlyOneOwnedCastle(t *testing.T) {
 }
 
 func TestWhenPlayerCastlesChange_LeavesNeutralZoneUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	zones := applyPlayerCastleChange()
 
@@ -182,6 +195,7 @@ func TestWhenPlayerCastlesChange_LeavesNeutralZoneUntouched(t *testing.T) {
 }
 
 func TestWhenSpawnZoneLacksSpawnCastle_LeavesItUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.PlayerZoneCastles = 2
@@ -199,6 +213,7 @@ func TestWhenSpawnZoneLacksSpawnCastle_LeavesItUntouched(t *testing.T) {
 }
 
 func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.HubZoneCastles = 3
@@ -215,6 +230,7 @@ func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
 }
 
 func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.HubZoneCastles = 2
@@ -231,6 +247,7 @@ func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
 }
 
 func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.NeutralZoneCastles = 3

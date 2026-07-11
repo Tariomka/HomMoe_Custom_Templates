@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsObjectWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedOwner := gofakeit.Word()
 	expectedGuardValue := gofakeit.Number(1, 60000)

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenCityTypeIsChosen_SetsCityTypeOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

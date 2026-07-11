@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMainObjectsAreProvided_SetsMainObjectsOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedObjects := []entities.MainObject{
 		{Type: "Spawn", Owner: gofakeit.Word()},

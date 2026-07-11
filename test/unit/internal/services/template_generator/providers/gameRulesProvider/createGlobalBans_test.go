@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenItemsAndMagicsBanned_ReturnsBothLists(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.BannedItems = "voodoosh_doll_artifact\nflag_of_truce_artifact"
@@ -28,6 +29,7 @@ func TestWhenItemsAndMagicsBanned_ReturnsBothLists(t *testing.T) {
 }
 
 func TestWhenNothingBanned_ReturnsNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 
@@ -39,6 +41,7 @@ func TestWhenNothingBanned_ReturnsNil(t *testing.T) {
 }
 
 func TestWhenOnlyMagicsBanned_ReturnsBansWithNilItems(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.BannedMagics = "magic_armageddon"
@@ -51,6 +54,7 @@ func TestWhenOnlyMagicsBanned_ReturnsBansWithNilItems(t *testing.T) {
 }
 
 func TestWhenBannedLinesContainWhitespace_TrimsAndSkipsBlankLines(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.BannedItems = "  voodoosh_doll_artifact  \n\n\t\nflag_of_truce_artifact"
@@ -65,6 +69,7 @@ func TestWhenBannedLinesContainWhitespace_TrimsAndSkipsBlankLines(t *testing.T) 
 // Functional-equivalence check: feeding the real Blitz item bans back through
 // the parser must reproduce them exactly.
 func TestWhenBlitzItemBansParsed_ReproducesBlitzItems(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	blitz := loadExampleTemplate(t, "Blitz.rmg.json")
 	require.NotNil(t, blitz.GlobalBans)

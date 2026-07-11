@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenAllOptionalSpawnsAreEnabled_BuildsTuningFromConfiguredPercentages(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	resourceDensity := gofakeit.Number(25, 300)
 	structureDensity := gofakeit.Number(25, 300)
@@ -55,6 +56,7 @@ func TestWhenAllOptionalSpawnsAreEnabled_BuildsTuningFromConfiguredPercentages(t
 }
 
 func TestWhenRemoteFootholdsAreDisabled_ZeroesFootholdCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
@@ -68,6 +70,7 @@ func TestWhenRemoteFootholdsAreDisabled_ZeroesFootholdCount(t *testing.T) {
 }
 
 func TestWhenAbandonedOutpostsAreDisabled_ZeroesOutpostCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.SpawnAbandonedOutposts = false
@@ -81,6 +84,7 @@ func TestWhenAbandonedOutpostsAreDisabled_ZeroesOutpostCount(t *testing.T) {
 }
 
 func TestWhenAdvancedSettingsAreEnabled_UsesConfiguredGuardRandomization(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.Enabled = true

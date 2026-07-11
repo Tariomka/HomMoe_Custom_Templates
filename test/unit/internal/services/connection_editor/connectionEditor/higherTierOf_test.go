@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenBothZonesArePlayerZones_ReturnsPlayerToPlayer(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	playerZoneNames := map[string]bool{"Spawn-A": true, "Spawn-B": true}
@@ -21,6 +22,7 @@ func TestWhenBothZonesArePlayerZones_ReturnsPlayerToPlayer(t *testing.T) {
 }
 
 func TestWhenSecondZoneTierIsHigher_ReturnsSecondZoneTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
@@ -36,6 +38,7 @@ func TestWhenSecondZoneTierIsHigher_ReturnsSecondZoneTier(t *testing.T) {
 }
 
 func TestWhenFirstZoneTierIsHigher_ReturnsFirstZoneTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Neutral-Gold", GuardedContentPool: []string{"pool_t5_x"}},

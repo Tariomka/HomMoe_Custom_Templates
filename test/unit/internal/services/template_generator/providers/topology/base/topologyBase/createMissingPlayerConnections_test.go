@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenFewerThanTwoPlayerLabelsExist_NoFallbackConnectionsAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	zones := []entities.Zone{{Name: "Spawn-A"}}
@@ -22,6 +23,7 @@ func TestWhenFewerThanTwoPlayerLabelsExist_NoFallbackConnectionsAreCreated(t *te
 }
 
 func TestWhenBothSpawnZonesLackConnections_SingleSharedFallbackLinksThem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
@@ -43,6 +45,7 @@ func TestWhenBothSpawnZonesLackConnections_SingleSharedFallbackLinksThem(t *test
 }
 
 func TestWhenSpawnZonesAlreadyRoadLinkedToKnownConnections_NoFallbackIsCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	zones := []entities.Zone{
@@ -64,6 +67,7 @@ func TestWhenSpawnZonesAlreadyRoadLinkedToKnownConnections_NoFallbackIsCreated(t
 }
 
 func TestWhenZoneRoadReferencesUnknownConnection_FallbackIsStillCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	zones := []entities.Zone{
@@ -82,6 +86,7 @@ func TestWhenZoneRoadReferencesUnknownConnection_FallbackIsStillCreated(t *testi
 }
 
 func TestWhenSpawnZonesAreMissingFromZoneList_NoFallbacksAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -94,6 +99,7 @@ func TestWhenSpawnZonesAreMissingFromZoneList_NoFallbacksAreCreated(t *testing.T
 }
 
 func TestWhenPlayerLabelsAreReversed_FallbackNameStillSortsLabelsAlphabetically(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	zones := []entities.Zone{{Name: "Spawn-B"}, {Name: "Spawn-A"}}
@@ -115,6 +121,7 @@ func TestWhenPlayerLabelsAreReversed_FallbackNameStillSortsLabelsAlphabetically(
 }
 
 func TestWhenBorderGuardMultiplierIsDoubled_FallbackGuardValueIsScaled(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	tuning := newUnitTuning()

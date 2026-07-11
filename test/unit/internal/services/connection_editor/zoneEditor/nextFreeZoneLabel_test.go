@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneListIsEmpty_ReturnsLabelA(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -19,6 +20,7 @@ func TestWhenZoneListIsEmpty_ReturnsLabelA(t *testing.T) {
 }
 
 func TestWhenFirstLettersAreUsed_ReturnsNextFreeLetter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
@@ -33,6 +35,7 @@ func TestWhenFirstLettersAreUsed_ReturnsNextFreeLetter(t *testing.T) {
 }
 
 func TestWhenSameLetterIsUsedAcrossPrefixes_CountsItOnce(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},

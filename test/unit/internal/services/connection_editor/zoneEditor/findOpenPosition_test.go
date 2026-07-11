@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenBoardIsEmpty_PicksCornerFarthestFromCenter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -24,6 +25,7 @@ func TestWhenBoardIsEmpty_PicksCornerFarthestFromCenter(t *testing.T) {
 }
 
 func TestWhenCornerIsCrowded_PicksPositionAwayFromIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	occupied := [][2]float64{{0.1, 0.1}, {0.1, 0.2}, {0.2, 0.1}}
 

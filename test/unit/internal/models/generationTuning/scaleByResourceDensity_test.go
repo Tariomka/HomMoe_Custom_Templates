@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenValueIsPositive_ScalesByResourceDensityMultiplier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float64Range(1, 10000)
 	multiplier := gofakeit.Float64Range(0.1, 3)
@@ -23,6 +24,7 @@ func TestWhenValueIsPositive_ScalesByResourceDensityMultiplier(t *testing.T) {
 }
 
 func TestWhenScaledResourceValueIsNegative_ClampsToZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tuning := models.GenerationTuning{ResourceDensityMultiplier: 1.0}
 

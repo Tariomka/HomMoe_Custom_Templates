@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenMainObjectTypeIsChosen_SetsMainObjectTypeOnBuiltRule(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := placement_rule.NewPlacementRuleBuilder()
 

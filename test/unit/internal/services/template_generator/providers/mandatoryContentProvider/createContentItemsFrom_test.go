@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRowsAreEmpty_ReturnsNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 
@@ -21,6 +22,7 @@ func TestWhenRowsAreEmpty_ReturnsNil(t *testing.T) {
 }
 
 func TestWhenRowSidIsEmpty_SkipsRow(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	rows := []models.ZoneContentRowSave{{Sid: "", Count: 2}}
@@ -33,6 +35,7 @@ func TestWhenRowSidIsEmpty_SkipsRow(t *testing.T) {
 }
 
 func TestWhenRowCountIsThree_CreatesThreeIdenticalItems(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	rows := []models.ZoneContentRowSave{{Sid: "sawmill", Count: 3}}
@@ -49,6 +52,7 @@ func TestWhenRowCountIsThree_CreatesThreeIdenticalItems(t *testing.T) {
 }
 
 func TestWhenRowCountIsBelowOne_NormalizesToSingleItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	rows := []models.ZoneContentRowSave{{Sid: "sawmill", Count: 0}}
@@ -61,6 +65,7 @@ func TestWhenRowCountIsBelowOne_NormalizesToSingleItem(t *testing.T) {
 }
 
 func TestWhenRowIsGroup_SetsIncludeListsInsteadOfSid(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	rows := []models.ZoneContentRowSave{{Sid: "include_list_dwellings", Count: 1, IsGroup: true}}
@@ -75,6 +80,7 @@ func TestWhenRowIsGroup_SetsIncludeListsInsteadOfSid(t *testing.T) {
 }
 
 func TestWhenRowIsMine_SetsIsMineOnItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
 	rows := []models.ZoneContentRowSave{{Sid: "gold_mine", Count: 1, IsMine: true}}
@@ -87,6 +93,7 @@ func TestWhenRowIsMine_SetsIsMineOnItem(t *testing.T) {
 }
 
 func TestWhenRowHasGuardedRule_AppliesGuardedFlagToItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	guarded := true
 	provider := providers.NewMandatoryContentProvider()

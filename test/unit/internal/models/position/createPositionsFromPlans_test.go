@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNoLabelsAreProvided_ReturnsNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	var orderedLabels []string
 
@@ -21,7 +22,8 @@ func TestWhenNoLabelsAreProvided_ReturnsNil(t *testing.T) {
 }
 
 func TestWhenSinglePlayerLabelIsProvided_PlacesItOnPlayerRingRadius(t *testing.T) {
-	// Arrange - one player zone: tier 0, radius 0.38, angle 0, jitter -0.008.
+	t.Parallel()
+	// Arrange
 	orderedLabels := []string{"P1"}
 	playerLabels := []string{"P1"}
 	expected := models.Positions{data.NewVec2(
@@ -37,6 +39,7 @@ func TestWhenSinglePlayerLabelIsProvided_PlacesItOnPlayerRingRadius(t *testing.T
 }
 
 func TestWhenLabelsSpanEveryTier_ReturnsOnePositionPerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	orderedLabels := []string{"P1", "P2", "L1", "M1", "H1"}
 	playerLabels := []string{"P1", "P2"}
@@ -54,6 +57,7 @@ func TestWhenLabelsSpanEveryTier_ReturnsOnePositionPerLabel(t *testing.T) {
 }
 
 func TestWhenManyLabelsArePlaced_ClampsEveryPositionInsideCanvasMargins(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	orderedLabels := []string{"P1", "P2", "P3", "L1", "L2", "M1", "M2", "H1", "H2"}
 	playerLabels := []string{"P1", "P2", "P3"}

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenFewerThanTwoLabelsExist_NoBridgesAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -22,6 +23,7 @@ func TestWhenFewerThanTwoLabelsExist_NoBridgesAreCreated(t *testing.T) {
 }
 
 func TestWhenAllZonesAreAlreadyConnected_NoBridgesAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
@@ -38,6 +40,7 @@ func TestWhenAllZonesAreAlreadyConnected_NoBridgesAreCreated(t *testing.T) {
 }
 
 func TestWhenTwoPlayerZonesAreDisconnected_BridgeLinksThemWithPlayerBorderGuard(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
@@ -59,6 +62,7 @@ func TestWhenTwoPlayerZonesAreDisconnected_BridgeLinksThemWithPlayerBorderGuard(
 }
 
 func TestWhenThreeZonesAreAllDisconnected_BridgesAreAddedUntilFullyConnected(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.5, Y: 0.5}, {X: 0.9, Y: 0.9}}
@@ -72,6 +76,7 @@ func TestWhenThreeZonesAreAllDisconnected_BridgesAreAddedUntilFullyConnected(t *
 }
 
 func TestWhenIsolatedZoneSitsClosestToSecondZone_BridgeAttachesToClosestPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.5, Y: 0.5}, {X: 0.55, Y: 0.5}}
@@ -97,6 +102,7 @@ func TestWhenIsolatedZoneSitsClosestToSecondZone_BridgeAttachesToClosestPair(t *
 }
 
 func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
@@ -122,6 +128,7 @@ func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *
 }
 
 func TestWhenLabelOrderIsReversed_BridgeNameStillSortsLabelsAlphabetically(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
@@ -143,6 +150,7 @@ func TestWhenLabelOrderIsReversed_BridgeNameStillSortsLabelsAlphabetically(t *te
 }
 
 func TestWhenBridgedZonesHaveVariousRoadShapes_BridgeIsStillReturned(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	testCases := []struct {
@@ -184,6 +192,7 @@ func TestWhenBridgedZonesHaveVariousRoadShapes_BridgeIsStillReturned(t *testing.
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			topologyBase := base.NewTopologyBase()
 			zones := []entities.Zone{testCase.firstZone, {Name: "Spawn-B"}}

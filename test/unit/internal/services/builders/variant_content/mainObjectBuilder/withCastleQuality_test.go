@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenCastleQualitySidIsProvided_SetsBuildingsConstructionSidOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 	builder := variant_content.NewObjectBuilder()

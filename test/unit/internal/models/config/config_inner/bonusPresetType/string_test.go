@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPresetTypeIsNamed_ReturnsItsName(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		presetType  config_inner.BonusPresetType
@@ -27,7 +28,8 @@ func TestWhenPresetTypeIsNamed_ReturnsItsName(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
-			// Arrange - preset type provided by the test case.
+			t.Parallel()
+			// Arrange
 
 			// Act
 			actual := testCase.presetType.String()
@@ -39,6 +41,7 @@ func TestWhenPresetTypeIsNamed_ReturnsItsName(t *testing.T) {
 }
 
 func TestWhenPresetTypeIsUnknown_ReturnsNumericString(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	unknown := config_inner.BonusPresetType(99)
 

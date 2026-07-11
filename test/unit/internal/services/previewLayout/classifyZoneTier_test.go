@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneIsASpawnZone_ReturnsTierZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Spawn-A"}
 
@@ -20,6 +21,7 @@ func TestWhenZoneIsASpawnZone_ReturnsTierZero(t *testing.T) {
 }
 
 func TestWhenGuardedPoolContainsTierFiveMarker_ReturnsGoldTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-A", GuardedContentPool: []string{"classic_template_pool_random_t5_item"}}
 
@@ -31,6 +33,7 @@ func TestWhenGuardedPoolContainsTierFiveMarker_ReturnsGoldTier(t *testing.T) {
 }
 
 func TestWhenGuardedPoolContainsTierFourMarker_ReturnsGoldTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-A", GuardedContentPool: []string{"classic_template_pool_random_t4_item"}}
 
@@ -42,6 +45,7 @@ func TestWhenGuardedPoolContainsTierFourMarker_ReturnsGoldTier(t *testing.T) {
 }
 
 func TestWhenGuardedPoolContainsTierThreeMarker_ReturnsSilverTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-A", GuardedContentPool: []string{"classic_template_pool_random_t3_item"}}
 
@@ -53,6 +57,7 @@ func TestWhenGuardedPoolContainsTierThreeMarker_ReturnsSilverTier(t *testing.T) 
 }
 
 func TestWhenGuardedPoolContainsTierTwoMarker_ReturnsBronzeTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-A", GuardedContentPool: []string{"classic_template_pool_random_t2_item"}}
 
@@ -64,6 +69,7 @@ func TestWhenGuardedPoolContainsTierTwoMarker_ReturnsBronzeTier(t *testing.T) {
 }
 
 func TestWhenOnlyUnguardedPoolHasTierMarker_FallsBackToUnguardedPool(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{
 		Name:                 "Neutral-A",
@@ -78,6 +84,7 @@ func TestWhenOnlyUnguardedPoolHasTierMarker_FallsBackToUnguardedPool(t *testing.
 }
 
 func TestWhenLayoutNameContainsSides_ReturnsBronzeTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-A", Layout: "zone_layout_sides"}
 
@@ -89,6 +96,7 @@ func TestWhenLayoutNameContainsSides_ReturnsBronzeTier(t *testing.T) {
 }
 
 func TestWhenLayoutNameContainsTreasure_ReturnsSilverTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-A", Layout: "zone_layout_treasure_zone"}
 
@@ -100,6 +108,7 @@ func TestWhenLayoutNameContainsTreasure_ReturnsSilverTier(t *testing.T) {
 }
 
 func TestWhenLayoutNameContainsCenter_ReturnsGoldTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-A", Layout: "zone_layout_center"}
 
@@ -111,6 +120,7 @@ func TestWhenLayoutNameContainsCenter_ReturnsGoldTier(t *testing.T) {
 }
 
 func TestWhenZoneNameContainsLow_ReturnsBronzeTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-low"}
 
@@ -122,6 +132,7 @@ func TestWhenZoneNameContainsLow_ReturnsBronzeTier(t *testing.T) {
 }
 
 func TestWhenZoneNameContainsMed_ReturnsSilverTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-med"}
 
@@ -133,6 +144,7 @@ func TestWhenZoneNameContainsMed_ReturnsSilverTier(t *testing.T) {
 }
 
 func TestWhenZoneNameContainsHigh_ReturnsGoldTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-high"}
 
@@ -144,6 +156,7 @@ func TestWhenZoneNameContainsHigh_ReturnsGoldTier(t *testing.T) {
 }
 
 func TestWhenZoneNameContainsCore_ReturnsGoldTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-core"}
 
@@ -155,6 +168,7 @@ func TestWhenZoneNameContainsCore_ReturnsGoldTier(t *testing.T) {
 }
 
 func TestWhenNoTierHintIsPresent_DefaultsToBronzeTier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{Name: "Neutral-Z"}
 

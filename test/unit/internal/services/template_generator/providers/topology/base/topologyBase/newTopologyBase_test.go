@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenBaseIsConstructed_ProvidesZoneLabelProvider(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	topologyBase := base.NewTopologyBase()
 

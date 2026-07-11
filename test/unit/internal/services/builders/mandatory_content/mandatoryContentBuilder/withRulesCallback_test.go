@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRulesCallbackIsProvided_AppendsCallbackRulesOnBuiltItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 	expectedRules := []entities.PlacementRule{

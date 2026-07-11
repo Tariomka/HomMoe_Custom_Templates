@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardCutoffValueIsProvided_SetsGuardCutoffValueOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedCutoff := gofakeit.Number(1, 60000)
 	builder := variant_content.NewZoneBuilder()

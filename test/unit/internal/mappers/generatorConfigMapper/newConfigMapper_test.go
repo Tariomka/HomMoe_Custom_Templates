@@ -8,7 +8,8 @@ import (
 )
 
 func TestWhenMapperIsCreated_ReturnsNonNilInstance(t *testing.T) {
-	// Arrange - nothing to prepare.
+	t.Parallel()
+	// Arrange
 
 	// Act
 	mapper := mappers.NewConfigMapper()

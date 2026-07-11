@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenFirstLabelIsPlayer_ZeroAngleZoneIsThatSpawnZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -20,6 +21,7 @@ func TestWhenFirstLabelIsPlayer_ZeroAngleZoneIsThatSpawnZone(t *testing.T) {
 }
 
 func TestWhenFirstLabelIsNeutral_ZeroAngleZoneIsThatNeutralZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -31,6 +33,7 @@ func TestWhenFirstLabelIsNeutral_ZeroAngleZoneIsThatNeutralZone(t *testing.T) {
 }
 
 func TestWhenZoneCountIsPositive_RandomAngleStepDividesFullCircleByZoneCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -42,6 +45,7 @@ func TestWhenZoneCountIsPositive_RandomAngleStepDividesFullCircleByZoneCount(t *
 }
 
 func TestWhenZoneCountIsZero_RandomAngleStepStaysUnset(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -53,6 +57,7 @@ func TestWhenZoneCountIsZero_RandomAngleStepStaysUnset(t *testing.T) {
 }
 
 func TestWhenZonesProvided_VariantCarriesZonesVerbatim(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-C"}}
@@ -65,6 +70,7 @@ func TestWhenZonesProvided_VariantCarriesZonesVerbatim(t *testing.T) {
 }
 
 func TestWhenConnectionsProvided_VariantCarriesConnectionsVerbatim(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	connections := []entities.Connection{{Name: "Ring-A-C", From: "Spawn-A", To: "Neutral-C"}}

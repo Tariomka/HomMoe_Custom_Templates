@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenSolo_ShowsTrueState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(true)
 
@@ -19,6 +20,7 @@ func TestWhenSolo_ShowsTrueState(t *testing.T) {
 }
 
 func TestWhenExplicitlyNotSolo_ShowsFalseState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(false)
 

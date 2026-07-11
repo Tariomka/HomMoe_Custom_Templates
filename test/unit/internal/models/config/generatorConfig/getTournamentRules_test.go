@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenTournamentRulesAreSet_ReturnsTheirCopy(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := config.TournamentRules{
 		Enabled:            true,
@@ -28,6 +29,7 @@ func TestWhenTournamentRulesAreSet_ReturnsTheirCopy(t *testing.T) {
 }
 
 func TestWhenTournamentRulesAreNil_ReturnsZeroRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.TournamentRules = nil

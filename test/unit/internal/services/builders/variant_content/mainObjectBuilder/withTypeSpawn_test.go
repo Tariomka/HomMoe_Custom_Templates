@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSpawnTypeIsChosen_SetsSpawnTypeOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

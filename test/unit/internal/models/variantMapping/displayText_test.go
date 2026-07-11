@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenVariantsHaveMultipleKeys_ReturnsLowestKeyDescription(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapping := models.NewVariantMapping(
 		models.SidMapping{Sid: "x", Name: "Fallback"},
@@ -22,6 +23,7 @@ func TestWhenVariantsHaveMultipleKeys_ReturnsLowestKeyDescription(t *testing.T) 
 }
 
 func TestWhenNoVariantsAreDefined_ReturnsContentName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapping := models.NewVariantMapping(models.SidMapping{Sid: "x", Name: "Fallback"}, map[int]string{})
 

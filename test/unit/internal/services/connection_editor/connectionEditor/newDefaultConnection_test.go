@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
@@ -34,6 +35,7 @@ func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 }
 
 func TestWhenBothEndpointsArePlayerZones_SeedsPlayerToPlayerGeneratorDefault(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	playerZoneNames := map[string]bool{"Spawn-A": true, "Spawn-B": true}

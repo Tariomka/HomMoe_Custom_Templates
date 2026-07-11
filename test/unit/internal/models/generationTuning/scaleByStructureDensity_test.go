@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenValueIsPositive_ScalesByStructureDensityMultiplier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Float64Range(1, 10000)
 	multiplier := gofakeit.Float64Range(0.1, 3)
@@ -23,6 +24,7 @@ func TestWhenValueIsPositive_ScalesByStructureDensityMultiplier(t *testing.T) {
 }
 
 func TestWhenScaledStructureValueIsNegative_ClampsToZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tuning := models.GenerationTuning{StructureDensityMultiplier: 1.0}
 

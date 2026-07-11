@@ -24,6 +24,7 @@ func makeArbitraryConnection() entities.Connection {
 }
 
 func TestWhenIsUserAddedIsRequestedTrue_ReturnsIdenticalCopyWithFlagSet(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	original := makeArbitraryConnection()
 	expected := original
@@ -37,6 +38,7 @@ func TestWhenIsUserAddedIsRequestedTrue_ReturnsIdenticalCopyWithFlagSet(t *testi
 }
 
 func TestWhenIsUserAddedIsRequestedFalse_ReturnsIdenticalCopyWithFlagCleared(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	original := makeArbitraryConnection()
 	original.IsUserAdded = true
@@ -51,6 +53,7 @@ func TestWhenIsUserAddedIsRequestedFalse_ReturnsIdenticalCopyWithFlagCleared(t *
 }
 
 func TestWhenConnectionIsCloned_LeavesOriginalFlagUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	original := makeArbitraryConnection()
 

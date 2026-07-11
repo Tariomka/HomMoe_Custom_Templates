@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneIsRemoved_KeepsOnlyOtherZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
@@ -27,6 +28,7 @@ func TestWhenZoneIsRemoved_KeepsOnlyOtherZones(t *testing.T) {
 }
 
 func TestWhenZoneIsRemoved_DropsConnectionsTouchingIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},

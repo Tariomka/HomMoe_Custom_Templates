@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMandatoryContentNamesAreProvided_SetsMandatoryContentOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstName := gofakeit.Word()
 	secondName := gofakeit.Word()

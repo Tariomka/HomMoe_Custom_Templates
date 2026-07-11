@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenMediumPlanIsAdded_AppendsPlanWithMediumQuality(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	label := gofakeit.LetterN(2)
 	castleCount := gofakeit.Number(0, 4)

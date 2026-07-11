@@ -10,6 +10,7 @@ import (
 
 // The expected Min/Max bounds pin the C# DistancePresets values exactly.
 func TestWhenPresetNameIsKnown_ReturnsItsVariation(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name       string
 		lookupName string
@@ -39,6 +40,7 @@ func TestWhenPresetNameIsKnown_ReturnsItsVariation(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act
@@ -52,6 +54,7 @@ func TestWhenPresetNameIsKnown_ReturnsItsVariation(t *testing.T) {
 }
 
 func TestWhenNameDiffersOnlyByCase_ResolvesIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -63,6 +66,7 @@ func TestWhenNameDiffersOnlyByCase_ResolvesIt(t *testing.T) {
 }
 
 func TestWhenNameHasSurroundingWhitespace_ResolvesIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -74,6 +78,7 @@ func TestWhenNameHasSurroundingWhitespace_ResolvesIt(t *testing.T) {
 }
 
 func TestWhenNameIsUnknown_ReturnsNotOk(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act

@@ -13,6 +13,7 @@ type distanceLookupResult struct {
 }
 
 func TestWhenLabelIsResolved_ReturnsMatchingPresetAndFoundFlag(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		label    string
@@ -61,6 +62,7 @@ func TestWhenLabelIsResolved_ReturnsMatchingPresetAndFoundFlag(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange & Act
 			actualDistance, actualFound := placement_rule.TryGetDistanceFrom(testCase.label)
 

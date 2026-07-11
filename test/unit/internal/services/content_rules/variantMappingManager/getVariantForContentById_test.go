@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenVariantIdExists_ReturnsItsSingleEntryMapping(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -21,6 +22,7 @@ func TestWhenVariantIdExists_ReturnsItsSingleEntryMapping(t *testing.T) {
 }
 
 func TestWhenVariantIdIsUnknown_ReturnsNotOk(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -31,6 +33,7 @@ func TestWhenVariantIdIsUnknown_ReturnsNotOk(t *testing.T) {
 }
 
 func TestWhenContentHasNoVariants_ReturnsNotOk(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act

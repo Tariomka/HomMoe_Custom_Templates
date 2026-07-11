@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenDefaultCastleQualityIsChosen_SetsDefaultConstructionSidOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

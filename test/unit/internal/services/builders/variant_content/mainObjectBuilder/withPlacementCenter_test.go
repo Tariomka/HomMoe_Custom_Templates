@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenCenterPlacementIsChosen_SetsCenterPlacementOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

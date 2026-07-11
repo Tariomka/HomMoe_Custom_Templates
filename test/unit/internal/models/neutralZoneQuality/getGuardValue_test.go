@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenQualityVaries_ReturnsMatchingGuardValue(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName        string
 		quality            models.NeutralZoneQuality
@@ -19,6 +20,7 @@ func TestWhenQualityVaries_ReturnsMatchingGuardValue(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			quality := testCase.quality
 

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	original := models.ZoneContentRowSave{
 		Sid:   "dragon_utopia",
@@ -32,6 +33,7 @@ func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
 }
 
 func TestWhenRowIsSerialized_UsesRulesFormatWithoutLegacyFlatFields(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	row := models.ZoneContentRowSave{
 		Sid:   "x",

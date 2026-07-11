@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenHoldCityWinConIsChosen_MarksBuiltObjectAsHoldCityWinCondition(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

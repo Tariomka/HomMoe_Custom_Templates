@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenToReferenceIsProvided_SetsToOnBuiltRoad(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedTo := entities.TypedRef{Type: gofakeit.Word(), Args: []string{gofakeit.Word()}}
 	builder := variant_content.NewRoadBuilder()

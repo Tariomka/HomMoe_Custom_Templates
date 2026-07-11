@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenAbandonedOutpostTypeIsChosen_SetsAbandonedOutpostTypeOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

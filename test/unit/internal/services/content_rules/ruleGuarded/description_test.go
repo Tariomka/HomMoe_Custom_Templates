@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenDescriptionIsQueried_ExplainsGuardOverride(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(true)
 

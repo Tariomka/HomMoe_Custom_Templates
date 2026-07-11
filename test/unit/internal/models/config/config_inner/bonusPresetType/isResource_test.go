@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPresetTypeVaries_ReportsResourceKindsOnly(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		presetType  config_inner.BonusPresetType
@@ -27,7 +28,8 @@ func TestWhenPresetTypeVaries_ReportsResourceKindsOnly(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
-			// Arrange - preset type provided by the test case.
+			t.Parallel()
+			// Arrange
 
 			// Act
 			actual := testCase.presetType.IsResource()

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenSizeIsProvided_SetsSizeOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSize := gofakeit.Float64Range(0.1, 10)
 	builder := variant_content.NewZoneBuilder()

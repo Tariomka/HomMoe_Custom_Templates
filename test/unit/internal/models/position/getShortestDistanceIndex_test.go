@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenOnlyOneComponentExists_ReportsNoPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	positions := models.Positions{data.NewVec2(0.1, 0.1), data.NewVec2(0.9, 0.9)}
 
@@ -20,6 +21,7 @@ func TestWhenOnlyOneComponentExists_ReportsNoPair(t *testing.T) {
 }
 
 func TestWhenComponentListIsEmpty_ReturnsNegativeIndexes(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	positions := models.Positions{data.NewVec2(0.1, 0.1)}
 
@@ -31,7 +33,8 @@ func TestWhenComponentListIsEmpty_ReturnsNegativeIndexes(t *testing.T) {
 }
 
 func TestWhenTwoComponentsExist_PicksClosestCrossComponentPair(t *testing.T) {
-	// Arrange - component {0,1} and {2,3}; 1 and 2 are the closest cross pair.
+	t.Parallel()
+	// Arrange
 	positions := models.Positions{
 		data.NewVec2(0.0, 0.0),
 		data.NewVec2(0.4, 0.4),

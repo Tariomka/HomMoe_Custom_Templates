@@ -9,7 +9,8 @@ import (
 )
 
 func TestWhenGraphHasTwoComponents_ReturnsBothComponentsWithTheirMembers(t *testing.T) {
-	// Arrange - nodes {0,1,2} connected, {3,4} connected.
+	t.Parallel()
+	// Arrange
 	adjacency := models.NewZoneIndexAdjacency(5)
 	adjacency.Link(0, 1)
 	adjacency.Link(1, 2)
@@ -29,6 +30,7 @@ func TestWhenGraphHasTwoComponents_ReturnsBothComponentsWithTheirMembers(t *test
 }
 
 func TestWhenNoLinksExist_ReturnsOneComponentPerNode(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	adjacency := models.NewZoneIndexAdjacency(3)
 

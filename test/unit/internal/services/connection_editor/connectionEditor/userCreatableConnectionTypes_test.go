@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenListingUserCreatableTypes_ReturnsDirectAndPortalOnly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act

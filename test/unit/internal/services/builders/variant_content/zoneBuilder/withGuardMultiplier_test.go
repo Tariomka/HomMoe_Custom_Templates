@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardMultiplierIsProvided_SetsGuardMultiplierOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedMultiplier := gofakeit.Float64Range(0.1, 5)
 	builder := variant_content.NewZoneBuilder()

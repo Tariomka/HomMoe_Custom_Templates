@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenTypeIsProvided_SetsTypeOnBuiltReference(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedType := gofakeit.Word()
 	builder := variant_content.NewRefBuilder()

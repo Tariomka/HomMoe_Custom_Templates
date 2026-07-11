@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenSoloEncounterIsChosen_MarksBuiltItemAsSoloEncounter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 	builder := mandatory_content.NewContentBuilder(expectedSid)

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenConnectionPlacementIsChosen_SetsConnectionPlacementOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSoloRuleIsSerialized_WritesNameAndTrueState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(true)
 	isSoloEncounter := true
@@ -21,6 +22,7 @@ func TestWhenSoloRuleIsSerialized_WritesNameAndTrueState(t *testing.T) {
 }
 
 func TestWhenNotSoloRuleIsSerialized_WritesNameAndFalseState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(false)
 	isSoloEncounter := false

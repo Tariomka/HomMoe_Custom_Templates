@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenStoneTypeIsChosen_SetsStoneTypeOnBuiltRoad(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewRoadBuilder()
 

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNeutralZoneIsDrawn_CanvasIsMutated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	blankPixels := append([]uint8(nil), newCanvas().Pix...)
 
@@ -19,6 +20,7 @@ func TestWhenNeutralZoneIsDrawn_CanvasIsMutated(t *testing.T) {
 }
 
 func TestWhenTierIsUnknown_FallsBackToLowQualitySprite(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowTierCanvas := renderNeutral(t, preview.PreviewZone{Tier: 1})
 
@@ -30,6 +32,7 @@ func TestWhenTierIsUnknown_FallsBackToLowQualitySprite(t *testing.T) {
 }
 
 func TestWhenTierIsMedium_DrawsDifferentSpriteThanLow(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lowTierCanvas := renderNeutral(t, preview.PreviewZone{Tier: 1})
 
@@ -41,6 +44,7 @@ func TestWhenTierIsMedium_DrawsDifferentSpriteThanLow(t *testing.T) {
 }
 
 func TestWhenTierIsHigh_DrawsDifferentSpriteThanMedium(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mediumTierCanvas := renderNeutral(t, preview.PreviewZone{Tier: 2})
 
@@ -52,6 +56,7 @@ func TestWhenTierIsHigh_DrawsDifferentSpriteThanMedium(t *testing.T) {
 }
 
 func TestWhenZoneHasCastle_DrawsDifferentSpriteThanWithoutCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	castleLessCanvas := renderNeutral(t, preview.PreviewZone{Tier: 2})
 

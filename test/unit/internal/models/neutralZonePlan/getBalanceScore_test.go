@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenQualityAndCastleCountVary_ComputesScoreFromQualityAndCappedCastles(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName   string
 		plan          models.NeutralZonePlan
@@ -41,6 +42,7 @@ func TestWhenQualityAndCastleCountVary_ComputesScoreFromQualityAndCappedCastles(
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			plan := testCase.plan
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenUniformPlacementIsChosen_SetsUniformPlacementOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenBuilderIsFreshlyCreated_ProducesEmptyRoad(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	builder := variant_content.NewRoadBuilder()
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenHubCastleCountIsZero_NoHubCastlesAreCreatedEvenForHoldCity(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -20,6 +21,7 @@ func TestWhenHubCastleCountIsZero_NoHubCastlesAreCreatedEvenForHoldCity(t *testi
 }
 
 func TestWhenHubIsHoldCity_FirstCastleIsUltraRichCenteredHoldCityCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedCastles := []entities.MainObject{
@@ -43,6 +45,7 @@ func TestWhenHubIsHoldCity_FirstCastleIsUltraRichCenteredHoldCityCastle(t *testi
 }
 
 func TestWhenHubIsNotHoldCity_CastleIsRichWithHalfGuardChance(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedCastles := []entities.MainObject{
@@ -66,6 +69,7 @@ func TestWhenHubIsNotHoldCity_CastleIsRichWithHalfGuardChance(t *testing.T) {
 }
 
 func TestWhenHoldCityHubHasMultipleCastles_ExtraCastlesAreRegularRichCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedExtraCastle := entities.MainObject{
@@ -87,6 +91,7 @@ func TestWhenHoldCityHubHasMultipleCastles_ExtraCastlesAreRegularRichCastles(t *
 }
 
 func TestWhenNeutralGuardMultiplierIsDoubled_HubCastleGuardIsScaled(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	tuning := newUnitTuning()

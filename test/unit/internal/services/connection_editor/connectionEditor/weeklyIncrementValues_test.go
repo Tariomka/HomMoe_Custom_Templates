@@ -10,6 +10,7 @@ import (
 // WeeklyIncrementValues is a public preset table (not a function); it is pinned
 // here because NewDefaultConnection and the GUI dropdown both depend on it.
 func TestWhenReadingWeeklyIncrementPresets_MatchesGuardGrowthTable(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := []float64{0.05, 0.10, 0.15, 0.20, 0.25}
 

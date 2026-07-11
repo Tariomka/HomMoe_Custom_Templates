@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenZoneIsChecked_ProtectsOnlyPlayerZones(t *testing.T) {
+	t.Parallel()
 	playerZoneNames := map[string]bool{"Spawn-A": true, "Spawn-B": true}
 
 	testCases := []struct {
@@ -21,6 +22,7 @@ func TestWhenZoneIsChecked_ProtectsOnlyPlayerZones(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act

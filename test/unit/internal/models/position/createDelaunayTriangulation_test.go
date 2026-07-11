@@ -20,6 +20,7 @@ func normalizedEdges(edges []models.ConnectionIndexes) []models.ConnectionIndexe
 }
 
 func TestWhenListHasOnePosition_ReturnsNoEdges(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	positions := models.Positions{data.NewVec2(0.5, 0.5)}
 
@@ -31,6 +32,7 @@ func TestWhenListHasOnePosition_ReturnsNoEdges(t *testing.T) {
 }
 
 func TestWhenListHasTwoPositions_ReturnsSingleEdge(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	positions := models.Positions{data.NewVec2(0.1, 0.1), data.NewVec2(0.9, 0.9)}
 
@@ -42,6 +44,7 @@ func TestWhenListHasTwoPositions_ReturnsSingleEdge(t *testing.T) {
 }
 
 func TestWhenListHasThreePositions_ReturnsAllTriangleEdges(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	positions := models.Positions{
 		data.NewVec2(0.1, 0.1),
@@ -62,7 +65,8 @@ func TestWhenListHasThreePositions_ReturnsAllTriangleEdges(t *testing.T) {
 }
 
 func TestWhenFourPositionsFormASquare_OmitsOneDiagonal(t *testing.T) {
-	// Arrange - a unit square triangulates into 4 hull edges + exactly 1 diagonal.
+	t.Parallel()
+	// Arrange
 	positions := models.Positions{
 		data.NewVec2(0.0, 0.0),
 		data.NewVec2(1.0, 0.0),

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMainObjectReferenceIsBuilt_SetsMainObjectTypeWithArguments(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedArgument := gofakeit.Word()
 	builder := variant_content.NewRefBuilder()

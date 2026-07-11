@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenFactionTypeAndArgumentsAreProvided_SetsFactionReferenceOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedType := gofakeit.Word()
 	firstArgument := gofakeit.Word()

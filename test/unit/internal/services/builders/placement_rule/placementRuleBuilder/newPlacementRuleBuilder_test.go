@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenBuilderIsFreshlyCreated_ProducesEmptyRule(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	builder := placement_rule.NewPlacementRuleBuilder()
 

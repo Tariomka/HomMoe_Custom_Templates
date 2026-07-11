@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenFactionsAreProvidedTwice_AppendsAllFactionsOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstFaction := gofakeit.Word()
 	secondFaction := gofakeit.Word()

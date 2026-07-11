@@ -13,6 +13,7 @@ import (
 )
 
 func TestWhenCountIncreases_RebuildsRequestedCastleCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityHigh, 1)
 
@@ -24,6 +25,7 @@ func TestWhenCountIncreases_RebuildsRequestedCastleCount(t *testing.T) {
 }
 
 func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityHigh, 1)
 
@@ -35,6 +37,7 @@ func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityHigh, 1)
 	originalGuardMultiplier := zone.GuardMultiplier
@@ -48,6 +51,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardedContentPool(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityHigh, 1)
 	originalPool := zone.GuardedContentPool
@@ -60,6 +64,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentPool(t *testing.T) {
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardedContentValue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityHigh, 1)
 	originalGuardedValue := zone.GuardedContentValue
@@ -72,6 +77,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentValue(t *testing.T) {
 }
 
 func TestWhenZoneSizeWasEditedManually_KeepsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityHigh, 1)
 	manualSize := gofakeit.Float64Range(0.5, 3.0)
@@ -85,6 +91,7 @@ func TestWhenZoneSizeWasEditedManually_KeepsIt(t *testing.T) {
 }
 
 func TestWhenZoneHasAbandonedOutpost_PreservesIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityMedium, 1)
 	zone.MainObjects = append(zone.MainObjects, entities.MainObject{Type: "AbandonedOutpost"})
@@ -103,6 +110,7 @@ func TestWhenZoneHasAbandonedOutpost_PreservesIt(t *testing.T) {
 }
 
 func TestWhenPrimaryCastleHoldsWinCondition_PreservesHoldCityFlag(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", models.QualityHigh, 1)
 	zone.MainObjects[0].HoldCityWinCon = true

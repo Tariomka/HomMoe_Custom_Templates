@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenPositionIsAdded_AppendsItToTheList(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	existing := data.NewVec2(gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1))
 	added := data.NewVec2(gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1))

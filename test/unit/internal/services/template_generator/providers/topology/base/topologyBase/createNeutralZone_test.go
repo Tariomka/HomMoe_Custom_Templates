@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenNeutralZoneIsCreated_NameCombinesNeutralPrefixWithPlanLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	label := gofakeit.LetterN(3)
 	plan := models.NeutralZonePlan{Label: label, Quality: models.QualityMedium, CastleCount: 1}
@@ -24,6 +25,7 @@ func TestWhenNeutralZoneIsCreated_NameCombinesNeutralPrefixWithPlanLabel(t *test
 }
 
 func TestWhenPlanHasCastles_MainObjectCountMatchesCastleCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plan := models.NeutralZonePlan{Label: "D", Quality: models.QualityMedium, CastleCount: 2}
 	topologyBase := base.NewTopologyBase()
@@ -36,6 +38,7 @@ func TestWhenPlanHasCastles_MainObjectCountMatchesCastleCount(t *testing.T) {
 }
 
 func TestWhenHoldCityZoneHasNoPlannedCastles_ForcesSingleCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plan := models.NeutralZonePlan{Label: "D", Quality: models.QualityMedium, CastleCount: 0}
 	topologyBase := base.NewTopologyBase()
@@ -48,6 +51,7 @@ func TestWhenHoldCityZoneHasNoPlannedCastles_ForcesSingleCastle(t *testing.T) {
 }
 
 func TestWhenZoneIsHoldCity_PrimaryCastleCarriesHoldCityWinCondition(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plan := models.NeutralZonePlan{Label: "D", Quality: models.QualityHigh, CastleCount: 1}
 	topologyBase := base.NewTopologyBase()
@@ -60,6 +64,7 @@ func TestWhenZoneIsHoldCity_PrimaryCastleCarriesHoldCityWinCondition(t *testing.
 }
 
 func TestWhenZoneHasNoMainObjects_BiomeMatchesZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plan := models.NeutralZonePlan{Label: "D", Quality: models.QualityLow, CastleCount: 0}
 	topologyBase := base.NewTopologyBase()
@@ -72,6 +77,7 @@ func TestWhenZoneHasNoMainObjects_BiomeMatchesZone(t *testing.T) {
 }
 
 func TestWhenZoneHasMainObjects_BiomeMatchesPrimaryMainObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plan := models.NeutralZonePlan{Label: "D", Quality: models.QualityLow, CastleCount: 1}
 	topologyBase := base.NewTopologyBase()
@@ -84,6 +90,7 @@ func TestWhenZoneHasMainObjects_BiomeMatchesPrimaryMainObject(t *testing.T) {
 }
 
 func TestWhenAbandonedOutpostCountIsPositive_AppendsOutpostsAfterCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plan := models.NeutralZonePlan{Label: "D", Quality: models.QualityMedium, CastleCount: 1}
 	tuning := newUnitTuning()

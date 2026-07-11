@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardedContentValueIsProvided_SetsGuardedContentValueOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedValue := gofakeit.Number(1, 100000)
 	builder := variant_content.NewZoneBuilder()

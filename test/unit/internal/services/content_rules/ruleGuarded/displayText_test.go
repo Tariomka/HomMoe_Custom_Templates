@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenGuarded_ShowsTrueState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(true)
 
@@ -19,6 +20,7 @@ func TestWhenGuarded_ShowsTrueState(t *testing.T) {
 }
 
 func TestWhenExplicitlyUnguarded_ShowsFalseState(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(false)
 

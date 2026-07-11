@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenGraphIsAChain_ComputesBreadthFirstDistances(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	adjacency := models.ZoneAdjacency{}
 	adjacency.Link("A", "B")
@@ -23,6 +24,7 @@ func TestWhenGraphIsAChain_ComputesBreadthFirstDistances(t *testing.T) {
 }
 
 func TestWhenGraphIsDisconnected_OmitsUnreachableLabels(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	adjacency := models.ZoneAdjacency{}
 	adjacency.Link("A", "B")
@@ -36,7 +38,8 @@ func TestWhenGraphIsDisconnected_OmitsUnreachableLabels(t *testing.T) {
 }
 
 func TestWhenShorterPathExists_PrefersShortestDistance(t *testing.T) {
-	// Arrange - triangle A-B, B-C plus a direct A-C shortcut.
+	t.Parallel()
+	// Arrange
 	adjacency := models.ZoneAdjacency{}
 	adjacency.Link("A", "B")
 	adjacency.Link("B", "C")

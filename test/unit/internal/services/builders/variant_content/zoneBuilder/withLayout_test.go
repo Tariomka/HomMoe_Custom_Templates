@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenLayoutNameIsProvided_SetsLayoutOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedLayout := gofakeit.Word()
 	builder := variant_content.NewZoneBuilder()

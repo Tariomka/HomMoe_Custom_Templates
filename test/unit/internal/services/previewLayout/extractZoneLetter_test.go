@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNameHasSpawnPrefix_ReturnsTrailingLetters(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zoneName := "Spawn-AB"
 
@@ -19,6 +20,7 @@ func TestWhenNameHasSpawnPrefix_ReturnsTrailingLetters(t *testing.T) {
 }
 
 func TestWhenNameHasNeutralPrefix_ReturnsTrailingLetter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zoneName := "Neutral-C"
 
@@ -30,6 +32,7 @@ func TestWhenNameHasNeutralPrefix_ReturnsTrailingLetter(t *testing.T) {
 }
 
 func TestWhenNameHasNoKnownPrefix_ReturnsNameUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zoneName := "Hub"
 

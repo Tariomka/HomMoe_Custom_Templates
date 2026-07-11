@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenConnectionIsNameless_AssignsManualName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-B"},
@@ -22,6 +23,7 @@ func TestWhenConnectionIsNameless_AssignsManualName(t *testing.T) {
 }
 
 func TestWhenConnectionAlreadyHasName_KeepsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{Name: "Rnd-A-B", From: "Spawn-A", To: "Neutral-B"},
@@ -35,6 +37,7 @@ func TestWhenConnectionAlreadyHasName_KeepsIt(t *testing.T) {
 }
 
 func TestWhenManualNameIsAlreadyTaken_AppendsNumericSuffix(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{Name: "Manual-A-B", From: "Spawn-A", To: "Neutral-B"},
@@ -49,6 +52,7 @@ func TestWhenManualNameIsAlreadyTaken_AppendsNumericSuffix(t *testing.T) {
 }
 
 func TestWhenTwoNamelessConnectionsSharePair_AssignsDistinctNames(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-B"},

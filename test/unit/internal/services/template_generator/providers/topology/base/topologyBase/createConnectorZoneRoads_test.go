@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenRoadGenerationIsDisabled_NoConnectorRoadsAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -20,6 +21,7 @@ func TestWhenRoadGenerationIsDisabled_NoConnectorRoadsAreCreated(t *testing.T) {
 }
 
 func TestWhenNoConnectionNamesAreProvided_NoConnectorRoadsAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -31,6 +33,7 @@ func TestWhenNoConnectionNamesAreProvided_NoConnectorRoadsAreCreated(t *testing.
 }
 
 func TestWhenSingleConnectionNameIsProvided_RoadLoopsBackToItself(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedRoads := []entities.Road{
@@ -48,6 +51,7 @@ func TestWhenSingleConnectionNameIsProvided_RoadLoopsBackToItself(t *testing.T) 
 }
 
 func TestWhenMultipleConnectionNamesAreProvided_RoadsFanOutFromFirstConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedRoads := []entities.Road{
@@ -69,6 +73,7 @@ func TestWhenMultipleConnectionNamesAreProvided_RoadsFanOutFromFirstConnection(t
 }
 
 func TestWhenDuplicateConnectionNamesAreProvided_DuplicatesAreIgnored(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedRoads := []entities.Road{

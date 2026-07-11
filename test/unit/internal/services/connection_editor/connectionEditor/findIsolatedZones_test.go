@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneHasNoConnections_ReturnsThatZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
@@ -27,6 +28,7 @@ func TestWhenZoneHasNoConnections_ReturnsThatZone(t *testing.T) {
 }
 
 func TestWhenEveryZoneIsConnected_ReturnsNoZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},

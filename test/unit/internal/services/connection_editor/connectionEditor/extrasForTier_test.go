@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenTierIsGiven_ReturnsGeneratorDefaultExtra(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		tier     connection_editor.ZoneTier
@@ -20,6 +21,7 @@ func TestWhenTierIsGiven_ReturnsGeneratorDefaultExtra(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			expected := []connection_editor.GuardPresetExtra{
 				{Label: "Generator Default", Value: testCase.expected},

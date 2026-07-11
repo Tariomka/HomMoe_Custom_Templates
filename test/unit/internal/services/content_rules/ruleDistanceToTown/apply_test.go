@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenRuleIsApplied_AppendsMainObjectPlacementRuleWithDistanceBounds(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	distance := content_rules.DistanceNear
 	rule := content_rules.NewRuleDistanceToTown(&distance)

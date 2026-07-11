@@ -27,6 +27,7 @@ func maxCountFor(t *testing.T, groups []entities.ContentCountLimit, sid string) 
 }
 
 func TestWhenDefaultConfiguration_CreatesSeventeenLimitGroups(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
@@ -39,6 +40,7 @@ func TestWhenDefaultConfiguration_CreatesSeventeenLimitGroups(t *testing.T) {
 }
 
 func TestWhenDefaultConfiguration_NamesGroupsAfterSidePairs(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
@@ -73,6 +75,7 @@ func TestWhenDefaultConfiguration_NamesGroupsAfterSidePairs(t *testing.T) {
 }
 
 func TestWhenDefaultConfiguration_AllGroupsShareSameLimits(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
@@ -85,6 +88,7 @@ func TestWhenDefaultConfiguration_AllGroupsShareSameLimits(t *testing.T) {
 }
 
 func TestWhenMandatoryContentBelowDefaultCap_KeepsDefaultCap(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	provider := providers.NewContentLimitProvider()
@@ -99,6 +103,7 @@ func TestWhenMandatoryContentBelowDefaultCap_KeepsDefaultCap(t *testing.T) {
 }
 
 func TestWhenMandatoryContentExceedsDefaultCap_LiftsLimitToRequestedCount(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	provider := providers.NewContentLimitProvider()
@@ -115,6 +120,7 @@ func TestWhenMandatoryContentExceedsDefaultCap_LiftsLimitToRequestedCount(t *tes
 }
 
 func TestWhenRequestedSidsSpanSeveralContentLists_SumsCountsAcrossLists(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	provider := providers.NewContentLimitProvider()
@@ -134,6 +140,7 @@ func TestWhenRequestedSidsSpanSeveralContentLists_SumsCountsAcrossLists(t *testi
 }
 
 func TestWhenRequestedSidCaseDiffersFromLimitSid_StillLiftsLimit(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	upperCaseSid := strings.ToUpper(fountainSid)
@@ -151,6 +158,7 @@ func TestWhenRequestedSidCaseDiffersFromLimitSid_StillLiftsLimit(t *testing.T) {
 }
 
 func TestWhenMandatoryContentUsesUnlimitedSid_AddsNoNewLimitEntry(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewContentLimitProvider()
 	defaultGroups := provider.CreateContentCountLimits(*config.NewGeneratorConfig())

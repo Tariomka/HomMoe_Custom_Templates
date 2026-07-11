@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardChanceIsResolved_ClampsValueIntoUnitRange(t *testing.T) {
+	t.Parallel()
 	inRangeChance := gofakeit.Float64Range(0.01, 0.99)
 	testCases := []struct {
 		name           string
@@ -34,6 +35,7 @@ func TestWhenGuardChanceIsResolved_ClampsValueIntoUnitRange(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			builder := variant_content.NewObjectBuilder()
 

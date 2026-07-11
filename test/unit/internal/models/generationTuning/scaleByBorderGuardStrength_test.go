@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenValueIsPositive_ScalesByBorderGuardStrengthMultiplier(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	value := gofakeit.Number(1, 100000)
 	multiplier := gofakeit.Float64Range(0.1, 3)
@@ -23,6 +24,7 @@ func TestWhenValueIsPositive_ScalesByBorderGuardStrengthMultiplier(t *testing.T)
 }
 
 func TestWhenScaledBorderGuardValueIsNegative_ClampsToZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tuning := models.GenerationTuning{BorderGuardStrengthMultiplier: 1.0}
 

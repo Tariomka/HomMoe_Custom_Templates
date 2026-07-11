@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsRuleWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedDistance := placement_rule.Distance{
 		Min: gofakeit.Float64Range(0.01, 0.4),

@@ -1,7 +1,7 @@
 package math_test
 
 import (
-	stdmath "math"
+	"math"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
@@ -11,14 +11,15 @@ import (
 )
 
 func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		zoneSize float64
 		expected float64
 	}{
-		{"WhenSizeIsNaN_ReturnsDefaultSize", stdmath.NaN(), 1.0},
-		{"WhenSizeIsPositiveInfinity_ReturnsDefaultSize", stdmath.Inf(1), 1.0},
-		{"WhenSizeIsNegativeInfinity_ReturnsDefaultSize", stdmath.Inf(-1), 1.0},
+		{"WhenSizeIsNaN_ReturnsDefaultSize", math.NaN(), 1.0},
+		{"WhenSizeIsPositiveInfinity_ReturnsDefaultSize", math.Inf(1), 1.0},
+		{"WhenSizeIsNegativeInfinity_ReturnsDefaultSize", math.Inf(-1), 1.0},
 		{"WhenSizeIsBelowMinimum_ClampsToMinimum", 0.01, 0.1},
 		{"WhenSizeIsNegative_ClampsToMinimum", -3.5, 0.1},
 		{"WhenSizeExceedsMaximum_ClampsToMaximum", 5.0, 2.0},
@@ -28,7 +29,8 @@ func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			// Arrange handled by the table entry.
+			t.Parallel()
+			// Arrange
 
 			// Act
 			normalized := utils.NormalizeZoneSize(testCase.zoneSize)
@@ -40,6 +42,7 @@ func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
 }
 
 func TestWhenArbitraryFiniteSizeIsProvided_ResultStaysWithinClampBounds(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zoneSize := gofakeit.Float64Range(-10, 10)
 

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenLabelQualityVaries_MapsQualityToTier(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName  string
 		quality      models.NeutralZoneQuality
@@ -19,6 +20,7 @@ func TestWhenLabelQualityVaries_MapsQualityToTier(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			plans := models.NeutralZonePlans{{Label: "A", Quality: testCase.quality}}
 
@@ -32,6 +34,7 @@ func TestWhenLabelQualityVaries_MapsQualityToTier(t *testing.T) {
 }
 
 func TestWhenLabelIsNotFound_ReturnsTierOne(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{{Label: "A", Quality: models.QualityHigh}}
 

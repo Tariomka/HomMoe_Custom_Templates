@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneHasMixedMainObjects_CountsOnlyCities(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{
 		MainObjects: []entities.MainObject{
@@ -27,6 +28,7 @@ func TestWhenZoneHasMixedMainObjects_CountsOnlyCities(t *testing.T) {
 }
 
 func TestWhenCityTypeDiffersInCase_CountsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{
 		MainObjects: []entities.MainObject{{Type: "city"}},
@@ -40,6 +42,7 @@ func TestWhenCityTypeDiffersInCase_CountsIt(t *testing.T) {
 }
 
 func TestWhenZoneHasNoMainObjects_ReturnsZero(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := entities.Zone{}
 

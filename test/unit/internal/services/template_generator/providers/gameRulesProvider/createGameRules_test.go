@@ -13,6 +13,7 @@ import (
 // ── Default configuration golden ─────────────────────────────────────
 
 func TestWhenDefaultConfiguration_ReturnsExpectedGameRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := entities.GameRules{
 		HeroCountMin:           4,
@@ -48,6 +49,7 @@ func TestWhenDefaultConfiguration_ReturnsExpectedGameRules(t *testing.T) {
 // ── Hero settings ────────────────────────────────────────────────────
 
 func TestWhenGameModeIsClassic_DisablesHeroHireBan(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameMode = "Classic"
@@ -58,6 +60,7 @@ func TestWhenGameModeIsClassic_DisablesHeroHireBan(t *testing.T) {
 }
 
 func TestWhenGameModeIsSingleHero_EnablesHeroHireBan(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameMode = "SingleHero"
@@ -68,6 +71,7 @@ func TestWhenGameModeIsSingleHero_EnablesHeroHireBan(t *testing.T) {
 }
 
 func TestWhenGameModeIsSingleHero_ForcesSingleHeroCounts(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedHeroSettings := config.HeroSettings{
 		HeroCountMin:       1,
@@ -95,6 +99,7 @@ func TestWhenGameModeIsSingleHero_ForcesSingleHeroCounts(t *testing.T) {
 }
 
 func TestWhenGameModeIsClassic_PropagatesConfiguredHeroCounts(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedHeroSettings := config.HeroSettings{
 		HeroCountMin:       gofakeit.Number(1, 5),
@@ -119,6 +124,7 @@ func TestWhenGameModeIsClassic_PropagatesConfiguredHeroCounts(t *testing.T) {
 // ── Experience modifiers ─────────────────────────────────────────────
 
 func TestWhenFactionLawsExpPercentWithinRange_SetsPercentDividedByHundred(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedPercent := gofakeit.IntRange(25, 200)
 
@@ -132,6 +138,7 @@ func TestWhenFactionLawsExpPercentWithinRange_SetsPercentDividedByHundred(t *tes
 }
 
 func TestWhenFactionLawsExpPercentBelowMinimum_ClampsModifierToQuarter(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.FactionLawsExpPercent = gofakeit.IntRange(-1000, 24)
@@ -142,6 +149,7 @@ func TestWhenFactionLawsExpPercentBelowMinimum_ClampsModifierToQuarter(t *testin
 }
 
 func TestWhenFactionLawsExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.FactionLawsExpPercent = gofakeit.IntRange(201, 9999)
@@ -152,6 +160,7 @@ func TestWhenFactionLawsExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T)
 }
 
 func TestWhenAstrologyExpPercentWithinRange_SetsPercentDividedByHundred(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedPercent := gofakeit.IntRange(25, 200)
 
@@ -165,6 +174,7 @@ func TestWhenAstrologyExpPercentWithinRange_SetsPercentDividedByHundred(t *testi
 }
 
 func TestWhenAstrologyExpPercentBelowMinimum_ClampsModifierToQuarter(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.AstrologyExpPercent = gofakeit.IntRange(-1000, 24)
@@ -175,6 +185,7 @@ func TestWhenAstrologyExpPercentBelowMinimum_ClampsModifierToQuarter(t *testing.
 }
 
 func TestWhenAstrologyExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.AstrologyExpPercent = gofakeit.IntRange(201, 9999)
@@ -187,6 +198,7 @@ func TestWhenAstrologyExpPercentAboveMaximum_ClampsModifierToTwo(t *testing.T) {
 // ── Win conditions from victory-condition presets ────────────────────
 
 func TestWhenVictoryConditionThree_EnablesLostStartCity(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameEndConditions = &config.GameEndConditions{
@@ -201,6 +213,7 @@ func TestWhenVictoryConditionThree_EnablesLostStartCity(t *testing.T) {
 }
 
 func TestWhenVictoryConditionFive_EnablesCityHold(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameEndConditions = &config.GameEndConditions{
@@ -215,6 +228,7 @@ func TestWhenVictoryConditionFive_EnablesCityHold(t *testing.T) {
 }
 
 func TestWhenVictoryConditionFour_EnablesGladiatorArena(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameEndConditions = &config.GameEndConditions{
@@ -229,6 +243,7 @@ func TestWhenVictoryConditionFour_EnablesGladiatorArena(t *testing.T) {
 }
 
 func TestWhenVictoryConditionSix_EnablesTournament(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameEndConditions = &config.GameEndConditions{
@@ -243,6 +258,7 @@ func TestWhenVictoryConditionSix_EnablesTournament(t *testing.T) {
 }
 
 func TestWhenCityHoldConditionEnabled_EnablesCityHold(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameEndConditions = &config.GameEndConditions{
@@ -258,6 +274,7 @@ func TestWhenCityHoldConditionEnabled_EnablesCityHold(t *testing.T) {
 }
 
 func TestWhenLostStartCityDayAboveMaximum_ClampsToThirty(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameEndConditions = &config.GameEndConditions{
@@ -272,6 +289,7 @@ func TestWhenLostStartCityDayAboveMaximum_ClampsToThirty(t *testing.T) {
 }
 
 func TestWhenCityHoldDaysAboveMaximum_ClampsToThirty(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameEndConditions = &config.GameEndConditions{
@@ -288,6 +306,7 @@ func TestWhenCityHoldDaysAboveMaximum_ClampsToThirty(t *testing.T) {
 // ── Gladiator arena ──────────────────────────────────────────────────
 
 func TestWhenGladiatorArenaEnabled_EnablesGladiatorArenaWinCondition(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GladiatorArenaRules = &config.GladiatorArenaRules{
@@ -302,6 +321,7 @@ func TestWhenGladiatorArenaEnabled_EnablesGladiatorArenaWinCondition(t *testing.
 }
 
 func TestWhenGladiatorArenaEnabled_SetsConfiguredDaysDelayStart(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedDaysDelayStart := gofakeit.Number(1, 60)
 
@@ -319,6 +339,7 @@ func TestWhenGladiatorArenaEnabled_SetsConfiguredDaysDelayStart(t *testing.T) {
 }
 
 func TestWhenGladiatorArenaEnabled_SetsConfiguredCountDay(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedCountDay := gofakeit.Number(1, 30)
 
@@ -336,6 +357,7 @@ func TestWhenGladiatorArenaEnabled_SetsConfiguredCountDay(t *testing.T) {
 }
 
 func TestWhenGladiatorArenaEnabled_SetsChampionSelectRuleToStartHero(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GladiatorArenaRules = &config.GladiatorArenaRules{
@@ -350,6 +372,7 @@ func TestWhenGladiatorArenaEnabled_SetsChampionSelectRuleToStartHero(t *testing.
 }
 
 func TestWhenGladiatorArenaEnabled_ForcesLostStartHero(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GladiatorArenaRules = &config.GladiatorArenaRules{
@@ -364,6 +387,7 @@ func TestWhenGladiatorArenaEnabled_ForcesLostStartHero(t *testing.T) {
 }
 
 func TestWhenGameModeIsSingleHero_ForcesLostStartHero(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GameMode = "SingleHero"
@@ -374,6 +398,7 @@ func TestWhenGameModeIsSingleHero_ForcesLostStartHero(t *testing.T) {
 }
 
 func TestWhenGladiatorDaysDelayStartAboveMaximum_ClampsToSixty(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.GladiatorArenaRules = &config.GladiatorArenaRules{
@@ -390,6 +415,7 @@ func TestWhenGladiatorDaysDelayStartAboveMaximum_ClampsToSixty(t *testing.T) {
 // ── Tournament ───────────────────────────────────────────────────────
 
 func TestWhenTournamentEnabled_EnablesTournamentWinCondition(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.TournamentRules = &config.TournamentRules{
@@ -405,6 +431,7 @@ func TestWhenTournamentEnabled_EnablesTournamentWinCondition(t *testing.T) {
 }
 
 func TestWhenTournamentEnabled_EnablesTournamentSaveArmy(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.TournamentRules = &config.TournamentRules{
@@ -420,6 +447,7 @@ func TestWhenTournamentEnabled_EnablesTournamentSaveArmy(t *testing.T) {
 }
 
 func TestWhenTournamentEnabled_SetsConfiguredPointsToWin(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedPointsToWin := gofakeit.Number(1, 10)
 
@@ -438,6 +466,7 @@ func TestWhenTournamentEnabled_SetsConfiguredPointsToWin(t *testing.T) {
 }
 
 func TestWhenTournamentEnabled_CreatesAnnounceDayPerRound(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	pointsToWin := gofakeit.Number(1, 5)
 	expectedRoundCount := pointsToWin*2 - 1
@@ -457,6 +486,7 @@ func TestWhenTournamentEnabled_CreatesAnnounceDayPerRound(t *testing.T) {
 }
 
 func TestWhenTournamentEnabled_CreatesBattleDayOffsetPerRound(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	pointsToWin := gofakeit.Number(1, 5)
 	expectedRoundCount := pointsToWin*2 - 1
@@ -476,6 +506,7 @@ func TestWhenTournamentEnabled_CreatesBattleDayOffsetPerRound(t *testing.T) {
 }
 
 func TestWhenTournamentScheduleComputed_SetsExpectedAnnounceDays(t *testing.T) {
+	t.Parallel()
 	// Arrange: first battle on day 10, then every 5 days; announcements follow
 	// the day after each previous battle: rounds land on days 10, 15, 20.
 	// Act
@@ -493,6 +524,7 @@ func TestWhenTournamentScheduleComputed_SetsExpectedAnnounceDays(t *testing.T) {
 }
 
 func TestWhenTournamentScheduleComputed_SetsExpectedBattleDayOffsets(t *testing.T) {
+	t.Parallel()
 	// Arrange: offsets are relative to each announcement day (first-day - 1,
 	// then interval - 1 per subsequent round).
 	// Act
@@ -510,6 +542,7 @@ func TestWhenTournamentScheduleComputed_SetsExpectedBattleDayOffsets(t *testing.
 }
 
 func TestWhenTournamentPointsToWinAboveMaximum_ClampsToTen(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.TournamentRules = &config.TournamentRules{
@@ -527,6 +560,7 @@ func TestWhenTournamentPointsToWinAboveMaximum_ClampsToTen(t *testing.T) {
 // ── Bonuses ──────────────────────────────────────────────────────────
 
 func TestWhenTownPortalFreeBonusConfigured_ExpandsToSpellAndFreeCostBonuses(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entry := config.BonusEntry{PresetType: config.BonusTownPortalFree, ReceiverFilter: "start_hero"}
 
@@ -551,6 +585,7 @@ func TestWhenTownPortalFreeBonusConfigured_ExpandsToSpellAndFreeCostBonuses(t *t
 }
 
 func TestWhenFreeSpellBonusConfigured_ExpandsToSpellAndCostOverrideBonuses(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entry := config.BonusEntry{
 		PresetType:     config.BonusSpell,
@@ -580,6 +615,7 @@ func TestWhenFreeSpellBonusConfigured_ExpandsToSpellAndCostOverrideBonuses(t *te
 }
 
 func TestWhenPaidSpellBonusConfigured_ProducesOnlySpellBonus(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entry := config.BonusEntry{
 		PresetType:     config.BonusSpell,
@@ -603,6 +639,7 @@ func TestWhenPaidSpellBonusConfigured_ProducesOnlySpellBonus(t *testing.T) {
 }
 
 func TestWhenSingleBonusPresetConfigured_ProducesExpectedBonus(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name               string
 		preset             config.BonusPresetType
@@ -676,6 +713,7 @@ func TestWhenSingleBonusPresetConfigured_ProducesExpectedBonus(t *testing.T) {
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			entry := config.BonusEntry{
 				PresetType:     testCase.preset,
@@ -700,6 +738,7 @@ func TestWhenSingleBonusPresetConfigured_ProducesExpectedBonus(t *testing.T) {
 }
 
 func TestWhenMultipleBonusEntriesConfigured_ConcatenatesExpansions(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	entries := []config.BonusEntry{
 		{PresetType: config.BonusStartingGold, ReceiverFilter: "start_hero", Param: "1000"},
@@ -714,6 +753,7 @@ func TestWhenMultipleBonusEntriesConfigured_ConcatenatesExpansions(t *testing.T)
 }
 
 func TestWhenNoBonusEntriesConfigured_ProducesEmptyBonusList(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	actual := bonusesFor()
 
@@ -724,6 +764,7 @@ func TestWhenNoBonusEntriesConfigured_ProducesEmptyBonusList(t *testing.T) {
 // Functional-equivalence check against a real game template: Blitz grants the
 // free Town Portal, whose raw bonuses must match our expansion exactly.
 func TestWhenTownPortalFreeExpansionComparedToBlitzTemplate_MatchesExactly(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	blitz := loadExampleTemplate(t, "Blitz.rmg.json")
 

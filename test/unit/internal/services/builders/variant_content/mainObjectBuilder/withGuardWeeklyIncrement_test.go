@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardWeeklyIncrementIsProvided_SetsGuardWeeklyIncrementOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedIncrement := gofakeit.Float64Range(0.01, 1)
 	builder := variant_content.NewObjectBuilder()

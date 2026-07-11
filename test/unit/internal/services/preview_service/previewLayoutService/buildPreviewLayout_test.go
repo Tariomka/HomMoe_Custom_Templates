@@ -15,6 +15,7 @@ import (
 const layoutSide = 700.0
 
 func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := preview.PreviewLayout{Positions: map[string]image.Point{}}
 
@@ -26,6 +27,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
 }
 
 func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := preview.PreviewLayout{Positions: map[string]image.Point{}}
 
@@ -37,6 +39,7 @@ func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
 }
 
 func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := preview.PreviewLayout{Positions: map[string]image.Point{}}
 
@@ -48,6 +51,7 @@ func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
 }
 
 func TestWhenRingTopologyIsLaidOut_EveryZoneStaysInsideTheCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Spawn-A"), namedZone("Spawn-B"),
@@ -72,6 +76,7 @@ func TestWhenRingTopologyIsLaidOut_EveryZoneStaysInsideTheCanvas(t *testing.T) {
 }
 
 func TestWhenAllZonesHaveManualPositions_PlacesThemVerbatim(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		manualZone("Spawn-A", 0.25, 0.5),
@@ -90,6 +95,7 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemVerbatim(t *testing.T) {
 }
 
 func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.1, 0.5),
@@ -109,6 +115,7 @@ func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing
 }
 
 func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
 	connections := []entities.Connection{directConnection("Spawn-A", "Neutral-B")}
@@ -125,6 +132,7 @@ func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 }
 
 func TestWhenZoneIsNamedHub_MarksZoneAsHub(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Hub")}
 	connections := []entities.Connection{directConnection("Spawn-A", "Hub")}
@@ -142,6 +150,7 @@ func TestWhenZoneIsNamedHub_MarksZoneAsHub(t *testing.T) {
 }
 
 func TestWhenSpawnMainObjectNamesPlayer_ParsesOwnerNumber(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := namedZone("Spawn-A")
 	zone.MainObjects = []entities.MainObject{{Type: "Spawn", Spawn: "Player3"}}
@@ -160,6 +169,7 @@ func TestWhenSpawnMainObjectNamesPlayer_ParsesOwnerNumber(t *testing.T) {
 }
 
 func TestWhenZoneHasCityMainObjects_CountsCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := namedZone("Neutral-B")
 	zone.MainObjects = []entities.MainObject{{Type: "City"}, {Type: "City"}}
@@ -178,6 +188,7 @@ func TestWhenZoneHasCityMainObjects_CountsCastles(t *testing.T) {
 }
 
 func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
 	connections := []entities.Connection{
@@ -193,6 +204,7 @@ func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T)
 }
 
 func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
 	connections := []entities.Connection{
@@ -208,6 +220,7 @@ func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
 }
 
 func TestWhenTwoConnectionsShareTheSameZonePair_FansOutTheirControlPoints(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
 	connections := []entities.Connection{
@@ -224,6 +237,7 @@ func TestWhenTwoConnectionsShareTheSameZonePair_FansOutTheirControlPoints(t *tes
 }
 
 func TestWhenZeroAngleZoneIsSet_RotatesTheRingToStartAtThatZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Spawn-A"), namedZone("Neutral-B"),

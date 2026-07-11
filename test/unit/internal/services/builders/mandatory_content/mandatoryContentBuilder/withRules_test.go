@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRulesAreProvidedTwice_AppendsAllRulesOnBuiltItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 	firstRule := entities.PlacementRule{Type: "Road", Weight: gofakeit.Number(1, 100)}

@@ -9,7 +9,8 @@ import (
 )
 
 func TestWhenPositionsAreScattered_ReturnsComponentWiseMinAndMax(t *testing.T) {
-	// Arrange - min/max come from different positions per axis.
+	t.Parallel()
+	// Arrange
 	positions := models.Positions{
 		data.NewVec2(0.3, 0.8),
 		data.NewVec2(0.1, 0.9),

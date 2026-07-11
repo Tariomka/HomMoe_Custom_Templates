@@ -7,6 +7,7 @@ import (
 )
 
 func TestWhenBackgroundIsDrawn_CanvasIsMutated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := mustNewProvider(t)
 	canvas := newCanvas()
@@ -20,6 +21,7 @@ func TestWhenBackgroundIsDrawn_CanvasIsMutated(t *testing.T) {
 }
 
 func TestWhenBackgroundIsDrawn_EveryPixelIsOpaque(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := mustNewProvider(t)
 	canvas := newCanvas()

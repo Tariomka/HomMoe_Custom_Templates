@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNameIsQueried_ReturnsDistanceToTown(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleDistanceToTown(nil)
 

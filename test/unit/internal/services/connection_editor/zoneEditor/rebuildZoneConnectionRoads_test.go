@@ -56,6 +56,7 @@ func buildFootholdScenario() ([]entities.Zone, []entities.Connection) {
 }
 
 func TestWhenZoneHasTwoConnections_KeepsRoadToExistingConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildFootholdScenario()
 
@@ -68,6 +69,7 @@ func TestWhenZoneHasTwoConnections_KeepsRoadToExistingConnection(t *testing.T) {
 }
 
 func TestWhenConnectionWasAddedInEditor_CreatesRoadForIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildFootholdScenario()
 
@@ -80,6 +82,7 @@ func TestWhenConnectionWasAddedInEditor_CreatesRoadForIt(t *testing.T) {
 }
 
 func TestWhenZoneHasFootholdRoad_KeepsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildFootholdScenario()
 
@@ -92,6 +95,7 @@ func TestWhenZoneHasFootholdRoad_KeepsIt(t *testing.T) {
 }
 
 func TestWhenNewConnectionTouchesAnotherZone_CreatesRoadOnThatZoneToo(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildFootholdScenario()
 
@@ -123,6 +127,7 @@ func buildNamelessManualScenario() ([]entities.Zone, []entities.Connection) {
 }
 
 func TestWhenManualConnectionIsNameless_AssignsItAName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildNamelessManualScenario()
 
@@ -135,6 +140,7 @@ func TestWhenManualConnectionIsNameless_AssignsItAName(t *testing.T) {
 }
 
 func TestWhenManualConnectionIsNameless_CreatesRoadOnFromZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildNamelessManualScenario()
 
@@ -148,6 +154,7 @@ func TestWhenManualConnectionIsNameless_CreatesRoadOnFromZone(t *testing.T) {
 }
 
 func TestWhenManualConnectionIsNameless_CreatesRoadOnToZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildNamelessManualScenario()
 
@@ -180,6 +187,7 @@ func buildCastleGrowthScenario() ([]entities.Zone, []entities.Connection) {
 }
 
 func TestWhenZoneGainedCastlesWithoutCastleRoads_CreatesStoneRoadsToEachCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildCastleGrowthScenario()
 
@@ -192,6 +200,7 @@ func TestWhenZoneGainedCastlesWithoutCastleRoads_CreatesStoneRoadsToEachCastle(t
 }
 
 func TestWhenCastleRoadsAreRegenerated_KeepsConnectionRoad(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones, connections := buildCastleGrowthScenario()
 
@@ -204,6 +213,7 @@ func TestWhenCastleRoadsAreRegenerated_KeepsConnectionRoad(t *testing.T) {
 }
 
 func TestWhenCastleCountShrank_DropsDanglingCastleRoads(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{
@@ -233,6 +243,7 @@ func TestWhenCastleCountShrank_DropsDanglingCastleRoads(t *testing.T) {
 }
 
 func TestWhenZoneHasNoMainObjects_CreatesConnectorRoads(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Neutral-K"},

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenTwoIndexesAreSwapped_ExchangesThosePlans(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "A", Quality: models.QualityLow},

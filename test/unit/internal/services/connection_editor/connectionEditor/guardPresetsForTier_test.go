@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenTierIsGiven_ReturnsMatchingGuardPresetRow(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		tier     connection_editor.ZoneTier
@@ -28,6 +29,7 @@ func TestWhenTierIsGiven_ReturnsMatchingGuardPresetRow(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act

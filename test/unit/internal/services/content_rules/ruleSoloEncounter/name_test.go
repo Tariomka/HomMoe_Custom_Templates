@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNameIsQueried_ReturnsSoloEncounter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(true)
 

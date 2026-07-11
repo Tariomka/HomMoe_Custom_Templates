@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenMultipleOptionsAreChained_ReturnsRoadWithAllAccumulatedValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedFrom := entities.TypedRef{Type: gofakeit.Word(), Args: []string{gofakeit.Word()}}
 	expectedTo := entities.TypedRef{Type: gofakeit.Word(), Args: []string{gofakeit.Word()}}

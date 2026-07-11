@@ -60,7 +60,7 @@ func TestWhenRandomizationInputVaries_ReturnsEffectiveValue(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
 			t.Parallel()
-			// Arrange - settings provided by the test case.
+			// Arrange
 
 			// Act
 			actual := testCase.settings.GetEffectiveGuardRandomization()

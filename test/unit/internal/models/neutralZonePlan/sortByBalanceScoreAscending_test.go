@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPlansAreUnordered_SortsByBalanceScoreAscendingThenLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "A", Quality: models.QualityHigh, CastleCount: 2},   // score 3.3
@@ -28,6 +29,7 @@ func TestWhenPlansAreUnordered_SortsByBalanceScoreAscendingThenLabel(t *testing.
 }
 
 func TestWhenBalanceScoresAreEqualDuringAscendingSort_BreaksTieByLabelAscending(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "Z", Quality: models.QualityLow, CastleCount: 1},

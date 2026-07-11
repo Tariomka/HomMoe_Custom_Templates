@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNameIsEmpty_SetsDefaultName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.TemplateName = ""
@@ -21,6 +22,7 @@ func TestWhenNameIsEmpty_SetsDefaultName(t *testing.T) {
 }
 
 func TestWhenNameIsAlreadySet_KeepsExistingName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	existingName := gofakeit.ProductName()
 	configuration := config.NewGeneratorConfig()

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenDirtTypeIsChosen_SetsDirtTypeOnBuiltRoad(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewRoadBuilder()
 

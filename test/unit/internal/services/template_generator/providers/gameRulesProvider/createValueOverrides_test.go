@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenTextMixesValidAndJunkLines_ParsesOnlyValidLines(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ValueOverridesText = "watchtower=25000\n\n  =5 \nbad_line\ngold_mine = 12000 \nnonnum=abc"
@@ -27,6 +28,7 @@ func TestWhenTextMixesValidAndJunkLines_ParsesOnlyValidLines(t *testing.T) {
 }
 
 func TestWhenTextIsEmpty_ReturnsNil(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 
@@ -41,6 +43,7 @@ func TestWhenTextIsEmpty_ReturnsNil(t *testing.T) {
 // Blitz template through the parser must reproduce it (with the generator's
 // all-variants marker -1).
 func TestWhenBlitzOverrideLineParsed_ReproducesBlitzSidAndGuardValue(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	blitz := loadExampleTemplate(t, "Blitz.rmg.json")
 	require.NotEmpty(t, blitz.ValueOverrides)

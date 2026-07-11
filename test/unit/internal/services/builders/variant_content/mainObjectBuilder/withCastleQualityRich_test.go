@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenRichCastleQualityIsChosen_SetsRichConstructionSidOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

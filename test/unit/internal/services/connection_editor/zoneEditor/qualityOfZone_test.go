@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGuardedPoolIsInspected_ReturnsMatchingQuality(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		pool     []string
@@ -24,6 +25,7 @@ func TestWhenGuardedPoolIsInspected_ReturnsMatchingQuality(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			zone := entities.Zone{Name: "Neutral-Z", GuardedContentPool: testCase.pool}
 

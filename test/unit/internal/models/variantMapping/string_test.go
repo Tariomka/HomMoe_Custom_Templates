@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenFormattedAsString_ReturnsDisplayText(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapping := models.NewVariantMapping(
 		models.SidMapping{Sid: "x", Name: "Fallback"},

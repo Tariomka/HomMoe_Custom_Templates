@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneIsClassified_ReturnsExpectedTier(t *testing.T) {
+	t.Parallel()
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Hub"},
@@ -41,6 +42,7 @@ func TestWhenZoneIsClassified_ReturnsExpectedTier(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenOwnedCastleCountIsZero_NoOwnedCastlesAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 
@@ -21,6 +22,7 @@ func TestWhenOwnedCastleCountIsZero_NoOwnedCastlesAreCreated(t *testing.T) {
 }
 
 func TestWhenFactionsMatchPlayer_OwnedCastleIsPoorCityWithMatchFaction(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedCastles := []entities.MainObject{
@@ -41,6 +43,7 @@ func TestWhenFactionsMatchPlayer_OwnedCastleIsPoorCityWithMatchFaction(t *testin
 }
 
 func TestWhenFactionsDoNotMatchPlayer_OwnedCastleFactionIsRandom(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedCastles := []entities.MainObject{
@@ -61,6 +64,7 @@ func TestWhenFactionsDoNotMatchPlayer_OwnedCastleFactionIsRandom(t *testing.T) {
 }
 
 func TestWhenMultipleOwnedCastlesAreRequested_CastleCountMatchesRequest(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	castleCount := gofakeit.Number(2, 5)

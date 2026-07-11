@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenRowHasSerializedRules_RestoresEachRule(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	isGuarded := true
 	row := models.ZoneContentRowSave{
@@ -31,6 +32,7 @@ func TestWhenRowHasSerializedRules_RestoresEachRule(t *testing.T) {
 }
 
 func TestWhenRowHasNoRules_ReturnsNoRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	row := models.ZoneContentRowSave{Sid: "x"}
 
@@ -42,6 +44,7 @@ func TestWhenRowHasNoRules_ReturnsNoRules(t *testing.T) {
 }
 
 func TestWhenSavedRuleIsInvalid_SkipsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	isGuarded := true
 	row := models.ZoneContentRowSave{

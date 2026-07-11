@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRoadsAreProvided_SetsRoadsOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedRoads := []entities.Road{
 		{Type: "Stone", From: entities.TypedRef{Type: gofakeit.Word()}},

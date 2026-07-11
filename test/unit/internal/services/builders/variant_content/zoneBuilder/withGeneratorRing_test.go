@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGeneratorRingIsProvided_SetsGeneratorRingPointerOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedRing := gofakeit.Number(0, 5)
 	builder := variant_content.NewZoneBuilder()

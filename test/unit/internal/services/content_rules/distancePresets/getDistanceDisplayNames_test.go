@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNamesAreListed_ReturnsPresetsInDeclarationOrder(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := []string{"Next To", "Near", "Medium", "Far", "Very Far"}
 

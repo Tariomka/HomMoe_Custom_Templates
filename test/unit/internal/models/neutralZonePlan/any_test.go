@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPlansArePresent_ReportsAny(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{{Label: "A", Quality: models.QualityLow}}
 
@@ -19,6 +20,7 @@ func TestWhenPlansArePresent_ReportsAny(t *testing.T) {
 }
 
 func TestWhenPlanListIsEmpty_ReportsNone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{}
 

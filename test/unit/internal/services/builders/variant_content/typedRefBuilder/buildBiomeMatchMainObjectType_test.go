@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenBiomeMatchMainObjectReferenceIsBuilt_SetsMatchMainObjectTypeWithArguments(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedArgument := gofakeit.Word()
 	builder := variant_content.NewRefBuilder()

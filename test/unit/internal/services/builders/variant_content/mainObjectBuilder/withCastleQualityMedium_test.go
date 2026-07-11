@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenMediumCastleQualityIsChosen_SetsMediumConstructionSidOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSpawnsLayoutIsChosen_SetsSpawnsLayoutOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewZoneBuilder()
 

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPlansAreUnordered_SortsByQualityThenCastlesThenLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "B", Quality: models.QualityLow, CastleCount: 0},
@@ -32,6 +33,7 @@ func TestWhenPlansAreUnordered_SortsByQualityThenCastlesThenLabel(t *testing.T) 
 }
 
 func TestWhenSortedCopyIsCreated_LeavesInputSliceUntouched(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "B", Quality: models.QualityLow},

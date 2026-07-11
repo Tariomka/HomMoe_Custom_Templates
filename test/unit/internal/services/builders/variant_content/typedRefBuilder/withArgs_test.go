@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenArgumentsAreProvidedTwice_AppendsAllArgumentsOnBuiltReference(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstArgument := gofakeit.Word()
 	secondArgument := gofakeit.Word()

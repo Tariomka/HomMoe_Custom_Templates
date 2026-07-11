@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenRandomHireWeeklyIncrementFlagsAreProvided_SetsRandomHireWeeklyIncrementFlagsOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedFlags := []bool{gofakeit.Bool(), gofakeit.Bool(), gofakeit.Bool()}
 	builder := variant_content.NewZoneBuilder()

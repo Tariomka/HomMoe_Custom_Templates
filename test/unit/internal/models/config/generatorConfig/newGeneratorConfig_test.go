@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenConfigIsCreated_ReturnsDocumentedDefaults(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := &config.GeneratorConfig{
 		TemplateName: "Custom Template",

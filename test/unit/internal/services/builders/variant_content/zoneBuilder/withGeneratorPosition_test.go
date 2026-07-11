@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGeneratorPositionIsProvided_SetsGeneratorPositionPointerOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedPosition := [2]float64{gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1)}
 	builder := variant_content.NewZoneBuilder()

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenCenterLayoutIsChosen_SetsCenterLayoutOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewZoneBuilder()
 

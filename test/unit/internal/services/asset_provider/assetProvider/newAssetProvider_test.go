@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenEmbeddedAssetsAreValid_ReturnsNoError(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -19,6 +20,7 @@ func TestWhenEmbeddedAssetsAreValid_ReturnsNoError(t *testing.T) {
 }
 
 func TestWhenEmbeddedAssetsAreValid_ReturnsProvider(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -30,6 +32,7 @@ func TestWhenEmbeddedAssetsAreValid_ReturnsProvider(t *testing.T) {
 }
 
 func TestWhenCalledTwice_ReturnsSameSingletonInstance(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstProvider, err := asset_provider.NewAssetProvider()
 	require.NoError(t, err)

@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenTwoIndexesAreLinked_CreatesSymmetricIndexAdjacency(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	adjacency := models.NewZoneIndexAdjacency(3)
 	expected := models.ZoneIndexAdjacency{

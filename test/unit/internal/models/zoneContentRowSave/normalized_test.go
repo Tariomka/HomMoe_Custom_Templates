@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenCountIsUnset_NormalizesCountToOne(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	row := models.ZoneContentRowSave{Sid: "x"}
 
@@ -19,6 +20,7 @@ func TestWhenCountIsUnset_NormalizesCountToOne(t *testing.T) {
 }
 
 func TestWhenRulesArePresentAndCountIsUnset_StillNormalizesCountToOne(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	row := models.ZoneContentRowSave{
 		Sid:   "x",
@@ -33,6 +35,7 @@ func TestWhenRulesArePresentAndCountIsUnset_StillNormalizesCountToOne(t *testing
 }
 
 func TestWhenCountIsPositive_KeepsCountUnchanged(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	row := models.ZoneContentRowSave{Sid: "x", Count: 3}
 

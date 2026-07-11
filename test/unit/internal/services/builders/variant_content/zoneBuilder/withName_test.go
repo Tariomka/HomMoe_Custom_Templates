@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNameIsProvided_SetsNameOnBuiltZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.Word()
 	builder := variant_content.NewZoneBuilder()

@@ -47,6 +47,7 @@ func templateWith(zones []entities.Zone, connections []entities.Connection) *ent
 // ── edge cases ───────────────────────────────────────────────────────
 
 func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := services.PreviewLayout{Positions: map[string]image.Point{}}
 
@@ -58,6 +59,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
 }
 
 func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := services.PreviewLayout{Positions: map[string]image.Point{}}
 
@@ -69,6 +71,7 @@ func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
 }
 
 func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := services.PreviewLayout{Positions: map[string]image.Point{}}
 
@@ -82,6 +85,7 @@ func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
 // ── ring / default dispatch ──────────────────────────────────────────
 
 func TestWhenRingTopologyProvided_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 	connections := []entities.Connection{
@@ -97,6 +101,7 @@ func TestWhenRingTopologyProvided_PositionsEveryZone(t *testing.T) {
 }
 
 func TestWhenRingTopologyProvided_ComputesPositiveZoneRadius(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 
@@ -108,6 +113,7 @@ func TestWhenRingTopologyProvided_ComputesPositiveZoneRadius(t *testing.T) {
 }
 
 func TestWhenOnlyOneZoneExists_CentresItOnCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A")}
 
@@ -119,6 +125,7 @@ func TestWhenOnlyOneZoneExists_CentresItOnCanvas(t *testing.T) {
 }
 
 func TestWhenZoneIsNamedHub_PlacesItAtCanvasCentre(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Hub"), namedZone("Spawn-A"), namedZone("Spawn-B")}
 
@@ -132,6 +139,7 @@ func TestWhenZoneIsNamedHub_PlacesItAtCanvasCentre(t *testing.T) {
 // ── implicit hub rejection ───────────────────────────────────────────
 
 func TestWhenNeutralTouchesEverySpawn_DoesNotCentreIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Spawn-C"), namedZone("Neutral-H"),
@@ -150,6 +158,7 @@ func TestWhenNeutralTouchesEverySpawn_DoesNotCentreIt(t *testing.T) {
 }
 
 func TestWhenNeutralTouchesEverySpawn_DoesNotFlagItAsHub(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Spawn-C"), namedZone("Neutral-H"),
@@ -174,6 +183,7 @@ func TestWhenNeutralTouchesEverySpawn_DoesNotFlagItAsHub(t *testing.T) {
 }
 
 func TestWhenNeutralOnlyConnectsTwoSpawns_FlagsNoHub(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-H")}
 	connections := []entities.Connection{
@@ -195,6 +205,7 @@ func TestWhenNeutralOnlyConnectsTwoSpawns_FlagsNoHub(t *testing.T) {
 }
 
 func TestWhenZoneIsExplicitlyNamedHub_FlagsOnlyThatZoneAsHub(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Hub"), namedZone("Spawn-A"), namedZone("Spawn-B")}
 	connections := []entities.Connection{
@@ -216,6 +227,7 @@ func TestWhenZoneIsExplicitlyNamedHub_FlagsOnlyThatZoneAsHub(t *testing.T) {
 }
 
 func TestWhenTwoHubZonesExist_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"), namedZone("Spawn-A"), namedZone("Spawn-B"),
@@ -236,6 +248,7 @@ func TestWhenTwoHubZonesExist_PositionsEveryZone(t *testing.T) {
 // ── scatter (Random) dispatch ────────────────────────────────────────
 
 func TestWhenRandomTopologyZonesHavePositions_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
@@ -255,6 +268,7 @@ func TestWhenRandomTopologyZonesHavePositions_PositionsEveryZone(t *testing.T) {
 }
 
 func TestWhenRandomTopologyHasNoConnections_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.1, 0.1),
@@ -270,6 +284,7 @@ func TestWhenRandomTopologyHasNoConnections_PositionsEveryZone(t *testing.T) {
 }
 
 func TestWhenRandomTopologyZonesLackPositions_FallsBackToRingLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 
@@ -283,6 +298,7 @@ func TestWhenRandomTopologyZonesLackPositions_FallsBackToRingLayout(t *testing.T
 // ── circles ring dispatch ────────────────────────────────────────────
 
 func TestWhenCirclesZonesSpanMultipleRings_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		ringedZone("Spawn-A", 0, 0.1, 0.1),
@@ -298,6 +314,7 @@ func TestWhenCirclesZonesSpanMultipleRings_PositionsEveryZone(t *testing.T) {
 }
 
 func TestWhenCirclesZonesShareOneRing_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		ringedZone("Spawn-A", 0, 0.2, 0.2),
@@ -313,6 +330,7 @@ func TestWhenCirclesZonesShareOneRing_PositionsEveryZone(t *testing.T) {
 }
 
 func TestWhenCirclesTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{ringedZone("Spawn-A", 0, 0.5, 0.5)}
 
@@ -326,6 +344,7 @@ func TestWhenCirclesTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
 // ── connection rendering ─────────────────────────────────────────────
 
 func TestWhenDirectConnectionExists_CollectsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
 	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
@@ -338,6 +357,7 @@ func TestWhenDirectConnectionExists_CollectsIt(t *testing.T) {
 }
 
 func TestWhenDirectConnectionExists_DoesNotFlagItAsPortal(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
 	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
@@ -351,6 +371,7 @@ func TestWhenDirectConnectionExists_DoesNotFlagItAsPortal(t *testing.T) {
 }
 
 func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 	connections := []entities.Connection{
@@ -373,6 +394,7 @@ func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
 }
 
 func TestWhenConnectionReferencesUnknownZone_SkipsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
 	connections := []entities.Connection{directConnection("Spawn-A", "Missing-X")}
@@ -387,6 +409,7 @@ func TestWhenConnectionReferencesUnknownZone_SkipsIt(t *testing.T) {
 // ── two-cluster (tournament) templates ───────────────────────────────
 
 func TestWhenTemplateHasTwoClusters_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Spawn-A"), namedZone("Neutral-X"),
@@ -407,6 +430,7 @@ func TestWhenTemplateHasTwoClusters_PositionsEveryZone(t *testing.T) {
 // ── zone classification side-effects ─────────────────────────────────
 
 func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
@@ -430,6 +454,7 @@ func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) 
 }
 
 func TestWhenZoneHasTwoCityMainObjects_CountsTwoCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Neutral-Z", MainObjects: []entities.MainObject{{Type: "City"}, {Type: "City"}}},
@@ -446,6 +471,7 @@ func TestWhenZoneHasTwoCityMainObjects_CountsTwoCastles(t *testing.T) {
 // ── parallel connection fanning ──────────────────────────────────────
 
 func TestWhenOnlyOneEdgeConnectsAPair_KeepsControlPointOnMidpoint(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.2, 0.5),
@@ -466,6 +492,7 @@ func TestWhenOnlyOneEdgeConnectsAPair_KeepsControlPointOnMidpoint(t *testing.T) 
 }
 
 func TestWhenParallelEdgesConnectSamePair_GivesThemDistinctControlPoints(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.2, 0.5),
@@ -485,6 +512,7 @@ func TestWhenParallelEdgesConnectSamePair_GivesThemDistinctControlPoints(t *test
 }
 
 func TestWhenParallelEdgesConnectSamePair_BulgesThemSymmetricallyAboutMidpoint(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.2, 0.5),
@@ -512,6 +540,7 @@ func TestWhenParallelEdgesConnectSamePair_BulgesThemSymmetricallyAboutMidpoint(t
 // ── fixed-geometry (Square/Geometric/Cross/Fractal) dispatch ─────────
 
 func TestWhenFixedGeometryTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{positionedZone("Spawn-A", 0.3, 0.7)}
 
@@ -523,6 +552,7 @@ func TestWhenFixedGeometryTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
 }
 
 func TestWhenFixedGeometryZonesShareOnePosition_PositionsBothAtSamePoint(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.5, 0.5),
@@ -537,6 +567,7 @@ func TestWhenFixedGeometryZonesShareOnePosition_PositionsBothAtSamePoint(t *test
 }
 
 func TestWhenFixedGeometryZonesLackPositions_FallsBackToRingLayout(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 
@@ -550,6 +581,7 @@ func TestWhenFixedGeometryZonesLackPositions_FallsBackToRingLayout(t *testing.T)
 // ── circles ring edge cases ──────────────────────────────────────────
 
 func TestWhenCirclesZoneLacksRingStamp_StillPositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	missingRingZone := positionedZone("Neutral-C", 0.5, 0.5)
 	zones := []entities.Zone{
@@ -566,6 +598,7 @@ func TestWhenCirclesZoneLacksRingStamp_StillPositionsEveryZone(t *testing.T) {
 }
 
 func TestWhenCirclesOuterRingHasSingleZone_PositionsEveryZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		ringedZone("Neutral-C", 1, 0.4, 0.4),
@@ -584,6 +617,7 @@ func TestWhenCirclesOuterRingHasSingleZone_PositionsEveryZone(t *testing.T) {
 // ── scatter edge cases ───────────────────────────────────────────────
 
 func TestWhenRandomTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{positionedZone("Spawn-A", 0.2, 0.8)}
 
@@ -595,6 +629,7 @@ func TestWhenRandomTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
 }
 
 func TestWhenConnectedScatterZonesShareOnePosition_PositionsBothZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.5, 0.5),
@@ -610,6 +645,7 @@ func TestWhenConnectedScatterZonesShareOnePosition_PositionsBothZones(t *testing
 }
 
 func TestWhenUnconnectedZoneLiesFarFromTightPair_KeepsEveryZoneInsideCanvas(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.0, 0.0),
@@ -632,6 +668,7 @@ func TestWhenUnconnectedZoneLiesFarFromTightPair_KeepsEveryZoneInsideCanvas(t *t
 }
 
 func TestWhenThirdZoneLiesOnConnectionLine_NudgesItOffTheLine(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.1, 0.5),
@@ -656,6 +693,7 @@ func manualZone(name string, x, y float64) entities.Zone {
 }
 
 func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		manualZone("Spawn-A", 0.25, 0.5),
@@ -673,6 +711,7 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testin
 }
 
 func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		manualZone("Spawn-A", 0.5, 0.5),
@@ -691,6 +730,7 @@ func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
 // ── further connection edge cases ────────────────────────────────────
 
 func TestWhenConnectionSourceIsUnknownZone_SkipsIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
 	connections := []entities.Connection{directConnection("Missing-X", "Spawn-B")}
@@ -705,6 +745,7 @@ func TestWhenConnectionSourceIsUnknownZone_SkipsIt(t *testing.T) {
 // ── multi-hub edge cases ─────────────────────────────────────────────
 
 func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCentre(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"),
@@ -722,6 +763,7 @@ func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCentre(t *testing.T) {
 // ── zero-angle-zone rotation ─────────────────────────────────────────
 
 func TestWhenZeroAngleZoneIsSet_RotatesThatZoneToFirstRingSlot(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 	rmgTemplate := &entities.RmgTemplate{
@@ -741,6 +783,7 @@ func TestWhenZeroAngleZoneIsSet_RotatesThatZoneToFirstRingSlot(t *testing.T) {
 // ── crowded circles ring ─────────────────────────────────────────────
 
 func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *testing.T) {
+	t.Parallel()
 	// Arrange - 23 zones on one ring force the ring circumference past the
 	// draw radius at the maximum zone size, so the binary search must shrink.
 	zones := []entities.Zone{ringedZone("Neutral-Centre", 1, 0.5, 0.5)}
@@ -761,6 +804,7 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 // ── scatter adjacency filtering ──────────────────────────────────────
 
 func TestWhenScatterConnectionIsPortal_IgnoresItForAdjacency(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
@@ -778,6 +822,7 @@ func TestWhenScatterConnectionIsPortal_IgnoresItForAdjacency(t *testing.T) {
 }
 
 func TestWhenScatterConnectionReferencesUnknownZone_IgnoresItForAdjacency(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
@@ -794,6 +839,7 @@ func TestWhenScatterConnectionReferencesUnknownZone_IgnoresItForAdjacency(t *tes
 }
 
 func TestWhenScatterConnectionIsSelfLoop_IgnoresItForAdjacency(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
@@ -812,6 +858,7 @@ func TestWhenScatterConnectionIsSelfLoop_IgnoresItForAdjacency(t *testing.T) {
 // ── multi-hub structural connection filtering ────────────────────────
 
 func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCentre(t *testing.T) {
+	t.Parallel()
 	// Arrange - portal connections never count as spokes, so the zone
 	// collapses to the canvas centre as a straggler.
 	zones := []entities.Zone{
@@ -831,6 +878,7 @@ func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCentre(t *testing.T) {
 }
 
 func TestWhenHubSpokeConnectionIsDuplicated_PlacesTheSpokeOnce(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zones := []entities.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"),

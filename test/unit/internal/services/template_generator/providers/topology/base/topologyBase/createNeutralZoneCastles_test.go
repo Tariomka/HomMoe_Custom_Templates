@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNeutralCastleCountIsZero_NoNeutralCastlesAreCreated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	profile := models.NewNeutralZoneProfile(models.QualityMedium)
 
@@ -21,6 +22,7 @@ func TestWhenNeutralCastleCountIsZero_NoNeutralCastlesAreCreated(t *testing.T) {
 }
 
 func TestWhenZoneIsHoldCity_PrimaryCastleIsUltraRichCenteredHoldCityCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	profile := models.NewNeutralZoneProfile(models.QualityHigh)
 	expectedCastles := []entities.MainObject{
@@ -44,6 +46,7 @@ func TestWhenZoneIsHoldCity_PrimaryCastleIsUltraRichCenteredHoldCityCastle(t *te
 }
 
 func TestWhenHoldCityProfileGuardExceedsFloor_ProfileGuardValueIsUsed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	profile := models.NeutralZoneProfile{PrimaryCityGuardValue: 30000}
 
@@ -55,6 +58,7 @@ func TestWhenHoldCityProfileGuardExceedsFloor_ProfileGuardValueIsUsed(t *testing
 }
 
 func TestWhenZoneIsNotHoldCity_PrimaryCastleUsesProfileQualityAndGuard(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	profile := models.NewNeutralZoneProfile(models.QualityLow)
 	expectedCastles := []entities.MainObject{
@@ -78,6 +82,7 @@ func TestWhenZoneIsNotHoldCity_PrimaryCastleUsesProfileQualityAndGuard(t *testin
 }
 
 func TestWhenMultipleNeutralCastlesAreRequested_ExtraCastlesUseExtraProfileValues(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	profile := models.NewNeutralZoneProfile(models.QualityMedium)
 	expectedExtraCastle := entities.MainObject{
@@ -99,6 +104,7 @@ func TestWhenMultipleNeutralCastlesAreRequested_ExtraCastlesUseExtraProfileValue
 }
 
 func TestWhenBorderGuardMultiplierIsDoubled_NeutralCastleGuardsAreScaled(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	profile := models.NewNeutralZoneProfile(models.QualityLow)
 	tuning := newUnitTuning()

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenSpawnZoneIsCreated_NameCombinesSpawnPrefixWithLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	label := gofakeit.LetterN(3)
 	topologyBase := base.NewTopologyBase()
@@ -22,6 +23,7 @@ func TestWhenSpawnZoneIsCreated_NameCombinesSpawnPrefixWithLabel(t *testing.T) {
 }
 
 func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expected := entities.MainObject{
@@ -44,6 +46,7 @@ func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing
 }
 
 func TestWhenOwnedAndUnclaimedCastlesRequested_MainObjectCountIsSpawnPlusOwnedPlusUnclaimed(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	tuning := newUnitTuning()
@@ -57,6 +60,7 @@ func TestWhenOwnedAndUnclaimedCastlesRequested_MainObjectCountIsSpawnPlusOwnedPl
 }
 
 func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedRoads := []entities.Road{
@@ -75,6 +79,7 @@ func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *test
 }
 
 func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedRoads := []entities.Road{
@@ -98,6 +103,7 @@ func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle
 }
 
 func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	expectedRoads := []entities.Road{
@@ -124,6 +130,7 @@ func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T)
 }
 
 func TestWhenRoadGenerationIsDisabled_ZoneHasNoRoads(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 

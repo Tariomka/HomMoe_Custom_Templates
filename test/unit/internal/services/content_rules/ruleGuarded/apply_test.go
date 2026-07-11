@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenGuardedRuleIsApplied_SetsItemGuarded(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(true)
 	item := entities.MandatoryContentItem{SID: "x"}
@@ -21,6 +22,7 @@ func TestWhenGuardedRuleIsApplied_SetsItemGuarded(t *testing.T) {
 }
 
 func TestWhenUnguardedRuleIsApplied_ClearsItemGuarded(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(false)
 	item := entities.MandatoryContentItem{SID: "x", IsGuarded: true}

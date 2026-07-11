@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
 	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityLow, 0, false, tuning)
@@ -21,6 +22,7 @@ func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
 }
 
 func TestWhenTwoCastlesAreRequested_RebuildsTwoCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
 	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityLow, 0, false, tuning)
@@ -36,6 +38,7 @@ func TestWhenTwoCastlesAreRequested_RebuildsTwoCastles(t *testing.T) {
 // stone castle<->castle roads that link the new castles to the primary one.
 // Regression test for the missing third-castle road.
 func TestWhenCastlesAreAddedToConnectorZone_RegeneratesCastleRoads(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
 	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityMedium, 0, true, tuning)
@@ -50,6 +53,7 @@ func TestWhenCastlesAreAddedToConnectorZone_RegeneratesCastleRoads(t *testing.T)
 
 // Reducing the castle count must drop the now-dangling castle roads.
 func TestWhenCastleCountShrinksToOne_RemovesStaleCastleRoads(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
 	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityHigh, 3, true, tuning)

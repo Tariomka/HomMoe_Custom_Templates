@@ -14,6 +14,7 @@ import (
 )
 
 func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
+	t.Parallel()
 	templateName := gofakeit.ProductName()
 	bannedItems := gofakeit.Word()
 	bannedMagics := gofakeit.Word()
@@ -143,6 +144,7 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			state := dtos.NewDefaultEditorStateDto()
 			testCase.mutate(&state)
@@ -157,6 +159,7 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 }
 
 func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.NeutralZoneCount = 5
@@ -222,6 +225,7 @@ func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 }
 
 func TestWhenHeroOptionsProvided_PopulatesHeroSettings(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.HeroCountMin = 2
@@ -237,6 +241,7 @@ func TestWhenHeroOptionsProvided_PopulatesHeroSettings(t *testing.T) {
 }
 
 func TestWhenManualCityHoldOptionsProvided_PopulatesGameEndConditions(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.VictoryCondition = "win_condition_1"
@@ -262,6 +267,7 @@ func TestWhenManualCityHoldOptionsProvided_PopulatesGameEndConditions(t *testing
 }
 
 func TestWhenVictoryConditionIsCityHoldCondition_ForcesCityHoldEnabled(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.VictoryCondition = "win_condition_5"
@@ -275,6 +281,7 @@ func TestWhenVictoryConditionIsCityHoldCondition_ForcesCityHoldEnabled(t *testin
 }
 
 func TestWhenGladiatorArenaOptionsProvided_PopulatesGladiatorArenaRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.GladiatorArena = true
@@ -290,6 +297,7 @@ func TestWhenGladiatorArenaOptionsProvided_PopulatesGladiatorArenaRules(t *testi
 }
 
 func TestWhenTournamentOptionsProvided_PopulatesTournamentRules(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.Tournament = true
@@ -313,6 +321,7 @@ func TestWhenTournamentOptionsProvided_PopulatesTournamentRules(t *testing.T) {
 }
 
 func TestWhenContentRowsProvidedForEveryZoneKind_PopulatesEveryMandatoryCollection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "a", Count: 1}}
@@ -336,6 +345,7 @@ func TestWhenContentRowsProvidedForEveryZoneKind_PopulatesEveryMandatoryCollecti
 }
 
 func TestWhenPlayerRowHasCountTwo_ExpandsIntoTwoMandatoryItems(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 2, IsMine: true}}
@@ -348,6 +358,7 @@ func TestWhenPlayerRowHasCountTwo_ExpandsIntoTwoMandatoryItems(t *testing.T) {
 }
 
 func TestWhenPlayerRowIsMine_PropagatesIsMineFlag(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 1, IsMine: true}}
@@ -361,6 +372,7 @@ func TestWhenPlayerRowIsMine_PropagatesIsMineFlag(t *testing.T) {
 }
 
 func TestWhenHighNeutralRowProvided_CopiesSidToMandatoryItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	state.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "pandora_box", Count: 1}}
@@ -374,6 +386,7 @@ func TestWhenHighNeutralRowProvided_CopiesSidToMandatoryItem(t *testing.T) {
 }
 
 func TestWhenBonusEntriesProvided_CopiesBonuses(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 	bonuses := []config_inner.BonusEntry{

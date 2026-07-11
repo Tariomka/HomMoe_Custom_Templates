@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneCharacteristicsVary_ClassifiesTierAccordingly(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		zone        entities.Zone
@@ -82,6 +83,7 @@ func TestWhenZoneCharacteristicsVary_ClassifiesTierAccordingly(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenLabelIsGiven_NamesZoneNeutralLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -19,6 +20,7 @@ func TestWhenLabelIsGiven_NamesZoneNeutralLabel(t *testing.T) {
 }
 
 func TestWhenZoneIsCreatedManually_ClearsMandatoryContentReference(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -29,6 +31,7 @@ func TestWhenZoneIsCreatedManually_ClearsMandatoryContentReference(t *testing.T)
 }
 
 func TestWhenCastleCountIsOne_CreatesOneCastle(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -39,6 +42,7 @@ func TestWhenCastleCountIsOne_CreatesOneCastle(t *testing.T) {
 }
 
 func TestWhenCastleCountIsZero_CreatesNoCastles(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -49,6 +53,7 @@ func TestWhenCastleCountIsZero_CreatesNoCastles(t *testing.T) {
 }
 
 func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name    string
 		quality models.NeutralZoneQuality
@@ -59,6 +64,7 @@ func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 
 			// Act

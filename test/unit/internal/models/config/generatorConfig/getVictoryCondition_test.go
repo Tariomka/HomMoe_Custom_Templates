@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenGameEndConditionsExist_ReturnsConfiguredCondition(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.GameEndConditions.VictoryCondition = "win_condition_5"
@@ -20,6 +21,7 @@ func TestWhenGameEndConditionsExist_ReturnsConfiguredCondition(t *testing.T) {
 }
 
 func TestWhenGameEndConditionsAreNil_ReturnsStandardCondition(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.GameEndConditions = nil

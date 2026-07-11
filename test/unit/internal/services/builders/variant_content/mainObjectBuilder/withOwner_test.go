@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenOwnerIsProvided_SetsOwnerOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedOwner := gofakeit.Word()
 	builder := variant_content.NewObjectBuilder()

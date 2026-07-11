@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenPlayerZoneIsDrawn_CanvasIsMutated(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	blankPixels := append([]uint8(nil), newCanvas().Pix...)
 
@@ -19,6 +20,7 @@ func TestWhenPlayerZoneIsDrawn_CanvasIsMutated(t *testing.T) {
 }
 
 func TestWhenOwnerIsBelowRange_FallsBackToFirstPlayerSprite(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstPlayerCanvas := renderPlayer(t, preview.PreviewZone{Owner: 1, IsPlayer: true})
 
@@ -30,6 +32,7 @@ func TestWhenOwnerIsBelowRange_FallsBackToFirstPlayerSprite(t *testing.T) {
 }
 
 func TestWhenOwnerIsAboveRange_FallsBackToLastPlayerSprite(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	lastPlayerCanvas := renderPlayer(t, preview.PreviewZone{Owner: 8, IsPlayer: true})
 
@@ -41,6 +44,7 @@ func TestWhenOwnerIsAboveRange_FallsBackToLastPlayerSprite(t *testing.T) {
 }
 
 func TestWhenOwnersDiffer_DrawsDifferentSprites(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	firstPlayerCanvas := renderPlayer(t, preview.PreviewZone{Owner: 1, IsPlayer: true})
 

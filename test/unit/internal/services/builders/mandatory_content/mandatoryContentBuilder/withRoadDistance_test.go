@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenRoadDistanceIsProvided_AppendsRoadRuleWithWeightOneOnBuiltItem(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 	expectedDistance := placement_rule.Distance{

@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenSpawnIsProvided_SetsSpawnOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSpawn := gofakeit.Word()
 	builder := variant_content.NewObjectBuilder()

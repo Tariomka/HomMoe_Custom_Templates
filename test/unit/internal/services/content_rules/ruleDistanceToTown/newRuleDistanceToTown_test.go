@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenDistanceIsNil_DefaultsToMedium(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act
@@ -18,6 +19,7 @@ func TestWhenDistanceIsNil_DefaultsToMedium(t *testing.T) {
 }
 
 func TestWhenDistanceIsSupplied_UsesIt(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	distance := content_rules.DistanceNear
 

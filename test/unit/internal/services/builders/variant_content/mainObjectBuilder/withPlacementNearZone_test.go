@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNearZonePlacementIsChosen_SetsNearZonePlacementOnBuiltObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 

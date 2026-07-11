@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenSoloRuleIsApplied_SetsItemSoloEncounter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(true)
 	item := entities.MandatoryContentItem{SID: "x"}
@@ -21,6 +22,7 @@ func TestWhenSoloRuleIsApplied_SetsItemSoloEncounter(t *testing.T) {
 }
 
 func TestWhenNotSoloRuleIsApplied_ClearsItemSoloEncounter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleSoloEncounter(false)
 	item := entities.MandatoryContentItem{SID: "x", SoloEncounter: true}

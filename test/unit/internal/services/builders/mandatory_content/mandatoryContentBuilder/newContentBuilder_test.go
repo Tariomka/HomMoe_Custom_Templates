@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenBuilderIsFreshlyCreated_ProducesItemWithOnlyProvidedSid(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
 

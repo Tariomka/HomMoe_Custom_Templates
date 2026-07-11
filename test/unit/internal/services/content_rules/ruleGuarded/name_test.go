@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNameIsQueried_ReturnsGuarded(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	rule := content_rules.NewRuleGuarded(true)
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenKeyObjectIsChosen_MarksBuiltObjectAsKeyObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	builder := variant_content.NewObjectBuilder()
 
