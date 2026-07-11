@@ -179,7 +179,7 @@ func buildPreviewConnections(
 			isPortal := len(conn.PortalPlacementRulesFrom) > 0 ||
 				len(conn.PortalPlacementRulesTo) > 0 ||
 				conn.ConnectionType == "Portal"
-			result = append(result, preview.PreviewConnection{A: a, B: b, Ctrl: ctrl, Portal: isPortal})
+			result = append(result, preview.PreviewConnection{Start: a, End: b, Ctrl: ctrl, Portal: isPortal})
 		}
 	}
 	return result

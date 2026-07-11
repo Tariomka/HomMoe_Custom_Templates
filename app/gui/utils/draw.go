@@ -21,8 +21,8 @@ import (
 
 func DrawConnection(gtx layout.Context, conn preview.PreviewConnection, zoneRadius int) {
 	radius := float64(zoneRadius)
-	start, ok1 := helpers.CalculatePointTowards(conn.A, conn.Ctrl, radius)
-	end, ok2 := helpers.CalculatePointTowards(conn.B, conn.Ctrl, radius)
+	start, ok1 := helpers.CalculatePointTowards(conn.Start, conn.Ctrl, radius)
+	end, ok2 := helpers.CalculatePointTowards(conn.End, conn.Ctrl, radius)
 	if !ok1 || !ok2 {
 		return
 	}

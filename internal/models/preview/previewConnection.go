@@ -8,7 +8,6 @@ import "image"
 // edges between the same pair of zones spread their control points to either
 // side so each connection stays individually visible.
 type PreviewConnection struct {
-	A, B   image.Point
-	Ctrl   image.Point
-	Portal bool
+	Start, Ctrl, End image.Point
+	Portal           bool
 }

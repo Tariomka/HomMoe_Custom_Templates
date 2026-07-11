@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
@@ -150,63 +151,59 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 func (this *PreviewLayoutService) buildPreviewConnections(
 	connections []entities.Connection,
 	positions map[string]image.Point) []preview.PreviewConnection {
-	type pairKey struct{ a, b string }
-	groups := make(map[pairKey][]entities.Connection)
-	order := make([]pairKey, 0)
-	for _, conn := range connections {
-		if _, ok := positions[conn.From]; !ok {
-			continue
+	type pairKey struct{ start, end string }
+	sortedKey := func(connection entities.Connection) pairKey {
+		if connection.From > connection.To {
+			return pairKey{connection.To, connection.From}
 		}
+		return pairKey{connection.From, connection.To}
+	}
+	visible := func(connection entities.Connection) bool {
+		_, okFrom := positions[connection.From]
+		_, okTo := positions[connection.To]
+		return okFrom && okTo
+	}
 
-		if _, ok := positions[conn.To]; !ok {
-			continue
+	counts := make(map[pairKey]int)
+	for _, connection := range connections {
+		if visible(connection) {
+			counts[sortedKey(connection)]++
 		}
-
-		a, b := conn.From, conn.To
-		if a > b {
-			a, b = b, a
-		}
-		key := pairKey{a, b}
-		if _, seen := groups[key]; !seen {
-			order = append(order, key)
-		}
-		groups[key] = append(groups[key], conn)
 	}
 
 	result := make([]preview.PreviewConnection, 0, len(connections))
-	for _, key := range order {
-		group := groups[key]
-		count := len(group)
-		for index, conn := range group {
-			a := positions[conn.From]
-			b := positions[conn.To]
-			// Bulge off a canonical baseline (sorted endpoints) so every
-			// parallel edge fans out from the same side regardless of the
-			// direction in which it happens to be stored.
-			canonicalA, canonicalB := a, b
-			if conn.From > conn.To {
-				canonicalA, canonicalB = canonicalB, canonicalA
-			}
-			dx := float64(canonicalB.X - canonicalA.X)
-			dy := float64(canonicalB.Y - canonicalA.Y)
-			distance := math.Hypot(dx, dy)
-			if distance < 1 {
-				distance = 1
-			}
-			normalX := dy / distance
-			normalY := -dx / distance
-			spread := (float64(index) - float64(count-1)/2.0) * previewParallelGap
-			midX := float64(a.X+b.X) / 2.0
-			midY := float64(a.Y+b.Y) / 2.0
-			ctrl := image.Pt(
-				int(math.Round(midX+2.0*spread*normalX)),
-				int(math.Round(midY+2.0*spread*normalY)),
-			)
-			isPortal := len(conn.PortalPlacementRulesFrom) > 0 ||
-				len(conn.PortalPlacementRulesTo) > 0 ||
-				conn.ConnectionType == "Portal"
-			result = append(result, preview.PreviewConnection{A: a, B: b, Ctrl: ctrl, Portal: isPortal})
+	indexInPair := make(map[pairKey]int)
+	for _, connection := range connections {
+		if !visible(connection) {
+			continue
 		}
+
+		key := sortedKey(connection)
+		index := indexInPair[key]
+		indexInPair[key]++
+
+		// Endpoints from the sorted key: every parallel edge shares the same
+		// baseline, so the fan always spreads from the same side. DrawConnection
+		// is direction-agnostic, so A/B order does not matter.
+		startPoint := positions[key.start]
+		endPoint := positions[key.end]
+		delta := data.Vec2FromPoint[float64](endPoint.Sub(startPoint))
+		distance := math.Max(math.Hypot(delta.X, delta.Y), 1)
+		spread := (float64(index) - float64(counts[key]-1)/2.0) * previewParallelGap
+		// Ctrl offset is 2× the desired bulge: a quadratic Bézier's midpoint
+		// sits halfway between the chord midpoint and the control point.
+		chordMidpoint := data.Vec2FromPoint[float64](startPoint.Add(endPoint)).MultiplyScalar(0.5)
+		// ( x, y ) → ( y, -x ) rotates it 90°
+		offset := data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance)
+
+		ctrl := chordMidpoint.Add(offset).ToPointRounded()
+		isPortal := connection.ConnectionType == "Portal" ||
+			len(connection.PortalPlacementRulesFrom) > 0 ||
+			len(connection.PortalPlacementRulesTo) > 0
+		result = append(
+			result,
+			preview.PreviewConnection{Start: startPoint, End: endPoint, Ctrl: ctrl, Portal: isPortal},
+		)
 	}
 	return result
 }

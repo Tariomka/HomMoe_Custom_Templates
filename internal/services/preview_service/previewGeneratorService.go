@@ -77,8 +77,8 @@ func (this *PreviewGeneratorService) drawConnections(
 	zoneRadius float64) {
 	for _, conn := range connections {
 		controlPoint := fitterCallback(conn.Ctrl) // Bézier control point
-		startPoint, ok1 := helpers.CalculatePointTowards(fitterCallback(conn.A), controlPoint, zoneRadius)
-		endPoint, ok2 := helpers.CalculatePointTowards(fitterCallback(conn.B), controlPoint, zoneRadius)
+		startPoint, ok1 := helpers.CalculatePointTowards(fitterCallback(conn.Start), controlPoint, zoneRadius)
+		endPoint, ok2 := helpers.CalculatePointTowards(fitterCallback(conn.End), controlPoint, zoneRadius)
 		if !ok1 || !ok2 {
 			continue
 		}
@@ -152,6 +152,7 @@ func (this *PreviewGeneratorService) getPointOnQuadraticBezierCurve(
 	mt := 1 - t
 	point := data.Vec2FromPoint[float64](start).MultiplyScalar(mt * mt).
 		Add(data.Vec2FromPoint[float64](ctrl).MultiplyScalar(2 * mt * t)).
-		Add(data.Vec2FromPoint[float64](end).MultiplyScalar(t * t))
-	return image.Pt(int(math.Round(point.X)), int(math.Round(point.Y)))
+		Add(data.Vec2FromPoint[float64](end).MultiplyScalar(t * t)).
+		ToPointRounded()
+	return point
 }

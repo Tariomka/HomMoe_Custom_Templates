@@ -485,8 +485,8 @@ func TestWhenOnlyOneEdgeConnectsAPair_KeepsControlPointOnMidpoint(t *testing.T) 
 	// Assert
 	require.Len(t, layout.Connections, 1)
 	edge := layout.Connections[0]
-	midX := float64(edge.A.X+edge.B.X) / 2.0
-	midY := float64(edge.A.Y+edge.B.Y) / 2.0
+	midX := float64(edge.Start.X+edge.End.X) / 2.0
+	midY := float64(edge.Start.Y+edge.End.Y) / 2.0
 	distanceFromMidpoint := math.Hypot(float64(edge.Ctrl.X)-midX, float64(edge.Ctrl.Y)-midY)
 	assert.LessOrEqual(t, distanceFromMidpoint, 1.5)
 }
@@ -529,8 +529,8 @@ func TestWhenParallelEdgesConnectSamePair_BulgesThemSymmetricallyAboutMidpoint(t
 	// Assert
 	require.Len(t, layout.Connections, 2)
 	first, second := layout.Connections[0], layout.Connections[1]
-	midX := float64(first.A.X+first.B.X) / 2.0
-	midY := float64(first.A.Y+first.B.Y) / 2.0
+	midX := float64(first.Start.X+first.End.X) / 2.0
+	midY := float64(first.Start.Y+first.End.Y) / 2.0
 	averageX := float64(first.Ctrl.X+second.Ctrl.X) / 2.0
 	averageY := float64(first.Ctrl.Y+second.Ctrl.Y) / 2.0
 	averageDistanceFromMidpoint := math.Hypot(averageX-midX, averageY-midY)
@@ -724,7 +724,7 @@ func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
 
 	// Assert
 	require.Len(t, layout.Connections, 1)
-	assert.Equal(t, layout.Connections[0].A, layout.Connections[0].Ctrl)
+	assert.Equal(t, layout.Connections[0].Start, layout.Connections[0].Ctrl)
 }
 
 // ── further connection edge cases ────────────────────────────────────
