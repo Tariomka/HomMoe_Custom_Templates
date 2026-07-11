@@ -152,8 +152,7 @@ jobs:
           coverage-file-name: ${{ env.coverage_file }}
           root-package: github.com/Tariomka/hommoe_custom_templates
           trim: github.com/Tariomka/hommoe_custom_templates/
-          # exclude: "(^|/)test/"
-          exclude: test/
+          exclude: test/helpers
 
       - name: Fail if coverage drops
         if: ${{ github.event_name == 'pull_request' && steps.coverage.outputs.coverage_trend == 'decreased' }}
