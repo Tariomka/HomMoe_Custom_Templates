@@ -23,7 +23,18 @@ const (
 	scatterIdealMult = 3.2
 	scatterMinDist   = 3.8
 	scatterEdgeClear = 1.2
+
+	// previewParallelGap is the perpendicular spacing between parallel preview
+	// edges, matched to the manual zone editor's bulge spacing so both views fan
+	// multiple connections out the same way.
+	previewParallelGap = 22.0
 )
+
+type PreviewLayoutService struct{}
+
+func NewPreviewLayoutService() *PreviewLayoutService {
+	return &PreviewLayoutService{}
+}
 
 func canvasScale(side float64) float64 { return side / csCanvasSide }
 
@@ -36,15 +47,15 @@ func canvasScale(side float64) float64 { return side / csCanvasSide }
 // GeneratorPosition stamps with hard-floor and edge-clearance correction
 // passes; all other topologies fall back to the classic ring / hub-and-spoke
 // renderer.
-func BuildPreviewLayout(
+func (this *PreviewLayoutService) BuildPreviewLayout(
 	template *entities.RmgTemplate,
 	topology config.MapTopology,
-	side float64,
-) preview.PreviewLayout {
+	side float64) preview.PreviewLayout {
 	layout := preview.PreviewLayout{Positions: map[string]image.Point{}}
 	if template == nil || len(template.Variants) == 0 {
 		return layout
 	}
+
 	variant := template.Variants[0]
 	if len(variant.Zones) == 0 {
 		return layout
@@ -60,7 +71,7 @@ func BuildPreviewLayout(
 	zones := orderZonesByZeroAngle(variant.Zones, variant.Orientation.ZeroAngleZone)
 	connections := variant.Connections
 
-	dispatchClusterLayout(&layout, zones, connections, topology, side)
+	this.dispatchClusterLayout(&layout, zones, connections, topology, side)
 
 	for _, zone := range variant.Zones {
 		pos, ok := layout.Positions[zone.Name]
@@ -105,20 +116,38 @@ func BuildPreviewLayout(
 	// Parallel edges between the same unordered pair are fanned out into
 	// distinct curves (matching the manual zone editor); a lone edge keeps its
 	// control point on the midpoint and therefore renders straight.
-	layout.Connections = buildPreviewConnections(variant.Connections, layout.Positions)
+	layout.Connections = this.buildPreviewConnections(variant.Connections, layout.Positions)
 	return layout
 }
 
-// previewParallelGap is the perpendicular spacing between parallel preview
-// edges, matched to the manual zone editor's bulge spacing so both views fan
-// multiple connections out the same way.
-const previewParallelGap = 22.0
+// dispatchClusterLayout writes positions for the given zones into the layout,
+// picking the topology-specific renderer. Each path sets layout.Positions and
+// layout.ZoneRadius.
+func (this *PreviewLayoutService) dispatchClusterLayout(
+	layout *preview.PreviewLayout,
+	zones []entities.Zone,
+	connections []entities.Connection,
+	topology config.MapTopology,
+	side float64) {
+	switch {
+	case allHaveManualPosition(zones):
+		layoutManualPositions(layout, zones, side)
+	case (topology == config.TopologyCircles) && allHaveRing(zones):
+		layoutBalancedRings(layout, zones, side)
+	case isFixedGeometryTopology(topology) && allHavePosition(zones):
+		layoutFixedPositions(layout, zones, side)
+	case isScatterTopology(topology) && allHavePosition(zones):
+		layoutScatter(layout, zones, connections, side)
+	default:
+		layoutRingOrHub(layout, zones, connections, side)
+	}
+}
 
 // buildPreviewConnections turns the variant's connections into drawable preview
 // edges. Connections sharing the same unordered endpoint pair are grouped and
 // each is given a perpendicular bulge so they do not collapse onto a single
 // overlapping line.
-func buildPreviewConnections(
+func (this *PreviewLayoutService) buildPreviewConnections(
 	connections []entities.Connection,
 	positions map[string]image.Point) []preview.PreviewConnection {
 	type pairKey struct{ a, b string }
@@ -128,9 +157,11 @@ func buildPreviewConnections(
 		if _, ok := positions[conn.From]; !ok {
 			continue
 		}
+
 		if _, ok := positions[conn.To]; !ok {
 			continue
 		}
+
 		a, b := conn.From, conn.To
 		if a > b {
 			a, b = b, a
@@ -178,29 +209,6 @@ func buildPreviewConnections(
 		}
 	}
 	return result
-}
-
-// dispatchClusterLayout writes positions for the given zones into the layout,
-// picking the topology-specific renderer. Each path sets layout.Positions and
-// layout.ZoneRadius.
-func dispatchClusterLayout(
-	layout *preview.PreviewLayout,
-	zones []entities.Zone,
-	connections []entities.Connection,
-	topology config.MapTopology,
-	side float64) {
-	switch {
-	case allHaveManualPosition(zones):
-		layoutManualPositions(layout, zones, side)
-	case (topology == config.TopologyCircles) && allHaveRing(zones):
-		layoutBalancedRings(layout, zones, side)
-	case isFixedGeometryTopology(topology) && allHavePosition(zones):
-		layoutFixedPositions(layout, zones, side)
-	case isScatterTopology(topology) && allHavePosition(zones):
-		layoutScatter(layout, zones, connections, side)
-	default:
-		layoutRingOrHub(layout, zones, connections, side)
-	}
 }
 
 func isStructuralIgnored(connectionType string) bool {

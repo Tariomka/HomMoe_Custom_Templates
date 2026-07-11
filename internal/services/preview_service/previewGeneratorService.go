@@ -27,7 +27,7 @@ var connectorLineColor = color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF}
 
 type PreviewGeneratorService struct {
 	assetProvider *asset_provider.AssetProvider
-	// layoutService  *previewLayoutService
+	layoutService *PreviewLayoutService
 }
 
 func NewPreviewGenerator() (*PreviewGeneratorService, error) {
@@ -36,7 +36,10 @@ func NewPreviewGenerator() (*PreviewGeneratorService, error) {
 		return nil, err
 	}
 
-	return &PreviewGeneratorService{assetProvider: assetProvider}, nil
+	return &PreviewGeneratorService{
+		assetProvider: assetProvider,
+		layoutService: NewPreviewLayoutService(),
+	}, nil
 }
 
 func (this *PreviewGeneratorService) CreatePreviewImage(
@@ -45,8 +48,7 @@ func (this *PreviewGeneratorService) CreatePreviewImage(
 	canvas := image.NewRGBA(image.Rect(0, 0, canvasSize, canvasSize))
 	this.assetProvider.DrawBackground(canvas)
 
-	layout := BuildPreviewLayout(template, topology, canvasSize)
-	// layout := this.layoutService.BuildPreviewLayout(template, topology, canvasSize)
+	layout := this.layoutService.BuildPreviewLayout(template, topology, canvasSize)
 	if len(layout.Positions) == 0 {
 		return canvas
 	}
