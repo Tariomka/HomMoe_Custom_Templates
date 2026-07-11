@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenPlayerIsNotAtEnd_OrdersStrongestZoneFirst(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	strongZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
 	mediumZone := models.NeutralZonePlan{Label: "B", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
@@ -25,6 +26,7 @@ func TestWhenPlayerIsNotAtEnd_OrdersStrongestZoneFirst(t *testing.T) {
 }
 
 func TestWhenPlayerIsAtEnd_OrdersStrongestZoneLast(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	strongZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
 	mediumZone := models.NeutralZonePlan{Label: "B", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
@@ -40,6 +42,7 @@ func TestWhenPlayerIsAtEnd_OrdersStrongestZoneLast(t *testing.T) {
 }
 
 func TestWhenGapIsEmptyAndPlayerIsAtEnd_ReturnsEmptyPlans(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	neutralZones := models.NeutralZonePlans{}
 
@@ -51,6 +54,7 @@ func TestWhenGapIsEmptyAndPlayerIsAtEnd_ReturnsEmptyPlans(t *testing.T) {
 }
 
 func TestWhenGapHasSingleZoneAndPlayerIsAtEnd_ReturnsThatZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := models.NeutralZonePlan{Label: "A", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
 	neutralZones := models.NeutralZonePlans{zone}

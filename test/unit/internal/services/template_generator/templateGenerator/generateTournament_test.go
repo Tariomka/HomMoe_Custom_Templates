@@ -34,6 +34,7 @@ func newTournamentConfiguration(
 }
 
 func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	playerCount := gofakeit.Number(2, 8)
 	generator := template_generator.NewTemplateGenerator(
@@ -47,6 +48,7 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 }
 
 func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubGuardGroups(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := template_generator.NewTemplateGenerator(
 		newTournamentConfiguration(config.TopologyHubAndSpoke, 2, gofakeit.Number(1, 20)))
@@ -64,6 +66,7 @@ func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubGuardGroups(t *t
 }
 
 func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *testing.T) {
+	t.Parallel()
 	perClusterTopologies := []config.MapTopology{
 		config.TopologyRing,
 		config.TopologyHubAndSpoke,
@@ -73,6 +76,7 @@ func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *test
 	for _, topology := range perClusterTopologies {
 		subTestName := fmt.Sprintf("When%sTopologySelected_SecondPlayerClusterIsUnreachableFromFirst", topology)
 		t.Run(subTestName, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			generator := template_generator.NewTemplateGenerator(
 				newTournamentConfiguration(topology, 2, gofakeit.Number(1, 20)))
@@ -108,6 +112,7 @@ func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *test
 }
 
 func TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := newTournamentConfiguration(config.TopologyRing, gofakeit.Number(2, 8), gofakeit.Number(1, 20))
 	configuration.RandomPortals = true

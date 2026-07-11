@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenCreatingZoneLayouts_ReturnsFourLayouts(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewZoneLayoutProvider()
 
@@ -21,6 +22,7 @@ func TestWhenCreatingZoneLayouts_ReturnsFourLayouts(t *testing.T) {
 }
 
 func TestWhenCreatingZoneLayouts_NamesLayoutsAfterRegistryLayoutSids(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	layoutSids := registry.GetLayoutValues()
 	provider := providers.NewZoneLayoutProvider()
@@ -42,6 +44,7 @@ func TestWhenCreatingZoneLayouts_NamesLayoutsAfterRegistryLayoutSids(t *testing.
 }
 
 func TestWhenCreatingZoneLayouts_SpawnsLayoutMatchesExpectedTuning(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	layoutSids := registry.GetLayoutValues()
 	expected := entities.ZoneLayoutDef{
@@ -78,6 +81,7 @@ func TestWhenCreatingZoneLayouts_SpawnsLayoutMatchesExpectedTuning(t *testing.T)
 }
 
 func TestWhenCreatingZoneLayouts_EveryLayoutHasTwoElevationModes(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	provider := providers.NewZoneLayoutProvider()
 

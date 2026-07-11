@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenCapacitiesAreEmpty_ReturnsNoGaps(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	neutralZones := models.NeutralZonePlans{
 		{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)},
@@ -23,6 +24,7 @@ func TestWhenCapacitiesAreEmpty_ReturnsNoGaps(t *testing.T) {
 }
 
 func TestWhenZonesFitExactly_AssignsStrongestZoneToLowestIndexedGap(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	strongZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
 	weakZone := models.NeutralZonePlan{Label: "B", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
@@ -37,6 +39,7 @@ func TestWhenZonesFitExactly_AssignsStrongestZoneToLowestIndexedGap(t *testing.T
 }
 
 func TestWhenTotalCapacityIsExceeded_DropsWeakestZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	strongZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
 	weakZone := models.NeutralZonePlan{Label: "B", Quality: models.QualityLow, CastleCount: gofakeit.Number(0, 4)}
@@ -51,6 +54,7 @@ func TestWhenTotalCapacityIsExceeded_DropsWeakestZones(t *testing.T) {
 }
 
 func TestWhenPreferInteriorIsTrue_AssignsFirstZoneToInteriorGap(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
 	neutralZones := models.NeutralZonePlans{zone}
@@ -64,6 +68,7 @@ func TestWhenPreferInteriorIsTrue_AssignsFirstZoneToInteriorGap(t *testing.T) {
 }
 
 func TestWhenInteriorGapsAreFull_FallsBackToEdgeGaps(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	strongZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
 	mediumZone := models.NeutralZonePlan{Label: "B", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
@@ -79,6 +84,7 @@ func TestWhenInteriorGapsAreFull_FallsBackToEdgeGaps(t *testing.T) {
 }
 
 func TestWhenOnlyTwoGapsExistWithPreferInterior_UsesEdgeGap(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := models.NeutralZonePlan{Label: "A", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
 	neutralZones := models.NeutralZonePlans{zone}
@@ -92,6 +98,7 @@ func TestWhenOnlyTwoGapsExistWithPreferInterior_UsesEdgeGap(t *testing.T) {
 }
 
 func TestWhenGapLoadsAreTied_PrefersGapWithFewerZones(t *testing.T) {
+	t.Parallel()
 	// Arrange - one medium zone (score 2.0) balances two low zones (1.0 each),
 	// so the fourth zone sees equal loads but fewer zones in the first gap.
 	mediumZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityMedium, CastleCount: 0}
@@ -109,6 +116,7 @@ func TestWhenGapLoadsAreTied_PrefersGapWithFewerZones(t *testing.T) {
 }
 
 func TestWhenNoZonesAreGiven_ReturnsEmptyGapPerCapacity(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expected := []models.NeutralZonePlans{nil, nil}
 

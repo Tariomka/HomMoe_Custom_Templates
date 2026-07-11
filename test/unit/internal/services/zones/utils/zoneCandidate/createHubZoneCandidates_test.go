@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenPlanLabelsHaveDistances_CreatesOneCandidatePerPlan(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "C", Quality: models.QualityMedium, CastleCount: 1},
@@ -24,6 +25,7 @@ func TestWhenPlanLabelsHaveDistances_CreatesOneCandidatePerPlan(t *testing.T) {
 }
 
 func TestWhenDistanceIsMissingForPlayer_TreatsZoneAsVeryFar(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "X", Quality: models.QualityMedium, CastleCount: 0},

@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenThreePlayersAndSevenNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
@@ -35,6 +36,7 @@ func TestWhenThreePlayersAndSevenNeutralPlansProvided_CreatesZonePerLabel(t *tes
 }
 
 func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCentre(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
@@ -62,6 +64,7 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCentre(t *testing.T) 
 }
 
 func TestWhenFlowerIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
@@ -85,6 +88,7 @@ func TestWhenFlowerIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) 
 }
 
 func TestWhenNoNeutralZonesExist_FallsBackToClosedPlayerPolygon(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
@@ -101,6 +105,7 @@ func TestWhenNoNeutralZonesExist_FallsBackToClosedPlayerPolygon(t *testing.T) {
 }
 
 func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
@@ -120,6 +125,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric

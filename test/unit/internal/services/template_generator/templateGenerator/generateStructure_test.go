@@ -11,6 +11,7 @@ import (
 )
 
 func TestWhenRingTopologySelected_CreatesConnectionPerZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	playerCount := gofakeit.Number(3, 8)
 	neutralZoneCount := gofakeit.Number(1, 6)
@@ -28,6 +29,7 @@ func TestWhenRingTopologySelected_CreatesConnectionPerZone(t *testing.T) {
 }
 
 func TestWhenRingTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegrees(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -51,6 +53,7 @@ func TestWhenRingTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegre
 }
 
 func TestWhenTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name           string
 		topology       config.MapTopology
@@ -63,6 +66,7 @@ func TestWhenTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			configuration := config.NewGeneratorConfig()
 			configuration.Topology = testCase.topology
@@ -94,6 +98,7 @@ func newCirclesMixedNeutralConfiguration() *config.GeneratorConfig {
 }
 
 func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesZoneForEveryPlannedZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := template_generator.NewTemplateGenerator(newCirclesMixedNeutralConfiguration())
 
@@ -105,6 +110,7 @@ func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesZoneForEveryPlannedZone
 }
 
 func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	generator := template_generator.NewTemplateGenerator(newCirclesMixedNeutralConfiguration())
 
@@ -126,6 +132,7 @@ func sumConnectionGuardValues(generated *entities.RmgTemplate) int {
 }
 
 func TestWhenNeutralZonesAreHighQuality_ProducesStrongerBorderGuardsThanLowQuality(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	newQualityConfiguration := func(highCount, lowCount int) *config.GeneratorConfig {
 		configuration := config.NewGeneratorConfig()
@@ -149,6 +156,7 @@ func TestWhenNeutralZonesAreHighQuality_ProducesStrongerBorderGuardsThanLowQuali
 }
 
 func TestWhenCityHoldEnabledWithMixedNeutralTiers_MarksExactlyOneHoldCityMainObject(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke

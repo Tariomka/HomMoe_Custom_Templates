@@ -19,6 +19,7 @@ func newThreeNeutralPlans() models.NeutralZonePlans {
 }
 
 func TestWhenPlayerHasThreeNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
@@ -33,6 +34,7 @@ func TestWhenPlayerHasThreeNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.
 }
 
 func TestWhenRingIsBuilt_FirstZoneIsPlayerSpawn(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
@@ -47,6 +49,7 @@ func TestWhenRingIsBuilt_FirstZoneIsPlayerSpawn(t *testing.T) {
 }
 
 func TestWhenRingIsBuilt_CreatesConnectionPerRingSegment(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
@@ -61,6 +64,7 @@ func TestWhenRingIsBuilt_CreatesConnectionPerRingSegment(t *testing.T) {
 }
 
 func TestWhenRingIsBuilt_EveryConnectionNameCarriesRingPrefix(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
@@ -81,6 +85,7 @@ func TestWhenRingIsBuilt_EveryConnectionNameCarriesRingPrefix(t *testing.T) {
 }
 
 func TestWhenRingIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
@@ -105,6 +110,7 @@ func TestWhenRingIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 }
 
 func TestWhenPlayerHasNoNeutralPlans_CreatesLoneSpawnZoneWithoutConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	emptyPlans := models.NeutralZonePlans{}
@@ -120,6 +126,7 @@ func TestWhenPlayerHasNoNeutralPlans_CreatesLoneSpawnZoneWithoutConnections(t *t
 }
 
 func TestWhenSecondPlayerClusterIsBuilt_SpawnCastleBelongsToPlayerTwo(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()

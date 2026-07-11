@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenNoCandidatesExist_ReturnsEmptyString(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	candidates := utils.CreateHubZoneCandidates(models.NeutralZonePlans{}, nil)
 
@@ -20,6 +21,7 @@ func TestWhenNoCandidatesExist_ReturnsEmptyString(t *testing.T) {
 }
 
 func TestWhenCandidatesExist_ReturnsFirstCandidateLetter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "C", Quality: models.QualityMedium, CastleCount: 0},

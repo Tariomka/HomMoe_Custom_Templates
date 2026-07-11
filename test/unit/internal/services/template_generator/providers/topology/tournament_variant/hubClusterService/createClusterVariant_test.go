@@ -19,6 +19,7 @@ func newTwoNeutralPlans() models.NeutralZonePlans {
 }
 
 func TestWhenPlayerHasTwoNeutralPlans_CreatesHubSpawnAndNeutralZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -37,6 +38,7 @@ func TestWhenPlayerHasTwoNeutralPlans_CreatesHubSpawnAndNeutralZones(t *testing.
 }
 
 func TestWhenClusterIsBuilt_HubZoneIsNamedAfterPlayerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -51,6 +53,7 @@ func TestWhenClusterIsBuilt_HubZoneIsNamedAfterPlayerLabel(t *testing.T) {
 }
 
 func TestWhenSpokesAreBuilt_CreatesSpokeConnectionPerSpokeZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -71,6 +74,7 @@ func TestWhenSpokesAreBuilt_CreatesSpokeConnectionPerSpokeZone(t *testing.T) {
 }
 
 func TestWhenSpokeConnectionsAreBuilt_EverySpokeStartsAtHubZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -95,6 +99,7 @@ func TestWhenSpokeConnectionsAreBuilt_EverySpokeStartsAtHubZone(t *testing.T) {
 }
 
 func TestWhenProximityRingIsBuilt_CreatesProximityConnectionPerSpokePair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -115,6 +120,7 @@ func TestWhenProximityRingIsBuilt_CreatesProximityConnectionPerSpokePair(t *test
 }
 
 func TestWhenHubMandatoryContentIsConfigured_HubZoneReferencesHubContentGroup(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{}}
@@ -130,6 +136,7 @@ func TestWhenHubMandatoryContentIsConfigured_HubZoneReferencesHubContentGroup(t 
 }
 
 func TestWhenHubMandatoryContentIsEmpty_HubZoneHasNoMandatoryContent(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.HubZoneMandatoryContent = nil

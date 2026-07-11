@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenServiceIsConstructed_InitializesZoneLabelProvider(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	service := topology.NewHubTopologyService()
 

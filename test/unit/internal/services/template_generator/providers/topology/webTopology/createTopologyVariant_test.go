@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenTwoPlayersAndThreeNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
@@ -29,6 +30,7 @@ func TestWhenTwoPlayersAndThreeNeutralPlansProvided_CreatesZonePerLabel(t *testi
 }
 
 func TestWhenThreeNeutralZonesFormTheRing_CreatesNeutralRingConnectionPerPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
@@ -48,6 +50,7 @@ func TestWhenThreeNeutralZonesFormTheRing_CreatesNeutralRingConnectionPerPair(t 
 }
 
 func TestWhenPlayersAttachToTheNeutralRing_CreatesTwoWebSpokesPerPlayer(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
@@ -67,6 +70,7 @@ func TestWhenPlayersAttachToTheNeutralRing_CreatesTwoWebSpokesPerPlayer(t *testi
 }
 
 func TestWhenOnlyOneNeutralZoneExists_CreatesNoNeutralRingConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
@@ -84,6 +88,7 @@ func TestWhenOnlyOneNeutralZoneExists_CreatesNoNeutralRingConnections(t *testing
 }
 
 func TestWhenWebIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
@@ -103,6 +108,7 @@ func TestWhenWebIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 }
 
 func TestWhenCirclesTopologySelected_BalancesNeutralLabelsAcrossPlayers(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCircles
@@ -122,6 +128,7 @@ func TestWhenCirclesTopologySelected_BalancesNeutralLabelsAcrossPlayers(t *testi
 }
 
 func TestWhenPlayerConnectionsAreForbidden_NoDirectConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
@@ -141,6 +148,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoDirectConnectionJoinsTwoSpawnZones(
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb

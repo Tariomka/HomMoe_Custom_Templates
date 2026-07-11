@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenConstructed_ReturnsNonNilProvider(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	provider := providers.NewZoneLayoutProvider()
 

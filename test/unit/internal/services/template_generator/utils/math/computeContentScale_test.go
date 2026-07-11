@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenZoneAreaEqualsReferenceArea_ReturnsOne(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapSize := 160
 	totalZones := 4 // 160*160/4 equals the 80x80 reference zone area.
@@ -21,6 +22,7 @@ func TestWhenZoneAreaEqualsReferenceArea_ReturnsOne(t *testing.T) {
 }
 
 func TestWhenZoneAreaIsFourTimesReferenceArea_ReturnsTwo(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapSize := 320
 	totalZones := 4
@@ -33,6 +35,7 @@ func TestWhenZoneAreaIsFourTimesReferenceArea_ReturnsTwo(t *testing.T) {
 }
 
 func TestWhenZoneAreaIsTiny_ClampsScaleToMinimumHalf(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapSize := 20
 	totalZones := 30
@@ -45,6 +48,7 @@ func TestWhenZoneAreaIsTiny_ClampsScaleToMinimumHalf(t *testing.T) {
 }
 
 func TestWhenZoneAreaIsHuge_ClampsScaleToMaximumTwoAndHalf(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapSize := 900
 	totalZones := 1
@@ -57,6 +61,7 @@ func TestWhenZoneAreaIsHuge_ClampsScaleToMaximumTwoAndHalf(t *testing.T) {
 }
 
 func TestWhenTotalZonesIsZero_TreatsZoneCountAsOne(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	mapSize := 160
 	totalZones := 0 // Guarded by math.Max(1, ...) so the zone area is the whole map.

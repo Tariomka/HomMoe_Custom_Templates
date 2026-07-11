@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenTwoPlayersAndSixNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
@@ -34,6 +35,7 @@ func TestWhenTwoPlayersAndSixNeutralPlansProvided_CreatesZonePerLabel(t *testing
 }
 
 func TestWhenSquareIsLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
@@ -56,6 +58,7 @@ func TestWhenSquareIsLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing.T)
 }
 
 func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCentre(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
@@ -83,6 +86,7 @@ func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCentre(t *testing.T)
 }
 
 func TestWhenSquareIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
@@ -105,6 +109,7 @@ func TestWhenSquareIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) 
 }
 
 func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
@@ -124,6 +129,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare

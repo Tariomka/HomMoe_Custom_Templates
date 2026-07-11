@@ -17,6 +17,7 @@ func newTwoNeutralPlans() models.NeutralZonePlans {
 }
 
 func TestWhenPlayerHasTwoNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -35,6 +36,7 @@ func TestWhenPlayerHasTwoNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T)
 }
 
 func TestWhenChainIsBuilt_CreatesConnectionPerAdjacentPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -53,6 +55,7 @@ func TestWhenChainIsBuilt_CreatesConnectionPerAdjacentPair(t *testing.T) {
 }
 
 func TestWhenFirstChainLinkIsBuilt_ConnectsSpawnToFirstNeutral(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -67,6 +70,7 @@ func TestWhenFirstChainLinkIsBuilt_ConnectsSpawnToFirstNeutral(t *testing.T) {
 }
 
 func TestWhenLaterChainLinkIsBuilt_ConnectsNeutralToNextNeutral(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
@@ -81,6 +85,7 @@ func TestWhenLaterChainLinkIsBuilt_ConnectsNeutralToNextNeutral(t *testing.T) {
 }
 
 func TestWhenPlayerHasNoNeutralPlans_CreatesOnlySpawnZoneWithoutConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	emptyPlans := models.NeutralZonePlans{}
@@ -96,6 +101,7 @@ func TestWhenPlayerHasNoNeutralPlans_CreatesOnlySpawnZoneWithoutConnections(t *t
 }
 
 func TestWhenSecondPlayerClusterIsBuilt_SpawnCastleBelongsToPlayerTwo(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()

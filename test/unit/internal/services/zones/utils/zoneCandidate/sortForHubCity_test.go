@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenMinDistancesDiffer_PutsFarthestZoneFirst(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "X", Quality: models.QualityMedium, CastleCount: 0},
@@ -26,6 +27,7 @@ func TestWhenMinDistancesDiffer_PutsFarthestZoneFirst(t *testing.T) {
 }
 
 func TestWhenMinDistancesTie_PutsLowestVarianceFirst(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "Y", Quality: models.QualityMedium, CastleCount: 0},
@@ -46,6 +48,7 @@ func TestWhenMinDistancesTie_PutsLowestVarianceFirst(t *testing.T) {
 }
 
 func TestWhenVarianceAlsoTies_PutsHighestQualityFirst(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "Y", Quality: models.QualityLow, CastleCount: 0},
@@ -63,6 +66,7 @@ func TestWhenVarianceAlsoTies_PutsHighestQualityFirst(t *testing.T) {
 }
 
 func TestWhenQualityAlsoTies_PutsCastleZoneFirst(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	plans := models.NeutralZonePlans{
 		{Label: "Y", Quality: models.QualityMedium, CastleCount: 0},

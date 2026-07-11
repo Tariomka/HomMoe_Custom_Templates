@@ -26,6 +26,7 @@ func newFourNeutralPlans() models.NeutralZonePlans {
 }
 
 func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeutralLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
@@ -40,6 +41,7 @@ func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeu
 }
 
 func TestWhenTournamentIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
@@ -54,6 +56,7 @@ func TestWhenTournamentIsBuilt_EveryConnectionReferencesExistingZones(t *testing
 }
 
 func TestWhenPortalsAreDisabled_PlayerClustersStayIsolatedAsTwoComponents(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := newChainTournamentConfig()
 	configuration.RandomPortals = false
@@ -69,6 +72,7 @@ func TestWhenPortalsAreDisabled_PlayerClustersStayIsolatedAsTwoComponents(t *tes
 }
 
 func TestWhenTwoPlayersAreProvided_EachPlayerGetsOwnSpawnZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
@@ -85,6 +89,7 @@ func TestWhenTwoPlayersAreProvided_EachPlayerGetsOwnSpawnZone(t *testing.T) {
 }
 
 func TestWhenTopologyIsHubAndSpoke_CreatesHubZonePerPlayer(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
@@ -102,6 +107,7 @@ func TestWhenTopologyIsHubAndSpoke_CreatesHubZonePerPlayer(t *testing.T) {
 }
 
 func TestWhenTopologyIsRing_CreatesRingClusterConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
@@ -117,6 +123,7 @@ func TestWhenTopologyIsRing_CreatesRingClusterConnections(t *testing.T) {
 }
 
 func TestWhenTopologyIsCircles_CreatesBalancedClusterConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCircles
@@ -132,6 +139,7 @@ func TestWhenTopologyIsCircles_CreatesBalancedClusterConnections(t *testing.T) {
 }
 
 func TestWhenTopologyIsUnhandled_FallsBackToChainClusterConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
@@ -147,6 +155,7 @@ func TestWhenTopologyIsUnhandled_FallsBackToChainClusterConnections(t *testing.T
 }
 
 func TestWhenRandomPortalsAreEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := newChainTournamentConfig()
 	configuration.RandomPortals = true
@@ -162,6 +171,7 @@ func TestWhenRandomPortalsAreEnabled_AddsPortalConnections(t *testing.T) {
 }
 
 func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := newChainTournamentConfig()
 	configuration.RandomPortals = false

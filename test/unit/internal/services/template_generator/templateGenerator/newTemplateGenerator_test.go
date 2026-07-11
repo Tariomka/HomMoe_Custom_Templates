@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenConfigurationProvided_ReturnsNonNilGenerator(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 
@@ -21,6 +22,7 @@ func TestWhenConfigurationProvided_ReturnsNonNilGenerator(t *testing.T) {
 }
 
 func TestWhenConfigurationIsNil_FallsBackToDefaultConfiguration(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	generator := template_generator.NewTemplateGenerator(nil)
 
@@ -30,6 +32,7 @@ func TestWhenConfigurationIsNil_FallsBackToDefaultConfiguration(t *testing.T) {
 }
 
 func TestWhenConfigurationProvided_GeneratesFromProvidedConfiguration(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.InputName()
 	configuration := config.NewGeneratorConfig()

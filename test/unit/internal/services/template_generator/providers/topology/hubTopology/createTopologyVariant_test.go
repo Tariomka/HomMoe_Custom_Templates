@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenOuterLabelsSurroundTheHub_CreatesSingleHubZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
@@ -36,6 +37,7 @@ func TestWhenOuterLabelsSurroundTheHub_CreatesSingleHubZone(t *testing.T) {
 }
 
 func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesHubPlusOuterZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
@@ -54,6 +56,7 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesHubPlusOuterZones(t *te
 }
 
 func TestWhenHubAndSpokesAreBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
@@ -72,6 +75,7 @@ func TestWhenHubAndSpokesAreBuilt_EveryConnectionReferencesExistingZones(t *test
 }
 
 func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentName(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
@@ -98,6 +102,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentName(t *te
 }
 
 func TestWhenIsolatedPlayersAreAdjacentOuterLabels_SkipsTheirPseudoConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
@@ -116,6 +121,7 @@ func TestWhenIsolatedPlayersAreAdjacentOuterLabels_SkipsTheirPseudoConnection(t 
 }
 
 func TestWhenCirclesTopologyCannotHonorSeparation_BalancesOuterLabelsWithoutSeparation(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCircles
@@ -135,6 +141,7 @@ func TestWhenCirclesTopologyCannotHonorSeparation_BalancesOuterLabelsWithoutSepa
 }
 
 func TestWhenCirclesTopologyHonorsNeutralSeparation_CreatesHubPlusOuterZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCircles
@@ -156,6 +163,7 @@ func TestWhenCirclesTopologyHonorsNeutralSeparation_CreatesHubPlusOuterZones(t *
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke

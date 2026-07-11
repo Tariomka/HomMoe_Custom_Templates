@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain
@@ -28,6 +29,7 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesZonePerLabel(t *testing
 }
 
 func TestWhenFourLabelsFormTheChain_CreatesConnectionPerAdjacentPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain
@@ -46,6 +48,7 @@ func TestWhenFourLabelsFormTheChain_CreatesConnectionPerAdjacentPair(t *testing.
 }
 
 func TestWhenChainIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain
@@ -64,6 +67,7 @@ func TestWhenChainIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 }
 
 func TestWhenIsolatedPlayersAreAdjacentInTheChain_SkipsTheirChainConnection(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain
@@ -81,6 +85,7 @@ func TestWhenIsolatedPlayersAreAdjacentInTheChain_SkipsTheirChainConnection(t *t
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain

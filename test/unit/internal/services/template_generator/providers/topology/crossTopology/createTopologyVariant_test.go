@@ -12,6 +12,7 @@ import (
 )
 
 func TestWhenTwoPlayersAndFiveNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCross
@@ -33,6 +34,7 @@ func TestWhenTwoPlayersAndFiveNeutralPlansProvided_CreatesZonePerLabel(t *testin
 }
 
 func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheCrossCentre(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCross
@@ -60,6 +62,7 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheCrossCentre(t *testing.T) {
 }
 
 func TestWhenCrossIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCross
@@ -81,6 +84,7 @@ func TestWhenCrossIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 }
 
 func TestWhenNoNeutralZonesExist_JoinsPlayerTipsInARing(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name              string
 		playerLabels      []string
@@ -104,6 +108,7 @@ func TestWhenNoNeutralZonesExist_JoinsPlayerTipsInARing(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			configuration := config.NewGeneratorConfig()
 			configuration.Topology = config.TopologyCross
@@ -123,6 +128,7 @@ func TestWhenNoNeutralZonesExist_JoinsPlayerTipsInARing(t *testing.T) {
 }
 
 func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCross
@@ -142,6 +148,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCross

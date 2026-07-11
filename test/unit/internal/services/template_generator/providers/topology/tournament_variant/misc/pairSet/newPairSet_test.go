@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenNewPairSetIsCreated_SetIsEmpty(t *testing.T) {
+	t.Parallel()
 	// Arrange & Act
 	set := misc.NewPairSet()
 

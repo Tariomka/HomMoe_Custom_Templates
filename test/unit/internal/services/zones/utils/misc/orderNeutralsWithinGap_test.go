@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenGapIsEmpty_ReturnsEmptyPlans(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	neutralZones := models.NeutralZonePlans{}
 
@@ -21,6 +22,7 @@ func TestWhenGapIsEmpty_ReturnsEmptyPlans(t *testing.T) {
 }
 
 func TestWhenGapHasSingleZone_ReturnsThatZone(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	zone := models.NeutralZonePlan{Label: "A", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
 	neutralZones := models.NeutralZonePlans{zone}
@@ -33,6 +35,7 @@ func TestWhenGapHasSingleZone_ReturnsThatZone(t *testing.T) {
 }
 
 func TestWhenGapHasThreeZones_PlacesStrongestFirstAndSecondStrongestLast(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	strongZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
 	mediumZone := models.NeutralZonePlan{Label: "B", Quality: models.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
@@ -48,7 +51,8 @@ func TestWhenGapHasThreeZones_PlacesStrongestFirstAndSecondStrongestLast(t *test
 }
 
 func TestWhenGapHasFourZones_AlternatesEndsInwards(t *testing.T) {
-	// Arrange - balance scores descend A > B > C > D via castle counts.
+	t.Parallel()
+	// Arrange
 	firstZone := models.NeutralZonePlan{Label: "A", Quality: models.QualityHigh, CastleCount: 4}
 	secondZone := models.NeutralZonePlan{Label: "B", Quality: models.QualityHigh, CastleCount: 0}
 	thirdZone := models.NeutralZonePlan{Label: "C", Quality: models.QualityLow, CastleCount: 4}

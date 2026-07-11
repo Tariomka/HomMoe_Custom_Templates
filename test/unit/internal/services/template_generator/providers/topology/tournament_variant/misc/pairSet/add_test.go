@@ -9,6 +9,7 @@ import (
 )
 
 func TestWhenPairIsAddedInAscendingOrder_StoresPairAsGiven(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	set := misc.NewPairSet()
 
@@ -20,6 +21,7 @@ func TestWhenPairIsAddedInAscendingOrder_StoresPairAsGiven(t *testing.T) {
 }
 
 func TestWhenPairIsAddedInDescendingOrder_StoresNormalizedAscendingPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	set := misc.NewPairSet()
 
@@ -31,6 +33,7 @@ func TestWhenPairIsAddedInDescendingOrder_StoresNormalizedAscendingPair(t *testi
 }
 
 func TestWhenSamePairIsAddedInBothOrders_KeepsSingleEntry(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	set := misc.NewPairSet()
 	first := gofakeit.Number(0, 100)
@@ -45,6 +48,7 @@ func TestWhenSamePairIsAddedInBothOrders_KeepsSingleEntry(t *testing.T) {
 }
 
 func TestWhenDistinctPairsAreAdded_KeepsEntryPerPair(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	set := misc.NewPairSet()
 

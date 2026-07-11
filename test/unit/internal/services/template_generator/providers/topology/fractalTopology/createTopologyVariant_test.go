@@ -21,6 +21,7 @@ func addTieredNeutralPlans(neutralZones *models.NeutralZonePlans) {
 }
 
 func TestWhenTwoPlayersAndSixTieredNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -38,6 +39,7 @@ func TestWhenTwoPlayersAndSixTieredNeutralPlansProvided_CreatesZonePerLabel(t *t
 }
 
 func TestWhenEveryTierIsPopulated_NoRandomConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -55,6 +57,7 @@ func TestWhenEveryTierIsPopulated_NoRandomConnectionJoinsTwoSpawnZones(t *testin
 }
 
 func TestWhenFractalsAreLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -72,6 +75,7 @@ func TestWhenFractalsAreLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing
 }
 
 func TestWhenFractalsAreBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -89,6 +93,7 @@ func TestWhenFractalsAreBuilt_EveryConnectionReferencesExistingZones(t *testing.
 }
 
 func TestWhenFewerNeutralZonesThanPlayers_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -107,6 +112,7 @@ func TestWhenFewerNeutralZonesThanPlayers_CreatesZonePerLabel(t *testing.T) {
 }
 
 func TestWhenFewerNeutralZonesThanPlayers_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -125,6 +131,7 @@ func TestWhenFewerNeutralZonesThanPlayers_EveryConnectionReferencesExistingZones
 }
 
 func TestWhenNoNeutralZonesExist_CreatesOnlyPlayerZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -141,6 +148,7 @@ func TestWhenNoNeutralZonesExist_CreatesOnlyPlayerZones(t *testing.T) {
 }
 
 func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal
@@ -159,6 +167,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyFractal

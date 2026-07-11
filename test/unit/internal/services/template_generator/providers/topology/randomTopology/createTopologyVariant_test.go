@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenTwoPlayersAndFourNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRandom
@@ -30,6 +31,7 @@ func TestWhenTwoPlayersAndFourNeutralPlansProvided_CreatesZonePerLabel(t *testin
 }
 
 func TestWhenPositionsAreRolled_EveryZoneGetsPositionInsideUnitSquare(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRandom
@@ -50,6 +52,7 @@ func TestWhenPositionsAreRolled_EveryZoneGetsPositionInsideUnitSquare(t *testing
 }
 
 func TestWhenTriangulationIsBuilt_CreatesRandomPrefixedConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRandom
@@ -70,6 +73,7 @@ func TestWhenTriangulationIsBuilt_CreatesRandomPrefixedConnections(t *testing.T)
 }
 
 func TestWhenTriangulationIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRandom
@@ -90,6 +94,7 @@ func TestWhenTriangulationIsBuilt_EveryConnectionReferencesExistingZones(t *test
 }
 
 func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRandom
@@ -109,6 +114,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 }
 
 func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRandom

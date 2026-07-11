@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenProviderIsConstructed_ReturnsNonNilProvider(t *testing.T) {
+	t.Parallel()
 	// Arrange
 
 	// Act

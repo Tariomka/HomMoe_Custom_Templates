@@ -8,6 +8,7 @@ import (
 )
 
 func TestGetEvenGapCapacities_TableDriven(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name          string
 		gapCount      int
@@ -64,7 +65,8 @@ func TestGetEvenGapCapacities_TableDriven(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			// Arrange - inputs come from the table entry
+			t.Parallel()
+			// Arrange
 
 			// Act
 			capacities := utils.GetEvenGapCapacities(testCase.gapCount, testCase.itemCount, testCase.minimumPerGap)

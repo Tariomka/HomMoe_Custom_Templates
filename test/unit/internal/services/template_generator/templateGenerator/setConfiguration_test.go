@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNewConfigurationProvided_GeneratesWithNewConfiguration(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.InputName()
 	generator := template_generator.NewTemplateGenerator(config.NewGeneratorConfig())
@@ -24,6 +25,7 @@ func TestWhenNewConfigurationProvided_GeneratesWithNewConfiguration(t *testing.T
 }
 
 func TestWhenNilConfigurationProvided_KeepsPreviousConfiguration(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.InputName()
 	originalConfiguration := config.NewGeneratorConfig()

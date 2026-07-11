@@ -21,6 +21,7 @@ func newFourNeutralPlans() models.NeutralZonePlans {
 }
 
 func TestWhenPlayerHasFourNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
@@ -35,6 +36,7 @@ func TestWhenPlayerHasFourNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T
 }
 
 func TestWhenClusterIsBuilt_EveryZoneReceivesGeneratorAndManualPositions(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
@@ -55,6 +57,7 @@ func TestWhenClusterIsBuilt_EveryZoneReceivesGeneratorAndManualPositions(t *test
 }
 
 func TestWhenFirstPlayerClusterIsBuilt_AllZonePositionsStayInLeftHalf(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
@@ -75,6 +78,7 @@ func TestWhenFirstPlayerClusterIsBuilt_AllZonePositionsStayInLeftHalf(t *testing
 }
 
 func TestWhenSecondPlayerClusterIsBuilt_AllZonePositionsStayInRightHalf(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
@@ -95,6 +99,7 @@ func TestWhenSecondPlayerClusterIsBuilt_AllZonePositionsStayInRightHalf(t *testi
 }
 
 func TestWhenConnectionsAreBuilt_BalancedConnectionsCarryClusterPrefix(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
@@ -109,6 +114,7 @@ func TestWhenConnectionsAreBuilt_BalancedConnectionsCarryClusterPrefix(t *testin
 }
 
 func TestWhenClusterIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
@@ -133,6 +139,7 @@ func TestWhenClusterIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T)
 }
 
 func TestWhenClusterIsBuilt_AllZonesFormSingleConnectedComponent(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
