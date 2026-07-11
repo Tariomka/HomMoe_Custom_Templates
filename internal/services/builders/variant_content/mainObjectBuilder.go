@@ -40,7 +40,7 @@ func (this *MainObjectBuilder) WithNoGuardWhenOwned() *MainObjectBuilder {
 	return this
 }
 func (this *MainObjectBuilder) WithGuardChance(chance float64) *MainObjectBuilder {
-	this.item.GuardChance = helpers.ClampFloat(chance, 0, 1)
+	this.item.GuardChance = helpers.Clamp(chance, 0, 1)
 	return this
 }
 func (this *MainObjectBuilder) WithGuardValue(value int) *MainObjectBuilder {

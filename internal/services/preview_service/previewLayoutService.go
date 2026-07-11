@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
@@ -24,14 +25,11 @@ const (
 	scatterIdealMult = 3.2
 	scatterMinDist   = 3.8
 	scatterEdgeClear = 1.2
-
-	// previewParallelGap is the perpendicular spacing between parallel preview
-	// edges, matched to the manual zone editor's bulge spacing so both views fan
-	// multiple connections out the same way.
-	previewParallelGap = 22.0
 )
 
-type PreviewLayoutService struct{}
+type PreviewLayoutService struct {
+	layout *preview.PreviewLayout
+}
 
 func NewPreviewLayoutService() *PreviewLayoutService {
 	return &PreviewLayoutService{}
@@ -52,14 +50,14 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 	template *entities.RmgTemplate,
 	topology config.MapTopology,
 	side float64) preview.PreviewLayout {
-	layout := preview.PreviewLayout{Positions: map[string]image.Point{}}
+	this.layout = &preview.PreviewLayout{Positions: map[string]image.Point{}}
 	if template == nil || len(template.Variants) == 0 {
-		return layout
+		return *this.layout
 	}
 
 	variant := template.Variants[0]
 	if len(variant.Zones) == 0 {
-		return layout
+		return *this.layout
 	}
 
 	// Apply the optional ZeroAngleZone rotation so the first ring slot lines
@@ -72,10 +70,10 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 	zones := orderZonesByZeroAngle(variant.Zones, variant.Orientation.ZeroAngleZone)
 	connections := variant.Connections
 
-	this.dispatchClusterLayout(&layout, zones, connections, topology, side)
+	this.dispatchClusterLayout(zones, connections, topology, side)
 
 	for _, zone := range variant.Zones {
-		pos, ok := layout.Positions[zone.Name]
+		pos, ok := this.layout.Positions[zone.Name]
 		if !ok {
 			continue
 		}
@@ -110,14 +108,16 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 				preview.Castles++
 			}
 		}
-		layout.Zones = append(layout.Zones, preview)
+		this.layout.Zones = append(this.layout.Zones, preview)
 	}
 
 	// Connections - only render those whose endpoints survived the strip.
 	// Parallel edges between the same unordered pair are fanned out into
 	// distinct curves (matching the manual zone editor); a lone edge keeps its
 	// control point on the midpoint and therefore renders straight.
-	layout.Connections = this.buildPreviewConnections(variant.Connections, layout.Positions)
+	this.layout.Connections = this.buildPreviewConnections(variant.Connections, this.layout.Positions)
+	layout := *this.layout
+	this.layout = nil
 	return layout
 }
 
@@ -125,22 +125,21 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 // picking the topology-specific renderer. Each path sets layout.Positions and
 // layout.ZoneRadius.
 func (this *PreviewLayoutService) dispatchClusterLayout(
-	layout *preview.PreviewLayout,
 	zones []entities.Zone,
 	connections []entities.Connection,
 	topology config.MapTopology,
 	side float64) {
 	switch {
 	case allHaveManualPosition(zones):
-		layoutManualPositions(layout, zones, side)
+		this.layoutManualPositions(zones, side)
 	case (topology == config.TopologyCircles) && allHaveRing(zones):
-		layoutBalancedRings(layout, zones, side)
+		this.layoutBalancedRings(zones, side)
 	case isFixedGeometryTopology(topology) && allHavePosition(zones):
-		layoutFixedPositions(layout, zones, side)
+		this.layoutFixedPositions(zones, side)
 	case isScatterTopology(topology) && allHavePosition(zones):
-		layoutScatter(layout, zones, connections, side)
+		this.layoutScatter(zones, connections, side)
 	default:
-		layoutRingOrHub(layout, zones, connections, side)
+		this.layoutRingOrHub(zones, connections, side)
 	}
 }
 
@@ -173,6 +172,8 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 
 	result := make([]preview.PreviewConnection, 0, len(connections))
 	indexInPair := make(map[pairKey]int)
+
+	const spacingBetweenEdges = 21.0
 	for _, connection := range connections {
 		if !visible(connection) {
 			continue
@@ -182,21 +183,17 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 		index := indexInPair[key]
 		indexInPair[key]++
 
-		// Endpoints from the sorted key: every parallel edge shares the same
-		// baseline, so the fan always spreads from the same side. DrawConnection
-		// is direction-agnostic, so A/B order does not matter.
 		startPoint := positions[key.start]
 		endPoint := positions[key.end]
 		delta := data.Vec2FromPoint[float64](endPoint.Sub(startPoint))
 		distance := math.Max(math.Hypot(delta.X, delta.Y), 1)
-		spread := (float64(index) - float64(counts[key]-1)/2.0) * previewParallelGap
+		spread := (float64(index) - float64(counts[key]-1)/2.0) * spacingBetweenEdges
 		// Ctrl offset is 2× the desired bulge: a quadratic Bézier's midpoint
 		// sits halfway between the chord midpoint and the control point.
-		chordMidpoint := data.Vec2FromPoint[float64](startPoint.Add(endPoint)).MultiplyScalar(0.5)
-		// ( x, y ) → ( y, -x ) rotates it 90°
-		offset := data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance)
-
-		ctrl := chordMidpoint.Add(offset).ToPointRounded()
+		ctrl := data.Vec2FromPoint[float64](startPoint.Add(endPoint)).MultiplyScalar(0.5).
+			// ( x, y ) → ( y, -x ) rotates it 90°
+			Add(data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance)).
+			ToPointRounded()
 		isPortal := connection.ConnectionType == "Portal" ||
 			len(connection.PortalPlacementRulesFrom) > 0 ||
 			len(connection.PortalPlacementRulesTo) > 0
@@ -208,80 +205,13 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 	return result
 }
 
-func isStructuralIgnored(connectionType string) bool {
-	return connectionType == "Proximity" || connectionType == "Portal"
-}
-
-func orderZonesByZeroAngle(zones []entities.Zone, zeroAngleZone string) []entities.Zone {
-	if zeroAngleZone == "" {
-		return zones
-	}
-	pivot := -1
-	for i, z := range zones {
-		if z.Name == zeroAngleZone {
-			pivot = i
-			break
-		}
-	}
-	if pivot <= 0 {
-		return zones
-	}
-	out := make([]entities.Zone, 0, len(zones))
-	out = append(out, zones[pivot:]...)
-	out = append(out, zones[:pivot]...)
-	return out
-}
-
-func allHavePosition(zones []entities.Zone) bool {
-	for _, z := range zones {
-		if z.GeneratorPosition == nil {
-			return false
-		}
-	}
-	return true
-}
-
-// isScatterTopology reports whether the topology lays out zones from their
-// GeneratorPosition stamps using the organic scatter renderer (mean-edge
-// scaling plus the relaxation passes that nudge zones apart).
-func isScatterTopology(topology config.MapTopology) bool {
-	switch topology {
-	case config.TopologyRandom, config.TopologyCircles:
-		return true
-	default:
-		return false
-	}
-}
-
-// isFixedGeometryTopology reports whether the topology defines an exact,
-// deterministic geometric figure from its GeneratorPosition stamps. These are
-// placed verbatim (only centred and scaled to fit) so the preview reproduces
-// the intended shape instead of relaxing it into a scatter.
-func isFixedGeometryTopology(topology config.MapTopology) bool {
-	switch topology {
-	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross, config.TopologyFractal:
-		return true
-	default:
-		return false
-	}
-}
-
-func allHaveManualPosition(zones []entities.Zone) bool {
-	for _, z := range zones {
-		if z.ManualPosition == nil {
-			return false
-		}
-	}
-	return len(zones) > 0
-}
-
 // layoutManualPositions places zones exactly where the manual zone editor put
 // them: canvas = normalized position × side. The mapping must stay trivially
 // invertible (p = pos / side) so dragging in the editor is exact. The zone
 // radius shrinks just enough to keep the closest pair of zones from
 // overlapping.
-func layoutManualPositions(layout *preview.PreviewLayout, zones []entities.Zone, side float64) {
-	scale := canvasScale(side)
+func (this *PreviewLayoutService) layoutManualPositions(zones []entities.Zone, side float64) {
+	scale := side / csCanvasSide
 	radius := csZoneRadiusMax * scale
 	minGap := csMinGap * scale
 
@@ -299,10 +229,10 @@ func layoutManualPositions(layout *preview.PreviewLayout, zones []entities.Zone,
 	}
 	radius = math.Max(radius, 8.0)
 
-	layout.ZoneRadius = int(math.Round(radius))
+	this.layout.ZoneRadius = int(math.Round(radius))
 	for _, zone := range zones {
 		p := *zone.ManualPosition
-		layout.Positions[zone.Name] = image.Pt(
+		this.layout.Positions[zone.Name] = image.Pt(
 			int(math.Round(p[0]*side)),
 			int(math.Round(p[1]*side)))
 	}
@@ -313,13 +243,14 @@ func layoutManualPositions(layout *preview.PreviewLayout, zones []entities.Zone,
 // and Cross topologies. The normalized positions are centred and uniformly
 // scaled to fill the padded canvas (never relaxed), then the zone radius is
 // shrunk just enough to keep the closest pair from overlapping.
-func layoutFixedPositions(layout *preview.PreviewLayout, zones []entities.Zone, side float64) {
+func (this *PreviewLayoutService) layoutFixedPositions(zones []entities.Zone, side float64) {
+	scale := canvasScale(side)
 	n := len(zones)
 	if n == 0 {
-		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
+		this.layout.ZoneRadius = helpers.ScaleRound(csZoneRadiusMax, scale)
 		return
 	}
-	scale := canvasScale(side)
+
 	margin := csMargin * scale
 	minGap := csMinGap * scale
 	zoneRadiusMax := csZoneRadiusMax * scale
@@ -327,8 +258,8 @@ func layoutFixedPositions(layout *preview.PreviewLayout, zones []entities.Zone, 
 	cy := side / 2.0
 
 	if n == 1 {
-		layout.ZoneRadius = int(math.Round(zoneRadiusMax))
-		layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
+		this.layout.ZoneRadius = int(math.Round(zoneRadiusMax))
+		this.layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
 		return
 	}
 
@@ -380,28 +311,20 @@ func layoutFixedPositions(layout *preview.PreviewLayout, zones []entities.Zone, 
 	}
 	radius = math.Max(radius, 8.0)
 
-	layout.ZoneRadius = int(math.Round(radius))
+	this.layout.ZoneRadius = int(math.Round(radius))
 	for i, z := range zones {
-		layout.Positions[z.Name] = image.Pt(int(math.Round(px[i])), int(math.Round(py[i])))
+		this.layout.Positions[z.Name] = image.Pt(int(math.Round(px[i])), int(math.Round(py[i])))
 	}
 }
 
-func allHaveRing(zones []entities.Zone) bool {
-	for _, z := range zones {
-		if z.GeneratorRing == nil {
-			return false
-		}
-	}
-	return true
-}
-
-func layoutBalancedRings(layout *preview.PreviewLayout, zones []entities.Zone, side float64) {
+func (this *PreviewLayoutService) layoutBalancedRings(zones []entities.Zone, side float64) {
+	scale := canvasScale(side)
 	zoneCount := len(zones)
 	if zoneCount == 0 {
-		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
+		this.layout.ZoneRadius = helpers.ScaleRound(csZoneRadiusMax, scale)
 		return
 	}
-	scale := canvasScale(side)
+
 	margin := csMargin * scale
 	minGap := csMinGap * scale
 	zoneRadiusMax := csZoneRadiusMax * scale
@@ -409,8 +332,8 @@ func layoutBalancedRings(layout *preview.PreviewLayout, zones []entities.Zone, s
 	cy := side / 2.0
 
 	if zoneCount == 1 {
-		layout.ZoneRadius = int(math.Round(zoneRadiusMax))
-		layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
+		this.layout.ZoneRadius = int(math.Round(zoneRadiusMax))
+		this.layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
 		return
 	}
 
@@ -433,7 +356,7 @@ func layoutBalancedRings(layout *preview.PreviewLayout, zones []entities.Zone, s
 
 	if ringCount < 2 {
 		// All zones in a single ring - degenerate; fall back to the ring path.
-		layoutRingOrHub(layout, zones, nil, side)
+		this.layoutRingOrHub(zones, nil, side)
 		return
 	}
 
@@ -482,7 +405,7 @@ func layoutBalancedRings(layout *preview.PreviewLayout, zones []entities.Zone, s
 	}
 	zoneRadius := math.Max(lo, 8.0)
 	ringRadii := assignRingRadii(zoneRadius)
-	layout.ZoneRadius = int(math.Round(zoneRadius))
+	this.layout.ZoneRadius = int(math.Round(zoneRadius))
 
 	rawCx, rawCy := positionCentroid(zones)
 
@@ -493,7 +416,7 @@ func layoutBalancedRings(layout *preview.PreviewLayout, zones []entities.Zone, s
 			continue
 		}
 		if cnt == 1 && ringIndex == 0 {
-			layout.Positions[zones[group[0]].Name] = image.Pt(int(cx), int(cy))
+			this.layout.Positions[zones[group[0]].Name] = image.Pt(int(cx), int(cy))
 			continue
 		}
 		// Sort zones in this ring by their raw position's angle around the
@@ -509,18 +432,19 @@ func layoutBalancedRings(layout *preview.PreviewLayout, zones []entities.Zone, s
 			angle := firstAngle + 2.0*math.Pi*float64(j)/float64(cnt)
 			x := cx + math.Cos(angle)*canvasRadius
 			y := cy + math.Sin(angle)*canvasRadius
-			layout.Positions[zones[idx].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+			this.layout.Positions[zones[idx].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
 		}
 	}
 }
 
-func layoutScatter(layout *preview.PreviewLayout, zones []entities.Zone, conns []entities.Connection, side float64) {
+func (this *PreviewLayoutService) layoutScatter(zones []entities.Zone, conns []entities.Connection, side float64) {
+	scale := canvasScale(side)
 	n := len(zones)
 	if n == 0 {
-		layout.ZoneRadius = scaledInt(csZoneRadiusMax, side)
+		this.layout.ZoneRadius = helpers.ScaleRound(csZoneRadiusMax, scale)
 		return
 	}
-	scale := canvasScale(side)
+
 	margin := csMargin * scale
 	minGap := csMinGap * scale
 	zoneRadiusMax := csZoneRadiusMax * scale
@@ -528,8 +452,8 @@ func layoutScatter(layout *preview.PreviewLayout, zones []entities.Zone, conns [
 	cy := side / 2.0
 
 	if n == 1 {
-		layout.ZoneRadius = int(math.Round(zoneRadiusMax))
-		layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
+		this.layout.ZoneRadius = int(math.Round(zoneRadiusMax))
+		this.layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
 		return
 	}
 
@@ -659,9 +583,194 @@ func layoutScatter(layout *preview.PreviewLayout, zones []entities.Zone, conns [
 		zoneRadius = math.Max(zoneRadius*shrink, 8.0)
 	}
 
-	layout.ZoneRadius = int(math.Round(zoneRadius))
+	this.layout.ZoneRadius = int(math.Round(zoneRadius))
 	for i, z := range zones {
-		layout.Positions[z.Name] = image.Pt(int(math.Round(px[i])), int(math.Round(py[i])))
+		this.layout.Positions[z.Name] = image.Pt(int(math.Round(px[i])), int(math.Round(py[i])))
+	}
+}
+
+// Used for structured topologies (Default, HubAndSpoke, Chain, SharedWeb).
+// Multi-hub "Hub-*" templates fan their spokes out from each cluster centre;
+// otherwise zones land on a single outer ring with an optional centre hub.
+func (this *PreviewLayoutService) layoutRingOrHub(zones []entities.Zone, conns []entities.Connection, side float64) {
+	n := len(zones)
+	scale := canvasScale(side)
+	margin := csMargin * scale
+	minGap := csMinGap * scale
+	zoneRadiusMax := csZoneRadiusMax * scale
+	hubRadiusMin := csHubRadiusMin * scale
+	connectionGap := csConnectionGap * scale
+	cx := side / 2.0
+	cy := side / 2.0
+
+	if n == 0 {
+		this.layout.ZoneRadius = int(math.Round(zoneRadiusMax))
+		return
+	}
+
+	// Multi-hub tournament layout: clusters fan out around the canvas.
+	var hubIndices []int
+	for i, z := range zones {
+		if strings.HasPrefix(z.Name, "Hub-") {
+			hubIndices = append(hubIndices, i)
+		}
+	}
+	if len(hubIndices) >= 2 {
+		this.layoutMultiHub(zones, conns, hubIndices, side)
+		return
+	}
+
+	// Hub detection: only an explicitly named "Hub" zone is treated as a hub.
+	// The preview is a faithful representation of the template data, so
+	// connectivity is never used to guess an implicit hub.
+	hubIdx := -1
+	for i, z := range zones {
+		if z.Name == "Hub" {
+			hubIdx = i
+			break
+		}
+	}
+
+	var outer []int
+	for i := range zones {
+		if i != hubIdx {
+			outer = append(outer, i)
+		}
+	}
+	outerN := max(len(outer), 1)
+	ringRadius0 := side/2.0 - margin
+	sinA := 1.0
+	if outerN > 1 {
+		sinA = math.Sin(math.Pi / float64(outerN))
+	}
+	var zoneRadius float64
+	if hubIdx < 0 {
+		zoneRadius = (2.0*ringRadius0*sinA - connectionGap) / (2.0 * (1.0 + sinA))
+	} else {
+		chord0 := 2.0 * ringRadius0 * math.Sin(math.Pi/math.Max(1, float64(outerN)))
+		zoneRadius = (chord0 - connectionGap) / 2.0
+	}
+	zoneRadius = math.Min(zoneRadiusMax, math.Max(zoneRadius, 4.0))
+	this.layout.ZoneRadius = int(math.Round(zoneRadius))
+
+	ringRadius := math.Max(hubRadiusMin+zoneRadius+minGap,
+		math.Min(ringRadius0, side/2.0-zoneRadius-margin))
+
+	if hubIdx >= 0 {
+		this.layout.Positions[zones[hubIdx].Name] = image.Pt(int(cx), int(cy))
+	}
+	if n == 1 {
+		this.layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
+		return
+	}
+	for i, idx := range outer {
+		angle := -math.Pi/2.0 + float64(i)*2.0*math.Pi/float64(outerN)
+		x := cx + math.Cos(angle)*ringRadius
+		y := cy + math.Sin(angle)*ringRadius
+		this.layout.Positions[zones[idx].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+	}
+}
+
+func (this *PreviewLayoutService) layoutMultiHub(
+	zones []entities.Zone,
+	conns []entities.Connection,
+	hubIndices []int,
+	side float64) {
+	scale := canvasScale(side)
+	margin := csMargin * scale
+	minGap := csMinGap * scale
+	zoneRadiusMax := csZoneRadiusMax * scale
+	hubRadiusMin := csHubRadiusMin * scale
+	cx := side / 2.0
+	cy := side / 2.0
+
+	zoneIdx := make(map[string]int, len(zones))
+	for i, z := range zones {
+		zoneIdx[z.Name] = i
+	}
+	// Build per-hub spoke list (Direct connections only, dedup'd).
+	hubSpokes := make(map[string][]int, len(hubIndices))
+	for _, h := range hubIndices {
+		hub := zones[h].Name
+		seen := map[int]bool{}
+		for _, c := range conns {
+			if isStructuralIgnored(c.ConnectionType) {
+				continue
+			}
+			other := ""
+			switch {
+			case c.From == hub:
+				other = c.To
+			case c.To == hub:
+				other = c.From
+			}
+			if other == "" {
+				continue
+			}
+			oi, ok := zoneIdx[other]
+			if !ok || seen[oi] {
+				continue
+			}
+			seen[oi] = true
+			hubSpokes[hub] = append(hubSpokes[hub], oi)
+		}
+	}
+	numHubs := len(hubIndices)
+	maxSpokes := 1
+	for _, s := range hubSpokes {
+		if len(s) > maxSpokes {
+			maxSpokes = len(s)
+		}
+	}
+
+	canvasHalf := side/2.0 - margin
+	sinB := 0.0
+	if numHubs > 1 {
+		sinB = math.Sin(math.Pi / float64(numHubs))
+	}
+	sinA := 1.0
+	if maxSpokes > 1 {
+		sinA = math.Sin(math.Pi / float64(maxSpokes))
+	}
+	hubRing := 0.0
+	if numHubs > 1 {
+		hubRing = (canvasHalf + minGap/2.0) / (1.0 + sinB)
+	}
+	radialLeft := canvasHalf - hubRing
+	minSpokeR := hubRadiusMin + minGap
+	zoneRadius := math.Min(zoneRadiusMax, (radialLeft*sinA-minGap/2.0)/(1.0+sinA))
+	zoneRadius = math.Max(1.0, zoneRadius)
+	spokeRing := math.Max(radialLeft-zoneRadius, minSpokeR+zoneRadius)
+	this.layout.ZoneRadius = int(math.Round(zoneRadius))
+
+	for h, hubIndex := range hubIndices {
+		hubAngle := -math.Pi/2.0 + float64(h)*2.0*math.Pi/float64(numHubs)
+		hx, hy := cx, cy
+		if numHubs > 1 {
+			hx = cx + math.Cos(hubAngle)*hubRing
+			hy = cy + math.Sin(hubAngle)*hubRing
+		}
+		this.layout.Positions[zones[hubIndex].Name] = image.Pt(int(math.Round(hx)), int(math.Round(hy)))
+		spokes := hubSpokes[zones[hubIndex].Name]
+		if len(spokes) == 0 {
+			continue
+		}
+		spokeBase := hubAngle
+		if numHubs == 1 {
+			spokeBase = -math.Pi / 2.0
+		}
+		for i, si := range spokes {
+			angle := spokeBase + float64(i)*2.0*math.Pi/float64(len(spokes))
+			x := hx + math.Cos(angle)*spokeRing
+			y := hy + math.Sin(angle)*spokeRing
+			this.layout.Positions[zones[si].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+		}
+	}
+	// Stragglers (e.g. cross-cluster zones) collapse to canvas centre.
+	for _, z := range zones {
+		if _, ok := this.layout.Positions[z.Name]; !ok {
+			this.layout.Positions[z.Name] = image.Pt(int(cx), int(cy))
+		}
 	}
 }
 
@@ -760,191 +869,80 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 	}
 }
 
-// Used for structured topologies (Default, HubAndSpoke, Chain, SharedWeb).
-// Multi-hub "Hub-*" templates fan their spokes out from each cluster centre;
-// otherwise zones land on a single outer ring with an optional centre hub.
-func layoutRingOrHub(layout *preview.PreviewLayout, zones []entities.Zone, conns []entities.Connection, side float64) {
-	n := len(zones)
-	scale := canvasScale(side)
-	margin := csMargin * scale
-	minGap := csMinGap * scale
-	zoneRadiusMax := csZoneRadiusMax * scale
-	hubRadiusMin := csHubRadiusMin * scale
-	connectionGap := csConnectionGap * scale
-	cx := side / 2.0
-	cy := side / 2.0
+func isStructuralIgnored(connectionType string) bool {
+	return connectionType == "Proximity" || connectionType == "Portal"
+}
 
-	if n == 0 {
-		layout.ZoneRadius = int(math.Round(zoneRadiusMax))
-		return
+func orderZonesByZeroAngle(zones []entities.Zone, zeroAngleZone string) []entities.Zone {
+	if zeroAngleZone == "" {
+		return zones
 	}
-
-	// Multi-hub tournament layout: clusters fan out around the canvas.
-	var hubIndices []int
+	pivot := -1
 	for i, z := range zones {
-		if strings.HasPrefix(z.Name, "Hub-") {
-			hubIndices = append(hubIndices, i)
-		}
-	}
-	if len(hubIndices) >= 2 {
-		layoutMultiHub(layout, zones, conns, hubIndices, side)
-		return
-	}
-
-	// Hub detection: only an explicitly named "Hub" zone is treated as a hub.
-	// The preview is a faithful representation of the template data, so
-	// connectivity is never used to guess an implicit hub.
-	hubIdx := -1
-	for i, z := range zones {
-		if z.Name == "Hub" {
-			hubIdx = i
+		if z.Name == zeroAngleZone {
+			pivot = i
 			break
 		}
 	}
+	if pivot <= 0 {
+		return zones
+	}
+	out := make([]entities.Zone, 0, len(zones))
+	out = append(out, zones[pivot:]...)
+	out = append(out, zones[:pivot]...)
+	return out
+}
 
-	var outer []int
-	for i := range zones {
-		if i != hubIdx {
-			outer = append(outer, i)
+func allHavePosition(zones []entities.Zone) bool {
+	for _, z := range zones {
+		if z.GeneratorPosition == nil {
+			return false
 		}
 	}
-	outerN := max(len(outer), 1)
-	ringRadius0 := side/2.0 - margin
-	sinA := 1.0
-	if outerN > 1 {
-		sinA = math.Sin(math.Pi / float64(outerN))
-	}
-	var zoneRadius float64
-	if hubIdx < 0 {
-		zoneRadius = (2.0*ringRadius0*sinA - connectionGap) / (2.0 * (1.0 + sinA))
-	} else {
-		chord0 := 2.0 * ringRadius0 * math.Sin(math.Pi/math.Max(1, float64(outerN)))
-		zoneRadius = (chord0 - connectionGap) / 2.0
-	}
-	zoneRadius = math.Min(zoneRadiusMax, math.Max(zoneRadius, 4.0))
-	layout.ZoneRadius = int(math.Round(zoneRadius))
+	return true
+}
 
-	ringRadius := math.Max(hubRadiusMin+zoneRadius+minGap,
-		math.Min(ringRadius0, side/2.0-zoneRadius-margin))
-
-	if hubIdx >= 0 {
-		layout.Positions[zones[hubIdx].Name] = image.Pt(int(cx), int(cy))
-	}
-	if n == 1 {
-		layout.Positions[zones[0].Name] = image.Pt(int(cx), int(cy))
-		return
-	}
-	for i, idx := range outer {
-		angle := -math.Pi/2.0 + float64(i)*2.0*math.Pi/float64(outerN)
-		x := cx + math.Cos(angle)*ringRadius
-		y := cy + math.Sin(angle)*ringRadius
-		layout.Positions[zones[idx].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+// isScatterTopology reports whether the topology lays out zones from their
+// GeneratorPosition stamps using the organic scatter renderer (mean-edge
+// scaling plus the relaxation passes that nudge zones apart).
+func isScatterTopology(topology config.MapTopology) bool {
+	switch topology {
+	case config.TopologyRandom, config.TopologyCircles:
+		return true
+	default:
+		return false
 	}
 }
 
-func layoutMultiHub(
-	layout *preview.PreviewLayout,
-	zones []entities.Zone,
-	conns []entities.Connection,
-	hubIndices []int,
-	side float64,
-) {
-	scale := canvasScale(side)
-	margin := csMargin * scale
-	minGap := csMinGap * scale
-	zoneRadiusMax := csZoneRadiusMax * scale
-	hubRadiusMin := csHubRadiusMin * scale
-	cx := side / 2.0
-	cy := side / 2.0
+// isFixedGeometryTopology reports whether the topology defines an exact,
+// deterministic geometric figure from its GeneratorPosition stamps. These are
+// placed verbatim (only centred and scaled to fit) so the preview reproduces
+// the intended shape instead of relaxing it into a scatter.
+func isFixedGeometryTopology(topology config.MapTopology) bool {
+	switch topology {
+	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross, config.TopologyFractal:
+		return true
+	default:
+		return false
+	}
+}
 
-	zoneIdx := make(map[string]int, len(zones))
-	for i, z := range zones {
-		zoneIdx[z.Name] = i
-	}
-	// Build per-hub spoke list (Direct connections only, dedup'd).
-	hubSpokes := make(map[string][]int, len(hubIndices))
-	for _, h := range hubIndices {
-		hub := zones[h].Name
-		seen := map[int]bool{}
-		for _, c := range conns {
-			if isStructuralIgnored(c.ConnectionType) {
-				continue
-			}
-			other := ""
-			switch {
-			case c.From == hub:
-				other = c.To
-			case c.To == hub:
-				other = c.From
-			}
-			if other == "" {
-				continue
-			}
-			oi, ok := zoneIdx[other]
-			if !ok || seen[oi] {
-				continue
-			}
-			seen[oi] = true
-			hubSpokes[hub] = append(hubSpokes[hub], oi)
-		}
-	}
-	numHubs := len(hubIndices)
-	maxSpokes := 1
-	for _, s := range hubSpokes {
-		if len(s) > maxSpokes {
-			maxSpokes = len(s)
-		}
-	}
-
-	canvasHalf := side/2.0 - margin
-	sinB := 0.0
-	if numHubs > 1 {
-		sinB = math.Sin(math.Pi / float64(numHubs))
-	}
-	sinA := 1.0
-	if maxSpokes > 1 {
-		sinA = math.Sin(math.Pi / float64(maxSpokes))
-	}
-	hubRing := 0.0
-	if numHubs > 1 {
-		hubRing = (canvasHalf + minGap/2.0) / (1.0 + sinB)
-	}
-	radialLeft := canvasHalf - hubRing
-	minSpokeR := hubRadiusMin + minGap
-	zoneRadius := math.Min(zoneRadiusMax, (radialLeft*sinA-minGap/2.0)/(1.0+sinA))
-	zoneRadius = math.Max(1.0, zoneRadius)
-	spokeRing := math.Max(radialLeft-zoneRadius, minSpokeR+zoneRadius)
-	layout.ZoneRadius = int(math.Round(zoneRadius))
-
-	for h, hubIndex := range hubIndices {
-		hubAngle := -math.Pi/2.0 + float64(h)*2.0*math.Pi/float64(numHubs)
-		hx, hy := cx, cy
-		if numHubs > 1 {
-			hx = cx + math.Cos(hubAngle)*hubRing
-			hy = cy + math.Sin(hubAngle)*hubRing
-		}
-		layout.Positions[zones[hubIndex].Name] = image.Pt(int(math.Round(hx)), int(math.Round(hy)))
-		spokes := hubSpokes[zones[hubIndex].Name]
-		if len(spokes) == 0 {
-			continue
-		}
-		spokeBase := hubAngle
-		if numHubs == 1 {
-			spokeBase = -math.Pi / 2.0
-		}
-		for i, si := range spokes {
-			angle := spokeBase + float64(i)*2.0*math.Pi/float64(len(spokes))
-			x := hx + math.Cos(angle)*spokeRing
-			y := hy + math.Sin(angle)*spokeRing
-			layout.Positions[zones[si].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
-		}
-	}
-	// Stragglers (e.g. cross-cluster zones) collapse to canvas centre.
+func allHaveManualPosition(zones []entities.Zone) bool {
 	for _, z := range zones {
-		if _, ok := layout.Positions[z.Name]; !ok {
-			layout.Positions[z.Name] = image.Pt(int(cx), int(cy))
+		if z.ManualPosition == nil {
+			return false
 		}
 	}
+	return len(zones) > 0
+}
+
+func allHaveRing(zones []entities.Zone) bool {
+	for _, z := range zones {
+		if z.GeneratorRing == nil {
+			return false
+		}
+	}
+	return true
 }
 
 // ── Tier / letter helpers (kept for compatibility) ────────────────────────
@@ -955,9 +953,11 @@ func ExtractZoneLetter(zoneName string) string {
 	if after, ok := strings.CutPrefix(zoneName, "Spawn-"); ok {
 		return after
 	}
+
 	if after, ok := strings.CutPrefix(zoneName, "Neutral-"); ok {
 		return after
 	}
+
 	return zoneName
 }
 
