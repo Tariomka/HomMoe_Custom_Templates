@@ -277,21 +277,6 @@ linters:
     inamedparam:
       skip-single-param: true # Skips check for interface methods with only a single parameter.
 
-    mnd:
-      ignored-functions: # List of function patterns to exclude from analysis.
-        - args.Error
-        - flag.Arg
-        - flag.Duration.*
-        - flag.Float.*
-        - flag.Int.*
-        - flag.Uint.*
-        - os.Chmod
-        - os.Mkdir.*
-        - os.OpenFile
-        - os.WriteFile
-        - prometheus.ExponentialBuckets.*
-        - prometheus.LinearBuckets
-
     nakedret:
       max-func-lines: 0 # Make an issue if func has more lines of code than this setting, and it has naked returns.
 

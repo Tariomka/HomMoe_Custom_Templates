@@ -15,6 +15,7 @@ import (
 // TestRmgTemplate_RoundTripAllExamples decodes every bundled example template,
 // re-encodes it, and decodes again to verify the model captures every field.
 func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
+	t.Parallel()
 	root, err := filepath.Abs(filepath.Join("..", "..", "data", "ExampleTemplates"))
 	require.NoError(t, err, "resolve example dir")
 
@@ -28,6 +29,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 		}
 		name := entity.Name()
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			path := filepath.Join(root, name)
 			raw, err := os.ReadFile(path)
 			require.NoError(t, err, "read file: "+path)

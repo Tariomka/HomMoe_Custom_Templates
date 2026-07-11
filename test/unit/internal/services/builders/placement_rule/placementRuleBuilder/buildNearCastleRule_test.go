@@ -10,6 +10,7 @@ import (
 )
 
 func TestWhenNearCastleRuleIsBuilt_TargetsPrimaryMainObjectAtNearDistance(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	expectedWeight := gofakeit.Number(1, 100)
 	builder := placement_rule.NewPlacementRuleBuilder()
