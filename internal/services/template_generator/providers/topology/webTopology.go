@@ -32,11 +32,14 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 	playerSpokes, neutralSpokes := this.createSpokes(playerLabels, neutralLabels)
 	neutralConnNames := this.createRingConnectionNames(neutralLabels)
 
-	zones := this.createZones(configuration, playerLabels, neutralLabels, tuning, neutralZones, holdCityNeutralLetter, playerSpokes, neutralSpokes, neutralConnNames)
+	zones := this.createZones(
+		configuration, playerLabels, neutralLabels, tuning, neutralZones,
+		holdCityNeutralLetter, playerSpokes, neutralSpokes, neutralConnNames)
 	conns := this.createConnections(playerLabels, neutralLabels, tuning, neutralZones, playerSpokes, neutralConnNames)
 	if configuration.RandomPortals {
 		allLabels := append(append([]string{}, playerLabels...), neutralLabels...)
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if configuration.NoDirectPlayerConnections && len(playerLabels) > 1 {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
@@ -88,7 +91,7 @@ func (this *SharedWebTopologyService) createSpokes(
 		}
 	}
 
-	return
+	return playerSpokes, neutralSpokes
 }
 
 func (this *SharedWebTopologyService) createRingConnectionNames(neutralLabels []string) []string {
@@ -134,9 +137,10 @@ func (this *SharedWebTopologyService) createZones(
 	for i, label := range playerLabels {
 		zones = append(zones,
 			this.CreateSpawnZone(
-				label, fmt.Sprintf("Player%d", i+1), playerSpokes[label], configuration.ZoneConfiguration.PlayerZoneCastles,
-				configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
+				label, fmt.Sprintf("Player%d", i+1), playerSpokes[label],
+				configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
+				configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+				configuration.GenerateRoads, tuning))
 	}
 
 	return zones

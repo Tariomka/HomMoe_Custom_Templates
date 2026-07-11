@@ -1,6 +1,6 @@
 package utils
 
-// Denormalize returns the inverse of Normalize(float32, float32, float32), i.e. converts value from range [0,1] -> [low, high]
+// Denormalize returns the inverse of Normalize(float32, float32, float32), i.e. converts value from range [0,1] -> [low, high].
 func Denormalize(value, low, high float32) float32 {
 	if value < 0 {
 		value = 0
@@ -11,7 +11,7 @@ func Denormalize(value, low, high float32) float32 {
 	return low + value*(high-low)
 }
 
-// Normalize returns a normalized value, i.e. converts value from range [low, high] to [0, 1]
+// Normalize returns a normalized value, i.e. converts value from range [low, high] to [0, 1].
 func Normalize(value, low, high float32) float32 {
 	if high == low {
 		return 0
@@ -33,12 +33,12 @@ func RoundHalfAway(value float64) float64 {
 	return float64(int(value + 0.5))
 }
 
-// RoundedRange snaps a [0,1] slider value to the nearest integer in [low, high]
+// RoundedRange snaps a [0,1] slider value to the nearest integer in [low, high].
 func RoundedRange(value float32, low, high int) int {
 	return min(max(int(RoundHalfAway(float64(Denormalize(value, float32(low), float32(high))))), low), high)
 }
 
-// Multiplier returns a value that is a linear combination of the base and the value scaled by the factor
+// Multiplier returns a value that is a linear combination of the base and the value scaled by the factor.
 func Multiplier(value, base, factor float32) float32 {
 	return value*factor + base
 }

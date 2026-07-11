@@ -42,7 +42,7 @@ type ManageRulesDialog struct {
 	onApply func([]models.ContentRuleRowSave)
 
 	types         []ruleTypeOption
-	variantIds    []int
+	variantIDs    []int
 	variantLabels []string
 
 	scroll           widget.List
@@ -60,7 +60,10 @@ type ManageRulesDialog struct {
 
 // NewManageRulesDialog builds the dialog for the given content row. onApply is
 // invoked with the edited rule list when the user clicks Apply.
-func NewManageRulesDialog(mapping models.SidMapping, rules []models.ContentRuleRowSave, onApply func([]models.ContentRuleRowSave)) *ManageRulesDialog {
+func NewManageRulesDialog(
+	mapping models.SidMapping,
+	rules []models.ContentRuleRowSave,
+	onApply func([]models.ContentRuleRowSave)) *ManageRulesDialog {
 	dialog := &ManageRulesDialog{
 		mapping: mapping,
 		rules:   utils.CloneRuleRows(rules),
@@ -77,11 +80,11 @@ func NewManageRulesDialog(mapping models.SidMapping, rules []models.ContentRuleR
 
 	for _, variant := range content_rules.GetVariantsForContent(mapping) {
 		for id, description := range variant.Variants {
-			dialog.variantIds = append(dialog.variantIds, id)
+			dialog.variantIDs = append(dialog.variantIDs, id)
 			dialog.variantLabels = append(dialog.variantLabels, description)
 		}
 	}
-	if len(dialog.variantIds) > 0 {
+	if len(dialog.variantIDs) > 0 {
 		dialog.types = append(dialog.types, ruleTypeOption{content_rules.RuleVariantName, editorVariant})
 	}
 
@@ -122,9 +125,10 @@ func (this *ManageRulesDialog) Body(gtx layout.Context, theme *material.Theme) (
 	rows := this.buildContentWidgets(theme)
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return material.List(theme, &this.scroll).Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
-				return rows[index](gtx)
-			})
+			return material.List(theme, &this.scroll).Layout(gtx, len(rows),
+				func(gtx layout.Context, index int) layout.Dimensions {
+					return rows[index](gtx)
+				})
 		}),
 		layout.Rigid(layout.Spacer{Height: unit.Dp(10)}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -169,7 +173,8 @@ func (this *ManageRulesDialog) buildContentWidgets(theme *material.Theme) []layo
 		this.layoutTypeRow(theme),
 		this.layoutEditor(theme),
 		func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, widgets.NewButtonWidget(theme, "+ Add / update", &this.addBtn, false))
+			return layout.Inset{Top: unit.Dp(6)}.Layout(gtx,
+				widgets.NewButtonWidget(theme, "+ Add / update", &this.addBtn, false))
 		},
 	)
 	return rows
@@ -232,7 +237,10 @@ func (this *ManageRulesDialog) layoutEditor(theme *material.Theme) layout.Widget
 	}
 }
 
-func (this *ManageRulesDialog) labeledControl(theme *material.Theme, label string, control layout.Widget) layout.Widget {
+func (this *ManageRulesDialog) labeledControl(
+	theme *material.Theme,
+	label string,
+	control layout.Widget) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -246,12 +254,13 @@ func (this *ManageRulesDialog) labeledControl(theme *material.Theme, label strin
 
 func (this *ManageRulesDialog) sectionLabel(theme *material.Theme, text string) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			label := material.Body1(theme, text)
-			label.Color = themes.ColorAccent
-			label.TextSize = unit.Sp(13)
-			return label.Layout(gtx)
-		})
+		return layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx,
+			func(gtx layout.Context) layout.Dimensions {
+				label := material.Body1(theme, text)
+				label.Color = themes.ColorAccent
+				label.TextSize = unit.Sp(13)
+				return label.Layout(gtx)
+			})
 	}
 }
 
@@ -302,11 +311,11 @@ func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRowSave,
 		return models.ContentRuleRowSave{Name: content_rules.RuleSoloEncounterName, IsSoloEncounter: &value}, true
 	case editorVariant:
 		variantIdx := this.variantDropdown.GetSelectedIndex()
-		if variantIdx < 0 || variantIdx >= len(this.variantIds) {
+		if variantIdx < 0 || variantIdx >= len(this.variantIDs) {
 			return models.ContentRuleRowSave{}, false
 		}
-		id := this.variantIds[variantIdx]
-		return models.ContentRuleRowSave{Name: content_rules.RuleVariantName, VariantId: &id}, true
+		id := this.variantIDs[variantIdx]
+		return models.ContentRuleRowSave{Name: content_rules.RuleVariantName, VariantID: &id}, true
 	}
 	return models.ContentRuleRowSave{}, false
 }

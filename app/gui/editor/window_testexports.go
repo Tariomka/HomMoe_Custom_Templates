@@ -36,12 +36,12 @@ func (this *Window) SelectedTabIndex() int {
 
 // DialogsOpen ONLY FOR INTEGRATION TEST USE
 func (this *Window) DialogsOpen() bool {
-	return this.state.Dialogs().IsOpen()
+	return this.state.GetDialogHost().IsOpen()
 }
 
 // CloseTopDialog ONLY FOR INTEGRATION TEST USE
 func (this *Window) CloseTopDialog() {
-	this.state.Dialogs().Close()
+	this.state.GetDialogHost().Close()
 }
 
 // GetStateDriver ONLY FOR INTEGRATION TEST USE

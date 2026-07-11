@@ -18,7 +18,7 @@ type GenerationTuning struct {
 	PlayerOwnedCastles             int
 }
 
-// NewGenerationTuning builds the content/guard scaling factors for the given configuration
+// NewGenerationTuning builds the content/guard scaling factors for the given configuration.
 func NewGenerationTuning(configuration *config.GeneratorConfig, totalZoneCount int) GenerationTuning {
 	remoteFootholdCount := 0
 	if configuration.SpawnRemoteFootholds {

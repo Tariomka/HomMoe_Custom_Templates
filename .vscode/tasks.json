@@ -2,12 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            // Runs ONLY the integration + performance suites, which are gated
-            // behind the "integration_test" build tag (they access Window
-            // internals via app/gui/editor/window_testexports.go). The tag is
-            // scoped to these two directories on purpose; do not add it to a
-            // global test run.
-            "label": "go: test integration+performance (integration_test)",
+            "label": "Go: Run Integration tests",
             "type": "shell",
             "command": "go",
             "args": [
@@ -15,28 +10,117 @@
                 "-tags=integration_test",
                 "-count=1",
                 "./test/integration/...",
-                "./test/performance/..."
             ],
             "group": "test",
             "problemMatcher": "$go"
         },
         {
-            // Normal test run for everything else. No "integration_test" tag, so
-            // the integration/performance packages compile to "[no test files]"
-            // and are skipped rather than failing.
-            "label": "go: test (default, no integration_test)",
+            "label": "Go: Run Performance tests",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-v",
+                "-bench=BenchmarkEditorWindow_TabCycling",
+                "-run=xxx",
+                "./test/performance/...",
+                "-tags=integration_test",
+                "-benchmem",
+                // "-cpuprofile='cpu.prof'",
+                // "-memprofile='memory.prof'",
+                "-benchtime=20x",
+                "-timeout=120s",
+                // "-args=headed"
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Run Unit tests",
             "type": "shell",
             "command": "go",
             "args": [
                 "test",
                 "-count=1",
-                "./..."
+                "./test/unit/..."
             ],
             "group": {
                 "kind": "test",
                 "isDefault": true
             },
             "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Generate code coverage report",
+            "type": "shell",
+            "command": "go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...; go tool cover '-html=coverage.txt' -o coverage.html; gcov2lcov '-infile=coverage.txt' '-outfile=lcov.info'",
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Run Linter",
+            "type": "shell",
+            "command": "golangci-lint-v2",
+            "args": [ "run", "./...", "--issues-exit-code=0", "--fix" ],
+            "problemMatcher": {
+                "owner": "go",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^([^\\s].*):(\\d+):(\\d+):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                }
+            },
+            "group": {
+                "kind": "build",
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
+        },
+        {
+            "label": "Go: Get Linter Results",
+            "type": "shell",
+            "command": "golangci-lint-v2",
+            "args": [
+                "run",
+                "./...",
+                "--issues-exit-code=0",
+                // "--cpu-profile-path=${cwd}/tmp/lint-cpu.prof",
+                // "--mem-profile-path=${cwd}/tmp/lint-mem.prof",
+                // "--trace-path=${cwd}/tmp/lint-trace.out",
+            ], 
+            "problemMatcher": {
+                "owner": "go",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^([^\\s].*):(\\d+):(\\d+):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
         }
     ]
 }
+

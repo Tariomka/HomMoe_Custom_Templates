@@ -12,11 +12,14 @@ env:
   GO_VERSION: 1.26.3
   coverage_file: coverage.txt
   coverage_artifact: code-coverage
+  coverage_percentage_threshold: 60.0
 
 jobs:
   check-go-mod:
     name: Check for dirty changes
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -37,7 +40,7 @@ jobs:
   run-gci-lint:
     name: Run Golangci-lint
     runs-on: ubuntu-latest
-    if: false
+    if: ${{ github.event_name == 'pull_request' && false }}
 
     steps:
       - name: Checkout code
@@ -52,6 +55,9 @@ jobs:
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12.2
+          install-mode: binary
 
   run-vulnerability-scan:
     name: Run Vulnerability Scan
@@ -121,17 +127,16 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run unit tests
-        run: go test -v -cover -coverprofile=${{ env.coverage_file }} ./...
+        run: go test -v -coverprofile=${{ env.coverage_file }} -coverpkg=./internal/...,./app/... ./test/unit/...
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.coverage_artifact }}
-          path: ${{ env.coverage_file }} # Make sure to use the same file name you chose for the "-coverprofile" in the "Test" step
+          path: ${{ env.coverage_file }}
 
   code_coverage:
     name: Code coverage report
-    if: github.event_name == 'pull_request' # Do not run when workflow is triggered by push to main branch
     runs-on: ubuntu-latest
     needs: run-unit-tests
     permissions:
@@ -145,18 +150,20 @@ jobs:
         with:
           coverage-artifact-name: ${{ env.coverage_artifact }}
           coverage-file-name: ${{ env.coverage_file }}
-          exclude: "test/*"
+          root-package: github.com/Tariomka/hommoe_custom_templates
+          trim: github.com/Tariomka/hommoe_custom_templates/
+          exclude: (?:^|/)test/(.+)$
 
       - name: Fail if coverage drops
-        if: ${{ steps.coverage.outputs.coverage_trend == 'decreased' }}
+        if: ${{ github.event_name == 'pull_request' && steps.coverage.outputs.coverage_trend == 'decreased' }}
         run: echo "Coverage decreased!" && exit 1
 
       - name: Enforce minimum coverage
-        if: false # TODO: Fix later, for now coverage shows up as 0% in the report
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           COV="${{ steps.coverage.outputs.total_coverage }}"
-          if (( $(echo "$COV < 80.0" | bc -l) )); then
-            echo "Coverage $COV% is below 80%" && exit 1
+          if (( $(echo "$COV < ${{ env.coverage_percentage_threshold }}" | bc -l) )); then
+            echo "Coverage $COV% is below ${{ env.coverage_percentage_threshold }}%" && exit 1
           fi
 
   run-integration-tests:
@@ -178,4 +185,4 @@ jobs:
         run: go test -v -tags integration_test ./test/integration/...
 
       - name: Run performance tests
-        run: go test -v -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
+        run: go test -v -tags integration_test ./test/performance/... -bench . -benchmem -benchtime 500x -timeout 30s

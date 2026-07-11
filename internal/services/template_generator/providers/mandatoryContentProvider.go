@@ -61,23 +61,6 @@ func (this *MandatoryContentProvider) CreateContents(
 	return groups
 }
 
-// hubContentGroup builds the hub zone's mandatory-content group from the
-// configured hub rows. It only exists for the Hub & Spoke topology and only
-// when the user actually configured hub content, matching the parallel C#
-// editor which references "mandatory_content_hub" only when hub rows are set.
-// The hub zone has no remote-foothold roads, so no foothold item is added.
-func (this *MandatoryContentProvider) hubContentGroup(
-	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
-	if configuration.Topology != config.TopologyHubAndSpoke || len(configuration.HubZoneMandatoryContent) == 0 {
-		return entities.MandatoryContent{}, false
-	}
-	content := cloneContentItems(configuration.HubZoneMandatoryContent)
-	if configuration.ZoneConfiguration.HubZoneCastles == 0 {
-		content = stripNearCastleRules(content)
-	}
-	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
-}
-
 // CreateContentsForZones rebuilds the mandatory-content groups from the final
 // zones (after any manual edits) instead of from the original generation plan.
 // A zone whose quality or castle count was changed in the manual zone editor no
@@ -142,11 +125,29 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 		if row.Sid == "" {
 			continue
 		}
-		for i := 0; i < row.Count; i++ {
+		for range row.Count {
 			out = append(out, this.createContentItemFrom(row))
 		}
 	}
 	return out
+}
+
+// hubContentGroup builds the hub zone's mandatory-content group from the
+// configured hub rows. It only exists for the Hub & Spoke topology and only
+// when the user actually configured hub content, matching the parallel C#
+// editor which references "mandatory_content_hub" only when hub rows are set.
+// The hub zone has no remote-foothold roads, so no foothold item is added.
+func (this *MandatoryContentProvider) hubContentGroup(
+	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
+	if configuration.Topology != config.TopologyHubAndSpoke || len(configuration.HubZoneMandatoryContent) == 0 {
+		return entities.MandatoryContent{}, false
+	}
+
+	content := cloneContentItems(configuration.HubZoneMandatoryContent)
+	if configuration.ZoneConfiguration.HubZoneCastles == 0 {
+		content = stripNearCastleRules(content)
+	}
+	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
 }
 
 func (this *MandatoryContentProvider) createContentItemFrom(
@@ -212,7 +213,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 
 // stripNearCastleRules removes placement rules that anchor an item near
 // the zone's main castle. Used when a zone has no castle so the rule
-// would never be satisfiable
+// would never be satisfiable.
 func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
 	for i := range items {
 		if len(items[i].Rules) == 0 {
@@ -260,6 +261,8 @@ func neutralRowsForQuality(
 		return configuration.LowNeutralMandatoryContent
 	case models.QualityHigh:
 		return configuration.HighNeutralMandatoryContent
+	case models.QualityMedium:
+		fallthrough
 	default:
 		return configuration.MediumNeutralMandatoryContent
 	}

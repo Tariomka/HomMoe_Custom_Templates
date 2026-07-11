@@ -1,13 +1,15 @@
 package handlers
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
@@ -16,13 +18,24 @@ type GUIHandler struct {
 	templateGenerator *template_generator.TemplateGenerator
 	mapper            *mappers.GeneratorConfigMapper
 	contentProvider   *providers.MandatoryContentProvider
+	fileService       *file_service.FileService
+	previewGenerator  *preview_service.PreviewGeneratorService
 }
 
 func NewGuiHandler() *GUIHandler {
+	previewGenerator, err := preview_service.NewPreviewGenerator()
+	if err != nil {
+		slog.Error(
+			"Preview Generator failed to initialize, preview images will not be generated",
+			slog.String("error", err.Error()))
+	}
+
 	return &GUIHandler{
 		templateGenerator: template_generator.NewTemplateGenerator(nil),
 		mapper:            mappers.NewConfigMapper(),
 		contentProvider:   providers.NewMandatoryContentProvider(),
+		fileService:       file_service.NewFileService(),
+		previewGenerator:  previewGenerator,
 	}
 }
 
@@ -46,28 +59,28 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 		return dtos.TemplateLoadDto{}, common.ErrProvidedTemplateInvalid
 	}
 
-	templateDto.Template.Variants[0].Zones = templateDto.Zones
-	templateDto.Template.Variants[0].Connections = templateDto.Connections
+	newTemplate := *templateDto.Template
+	newTemplate.Variants[0].Zones = templateDto.Zones
+	newTemplate.Variants[0].Connections = templateDto.Connections
 
-	// TODO: might not be needed, eventually I will investigate this and remove it if need be
 	connection_editor.RebuildZoneConnectionRoads(
-		templateDto.Template.Variants[0].Zones,
-		templateDto.Template.Variants[0].Connections)
+		newTemplate.Variants[0].Zones,
+		newTemplate.Variants[0].Connections)
 
 	// Rebuild mandatory content from the final zones so a zone re-tiered in the
 	// manual editor (e.g. Medium -> High) gets the content of its new quality
 	// instead of keeping the content keyed to its original generation tier.
 	if templateDto.Config != nil {
-		templateDto.Template.MandatoryContent = this.contentProvider.CreateContentsForZones(
-			*templateDto.Config, templateDto.Template.Variants[0].Zones)
+		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(
+			*templateDto.Config, newTemplate.Variants[0].Zones)
 	}
 
 	var err error
-	if connection_editor.ComputeHasErrors(templateDto.Zones, templateDto.Connections) {
+	if connection_editor.ComputeHasErrors(newTemplate.Variants[0].Zones, newTemplate.Variants[0].Connections) {
 		err = common.ErrZonesMissing
 	}
 
-	return dtos.TemplateLoadDto{Template: templateDto.Template}, err
+	return dtos.TemplateLoadDto{Template: &newTemplate}, err
 }
 
 func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {
@@ -80,14 +93,17 @@ func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, 
 		return "", common.ErrNoOutputPath
 	}
 
-	out, err := services.WriteTemplate(outputPath, templateDto.Template)
+	out, err := this.fileService.SaveTemplate(outputPath, templateDto.Template)
 	if err != nil {
 		return "", err
 	}
 
-	_, err = services.WritePreviewPNG(outputPath, templateDto.Template, templateDto.Topology)
-	if err != nil {
-		return out, err
+	if this.previewGenerator != nil {
+		previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
+		_, err = this.fileService.SavePreviewImage(outputPath, previewImage, templateDto.Template.Name)
+		if err != nil {
+			return out, err
+		}
 	}
 
 	return out, nil
@@ -99,7 +115,7 @@ func (this *GUIHandler) LoadState(path string) (*dtos.EditorStateDto, error) {
 		return nil, common.ErrNoOutputPath
 	}
 
-	loaded, err := services.LoadSettingsFile(path)
+	loaded, err := this.fileService.LoadSettingsFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +133,7 @@ func (this *GUIHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, err
 		return "", common.ErrNoOutputPath
 	}
 
-	err := services.SaveSettingsFile(outputPath, stateDto.State)
+	err := this.fileService.SaveSettings(outputPath, stateDto.State)
 	if err != nil {
 		return "", err
 	}

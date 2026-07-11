@@ -66,9 +66,10 @@ func (this *ChainClusterService) createZones(
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(allNeutralZonePlans).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
-					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning, false))
+					linq.FromSlice(allNeutralZonePlans).
+						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
 	}
 	return zones

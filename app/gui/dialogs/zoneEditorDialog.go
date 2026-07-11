@@ -19,7 +19,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
@@ -27,6 +26,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
@@ -81,7 +81,7 @@ type ZoneEditorDialog struct {
 
 	// Geometry recomputed every frame from BuildPreviewLayout.
 	positions    map[string]image.Point
-	previewZones []services.PreviewZone
+	previewZones []preview.PreviewZone
 	radius       int
 	side         int
 	edges        []connEdgeGeom
@@ -306,7 +306,12 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 		} else if this.addZoneMode {
 			message = "Add zone mode: click an empty spot to place a zone. Repeat to add more."
 		} else if isolated := connection_editor.FindIsolatedZones(this.zones, connections); len(isolated) > 0 {
-			message = fmt.Sprintf("%d zones · %d connections · %d isolated zone(s)", len(this.zones), len(connections), len(isolated))
+			message = fmt.Sprintf(
+				"%d zones · %d connections · %d isolated zone(s)",
+				len(this.zones),
+				len(connections),
+				len(isolated),
+			)
 		}
 		label := material.Body2(theme, message)
 		label.Color = themes.ColorTextDim
@@ -351,7 +356,14 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	}.Op())
 
 	if len(this.zones) == 0 {
-		return widgets.NewCenteredMessageWidget(theme, "No zones to edit - generate a template first.", canvasSize, outer)(gtx)
+		return widgets.NewCenteredMessageWidget(
+			theme,
+			"No zones to edit - generate a template first.",
+			canvasSize,
+			outer,
+		)(
+			gtx,
+		)
 	}
 
 	area := clip.Rect{Max: canvasSize}.Push(gtx.Ops)
@@ -399,6 +411,7 @@ func (this *ZoneEditorDialog) handlePointer(gtx layout.Context) {
 			this.moveDraggedZone(pos)
 		case pointer.Release:
 			this.onRelease(pos)
+		case pointer.Cancel, pointer.Enter, pointer.Leave, pointer.Move, pointer.Scroll: // noop
 		}
 	}
 }
@@ -487,7 +500,7 @@ func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection 
 	bestDistance := 9.0
 	for i := range this.edges {
 		edge := this.edges[i]
-		for step := 0; step <= 20; step++ {
+		for step := range 21 {
 			t := float64(step) / 20.0
 			mt := 1 - t
 			bx := mt*mt*float64(edge.p0.X) + 2*mt*t*float64(edge.ctrl.X) + t*t*float64(edge.p1.X)
@@ -638,7 +651,14 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 			dot := image.Rect(edge.mid.X-marker, edge.mid.Y-marker, edge.mid.X+marker, edge.mid.Y+marker)
 			paint.FillShape(gtx.Ops, colorUserAddedDot, clip.UniformRRect(dot, marker).Op(gtx.Ops))
 		}
-		drawCanvasText(gtx, theme, image.Pt(edge.mid.X, edge.mid.Y-gtx.Dp(unit.Dp(9))), strconv.Itoa(edge.conn.GuardValue), 9, colorGuardLabel)
+		drawCanvasText(
+			gtx,
+			theme,
+			image.Pt(edge.mid.X, edge.mid.Y-gtx.Dp(unit.Dp(9))),
+			strconv.Itoa(edge.conn.GuardValue),
+			9,
+			colorGuardLabel,
+		)
 	}
 }
 
@@ -712,10 +732,11 @@ func (this *ZoneEditorDialog) layoutSidePanel(gtx layout.Context, theme *materia
 				this.syncedZoneFor = zone.Name
 			}
 			rows := this.zonePropertyRows(theme, zone)
-			dims := material.List(theme, &this.sideScroll).Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
-				return rows[index](gtx)
-			})
-			this.writebackZoneProps(gtx, zone)
+			dims := material.List(theme, &this.sideScroll).
+				Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
+					return rows[index](gtx)
+				})
+			this.writebackZoneProps(zone)
 			return dims
 		}
 		if this.selected == nil {
@@ -726,17 +747,19 @@ func (this *ZoneEditorDialog) layoutSidePanel(gtx layout.Context, theme *materia
 			this.syncedFor = this.selected
 		}
 		rows := this.propertyRows(theme)
-		dims := material.List(theme, &this.sideScroll).Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
-			return rows[index](gtx)
-		})
-		this.writebackProps(gtx)
+		dims := material.List(theme, &this.sideScroll).
+			Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
+				return rows[index](gtx)
+			})
+		this.writebackProps()
 		return dims
 	})
 	return layout.Dimensions{Size: size}
 }
 
 func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+	return layout.Flex{Axis: layout.Vertical}.Layout(
+		gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			label := material.Body1(theme, "Nothing selected")
 			label.Color = themes.ColorText
@@ -744,13 +767,30 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Click a zone to edit its size, quality and guards - drag it to move it.")),
+		layout.Rigid(
+			widgets.NewDimmedLabelWidget(
+				theme,
+				"Click a zone to edit its size, quality and guards - drag it to move it.",
+			),
+		),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Click a connection line to edit its guard, type and growth.")),
+		layout.Rigid(
+			widgets.NewDimmedLabelWidget(theme, "Click a connection line to edit its guard, type and growth."),
+		),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add connection”, then drag from one zone to another to create a link.")),
+		layout.Rigid(
+			widgets.NewDimmedLabelWidget(
+				theme,
+				"Use “Add connection”, then drag from one zone to another to create a link.",
+			),
+		),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(widgets.NewDimmedLabelWidget(theme, "Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.")),
+		layout.Rigid(
+			widgets.NewDimmedLabelWidget(
+				theme,
+				"Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.",
+			),
+		),
 	)
 }
 
@@ -767,22 +807,39 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 	if connection.IsUserAdded {
 		rows = append(rows, widgets.NewDimmedLabelWidget(theme, "User-added connection"))
 	}
-	rows = append(rows,
+	rows = append(
+		rows,
 		widgets.NewVerticalSpacerWidget(6),
 		widgets.NewLabeledRowWidget(theme, "Type", 110, this.typeDropdown.GetWidget(theme)),
 		widgets.NewLabeledRowWidget(theme, "Guard zone", 110, this.guardZoneDropdown.GetWidget(theme)),
 		widgets.NewVerticalSpacerWidget(4),
 		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, this.guardDropdown.GetWidget(theme)),
-		widgets.NewLabeledRowWidget(theme, "Guard value", 110, widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false)),
+		widgets.NewLabeledRowWidget(
+			theme,
+			"Guard value",
+			110,
+			widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false),
+		),
 		widgets.NewVerticalSpacerWidget(4),
 		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, this.weeklyDropdown.GetWidget(theme)),
-		widgets.NewLabeledRowWidget(theme, "Increment", 110, widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false)),
+		widgets.NewLabeledRowWidget(
+			theme,
+			"Increment",
+			110,
+			widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false),
+		),
 		widgets.NewVerticalSpacerWidget(6),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.advancedBool, "Advanced options"),
 	)
 	if this.advancedBool.Value {
-		rows = append(rows,
-			widgets.NewLabeledRowWidget(theme, "Match group", 110, widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_...", false)),
+		rows = append(
+			rows,
+			widgets.NewLabeledRowWidget(
+				theme,
+				"Match group",
+				110,
+				widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_...", false),
+			),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.escapeBool, "Guard escape"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.simSquadBool, "Sim turn squad"),
 		)
@@ -825,7 +882,7 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 
 // writebackProps copies the property widget state back into the selected
 // connection after the panel has been laid out for this frame.
-func (this *ZoneEditorDialog) writebackProps(gtx layout.Context) {
+func (this *ZoneEditorDialog) writebackProps() {
 	connection := this.selected
 	if connection == nil {
 		return
@@ -847,7 +904,8 @@ func (this *ZoneEditorDialog) writebackProps(gtx layout.Context) {
 		connection.GuardValue = value
 	}
 	if this.weeklyDropdown.WasUpdated {
-		if index := this.weeklyDropdown.GetSelectedIndex(); index >= 0 && index < len(connection_editor.WeeklyIncrementValues) {
+		if index := this.weeklyDropdown.GetSelectedIndex(); index >= 0 &&
+			index < len(connection_editor.WeeklyIncrementValues) {
 			this.weeklyEdit.SetText(formatIncrement(connection_editor.WeeklyIncrementValues[index]))
 		}
 	}
@@ -1042,7 +1100,12 @@ func (this *ZoneEditorDialog) otherZoneGuides(radius float64) (guidesX, guidesY 
 // snapAxis snaps a single axis value. Zone-alignment guides win over the grid;
 // within each class the smallest correction wins. When a zone guide is hit its
 // coordinate is returned so the caller can draw an alignment indicator.
-func snapAxis(value float64, offsets [3]float64, guides []float64, gridStep float64) (snapped float64, guide float64, zoneGuideHit bool) {
+func snapAxis(
+	value float64,
+	offsets [3]float64,
+	guides []float64,
+	gridStep float64,
+) (snapped float64, guide float64, zoneGuideHit bool) {
 	best := math.MaxFloat64
 	bestGuide := 0.0
 	for _, offset := range offsets {
@@ -1139,8 +1202,7 @@ func (this *ZoneEditorDialog) deleteZone(name string) {
 	this.zones = zones
 	this.working = this.working[:0]
 	for i := range connections {
-		kept := connections[i]
-		this.working = append(this.working, &kept)
+		this.working = append(this.working, &connections[i])
 	}
 	this.selected = nil
 	this.syncedFor = nil
@@ -1163,16 +1225,35 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 		},
 	}
 	if isSpawn {
-		rows = append(rows, widgets.NewDimmedLabelWidget(theme, "Player spawn zone - content is managed by the generator."))
+		rows = append(
+			rows,
+			widgets.NewDimmedLabelWidget(theme, "Player spawn zone - content is managed by the generator."),
+		)
 	} else if !isNeutral {
 		rows = append(rows, widgets.NewDimmedLabelWidget(theme, "Quality presets apply to neutral zones only."))
 	}
-	rows = append(rows,
+	rows = append(
+		rows,
 		widgets.NewVerticalSpacerWidget(6),
-		widgets.NewLabeledRowWidget(theme, "Size", 110, widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 - 2.0", false)),
+		widgets.NewLabeledRowWidget(
+			theme,
+			"Size",
+			110,
+			widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 - 2.0", false),
+		),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(theme, "Guard x", 110, widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier", false)),
-		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15", false)),
+		widgets.NewLabeledRowWidget(
+			theme,
+			"Guard x",
+			110,
+			widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier", false),
+		),
+		widgets.NewLabeledRowWidget(
+			theme,
+			"Weekly +",
+			110,
+			widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15", false),
+		),
 	)
 	if isNeutral {
 		rows = append(rows,
@@ -1194,10 +1275,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 	quality := connection_editor.QualityOfZone(*zone)
 	this.qualityDropdown.SelectByName(connection_editor.QualityLabels[int(quality)])
-	castles := connection_editor.CountZoneCastles(*zone)
-	if castles > 4 {
-		castles = 4
-	}
+	castles := min(connection_editor.CountZoneCastles(*zone), 4)
 	this.castleDropdown.SelectByName(strconv.Itoa(castles))
 	this.zoneSizeEdit.SetText(strconv.FormatFloat(zone.Size, 'f', -1, 64))
 	this.zoneGuardEdit.SetText(strconv.FormatFloat(zone.GuardMultiplier, 'f', -1, 64))
@@ -1206,7 +1284,7 @@ func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 
 // writebackZoneProps copies the zone widget state back into the selected zone
 // after the panel has been laid out for this frame.
-func (this *ZoneEditorDialog) writebackZoneProps(gtx layout.Context, zone *entities.Zone) {
+func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 	if value, err := strconv.ParseFloat(strings.TrimSpace(this.zoneSizeEdit.Text()), 64); err == nil {
 		zone.Size = math.Round(math.Min(math.Max(value, 0.1), 2.0)*100) / 100
 	}
@@ -1267,7 +1345,14 @@ func formatIncrement(value float64) string {
 	return strconv.FormatFloat(value, 'g', -1, 64)
 }
 
-func drawCanvasText(gtx layout.Context, theme *material.Theme, center image.Point, text string, sizeSp int, textColor color.NRGBA) {
+func drawCanvasText(
+	gtx layout.Context,
+	theme *material.Theme,
+	center image.Point,
+	text string,
+	sizeSp int,
+	textColor color.NRGBA,
+) {
 	macro := op.Record(gtx.Ops)
 	local := gtx
 	local.Constraints.Min = image.Point{}

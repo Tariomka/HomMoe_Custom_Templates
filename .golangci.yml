@@ -1,10 +1,8 @@
 version: "2"
 
 issues:
-  # Maximum count of issues with the same text.
-  # Set to 0 to disable.
-  # Default: 3
-  max-same-issues: 50
+  max-same-issues: 0 # Maximum count of issues with the same text. Set to 0 to disable.
+  uniq-by-line: false # Make issues output unique by line.
 
 formatters:
   enable:
@@ -46,7 +44,6 @@ linters:
     - gocognit # computes and checks the cognitive complexity of functions
     - goconst # finds repeated strings that could be replaced by a constant
     - gocritic # provides diagnostics that check for bugs, performance and style issues
-    - gocyclo # computes and checks the cyclomatic complexity of functions
     - godoclint # checks Golang's documentation practice
     - godot # checks if comments end in a period
     - gomoddirectives # manages the use of 'replace', 'retract', and 'excludes' directives in go.mod
@@ -69,7 +66,6 @@ linters:
     - nilnil # checks that there is no simultaneous return of nil error and an invalid value
     - noctx # finds sending http request without context.Context
     - nolintlint # reports ill-formed or insufficient nolint directives
-    - nonamedreturns # reports all named returns
     - nosprintfhostport # checks for misuse of Sprintf to construct a host with port in a URL
     - paralleltest # detects missing usage of t.Parallel() method in your Go test
     - perfsprint # checks that fmt.Sprintf can be replaced with a faster alternative
@@ -79,7 +75,6 @@ linters:
     - reassign # checks that package variables are not reassigned
     - recvcheck # checks for receiver type consistency
     - revive # fast, configurable, extensible, flexible, and beautiful linter for Go, drop-in replacement of golint
-    - rowserrcheck # checks whether Err of rows is checked successfully
     - sloglint # ensure consistent code style when using log/slog
     - spancheck # checks for mistakes with OpenTelemetry/Census spans
     - sqlclosecheck # checks that sql.Rows and sql.Stmt are closed
@@ -127,34 +122,15 @@ linters:
   # All settings can be found here https://github.com/golangci/golangci-lint/blob/HEAD/.golangci.reference.yml
   settings:
     cyclop:
-      # The maximal code complexity to report.
-      # Default: 10
-      max-complexity: 30
-      # The maximal average package complexity.
-      # If it's higher than 0.0 (float) the check is enabled.
-      # Default: 0.0
-      package-average: 10.0
+      max-complexity: 30 # The maximal code complexity to report.
+      package-average: 10.0 # The maximal average package complexity.
 
     depguard:
-      # Rules to apply.
-      #
-      # Variables:
-      # - File Variables
-      #   Use an exclamation mark `!` to negate a variable.
-      #   Example: `!$test` matches any file that is not a go test file.
-      #
-      #   `$all` - matches all go files
-      #   `$test` - matches all go test files
-      #
-      # - Package Variables
-      #
-      #   `$gostd` - matches all of go's standard library (Pulled from `GOROOT`)
-      #
-      # Default (applies if no custom rules are defined): Only allow $gostd in all files.
       rules:
         no-ui-from-internal:
           files:
             - "**/internal/**"
+            - "!$test"
           deny:
             - pkg: github.com/Tariomka/hommoe_custom_templates/app
               desc: internal/* must not import app/*
@@ -162,6 +138,7 @@ linters:
         config-inner-private:
           files:
             - "!**/internal/models/config/**"
+            - "!$test"
           deny:
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner
               desc: import internal/models/config instead
@@ -169,6 +146,7 @@ linters:
         template-inner-private:
           files:
             - "!**/internal/entities/**"
+            - "!$test"
           deny:
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/entities/template
               desc: import internal/entities instead
@@ -199,9 +177,7 @@ linters:
               desc: Use log/slog instead, see https://go.dev/blog/slog
 
     embeddedstructfieldcheck:
-      # Checks that sync.Mutex and sync.RWMutex are not used as embedded fields.
-      # Default: false
-      forbid-mutex: true
+      forbid-mutex: true # Checks that sync.Mutex and sync.RWMutex are not used as embedded fields.
 
     errcheck:
       # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
@@ -253,9 +229,10 @@ linters:
       allow-empty-returns: true
 
     funcorder:
-      # Checks if the exported methods of a structure are placed before the non-exported ones.
-      # Default: true
-      struct-method: false
+      constructor: true # Checks that constructors are placed after the structure declaration.
+      struct-method: true # Checks if the exported methods of a structure are placed before the unexported ones.
+      alphabetical: false # Checks if the constructors and/or structure methods are sorted alphabetically.
+      function: true # Checks that exported functions are placed before unexported functions.
 
     funlen:
       lines: 60
@@ -270,23 +247,14 @@ linters:
       min-complexity: 30
 
     gocritic:
-      # Settings passed to gocritic.
-      # The settings key is the name of a supported gocritic checker.
-      # The list of supported checkers can be found at https://go-critic.com/overview.
       settings:
         captLocal:
-          # Whether to restrict checker to params only.
-          # Default: true
-          paramsOnly: false
+          paramsOnly: false # Whether to restrict checker to params only.
         underef:
-          # Whether to skip (*x).method() calls where x is a pointer receiver.
-          # Default: true
-          skipRecvDeref: false
+          skipRecvDeref: false # Whether to skip (*x).method() calls where x is a pointer receiver.
 
     godoclint:
-      # List of rules to enable in addition to the default set.
-      # Default: empty
-      enable:
+      enable: # List of rules to enable in addition to the default set.
         # Assert no unused link in godocs.
         # https://github.com/godoc-lint/godoc-lint?tab=readme-ov-file#no-unused-link
         - no-unused-link
@@ -294,92 +262,55 @@ linters:
         # https://github.com/godoc-lint/godoc-lint?tab=readme-ov-file#require-stdlib-doclink
         - require-stdlib-doclink
 
+    gosec:
+      excludes:
+        - G404 # Use of weak random number generator (math/rand instead of crypto/rand)
+
     govet:
-      # Enable all analyzers.
-      # Default: false
       enable-all: true
-      # Disable analyzers by name.
-      # Run `GL_DEBUG=govet golangci-lint run --enable=govet` to see default, all available analyzers, and enabled analyzers.
-      # Default: []
       disable:
         - fieldalignment # too strict
-      # Settings per analyzer.
       settings:
         shadow:
-          # Whether to be strict about shadowing; can be noisy.
-          # Default: false
-          strict: true
+          strict: false # Whether to be strict about shadowing; can be noisy. #TEMP
 
     inamedparam:
-      # Skips check for interface methods with only a single parameter.
-      # Default: false
-      skip-single-param: true
-
-    mnd:
-      # List of function patterns to exclude from analysis.
-      # Values always ignored: `time.Date`,
-      # `strconv.FormatInt`, `strconv.FormatUint`, `strconv.FormatFloat`,
-      # `strconv.ParseInt`, `strconv.ParseUint`, `strconv.ParseFloat`.
-      # Default: []
-      ignored-functions:
-        - args.Error
-        - flag.Arg
-        - flag.Duration.*
-        - flag.Float.*
-        - flag.Int.*
-        - flag.Uint.*
-        - os.Chmod
-        - os.Mkdir.*
-        - os.OpenFile
-        - os.WriteFile
-        - prometheus.ExponentialBuckets.*
-        - prometheus.LinearBuckets
+      skip-single-param: true # Skips check for interface methods with only a single parameter.
 
     nakedret:
-      # Make an issue if func has more lines of code than this setting, and it has naked returns.
-      # Default: 30
-      max-func-lines: 0
+      max-func-lines: 0 # Make an issue if func has more lines of code than this setting, and it has naked returns.
 
     nolintlint:
-      # Exclude following linters from requiring an explanation.
-      # Default: []
       allow-no-explanation: [ funlen, gocognit, golines ]
-      # Enable to require an explanation of nonzero length after each nolint directive.
-      # Default: false
       require-explanation: true
-      # Enable to require nolint directives to mention the specific linter being suppressed.
-      # Default: false
       require-specific: true
 
     perfsprint:
-      # Optimizes into strings concatenation.
-      # Default: true
-      strconcat: false
+      strconcat: false # Optimizes into strings concatenation.
 
     reassign:
-      # Patterns for global variable names that are checked for reassignment.
-      # See https://github.com/curioswitch/go-reassign#usage
-      # Default: ["EOF", "Err.*"]
-      patterns:
+      patterns: # Patterns for global variable names that are checked for reassignment.
         - ".*"
 
-    rowserrcheck:
-      # database/sql is always checked.
-      # Default: []
-      packages:
-        - github.com/jmoiron/sqlx
+    revive:
+      enable-default-rules: true
+      rules:
+        - name: unexported-return
+          severity: warning
+          disabled: false
+          exclude:
+            - "~internal/registry/"
+
+        - name: receiver-naming
+          disabled: true
+
+        - name: var-naming
+          severity: warning
+          disabled: false
 
     sloglint:
-      # Report the use of global loggers.
-      # https://github.com/go-simpler/sloglint#no-global-logger
-      # Values: "all", "default"
-      # Default: "" (disabled)
-      no-global: all
-      # Report the use of functions without a context.Context.
-      # https://github.com/go-simpler/sloglint#context-only
-      # Values: "all", "scope"
-      # Default: "" (disabled)
-      context: scope
+      no-global: default # Report the use of global loggers.
+      context: scope # Report the use of functions without a context.Context.
 
     staticcheck:
       checks:
@@ -391,44 +322,63 @@ linters:
         # Reason: Too noisy. Generic name is useful to distinguish attached struct from ouside variables. Single character names are evil
         - -ST1006
         # Incorrect or missing package comment. https://staticcheck.dev/docs/checks/#ST1000
-        # Temporarily disabled while still work in progress
+        # TEMP disabled while still work in progress
         - -ST1000
 
     usetesting:
-      # Enable/disable `os.TempDir()` detections.
-      # Default: false
-      os-temp-dir: true
+      os-temp-dir: true # Enable/disable `os.TempDir()` detections.
 
   exclusions:
-    # Log a warning if an exclusion rule is unused.
-    # Default: false
-    warn-unused: true
-    # Predefined exclusion rules.
-    # Default: []
-    presets:
+    warn-unused: true # Log a warning if an exclusion rule is unused.
+    presets: # Predefined exclusion rules.
       - std-error-handling
       - common-false-positives
-    # Excluding configuration per-path, per-linter, per-text and per-source.
-    rules:
+    rules: # Excluding configuration per-path, per-linter, per-text and per-source.
       - source: 'TODO'
         linters: [ godot ]
+
       - text: 'should have a package comment'
         linters: [ revive ]
+
       - text: 'exported \S+ \S+ should have comment( \(or a comment on this block\))? or be unexported'
         linters: [ revive ]
+
       - text: 'package comment should be of the form ".+"'
         source: '// ?(nolint|TODO)'
         linters: [ revive ]
+
       - text: 'comment on exported \S+ \S+ should be of the form ".+"'
         source: '// ?(nolint|TODO)'
         linters: [ revive, staticcheck ]
+
       - path: '_test\.go'
-        linters:
-          - bodyclose
-          - dupl
-          - errcheck
-          - funlen
-          - goconst
-          - gosec
-          - noctx
-          - wrapcheck
+        linters: [ "bodyclose", "dupl", "errcheck", "funlen", "goconst", "gosec", "noctx", "wrapcheck" ]
+
+      - path: '(app/gui/themes|app/gui/constants|internal/registry|internal/services/content_rules)/'
+        linters: [ dupl ]
+
+severity:
+  default: "@linter"
+  rules:
+  - severity: warning
+    linters:
+    - godox
+    - dupl
+    - unparam
+    - gochecknoglobals # temporarily make it less critical
+
+  - severity: note
+    linters:
+      - sloglint
+
+output:
+  formats:
+    text:
+      path: stdout
+      colors: true
+
+    html:
+      path: ./tmp/lint-report.html
+
+    sarif:
+      path: ./tmp/lint-report.sarif

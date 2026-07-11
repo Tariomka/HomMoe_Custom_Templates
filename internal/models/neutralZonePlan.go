@@ -21,6 +21,8 @@ func (this NeutralZonePlan) GetBalanceScore() float64 {
 		qualityScore = 3.0
 	case QualityMedium:
 		qualityScore = 2.0
+	case QualityLow:
+		fallthrough
 	default:
 		qualityScore = 1.0
 	}
@@ -85,6 +87,8 @@ func (this *NeutralZonePlans) GetTier(label string) int {
 		return 3
 	case QualityMedium:
 		return 2
+	case QualityLow:
+		fallthrough
 	default:
 		return 1
 	}

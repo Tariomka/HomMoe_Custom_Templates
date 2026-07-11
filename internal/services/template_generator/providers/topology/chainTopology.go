@@ -32,10 +32,13 @@ func (this *ChainTopologyService) CreateTopologyVariant(
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
 	connNames := this.createConnectionNames(playerLetters, orderedLabels, isIsolated)
 
-	zones := this.createZones(configuration, playerLetters, orderedLabels, tuning, neutralZones, holdCityNeutralLetter, connNames)
+	zones := this.createZones(
+		configuration, playerLetters, orderedLabels, tuning, neutralZones, holdCityNeutralLetter, connNames)
 	conns := this.createConnections(playerLetters, orderedLabels, tuning, neutralZones, connNames)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLetters, orderedLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(
+				playerLetters, orderedLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLetters, zones, conns, tuning)...)
@@ -50,9 +53,12 @@ func (this *ChainTopologyService) createConnectionNames(
 
 	connNames := make([]string, labelCount-1)
 	for i := range labelCount - 1 {
-		if isIsolated && slices.Contains(playerLetters, orderedLabels[i]) && slices.Contains(playerLetters, orderedLabels[i+1]) {
+		if isIsolated &&
+			slices.Contains(playerLetters, orderedLabels[i]) &&
+			slices.Contains(playerLetters, orderedLabels[i+1]) {
 			continue
 		}
+
 		connNames[i] = fmt.Sprintf("Chain-%s-%s", orderedLabels[i], orderedLabels[i+1])
 	}
 	return connNames
@@ -79,13 +85,15 @@ func (this *ChainTopologyService) createZones(
 		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
 			zones = append(zones,
 				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), tempConnectionNames, configuration.ZoneConfiguration.PlayerZoneCastles,
-					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
+					label, fmt.Sprintf("Player%d", playerIndex+1), tempConnectionNames,
+					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
+					configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					linq.FromSlice(neutralZones).
+						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
 					tempConnectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}

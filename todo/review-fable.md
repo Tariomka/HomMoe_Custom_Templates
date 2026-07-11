@@ -81,33 +81,6 @@ this.connectionsModified = true
 The same pattern must be audited everywhere `_` receives an error: `grep -n ", _ :=" app/gui internal`
 and justify or fix each hit.
 
-### 1.2 🔴 The `unsaved` flag is write-only — the documented feature is dead
-[app/gui/drivers/state.go](../app/gui/drivers/state.go#L34) declares `unsaved bool`; it is set to
-`false` in three places (lines ~159, ~486, ~499) and **never set to `true`**. Consequences:
-
-- The toolbar asterisk (`toolbar.go` line 72, `this.state.IsUnsaved()`) never renders.
-- QUICKSTART.md documents "a trailing `*` marks unsaved edits" — the feature does not work.
-- The commented-out exit guard in `Exit()` (state.go lines 224–227) could never have worked.
-
-**Fix (exact):** set `unsaved = true` in the single mutation funnel `State.UpdateState`
-(state.go line ~253) *when the update actually changed something*, and after
-`ApplyEditedZones`:
-
-```go
-func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
-    before := *this.stateDto
-    updateFunc(this.stateDto)
-    // ... existing AdvancedMode normalization ...
-    if !before.EqualsIgnoringManualEdits(this.stateDto) {
-        this.unsaved = true
-    }
-}
-```
-
-Then re-enable the exit guard (see 1.3). Cheaper alternative if the per-call compare is too hot
-(UpdateState is called from click handlers, not per-frame, so it is not): set `unsaved = true`
-unconditionally in `UpdateState` and accept rare false positives.
-
 ### 1.3 🔴 `State.Exit` calls `os.Exit(0)` with the safety check commented out
 [app/gui/drivers/state.go](../app/gui/drivers/state.go#L223-L229)
 
@@ -143,94 +116,6 @@ func (this *State) Exit() {
 (A tiny two-press confirm avoids building a confirm dialog; if you prefer a dialog, open one via
 `this.dialogs.Open(...)` — the infrastructure already exists.)
 
-### 1.4 🔴 Windows drive-relative paths in `internal/helpers/io.go`
-[internal/helpers/io.go](../internal/helpers/io.go#L13-L24)
-
-```go
-windowsSteamPath = filepath.Join("C:", "Program Files (x86)", "Steam")
-windowsUserPath  = filepath.Join("C:", "Users", os.Getenv("USERNAME"))
-```
-
-Since Go 1.20, `filepath.Join("C:", "a")` deliberately returns **`C:a`** (a *drive-relative* path),
-not `C:\a`, to avoid turning a relative path absolute. `os.Stat("C:Program Files (x86)\Steam")`
-resolves against the process's per-drive working directory — it usually works by accident (the C:
-CWD defaults to `C:\`), but breaks whenever the process or a parent shell has changed the C: drive
-CWD. Three more problems in the same file:
-
-- 🔴 `getBasePath` (line ~92): `vdfContent["libraryfolders"].(map[string]any)` — unchecked type
-  assertion; a corrupt/old-format `libraryfolders.vdf` panics the app at startup
-  (`NewUIState` calls `FindOldenEraTemplatesDir` on line ~92 of state.go).
-- 🟠 `os.Getenv("USERNAME")`/`os.Getenv("HOME")` are read at package-init into package vars — wrong
-  for redirected profiles, untestable, and evaluated even when never needed.
-- 🟠 Hardcoded `C:` breaks Steam installs on other drives; the Windows registry
-  (`HKCU\Software\Valve\Steam\SteamPath`) or `%ProgramFiles(x86)%` is authoritative.
-
-**Fix (exact):**
-
-```go
-func windowsSteamPath() string {
-    if pf := os.Getenv("ProgramFiles(x86)"); pf != "" {
-        return filepath.Join(pf, "Steam")
-    }
-    return `C:\Program Files (x86)\Steam`
-}
-
-func windowsUserPath() (string, error) {
-    return os.UserHomeDir() // handles redirected profiles, no USERNAME guessing
-}
-
-func getBasePath(vdfContent map[string]any) string {
-    folders, ok := vdfContent["libraryfolders"].(map[string]any)
-    if !ok {
-        return ""
-    }
-    for _, data := range folders { ... } // rest unchanged
-}
-```
-
-Convert all the package-level `var` path strings into lazily-called functions (they are each used in
-exactly one place); this also makes the package testable with `t.Setenv`.
-
-### 1.5 🟠 Panics in library code
-- [internal/services/previewAssets.go](../internal/services/previewAssets.go#L44) (twice): a failed
-  embedded-PNG decode panics inside `sync.Once` during preview rendering. Embedded assets failing is
-  a build-time bug, so a panic is *defensible*, but it will take the whole app down mid-frame with
-  no message. Wrap: make `loadPreviewAssets() (*previewAssets, error)`, propagate through
-  `RenderPreviewImage`/`WritePreviewPNG` (both already return `error`), and keep a `sync.OnceValues`
-  memoization.
-- [internal/models/neutralZoneProfile.go](../internal/models/neutralZoneProfile.go#L33):
-  `panic("invalid quality")` on an enum the UI can never produce today — but the manual zone editor
-  writes qualities too. Return `(NeutralZoneProfile, error)` or, minimally, fall back to the low
-  profile and log.
-
-### 1.6 🟠 `GUIHandler.UpdateTemplate` conflates "warning" with "error" and mutates its input
-[internal/handlers/guiHandler.go](../internal/handlers/guiHandler.go#L45-L73)
-
-- It writes into `templateDto.Template.Variants[0]` in place and *also* returns the same pointer in
-  the DTO. Callers cannot tell whether to trust the returned value or the argument; combined with
-  1.1, an "error" result still contains a fully updated template. Pick one contract:
-  **pure-function style** — deep-copy the template, mutate the copy, return it; or **command style**
-  — return only `error` and document in-place mutation. Recommended: keep in-place (cheap) but
-  change the signature to `UpdateTemplate(dto dtos.TemplateUpdateDto) error` and delete the
-  misleading `TemplateLoadDto` return.
-- The `ComputeHasErrors → ErrZonesMissing` result is a *validation warning* about user data, not a
-  failure of the operation. Model it as a typed result:
-
-```go
-type UpdateResult struct{ DanglingConnections []string }
-func (h *GUIHandler) UpdateTemplate(dto dtos.TemplateUpdateDto) (UpdateResult, error)
-```
-
-- Line 52 TODO ("might not be needed") on `RebuildZoneConnectionRoads`: it *is* needed — it
-  self-heals stale roads from already-saved `.gen.json` files. Replace the TODO with that sentence.
-
-### 1.7 🟡 `go.mod` Go version vs CI mismatch
-[go.mod](../go.mod#L3) says `go 1.26.3`; [.github/workflows/pr-validation.yml](../.github/workflows/pr-validation.yml)
-pins `go-version: '1.25.8'`. `go build` with a toolchain older than the `go` directive fails (or
-auto-downloads a toolchain, depending on `GOTOOLCHAIN`). Align them: either bump the workflow to
-`1.26.x` or lower the directive to the minimum you actually need (`go 1.25`) — the directive should
-be a *minimum*, not your current toolchain patch version.
-
 ### 1.8 🟡 `internal/registry/temp_bannableItemSidValues.go` is live code wearing a "delete me" sign
 The file starts with `// remove/update`, is named `temp_…`, yet defines
 `GetBannableItemSidValues()` which **is the production registry** used by
@@ -265,9 +150,6 @@ and call it from `UpdateState`, surfacing problems via `SetStatus`.
 ### 1.10 ⚪ Rejected findings (checked, **not** bugs — do not "fix")
 For the record, these look suspicious but are correct:
 
-- `zoneEditorDialog.deleteZone` (line ~999) `kept := connections[i]; append(..., &kept)` — each
-  iteration creates a fresh variable; the pointers are valid. (Could still be simplified to
-  `&connections[i]`, but it is not a bug.)
 - `linq.QueryMap.ToMap()` ([internal/helpers/linq/map.go](../internal/helpers/linq/map.go#L74)) does
   `make(...)` correctly. It has **zero callers**, though — see §4.6 dead code.
 - `buildNonAdjacentDerangement` (topologyBase.go tail) has a deterministic shift fallback after 100
@@ -872,7 +754,6 @@ migrating the five `oldTests` (§7.1), convert their manual `if err != nil { t.F
 
 | Item | Action |
 |---|---|
-| 🔴 `hommoe_custom_templates.exe` committed at root | `git rm --cached hommoe_custom_templates.exe`; ensure `.gitignore` has `*.exe` (it does — the file predates it) |
 | 🟠 `Custom Template.gen.json`, `Initial.gen.json` at root | Move to `data/ExampleSettings/` (they are user-facing examples) or `test/testdata/fixtures/` if only tests use them; update any hardcoded paths |
 | 🟠 `output/Colosseum/*` committed | Generated artifacts: `git rm -r --cached output/` and add `output/` to `.gitignore` |
 | 🟡 `README.md` stale paths | Still references the old `internal/gui/` layout in the structure section — regenerate the tree from the current repo |

@@ -33,7 +33,8 @@ func (this *CrossTopologyService) CreateTopologyVariant(
 	allLabels, positions, pairs := this.createCrossLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
-	zones := this.createZones(configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
+	zones := this.createZones(
+		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
 	for index := range zones {
 		position := positions[index]
 		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
@@ -41,12 +42,14 @@ func (this *CrossTopologyService) CreateTopologyVariant(
 
 	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	conns = append(conns, this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
+	conns = append(conns,
+		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
@@ -79,7 +82,7 @@ func (this *CrossTopologyService) createCrossLayout(
 
 	// Distribute the remaining neutral zones across the arms, round-robin.
 	armNeutralCounts := make([]int, playerCount)
-	for i := 0; i < neutralCount-1; i++ {
+	for i := range neutralCount - 1 {
 		armNeutralCounts[i%max(1, playerCount)]++
 	}
 
@@ -93,7 +96,7 @@ func (this *CrossTopologyService) createCrossLayout(
 
 		// Arm neutral zones from the centre outward.
 		count := armNeutralCounts[arm]
-		for k := 0; k < count; k++ {
+		for k := range count {
 			radius := (armNear + armFar) / 2.0
 			if count > 1 {
 				radius = armNear + (armFar-armNear)*float64(k)/float64(count-1)

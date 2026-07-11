@@ -17,38 +17,41 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
+
+var receiversFilters = registry.GetReceiversFilterValues()
 
 // bonusTypeOption pairs a friendly dropdown label with its preset type.
 type bonusTypeOption struct {
-	label string
-	typ   config_inner.BonusPresetType
+	label      string
+	presetType config.BonusPresetType
 }
 
 var bonusTypeOptions = []bonusTypeOption{
-	{"Free Town Portal", config_inner.BonusTownPortalFree},
-	{"Spell", config_inner.BonusSpell},
-	{"Unit Multiplier", config_inner.BonusUnitMultiplier},
-	{"Movement Bonus", config_inner.BonusMovementBonus},
-	{"Starting Item", config_inner.BonusStartingItem},
-	{"Starting Gold", config_inner.BonusStartingGold},
-	{"Starting Gems", config_inner.BonusStartingGems},
-	{"Starting Crystals", config_inner.BonusStartingCrystals},
-	{"Starting Mercury", config_inner.BonusStartingMercury},
-	{"Starting Wood", config_inner.BonusStartingWood},
-	{"Starting Ore", config_inner.BonusStartingOre},
+	{"Free Town Portal", config.BonusTownPortalFree},
+	{"Spell", config.BonusSpell},
+	{"Unit Multiplier", config.BonusUnitMultiplier},
+	{"Movement Bonus", config.BonusMovementBonus},
+	{"Starting Item", config.BonusStartingItem},
+	{"Starting Gold", config.BonusStartingGold},
+	{"Starting Gems", config.BonusStartingGems},
+	{"Starting Crystals", config.BonusStartingCrystals},
+	{"Starting Mercury", config.BonusStartingMercury},
+	{"Starting Wood", config.BonusStartingWood},
+	{"Starting Ore", config.BonusStartingOre},
 }
 
-var bonusReceiverOptions = []string{"start_hero", "all_heroes"}
+var bonusReceiverOptions = []string{receiversFilters.StartingHero, receiversFilters.AllHeroes}
 
-var bonusResourceDefaults = map[config_inner.BonusPresetType]string{
-	config_inner.BonusStartingGold:     "10000",
-	config_inner.BonusStartingGems:     "15",
-	config_inner.BonusStartingCrystals: "15",
-	config_inner.BonusStartingMercury:  "15",
-	config_inner.BonusStartingWood:     "20",
-	config_inner.BonusStartingOre:      "20",
+var bonusResourceDefaults = map[config.BonusPresetType]string{
+	config.BonusStartingGold:     "10000",
+	config.BonusStartingGems:     "15",
+	config.BonusStartingCrystals: "15",
+	config.BonusStartingMercury:  "15",
+	config.BonusStartingWood:     "20",
+	config.BonusStartingOre:      "20",
 }
 
 // BonusPickerDialog composes one or more game-start bonuses. For the Spell
@@ -57,9 +60,9 @@ var bonusResourceDefaults = map[config_inner.BonusPresetType]string{
 // picker (via opener). Implements widgets.Dialog.
 type BonusPickerDialog struct {
 	existingKeys     map[string]bool
-	existingSpellIds []string
+	existingSpellIDs []string
 	opener           interfaces.DialogOpener
-	onApply          func(entries []config_inner.BonusEntry)
+	onApply          func(entries []config.BonusEntry)
 
 	typeDropdown     *components.DropdownSelector
 	receiverDropdown *components.DropdownSelector
@@ -82,20 +85,23 @@ type BonusPickerDialog struct {
 	cancelBtn widget.Clickable
 
 	errorText  string
-	pending    []config_inner.BonusEntry
+	pending    []config.BonusEntry
 	hasPending bool
 }
 
 // NewBonusPickerDialog builds the bonus composer. existing is used for
 // duplicate detection and to pre-exclude already-chosen spells in the spell
 // sub-picker. onApply receives the composed bonus entries.
-func NewBonusPickerDialog(existing []config_inner.BonusEntry, opener interfaces.DialogOpener, onApply func(entries []config_inner.BonusEntry)) *BonusPickerDialog {
+func NewBonusPickerDialog(
+	existing []config.BonusEntry,
+	opener interfaces.DialogOpener,
+	onApply func(entries []config.BonusEntry)) *BonusPickerDialog {
 	keys := make(map[string]bool, len(existing))
-	var spellIds []string
+	var spellIDs []string
 	for _, entry := range existing {
 		keys[entry.GetHash()] = true
-		if entry.PresetType == config_inner.BonusSpell && entry.Param != "" {
-			spellIds = append(spellIds, entry.Param)
+		if entry.PresetType == config.BonusSpell && entry.Param != "" {
+			spellIDs = append(spellIDs, entry.Param)
 		}
 	}
 
@@ -106,7 +112,7 @@ func NewBonusPickerDialog(existing []config_inner.BonusEntry, opener interfaces.
 
 	dialog := &BonusPickerDialog{
 		existingKeys:     keys,
-		existingSpellIds: spellIds,
+		existingSpellIDs: spellIDs,
 		opener:           opener,
 		onApply:          onApply,
 		typeDropdown:     components.NewDropdownSelector(labels),
@@ -125,9 +131,7 @@ func NewBonusPickerDialog(existing []config_inner.BonusEntry, opener interfaces.
 
 func (this *BonusPickerDialog) Title() string { return "Add Bonus" }
 
-func (this *BonusPickerDialog) PreferredSize() (unit.Dp, unit.Dp) {
-	return unit.Dp(460), unit.Dp(420)
-}
+func (this *BonusPickerDialog) PreferredSize() (unit.Dp, unit.Dp) { return unit.Dp(460), unit.Dp(420) }
 
 func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
 	if this.handleClicks(gtx) {
@@ -175,16 +179,25 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 	), false
 }
 
-func (this *BonusPickerDialog) getEditorWidget(theme *material.Theme, presetType config_inner.BonusPresetType) layout.Widget {
+func (this *BonusPickerDialog) getEditorWidget(
+	theme *material.Theme,
+	presetType config.BonusPresetType) layout.Widget {
 	switch presetType {
-	case config_inner.BonusTownPortalFree:
-		return widgets.NewDimmedLabelWidget(theme, "Grants free town portal to the selected hero(es). No extra parameters.")
-	case config_inner.BonusSpell:
+	case config.BonusTownPortalFree:
+		return widgets.NewDimmedLabelWidget(
+			theme,
+			"Grants free town portal to the selected hero(es). No extra parameters.",
+		)
+	case config.BonusSpell:
 		return func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, spellCountLabel(len(this.selectedSpells)))),
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(
+						gtx,
+						layout.Flexed(
+							1,
+							widgets.NewDimmedLabelWidget(theme, spellCountLabel(len(this.selectedSpells))),
+						),
 						widgets.NewDefaultComponentSpacer(),
 						layout.Rigid(widgets.NewButtonWidget(
 							theme, "Pick spells...", &this.pickSpellBtn, this.opener == nil)),
@@ -196,13 +209,13 @@ func (this *BonusPickerDialog) getEditorWidget(theme *material.Theme, presetType
 				layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.makeFree, "Make spell(s) free")),
 			)
 		}
-	case config_inner.BonusUnitMultiplier:
+	case config.BonusUnitMultiplier:
 		return widgets.NewLabeledRowWidget(theme, "Multiplier", 90,
 			widgets.NewTextboxWidget(theme, &this.multiplierEdit, "2", false))
-	case config_inner.BonusMovementBonus:
+	case config.BonusMovementBonus:
 		return widgets.NewLabeledRowWidget(theme, "Movement", 90,
 			widgets.NewTextboxWidget(theme, &this.movementEdit, "0", false))
-	case config_inner.BonusStartingItem:
+	case config.BonusStartingItem:
 		return func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.itemEdit, "use Pick item...", false)),
@@ -243,7 +256,7 @@ func (this *BonusPickerDialog) handleClicks(gtx layout.Context) bool {
 
 	if this.addBtn.Clicked(gtx) {
 		if entries, ok := this.buildEntries(); ok {
-			fresh := make([]config_inner.BonusEntry, 0, len(entries))
+			fresh := make([]config.BonusEntry, 0, len(entries))
 			for _, entry := range entries {
 				if !this.existingKeys[entry.GetHash()] {
 					fresh = append(fresh, entry)
@@ -271,7 +284,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	}
 
 	if this.pickSpellBtn.Clicked(gtx) {
-		excluded := append(append([]string{}, this.existingSpellIds...), this.selectedSpells...)
+		excluded := append(append([]string{}, this.existingSpellIDs...), this.selectedSpells...)
 		this.opener(NewSpellPickerDialog(excluded, false, func(ids []string, _ bool) {
 			// Append to (never overwrite) the current selection.
 			for _, id := range ids {
@@ -297,10 +310,10 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 			}
 
 			receiver := this.receiver()
-			entries := make([]config_inner.BonusEntry, 0, len(ids))
+			entries := make([]config.BonusEntry, 0, len(ids))
 			for _, id := range ids {
-				entries = append(entries, config_inner.BonusEntry{
-					PresetType:     config_inner.BonusStartingItem,
+				entries = append(entries, config.BonusEntry{
+					PresetType:     config.BonusStartingItem,
 					ReceiverFilter: receiver,
 					Param:          id,
 				})
@@ -311,14 +324,14 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	}
 }
 
-func (this *BonusPickerDialog) buildEntries() ([]config_inner.BonusEntry, bool) {
+func (this *BonusPickerDialog) buildEntries() ([]config.BonusEntry, bool) {
 	this.errorText = ""
 	presetType := this.getSelectedType()
 	receiver := this.receiver()
 	switch presetType {
-	case config_inner.BonusTownPortalFree:
-		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver}}, true
-	case config_inner.BonusSpell:
+	case config.BonusTownPortalFree:
+		return []config.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver}}, true
+	case config.BonusSpell:
 		if len(this.selectedSpells) == 0 {
 			this.errorText = "Pick at least one spell."
 			return nil, false
@@ -327,50 +340,50 @@ func (this *BonusPickerDialog) buildEntries() ([]config_inner.BonusEntry, bool) 
 		if this.makeFree.Value {
 			param2 = "1"
 		}
-		entries := make([]config_inner.BonusEntry, 0, len(this.selectedSpells))
+		entries := make([]config.BonusEntry, 0, len(this.selectedSpells))
 		for _, id := range this.selectedSpells {
 			entries = append(entries,
-				config_inner.BonusEntry{PresetType: presetType, ReceiverFilter: receiver, Param: id, Param2: param2})
+				config.BonusEntry{PresetType: presetType, ReceiverFilter: receiver, Param: id, Param2: param2})
 		}
 		return entries, true
-	case config_inner.BonusUnitMultiplier:
+	case config.BonusUnitMultiplier:
 		value := strings.TrimSpace(this.multiplierEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric multiplier."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
-	case config_inner.BonusMovementBonus:
+		return []config.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
+	case config.BonusMovementBonus:
 		value := strings.TrimSpace(this.movementEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric movement value."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
-	case config_inner.BonusStartingItem:
+		return []config.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
+	case config.BonusStartingItem:
 		id := strings.TrimSpace(this.itemEdit.Text())
 		if id == "" {
 			this.errorText = "Pick or enter an item."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: id}}, true
+		return []config.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: id}}, true
 	default:
 		value := strings.TrimSpace(this.resourceEdit.Text())
 		if !isNumeric(value) {
 			this.errorText = "Enter a numeric amount."
 			return nil, false
 		}
-		return []config_inner.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
+		return []config.BonusEntry{{PresetType: presetType, ReceiverFilter: receiver, Param: value}}, true
 	}
 }
 
-func (this *BonusPickerDialog) getSelectedType() config_inner.BonusPresetType {
+func (this *BonusPickerDialog) getSelectedType() config.BonusPresetType {
 	index := this.typeDropdown.GetSelectedIndex()
 	if index < 0 || index >= len(bonusTypeOptions) {
-		return config_inner.BonusTownPortalFree
+		return config.BonusTownPortalFree
 	}
 
-	return bonusTypeOptions[index].typ
+	return bonusTypeOptions[index].presetType
 }
 
 func (this *BonusPickerDialog) receiver() string {
@@ -382,7 +395,7 @@ func (this *BonusPickerDialog) receiver() string {
 	return bonusReceiverOptions[index]
 }
 
-func (this *BonusPickerDialog) applyTypeDefaults(typ config_inner.BonusPresetType) {
+func (this *BonusPickerDialog) applyTypeDefaults(typ config.BonusPresetType) {
 	if def, ok := bonusResourceDefaults[typ]; ok {
 		this.resourceEdit.SetText(def)
 	}

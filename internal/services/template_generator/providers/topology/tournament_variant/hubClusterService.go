@@ -37,8 +37,10 @@ func (this *HubClusterService) CreateClusterVariant(
 		spokeConnNames[index] = fmt.Sprintf("THubSpoke-%s-%s", playerLabel, label)
 	}
 
-	zones := this.createZones(configuration, spokeLabels, spokeConnNames, tuning, allNeutralZonePlans, hubName, playerIndex)
-	connections := this.createConnections(spokeLabels, spokeConnNames, tuning, allNeutralZonePlans, hubName, playerLabel)
+	zones := this.createZones(
+		configuration, spokeLabels, spokeConnNames, tuning, allNeutralZonePlans, hubName, playerIndex)
+	connections := this.createConnections(
+		spokeLabels, spokeConnNames, tuning, allNeutralZonePlans, hubName, playerLabel)
 	return zones, connections
 }
 
@@ -72,7 +74,8 @@ func (this *HubClusterService) createZones(
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(allNeutralZonePlans).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					linq.FromSlice(allNeutralZonePlans).
+						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
 					connectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}

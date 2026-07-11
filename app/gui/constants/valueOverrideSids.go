@@ -7,73 +7,56 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-// ValueOverrideSids are the known object / encounter SIDs offered by the
-// guard-value-override picker. SIDs come from the registry; they reference
-// world objects whose guard value can be overridden via valueOverrides.
-var ValueOverrideSids = buildValueOverrideSids()
+func GetValueOverrideSidsWithExclusions(excluded []string) []string {
+	sids := slices.DeleteFunc(
+		buildValueOverrideSids(),
+		func(sid string) bool { return slices.Contains(excluded, sid) })
+	slices.SortStableFunc(sids, strings.Compare)
+	return sids
+}
 
 func buildValueOverrideSids() []string {
-	buildingObjects := registry.GetMapObjectBuildingValues()
+	sids := []string{}
+	sids = append(sids, buildHeroBuffAndMagicSids()...)
+	sids = append(sids, buildNamedAndRandomUnitSids()...)
+	sids = append(sids, buildBuildingAndMiscSids()...)
+	sids = append(sids, buildMineAndResourceSids()...)
+	sids = append(sids, buildRandomItemAndScrollSids()...)
+	sids = append(sids, buildStatsAndSkillsObjectSids()...)
+	sids = append(sids, buildGuardedResourceBankSids()...)
+	sids = append(sids, buildVisionBuildingSids()...)
+	return sids
+}
+
+func buildHeroBuffAndMagicSids() []string {
 	heroBuffBuildings := registry.GetMapObjectHeroBuffBuildingValues()
 	magicBuildings := registry.GetMapObjectMagicBuildingValues()
-	mineObjects := registry.GetMapObjectMineValues()
-	miscObjects := registry.GetMapObjectMiscellaneousValues()
-	namedUnitBanks := registry.GetMapObjectNamedUnitBankValues()
-	nonContentObjects := registry.GetMapObjectNonContentValues()
-	randomUnitBanks := registry.GetMapObjectRandomUnitBankValues()
-	randomItemObjects := registry.GetMapObjectRandomItemValues()
-	resourceBanks := registry.GetMapObjectResourceBankValues()
-	resourceObjects := registry.GetMapObjectResourceValues()
-	scrollObjects := registry.GetMapObjectScrollValues()
-	t1StatsAndSkillsObjects := registry.GetMapObjectT1StatsAndSkillsValues()
-	t2StatsAndSkillsObjects := registry.GetMapObjectT2StatsAndSkillsBuildingValues()
-	t3StatsAndSkillsObjects := registry.GetMapObjectT3StatsAndSkillsBuildingValues()
-	t1GuardedResourceBanks := registry.GetMapObjectT1GuardedResourceBankValues()
-	t3GuardedResourceBanks := registry.GetMapObjectT3GuardedResourceBankValues()
-	visionBuildings := registry.GetMapObjectVisionBuildingValues()
 
 	return []string{
-		mineObjects.AlchemyLab,
-		buildingObjects.Arena,
 		heroBuffBuildings.BeerFountain,
-		namedUnitBanks.BorealCall,
 		magicBuildings.CelestialSphere,
-		buildingObjects.Chimerologist,
-		t2StatsAndSkillsObjects.Circus,
-		t3StatsAndSkillsObjects.CollegeOfWonder,
 		heroBuffBuildings.CrystalTrail,
-		t3GuardedResourceBanks.DragonUtopia,
-		buildingObjects.EternalDragon,
-		buildingObjects.FickleShrine,
-		visionBuildings.FlatteringMirror,
-		nonContentObjects.Forge,
-		t2StatsAndSkillsObjects.Fort,
 		heroBuffBuildings.Fountain,
 		heroBuffBuildings.Fountain2,
-		buildingObjects.HuntsmansCamp,
-		t2StatsAndSkillsObjects.InfernalCirque,
-		nonContentObjects.InsarasEye,
-		namedUnitBanks.JoustingRange,
 		heroBuffBuildings.ManaWell,
-		nonContentObjects.Market,
-		mineObjects.CrystalMine,
-		mineObjects.GemstoneMine,
-		mineObjects.GoldMine,
-		mineObjects.MercuryMine,
-		mineObjects.OreMine,
-		mineObjects.WoodMine,
-		nonContentObjects.Mirage,
-		resourceBanks.MontyHall,
 		heroBuffBuildings.MysteriousStone,
 		magicBuildings.MysticalTower,
-		scrollObjects.MythicScrollBox,
-		t2StatsAndSkillsObjects.OrbObservatory,
-		resourceObjects.PandoraBox,
-		namedUnitBanks.PetrifiedMemorial,
 		heroBuffBuildings.PileOfBooks,
-		namedUnitBanks.PointOfBalance,
-		miscObjects.Prison,
 		heroBuffBuildings.QuixsPath,
+		heroBuffBuildings.Stables,
+		heroBuffBuildings.TearOfTruth,
+	}
+}
+
+func buildNamedAndRandomUnitSids() []string {
+	namedUnitBanks := registry.GetMapObjectNamedUnitBankValues()
+	randomUnitBanks := registry.GetMapObjectRandomUnitBankValues()
+
+	return []string{
+		namedUnitBanks.BorealCall,
+		namedUnitBanks.JoustingRange,
+		namedUnitBanks.PetrifiedMemorial,
+		namedUnitBanks.PointOfBalance,
 		randomUnitBanks.RandomHireTier1,
 		randomUnitBanks.RandomHireTier2,
 		randomUnitBanks.RandomHireTier3,
@@ -81,35 +64,102 @@ func buildValueOverrideSids() []string {
 		randomUnitBanks.RandomHireTier5,
 		randomUnitBanks.RandomHireTier6,
 		randomUnitBanks.RandomHireTier7,
+		namedUnitBanks.RitualPyre,
+		namedUnitBanks.Gorge,
+		namedUnitBanks.UnforgottenGrave,
+	}
+}
+
+func buildBuildingAndMiscSids() []string {
+	buildingObjects := registry.GetMapObjectBuildingValues()
+	miscObjects := registry.GetMapObjectMiscellaneousValues()
+	nonContentObjects := registry.GetMapObjectNonContentValues()
+
+	return []string{
+		buildingObjects.Arena,
+		buildingObjects.Chimerologist,
+		buildingObjects.EternalDragon,
+		buildingObjects.FickleShrine,
+		nonContentObjects.Forge,
+		buildingObjects.HuntsmansCamp,
+		nonContentObjects.InsarasEye,
+		nonContentObjects.Market,
+		nonContentObjects.Mirage,
+		miscObjects.Prison,
+		nonContentObjects.RemoteFoothold,
+		buildingObjects.SacrificialShrine,
+		nonContentObjects.Tavern,
+		miscObjects.TownGate,
+		buildingObjects.TreeOfAbundance,
+	}
+}
+
+func buildMineAndResourceSids() []string {
+	mineObjects := registry.GetMapObjectMineValues()
+	resourceBanks := registry.GetMapObjectResourceBankValues()
+	resourceObjects := registry.GetMapObjectResourceValues()
+
+	return []string{
+		mineObjects.AlchemyLab,
+		mineObjects.CrystalMine,
+		mineObjects.GemstoneMine,
+		mineObjects.GoldMine,
+		mineObjects.MercuryMine,
+		mineObjects.OreMine,
+		mineObjects.WoodMine,
+		resourceBanks.MontyHall,
+		resourceObjects.PandoraBox,
+	}
+}
+
+func buildRandomItemAndScrollSids() []string {
+	randomItemObjects := registry.GetMapObjectRandomItemValues()
+	scrollObjects := registry.GetMapObjectScrollValues()
+
+	return []string{
+		scrollObjects.MythicScrollBox,
 		randomItemObjects.RandomItemCommon,
 		randomItemObjects.RandomItemEpic,
 		randomItemObjects.RandomItemLegendary,
 		randomItemObjects.RandomItemRare,
-		nonContentObjects.RemoteFoothold,
-		t3GuardedResourceBanks.ResearchLaboratory,
-		namedUnitBanks.RitualPyre,
-		buildingObjects.SacrificialShrine,
-		t1GuardedResourceBanks.ShadyDen,
-		heroBuffBuildings.Stables,
-		nonContentObjects.Tavern,
-		heroBuffBuildings.TearOfTruth,
-		namedUnitBanks.Gorge,
-		miscObjects.TownGate,
-		buildingObjects.TreeOfAbundance,
-		t3GuardedResourceBanks.TroglodyteThrone,
-		namedUnitBanks.UnforgottenGrave,
+	}
+}
+
+func buildStatsAndSkillsObjectSids() []string {
+	t1StatsAndSkillsObjects := registry.GetMapObjectT1StatsAndSkillsBuildingValues()
+	t2StatsAndSkillsObjects := registry.GetMapObjectT2StatsAndSkillsBuildingValues()
+	t3StatsAndSkillsObjects := registry.GetMapObjectT3StatsAndSkillsBuildingValues()
+
+	return []string{
+		t2StatsAndSkillsObjects.Circus,
+		t3StatsAndSkillsObjects.CollegeOfWonder,
+		t2StatsAndSkillsObjects.Fort,
+		t2StatsAndSkillsObjects.InfernalCirque,
+		t2StatsAndSkillsObjects.OrbObservatory,
 		t2StatsAndSkillsObjects.University,
-		t3GuardedResourceBanks.UnstableRuins,
-		visionBuildings.Watchtower,
-		visionBuildings.WindRose,
 		t1StatsAndSkillsObjects.WiseOwl,
 	}
 }
 
-func GetValueOverrideSidsWithExclusions(excluded []string) []string {
-	sids := slices.DeleteFunc(
-		buildValueOverrideSids(),
-		func(sid string) bool { return slices.Contains(excluded, sid) })
-	slices.SortStableFunc(sids, strings.Compare)
-	return sids
+func buildGuardedResourceBankSids() []string {
+	t1GuardedResourceBanks := registry.GetMapObjectT1GuardedResourceBankValues()
+	t3GuardedResourceBanks := registry.GetMapObjectT3GuardedResourceBankValues()
+
+	return []string{
+		t3GuardedResourceBanks.DragonUtopia,
+		t3GuardedResourceBanks.ResearchLaboratory,
+		t1GuardedResourceBanks.ShadyDen,
+		t3GuardedResourceBanks.TroglodyteThrone,
+		t3GuardedResourceBanks.UnstableRuins,
+	}
+}
+
+func buildVisionBuildingSids() []string {
+	visionBuildings := registry.GetMapObjectVisionBuildingValues()
+
+	return []string{
+		visionBuildings.FlatteringMirror,
+		visionBuildings.Watchtower,
+		visionBuildings.WindRose,
+	}
 }

@@ -73,7 +73,8 @@ func (this *TopologyProvider) ShufflePlayerZones(enabled bool) *TopologyProvider
 func (this *TopologyProvider) copyLabels(playerLabels []string) []string {
 	playerLabelsCopy := linq.FromSlice(playerLabels).ToSlice()
 	if this.shufflePlayerZones {
-		rand.Shuffle(len(playerLabelsCopy), func(i, j int) { playerLabelsCopy[i], playerLabelsCopy[j] = playerLabelsCopy[j], playerLabelsCopy[i] })
+		rand.Shuffle(len(playerLabelsCopy),
+			func(i, j int) { playerLabelsCopy[i], playerLabelsCopy[j] = playerLabelsCopy[j], playerLabelsCopy[i] })
 	}
 	return playerLabelsCopy
 }

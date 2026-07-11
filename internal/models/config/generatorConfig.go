@@ -187,8 +187,8 @@ func (this *GeneratorConfig) EnsureNameExists() {
 }
 
 func (this *GeneratorConfig) CanHonorNeutralSeparation() bool {
-	min := this.MinNeutralZonesBetweenPlayers
-	if min <= 0 {
+	minimumNeutralZones := this.MinNeutralZonesBetweenPlayers
+	if minimumNeutralZones <= 0 {
 		return true
 	}
 
@@ -199,13 +199,13 @@ func (this *GeneratorConfig) CanHonorNeutralSeparation() bool {
 	neutralZoneCount := this.getNeutralZoneCount()
 	switch this.Topology {
 	case config_inner.TopologyRing, config_inner.TopologyCircles:
-		return neutralZoneCount >= this.PlayerCount*min
+		return neutralZoneCount >= this.PlayerCount*minimumNeutralZones
 	case config_inner.TopologyChain:
-		return neutralZoneCount >= (this.PlayerCount-1)*min
+		return neutralZoneCount >= (this.PlayerCount-1)*minimumNeutralZones
 	case config_inner.TopologyHubAndSpoke:
-		return min <= 1
+		return minimumNeutralZones <= 1
 	case config_inner.TopologySharedWeb:
-		return min <= 1 && neutralZoneCount >= 1
+		return minimumNeutralZones <= 1 && neutralZoneCount >= 1
 	default:
 		return false
 	}

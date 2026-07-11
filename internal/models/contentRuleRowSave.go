@@ -15,6 +15,6 @@ type ContentRuleRowSave struct {
 	IsGuarded *bool `json:"isGuarded,omitempty"`
 	// IsSoloEncounter is set by the Solo Encounter rule.
 	IsSoloEncounter *bool `json:"isSoloEncounter,omitempty"`
-	// VariantId is set by the Variant rule.
-	VariantId *int `json:"variantId,omitempty"`
+	// VariantID is set by the Variant rule.
+	VariantID *int `json:"variantId,omitempty"`
 }

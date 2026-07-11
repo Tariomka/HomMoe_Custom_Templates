@@ -5,7 +5,7 @@ import "image/color"
 // Categorical accents - colors that encode a category rather than theme
 // chrome. They are tuned to sit comfortably on Crimson Night surfaces.
 
-// Bonus / ban category dots
+// Bonus / ban category dots.
 var (
 	ColorDotMovement = color.NRGBA{R: 0x6E, G: 0x9C, B: 0xF0, A: 0xFF} // movement - cornflower blue
 	ColorDotCombat   = color.NRGBA{R: 0xE8, G: 0x6A, B: 0x6A, A: 0xFF} // combat - soft red
@@ -15,7 +15,7 @@ var (
 	ColorDotDefault  = color.NRGBA{R: 0x8A, G: 0x86, B: 0x8E, A: 0xFF} // fallback - neutral grey
 )
 
-// Spell-school accents
+// Spell-school accents.
 var (
 	ColorSchoolHighNeutral = color.NRGBA{R: 0xA8, G: 0xA4, B: 0xAC, A: 0xFF}
 	ColorSchoolDaylight    = color.NRGBA{R: 0xD6, G: 0xC2, B: 0x7E, A: 0xFF}

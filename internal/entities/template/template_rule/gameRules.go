@@ -50,10 +50,9 @@ func (this *GameRules) UnmarshalJSON(data []byte) error {
 	// Also try to populate WinConditions from the same JSON object treated as a
 	// flat WinConditions blob (Zookeeper-style flat templates).
 	var flat WinConditions
-	if err := json.Unmarshal(data, &flat); err != nil {
-		// flat decode failure is non-fatal - the regular decode already succeeded.
-		return nil
+	err := json.Unmarshal(data, &flat) // flat decode failure is non-fatal - the regular decode already succeeded.
+	if err == nil {
+		this.WinConditions.MergeWinConditionsIfDoesNotExist(flat)
 	}
-	this.WinConditions.MergeWinConditionsIfDoesNotExist(flat)
 	return nil
 }

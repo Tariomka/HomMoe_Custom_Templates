@@ -386,7 +386,10 @@ func (this *FileExplorerDialog) getFooterWidget(theme *material.Theme) layout.Wi
 
 	children := make([]layout.FlexChild, 0, 5)
 	if this.canModify() {
-		children = append(children, layout.Rigid(widgets.NewButtonWidget(theme, "New Folder", &this.newFolderBtn, false)))
+		children = append(
+			children,
+			layout.Rigid(widgets.NewButtonWidget(theme, "New Folder", &this.newFolderBtn, false)),
+		)
 	}
 	children = append(children, layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{Size: image.Pt(gtx.Constraints.Min.X, 0)}
@@ -413,6 +416,8 @@ func (this *FileExplorerDialog) confirmButtonState() (label string, show bool, d
 		return "Save", true, len(this.filenameEd.Text()) == 0
 	case modePickFolder:
 		return "Select This Folder", true, this.currentDir == ""
+	case modeBrowse:
+		fallthrough
 	default:
 		return "", false, false
 	}
@@ -465,6 +470,7 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 				}
 			}
 		}
+	case modeBrowse: // noop
 	}
 
 	return false
@@ -598,6 +604,7 @@ func (this *FileExplorerDialog) onEntryClicked(entry fileEntry) {
 	case modeSaveFile:
 		this.filenameEd.SetText(entry.name)
 		this.overwriteActive = false
+	case modePickFolder, modeBrowse: // noop
 	}
 }
 
@@ -637,7 +644,7 @@ func (this *FileExplorerDialog) tryCreateFolder() {
 	}
 
 	target := filepath.Join(this.currentDir, name)
-	if err := os.Mkdir(target, 0o755); err != nil {
+	if err := os.Mkdir(target, 0o750); err != nil {
 		this.newFolderErr = err.Error()
 		return
 	}

@@ -11,71 +11,89 @@ type guardedContentPools struct {
 	Magic    string
 }
 
-var guardedT0PoolValues = guardedContentPools{
-	Base:     "classic_template_pool_random_t0_base",
-	Item:     "classic_template_pool_random_t0_item",
-	Pandora:  "classic_template_pool_random_t0_pandora",
-	Hire:     "classic_template_pool_random_t0_hire",
-	UnitBank: "classic_template_pool_random_t0_unit_bank",
-	ResBank:  "classic_template_pool_random_t0_res_bank",
-	Stat:     "classic_template_pool_random_t0_stat",
-	Magic:    "classic_template_pool_random_t0_magic",
+func GetGuardedT0PoolValues() guardedContentPools {
+	return guardedContentPools{
+		Base:     "classic_template_pool_random_t0_base",
+		Item:     "classic_template_pool_random_t0_item",
+		Pandora:  "classic_template_pool_random_t0_pandora",
+		Hire:     "classic_template_pool_random_t0_hire",
+		UnitBank: "classic_template_pool_random_t0_unit_bank",
+		ResBank:  "classic_template_pool_random_t0_res_bank",
+		Stat:     "classic_template_pool_random_t0_stat",
+		Magic:    "classic_template_pool_random_t0_magic",
+	}
 }
-var guardedT1PoolValues = guardedContentPools{
-	Base:     "classic_template_pool_random_t1_base",
-	Item:     "classic_template_pool_random_t1_item",
-	Pandora:  "classic_template_pool_random_t1_pandora",
-	Hire:     "classic_template_pool_random_t1_hire",
-	UnitBank: "classic_template_pool_random_t1_unit_bank",
-	ResBank:  "classic_template_pool_random_t1_res_bank",
-	Stat:     "classic_template_pool_random_t1_stat",
-	Magic:    "classic_template_pool_random_t1_magic",
+
+func GetGuardedT1PoolValues() guardedContentPools {
+	return guardedContentPools{
+		Base:     "classic_template_pool_random_t1_base",
+		Item:     "classic_template_pool_random_t1_item",
+		Pandora:  "classic_template_pool_random_t1_pandora",
+		Hire:     "classic_template_pool_random_t1_hire",
+		UnitBank: "classic_template_pool_random_t1_unit_bank",
+		ResBank:  "classic_template_pool_random_t1_res_bank",
+		Stat:     "classic_template_pool_random_t1_stat",
+		Magic:    "classic_template_pool_random_t1_magic",
+	}
 }
-var guardedT2PoolValues = guardedContentPools{
-	Base:     "classic_template_pool_random_t2_base",
-	Item:     "classic_template_pool_random_t2_item",
-	Pandora:  "classic_template_pool_random_t2_pandora",
-	Hire:     "classic_template_pool_random_t2_hire",
-	UnitBank: "classic_template_pool_random_t2_unit_bank",
-	ResBank:  "classic_template_pool_random_t2_res_bank",
-	Stat:     "classic_template_pool_random_t2_stat",
-	Magic:    "classic_template_pool_random_t2_magic",
+
+func GetGuardedT2PoolValues() guardedContentPools {
+	return guardedContentPools{
+		Base:     "classic_template_pool_random_t2_base",
+		Item:     "classic_template_pool_random_t2_item",
+		Pandora:  "classic_template_pool_random_t2_pandora",
+		Hire:     "classic_template_pool_random_t2_hire",
+		UnitBank: "classic_template_pool_random_t2_unit_bank",
+		ResBank:  "classic_template_pool_random_t2_res_bank",
+		Stat:     "classic_template_pool_random_t2_stat",
+		Magic:    "classic_template_pool_random_t2_magic",
+	}
 }
-var guardedT3PoolValues = guardedContentPools{
-	Base:     "classic_template_pool_random_t3_base",
-	Item:     "classic_template_pool_random_t3_item",
-	Pandora:  "classic_template_pool_random_t3_pandora",
-	Hire:     "classic_template_pool_random_t3_hire",
-	UnitBank: "classic_template_pool_random_t3_unit_bank",
-	ResBank:  "classic_template_pool_random_t3_res_bank",
-	Stat:     "classic_template_pool_random_t3_stat",
-	Magic:    "classic_template_pool_random_t3_magic",
+
+func GetGuardedT3PoolValues() guardedContentPools {
+	return guardedContentPools{
+		Base:     "classic_template_pool_random_t3_base",
+		Item:     "classic_template_pool_random_t3_item",
+		Pandora:  "classic_template_pool_random_t3_pandora",
+		Hire:     "classic_template_pool_random_t3_hire",
+		UnitBank: "classic_template_pool_random_t3_unit_bank",
+		ResBank:  "classic_template_pool_random_t3_res_bank",
+		Stat:     "classic_template_pool_random_t3_stat",
+		Magic:    "classic_template_pool_random_t3_magic",
+	}
 }
-var guardedT4PoolValues = guardedContentPools{
-	Base:     "classic_template_pool_random_t4_base",
-	Item:     "classic_template_pool_random_t4_item",
-	Pandora:  "classic_template_pool_random_t4_pandora",
-	Hire:     "classic_template_pool_random_t4_hire",
-	UnitBank: "classic_template_pool_random_t4_unit_bank",
-	ResBank:  "classic_template_pool_random_t4_res_bank",
-	Stat:     "classic_template_pool_random_t4_stat",
-	Magic:    "classic_template_pool_random_t4_magic",
+
+func GetGuardedT4PoolValues() guardedContentPools {
+	return guardedContentPools{
+		Base:     "classic_template_pool_random_t4_base",
+		Item:     "classic_template_pool_random_t4_item",
+		Pandora:  "classic_template_pool_random_t4_pandora",
+		Hire:     "classic_template_pool_random_t4_hire",
+		UnitBank: "classic_template_pool_random_t4_unit_bank",
+		ResBank:  "classic_template_pool_random_t4_res_bank",
+		Stat:     "classic_template_pool_random_t4_stat",
+		Magic:    "classic_template_pool_random_t4_magic",
+	}
 }
-var guardedT5PoolValues = guardedContentPools{
-	Base:     "classic_template_pool_random_t5_base",
-	Item:     "classic_template_pool_random_t5_item",
-	Pandora:  "classic_template_pool_random_t5_pandora",
-	Hire:     "classic_template_pool_random_t5_hire",
-	UnitBank: "classic_template_pool_random_t5_unit_bank",
-	ResBank:  "classic_template_pool_random_t5_res_bank",
-	Stat:     "classic_template_pool_random_t5_stat",
-	Magic:    "classic_template_pool_random_t5_magic",
+
+func GetGuardedT5PoolValues() guardedContentPools {
+	return guardedContentPools{
+		Base:     "classic_template_pool_random_t5_base",
+		Item:     "classic_template_pool_random_t5_item",
+		Pandora:  "classic_template_pool_random_t5_pandora",
+		Hire:     "classic_template_pool_random_t5_hire",
+		UnitBank: "classic_template_pool_random_t5_unit_bank",
+		ResBank:  "classic_template_pool_random_t5_res_bank",
+		Stat:     "classic_template_pool_random_t5_stat",
+		Magic:    "classic_template_pool_random_t5_magic",
+	}
 }
 
 // GetGuardedContentPoolT0List returns a list of all guarded tier 0 content pool IDs (excluding the base pool) used for
 //
 //	variants.zones.guardedContentPool
 func GetGuardedContentPoolT0List() []string {
+	guardedT0PoolValues := GetGuardedT0PoolValues()
 	return []string{
 		guardedT0PoolValues.Item,
 		guardedT0PoolValues.Pandora,
@@ -91,6 +109,7 @@ func GetGuardedContentPoolT0List() []string {
 //
 //	variants.zones.guardedContentPool
 func GetGuardedContentPoolT1List() []string {
+	guardedT1PoolValues := GetGuardedT1PoolValues()
 	return []string{
 		guardedT1PoolValues.Item,
 		guardedT1PoolValues.Pandora,
@@ -106,6 +125,7 @@ func GetGuardedContentPoolT1List() []string {
 //
 //	variants.zones.guardedContentPool
 func GetGuardedContentPoolT2List() []string {
+	guardedT2PoolValues := GetGuardedT2PoolValues()
 	return []string{
 		guardedT2PoolValues.Item,
 		guardedT2PoolValues.Pandora,
@@ -121,6 +141,7 @@ func GetGuardedContentPoolT2List() []string {
 //
 //	variants.zones.guardedContentPool
 func GetGuardedContentPoolT3List() []string {
+	guardedT3PoolValues := GetGuardedT3PoolValues()
 	return []string{
 		guardedT3PoolValues.Item,
 		guardedT3PoolValues.Pandora,
@@ -136,6 +157,7 @@ func GetGuardedContentPoolT3List() []string {
 //
 //	variants.zones.guardedContentPool
 func GetGuardedContentPoolT4List() []string {
+	guardedT4PoolValues := GetGuardedT4PoolValues()
 	return []string{
 		guardedT4PoolValues.Item,
 		guardedT4PoolValues.Pandora,
@@ -151,6 +173,7 @@ func GetGuardedContentPoolT4List() []string {
 //
 //	variants.zones.guardedContentPool
 func GetGuardedContentPoolT5List() []string {
+	guardedT5PoolValues := GetGuardedT5PoolValues()
 	return []string{
 		guardedT5PoolValues.Item,
 		guardedT5PoolValues.Pandora,

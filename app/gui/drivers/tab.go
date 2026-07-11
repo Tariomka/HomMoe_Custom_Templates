@@ -15,6 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
 type Tab struct {
@@ -80,7 +81,7 @@ func (this *Tab) GetPanelWidget(theme *material.Theme) layout.Widget {
 		return this.panel.GetPanelWidget(theme)
 	}
 
-	return func(gtx layout.Context) layout.Dimensions { return layout.Dimensions{} }
+	return widgets.NewEmptyWidget()
 }
 
 func (this *Tab) LoadFromState() {

@@ -37,7 +37,8 @@ func (this *FractalTopologyService) CreateTopologyVariant(
 	allLabels, positions, pairs := this.createFractalLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
-	zones := this.createZones(configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
+	zones := this.createZones(
+		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
 	for index := range zones {
 		position := positions[index]
 		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
@@ -45,12 +46,14 @@ func (this *FractalTopologyService) CreateTopologyVariant(
 
 	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	conns = append(conns, this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
+	conns = append(conns,
+		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
@@ -95,6 +98,8 @@ func (this *FractalTopologyService) createFractalLayout(
 			tierBuckets[2] = append(tierBuckets[2], index)
 		case models.QualityMedium:
 			tierBuckets[1] = append(tierBuckets[1], index)
+		case models.QualityLow:
+			fallthrough
 		default:
 			tierBuckets[0] = append(tierBuckets[0], index)
 		}
@@ -126,7 +131,7 @@ func (this *FractalTopologyService) createFractalLayout(
 
 		var tree fractalTree
 		tree.player = playerIndex
-		for tier := 0; tier < 3; tier++ {
+		for tier := range 3 {
 			plan := perPlayerTier[tier][player]
 			half := sectorHalf * tierSpread[tier]
 			radius := tierRadius[tier]
@@ -156,7 +161,7 @@ func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) []mo
 	for treeIndex, tree := range trees {
 		// Collect the tiers that actually received zones, outermost first.
 		chain := make([][]int, 0, len(tree.levels))
-		for tier := 0; tier < len(tree.levels); tier++ {
+		for tier := range len(tree.levels) {
 			if len(tree.levels[tier]) > 0 {
 				chain = append(chain, tree.levels[tier])
 			}

@@ -92,7 +92,12 @@ func calibrateTabPoints(tb testing.TB, r *AppRunner) []image.Point {
 
 	for i, ok := range found {
 		if !ok {
-			tb.Fatalf("calibration failed: located tab strip at y=%d but could not find a click point for tab %d of %d", stripY, i, tabCount)
+			tb.Fatalf(
+				"calibration failed: located tab strip at y=%d but could not find a click point for tab %d of %d",
+				stripY,
+				i,
+				tabCount,
+			)
 		}
 	}
 	return points
@@ -109,8 +114,6 @@ func BenchmarkEditorWindow_TabCycling(b *testing.B) {
 
 	points := calibrateTabPoints(b, runner)
 	runner.SetRenderDelay(100 * time.Millisecond)
-
-	b.ReportAllocs()
 
 	// TODO: add benchmark assertion with
 	// actual := testing.Benchmark()

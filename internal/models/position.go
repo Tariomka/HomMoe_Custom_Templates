@@ -61,7 +61,7 @@ func (this *Positions) Add(position Position) { *this = append(*this, position) 
 func (this *Positions) GetShortestDistanceIndex(adjacencyIndexes [][]int) (indices ConnectionIndexes, ok bool) {
 	indices = data.NewVec2(-1, -1)
 	if len(adjacencyIndexes) <= 1 {
-		return
+		return indices, ok
 	}
 
 	bestDist := math.MaxFloat64
@@ -164,7 +164,7 @@ func (this *Positions) GetMinAndMaxPositions() (minPos, maxPos Position) {
 		maxPos.X = max(maxPos.X, position.X)
 		maxPos.Y = max(maxPos.Y, position.Y)
 	}
-	return
+	return minPos, maxPos
 }
 
 // inCircumscribedCircle checks if "point" lies strictly inside the circumcircle of triangle ABC.

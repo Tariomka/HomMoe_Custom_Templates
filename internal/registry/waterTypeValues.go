@@ -10,19 +10,17 @@ type waterTypes struct {
 	WaterGrass  string
 }
 
-var waterTypeValues = waterTypes{
-	WaterDirt:   "water dirt",
-	WaterSand:   "water sand",
-	WaterDeath:  "water death",
-	WaterSnow:   "water snow",
-	WaterFallen: "water fallen",
-	Lava:        "lava",
-	WaterGrass:  "water grass",
-}
-
 // GetWaterTypeValues returns the different water types used for
 //
 //	variants.border.waterType
 func GetWaterTypeValues() waterTypes {
-	return waterTypeValues
+	return waterTypes{
+		WaterDirt:   "water dirt",
+		WaterSand:   "water sand",
+		WaterDeath:  "water death",
+		WaterSnow:   "water snow",
+		WaterFallen: "water fallen",
+		Lava:        "lava",
+		WaterGrass:  "water grass",
+	}
 }

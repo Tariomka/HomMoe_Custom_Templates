@@ -1,6 +1,7 @@
 package drivers
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -34,11 +36,9 @@ type State struct {
 
 	innerState *models.EditorState
 
-	// File state
 	currentPath string
 	unsaved     bool
 
-	// Output / status
 	outputPath   widget.Editor
 	lastTemplate *entities.RmgTemplate
 	statusMsg    string
@@ -80,8 +80,7 @@ func NewUIState() *State {
 
 func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg, this.statusErr }
 
-// Dialogs returns the modal host used to open and render dialogs.
-func (this *State) Dialogs() *DialogHost { return this.dialogs }
+func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
 func (this *State) GetStateData() dtos.EditorStateDto { return this.innerState.GetCurrentState() }
 
@@ -164,7 +163,7 @@ func (this *State) Exit() {
 	// In program.go, pass func() { window.Perform(system.ActionClose) } so the normal app.DestroyEvent path runs.
 	if this.unsaved && !this.confirmExit {
 		this.SetStatus("Unsaved changes exist - save first or press Exit again.", true)
-		this.confirmExit = true // reset if not selected right after
+		this.confirmExit = true // TODO: reset if not selected right after
 		return
 	}
 	// this.onExit()
@@ -197,6 +196,7 @@ func (this *State) RevealOutputDir() {
 }
 
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
+	// validators.ValidateEditorState(updateFunc, this.innerState.GetCurrentState())
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
 		this.unsaved = true
@@ -315,8 +315,15 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 		Connections: connections,
 		Config:      this.GetGeneratorConfig(),
 	})
-	this.lastTemplate = dto.Template
 
+	if err != nil && errors.Is(err, common.ErrProvidedTemplateInvalid) {
+		this.SetStatus(
+			fmt.Sprintf("Unable to update template, possibly because template was not generated. ⚠ Error: %v", err),
+			true)
+		return
+	}
+
+	this.lastTemplate = dto.Template
 	if err != nil {
 		this.SetStatus(
 			fmt.Sprintf(
@@ -416,5 +423,5 @@ func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCo
 		zoneCount = len(this.lastTemplate.Variants[0].Zones)
 		connectionCount = len(this.lastTemplate.Variants[0].Connections)
 	}
-	return
+	return zoneCount, connectionCount
 }

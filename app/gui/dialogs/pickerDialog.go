@@ -71,6 +71,100 @@ func newMultiSelectPicker(title string, entries []pickerEntry, grouped bool) *mu
 	return picker
 }
 
+func NewItemPickerDialog(title string, excluded []string, onApply func(ids []string)) *multiSelectPicker {
+	visible := constants.GetBannableItemsWithExclusions(excluded)
+
+	entries := make([]pickerEntry, 0, len(visible))
+	for _, item := range visible {
+		entries = append(entries, pickerEntry{
+			id:       item.Sid,
+			group:    item.Category,
+			label:    item.Name,
+			haystack: strings.ToLower(item.Name + " " + item.Sid + " " + item.Category),
+		})
+	}
+
+	picker := newMultiSelectPicker(title, entries, true)
+	picker.onApply = onApply
+	return picker
+}
+
+func NewSpellPickerDialog(
+	excluded []string,
+	showMakeFree bool,
+	onApply func(ids []string, makeFree bool)) *multiSelectPicker {
+	visible := constants.GetKnownSpellsWithExclusions(excluded)
+
+	entries := make([]pickerEntry, 0, len(visible))
+	for _, spell := range visible {
+		label := constants.SpellSchoolDisplayNames[spell.School]
+		if label == "" {
+			label = spell.School
+		}
+		entries = append(entries, pickerEntry{
+			id:       spell.Sid,
+			group:    label,
+			label:    spell.Name,
+			badge:    fmt.Sprintf("[T%d]", spell.Tier),
+			haystack: strings.ToLower(spell.Name + " " + spell.Sid + " " + spell.School),
+		})
+	}
+
+	makeFree := new(widget.Bool)
+	picker := newMultiSelectPicker("Pick Spells", entries, true)
+	picker.groupColor = constants.GetSpellSchoolColorFromDisplayName
+	if showMakeFree {
+		picker.footerWidget = func(theme *material.Theme) layout.Widget {
+			return widgets.NewLabeledCheckboxRowWidget(theme, makeFree, "Make spell(s) free")
+		}
+	}
+	picker.onApply = func(ids []string) {
+		onApply(ids, makeFree.Value)
+	}
+	return picker
+}
+
+func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *multiSelectPicker {
+	sids := constants.GetValueOverrideSidsWithExclusions(excluded)
+
+	entries := make([]pickerEntry, 0, len(sids))
+	for _, sid := range sids {
+		entries = append(entries, pickerEntry{
+			id:       sid,
+			label:    sid,
+			haystack: strings.ToLower(sid),
+		})
+	}
+
+	guardEdit := &widget.Editor{SingleLine: true}
+	guardEdit.SetText("5000")
+	picker := newMultiSelectPicker("Pick Value Overrides", entries, false)
+	picker.footerWidget = func(theme *material.Theme) layout.Widget {
+		return func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Min.X = gtx.Dp(unit.Dp(100))
+					label := material.Caption(theme, "Guard value")
+					label.Color = themes.ColorTextDim
+					return label.Layout(gtx)
+				}),
+				layout.Flexed(1, widgets.NewTextboxWidget(theme, guardEdit, "5000", false)))
+		}
+	}
+	picker.onApply = func(ids []string) {
+		guard := 5000
+		if parsed, err := strconv.Atoi(strings.TrimSpace(guardEdit.Text())); err == nil {
+			guard = parsed
+		}
+		lines := make([]string, 0, len(ids))
+		for _, sid := range ids {
+			lines = append(lines, fmt.Sprintf("%s=%d", sid, guard))
+		}
+		onApply(lines)
+	}
+	return picker
+}
+
 func (this *multiSelectPicker) Title() string { return this.title }
 
 func (this *multiSelectPicker) PreferredSize() (unit.Dp, unit.Dp) { return this.prefW, this.prefH }
@@ -271,110 +365,4 @@ func (this *multiSelectPicker) selectedIds() []string {
 		}
 	}
 	return ids
-}
-
-// ── Item picker ─────────────────────────────────────────────────────────────
-
-// NewItemPickerDialog builds a category-grouped artifact picker. excluded ids
-// are hidden (already-banned / already-chosen). onApply receives the selected
-// artifact SIDs.
-func NewItemPickerDialog(title string, excluded []string, onApply func(ids []string)) *multiSelectPicker {
-	visible := constants.GetBannableItemsWithExclusions(excluded)
-
-	entries := make([]pickerEntry, 0, len(visible))
-	for _, item := range visible {
-		entries = append(entries, pickerEntry{
-			id:       item.Sid,
-			group:    item.Category,
-			label:    item.Name,
-			haystack: strings.ToLower(item.Name + " " + item.Sid + " " + item.Category),
-		})
-	}
-
-	picker := newMultiSelectPicker(title, entries, true)
-	picker.onApply = onApply
-	return picker
-}
-
-// ── Spell picker ────────────────────────────────────────────────────────────
-
-// NewSpellPickerDialog builds a school-grouped, tier-sorted spell picker.
-// excluded ids are hidden. When showMakeFree is true a "make free" toggle is
-// shown. onApply receives the selected spell SIDs and the make-free flag.
-func NewSpellPickerDialog(excluded []string, showMakeFree bool, onApply func(ids []string, makeFree bool)) *multiSelectPicker {
-	visible := constants.GetKnownSpellsWithExclusions(excluded)
-
-	entries := make([]pickerEntry, 0, len(visible))
-	for _, spell := range visible {
-		label := constants.SpellSchoolDisplayNames[spell.School]
-		if label == "" {
-			label = spell.School
-		}
-		entries = append(entries, pickerEntry{
-			id:       spell.Sid,
-			group:    label,
-			label:    spell.Name,
-			badge:    fmt.Sprintf("[T%d]", spell.Tier),
-			haystack: strings.ToLower(spell.Name + " " + spell.Sid + " " + spell.School),
-		})
-	}
-
-	makeFree := new(widget.Bool)
-	picker := newMultiSelectPicker("Pick Spells", entries, true)
-	picker.groupColor = constants.GetSpellSchoolColorFromDisplayName
-	if showMakeFree {
-		picker.footerWidget = func(theme *material.Theme) layout.Widget {
-			return widgets.NewLabeledCheckboxRowWidget(theme, makeFree, "Make spell(s) free")
-		}
-	}
-	picker.onApply = func(ids []string) {
-		onApply(ids, makeFree.Value)
-	}
-	return picker
-}
-
-// ── Value-override picker ───────────────────────────────────────────────────
-
-// NewValueOverridePickerDialog builds a flat SID picker with a single guard
-// value applied to every selection. excluded SIDs are hidden. onApply receives
-// "sid=guardValue" lines.
-func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *multiSelectPicker {
-	sids := constants.GetValueOverrideSidsWithExclusions(excluded)
-
-	entries := make([]pickerEntry, 0, len(sids))
-	for _, sid := range sids {
-		entries = append(entries, pickerEntry{
-			id:       sid,
-			label:    sid,
-			haystack: strings.ToLower(sid),
-		})
-	}
-
-	guardEdit := &widget.Editor{SingleLine: true}
-	guardEdit.SetText("5000")
-	picker := newMultiSelectPicker("Pick Value Overrides", entries, false)
-	picker.footerWidget = func(theme *material.Theme) layout.Widget {
-		return func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					gtx.Constraints.Min.X = gtx.Dp(unit.Dp(100))
-					label := material.Caption(theme, "Guard value")
-					label.Color = themes.ColorTextDim
-					return label.Layout(gtx)
-				}),
-				layout.Flexed(1, widgets.NewTextboxWidget(theme, guardEdit, "5000", false)))
-		}
-	}
-	picker.onApply = func(ids []string) {
-		guard := 5000
-		if parsed, err := strconv.Atoi(strings.TrimSpace(guardEdit.Text())); err == nil {
-			guard = parsed
-		}
-		lines := make([]string, 0, len(ids))
-		for _, sid := range ids {
-			lines = append(lines, fmt.Sprintf("%s=%d", sid, guard))
-		}
-		onApply(lines)
-	}
-	return picker
 }

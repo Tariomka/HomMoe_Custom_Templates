@@ -39,7 +39,15 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	sortedPairs := this.createSortedPairs(orderedLabels, rawPositions, allNeutralZonePlans)
 
 	connectionNames := this.createConnectionNames(orderedLabels, sortedPairs)
-	zones := this.createZones(configuration, playerLabel, playerIndex, orderedLabels, tuning, allNeutralZonePlans, connectionNames)
+	zones := this.createZones(
+		configuration,
+		playerLabel,
+		playerIndex,
+		orderedLabels,
+		tuning,
+		allNeutralZonePlans,
+		connectionNames,
+	)
 
 	for index, label := range orderedLabels {
 		position := positions[index]
@@ -53,8 +61,16 @@ func (this *BalancedClusterService) CreateClusterVariant(
 		zones[index].GeneratorRing = &tier
 	}
 
-	connections := this.createConnections(playerLabel, orderedLabels, tuning, allNeutralZonePlans, connectionNames, sortedPairs)
-	connections = append(connections, this.CreateMissingConnections(singlePlayerList, orderedLabels, positions, zones, connections, tuning, allNeutralZonePlans)...)
+	connections := this.createConnections(
+		playerLabel, orderedLabels,
+		tuning, allNeutralZonePlans,
+		connectionNames, sortedPairs)
+	connections = append(
+		connections,
+		this.CreateMissingConnections(
+			singlePlayerList, orderedLabels,
+			positions, zones, connections,
+			tuning, allNeutralZonePlans)...)
 	return zones, connections
 }
 
@@ -63,9 +79,9 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 		return models.Positions{}
 	}
 
-	min, max := rawPositions.GetMinAndMaxPositions()
-	spanX := math.Max(max.X-min.X, 0.001)
-	spanY := math.Max(max.Y-min.Y, 0.001)
+	minimumPosition, maximumPosition := rawPositions.GetMinAndMaxPositions()
+	spanX := math.Max(maximumPosition.X-minimumPosition.X, 0.001)
+	spanY := math.Max(maximumPosition.Y-minimumPosition.Y, 0.001)
 
 	// Player 0 fills the left half, player 1 the right half. Player 1 is laid
 	// out as a true mirror of player 0 - reflected on both the horizontal and
@@ -85,8 +101,8 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 	positions := models.Positions{}
 	for _, position := range rawPositions {
 		positions.Add(data.NewVec2(
-			xCentre+xSign*(position.X-(min.X+max.X)/2.0)*scale,
-			yCentre+ySign*(position.Y-(min.Y+max.Y)/2.0)*scale))
+			xCentre+xSign*(position.X-(minimumPosition.X+maximumPosition.X)/2.0)*scale,
+			yCentre+ySign*(position.Y-(minimumPosition.Y+maximumPosition.Y)/2.0)*scale))
 	}
 
 	return positions
@@ -96,7 +112,6 @@ func (this *BalancedClusterService) createSortedPairs(
 	orderedLabels []string,
 	rawPositions models.Positions,
 	allNeutralZonePlans models.NeutralZonePlans) [][2]int {
-
 	tierIndices := map[int][]int{}
 	for index, label := range orderedLabels {
 		tier := allNeutralZonePlans.GetTier(label)
@@ -148,7 +163,9 @@ func (this *BalancedClusterService) createSortedPairs(
 		for outerIndex := range outerSorted {
 			best, bestD := 0, math.MaxFloat64
 			for innerIndex := range innerSorted {
-				if distance := misc.GetShortestAngleDistance(outerAngles[outerIndex], innerAngles[innerIndex]); distance < bestD {
+				if distance := misc.GetShortestAngleDistance(
+					outerAngles[outerIndex],
+					innerAngles[innerIndex]); distance < bestD {
 					bestD = distance
 					best = innerIndex
 				}
@@ -162,12 +179,17 @@ func (this *BalancedClusterService) createSortedPairs(
 		for innerIndex := range innerSorted {
 			bestDistance := math.MaxFloat64
 			for outerIndex := range outerSorted {
-				if distance := misc.GetShortestAngleDistance(innerAngles[innerIndex], outerAngles[outerIndex]); distance < bestDistance {
+				if distance := misc.GetShortestAngleDistance(
+					innerAngles[innerIndex],
+					outerAngles[outerIndex],
+				); distance < bestDistance {
 					bestDistance = distance
 				}
 			}
 			for outerIndex := range outerSorted {
-				if misc.GetShortestAngleDistance(innerAngles[innerIndex], outerAngles[outerIndex]) <= bestDistance+epsilon {
+				if misc.GetShortestAngleDistance(
+					innerAngles[innerIndex],
+					outerAngles[outerIndex]) <= bestDistance+epsilon {
 					pairSet.Add(innerSorted[innerIndex], outerSorted[outerIndex])
 				}
 			}
@@ -209,14 +231,27 @@ func (this *BalancedClusterService) createZones(
 		myConns := connectionNames[index]
 		if label == playerLabel {
 			zones = append(zones, this.CreateSpawnZone(
-				label, fmt.Sprintf("Player%d", playerIndex+1), myConns, configuration.ZoneConfiguration.PlayerZoneCastles,
-				configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
+				label,
+				fmt.Sprintf("Player%d", playerIndex+1),
+				myConns,
+				configuration.ZoneConfiguration.PlayerZoneCastles,
+				configuration.MatchPlayerCastleFactions,
+				configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+				tuning.RemoteFootholdCount,
+				configuration.GenerateRoads,
+				tuning,
+			))
 		} else {
 			zones = append(zones, this.CreateNeutralZone(
-				linq.FromSlice(allNeutralZonePlans).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
-				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize, tuning.RemoteFootholdCount,
-				configuration.GenerateRoads, tuning, false))
+				linq.FromSlice(allNeutralZonePlans).
+					FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+				myConns,
+				configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+				tuning.RemoteFootholdCount,
+				configuration.GenerateRoads,
+				tuning,
+				false,
+			))
 		}
 	}
 	return zones
@@ -250,10 +285,21 @@ func (this *BalancedClusterService) createConnections(
 			toZone = "Neutral-" + labelTo
 		}
 		connections = append(connections, entities.Connection{
-			Name: connName, From: fromZone, To: toZone,
-			ConnectionType: "Direct", GuardZone: fromZone, SimTurnSquad: true,
-			GuardValue: this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo),
+			Name:           connName,
+			From:           fromZone,
+			To:             toZone,
+			ConnectionType: "Direct",
+			GuardZone:      fromZone,
+			SimTurnSquad:   true,
+			GuardValue: this.GetBorderGuardValue(
+				labelFrom,
+				labelTo,
+				[]string{playerLabel},
+				allNeutralZonePlans,
+				tuning,
+			),
+			GuardWeeklyIncrement: 0.15,
+			GuardMatchGroup:      fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo),
 		})
 	}
 	return connections

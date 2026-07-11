@@ -1,11 +1,13 @@
+package connection_editor
+
 // Zone-mutation logic of the Manual Zone Editor: adding, deleting and
 // re-profiling zones. The visual canvas lives in the GUI layer; everything
 // testable lives here.
-package connection_editor
 
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -40,7 +42,7 @@ func buildCastleRoads(mainObjectCount int) []entities.Road {
 			variant_content.NewRoadBuilder().
 				WithStoneType().
 				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(fmt.Sprintf("%d", i))).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i))).
 				Build())
 	}
 	return roads
@@ -226,12 +228,17 @@ func ApplyNeutralZoneQuality(
 	zone.GuardedContentPool = profile.GuardedContentPool
 	zone.UnguardedContentPool = profile.UnguardedContentPool
 	zone.ResourcesContentPool = profile.ResourcesContentPool
-	zone.GuardedContentValue = tuning.ScaleByStructureDensity(float64(profile.GuardedContentValue) * tuning.ContentScale)
-	zone.GuardedContentValuePerArea = tuning.ScaleByStructureDensity(float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))
-	zone.UnguardedContentValue = tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValue) * tuning.ContentScale)
-	zone.UnguardedContentValuePerArea = tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))
+	zone.GuardedContentValue = tuning.ScaleByStructureDensity(
+		float64(profile.GuardedContentValue) * tuning.ContentScale)
+	zone.GuardedContentValuePerArea = tuning.ScaleByStructureDensity(
+		float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))
+	zone.UnguardedContentValue = tuning.ScaleByStructureDensity(
+		float64(profile.UnguardedContentValue) * tuning.ContentScale)
+	zone.UnguardedContentValuePerArea = tuning.ScaleByStructureDensity(
+		float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))
 	zone.ResourcesValue = tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)
-	zone.ResourcesValuePerArea = tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))
+	zone.ResourcesValuePerArea = tuning.ScaleByResourceDensity(
+		float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))
 	zone.MainObjects = base.CreateNeutralZoneCastles(profile, tuning, castleCount, false)
 
 	// Regenerate the castle<->castle roads so the rebuilt castles are

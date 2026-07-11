@@ -55,14 +55,14 @@ func CreateRuleFromSavedRule(saved models.ContentRuleRowSave, content models.Sid
 		}
 		return NewRuleSoloEncounter(*saved.IsSoloEncounter)
 	case strings.EqualFold(saved.Name, RuleVariantName):
-		if saved.VariantId == nil {
+		if saved.VariantID == nil {
 			return nil
 		}
-		mapping, ok := GetVariantForContentById(content, *saved.VariantId)
+		mapping, ok := GetVariantForContentByID(content, *saved.VariantID)
 		if !ok {
 			return nil
 		}
-		rule, err := NewRuleVariant(&mapping, saved.VariantId)
+		rule, err := NewRuleVariant(&mapping, saved.VariantID)
 		if err != nil {
 			return nil
 		}

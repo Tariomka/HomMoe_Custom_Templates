@@ -17,7 +17,9 @@ type candidate struct {
 
 type hubZoneCandidates []candidate
 
-func CreateHubZoneCandidates(neutralZones models.NeutralZonePlans, distancesByPlayer []map[string]int) *hubZoneCandidates {
+func CreateHubZoneCandidates(
+	neutralZones models.NeutralZonePlans,
+	distancesByPlayer []map[string]int) *hubZoneCandidates {
 	var candidates hubZoneCandidates
 	for _, plan := range neutralZones {
 		var dists []int

@@ -16,8 +16,8 @@ type Iterable[T any] interface {
 //		// use value
 //	}
 //
-//	linq.FromSlice(mySlice).Iterate(func(item T) bool {
-//		// use item
+//	linq.FromSlice(mySlice).Iterate(func(value T) bool {
+//		// use value
 //		return true // to continue iteration
 //		return false // to stop iteration
 //	})
@@ -112,16 +112,13 @@ func (this Query[T]) First(predicate Predicate[T]) (result T, ok bool) {
 		return true
 	})
 
-	return // result, ok
+	return result, ok
 }
 
 func (this Query[T]) Any() bool {
 	found := false
 
-	this.Iterate(func(item T) bool {
-		found = true
-		return false
-	})
+	this.Iterate(func(T) bool { found = true; return false })
 
 	return found
 }

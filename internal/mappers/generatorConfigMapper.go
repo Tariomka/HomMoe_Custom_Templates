@@ -38,16 +38,30 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.BannedItems = editorState.BannedItems
 	generatorSettings.BannedMagics = editorState.BannedMagics
 	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
-	generatorSettings.Bonuses = editorState.BonusesJSON
-	generatorSettings.PlayerZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.PlayerZoneContentRows)
-	generatorSettings.LowNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.LowNeutralContentRows)
-	generatorSettings.MediumNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.MediumNeutralContentRows)
-	generatorSettings.HighNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HighNeutralContentRows)
+	generatorSettings.Bonuses = editorState.Bonuses
+	generatorSettings.PlayerZoneMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.PlayerZoneContentRows)
+	generatorSettings.LowNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.LowNeutralContentRows)
+	generatorSettings.MediumNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.MediumNeutralContentRows)
+	generatorSettings.HighNeutralMandatoryContent = contentProvider.CreateContentItemsFrom(
+		editorState.HighNeutralContentRows)
 	generatorSettings.HubZoneMandatoryContent = contentProvider.CreateContentItemsFrom(editorState.HubZoneContentRows)
 	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
 	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent
 
-	generatorSettings.ZoneConfiguration = config.ZoneConfig{
+	generatorSettings.ZoneConfiguration = this.mapZoneConfig(editorState)
+	generatorSettings.HeroSettings = this.mapHeroSettings(editorState)
+	generatorSettings.GameEndConditions = this.mapGameEndConditions(editorState)
+	generatorSettings.GladiatorArenaRules = this.mapGladiatorArenaRules(editorState)
+	generatorSettings.TournamentRules = this.mapTournamentRules(editorState)
+
+	return generatorSettings
+}
+
+func (this *GeneratorConfigMapper) mapZoneConfig(editorState dtos.EditorStateDto) config.ZoneConfig {
+	return config.ZoneConfig{
 		NeutralZoneCount:            editorState.NeutralZoneCount,
 		PlayerOwnedCastles:          editorState.PlayerOwnedCastles,
 		PlayerZoneCastles:           editorState.PlayerZoneCastles,
@@ -76,14 +90,18 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 			GuardRandomization:          editorState.GuardRandomization,
 		},
 	}
+}
 
-	generatorSettings.HeroSettings = config.HeroSettings{
+func (this *GeneratorConfigMapper) mapHeroSettings(editorState dtos.EditorStateDto) config.HeroSettings {
+	return config.HeroSettings{
 		HeroCountMin:       editorState.HeroCountMin,
 		HeroCountMax:       editorState.HeroCountMax,
 		HeroCountIncrement: editorState.HeroCountIncrement,
 	}
+}
 
-	generatorSettings.GameEndConditions = &config.GameEndConditions{
+func (this *GeneratorConfigMapper) mapGameEndConditions(editorState dtos.EditorStateDto) *config.GameEndConditions {
+	return &config.GameEndConditions{
 		VictoryCondition: editorState.VictoryCondition,
 		CityHold:         editorState.CityHold || editorState.VictoryCondition == winConditions.CityHold,
 		CityHoldDays:     editorState.CityHoldDays,
@@ -91,20 +109,22 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 		LostStartCityDay: editorState.LostStartCityDay,
 		LostStartHero:    editorState.LostStartHero,
 	}
+}
 
-	generatorSettings.GladiatorArenaRules = &config.GladiatorArenaRules{
+func (this *GeneratorConfigMapper) mapGladiatorArenaRules(editorState dtos.EditorStateDto) *config.GladiatorArenaRules {
+	return &config.GladiatorArenaRules{
 		Enabled:        editorState.GladiatorArena,
 		DaysDelayStart: editorState.GladiatorArenaDaysDelayStart,
 		CountDay:       editorState.GladiatorArenaCountDay,
 	}
+}
 
-	generatorSettings.TournamentRules = &config.TournamentRules{
+func (this *GeneratorConfigMapper) mapTournamentRules(editorState dtos.EditorStateDto) *config.TournamentRules {
+	return &config.TournamentRules{
 		Enabled:            editorState.Tournament,
 		FirstTournamentDay: editorState.TournamentFirstTournamentDay,
 		Interval:           editorState.TournamentInterval,
 		PointsToWin:        editorState.TournamentPointsToWin,
 		SaveArmy:           editorState.TournamentSaveArmy,
 	}
-
-	return generatorSettings
 }

@@ -42,15 +42,18 @@ func (this *WinConditions) MergeWinConditionsIfDoesNotExist(source WinConditions
 	if err != nil {
 		return
 	}
+
 	sourceBytes, err := json.Marshal(source)
 	if err != nil {
 		return
 	}
+
 	var destinationMap, sourceMap map[string]json.RawMessage
-	if err := json.Unmarshal(destinationBytes, &destinationMap); err != nil {
+	if err = json.Unmarshal(destinationBytes, &destinationMap); err != nil {
 		return
 	}
-	if err := json.Unmarshal(sourceBytes, &sourceMap); err != nil {
+
+	if err = json.Unmarshal(sourceBytes, &sourceMap); err != nil {
 		return
 	}
 	// Because every WinConditions field uses `omitempty`, any field present in
@@ -66,9 +69,11 @@ func (this *WinConditions) MergeWinConditionsIfDoesNotExist(source WinConditions
 	if !changed {
 		return
 	}
+
 	merged, err := json.Marshal(destinationMap)
 	if err != nil {
 		return
 	}
+
 	_ = json.Unmarshal(merged, this)
 }

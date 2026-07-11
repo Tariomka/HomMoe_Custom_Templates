@@ -11,6 +11,10 @@
 
 # Output of the go coverage tool
 *.out
+coverage.txt
+coverage.html
+lcov.info
+/*.txt
 
 # Dependency directories
 vendor/

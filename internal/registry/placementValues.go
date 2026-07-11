@@ -7,16 +7,14 @@ type placements struct {
 	Uniform    string
 }
 
-var placementValues = placements{
-	Center:     "Center",
-	Connection: "Connection",
-	NearZone:   "NearZone",
-	Uniform:    "Uniform",
-}
-
 // GetPlacementValues returns the placement values used for
 //
 //	variants.zones.mainObjects.placement
 func GetPlacementValues() placements {
-	return placementValues
+	return placements{
+		Center:     "Center",
+		Connection: "Connection",
+		NearZone:   "NearZone",
+		Uniform:    "Uniform",
+	}
 }

@@ -156,8 +156,8 @@ func NewDefaultConnection(from, to string, zones []entities.Zone, playerZoneName
 // ZoneLetterFromName extracts the identifier after the first dash in a zone name,
 // e.g. "Spawn-A" → "A", "Neutral-C" → "C".
 func ZoneLetterFromName(zoneName string) string {
-	if index := strings.IndexByte(zoneName, '-'); index >= 0 {
-		return zoneName[index+1:]
+	if _, after, ok := strings.Cut(zoneName, "-"); ok {
+		return after
 	}
 	return zoneName
 }

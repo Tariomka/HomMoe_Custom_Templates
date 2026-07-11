@@ -14,7 +14,8 @@ func NewContentLimitProvider() *ContentLimitProvider {
 	return &ContentLimitProvider{}
 }
 
-func (this *ContentLimitProvider) CreateContentCountLimits(settings config.GeneratorConfig) []entities.ContentCountLimit {
+func (this *ContentLimitProvider) CreateContentCountLimits(
+	settings config.GeneratorConfig) []entities.ContentCountLimit {
 	sidLimits := this.createDefaultContentLimits()
 
 	// Lift limits when any mandatory-content list (player or neutral or

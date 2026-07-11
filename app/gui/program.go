@@ -1,7 +1,7 @@
 package gui
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -18,7 +18,7 @@ func StartApplication() {
 	app.Main()
 }
 
-// eventLoop is a blocking function and needs to executed concurrently
+// eventLoop is a blocking function and needs to executed concurrently.
 func eventLoop() {
 	window := getAndConfigureWindow()
 	windowLayout := editor.NewWindow()
@@ -29,7 +29,7 @@ func eventLoop() {
 		switch event := window.Event().(type) {
 		case app.DestroyEvent:
 			if event.Err != nil {
-				log.Println(event.Err)
+				slog.Error("Window destroyed with error", slog.String("error", event.Err.Error()))
 				os.Exit(1)
 			}
 			os.Exit(0)
@@ -48,6 +48,8 @@ func getAndConfigureWindow() *app.Window {
 		app.MinSize(unit.Dp(1280), unit.Dp(800)),
 	}
 
+	slog.SetDefault(slog.New(slog.DiscardHandler))
+
 	windowWidth, windowHeight := 1600, 900
 	for _, arg := range os.Args[1:] {
 		switch arg {
@@ -57,12 +59,16 @@ func getAndConfigureWindow() *app.Window {
 		case "-fullscreen":
 			configuration = append(configuration, app.Fullscreen.Option())
 			continue
+		case "-with-logging":
+			handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+			slog.SetDefault(slog.New(handler))
+			continue
 		}
 
 		split := strings.Split(arg, "=")
 		if len(split) > 1 {
 			if split[1] == "" {
-				log.Printf("Value for argument %s is missing", split[0])
+				slog.Warn("Value for argument is missing", slog.String("argument", split[0]))
 			}
 
 			switch split[0] {

@@ -35,7 +35,8 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 	allLabels, positions, pairs := this.createGeometricLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
-	zones := this.createZones(configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
+	zones := this.createZones(
+		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
 	for index := range zones {
 		position := positions[index]
 		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
@@ -43,12 +44,14 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 
 	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	conns = append(conns, this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
+	conns = append(conns,
+		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 

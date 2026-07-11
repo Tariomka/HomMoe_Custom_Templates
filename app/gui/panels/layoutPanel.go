@@ -406,7 +406,7 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	settings := this.state.GetStateData()
 	generatorConfig := this.state.GetGeneratorConfig()
 	tuning := models.NewGenerationTuning(generatorConfig, len(activeVariant.Zones))
-	this.state.Dialogs().Open(dialogs.NewZoneEditorDialog(
+	this.state.GetDialogHost().Open(dialogs.NewZoneEditorDialog(
 		activeVariant.Zones,
 		activeVariant.Connections,
 		settings.Topology,
@@ -446,8 +446,8 @@ func (this *LayoutPanel) openZoneContentDialog(
 	isPlayerTier bool,
 	rows []models.ZoneContentRowSave,
 	set func(*dtos.EditorStateDto, []models.ZoneContentRowSave)) {
-	this.state.Dialogs().Open(dialogs.NewZoneContentDialog(
-		title, isPlayerTier, rows, this.state.Dialogs().Open,
+	this.state.GetDialogHost().Open(dialogs.NewZoneContentDialog(
+		title, isPlayerTier, rows, this.state.GetDialogHost().Open,
 		func(updated []models.ZoneContentRowSave) {
 			this.state.UpdateState(func(s *dtos.EditorStateDto) { set(s, updated) })
 		}))

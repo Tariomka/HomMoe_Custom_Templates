@@ -31,9 +31,12 @@ func (this *HubTopologyService) CreateTopologyVariant(
 	outerLabels := this.createOuterLabels(configuration, playerLabels, neutralZones)
 
 	zones := this.createZones(configuration, playerLabels, outerLabels, tuning, neutralZones, hubIsHoldCity)
-	conns := this.createConnections(playerLabels, outerLabels, tuning, configuration.NoDirectPlayerConnections, neutralZones)
+	conns := this.createConnections(
+		playerLabels, outerLabels, tuning, configuration.NoDirectPlayerConnections, neutralZones)
 	if configuration.RandomPortals {
-		conns = append(conns, this.CreateRandomPortalConnections(playerLabels, outerLabels, tuning, configuration.MaxPortalConnections)...)
+		conns = append(conns,
+			this.CreateRandomPortalConnections(
+				playerLabels, outerLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	return this.CreateVariant(playerLabels, outerLabels[0], len(outerLabels)+1, zones, conns)
 }
@@ -86,7 +89,8 @@ func (this *HubTopologyService) createZones(
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					linq.FromSlice(neutralZones).
+						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
 					spokeConnectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
