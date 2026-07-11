@@ -69,7 +69,7 @@ func NewGeneralPanel(state *drivers.State) *GeneralPanel {
 		gameMode:     components.NewSegmentButtonGroup(registry.GetGameModeList()),
 		victorySelector: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
-			for _, victory := range constants.VictoryConditions {
+			for _, victory := range constants.GetVictoryConditionList() {
 				labels = append(labels, victory.Label)
 			}
 			return labels
@@ -364,7 +364,7 @@ func (this *GeneralPanel) getCurrentMapSize() constants.MapSize {
 }
 
 func (this *GeneralPanel) getCurrentVictoryCondition() constants.Victory {
-	return constants.VictoryConditions[this.victorySelector.GetSelectedIndex()]
+	return constants.GetVictoryConditionList()[this.victorySelector.GetSelectedIndex()]
 }
 
 func (this *GeneralPanel) isSingleHero() bool {

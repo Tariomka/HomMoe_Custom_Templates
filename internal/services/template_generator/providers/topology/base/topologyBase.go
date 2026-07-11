@@ -496,20 +496,6 @@ func (this *TopologyBase) GetBorderGuardValue(
 	return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
 }
 
-func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
-	return variant_content.NewObjectBuilder().
-		WithTypeSpawn().
-		WithSpawn(playerName).
-		WithNoGuardWhenOwned().
-		WithGuardChance(1).
-		WithGuardValue(guardValue).
-		WithGuardWeeklyIncrement(0.10).
-		WithCastleQualityDefault().
-		WithPlacementUniform().
-		WithPlacementArgs("true", "0.7", "0").
-		Build()
-}
-
 // CreatePlayerOwnedCastles builds the extra City castles that the player owns
 // from the very start of the game. Because they already have an owner, their
 // guards are dropped immediately so the player can use them right away.
@@ -561,6 +547,109 @@ func (this *TopologyBase) CreatePlayerUnclaimedCastles(
 		castles = append(castles, objectBuilder.Build())
 	}
 	return castles
+}
+
+// CreateHubZoneCastles builds the City main objects of a hub zone. Exported
+// so the manual zone editor can rebuild hub castles when the hub-castle
+// option changes after manual editing.
+func (this *TopologyBase) CreateHubZoneCastles(
+	tuning models.GenerationTuning,
+	castleCount int,
+	isHoldCityZone bool) []entities.MainObject {
+	var castles []entities.MainObject
+	newCastleBuilder := func() *variant_content.MainObjectBuilder {
+		return variant_content.NewObjectBuilder().
+			WithTypeCity().
+			WithGuardWeeklyIncrement(0.10).
+			WithFaction("FromList")
+	}
+	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
+		return builder.
+			WithGuardChance(1).
+			WithGuardValue(tuning.ScaleByNeutralGuardStrength(25_000)).
+			WithCastleQualityUltraRich().
+			WithPlacementCenter().
+			WithHoldCityWinCon().
+			Build()
+	}
+	buildCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
+		return builder.
+			WithGuardChance(0.5).
+			WithGuardValue(tuning.ScaleByNeutralGuardStrength(16_000)).
+			WithCastleQualityRich().
+			WithPlacementUniform().
+			WithPlacementArgs("true", "0.8", "2").
+			Build()
+	}
+
+	if castleCount > 0 && isHoldCityZone {
+		castles = append(castles, buildHoldCityCastle(newCastleBuilder()))
+	} else if castleCount > 0 {
+		castles = append(castles, buildCastle(newCastleBuilder()))
+	}
+
+	for range castleCount - 1 {
+		castles = append(castles, buildCastle(newCastleBuilder()))
+	}
+
+	return castles
+}
+
+func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
+	return variant_content.NewObjectBuilder().
+		WithTypeSpawn().
+		WithSpawn(playerName).
+		WithNoGuardWhenOwned().
+		WithGuardChance(1).
+		WithGuardValue(guardValue).
+		WithGuardWeeklyIncrement(0.10).
+		WithCastleQualityDefault().
+		WithPlacementUniform().
+		WithPlacementArgs("true", "0.7", "0").
+		Build()
+}
+
+// createOuterZoneRoads builds a castle zone's roads: a stone road from the
+// primary main object (index 0) to every other main object, a road to each
+// remote foothold, and a road to each connection. mainObjectCount is the TOTAL
+// number of main objects in the zone; a zone with none (mainObjectCount == 0)
+// is a pure pass-through connector instead.
+func (this *TopologyBase) createOuterZoneRoads(
+	connectionNames []string,
+	mainObjectCount int,
+	footholdCount int, generateRoads bool) []entities.Road {
+	if !generateRoads {
+		return nil
+	}
+
+	if mainObjectCount == 0 {
+		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
+	}
+
+	var roads []entities.Road
+	for i := 1; i < mainObjectCount; i++ {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithStoneType().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i))).
+				Build())
+	}
+	for i := 1; i <= footholdCount; i++ {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildMandatoryContentType(fmt.Sprintf("name_remote_foothold_%d", i))).
+				Build())
+	}
+	for _, name := range connectionNames {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
+				Build())
+	}
+	return roads
 }
 
 // CreateNeutralZoneCastles builds the City main objects of a neutral zone.
@@ -636,95 +725,6 @@ func createAbandonedOutposts(
 				Build())
 	}
 	return outposts
-}
-
-// CreateHubZoneCastles builds the City main objects of a hub zone. Exported
-// so the manual zone editor can rebuild hub castles when the hub-castle
-// option changes after manual editing.
-func (this *TopologyBase) CreateHubZoneCastles(
-	tuning models.GenerationTuning,
-	castleCount int,
-	isHoldCityZone bool) []entities.MainObject {
-	var castles []entities.MainObject
-	newCastleBuilder := func() *variant_content.MainObjectBuilder {
-		return variant_content.NewObjectBuilder().
-			WithTypeCity().
-			WithGuardWeeklyIncrement(0.10).
-			WithFaction("FromList")
-	}
-	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
-		return builder.
-			WithGuardChance(1).
-			WithGuardValue(tuning.ScaleByNeutralGuardStrength(25_000)).
-			WithCastleQualityUltraRich().
-			WithPlacementCenter().
-			WithHoldCityWinCon().
-			Build()
-	}
-	buildCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
-		return builder.
-			WithGuardChance(0.5).
-			WithGuardValue(tuning.ScaleByNeutralGuardStrength(16_000)).
-			WithCastleQualityRich().
-			WithPlacementUniform().
-			WithPlacementArgs("true", "0.8", "2").
-			Build()
-	}
-
-	if castleCount > 0 && isHoldCityZone {
-		castles = append(castles, buildHoldCityCastle(newCastleBuilder()))
-	} else if castleCount > 0 {
-		castles = append(castles, buildCastle(newCastleBuilder()))
-	}
-
-	for range castleCount - 1 {
-		castles = append(castles, buildCastle(newCastleBuilder()))
-	}
-
-	return castles
-}
-
-// createOuterZoneRoads builds a castle zone's roads: a stone road from the
-// primary main object (index 0) to every other main object, a road to each
-// remote foothold, and a road to each connection. mainObjectCount is the TOTAL
-// number of main objects in the zone; a zone with none (mainObjectCount == 0)
-// is a pure pass-through connector instead.
-func (this *TopologyBase) createOuterZoneRoads(
-	connectionNames []string,
-	mainObjectCount int,
-	footholdCount int, generateRoads bool) []entities.Road {
-	if !generateRoads {
-		return nil
-	}
-
-	if mainObjectCount == 0 {
-		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
-	}
-
-	var roads []entities.Road
-	for i := 1; i < mainObjectCount; i++ {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithStoneType().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i))).
-				Build())
-	}
-	for i := 1; i <= footholdCount; i++ {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMandatoryContentType(fmt.Sprintf("name_remote_foothold_%d", i))).
-				Build())
-	}
-	for _, name := range connectionNames {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
-				Build())
-	}
-	return roads
 }
 
 func buildSideContentLimits() entities.StringList {

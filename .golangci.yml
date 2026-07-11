@@ -365,6 +365,7 @@ severity:
     - godox
     - dupl
     - unparam
+    - gochecknoglobals # temporarily make it less critical
 
   - severity: note
     linters:

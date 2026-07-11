@@ -19,7 +19,18 @@ type victoryConditions struct {
 	Tournament       Victory
 }
 
-var victoryConditionValues = func() victoryConditions {
+func GetVictoryConditionList() []Victory {
+	values := GetVictoryConditionValues()
+	return []Victory{
+		values.Standard,
+		values.LostStartingCity,
+		values.GuardianArena,
+		values.HoldCity,
+		values.Tournament,
+	}
+}
+
+func GetVictoryConditionValues() victoryConditions {
 	winConditions := registry.GetWinningConditionValues()
 	return victoryConditions{
 		Standard:         Victory{ID: winConditions.Standard, Label: "Standard"},
@@ -28,25 +39,13 @@ var victoryConditionValues = func() victoryConditions {
 		HoldCity:         Victory{ID: winConditions.CityHold, Label: "Hold City"},
 		Tournament:       Victory{ID: winConditions.Tournament, Label: "Tournament"},
 	}
-}()
-
-var VictoryConditions = []Victory{
-	victoryConditionValues.Standard,
-	victoryConditionValues.LostStartingCity,
-	victoryConditionValues.GuardianArena,
-	victoryConditionValues.HoldCity,
-	victoryConditionValues.Tournament,
-}
-
-func GetVictoryConditionValues() victoryConditions {
-	return victoryConditionValues
 }
 
 func GetVictoryCondition(id string) Victory {
-	for _, victory := range VictoryConditions {
+	for _, victory := range GetVictoryConditionList() {
 		if strings.EqualFold(victory.ID, id) {
 			return victory
 		}
 	}
-	return VictoryConditions[0] // TODO: probably should return empty Victory... suck it
+	return GetVictoryConditionList()[0] // TODO: probably should return empty Victory... suck it
 }
