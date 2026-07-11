@@ -18,7 +18,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 )
 
 // PreviewPanel holds the layout cache + buttons for the preview panel.
@@ -28,11 +29,12 @@ type PreviewPanel struct {
 	btnPickOutput   widget.Clickable
 	btnRevealOutput widget.Clickable
 
-	state *drivers.State
+	state         *drivers.State
+	layoutService *preview_service.PreviewLayoutService
 }
 
 func NewPreviewPanel(state *drivers.State) *PreviewPanel {
-	return &PreviewPanel{state: state}
+	return &PreviewPanel{state: state, layoutService: preview_service.NewPreviewLayoutService()}
 }
 
 func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
@@ -176,7 +178,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 		legendOffset.Pop()
 	}
 
-	renderTemplate := func(gtx layout.Context, previewLayout services.PreviewLayout) {
+	renderTemplate := func(gtx layout.Context, previewLayout preview.PreviewLayout) {
 		// Connections beneath zones.
 		for _, connection := range previewLayout.Connections {
 			utils.DrawConnection(gtx, connection, previewLayout.ZoneRadius)
@@ -208,7 +210,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 				theme, "Adjust the options to generate the map layout.", canvasSize, outerCanvasSize)(gtx)
 		}
 
-		previewLayout := services.BuildPreviewLayout(
+		previewLayout := this.layoutService.BuildPreviewLayout(
 			template, this.state.GetStateData().Topology, float64(canvasSize.X))
 		if len(previewLayout.Positions) == 0 {
 			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)

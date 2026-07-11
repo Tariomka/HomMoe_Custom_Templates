@@ -27,8 +27,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 )
 
 var (
@@ -78,6 +78,7 @@ type ZoneEditorDialog struct {
 	working       []*entities.Connection
 	original      []entities.Connection
 	onApply       func([]entities.Zone, []entities.Connection)
+	layoutService *preview_service.PreviewLayoutService
 
 	// Geometry recomputed every frame from BuildPreviewLayout.
 	positions    map[string]image.Point
@@ -167,6 +168,7 @@ func NewZoneEditorDialog(
 		tuning:            tuning,
 		generateRoads:     generateRoads,
 		onApply:           onApply,
+		layoutService:     preview_service.NewPreviewLayoutService(),
 		typeDropdown:      components.NewDropdownSelector(connection_editor.UserCreatableConnectionTypes()),
 		guardZoneDropdown: components.NewDropdownSelector(nil),
 		guardDropdown:     components.NewDropdownSelector(nil),
@@ -526,7 +528,7 @@ func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 			Connections: derefConnections(this.working),
 		}},
 	}
-	layoutData := services.BuildPreviewLayout(mini, this.topology, float64(side))
+	layoutData := this.layoutService.BuildPreviewLayout(mini, this.topology, float64(side))
 	this.positions = layoutData.Positions
 	this.previewZones = layoutData.Zones
 	this.radius = layoutData.ZoneRadius

@@ -1,4 +1,4 @@
-package previewLayoutService_test
+package zoneClassifier_test
 
 import (
 	"testing"
