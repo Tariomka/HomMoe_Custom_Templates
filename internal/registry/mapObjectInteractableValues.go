@@ -419,10 +419,6 @@ func GetMapObjectRandomUnitBankValues() interactableRandomUnitBanks {
 	}
 }
 
-// Below are SIDs currently unused
-// TODO: make them also registry entries
-// also need correct names as the parameters for each of these building ids
-
 // "id": "underground_lair",
 // "id": "vanguard",
 // "id": "pocket_dimension",

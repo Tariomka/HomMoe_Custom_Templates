@@ -8,6 +8,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
+const (
+	categoryMovement      = "Movement"
+	categoryDiplomacy     = "Diplomacy"
+	categoryCombat        = "Combat"
+	categoryMagic         = "Magic"
+	categoryMiscellaneous = "Misc"
+	categorySet           = "Set"
+)
+
 // BannableItemEntry pairs an artifact SID with its human-readable name and the
 // UI grouping category used by the item picker.
 type BannableItemEntry struct {
@@ -16,238 +25,375 @@ type BannableItemEntry struct {
 	Category string
 }
 
-// BannableItems is the catalog of artifacts that can appear in
-// globalBans.items. SIDs come from the registry; names and categories
-// (Movement, Diplomacy, Combat, Magic, Misc, Set) are editor-side labels
-// used to group the picker.
-//
-//nolint:gochecknoglobals // semantic catalog
 var BannableItems = buildBannableItems()
 
 func buildBannableItems() []BannableItemEntry {
-	sids := registry.GetBannableItemSidValues()
+	items := []BannableItemEntry{}
+	items = append(items, buildMovementItems()...)
+	items = append(items, buildDiplomacyItems()...)
+	items = append(items, buildCombatItems()...)
+	items = append(items, buildMagicItems()...)
+	items = append(items, buildMiscellaneousItems()...)
+	items = append(items, buildResonantSphereItems()...)
+	items = append(items, buildTranquilityItems()...)
+	items = append(items, buildShamaniacSoulItems()...)
+	items = append(items, buildKnightsHonorItems()...)
+	items = append(items, buildUkhtabarSealItems()...)
+	items = append(items, buildMilosCurseItems()...)
+	items = append(items, buildPaupersGloryItems()...)
+	items = append(items, buildAngelicAllianceItems()...)
+	items = append(items, buildGiftsOfDwarvenLordsItems()...)
+	items = append(items, buildElixirOfLifeItems()...)
+	items = append(items, buildShadowOfDeathItems()...)
+	items = append(items, buildWanderersWayItems()...)
+	items = append(items, buildLivingArrowsItems()...)
+	items = append(items, buildDuelistsPrideItems()...)
+	items = append(items, buildEtherealKnowledgeItems()...)
+	items = append(items, buildInnerSongItems()...)
+	items = append(items, buildPowerOfTheDragonFatherItems()...)
+	items = append(items, buildBeelzebubsBlessingItems()...)
+	items = append(items, buildBoreolosItems()...)
+	items = append(items, buildHolySigilItems()...)
+	items = append(items, buildRuleOfShadowItems()...)
+	items = append(items, buildAmbassadorsWordItems()...)
+	items = append(items, buildWarriorsStrengthItems()...)
+	items = append(items, buildKeepersFortitudeItems()...)
+	items = append(items, buildWizardsMightItems()...)
+	items = append(items, buildScholarsWisdomItems()...)
+	return items
+}
+
+func buildMovementItems() []BannableItemEntry {
+	sids := registry.GetMapObjectMovementArtifactValues()
 	return []BannableItemEntry{
-		// Movement
-		{sids.PoleStar, "Pole Star", "Movement"},
-		{sids.SevenLeagueBoots, "Seven League Boots", "Movement"},
-		{sids.SwampBoots, "Swamp Boots", "Movement"},
-		{sids.WarlordBoots, "Warlord Boots", "Movement"},
-		{sids.MagicKeyRing, "Magic Key Ring", "Movement"},
-		{sids.LegionsStep, "Legion's Step", "Movement"},
-		{sids.FallenAngelWings, "Fallen Angel Wings", "Movement"},
-		{sids.BannerOfFourWinds, "Banner of Four Winds", "Movement"},
-		{sids.Spyglass, "Spyglass", "Movement"},
+		{sids.PoleStar, "Pole Star", categoryMovement},
+		{sids.SevenLeagueBoots, "Seven League Boots", categoryMovement},
+		{sids.SwampBoots, "Swamp Boots", categoryMovement},
+		{sids.WarlordBoots, "Warlord Boots", categoryMovement},
+		{sids.MagicKeyRing, "Magic Key Ring", categoryMovement},
+		{sids.LegionsStep, "Legion's Step", categoryMovement},
+		{sids.FallenAngelWings, "Fallen Angel Wings", categoryMovement},
+		{sids.BannerOfFourWinds, "Banner of Four Winds", categoryMovement},
+		{sids.Spyglass, "Spyglass", categoryMovement},
+	}
+}
 
-		// Diplomacy
-		{sids.VoodooshDoll, "Voodoosh Doll", "Diplomacy"},
-		{sids.FlagOfTruce, "Flag of Truce", "Diplomacy"},
-		{sids.RingOfNeutrality, "Ring of Neutrality", "Diplomacy"},
+func buildDiplomacyItems() []BannableItemEntry {
+	sids := registry.GetMapObjectDiplomacyArtifactValues()
+	return []BannableItemEntry{
+		{sids.VoodooshDoll, "Voodoosh Doll", categoryDiplomacy},
+		{sids.FlagOfTruce, "Flag of Truce", categoryDiplomacy},
+		{sids.RingOfNeutrality, "Ring of Neutrality", categoryDiplomacy},
+	}
+}
 
-		// Combat
-		{sids.ShacklesOfWar, "Shackles of War", "Combat"},
-		{sids.OgresClubOfHavoc, "Ogre's Club of Havoc", "Combat"},
-		{sids.TarqOfTheRampagingOgre, "Tarq of the Rampaging Ogre", "Combat"},
-		{sids.TunicOfTheCyclopsKing, "Tunic of the Cyclops King", "Combat"},
-		{sids.Garotte, "Garotte", "Combat"},
-		{sids.HourglassOfProtection, "Hourglass of Protection", "Combat"},
-		{sids.ShoddyShield, "Shoddy Shield", "Combat"},
-		{sids.EagleArmor, "Eagle Armor", "Combat"},
-		{sids.ChainMail, "Chain Mail", "Combat"},
-		{sids.HeadTorch, "Head Torch", "Combat"},
-		{sids.FineWand, "Fine Wand", "Combat"},
-		{sids.LordsRing, "Lord's Ring", "Combat"},
+func buildCombatItems() []BannableItemEntry {
+	sids := registry.GetMapObjectCombatArtifactValues()
+	return []BannableItemEntry{
+		{sids.ShacklesOfWar, "Shackles of War", categoryCombat},
+		{sids.OgresClubOfHavoc, "Ogre's Club of Havoc", categoryCombat},
+		{sids.TarqOfTheRampagingOgre, "Tarq of the Rampaging Ogre", categoryCombat},
+		{sids.TunicOfTheCyclopsKing, "Tunic of the Cyclops King", categoryCombat},
+		{sids.Garotte, "Garotte", categoryCombat},
+		{sids.HourglassOfProtection, "Hourglass of Protection", categoryCombat},
+		{sids.ShoddyShield, "Shoddy Shield", categoryCombat},
+		{sids.EagleArmor, "Eagle Armor", categoryCombat},
+		{sids.ChainMail, "Chain Mail", categoryCombat},
+		{sids.HeadTorch, "Head Torch", categoryCombat},
+		{sids.FineWand, "Fine Wand", categoryCombat},
+		{sids.LordsRing, "Lord's Ring", categoryCombat},
+	}
+}
 
-		// Magic
-		{sids.CatechismOfNightMagic, "Catechism of Night Magic", "Magic"},
-		{sids.CatechismOfDaylightMagic, "Catechism of Daylight Magic", "Magic"},
-		{sids.CatechismOfSpacetimeMagic, "Catechism of Spacetime Magic", "Magic"},
-		{sids.CatechismOfPrimalMagic, "Catechism of Primal Magic", "Magic"},
-		{sids.SpellbindersHat, "Spellbinder's Hat", "Magic"},
-		{sids.SpellsInABottle, "Spells in a Bottle", "Magic"},
-		{sids.OrbOfInhibition, "Orb of Inhibition", "Magic"},
-		{sids.OrbOfDestruction, "Orb of Destruction", "Magic"},
-		{sids.SealOfSilence, "Seal of Silence", "Magic"},
-		{sids.CrownOfTheSupremeMagi, "Crown of the Supreme Magi", "Magic"},
-		{sids.ClothesOfEnlightenment, "Clothes of Enlightenment", "Magic"},
-		{sids.CardsDeck, "Cards Deck", "Magic"},
-		{sids.RunestoneShards, "Runestone Shards", "Magic"},
+func buildMagicItems() []BannableItemEntry {
+	sids := registry.GetMapObjectMagicArtifactValues()
+	return []BannableItemEntry{
+		{sids.CatechismOfNightMagic, "Catechism of Night Magic", categoryMagic},
+		{sids.CatechismOfDaylightMagic, "Catechism of Daylight Magic", categoryMagic},
+		{sids.CatechismOfSpacetimeMagic, "Catechism of Spacetime Magic", categoryMagic},
+		{sids.CatechismOfPrimalMagic, "Catechism of Primal Magic", categoryMagic},
+		{sids.SpellbindersHat, "Spellbinder's Hat", categoryMagic},
+		{sids.SpellsInABottle, "Spells in a Bottle", categoryMagic},
+		{sids.OrbOfInhibition, "Orb of Inhibition", categoryMagic},
+		{sids.OrbOfDestruction, "Orb of Destruction", categoryMagic},
+		{sids.SealOfSilence, "Seal of Silence", categoryMagic},
+		{sids.CrownOfTheSupremeMagi, "Crown of the Supreme Magi", categoryMagic},
+		{sids.ClothesOfEnlightenment, "Clothes of Enlightenment", categoryMagic},
+		{sids.CardsDeck, "Cards Deck", categoryMagic},
+		{sids.RunestoneShards, "Runestone Shards", categoryMagic},
+	}
+}
 
-		// Misc (standalone)
-		{sids.GoldenGooseEgg, "Golden Goose Egg", "Misc"},
-		{sids.TacticalGuide, "Tactical Guide", "Misc"},
-		{sids.EndlessBag, "Endless Bag", "Misc"},
-		{sids.SoullessSash, "Soulless Sash", "Misc"},
-		{sids.MonsterHead, "Monster Head", "Misc"},
-		{sids.Omencaller, "Omencaller", "Misc"},
-		{sids.SixthFinger, "Sixth Finger", "Misc"},
-		{sids.SoulscallerRing, "Soulscaller Ring", "Misc"},
-		{sids.ChainLink, "Chain Link", "Misc"},
-		{sids.DemonicHeart, "Demonic Heart", "Misc"},
-		{sids.TwoFacedMask, "Two-Faced Mask", "Misc"},
-		{sids.AncientIdol, "Ancient Idol", "Misc"},
-		{sids.Excalibur, "Excalibur", "Misc"},
-		{sids.Caduceus, "Caduceus", "Misc"},
+func buildMiscellaneousItems() []BannableItemEntry {
+	sids := registry.GetMapObjectMiscellaneousArtifactValues()
+	return []BannableItemEntry{
+		{sids.GoldenGooseEgg, "Golden Goose Egg", categoryMiscellaneous},
+		{sids.TacticalGuide, "Tactical Guide", categoryMiscellaneous},
+		{sids.EndlessBag, "Endless Bag", categoryMiscellaneous},
+		{sids.SoullessSash, "Soulless Sash", categoryMiscellaneous},
+		{sids.MonsterHead, "Monster Head", categoryMiscellaneous},
+		{sids.Omencaller, "Omencaller", categoryMiscellaneous},
+		{sids.SixthFinger, "Sixth Finger", categoryMiscellaneous},
+		{sids.SoulscallerRing, "Soulscaller Ring", categoryMiscellaneous},
+		{sids.ChainLink, "Chain Link", categoryMiscellaneous},
+		{sids.DemonicHeart, "Demonic Heart", categoryMiscellaneous},
+		{sids.TwoFacedMask, "Two-Faced Mask", categoryMiscellaneous},
+		{sids.AncientIdol, "Ancient Idol", categoryMiscellaneous},
+		{sids.Excalibur, "Excalibur", categoryMiscellaneous},
+		{sids.Caduceus, "Caduceus", categoryMiscellaneous},
+	}
+}
 
-		// Set: Resonant Sphere
-		{sids.ResonantSphereOrbOfTwilight, "Resonant Sphere: Orb of Twilight", "Set"},
-		{sids.ResonantSphereOrbOfDaylight, "Resonant Sphere: Orb of Daylight", "Set"},
-		{sids.ResonantSphereOrbOfEternity, "Resonant Sphere: Orb of Eternity", "Set"},
-		{sids.ResonantSpherePrimalOrb, "Resonant Sphere: Primal Orb", "Set"},
+func buildResonantSphereItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetResonantSphereValues()
+	return []BannableItemEntry{
+		{sids.OrbOfTwilight, "Resonant Sphere: Orb of Twilight", categorySet},
+		{sids.OrbOfDaylight, "Resonant Sphere: Orb of Daylight", categorySet},
+		{sids.OrbOfEternity, "Resonant Sphere: Orb of Eternity", categorySet},
+		{sids.PrimalOrb, "Resonant Sphere: Primal Orb", categorySet},
+	}
+}
 
-		// Set: Tranquility
-		{sids.TranquilityBrightmindTiara, "Tranquility: Brightmind Tiara", "Set"},
-		{sids.TranquilityMagicMirror, "Tranquility: Magic Mirror", "Set"},
-		{sids.TranquilityRingOfSerenity, "Tranquility: Ring of Serenity", "Set"},
+func buildTranquilityItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetTranquilityValues()
+	return []BannableItemEntry{
+		{sids.BrightmindTiara, "Tranquility: Brightmind Tiara", categorySet},
+		{sids.MagicMirror, "Tranquility: Magic Mirror", categorySet},
+		{sids.RingOfSerenity, "Tranquility: Ring of Serenity", categorySet},
+	}
+}
 
-		// Set: Shamaniac Soul
-		{sids.ShamaniacSoulShamanStaff, "Shamaniac Soul: Shaman Staff", "Set"},
-		{sids.ShamaniacSoulIridescentCloak, "Shamaniac Soul: Iridescent Cloak", "Set"},
-		{sids.ShamaniacSoulGemwoodMask, "Shamaniac Soul: Gemwood Mask", "Set"},
-		{sids.ShamaniacSoulClutchingRing, "Shamaniac Soul: Clutching Ring", "Set"},
+func buildShamaniacSoulItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetShamaniacSoulValues()
+	return []BannableItemEntry{
+		{sids.ShamanStaff, "Shamaniac Soul: Shaman Staff", categorySet},
+		{sids.IridescentCloak, "Shamaniac Soul: Iridescent Cloak", categorySet},
+		{sids.GemwoodMask, "Shamaniac Soul: Gemwood Mask", categorySet},
+		{sids.ClutchingRing, "Shamaniac Soul: Clutching Ring", categorySet},
+	}
+}
 
-		// Set: Knight's Honor
-		{sids.KnightsHonorDrumsOfWar, "Knight's Honor: Drums of War", "Set"},
-		{sids.KnightsHonorLance, "Knight's Honor: Lance", "Set"},
-		{sids.KnightsHonorMisericorde, "Knight's Honor: Misericorde", "Set"},
-		{sids.KnightsHonorPlateArmor, "Knight's Honor: Plate Armor", "Set"},
-		{sids.KnightsHonorArmet, "Knight's Honor: Armet", "Set"},
+func buildKnightsHonorItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetKnightsHonorValues()
+	return []BannableItemEntry{
+		{sids.DrumsOfWar, "Knight's Honor: Drums of War", categorySet},
+		{sids.Lance, "Knight's Honor: Lance", categorySet},
+		{sids.Misericorde, "Knight's Honor: Misericorde", categorySet},
+		{sids.PlateArmor, "Knight's Honor: Plate Armor", categorySet},
+		{sids.Armet, "Knight's Honor: Armet", categorySet},
+	}
+}
 
-		// Set: Ukhtabar Seal
-		{sids.UkhtabarSealUkhSeal, "Ukhtabar Seal: Ukh Seal", "Set"},
-		{sids.UkhtabarSealTabarSeal, "Ukhtabar Seal: Tabar Seal", "Set"},
+func buildUkhtabarSealItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetUkhtabarSealValues()
+	return []BannableItemEntry{
+		{sids.UkhSeal, "Ukhtabar Seal: Ukh Seal", categorySet},
+		{sids.TabarSeal, "Ukhtabar Seal: Tabar Seal", categorySet},
+	}
+}
 
-		// Set: Milo's Curse
-		{sids.MilosCurseGoldenPig, "Milo's Curse: Golden Pig", "Set"},
-		{sids.MilosCurseGoldenMoth, "Milo's Curse: Golden Moth", "Set"},
-		{sids.MilosCurseSkullOfMilos, "Milo's Curse: Skull of Milos", "Set"},
+func buildMilosCurseItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetMilosCurseValues()
+	return []BannableItemEntry{
+		{sids.GoldenPig, "Milo's Curse: Golden Pig", categorySet},
+		{sids.GoldenMoth, "Milo's Curse: Golden Moth", categorySet},
+		{sids.SkullOfMilos, "Milo's Curse: Skull of Milos", categorySet},
+	}
+}
 
-		// Set: Pauper's Glory
-		{sids.PaupersGloryWoodenRing, "Pauper's Glory: Wooden Ring", "Set"},
-		{sids.PaupersGloryStrawHat, "Pauper's Glory: Straw Hat", "Set"},
-		{sids.PaupersGloryRopeBelt, "Pauper's Glory: Rope Belt", "Set"},
-		{sids.PaupersGloryRags, "Pauper's Glory: Rags", "Set"},
-		{sids.PaupersGloryDumbClub, "Pauper's Glory: Dumb Club", "Set"},
-		{sids.PaupersGloryLastCoin, "Pauper's Glory: Last Coin", "Set"},
+func buildPaupersGloryItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetPaupersGloryValues()
+	return []BannableItemEntry{
+		{sids.WoodenRing, "Pauper's Glory: Wooden Ring", categorySet},
+		{sids.StrawHat, "Pauper's Glory: Straw Hat", categorySet},
+		{sids.RopeBelt, "Pauper's Glory: Rope Belt", categorySet},
+		{sids.Rags, "Pauper's Glory: Rags", categorySet},
+		{sids.DumbClub, "Pauper's Glory: Dumb Club", categorySet},
+		{sids.LastCoin, "Pauper's Glory: Last Coin", categorySet},
+	}
+}
 
-		// Set: Angelic Alliance
-		{sids.AngelicAllianceSwordOfJudgement, "Angelic Alliance: Sword of Judgement", "Set"},
-		{sids.AngelicAllianceCelestialSashOfBliss, "Angelic Alliance: Celestial Sash of Bliss", "Set"},
-		{sids.AngelicAllianceLionsShieldOfCourage, "Angelic Alliance: Lion's Shield of Courage", "Set"},
-		{sids.AngelicAllianceArmorOfWonder, "Angelic Alliance: Armor of Wonder", "Set"},
-		{sids.AngelicAllianceHelmOfHeavenlyEnlightenment, "Angelic Alliance: Helm of Heavenly Enlightenment", "Set"},
-		{sids.AngelicAllianceSandalsOfTheSaint, "Angelic Alliance: Sandals of the Saint", "Set"},
+func buildAngelicAllianceItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetAngelicAllianceValues()
+	return []BannableItemEntry{
+		{sids.SwordOfJudgement, "Angelic Alliance: Sword of Judgement", categorySet},
+		{sids.CelestialSashOfBliss, "Angelic Alliance: Celestial Sash of Bliss", categorySet},
+		{sids.LionsShieldOfCourage, "Angelic Alliance: Lion's Shield of Courage", categorySet},
+		{sids.ArmorOfWonder, "Angelic Alliance: Armor of Wonder", categorySet},
+		{sids.HelmOfHeavenlyEnlightenment, "Angelic Alliance: Helm of Heavenly Enlightenment", categorySet},
+		{sids.SandalsOfTheSaint, "Angelic Alliance: Sandals of the Saint", categorySet},
+	}
+}
 
-		// Set: Gifts of Dwarven Lords
-		{sids.GiftsOfDwarvenLordsAutomatedAntimagicShield, "Dwarven Gifts: Automated Antimagic Shield", "Set"},
-		{sids.GiftsOfDwarvenLordsAutomatedAntimagicShieldAlt, "Dwarven Gifts: Automated Antimagic Shield (Alt)", "Set"},
-		{sids.GiftsOfDwarvenLordsProtectiveBelt, "Dwarven Gifts: Protective Belt", "Set"},
-		{sids.GiftsOfDwarvenLordsProtectiveBeltAlt, "Dwarven Gifts: Protective Belt (Alt)", "Set"},
-		{sids.GiftsOfDwarvenLordsCrimsonResonanceController, "Dwarven Gifts: Crimson Resonance Controller", "Set"},
-		{
-			sids.GiftsOfDwarvenLordsCrimsonResonanceControllerAlt,
-			"Dwarven Gifts: Crimson Resonance Controller (Alt)",
-			"Set",
-		},
-		{sids.GiftsOfDwarvenLordsEmeraldResonanceController, "Dwarven Gifts: Emerald Resonance Controller", "Set"},
-		{
-			sids.GiftsOfDwarvenLordsEmeraldResonanceControllerAlt,
-			"Dwarven Gifts: Emerald Resonance Controller (Alt)",
-			"Set",
-		},
+func buildGiftsOfDwarvenLordsItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetGiftsOfDwarvenLordsValues()
+	return []BannableItemEntry{
+		{sids.AutomatedAntimagicShield, "Dwarven Gifts: Automated Antimagic Shield", categorySet},
+		{sids.ProtectiveBelt, "Dwarven Gifts: Protective Belt", categorySet},
+		{sids.CrimsonResonanceController, "Dwarven Gifts: Crimson Resonance Controller", categorySet},
+		{sids.EmeraldResonanceController, "Dwarven Gifts: Emerald Resonance Controller", categorySet},
+	}
+}
 
-		// Set: Elixir of Life
-		{sids.ElixirOfLifeFlaskOfOblivion, "Elixir of Life: Flask of Oblivion", "Set"},
-		{sids.ElixirOfLifeLifebloodFairy, "Elixir of Life: Lifeblood Fairy", "Set"},
-		{sids.ElixirOfLifeRingOfLife, "Elixir of Life: Ring of Life", "Set"},
+func buildElixirOfLifeItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetElixirOfLifeValues()
+	return []BannableItemEntry{
+		{sids.FlaskOfOblivion, "Elixir of Life: Flask of Oblivion", categorySet},
+		{sids.LifebloodFairy, "Elixir of Life: Lifeblood Fairy", categorySet},
+		{sids.RingOfLife, "Elixir of Life: Ring of Life", categorySet},
+	}
+}
 
-		// Set: Shadow of Death
-		{sids.ShadowOfDeathCursedArmor, "Shadow of Death: Cursed Armor", "Set"},
-		{sids.ShadowOfDeathBoneBoots, "Shadow of Death: Bone Boots", "Set"},
-		{sids.ShadowOfDeathSecondShade, "Shadow of Death: Second Shade", "Set"},
-		{sids.ShadowOfDeathDarkHatchet, "Shadow of Death: Dark Hatchet", "Set"},
+func buildShadowOfDeathItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetShadowOfDeathValues()
+	return []BannableItemEntry{
+		{sids.CursedArmor, "Shadow of Death: Cursed Armor", categorySet},
+		{sids.BoneBoots, "Shadow of Death: Bone Boots", categorySet},
+		{sids.SecondShade, "Shadow of Death: Second Shade", categorySet},
+		{sids.DarkHatchet, "Shadow of Death: Dark Hatchet", categorySet},
+	}
+}
 
-		// Set: Wanderer's Way
-		{sids.WanderersWayBootsOfTravel, "Wanderer's Way: Boots of Travel", "Set"},
-		{sids.WanderersWayBackpack, "Wanderer's Way: Backpack", "Set"},
+func buildWanderersWayItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetWanderersWayValues()
+	return []BannableItemEntry{
+		{sids.BootsOfTravel, "Wanderer's Way: Boots of Travel", categorySet},
+		{sids.Backpack, "Wanderer's Way: Backpack", categorySet},
+	}
+}
 
-		// Set: Living Arrows
-		{sids.LivingArrowsShroomwoodBow, "Living Arrows: Shroomwood Bow", "Set"},
-		{sids.LivingArrowsLightAndShadeCloak, "Living Arrows: Light and Shade Cloak", "Set"},
-		{sids.LivingArrowsQuiveringQuiver, "Living Arrows: Quivering Quiver", "Set"},
+func buildLivingArrowsItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetLivingArrowsValues()
+	return []BannableItemEntry{
+		{sids.ShroomwoodBow, "Living Arrows: Shroomwood Bow", categorySet},
+		{sids.LightAndShadeCloak, "Living Arrows: Light and Shade Cloak", categorySet},
+		{sids.QuiveringQuiver, "Living Arrows: Quivering Quiver", categorySet},
+	}
+}
 
-		// Set: Duelist's Pride
-		{sids.DuelistsPrideRapier, "Duelist's Pride: Rapier", "Set"},
-		{sids.DuelistsPrideBuckler, "Duelist's Pride: Buckler", "Set"},
-		{sids.DuelistsPrideBrassKnuckles, "Duelist's Pride: Brass Knuckles", "Set"},
+func buildDuelistsPrideItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetDuelistsPrideValues()
+	return []BannableItemEntry{
+		{sids.Rapier, "Duelist's Pride: Rapier", categorySet},
+		{sids.Buckler, "Duelist's Pride: Buckler", categorySet},
+		{sids.BrassKnuckles, "Duelist's Pride: Brass Knuckles", categorySet},
+	}
+}
 
-		// Set: Ethereal Knowledge
-		{sids.EtherealKnowledgeGlassDagger, "Ethereal Knowledge: Glass Dagger", "Set"},
-		{sids.EtherealKnowledgeMirrorShoes, "Ethereal Knowledge: Mirror Shoes", "Set"},
-		{sids.EtherealKnowledgeVortexDress, "Ethereal Knowledge: Vortex Dress", "Set"},
-		{sids.EtherealKnowledgeThirdEye, "Ethereal Knowledge: Third Eye", "Set"},
+func buildEtherealKnowledgeItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetEtherealKnowledgeValues()
+	return []BannableItemEntry{
+		{sids.GlassDagger, "Ethereal Knowledge: Glass Dagger", categorySet},
+		{sids.MirrorShoes, "Ethereal Knowledge: Mirror Shoes", categorySet},
+		{sids.VortexDress, "Ethereal Knowledge: Vortex Dress", categorySet},
+		{sids.ThirdEye, "Ethereal Knowledge: Third Eye", categorySet},
+	}
+}
 
-		// Set: Inner Song
-		{sids.InnerSongMusicSheet, "Inner Song: Music Sheet", "Set"},
-		{sids.InnerSongSingingPanPipe, "Inner Song: Singing Pan Pipe", "Set"},
-		{sids.InnerSongFancyMask, "Inner Song: Fancy Mask", "Set"},
+func buildInnerSongItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetInnerSongValues()
+	return []BannableItemEntry{
+		{sids.MusicSheet, "Inner Song: Music Sheet", categorySet},
+		{sids.SingingPanPipe, "Inner Song: Singing Pan Pipe", categorySet},
+		{sids.FancyMask, "Inner Song: Fancy Mask", categorySet},
+	}
+}
 
-		// Set: Power of the Dragon Father
-		{sids.PowerOfTheDragonFatherRedDragonFlameTongue, "Dragon Father: Red Dragon Flame Tongue", "Set"},
-		{sids.PowerOfTheDragonFatherDragonScaleShield, "Dragon Father: Dragon Scale Shield", "Set"},
-		{sids.PowerOfTheDragonFatherDragonScaleArmor, "Dragon Father: Dragon Scale Armor", "Set"},
-		{sids.PowerOfTheDragonFatherDragonCrest, "Dragon Father: Dragon Crest", "Set"},
-		{sids.PowerOfTheDragonFatherDragonboneGreaves, "Dragon Father: Dragonbone Greaves", "Set"},
-		{sids.PowerOfTheDragonFatherSlitheringSash, "Dragon Father: Slithering Sash", "Set"},
-		{sids.PowerOfTheDragonFatherDragonWing, "Dragon Father: Dragon Wing", "Set"},
-		{sids.PowerOfTheDragonFatherPiercingEyeOfADragon, "Dragon Father: Piercing Eye of a Dragon", "Set"},
+func buildPowerOfTheDragonFatherItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetPowerOfTheDragonFatherValues()
+	return []BannableItemEntry{
+		{sids.RedDragonFlameTongue, "Dragon Father: Red Dragon Flame Tongue", categorySet},
+		{sids.DragonScaleShield, "Dragon Father: Dragon Scale Shield", categorySet},
+		{sids.DragonScaleArmor, "Dragon Father: Dragon Scale Armor", categorySet},
+		{sids.DragonCrest, "Dragon Father: Dragon Crest", categorySet},
+		{sids.DragonBoneGreaves, "Dragon Father: Dragonbone Greaves", categorySet},
+		{sids.SlitheringSash, "Dragon Father: Slithering Sash", categorySet},
+		{sids.DragonWing, "Dragon Father: Dragon Wing", categorySet},
+		{sids.PiercingEyeOfADragon, "Dragon Father: Piercing Eye of a Dragon", categorySet},
+	}
+}
 
-		// Set: Beelzebub's Blessing
-		{sids.BeelzebubsBlessingDemonClaw, "Beelzebub's Blessing: Demon Claw", "Set"},
-		{sids.BeelzebubsBlessingChitinousShield, "Beelzebub's Blessing: Chitinous Shield", "Set"},
-		{sids.BeelzebubsBlessingHeartbeat, "Beelzebub's Blessing: Heartbeat", "Set"},
-		{sids.BeelzebubsBlessingDemonCrest, "Beelzebub's Blessing: Demon Crest", "Set"},
+func buildBeelzebubsBlessingItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetBeelzebubsBlessingValues()
+	return []BannableItemEntry{
+		{sids.DemonClaw, "Beelzebub's Blessing: Demon Claw", categorySet},
+		{sids.ChitinousShield, "Beelzebub's Blessing: Chitinous Shield", categorySet},
+		{sids.Heartbeat, "Beelzebub's Blessing: Heartbeat", categorySet},
+		{sids.DemonCrest, "Beelzebub's Blessing: Demon Crest", categorySet},
+	}
+}
 
-		// Set: Boreolos
-		{sids.BoreolosHand, "Boreolos: Hand", "Set"},
-		{sids.BoreolosFoot, "Boreolos: Foot", "Set"},
-		{sids.BoreolosHeart, "Boreolos: Heart", "Set"},
-		{sids.BoreolosHead, "Boreolos: Head", "Set"},
+func buildBoreolosItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetBoreolosValues()
+	return []BannableItemEntry{
+		{sids.Hand, "Boreolos: Hand", categorySet},
+		{sids.Foot, "Boreolos: Foot", categorySet},
+		{sids.Heart, "Boreolos: Heart", categorySet},
+		{sids.Head, "Boreolos: Head", categorySet},
+	}
+}
 
-		// Set: Holy Sigils
-		{sids.HolySigilOfRoph, "Holy Sigil of Roph", "Set"},
-		{sids.HolySigilOfEridore, "Holy Sigil of Eridore", "Set"},
-		{sids.HolySigilOfMearea, "Holy Sigil of Mearea", "Set"},
-		{sids.HolySigilOfInsara, "Holy Sigil of Insara", "Set"},
-		{sids.HolySigilOfQuix, "Holy Sigil of Quix", "Set"},
-		{sids.HolySigilOfTheSevenMagi, "Holy Sigil of the Seven Magi", "Set"},
-		{sids.HolySigilOfTheSecondMan, "Holy Sigil of the Second Man", "Set"},
-		{sids.HolySigilOfUurdt, "Holy Sigil of Uurdt", "Set"},
+func buildHolySigilItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetHolySigilsValues()
+	return []BannableItemEntry{
+		{sids.SigilOfRoph, "Holy Sigil of Roph", categorySet},
+		{sids.SigilOfEridore, "Holy Sigil of Eridore", categorySet},
+		{sids.SigilOfMearea, "Holy Sigil of Mearea", categorySet},
+		{sids.SigilOfInsara, "Holy Sigil of Insara", categorySet},
+		{sids.SigilOfQuix, "Holy Sigil of Quix", categorySet},
+		{sids.SigilOfTheSevenMagi, "Holy Sigil of the Seven Magi", categorySet},
+		{sids.SigilOfTheSecondMan, "Holy Sigil of the Second Man", categorySet},
+		{sids.SigilOfUurdt, "Holy Sigil of Uurdt", categorySet},
+	}
+}
 
-		// Set: Rule of Shadow
-		{sids.RuleOfShadowLiquidSilence, "Rule of Shadow: Liquid Silence", "Set"},
-		{sids.RuleOfShadowTheTruthmaker, "Rule of Shadow: The Truthmaker", "Set"},
-		{sids.RuleOfShadowTheTruthseeker, "Rule of Shadow: The Truthseeker", "Set"},
-		{sids.RuleOfShadowNostriasGaze, "Rule of Shadow: Nostria's Gaze", "Set"},
+func buildRuleOfShadowItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetRuleOfShadowValues()
+	return []BannableItemEntry{
+		{sids.LiquidSilence, "Rule of Shadow: Liquid Silence", categorySet},
+		{sids.TheTruthmaker, "Rule of Shadow: The Truthmaker", categorySet},
+		{sids.TheTruthseeker, "Rule of Shadow: The Truthseeker", categorySet},
+		{sids.NostriasGaze, "Rule of Shadow: Nostria's Gaze", categorySet},
+	}
+}
 
-		// Set: Ambassador's Word
-		{sids.AmbassadorsWordDiplomaticGifts, "Ambassador's Word: Diplomatic Gifts", "Set"},
-		{sids.AmbassadorsWordAmbassadorsSash, "Ambassador's Word: Ambassador's Sash", "Set"},
+func buildAmbassadorsWordItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetAmbassadorsWordValues()
+	return []BannableItemEntry{
+		{sids.DiplomaticGifts, "Ambassador's Word: Diplomatic Gifts", categorySet},
+		{sids.AmbassadorsSash, "Ambassador's Word: Ambassador's Sash", categorySet},
+	}
+}
 
-		// Set: Warrior's Strength
-		{sids.WarriorsStrengthWarriorsBelt, "Warrior's Strength: Warrior's Belt", "Set"},
-		{sids.WarriorsStrengthWarriorsOberegus, "Warrior's Strength: Warrior's Oberegus", "Set"},
+func buildWarriorsStrengthItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetWarriorsStrengthValues()
+	return []BannableItemEntry{
+		{sids.WarriorsBelt, "Warrior's Strength: Warrior's Belt", categorySet},
+		{sids.WarriorsOberegus, "Warrior's Strength: Warrior's Oberegus", categorySet},
+	}
+}
 
-		// Set: Keeper's Fortitude
-		{sids.KeepersFortitudeKeepersRing, "Keeper's Fortitude: Keeper's Ring", "Set"},
-		{sids.KeepersFortitudeKeepersOberegus, "Keeper's Fortitude: Keeper's Oberegus", "Set"},
+func buildKeepersFortitudeItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetKeepersFortitudeValues()
+	return []BannableItemEntry{
+		{sids.KeepersRing, "Keeper's Fortitude: Keeper's Ring", categorySet},
+		{sids.KeepersOberegus, "Keeper's Fortitude: Keeper's Oberegus", categorySet},
+	}
+}
 
-		// Set: Wizard's Might
-		{sids.WizardsMightWizardsCloak, "Wizard's Might: Wizard's Cloak", "Set"},
-		{sids.WizardsMightWizardsOberegus, "Wizard's Might: Wizard's Oberegus", "Set"},
+func buildWizardsMightItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetWizardsMightValues()
+	return []BannableItemEntry{
+		{sids.WizardsCloak, "Wizard's Might: Wizard's Cloak", categorySet},
+		{sids.WizardsOberegus, "Wizard's Might: Wizard's Oberegus", categorySet},
+	}
+}
 
-		// Set: Scholar's Wisdom
-		{sids.ScholarsWisdomScholarsTiara, "Scholar's Wisdom: Scholar's Tiara", "Set"},
-		{sids.ScholarsWisdomScholarsOberegus, "Scholar's Wisdom: Scholar's Oberegus", "Set"},
+func buildScholarsWisdomItems() []BannableItemEntry {
+	sids := registry.GetMapObjectSetScholarsWisdomValues()
+	return []BannableItemEntry{
+		{sids.ScholarsTiara, "Scholar's Wisdom: Scholar's Tiara", categorySet},
+		{sids.ScholarsOberegus, "Scholar's Wisdom: Scholar's Oberegus", categorySet},
 	}
 }
 
