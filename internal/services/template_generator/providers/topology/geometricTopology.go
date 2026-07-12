@@ -32,28 +32,8 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-	allLabels, positions, pairs := this.createGeometricLayout(playerLabels, neutralZones)
-	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
-
-	zones := this.createZones(
-		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
-	for index := range zones {
-		position := positions[index]
-		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
-	}
-
-	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
-	if configuration.RandomPortals {
-		conns = append(conns,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
-	}
-	if isIsolated {
-		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
-	}
-	conns = append(conns,
-		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
-	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
+	return this.createVariantFromLayout(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createGeometricLayout)
 }
 
 // petal holds the zone indices that make up one flower petal in ring order:

@@ -31,11 +31,19 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
+	return this.createVariantFromLayout(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createRandomLayout)
+}
+
+// createRandomLayout scatters all zones uniformly over the map and connects
+// them through a Delaunay triangulation of the random positions.
+func (this *RandomTopologyService) createRandomLayout(
+	playerLabels []string,
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	neutralLabels := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
 		neutralLabels[i] = nz.Label
 	}
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	allLabels := append(append([]string{}, playerLabels...), neutralLabels...)
 	labelCount := len(allLabels)
 	rand.Shuffle(labelCount, func(i, j int) { allLabels[i], allLabels[j] = allLabels[j], allLabels[i] })
@@ -44,6 +52,23 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 		positions.Add(data.NewVec2(rand.Float64()*0.9+0.05, rand.Float64()*0.9+0.05))
 	}
 	pairs := positions.CreateDelaunayTriangulation()
+	return allLabels, positions, pairs
+}
+
+// createVariantFromLayout is the shared topology-variant pipeline: build the
+// layout, derive connection names, create the zones with their generator
+// positions, create the connections (plus portal and missing-connection
+// fill-ins), and assemble the variant. Each topology service supplies only its
+// own layout builder.
+func (this *RandomTopologyService) createVariantFromLayout(
+	configuration config.GeneratorConfig,
+	playerLabels []string,
+	neutralZones neutralZone.Plans,
+	tuning models.GenerationTuning,
+	holdCityNeutralLabel string,
+	buildLayout layoutFunc) entities.Variant {
+	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
+	allLabels, positions, pairs := buildLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
 	zones := this.createZones(
@@ -63,7 +88,7 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 	}
 	conns = append(conns,
 		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
-	return this.CreateVariant(playerLabels, allLabels[0], labelCount, zones, conns)
+	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
 func (this *RandomTopologyService) createConnectionNames(

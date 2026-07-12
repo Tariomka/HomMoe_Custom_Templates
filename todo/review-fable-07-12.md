@@ -278,7 +278,7 @@ generation.
    with gofakeit-fuzzed out-of-range values.
 4. Delete the empty-package TODO and the commented call.
 
-### 2.2 🟠 `drivers.State` remains a god object without a seam (408 LOC)
+### 2.2 ✅ FIXED 🟠 `drivers.State` remains a god object without a seam (408 LOC)
 
 [state.go](../app/gui/drivers/state.go) still owns: file dialogs, save/load, generation,
 debounce state machine, manual-edit reapplication, exit policy, status bar, output-path
