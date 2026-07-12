@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -89,6 +90,10 @@ func getVDFFilePath() (path string, err error) {
 func getSteamPath() string {
 	switch runtime.GOOS {
 	case "windows":
+		if registryPath := getSteamPathFromRegistry(); registryPath != "" {
+			return registryPath
+		}
+
 		if programFilesPath := os.Getenv("ProgramFiles(x86)"); programFilesPath != "" {
 			return filepath.Join(programFilesPath, "Steam")
 		}
@@ -110,12 +115,12 @@ func getSteamPath() string {
 }
 
 func getBasePath(vdfContent map[string]any) string {
-	content, ok := vdfContent["content"].(map[string]any)
+	libraryFolders, ok := vdfContent["libraryfolders"].(map[string]any)
 	if !ok {
 		return ""
 	}
 
-	for _, data := range content {
+	for _, data := range libraryFolders {
 		library, ok := data.(map[string]any)
 		if !ok {
 			continue
@@ -143,15 +148,15 @@ func getBasePath(vdfContent map[string]any) string {
 
 func resolveGlob(pattern string) (string, error) {
 	matches, err := filepath.Glob(pattern)
-	if err != nil || len(matches) == 0 {
-		return "", err
+	if err != nil {
+		return "", fmt.Errorf("resolve templates glob %q: %w", pattern, err)
 	}
 
 	for _, path := range matches {
-		if _, err = os.Stat(path); !os.IsNotExist(err) {
+		if _, statErr := os.Stat(path); statErr == nil {
 			return path, nil
 		}
 	}
 
-	return "", err
+	return "", common.ErrTemplatesDirNotFound
 }

@@ -67,10 +67,10 @@ func NewUIState() *State {
 
 	templateDir, err := helpers.FindOldenEraTemplatesDir(false)
 	if templateDir == "" {
-		if err != nil {
-			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)
+		if errors.Is(err, common.ErrTemplatesDirNotFound) {
+			state.SetStatus("Game template directory not found, using fallback directory.", false)
 		} else {
-			state.SetStatus("Failed to find game template directory, using fallback directory.", false)
+			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)
 		}
 
 		if workingDir, err := os.Getwd(); err == nil {

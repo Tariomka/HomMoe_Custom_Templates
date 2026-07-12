@@ -10,4 +10,5 @@ var (
 	ErrProvidedTemplateInvalid  = errors.New("provided template is invalid")
 	ErrZonesMissing             = errors.New("some connections point to non existing zone(s)")
 	ErrGameInVDFNotFound        = errors.New("could not find game path in Steam VDF file")
+	ErrTemplatesDirNotFound     = errors.New("game templates directory not found")
 )

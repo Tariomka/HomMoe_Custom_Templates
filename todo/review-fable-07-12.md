@@ -195,7 +195,7 @@ func GetVictoryConditionByID(id string) (VictoryCondition, bool) { ... }
 At the load call-site, on `!ok` fall back to Standard **and** call
 `SetStatus("Unknown victory condition %q in file - reset to Standard.", false)`.
 
-### 1.6 🟡 `GUIHandler.UpdateTemplate` shallow-copies the template but aliases `Variants`
+### 1.6 ✅ FIXED 🟡 `GUIHandler.UpdateTemplate` shallow-copies the template but aliases `Variants`
 
 [guiHandler.go](../internal/handlers/guiHandler.go#L58-L70): `newTemplate :=
 *templateDto.Template` copies the struct, but `Variants` is a slice, so
