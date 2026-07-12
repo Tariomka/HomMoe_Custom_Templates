@@ -92,7 +92,7 @@ slice contain the new bridge road (this is exactly the untestable side effect
 > If investigation shows roads are *intentionally* not added (game tolerates it), delete
 > the dead mutation code instead — either way the current code is wrong.
 
-### 1.2 🟠 `State.Exit` still calls `os.Exit(0)`; `confirmExit` never resets
+### 1.2 ✅ FIXED 🟠 `State.Exit` still calls `os.Exit(0)`; `confirmExit` never resets
 
 [state.go](../app/gui/drivers/state.go#L162-L173):
 

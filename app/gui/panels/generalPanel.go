@@ -1,6 +1,7 @@
 package panels
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -124,7 +125,14 @@ func (this *GeneralPanel) LoadFromState() {
 	this.factionLawXpMultiplier.Value = utils.Normalize(float32(settings.FactionLawXpPercent), 25, 200)
 	this.astrologyXpMultiplier.Value = utils.Normalize(float32(settings.AstrologyXpPercent), 25, 200)
 
-	this.victorySelector.SelectByName(constants.GetVictoryCondition(settings.VictoryCondition).Label)
+	victory, victoryKnown := constants.GetVictoryCondition(settings.VictoryCondition)
+	if !victoryKnown {
+		victory = constants.GetVictoryConditionValues().Standard
+		this.state.SetStatus(
+			fmt.Sprintf("Unknown victory condition %q in file - reset to Standard.", settings.VictoryCondition),
+			false)
+	}
+	this.victorySelector.SelectByName(victory.Label)
 
 	this.checkLostStartCity.Value = settings.LostStartCity
 	this.lostCityDayCount.Value = utils.Normalize(float32(settings.LostStartCityDay), 1, 30)

@@ -280,3 +280,28 @@ func TestLoadFromFile_UnknownGameMode_FallsBackToClassic(t *testing.T) {
 	assert.Equal(t, registry.GetGameModeValues().Classic, state.GetStateData().GameMode,
 		"unknown game mode should fall back to Classic")
 }
+
+// TestLoadFromFile_UnknownVictoryCondition_FallsBackToStandardAndWarns verifies
+// that a hand-edited .gen.json with an unrecognized victory condition settles
+// on Standard and tells the user about it instead of silently reshaping the
+// setting.
+func TestLoadFromFile_UnknownVictoryCondition_FallsBackToStandardAndWarns(t *testing.T) {
+	dir := t.TempDir()
+	savedPath := filepath.Join(dir, "unknown-victory.gen.json")
+
+	author := drivers.NewUIState()
+	author.UpdateState(func(s *dtos.EditorStateDto) { s.VictoryCondition = "notARealVictoryCondition" })
+	author.SaveStateToFile(savedPath)
+
+	state, saveFrame, loadPanels := newEditorSession()
+	state.LoadStateFromFile(savedPath)
+	loadPanels()
+	saveFrame()
+
+	message, isError := state.GetStatus()
+	require.False(t, isError)
+	assert.Contains(t, message, `Unknown victory condition "notARealVictoryCondition"`,
+		"the user must be told their victory condition was dropped")
+	assert.Equal(t, registry.GetWinningConditionValues().Standard, state.GetStateData().VictoryCondition,
+		"unknown victory condition should fall back to Standard")
+}
