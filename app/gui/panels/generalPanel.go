@@ -1,6 +1,7 @@
 package panels
 
 import (
+	"slices"
 	"strings"
 
 	"gioui.org/layout"
@@ -114,7 +115,8 @@ func (this *GeneralPanel) LoadFromState() {
 	this.updateMapSizeSelectorItems()
 	this.mapSizeSelector.SelectByName(constants.GetMapSize(settings.MapSize).Label)
 
-	this.gameMode.SetSelectedIndex(0) // TODO: here is a bug where gameMode will not be loaded
+	gameModeIndex := max(slices.Index(constants.GameModes, settings.GameMode), 0)
+	this.gameMode.SetSelectedIndex(gameModeIndex)
 	this.heroMinimumCount.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 12)
 	this.heroMaximumCount.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
 	this.heroIncrementPerCastle.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 10)
