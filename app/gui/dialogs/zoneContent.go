@@ -256,7 +256,7 @@ func rowDisplayName(row *zoneContentRow) string {
 			continue
 		}
 		for _, variant := range content_rules.GetVariantsForContent(row.Mapping) {
-			if description, ok := variant.Variants[*saved.VariantID]; ok {
+			if description, ok := variant.GetVariantByID(*saved.VariantID); ok {
 				return row.Mapping.Name + " (" + description + ")"
 			}
 		}

@@ -79,9 +79,9 @@ func NewManageRulesDialog(
 	}
 
 	for _, variant := range content_rules.GetVariantsForContent(mapping) {
-		for id, description := range variant.Variants {
-			dialog.variantIDs = append(dialog.variantIDs, id)
-			dialog.variantLabels = append(dialog.variantLabels, description)
+		for _, tuple := range variant.Variants {
+			dialog.variantIDs = append(dialog.variantIDs, tuple.Key)
+			dialog.variantLabels = append(dialog.variantLabels, tuple.Value)
 		}
 	}
 	if len(dialog.variantIDs) > 0 {
