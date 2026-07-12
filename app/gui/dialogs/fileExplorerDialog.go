@@ -443,37 +443,62 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 		}
 	case modeSaveFile:
 		if this.overwriteActive {
-			if this.overwriteConfirmBtn.Clicked(gtx) {
-				if path, ok := this.resolveSaveTarget(); ok {
-					this.overwriteActive = false
-					if this.onSave != nil {
-						this.onSave(path)
-					}
-					return true
-				}
-
-				// Filename was cleared while the prompt was up; abandon it.
-				this.overwriteActive = false
-			}
-			if this.overwriteCancelBtn.Clicked(gtx) {
-				this.overwriteActive = false
-			}
-		} else if this.confirmBtn.Clicked(gtx) {
-			if path, ok := this.resolveSaveTarget(); ok {
-				if _, err := os.Stat(path); err == nil {
-					this.overwriteActive = true
-				} else {
-					if this.onSave != nil {
-						this.onSave(path)
-					}
-					return true
-				}
-			}
+			return this.confirmOverwrite(gtx)
 		}
+
+		return this.confirmSelection(gtx)
 	case modeBrowse: // noop
 	}
 
 	return false
+}
+
+// confirmOverwrite processes the overwrite prompt's buttons and reports
+// whether the dialog should close.
+func (this *FileExplorerDialog) confirmOverwrite(gtx layout.Context) bool {
+	if this.overwriteConfirmBtn.Clicked(gtx) {
+		this.overwriteActive = false
+
+		path, ok := this.resolveSaveTarget()
+		if !ok {
+			// Filename was cleared while the prompt was up; abandon it.
+			return false
+		}
+
+		if this.onSave != nil {
+			this.onSave(path)
+		}
+		return true
+	}
+
+	if this.overwriteCancelBtn.Clicked(gtx) {
+		this.overwriteActive = false
+	}
+
+	return false
+}
+
+// confirmSelection handles the save button: an existing target opens the
+// overwrite prompt, otherwise the file is saved immediately.
+func (this *FileExplorerDialog) confirmSelection(gtx layout.Context) bool {
+	if !this.confirmBtn.Clicked(gtx) {
+		return false
+	}
+
+	path, ok := this.resolveSaveTarget()
+	if !ok {
+		return false
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		this.overwriteActive = true
+		return false
+	}
+
+	if this.onSave != nil {
+		this.onSave(path)
+	}
+	return true
 }
 
 // loadDir reads dir and replaces the cached listing. It is the single
@@ -532,7 +557,7 @@ func (this *FileExplorerDialog) loadDir(dir string) {
 	})
 
 	this.currentDir = dir
-	this.entries = append(dirs, files...)
+	this.entries = slices.Concat(dirs, files)
 	this.rowClicks = map[string]*widget.Clickable{}
 	this.resetScroll()
 }

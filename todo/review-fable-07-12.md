@@ -212,7 +212,7 @@ newTemplate.Variants = slices.Clone(templateDto.Template.Variants)
 
 `slices.Clone` of one variant header is cheap and removes the aliasing hazard.
 
-### 1.7 🟡 `resolveGlob` shape and Steam-path fallback
+### 1.7 ✅ FIXED 🟡 `resolveGlob` shape and Steam-path fallback
 
 [io.go](../internal/helpers/io.go#L146-L159): `resolveGlob` returns `("", nil)` when the
 glob matches nothing and `("", err)` at the bottom where `err` is whatever the *last*
