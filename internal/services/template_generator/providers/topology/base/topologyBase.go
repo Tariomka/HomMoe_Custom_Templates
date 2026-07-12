@@ -321,9 +321,13 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 			GuardMatchGroup: "fallback_guard_" + fallbackName,
 		})
 		connNames[fallbackName] = true
-		for _, pl := range []string{label, partner} {
-			if pz, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
-				pz.Roads = append(pz.Roads, variant_content.NewRoadBuilder().
+		for _, playerLabel := range []string{label, partner} {
+			spawnZoneName := "Spawn-" + playerLabel
+			zoneIndex := slices.IndexFunc(
+				zones,
+				func(candidate entities.Zone) bool { return candidate.Name == spawnZoneName })
+			if zoneIndex >= 0 {
+				zones[zoneIndex].Roads = append(zones[zoneIndex].Roads, variant_content.NewRoadBuilder().
 					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
 					WithTo(variant_content.NewRefBuilder().BuildConnectionType(fallbackName)).
 					Build())
@@ -395,6 +399,9 @@ func (this *TopologyBase) CreateMissingConnections(
 		}
 		bridgeName := fmt.Sprintf("Bridge-%s-%s", labelA, labelB)
 		if connNameSet[bridgeName] {
+			// The existing bridge already connects the two components; link them so the
+			// loop progresses instead of reselecting the same pair forever.
+			adjacency.Link(bestIndexes.X, bestIndexes.Y)
 			continue
 		}
 
@@ -414,24 +421,29 @@ func (this *TopologyBase) CreateMissingConnections(
 		connNameSet[bridgeName] = true
 
 		for _, zoneName := range []string{zoneFrom, zoneTo} {
-			if zone, ok := linq.FromSlice(zones).First(func(x entities.Zone) bool { return x.Name == zoneName }); ok {
-				roadBuilder := variant_content.NewRoadBuilder().WithTo(
-					variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
-				if len(zone.MainObjects) > 0 {
-					zone.Roads = append(zone.Roads,
-						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).Build())
-				} else if len(zone.Roads) > 0 {
-					connectionName := getFallbackConnName(zone)
-					if connectionName == "" {
-						connectionName = bridgeName
-					}
-					zone.Roads = append(zone.Roads,
-						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(connectionName)).
-							Build())
-				} else {
-					zone.Roads = append(zone.Roads,
-						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
+			zoneIndex := slices.IndexFunc(
+				zones,
+				func(candidate entities.Zone) bool { return candidate.Name == zoneName })
+			if zoneIndex < 0 {
+				continue
+			}
+			roadBuilder := variant_content.NewRoadBuilder().WithTo(
+				variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
+			switch {
+			case len(zones[zoneIndex].MainObjects) > 0:
+				zones[zoneIndex].Roads = append(zones[zoneIndex].Roads,
+					roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).Build())
+			case len(zones[zoneIndex].Roads) > 0:
+				connectionName := getFallbackConnName(zones[zoneIndex])
+				if connectionName == "" {
+					connectionName = bridgeName
 				}
+				zones[zoneIndex].Roads = append(zones[zoneIndex].Roads,
+					roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(connectionName)).
+						Build())
+			default:
+				zones[zoneIndex].Roads = append(zones[zoneIndex].Roads,
+					roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
 			}
 		}
 

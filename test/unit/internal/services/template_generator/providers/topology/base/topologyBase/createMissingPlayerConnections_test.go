@@ -135,3 +135,24 @@ func TestWhenBorderGuardMultiplierIsDoubled_FallbackGuardValueIsScaled(t *testin
 	// Assert
 	assert.Equal(t, 60000, connections[0].GuardValue)
 }
+
+func TestWhenFallbackConnectionIsCreated_BothSpawnZonesInSliceGainFallbackRoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+	expectedRoad := entities.Road{
+		From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+		To:   entities.TypedRef{Type: "Connection", Args: []string{"Fallback-A-B"}},
+	}
+	expectedZones := []entities.Zone{
+		{Name: "Spawn-A", Roads: []entities.Road{expectedRoad}},
+		{Name: "Spawn-B", Roads: []entities.Road{expectedRoad}},
+	}
+
+	// Act
+	topologyBase.CreateMissingPlayerConnections([]string{"A", "B"}, zones, nil, newUnitTuning())
+
+	// Assert
+	assert.Equal(t, expectedZones, zones)
+}
