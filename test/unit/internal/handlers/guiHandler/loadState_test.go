@@ -19,7 +19,7 @@ func TestWhenStateFilePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	handler := handlers.NewGuiHandler()
 
 	// Act
-	_, err := handler.LoadState("")
+	_, _, err := handler.LoadState("", true)
 
 	// Assert
 	assert.ErrorIs(t, err, common.ErrNoOutputPath)
@@ -31,7 +31,7 @@ func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T
 	handler := handlers.NewGuiHandler()
 
 	// Act
-	_, err := handler.LoadState("  \t  ")
+	_, _, err := handler.LoadState("  \t  ", true)
 
 	// Assert
 	assert.ErrorIs(t, err, common.ErrNoOutputPath)
@@ -44,7 +44,7 @@ func TestWhenStateFileDoesNotExist_ReturnsNotExistError(t *testing.T) {
 	missingPath := filepath.Join(t.TempDir(), "missing-state.gen.json")
 
 	// Act
-	_, err := handler.LoadState(missingPath)
+	_, _, err := handler.LoadState(missingPath, true)
 
 	// Assert
 	assert.ErrorIs(t, err, os.ErrNotExist)
@@ -58,7 +58,7 @@ func TestWhenStateFileContainsInvalidJson_ReturnsError(t *testing.T) {
 	require.NoError(t, os.WriteFile(corruptPath, []byte("this is { not valid json"), 0o644))
 
 	// Act
-	_, err := handler.LoadState(corruptPath)
+	_, _, err := handler.LoadState(corruptPath, true)
 
 	// Assert
 	assert.Error(t, err)
@@ -78,10 +78,90 @@ func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.
 	require.NoError(t, saveErr)
 
 	// Act
-	loadedState, err := handler.LoadState(statePath)
+	loadedState, _, err := handler.LoadState(statePath, true)
 
 	// Assert
 	require.NoError(t, err)
 	require.NotNil(t, loadedState)
 	assert.Equal(t, savedState, *loadedState)
+}
+
+func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	statePath := filepath.Join(t.TempDir(), "valid-state.gen.json")
+	savedState := dtos.NewDefaultEditorStateDto()
+	_, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
+		State:      &savedState,
+		OutputPath: statePath,
+	})
+	require.NoError(t, saveErr)
+
+	// Act
+	_, warnings, err := handler.LoadState(statePath, true)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Empty(t, warnings)
+}
+
+func TestWhenStateFileHasOutOfRangeValues_ReturnsWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
+	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
+
+	// Act
+	_, warnings, err := handler.LoadState(statePath, true)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotEmpty(t, warnings)
+}
+
+func TestWhenFixIssuesIsTrue_ReturnsStateWithIssuesFixed(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
+	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
+
+	// Act
+	loadedState, _, err := handler.LoadState(statePath, true)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, 8, loadedState.PlayerCount)
+}
+
+func TestWhenFixIssuesIsFalse_ReturnsStateWithIssuesUnfixed(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
+	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
+
+	// Act
+	loadedState, _, err := handler.LoadState(statePath, false)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, 50, loadedState.PlayerCount)
+}
+
+func TestWhenFixIssuesIsFalse_StillReturnsWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
+	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
+
+	// Act
+	_, warnings, err := handler.LoadState(statePath, false)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotEmpty(t, warnings)
 }

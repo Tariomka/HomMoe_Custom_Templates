@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
 
 type GUIHandler struct {
@@ -111,18 +112,31 @@ func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, 
 	return out, nil
 }
 
-func (this *GUIHandler) LoadState(path string) (*dtos.EditorStateDto, error) {
+// LoadState reads an editor state from the given .gen.json path and
+// validates it against the editor's allowed values. When fixIssues is true,
+// every detected issue is corrected in the returned state; the returned
+// warnings describe the issues found either way.
+func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
-		return nil, common.ErrNoOutputPath
+		return nil, nil, common.ErrNoOutputPath
 	}
 
 	loaded, err := this.fileService.LoadSettingsFile(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return loaded, nil
+	issues := validators.ValidateEditorState(loaded)
+	warnings := make([]string, 0, len(issues))
+	for _, issue := range issues {
+		if fixIssues {
+			issue.Fix(loaded)
+		}
+		warnings = append(warnings, issue.Message)
+	}
+
+	return loaded, warnings, nil
 }
 
 func (this *GUIHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {

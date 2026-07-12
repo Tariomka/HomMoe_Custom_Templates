@@ -402,7 +402,7 @@ as having a soft budget.
 
 ### 5.1 Session budget
 
-- **Recommended length: 10–20 messages per session.**
+- **Recommended length: <20 messages per session.**
 - Around message **15**, warn the user that the session is approaching the
   recommended limit.
 - At message **20** (or sooner if context feels saturated, tools start

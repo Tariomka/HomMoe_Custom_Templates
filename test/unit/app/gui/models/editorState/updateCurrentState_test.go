@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -54,4 +55,29 @@ func TestWhenUpdateStaysInSimpleMode_AdvancedNeutralCountsAreZeroed(t *testing.T
 
 	// Assert
 	assert.Equal(t, dtos.NewDefaultEditorStateDto(), state.GetCurrentState())
+}
+
+func TestWhenUpdateSetsPlayerCountAboveMaximum_PlayerCountIsClamped(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := models.NewEditorState()
+	tooManyPlayers := gofakeit.Number(9, 100)
+
+	// Act
+	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount = tooManyPlayers })
+
+	// Assert
+	assert.Equal(t, 8, state.GetCurrentState().PlayerCount)
+}
+
+func TestWhenUpdateSetsUnknownGameMode_GameModeIsResetToClassic(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := models.NewEditorState()
+
+	// Act
+	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.GameMode = "NotARealGameMode" })
+
+	// Assert
+	assert.Equal(t, registry.GetGameModeValues().Classic, state.GetCurrentState().GameMode)
 }

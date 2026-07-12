@@ -201,7 +201,6 @@ func (this *State) RevealOutputDir() {
 }
 
 func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
-	// validators.ValidateEditorState(updateFunc, this.innerState.GetCurrentState())
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
 		this.unsaved = true
@@ -280,7 +279,7 @@ func (this *State) handleSaveState(path string) {
 }
 
 func (this *State) handleLoadState(path string) bool {
-	dto, err := this.handler.LoadState(path)
+	dto, warnings, err := this.handler.LoadState(path, true)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
 		return false
@@ -290,6 +289,10 @@ func (this *State) handleLoadState(path string) bool {
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()
+	if len(warnings) > 0 {
+		this.SetStatus(fmt.Sprintf("Loaded %s (adjusted: %s)", path, strings.Join(warnings, "; ")), false)
+		return true
+	}
 	this.SetStatus("Loaded "+path, false)
 	return true
 }

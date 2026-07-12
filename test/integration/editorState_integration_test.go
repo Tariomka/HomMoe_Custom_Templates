@@ -268,9 +268,9 @@ func TestLoadFromFile_UnknownGameMode_FallsBackToClassic(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "unknown-gamemode.gen.json")
 
-	author := drivers.NewUIState()
-	author.UpdateState(func(s *dtos.EditorStateDto) { s.GameMode = "NotARealGameMode" })
-	author.SaveStateToFile(savedPath)
+	// UpdateState fixes invalid values on the fly, so the hand-edited file has
+	// to be written directly.
+	require.NoError(t, os.WriteFile(savedPath, []byte(`{"gameMode": "NotARealGameMode"}`), 0o644))
 
 	state, saveFrame, loadPanels := newEditorSession()
 	state.LoadStateFromFile(savedPath)
@@ -289,9 +289,10 @@ func TestLoadFromFile_UnknownVictoryCondition_FallsBackToStandardAndWarns(t *tes
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "unknown-victory.gen.json")
 
-	author := drivers.NewUIState()
-	author.UpdateState(func(s *dtos.EditorStateDto) { s.VictoryCondition = "notARealVictoryCondition" })
-	author.SaveStateToFile(savedPath)
+	// UpdateState fixes invalid values on the fly, so the hand-edited file has
+	// to be written directly.
+	require.NoError(t, os.WriteFile(savedPath,
+		[]byte(`{"victoryCondition": "notARealVictoryCondition"}`), 0o644))
 
 	state, saveFrame, loadPanels := newEditorSession()
 	state.LoadStateFromFile(savedPath)
@@ -300,7 +301,7 @@ func TestLoadFromFile_UnknownVictoryCondition_FallsBackToStandardAndWarns(t *tes
 
 	message, isError := state.GetStatus()
 	require.False(t, isError)
-	assert.Contains(t, message, `Unknown victory condition "notARealVictoryCondition"`,
+	assert.Contains(t, message, `victoryCondition "notARealVictoryCondition" is not a known victory condition`,
 		"the user must be told their victory condition was dropped")
 	assert.Equal(t, registry.GetWinningConditionValues().Standard, state.GetStateData().VictoryCondition,
 		"unknown victory condition should fall back to Standard")
