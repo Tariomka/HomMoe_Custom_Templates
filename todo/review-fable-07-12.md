@@ -241,7 +241,7 @@ has the highest cognitive complexity in the codebase (43, limit 30), with a nest
 `confirmOverwrite(gtx)` and `confirmSelection(gtx)` from `handleConfirm` so each branch is
 a flat early-return function.
 
-### 1.9 🟡 gosec G115: unchecked `int → uint8` conversions in alpha blending
+### 1.9 ✅ FIXED 🟡 gosec G115: unchecked `int → uint8` conversions in alpha blending
 
 [assetProvider.go](../internal/services/asset_provider/assetProvider.go#L101-L103). The math
 (`(a*alpha + b*keep)/255` with `alpha+keep == 255`) cannot exceed 255, so this is a false
