@@ -54,6 +54,7 @@ func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlan
 	}
 }
 
+//nolint:gocognit // This test is intentionally complex because it is a cross-topology contract test that exercises every topology implementation.
 func TestWhenAnyTopologySelected_EveryZoneHasAllRequiredFields(t *testing.T) {
 	t.Parallel()
 	for _, topology := range allGeneratorTopologies() {

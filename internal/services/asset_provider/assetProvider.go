@@ -98,8 +98,11 @@ func (this *AssetProvider) drawAsset(
 			// Src-over blend: out = source*alpha + destination*(1-alpha).
 			offset := canvas.PixOffset(x, y)
 			alpha, keep := int(interpolatedColor.A), 255-int(interpolatedColor.A)
+			//nolint:gosec // G115: (src*alpha + dst*keep)/255 <= 255 because alpha+keep == 255 and all inputs are <= 255.
 			canvas.Pix[offset+0] = uint8((int(interpolatedColor.R)*alpha + int(canvas.Pix[offset+0])*keep) / 255)
+			//nolint:gosec // G115: same bound as above.
 			canvas.Pix[offset+1] = uint8((int(interpolatedColor.G)*alpha + int(canvas.Pix[offset+1])*keep) / 255)
+			//nolint:gosec // G115: same bound as above.
 			canvas.Pix[offset+2] = uint8((int(interpolatedColor.B)*alpha + int(canvas.Pix[offset+2])*keep) / 255)
 			canvas.Pix[offset+3] = 255
 		}

@@ -229,7 +229,7 @@ the registry key `HKCU\Software\Valve\Steam\SteamPath`.
 2. Optional (Windows polish): read the registry key via `golang.org/x/sys/windows/registry`
    behind `//go:build windows` before falling back to the literal path.
 
-### 1.8 🟡 `fileExplorerDialog.handleConfirm` — `appendAssign` and complexity 43
+### 1.8 ✅ FIXED 🟡 `fileExplorerDialog.handleConfirm` — `appendAssign` and complexity 43
 
 [fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go#L535):
 `this.entries = append(dirs, files...)` appends onto `dirs`'s backing array (gocritic
