@@ -3,8 +3,8 @@ package zoneLabelProvider_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,10 +23,10 @@ func TestWhenSimpleCountIsUsed_CreatesMediumPlansStartingAfterPlayerLabels(t *te
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, 3, 2)
-	expected := models.NeutralZonePlans{
-		{Label: "C", Quality: models.QualityMedium, CastleCount: 2},
-		{Label: "D", Quality: models.QualityMedium, CastleCount: 2},
-		{Label: "E", Quality: models.QualityMedium, CastleCount: 2},
+	expected := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityMedium, CastleCount: 2},
+		{Label: "D", Quality: neutralZone.QualityMedium, CastleCount: 2},
+		{Label: "E", Quality: neutralZone.QualityMedium, CastleCount: 2},
 	}
 
 	// Act
@@ -46,7 +46,7 @@ func TestWhenSimpleCastleCountExceedsFour_ClampsCastlesToFour(t *testing.T) {
 	plans := provider.CreateNeutralZonePlans(configuration)
 
 	// Assert
-	assert.Equal(t, models.NeutralZonePlans{{Label: "C", Quality: models.QualityMedium, CastleCount: 4}}, plans)
+	assert.Equal(t, neutralZone.Plans{{Label: "C", Quality: neutralZone.QualityMedium, CastleCount: 4}}, plans)
 }
 
 func TestWhenAdvancedCountsAreSet_CreatesPlansInTierOrder(t *testing.T) {
@@ -63,13 +63,13 @@ func TestWhenAdvancedCountsAreSet_CreatesPlansInTierOrder(t *testing.T) {
 	configuration.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = 1
 	configuration.ZoneConfiguration.Advanced.NeutralHighCastleCount = 1
 	configuration.ZoneConfiguration.Advanced.NeutralHighCastlesPerZone = 3
-	expected := models.NeutralZonePlans{
-		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
-		{Label: "D", Quality: models.QualityLow, CastleCount: 2},
-		{Label: "E", Quality: models.QualityMedium, CastleCount: 0},
-		{Label: "F", Quality: models.QualityMedium, CastleCount: 1},
-		{Label: "G", Quality: models.QualityHigh, CastleCount: 0},
-		{Label: "H", Quality: models.QualityHigh, CastleCount: 3},
+	expected := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
+		{Label: "D", Quality: neutralZone.QualityLow, CastleCount: 2},
+		{Label: "E", Quality: neutralZone.QualityMedium, CastleCount: 0},
+		{Label: "F", Quality: neutralZone.QualityMedium, CastleCount: 1},
+		{Label: "G", Quality: neutralZone.QualityHigh, CastleCount: 0},
+		{Label: "H", Quality: neutralZone.QualityHigh, CastleCount: 3},
 	}
 
 	// Act
@@ -91,7 +91,7 @@ func TestWhenAdvancedCastlesPerZoneExceedsFour_ClampsCastlesToFour(t *testing.T)
 	plans := provider.CreateNeutralZonePlans(configuration)
 
 	// Assert
-	assert.Equal(t, models.NeutralZonePlans{{Label: "C", Quality: models.QualityHigh, CastleCount: 4}}, plans)
+	assert.Equal(t, neutralZone.Plans{{Label: "C", Quality: neutralZone.QualityHigh, CastleCount: 4}}, plans)
 }
 
 func TestWhenTopologyIsSharedWebAndNoNeutralsRequested_AddsSingleMediumPlan(t *testing.T) {
@@ -105,7 +105,7 @@ func TestWhenTopologyIsSharedWebAndNoNeutralsRequested_AddsSingleMediumPlan(t *t
 	plans := provider.CreateNeutralZonePlans(configuration)
 
 	// Assert
-	assert.Equal(t, models.NeutralZonePlans{{Label: "C", Quality: models.QualityMedium, CastleCount: 1}}, plans)
+	assert.Equal(t, neutralZone.Plans{{Label: "C", Quality: neutralZone.QualityMedium, CastleCount: 1}}, plans)
 }
 
 func TestWhenRequestedCountExceedsLabelPool_CapsPlansAtAvailableLabels(t *testing.T) {

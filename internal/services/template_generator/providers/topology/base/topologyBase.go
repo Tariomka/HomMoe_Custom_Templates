@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
@@ -123,7 +124,7 @@ func (this *TopologyBase) CreateSpawnZone(
 }
 
 func (this *TopologyBase) CreateNeutralZone(
-	plan models.NeutralZonePlan,
+	plan neutralZone.Plan,
 	connectionNames []string,
 	zoneSize float64,
 	footholdCount int,
@@ -133,7 +134,7 @@ func (this *TopologyBase) CreateNeutralZone(
 	if isHoldCity && plan.CastleCount < 1 {
 		plan.CastleCount = 1
 	}
-	profile := models.NewNeutralZoneProfile(plan.Quality)
+	profile := neutralZone.NewNeutralZoneProfile(plan.Quality)
 
 	// Abandoned outposts are spawned in addition to the zone's castles, with
 	// their own count slider instead of being tied to the castle count.
@@ -338,7 +339,7 @@ func (this *TopologyBase) CreateMissingConnections(
 	zones []entities.Zone,
 	connections []entities.Connection,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans) []entities.Connection {
+	neutralZones neutralZone.Plans) []entities.Connection {
 	if len(allLabels) < 2 {
 		return nil
 	}
@@ -471,7 +472,7 @@ func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, gen
 func (this *TopologyBase) GetBorderGuardValue(
 	labelA, labelB string,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning) int {
 	aIsPlayer := slices.Contains(playerLabels, labelA)
 	bIsPlayer := slices.Contains(playerLabels, labelB)
@@ -656,7 +657,7 @@ func (this *TopologyBase) createOuterZoneRoads(
 // Exported so the manual zone editor can rebuild castles when the user edits
 // a zone's quality or castle count.
 func CreateNeutralZoneCastles(
-	profile models.NeutralZoneProfile,
+	profile neutralZone.Profile,
 	tuning models.GenerationTuning,
 	castleCount int,
 	isHoldCityZone bool) []entities.MainObject {
@@ -707,7 +708,7 @@ func CreateNeutralZoneCastles(
 // in a neutral zone alongside its City castles. The number of outposts is
 // driven by the dedicated count rather than the zone's castle count.
 func createAbandonedOutposts(
-	profile models.NeutralZoneProfile,
+	profile neutralZone.Profile,
 	tuning models.GenerationTuning,
 	count int) []entities.MainObject {
 	var outposts []entities.MainObject

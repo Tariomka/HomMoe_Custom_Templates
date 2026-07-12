@@ -26,6 +26,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -82,7 +83,7 @@ type ZoneEditorDialog struct {
 
 	// Geometry recomputed every frame from BuildPreviewLayout.
 	positions    map[string]image.Point
-	previewZones []preview.PreviewZone
+	previewZones []preview.Zone
 	radius       int
 	side         int
 	edges        []connEdgeGeom
@@ -1183,7 +1184,8 @@ func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
 		return
 	}
 	this.ensureManualPositions()
-	zone := connection_editor.NewDefaultNeutralZone(label, models.QualityMedium, 1, this.generateRoads, this.tuning)
+	zone := connection_editor.NewDefaultNeutralZone(
+		label, neutralZone.QualityMedium, 1, this.generateRoads, this.tuning)
 	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
 	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
@@ -1275,7 +1277,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 // syncZoneProps loads the zone property widgets from the selected zone.
 // Called once whenever the zone selection changes.
 func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
-	quality := connection_editor.QualityOfZone(*zone)
+	quality := neutralZone.GetQualityFrom(*zone)
 	this.qualityDropdown.SelectByName(connection_editor.QualityLabels[int(quality)])
 	castles := min(connection_editor.CountZoneCastles(*zone), 4)
 	this.castleDropdown.SelectByName(strconv.Itoa(castles))
@@ -1297,7 +1299,7 @@ func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 		zone.GuardWeeklyIncrement = value
 	}
 	if strings.HasPrefix(zone.Name, "Neutral-") && (this.qualityDropdown.WasUpdated || this.castleDropdown.WasUpdated) {
-		quality := models.NeutralZoneQuality(this.qualityDropdown.GetSelectedIndex())
+		quality := neutralZone.Quality(this.qualityDropdown.GetSelectedIndex())
 		castles := this.castleDropdown.GetSelectedIndex()
 		connection_editor.ApplyNeutralZoneQuality(zone, quality, castles, this.tuning)
 		this.syncedZoneFor = "" // re-sync dependent fields next frame

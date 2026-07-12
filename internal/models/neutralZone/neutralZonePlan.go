@@ -1,4 +1,4 @@
-package models
+package neutralZone
 
 import (
 	"cmp"
@@ -8,13 +8,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 )
 
-type NeutralZonePlan struct {
+type Plan struct {
 	Label       string
-	Quality     NeutralZoneQuality
+	Quality     Quality
 	CastleCount int
 }
 
-func (this NeutralZonePlan) GetBalanceScore() float64 {
+func (this Plan) GetBalanceScore() float64 {
 	var qualityScore float64
 	switch this.Quality {
 	case QualityHigh:
@@ -30,55 +30,55 @@ func (this NeutralZonePlan) GetBalanceScore() float64 {
 	return qualityScore + math.Min(float64(this.CastleCount), 4)*0.15
 }
 
-type NeutralZonePlans []NeutralZonePlan
+type Plans []Plan
 
-func NewNeutralZonePlansSorted(plans NeutralZonePlans) *NeutralZonePlans {
-	sortedPlans := make(NeutralZonePlans, len(plans))
+func NewNeutralZonePlansSorted(plans Plans) *Plans {
+	sortedPlans := make(Plans, len(plans))
 	copy(sortedPlans, plans)
 	sortedPlans.sort()
 	return &sortedPlans
 }
 
-func NewNeutralZonePlansSortedByBalance(plans NeutralZonePlans) *NeutralZonePlans {
-	sortedPlans := make(NeutralZonePlans, len(plans))
+func NewNeutralZonePlansSortedByBalance(plans Plans) *Plans {
+	sortedPlans := make(Plans, len(plans))
 	copy(sortedPlans, plans)
 	sortedPlans.sortByBalanceScoreDescending()
 	return &sortedPlans
 }
 
-func (this *NeutralZonePlans) AddPlans(plans ...NeutralZonePlan) {
+func (this *Plans) AddPlans(plans ...Plan) {
 	*this = append(*this, plans...)
 }
 
-func (this *NeutralZonePlans) AddPlan(label string, quality NeutralZoneQuality, castleCount int) {
-	*this = append(*this, NeutralZonePlan{
+func (this *Plans) AddPlan(label string, quality Quality, castleCount int) {
+	*this = append(*this, Plan{
 		Label:       label,
 		Quality:     quality,
 		CastleCount: castleCount,
 	})
 }
 
-func (this *NeutralZonePlans) AddMediumPlan(label string, castleCount int) {
-	*this = append(*this, NeutralZonePlan{
+func (this *Plans) AddMediumPlan(label string, castleCount int) {
+	*this = append(*this, Plan{
 		Label:       label,
 		Quality:     QualityMedium,
 		CastleCount: castleCount,
 	})
 }
 
-func (this *NeutralZonePlans) GetQuality(label string) NeutralZoneQuality {
+func (this *Plans) GetQuality(label string) Quality {
 	if len(*this) == 0 {
 		return QualityMedium
 	}
-	plan, ok := linq.FromSlice(*this).First(func(x NeutralZonePlan) bool { return x.Label == label })
+	plan, ok := linq.FromSlice(*this).First(func(x Plan) bool { return x.Label == label })
 	if !ok {
 		return QualityMedium
 	}
 	return plan.Quality
 }
 
-func (this *NeutralZonePlans) GetTier(label string) int {
-	plan, ok := linq.FromSlice(*this).First(func(x NeutralZonePlan) bool { return x.Label == label })
+func (this *Plans) GetTier(label string) int {
+	plan, ok := linq.FromSlice(*this).First(func(x Plan) bool { return x.Label == label })
 	if !ok {
 		return 1
 	}
@@ -94,16 +94,16 @@ func (this *NeutralZonePlans) GetTier(label string) int {
 	}
 }
 
-func (this *NeutralZonePlans) Any() bool {
+func (this *Plans) Any() bool {
 	return len(*this) > 0
 }
 
-func (this *NeutralZonePlans) Swap(firstIndex, secondIndex int) {
+func (this *Plans) Swap(firstIndex, secondIndex int) {
 	(*this)[firstIndex], (*this)[secondIndex] = (*this)[secondIndex], (*this)[firstIndex]
 }
 
-func (this *NeutralZonePlans) SortByBalanceScoreAscending() {
-	slices.SortStableFunc(*this, func(a, b NeutralZonePlan) int {
+func (this *Plans) SortByBalanceScoreAscending() {
+	slices.SortStableFunc(*this, func(a, b Plan) int {
 		if comparison := cmp.Compare(a.GetBalanceScore(), b.GetBalanceScore()); comparison != 0 {
 			return comparison
 		}
@@ -112,8 +112,8 @@ func (this *NeutralZonePlans) SortByBalanceScoreAscending() {
 	})
 }
 
-func (this *NeutralZonePlans) sort() {
-	slices.SortStableFunc(*this, func(a, b NeutralZonePlan) int {
+func (this *Plans) sort() {
+	slices.SortStableFunc(*this, func(a, b Plan) int {
 		// a.Quality > b.Quality
 		if comparison := cmp.Compare(b.Quality, a.Quality); comparison != 0 {
 			return comparison
@@ -129,8 +129,8 @@ func (this *NeutralZonePlans) sort() {
 	})
 }
 
-func (this *NeutralZonePlans) sortByBalanceScoreDescending() {
-	slices.SortStableFunc(*this, func(a, b NeutralZonePlan) int {
+func (this *Plans) sortByBalanceScoreDescending() {
+	slices.SortStableFunc(*this, func(a, b Plan) int {
 		if comparison := cmp.Compare(b.GetBalanceScore(), a.GetBalanceScore()); comparison != 0 {
 			return comparison
 		}

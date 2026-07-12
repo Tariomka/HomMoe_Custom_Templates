@@ -178,7 +178,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 		legendOffset.Pop()
 	}
 
-	renderTemplate := func(gtx layout.Context, previewLayout preview.PreviewLayout) {
+	renderTemplate := func(gtx layout.Context, previewLayout preview.Layout) {
 		// Connections beneath zones.
 		for _, connection := range previewLayout.Connections {
 			utils.DrawConnection(gtx, connection, previewLayout.ZoneRadius)

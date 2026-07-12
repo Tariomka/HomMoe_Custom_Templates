@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -15,7 +15,7 @@ import (
 func TestWhenCountIncreases_RebuildsRequestedCastleCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityHigh, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityHigh, 1)
 
 	// Act
 	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
@@ -27,19 +27,19 @@ func TestWhenCountIncreases_RebuildsRequestedCastleCount(t *testing.T) {
 func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityHigh, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityHigh, 1)
 
 	// Act
 	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, models.QualityHigh, connection_editor.QualityOfZone(zone))
+	assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone))
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityHigh, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityHigh, 1)
 	originalGuardMultiplier := zone.GuardMultiplier
 
 	// Act
@@ -53,7 +53,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
 func TestWhenCastlesAreRebuilt_KeepsGuardedContentPool(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityHigh, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityHigh, 1)
 	originalPool := zone.GuardedContentPool
 
 	// Act
@@ -66,7 +66,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentPool(t *testing.T) {
 func TestWhenCastlesAreRebuilt_KeepsGuardedContentValue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityHigh, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityHigh, 1)
 	originalGuardedValue := zone.GuardedContentValue
 
 	// Act
@@ -79,7 +79,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentValue(t *testing.T) {
 func TestWhenZoneSizeWasEditedManually_KeepsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityHigh, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityHigh, 1)
 	manualSize := gofakeit.Float64Range(0.5, 3.0)
 	zone.Size = manualSize
 
@@ -93,7 +93,7 @@ func TestWhenZoneSizeWasEditedManually_KeepsIt(t *testing.T) {
 func TestWhenZoneHasAbandonedOutpost_PreservesIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityMedium, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityMedium, 1)
 	zone.MainObjects = append(zone.MainObjects, entities.MainObject{Type: "AbandonedOutpost"})
 
 	// Act
@@ -112,7 +112,7 @@ func TestWhenZoneHasAbandonedOutpost_PreservesIt(t *testing.T) {
 func TestWhenPrimaryCastleHoldsWinCondition_PreservesHoldCityFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := makeNeutralZone("G", models.QualityHigh, 1)
+	zone := makeNeutralZone("G", neutralZone.QualityHigh, 1)
 	zone.MainObjects[0].HoldCityWinCon = true
 
 	// Act

@@ -3,7 +3,7 @@ package zoneCandidate_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,9 +11,9 @@ import (
 func TestWhenMinDistancesDiffer_PutsFarthestZoneFirst(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "X", Quality: models.QualityMedium, CastleCount: 0},
-		{Label: "Y", Quality: models.QualityMedium, CastleCount: 0},
+	plans := neutralZone.Plans{
+		{Label: "X", Quality: neutralZone.QualityMedium, CastleCount: 0},
+		{Label: "Y", Quality: neutralZone.QualityMedium, CastleCount: 0},
 	}
 	distancesByPlayer := []map[string]int{{"X": 1, "Y": 3}}
 
@@ -29,9 +29,9 @@ func TestWhenMinDistancesDiffer_PutsFarthestZoneFirst(t *testing.T) {
 func TestWhenMinDistancesTie_PutsLowestVarianceFirst(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "Y", Quality: models.QualityMedium, CastleCount: 0},
-		{Label: "X", Quality: models.QualityMedium, CastleCount: 0},
+	plans := neutralZone.Plans{
+		{Label: "Y", Quality: neutralZone.QualityMedium, CastleCount: 0},
+		{Label: "X", Quality: neutralZone.QualityMedium, CastleCount: 0},
 	}
 	distancesByPlayer := []map[string]int{
 		{"X": 2, "Y": 2},
@@ -50,9 +50,9 @@ func TestWhenMinDistancesTie_PutsLowestVarianceFirst(t *testing.T) {
 func TestWhenVarianceAlsoTies_PutsHighestQualityFirst(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "Y", Quality: models.QualityLow, CastleCount: 0},
-		{Label: "X", Quality: models.QualityHigh, CastleCount: 0},
+	plans := neutralZone.Plans{
+		{Label: "Y", Quality: neutralZone.QualityLow, CastleCount: 0},
+		{Label: "X", Quality: neutralZone.QualityHigh, CastleCount: 0},
 	}
 	distancesByPlayer := []map[string]int{{"X": 2, "Y": 2}}
 
@@ -68,9 +68,9 @@ func TestWhenVarianceAlsoTies_PutsHighestQualityFirst(t *testing.T) {
 func TestWhenQualityAlsoTies_PutsCastleZoneFirst(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "Y", Quality: models.QualityMedium, CastleCount: 0},
-		{Label: "X", Quality: models.QualityMedium, CastleCount: 2},
+	plans := neutralZone.Plans{
+		{Label: "Y", Quality: neutralZone.QualityMedium, CastleCount: 0},
+		{Label: "X", Quality: neutralZone.QualityMedium, CastleCount: 2},
 	}
 	distancesByPlayer := []map[string]int{{"X": 2, "Y": 2}}
 

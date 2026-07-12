@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
 )
@@ -28,7 +29,7 @@ func NewBalancedClusterService() *BalancedClusterService {
 func (this *BalancedClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	singlePlayerList := []string{playerLabel}
@@ -111,7 +112,7 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 func (this *BalancedClusterService) createSortedPairs(
 	orderedLabels []string,
 	rawPositions models.Positions,
-	allNeutralZonePlans models.NeutralZonePlans) [][2]int {
+	allNeutralZonePlans neutralZone.Plans) [][2]int {
 	tierIndices := map[int][]int{}
 	for index, label := range orderedLabels {
 		tier := allNeutralZonePlans.GetTier(label)
@@ -224,7 +225,7 @@ func (this *BalancedClusterService) createZones(
 	playerIndex int,
 	orderedLabels []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	connectionNames [][]string) []entities.Zone {
 	var zones []entities.Zone
 	for index, label := range orderedLabels {
@@ -244,7 +245,7 @@ func (this *BalancedClusterService) createZones(
 		} else {
 			zones = append(zones, this.CreateNeutralZone(
 				linq.FromSlice(allNeutralZonePlans).
-					FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 				myConns,
 				configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 				tuning.RemoteFootholdCount,
@@ -261,7 +262,7 @@ func (this *BalancedClusterService) createConnections(
 	playerLabel string,
 	orderedLabels []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	connectionNames [][]string,
 	sortedPairs [][2]int) []entities.Connection {
 	nameLookup := make(map[int]int, len(orderedLabels))

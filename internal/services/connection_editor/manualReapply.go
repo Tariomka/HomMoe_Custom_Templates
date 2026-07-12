@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
@@ -76,16 +77,16 @@ func neutralCastleTarget(
 		return 0, false
 	}
 
-	switch QualityOfZone(zone) {
-	case models.QualityHigh:
+	switch neutralZone.GetQualityFrom(zone) {
+	case neutralZone.QualityHigh:
 		if changes.NeutralHigh {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralHighCastlesPerZone, 0, 4), true
 		}
-	case models.QualityLow:
+	case neutralZone.QualityLow:
 		if changes.NeutralLow {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowCastlesPerZone, 0, 4), true
 		}
-	case models.QualityMedium:
+	case neutralZone.QualityMedium:
 		fallthrough
 	default:
 		if changes.NeutralMedium {
@@ -100,7 +101,7 @@ func neutralCastleTarget(
 // non-castle main objects (abandoned outposts) untouched - unlike
 // ApplyNeutralZoneQuality, which re-profiles the whole zone.
 func SetNeutralZoneCastleCount(zone *entities.Zone, castleCount int, tuning models.GenerationTuning) {
-	profile := models.NewNeutralZoneProfile(QualityOfZone(*zone))
+	profile := neutralZone.NewNeutralZoneProfile(neutralZone.GetQualityFrom(*zone))
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
 		base.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),

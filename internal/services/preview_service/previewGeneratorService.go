@@ -72,7 +72,7 @@ func (this *PreviewGeneratorService) CreatePreviewImage(
 
 func (this *PreviewGeneratorService) drawConnections(
 	canvas *image.RGBA,
-	connections []preview.PreviewConnection,
+	connections []preview.Connection,
 	fitterCallback assetFitter,
 	zoneRadius float64) {
 	for _, conn := range connections {

@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 // SquareTopologyService lays the player zones out along the edges of a square.
@@ -24,7 +25,7 @@ func NewSquareTopologyService() *SquareTopologyService {
 func (this *SquareTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
@@ -57,7 +58,7 @@ func (this *SquareTopologyService) CreateTopologyVariant(
 // the interior neutral zones.
 func (this *SquareTopologyService) createSquareLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		centreX = 0.5
 		centreY = 0.5

@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 // FractalTopologyService grows one self-similar fractal per player. Every player
@@ -30,7 +31,7 @@ func NewFractalTopologyService() *FractalTopologyService {
 func (this *FractalTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
@@ -73,7 +74,7 @@ type fractalTree struct {
 // of high zones at the centre - a self-similar, converging branch per player.
 func (this *FractalTopologyService) createFractalLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		centreX      = 0.5
 		centreY      = 0.5
@@ -94,11 +95,11 @@ func (this *FractalTopologyService) createFractalLayout(
 	tierBuckets := [3][]int{}
 	for index, plan := range neutralZones {
 		switch plan.Quality {
-		case models.QualityHigh:
+		case neutralZone.QualityHigh:
 			tierBuckets[2] = append(tierBuckets[2], index)
-		case models.QualityMedium:
+		case neutralZone.QualityMedium:
 			tierBuckets[1] = append(tierBuckets[1], index)
-		case models.QualityLow:
+		case neutralZone.QualityLow:
 			fallthrough
 		default:
 			tierBuckets[0] = append(tierBuckets[0], index)

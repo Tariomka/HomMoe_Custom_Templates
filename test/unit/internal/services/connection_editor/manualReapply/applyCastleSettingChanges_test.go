@@ -5,8 +5,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	zones := []entities.Zone{makeNeutralZone("G", models.QualityMedium, 1)}
+	zones := []entities.Zone{makeNeutralZone("G", neutralZone.QualityMedium, 1)}
 
 	// Act
 	connection_editor.ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
@@ -31,8 +31,8 @@ func applySimpleModeChange() []entities.Zone {
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.NeutralZoneCastles = 2
 	zones := []entities.Zone{
-		makeNeutralZone("G", models.QualityMedium, 1),
-		makeNeutralZone("H", models.QualityHigh, 0),
+		makeNeutralZone("G", neutralZone.QualityMedium, 1),
+		makeNeutralZone("H", neutralZone.QualityHigh, 0),
 		makeSpawnZone("A", "Player1", 1),
 	}
 	connection_editor.ApplyCastleSettingChanges(
@@ -73,9 +73,9 @@ func applyAdvancedHighChange() []entities.Zone {
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.NeutralHighCastlesPerZone = 3
 	zones := []entities.Zone{
-		makeNeutralZone("G", models.QualityHigh, 1),
-		makeNeutralZone("H", models.QualityLow, 1),
-		makeNeutralZone("I", models.QualityHigh, 0),
+		makeNeutralZone("G", neutralZone.QualityHigh, 1),
+		makeNeutralZone("H", neutralZone.QualityLow, 1),
+		makeNeutralZone("I", neutralZone.QualityHigh, 0),
 	}
 	connection_editor.ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{NeutralHigh: true}, configuration)
@@ -117,7 +117,7 @@ func applyPlayerCastleChange() []entities.Zone {
 	configuration.ZoneConfiguration.PlayerOwnedCastles = 1
 	zones := []entities.Zone{
 		makeSpawnZone("A", "Player1", 0),
-		makeNeutralZone("G", models.QualityMedium, 1),
+		makeNeutralZone("G", neutralZone.QualityMedium, 1),
 	}
 	connection_editor.ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{PlayerCastles: true}, configuration)
@@ -251,7 +251,7 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.NeutralZoneCastles = 3
-	zones := []entities.Zone{makeNeutralZone("G", models.QualityMedium, 1)}
+	zones := []entities.Zone{makeNeutralZone("G", neutralZone.QualityMedium, 1)}
 
 	// Act
 	connection_editor.ApplyCastleSettingChanges(

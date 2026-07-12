@@ -29,7 +29,7 @@ func mustNewProvider(t *testing.T) *asset_provider.AssetProvider {
 }
 
 // renderPlayer draws the given player zone centred on a fresh canvas and returns it.
-func renderPlayer(t *testing.T, zone preview.PreviewZone) *image.RGBA {
+func renderPlayer(t *testing.T, zone preview.Zone) *image.RGBA {
 	t.Helper()
 	canvas := newCanvas()
 	mustNewProvider(t).DrawPlayerZone(canvas, zone, image.Pt(canvasCenter, canvasCenter), spriteScale)
@@ -37,7 +37,7 @@ func renderPlayer(t *testing.T, zone preview.PreviewZone) *image.RGBA {
 }
 
 // renderNeutral draws the given neutral zone centred on a fresh canvas and returns it.
-func renderNeutral(t *testing.T, zone preview.PreviewZone) *image.RGBA {
+func renderNeutral(t *testing.T, zone preview.Zone) *image.RGBA {
 	t.Helper()
 	canvas := newCanvas()
 	mustNewProvider(t).DrawNeutralZone(canvas, zone, image.Pt(canvasCenter, canvasCenter), spriteScale)

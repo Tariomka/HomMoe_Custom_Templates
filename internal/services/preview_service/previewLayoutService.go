@@ -12,7 +12,7 @@ import (
 )
 
 type PreviewLayoutService struct {
-	layout *preview.PreviewLayout
+	layout *preview.Layout
 }
 
 func NewPreviewLayoutService() *PreviewLayoutService {
@@ -31,8 +31,8 @@ func NewPreviewLayoutService() *PreviewLayoutService {
 func (this *PreviewLayoutService) BuildPreviewLayout(
 	template *entities.RmgTemplate,
 	topology config.MapTopology,
-	side float64) preview.PreviewLayout {
-	this.layout = &preview.PreviewLayout{Positions: map[string]image.Point{}}
+	side float64) preview.Layout {
+	this.layout = &preview.Layout{Positions: map[string]image.Point{}}
 	if template == nil || len(template.Variants) == 0 {
 		return *this.layout
 	}
@@ -96,7 +96,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 		if !ok {
 			continue
 		}
-		previewZone := preview.PreviewZone{
+		previewZone := preview.Zone{
 			Name:     zone.Name,
 			Letter:   ExtractZoneLetter(zone.Name),
 			Center:   pos,
@@ -111,7 +111,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 
 // applyMainObjects folds the zone's Spawn/City main objects into the preview
 // zone's castle count and player-owner number.
-func applyMainObjects(zone entities.Zone, previewZone *preview.PreviewZone) {
+func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 	for _, mainObject := range zone.MainObjects {
 		switch {
 		case strings.EqualFold(mainObject.Type, "Spawn"):
@@ -139,7 +139,7 @@ func applyMainObjects(zone entities.Zone, previewZone *preview.PreviewZone) {
 // straight.
 func (this *PreviewLayoutService) buildPreviewConnections(
 	connections []entities.Connection,
-	positions map[string]image.Point) []preview.PreviewConnection {
+	positions map[string]image.Point) []preview.Connection {
 	type pairKey struct{ start, end string }
 	sortedKey := func(connection entities.Connection) pairKey {
 		if connection.From > connection.To {
@@ -160,7 +160,7 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 		}
 	}
 
-	result := make([]preview.PreviewConnection, 0, len(connections))
+	result := make([]preview.Connection, 0, len(connections))
 	indexInPair := make(map[pairKey]int)
 
 	const spacingBetweenEdges = 21.0
@@ -189,7 +189,7 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 			len(connection.PortalPlacementRulesTo) > 0
 		result = append(
 			result,
-			preview.PreviewConnection{Start: startPoint, End: endPoint, Ctrl: ctrl, Portal: isPortal},
+			preview.Connection{Start: startPoint, End: endPoint, Ctrl: ctrl, Portal: isPortal},
 		)
 	}
 	return result

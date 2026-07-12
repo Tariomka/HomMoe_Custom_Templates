@@ -3,7 +3,7 @@ package neutralZoneQuality_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,12 +11,12 @@ func TestWhenQualityVaries_ReturnsMatchingGuardValue(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		subtestName        string
-		quality            models.NeutralZoneQuality
+		quality            neutralZone.Quality
 		expectedGuardValue int
 	}{
-		{"WhenQualityIsHigh_ReturnsTwentyFiveThousand", models.QualityHigh, 25_000},
-		{"WhenQualityIsMedium_ReturnsTwentyThousand", models.QualityMedium, 20_000},
-		{"WhenQualityIsLow_ReturnsFifteenThousand", models.QualityLow, 15_000},
+		{"WhenQualityIsHigh_ReturnsTwentyFiveThousand", neutralZone.QualityHigh, 25_000},
+		{"WhenQualityIsMedium_ReturnsTwentyThousand", neutralZone.QualityMedium, 20_000},
+		{"WhenQualityIsLow_ReturnsFifteenThousand", neutralZone.QualityLow, 15_000},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {

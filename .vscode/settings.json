@@ -93,7 +93,7 @@
     "go.inlayHints.ignoredError": true,
     "go.inlayHints.rangeVariableTypes": false,
     "go.testExplorer.packageDisplayMode": "nested",
-    "go.lintOnSave": "file",
+    "go.lintOnSave": "package",
     "coverage-gutters.coverageFileNames": [
         "lcov.info",
         "cov.xml",

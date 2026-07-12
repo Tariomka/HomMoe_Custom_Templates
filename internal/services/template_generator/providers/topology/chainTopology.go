@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -25,7 +26,7 @@ func NewChainTopologyService() *ChainTopologyService {
 func (this *ChainTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLetters []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) entities.Variant {
 	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
@@ -68,7 +69,7 @@ func (this *ChainTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	holdCityNeutralLabel string,
 	connectionNames []string) []entities.Zone {
 	labelCount := len(orderedLabels)
@@ -93,7 +94,7 @@ func (this *ChainTopologyService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 					tempConnectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
@@ -104,7 +105,7 @@ func (this *ChainTopologyService) createZones(
 func (this *ChainTopologyService) createConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	connectionNames []string) []entities.Connection {
 	labelCount := len(orderedLabels)
 

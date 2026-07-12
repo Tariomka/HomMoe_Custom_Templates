@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/utils"
 )
 
@@ -32,11 +33,11 @@ func (this *ZoneLabelProvider) CreatePlayerLabels(playerCount int) []string {
 }
 
 func (this *ZoneLabelProvider) CreateNeutralZonePlans(
-	configuration config.GeneratorConfig) models.NeutralZonePlans {
-	var plans models.NeutralZonePlans
+	configuration config.GeneratorConfig) neutralZone.Plans {
+	var plans neutralZone.Plans
 	maxNeutral := max(0, len(this.zoneLabels)-configuration.PlayerCount)
 
-	add := func(requested int, quality models.NeutralZoneQuality, castleCount int) {
+	add := func(requested int, quality neutralZone.Quality, castleCount int) {
 		count := helpers.Clamp(requested, 0, 30)                // TODO: Clamp up to labelCount - playerCount
 		for i := 0; i < count && len(plans) < maxNeutral; i++ { // TODO: Is plans length needed?
 			plans.AddPlan(this.zoneLabels[configuration.PlayerCount+len(plans)], quality, castleCount)
@@ -51,15 +52,15 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 		lowCastlesPerZone := helpers.Clamp(advanced.NeutralLowCastlesPerZone, 0, 4)
 		medCastlesPerZone := helpers.Clamp(advanced.NeutralMediumCastlesPerZone, 0, 4)
 		highCastlesPerZone := helpers.Clamp(advanced.NeutralHighCastlesPerZone, 0, 4)
-		add(advanced.NeutralLowNoCastleCount, models.QualityLow, 0)
-		add(advanced.NeutralLowCastleCount, models.QualityLow, lowCastlesPerZone)
-		add(advanced.NeutralMediumNoCastleCount, models.QualityMedium, 0)
-		add(advanced.NeutralMediumCastleCount, models.QualityMedium, medCastlesPerZone)
-		add(advanced.NeutralHighNoCastleCount, models.QualityHigh, 0)
-		add(advanced.NeutralHighCastleCount, models.QualityHigh, highCastlesPerZone)
+		add(advanced.NeutralLowNoCastleCount, neutralZone.QualityLow, 0)
+		add(advanced.NeutralLowCastleCount, neutralZone.QualityLow, lowCastlesPerZone)
+		add(advanced.NeutralMediumNoCastleCount, neutralZone.QualityMedium, 0)
+		add(advanced.NeutralMediumCastleCount, neutralZone.QualityMedium, medCastlesPerZone)
+		add(advanced.NeutralHighNoCastleCount, neutralZone.QualityHigh, 0)
+		add(advanced.NeutralHighCastleCount, neutralZone.QualityHigh, highCastlesPerZone)
 	} else {
 		castleCount := helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 0, 4)
-		add(configuration.ZoneConfiguration.NeutralZoneCount, models.QualityMedium, castleCount)
+		add(configuration.ZoneConfiguration.NeutralZoneCount, neutralZone.QualityMedium, castleCount)
 	}
 	if configuration.Topology == config.TopologySharedWeb && len(plans) == 0 && maxNeutral > 0 {
 		plans.AddMediumPlan(
@@ -72,7 +73,7 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 func (this *ZoneLabelProvider) GetHoldCityLabel(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) string {
+	neutralZones neutralZone.Plans) string {
 	if !neutralZones.Any() || !configuration.IsHubCityToHold() {
 		return ""
 	}
@@ -98,10 +99,10 @@ func (this *ZoneLabelProvider) CreateZoneName(label string, playerLabels []strin
 func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones neutralZone.Plans,
 	isRing bool) []string {
 	neutralLabels := linq.FromSlice(neutralZones).
-		SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+		SelectString(func(x neutralZone.Plan) string { return x.Label }).
 		ToSlice()
 
 	if configuration.Topology == config.TopologyCircles {
@@ -148,7 +149,7 @@ func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 
 func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones neutralZone.Plans,
 	separationCount int) []string {
 	if len(playerLabels) == 0 {
 		return this.CreateBalancedNeutralRingZoneLabels(neutralZones, 1)
@@ -172,11 +173,11 @@ func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
 
 func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan,
+	neutralZones neutralZone.Plans,
 	minimumSeparation int) []string {
 	if len(playerLabels) == 0 {
 		return linq.FromSlice(neutralZones).
-			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+			SelectString(func(x neutralZone.Plan) string { return x.Label }).
 			ToSlice()
 	}
 
@@ -207,13 +208,13 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 	}
 	neutralZoneGaps := utils.AssignNeutralZonesToGaps(neutralZones, capacities, true)
 	orderedLabels := linq.FromSlice(utils.OrderEdgeGap(neutralZoneGaps[0], true)).
-		SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+		SelectString(func(x neutralZone.Plan) string { return x.Label }).
 		ToSlice()
 	for index, playerLabel := range playerLabels {
 		orderedLabels = append(orderedLabels, playerLabel)
 		neutralZoneGap := neutralZoneGaps[index+1]
 		trailing := index == len(playerLabels)-1
-		var gap models.NeutralZonePlans
+		var gap neutralZone.Plans
 		if trailing {
 			gap = utils.OrderEdgeGap(neutralZoneGap, false)
 		} else {
@@ -229,12 +230,12 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 
 	return append(playerLabels,
 		linq.FromSlice(neutralZones).
-			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+			SelectString(func(x neutralZone.Plan) string { return x.Label }).
 			ToSlice()...)
 }
 
 func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
-	neutralZones []models.NeutralZonePlan,
+	neutralZones neutralZone.Plans,
 	playerCount int) []string {
 	if len(neutralZones) < 2 {
 		labels := make([]string, len(neutralZones))
@@ -258,7 +259,7 @@ func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
 func (this *ZoneLabelProvider) createTopologyAdjacency(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones []models.NeutralZonePlan) models.ZoneAdjacency {
+	neutralZones neutralZone.Plans) models.ZoneAdjacency {
 	adjacency := models.ZoneAdjacency{}
 
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1

@@ -63,12 +63,12 @@ func (this *AssetProvider) DrawBackground(canvas *image.RGBA) {
 }
 
 func (this *AssetProvider) DrawPlayerZone(
-	canvas *image.RGBA, zone preview.PreviewZone, center image.Point, scale float64) {
+	canvas *image.RGBA, zone preview.Zone, center image.Point, scale float64) {
 	this.drawAsset(canvas, this.getPlayerAsset(zone), center, scale)
 }
 
 func (this *AssetProvider) DrawNeutralZone(
-	canvas *image.RGBA, zone preview.PreviewZone, center image.Point, scale float64) {
+	canvas *image.RGBA, zone preview.Zone, center image.Point, scale float64) {
 	this.drawAsset(canvas, this.getNeutralZoneAsset(zone), center, scale)
 }
 
@@ -150,7 +150,7 @@ func (this *AssetProvider) calculateBilinearInterpolation(asset image.Image, pos
 	}
 }
 
-func (this *AssetProvider) getNeutralZoneAsset(zone preview.PreviewZone) image.Image {
+func (this *AssetProvider) getNeutralZoneAsset(zone preview.Zone) image.Image {
 	quality := "low"
 	switch zone.Tier {
 	case 3:
@@ -167,7 +167,7 @@ func (this *AssetProvider) getNeutralZoneAsset(zone preview.PreviewZone) image.I
 	return this.neutralZones[name]
 }
 
-func (this *AssetProvider) getPlayerAsset(zone preview.PreviewZone) image.Image {
+func (this *AssetProvider) getPlayerAsset(zone preview.Zone) image.Image {
 	playerIndex := min(max(zone.Owner, 1), playerCount) - 1
 	return this.players[playerIndex]
 }

@@ -3,16 +3,16 @@ package zoneLabelProvider_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
-func mediumPlans(labels ...string) []models.NeutralZonePlan {
-	plans := make([]models.NeutralZonePlan, len(labels))
+func mediumPlans(labels ...string) []neutralZone.Plan {
+	plans := make([]neutralZone.Plan, len(labels))
 	for i, label := range labels {
-		plans[i] = models.NeutralZonePlan{Label: label, Quality: models.QualityMedium}
+		plans[i] = neutralZone.Plan{Label: label, Quality: neutralZone.QualityMedium}
 	}
 	return plans
 }

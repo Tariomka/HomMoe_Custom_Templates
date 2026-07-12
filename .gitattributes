@@ -1,0 +1,5 @@
+# Handle text files automatically by default
+* text=auto
+
+# Force all Go source files and modules to use LF
+*.go text eol=lf

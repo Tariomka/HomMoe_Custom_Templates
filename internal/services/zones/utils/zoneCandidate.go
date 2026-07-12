@@ -4,7 +4,7 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 type candidate struct {
@@ -18,7 +18,7 @@ type candidate struct {
 type hubZoneCandidates []candidate
 
 func CreateHubZoneCandidates(
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	distancesByPlayer []map[string]int) *hubZoneCandidates {
 	var candidates hubZoneCandidates
 	for _, plan := range neutralZones {

@@ -19,7 +19,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
-func DrawConnection(gtx layout.Context, conn preview.PreviewConnection, zoneRadius int) {
+func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int) {
 	radius := float64(zoneRadius)
 	start, ok1 := helpers.CalculatePointTowards(conn.Start, conn.Ctrl, radius)
 	end, ok2 := helpers.CalculatePointTowards(conn.End, conn.Ctrl, radius)
@@ -36,7 +36,7 @@ func DrawConnection(gtx layout.Context, conn preview.PreviewConnection, zoneRadi
 	drawCurve(gtx, start, conn.Ctrl, end, lineWidth, lineColor)
 }
 
-func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.PreviewZone, zoneRadius int) {
+func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zone, zoneRadius int) {
 	radius := zoneRadius
 	if zone.IsHub && radius < 28 {
 		radius = 28
@@ -111,7 +111,7 @@ func drawOffsetText(
 	stack.Pop()
 }
 
-func zoneColors(zone preview.PreviewZone) (fill, edge color.NRGBA) {
+func zoneColors(zone preview.Zone) (fill, edge color.NRGBA) {
 	switch {
 	case zone.IsPlayer:
 		return themes.ColorPreviewSpawnFill, themes.ColorPreviewSpawnEdge
@@ -128,7 +128,7 @@ func zoneColors(zone preview.PreviewZone) (fill, edge color.NRGBA) {
 	}
 }
 
-func zoneLabel(zone preview.PreviewZone) string {
+func zoneLabel(zone preview.Zone) string {
 	if zone.IsPlayer {
 		if zone.Owner > 0 {
 			return fmt.Sprintf("P%d", zone.Owner)

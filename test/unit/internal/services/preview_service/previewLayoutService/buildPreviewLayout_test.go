@@ -19,7 +19,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
-	expected := preview.PreviewLayout{Positions: map[string]image.Point{}}
+	expected := preview.Layout{Positions: map[string]image.Point{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(nil, config.TopologyRing, layoutSide)
@@ -32,7 +32,7 @@ func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
-	expected := preview.PreviewLayout{Positions: map[string]image.Point{}}
+	expected := preview.Layout{Positions: map[string]image.Point{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(&entities.RmgTemplate{}, config.TopologyRing, layoutSide)
@@ -45,7 +45,7 @@ func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
-	expected := preview.PreviewLayout{Positions: map[string]image.Point{}}
+	expected := preview.Layout{Positions: map[string]image.Point{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(templateWith(nil, nil), config.TopologyRing, layoutSide)
@@ -664,7 +664,7 @@ func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) 
 	zones := []entities.Zone{
 		{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
 	}
-	expected := preview.PreviewZone{
+	expected := preview.Zone{
 		Name:      "Spawn-A",
 		Letter:    "A",
 		Center:    image.Pt(300, 300),

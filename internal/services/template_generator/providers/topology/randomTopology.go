@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -27,7 +28,7 @@ func NewRandomTopologyService() *RandomTopologyService {
 func (this *RandomTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	neutralLabels := make([]string, len(neutralZones))
@@ -90,7 +91,7 @@ func (this *RandomTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, allLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	holdCityNeutralLabel string,
 	connectionNames map[int][]string) []entities.Zone {
 	var zones []entities.Zone
@@ -107,7 +108,7 @@ func (this *RandomTopologyService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
@@ -119,7 +120,7 @@ func (this *RandomTopologyService) createConnections(
 	playerLabels, allLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	connectionNames map[int][]string,
 	triangulationPairs []models.ConnectionIndexes) []entities.Connection {
 	nameLookup := make(map[int]int, len(allLabels))

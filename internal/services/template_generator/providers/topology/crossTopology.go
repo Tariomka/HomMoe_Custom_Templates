@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 // CrossTopologyService radiates one arm per player out of a central zone. Each
@@ -26,7 +27,7 @@ func NewCrossTopologyService() *CrossTopologyService {
 func (this *CrossTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
@@ -57,7 +58,7 @@ func (this *CrossTopologyService) CreateTopologyVariant(
 // centre outward laying its neutral zones followed by the player at the tip.
 func (this *CrossTopologyService) createCrossLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		centreX      = 0.5
 		centreY      = 0.5

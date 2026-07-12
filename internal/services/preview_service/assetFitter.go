@@ -13,7 +13,7 @@ type assetFitter func(image.Point) image.Point
 // just enough that no zone asset crosses the border line painted on the background
 // (inset ≈16 px on the 700 px canvas). Player emblems extend well past the bubble outline
 // (radius ≈36 in sprite space, plus the drop shadow), so they need more headroom.
-func newAssetFitter(zones []preview.PreviewZone, scale float64) assetFitter {
+func newAssetFitter(zones []preview.Zone, scale float64) assetFitter {
 	const borderInset = 19.0
 	const centre = canvasSize / 2
 

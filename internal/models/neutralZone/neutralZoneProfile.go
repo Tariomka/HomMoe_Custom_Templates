@@ -1,8 +1,8 @@
-package models
+package neutralZone
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/registry"
 
-type NeutralZoneProfile struct {
+type Profile struct {
 	Layout                       string
 	GuardReactionDistribution    []int
 	GuardMultiplier              float64
@@ -21,7 +21,7 @@ type NeutralZoneProfile struct {
 	ExtraBuildingsCSid           string
 }
 
-func NewNeutralZoneProfile(quality NeutralZoneQuality) NeutralZoneProfile {
+func NewNeutralZoneProfile(quality Quality) Profile {
 	switch quality {
 	case QualityHigh:
 		return newNeutralZoneProfileHighQuality()
@@ -34,10 +34,10 @@ func NewNeutralZoneProfile(quality NeutralZoneQuality) NeutralZoneProfile {
 	}
 }
 
-func newNeutralZoneProfileLowQuality() NeutralZoneProfile {
+func newNeutralZoneProfileLowQuality() Profile {
 	layoutValues := registry.GetLayoutValues()
 	constructionValues := registry.GetBuildingsConstructionSidValues()
-	return NeutralZoneProfile{
+	return Profile{
 		Layout:                       layoutValues.Sides,
 		GuardReactionDistribution:    []int{0, 10, 10, 10, 10, 0},
 		GuardMultiplier:              1.1,
@@ -57,10 +57,10 @@ func newNeutralZoneProfileLowQuality() NeutralZoneProfile {
 	}
 }
 
-func newNeutralZoneProfileMediumQuality() NeutralZoneProfile {
+func newNeutralZoneProfileMediumQuality() Profile {
 	layoutValues := registry.GetLayoutValues()
 	constructionValues := registry.GetBuildingsConstructionSidValues()
-	return NeutralZoneProfile{
+	return Profile{
 		Layout:                       layoutValues.TreasureZone,
 		GuardReactionDistribution:    []int{0, 10, 10, 10, 10, 0},
 		GuardMultiplier:              1.4,
@@ -80,10 +80,10 @@ func newNeutralZoneProfileMediumQuality() NeutralZoneProfile {
 	}
 }
 
-func newNeutralZoneProfileHighQuality() NeutralZoneProfile {
+func newNeutralZoneProfileHighQuality() Profile {
 	layoutValues := registry.GetLayoutValues()
 	constructionValues := registry.GetBuildingsConstructionSidValues()
-	return NeutralZoneProfile{
+	return Profile{
 		Layout:                    layoutValues.TreasureZone,
 		GuardReactionDistribution: []int{0, 10, 10, 20, 10, 0},
 		GuardMultiplier:           1.8,

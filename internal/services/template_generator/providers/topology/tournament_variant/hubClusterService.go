@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -24,13 +25,13 @@ func NewHubClusterService() *HubClusterService {
 func (this *HubClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	hubName := "Hub-" + playerLabel
 	spokeLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).
-			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+			SelectString(func(x neutralZone.Plan) string { return x.Label }).
 			ToSlice()...)
 	spokeConnNames := make([]string, len(spokeLabels))
 	for index, label := range spokeLabels {
@@ -48,7 +49,7 @@ func (this *HubClusterService) createZones(
 	configuration config.GeneratorConfig,
 	spokeLabels, spokeConnNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	hubName string,
 	playerIndex int) []entities.Zone {
 	var zones []entities.Zone
@@ -75,7 +76,7 @@ func (this *HubClusterService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(allNeutralZonePlans).
-						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 					connectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
@@ -86,7 +87,7 @@ func (this *HubClusterService) createZones(
 func (this *HubClusterService) createConnections(
 	spokeLabels, spokeConnNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	hubName, playerLabel string) []entities.Connection {
 	var connections []entities.Connection
 	for index, spokeLabel := range spokeLabels {

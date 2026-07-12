@@ -3,7 +3,7 @@ package zoneEditor_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,23 +12,23 @@ func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityLow, 0, false, tuning)
+	zone := connection_editor.NewDefaultNeutralZone("Z", neutralZone.QualityLow, 0, false, tuning)
 
 	// Act
-	connection_editor.ApplyNeutralZoneQuality(&zone, models.QualityHigh, 2, tuning)
+	connection_editor.ApplyNeutralZoneQuality(&zone, neutralZone.QualityHigh, 2, tuning)
 
 	// Assert
-	assert.Equal(t, models.QualityHigh, connection_editor.QualityOfZone(zone))
+	assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone))
 }
 
 func TestWhenTwoCastlesAreRequested_RebuildsTwoCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityLow, 0, false, tuning)
+	zone := connection_editor.NewDefaultNeutralZone("Z", neutralZone.QualityLow, 0, false, tuning)
 
 	// Act
-	connection_editor.ApplyNeutralZoneQuality(&zone, models.QualityHigh, 2, tuning)
+	connection_editor.ApplyNeutralZoneQuality(&zone, neutralZone.QualityHigh, 2, tuning)
 
 	// Assert
 	assert.Equal(t, 2, connection_editor.CountZoneCastles(zone))
@@ -41,10 +41,10 @@ func TestWhenCastlesAreAddedToConnectorZone_RegeneratesCastleRoads(t *testing.T)
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityMedium, 0, true, tuning)
+	zone := connection_editor.NewDefaultNeutralZone("Z", neutralZone.QualityMedium, 0, true, tuning)
 
 	// Act
-	connection_editor.ApplyNeutralZoneQuality(&zone, models.QualityHigh, 3, tuning)
+	connection_editor.ApplyNeutralZoneQuality(&zone, neutralZone.QualityHigh, 3, tuning)
 
 	// Assert
 	assert.Equal(t, []string{"1", "2"}, castleRoadTargets(zone),
@@ -56,10 +56,10 @@ func TestWhenCastleCountShrinksToOne_RemovesStaleCastleRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewDefaultNeutralZone("Z", models.QualityHigh, 3, true, tuning)
+	zone := connection_editor.NewDefaultNeutralZone("Z", neutralZone.QualityHigh, 3, true, tuning)
 
 	// Act
-	connection_editor.ApplyNeutralZoneQuality(&zone, models.QualityHigh, 1, tuning)
+	connection_editor.ApplyNeutralZoneQuality(&zone, neutralZone.QualityHigh, 1, tuning)
 
 	// Assert
 	assert.Empty(t, castleRoadTargets(zone),

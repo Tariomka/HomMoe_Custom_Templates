@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 type Position = data.Vec2[float64]
@@ -12,7 +13,7 @@ type ConnectionIndexes = data.Vec2[int]
 
 type Positions []Position
 
-func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZonePlans NeutralZonePlans) Positions {
+func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZonePlans neutralZone.Plans) Positions {
 	count := len(orderedLabels)
 	if count == 0 {
 		return nil

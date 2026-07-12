@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
@@ -22,7 +23,7 @@ func NewMandatoryContentProvider() *MandatoryContentProvider {
 func (this *MandatoryContentProvider) CreateContents(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) []entities.MandatoryContent {
+	neutralZones neutralZone.Plans) []entities.MandatoryContent {
 	var groups []entities.MandatoryContent
 	footholdCount := 0
 	if configuration.SpawnRemoteFootholds {
@@ -37,22 +38,22 @@ func (this *MandatoryContentProvider) CreateContents(
 				configuration.ZoneConfiguration.PlayerZoneCastles),
 		})
 	}
-	for _, neutralZone := range neutralZones {
+	for _, zone := range neutralZones {
 		var content []entities.MandatoryContentItem
-		switch neutralZone.Quality {
-		case models.QualityLow:
+		switch zone.Quality {
+		case neutralZone.QualityLow:
 			content = cloneContentItems(configuration.LowNeutralMandatoryContent)
-		case models.QualityMedium:
+		case neutralZone.QualityMedium:
 			content = cloneContentItems(configuration.MediumNeutralMandatoryContent)
-		case models.QualityHigh:
+		case neutralZone.QualityHigh:
 			content = cloneContentItems(configuration.HighNeutralMandatoryContent)
 		}
-		if neutralZone.CastleCount == 0 {
+		if zone.CastleCount == 0 {
 			content = stripNearCastleRules(content)
 		}
 		groups = append(groups, entities.MandatoryContent{
-			Name:    "mandatory_content_neutral_" + neutralZone.Label,
-			Content: this.createContentItemsWithFoothold(content, footholdCount, neutralZone.CastleCount),
+			Name:    "mandatory_content_neutral_" + zone.Label,
+			Content: this.createContentItemsWithFoothold(content, footholdCount, zone.CastleCount),
 		})
 	}
 	if hub, ok := this.hubContentGroup(configuration); ok {
@@ -90,7 +91,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			})
 		case strings.HasPrefix(zone.Name, "Neutral-"):
 			castleCount := countCityMainObjects(zone)
-			content := cloneContentItems(neutralRowsForQuality(configuration, detectZoneQuality(zone)))
+			content := cloneContentItems(neutralRowsForQuality(configuration, neutralZone.GetQualityFrom(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}
@@ -255,34 +256,17 @@ func cloneContentItems(items []entities.MandatoryContentItem) []entities.Mandato
 // neutral zone's quality tier.
 func neutralRowsForQuality(
 	configuration config.GeneratorConfig,
-	quality models.NeutralZoneQuality) []entities.MandatoryContentItem {
+	quality neutralZone.Quality) []entities.MandatoryContentItem {
 	switch quality {
-	case models.QualityLow:
+	case neutralZone.QualityLow:
 		return configuration.LowNeutralMandatoryContent
-	case models.QualityHigh:
+	case neutralZone.QualityHigh:
 		return configuration.HighNeutralMandatoryContent
-	case models.QualityMedium:
+	case neutralZone.QualityMedium:
 		fallthrough
 	default:
 		return configuration.MediumNeutralMandatoryContent
 	}
-}
-
-// detectZoneQuality infers a neutral zone's quality tier from its guarded
-// content pool, mirroring connection_editor.QualityOfZone so manual re-tiering
-// in the zone editor is reflected when rebuilding mandatory content.
-func detectZoneQuality(zone entities.Zone) models.NeutralZoneQuality {
-	pool := ""
-	if len(zone.GuardedContentPool) > 0 {
-		pool = zone.GuardedContentPool[0]
-	}
-	if strings.Contains(pool, "_t4_") || strings.Contains(pool, "_t5_") {
-		return models.QualityHigh
-	}
-	if strings.Contains(pool, "_t1_") || strings.Contains(pool, "_t2_") {
-		return models.QualityLow
-	}
-	return models.QualityMedium
 }
 
 // countCityMainObjects returns the number of City main objects (castles) in a
