@@ -175,7 +175,7 @@ if connNameSet[bridgeName] {
 
 This is also semantically correct: an existing bridge *does* connect the components.
 
-### 1.5 🟡 Unknown victory condition silently coerced to first entry
+### 1.5 ✅ FIXED 🟡 Unknown victory condition silently coerced to first entry
 
 [victoryConditions.go](../app/gui/constants/victoryConditions.go#L50):
 
