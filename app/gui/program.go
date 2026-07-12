@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"gioui.org/app"
+	"gioui.org/io/system"
 	"gioui.org/op"
 	"gioui.org/unit"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
@@ -22,6 +23,7 @@ func StartApplication() {
 func eventLoop() {
 	window := getAndConfigureWindow()
 	windowLayout := editor.NewWindow()
+	windowLayout.SetOnExit(func() { window.Perform(system.ActionClose) })
 	theme := themes.NewTheme()
 
 	var ops op.Ops

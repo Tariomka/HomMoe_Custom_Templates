@@ -39,6 +39,10 @@ func NewWindow() *Window {
 	return &window
 }
 
+// SetOnExit installs the callback the editor uses to close the application
+// window when the user exits (see drivers.State.Exit).
+func (this *Window) SetOnExit(onExit func()) { this.state.SetOnExit(onExit) }
+
 func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	this.save()
 	if redrawAt, scheduleRedraw := this.state.AutoRegenerate(gtx.Now); scheduleRedraw {

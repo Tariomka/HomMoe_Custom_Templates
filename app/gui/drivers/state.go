@@ -45,6 +45,9 @@ type State struct {
 	statusErr    bool
 
 	confirmExit bool
+	// onExit closes the application window (injected via SetOnExit) so exit
+	// flows through the normal Gio app.DestroyEvent path.
+	onExit func()
 
 	applyNextStateAt time.Time
 
@@ -158,17 +161,19 @@ func (this *State) SaveAs(templateName string) {
 	}))
 }
 
+// SetOnExit installs the callback Exit uses to close the application window.
+func (this *State) SetOnExit(onExit func()) { this.onExit = onExit }
+
 func (this *State) Exit() {
-	// Give State an onExit func() callback (injected from program.go).
-	// In program.go, pass func() { window.Perform(system.ActionClose) } so the normal app.DestroyEvent path runs.
 	if this.unsaved && !this.confirmExit {
 		this.SetStatus("Unsaved changes exist - save first or press Exit again.", true)
-		this.confirmExit = true // TODO: reset if not selected right after
+		this.confirmExit = true
 		return
 	}
-	// this.onExit()
 
-	os.Exit(0)
+	if this.onExit != nil {
+		this.onExit()
+	}
 }
 
 func (this *State) Generate() { this.handleGenerateTemplate(false) }
@@ -200,6 +205,8 @@ func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
 		this.unsaved = true
+		// New edits invalidate a pending exit confirmation.
+		this.confirmExit = false
 	}
 }
 
@@ -268,6 +275,7 @@ func (this *State) handleSaveState(path string) {
 	}
 
 	this.unsaved = false
+	this.confirmExit = false
 	this.SetStatus("Saved "+path, false)
 }
 

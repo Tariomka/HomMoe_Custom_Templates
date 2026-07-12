@@ -54,7 +54,7 @@ artifacts (§7.6), CI gaps (§7).
 
 ## 1. Bugs & correctness
 
-### 1.1 🔴 Road mutations silently lost in `TopologyBase` (value-copy bug)
+### 1.1 ✅ FIXED 🔴 Road mutations silently lost in `TopologyBase` (value-copy bug)
 
 [topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go#L323-L331)
 (`CreateMissingPlayerConnections`) and
@@ -123,7 +123,7 @@ Two defects:
    `Save`/`SaveAs` success paths.
 3. Delete the commented line and the `os` import if it becomes unused.
 
-### 1.3 🟠 `generalPanel` gameMode not restored on load (author-confirmed bug)
+### 1.3 ✅ FIXED 🟠 `generalPanel` gameMode not restored on load (author-confirmed bug)
 
 [generalPanel.go](../app/gui/panels/generalPanel.go#L117):
 
@@ -147,7 +147,7 @@ this.gameMode.SetSelectedIndex(gameModeIndex)
 Add an integration-suite check (load fixture with non-default gameMode → panel reflects
 it), since panels are Gio-gated per AGENTS.md §4.6.
 
-### 1.4 🟠 Potential infinite loop in `CreateMissingConnections` on duplicate bridge name
+### 1.4 ✅ FIXED 🟠 Potential infinite loop in `CreateMissingConnections` on duplicate bridge name
 
 [topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go#L395-L399):
 
@@ -582,7 +582,7 @@ needs a test folder), `resolveGlob` via `t.TempDir()`, and the VDF path assembly
 `getBasePath` at minimum should be covered now; no code change needed for it beyond the
 §1.7 error-shape fix.
 
-### 6.3 🟡 Road-mutation regression tests
+### 6.3 ✅ FIXED 🟡 Road-mutation regression tests
 
 After fixing §1.1, add assertions that zones passed to
 `CreateMissingConnections`/`CreateMissingPlayerConnections` gain the bridge/fallback
