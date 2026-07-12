@@ -21,7 +21,7 @@ const (
 	levelInfo  = slog.LevelInfo
 )
 
-// recordingHandler is a slog.Handler that captures every record it receives.
+// recordingHandler is a [slog.Handler] that captures every record it receives.
 type recordingHandler struct {
 	level   slog.Level
 	records []slog.Record
@@ -76,6 +76,7 @@ func attrValue(record slog.Record, key string) string {
 }
 
 func TestWhenOpsContainOffsetButton_LogsAbsoluteCenter(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	offset := image.Pt(gofakeit.Number(1, 500), gofakeit.Number(1, 500))
 	size := image.Pt(gofakeit.Number(10, 200), gofakeit.Number(10, 200))
@@ -94,6 +95,7 @@ func TestWhenOpsContainOffsetButton_LogsAbsoluteCenter(t *testing.T) {
 }
 
 func TestWhenOpsContainLabeledButton_LogsLabel(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	label := gofakeit.Word()
 	handler := newRecordingHandler(levelDebug)
@@ -110,6 +112,7 @@ func TestWhenOpsContainLabeledButton_LogsLabel(t *testing.T) {
 }
 
 func TestWhenOpsContainMultipleButtons_LogsEachButton(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := newRecordingHandler(levelDebug)
 	logger := utils.NewButtonPositionLogger(newSlogLogger(handler))
@@ -125,6 +128,7 @@ func TestWhenOpsContainMultipleButtons_LogsEachButton(t *testing.T) {
 }
 
 func TestWhenDebugLoggingIsDisabled_LogsNothing(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := newRecordingHandler(levelInfo)
 	logger := utils.NewButtonPositionLogger(newSlogLogger(handler))
@@ -139,6 +143,7 @@ func TestWhenDebugLoggingIsDisabled_LogsNothing(t *testing.T) {
 }
 
 func TestWhenOpsContainNoButtons_LogsNothing(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := newRecordingHandler(levelDebug)
 	logger := utils.NewButtonPositionLogger(newSlogLogger(handler))
@@ -154,6 +159,7 @@ func TestWhenOpsContainNoButtons_LogsNothing(t *testing.T) {
 }
 
 func TestWhenButtonHasNoLabel_SkipsButton(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := newRecordingHandler(levelDebug)
 	logger := utils.NewButtonPositionLogger(newSlogLogger(handler))

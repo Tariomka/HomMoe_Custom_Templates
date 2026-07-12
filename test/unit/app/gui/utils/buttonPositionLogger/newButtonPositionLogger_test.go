@@ -8,6 +8,7 @@ import (
 )
 
 func TestWhenCreated_ReturnsNonNilLogger(t *testing.T) {
+	t.Parallel()
 	// Arrange
 	handler := newRecordingHandler(levelDebug)
 
