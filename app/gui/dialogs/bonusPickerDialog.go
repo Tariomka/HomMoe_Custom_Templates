@@ -254,26 +254,30 @@ func (this *BonusPickerDialog) handleClicks(gtx layout.Context) bool {
 		}
 	}
 
-	if this.addBtn.Clicked(gtx) {
-		if entries, ok := this.buildEntries(); ok {
-			fresh := make([]config.BonusEntry, 0, len(entries))
-			for _, entry := range entries {
-				if !this.existingKeys[entry.GetHash()] {
-					fresh = append(fresh, entry)
-				}
-			}
-			if len(fresh) == 0 {
-				this.errorText = "That bonus already exists."
-			} else {
-				if this.onApply != nil {
-					this.onApply(fresh)
-				}
-				return true
-			}
-		}
+	if !this.addBtn.Clicked(gtx) {
+		return false
 	}
 
-	return false
+	entries, ok := this.buildEntries()
+	if !ok {
+		return false
+	}
+
+	fresh := make([]config.BonusEntry, 0, len(entries))
+	for _, entry := range entries {
+		if !this.existingKeys[entry.GetHash()] {
+			fresh = append(fresh, entry)
+		}
+	}
+	if len(fresh) == 0 {
+		this.errorText = "That bonus already exists."
+		return false
+	}
+
+	if this.onApply != nil {
+		this.onApply(fresh)
+	}
+	return true
 }
 
 // handleSubPickers reacts to the "Pick spell" / "Pick item" buttons by pushing
