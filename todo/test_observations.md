@@ -5,6 +5,15 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
 
 ## Gio-UI-heavy code (integration-suite territory, no unit tests)
 
+- app/gui/widgets/buttonWidget.go - all button constructors (and the private
+  `addButtonSemantics` helper added 2026-07-12 for button-position debug
+  logging) need a `layout.Context` + `material.Theme` text shaper to lay out;
+  covered indirectly by the integration/performance suites that render the
+  full editor window. The semantic-op replay path itself IS unit-tested via
+  test/unit/app/gui/utils/buttonPositionLogger/ (headless ops that mirror
+  `addButtonSemantics`), and was verified end-to-end against a real
+  `NewButtonWidget` layout during development.
+
 - app/gui/dialogs/fileExplorerDialog.go - `handleConfirm` / `confirmOverwrite` /
   `confirmSelection` need `layout.Context` + `widget.Clickable` click routing;
   the integration suite currently has NO file-explorer scenario (open/save/

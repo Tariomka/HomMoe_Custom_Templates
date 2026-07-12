@@ -333,7 +333,7 @@ commented-out `MinNeutralZonesBetweenPlayers` row at
 into config — either re-enable the row or delete the comment and document why the option
 is hidden (godox flags it).
 
-### 2.5 🟠 `CreateTopologyVariant` — 29 lines duplicated four times (dupl ×4)
+### 2.5 ✅ FIXED 🟠 `CreateTopologyVariant` — 29 lines duplicated four times (dupl ×4)
 
 The linter confirms [crossTopology.go](../internal/services/template_generator/providers/topology/crossTopology.go#L27),
 [fractalTopology.go](../internal/services/template_generator/providers/topology/fractalTopology.go#L31),
@@ -393,7 +393,7 @@ tests. Then extend the depguard rule to `test/unit/internal/**` denying `app/**`
 
 ## 3. Duplicate code
 
-### 3.1 🟠 Topology `CreateTopologyVariant` ×4 — see §2.5 (dupl-confirmed, one fix).
+### 3.1 ✅ FIXED 🟠 Topology `CreateTopologyVariant` ×4 — see §2.5 (dupl-confirmed, one fix).
 
 ### 3.2 🟡 Labeled slider/checkbox row vocabulary across panels
 

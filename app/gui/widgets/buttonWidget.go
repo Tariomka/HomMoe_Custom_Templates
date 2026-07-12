@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"gioui.org/font"
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -41,6 +42,7 @@ func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickab
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
+			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 			return buttonDimensions
 		})
 	}
@@ -64,17 +66,18 @@ func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.C
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := newButtonInset().Layout(gtx, NewLabelWidget(theme, label, textColor))
+			buttonDimensions := newButtonInset().Layout(gtx, NewLabelWidget(theme, label, textColor))
 			call := macro.Stop()
 			radius := gtx.Dp(constants.DefaultRoundness)
-			rect := image.Rectangle{Max: dims.Size}
+			rect := image.Rectangle{Max: buttonDimensions.Size}
 			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
 				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
-			return dims
+			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			return buttonDimensions
 		})
 	}
 }
@@ -99,18 +102,19 @@ func NewSegmentButtonWidget(theme *material.Theme, label string, button *widget.
 			return layout.UniformInset(unit.Dp(2)).Layout(gtx,
 				func(gtx layout.Context) layout.Dimensions {
 					macro := op.Record(gtx.Ops)
-					dims := layout.UniformInset(constants.DefaultPaddingSmall).
+					buttonDimensions := layout.UniformInset(constants.DefaultPaddingSmall).
 						Layout(gtx, NewLabelWidget(theme, label, textColor))
 					call := macro.Stop()
 					radius := gtx.Dp(constants.DefaultRoundness)
-					rect := image.Rectangle{Max: dims.Size}
+					rect := image.Rectangle{Max: buttonDimensions.Size}
 					paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 					paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
 						Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 						Width: float32(gtx.Dp(1)),
 					}.Op())
 					call.Add(gtx.Ops)
-					return dims
+					addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+					return buttonDimensions
 				})
 		})
 	}
@@ -138,18 +142,19 @@ func NewDropdownRowButtonWidget(
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.
+			buttonDimensions := layout.Inset{Top: unit.Dp(5), Bottom: unit.Dp(5), Left: unit.Dp(8), Right: unit.Dp(8)}.
 				Layout(gtx, NewLabelBuilder(theme).WithSizeDefault().
 					WithText(label).WithColor(textColor).WithFont(textFont).WithMaxLines(1).Build)
 			call := macro.Stop()
 			radius := gtx.Dp(constants.DefaultRoundness)
-			rect := image.Rectangle{Max: dims.Size}
+			rect := image.Rectangle{Max: buttonDimensions.Size}
 			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			call.Add(gtx.Ops)
-			if dims.Size.X < gtx.Constraints.Min.X {
-				dims.Size.X = gtx.Constraints.Min.X
+			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			if buttonDimensions.Size.X < gtx.Constraints.Min.X {
+				buttonDimensions.Size.X = gtx.Constraints.Min.X
 			}
-			return dims
+			return buttonDimensions
 		})
 	}
 }
@@ -172,17 +177,18 @@ func NewBrightButtonWidget(theme *material.Theme, label string, button *widget.C
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := newButtonInset().Layout(gtx, NewStyledLabelWidget(theme, label, textColor, buttonStyle))
+			buttonDimensions := newButtonInset().Layout(gtx, NewStyledLabelWidget(theme, label, textColor, buttonStyle))
 			call := macro.Stop()
 			radius := gtx.Dp(constants.DefaultRoundness)
-			rect := image.Rectangle{Max: dims.Size}
+			rect := image.Rectangle{Max: buttonDimensions.Size}
 			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
 				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
-			return dims
+			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			return buttonDimensions
 		})
 	}
 }
@@ -207,7 +213,7 @@ func NewBrightButtonLargeWidget(
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
-			dims := layout.UniformInset(constants.DefaultPaddingLarge).
+			buttonDimensions := layout.UniformInset(constants.DefaultPaddingLarge).
 				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					label := material.Body2(theme, label)
 					label.Font = font.Font{Weight: font.SemiBold}
@@ -216,14 +222,15 @@ func NewBrightButtonLargeWidget(
 				})
 			call := macro.Stop()
 			radius := gtx.Dp(constants.DefaultRoundnessLarge)
-			rect := image.Rectangle{Max: dims.Size}
+			rect := image.Rectangle{Max: buttonDimensions.Size}
 			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
 				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
-			return dims
+			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			return buttonDimensions
 		})
 	}
 }
@@ -235,4 +242,16 @@ func newButtonInset() layout.Inset {
 		Left:   constants.DefaultPaddingLarge,
 		Right:  constants.DefaultPaddingLarge,
 	}
+}
+
+// addButtonSemantics records the button class and label in a nested, handler-free
+// clip area sized to the button. The input router keeps semantics of such areas
+// intact (areas with an input handler lose them unless a gesture filter is
+// registered), which lets utils.ButtonPositionLogger resolve every button's
+// absolute window bounds from a replayed frame.
+func addButtonSemantics(operations *op.Ops, label string, size image.Point) {
+	area := clip.Rect(image.Rectangle{Max: size}).Push(operations)
+	semantic.Button.Add(operations)
+	semantic.LabelOp(label).Add(operations)
+	area.Pop()
 }

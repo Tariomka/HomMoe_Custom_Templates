@@ -12,6 +12,7 @@ import (
 	"gioui.org/unit"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 )
 
 func StartApplication() {
@@ -25,6 +26,7 @@ func eventLoop() {
 	windowLayout := editor.NewWindow()
 	windowLayout.SetOnExit(func() { window.Perform(system.ActionClose) })
 	theme := themes.NewTheme()
+	positionLogger := utils.NewButtonPositionLogger(slog.Default())
 
 	var ops op.Ops
 	for {
@@ -39,6 +41,7 @@ func eventLoop() {
 			gtx := app.NewContext(&ops, event)
 			windowLayout.Layout(gtx, theme)
 			event.Frame(gtx.Ops)
+			positionLogger.LogButtonPositions(gtx.Ops)
 		}
 	}
 }
