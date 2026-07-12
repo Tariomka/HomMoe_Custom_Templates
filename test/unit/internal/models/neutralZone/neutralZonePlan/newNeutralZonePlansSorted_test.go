@@ -3,30 +3,30 @@ package neutralZonePlan_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenPlansAreUnordered_SortsByQualityThenCastlesThenLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "B", Quality: models.QualityLow, CastleCount: 0},
-		{Label: "A", Quality: models.QualityLow, CastleCount: 0},
-		{Label: "C", Quality: models.QualityHigh, CastleCount: 1},
-		{Label: "D", Quality: models.QualityHigh, CastleCount: 2},
-		{Label: "E", Quality: models.QualityMedium, CastleCount: 0},
+	plans := neutralZone.Plans{
+		{Label: "B", Quality: neutralZone.QualityLow, CastleCount: 0},
+		{Label: "A", Quality: neutralZone.QualityLow, CastleCount: 0},
+		{Label: "C", Quality: neutralZone.QualityHigh, CastleCount: 1},
+		{Label: "D", Quality: neutralZone.QualityHigh, CastleCount: 2},
+		{Label: "E", Quality: neutralZone.QualityMedium, CastleCount: 0},
 	}
-	expected := models.NeutralZonePlans{
-		{Label: "D", Quality: models.QualityHigh, CastleCount: 2},
-		{Label: "C", Quality: models.QualityHigh, CastleCount: 1},
-		{Label: "E", Quality: models.QualityMedium, CastleCount: 0},
-		{Label: "A", Quality: models.QualityLow, CastleCount: 0},
-		{Label: "B", Quality: models.QualityLow, CastleCount: 0},
+	expected := neutralZone.Plans{
+		{Label: "D", Quality: neutralZone.QualityHigh, CastleCount: 2},
+		{Label: "C", Quality: neutralZone.QualityHigh, CastleCount: 1},
+		{Label: "E", Quality: neutralZone.QualityMedium, CastleCount: 0},
+		{Label: "A", Quality: neutralZone.QualityLow, CastleCount: 0},
+		{Label: "B", Quality: neutralZone.QualityLow, CastleCount: 0},
 	}
 
 	// Act
-	sortedPlans := models.NewNeutralZonePlansSorted(plans)
+	sortedPlans := neutralZone.NewNeutralZonePlansSorted(plans)
 
 	// Assert
 	assert.Equal(t, expected, *sortedPlans)
@@ -35,17 +35,17 @@ func TestWhenPlansAreUnordered_SortsByQualityThenCastlesThenLabel(t *testing.T) 
 func TestWhenSortedCopyIsCreated_LeavesInputSliceUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "B", Quality: models.QualityLow},
-		{Label: "A", Quality: models.QualityHigh},
+	plans := neutralZone.Plans{
+		{Label: "B", Quality: neutralZone.QualityLow},
+		{Label: "A", Quality: neutralZone.QualityHigh},
 	}
-	original := models.NeutralZonePlans{
-		{Label: "B", Quality: models.QualityLow},
-		{Label: "A", Quality: models.QualityHigh},
+	original := neutralZone.Plans{
+		{Label: "B", Quality: neutralZone.QualityLow},
+		{Label: "A", Quality: neutralZone.QualityHigh},
 	}
 
 	// Act
-	models.NewNeutralZonePlansSorted(plans)
+	neutralZone.NewNeutralZonePlansSorted(plans)
 
 	// Assert
 	assert.Equal(t, original, plans)

@@ -3,22 +3,22 @@ package neutralZonePlan_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenTwoIndexesAreSwapped_ExchangesThosePlans(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "A", Quality: models.QualityLow},
-		{Label: "B", Quality: models.QualityMedium},
-		{Label: "C", Quality: models.QualityHigh},
+	plans := neutralZone.Plans{
+		{Label: "A", Quality: neutralZone.QualityLow},
+		{Label: "B", Quality: neutralZone.QualityMedium},
+		{Label: "C", Quality: neutralZone.QualityHigh},
 	}
-	expected := models.NeutralZonePlans{
-		{Label: "C", Quality: models.QualityHigh},
-		{Label: "B", Quality: models.QualityMedium},
-		{Label: "A", Quality: models.QualityLow},
+	expected := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityHigh},
+		{Label: "B", Quality: neutralZone.QualityMedium},
+		{Label: "A", Quality: neutralZone.QualityLow},
 	}
 
 	// Act

@@ -3,7 +3,7 @@ package neutralZonePlan_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,18 +11,18 @@ func TestWhenLabelQualityVaries_MapsQualityToTier(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		subtestName  string
-		quality      models.NeutralZoneQuality
+		quality      neutralZone.Quality
 		expectedTier int
 	}{
-		{"WhenLabelHasHighQuality_ReturnsTierThree", models.QualityHigh, 3},
-		{"WhenLabelHasMediumQuality_ReturnsTierTwo", models.QualityMedium, 2},
-		{"WhenLabelHasLowQuality_ReturnsTierOne", models.QualityLow, 1},
+		{"WhenLabelHasHighQuality_ReturnsTierThree", neutralZone.QualityHigh, 3},
+		{"WhenLabelHasMediumQuality_ReturnsTierTwo", neutralZone.QualityMedium, 2},
+		{"WhenLabelHasLowQuality_ReturnsTierOne", neutralZone.QualityLow, 1},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			plans := models.NeutralZonePlans{{Label: "A", Quality: testCase.quality}}
+			plans := neutralZone.Plans{{Label: "A", Quality: testCase.quality}}
 
 			// Act
 			tier := plans.GetTier("A")
@@ -36,7 +36,7 @@ func TestWhenLabelQualityVaries_MapsQualityToTier(t *testing.T) {
 func TestWhenLabelIsNotFound_ReturnsTierOne(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{{Label: "A", Quality: models.QualityHigh}}
+	plans := neutralZone.Plans{{Label: "A", Quality: neutralZone.QualityHigh}}
 
 	// Act
 	tier := plans.GetTier("missing")

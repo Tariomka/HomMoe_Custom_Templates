@@ -3,7 +3,7 @@ package neutralZonePlan_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,9 +13,9 @@ func TestWhenMediumPlanIsAdded_AppendsPlanWithMediumQuality(t *testing.T) {
 	// Arrange
 	label := gofakeit.LetterN(2)
 	castleCount := gofakeit.Number(0, 4)
-	plans := models.NeutralZonePlans{}
-	expected := models.NeutralZonePlans{
-		{Label: label, Quality: models.QualityMedium, CastleCount: castleCount},
+	plans := neutralZone.Plans{}
+	expected := neutralZone.Plans{
+		{Label: label, Quality: neutralZone.QualityMedium, CastleCount: castleCount},
 	}
 
 	// Act

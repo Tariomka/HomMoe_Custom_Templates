@@ -3,26 +3,26 @@ package neutralZonePlan_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenPlansAreUnordered_SortsByBalanceScoreDescendingThenLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "B", Quality: models.QualityLow, CastleCount: 0},    // score 1.0
-		{Label: "A", Quality: models.QualityHigh, CastleCount: 2},   // score 3.3
-		{Label: "C", Quality: models.QualityMedium, CastleCount: 1}, // score 2.15
+	plans := neutralZone.Plans{
+		{Label: "B", Quality: neutralZone.QualityLow, CastleCount: 0},    // score 1.0
+		{Label: "A", Quality: neutralZone.QualityHigh, CastleCount: 2},   // score 3.3
+		{Label: "C", Quality: neutralZone.QualityMedium, CastleCount: 1}, // score 2.15
 	}
-	expected := models.NeutralZonePlans{
-		{Label: "A", Quality: models.QualityHigh, CastleCount: 2},
-		{Label: "C", Quality: models.QualityMedium, CastleCount: 1},
-		{Label: "B", Quality: models.QualityLow, CastleCount: 0},
+	expected := neutralZone.Plans{
+		{Label: "A", Quality: neutralZone.QualityHigh, CastleCount: 2},
+		{Label: "C", Quality: neutralZone.QualityMedium, CastleCount: 1},
+		{Label: "B", Quality: neutralZone.QualityLow, CastleCount: 0},
 	}
 
 	// Act
-	sortedPlans := models.NewNeutralZonePlansSortedByBalance(plans)
+	sortedPlans := neutralZone.NewNeutralZonePlansSortedByBalance(plans)
 
 	// Assert
 	assert.Equal(t, expected, *sortedPlans)
@@ -31,17 +31,17 @@ func TestWhenPlansAreUnordered_SortsByBalanceScoreDescendingThenLabel(t *testing
 func TestWhenBalanceScoresAreEqual_BreaksTieByLabelAscending(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	plans := models.NeutralZonePlans{
-		{Label: "Z", Quality: models.QualityMedium, CastleCount: 1},
-		{Label: "A", Quality: models.QualityMedium, CastleCount: 1},
+	plans := neutralZone.Plans{
+		{Label: "Z", Quality: neutralZone.QualityMedium, CastleCount: 1},
+		{Label: "A", Quality: neutralZone.QualityMedium, CastleCount: 1},
 	}
-	expected := models.NeutralZonePlans{
-		{Label: "A", Quality: models.QualityMedium, CastleCount: 1},
-		{Label: "Z", Quality: models.QualityMedium, CastleCount: 1},
+	expected := neutralZone.Plans{
+		{Label: "A", Quality: neutralZone.QualityMedium, CastleCount: 1},
+		{Label: "Z", Quality: neutralZone.QualityMedium, CastleCount: 1},
 	}
 
 	// Act
-	sortedPlans := models.NewNeutralZonePlansSortedByBalance(plans)
+	sortedPlans := neutralZone.NewNeutralZonePlansSortedByBalance(plans)
 
 	// Assert
 	assert.Equal(t, expected, *sortedPlans)
