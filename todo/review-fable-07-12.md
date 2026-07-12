@@ -308,7 +308,7 @@ every State-level test would drag in the full generator + preview stack (this is
    (Generate/AutoRegenerate/handleGenerateTemplate/applyGeneratedTemplate),
    `stateManualEdits.go` (ApplyEditedZones/reapplyManualEdits).
 
-### 2.3 🟠 `zoneEditorDialog.go` — 1,148 LOC god file
+### 2.3 ✅ FIXED 🟠 `zoneEditorDialog.go` — 1,148 LOC god file
 
 [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go) mixes canvas rendering,
 pointer/hit-testing, geometry recomputation, snapping, and two property-panel forms.
@@ -320,6 +320,16 @@ pointer/hit-testing, geometry recomputation, snapping, and two property-panel fo
 `zoneEditorZoneProps.go` (~220). While moving `recomputeGeometry`, extract the
 group-classification loop into `classifyZoneGroups()` to clear the funlen finding
 honestly (no `//nolint`).
+
+> **Resolution (2026-07-12, commit `1ed0d69`):** the file had grown to 1,372 LOC
+> (post-review snap-toggle code), so the split became five files (user-approved
+> deviation): `zoneEditorDialog.go` (532 — struct/ctor/Body/chrome/model helpers),
+> `zoneEditorCanvas.go` (478), `zoneEditorSnap.go` (156 — snap tunables + machinery),
+> `zoneEditorConnectionProps.go` (173), `zoneEditorZoneProps.go` (105). Bodies moved
+> verbatim. The extracted helper is named `groupConnectionsByPair()` (+ private
+> `connPairKey`) — it groups connections, not zones. funlen cleared without nolint
+> (95 → 94 lint issues). No new unit tests (Gio-UI-bound, §4.6); registered in
+> [test_observations.md](test_observations.md). Coverage steady at 64.4%.
 
 ### 2.4 🟡 `layoutPanel.go` (547 LOC) and `previewPanel.getPreviewCanvasWidget` (71-line func)
 

@@ -141,68 +141,18 @@ func (this *PreviewPanel) getStatusMessageWidget(theme *material.Theme) layout.W
 	}
 }
 
-// layoutPreviewCanvas draws the preview area. Always fills the available
+// getPreviewCanvasWidget draws the preview area. Always fills the available
 // space (so the surrounding panel keeps a consistent size) and renders an
 // informational message inside the canvas when there is no template or no
 // computed layout yet.
 func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.Widget {
-	getCanvasSizes := func(gtx layout.Context) (outerCanvasSize, innerCanvasSize image.Point) {
-		outerCanvasSize = gtx.Constraints.Max
-		maxSize := max(min(outerCanvasSize.X, outerCanvasSize.Y), 80)
-		innerCanvasSize = image.Pt(maxSize, maxSize)
-		return outerCanvasSize, innerCanvasSize
-	}
-
-	renderCanvas := func(gtx layout.Context, canvasSize image.Point) {
-		paint.FillShape(gtx.Ops, themes.ColorPreviewBg, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
-		paint.FillShape(gtx.Ops, themes.ColorPreviewFrame, clip.Stroke{
-			Path: clip.UniformRRect(
-				image.Rect(0, 0, canvasSize.X, canvasSize.Y),
-				gtx.Dp(constants.DefaultRoundnessLarge)).Path(gtx.Ops),
-			Width: 2,
-		}.Op())
-	}
-
-	renderLegend := func(gtx layout.Context, canvasSize image.Point) {
-		legendMacro := op.Record(gtx.Ops)
-		contextCopy := gtx
-		contextCopy.Constraints.Min = image.Point{}
-		contextCopy.Constraints.Max.X = canvasSize.X
-		legendWidget := this.getLegendWidget(theme)(contextCopy)
-		legendCall := legendMacro.Stop()
-		legendOffset := op.Offset(image.Point{
-			X: (canvasSize.X - legendWidget.Size.X) / 2,
-			Y: canvasSize.Y + gtx.Dp(constants.DefaultPaddingSmall),
-		}).Push(gtx.Ops)
-		legendCall.Add(gtx.Ops)
-		legendOffset.Pop()
-	}
-
-	renderTemplate := func(gtx layout.Context, previewLayout preview.Layout) {
-		// Connections beneath zones.
-		for _, connection := range previewLayout.Connections {
-			utils.DrawConnection(gtx, connection, previewLayout.ZoneRadius)
-		}
-		// Non-spawn zones first, then spawn zones on top.
-		for _, zone := range previewLayout.Zones {
-			if !zone.IsPlayer {
-				utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
-			}
-		}
-		for _, zone := range previewLayout.Zones {
-			if zone.IsPlayer {
-				utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
-			}
-		}
-	}
-
 	return func(gtx layout.Context) layout.Dimensions {
-		outerCanvasSize, canvasSize := getCanvasSizes(gtx)
+		outerCanvasSize, canvasSize := getPreviewCanvasSizes(gtx)
 
 		defer op.Offset(image.Pt((gtx.Constraints.Max.X-canvasSize.X)/2, (gtx.Constraints.Max.Y-canvasSize.Y)/2)).
 			Push(gtx.Ops).Pop() // Center canvas
-		renderCanvas(gtx, canvasSize)
-		renderLegend(gtx, canvasSize)
+		renderPreviewCanvas(gtx, canvasSize)
+		this.renderPreviewLegend(gtx, theme, canvasSize)
 
 		template := this.state.GetLastTemplate()
 		if template == nil {
@@ -216,9 +166,63 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)
 		}
 
-		renderTemplate(gtx, previewLayout)
+		renderPreviewTemplate(gtx, theme, previewLayout)
 
 		return layout.Dimensions{Size: outerCanvasSize}
+	}
+}
+
+// getPreviewCanvasSizes returns the full available area and the centred square
+// canvas (clamped to a small minimum) that the preview is drawn into.
+func getPreviewCanvasSizes(gtx layout.Context) (outerCanvasSize, innerCanvasSize image.Point) {
+	outerCanvasSize = gtx.Constraints.Max
+	maxSize := max(min(outerCanvasSize.X, outerCanvasSize.Y), 80)
+	innerCanvasSize = image.Pt(maxSize, maxSize)
+	return outerCanvasSize, innerCanvasSize
+}
+
+// renderPreviewCanvas paints the canvas backdrop and its rounded frame.
+func renderPreviewCanvas(gtx layout.Context, canvasSize image.Point) {
+	paint.FillShape(gtx.Ops, themes.ColorPreviewBg, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
+	paint.FillShape(gtx.Ops, themes.ColorPreviewFrame, clip.Stroke{
+		Path: clip.UniformRRect(
+			image.Rect(0, 0, canvasSize.X, canvasSize.Y),
+			gtx.Dp(constants.DefaultRoundnessLarge)).Path(gtx.Ops),
+		Width: 2,
+	}.Op())
+}
+
+// renderPreviewLegend draws the colour legend centred underneath the canvas.
+func (this *PreviewPanel) renderPreviewLegend(gtx layout.Context, theme *material.Theme, canvasSize image.Point) {
+	legendMacro := op.Record(gtx.Ops)
+	contextCopy := gtx
+	contextCopy.Constraints.Min = image.Point{}
+	contextCopy.Constraints.Max.X = canvasSize.X
+	legendWidget := this.getLegendWidget(theme)(contextCopy)
+	legendCall := legendMacro.Stop()
+	legendOffset := op.Offset(image.Point{
+		X: (canvasSize.X - legendWidget.Size.X) / 2,
+		Y: canvasSize.Y + gtx.Dp(constants.DefaultPaddingSmall),
+	}).Push(gtx.Ops)
+	legendCall.Add(gtx.Ops)
+	legendOffset.Pop()
+}
+
+// renderPreviewTemplate draws the computed preview layout: connections beneath
+// zones, non-spawn zones first, then spawn zones on top.
+func renderPreviewTemplate(gtx layout.Context, theme *material.Theme, previewLayout preview.Layout) {
+	for _, connection := range previewLayout.Connections {
+		utils.DrawConnection(gtx, connection, previewLayout.ZoneRadius)
+	}
+	for _, zone := range previewLayout.Zones {
+		if !zone.IsPlayer {
+			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
+		}
+	}
+	for _, zone := range previewLayout.Zones {
+		if zone.IsPlayer {
+			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
+		}
 	}
 }
 

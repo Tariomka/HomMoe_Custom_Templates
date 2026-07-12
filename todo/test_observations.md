@@ -33,6 +33,17 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   dialog interaction coverage would need the test/performance AppRunner
   synthetic-click pattern (future work — no integration scenario exists yet).
 
+- app/gui/panels/layoutPanel.go + layoutPanelTopology.go + layoutPanelZones.go
+  and previewPanel.go - Layout/Preview panels (layoutPanel method-split by
+  column in review item §2.4, 2026-07-12; previewPanel's canvas closures
+  promoted to private funcs/methods the same day). Pure Gio rendering:
+  section/widget builders need `layout.Context` + text shaper, click handlers
+  need `widget.Clickable` routing, and `LoadFromState`/`SaveToState` round-trips
+  are exercised end-to-end by the integration suite (window save/load
+  scenarios drive the tabs' SaveToState/LoadFromState closures). The state
+  values they marshal are validated by the unit-tested
+  internal/validators/editorStateValidator.
+
 ## app/gui/drivers.State (partially unit-tested since review item §2.2)
 
 Unit tests use `NewUIStateWithHandler` + `test_helpers.TemplateHandlerMock`.
