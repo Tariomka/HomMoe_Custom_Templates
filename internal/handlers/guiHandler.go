@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log/slog"
+	"slices"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
@@ -60,6 +61,7 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	}
 
 	newTemplate := *templateDto.Template
+	newTemplate.Variants = slices.Clone(templateDto.Template.Variants)
 	newTemplate.Variants[0].Zones = templateDto.Zones
 	newTemplate.Variants[0].Connections = templateDto.Connections
 

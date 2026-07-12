@@ -165,6 +165,48 @@ func TestWhenConfigIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
 	assert.Nil(t, loadDto.Template.MandatoryContent)
 }
 
+func TestWhenUpdateReplacesZones_CallersTemplateZonesAreNotMutated(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	template := generateDefaultTemplate(t, handler)
+	originalZones := template.Variants[0].Zones
+	require.NotEmpty(t, originalZones)
+	templateDto := dtos.TemplateUpdateDto{
+		Template:    template,
+		Zones:       slices.Clone(originalZones)[:1],
+		Connections: nil,
+	}
+
+	// Act
+	_, err := handler.UpdateTemplate(templateDto)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, template.Variants[0].Zones, len(originalZones))
+}
+
+func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	template := generateDefaultTemplate(t, handler)
+	originalConnections := template.Variants[0].Connections
+	require.NotEmpty(t, originalConnections)
+	templateDto := dtos.TemplateUpdateDto{
+		Template:    template,
+		Zones:       template.Variants[0].Zones,
+		Connections: nil,
+	}
+
+	// Act
+	_, err := handler.UpdateTemplate(templateDto)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, template.Variants[0].Connections, len(originalConnections))
+}
+
 // generateDefaultTemplate produces a real generated template from the default
 // editor state so update tests operate on realistic zones and connections.
 func generateDefaultTemplate(t *testing.T, handler *handlers.GUIHandler) *entities.RmgTemplate {
