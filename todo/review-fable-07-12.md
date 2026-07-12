@@ -254,7 +254,7 @@ three lines, or clamp with `min(value, 255)` if you prefer belt-and-braces.
 
 ## 2. Architecture
 
-### 2.1 🟠 Validation still does not exist anywhere
+### 2.1 ✅ FIXED 🟠 Validation still does not exist anywhere
 
 Three artifacts point at the same hole:
 - [generatorConfigValidator.go](../internal/validators/generatorConfigValidator.go) — the
