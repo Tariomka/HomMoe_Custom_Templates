@@ -331,7 +331,7 @@ honestly (no `//nolint`).
 > (95 → 94 lint issues). No new unit tests (Gio-UI-bound, §4.6); registered in
 > [test_observations.md](test_observations.md). Coverage steady at 64.4%.
 
-### 2.4 🟡 `layoutPanel.go` (547 LOC) and `previewPanel.getPreviewCanvasWidget` (71-line func)
+### 2.4 ✅ FIXED 🟡 `layoutPanel.go` (547 LOC) and `previewPanel.getPreviewCanvasWidget` (71-line func)
 
 [layoutPanel.go](../app/gui/panels/layoutPanel.go) declares 40+ widget fields and builds
 three columns in one file; [previewPanel.go](../app/gui/panels/previewPanel.go#L148) trips
@@ -342,6 +342,20 @@ commented-out `MinNeutralZonesBetweenPlayers` row at
 [layoutPanel.go](../app/gui/panels/layoutPanel.go#L253): the DTO field is live and mapped
 into config — either re-enable the row or delete the comment and document why the option
 is hidden (godox flags it).
+
+> **Resolution (2026-07-12, commit `29334f1`):** layoutPanel (454 LOC at fix time)
+> method-split as proposed: `layoutPanel.go` (199 — struct/ctor/GetPanelWidget/
+> Load/SaveToState/getCurrentTopology), `layoutPanelTopology.go` (115 — left column),
+> `layoutPanelZones.go` (167 — right column + click/dialog handlers). previewPanel:
+> the review's `fitPreviewImage` was stale (image-fitting math removed by the
+> preview_service consolidation) — instead the four local closures were promoted to
+> `getPreviewCanvasSizes`/`renderPreviewCanvas`/`renderPreviewTemplate` (package
+> funcs) + `renderPreviewLegend` (method), clearing funlen honestly.
+> MinNeutralZonesBetweenPlayers row RE-ENABLED (user choice) with a dimmed caption
+> stating when it's honored (Ring/Circles/Chain with enough neutrals, Hub &
+> Spoke/Shared Web ≤ 1, never with random portals — per `CanHonorNeutralSeparation`);
+> TODO deleted. Lint 94 → 92; coverage steady at 64.4%; panels registered in
+> [test_observations.md](test_observations.md).
 
 ### 2.5 ✅ FIXED 🟠 `CreateTopologyVariant` — 29 lines duplicated four times (dupl ×4)
 
