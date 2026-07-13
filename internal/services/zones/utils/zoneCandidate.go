@@ -17,6 +17,7 @@ type candidate struct {
 
 type hubZoneCandidates []candidate
 
+//nolint:revive // private helper struct, not intended for external use, besides GetFirstCandidateLabel()
 func CreateHubZoneCandidates(
 	neutralZones neutralZone.Plans,
 	distancesByPlayer []map[string]int) *hubZoneCandidates {

@@ -3,7 +3,7 @@ package topologies_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,10 +11,10 @@ import (
 func TestWhenTypeIsKnown_ReturnsMatchingDescriptor(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := constants.GetTopologyDescriptors().Fractal
+	expected := common.GetTopologyDescriptors().Fractal
 
 	// Act
-	actual := constants.GetTopologyDescriptorFromType(config.TopologyFractal)
+	actual := common.GetTopologyDescriptorFromType(config.TopologyFractal)
 
 	// Assert
 	assert.Equal(t, expected, actual)
@@ -23,10 +23,10 @@ func TestWhenTypeIsKnown_ReturnsMatchingDescriptor(t *testing.T) {
 func TestWhenTypeIsUnknown_ReturnsFirstTopology(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := constants.GetTopologyDescriptors().Random
+	expected := common.GetTopologyDescriptors().Random
 
 	// Act
-	actual := constants.GetTopologyDescriptorFromType(config.MapTopology("NoSuchTopology"))
+	actual := common.GetTopologyDescriptorFromType(config.MapTopology("NoSuchTopology"))
 
 	// Assert
 	assert.Equal(t, expected, actual)

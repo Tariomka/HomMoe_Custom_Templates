@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	gui_constants "github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +16,7 @@ func TestWhenExperimentalIsFalse_ReturnsSameBaseSizesAsInternalConstants(t *test
 	result := gui_constants.GetMapSizes(false)
 
 	// Assert
-	assert.Equal(t, constants.BaseMapSizes, result)
+	assert.Equal(t, common.BaseMapSizes, result)
 }
 
 func TestWhenExperimentalIsTrue_ReturnsSameAllSizesAsInternalConstants(t *testing.T) {
@@ -27,5 +27,5 @@ func TestWhenExperimentalIsTrue_ReturnsSameAllSizesAsInternalConstants(t *testin
 	result := gui_constants.GetMapSizes(true)
 
 	// Assert
-	assert.Equal(t, constants.AllMapSizes, result)
+	assert.Equal(t, common.AllMapSizes, result)
 }

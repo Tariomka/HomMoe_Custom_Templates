@@ -24,5 +24,4 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
     Chain/Ring/Circles topologies, which would also fix the `default` branch
     modelling Hub & Spoke as a sequential ring instead of its real star graph.
 
-- There is an issue on Windows with mouse scroll wheel not scrolling widgets.
-  don't know why, don't know how - it just does not work.
+- remove the [2]float from the template entities for example entities/template/template_variant/zone.go. It's easier to use Vec2 instead

@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -24,7 +24,7 @@ func TestWhenTemplateIsNil_ReturnsProvidedTemplateInvalidError(t *testing.T) {
 	_, err := handler.UpdateTemplate(templateDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrProvidedTemplateInvalid)
+	assert.ErrorIs(t, err, common_errors.ErrProvidedTemplateInvalid)
 }
 
 func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testing.T) {
@@ -39,7 +39,7 @@ func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testin
 	_, err := handler.UpdateTemplate(templateDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrProvidedTemplateInvalid)
+	assert.ErrorIs(t, err, common_errors.ErrProvidedTemplateInvalid)
 }
 
 func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.T) {
@@ -81,7 +81,7 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	_, err := handler.UpdateTemplate(templateDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrZonesMissing)
+	assert.ErrorIs(t, err, common_errors.ErrZonesMissing)
 }
 
 func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testing.T) {

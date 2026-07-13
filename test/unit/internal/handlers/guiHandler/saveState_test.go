@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +24,7 @@ func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 	_, err := handler.SaveState(stateSaveDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrNothingToSave)
+	assert.ErrorIs(t, err, common_errors.ErrNothingToSave)
 }
 
 func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
@@ -38,7 +38,7 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	_, err := handler.SaveState(stateSaveDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrNoOutputPath)
+	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
 }
 
 func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
@@ -52,7 +52,7 @@ func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing
 	_, err := handler.SaveState(stateSaveDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrNoOutputPath)
+	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
 }
 
 func TestWhenStateAndOutputPathAreValid_ReturnsOutputPath(t *testing.T) {

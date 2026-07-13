@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -93,7 +93,7 @@ func TestWhenUpdateRejectsTemplate_LastTemplateIsKept(t *testing.T) {
 	state, handlerMock, zones, connections := newGeneratedState()
 	previousTemplate := state.GetLastTemplate()
 	handlerMock.On("UpdateTemplate", mock.Anything).
-		Return(dtos.TemplateLoadDto{}, common.ErrProvidedTemplateInvalid)
+		Return(dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid)
 
 	// Act
 	state.ApplyEditedZones(zones, connections)

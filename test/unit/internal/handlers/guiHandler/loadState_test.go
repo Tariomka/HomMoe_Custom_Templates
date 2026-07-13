@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -22,7 +22,7 @@ func TestWhenStateFilePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	_, _, err := handler.LoadState("", true)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrNoOutputPath)
+	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
 }
 
 func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
@@ -34,7 +34,7 @@ func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T
 	_, _, err := handler.LoadState("  \t  ", true)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrNoOutputPath)
+	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
 }
 
 func TestWhenStateFileDoesNotExist_ReturnsNotExistError(t *testing.T) {

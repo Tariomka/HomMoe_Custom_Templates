@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/andygrunwald/vdf"
 )
 
@@ -36,7 +36,7 @@ func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 
 	directory := getBasePath(content)
 	if directory == "" {
-		return "", common.ErrGameInVDFNotFound
+		return "", common_errors.ErrGameInVDFNotFound
 	}
 
 	if !useInstallDir /*&& runtime.GOOS != "windows" is redundant here*/ {
@@ -158,5 +158,5 @@ func resolveGlob(pattern string) (string, error) {
 		}
 	}
 
-	return "", common.ErrTemplatesDirNotFound
+	return "", common_errors.ErrTemplatesDirNotFound
 }

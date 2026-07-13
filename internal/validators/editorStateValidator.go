@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -92,14 +92,14 @@ func validateHeroCountOrder(state *dtos.EditorStateDto) []ValidationIssue {
 }
 
 func validateMapSize(state *dtos.EditorStateDto) []ValidationIssue {
-	nearest := constants.GetNearestMapSize(state.MapSize)
+	nearest := common.GetNearestMapSize(state.MapSize)
 	if nearest.Size == state.MapSize {
 		return nil
 	}
 	return []ValidationIssue{{
 		Message: fmt.Sprintf("mapSize %d is not a valid map size (nearest: %d)", state.MapSize, nearest.Size),
 		fix: func(state *dtos.EditorStateDto) {
-			state.MapSize = constants.GetNearestMapSize(state.MapSize).Size
+			state.MapSize = common.GetNearestMapSize(state.MapSize).Size
 		},
 	}}
 }

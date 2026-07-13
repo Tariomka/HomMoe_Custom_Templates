@@ -12,7 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -57,7 +57,7 @@ func NewUIState() *State {
 
 	templateDir, err := helpers.FindOldenEraTemplatesDir(false)
 	if templateDir == "" {
-		if errors.Is(err, common.ErrTemplatesDirNotFound) {
+		if errors.Is(err, common_errors.ErrTemplatesDirNotFound) {
 			state.SetStatus("Game template directory not found, using fallback directory.", false)
 		} else {
 			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)

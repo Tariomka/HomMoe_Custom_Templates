@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -32,7 +32,7 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 		Config:      this.GetGeneratorConfig(),
 	})
 
-	if err != nil && errors.Is(err, common.ErrProvidedTemplateInvalid) {
+	if err != nil && errors.Is(err, common_errors.ErrProvidedTemplateInvalid) {
 		this.SetStatus(
 			fmt.Sprintf("Unable to update template, possibly because template was not generated. ⚠ Error: %v", err),
 			true)

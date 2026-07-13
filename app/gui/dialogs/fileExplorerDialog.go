@@ -182,22 +182,21 @@ func (this *FileExplorerDialog) Body(gtx layout.Context, theme *material.Theme) 
 		this.loadDir(this.currentDir)
 	}
 
-	if this.canModify() {
-		if this.newFolderBtn.Clicked(gtx) {
-			this.newFolderActive = !this.newFolderActive
-			this.newFolderErr = ""
-			if this.newFolderActive {
-				this.newFolderEd.SetText("")
-			}
-		}
+	if this.canModify() && this.newFolderBtn.Clicked(gtx) {
+		this.newFolderActive = !this.newFolderActive
+		this.newFolderErr = ""
 		if this.newFolderActive {
-			if this.createFolderBtn.Clicked(gtx) {
-				this.tryCreateFolder()
-			}
-			if this.cancelFolderBtn.Clicked(gtx) {
-				this.newFolderActive = false
-				this.newFolderErr = ""
-			}
+			this.newFolderEd.SetText("")
+		}
+	}
+
+	if this.canModify() && this.newFolderActive {
+		if this.createFolderBtn.Clicked(gtx) {
+			this.tryCreateFolder()
+		}
+		if this.cancelFolderBtn.Clicked(gtx) {
+			this.newFolderActive = false
+			this.newFolderErr = ""
 		}
 	}
 

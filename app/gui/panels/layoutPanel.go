@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	service_constants "github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	service_constants "github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 

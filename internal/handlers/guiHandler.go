@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
@@ -44,13 +44,13 @@ func NewGuiHandler() *GUIHandler {
 func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
 	configuration := this.mapper.FromEditorState(stateDto)
 	if configuration.TemplateName == "" {
-		return dtos.TemplateLoadDto{}, common.ErrNoTemplateName
+		return dtos.TemplateLoadDto{}, common_errors.ErrNoTemplateName
 	}
 
 	this.templateGenerator.SetConfiguration(configuration)
 	template := this.templateGenerator.Generate()
 	if template == nil {
-		return dtos.TemplateLoadDto{}, common.ErrGeneratedTemplateInvalid
+		return dtos.TemplateLoadDto{}, common_errors.ErrGeneratedTemplateInvalid
 	}
 
 	return dtos.TemplateLoadDto{Template: template}, nil
@@ -58,7 +58,7 @@ func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.Tem
 
 func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {
 	if templateDto.Template == nil || len(templateDto.Template.Variants) == 0 {
-		return dtos.TemplateLoadDto{}, common.ErrProvidedTemplateInvalid
+		return dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid
 	}
 
 	newTemplate := *templateDto.Template
@@ -80,7 +80,7 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 
 	var err error
 	if connection_editor.ComputeHasErrors(newTemplate.Variants[0].Zones, newTemplate.Variants[0].Connections) {
-		err = common.ErrZonesMissing
+		err = common_errors.ErrZonesMissing
 	}
 
 	return dtos.TemplateLoadDto{Template: &newTemplate}, err
@@ -88,12 +88,12 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 
 func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {
 	if templateDto.Template == nil {
-		return "", common.ErrNothingToSave
+		return "", common_errors.ErrNothingToSave
 	}
 
 	outputPath := strings.TrimSpace(templateDto.OutputPath)
 	if outputPath == "" {
-		return "", common.ErrNoOutputPath
+		return "", common_errors.ErrNoOutputPath
 	}
 
 	out, err := this.fileService.SaveTemplate(outputPath, templateDto.Template)
@@ -119,7 +119,7 @@ func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, 
 func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
-		return nil, nil, common.ErrNoOutputPath
+		return nil, nil, common_errors.ErrNoOutputPath
 	}
 
 	loaded, err := this.fileService.LoadSettingsFile(path)
@@ -141,12 +141,12 @@ func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStat
 
 func (this *GUIHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
 	if stateDto.State == nil {
-		return "", common.ErrNothingToSave
+		return "", common_errors.ErrNothingToSave
 	}
 
 	outputPath := strings.TrimSpace(stateDto.OutputPath)
 	if outputPath == "" {
-		return "", common.ErrNoOutputPath
+		return "", common_errors.ErrNoOutputPath
 	}
 
 	err := this.fileService.SaveSettings(outputPath, stateDto.State)

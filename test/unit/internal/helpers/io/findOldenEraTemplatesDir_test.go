@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +44,7 @@ func TestWhenUserTemplatesFolderIsMissing_ReturnsTemplatesDirNotFoundError(t *te
 	_, err := helpers.FindOldenEraTemplatesDir(false)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrTemplatesDirNotFound)
+	assert.ErrorIs(t, err, common_errors.ErrTemplatesDirNotFound)
 }
 
 func TestWhenSteamLibraryContainsGameAndProtonPrefixExists_ReturnsTemplatesPath(t *testing.T) {
@@ -82,7 +82,7 @@ func TestWhenSteamLibraryContainsGameButProtonPrefixIsMissing_ReturnsTemplatesDi
 	_, err := helpers.FindOldenEraTemplatesDir(false)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrTemplatesDirNotFound)
+	assert.ErrorIs(t, err, common_errors.ErrTemplatesDirNotFound)
 }
 
 func TestWhenSteamLibraryDoesNotContainGame_ReturnsGameInVDFNotFoundError(t *testing.T) {
@@ -98,7 +98,7 @@ func TestWhenSteamLibraryDoesNotContainGame_ReturnsGameInVDFNotFoundError(t *tes
 	_, err := helpers.FindOldenEraTemplatesDir(false)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrGameInVDFNotFound)
+	assert.ErrorIs(t, err, common_errors.ErrGameInVDFNotFound)
 }
 
 // writeSteamLibraryVDF creates a fake Steam install under homeDir/.local/share/Steam

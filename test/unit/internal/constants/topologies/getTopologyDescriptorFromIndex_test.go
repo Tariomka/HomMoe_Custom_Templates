@@ -3,17 +3,17 @@ package topologies_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenIndexIsWithinRange_ReturnsDescriptorAtIndex(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := constants.GetTopologyDescriptors().Circles
+	expected := common.GetTopologyDescriptors().Circles
 
 	// Act
-	actual := constants.GetTopologyDescriptorFromIndex(2)
+	actual := common.GetTopologyDescriptorFromIndex(2)
 
 	// Assert
 	assert.Equal(t, expected, actual)
@@ -22,10 +22,10 @@ func TestWhenIndexIsWithinRange_ReturnsDescriptorAtIndex(t *testing.T) {
 func TestWhenIndexIsNegative_ReturnsFirstTopology(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := constants.GetTopologyDescriptors().Random
+	expected := common.GetTopologyDescriptors().Random
 
 	// Act
-	actual := constants.GetTopologyDescriptorFromIndex(-1)
+	actual := common.GetTopologyDescriptorFromIndex(-1)
 
 	// Assert
 	assert.Equal(t, expected, actual)
@@ -34,10 +34,10 @@ func TestWhenIndexIsNegative_ReturnsFirstTopology(t *testing.T) {
 func TestWhenIndexIsBeyondRange_ReturnsFirstTopology(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := constants.GetTopologyDescriptors().Random
+	expected := common.GetTopologyDescriptors().Random
 
 	// Act
-	actual := constants.GetTopologyDescriptorFromIndex(1000)
+	actual := common.GetTopologyDescriptorFromIndex(1000)
 
 	// Assert
 	assert.Equal(t, expected, actual)

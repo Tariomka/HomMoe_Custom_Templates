@@ -9,7 +9,7 @@ type Zone struct {
 	// Geometric, Cross). It is NOT serialized - the
 	// preview renderer uses it to reproduce the same geometry that drove
 	// connection generation
-	GeneratorPosition *[2]float64 `json:"-"` //TODO: make it vec2[float64]. As it is not serialized to json, it should be safe to change
+	GeneratorPosition *[2]float64 `json:"-"`
 
 	// GeneratorRing is the concentric-ring index (0 = outermost player ring,
 	// increasing toward centre) stamped by the generator for Circles layouts.

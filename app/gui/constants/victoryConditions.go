@@ -30,6 +30,7 @@ func GetVictoryConditionList() []Victory {
 	}
 }
 
+//nolint:revive // private struct with public accessors, not intended for external referencing, only for direct use.
 func GetVictoryConditionValues() victoryConditions {
 	winConditions := registry.GetWinningConditionValues()
 	return victoryConditions{
