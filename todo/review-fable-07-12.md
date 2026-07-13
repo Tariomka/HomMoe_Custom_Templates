@@ -534,7 +534,16 @@ only when `geomDirty || side != this.lastSide`. The comment at L375-379 already 
 that hit-testing intentionally uses last frame's geometry, so a dirty flag is consistent
 with the existing design.
 
-### 4.4 🟡 Pixel-by-pixel brush fill in preview connector drawing
+### 4.4 🟡 Pixel-by-pixel brush fill in preview connector drawing — ✅ FIXED
+
+✅ **FIXED** (commit `59ab53a`): `drawLine`'s nested `SetRGBA` loops replaced with
+`draw.Draw(canvas, brush, brushSource, image.Point{}, draw.Src)` over an
+`image.NewUniform(connectorLineColor)` hoisted above the step loop (kept local —
+a package global would add a gochecknoglobals finding). Pixel-exactness proven by
+a temporary canvas-hash test over solid + dashed (portal) connections: identical
+SHA-256 before/after (`73288f6d…c1cb`). No permanent new tests — mechanical swap
+covered by the existing createPreviewImage suite. Coverage 64.4% / lint 74
+unchanged.
 
 [previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go#L94-L104)
 fills the brush rect with nested `canvas.SetRGBA` loops per curve step (~15k calls per

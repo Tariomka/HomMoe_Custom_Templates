@@ -322,8 +322,9 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 // spawnZoneHasConnection reports whether the spawn zone already has a road
 // leading to any of the known connections.
 func spawnZoneHasConnection(zone entities.Zone, connNames map[string]bool) bool {
+	connectionType := registry.GetRoadConnectionTypeValues().Connection
 	for _, road := range zone.Roads {
-		if road.To.Type == "Connection" && len(road.To.Args) > 0 && connNames[road.To.Args[0]] {
+		if road.To.Type == connectionType && len(road.To.Args) > 0 && connNames[road.To.Args[0]] {
 			return true
 		}
 	}
@@ -412,11 +413,12 @@ func (this *TopologyBase) CreateMissingConnections(
 // findExistingConnName returns the name of the first connection referenced by
 // the zone's roads, or "" when the zone has no connection-bound road.
 func findExistingConnName(zone entities.Zone) string {
+	connectionType := registry.GetRoadConnectionTypeValues().Connection
 	for _, road := range zone.Roads {
-		if road.From.Type == "Connection" && len(road.From.Args) > 0 {
+		if road.From.Type == connectionType && len(road.From.Args) > 0 {
 			return road.From.Args[0]
 		}
-		if road.To.Type == "Connection" && len(road.To.Args) > 0 {
+		if road.To.Type == connectionType && len(road.To.Args) > 0 {
 			return road.To.Args[0]
 		}
 	}
