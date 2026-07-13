@@ -20,9 +20,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
-// checkedRowBg is the highlight behind a selected picker row.
-var checkedRowBg = themes.ColorSelection
-
 // pickerEntry is one selectable row in a multiSelectPicker.
 type pickerEntry struct {
 	id       string
@@ -33,11 +30,11 @@ type pickerEntry struct {
 	haystack string // lowercased search text
 }
 
-// multiSelectPicker is a generic searchable, optionally-grouped, multi-select
+// MultiSelectPicker is a generic searchable, optionally-grouped, multi-select
 // modal. It backs the item, spell and value-override pickers; per-picker extras
 // (a guard-value field, a "make free" toggle) are supplied via the footer hook
 // and read back inside onApply. Implements widgets.Dialog.
-type multiSelectPicker struct {
+type MultiSelectPicker struct {
 	title        string
 	prefW, prefH unit.Dp
 	entries      []pickerEntry
@@ -55,8 +52,8 @@ type multiSelectPicker struct {
 	cancelBtn widget.Clickable
 }
 
-func newMultiSelectPicker(title string, entries []pickerEntry, grouped bool) *multiSelectPicker {
-	picker := &multiSelectPicker{
+func newMultiSelectPicker(title string, entries []pickerEntry, grouped bool) *MultiSelectPicker {
+	picker := &MultiSelectPicker{
 		title:    title,
 		prefW:    unit.Dp(560),
 		prefH:    unit.Dp(560),
@@ -71,7 +68,7 @@ func newMultiSelectPicker(title string, entries []pickerEntry, grouped bool) *mu
 	return picker
 }
 
-func NewItemPickerDialog(title string, excluded []string, onApply func(ids []string)) *multiSelectPicker {
+func NewItemPickerDialog(title string, excluded []string, onApply func(ids []string)) *MultiSelectPicker {
 	visible := constants.GetBannableItemsWithExclusions(excluded)
 
 	entries := make([]pickerEntry, 0, len(visible))
@@ -92,7 +89,7 @@ func NewItemPickerDialog(title string, excluded []string, onApply func(ids []str
 func NewSpellPickerDialog(
 	excluded []string,
 	showMakeFree bool,
-	onApply func(ids []string, makeFree bool)) *multiSelectPicker {
+	onApply func(ids []string, makeFree bool)) *MultiSelectPicker {
 	visible := constants.GetKnownSpellsWithExclusions(excluded)
 
 	entries := make([]pickerEntry, 0, len(visible))
@@ -124,7 +121,7 @@ func NewSpellPickerDialog(
 	return picker
 }
 
-func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *multiSelectPicker {
+func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *MultiSelectPicker {
 	sids := constants.GetValueOverrideSidsWithExclusions(excluded)
 
 	entries := make([]pickerEntry, 0, len(sids))
@@ -145,7 +142,7 @@ func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min.X = gtx.Dp(unit.Dp(100))
 					label := material.Caption(theme, "Guard value")
-					label.Color = themes.ColorTextDim
+					label.Color = themes.ColorsBase.TextDim
 					return label.Layout(gtx)
 				}),
 				layout.Flexed(1, widgets.NewTextboxWidget(theme, guardEdit, "5000", false)))
@@ -165,14 +162,14 @@ func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string
 	return picker
 }
 
-func (this *multiSelectPicker) Title() string { return this.title }
+func (this *MultiSelectPicker) Title() string { return this.title }
 
-func (this *multiSelectPicker) PreferredSize() (unit.Dp, unit.Dp) { return this.prefW, this.prefH }
+func (this *MultiSelectPicker) PreferredSize() (unit.Dp, unit.Dp) { return this.prefW, this.prefH }
 
-func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
+func (this *MultiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
 	if this.addBtn.Clicked(gtx) {
 		if this.onApply != nil {
-			this.onApply(this.selectedIds())
+			this.onApply(this.selectedIDs())
 		}
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
@@ -190,7 +187,7 @@ func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			if len(rows) == 0 {
 				label := material.Body2(theme, "(no matches)")
-				label.Color = themes.ColorTextDim
+				label.Color = themes.ColorsBase.TextDim
 				return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.Layout(gtx, label.Layout)
 			}
 
@@ -209,8 +206,8 @@ func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 	), false
 }
 
-func (this *multiSelectPicker) getButtonsWidget(theme *material.Theme) layout.Widget {
-	count := len(this.selectedIds())
+func (this *MultiSelectPicker) getButtonsWidget(theme *material.Theme) layout.Widget {
+	count := len(this.selectedIDs())
 	addText := this.addLabel
 	if count > 1 {
 		addText = fmt.Sprintf("%s (%d)", this.addLabel, count)
@@ -229,7 +226,7 @@ func (this *multiSelectPicker) getButtonsWidget(theme *material.Theme) layout.Wi
 
 // getRowWidgets flattens the filtered entries into a list of group headers and leaf
 // rows, preserving the entry order (so callers control grouping/sorting).
-func (this *multiSelectPicker) getRowWidgets(theme *material.Theme, filter string) []layout.Widget {
+func (this *MultiSelectPicker) getRowWidgets(theme *material.Theme, filter string) []layout.Widget {
 	var rows []layout.Widget
 	emitted := map[string]bool{}
 
@@ -257,8 +254,8 @@ func (this *multiSelectPicker) getRowWidgets(theme *material.Theme, filter strin
 	return rows
 }
 
-func (this *multiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group string, count int) layout.Widget {
-	groupTextColor := themes.ColorAccent
+func (this *MultiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group string, count int) layout.Widget {
+	groupTextColor := themes.ColorsBase.Accent
 	if this.groupColor != nil {
 		groupTextColor = this.groupColor(group)
 	}
@@ -275,7 +272,7 @@ func (this *multiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						label := material.Overline(theme, fmt.Sprintf("(%d)", count))
-						label.Color = themes.ColorTextDim
+						label.Color = themes.ColorsBase.TextDim
 						return label.Layout(gtx)
 					}),
 				)
@@ -283,7 +280,7 @@ func (this *multiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group
 	}
 }
 
-func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pickerEntry) layout.Widget {
+func (this *MultiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pickerEntry) layout.Widget {
 	clk := this.clickFor(entry.id)
 	return func(gtx layout.Context) layout.Dimensions {
 		if clk.Clicked(gtx) {
@@ -297,50 +294,12 @@ func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pic
 		return material.Clickable(gtx, clk, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
 			dims := layout.UniformInset(constants.DefaultPaddingSmall-2).
-				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(16))
-							mark := " "
-							if checked {
-								mark = "v"
-							}
-							label := material.Body1(theme, mark)
-							label.Color = themes.ColorAccentBright
-							label.Font = font.Font{Weight: font.Bold, Style: font.Italic}
-							return label.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							if entry.badge == "" {
-								return layout.Dimensions{}
-							}
-
-							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(34))
-							label := material.Overline(theme, entry.badge)
-							label.Color = themes.ColorTextDim
-							return label.Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-							label := material.Body2(theme, entry.label)
-							label.Color = themes.ColorText
-							return label.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							if entry.trailing == "" {
-								return layout.Dimensions{}
-							}
-
-							label := material.Overline(theme, entry.trailing)
-							label.Color = themes.ColorTextDim
-							return label.Layout(gtx)
-						}),
-					)
-				})
+				Layout(gtx, getLeafRowContentWidget(theme, entry, checked))
 			call := macro.Stop()
 			if checked {
-				paint.FillShape(gtx.Ops, checkedRowBg, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Selection, clip.Rect{Max: dims.Size}.Op())
 			} else if clk.Hovered() {
-				paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Hover, clip.Rect{Max: dims.Size}.Op())
 			}
 			call.Add(gtx.Ops)
 			return dims
@@ -348,7 +307,51 @@ func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pic
 	}
 }
 
-func (this *multiSelectPicker) clickFor(id string) *widget.Clickable {
+// getLeafRowContentWidget lays out a leaf row's checkmark, optional badge,
+// label and optional trailing text.
+func getLeafRowContentWidget(theme *material.Theme, entry pickerEntry, checked bool) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(16))
+				mark := " "
+				if checked {
+					mark = "v"
+				}
+				label := material.Body1(theme, mark)
+				label.Color = themes.ColorsBase.AccentBright
+				label.Font = font.Font{Weight: font.Bold, Style: font.Italic}
+				return label.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				if entry.badge == "" {
+					return layout.Dimensions{}
+				}
+
+				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(34))
+				label := material.Overline(theme, entry.badge)
+				label.Color = themes.ColorsBase.TextDim
+				return label.Layout(gtx)
+			}),
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				label := material.Body2(theme, entry.label)
+				label.Color = themes.ColorsBase.Text
+				return label.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				if entry.trailing == "" {
+					return layout.Dimensions{}
+				}
+
+				label := material.Overline(theme, entry.trailing)
+				label.Color = themes.ColorsBase.TextDim
+				return label.Layout(gtx)
+			}),
+		)
+	}
+}
+
+func (this *MultiSelectPicker) clickFor(id string) *widget.Clickable {
 	clk := this.clicks[id]
 	if clk == nil {
 		clk = &widget.Clickable{}
@@ -357,7 +360,7 @@ func (this *multiSelectPicker) clickFor(id string) *widget.Clickable {
 	return clk
 }
 
-func (this *multiSelectPicker) selectedIds() []string {
+func (this *MultiSelectPicker) selectedIDs() []string {
 	var ids []string
 	for _, entry := range this.entries {
 		if this.selected[entry.id] {

@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
 )
@@ -28,11 +29,11 @@ func NewBalancedClusterService() *BalancedClusterService {
 func (this *BalancedClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	singlePlayerList := []string{playerLabel}
-	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans, 0)
+	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans)
 	rawPositions := models.CreatePositionsFromPlans(orderedLabels, singlePlayerList, allNeutralZonePlans)
 	positions := this.createPositions(rawPositions, playerIndex)
 
@@ -95,14 +96,14 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 	}
 
 	scale := math.Min((xMax-xMin)/spanX, 0.9/spanY)
-	xCentre := (xMin + xMax) / 2.0
-	yCentre := 0.5
+	xCenter := (xMin + xMax) / 2.0
+	yCenter := 0.5
 
 	positions := models.Positions{}
 	for _, position := range rawPositions {
 		positions.Add(data.NewVec2(
-			xCentre+xSign*(position.X-(minimumPosition.X+maximumPosition.X)/2.0)*scale,
-			yCentre+ySign*(position.Y-(minimumPosition.Y+maximumPosition.Y)/2.0)*scale))
+			xCenter+xSign*(position.X-(minimumPosition.X+maximumPosition.X)/2.0)*scale,
+			yCenter+ySign*(position.Y-(minimumPosition.Y+maximumPosition.Y)/2.0)*scale))
 	}
 
 	return positions
@@ -111,89 +112,27 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 func (this *BalancedClusterService) createSortedPairs(
 	orderedLabels []string,
 	rawPositions models.Positions,
-	allNeutralZonePlans models.NeutralZonePlans) [][2]int {
-	tierIndices := map[int][]int{}
-	for index, label := range orderedLabels {
-		tier := allNeutralZonePlans.GetTier(label)
-		tierIndices[tier] = append(tierIndices[tier], index)
-	}
+	allNeutralZonePlans neutralZone.Plans) [][2]int {
+	tierIndices := bucketIndicesByTier(orderedLabels, allNeutralZonePlans)
 	tierKeys := make([]int, 0, len(tierIndices))
 	for tier := range tierIndices {
 		tierKeys = append(tierKeys, tier)
 	}
 	slices.Sort(tierKeys)
 
-	tierSorted := map[int][]int{}
-	tierAngles := map[int][]float64{}
-	for tier, idx := range tierIndices {
-		s := make([]int, len(idx))
-		copy(s, idx)
-		sort.SliceStable(s, func(i, j int) bool {
-			return math.Atan2(rawPositions[s[i]].Y-0.5, rawPositions[s[i]].X-0.5) <
-				math.Atan2(rawPositions[s[j]].Y-0.5, rawPositions[s[j]].X-0.5)
-		})
-		tierSorted[tier] = s
-		ang := make([]float64, len(s))
-		for j, ii := range s {
-			ang[j] = math.Atan2(rawPositions[ii].Y-0.5, rawPositions[ii].X-0.5)
-		}
-		tierAngles[tier] = ang
-	}
+	tierSorted, tierAngles := sortTiersByAngle(tierIndices, rawPositions)
 
 	pairSet := misc.NewPairSet()
 
 	// Same-ring: circle-neighbors only; skip degenerate < 3 rings.
-	for _, sorted := range tierSorted {
-		nn := len(sorted)
-		if nn < 3 {
-			continue
-		}
-		for i := range sorted {
-			pairSet.Add(sorted[i], sorted[(i+1)%nn])
-		}
-	}
+	addSameRingPairs(pairSet.Add, tierSorted)
 
 	// Cross-ring: bidirectional nearest-neighbor between adjacent tiers.
 	for tierIndex := range tierKeys[:len(tierKeys)-1] {
-		outerSorted := tierSorted[tierKeys[tierIndex]]
-		innerSorted := tierSorted[tierKeys[tierIndex+1]]
-		outerAngles := tierAngles[tierKeys[tierIndex]]
-		innerAngles := tierAngles[tierKeys[tierIndex+1]]
-
-		for outerIndex := range outerSorted {
-			best, bestD := 0, math.MaxFloat64
-			for innerIndex := range innerSorted {
-				if distance := misc.GetShortestAngleDistance(
-					outerAngles[outerIndex],
-					innerAngles[innerIndex]); distance < bestD {
-					bestD = distance
-					best = innerIndex
-				}
-			}
-			if len(innerSorted) > 0 {
-				pairSet.Add(outerSorted[outerIndex], innerSorted[best])
-			}
-		}
-
-		const epsilon = 1e-9
-		for innerIndex := range innerSorted {
-			bestDistance := math.MaxFloat64
-			for outerIndex := range outerSorted {
-				if distance := misc.GetShortestAngleDistance(
-					innerAngles[innerIndex],
-					outerAngles[outerIndex],
-				); distance < bestDistance {
-					bestDistance = distance
-				}
-			}
-			for outerIndex := range outerSorted {
-				if misc.GetShortestAngleDistance(
-					innerAngles[innerIndex],
-					outerAngles[outerIndex]) <= bestDistance+epsilon {
-					pairSet.Add(innerSorted[innerIndex], outerSorted[outerIndex])
-				}
-			}
-		}
+		addCrossRingPairs(
+			pairSet.Add,
+			tierSorted[tierKeys[tierIndex]], tierAngles[tierKeys[tierIndex]],
+			tierSorted[tierKeys[tierIndex+1]], tierAngles[tierKeys[tierIndex+1]])
 	}
 
 	sortedPairs := linq.FromMap(*pairSet).SelectKeys().ToSlice()
@@ -204,6 +143,97 @@ func (this *BalancedClusterService) createSortedPairs(
 		return sortedPairs[i][1] < sortedPairs[j][1]
 	})
 	return sortedPairs
+}
+
+// bucketIndicesByTier groups the ordered label indexes by their neutral-plan tier.
+func bucketIndicesByTier(orderedLabels []string, allNeutralZonePlans neutralZone.Plans) map[int][]int {
+	tierIndices := map[int][]int{}
+	for index, label := range orderedLabels {
+		tier := allNeutralZonePlans.GetTier(label)
+		tierIndices[tier] = append(tierIndices[tier], index)
+	}
+	return tierIndices
+}
+
+// sortTiersByAngle orders every tier's indexes by their angle around the map
+// center and returns the sorted indexes alongside the matching angles.
+func sortTiersByAngle(
+	tierIndices map[int][]int,
+	rawPositions models.Positions) (map[int][]int, map[int][]float64) {
+	tierSorted := map[int][]int{}
+	tierAngles := map[int][]float64{}
+	for tier, indexes := range tierIndices {
+		sorted := make([]int, len(indexes))
+		copy(sorted, indexes)
+		sort.SliceStable(sorted, func(i, j int) bool {
+			return math.Atan2(rawPositions[sorted[i]].Y-0.5, rawPositions[sorted[i]].X-0.5) <
+				math.Atan2(rawPositions[sorted[j]].Y-0.5, rawPositions[sorted[j]].X-0.5)
+		})
+		tierSorted[tier] = sorted
+		angles := make([]float64, len(sorted))
+		for j, zoneIndex := range sorted {
+			angles[j] = math.Atan2(rawPositions[zoneIndex].Y-0.5, rawPositions[zoneIndex].X-0.5)
+		}
+		tierAngles[tier] = angles
+	}
+	return tierSorted, tierAngles
+}
+
+// addSameRingPairs links each ring's circle-neighbours; rings with fewer than
+// three zones are skipped as degenerate.
+func addSameRingPairs(addPair func(a, b int), tierSorted map[int][]int) {
+	for _, sorted := range tierSorted {
+		ringSize := len(sorted)
+		if ringSize < 3 {
+			continue
+		}
+		for i := range sorted {
+			addPair(sorted[i], sorted[(i+1)%ringSize])
+		}
+	}
+}
+
+// addCrossRingPairs links two adjacent rings bidirectionally: every outer zone
+// to its angularly nearest inner zone, and every inner zone to all of its
+// angularly nearest outer zones (ties within epsilon all count).
+func addCrossRingPairs(
+	addPair func(a, b int),
+	outerSorted []int, outerAngles []float64,
+	innerSorted []int, innerAngles []float64) {
+	for outerIndex := range outerSorted {
+		best, bestD := 0, math.MaxFloat64
+		for innerIndex := range innerSorted {
+			if distance := misc.GetShortestAngleDistance(
+				outerAngles[outerIndex],
+				innerAngles[innerIndex]); distance < bestD {
+				bestD = distance
+				best = innerIndex
+			}
+		}
+		if len(innerSorted) > 0 {
+			addPair(outerSorted[outerIndex], innerSorted[best])
+		}
+	}
+
+	const epsilon = 1e-9
+	for innerIndex := range innerSorted {
+		bestDistance := math.MaxFloat64
+		for outerIndex := range outerSorted {
+			if distance := misc.GetShortestAngleDistance(
+				innerAngles[innerIndex],
+				outerAngles[outerIndex],
+			); distance < bestDistance {
+				bestDistance = distance
+			}
+		}
+		for outerIndex := range outerSorted {
+			if misc.GetShortestAngleDistance(
+				innerAngles[innerIndex],
+				outerAngles[outerIndex]) <= bestDistance+epsilon {
+				addPair(innerSorted[innerIndex], outerSorted[outerIndex])
+			}
+		}
+	}
 }
 
 func (this *BalancedClusterService) createConnectionNames(orderedLabels []string, sortedPairs [][2]int) [][]string {
@@ -224,7 +254,7 @@ func (this *BalancedClusterService) createZones(
 	playerIndex int,
 	orderedLabels []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	connectionNames [][]string) []entities.Zone {
 	var zones []entities.Zone
 	for index, label := range orderedLabels {
@@ -244,7 +274,7 @@ func (this *BalancedClusterService) createZones(
 		} else {
 			zones = append(zones, this.CreateNeutralZone(
 				linq.FromSlice(allNeutralZonePlans).
-					FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 				myConns,
 				configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 				tuning.RemoteFootholdCount,
@@ -261,7 +291,7 @@ func (this *BalancedClusterService) createConnections(
 	playerLabel string,
 	orderedLabels []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	connectionNames [][]string,
 	sortedPairs [][2]int) []entities.Connection {
 	nameLookup := make(map[int]int, len(orderedLabels))

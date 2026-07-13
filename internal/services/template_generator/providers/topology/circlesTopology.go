@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 type CirclesTopologyService struct {
@@ -21,7 +22,7 @@ func NewCirclesTopologyService() *CirclesTopologyService {
 func (this *CirclesTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	neutralLabels := make([]string, len(neutralZones))
@@ -29,7 +30,7 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 		neutralLabels[i] = zonePlan.Label
 	}
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones, 0)
+	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
 	positions := models.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
 	pairs := this.createCirclesPairs(positions.CreateDelaunayTriangulation(), allLabels, playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
@@ -62,7 +63,7 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 func (this *CirclesTopologyService) createCirclesPairs(
 	pairs []models.ConnectionIndexes,
 	allLabels, playerLabels []string,
-	neutralZones models.NeutralZonePlans) []models.ConnectionIndexes {
+	neutralZones neutralZone.Plans) []models.ConnectionIndexes {
 	presentTiers := map[int]bool{}
 	for _, label := range allLabels {
 		tier := 0

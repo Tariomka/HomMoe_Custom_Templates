@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 // SquareTopologyService lays the player zones out along the edges of a square.
@@ -24,31 +25,11 @@ func NewSquareTopologyService() *SquareTopologyService {
 func (this *SquareTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-	allLabels, positions, pairs := this.createSquareLayout(playerLabels, neutralZones)
-	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
-
-	zones := this.createZones(
-		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
-	for index := range zones {
-		position := positions[index]
-		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
-	}
-
-	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
-	if configuration.RandomPortals {
-		conns = append(conns,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
-	}
-	if isIsolated {
-		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
-	}
-	conns = append(conns,
-		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
-	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
+	return this.createVariantFromLayout(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createSquareLayout)
 }
 
 // createSquareLayout builds the parallel label, position and connection-pair
@@ -57,12 +38,8 @@ func (this *SquareTopologyService) CreateTopologyVariant(
 // the interior neutral zones.
 func (this *SquareTopologyService) createSquareLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
-	const (
-		centreX = 0.5
-		centreY = 0.5
-		half    = 0.42
-	)
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	const half = 0.42
 
 	// Roughly a third of the neutral zones (the higher tiers, which sort last)
 	// are pulled inside the square; the rest line the edges between players.
@@ -71,7 +48,7 @@ func (this *SquareTopologyService) createSquareLayout(
 	interiorPlans := neutralZones[len(neutralZones)-interiorCount:]
 
 	// Even player spacing around the perimeter, separated by the edge neutrals.
-	perimeterLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, perimeterPlans, 0)
+	perimeterLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, perimeterPlans)
 
 	var allLabels []string
 	var positions models.Positions
@@ -83,18 +60,18 @@ func (this *SquareTopologyService) createSquareLayout(
 			fraction = float64(i) / float64(perimeterCount)
 		}
 		allLabels = append(allLabels, label)
-		positions.Add(squarePerimeterPoint(fraction, centreX, centreY, half))
+		positions.Add(squarePerimeterPoint(fraction, half))
 	}
 
-	// Interior neutral zones sit on a smaller inner square (or the exact centre
+	// Interior neutral zones sit on a smaller inner square (or the exact center
 	// when there is only one) so they read as being inside the perimeter.
 	interiorHalf := half * 0.45
 	for i, plan := range interiorPlans {
 		var point models.Position
 		if len(interiorPlans) == 1 {
-			point = data.NewVec2(centreX, centreY)
+			point = data.NewVec2(layoutCenter, layoutCenter)
 		} else {
-			point = squarePerimeterPoint(float64(i)/float64(len(interiorPlans)), centreX, centreY, interiorHalf)
+			point = squarePerimeterPoint(float64(i)/float64(len(interiorPlans)), interiorHalf)
 		}
 		allLabels = append(allLabels, plan.Label)
 		positions.Add(point)

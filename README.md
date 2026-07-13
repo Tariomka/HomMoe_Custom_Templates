@@ -148,8 +148,8 @@ Hot reload via [air](https://github.com/air-verse/air) is configured in
 | Shared Web    | `config.TopologySharedWeb`     | Players connected through shared neutral zones.              |
 | Square        | `config.TopologySquare`        | Players line the edges of a square; neutrals on edges and inside. |
 | Geometric     | `config.TopologyGeometric`     | Symmetric geometric shapes built around a central zone.      |
-| Cross         | `config.TopologyCross`         | Zones and connections radiate from a centre into cross arms. |
-| Fractal       | `config.TopologyFractal`       | Each player is the base of a fractal that branches inward (low tiers nearest, high tiers at the woven centre); players never border directly. |
+| Cross         | `config.TopologyCross`         | Zones and connections radiate from a center into cross arms. |
+| Fractal       | `config.TopologyFractal`       | Each player is the base of a fractal that branches inward (low tiers nearest, high tiers at the woven center); players never border directly. |
 
 ## Game Modes & Victory Conditions
 

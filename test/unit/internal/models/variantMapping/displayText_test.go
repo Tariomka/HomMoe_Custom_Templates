@@ -3,6 +3,7 @@ package variantMapping_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,8 +13,11 @@ func TestWhenVariantsHaveMultipleKeys_ReturnsLowestKeyDescription(t *testing.T) 
 	// Arrange
 	mapping := models.NewVariantMapping(
 		models.SidMapping{Sid: "x", Name: "Fallback"},
-		map[int]string{2: "second", 0: "first", 1: "middle"},
-	)
+		[]data.Tuple[int, string]{
+			data.NewTuple(2, "second"),
+			data.NewTuple(0, "first"),
+			data.NewTuple(1, "middle"),
+		})
 
 	// Act
 	displayText := mapping.DisplayText()
@@ -25,7 +29,7 @@ func TestWhenVariantsHaveMultipleKeys_ReturnsLowestKeyDescription(t *testing.T) 
 func TestWhenNoVariantsAreDefined_ReturnsContentName(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapping := models.NewVariantMapping(models.SidMapping{Sid: "x", Name: "Fallback"}, map[int]string{})
+	mapping := models.NewVariantMapping(models.SidMapping{Sid: "x", Name: "Fallback"}, []data.Tuple[int, string]{})
 
 	// Act
 	displayText := mapping.DisplayText()

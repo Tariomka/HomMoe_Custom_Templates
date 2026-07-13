@@ -4,10 +4,10 @@ import (
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
-func GetEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
+func GetEvenGapCapacities(gapCount, itemCount int) []int {
 	if gapCount <= 0 {
 		return nil
 	}
@@ -15,29 +15,20 @@ func GetEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 	if itemCount <= 0 {
 		return capacities
 	}
-	minimum := max(0, minimumPerGap)
-	reserved := minimum * gapCount
-	remaining := itemCount
-	if minimum > 0 && itemCount >= reserved {
-		for i := range capacities {
-			capacities[i] = minimum
-		}
-		remaining -= reserved
-	}
-	for i := range remaining {
-		gap := int(math.Floor((float64(i) + 0.5) * float64(gapCount) / float64(remaining)))
+	for i := range itemCount {
+		gap := int(math.Floor((float64(i) + 0.5) * float64(gapCount) / float64(itemCount)))
 		capacities[helpers.Clamp(gap, 0, gapCount-1)]++
 	}
 	return capacities
 }
 
 func AssignNeutralZonesToGaps(
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	capacities []int,
-	preferInterior bool) []models.NeutralZonePlans {
-	gaps := make([]models.NeutralZonePlans, len(capacities))
+	preferInterior bool) []neutralZone.Plans {
+	gaps := make([]neutralZone.Plans, len(capacities))
 	loads := make([]float64, len(capacities))
-	sortedZones := models.NewNeutralZonePlansSortedByBalance(neutralZones)
+	sortedZones := neutralZone.NewNeutralZonePlansSortedByBalance(neutralZones)
 	for _, zonePlan := range *sortedZones {
 		var candidates []int
 		for i := range capacities {
@@ -73,15 +64,15 @@ func AssignNeutralZonesToGaps(
 	return gaps
 }
 
-func OrderNeutralsWithinGap(neutralZones models.NeutralZonePlans) models.NeutralZonePlans {
+func OrderNeutralsWithinGap(neutralZones neutralZone.Plans) neutralZone.Plans {
 	if len(neutralZones) <= 1 {
-		zones := models.NeutralZonePlans{}
+		zones := neutralZone.Plans{}
 		zones.AddPlans(neutralZones...)
 		return zones
 	}
 
-	sortedZones := models.NewNeutralZonePlansSortedByBalance(neutralZones)
-	slots := make(models.NeutralZonePlans, len(*sortedZones))
+	sortedZones := neutralZone.NewNeutralZonePlansSortedByBalance(neutralZones)
+	slots := make(neutralZone.Plans, len(*sortedZones))
 	lowIndex, highIndex := 0, len(*sortedZones)-1
 	for i, zonePlan := range *sortedZones {
 		if i%2 == 0 {
@@ -95,8 +86,8 @@ func OrderNeutralsWithinGap(neutralZones models.NeutralZonePlans) models.Neutral
 	return slots
 }
 
-func OrderEdgeGap(neutralZones models.NeutralZonePlans, playerAtEnd bool) models.NeutralZonePlans {
-	sorted := models.NewNeutralZonePlansSortedByBalance(neutralZones)
+func OrderEdgeGap(neutralZones neutralZone.Plans, playerAtEnd bool) neutralZone.Plans {
+	sorted := neutralZone.NewNeutralZonePlansSortedByBalance(neutralZones)
 	if playerAtEnd {
 		for i, j := 0, len(*sorted)-1; i < j; i, j = i+1, j-1 {
 			sorted.Swap(i, j)

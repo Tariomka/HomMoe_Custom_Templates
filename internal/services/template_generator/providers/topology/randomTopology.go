@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -27,14 +28,22 @@ func NewRandomTopologyService() *RandomTopologyService {
 func (this *RandomTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
+	return this.createVariantFromLayout(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createRandomLayout)
+}
+
+// createRandomLayout scatters all zones uniformly over the map and connects
+// them through a Delaunay triangulation of the random positions.
+func (this *RandomTopologyService) createRandomLayout(
+	playerLabels []string,
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	neutralLabels := make([]string, len(neutralZones))
 	for i, nz := range neutralZones {
 		neutralLabels[i] = nz.Label
 	}
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	allLabels := append(append([]string{}, playerLabels...), neutralLabels...)
 	labelCount := len(allLabels)
 	rand.Shuffle(labelCount, func(i, j int) { allLabels[i], allLabels[j] = allLabels[j], allLabels[i] })
@@ -43,6 +52,23 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 		positions.Add(data.NewVec2(rand.Float64()*0.9+0.05, rand.Float64()*0.9+0.05))
 	}
 	pairs := positions.CreateDelaunayTriangulation()
+	return allLabels, positions, pairs
+}
+
+// createVariantFromLayout is the shared topology-variant pipeline: build the
+// layout, derive connection names, create the zones with their generator
+// positions, create the connections (plus portal and missing-connection
+// fill-ins), and assemble the variant. Each topology service supplies only its
+// own layout builder.
+func (this *RandomTopologyService) createVariantFromLayout(
+	configuration config.GeneratorConfig,
+	playerLabels []string,
+	neutralZones neutralZone.Plans,
+	tuning models.GenerationTuning,
+	holdCityNeutralLabel string,
+	buildLayout layoutFunc) entities.Variant {
+	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
+	allLabels, positions, pairs := buildLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
 	zones := this.createZones(
@@ -62,7 +88,7 @@ func (this *RandomTopologyService) CreateTopologyVariant(
 	}
 	conns = append(conns,
 		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
-	return this.CreateVariant(playerLabels, allLabels[0], labelCount, zones, conns)
+	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
 func (this *RandomTopologyService) createConnectionNames(
@@ -90,7 +116,7 @@ func (this *RandomTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, allLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	holdCityNeutralLabel string,
 	connectionNames map[int][]string) []entities.Zone {
 	var zones []entities.Zone
@@ -107,7 +133,7 @@ func (this *RandomTopologyService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
@@ -119,7 +145,7 @@ func (this *RandomTopologyService) createConnections(
 	playerLabels, allLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	connectionNames map[int][]string,
 	triangulationPairs []models.ConnectionIndexes) []entities.Connection {
 	nameLookup := make(map[int]int, len(allLabels))

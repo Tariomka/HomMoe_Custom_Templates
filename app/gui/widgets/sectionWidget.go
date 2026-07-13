@@ -33,7 +33,7 @@ func NewSectionWidget(theme *material.Theme, title string, rows []layout.Widget)
 // newSectionHeaderWidget returns a Widget that renders a section title.
 func newSectionHeaderWidget(theme *material.Theme, title string) layout.Widget {
 	label := material.Body2(theme, "◆  "+title)
-	label.Color = themes.ColorAccent
+	label.Color = themes.ColorsBase.Accent
 	label.Font = font.Font{Weight: font.SemiBold}
 	return label.Layout
 }

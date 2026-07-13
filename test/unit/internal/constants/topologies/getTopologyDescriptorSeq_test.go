@@ -3,7 +3,7 @@ package topologies_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +26,7 @@ func TestWhenSequenceIsIterated_YieldsAllTopologiesInDropdownOrder(t *testing.T)
 	var actual []config.MapTopology
 
 	// Act
-	for descriptor := range constants.GetTopologyDescriptorSeq() {
+	for descriptor := range common.GetTopologyDescriptorSeq() {
 		actual = append(actual, descriptor.Type)
 	}
 
@@ -41,7 +41,7 @@ func TestWhenIterationStopsEarly_YieldsOnlyConsumedPrefix(t *testing.T) {
 	var actual []config.MapTopology
 
 	// Act
-	for descriptor := range constants.GetTopologyDescriptorSeq() {
+	for descriptor := range common.GetTopologyDescriptorSeq() {
 		actual = append(actual, descriptor.Type)
 		if len(actual) == 2 {
 			break

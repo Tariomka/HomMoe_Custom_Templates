@@ -20,8 +20,8 @@ func NewPanelWidget(padding unit.Dp, content layout.Widget) layout.Widget {
 		dims := layout.UniformInset(padding).Layout(gtx, content)
 		call := macro.Stop()
 		rect := image.Rectangle{Max: dims.Size}
-		paint.FillShape(gtx.Ops, themes.ColorPanel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-		paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
+		paint.FillShape(gtx.Ops, themes.ColorsBase.Panel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+		paint.FillShape(gtx.Ops, themes.ColorsBase.Border, clip.Stroke{
 			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 			Width: float32(gtx.Dp(1)),
 		}.Op())

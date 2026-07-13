@@ -52,7 +52,7 @@ func (this *ZoneIndexAdjacency) FindIndexes(nodeCount int) [][]int {
 			continue
 		}
 		var comp []int
-		queue := []int{start} // TODO: introduce a data structure for this
+		queue := []int{start}
 		visited[start] = true
 		for len(queue) > 0 {
 			cur := queue[0]

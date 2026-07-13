@@ -30,6 +30,7 @@ func GetVictoryConditionList() []Victory {
 	}
 }
 
+//nolint:revive // private struct with public accessors, not intended for external referencing, only for direct use.
 func GetVictoryConditionValues() victoryConditions {
 	winConditions := registry.GetWinningConditionValues()
 	return victoryConditions{
@@ -41,11 +42,14 @@ func GetVictoryConditionValues() victoryConditions {
 	}
 }
 
-func GetVictoryCondition(id string) Victory {
+// GetVictoryCondition looks up a victory condition by its wire ID. The second
+// return value reports whether the ID is known, letting callers surface
+// unknown values instead of silently reshaping them.
+func GetVictoryCondition(id string) (Victory, bool) {
 	for _, victory := range GetVictoryConditionList() {
 		if strings.EqualFold(victory.ID, id) {
-			return victory
+			return victory, true
 		}
 	}
-	return GetVictoryConditionList()[0] // TODO: probably should return empty Victory... suck it
+	return Victory{}, false
 }

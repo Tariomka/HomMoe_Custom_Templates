@@ -3,6 +3,7 @@ package ruleVariant_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
@@ -24,10 +25,10 @@ func TestWhenMappingIsNil_DefaultsToUtopiaMapping(t *testing.T) {
 func TestWhenVariantIdIsNil_UsesSmallestDefinedId(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapping := models.NewVariantMapping(models.SidMapping{Sid: "x"}, map[int]string{
-		5: "Five",
-		2: "Two",
-		9: "Nine",
+	mapping := models.NewVariantMapping(models.SidMapping{Sid: "x"}, []data.Tuple[int, string]{
+		data.NewTuple(5, "Five"),
+		data.NewTuple(2, "Two"),
+		data.NewTuple(9, "Nine"),
 	})
 
 	// Act

@@ -2,8 +2,8 @@ package preview
 
 import "image"
 
-// PreviewZone is one zone laid out on the preview canvas.
-type PreviewZone struct {
+// Zone is one zone laid out on the preview canvas.
+type Zone struct {
 	Name      string
 	Letter    string
 	Center    image.Point

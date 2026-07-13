@@ -5,11 +5,7 @@ inputs:
   go-version:
     description: The Go version to use
     required: false
-    default: 1.26.3
-  os:
-    description: The operating system to build for
-    required: false 
-    default: 'linux'
+    default: 1.26.5
 
 runs:
   using: 'composite'
@@ -21,7 +17,7 @@ runs:
         cache: true
 
     - name: Install Gio UI system dependencies
-      if: ${{ inputs.os == 'linux' }}
+      if: ${{ runner.os == 'Linux' }}
       shell: bash
       run: |
         sudo apt-get update

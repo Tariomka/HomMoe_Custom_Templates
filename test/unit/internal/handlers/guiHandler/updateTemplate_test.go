@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -24,7 +24,7 @@ func TestWhenTemplateIsNil_ReturnsProvidedTemplateInvalidError(t *testing.T) {
 	_, err := handler.UpdateTemplate(templateDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrProvidedTemplateInvalid)
+	assert.ErrorIs(t, err, common_errors.ErrProvidedTemplateInvalid)
 }
 
 func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testing.T) {
@@ -39,7 +39,7 @@ func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testin
 	_, err := handler.UpdateTemplate(templateDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrProvidedTemplateInvalid)
+	assert.ErrorIs(t, err, common_errors.ErrProvidedTemplateInvalid)
 }
 
 func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.T) {
@@ -81,7 +81,7 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	_, err := handler.UpdateTemplate(templateDto)
 
 	// Assert
-	assert.ErrorIs(t, err, common.ErrZonesMissing)
+	assert.ErrorIs(t, err, common_errors.ErrZonesMissing)
 }
 
 func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testing.T) {
@@ -163,6 +163,48 @@ func TestWhenConfigIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.Nil(t, loadDto.Template.MandatoryContent)
+}
+
+func TestWhenUpdateReplacesZones_CallersTemplateZonesAreNotMutated(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	template := generateDefaultTemplate(t, handler)
+	originalZones := template.Variants[0].Zones
+	require.NotEmpty(t, originalZones)
+	templateDto := dtos.TemplateUpdateDto{
+		Template:    template,
+		Zones:       slices.Clone(originalZones)[:1],
+		Connections: nil,
+	}
+
+	// Act
+	_, err := handler.UpdateTemplate(templateDto)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, template.Variants[0].Zones, len(originalZones))
+}
+
+func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	template := generateDefaultTemplate(t, handler)
+	originalConnections := template.Variants[0].Connections
+	require.NotEmpty(t, originalConnections)
+	templateDto := dtos.TemplateUpdateDto{
+		Template:    template,
+		Zones:       template.Variants[0].Zones,
+		Connections: nil,
+	}
+
+	// Act
+	_, err := handler.UpdateTemplate(templateDto)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, template.Variants[0].Connections, len(originalConnections))
 }
 
 // generateDefaultTemplate produces a real generated template from the default

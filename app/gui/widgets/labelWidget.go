@@ -40,9 +40,15 @@ func (this *LabelBuilder) WithColor(color color.NRGBA) *LabelBuilder {
 	this.item.Color = color
 	return this
 }
-func (this *LabelBuilder) WithColorDefault() *LabelBuilder { return this.WithColor(themes.ColorText) }
-func (this *LabelBuilder) WithColorDim() *LabelBuilder     { return this.WithColor(themes.ColorTextDim) }
-func (this *LabelBuilder) WithColorError() *LabelBuilder   { return this.WithColor(themes.ColorError) }
+func (this *LabelBuilder) WithColorDefault() *LabelBuilder {
+	return this.WithColor(themes.ColorsBase.Text)
+}
+func (this *LabelBuilder) WithColorDim() *LabelBuilder {
+	return this.WithColor(themes.ColorsBase.TextDim)
+}
+func (this *LabelBuilder) WithColorError() *LabelBuilder {
+	return this.WithColor(themes.ColorsBase.Error)
+}
 
 func (this *LabelBuilder) WithFont(font font.Font) *LabelBuilder {
 	this.item.Font = font

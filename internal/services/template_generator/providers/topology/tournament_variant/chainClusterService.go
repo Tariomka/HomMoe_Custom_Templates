@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -24,12 +25,12 @@ func NewChainClusterService() *ChainClusterService {
 func (this *ChainClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	chainLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).
-			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+			SelectString(func(x neutralZone.Plan) string { return x.Label }).
 			ToSlice()...)
 	connectionNames := make([]string, len(chainLabels)-1)
 	for index := range connectionNames {
@@ -45,7 +46,7 @@ func (this *ChainClusterService) createZones(
 	configuration config.GeneratorConfig,
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	playerIndex int) []entities.Zone {
 	var zones []entities.Zone
 	for index, label := range chainLabels {
@@ -67,7 +68,7 @@ func (this *ChainClusterService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(allNeutralZonePlans).
-						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
@@ -78,7 +79,7 @@ func (this *ChainClusterService) createZones(
 func (this *ChainClusterService) createConnections(
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	playerLabel string) []entities.Connection {
 	var connections []entities.Connection
 	for index, name := range connectionNames {

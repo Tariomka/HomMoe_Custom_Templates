@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,7 @@ func TestWhenVariantIdExists_ReturnsItsSingleEntryMapping(t *testing.T) {
 
 	// Assert
 	require.True(t, ok)
-	assert.Equal(t, map[int]string{2: "Large Guard"}, mapping.Variants)
+	assert.Equal(t, []data.Tuple[int, string]{data.NewTuple(2, "Large Guard")}, mapping.Variants)
 }
 
 func TestWhenVariantIdIsUnknown_ReturnsNotOk(t *testing.T) {

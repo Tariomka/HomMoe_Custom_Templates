@@ -22,8 +22,11 @@ const (
 
 var (
 	//go:embed assets/*.png
-	assetFileSystem      embed.FS
-	assetProviderFactory func() (*AssetProvider, error)
+	assetFileSystem embed.FS
+
+	// loadAssetProvider memoizes buildAssetProvider. Initialized eagerly at package
+	// load so concurrent NewAssetProvider callers share one race-free once-value.
+	loadAssetProvider = sync.OnceValues(buildAssetProvider)
 
 	neutralAssetNames = []string{
 		"neutral_low", "neutral_low_castle",
@@ -39,7 +42,7 @@ type AssetProvider struct {
 }
 
 func NewAssetProvider() (*AssetProvider, error) {
-	return getAssetProviderFactory()()
+	return loadAssetProvider()
 }
 
 func (this *AssetProvider) DrawBackground(canvas *image.RGBA) {
@@ -63,12 +66,12 @@ func (this *AssetProvider) DrawBackground(canvas *image.RGBA) {
 }
 
 func (this *AssetProvider) DrawPlayerZone(
-	canvas *image.RGBA, zone preview.PreviewZone, center image.Point, scale float64) {
+	canvas *image.RGBA, zone preview.Zone, center image.Point, scale float64) {
 	this.drawAsset(canvas, this.getPlayerAsset(zone), center, scale)
 }
 
 func (this *AssetProvider) DrawNeutralZone(
-	canvas *image.RGBA, zone preview.PreviewZone, center image.Point, scale float64) {
+	canvas *image.RGBA, zone preview.Zone, center image.Point, scale float64) {
 	this.drawAsset(canvas, this.getNeutralZoneAsset(zone), center, scale)
 }
 
@@ -98,8 +101,11 @@ func (this *AssetProvider) drawAsset(
 			// Src-over blend: out = source*alpha + destination*(1-alpha).
 			offset := canvas.PixOffset(x, y)
 			alpha, keep := int(interpolatedColor.A), 255-int(interpolatedColor.A)
+			//nolint:gosec // G115: (src*alpha + dst*keep)/255 <= 255 because alpha+keep == 255 and all inputs are <= 255.
 			canvas.Pix[offset+0] = uint8((int(interpolatedColor.R)*alpha + int(canvas.Pix[offset+0])*keep) / 255)
+			//nolint:gosec // G115: same bound as above.
 			canvas.Pix[offset+1] = uint8((int(interpolatedColor.G)*alpha + int(canvas.Pix[offset+1])*keep) / 255)
+			//nolint:gosec // G115: same bound as above.
 			canvas.Pix[offset+2] = uint8((int(interpolatedColor.B)*alpha + int(canvas.Pix[offset+2])*keep) / 255)
 			canvas.Pix[offset+3] = 255
 		}
@@ -150,7 +156,7 @@ func (this *AssetProvider) calculateBilinearInterpolation(asset image.Image, pos
 	}
 }
 
-func (this *AssetProvider) getNeutralZoneAsset(zone preview.PreviewZone) image.Image {
+func (this *AssetProvider) getNeutralZoneAsset(zone preview.Zone) image.Image {
 	quality := "low"
 	switch zone.Tier {
 	case 3:
@@ -167,52 +173,46 @@ func (this *AssetProvider) getNeutralZoneAsset(zone preview.PreviewZone) image.I
 	return this.neutralZones[name]
 }
 
-func (this *AssetProvider) getPlayerAsset(zone preview.PreviewZone) image.Image {
+func (this *AssetProvider) getPlayerAsset(zone preview.Zone) image.Image {
 	playerIndex := min(max(zone.Owner, 1), playerCount) - 1
 	return this.players[playerIndex]
 }
 
-func getAssetProviderFactory() func() (*AssetProvider, error) {
-	if assetProviderFactory != nil {
-		return assetProviderFactory
+// buildAssetProvider decodes all embedded preview assets. It is only invoked
+// once, through the loadAssetProvider once-value.
+func buildAssetProvider() (*AssetProvider, error) {
+	decode := func(name string) (image.Image, error) {
+		data, err := assetFileSystem.ReadFile(assetFolder + name)
+		if err != nil {
+			return nil, fmt.Errorf("preview asset %s: %w", name, err)
+		}
+
+		img, err := png.Decode(bytes.NewReader(data))
+		if err != nil {
+			return nil, fmt.Errorf("preview asset %s: %w", name, err)
+		}
+
+		return img, nil
 	}
 
-	assetProviderFactory = sync.OnceValues(func() (*AssetProvider, error) {
-		decode := func(name string) (image.Image, error) {
-			data, err := assetFileSystem.ReadFile(assetFolder + name)
-			if err != nil {
-				return nil, fmt.Errorf("preview asset %s: %w", name, err)
-			}
+	assetProvider := &AssetProvider{neutralZones: map[string]image.Image{}}
+	var err error
 
-			img, err := png.Decode(bytes.NewReader(data))
-			if err != nil {
-				return nil, fmt.Errorf("preview asset %s: %w", name, err)
-			}
+	if assetProvider.background, err = decode(backgroundAsset); err != nil {
+		return nil, fmt.Errorf("failed to load background: %w", err)
+	}
 
-			return img, nil
+	for index := range playerCount {
+		if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
+			return nil, fmt.Errorf("failed to load player %d: %w", index+1, err)
 		}
+	}
 
-		assetProvider := &AssetProvider{neutralZones: map[string]image.Image{}}
-		var err error
-
-		if assetProvider.background, err = decode(backgroundAsset); err != nil {
-			return nil, fmt.Errorf("failed to load background: %w", err)
+	for _, name := range neutralAssetNames {
+		if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
+			return nil, fmt.Errorf("failed to load neutral asset %s: %w", name, err)
 		}
+	}
 
-		for index := range playerCount {
-			if assetProvider.players[index], err = decode(fmt.Sprintf("player_%d.png", index+1)); err != nil {
-				return nil, fmt.Errorf("failed to load player %d: %w", index+1, err)
-			}
-		}
-
-		for _, name := range neutralAssetNames {
-			if assetProvider.neutralZones[name], err = decode(name + ".png"); err != nil {
-				return nil, fmt.Errorf("failed to load neutral asset %s: %w", name, err)
-			}
-		}
-
-		return assetProvider, nil
-	})
-
-	return assetProviderFactory
+	return assetProvider, nil
 }

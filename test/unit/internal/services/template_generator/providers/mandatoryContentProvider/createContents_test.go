@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
@@ -69,8 +69,8 @@ func TestWhenLowTierRowsConfigured_CopiesRowsIntoLowNeutralZone(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
-	plans := models.NeutralZonePlans{}
-	plans.AddPlan("C", models.QualityLow, 1)
+	plans := neutralZone.Plans{}
+	plans.AddPlan("C", neutralZone.QualityLow, 1)
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, plans)
@@ -86,8 +86,8 @@ func TestWhenMediumTierRowsConfigured_CopiesRowsIntoMediumNeutralZone(t *testing
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
-	plans := models.NeutralZonePlans{}
-	plans.AddPlan("C", models.QualityMedium, 1)
+	plans := neutralZone.Plans{}
+	plans.AddPlan("C", neutralZone.QualityMedium, 1)
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, plans)
@@ -109,8 +109,8 @@ func TestWhenHighTierRowsConfigured_CopiesRowsIntoHighNeutralZone(t *testing.T) 
 		{SID: "university"},
 		{SID: "random_item_legendary"},
 	}
-	plans := models.NeutralZonePlans{}
-	plans.AddPlan("W", models.QualityHigh, 3)
+	plans := neutralZone.Plans{}
+	plans.AddPlan("W", neutralZone.QualityHigh, 3)
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, plans)
@@ -135,8 +135,8 @@ func TestWhenNeutralZoneHasNoCastles_StripsNearCastlePlacementRules(t *testing.T
 			{Type: ruleTypeMainObject, Args: []any{"1"}},
 		},
 	}}
-	plans := models.NeutralZonePlans{}
-	plans.AddPlan("C", models.QualityMedium, 0)
+	plans := neutralZone.Plans{}
+	plans.AddPlan("C", neutralZone.QualityMedium, 0)
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, plans)
@@ -158,8 +158,8 @@ func TestWhenNeutralZoneHasCastles_KeepsNearCastlePlacementRules(t *testing.T) {
 		SID:   "treasure",
 		Rules: []entities.PlacementRule{{Type: ruleTypeMainObject, Args: []any{"0"}}},
 	}}
-	plans := models.NeutralZonePlans{}
-	plans.AddPlan("C", models.QualityMedium, 1)
+	plans := neutralZone.Plans{}
+	plans.AddPlan("C", neutralZone.QualityMedium, 1)
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, plans)
@@ -185,8 +185,8 @@ func TestWhenZeroCastleZoneStripsRules_DoesNotMutateConfiguredRows(t *testing.T)
 			{Type: ruleTypeMainObject, Args: []any{"1"}},
 		},
 	}}
-	plans := models.NeutralZonePlans{}
-	plans.AddPlan("C", models.QualityMedium, 0)
+	plans := neutralZone.Plans{}
+	plans.AddPlan("C", neutralZone.QualityMedium, 0)
 
 	// Act
 	provider.CreateContents(*configuration, nil, plans)

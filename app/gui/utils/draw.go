@@ -19,24 +19,24 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
-func DrawConnection(gtx layout.Context, conn preview.PreviewConnection, zoneRadius int) {
+func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int) {
 	radius := float64(zoneRadius)
-	start, ok1 := helpers.CalculatePointTowards(conn.A, conn.Ctrl, radius)
-	end, ok2 := helpers.CalculatePointTowards(conn.B, conn.Ctrl, radius)
+	start, ok1 := helpers.CalculatePointTowards(conn.Start, conn.Ctrl, radius)
+	end, ok2 := helpers.CalculatePointTowards(conn.End, conn.Ctrl, radius)
 	if !ok1 || !ok2 {
 		return
 	}
 
-	lineColor := themes.ColorPreviewDirectLine
+	lineColor := themes.ColorsPreview.DirectLine
 	lineWidth := float32(gtx.Dp(unit.Dp(2.0)))
 	if conn.Portal {
-		lineColor = themes.ColorPreviewPortalLine
+		lineColor = themes.ColorsPreview.PortalLine
 		lineWidth = float32(gtx.Dp(unit.Dp(1.5)))
 	}
 	drawCurve(gtx, start, conn.Ctrl, end, lineWidth, lineColor)
 }
 
-func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.PreviewZone, zoneRadius int) {
+func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zone, zoneRadius int) {
 	radius := zoneRadius
 	if zone.IsHub && radius < 28 {
 		radius = 28
@@ -54,7 +54,7 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Pre
 
 	label := zoneLabel(zone)
 	if label != "" {
-		drawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, themes.ColorPreviewZoneLabel)
+		drawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, themes.ColorsPreview.ZoneLabel)
 	}
 	if zone.HasCastle && zone.Castles > 0 {
 		// Small badge in lower right.
@@ -66,7 +66,7 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Pre
 			image.Pt(badgeX, badgeY),
 			fmt.Sprintf("⌂%d", zone.Castles),
 			10,
-			themes.ColorPreviewCastleBadge,
+			themes.ColorsPreview.CastleBadge,
 		)
 	}
 }
@@ -111,24 +111,24 @@ func drawOffsetText(
 	stack.Pop()
 }
 
-func zoneColors(zone preview.PreviewZone) (fill, edge color.NRGBA) {
+func zoneColors(zone preview.Zone) (fill, edge color.NRGBA) {
 	switch {
 	case zone.IsPlayer:
-		return themes.ColorPreviewSpawnFill, themes.ColorPreviewSpawnEdge
+		return themes.ColorsPreview.SpawnFill, themes.ColorsPreview.SpawnEdge
 	case zone.IsHub:
-		return themes.ColorPreviewHubFill, themes.ColorPreviewHubEdge
+		return themes.ColorsPreview.HubFill, themes.ColorsPreview.HubEdge
 	}
 	switch zone.Tier {
 	case 3:
-		return themes.ColorPreviewGoldFill, themes.ColorPreviewGoldEdge
+		return themes.ColorsPreview.GoldFill, themes.ColorsPreview.GoldEdge
 	case 2:
-		return themes.ColorPreviewSilverFill, themes.ColorPreviewSilverEdge
+		return themes.ColorsPreview.SilverFill, themes.ColorsPreview.SilverEdge
 	default:
-		return themes.ColorPreviewBronzeFill, themes.ColorPreviewBronzeEdge
+		return themes.ColorsPreview.BronzeFill, themes.ColorsPreview.BronzeEdge
 	}
 }
 
-func zoneLabel(zone preview.PreviewZone) string {
+func zoneLabel(zone preview.Zone) string {
 	if zone.IsPlayer {
 		if zone.Owner > 0 {
 			return fmt.Sprintf("P%d", zone.Owner)

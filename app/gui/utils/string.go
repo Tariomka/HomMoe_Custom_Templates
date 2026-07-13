@@ -21,3 +21,23 @@ func RoundedRangePercentString(value float32, minRange, maxRange int) string {
 func MultiplierString(value, base, factor float32) string {
 	return fmt.Sprintf("x %.2f", Multiplier(value, base, factor))
 }
+
+// DenormalizeFormatter returns a formatter that renders a value via [DenormalizeString].
+func DenormalizeFormatter(low, high float32) func(value float32) string {
+	return func(value float32) string { return DenormalizeString(value, low, high) }
+}
+
+// RoundedRangeFormatter returns a formatter that renders a value via [RoundedRangeString].
+func RoundedRangeFormatter(minRange, maxRange int) func(value float32) string {
+	return func(value float32) string { return RoundedRangeString(value, minRange, maxRange) }
+}
+
+// RoundedRangePercentFormatter returns a formatter that renders a value via [RoundedRangePercentString].
+func RoundedRangePercentFormatter(minRange, maxRange int) func(value float32) string {
+	return func(value float32) string { return RoundedRangePercentString(value, minRange, maxRange) }
+}
+
+// MultiplierFormatter returns a formatter that renders a value via [MultiplierString].
+func MultiplierFormatter(base, factor float32) func(value float32) string {
+	return func(value float32) string { return MultiplierString(value, base, factor) }
+}

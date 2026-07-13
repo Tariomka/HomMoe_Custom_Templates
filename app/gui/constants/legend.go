@@ -14,14 +14,14 @@ type LegendItem struct {
 
 var LegendRows = [][]LegendItem{
 	{
-		{Label: "Player", Color: themes.ColorPreviewSpawnEdge},
-		{Label: "Bronze", Color: themes.ColorPreviewBronzeEdge},
-		{Label: "Silver", Color: themes.ColorPreviewSilverEdge},
-		{Label: "Gold", Color: themes.ColorPreviewGoldEdge},
-		{Label: "Hub", Color: themes.ColorPreviewHubEdge},
+		{Label: "Player", Color: themes.ColorsPreview.SpawnEdge},
+		{Label: "Bronze", Color: themes.ColorsPreview.BronzeEdge},
+		{Label: "Silver", Color: themes.ColorsPreview.SilverEdge},
+		{Label: "Gold", Color: themes.ColorsPreview.GoldEdge},
+		{Label: "Hub", Color: themes.ColorsPreview.HubEdge},
 	},
 	{
-		{Label: "Road", Color: themes.ColorPreviewDirectLine, Line: true},
-		{Label: "Portal", Color: themes.ColorPreviewPortalLine, Line: true},
+		{Label: "Road", Color: themes.ColorsPreview.DirectLine, Line: true},
+		{Label: "Portal", Color: themes.ColorsPreview.PortalLine, Line: true},
 	},
 }

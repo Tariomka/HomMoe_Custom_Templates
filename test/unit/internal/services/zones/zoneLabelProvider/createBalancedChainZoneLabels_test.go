@@ -13,7 +13,7 @@ func TestWhenNoPlayerLabelsProvided_ReturnsNeutralLabelsOnly(t *testing.T) {
 	provider := zones.NewZoneLabelProvider()
 
 	// Act
-	ordered := provider.CreateBalancedChainZoneLabels(nil, mediumPlans("C", "D"), 0)
+	ordered := provider.CreateBalancedChainZoneLabels(nil, mediumPlans("C", "D"))
 
 	// Assert
 	assert.Equal(t, []string{"C", "D"}, ordered)
@@ -25,44 +25,32 @@ func TestWhenSinglePlayerProvided_DistributesNeutralsAcrossEdgeGaps(t *testing.T
 	provider := zones.NewZoneLabelProvider()
 
 	// Act
-	ordered := provider.CreateBalancedChainZoneLabels([]string{"A"}, mediumPlans("C"), 0)
+	ordered := provider.CreateBalancedChainZoneLabels([]string{"A"}, mediumPlans("C"))
 
 	// Assert
 	assert.Equal(t, []string{"A", "C"}, ordered)
 }
 
-func TestWhenMinimumSeparationIsSet_PlacesRequiredNeutralsBetweenPlayers(t *testing.T) {
+func TestWhenTwoPlayersAndOneNeutralProvided_PlacesNeutralBetweenPlayers(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
 	// Act
-	ordered := provider.CreateBalancedChainZoneLabels([]string{"A", "B"}, mediumPlans("C"), 1)
+	ordered := provider.CreateBalancedChainZoneLabels([]string{"A", "B"}, mediumPlans("C"))
 
 	// Assert
 	assert.Equal(t, []string{"A", "C", "B"}, ordered)
 }
 
-func TestWhenNeutralsExceedSeparationNeeds_KeepsChainEndsOnPlayers(t *testing.T) {
+func TestWhenMultipleNeutralsProvided_KeepsChainEndsOnPlayers(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 
 	// Act
-	ordered := provider.CreateBalancedChainZoneLabels([]string{"A", "B"}, mediumPlans("C", "D", "E"), 1)
+	ordered := provider.CreateBalancedChainZoneLabels([]string{"A", "B"}, mediumPlans("C", "D", "E"))
 
 	// Assert
 	assert.Equal(t, []string{"A", "C", "E", "D", "B"}, ordered)
-}
-
-func TestWhenSeparationCannotBeFilled_DistributesNeutralsInsideChain(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	provider := zones.NewZoneLabelProvider()
-
-	// Act
-	ordered := provider.CreateBalancedChainZoneLabels([]string{"A", "B"}, mediumPlans("C"), 5)
-
-	// Assert
-	assert.Equal(t, []string{"A", "C", "B"}, ordered)
 }

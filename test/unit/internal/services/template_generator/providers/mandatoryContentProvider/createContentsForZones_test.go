@@ -11,7 +11,7 @@ import (
 
 // CreateContentsForZones keys content off each zone's ACTUAL quality so a zone
 // re-tiered in the manual editor (Medium plan -> High zone) gets High content.
-// Regression test for the manually-promoted centre zone showing no high content.
+// Regression test for the manually-promoted center zone showing no high content.
 func TestWhenZoneManuallyPromotedToHighTier_UsesHighTierRows(t *testing.T) {
 	t.Parallel()
 	// Arrange

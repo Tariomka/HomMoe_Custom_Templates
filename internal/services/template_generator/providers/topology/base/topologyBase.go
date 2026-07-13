@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
@@ -123,7 +124,7 @@ func (this *TopologyBase) CreateSpawnZone(
 }
 
 func (this *TopologyBase) CreateNeutralZone(
-	plan models.NeutralZonePlan,
+	plan neutralZone.Plan,
 	connectionNames []string,
 	zoneSize float64,
 	footholdCount int,
@@ -133,7 +134,7 @@ func (this *TopologyBase) CreateNeutralZone(
 	if isHoldCity && plan.CastleCount < 1 {
 		plan.CastleCount = 1
 	}
-	profile := models.NewNeutralZoneProfile(plan.Quality)
+	profile := neutralZone.NewNeutralZoneProfile(plan.Quality)
 
 	// Abandoned outposts are spawned in addition to the zone's castles, with
 	// their own count slider instead of being tied to the castle count.
@@ -292,14 +293,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 			continue
 		}
 
-		hasConn := false
-		for _, r := range zone.Roads {
-			if r.To.Type == "Connection" && len(r.To.Args) > 0 && connNames[r.To.Args[0]] {
-				hasConn = true
-				break
-			}
-		}
-		if hasConn {
+		if spawnZoneHasConnection(zone, connNames) {
 			continue
 		}
 
@@ -320,16 +314,38 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 			GuardMatchGroup: "fallback_guard_" + fallbackName,
 		})
 		connNames[fallbackName] = true
-		for _, pl := range []string{label, partner} {
-			if pz, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == "Spawn-"+pl }); ok {
-				pz.Roads = append(pz.Roads, variant_content.NewRoadBuilder().
-					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-					WithTo(variant_content.NewRefBuilder().BuildConnectionType(fallbackName)).
-					Build())
-			}
-		}
+		appendSpawnFallbackRoads(zones, label, partner, fallbackName)
 	}
 	return additionalConns
+}
+
+// spawnZoneHasConnection reports whether the spawn zone already has a road
+// leading to any of the known connections.
+func spawnZoneHasConnection(zone entities.Zone, connNames map[string]bool) bool {
+	connectionType := registry.GetRoadConnectionTypeValues().Connection
+	for _, road := range zone.Roads {
+		if road.To.Type == connectionType && len(road.To.Args) > 0 && connNames[road.To.Args[0]] {
+			return true
+		}
+	}
+	return false
+}
+
+// appendSpawnFallbackRoads adds a road from each of the two spawn zones' first
+// main object to the freshly created fallback connection.
+func appendSpawnFallbackRoads(zones []entities.Zone, label, partner, fallbackName string) {
+	for _, playerLabel := range []string{label, partner} {
+		spawnZoneName := "Spawn-" + playerLabel
+		zoneIndex := slices.IndexFunc(
+			zones,
+			func(candidate entities.Zone) bool { return candidate.Name == spawnZoneName })
+		if zoneIndex >= 0 {
+			zones[zoneIndex].Roads = append(zones[zoneIndex].Roads, variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(fallbackName)).
+				Build())
+		}
+	}
 }
 
 func (this *TopologyBase) CreateMissingConnections(
@@ -338,41 +354,12 @@ func (this *TopologyBase) CreateMissingConnections(
 	zones []entities.Zone,
 	connections []entities.Connection,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans) []entities.Connection {
+	neutralZones neutralZone.Plans) []entities.Connection {
 	if len(allLabels) < 2 {
 		return nil
 	}
 
-	getFallbackConnName := func(zone entities.Zone) string {
-		existingConn := ""
-		for _, road := range zone.Roads {
-			if road.From.Type == "Connection" && len(road.From.Args) > 0 {
-				existingConn = road.From.Args[0]
-				break
-			}
-			if road.To.Type == "Connection" && len(road.To.Args) > 0 {
-				existingConn = road.To.Args[0]
-				break
-			}
-		}
-		return existingConn
-	}
-
-	adjacency := models.NewZoneIndexAdjacency(len(allLabels))
-	// TODO: move out to a separate function
-	zoneNameToIdx := map[string]int{}
-	for index, label := range allLabels {
-		zoneNameToIdx[this.ZoneLabelProvider.CreateZoneName(label, playerLabels)] = index
-	}
-	for connection := range linq.FromSlice(connections).
-		Where(func(x entities.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
-		Where(func(x entities.Connection) bool {
-			_, okA := zoneNameToIdx[x.From]
-			_, okB := zoneNameToIdx[x.To]
-			return okA && okB
-		}).Iterate {
-		adjacency.Link(zoneNameToIdx[connection.From], zoneNameToIdx[connection.To])
-	}
+	adjacency := this.buildZoneAdjacency(playerLabels, allLabels, connections)
 
 	connNameSet := map[string]bool{}
 	for connection := range linq.FromSlice(connections).
@@ -394,6 +381,9 @@ func (this *TopologyBase) CreateMissingConnections(
 		}
 		bridgeName := fmt.Sprintf("Bridge-%s-%s", labelA, labelB)
 		if connNameSet[bridgeName] {
+			// The existing bridge already connects the two components; link them so the
+			// loop progresses instead of reselecting the same pair forever.
+			adjacency.Link(bestIndexes.X, bestIndexes.Y)
 			continue
 		}
 
@@ -412,32 +402,59 @@ func (this *TopologyBase) CreateMissingConnections(
 			Build())
 		connNameSet[bridgeName] = true
 
-		for _, zoneName := range []string{zoneFrom, zoneTo} {
-			if zone, ok := linq.FromSlice(zones).First(func(x entities.Zone) bool { return x.Name == zoneName }); ok {
-				roadBuilder := variant_content.NewRoadBuilder().WithTo(
-					variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
-				if len(zone.MainObjects) > 0 {
-					zone.Roads = append(zone.Roads,
-						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).Build())
-				} else if len(zone.Roads) > 0 {
-					connectionName := getFallbackConnName(zone)
-					if connectionName == "" {
-						connectionName = bridgeName
-					}
-					zone.Roads = append(zone.Roads,
-						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(connectionName)).
-							Build())
-				} else {
-					zone.Roads = append(zone.Roads,
-						roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
-				}
-			}
-		}
+		appendBridgeRoads(zones, zoneFrom, zoneTo, bridgeName)
 
 		adjacency.Link(bestIndexes.X, bestIndexes.Y)
 	}
 
 	return additionalConns
+}
+
+// findExistingConnName returns the name of the first connection referenced by
+// the zone's roads, or "" when the zone has no connection-bound road.
+func findExistingConnName(zone entities.Zone) string {
+	connectionType := registry.GetRoadConnectionTypeValues().Connection
+	for _, road := range zone.Roads {
+		if road.From.Type == connectionType && len(road.From.Args) > 0 {
+			return road.From.Args[0]
+		}
+		if road.To.Type == connectionType && len(road.To.Args) > 0 {
+			return road.To.Args[0]
+		}
+	}
+	return ""
+}
+
+// appendBridgeRoads wires the new bridge connection into both endpoint zones:
+// from the zone's first main object when it has one, otherwise chained off an
+// existing connection road (or the bridge itself as a last resort).
+func appendBridgeRoads(zones []entities.Zone, zoneFrom, zoneTo, bridgeName string) {
+	for _, zoneName := range []string{zoneFrom, zoneTo} {
+		zoneIndex := slices.IndexFunc(
+			zones,
+			func(candidate entities.Zone) bool { return candidate.Name == zoneName })
+		if zoneIndex < 0 {
+			continue
+		}
+		roadBuilder := variant_content.NewRoadBuilder().WithTo(
+			variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
+		switch {
+		case len(zones[zoneIndex].MainObjects) > 0:
+			zones[zoneIndex].Roads = append(zones[zoneIndex].Roads,
+				roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).Build())
+		case len(zones[zoneIndex].Roads) > 0:
+			connectionName := findExistingConnName(zones[zoneIndex])
+			if connectionName == "" {
+				connectionName = bridgeName
+			}
+			zones[zoneIndex].Roads = append(zones[zoneIndex].Roads,
+				roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(connectionName)).
+					Build())
+		default:
+			zones[zoneIndex].Roads = append(zones[zoneIndex].Roads,
+				roadBuilder.WithFrom(variant_content.NewRefBuilder().BuildConnectionType(bridgeName)).Build())
+		}
+	}
 }
 
 func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []entities.Road {
@@ -471,7 +488,7 @@ func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, gen
 func (this *TopologyBase) GetBorderGuardValue(
 	labelA, labelB string,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning) int {
 	aIsPlayer := slices.Contains(playerLabels, labelA)
 	bIsPlayer := slices.Contains(playerLabels, labelB)
@@ -595,6 +612,28 @@ func (this *TopologyBase) CreateHubZoneCastles(
 	return castles
 }
 
+// buildZoneAdjacency indexes every zone label and links the indexes of zones
+// already joined by a Direct or Portal connection.
+func (this *TopologyBase) buildZoneAdjacency(
+	playerLabels, allLabels []string,
+	connections []entities.Connection) *models.ZoneIndexAdjacency {
+	adjacency := models.NewZoneIndexAdjacency(len(allLabels))
+	zoneNameToIdx := map[string]int{}
+	for index, label := range allLabels {
+		zoneNameToIdx[this.ZoneLabelProvider.CreateZoneName(label, playerLabels)] = index
+	}
+	for connection := range linq.FromSlice(connections).
+		Where(func(x entities.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
+		Where(func(x entities.Connection) bool {
+			_, okA := zoneNameToIdx[x.From]
+			_, okB := zoneNameToIdx[x.To]
+			return okA && okB
+		}).Iterate {
+		adjacency.Link(zoneNameToIdx[connection.From], zoneNameToIdx[connection.To])
+	}
+	return adjacency
+}
+
 func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
 	return variant_content.NewObjectBuilder().
 		WithTypeSpawn().
@@ -656,7 +695,7 @@ func (this *TopologyBase) createOuterZoneRoads(
 // Exported so the manual zone editor can rebuild castles when the user edits
 // a zone's quality or castle count.
 func CreateNeutralZoneCastles(
-	profile models.NeutralZoneProfile,
+	profile neutralZone.Profile,
 	tuning models.GenerationTuning,
 	castleCount int,
 	isHoldCityZone bool) []entities.MainObject {
@@ -707,7 +746,7 @@ func CreateNeutralZoneCastles(
 // in a neutral zone alongside its City castles. The number of outposts is
 // driven by the dedicated count rather than the zone's castle count.
 func createAbandonedOutposts(
-	profile models.NeutralZoneProfile,
+	profile neutralZone.Profile,
 	tuning models.GenerationTuning,
 	count int) []entities.MainObject {
 	var outposts []entities.MainObject
@@ -738,47 +777,63 @@ func buildSideContentLimits() entities.StringList {
 }
 
 func buildNonAdjacentDerangement(count int) []int {
-	dest := make([]int, count)
 	for range 100 {
-		candidates := make([]int, count)
-		for i := range candidates {
-			candidates[i] = i
-		}
-		rand.Shuffle(len(candidates), func(i, j int) { candidates[i], candidates[j] = candidates[j], candidates[i] })
-		valid := true
-		used := make([]bool, count)
-		for i := range count {
-			found := -1
-			for j := range candidates {
-				if used[candidates[j]] {
-					continue
-				}
-				candidate := candidates[j]
-				if candidate != i && candidate != (i+1)%count && candidate != (i-1+count)%count {
-					found = j
-					break
-				}
-			}
-			if found < 0 {
-				for j := range candidates {
-					if !used[candidates[j]] && candidates[j] != i {
-						found = j
-						break
-					}
-				}
-			}
-			if found < 0 {
-				valid = false
-				break
-			}
-			dest[i] = candidates[found]
-			used[candidates[found]] = true
-		}
-		if valid {
+		if dest, ok := tryRandomDerangement(count); ok {
 			return dest
 		}
 	}
+	return buildShiftDerangement(count)
+}
 
+// tryRandomDerangement attempts to assign every index a random destination that
+// is neither itself nor one of its ring neighbours; it reports failure when the
+// shuffled candidate order leaves some index without a legal destination.
+func tryRandomDerangement(count int) ([]int, bool) {
+	candidates := make([]int, count)
+	for i := range candidates {
+		candidates[i] = i
+	}
+	rand.Shuffle(len(candidates), func(i, j int) { candidates[i], candidates[j] = candidates[j], candidates[i] })
+
+	dest := make([]int, count)
+	used := make([]bool, count)
+	for i := range count {
+		found := pickDerangementTarget(candidates, used, i, count)
+		if found < 0 {
+			return nil, false
+		}
+		dest[i] = candidates[found]
+		used[candidates[found]] = true
+	}
+	return dest, true
+}
+
+// pickDerangementTarget returns the position (within candidates) of the first
+// unused candidate that is neither i nor a ring neighbour of i; when none
+// exists it falls back to any unused candidate other than i, or -1.
+func pickDerangementTarget(candidates []int, used []bool, i, count int) int {
+	for j := range candidates {
+		if used[candidates[j]] {
+			continue
+		}
+		candidate := candidates[j]
+		if candidate != i && candidate != (i+1)%count && candidate != (i-1+count)%count {
+			return j
+		}
+	}
+	for j := range candidates {
+		if !used[candidates[j]] && candidates[j] != i {
+			return j
+		}
+	}
+	return -1
+}
+
+// buildShiftDerangement is the deterministic fallback: every index maps to the
+// one half a ring away, which is never itself or an adjacent index for the
+// zone counts this is called with.
+func buildShiftDerangement(count int) []int {
+	dest := make([]int, count)
 	shift := max(1, count/2)
 	for i := range count {
 		dest[i] = (i + shift) % count

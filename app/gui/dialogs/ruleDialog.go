@@ -79,9 +79,9 @@ func NewManageRulesDialog(
 	}
 
 	for _, variant := range content_rules.GetVariantsForContent(mapping) {
-		for id, description := range variant.Variants {
-			dialog.variantIDs = append(dialog.variantIDs, id)
-			dialog.variantLabels = append(dialog.variantLabels, description)
+		for _, tuple := range variant.Variants {
+			dialog.variantIDs = append(dialog.variantIDs, tuple.Key)
+			dialog.variantLabels = append(dialog.variantLabels, tuple.Value)
 		}
 	}
 	if len(dialog.variantIDs) > 0 {
@@ -187,7 +187,7 @@ func (this *ManageRulesDialog) layoutRuleRow(theme *material.Theme, index int) l
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					label := material.Body1(theme, ruleDisplayText(this.mapping, saved))
-					label.Color = themes.ColorText
+					label.Color = themes.ColorsBase.Text
 					label.TextSize = unit.Sp(13)
 					return label.Layout(gtx)
 				}),
@@ -257,7 +257,7 @@ func (this *ManageRulesDialog) sectionLabel(theme *material.Theme, text string) 
 		return layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx,
 			func(gtx layout.Context) layout.Dimensions {
 				label := material.Body1(theme, text)
-				label.Color = themes.ColorAccent
+				label.Color = themes.ColorsBase.Accent
 				label.TextSize = unit.Sp(13)
 				return label.Layout(gtx)
 			})
@@ -267,7 +267,7 @@ func (this *ManageRulesDialog) sectionLabel(theme *material.Theme, text string) 
 func (this *ManageRulesDialog) dimLabel(theme *material.Theme, text string) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		label := material.Body2(theme, text)
-		label.Color = themes.ColorTextDim
+		label.Color = themes.ColorsBase.TextDim
 		label.TextSize = unit.Sp(12)
 		return label.Layout(gtx)
 	}

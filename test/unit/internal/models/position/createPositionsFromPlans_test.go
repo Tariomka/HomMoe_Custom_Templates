@@ -6,6 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func TestWhenNoLabelsAreProvided_ReturnsNil(t *testing.T) {
 	var orderedLabels []string
 
 	// Act
-	positions := models.CreatePositionsFromPlans(orderedLabels, nil, models.NeutralZonePlans{})
+	positions := models.CreatePositionsFromPlans(orderedLabels, nil, neutralZone.Plans{})
 
 	// Assert
 	assert.Nil(t, positions)
@@ -32,7 +33,7 @@ func TestWhenSinglePlayerLabelIsProvided_PlacesItOnPlayerRingRadius(t *testing.T
 	)}
 
 	// Act
-	positions := models.CreatePositionsFromPlans(orderedLabels, playerLabels, models.NeutralZonePlans{})
+	positions := models.CreatePositionsFromPlans(orderedLabels, playerLabels, neutralZone.Plans{})
 
 	// Assert
 	assert.Equal(t, expected, positions)
@@ -43,10 +44,10 @@ func TestWhenLabelsSpanEveryTier_ReturnsOnePositionPerLabel(t *testing.T) {
 	// Arrange
 	orderedLabels := []string{"P1", "P2", "L1", "M1", "H1"}
 	playerLabels := []string{"P1", "P2"}
-	plans := models.NeutralZonePlans{
-		{Label: "L1", Quality: models.QualityLow},
-		{Label: "M1", Quality: models.QualityMedium},
-		{Label: "H1", Quality: models.QualityHigh},
+	plans := neutralZone.Plans{
+		{Label: "L1", Quality: neutralZone.QualityLow},
+		{Label: "M1", Quality: neutralZone.QualityMedium},
+		{Label: "H1", Quality: neutralZone.QualityHigh},
 	}
 
 	// Act
@@ -61,13 +62,13 @@ func TestWhenManyLabelsArePlaced_ClampsEveryPositionInsideCanvasMargins(t *testi
 	// Arrange
 	orderedLabels := []string{"P1", "P2", "P3", "L1", "L2", "M1", "M2", "H1", "H2"}
 	playerLabels := []string{"P1", "P2", "P3"}
-	plans := models.NeutralZonePlans{
-		{Label: "L1", Quality: models.QualityLow},
-		{Label: "L2", Quality: models.QualityLow},
-		{Label: "M1", Quality: models.QualityMedium},
-		{Label: "M2", Quality: models.QualityMedium},
-		{Label: "H1", Quality: models.QualityHigh},
-		{Label: "H2", Quality: models.QualityHigh},
+	plans := neutralZone.Plans{
+		{Label: "L1", Quality: neutralZone.QualityLow},
+		{Label: "L2", Quality: neutralZone.QualityLow},
+		{Label: "M1", Quality: neutralZone.QualityMedium},
+		{Label: "M2", Quality: neutralZone.QualityMedium},
+		{Label: "H1", Quality: neutralZone.QualityHigh},
+		{Label: "H2", Quality: neutralZone.QualityHigh},
 	}
 
 	// Act

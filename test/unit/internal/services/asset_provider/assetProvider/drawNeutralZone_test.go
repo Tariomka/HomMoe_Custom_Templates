@@ -13,7 +13,7 @@ func TestWhenNeutralZoneIsDrawn_CanvasIsMutated(t *testing.T) {
 	blankPixels := append([]uint8(nil), newCanvas().Pix...)
 
 	// Act
-	canvas := renderNeutral(t, preview.PreviewZone{Tier: 1})
+	canvas := renderNeutral(t, preview.Zone{Tier: 1})
 
 	// Assert
 	assert.NotEqual(t, blankPixels, canvas.Pix)
@@ -22,10 +22,10 @@ func TestWhenNeutralZoneIsDrawn_CanvasIsMutated(t *testing.T) {
 func TestWhenTierIsUnknown_FallsBackToLowQualitySprite(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	lowTierCanvas := renderNeutral(t, preview.PreviewZone{Tier: 1})
+	lowTierCanvas := renderNeutral(t, preview.Zone{Tier: 1})
 
 	// Act
-	canvas := renderNeutral(t, preview.PreviewZone{Tier: 0})
+	canvas := renderNeutral(t, preview.Zone{Tier: 0})
 
 	// Assert
 	assert.Equal(t, lowTierCanvas.Pix, canvas.Pix)
@@ -34,10 +34,10 @@ func TestWhenTierIsUnknown_FallsBackToLowQualitySprite(t *testing.T) {
 func TestWhenTierIsMedium_DrawsDifferentSpriteThanLow(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	lowTierCanvas := renderNeutral(t, preview.PreviewZone{Tier: 1})
+	lowTierCanvas := renderNeutral(t, preview.Zone{Tier: 1})
 
 	// Act
-	canvas := renderNeutral(t, preview.PreviewZone{Tier: 2})
+	canvas := renderNeutral(t, preview.Zone{Tier: 2})
 
 	// Assert
 	assert.NotEqual(t, lowTierCanvas.Pix, canvas.Pix)
@@ -46,10 +46,10 @@ func TestWhenTierIsMedium_DrawsDifferentSpriteThanLow(t *testing.T) {
 func TestWhenTierIsHigh_DrawsDifferentSpriteThanMedium(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mediumTierCanvas := renderNeutral(t, preview.PreviewZone{Tier: 2})
+	mediumTierCanvas := renderNeutral(t, preview.Zone{Tier: 2})
 
 	// Act
-	canvas := renderNeutral(t, preview.PreviewZone{Tier: 3})
+	canvas := renderNeutral(t, preview.Zone{Tier: 3})
 
 	// Assert
 	assert.NotEqual(t, mediumTierCanvas.Pix, canvas.Pix)
@@ -58,10 +58,10 @@ func TestWhenTierIsHigh_DrawsDifferentSpriteThanMedium(t *testing.T) {
 func TestWhenZoneHasCastle_DrawsDifferentSpriteThanWithoutCastle(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	castleLessCanvas := renderNeutral(t, preview.PreviewZone{Tier: 2})
+	castleLessCanvas := renderNeutral(t, preview.Zone{Tier: 2})
 
 	// Act
-	canvas := renderNeutral(t, preview.PreviewZone{Tier: 2, HasCastle: true})
+	canvas := renderNeutral(t, preview.Zone{Tier: 2, HasCastle: true})
 
 	// Assert
 	assert.NotEqual(t, castleLessCanvas.Pix, canvas.Pix)

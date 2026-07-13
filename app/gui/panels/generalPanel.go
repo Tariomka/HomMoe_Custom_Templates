@@ -1,6 +1,8 @@
 package panels
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 
 	"gioui.org/layout"
@@ -114,7 +116,8 @@ func (this *GeneralPanel) LoadFromState() {
 	this.updateMapSizeSelectorItems()
 	this.mapSizeSelector.SelectByName(constants.GetMapSize(settings.MapSize).Label)
 
-	this.gameMode.SetSelectedIndex(0) // TODO: here is a bug where gameMode will not be loaded
+	gameModeIndex := max(slices.Index(constants.GameModes, settings.GameMode), 0)
+	this.gameMode.SetSelectedIndex(gameModeIndex)
 	this.heroMinimumCount.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 12)
 	this.heroMaximumCount.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
 	this.heroIncrementPerCastle.Value = utils.Normalize(float32(settings.HeroCountIncrement), 1, 10)
@@ -122,7 +125,14 @@ func (this *GeneralPanel) LoadFromState() {
 	this.factionLawXpMultiplier.Value = utils.Normalize(float32(settings.FactionLawXpPercent), 25, 200)
 	this.astrologyXpMultiplier.Value = utils.Normalize(float32(settings.AstrologyXpPercent), 25, 200)
 
-	this.victorySelector.SelectByName(constants.GetVictoryCondition(settings.VictoryCondition).Label)
+	victory, victoryKnown := constants.GetVictoryCondition(settings.VictoryCondition)
+	if !victoryKnown {
+		victory = constants.GetVictoryConditionValues().Standard
+		this.state.SetStatus(
+			fmt.Sprintf("Unknown victory condition %q in file - reset to Standard.", settings.VictoryCondition),
+			false)
+	}
+	this.victorySelector.SelectByName(victory.Label)
 
 	this.checkLostStartCity.Value = settings.LostStartCity
 	this.lostCityDayCount.Value = utils.Normalize(float32(settings.LostStartCityDay), 1, 30)
@@ -144,7 +154,6 @@ func (this *GeneralPanel) LoadFromState() {
 }
 
 func (this *GeneralPanel) SaveToState() {
-	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
@@ -185,9 +194,8 @@ func (this *GeneralPanel) getTemplateSectionWidget(theme *material.Theme) layout
 	return widgets.NewSectionWidget(theme, "Template", []layout.Widget{
 		widgets.NewLabeledRowWidget(theme, "Template name", constants.DefaultLabelWidth,
 			widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name", false)),
-		widgets.NewLabeledRowWidget(theme, "Players", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.playerCount,
-				utils.RoundedRangeString(this.playerCount.Value, 2, 8))),
+		widgets.NewSliderRowWidget(theme, "Players", constants.DefaultLabelWidth,
+			&this.playerCount, utils.RoundedRangeFormatter(2, 8)),
 		widgets.NewLabeledRowWidget(theme, "Map size", constants.DefaultLabelWidth,
 			func(gtx layout.Context) layout.Dimensions {
 				return this.updateMapSizeSelector(gtx).GetWidget(theme)(gtx)
@@ -204,15 +212,12 @@ func (this *GeneralPanel) getMapSectionWidget(theme *material.Theme) layout.Widg
 
 	if !this.isSingleHero() {
 		widgetList = append(widgetList,
-			widgets.NewLabeledRowWidget(theme, "Hero count min", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.heroMinimumCount,
-					utils.RoundedRangeString(this.heroMinimumCount.Value, 1, 12))),
-			widgets.NewLabeledRowWidget(theme, "Hero count max", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.heroMaximumCount,
-					utils.RoundedRangeString(this.heroMaximumCount.Value, 1, 12))),
-			widgets.NewLabeledRowWidget(theme, "Increment", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.heroIncrementPerCastle,
-					utils.RoundedRangeString(this.heroIncrementPerCastle.Value, 1, 10))))
+			widgets.NewSliderRowWidget(theme, "Hero count min", constants.DefaultLabelWidth,
+				&this.heroMinimumCount, utils.RoundedRangeFormatter(1, 12)),
+			widgets.NewSliderRowWidget(theme, "Hero count max", constants.DefaultLabelWidth,
+				&this.heroMaximumCount, utils.RoundedRangeFormatter(1, 12)),
+			widgets.NewSliderRowWidget(theme, "Increment", constants.DefaultLabelWidth,
+				&this.heroIncrementPerCastle, utils.RoundedRangeFormatter(1, 10)))
 	}
 
 	return widgets.NewSectionWidget(theme, "Hero Restrictions", widgetList)
@@ -220,16 +225,12 @@ func (this *GeneralPanel) getMapSectionWidget(theme *material.Theme) layout.Widg
 
 func (this *GeneralPanel) getRulesWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Rules", []layout.Widget{
-		widgets.NewLabeledRowWidget(
+		widgets.NewSliderRowWidget(
 			theme, "Faction law experience", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.factionLawXpMultiplier,
-				utils.RoundedRangePercentString(this.factionLawXpMultiplier.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(
+			&this.factionLawXpMultiplier, utils.RoundedRangePercentFormatter(25, 200)),
+		widgets.NewSliderRowWidget(
 			theme, "Astrology experience", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(
-				theme, &this.astrologyXpMultiplier,
-				utils.RoundedRangePercentString(this.astrologyXpMultiplier.Value, 25, 200))),
+			&this.astrologyXpMultiplier, utils.RoundedRangePercentFormatter(25, 200)),
 		widgets.NewSectionWidget(theme, "Conditions", []layout.Widget{
 			func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -260,15 +261,12 @@ func (this *GeneralPanel) getConditionOptionsWidget(theme *material.Theme) layou
 func (this *GeneralPanel) getTournamentOptionsRigidWidgets(theme *material.Theme) []layout.FlexChild {
 	return []layout.FlexChild{
 		layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.checkTournament, "Enable tournament")),
-		layout.Rigid(widgets.NewLabeledRowWidget(theme, "First tournament day", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.tournamentDayCount,
-				utils.RoundedRangeString(this.tournamentDayCount.Value, 3, 30)))),
-		layout.Rigid(widgets.NewLabeledRowWidget(theme, "Interval (days)", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.tournamentIntervalCount,
-				utils.RoundedRangeString(this.tournamentIntervalCount.Value, 3, 30)))),
-		layout.Rigid(widgets.NewLabeledRowWidget(theme, "Points to win", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.tournamentPointsCount,
-				utils.RoundedRangeString(this.tournamentPointsCount.Value, 1, 10)))),
+		layout.Rigid(widgets.NewSliderRowWidget(theme, "First tournament day", constants.DefaultLabelWidth,
+			&this.tournamentDayCount, utils.RoundedRangeFormatter(3, 30))),
+		layout.Rigid(widgets.NewSliderRowWidget(theme, "Interval (days)", constants.DefaultLabelWidth,
+			&this.tournamentIntervalCount, utils.RoundedRangeFormatter(3, 30))),
+		layout.Rigid(widgets.NewSliderRowWidget(theme, "Points to win", constants.DefaultLabelWidth,
+			&this.tournamentPointsCount, utils.RoundedRangeFormatter(1, 10))),
 		layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme,
 			&this.checkTournamentSaveArmy, "Save army between rounds")),
 	}
@@ -283,9 +281,8 @@ func (this *GeneralPanel) getNonTournamentOptionsRigidWidgets(theme *material.Th
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(theme, "Grace period (days)", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.lostCityDayCount,
-					utils.RoundedRangeString(this.lostCityDayCount.Value, 1, 30)))(gtx)
+			return widgets.NewSliderRowWidget(theme, "Grace period (days)", constants.DefaultLabelWidth,
+				&this.lostCityDayCount, utils.RoundedRangeFormatter(1, 30))(gtx)
 		}),
 		layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme,
 			&this.checkLostStartHero, "Lose if start hero is killed")),
@@ -295,9 +292,8 @@ func (this *GeneralPanel) getNonTournamentOptionsRigidWidgets(theme *material.Th
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(theme, "Days to hold", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.cityHoldDaysCount,
-					utils.RoundedRangeString(this.cityHoldDaysCount.Value, 1, 30)))(gtx)
+			return widgets.NewSliderRowWidget(theme, "Days to hold", constants.DefaultLabelWidth,
+				&this.cityHoldDaysCount, utils.RoundedRangeFormatter(1, 30))(gtx)
 		}),
 		layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.checkGladiatorArena, "Enable gladiator arena")),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -306,12 +302,10 @@ func (this *GeneralPanel) getNonTournamentOptionsRigidWidgets(theme *material.Th
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Days delay start", constants.DefaultLabelWidth,
-					widgets.NewLabeledSliderWidget(theme, &this.gladiatorDelayCount,
-						utils.RoundedRangeString(this.gladiatorDelayCount.Value, 1, 60)))),
-				layout.Rigid(widgets.NewLabeledRowWidget(theme, "Count days", constants.DefaultLabelWidth,
-					widgets.NewLabeledSliderWidget(theme, &this.gladiatorDayCount,
-						utils.RoundedRangeString(this.gladiatorDayCount.Value, 1, 30)))))
+				layout.Rigid(widgets.NewSliderRowWidget(theme, "Days delay start", constants.DefaultLabelWidth,
+					&this.gladiatorDelayCount, utils.RoundedRangeFormatter(1, 60))),
+				layout.Rigid(widgets.NewSliderRowWidget(theme, "Count days", constants.DefaultLabelWidth,
+					&this.gladiatorDayCount, utils.RoundedRangeFormatter(1, 30))))
 		}),
 	}
 }

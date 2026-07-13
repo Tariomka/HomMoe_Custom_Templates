@@ -111,7 +111,7 @@ win-condition flag.
 The crossed-swords glyph was extracted from the official `Helltide.png`
 preview (the clean version sitting on the bare central connector, with the
 connector line masked out) and matched to the existing 96x96 sprite format
-(bubble centre at `(48,48)`). Four assets were added under
+(bubble center at `(48,48)`). Four assets were added under
 `internal/services/previewassets/`:
 
 | File                         | Contents                                              |
@@ -129,7 +129,7 @@ Notes:
   ring, matching the Blitz preview) onto the `neutral_{none,low,medium,high}.png`
   bubbles to produce the zone-background variants.
 - The neutral-zone quality bubbles are: **none** = open ring (transparent
-  centre), **low** = light bronze, **medium** = silver, **high** = gold. The
+  center), **low** = light bronze, **medium** = silver, **high** = gold. The
   bronze **low** bubble is derived from the gold **high** bubble by recolouring
   the fill (keeping the ring and shading).
 - The **medium** variant has no official source (no official template places an

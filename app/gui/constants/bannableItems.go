@@ -25,8 +25,6 @@ type BannableItemEntry struct {
 	Category string
 }
 
-var BannableItems = buildBannableItems()
-
 func buildBannableItems() []BannableItemEntry {
 	items := []BannableItemEntry{}
 	items = append(items, buildMovementItems()...)
@@ -408,7 +406,7 @@ func GetBannableItemsWithExclusions(excluded []string) []BannableItemEntry {
 // FindBannableItem returns the catalog entry for an artifact SID, or ok=false
 // when the SID is not in the catalog (e.g. a custom/modded artifact).
 func FindBannableItem(sid string) (BannableItemEntry, bool) {
-	for _, item := range BannableItems {
+	for _, item := range buildBannableItems() {
 		if item.Sid == sid {
 			return item, true
 		}

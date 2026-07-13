@@ -31,8 +31,8 @@ The window has four regions:
 
 - **Toolbar** (top): `New`, `Open…`, `Save`, `Save As…`, with the current
   settings-file path on the right (a trailing `*` marks unsaved edits).
-- **Tabs** (centre-left): the four configuration tabs listed below.
-- **Preview** (centre-right): live render of the most recently generated
+- **Tabs** (center-left): the four configuration tabs listed below.
+- **Preview** (center-right): live render of the most recently generated
   template, with a `Refresh` button. The preview PNG is written automatically
   when you **Save Template**.
 - **Footer** (bottom): output folder picker, `Browse…`, `Reveal`,
@@ -167,8 +167,8 @@ presets the slider snaps to:
 - **Shared Web** — players linked through shared neutral zones.
 - **Square** (`TopologySquare`) — players line the edges of a square; neutrals on the edges and inside.
 - **Geometric** (`TopologyGeometric`) — symmetric geometric shapes built around a central zone.
-- **Cross** (`TopologyCross`) — zones and connections radiate from a centre into cross-shaped arms.
-- **Fractal** (`TopologyFractal`) — every player anchors a self-similar fractal that branches inward; low neutral zones sit nearest the player and high zones weave together at the centre, so no two players border directly.
+- **Cross** (`TopologyCross`) — zones and connections radiate from a center into cross-shaped arms.
+- **Fractal** (`TopologyFractal`) — every player anchors a self-similar fractal that branches inward; low neutral zones sit nearest the player and high zones weave together at the center, so no two players border directly.
 
 ## 8. Troubleshooting
 

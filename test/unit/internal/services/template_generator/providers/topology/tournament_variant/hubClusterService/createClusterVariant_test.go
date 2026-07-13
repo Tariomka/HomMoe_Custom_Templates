@@ -7,14 +7,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 	"github.com/stretchr/testify/assert"
 )
 
-func newTwoNeutralPlans() models.NeutralZonePlans {
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("C", models.QualityLow, 0)
-	neutralZones.AddPlan("D", models.QualityHigh, 1)
+func newTwoNeutralPlans() neutralZone.Plans {
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("C", neutralZone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutralZone.QualityHigh, 1)
 	return neutralZones
 }
 

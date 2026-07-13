@@ -57,8 +57,9 @@ func TestWhenVariantsAreReturned_OrdersThemByVariantId(t *testing.T) {
 	variantIDs := make([]int, 0, len(mappings))
 	for _, mapping := range mappings {
 		require.Len(t, mapping.Variants, 1)
-		for variantID := range mapping.Variants {
-			variantIDs = append(variantIDs, variantID)
+
+		for _, variantID := range mapping.Variants {
+			variantIDs = append(variantIDs, variantID.Key)
 		}
 	}
 	assert.Equal(t, []int{0, 1, 2, 3}, variantIDs)

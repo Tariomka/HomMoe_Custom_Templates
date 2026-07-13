@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,15 +34,15 @@ func connectionKeys(connections []entities.Connection) map[[3]string]bool {
 	return keys
 }
 
-func retierZone(state *drivers.State, zones []entities.Zone, index int, quality models.NeutralZoneQuality, castles int) {
+func retierZone(state *drivers.State, zones []entities.Zone, index int, quality neutralZone.Quality, castles int) {
 	tuning := models.NewGenerationTuning(state.GetGeneratorConfig(), len(zones))
 	connection_editor.ApplyNeutralZoneQuality(&zones[index], quality, castles, tuning)
 }
 
-func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality models.NeutralZoneQuality) int {
+func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutralZone.Quality) int {
 	t.Helper()
 	for i, zone := range zones {
-		if connection_editor.IsNeutralZoneName(zone.Name) && connection_editor.QualityOfZone(zone) == quality {
+		if connection_editor.IsNeutralZoneName(zone.Name) && neutralZone.GetQualityFrom(zone) == quality {
 			return i
 		}
 	}
@@ -67,8 +68,8 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	// Manual session: re-tier one neutral zone to High, stamp positions and
 	// add a user connection.
 	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
-	retiered := findNeutralOfQuality(t, zones, models.QualityMedium)
-	retierZone(state, zones, retiered, models.QualityHigh, 1)
+	retiered := findNeutralOfQuality(t, zones, neutralZone.QualityMedium)
+	retierZone(state, zones, retiered, neutralZone.QualityHigh, 1)
 	retieredName := zones[retiered].Name
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.05 * float64(i+1)}
@@ -94,7 +95,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 		assert.Equalf(t, 3, connection_editor.CountZoneCastles(zone),
 			"zone %s must follow the new simple-mode castle count", zone.Name)
 		if zone.Name == retieredName {
-			assert.Equal(t, models.QualityHigh, connection_editor.QualityOfZone(zone),
+			assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone),
 				"the manual quality change must survive the castle update")
 		}
 		assert.NotNilf(t, zone.ManualPosition, "zone %s lost its manual position", zone.Name)
@@ -132,8 +133,8 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 
 	// Manually promote one of the Low zones to High.
 	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
-	promoted := findNeutralOfQuality(t, zones, models.QualityLow)
-	retierZone(state, zones, promoted, models.QualityHigh, 1)
+	promoted := findNeutralOfQuality(t, zones, neutralZone.QualityLow)
+	retierZone(state, zones, promoted, neutralZone.QualityHigh, 1)
 	promotedName := zones[promoted].Name
 	state.ApplyEditedZones(zones, template.Variants[0].Connections)
 
@@ -148,13 +149,13 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 			continue
 		}
 		expected := 1
-		if connection_editor.QualityOfZone(zone) == models.QualityHigh {
+		if neutralZone.GetQualityFrom(zone) == neutralZone.QualityHigh {
 			expected = 3
 		}
 		assert.Equalf(t, expected, connection_editor.CountZoneCastles(zone),
-			"zone %s (quality %v)", zone.Name, connection_editor.QualityOfZone(zone))
+			"zone %s (quality %v)", zone.Name, neutralZone.GetQualityFrom(zone))
 		if zone.Name == promotedName {
-			assert.Equal(t, models.QualityHigh, connection_editor.QualityOfZone(zone))
+			assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone))
 		}
 	}
 }
@@ -173,8 +174,8 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 	require.NotEmpty(t, template.Variants)
 
 	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
-	edited := findNeutralOfQuality(t, zones, models.QualityMedium)
-	retierZone(state, zones, edited, models.QualityHigh, 2)
+	edited := findNeutralOfQuality(t, zones, neutralZone.QualityMedium)
+	retierZone(state, zones, edited, neutralZone.QualityHigh, 2)
 	zones[edited].GuardMultiplier = 7.5 // explicit manual guard edit
 	editedName := zones[edited].Name
 	state.ApplyEditedZones(zones, template.Variants[0].Connections)
@@ -196,7 +197,7 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 			"a non-castle option change must not touch the manual castle count")
 		assert.Equal(t, 7.5, zone.GuardMultiplier,
 			"a non-castle option change must not touch manual guard values")
-		assert.Equal(t, models.QualityHigh, connection_editor.QualityOfZone(zone))
+		assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone))
 	}
 	assert.True(t, found, "manually edited zone disappeared from the regenerated template")
 }

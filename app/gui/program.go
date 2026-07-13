@@ -7,22 +7,26 @@ import (
 	"strings"
 
 	"gioui.org/app"
+	"gioui.org/io/system"
 	"gioui.org/op"
 	"gioui.org/unit"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 )
 
-func StartApplication() {
-	go eventLoop()
+func StartApplication(version string) {
+	go eventLoop(version)
 	app.Main()
 }
 
 // eventLoop is a blocking function and needs to executed concurrently.
-func eventLoop() {
-	window := getAndConfigureWindow()
+func eventLoop(version string) {
+	window := getAndConfigureWindow(version)
 	windowLayout := editor.NewWindow()
+	windowLayout.SetOnExit(func() { window.Perform(system.ActionClose) })
 	theme := themes.NewTheme()
+	positionLogger := utils.NewButtonPositionLogger(slog.Default())
 
 	var ops op.Ops
 	for {
@@ -37,14 +41,15 @@ func eventLoop() {
 			gtx := app.NewContext(&ops, event)
 			windowLayout.Layout(gtx, theme)
 			event.Frame(gtx.Ops)
+			positionLogger.LogButtonPositions(gtx.Ops)
 		}
 	}
 }
 
-func getAndConfigureWindow() *app.Window {
+func getAndConfigureWindow(version string) *app.Window {
 	window := new(app.Window)
 	configuration := []app.Option{
-		app.Title("Olden Era - Custom Templates"),
+		app.Title("Olden Era - Custom Templates (" + version + ")"),
 		app.MinSize(unit.Dp(1280), unit.Dp(800)),
 	}
 

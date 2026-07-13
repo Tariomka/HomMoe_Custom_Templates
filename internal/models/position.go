@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 type Position = data.Vec2[float64]
@@ -12,7 +13,7 @@ type ConnectionIndexes = data.Vec2[int]
 
 type Positions []Position
 
-func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZonePlans NeutralZonePlans) Positions {
+func CreatePositionsFromPlans(orderedLabels, playerLabels []string, neutralZonePlans neutralZone.Plans) Positions {
 	count := len(orderedLabels)
 	if count == 0 {
 		return nil
@@ -85,6 +86,11 @@ func (this *Positions) GetShortestDistanceIndex(adjacencyIndexes [][]int) (indic
 // which divides the positions into a mesh of contiguous, non-overlapping triangles,
 // and returns the edges as pairs of indexes. Delaunay triangulation ensures that no point
 // falls inside the circumscribed circle (the circle that touches all three vertices) of any triangle.
+//
+// The implementation is the incremental Bowyer-Watson algorithm: start from a
+// "super triangle" enclosing every point, insert the points one at a time
+// (re-triangulating the cavity of triangles whose circumcircle contains the
+// point), then keep only the edges whose triangles use real points.
 func (this *Positions) CreateDelaunayTriangulation() []ConnectionIndexes {
 	count := len(*this)
 	if count <= 1 {
@@ -103,54 +109,70 @@ func (this *Positions) CreateDelaunayTriangulation() []ConnectionIndexes {
 	superPts[count+2] = data.NewVec2(minPos.X, minPos.Y+delta*3)
 
 	trianglesIndexes := []data.Vec3[int]{data.NewVec3(count, count+1, count+2)}
-
-	normalizeEdge := func(a, b int) ConnectionIndexes {
-		if a > b {
-			a, b = b, a
-		}
-		return data.NewVec2(a, b)
-	}
-
 	for index := range *this {
-		point := superPts[index]
-		// Split triangles into "bad" ones (circumscribed circle contains the
-		// point) and kept ones. Edges of the bad region that appear exactly
-		// once form its boundary; re-triangulate the cavity from those.
-		edgeCount := map[ConnectionIndexes]int{}
-		var kept []data.Vec3[int]
-		for _, triangleIndexes := range trianglesIndexes {
-			triangle := [3]Position{
-				superPts[triangleIndexes.X],
-				superPts[triangleIndexes.Y],
-				superPts[triangleIndexes.Z],
-			}
-			if inCircumscribedCircle(triangle, point) {
-				edgeCount[normalizeEdge(triangleIndexes.X, triangleIndexes.Y)]++
-				edgeCount[normalizeEdge(triangleIndexes.Y, triangleIndexes.Z)]++
-				edgeCount[normalizeEdge(triangleIndexes.Z, triangleIndexes.X)]++
-			} else {
-				kept = append(kept, triangleIndexes)
-			}
-		}
-		for e, occurrences := range edgeCount {
-			if occurrences == 1 {
-				kept = append(kept, data.NewVec3(e.X, e.Y, index))
-			}
-		}
-		trianglesIndexes = kept
+		trianglesIndexes = insertPointIntoTriangulation(trianglesIndexes, superPts, index)
 	}
 
+	return extractRealEdges(trianglesIndexes, count)
+}
+
+// normalizeEdge orders an edge's endpoint indexes so equal edges compare equal.
+func normalizeEdge(a, b int) ConnectionIndexes {
+	if a > b {
+		a, b = b, a
+	}
+	return data.NewVec2(a, b)
+}
+
+// insertPointIntoTriangulation performs one Bowyer-Watson insertion step for
+// the point at the given index. It splits the triangles into "bad" ones (the
+// circumscribed circle contains the point) and kept ones. Edges of the bad
+// region that appear exactly once form its boundary; the cavity is
+// re-triangulated by joining those boundary edges to the new point.
+func insertPointIntoTriangulation(
+	trianglesIndexes []data.Vec3[int],
+	superPts []Position,
+	index int) []data.Vec3[int] {
+	point := superPts[index]
+	edgeCount := map[ConnectionIndexes]int{}
+	var kept []data.Vec3[int]
+	for _, triangleIndexes := range trianglesIndexes {
+		triangle := [3]Position{
+			superPts[triangleIndexes.X],
+			superPts[triangleIndexes.Y],
+			superPts[triangleIndexes.Z],
+		}
+		if inCircumscribedCircle(triangle, point) {
+			edgeCount[normalizeEdge(triangleIndexes.X, triangleIndexes.Y)]++
+			edgeCount[normalizeEdge(triangleIndexes.Y, triangleIndexes.Z)]++
+			edgeCount[normalizeEdge(triangleIndexes.Z, triangleIndexes.X)]++
+		} else {
+			kept = append(kept, triangleIndexes)
+		}
+	}
+	for edge, occurrences := range edgeCount {
+		if occurrences == 1 {
+			kept = append(kept, data.NewVec3(edge.X, edge.Y, index))
+		}
+	}
+	return kept
+}
+
+// extractRealEdges collects the unique edges of every triangle whose vertices
+// are all real points, dropping any triangle still touching the super-triangle
+// vertices (whose indexes are count and above).
+func extractRealEdges(trianglesIndexes []data.Vec3[int], count int) []ConnectionIndexes {
 	edgeSet := map[ConnectionIndexes]bool{}
-	for _, t := range trianglesIndexes {
-		if t.X < count && t.Y < count && t.Z < count {
-			edgeSet[normalizeEdge(t.X, t.Y)] = true
-			edgeSet[normalizeEdge(t.Y, t.Z)] = true
-			edgeSet[normalizeEdge(t.Z, t.X)] = true
+	for _, triangleIndexes := range trianglesIndexes {
+		if triangleIndexes.X < count && triangleIndexes.Y < count && triangleIndexes.Z < count {
+			edgeSet[normalizeEdge(triangleIndexes.X, triangleIndexes.Y)] = true
+			edgeSet[normalizeEdge(triangleIndexes.Y, triangleIndexes.Z)] = true
+			edgeSet[normalizeEdge(triangleIndexes.Z, triangleIndexes.X)] = true
 		}
 	}
 	result := make([]ConnectionIndexes, 0, len(edgeSet))
-	for e := range edgeSet {
-		result = append(result, e)
+	for edge := range edgeSet {
+		result = append(result, edge)
 	}
 	return result
 }

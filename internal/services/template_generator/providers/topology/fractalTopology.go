@@ -6,13 +6,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 // FractalTopologyService grows one self-similar fractal per player. Every player
 // zone is the base of its fractal and sits on the outer ring; its neutral zones
-// branch inward toward the centre in nested tiers - low zones nearest the player
+// branch inward toward the center in nested tiers - low zones nearest the player
 // fan out widely, then merge into fewer medium zones, then into the high zones
-// that gather near the centre (the farthest point from any player). The innermost
+// that gather near the center (the farthest point from any player). The innermost
 // tips of neighbouring fractals are woven into a shared central ring, so the
 // player sectors integrate seamlessly into one rotationally symmetric pattern and
 // no two players ever border each other - the design itself keeps them apart,
@@ -30,36 +31,16 @@ func NewFractalTopologyService() *FractalTopologyService {
 func (this *FractalTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-	allLabels, positions, pairs := this.createFractalLayout(playerLabels, neutralZones)
-	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
-
-	zones := this.createZones(
-		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
-	for index := range zones {
-		position := positions[index]
-		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
-	}
-
-	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
-	if configuration.RandomPortals {
-		conns = append(conns,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
-	}
-	if isIsolated {
-		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
-	}
-	conns = append(conns,
-		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
-	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
+	return this.createVariantFromLayout(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createFractalLayout)
 }
 
 // fractalTree holds the zone indices of one player's fractal. levels[0] are the
 // low (tier 1) zones closest to the player, levels[1] the medium (tier 2) zones,
-// levels[2] the high (tier 3) zones nearest the centre. Any level may be empty
+// levels[2] the high (tier 3) zones nearest the center. Any level may be empty
 // when the zone pool does not provide that tier for this player.
 type fractalTree struct {
 	levels [3][]int
@@ -70,47 +51,14 @@ type fractalTree struct {
 // slices. Players are evenly spaced on the outer ring and each one anchors a
 // fractal whose neutral tiers nest inward: the band of each tier narrows as the
 // radius shrinks, so the wide spray of low zones funnels into the tight cluster
-// of high zones at the centre - a self-similar, converging branch per player.
+// of high zones at the center - a self-similar, converging branch per player.
 func (this *FractalTopologyService) createFractalLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
-	const (
-		centreX      = 0.5
-		centreY      = 0.5
-		playerRadius = 0.45 // base of every fractal, on the outer ring
-		startAngle   = -math.Pi / 2.0
-	)
-	// Radius of each neutral tier measured from the centre. Low sits just inside
-	// the player, high gathers near the middle (the farthest point from a player).
-	tierRadius := [3]float64{0.32, 0.19, 0.08}
-	// Angular half-width of each tier's band as a fraction of the player's sector.
-	// It shrinks inward so the branches visibly converge toward the centre.
-	tierSpread := [3]float64{0.85, 0.52, 0.26}
-
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	const startAngle = -math.Pi / 2.0
 	playerCount := len(playerLabels)
 
-	// Bucket the neutral zones by tier so low zones always land in the outer band
-	// and high zones in the inner band, regardless of the pool's incoming order.
-	tierBuckets := [3][]int{}
-	for index, plan := range neutralZones {
-		switch plan.Quality {
-		case models.QualityHigh:
-			tierBuckets[2] = append(tierBuckets[2], index)
-		case models.QualityMedium:
-			tierBuckets[1] = append(tierBuckets[1], index)
-		case models.QualityLow:
-			fallthrough
-		default:
-			tierBuckets[0] = append(tierBuckets[0], index)
-		}
-	}
-	// Spread each tier evenly across the players so every fractal grows at the
-	// same rate and the overall pattern stays rotationally balanced.
-	perPlayerTier := [3][][]int{
-		distributeRoundRobin(tierBuckets[0], playerCount),
-		distributeRoundRobin(tierBuckets[1], playerCount),
-		distributeRoundRobin(tierBuckets[2], playerCount),
-	}
+	perPlayerTier := bucketNeutralsPerPlayer(neutralZones, playerCount)
 
 	sectorHalf := math.Pi
 	if playerCount >= 1 {
@@ -123,37 +71,89 @@ func (this *FractalTopologyService) createFractalLayout(
 
 	for player := range playerCount {
 		axis := startAngle + 2.0*math.Pi*float64(player)/float64(playerCount)
-
-		// Player zone: the base of this fractal on the outer ring.
-		playerIndex := len(allLabels)
-		allLabels = append(allLabels, playerLabels[player])
-		positions.Add(circlePoint(axis, centreX, centreY, playerRadius))
-
-		var tree fractalTree
-		tree.player = playerIndex
-		for tier := range 3 {
-			plan := perPlayerTier[tier][player]
-			half := sectorHalf * tierSpread[tier]
-			radius := tierRadius[tier]
-			for slot, planIndex := range plan {
-				angle := axis
-				if len(plan) > 1 {
-					angle = axis - half + 2.0*half*float64(slot)/float64(len(plan)-1)
-				}
-				tree.levels[tier] = append(tree.levels[tier], len(allLabels))
-				allLabels = append(allLabels, neutralZones[planIndex].Label)
-				positions.Add(circlePoint(angle, centreX, centreY, radius))
-			}
+		playerPlans := [3][]int{
+			perPlayerTier[0][player],
+			perPlayerTier[1][player],
+			perPlayerTier[2][player],
 		}
-		trees[player] = tree
+		trees[player] = placePlayerFractal(
+			axis, sectorHalf, playerLabels[player], playerPlans, neutralZones, &allLabels, &positions)
 	}
 
 	pairs := this.createFractalPairs(trees)
 	return allLabels, positions, pairs
 }
 
+// bucketNeutralsPerPlayer buckets the neutral zones by tier so low zones always
+// land in the outer band and high zones in the inner band, regardless of the
+// pool's incoming order, then spreads each tier evenly across the players so
+// every fractal grows at the same rate and the overall pattern stays
+// rotationally balanced.
+func bucketNeutralsPerPlayer(neutralZones neutralZone.Plans, playerCount int) [3][][]int {
+	tierBuckets := [3][]int{}
+	for index, plan := range neutralZones {
+		switch plan.Quality {
+		case neutralZone.QualityHigh:
+			tierBuckets[2] = append(tierBuckets[2], index)
+		case neutralZone.QualityMedium:
+			tierBuckets[1] = append(tierBuckets[1], index)
+		case neutralZone.QualityLow:
+			fallthrough
+		default:
+			tierBuckets[0] = append(tierBuckets[0], index)
+		}
+	}
+	return [3][][]int{
+		distributeRoundRobin(tierBuckets[0], playerCount),
+		distributeRoundRobin(tierBuckets[1], playerCount),
+		distributeRoundRobin(tierBuckets[2], playerCount),
+	}
+}
+
+// placePlayerFractal places one player's zone at the base of its fractal on the
+// outer ring and the player's share of each neutral tier in inward-nesting,
+// narrowing angular bands, appending labels and positions in place and
+// returning the tree of assigned zone indices.
+func placePlayerFractal(
+	axis, sectorHalf float64,
+	playerLabel string,
+	playerPlans [3][]int,
+	neutralZones neutralZone.Plans,
+	allLabels *[]string,
+	positions *models.Positions) fractalTree {
+	const playerRadius = 0.45 // base of every fractal, on the outer ring
+	// Radius of each neutral tier measured from the center. Low sits just inside
+	// the player, high gathers near the middle (the farthest point from a player).
+	tierRadius := [3]float64{0.32, 0.19, 0.08}
+	// Angular half-width of each tier's band as a fraction of the player's sector.
+	// It shrinks inward so the branches visibly converge toward the center.
+	tierSpread := [3]float64{0.85, 0.52, 0.26}
+
+	playerIndex := len(*allLabels)
+	*allLabels = append(*allLabels, playerLabel)
+	positions.Add(circlePoint(axis, playerRadius))
+
+	var tree fractalTree
+	tree.player = playerIndex
+	for tier := range 3 {
+		plan := playerPlans[tier]
+		half := sectorHalf * tierSpread[tier]
+		radius := tierRadius[tier]
+		for slot, planIndex := range plan {
+			angle := axis
+			if len(plan) > 1 {
+				angle = axis - half + 2.0*half*float64(slot)/float64(len(plan)-1)
+			}
+			tree.levels[tier] = append(tree.levels[tier], len(*allLabels))
+			*allLabels = append(*allLabels, neutralZones[planIndex].Label)
+			positions.Add(circlePoint(angle, radius))
+		}
+	}
+	return tree
+}
+
 // createFractalPairs wires each fractal from the player outward through its tiers
-// and then stitches the fractals together at their centre-facing tips.
+// and then stitches the fractals together at their center-facing tips.
 func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) []models.ConnectionIndexes {
 	builder := newPairBuilder()
 
@@ -181,7 +181,7 @@ func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) []mo
 		}
 		// Each inner tier merges into the tier just outside it: zones stay sorted
 		// by angle, so mapping every inner zone to a proportional outer parent
-		// produces clean, non-crossing branches that funnel toward the centre.
+		// produces clean, non-crossing branches that funnel toward the center.
 		for level := 0; level+1 < len(chain); level++ {
 			outer := chain[level]
 			inner := chain[level+1]
@@ -197,7 +197,7 @@ func (this *FractalTopologyService) createFractalPairs(trees []fractalTree) []mo
 		tips[treeIndex] = deepest[len(deepest)/2]
 	}
 
-	// Weave the tips into a closed ring around the centre. This is the seam where
+	// Weave the tips into a closed ring around the center. This is the seam where
 	// neighbouring fractals integrate, and it also guarantees the whole map is one
 	// connected component. Tips that are still a player zone (a fractal with no
 	// neutrals) are dropped so the ring never links two players directly.

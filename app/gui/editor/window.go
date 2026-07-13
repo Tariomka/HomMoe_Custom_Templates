@@ -21,6 +21,10 @@ type Window struct {
 
 	tabs        []*drivers.Tab
 	selectedTab int
+	// tabChildren caches the FlexChild wrappers for the static tab strip;
+	// built on the first frame (the theme does not exist yet in NewWindow)
+	// and reused - each child reads live tab state at layout time.
+	tabChildren []layout.FlexChild
 
 	toolbar      *Toolbar
 	previewPanel *panels.PreviewPanel
@@ -39,6 +43,10 @@ func NewWindow() *Window {
 	return &window
 }
 
+// SetOnExit installs the callback the editor uses to close the application
+// window when the user exits (see drivers.State.Exit).
+func (this *Window) SetOnExit(onExit func()) { this.state.SetOnExit(onExit) }
+
 func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dimensions {
 	this.save()
 	if redrawAt, scheduleRedraw := this.state.AutoRegenerate(gtx.Now); scheduleRedraw {
@@ -46,7 +54,7 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 	}
 	this.handleClicks(gtx)
 
-	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
+	paint.FillShape(gtx.Ops, themes.ColorsBase.Background, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
@@ -65,12 +73,14 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 func (this *Window) getTabsWidget(gtx layout.Context, theme *material.Theme) layout.Widget {
 	this.updateTabs(gtx)
 
-	children := make([]layout.FlexChild, 0)
-	for _, tab := range this.tabs {
-		children = append(children, layout.Rigid(tab.GetWidget(theme)))
+	if this.tabChildren == nil {
+		this.tabChildren = make([]layout.FlexChild, 0, len(this.tabs))
+		for _, tab := range this.tabs {
+			this.tabChildren = append(this.tabChildren, layout.Rigid(tab.GetWidget(theme)))
+		}
 	}
 	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, children...)
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, this.tabChildren...)
 	}
 }
 

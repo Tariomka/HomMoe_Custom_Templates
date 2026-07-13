@@ -30,7 +30,7 @@ func probeClick(r *AppRunner, p image.Point) {
 }
 
 // calibrateTabPoints discovers one click point inside every tab by probing the
-// laid-out window. The tab strip is horizontally centred (the editor's vertical
+// laid-out window. The tab strip is horizontally centered (the editor's vertical
 // Flex uses Alignment: Middle) and its position depends on font metrics, so the
 // benchmark locates it dynamically instead of hard-coding fragile coordinates.
 // It approaches the strip from below so it never clicks the toolbar above (which

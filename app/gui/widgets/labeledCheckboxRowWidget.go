@@ -14,8 +14,8 @@ func NewLabeledCheckboxRowWidget(theme *material.Theme, boolValue *widget.Bool, 
 		return layout.Inset{Top: unit.Dp(3), Bottom: unit.Dp(3)}.
 			Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				checkbox := material.CheckBox(theme, boolValue, label)
-				checkbox.Color = themes.ColorText
-				checkbox.IconColor = themes.ColorAccent
+				checkbox.Color = themes.ColorsBase.Text
+				checkbox.IconColor = themes.ColorsBase.Accent
 				checkbox.TextSize = unit.Sp(12)
 				return checkbox.Layout(gtx)
 			})

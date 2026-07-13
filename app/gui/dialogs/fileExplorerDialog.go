@@ -182,22 +182,21 @@ func (this *FileExplorerDialog) Body(gtx layout.Context, theme *material.Theme) 
 		this.loadDir(this.currentDir)
 	}
 
-	if this.canModify() {
-		if this.newFolderBtn.Clicked(gtx) {
-			this.newFolderActive = !this.newFolderActive
-			this.newFolderErr = ""
-			if this.newFolderActive {
-				this.newFolderEd.SetText("")
-			}
-		}
+	if this.canModify() && this.newFolderBtn.Clicked(gtx) {
+		this.newFolderActive = !this.newFolderActive
+		this.newFolderErr = ""
 		if this.newFolderActive {
-			if this.createFolderBtn.Clicked(gtx) {
-				this.tryCreateFolder()
-			}
-			if this.cancelFolderBtn.Clicked(gtx) {
-				this.newFolderActive = false
-				this.newFolderErr = ""
-			}
+			this.newFolderEd.SetText("")
+		}
+	}
+
+	if this.canModify() && this.newFolderActive {
+		if this.createFolderBtn.Clicked(gtx) {
+			this.tryCreateFolder()
+		}
+		if this.cancelFolderBtn.Clicked(gtx) {
+			this.newFolderActive = false
+			this.newFolderErr = ""
 		}
 	}
 
@@ -253,7 +252,7 @@ func (this *FileExplorerDialog) getListWidget(theme *material.Theme) layout.Widg
 			message = "(unable to read folder)"
 		}
 		return func(gtx layout.Context) layout.Dimensions {
-			return layout.Center.Layout(gtx, widgets.NewLabelBigWidget(theme, message, themes.ColorTextDim))
+			return layout.Center.Layout(gtx, widgets.NewLabelBigWidget(theme, message, themes.ColorsBase.TextDim))
 		}
 	}
 
@@ -273,10 +272,10 @@ func (this *FileExplorerDialog) getEntryRowWidget(theme *material.Theme, entry f
 		}
 		selected := !entry.isDir && entry.path == this.selectedPath
 		badgeText := ""
-		textColor := themes.ColorText
+		textColor := themes.ColorsBase.Text
 		if entry.isDir {
 			badgeText = "DIR"
-			textColor = themes.ColorAccentBright
+			textColor = themes.ColorsBase.AccentBright
 		}
 		return material.Clickable(gtx, clk, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
@@ -286,16 +285,16 @@ func (this *FileExplorerDialog) getEntryRowWidget(theme *material.Theme, entry f
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(38))
 							return widgets.NewStyledLabelWidget(
-								theme, badgeText, themes.ColorAccent, font.Font{Weight: font.SemiBold})(gtx)
+								theme, badgeText, themes.ColorsBase.Accent, font.Font{Weight: font.SemiBold})(gtx)
 						}),
 						layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
 							WithText(entry.name).WithColor(textColor).WithMaxLines(1).Build))
 				})
 			call := macro.Stop()
 			if selected {
-				paint.FillShape(gtx.Ops, themes.ColorSelection, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Selection, clip.Rect{Max: dims.Size}.Op())
 			} else if clk.Hovered() {
-				paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Hover, clip.Rect{Max: dims.Size}.Op())
 			}
 			call.Add(gtx.Ops)
 			return dims
@@ -311,7 +310,7 @@ func (this *FileExplorerDialog) getErrorLineWidget(theme *material.Theme) layout
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: constants.DefaultPaddingSmall}.
 			Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
-				WithText(this.listErr).WithColor(themes.ColorError).WithMaxLines(2).Build)
+				WithText(this.listErr).WithColor(themes.ColorsBase.Error).WithMaxLines(2).Build)
 	}
 }
 
@@ -324,7 +323,7 @@ func (this *FileExplorerDialog) getSaveRowWidget(theme *material.Theme) layout.W
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(widgets.NewLabelBigWidget(theme, "Save as:", themes.ColorTextDim)),
+				layout.Rigid(widgets.NewLabelBigWidget(theme, "Save as:", themes.ColorsBase.TextDim)),
 				widgets.NewDefaultComponentSpacer(),
 				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, hint, false)),
 			)
@@ -342,7 +341,7 @@ func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) lay
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(widgets.NewLabelBigWidget(theme, "New folder:", themes.ColorTextDim)),
+						layout.Rigid(widgets.NewLabelBigWidget(theme, "New folder:", themes.ColorsBase.TextDim)),
 						widgets.NewDefaultComponentSpacer(),
 						layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
 						widgets.NewDefaultComponentSpacer(),
@@ -358,7 +357,7 @@ func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) lay
 
 					return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.
 						Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
-							WithText(this.newFolderErr).WithColor(themes.ColorError).WithMaxLines(2).Build)
+							WithText(this.newFolderErr).WithColor(themes.ColorsBase.Error).WithMaxLines(2).Build)
 				}),
 			)
 		})
@@ -370,7 +369,8 @@ func (this *FileExplorerDialog) getFooterWidget(theme *material.Theme) layout.Wi
 		return func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
-					WithText("File already exists. Overwrite?").WithColor(themes.ColorWarnText).WithMaxLines(1).Build),
+					WithText("File already exists. Overwrite?").
+					WithColor(themes.ColorsBase.WarnText).WithMaxLines(1).Build),
 				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.overwriteCancelBtn, false)),
 				widgets.NewDefaultComponentSpacer(),
 				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Overwrite", &this.overwriteConfirmBtn, false)),
@@ -443,37 +443,62 @@ func (this *FileExplorerDialog) handleConfirm(gtx layout.Context) bool {
 		}
 	case modeSaveFile:
 		if this.overwriteActive {
-			if this.overwriteConfirmBtn.Clicked(gtx) {
-				if path, ok := this.resolveSaveTarget(); ok {
-					this.overwriteActive = false
-					if this.onSave != nil {
-						this.onSave(path)
-					}
-					return true
-				}
-
-				// Filename was cleared while the prompt was up; abandon it.
-				this.overwriteActive = false
-			}
-			if this.overwriteCancelBtn.Clicked(gtx) {
-				this.overwriteActive = false
-			}
-		} else if this.confirmBtn.Clicked(gtx) {
-			if path, ok := this.resolveSaveTarget(); ok {
-				if _, err := os.Stat(path); err == nil {
-					this.overwriteActive = true
-				} else {
-					if this.onSave != nil {
-						this.onSave(path)
-					}
-					return true
-				}
-			}
+			return this.confirmOverwrite(gtx)
 		}
+
+		return this.confirmSelection(gtx)
 	case modeBrowse: // noop
 	}
 
 	return false
+}
+
+// confirmOverwrite processes the overwrite prompt's buttons and reports
+// whether the dialog should close.
+func (this *FileExplorerDialog) confirmOverwrite(gtx layout.Context) bool {
+	if this.overwriteConfirmBtn.Clicked(gtx) {
+		this.overwriteActive = false
+
+		path, ok := this.resolveSaveTarget()
+		if !ok {
+			// Filename was cleared while the prompt was up; abandon it.
+			return false
+		}
+
+		if this.onSave != nil {
+			this.onSave(path)
+		}
+		return true
+	}
+
+	if this.overwriteCancelBtn.Clicked(gtx) {
+		this.overwriteActive = false
+	}
+
+	return false
+}
+
+// confirmSelection handles the save button: an existing target opens the
+// overwrite prompt, otherwise the file is saved immediately.
+func (this *FileExplorerDialog) confirmSelection(gtx layout.Context) bool {
+	if !this.confirmBtn.Clicked(gtx) {
+		return false
+	}
+
+	path, ok := this.resolveSaveTarget()
+	if !ok {
+		return false
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		this.overwriteActive = true
+		return false
+	}
+
+	if this.onSave != nil {
+		this.onSave(path)
+	}
+	return true
 }
 
 // loadDir reads dir and replaces the cached listing. It is the single
@@ -532,7 +557,7 @@ func (this *FileExplorerDialog) loadDir(dir string) {
 	})
 
 	this.currentDir = dir
-	this.entries = append(dirs, files...)
+	this.entries = slices.Concat(dirs, files)
 	this.rowClicks = map[string]*widget.Clickable{}
 	this.resetScroll()
 }

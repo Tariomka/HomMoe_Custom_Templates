@@ -3,6 +3,7 @@ package preview_service
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -27,7 +28,7 @@ var connectorLineColor = color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF}
 
 type PreviewGeneratorService struct {
 	assetProvider *asset_provider.AssetProvider
-	// layoutService  *previewLayoutService
+	layoutService *PreviewLayoutService
 }
 
 func NewPreviewGenerator() (*PreviewGeneratorService, error) {
@@ -36,7 +37,10 @@ func NewPreviewGenerator() (*PreviewGeneratorService, error) {
 		return nil, err
 	}
 
-	return &PreviewGeneratorService{assetProvider: assetProvider}, nil
+	return &PreviewGeneratorService{
+		assetProvider: assetProvider,
+		layoutService: NewPreviewLayoutService(),
+	}, nil
 }
 
 func (this *PreviewGeneratorService) CreatePreviewImage(
@@ -45,8 +49,7 @@ func (this *PreviewGeneratorService) CreatePreviewImage(
 	canvas := image.NewRGBA(image.Rect(0, 0, canvasSize, canvasSize))
 	this.assetProvider.DrawBackground(canvas)
 
-	layout := BuildPreviewLayout(template, topology, canvasSize)
-	// layout := this.layoutService.BuildPreviewLayout(template, topology, canvasSize)
+	layout := this.layoutService.BuildPreviewLayout(template, topology, canvasSize)
 	if len(layout.Positions) == 0 {
 		return canvas
 	}
@@ -70,13 +73,13 @@ func (this *PreviewGeneratorService) CreatePreviewImage(
 
 func (this *PreviewGeneratorService) drawConnections(
 	canvas *image.RGBA,
-	connections []preview.PreviewConnection,
+	connections []preview.Connection,
 	fitterCallback assetFitter,
 	zoneRadius float64) {
 	for _, conn := range connections {
 		controlPoint := fitterCallback(conn.Ctrl) // Bézier control point
-		startPoint, ok1 := helpers.CalculatePointTowards(fitterCallback(conn.A), controlPoint, zoneRadius)
-		endPoint, ok2 := helpers.CalculatePointTowards(fitterCallback(conn.B), controlPoint, zoneRadius)
+		startPoint, ok1 := helpers.CalculatePointTowards(fitterCallback(conn.Start), controlPoint, zoneRadius)
+		endPoint, ok2 := helpers.CalculatePointTowards(fitterCallback(conn.End), controlPoint, zoneRadius)
 		if !ok1 || !ok2 {
 			continue
 		}
@@ -126,17 +129,14 @@ func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end ima
 
 	increment := data.Vec2FromPoint[float64](delta).DivideScalar(steps)
 	half := connectorLineWidth / 2
+	brushSource := image.NewUniform(connectorLineColor)
 	for i := range int(steps) {
 		center := data.Vec2FromPoint[float64](start).
 			Add(increment.MultiplyScalar(float64(i))).
 			ToPointRounded()
 		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
-			Intersect(canvas.Bounds()) // Square brush around the centre, clipped to the canvas.
-		for y := brush.Min.Y; y < brush.Max.Y; y++ {
-			for x := brush.Min.X; x < brush.Max.X; x++ {
-				canvas.SetRGBA(x, y, connectorLineColor)
-			}
-		}
+			Intersect(canvas.Bounds()) // Square brush around the center, clipped to the canvas.
+		draw.Draw(canvas, brush, brushSource, image.Point{}, draw.Src)
 	}
 }
 
@@ -150,6 +150,7 @@ func (this *PreviewGeneratorService) getPointOnQuadraticBezierCurve(
 	mt := 1 - t
 	point := data.Vec2FromPoint[float64](start).MultiplyScalar(mt * mt).
 		Add(data.Vec2FromPoint[float64](ctrl).MultiplyScalar(2 * mt * t)).
-		Add(data.Vec2FromPoint[float64](end).MultiplyScalar(t * t))
-	return image.Pt(int(math.Round(point.X)), int(math.Round(point.Y)))
+		Add(data.Vec2FromPoint[float64](end).MultiplyScalar(t * t)).
+		ToPointRounded()
+	return point
 }

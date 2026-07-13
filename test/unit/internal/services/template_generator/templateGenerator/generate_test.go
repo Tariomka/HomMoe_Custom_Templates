@@ -418,9 +418,6 @@ func TestWhenNoDirectPlayerConnectionsEnabled_OmitsDirectPlayerConnections(t *te
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = playerCount
-	// Provide at least one neutral zone between every player so the topology can
-	// actually honour the separation instead of falling back to direct links.
-	configuration.MinNeutralZonesBetweenPlayers = 1
 	configuration.ZoneConfiguration.NeutralZoneCount = playerCount + gofakeit.Number(0, 4)
 	configuration.NoDirectPlayerConnections = true
 	generator := template_generator.NewTemplateGenerator(configuration)
@@ -429,9 +426,11 @@ func TestWhenNoDirectPlayerConnectionsEnabled_OmitsDirectPlayerConnections(t *te
 	actual := generator.Generate()
 
 	// Assert
+	// Adjacent players lose their ring edge; connectivity repair may still add
+	// guarded Fallback links, so only Ring player-player connections are forbidden.
 	directPlayerConnections := linq.FromSlice(actual.Variants[0].Connections).
 		Where(func(connection entities.Connection) bool {
-			return connection.ConnectionType == "Direct" &&
+			return strings.HasPrefix(connection.Name, "Ring-") &&
 				strings.HasPrefix(connection.From, "Spawn-") && strings.HasPrefix(connection.To, "Spawn-")
 		}).
 		ToSlice()

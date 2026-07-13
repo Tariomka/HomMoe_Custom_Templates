@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/stretchr/testify/assert"
 )
@@ -106,9 +107,9 @@ func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
-	neutralPlans := models.NeutralZonePlans{
-		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
-		{Label: "D", Quality: models.QualityHigh, CastleCount: 0},
+	neutralPlans := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
+		{Label: "D", Quality: neutralZone.QualityHigh, CastleCount: 0},
 	}
 	expectedConnections := []entities.Connection{
 		{
@@ -205,4 +206,124 @@ func TestWhenBridgedZonesHaveVariousRoadShapes_BridgeIsStillReturned(t *testing.
 			assert.Len(t, connections, 1)
 		})
 	}
+}
+
+func TestWhenBridgeIsCreated_FirstZoneInSliceGainsBridgeRoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
+	testCases := []struct {
+		name          string
+		firstZone     entities.Zone
+		expectedRoads []entities.Road
+	}{
+		{
+			name: "WhenZoneHasMainObjects_AppendedRoadStartsAtPrimaryMainObject",
+			firstZone: entities.Zone{Name: "Spawn-A", MainObjects: []entities.MainObject{
+				{Type: "Spawn"},
+			}},
+			expectedRoads: []entities.Road{
+				{
+					From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+				},
+			},
+		},
+		{
+			name: "WhenZoneHasRoadReferencingExistingConnection_AppendedRoadChainsFromIt",
+			firstZone: entities.Zone{Name: "Spawn-A", Roads: []entities.Road{
+				{From: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
+			}},
+			expectedRoads: []entities.Road{
+				{From: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
+				{
+					From: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}},
+					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+				},
+			},
+		},
+		{
+			name: "WhenZoneRoadsHaveNoConnectionRefs_AppendedRoadFallsBackToBridgeName",
+			firstZone: entities.Zone{Name: "Spawn-A", Roads: []entities.Road{
+				{
+					From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+				},
+			}},
+			expectedRoads: []entities.Road{
+				{
+					From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+				},
+				{
+					From: entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+				},
+			},
+		},
+		{
+			name:      "WhenZoneHasNeitherMainObjectsNorRoads_AppendedRoadSelfReferencesBridge",
+			firstZone: entities.Zone{Name: "Spawn-A"},
+			expectedRoads: []entities.Road{
+				{
+					From: entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			topologyBase := base.NewTopologyBase()
+			zones := []entities.Zone{testCase.firstZone, {Name: "Spawn-B"}}
+
+			// Act
+			topologyBase.CreateMissingConnections(
+				[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil)
+
+			// Assert
+			assert.Equal(t, testCase.expectedRoads, zones[0].Roads)
+		})
+	}
+}
+
+func TestWhenBridgeIsCreated_SecondZoneInSliceAlsoGainsBridgeRoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
+	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+	expectedRoads := []entities.Road{
+		{
+			From: entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+			To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+		},
+	}
+
+	// Act
+	topologyBase.CreateMissingConnections(
+		[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil)
+
+	// Assert
+	assert.Equal(t, expectedRoads, zones[1].Roads)
+}
+
+func TestWhenBridgeNameAlreadyExistsOnUnmappedConnection_LoopTerminatesWithoutDuplicateBridge(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
+	existingConnections := []entities.Connection{
+		{Name: "Bridge-A-B", From: "Unknown-X", To: "Unknown-Y", ConnectionType: "Direct"},
+	}
+
+	// Act
+	connections := topologyBase.CreateMissingConnections(
+		[]string{"A", "B"}, []string{"A", "B"}, positions, nil, existingConnections, newUnitTuning(), nil)
+
+	// Assert
+	assert.Empty(t, connections)
 }

@@ -20,7 +20,7 @@ func NewLabeledRowWidget(
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(labelWidthPixels))
-				return NewLabelWidget(theme, label, themes.ColorText)(gtx)
+				return NewLabelWidget(theme, label, themes.ColorsBase.Text)(gtx)
 			}),
 			layout.Flexed(1, control))
 	}

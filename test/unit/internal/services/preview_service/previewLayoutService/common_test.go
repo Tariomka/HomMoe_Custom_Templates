@@ -27,6 +27,13 @@ func manualZone(name string, x, y float64) entities.Zone {
 	return zone
 }
 
+// ringedZone builds a zone with generator position and ring stamps.
+func ringedZone(name string, ring int, x, y float64) entities.Zone {
+	zone := positionedZone(name, x, y)
+	zone.GeneratorRing = new(ring)
+	return zone
+}
+
 // directConnection builds a plain direct connection between two zones.
 func directConnection(from, to string) entities.Connection {
 	return entities.Connection{From: from, To: to, ConnectionType: "Direct"}

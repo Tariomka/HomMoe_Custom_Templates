@@ -3,7 +3,7 @@ package topologies_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +25,7 @@ func TestWhenCatalogIsRequested_EveryDescriptorCarriesItsOwnType(t *testing.T) {
 	}
 
 	// Act
-	descriptors := constants.GetTopologyDescriptors()
+	descriptors := common.GetTopologyDescriptors()
 
 	// Assert
 	actual := []config.MapTopology{

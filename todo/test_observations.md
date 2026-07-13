@@ -1,127 +1,72 @@
-# Unit Test Observations — code unreachable or untestable by unit tests
+# Test Observations - untestable / integration-only code registry
 
-This file tracks implementation code that cannot be (fully) unit-tested
-through public entry points, per the rule: never add helpers/seams to
-implementation code just to make it testable. Each entry needs manual
-investigation by the maintainer.
+Referenced by AGENTS.md §4.6. Records code that cannot be exercised through
+public APIs in unit tests, so per-file coverage gaps here are intentional.
 
-Format: `path` — reason — suggested action.
+## Gio-UI-heavy code (integration-suite territory, no unit tests)
 
-## Untestable / unreachable code
+- app/gui/widgets/buttonWidget.go - all button constructors (and the private
+  `addButtonSemantics` helper added 2026-07-12 for button-position debug
+  logging) need a `layout.Context` + `material.Theme` text shaper to lay out;
+  covered indirectly by the integration/performance suites that render the
+  full editor window. The semantic-op replay path itself IS unit-tested via
+  test/unit/app/gui/utils/buttonPositionLogger/ (headless ops that mirror
+  `addButtonSemantics`), and was verified end-to-end against a real
+  `NewButtonWidget` layout during development.
 
-- `internal/helpers/io.go` — entire file has NO unit tests. `FindOldenEraTemplatesDir` depends on
-  host state that cannot be redirected: `USERNAME`/`HOME` are read at PACKAGE INIT into private vars
-  (so `t.Setenv` cannot influence them), the Windows path is the hard-coded
-  `C:\Program Files (x86)\Steam\steamapps\libraryfolders.vdf`, and every branch (VDF missing/parsed,
-  app 3105440 present/absent, install dir exists) depends on the machine's Steam installation. Private
-  helpers (`getVDFContent`, `getVDFFilePath`, `getBasePath`, `resolveGlob`) are only reachable through the
-  same entry point. Suggested action: inject the env/paths via parameters or a config struct (also fixes the
-  known `filepath.Join("C:", ...)` drive-relative bug), then add tests.
-- `internal/services/template_generator/providers/topology/base/topologyBase.go`
-  `buildNonAdjacentDerangement` — the deterministic-shift fallback requires 100 consecutive failed random
-  attempts; practically unreachable in tests. Suggested action: none (safety net).
-- `internal/services/template_generator/providers/topology/base/topologyBase.go` `CreateMissingConnections`
-  — the duplicate-bridge-name `continue` guard is unreachable: hitting it would require a pre-existing
-  non-Direct bridge with the same generated name, which would loop forever anyway. Suggested action: review
-  the loop's exit conditions.
-- `internal/services/content_rules/ruleVariant.go` `DisplayText` — the "Unforeseen Error" branch is
-  unreachable via `NewRuleVariant` (constructor validates the id); covered only by constructing the exported
-  struct directly. Suggested action: none.
-- `internal/handlers/guiHandler.go` — `SaveState` marshal-error branch (DTO is always marshalable),
-  `SaveTemplate` `previewGenerator == nil` skip (depends on embedded-asset init, not on inputs) and
-  `GenerateTemplate`'s `ErrGeneratedTemplateInvalid` are unreachable via inputs. Suggested action: none
-  (defensive guards).
-- `internal/services/template_generator/providers/gameRulesProvider.go` — `entities.GameRules.TournamentRules`
-  (bool) and `WinConditions.GladiatorArenaRegistrationStartWork` are never SET by the generator; they exist
-  only for tolerant parsing of hand-authored templates, so generator-side tests cannot exercise them.
-  Suggested action: none.
-- `internal/entities/template/template_variant/connection.go` — `Connection.IsUserAdded` carries `json:"-"`
-  (must never serialize). This contract has no public function to test against (pure struct tag); it is
-  exercised implicitly by templateWriter/integration tests. The legacy test `TestIsUserAdded_IsNotSerialized`
-  was dropped in the migration. Suggested action: keep the contract in mind when editing the schema.
-- `internal/services/template_generator/providers/common.go` — no public API (package-private registry alias
-  vars only); no test folder possible, covered transitively by every provider test.
-- `internal/services/preview_service/assetFitter.go` — all identifiers private (`newAssetFitter`); covered
-  indirectly through `PreviewGeneratorService.CreatePreviewImage` tests. Suggested action: none.
-- `internal/services/connection_editor/zoneEditor.go` `FindOpenPosition` — on an empty board returns
-  (0.9, 0.9): float accumulation makes the LAST tied corner win the strict `>` comparison. Not a bug, but the
-  tie-breaking is floating-point-sensitive; tests pin the current behavior.
-- `internal/services/connection_editor/connectionEditor.go` `WeeklyIncrementValues` — public VAR (not a
-  function); pinned by a dedicated test file per the per-file coverage rule.
+- app/gui/widgets/sliderRowWidget.go - `NewSliderRowWidget` (added 2026-07-13,
+  review item §3.2) is a thin composition of `NewLabeledRowWidget` +
+  `NewLabeledSliderWidget` whose returned closure needs a `layout.Context` +
+  text shaper; covered indirectly by the integration/performance suites. The
+  formatter funcs it receives ARE unit-tested (test/unit/app/gui/utils/string/
+  *Formatter_test.go).
 
-- `internal/entities/template/template_rule/winConditions.go` `MergeWinConditionsIfDoesNotExist` — the four
-  error-return branches (marshal of destination/source, unmarshal into maps, marshal of merged map) are
-  unreachable: `WinConditions` contains only JSON-safe field types, so `json.Marshal`/`json.Unmarshal` on it
-  can never fail. Function capped at ~77% coverage. Suggested action: none (defensive guards).
-- `internal/models/config/config_inner/bonusEntry.go` `GetHash` — the fallback branch when `json.Marshal`
-  fails is unreachable: `BonusEntry` holds only string/int fields, so marshalling never errors. Capped at 80%.
-  Suggested action: none (defensive guard).
-- `internal/services/previewLayout.go` — several branches are unreachable via `BuildPreviewLayout` (the only
-  public entry that drives the private layout code):
-  - the `!ok { continue }` guard in the zone loop (line ~72): every dispatch path positions every zone
-    (layoutMultiHub sweeps stragglers to the canvas centre), so a variant zone is never absent from Positions;
-  - the `n == 0` guards in `layoutFixedPositions`, `layoutBalancedRings`, `layoutScatter` and
-    `layoutRingOrHub`: BuildPreviewLayout early-returns when the variant has no zones and every internal
-    caller passes a non-empty slice — consequently `scaledInt` (only called from those guards) stays 0%;
-  - the `cnt == 0 { continue }` in the balanced-rings placement loop: every ring index maps to a present
-    GeneratorRing tier which by construction holds at least one zone;
-  - `relaxPasses` Pass B `elen2 < 1e-3 { continue }`: Pass A in the same iteration pushes any coincident
-    connected pair apart to minDist (≥30 px) before Pass B runs;
-  - `layoutMultiHub` `numHubs == 1` spoke-base branch: the function is only invoked with ≥2 hub zones;
-  - `positionCentroid`/`minMax` empty-input guards: all callers pass ≥1 element.
-  Suggested action: none (defensive guards).
-- `internal/services/previewRenderer.go` — unreachable branches:
-  - `WritePreviewPNG` `png.Encode` error return: encoding a valid RGBA into a freshly created file cannot
-    fail without I/O fault injection;
-  - `RenderPreviewImage` `NewAssetProvider` error return: preview assets are embedded PNGs that always decode;
-  - the `allowed < 1 { continue }` guard in the border-fit loop: side is forced to 700 so allowed ≥ ~280;
-  - `drawDashedQuadratic` `dashOn <= 0` / `dashOff < 0` guards: the sole caller passes fixed dashOn=9,
-    dashOff=13 (scaled).
-  Suggested action: none (defensive guards / fault-injection-only paths).
-- `internal/services/template_generator/providers/topology/geometryHelpers.go` — every function/type in the
-  file is private (`circlePoint`, `squarePerimeterPoint`, `nearestIndexInRange`, `pairBuilder`), so no
-  dedicated test folder is possible; the helpers are covered indirectly through the topology service tests
-  (circles/square/geometric/cross/fractal). Suggested action: none, unless the helpers are ever exported.
-- `internal/services/template_generator/providers/topology/base/topologyBase.go` `CreateMissingConnections` /
-  `CreateMissingPlayerConnections` — both append the fallback/bridge roads to `linq.FromSlice(zones).First(...)`
-  results, which are VALUE COPIES of the zone structs; the road mutations are silently lost and never reach the
-  caller's zones. Unit tests can therefore only assert the returned connections, not the road side-effect.
-  Suggested action: investigate — either mutate `zones[i]` via index or document that roads are intentionally
-  not added.
+- app/gui/dialogs/fileExplorerDialog.go - `handleConfirm` / `confirmOverwrite` /
+  `confirmSelection` need `layout.Context` + `widget.Clickable` click routing;
+  the integration suite currently has NO file-explorer scenario (open/save/
+  overwrite flows are unexercised). Noted 2026-07-12 during review item §1.8
+  (behavior-preserving split of `handleConfirm`); synthetic-click coverage via
+  the test/performance AppRunner pattern is possible future work.
 
-## Gio-UI-heavy files (covered by integration suite, not unit-testable)
+- app/gui/dialogs/zoneEditorDialog.go + zoneEditorCanvas.go + zoneEditorSnap.go +
+  zoneEditorConnectionProps.go + zoneEditorZoneProps.go - the Manual Zone Editor
+  (one struct, method-split across five files in review item §2.3, 2026-07-12).
+  Everything runs off `layout.Context` frames: canvas drawing/hit-testing uses
+  the previous frame's geometry, property panels are `widget.Editor`/dropdown
+  driven, and pointer flows (drag-to-connect, zone drag + snapping) need
+  synthetic pointer events. The extracted `groupConnectionsByPair` and the snap
+  helpers are private and only reachable through `Body`. Zone/connection
+  *business* logic is unit-tested in internal/services/connection_editor;
+  dialog interaction coverage would need the test/performance AppRunner
+  synthetic-click pattern (future work — no integration scenario exists yet).
 
-These files require a Gio `layout.Context`/window/event loop to exercise and are validated by the gated
-integration + performance suites (`go test -tags=integration_test ./test/integration/... ./test/performance/...`),
-not by unit tests:
+- app/gui/panels/layoutPanel.go + layoutPanelTopology.go + layoutPanelZones.go
+  and previewPanel.go - Layout/Preview panels (layoutPanel method-split by
+  column in review item §2.4, 2026-07-12; previewPanel's canvas closures
+  promoted to private funcs/methods the same day). Pure Gio rendering:
+  section/widget builders need `layout.Context` + text shaper, click handlers
+  need `widget.Clickable` routing, and `LoadFromState`/`SaveToState` round-trips
+  are exercised end-to-end by the integration suite (window save/load
+  scenarios drive the tabs' SaveToState/LoadFromState closures). The state
+  values they marshal are validated by the unit-tested
+  internal/validators/editorStateValidator.
 
-- `app/gui/program.go` — window/event loop entry point.
-- `app/gui/widgets/*.go` (14 files) — `New*Widget` closures over `layout.Context`/`material.Theme`.
-- `app/gui/dialogs/*.go` (9 files) — modal dialogs (bonus picker, file explorer, picker, rule, zone content,
-  zone editor) built on Gio widgets/clip/paint.
-- `app/gui/panels/*.go` (4 files) — generalPanel, layoutPanel, zoneContentPanel/bonusesPanel, previewPanel.
-- `app/gui/components/*.go` (2 files) — dropdownSelector, segmentButtonGroup.
-- `app/gui/editor/window.go`, `app/gui/editor/toolbar.go` — editor window composition/frame loop.
-- `app/gui/drivers/tab.go`, `app/gui/drivers/dialogHost.go` — Gio widget wrappers.
-- `app/gui/utils/draw.go` — clip/paint drawing helpers.
-- `app/gui/themes/*`, `app/gui/constants/*`, `app/gui/interfaces/*` — pure data/color/interface catalogs
-  (no logic to test).
+## app/gui/drivers.State (partially unit-tested since review item §2.2)
 
-- `app/gui/drivers/state.go` — evaluated for unit tests (Phase 7) and SKIPPED: the only constructor
-  `NewUIState()` is machine-dependent — it probes the Steam library via `helpers.FindOldenEraTemplatesDir`
-  (host filesystem + `USERNAME`/`HOME` read at package init) and falls back to `os.Getwd()`, so the initial
-  status message and output path differ per host. A zero-value `drivers.State{}` bypasses invariants
-  (nil `innerState`/`handler` panics in `AutoRegenerate`/`UpdateState`/`SetStatus`-adjacent flows), and adding
-  a test-only constructor seam is forbidden. `AutoRegenerate` debounce and `GetStatus`/`SetStatus` are already
-  exercised end-to-end by the gated integration suite
-  (`test/integration/manualCastleReapply_integration_test.go` drives `AutoRegenerate(now)` /
-  `AutoRegenerate(now+1s)`). Suggested action: none.
+Unit tests use `NewUIStateWithHandler` + `test_helpers.TemplateHandlerMock`.
+Still unit-untestable (dialog-callback or Gio territory):
 
-## Dead code found while testing
+- state.go - `NewUIState` (probes the disk for the game templates dir and
+  builds the real `GUIHandler`/preview stack) and `GetOutputPathWidget`
+  (returns a Gio widget). Covered by the integration suite.
+- stateFiles.go - `handleSaveState` / `handleLoadState` success paths and
+  `suggestDirectory` are only reachable through file-dialog callbacks
+  (`Load`/`SaveAs` pick handlers); unit tests assert the dialogs open, the
+  integration suite exercises the load/save flows via the
+  `integration_test`-gated `SaveStateToFile`/`LoadStateFromFile` exports.
+- stateFiles.go - `PickOutputDir` / `RevealOutputDir` only open dialogs whose
+  behavior lives in the dialog implementations.
+- stateGeneration.go - `reapplyManualEdits` castle-change branch requires a
+  generation-then-castle-option-change sequence entangled with the real
+  mapper; exercised by the integration suite's manual-edit scenarios.
 
-- `internal/services/previewLayout.go` vs `internal/services/preview_service/previewLayoutService.go` —
-  the preview-layout logic exists TWICE (near-identical `BuildPreviewLayout`, `ExtractZoneLetter`,
-  `ClassifyZoneTier` + private layout dispatch). The old `services` copy is still LIVE
-  (`app/gui/panels/previewPanel.go`, `app/gui/dialogs/zoneEditorDialog.go` call `services.BuildPreviewLayout`),
-  while `preview_service` is used via `guiHandler`. Consolidate to one implementation, then drop the
-  duplicate and its duplicated test folders (both are currently unit-tested separately).

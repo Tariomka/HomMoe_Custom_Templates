@@ -3,7 +3,7 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,9 +24,9 @@ func TestWhenBothLabelsArePlayers_GuardValueIsPlayerBorderStrength(t *testing.T)
 func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	neutralPlans := models.NeutralZonePlans{
-		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
-		{Label: "D", Quality: models.QualityHigh, CastleCount: 0},
+	neutralPlans := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
+		{Label: "D", Quality: neutralZone.QualityHigh, CastleCount: 0},
 	}
 	testCases := []struct {
 		name       string
@@ -57,8 +57,8 @@ func TestWhenOnlyFirstLabelIsPlayer_NeutralSecondLabelQualityDrivesGuard(t *test
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
-	neutralPlans := models.NeutralZonePlans{
-		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
+	neutralPlans := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
 	}
 
 	// Act
@@ -73,8 +73,8 @@ func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *test
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
-	neutralPlans := models.NeutralZonePlans{
-		{Label: "C", Quality: models.QualityLow, CastleCount: 0},
+	neutralPlans := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
 	}
 
 	// Act

@@ -2,7 +2,6 @@ package content_rules
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -35,12 +34,13 @@ func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVarian
 	if variantID != nil {
 		id = *variantID
 	} else {
-		id = smallestVariantKey(resolved.Variants)
+		id = resolved.GetVariantIDsInOrder()[0]
 	}
 
-	if _, ok := resolved.Variants[id]; !ok {
+	if _, ok := resolved.GetVariantByID(id); !ok {
 		return nil, fmt.Errorf("selected variant id %d is not present in the provided variant mapping", id)
 	}
+
 	return &RuleVariant{Mapping: resolved, VariantID: id}, nil
 }
 
@@ -49,9 +49,10 @@ func (this *RuleVariant) Description() string { return RuleVariantDescription }
 func (this *RuleVariant) Marker() string      { return RuleVariantMarker }
 
 func (this *RuleVariant) DisplayText() string {
-	if description, ok := this.Mapping.Variants[this.VariantID]; ok {
+	if description, ok := this.Mapping.GetVariantByID(this.VariantID); ok {
 		return fmt.Sprintf("%s: %s", this.Name(), description)
 	}
+
 	return fmt.Sprintf("%s: Unforeseen Error", this.Name())
 }
 
@@ -66,18 +67,4 @@ func (this *RuleVariant) SerializeToRowSave() models.ContentRuleRowSave {
 		Name:      this.Name(),
 		VariantID: &id,
 	}
-}
-
-// smallestVariantKey returns the lowest key in the map, so variant resolution
-// is deterministic regardless of Go map iteration order.
-func smallestVariantKey(variants map[int]string) int {
-	if len(variants) == 0 {
-		return 0
-	}
-	keys := make([]int, 0, len(variants))
-	for key := range variants {
-		keys = append(keys, key)
-	}
-	sort.Ints(keys)
-	return keys[0]
 }

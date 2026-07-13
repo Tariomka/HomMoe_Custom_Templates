@@ -12,6 +12,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -152,7 +153,7 @@ var zoneLabels = []string{
 }
 
 // QualityLabels are the display names of the neutral-zone quality presets,
-// indexed by models.NeutralZoneQuality.
+// indexed by neutralZone.Quality.
 var QualityLabels = []string{"Low", "Medium", "High"}
 
 // NextFreeZoneLabel returns the first generator label not used by any zone, or
@@ -175,31 +176,15 @@ func NextFreeZoneLabel(zones []entities.Zone) string {
 // because no template-level definition exists for a manual zone.
 func NewDefaultNeutralZone(
 	label string,
-	quality models.NeutralZoneQuality,
+	quality neutralZone.Quality,
 	castleCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
 	topology := base.NewTopologyBase()
-	plan := models.NeutralZonePlan{Label: label, Quality: quality, CastleCount: castleCount}
+	plan := neutralZone.Plan{Label: label, Quality: quality, CastleCount: castleCount}
 	zone := topology.CreateNeutralZone(plan, nil, 1.0, tuning.RemoteFootholdCount, generateRoads, tuning, false)
 	zone.MandatoryContent = nil
 	return zone
-}
-
-// QualityOfZone infers a neutral zone's quality preset from its guarded
-// content pool, mirroring GetZoneTier's bracket rules.
-func QualityOfZone(zone entities.Zone) models.NeutralZoneQuality {
-	pool := ""
-	if len(zone.GuardedContentPool) > 0 {
-		pool = zone.GuardedContentPool[0]
-	}
-	if strings.Contains(pool, "_t4_") || strings.Contains(pool, "_t5_") {
-		return models.QualityHigh
-	}
-	if strings.Contains(pool, "_t1_") || strings.Contains(pool, "_t2_") {
-		return models.QualityLow
-	}
-	return models.QualityMedium
 }
 
 // CountZoneCastles returns the number of City main objects in the zone.
@@ -218,10 +203,10 @@ func CountZoneCastles(zone entities.Zone) int {
 // the requested count. Only meaningful for neutral zones.
 func ApplyNeutralZoneQuality(
 	zone *entities.Zone,
-	quality models.NeutralZoneQuality,
+	quality neutralZone.Quality,
 	castleCount int,
 	tuning models.GenerationTuning) {
-	profile := models.NewNeutralZoneProfile(quality)
+	profile := neutralZone.NewNeutralZoneProfile(quality)
 	zone.Layout = profile.Layout
 	zone.GuardMultiplier = tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)
 	zone.GuardReactionDistribution = profile.GuardReactionDistribution

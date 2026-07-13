@@ -7,26 +7,30 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
+// layoutCenter is the center coordinate of the normalized [0,1] layout space
+// that every fixed-geometry topology builds its shape around.
+const layoutCenter = 0.5
+
 // circlePoint returns the point at the given angle (radians) on a circle of the
-// given radius centred on (centreX, centreY), in normalized [0,1] layout space.
-func circlePoint(angle, centreX, centreY, radius float64) models.Position {
+// given radius centered on the layout center, in normalized [0,1] layout space.
+func circlePoint(angle, radius float64) models.Position {
 	return data.NewVec2(
-		centreX+math.Cos(angle)*radius,
-		centreY+math.Sin(angle)*radius)
+		layoutCenter+math.Cos(angle)*radius,
+		layoutCenter+math.Sin(angle)*radius)
 }
 
 // squarePerimeterPoint maps a parameter t in [0,1) to a point traveling
-// clockwise around the perimeter of a square centred on (centreX, centreY) with
+// clockwise around the perimeter of a square centered on the layout center with
 // the given half-side, starting from the top-left corner.
-func squarePerimeterPoint(t, centreX, centreY, half float64) models.Position {
+func squarePerimeterPoint(t, half float64) models.Position {
 	t -= math.Floor(t)
 	scaled := t * 4.0
 	side := int(scaled)
 	frac := scaled - float64(side)
-	left := centreX - half
-	right := centreX + half
-	top := centreY - half
-	bottom := centreY + half
+	left := layoutCenter - half
+	right := layoutCenter + half
+	top := layoutCenter - half
+	bottom := layoutCenter + half
 	switch side {
 	case 0: // top edge, left to right
 		return data.NewVec2(left+frac*2.0*half, top)

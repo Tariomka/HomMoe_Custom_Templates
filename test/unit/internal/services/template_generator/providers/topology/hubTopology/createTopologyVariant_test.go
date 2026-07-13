@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,9 +18,9 @@ func TestWhenOuterLabelsSurroundTheHub_CreatesSingleHubZone(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
-	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
@@ -42,9 +43,9 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesHubPlusOuterZones(t *te
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
-	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
@@ -61,9 +62,9 @@ func TestWhenHubAndSpokesAreBuilt_EveryConnectionReferencesExistingZones(t *test
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
-	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
@@ -81,8 +82,8 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentName(t *te
 	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{}}
 	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 4)
 	service := topology.NewHubTopologyService()
 
@@ -108,8 +109,8 @@ func TestWhenIsolatedPlayersAreAdjacentOuterLabels_SkipsTheirPseudoConnection(t 
 	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.NoDirectPlayerConnections = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 4)
 	service := topology.NewHubTopologyService()
 
@@ -120,38 +121,15 @@ func TestWhenIsolatedPlayersAreAdjacentOuterLabels_SkipsTheirPseudoConnection(t 
 	assert.NotContains(t, connectionNames(variant), "Pseudo-A-B")
 }
 
-func TestWhenCirclesTopologyCannotHonorSeparation_BalancesOuterLabelsWithoutSeparation(t *testing.T) {
+func TestWhenCirclesTopologyProvided_CreatesHubPlusOuterZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCircles
-	configuration.MinNeutralZonesBetweenPlayers = 0
 	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
-	neutralZones.AddPlan("N2", models.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewHubTopologyService()
-
-	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
-
-	// Assert
-	assert.Len(t, variant.Zones, 5)
-}
-
-func TestWhenCirclesTopologyHonorsNeutralSeparation_CreatesHubPlusOuterZones(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyCircles
-	configuration.MinNeutralZonesBetweenPlayers = 1
-	configuration.PlayerCount = 2
-	configuration.ZoneConfiguration.NeutralZoneCount = 2
-	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
-	neutralZones.AddPlan("N2", models.QualityMedium, 1)
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
@@ -169,11 +147,11 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.RandomPortals = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := models.NeutralZonePlans{}
-	neutralZones.AddPlan("N1", models.QualityMedium, 1)
-	neutralZones.AddPlan("N2", models.QualityMedium, 1)
-	neutralZones.AddPlan("N3", models.QualityMedium, 1)
-	neutralZones.AddPlan("N4", models.QualityMedium, 1)
+	neutralZones := neutralZone.Plans{}
+	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
+	neutralZones.AddPlan("N3", neutralZone.QualityMedium, 1)
+	neutralZones.AddPlan("N4", neutralZone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 7)
 	service := topology.NewHubTopologyService()
 

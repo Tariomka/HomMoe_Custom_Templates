@@ -309,7 +309,7 @@ linters:
           disabled: false
 
     sloglint:
-      no-global: default # Report the use of global loggers.
+      no-global: "" # Report the use of global loggers.
       context: scope # Report the use of functions without a context.Context.
 
     staticcheck:
@@ -366,10 +366,6 @@ severity:
     - dupl
     - unparam
     - gochecknoglobals # temporarily make it less critical
-
-  - severity: note
-    linters:
-      - sloglint
 
 output:
   formats:

@@ -16,6 +16,9 @@ coverage.html
 lcov.info
 /*.txt
 
+# Output directories
+output/
+
 # Dependency directories
 vendor/
 

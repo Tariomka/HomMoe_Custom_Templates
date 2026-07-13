@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
 
 type EditorState struct {
@@ -31,10 +32,10 @@ func (this *EditorState) GetCurrentState() dtos.EditorStateDto {
 }
 
 func (this *EditorState) UpdateCurrentState(updateFunc func(state *dtos.EditorStateDto)) {
-	// TODO: add validator for state updates, e.g. to prevent invalid map sizes or player counts
-	// this.SnapshotCurrentState()
-
 	updateFunc(this.current)
+	for _, issue := range validators.ValidateEditorState(this.current) {
+		issue.Fix(this.current)
+	}
 	if this.current.AdvancedMode {
 		this.current.NeutralZoneCount = 0
 	} else {

@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 )
@@ -24,7 +25,7 @@ func NewTournamentTopologyService() *TournamentTopologyService {
 func (this *TournamentTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning) entities.Variant {
 	perPlayerNeutralZones := this.createPerPlayerNeutralZonePlans(neutralZones)
 
@@ -57,7 +58,7 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		for playerIndex := range 2 {
 			clusterLabels := linq.FromSlice(perPlayerNeutralZones[playerIndex]).
-				SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+				SelectString(func(x neutralZone.Plan) string { return x.Label }).
 				ToSlice()
 			conns = append(conns,
 				this.CreateRandomPortalConnections(
@@ -70,10 +71,10 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 // createPerPlayerNeutralZonePlans splits neutral zone plans into two per-player lists
 // in a balanced round-robin so that quality tiers are split evenly across the two players.
 func (this *TournamentTopologyService) createPerPlayerNeutralZonePlans(
-	neutralZones models.NeutralZonePlans) [2]models.NeutralZonePlans {
-	perPlayerNeutralZones := [2]models.NeutralZonePlans{}
+	neutralZones neutralZone.Plans) [2]neutralZone.Plans {
+	perPlayerNeutralZones := [2]neutralZone.Plans{}
 
-	sorted := models.NewNeutralZonePlansSorted(neutralZones)
+	sorted := neutralZone.NewNeutralZonePlansSorted(neutralZones)
 	for index, zonePlan := range *sorted {
 		perPlayerNeutralZones[index%2].AddPlans(zonePlan)
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -24,7 +25,7 @@ func NewRingClusterService() *RingClusterService {
 func (this *RingClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	ringLabels := this.createLabels(playerNeutralZonePlans, playerLabel)
@@ -45,14 +46,14 @@ func (this *RingClusterService) CreateClusterVariant(
 }
 
 func (this *RingClusterService) createLabels(
-	playerNeutralZonePlans models.NeutralZonePlans,
+	playerNeutralZonePlans neutralZone.Plans,
 	playerLabel string) []string {
-	sortedNeutralZonePlans := models.NeutralZonePlans{}
+	sortedNeutralZonePlans := neutralZone.Plans{}
 	sortedNeutralZonePlans.AddPlans(playerNeutralZonePlans...)
 	sortedNeutralZonePlans.SortByBalanceScoreAscending()
 
 	zoneCount := len(sortedNeutralZonePlans)
-	orderedNeutralZonePlans := make(models.NeutralZonePlans, zoneCount)
+	orderedNeutralZonePlans := make(neutralZone.Plans, zoneCount)
 	lowIndex, highIndex := 0, zoneCount-1
 	for index, zonePlan := range sortedNeutralZonePlans {
 		if index%2 == 0 {
@@ -66,7 +67,7 @@ func (this *RingClusterService) createLabels(
 
 	return append([]string{playerLabel},
 		linq.FromSlice(orderedNeutralZonePlans).
-			SelectString(func(x models.NeutralZonePlan) string { return x.Label }).
+			SelectString(func(x neutralZone.Plan) string { return x.Label }).
 			ToSlice()...)
 }
 
@@ -74,7 +75,7 @@ func (this *RingClusterService) createZones(
 	configuration config.GeneratorConfig,
 	ringLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	playerIndex int) []entities.Zone {
 	count := len(ringLabels)
 
@@ -98,7 +99,7 @@ func (this *RingClusterService) createZones(
 		} else {
 			zones = append(zones, this.CreateNeutralZone(
 				linq.FromSlice(allNeutralZonePlans).
-					FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+					FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
@@ -120,7 +121,7 @@ func (this *RingClusterService) createSinglePlayerZone(
 func (this *RingClusterService) createConnections(
 	ringLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans models.NeutralZonePlans,
+	allNeutralZonePlans neutralZone.Plans,
 	playerLabel string) []entities.Connection {
 	ringCount := len(ringLabels)
 

@@ -152,7 +152,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(120)
 						label := material.Caption(theme, "Add preset:")
-						label.Color = themes.ColorTextDim
+						label.Color = themes.ColorsBase.TextDim
 						return label.Layout(gtx)
 					}),
 					layout.Flexed(1, this.addPreset.GetWidget(theme)),
@@ -163,7 +163,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			func(gtx layout.Context) layout.Dimensions {
 				if len(this.rows) == 0 {
 					label := material.Caption(theme, "(no items)")
-					label.Color = themes.ColorTextDim
+					label.Color = themes.ColorsBase.TextDim
 					return layout.Inset{Top: unit.Dp(4), Left: unit.Dp(4)}.Layout(gtx, label.Layout)
 				}
 				children := make([]layout.FlexChild, 0, len(this.rows)*2)
@@ -203,7 +203,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 							label := material.Body1(theme, rowDisplayName(row))
-							label.Color = themes.ColorAccent
+							label.Color = themes.ColorsBase.Accent
 							label.TextSize = unit.Sp(13)
 							return label.Layout(gtx)
 						}),
@@ -216,8 +216,8 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(0.6,
-							widgets.NewLabeledRowWidget(theme, "Count", 60,
-								widgets.NewLabeledSliderWidget(theme, &row.countSld, strconv.Itoa(liveCount)))),
+							widgets.NewSliderRowWidget(theme, "Count", 60, &row.countSld,
+								func(float32) string { return strconv.Itoa(liveCount) })),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
 						layout.Flexed(0.4,
 							widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),
@@ -237,12 +237,12 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 		markers := ruleMarkers(row.Mapping, row.rules)
 		if markers == "" {
 			label := material.Body2(theme, "(none)")
-			label.Color = themes.ColorTextDim
+			label.Color = themes.ColorsBase.TextDim
 			label.TextSize = unit.Sp(12)
 			return label.Layout(gtx)
 		}
 		label := material.Body1(theme, markers)
-		label.Color = themes.ColorAccentBright
+		label.Color = themes.ColorsBase.AccentBright
 		label.TextSize = unit.Sp(13)
 		return label.Layout(gtx)
 	}
@@ -256,7 +256,7 @@ func rowDisplayName(row *zoneContentRow) string {
 			continue
 		}
 		for _, variant := range content_rules.GetVariantsForContent(row.Mapping) {
-			if description, ok := variant.Variants[*saved.VariantID]; ok {
+			if description, ok := variant.GetVariantByID(*saved.VariantID); ok {
 				return row.Mapping.Name + " (" + description + ")"
 			}
 		}

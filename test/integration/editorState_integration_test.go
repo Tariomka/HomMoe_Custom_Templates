@@ -15,6 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -230,4 +231,78 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	// With four players the regenerated layout has its own spawn zones; the
 	// manual single-position stamp must not have been forced back on.
 	assert.GreaterOrEqual(t, len(regenerated.Variants[0].Zones), 4)
+}
+
+// TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave is the regression
+// test for the generalPanel gameMode load bug: LoadFromState used to hard-reset
+// the game-mode segment button to index 0, so the next frame's SaveToState
+// silently reverted a loaded non-default game mode back to Classic.
+func TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave(t *testing.T) {
+	dir := t.TempDir()
+	savedPath := filepath.Join(dir, "gamemode.gen.json")
+	singleHero := registry.GetGameModeValues().SingleHero
+
+	// Author a state with the non-default game mode and persist it.
+	author := drivers.NewUIState()
+	author.UpdateState(func(s *dtos.EditorStateDto) { s.GameMode = singleHero })
+	author.SaveStateToFile(savedPath)
+	message, irError := author.GetStatus()
+	require.False(t, irError)
+	require.Equal(t, "Saved "+savedPath, message)
+
+	// Fresh editor session at defaults; load, resync panels (window.load()),
+	// then run the next frame's SaveToState (window.save()).
+	state, saveFrame, loadPanels := newEditorSession()
+	state.LoadStateFromFile(savedPath)
+	loadPanels()
+	saveFrame()
+
+	assert.Equal(t, singleHero, state.GetStateData().GameMode,
+		"loaded game mode was clobbered by the next frame's SaveToState")
+}
+
+// TestLoadFromFile_UnknownGameMode_FallsBackToClassic verifies that a
+// hand-edited .gen.json with an unrecognized game mode does not panic and
+// settles on the default (Classic) mode.
+func TestLoadFromFile_UnknownGameMode_FallsBackToClassic(t *testing.T) {
+	dir := t.TempDir()
+	savedPath := filepath.Join(dir, "unknown-gamemode.gen.json")
+
+	// UpdateState fixes invalid values on the fly, so the hand-edited file has
+	// to be written directly.
+	require.NoError(t, os.WriteFile(savedPath, []byte(`{"gameMode": "NotARealGameMode"}`), 0o644))
+
+	state, saveFrame, loadPanels := newEditorSession()
+	state.LoadStateFromFile(savedPath)
+	loadPanels()
+	saveFrame()
+
+	assert.Equal(t, registry.GetGameModeValues().Classic, state.GetStateData().GameMode,
+		"unknown game mode should fall back to Classic")
+}
+
+// TestLoadFromFile_UnknownVictoryCondition_FallsBackToStandardAndWarns verifies
+// that a hand-edited .gen.json with an unrecognized victory condition settles
+// on Standard and tells the user about it instead of silently reshaping the
+// setting.
+func TestLoadFromFile_UnknownVictoryCondition_FallsBackToStandardAndWarns(t *testing.T) {
+	dir := t.TempDir()
+	savedPath := filepath.Join(dir, "unknown-victory.gen.json")
+
+	// UpdateState fixes invalid values on the fly, so the hand-edited file has
+	// to be written directly.
+	require.NoError(t, os.WriteFile(savedPath,
+		[]byte(`{"victoryCondition": "notARealVictoryCondition"}`), 0o644))
+
+	state, saveFrame, loadPanels := newEditorSession()
+	state.LoadStateFromFile(savedPath)
+	loadPanels()
+	saveFrame()
+
+	message, isError := state.GetStatus()
+	require.False(t, isError)
+	assert.Contains(t, message, `victoryCondition "notARealVictoryCondition" is not a known victory condition`,
+		"the user must be told their victory condition was dropped")
+	assert.Equal(t, registry.GetWinningConditionValues().Standard, state.GetStateData().VictoryCondition,
+		"unknown victory condition should fall back to Standard")
 }

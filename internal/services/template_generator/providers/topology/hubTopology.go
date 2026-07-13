@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -25,7 +26,7 @@ func NewHubTopologyService() *HubTopologyService {
 func (this *HubTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	hubIsHoldCity bool) entities.Variant {
 	outerLabels := this.createOuterLabels(configuration, playerLabels, neutralZones)
@@ -44,18 +45,14 @@ func (this *HubTopologyService) CreateTopologyVariant(
 func (this *HubTopologyService) createOuterLabels(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) []string {
+	neutralZones neutralZone.Plans) []string {
 	if configuration.Topology == config.TopologyCircles {
-		sep := 0
-		if configuration.MinNeutralZonesBetweenPlayers > 0 && configuration.CanHonorNeutralSeparation() {
-			sep = configuration.MinNeutralZonesBetweenPlayers
-		}
-		return this.ZoneLabelProvider.CreateBalancedChainZoneLabels(playerLabels, neutralZones, sep)
+		return this.ZoneLabelProvider.CreateBalancedChainZoneLabels(playerLabels, neutralZones)
 	}
 
 	return append(playerLabels,
 		linq.FromSlice(neutralZones).
-			SelectString(func(nz models.NeutralZonePlan) string { return nz.Label }).
+			SelectString(func(nz neutralZone.Plan) string { return nz.Label }).
 			ToSlice()...)
 }
 
@@ -63,7 +60,7 @@ func (this *HubTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	hubIsHoldCity bool) []entities.Zone {
 	hubConns := make([]string, len(outerLabels))
 	for index, label := range outerLabels {
@@ -90,7 +87,7 @@ func (this *HubTopologyService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x models.NeutralZonePlan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
 					spokeConnectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
@@ -102,7 +99,7 @@ func (this *HubTopologyService) createConnections(
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones models.NeutralZonePlans) []entities.Connection {
+	neutralZones neutralZone.Plans) []entities.Connection {
 	var connections []entities.Connection
 	for index, label := range outerLabels {
 		hubAnchor := label

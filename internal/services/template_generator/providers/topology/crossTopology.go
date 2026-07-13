@@ -7,10 +7,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
 // CrossTopologyService radiates one arm per player out of a central zone. Each
-// arm is a chain of neutral zones running from the centre out to the player at
+// arm is a chain of neutral zones running from the center out to the player at
 // its tip, so the zones and connections form a cross / star whose number of
 // arms follows the player count.
 type CrossTopologyService struct {
@@ -26,41 +27,19 @@ func NewCrossTopologyService() *CrossTopologyService {
 func (this *CrossTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans,
+	neutralZones neutralZone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-	allLabels, positions, pairs := this.createCrossLayout(playerLabels, neutralZones)
-	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
-
-	zones := this.createZones(
-		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
-	for index := range zones {
-		position := positions[index]
-		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
-	}
-
-	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
-	if configuration.RandomPortals {
-		conns = append(conns,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
-	}
-	if isIsolated {
-		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
-	}
-	conns = append(conns,
-		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
-	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
+	return this.createVariantFromLayout(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createCrossLayout)
 }
 
 // createCrossLayout places the central zone first, then walks each arm from the
-// centre outward laying its neutral zones followed by the player at the tip.
+// center outward laying its neutral zones followed by the player at the tip.
 func (this *CrossTopologyService) createCrossLayout(
 	playerLabels []string,
-	neutralZones models.NeutralZonePlans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
-		centreX      = 0.5
-		centreY      = 0.5
 		playerRadius = 0.42
 		armNear      = 0.14
 		armFar       = 0.34
@@ -73,11 +52,11 @@ func (this *CrossTopologyService) createCrossLayout(
 	var positions models.Positions
 
 	// Central zone is the heart of the cross.
-	centreIndex := -1
+	centerIndex := -1
 	if neutralCount >= 1 {
-		centreIndex = len(allLabels)
+		centerIndex = len(allLabels)
 		allLabels = append(allLabels, neutralZones[0].Label)
-		positions.Add(data.NewVec2(centreX, centreY))
+		positions.Add(data.NewVec2(layoutCenter, layoutCenter))
 	}
 
 	// Distribute the remaining neutral zones across the arms, round-robin.
@@ -94,7 +73,7 @@ func (this *CrossTopologyService) createCrossLayout(
 			angle += 2.0 * math.Pi * float64(arm) / float64(playerCount)
 		}
 
-		// Arm neutral zones from the centre outward.
+		// Arm neutral zones from the center outward.
 		count := armNeutralCounts[arm]
 		for k := range count {
 			radius := (armNear + armFar) / 2.0
@@ -103,22 +82,22 @@ func (this *CrossTopologyService) createCrossLayout(
 			}
 			armIndices[arm] = append(armIndices[arm], len(allLabels))
 			allLabels = append(allLabels, neutralZones[nextNeutral].Label)
-			positions.Add(circlePoint(angle, centreX, centreY, radius))
+			positions.Add(circlePoint(angle, radius))
 			nextNeutral++
 		}
 
 		// Player zone at the arm tip.
 		armIndices[arm] = append(armIndices[arm], len(allLabels))
 		allLabels = append(allLabels, playerLabels[arm])
-		positions.Add(circlePoint(angle, centreX, centreY, playerRadius))
+		positions.Add(circlePoint(angle, playerRadius))
 	}
 
-	pairs := this.createCrossPairs(centreIndex, armIndices, playerCount)
+	pairs := this.createCrossPairs(centerIndex, armIndices, playerCount)
 	return allLabels, positions, pairs
 }
 
 func (this *CrossTopologyService) createCrossPairs(
-	centreIndex int,
+	centerIndex int,
 	armIndices [][]int,
 	playerCount int) []models.ConnectionIndexes {
 	builder := newPairBuilder()
@@ -128,19 +107,19 @@ func (this *CrossTopologyService) createCrossPairs(
 		if len(indices) == 0 {
 			continue
 		}
-		// The centre joins the innermost zone of each arm.
-		if centreIndex >= 0 {
-			builder.add(centreIndex, indices[0])
+		// The center joins the innermost zone of each arm.
+		if centerIndex >= 0 {
+			builder.add(centerIndex, indices[0])
 		}
-		// Chain the arm zones from the centre outward to the player tip.
+		// Chain the arm zones from the center outward to the player tip.
 		for k := 0; k+1 < len(indices); k++ {
 			builder.add(indices[k], indices[k+1])
 		}
 	}
 
-	// Without a centre zone (no neutral zones) join the player tips in a ring so
+	// Without a center zone (no neutral zones) join the player tips in a ring so
 	// they still form a closed, cross-like outline.
-	if centreIndex < 0 && playerCount >= 2 {
+	if centerIndex < 0 && playerCount >= 2 {
 		for i := range playerCount {
 			tip := armIndices[i][len(armIndices[i])-1]
 			nextTip := armIndices[(i+1)%playerCount][len(armIndices[(i+1)%playerCount])-1]

@@ -38,12 +38,16 @@ type GuardPresetExtra struct {
 	Value int
 }
 
+// generatorDefaultLabel is the dropdown label of the per-tier default guard
+// value produced by the generator.
+const generatorDefaultLabel = "Generator Default"
+
 // TierExtras holds the "Generator Default" value for each tier.
 var TierExtras = [4][]GuardPresetExtra{
-	{{Label: "Generator Default", Value: 15000}}, // Bronze
-	{{Label: "Generator Default", Value: 20000}}, // Silver
-	{{Label: "Generator Default", Value: 25000}}, // Gold
-	{{Label: "Generator Default", Value: 30000}}, // PlayerToPlayer
+	{{Label: generatorDefaultLabel, Value: 15000}}, // Bronze
+	{{Label: generatorDefaultLabel, Value: 20000}}, // Silver
+	{{Label: generatorDefaultLabel, Value: 25000}}, // Gold
+	{{Label: generatorDefaultLabel, Value: 30000}}, // PlayerToPlayer
 }
 
 // WeeklyIncrementLabels and WeeklyIncrementValues describe the guard-growth presets.
