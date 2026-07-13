@@ -23,3 +23,6 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
   - start using them: extend hold-city (or other adjacency-based features) to
     Chain/Ring/Circles topologies, which would also fix the `default` branch
     modelling Hub & Spoke as a sequential ring instead of its real star graph.
+
+- There is an issue on Windows with mouse scroll wheel not scrolling widgets.
+  don't know why, don't know how - it just does not work.

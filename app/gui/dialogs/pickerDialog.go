@@ -313,8 +313,6 @@ func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pic
 // getLeafRowContentWidget lays out a leaf row's checkmark, optional badge,
 // label and optional trailing text.
 func getLeafRowContentWidget(theme *material.Theme, entry pickerEntry, checked bool) layout.Widget {
-	// TODO: check scroll wheel action in dialog
-	// this is probably not the correct spot because it doesn't work everywhere
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
