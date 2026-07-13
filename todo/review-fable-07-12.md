@@ -727,7 +727,7 @@ No new blanket coverage push is warranted; target the two gaps.
 
 ## 7. CI/CD
 
-### 7.1 🟠 Vulnerability scan is wired but disabled
+### 7.1 ✅ FIXED 🟠 Vulnerability scan is wired but disabled
 
 [pr-validation.yml](../.github/workflows/pr-validation.yml#L61-L64): the
 `run-vulnerability-scan` job is complete but has `if: false`. govulncheck is low-noise
@@ -736,7 +736,7 @@ No new blanket coverage push is warranted; target the two gaps.
 into one `go-package: ./...` step (they share the module; three runs triple the cost for
 no added signal).
 
-### 7.2 🟠 No race detector anywhere in CI
+### 7.2 ✅ FIXED 🟠 No race detector anywhere in CI
 
 The GUI is event-driven with a generator pipeline behind it; races would ship silently.
 **Fix**: add `-race` to the unit-test step (Linux runners support it out of the box):
@@ -749,7 +749,7 @@ The GUI is event-driven with a generator pipeline behind it; races would ship si
 If `-race` + coverage is too slow, run a separate `go test -race ./test/unit/...` job
 without coverage in parallel.
 
-### 7.3 🟡 `check-build` only builds the root package
+### 7.3 ✅ FIXED 🟡 `check-build` only builds the root package
 
 [pr-validation.yml](../.github/workflows/pr-validation.yml#L110): `go build .` skips
 `tools/` and any package not reachable from main (e.g. `*_testexports.go` files under the

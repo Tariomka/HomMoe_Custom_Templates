@@ -102,6 +102,28 @@ jobs:
       - name: Vet (including integration_test-gated files)
         run: go vet -tags=integration_test ./...
 
+  check-windows:
+    name: Check Windows Build & Unit Tests
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Project
+        uses: ./.github/workflows/setup-steps
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          os: windows # skips the Linux-only Gio apt-get dependencies
+
+      - name: Build
+        run: go build ./...
+
+      - name: Run unit tests
+        run: go test ./test/unit/...
+
   run-unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-latest
