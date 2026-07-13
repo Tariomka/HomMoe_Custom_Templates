@@ -757,7 +757,7 @@ without coverage in parallel.
 `go vet -tags=integration_test ./...` to compile-check the gated files without running
 gated tests.
 
-### 7.4 🟡 Single-OS CI for a dual-OS product
+### 7.4 ✅ FIXED 🟡 Single-OS CI for a dual-OS product
 
 Everything runs on ubuntu-latest, yet the primary user platform (and all Steam-path logic
 in [io.go](../internal/helpers/io.go)) is Windows. **Fix**: add a `windows-latest` job

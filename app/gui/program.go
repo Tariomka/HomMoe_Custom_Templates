@@ -15,14 +15,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 )
 
-func StartApplication() {
-	go eventLoop()
+func StartApplication(version string) {
+	go eventLoop(version)
 	app.Main()
 }
 
 // eventLoop is a blocking function and needs to executed concurrently.
-func eventLoop() {
-	window := getAndConfigureWindow()
+func eventLoop(version string) {
+	window := getAndConfigureWindow(version)
 	windowLayout := editor.NewWindow()
 	windowLayout.SetOnExit(func() { window.Perform(system.ActionClose) })
 	theme := themes.NewTheme()
@@ -46,10 +46,10 @@ func eventLoop() {
 	}
 }
 
-func getAndConfigureWindow() *app.Window {
+func getAndConfigureWindow(version string) *app.Window {
 	window := new(app.Window)
 	configuration := []app.Option{
-		app.Title("Olden Era - Custom Templates"),
+		app.Title("Olden Era - Custom Templates (" + version + ")"),
 		app.MinSize(unit.Dp(1280), unit.Dp(800)),
 	}
 
