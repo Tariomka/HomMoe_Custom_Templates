@@ -137,6 +137,10 @@ jobs:
 
   code_coverage:
     name: Code coverage report
+    if: github.event_name == 'pull_request' # Do not run when workflow is triggered by push to main branch. Below is an error that is returned:
+    #   Error: Unable to locate the git repository in the given path: /home/runner/work/HomMoe_Custom_Templates/HomMoe_Custom_Templates.
+    #  Please run actions/checkout before this action (Make sure the 'path' input is correct).
+    #  If you intend to use Github's REST API note that only pull_request* events are supported. Current event is "push".
     runs-on: ubuntu-latest
     needs: run-unit-tests
     permissions:
@@ -155,11 +159,10 @@ jobs:
           exclude: (?:^|/)test/(.+)$
 
       - name: Fail if coverage drops
-        if: ${{ github.event_name == 'pull_request' && steps.coverage.outputs.coverage_trend == 'decreased' }}
+        if: ${{ steps.coverage.outputs.coverage_trend == 'decreased' }}
         run: echo "Coverage decreased!" && exit 1
 
       - name: Enforce minimum coverage
-        if: ${{ github.event_name == 'pull_request' }}
         run: |
           COV="${{ steps.coverage.outputs.total_coverage }}"
           if (( $(echo "$COV < ${{ env.coverage_percentage_threshold }}" | bc -l) )); then
