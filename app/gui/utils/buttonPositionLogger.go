@@ -28,11 +28,13 @@ func (this *ButtonPositionLogger) LogButtonPositions(operations *op.Ops) {
 	if !this.logger.Enabled(context.Background(), slog.LevelDebug) {
 		return
 	}
+
 	this.router.Frame(operations)
 	for _, node := range this.router.AppendSemantics(nil) {
 		if node.Desc.Class != semantic.Button || node.Desc.Label == "" {
 			continue
 		}
+
 		bounds := node.Desc.Bounds
 		center := bounds.Min.Add(bounds.Max).Div(2)
 		this.logger.Debug("Button position",

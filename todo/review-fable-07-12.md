@@ -452,7 +452,20 @@ read-only rule); the globals live outside the registry and are fair game.
 
 ## 4. Performance
 
-### 4.1 🟠 `reflect.DeepEqual` over the whole DTO every frame
+### 4.1 🟠 `reflect.DeepEqual` over the whole DTO every frame — ✅ FIXED
+
+✅ **FIXED** (commits `4bf82d2` + `114fc2a`): `EqualsIgnoringManualEdits` is now
+hand-rolled (option 1) — three private field-group scalar methods
+(`zoneOptionScalarsEqual`/`generationOptionScalarsEqual`/`gameRuleScalarsEqual`,
+`//nolint:dupl`) plus strict element-wise slice compares
+(`contentRowSlicesEqual`/`contentRowsEqual`/`contentRulesEqual`/`pointedValuesEqual`)
+with exact DeepEqual semantics (nil ≠ empty slice, pointers by pointed-to value);
+`reflect` import removed. Option 2 (revision counter) was rejected: window.save()
+calls `UpdateCurrentState` every frame, so the "compare once per mutation" premise
+doesn't hold in this architecture. Tests: fuzz-parity suite (19 mutation subtests
+vs a `reflect.DeepEqual` reference) + a reflection tripwire test that mutates every
+DTO field and trips when a new field is added without extending the comparison.
+Coverage 64.5%→64.6%; lint 77 (unchanged).
 
 [editorStateDto.go](../internal/dtos/editorStateDto.go#L179-L186)
 `EqualsIgnoringManualEdits` copies two ~100-field structs and reflection-walks five
