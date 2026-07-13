@@ -504,7 +504,19 @@ gofakeit-fuzzed pairs so the two can't drift.
 the `[]layout.FlexChild` once in `NewWindow` (tab set never changes) or reuse a struct
 field slice with `this.tabChildren = this.tabChildren[:0]`.
 
-### 4.3 🟡 Zone editor recomputes full geometry every frame while open
+### 4.3 🟡 Zone editor recomputes full geometry every frame while open — ✅ FIXED
+
+✅ **FIXED** (commit `1645ee7`): added `geometryDirty bool` (init `true`) +
+`geometrySide int` to `ZoneEditorDialog`; `layoutCanvas` recomputes only when
+`geometryDirty || geometrySide != side`. Dirty raised in all geometry mutators:
+`addConnection`, `deleteConnection`, `resetToOriginal`, `ensureManualPositions`,
+`addZoneAt`, `deleteZone`, `moveDraggedZone`, and the `ApplyNeutralZoneQuality`
+branch of `writebackZoneProps` (tier colour/castle glyph live in cached
+`previewZones`). Connection-props writeback needs no dirty flag (type/guard/weekly
+are drawn per frame straight from the conn pointer). Pointer handling still
+precedes the recompute, so edits appear the same frame. No new tests — the
+zoneEditor files are Gio-UI/integration territory per test_observations.md;
+coverage 64.6%→64.4% (denominator effect of uncovered UI statements, accepted).
 
 [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go#L381) calls
 `recomputeGeometry(side)` unconditionally per frame; that runs `BuildPreviewLayout`
