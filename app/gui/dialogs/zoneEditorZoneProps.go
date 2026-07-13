@@ -100,6 +100,7 @@ func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 		quality := neutralZone.Quality(this.qualityDropdown.GetSelectedIndex())
 		castles := this.castleDropdown.GetSelectedIndex()
 		connection_editor.ApplyNeutralZoneQuality(zone, quality, castles, this.tuning)
-		this.syncedZoneFor = "" // re-sync dependent fields next frame
+		this.geometryDirty = true // tier color / castle glyph live in previewZones
+		this.syncedZoneFor = ""   // re-sync dependent fields next frame
 	}
 }

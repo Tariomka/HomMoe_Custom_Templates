@@ -85,7 +85,13 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	this.side = side
 	this.handlePointer(gtx)
 
-	this.recomputeGeometry(side)
+	// Every mutator raises geometryDirty, so an idle dialog skips the full
+	// BuildPreviewLayout + edge-grouping pass and redraws cached geometry.
+	if this.geometryDirty || this.geometrySide != side {
+		this.recomputeGeometry(side)
+		this.geometryDirty = false
+		this.geometrySide = side
+	}
 
 	if len(this.positions) == 0 {
 		return layout.Dimensions{Size: outer}
@@ -453,6 +459,7 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos image.Point) {
 	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
 	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
+	this.geometryDirty = true
 }
 
 func drawCanvasText(

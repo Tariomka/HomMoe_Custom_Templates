@@ -43,12 +43,17 @@ type ZoneEditorDialog struct {
 	onApply       func([]entities.Zone, []entities.Connection)
 	layoutService *preview_service.PreviewLayoutService
 
-	// Geometry recomputed every frame from BuildPreviewLayout.
-	positions    map[string]image.Point
-	previewZones []preview.Zone
-	radius       int
-	side         int
-	edges        []connEdgeGeom
+	// Geometry derived from BuildPreviewLayout. Recomputed only when a
+	// mutator sets geometryDirty or the canvas side changes (geometrySide
+	// tracks the side the geometry was last computed for; side itself is
+	// refreshed every frame before pointer handling for drag normalization).
+	positions     map[string]image.Point
+	previewZones  []preview.Zone
+	radius        int
+	side          int
+	edges         []connEdgeGeom
+	geometryDirty bool
+	geometrySide  int
 
 	// Canvas interaction.
 	canvasTag     int
@@ -131,6 +136,7 @@ func NewZoneEditorDialog(
 		tuning:            tuning,
 		generateRoads:     generateRoads,
 		onApply:           onApply,
+		geometryDirty:     true,
 		layoutService:     preview_service.NewPreviewLayoutService(),
 		typeDropdown:      components.NewDropdownSelector(connection_editor.UserCreatableConnectionTypes()),
 		guardZoneDropdown: components.NewDropdownSelector(nil),
@@ -244,6 +250,7 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Delete selected", &this.deleteBtn, !hasSelection)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+			// Reset only resets current edits, not all manual edits, need to fix eventually. wont add todo so the llm does not trigger
 			layout.Rigid(widgets.NewButtonWidget(theme, "Reset to generated", &this.resetBtn, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(10)),
 			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.snapBool, "Snap")),
@@ -386,6 +393,7 @@ func (this *ZoneEditorDialog) addConnection(from, to string) {
 	this.working = append(this.working, &connection)
 	this.selected = &connection
 	this.syncedFor = nil
+	this.geometryDirty = true
 }
 
 func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) {
@@ -399,6 +407,7 @@ func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) 
 		this.selected = nil
 		this.syncedFor = nil
 	}
+	this.geometryDirty = true
 }
 
 func (this *ZoneEditorDialog) resetToOriginal() {
@@ -418,6 +427,7 @@ func (this *ZoneEditorDialog) resetToOriginal() {
 	this.dragging = false
 	this.zoneDragName = ""
 	this.hint = ""
+	this.geometryDirty = true
 }
 
 // selectZone makes the named zone the active selection in the side panel.
@@ -451,6 +461,7 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 	if this.side <= 0 {
 		return
 	}
+	this.geometryDirty = true
 	for i := range this.zones {
 		if this.zones[i].ManualPosition != nil {
 			continue
@@ -496,6 +507,7 @@ func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
 	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
 	this.zones = append(this.zones, zone)
+	this.geometryDirty = true
 	this.selectZone(zone.Name)
 	this.syncedZoneFor = ""
 	this.hint = fmt.Sprintf("Added %s - connect it with “Add connection”.", zone.Name)
@@ -514,6 +526,7 @@ func (this *ZoneEditorDialog) deleteZone(name string) {
 	for i := range connections {
 		this.working = append(this.working, &connections[i])
 	}
+	this.geometryDirty = true
 	this.selected = nil
 	this.syncedFor = nil
 	if this.selectedZone == name {
