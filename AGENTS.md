@@ -7,8 +7,7 @@ working on the **HomMoe Custom Templates** repository. Follow them strictly.
 
 ## 1. Project Snapshot
 
-- **Language / Toolchain:** Go 1.25.8, single module
-  `github.com/Tariomka/hommoe_custom_templates`.
+- **Language / Toolchain:** Go 1.26.3, single module `github.com/Tariomka/hommoe_custom_templates`.
 - **UI:** Gio (`gioui.org v0.9.0`) — immediate-mode desktop GUI.
 - **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
   and Magic: Olden Era* and persist editor state as `.gen.json` files.
@@ -70,7 +69,7 @@ The project must build and run on **both Windows and Linux**. Therefore:
 - If you discover existing untested code adjacent to your change, add tests
   for it as part of the change.
 - **Every code change (new feature, fix, refactor) must check unit test code
-  coverage.** Run the *"Go: Unit test coverage report"* task (or the command
+  coverage.** Run the *"Go: Generate code coverage report"* task (or the command
   below) before and after the change and verify that every branch and logical
   unit of the code in question is covered, and that total coverage did not drop:
 
@@ -403,7 +402,7 @@ as having a soft budget.
 ### 5.1 Session budget
 
 - **Recommended length: <20 messages per session.**
-- Around message **15**, warn the user that the session is approaching the
+- Around message **18**, warn the user that the session is approaching the
   recommended limit.
 - At message **20** (or sooner if context feels saturated, tools start
   failing, or summaries become lossy), **stop taking new work** and produce a
@@ -473,7 +472,11 @@ no prior memory must be able to resume work from it alone.
 | Build                      | `go build ./...`                                       |
 | Run GUI                    | `go run .`                                             |
 | Run all tests              | `go test ./test/... -count=1`                          |
+| Run integration/perf tests | `go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1` |
 | Run with race detector     | `go test -race ./test/...`                             |
+| Unit test coverage report  | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` (see §2.3; VS Code task *"Go: Generate code coverage report"*) |
+| Lint (report only)         | `golangci-lint-v2 run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
+| Lint (auto-fix)            | `golangci-lint-v2 run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |
 | Format Go code             | `gofmt -w .` (never run on `data/`)                    |
 | Tidy modules               | `go mod tidy`                                          |
 
@@ -481,5 +484,5 @@ no prior memory must be able to resume work from it alone.
 
 **TL;DR:** Don't touch [data/](data/) or
 [internal/entities/template/](internal/entities/template/). Stay cross-platform.
-Cover everything you write with tests. Cap sessions at 10–20 messages and
+Cover everything you write with tests. Cap sessions at 17–20 messages and
 hand off via `./.agent/session-carry-forward.md`.

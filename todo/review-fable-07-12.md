@@ -449,14 +449,24 @@ layoutPanelZones ×8, generalPanel ×13, dialogs/zoneContent ×1). Formatter uni
 tests in test/unit/app/gui/utils/string/; the widget itself is Gio-UI
 (test_observations.md). Coverage 64.1% → 64.2%; lint stayed at 62.
 
-### 3.3 🟡 `circlePoint` centre parameters always 0.5 (unparam ×2)
+### 3.3 ✅ FIXED 🟡 `circlePoint` center parameters always 0.5 (unparam ×2)
 
 [geometryHelpers.go](../internal/services/template_generator/providers/topology/geometryHelpers.go#L12):
-every caller passes `centreX=0.5, centreY=0.5`. **Fix**: drop both parameters and use a
-named constant `const layoutCentre = 0.5` inside; or keep them and add one caller that
+every caller passes `centerX=0.5, centerY=0.5`. **Fix**: drop both parameters and use a
+named constant `const layoutCenter = 0.5` inside; or keep them and add one caller that
 actually varies them. Prefer the former until a real need appears.
 
-### 3.4 🟡 Duplicated registry-lookup globals
+✅ **FIXED** (commits `17b51d3` + `14d7348`): `const layoutCenter = 0.5` added to
+geometryHelpers.go; center params dropped from `circlePoint` AND (per owner's
+request, for consistency) `squarePerimeterPoint`. Local `centerX`/`centerY`
+consts removed from cross/fractal/square topologies; geometricTopology's Bézier
+math folded onto `layoutCenter` too. Bundled with a repo-wide `centre→center`
+American-English rename (28 files — code identifiers, test names, docs prose;
+read-only dirs untouched, so zone.go keeps "centre"). No new tests (private
+helpers, behavior-identical; topology suites re-ran ×20 green). Coverage 64.1%
+held; lint 62 → **60** (unparam cleared).
+
+### 3.4 � OWNER'S RESPONSIBILITY �🟡 Duplicated registry-lookup globals
 
 `winConditions`/`gameModes` package globals are declared in
 [editorStateDto.go](../internal/dtos/editorStateDto.go#L12-L15),
