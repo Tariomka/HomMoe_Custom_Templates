@@ -129,6 +129,7 @@ jobs:
   run-race-tests:
     name: Run Unit Tests (race detector)
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
