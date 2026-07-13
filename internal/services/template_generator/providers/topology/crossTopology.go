@@ -40,8 +40,6 @@ func (this *CrossTopologyService) createCrossLayout(
 	playerLabels []string,
 	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
-		centerX      = 0.5
-		centerY      = 0.5
 		playerRadius = 0.42
 		armNear      = 0.14
 		armFar       = 0.34
@@ -58,7 +56,7 @@ func (this *CrossTopologyService) createCrossLayout(
 	if neutralCount >= 1 {
 		centerIndex = len(allLabels)
 		allLabels = append(allLabels, neutralZones[0].Label)
-		positions.Add(data.NewVec2(centerX, centerY))
+		positions.Add(data.NewVec2(layoutCenter, layoutCenter))
 	}
 
 	// Distribute the remaining neutral zones across the arms, round-robin.
@@ -84,14 +82,14 @@ func (this *CrossTopologyService) createCrossLayout(
 			}
 			armIndices[arm] = append(armIndices[arm], len(allLabels))
 			allLabels = append(allLabels, neutralZones[nextNeutral].Label)
-			positions.Add(circlePoint(angle, centerX, centerY, radius))
+			positions.Add(circlePoint(angle, radius))
 			nextNeutral++
 		}
 
 		// Player zone at the arm tip.
 		armIndices[arm] = append(armIndices[arm], len(allLabels))
 		allLabels = append(allLabels, playerLabels[arm])
-		positions.Add(circlePoint(angle, centerX, centerY, playerRadius))
+		positions.Add(circlePoint(angle, playerRadius))
 	}
 
 	pairs := this.createCrossPairs(centerIndex, armIndices, playerCount)

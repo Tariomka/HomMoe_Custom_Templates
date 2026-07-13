@@ -56,8 +56,6 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
 	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
-		centerX    = 0.5
-		centerY    = 0.5
 		tipRadius  = 0.46 // player tip, almost at the canvas edge
 		startAngle = -math.Pi / 2.0
 	)
@@ -75,7 +73,7 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	if neutralCount >= 1 {
 		centerIndex = len(allLabels)
 		allLabels = append(allLabels, neutralZones[0].Label)
-		positions.Add(data.NewVec2(centerX, centerY))
+		positions.Add(data.NewVec2(layoutCenter, layoutCenter))
 		neutralCursor = 1
 	}
 
@@ -122,12 +120,8 @@ func buildPetal(
 	neutralZones neutralZone.Plans,
 	allLabels *[]string,
 	positions *models.Positions) petal {
-	const (
-		centerX = 0.5
-		centerY = 0.5
-	)
-	tipX := centerX + math.Cos(axis)*tipRadius
-	tipY := centerY + math.Sin(axis)*tipRadius
+	tipX := layoutCenter + math.Cos(axis)*tipRadius
+	tipY := layoutCenter + math.Sin(axis)*tipRadius
 	leftCtrl := axis + bowAngle
 	rightCtrl := axis - bowAngle
 	leftCount := (len(plan) + 1) / 2
@@ -137,11 +131,11 @@ func buildPetal(
 	// (0 = center, 1 = tip) via a quadratic Bézier center→control→tip.
 	leafPoint := func(ctrlAngle, t float64) models.Position {
 		mt := 1.0 - t
-		p1x := centerX + math.Cos(ctrlAngle)*ctrlDist
-		p1y := centerY + math.Sin(ctrlAngle)*ctrlDist
+		p1x := layoutCenter + math.Cos(ctrlAngle)*ctrlDist
+		p1y := layoutCenter + math.Sin(ctrlAngle)*ctrlDist
 		return data.NewVec2(
-			mt*mt*centerX+2*mt*t*p1x+t*t*tipX,
-			mt*mt*centerY+2*mt*t*p1y+t*t*tipY)
+			mt*mt*layoutCenter+2*mt*t*p1x+t*t*tipX,
+			mt*mt*layoutCenter+2*mt*t*p1y+t*t*tipY)
 	}
 
 	var ring []int

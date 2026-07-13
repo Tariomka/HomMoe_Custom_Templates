@@ -121,11 +121,7 @@ func placePlayerFractal(
 	neutralZones neutralZone.Plans,
 	allLabels *[]string,
 	positions *models.Positions) fractalTree {
-	const (
-		centerX      = 0.5
-		centerY      = 0.5
-		playerRadius = 0.45 // base of every fractal, on the outer ring
-	)
+	const playerRadius = 0.45 // base of every fractal, on the outer ring
 	// Radius of each neutral tier measured from the center. Low sits just inside
 	// the player, high gathers near the middle (the farthest point from a player).
 	tierRadius := [3]float64{0.32, 0.19, 0.08}
@@ -135,7 +131,7 @@ func placePlayerFractal(
 
 	playerIndex := len(*allLabels)
 	*allLabels = append(*allLabels, playerLabel)
-	positions.Add(circlePoint(axis, centerX, centerY, playerRadius))
+	positions.Add(circlePoint(axis, playerRadius))
 
 	var tree fractalTree
 	tree.player = playerIndex
@@ -150,7 +146,7 @@ func placePlayerFractal(
 			}
 			tree.levels[tier] = append(tree.levels[tier], len(*allLabels))
 			*allLabels = append(*allLabels, neutralZones[planIndex].Label)
-			positions.Add(circlePoint(angle, centerX, centerY, radius))
+			positions.Add(circlePoint(angle, radius))
 		}
 	}
 	return tree

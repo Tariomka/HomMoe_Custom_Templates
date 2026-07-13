@@ -39,11 +39,7 @@ func (this *SquareTopologyService) CreateTopologyVariant(
 func (this *SquareTopologyService) createSquareLayout(
 	playerLabels []string,
 	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
-	const (
-		centerX = 0.5
-		centerY = 0.5
-		half    = 0.42
-	)
+	const half = 0.42
 
 	// Roughly a third of the neutral zones (the higher tiers, which sort last)
 	// are pulled inside the square; the rest line the edges between players.
@@ -64,7 +60,7 @@ func (this *SquareTopologyService) createSquareLayout(
 			fraction = float64(i) / float64(perimeterCount)
 		}
 		allLabels = append(allLabels, label)
-		positions.Add(squarePerimeterPoint(fraction, centerX, centerY, half))
+		positions.Add(squarePerimeterPoint(fraction, half))
 	}
 
 	// Interior neutral zones sit on a smaller inner square (or the exact center
@@ -73,9 +69,9 @@ func (this *SquareTopologyService) createSquareLayout(
 	for i, plan := range interiorPlans {
 		var point models.Position
 		if len(interiorPlans) == 1 {
-			point = data.NewVec2(centerX, centerY)
+			point = data.NewVec2(layoutCenter, layoutCenter)
 		} else {
-			point = squarePerimeterPoint(float64(i)/float64(len(interiorPlans)), centerX, centerY, interiorHalf)
+			point = squarePerimeterPoint(float64(i)/float64(len(interiorPlans)), interiorHalf)
 		}
 		allLabels = append(allLabels, plan.Label)
 		positions.Add(point)
