@@ -27,7 +27,7 @@ func (this *PreviewLayoutService) layoutScatter(
 
 	relaxPasses(px, py, adj, zoneRadius)
 
-	// Final fit: recentre the bounding box then shrink only if it overflows
+	// Final fit: recenter the bounding box then shrink only if it overflows
 	// the padded canvas.
 	shrink := fitToCanvas(px, py, metrics, zoneRadius+metrics.margin, false)
 	if shrink < 1.0 {
@@ -78,7 +78,7 @@ func scatterZoneRadius(adj [][]int, metrics canvasMetrics) float64 {
 // projectScatterPositions maps the raw [0,1] generator positions onto the
 // canvas: scaled so the mean direct-edge length matches the ideal for the
 // zone radius (falling back to spanning the draw area for empty graphs),
-// centred, and shrunk to fit the padded canvas.
+// centered, and shrunk to fit the padded canvas.
 func projectScatterPositions(
 	zones []entities.Zone,
 	adj [][]int,

@@ -40,8 +40,8 @@ func (this *SquareTopologyService) createSquareLayout(
 	playerLabels []string,
 	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
-		centreX = 0.5
-		centreY = 0.5
+		centerX = 0.5
+		centerY = 0.5
 		half    = 0.42
 	)
 
@@ -64,18 +64,18 @@ func (this *SquareTopologyService) createSquareLayout(
 			fraction = float64(i) / float64(perimeterCount)
 		}
 		allLabels = append(allLabels, label)
-		positions.Add(squarePerimeterPoint(fraction, centreX, centreY, half))
+		positions.Add(squarePerimeterPoint(fraction, centerX, centerY, half))
 	}
 
-	// Interior neutral zones sit on a smaller inner square (or the exact centre
+	// Interior neutral zones sit on a smaller inner square (or the exact center
 	// when there is only one) so they read as being inside the perimeter.
 	interiorHalf := half * 0.45
 	for i, plan := range interiorPlans {
 		var point models.Position
 		if len(interiorPlans) == 1 {
-			point = data.NewVec2(centreX, centreY)
+			point = data.NewVec2(centerX, centerY)
 		} else {
-			point = squarePerimeterPoint(float64(i)/float64(len(interiorPlans)), centreX, centreY, interiorHalf)
+			point = squarePerimeterPoint(float64(i)/float64(len(interiorPlans)), centerX, centerY, interiorHalf)
 		}
 		allLabels = append(allLabels, plan.Label)
 		positions.Add(point)

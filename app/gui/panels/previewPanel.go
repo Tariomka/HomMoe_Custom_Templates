@@ -172,7 +172,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 	}
 }
 
-// getPreviewCanvasSizes returns the full available area and the centred square
+// getPreviewCanvasSizes returns the full available area and the centered square
 // canvas (clamped to a small minimum) that the preview is drawn into.
 func getPreviewCanvasSizes(gtx layout.Context) (outerCanvasSize, innerCanvasSize image.Point) {
 	outerCanvasSize = gtx.Constraints.Max
@@ -192,7 +192,7 @@ func renderPreviewCanvas(gtx layout.Context, canvasSize image.Point) {
 	}.Op())
 }
 
-// renderPreviewLegend draws the colour legend centred underneath the canvas.
+// renderPreviewLegend draws the colour legend centered underneath the canvas.
 func (this *PreviewPanel) renderPreviewLegend(gtx layout.Context, theme *material.Theme, canvasSize image.Point) {
 	legendMacro := op.Record(gtx.Ops)
 	contextCopy := gtx

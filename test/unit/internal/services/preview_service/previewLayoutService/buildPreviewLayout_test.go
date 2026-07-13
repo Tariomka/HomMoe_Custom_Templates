@@ -308,7 +308,7 @@ func TestWhenRingTopologyProvided_ComputesPositiveZoneRadius(t *testing.T) {
 	assert.Positive(t, layout.ZoneRadius)
 }
 
-func TestWhenOnlyOneZoneExists_CentresItOnCanvas(t *testing.T) {
+func TestWhenOnlyOneZoneExists_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
@@ -321,7 +321,7 @@ func TestWhenOnlyOneZoneExists_CentresItOnCanvas(t *testing.T) {
 	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
 }
 
-func TestWhenZoneIsNamedHub_PlacesItAtCanvasCentre(t *testing.T) {
+func TestWhenZoneIsNamedHub_PlacesItAtCanvasCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
@@ -336,7 +336,7 @@ func TestWhenZoneIsNamedHub_PlacesItAtCanvasCentre(t *testing.T) {
 
 // ── implicit hub rejection ───────────────────────────────────────────
 
-func TestWhenNeutralTouchesEverySpawn_DoesNotCentreIt(t *testing.T) {
+func TestWhenNeutralTouchesEverySpawn_DoesNotCenterIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
@@ -537,7 +537,7 @@ func TestWhenCirclesZonesShareOneRing_PositionsEveryZone(t *testing.T) {
 	assert.Len(t, layout.Positions, 3)
 }
 
-func TestWhenCirclesTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+func TestWhenCirclesTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
@@ -772,7 +772,7 @@ func TestWhenParallelEdgesConnectSamePair_BulgesThemSymmetricallyAboutMidpoint(t
 
 // ── fixed-geometry (Square/Geometric/Cross/Fractal) dispatch ─────────
 
-func TestWhenFixedGeometryTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+func TestWhenFixedGeometryTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
@@ -857,7 +857,7 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 	// Arrange - 23 zones on one ring force the ring circumference past the
 	// draw radius at the maximum zone size, so the binary search must shrink.
 	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{ringedZone("Neutral-Centre", 1, 0.5, 0.5)}
+	zones := []entities.Zone{ringedZone("Neutral-Center", 1, 0.5, 0.5)}
 	for index := range 23 {
 		angle := 2.0 * math.Pi * float64(index) / 23.0
 		zones = append(zones, ringedZone(
@@ -874,7 +874,7 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 
 // ── scatter edge cases ───────────────────────────────────────────────
 
-func TestWhenRandomTopologyHasOneZone_CentresItOnCanvas(t *testing.T) {
+func TestWhenRandomTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
@@ -1047,7 +1047,7 @@ func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
 
 // ── multi-hub edge cases ─────────────────────────────────────────────
 
-func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCentre(t *testing.T) {
+func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
@@ -1064,10 +1064,10 @@ func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCentre(t *testing.T) {
 	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
 }
 
-func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCentre(t *testing.T) {
+func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange - portal connections never count as spokes, so the zone
-	// collapses to the canvas centre as a straggler.
+	// collapses to the canvas center as a straggler.
 	service := preview_service.NewPreviewLayoutService()
 	zones := []entities.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"),

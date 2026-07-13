@@ -8,25 +8,25 @@ import (
 )
 
 // circlePoint returns the point at the given angle (radians) on a circle of the
-// given radius centred on (centreX, centreY), in normalized [0,1] layout space.
-func circlePoint(angle, centreX, centreY, radius float64) models.Position {
+// given radius centered on (centerX, centerY), in normalized [0,1] layout space.
+func circlePoint(angle, centerX, centerY, radius float64) models.Position {
 	return data.NewVec2(
-		centreX+math.Cos(angle)*radius,
-		centreY+math.Sin(angle)*radius)
+		centerX+math.Cos(angle)*radius,
+		centerY+math.Sin(angle)*radius)
 }
 
 // squarePerimeterPoint maps a parameter t in [0,1) to a point traveling
-// clockwise around the perimeter of a square centred on (centreX, centreY) with
+// clockwise around the perimeter of a square centered on (centerX, centerY) with
 // the given half-side, starting from the top-left corner.
-func squarePerimeterPoint(t, centreX, centreY, half float64) models.Position {
+func squarePerimeterPoint(t, centerX, centerY, half float64) models.Position {
 	t -= math.Floor(t)
 	scaled := t * 4.0
 	side := int(scaled)
 	frac := scaled - float64(side)
-	left := centreX - half
-	right := centreX + half
-	top := centreY - half
-	bottom := centreY + half
+	left := centerX - half
+	right := centerX + half
+	top := centerY - half
+	bottom := centerY + half
 	switch side {
 	case 0: // top edge, left to right
 		return data.NewVec2(left+frac*2.0*half, top)

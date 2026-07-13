@@ -23,7 +23,7 @@ func NewPreviewLayoutService() *PreviewLayoutService {
 // preview canvas of the given side length. The layout strategy is picked to
 // match the in-game generator: Circles uses concentric rings keyed off the
 // GeneratorRing stamps; Square, Geometric, Cross and Fractal are placed
-// verbatim from their GeneratorPosition stamps (centred and scaled to fit) so
+// verbatim from their GeneratorPosition stamps (centered and scaled to fit) so
 // the exact geometric figure is preserved; Random scatters zones using the
 // GeneratorPosition stamps with hard-floor and edge-clearance correction
 // passes; all other topologies fall back to the classic ring / hub-and-spoke

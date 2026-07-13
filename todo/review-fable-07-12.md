@@ -427,7 +427,7 @@ tests. Then extend the depguard rule to `test/unit/internal/**` denying `app/**`
 
 ### 3.1 ✅ FIXED 🟠 Topology `CreateTopologyVariant` ×4 — see §2.5 (dupl-confirmed, one fix).
 
-### 3.2 🟡 Labeled slider/checkbox row vocabulary across panels
+### 3.2 ✅ FIXED 🟡 Labeled slider/checkbox row vocabulary across panels
 
 [layoutPanel.go](../app/gui/panels/layoutPanel.go), [generalPanel.go](../app/gui/panels/generalPanel.go),
 [bonusesPanel.go](../app/gui/panels/bonusesPanel.go) repeat
@@ -436,6 +436,18 @@ tests. Then extend the depguard rule to `test/unit/internal/**` denying `app/**`
 `NewSliderRow(theme, label string, width unit.Dp, slider *widget.Float, format func(float32) string)`
 and `NewCheckboxRow(theme, value *widget.Bool, label, hint string)`. Panels then read like
 a form schema; removes ~120 LOC. (Keep it to these two — don't build a form framework.)
+
+✅ **FIXED** (commit `96d0d93`): the checkbox factory already existed
+(`NewLabeledCheckboxRowWidget`), so only the slider half was real work. Added
+[sliderRowWidget.go](../app/gui/widgets/sliderRowWidget.go) `NewSliderRowWidget`
+(composes the two existing widgets, formats the value lazily at layout time) plus
+4 curried formatters in [string.go](../app/gui/utils/string.go)
+(`RoundedRangeFormatter`/`RoundedRangePercentFormatter`/`MultiplierFormatter`/
+`DenormalizeFormatter` — `Formatter` suffix avoids collision with the utils/math
+funcs). Converted all 33 slider-row sites (layoutPanelTopology ×11,
+layoutPanelZones ×8, generalPanel ×13, dialogs/zoneContent ×1). Formatter unit
+tests in test/unit/app/gui/utils/string/; the widget itself is Gio-UI
+(test_observations.md). Coverage 64.1% → 64.2%; lint stayed at 62.
 
 ### 3.3 🟡 `circlePoint` centre parameters always 0.5 (unparam ×2)
 

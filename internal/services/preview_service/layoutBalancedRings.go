@@ -116,7 +116,7 @@ func (this *PreviewLayoutService) placeRings(
 			continue
 		}
 		if count == 1 && ringIndex == 0 {
-			this.layout.Positions[zones[group[0]].Name] = metrics.centre()
+			this.layout.Positions[zones[group[0]].Name] = metrics.center()
 			continue
 		}
 		sorted := sortIndicesByAngle(zones, group, rawCx, rawCy)

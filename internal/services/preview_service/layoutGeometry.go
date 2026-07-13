@@ -53,20 +53,20 @@ func newCanvasMetrics(side float64) canvasMetrics {
 	}
 }
 
-func (this canvasMetrics) centre() image.Point {
+func (this canvasMetrics) center() image.Point {
 	return image.Pt(int(this.cx), int(this.cy))
 }
 
 // placeTrivial handles the degenerate 0- and 1-zone cases shared by every
 // renderer: the zone radius maxes out and a lone zone sits at the canvas
-// centre. Reports whether the layout was fully handled.
+// center. Reports whether the layout was fully handled.
 func (this *PreviewLayoutService) placeTrivial(zones []entities.Zone, metrics canvasMetrics) bool {
 	if len(zones) > 1 {
 		return false
 	}
 	this.layout.ZoneRadius = int(math.Round(metrics.zoneRadiusMax))
 	if len(zones) == 1 {
-		this.layout.Positions[zones[0].Name] = metrics.centre()
+		this.layout.Positions[zones[0].Name] = metrics.center()
 	}
 	return true
 }
@@ -118,8 +118,8 @@ func closestPairDistance(px, py []float64) float64 {
 	return minDist
 }
 
-// fitToCanvas centres the bounding box of the points on the canvas and
-// uniformly scales them about the centre so the box fits inside the padded
+// fitToCanvas centers the bounding box of the points on the canvas and
+// uniformly scales them about the center so the box fits inside the padded
 // draw area. With fill=true the figure is also scaled up to fill the area;
 // otherwise it is only ever shrunk. Returns the applied scale factor.
 func fitToCanvas(px, py []float64, metrics canvasMetrics, pad float64, fill bool) float64 {
@@ -233,7 +233,7 @@ func isScatterTopology(topology config.MapTopology) bool {
 
 // isFixedGeometryTopology reports whether the topology defines an exact,
 // deterministic geometric figure from its GeneratorPosition stamps. These are
-// placed verbatim (only centred and scaled to fit) so the preview reproduces
+// placed verbatim (only centered and scaled to fit) so the preview reproduces
 // the intended shape instead of relaxing it into a scatter.
 func isFixedGeometryTopology(topology config.MapTopology) bool {
 	switch topology {

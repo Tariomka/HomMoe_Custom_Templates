@@ -10,8 +10,8 @@ import (
 
 // layoutRingOrHub renders the structured topologies (Default, HubAndSpoke,
 // Chain, SharedWeb). Multi-hub "Hub-*" templates fan their spokes out from
-// each cluster centre; otherwise zones land on a single outer ring with an
-// optional centre hub.
+// each cluster center; otherwise zones land on a single outer ring with an
+// optional center hub.
 //
 // Hub detection: only an explicitly named "Hub" / "Hub-*" zone is treated as
 // a hub. The preview is a faithful representation of the template data, so
@@ -59,7 +59,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 		math.Min(ringRadius0, side/2.0-zoneRadius-metrics.margin))
 
 	if hubIdx >= 0 {
-		this.layout.Positions[zones[hubIdx].Name] = metrics.centre()
+		this.layout.Positions[zones[hubIdx].Name] = metrics.center()
 	}
 	for i, zoneIndex := range outer {
 		angle := -math.Pi/2.0 + float64(i)*2.0*math.Pi/float64(len(outer))
@@ -71,7 +71,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 
 // ringZoneRadius sizes the ring zones so neighbouring chords keep a visible
 // connection gap; hub layouts skip the self-clearance term because the hub
-// occupies the centre.
+// occupies the center.
 func ringZoneRadius(outerCount int, hasHub bool, metrics canvasMetrics) float64 {
 	outerN := max(outerCount, 1)
 	ringRadius0 := metrics.side/2.0 - metrics.margin
@@ -90,7 +90,7 @@ func ringZoneRadius(outerCount int, hasHub bool, metrics canvasMetrics) float64 
 
 // layoutMultiHub fans each "Hub-*" cluster out around the canvas, placing the
 // hubs on an inner ring and their direct spokes around each hub. Zones that
-// spoke off no hub (e.g. cross-cluster zones) collapse to the canvas centre.
+// spoke off no hub (e.g. cross-cluster zones) collapse to the canvas center.
 func (this *PreviewLayoutService) layoutMultiHub(
 	zones []entities.Zone,
 	conns []entities.Connection,
@@ -146,10 +146,10 @@ func (this *PreviewLayoutService) layoutMultiHub(
 			this.layout.Positions[zones[spokeIndex].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
 		}
 	}
-	// Stragglers (e.g. cross-cluster zones) collapse to canvas centre.
+	// Stragglers (e.g. cross-cluster zones) collapse to canvas center.
 	for _, zone := range zones {
 		if _, ok := this.layout.Positions[zone.Name]; !ok {
-			this.layout.Positions[zone.Name] = metrics.centre()
+			this.layout.Positions[zone.Name] = metrics.center()
 		}
 	}
 }

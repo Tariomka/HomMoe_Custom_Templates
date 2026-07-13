@@ -70,7 +70,7 @@ type ZoneEditorDialog struct {
 	hint          string
 
 	// Active zone-alignment snap guides (canvas px), valid while a zone is
-	// being dragged and holding onto another zone's edge/centre extension.
+	// being dragged and holding onto another zone's edge/center extension.
 	snapGuideX       float64
 	snapGuideY       float64
 	snapGuideXActive bool

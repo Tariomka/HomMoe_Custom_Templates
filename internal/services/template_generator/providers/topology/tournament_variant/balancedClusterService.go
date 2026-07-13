@@ -96,14 +96,14 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 	}
 
 	scale := math.Min((xMax-xMin)/spanX, 0.9/spanY)
-	xCentre := (xMin + xMax) / 2.0
-	yCentre := 0.5
+	xCenter := (xMin + xMax) / 2.0
+	yCenter := 0.5
 
 	positions := models.Positions{}
 	for _, position := range rawPositions {
 		positions.Add(data.NewVec2(
-			xCentre+xSign*(position.X-(minimumPosition.X+maximumPosition.X)/2.0)*scale,
-			yCentre+ySign*(position.Y-(minimumPosition.Y+maximumPosition.Y)/2.0)*scale))
+			xCenter+xSign*(position.X-(minimumPosition.X+maximumPosition.X)/2.0)*scale,
+			yCenter+ySign*(position.Y-(minimumPosition.Y+maximumPosition.Y)/2.0)*scale))
 	}
 
 	return positions
@@ -156,7 +156,7 @@ func bucketIndicesByTier(orderedLabels []string, allNeutralZonePlans neutralZone
 }
 
 // sortTiersByAngle orders every tier's indexes by their angle around the map
-// centre and returns the sorted indexes alongside the matching angles.
+// center and returns the sorted indexes alongside the matching angles.
 func sortTiersByAngle(
 	tierIndices map[int][]int,
 	rawPositions models.Positions) (map[int][]int, map[int][]float64) {

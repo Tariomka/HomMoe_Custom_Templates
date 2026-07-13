@@ -18,11 +18,11 @@ const (
 	// between adjacent grid lines is (zone diameter) / gridCellsPerZoneDiameter.
 	gridCellsPerZoneDiameter = 7.0
 	// gridSnapThresholdPx is the "light" hold distance (canvas px) within
-	// which a dragged zone's edges/centre stick to a grid line.
+	// which a dragged zone's edges/center stick to a grid line.
 	gridSnapThresholdPx = 4.0
 	// zoneSnapThresholdPx is the "heavier" hold distance (canvas px) within
-	// which a dragged zone's edges/centre stick to the horizontal or vertical
-	// extension of another zone's edge or centre.
+	// which a dragged zone's edges/center stick to the horizontal or vertical
+	// extension of another zone's edge or center.
 	zoneSnapThresholdPx = 9.0
 )
 
@@ -59,7 +59,7 @@ func (this *ZoneEditorDialog) drawSnapGrid(gtx layout.Context) {
 }
 
 // drawSnapGuides draws thin green lines across the canvas where the dragged
-// zone is currently holding onto another zone's edge/centre extension. Only
+// zone is currently holding onto another zone's edge/center extension. Only
 // visible while a zone is being moved.
 func (this *ZoneEditorDialog) drawSnapGuides(gtx layout.Context) {
 	if this.zoneDragName == "" || !this.zoneDragMoved {
@@ -77,8 +77,8 @@ func (this *ZoneEditorDialog) drawSnapGuides(gtx layout.Context) {
 	}
 }
 
-// snapDraggedPosition nudges the dragged zone's centre so that its edges or
-// centre "hold on" to nearby guides: heavier onto other zones' edge/centre
+// snapDraggedPosition nudges the dragged zone's center so that its edges or
+// center "hold on" to nearby guides: heavier onto other zones' edge/center
 // extension lines, lighter onto the background grid. It never pulls from afar -
 // only positions already within the threshold stick.
 func (this *ZoneEditorDialog) snapDraggedPosition(pos image.Point) image.Point {
@@ -88,7 +88,7 @@ func (this *ZoneEditorDialog) snapDraggedPosition(pos image.Point) image.Point {
 		return pos
 	}
 	radius := float64(this.radius)
-	// The dragged zone's own snap points on each axis: leading edge, centre,
+	// The dragged zone's own snap points on each axis: leading edge, center,
 	// trailing edge.
 	offsets := [3]float64{-radius, 0, radius}
 	guidesX, guidesY := this.otherZoneGuides(radius)
@@ -104,7 +104,7 @@ func (this *ZoneEditorDialog) snapDraggedPosition(pos image.Point) image.Point {
 }
 
 // otherZoneGuides collects the horizontal and vertical guide coordinates
-// (edge / centre / edge) of every zone except the dragged one.
+// (edge / center / edge) of every zone except the dragged one.
 func (this *ZoneEditorDialog) otherZoneGuides(radius float64) (guidesX, guidesY []float64) {
 	for name, center := range this.positions {
 		if name == this.zoneDragName {

@@ -64,7 +64,7 @@ var descriptorValues = TopologyDescriptors{
 	Geometric: TopologyDescriptor{
 		Type:        config.TopologyGeometric,
 		Label:       "Geometric",
-		Description: "Geometric: zones and connections form symmetric geometric shapes around a centre.",
+		Description: "Geometric: zones and connections form symmetric geometric shapes around a center.",
 	},
 	Cross: TopologyDescriptor{
 		Type:        config.TopologyCross,
@@ -74,7 +74,7 @@ var descriptorValues = TopologyDescriptors{
 	Fractal: TopologyDescriptor{
 		Type:        config.TopologyFractal,
 		Label:       "Fractal",
-		Description: "Fractal: each player is the base of a fractal that branches inward through low, then high neutral tiers, weaving into a shared centre.",
+		Description: "Fractal: each player is the base of a fractal that branches inward through low, then high neutral tiers, weaving into a shared center.",
 	},
 }
 

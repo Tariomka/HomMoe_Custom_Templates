@@ -36,7 +36,7 @@ func TestWhenThreePlayersAndSevenNeutralPlansProvided_CreatesZonePerLabel(t *tes
 	assert.Len(t, variant.Zones, 10)
 }
 
-func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCentre(t *testing.T) {
+func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
@@ -53,15 +53,15 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCentre(t *testing.T) 
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
-	var centreZone entities.Zone
+	var centerZone entities.Zone
 	for _, zone := range variant.Zones {
 		if zone.Name == "Neutral-N1" {
-			centreZone = zone
+			centerZone = zone
 			break
 		}
 	}
-	require.NotNil(t, centreZone.GeneratorPosition)
-	assert.Equal(t, [2]float64{0.5, 0.5}, *centreZone.GeneratorPosition)
+	require.NotNil(t, centerZone.GeneratorPosition)
+	assert.Equal(t, [2]float64{0.5, 0.5}, *centerZone.GeneratorPosition)
 }
 
 func TestWhenFlowerIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {

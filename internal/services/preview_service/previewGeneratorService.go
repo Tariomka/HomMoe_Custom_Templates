@@ -135,7 +135,7 @@ func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end ima
 			Add(increment.MultiplyScalar(float64(i))).
 			ToPointRounded()
 		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
-			Intersect(canvas.Bounds()) // Square brush around the centre, clipped to the canvas.
+			Intersect(canvas.Bounds()) // Square brush around the center, clipped to the canvas.
 		draw.Draw(canvas, brush, brushSource, image.Point{}, draw.Src)
 	}
 }

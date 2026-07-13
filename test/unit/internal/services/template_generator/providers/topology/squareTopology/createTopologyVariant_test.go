@@ -58,7 +58,7 @@ func TestWhenSquareIsLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing.T)
 	assert.Empty(t, zonesWithoutValidPosition(variant))
 }
 
-func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCentre(t *testing.T) {
+func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
