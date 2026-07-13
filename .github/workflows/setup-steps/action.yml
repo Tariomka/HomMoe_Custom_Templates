@@ -5,7 +5,7 @@ inputs:
   go-version:
     description: The Go version to use
     required: false
-    default: 1.26.3
+    default: 1.26.5
   os:
     description: The operating system to build for
     required: false 
