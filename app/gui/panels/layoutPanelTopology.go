@@ -32,9 +32,8 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(theme, "Max portal connections", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.sldMaxPortals,
-					utils.RoundedRangeString(this.sldMaxPortals.Value, 1, 32)))(gtx)
+			return widgets.NewSliderRowWidget(theme, "Max portal connections", constants.DefaultLabelWidth,
+				&this.sldMaxPortals, utils.RoundedRangeFormatter(1, 32))(gtx)
 		},
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkPlayerIsolation,
 			"Disallow direct player-to-player connections"),
@@ -45,9 +44,8 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(theme, "Remote footholds", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.sldRemoteFootholds,
-					utils.RoundedRangeString(this.sldRemoteFootholds.Value, 0, 4)))(gtx)
+			return widgets.NewSliderRowWidget(theme, "Remote footholds", constants.DefaultLabelWidth,
+				&this.sldRemoteFootholds, utils.RoundedRangeFormatter(0, 4))(gtx)
 		},
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAbandonedOutposts,
 			"Spawn abandoned outposts alongside neutral castles"),
@@ -56,49 +54,40 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(theme, "Abandoned outposts", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.sldAbandonedOutposts,
-					utils.RoundedRangeString(this.sldAbandonedOutposts.Value, 0, 4)))(gtx)
+			return widgets.NewSliderRowWidget(theme, "Abandoned outposts", constants.DefaultLabelWidth,
+				&this.sldAbandonedOutposts, utils.RoundedRangeFormatter(0, 4))(gtx)
 		},
 	})
 }
 
 func (this *LayoutPanel) getZoneSizesWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Zone sizes", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Player zone size", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.sldPlayerZoneSize,
-				utils.MultiplierString(this.sldPlayerZoneSize.Value, 0.5, 1.5))),
-		widgets.NewLabeledRowWidget(theme, "Neutral zone size", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.sldNeutralZoneSize,
-				utils.MultiplierString(this.sldNeutralZoneSize.Value, 0.5, 1.5))),
+		widgets.NewSliderRowWidget(theme, "Player zone size", constants.DefaultLabelWidth,
+			&this.sldPlayerZoneSize, utils.MultiplierFormatter(0.5, 1.5)),
+		widgets.NewSliderRowWidget(theme, "Neutral zone size", constants.DefaultLabelWidth,
+			&this.sldNeutralZoneSize, utils.MultiplierFormatter(0.5, 1.5)),
 		func(gtx layout.Context) layout.Dimensions {
 			if this.state.GetStateData().Topology != config.TopologyHubAndSpoke {
 				return layout.Dimensions{}
 			}
 
-			return widgets.NewLabeledRowWidget(theme, "Hub zone size", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.sldHubSize,
-					utils.MultiplierString(this.sldHubSize.Value, 0.5, 1.5)))(gtx)
+			return widgets.NewSliderRowWidget(theme, "Hub zone size", constants.DefaultLabelWidth,
+				&this.sldHubSize, utils.MultiplierFormatter(0.5, 1.5))(gtx)
 		},
 	})
 }
 
 func (this *LayoutPanel) getDifficultyAndDensityWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Difficulty & Density", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Resource density", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.sldResourceDensity,
-				utils.RoundedRangePercentString(this.sldResourceDensity.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(theme, "Structure density", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.sldStructureDensity,
-				utils.RoundedRangePercentString(this.sldStructureDensity.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(theme, "Neutral stack strength", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.sldNeutralStack,
-				utils.RoundedRangePercentString(this.sldNeutralStack.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(theme, "Border guard strength", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.sldBorderGuard,
-				utils.RoundedRangePercentString(this.sldBorderGuard.Value, 25, 200))),
-		widgets.NewLabeledRowWidget(theme, "Guard randomization", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, &this.sldGuardRandom,
-				utils.DenormalizeString(this.sldGuardRandom.Value, 0, 0.5))),
+		widgets.NewSliderRowWidget(theme, "Resource density", constants.DefaultLabelWidth,
+			&this.sldResourceDensity, utils.RoundedRangePercentFormatter(25, 200)),
+		widgets.NewSliderRowWidget(theme, "Structure density", constants.DefaultLabelWidth,
+			&this.sldStructureDensity, utils.RoundedRangePercentFormatter(25, 200)),
+		widgets.NewSliderRowWidget(theme, "Neutral stack strength", constants.DefaultLabelWidth,
+			&this.sldNeutralStack, utils.RoundedRangePercentFormatter(25, 200)),
+		widgets.NewSliderRowWidget(theme, "Border guard strength", constants.DefaultLabelWidth,
+			&this.sldBorderGuard, utils.RoundedRangePercentFormatter(25, 200)),
+		widgets.NewSliderRowWidget(theme, "Guard randomization", constants.DefaultLabelWidth,
+			&this.sldGuardRandom, utils.DenormalizeFormatter(0, 0.5)),
 	})
 }

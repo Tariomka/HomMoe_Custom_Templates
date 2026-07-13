@@ -216,8 +216,8 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(0.6,
-							widgets.NewLabeledRowWidget(theme, "Count", 60,
-								widgets.NewLabeledSliderWidget(theme, &row.countSld, strconv.Itoa(liveCount)))),
+							widgets.NewSliderRowWidget(theme, "Count", 60, &row.countSld,
+								func(float32) string { return strconv.Itoa(liveCount) })),
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(16)),
 						layout.Flexed(0.4,
 							widgets.NewLabeledRowWidget(theme, "Rules", 50, this.layoutMarkers(theme, row))),

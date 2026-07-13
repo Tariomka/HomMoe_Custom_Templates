@@ -23,12 +23,10 @@ func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.W
 
 func (this *LayoutPanel) getZonesWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Zones", []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "Player Owned castles per zone", constants.DefaultLabelWidthLong,
-			widgets.NewLabeledSliderWidget(theme, &this.sldPlayerOwnedCastles,
-				utils.RoundedRangeString(this.sldPlayerOwnedCastles.Value, 0, 4))),
-		widgets.NewLabeledRowWidget(theme, "Player Unclaimed castles per zone", constants.DefaultLabelWidthLong,
-			widgets.NewLabeledSliderWidget(theme, &this.sldPlayerCastles,
-				utils.RoundedRangeString(this.sldPlayerCastles.Value, 0, 4))),
+		widgets.NewSliderRowWidget(theme, "Player Owned castles per zone", constants.DefaultLabelWidthLong,
+			&this.sldPlayerOwnedCastles, utils.RoundedRangeFormatter(0, 4)),
+		widgets.NewSliderRowWidget(theme, "Player Unclaimed castles per zone", constants.DefaultLabelWidthLong,
+			&this.sldPlayerCastles, utils.RoundedRangeFormatter(0, 4)),
 		widgets.NewBrightButtonLargeWidget(theme, "Edit player zone content...", &this.btnPlayerContent, false),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAdvancedZones,
 			"Advanced zone control (split low / medium / high tiers)"),
@@ -36,13 +34,11 @@ func (this *LayoutPanel) getZonesWidget(theme *material.Theme) layout.Widget {
 			if !this.chkAdvancedZones.Value {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(
-						widgets.NewLabeledRowWidget(theme, "Total neutral zones", constants.DefaultLabelWidthLong,
-							widgets.NewLabeledSliderWidget(theme, &this.sldNeutralCount,
-								utils.RoundedRangeString(this.sldNeutralCount.Value, 0, 16)))),
+						widgets.NewSliderRowWidget(theme, "Total neutral zones", constants.DefaultLabelWidthLong,
+							&this.sldNeutralCount, utils.RoundedRangeFormatter(0, 16))),
 					layout.Rigid(
-						widgets.NewLabeledRowWidget(theme, "Neutral castles per zone", constants.DefaultLabelWidthLong,
-							widgets.NewLabeledSliderWidget(theme, &this.sldNeutralCastles,
-								utils.RoundedRangeString(this.sldNeutralCastles.Value, 0, 4)))))
+						widgets.NewSliderRowWidget(theme, "Neutral castles per zone", constants.DefaultLabelWidthLong,
+							&this.sldNeutralCastles, utils.RoundedRangeFormatter(0, 4))))
 			}
 
 			return this.getAdvancedZonesWidget(theme)(gtx)
@@ -71,15 +67,12 @@ func (this *LayoutPanel) getAdvancedZonesWidget(theme *material.Theme) layout.Wi
 func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, title string,
 	noCastle, withCastle, castlesPerZone *widget.Float, contentBtn *widget.Clickable) layout.Widget {
 	return widgets.NewSectionWidget(theme, title, []layout.Widget{
-		widgets.NewLabeledRowWidget(theme, "No castle", constants.DefaultLabelWidthShort,
-			widgets.NewLabeledSliderWidget(theme, noCastle,
-				utils.RoundedRangeString(noCastle.Value, 0, 8))),
-		widgets.NewLabeledRowWidget(theme, "With castle", constants.DefaultLabelWidthShort,
-			widgets.NewLabeledSliderWidget(theme, withCastle,
-				utils.RoundedRangeString(withCastle.Value, 0, 8))),
-		widgets.NewLabeledRowWidget(theme, "Neutral castles per zone", constants.DefaultLabelWidth,
-			widgets.NewLabeledSliderWidget(theme, castlesPerZone,
-				utils.RoundedRangeString(castlesPerZone.Value, 1, 4))),
+		widgets.NewSliderRowWidget(theme, "No castle", constants.DefaultLabelWidthShort,
+			noCastle, utils.RoundedRangeFormatter(0, 8)),
+		widgets.NewSliderRowWidget(theme, "With castle", constants.DefaultLabelWidthShort,
+			withCastle, utils.RoundedRangeFormatter(0, 8)),
+		widgets.NewSliderRowWidget(theme, "Neutral castles per zone", constants.DefaultLabelWidth,
+			castlesPerZone, utils.RoundedRangeFormatter(1, 4)),
 		widgets.NewBrightButtonLargeWidget(theme, "Edit zone content...", contentBtn, false),
 	})
 }
@@ -94,9 +87,8 @@ func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.W
 		}
 
 		return widgets.NewSectionWidget(theme, "Hub", []layout.Widget{
-			widgets.NewLabeledRowWidget(theme, "Hub zone castles", constants.DefaultLabelWidth,
-				widgets.NewLabeledSliderWidget(theme, &this.sldHubCastles,
-					utils.RoundedRangeString(this.sldHubCastles.Value, 0, 4))),
+			widgets.NewSliderRowWidget(theme, "Hub zone castles", constants.DefaultLabelWidth,
+				&this.sldHubCastles, utils.RoundedRangeFormatter(0, 4)),
 			widgets.NewBrightButtonLargeWidget(theme, "Edit zone content...", &this.btnHubContent, false),
 		})(gtx)
 	}

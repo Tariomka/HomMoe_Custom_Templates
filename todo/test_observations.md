@@ -14,6 +14,13 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   `addButtonSemantics`), and was verified end-to-end against a real
   `NewButtonWidget` layout during development.
 
+- app/gui/widgets/sliderRowWidget.go - `NewSliderRowWidget` (added 2026-07-13,
+  review item §3.2) is a thin composition of `NewLabeledRowWidget` +
+  `NewLabeledSliderWidget` whose returned closure needs a `layout.Context` +
+  text shaper; covered indirectly by the integration/performance suites. The
+  formatter funcs it receives ARE unit-tested (test/unit/app/gui/utils/string/
+  *Formatter_test.go).
+
 - app/gui/dialogs/fileExplorerDialog.go - `handleConfirm` / `confirmOverwrite` /
   `confirmSelection` need `layout.Context` + `widget.Clickable` click routing;
   the integration suite currently has NO file-explorer scenario (open/save/
