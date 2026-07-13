@@ -1,7 +1,7 @@
 package dtos
 
 import (
-	"reflect"
+	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -176,12 +176,23 @@ func (this *EditorStateDto) DiffCastleSettings(incoming *EditorStateDto) editor_
 // the manual-edit fields are disregarded. Manual zones and connections are
 // reapplied to the generated template through a separate path, so they must
 // not trigger an automatic regeneration on their own.
+//
+// The comparison is hand-rolled instead of [reflect.DeepEqual] because it runs
+// on the UI hot path several times per frame. Every non-manual field must be
+// covered here; the per-field mutation test on this method trips when a new
+// DTO field is added without extending the comparison.
 func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) bool {
-	left := *this
-	right := *other
-	left.ManualZones, left.ManualConnections = nil, nil
-	right.ManualZones, right.ManualConnections = nil, nil
-	return reflect.DeepEqual(left, right)
+	return this.zoneOptionScalarsEqual(other) &&
+		this.generationOptionScalarsEqual(other) &&
+		this.gameRuleScalarsEqual(other) &&
+		(this.Bonuses == nil) == (other.Bonuses == nil) &&
+		slices.EqualFunc(this.Bonuses, other.Bonuses,
+			func(left, right config.BonusEntry) bool { return left == right }) &&
+		contentRowSlicesEqual(this.PlayerZoneContentRows, other.PlayerZoneContentRows) &&
+		contentRowSlicesEqual(this.LowNeutralContentRows, other.LowNeutralContentRows) &&
+		contentRowSlicesEqual(this.MediumNeutralContentRows, other.MediumNeutralContentRows) &&
+		contentRowSlicesEqual(this.HighNeutralContentRows, other.HighNeutralContentRows) &&
+		contentRowSlicesEqual(this.HubZoneContentRows, other.HubZoneContentRows)
 }
 
 func (this *EditorStateDto) HasManualEdits() bool {
@@ -199,6 +210,88 @@ func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bo
 		this.NeutralMediumCastleCount != incoming.NeutralMediumCastleCount ||
 		this.NeutralHighNoCastleCount != incoming.NeutralHighNoCastleCount ||
 		this.NeutralHighCastleCount != incoming.NeutralHighCastleCount
+}
+
+// zoneOptionScalarsEqual compares the template identity and zone/castle count
+// options (first section of the struct).
+//
+//nolint:dupl // comparison chains over disjoint field groups are inherently similar
+func (this *EditorStateDto) zoneOptionScalarsEqual(other *EditorStateDto) bool {
+	return this.TemplateName == other.TemplateName &&
+		this.GameMode == other.GameMode &&
+		this.MapSize == other.MapSize &&
+		this.PlayerCount == other.PlayerCount &&
+		this.NeutralZoneCount == other.NeutralZoneCount &&
+		this.PlayerOwnedCastles == other.PlayerOwnedCastles &&
+		this.PlayerZoneCastles == other.PlayerZoneCastles &&
+		this.NeutralZoneCastles == other.NeutralZoneCastles &&
+		this.SpawnAbandonedOutposts == other.SpawnAbandonedOutposts &&
+		this.AbandonedOutpostCount == other.AbandonedOutpostCount &&
+		this.AdvancedMode == other.AdvancedMode &&
+		this.NeutralLowNoCastleCount == other.NeutralLowNoCastleCount &&
+		this.NeutralLowCastleCount == other.NeutralLowCastleCount &&
+		this.NeutralMediumNoCastleCount == other.NeutralMediumNoCastleCount &&
+		this.NeutralMediumCastleCount == other.NeutralMediumCastleCount &&
+		this.NeutralHighNoCastleCount == other.NeutralHighNoCastleCount &&
+		this.NeutralHighCastleCount == other.NeutralHighCastleCount &&
+		this.NeutralLowCastlesPerZone == other.NeutralLowCastlesPerZone &&
+		this.NeutralMediumCastlesPerZone == other.NeutralMediumCastlesPerZone &&
+		this.NeutralHighCastlesPerZone == other.NeutralHighCastlesPerZone &&
+		this.MatchPlayerCastleFactions == other.MatchPlayerCastleFactions &&
+		this.MinNeutralZonesBetweenPlayers == other.MinNeutralZonesBetweenPlayers
+}
+
+// generationOptionScalarsEqual compares the map generation options (second
+// section of the struct: sizes, heroes, topology, connections, densities).
+//
+//nolint:dupl // comparison chains over disjoint field groups are inherently similar
+func (this *EditorStateDto) generationOptionScalarsEqual(other *EditorStateDto) bool {
+	return this.ExperimentalMapSizes == other.ExperimentalMapSizes &&
+		this.PlayerZoneSize == other.PlayerZoneSize &&
+		this.NeutralZoneSize == other.NeutralZoneSize &&
+		this.HubZoneSize == other.HubZoneSize &&
+		this.HubZoneCastles == other.HubZoneCastles &&
+		this.GuardRandomization == other.GuardRandomization &&
+		this.HeroCountMin == other.HeroCountMin &&
+		this.HeroCountMax == other.HeroCountMax &&
+		this.HeroCountIncrement == other.HeroCountIncrement &&
+		this.Topology == other.Topology &&
+		this.RandomPortals == other.RandomPortals &&
+		this.MaxPortalConnections == other.MaxPortalConnections &&
+		this.SpawnRemoteFootholds == other.SpawnRemoteFootholds &&
+		this.RemoteFootholdCount == other.RemoteFootholdCount &&
+		this.GenerateRoads == other.GenerateRoads &&
+		this.NoDirectPlayerConn == other.NoDirectPlayerConn &&
+		this.ResourceDensityPercent == other.ResourceDensityPercent &&
+		this.StructureDensityPercent == other.StructureDensityPercent &&
+		this.NeutralStackStrengthPercent == other.NeutralStackStrengthPercent &&
+		this.BorderGuardStrengthPercent == other.BorderGuardStrengthPercent
+}
+
+// gameRuleScalarsEqual compares the victory/game-rule options and the banned
+// content free-text fields (third section of the struct).
+//
+//nolint:dupl // comparison chains over disjoint field groups are inherently similar
+func (this *EditorStateDto) gameRuleScalarsEqual(other *EditorStateDto) bool {
+	return this.VictoryCondition == other.VictoryCondition &&
+		this.FactionLawXpPercent == other.FactionLawXpPercent &&
+		this.AstrologyXpPercent == other.AstrologyXpPercent &&
+		this.LostStartCity == other.LostStartCity &&
+		this.LostStartCityDay == other.LostStartCityDay &&
+		this.LostStartHero == other.LostStartHero &&
+		this.CityHold == other.CityHold &&
+		this.CityHoldDays == other.CityHoldDays &&
+		this.GladiatorArena == other.GladiatorArena &&
+		this.GladiatorArenaDaysDelayStart == other.GladiatorArenaDaysDelayStart &&
+		this.GladiatorArenaCountDay == other.GladiatorArenaCountDay &&
+		this.Tournament == other.Tournament &&
+		this.TournamentFirstTournamentDay == other.TournamentFirstTournamentDay &&
+		this.TournamentInterval == other.TournamentInterval &&
+		this.TournamentPointsToWin == other.TournamentPointsToWin &&
+		this.TournamentSaveArmy == other.TournamentSaveArmy &&
+		this.BannedItems == other.BannedItems &&
+		this.BannedMagics == other.BannedMagics &&
+		this.ValueOverridesText == other.ValueOverridesText
 }
 
 // DefaultPlayerZoneContentRows returns the historical default mandatory-content
@@ -248,17 +341,16 @@ func defaultPlayerZoneTreasureRows() []models.ZoneContentRowSave {
 	resources := registry.GetMapObjectResourceValues()
 	randomItems := registry.GetMapObjectRandomItemValues()
 
-	trueVal := true
 	return []models.ZoneContentRowSave{
 		{
 			Sid:   resources.PandoraBox,
 			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
+			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: new(true)}},
 		},
 		{
 			Sid:   randomItems.RandomItemEpic,
 			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
+			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: new(true)}},
 		},
 	}
 }
@@ -303,4 +395,43 @@ func defaultPlayerZoneHireAndBankRows() []models.ZoneContentRowSave {
 			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 	}
+}
+
+func contentRowSlicesEqual(left, right []models.ZoneContentRowSave) bool {
+	return (left == nil) == (right == nil) && slices.EqualFunc(left, right, contentRowsEqual)
+}
+
+// contentRowsEqual compares the scalar row fields and the rules element-wise.
+// New ZoneContentRowSave fields must be added here; the fuzz-parity test on
+// EqualsIgnoringManualEdits guards against drift.
+func contentRowsEqual(left, right models.ZoneContentRowSave) bool {
+	return left.Sid == right.Sid &&
+		left.Count == right.Count &&
+		left.IsGroup == right.IsGroup &&
+		left.IsMine == right.IsMine &&
+		(left.Rules == nil) == (right.Rules == nil) &&
+		slices.EqualFunc(left.Rules, right.Rules, contentRulesEqual)
+}
+
+// contentRulesEqual compares two content rules; the pointer fields compare by
+// pointed-to value, matching [reflect.DeepEqual].
+func contentRulesEqual(left, right models.ContentRuleRowSave) bool {
+	leftScalars := left
+	rightScalars := right
+	leftScalars.IsGuarded, rightScalars.IsGuarded = nil, nil
+	leftScalars.IsSoloEncounter, rightScalars.IsSoloEncounter = nil, nil
+	leftScalars.VariantID, rightScalars.VariantID = nil, nil
+	return leftScalars == rightScalars &&
+		pointedValuesEqual(left.IsGuarded, right.IsGuarded) &&
+		pointedValuesEqual(left.IsSoloEncounter, right.IsSoloEncounter) &&
+		pointedValuesEqual(left.VariantID, right.VariantID)
+}
+
+// pointedValuesEqual reports whether two pointers are both nil or point to
+// equal values, matching [reflect.DeepEqual]'s pointer semantics.
+func pointedValuesEqual[Value comparable](left, right *Value) bool {
+	if left == nil || right == nil {
+		return left == right
+	}
+	return *left == *right
 }
