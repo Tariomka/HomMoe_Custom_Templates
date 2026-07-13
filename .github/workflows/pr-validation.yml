@@ -58,6 +58,7 @@ jobs:
         with:
           version: v2.12.2
           install-mode: binary
+          args: --disable=godox,dupl,unparam,gochecknoglobals # these are the same linters marked as warning level in .golangci.yml
 
   run-vulnerability-scan:
     name: Run Vulnerability Scan
