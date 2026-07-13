@@ -3,6 +3,7 @@ package preview_service
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -128,17 +129,14 @@ func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end ima
 
 	increment := data.Vec2FromPoint[float64](delta).DivideScalar(steps)
 	half := connectorLineWidth / 2
+	brushSource := image.NewUniform(connectorLineColor)
 	for i := range int(steps) {
 		center := data.Vec2FromPoint[float64](start).
 			Add(increment.MultiplyScalar(float64(i))).
 			ToPointRounded()
 		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
 			Intersect(canvas.Bounds()) // Square brush around the centre, clipped to the canvas.
-		for y := brush.Min.Y; y < brush.Max.Y; y++ {
-			for x := brush.Min.X; x < brush.Max.X; x++ {
-				canvas.SetRGBA(x, y, connectorLineColor)
-			}
-		}
+		draw.Draw(canvas, brush, brushSource, image.Point{}, draw.Src)
 	}
 }
 

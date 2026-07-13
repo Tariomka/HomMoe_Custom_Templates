@@ -497,7 +497,14 @@ idle.
 Add a unit test asserting the hand-rolled equality matches `reflect.DeepEqual` on
 gofakeit-fuzzed pairs so the two can't drift.
 
-### 4.2 🟡 Per-frame slice allocation for static tabs
+### 4.2 🟡 Per-frame slice allocation for static tabs — ✅ FIXED
+
+✅ **FIXED** (commit `e3faa23`): `Window.tabChildren []layout.FlexChild` caches the
+wrappers, built lazily on the first frame (theme is not available in `NewWindow`)
+and reused thereafter — safe because each child closure reads live tab state
+(`isSelected`/`button`) at layout time. Click handling (`updateTabs`) untouched.
+Coverage 64.4% / lint 74 unchanged; verified by the integration + tab-cycling
+suites.
 
 [window.go](../app/gui/editor/window.go#L65-L75) `getTabsWidget` rebuilds
 `make([]layout.FlexChild, 0)` from the same four static tabs every frame. **Fix**: build
