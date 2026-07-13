@@ -382,7 +382,15 @@ func (this *TopologyBase) CreateVariantFromLayout(
 Each service's `CreateTopologyVariant` collapses to one call passing its private layout
 func. Clears all four dupl findings, and adding topology #11 no longer copies the block.
 
-### 2.6 🟡 `GeneratorConfigMapper.FromEditorState` allocates a provider per call
+### 2.6 🟡 `GeneratorConfigMapper.FromEditorState` allocates a provider per call — ✅ FIXED
+
+> **Resolution (2026-07-13, commit `9bb809b`):** `contentProvider` is now a
+> `GeneratorConfigMapper` field initialized once in `NewConfigMapper()`;
+> `FromEditorState` reuses it. No call-site changes (everything already went
+> through `NewConfigMapper`). Provider is a stateless empty struct — output
+> identical, pinned by existing fromEditorState tests. The optional follow-up
+> (moving `CreateContentItemsFrom` to `internal/models` to fully decouple
+> mappers from services) remains deferred per the review's own note.
 
 [generatorConfigMapper.go](../internal/mappers/generatorConfigMapper.go#L23) constructs
 `providers.NewMandatoryContentProvider()` on every mapping, and the mapper package thereby
@@ -620,7 +628,24 @@ capturing log output in tests. If that plumbing feels heavy for three call sites
 honest alternative is disabling sloglint's `no-global` option in `.golangci.yml` —
 pick one, don't leave the warnings.
 
-### 5.5 🟡 godox inventory — 17 TODOs; resolve or convert
+### 5.5 🟡 godox inventory — 17 TODOs; resolve or convert — ✅ FIXED
+
+> **Resolution (2026-07-13, commits `bafd251`+`6c0455c`):** godox 12 → 2. Kept by
+> owner's choice: zone.go vec2 TODO (read-only schema) + pickerDialog scroll-wheel
+> TODO — permanent accepted findings. Deleted: toolbar icon experiment, zoneAdjacency
+> BFS-queue TODO, both `.Update(gtx)` TODOs (superseded by §4.1), previewLayout Vec2
+> TODO (moved to todo/backlog.md), builders/types.go (placeholder file removed),
+> `WithRoadDistance` (dead, removed + test). zoneLabelProvider clamp → `maxNeutral`
+> (behavior-identical). The layoutPanelTopology angry TODO was resolved by REMOVING
+> `MinNeutralZonesBetweenPlayers` entirely (UI slider, DTO field + comparisons,
+> mapper, validator rule, config field, `CanHonorNeutralSeparation`+
+> `getNeutralZoneCount`, separation logic in zoneLabelProvider/hubTopology,
+> `GetEvenGapCapacities` minimumPerGap param); legacy .gen.json key silently ignored.
+> `TestWhenNoDirectPlayerConnectionsEnabled_*` retargeted to forbid `Ring-`
+> player-player edges (adjacent players legitimately get guarded Fallback links).
+> createTopologyAdjacency dead Chain/Ring branches: investigated, removal rolled
+> back by owner — tracked in todo/backlog.md. New baselines (owner-confirmed):
+> coverage **64.1%** (was 64.4; pure deleted-covered-code arithmetic), lint **62**.
 
 Actionable ones are already covered: victory condition (§1.5), exit confirm (§1.2),
 gameMode (§1.3), validators (§2.1), `move out to a separate function` (§5.1),
