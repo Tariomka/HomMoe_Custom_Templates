@@ -515,7 +515,7 @@ from `image/draw`.
 
 ## 5. Readability & maintainability
 
-### 5.1 🟡 Ten funlen + five gocognit functions — decompose, don't suppress
+### 5.1 ✅ FIXED 🟡 Ten funlen + five gocognit functions — decompose, don't suppress
 
 Beyond those covered above (§1.8, §2.3, §2.4), the linter flags:
 
