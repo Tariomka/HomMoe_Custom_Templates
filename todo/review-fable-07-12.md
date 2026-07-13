@@ -790,10 +790,15 @@ your approval — `data/` is a protected directory) or a new `examples/` folder;
 `git rm -r --cached output/` (needs your confirmation — destructive to git history view,
 not to files).
 
-### 7.7 ⚪ Dependabot
+### 7.7 ⚪ Dependabot ✅ FIXED
 
 No `.github/dependabot.yml`. One 10-line file covering `gomod` + `github-actions`
 (weekly) keeps Gio and action versions moving without manual sweeps.
+
+> **Resolution (commit 41f6626):** added `.github/dependabot.yml` — weekly `gomod`
+> (root module only, `tools/` deliberately excluded per owner) + weekly
+> `github-actions`, each grouping minor/patch bumps into a single PR; major bumps
+> stay as individual PRs.
 
 ---
 
