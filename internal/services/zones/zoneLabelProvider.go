@@ -215,7 +215,9 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 	adjacency := models.ZoneAdjacency{}
 
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-
+	// currently this is only reached from Hub & Spoke (GetHoldCityLabel gates on IsHubCityToHold)
+	// and only default branch is used, but the logic is correct and probably will be used in the future
+	// so for now we keep all of the branches
 	switch configuration.Topology {
 	case config.TopologyChain:
 		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, false)
