@@ -62,7 +62,7 @@ jobs:
   run-vulnerability-scan:
     name: Run Vulnerability Scan
     runs-on: ubuntu-latest
-    if: false
+    if: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - name: Checkout code
@@ -75,23 +75,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Check UI for vulnerabilities
+      - name: Check for vulnerabilities
         uses: golang/govulncheck-action@v1
         with:
            go-version-input: ${{ env.GO_VERSION }}
-           go-package: ./app/...
-
-      - name: Check Internal for vulnerabilities
-        uses: golang/govulncheck-action@v1
-        with:
-           go-version-input: ${{ env.GO_VERSION }}
-           go-package: ./internal/...
-
-      - name: Check Tests for vulnerabilities
-        uses: golang/govulncheck-action@v1
-        with:
-           go-version-input: ${{ env.GO_VERSION }}
-           go-package: ./test/...
+           go-package: ./...
 
   check-build:
     name: Check Build
@@ -109,7 +97,10 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Build
-        run: go build .
+        run: go build ./...
+
+      - name: Vet (including integration_test-gated files)
+        run: go vet -tags=integration_test ./...
 
   run-unit-tests:
     name: Run Unit Tests
@@ -134,6 +125,24 @@ jobs:
         with:
           name: ${{ env.coverage_artifact }}
           path: ${{ env.coverage_file }}
+
+  run-race-tests:
+    name: Run Unit Tests (race detector)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Project
+        uses: ./.github/workflows/setup-steps
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run unit tests with race detector
+        run: go test -race ./test/unit/...
 
   code_coverage:
     name: Code coverage report
