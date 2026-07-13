@@ -9,10 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var (
-	winConditions = registry.GetWinningConditionValues()
-	gameModes     = registry.GetGameModeValues()
-)
+const guardedRuleName = "Guarded"
 
 // EditorStateDto is the serialized .gen.json file produced and consumed by the
 // editor.
@@ -96,6 +93,8 @@ type EditorStateDto struct {
 }
 
 func NewDefaultEditorStateDto() EditorStateDto {
+	winConditions := registry.GetWinningConditionValues()
+	gameModes := registry.GetGameModeValues()
 	return EditorStateDto{
 		TemplateName:                 "Custom Template",
 		GameMode:                     gameModes.Classic,
@@ -206,117 +205,102 @@ func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bo
 // rows seeded into every player zone: the six basic mines plus an alchemy lab,
 // a couple of guarded treasures, random hires and resource banks.
 func DefaultPlayerZoneContentRows() []models.ZoneContentRowSave {
+	rows := defaultPlayerZoneMineRows()
+	rows = append(rows, defaultPlayerZoneTreasureRows()...)
+	rows = append(rows, defaultPlayerZoneHireAndBankRows()...)
+	return rows
+}
+
+// defaultPlayerZoneMineRows returns the six basic mines plus an alchemy lab:
+// the wood, ore and gold mines near the town, the rest next to a road.
+func defaultPlayerZoneMineRows() []models.ZoneContentRowSave {
 	interactable := registry.GetMapObjectAllInteractableValues()
+	nearTown := models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Near"}
+	nextToRoad := models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Next To"}
+	return []models.ZoneContentRowSave{
+		defaultGuardedMineRow(interactable.WoodMine, nearTown),
+		defaultGuardedMineRow(interactable.OreMine, nearTown),
+		defaultGuardedMineRow(interactable.GoldMine, nearTown),
+		defaultGuardedMineRow(interactable.CrystalMine, nextToRoad),
+		defaultGuardedMineRow(interactable.MercuryMine, nextToRoad),
+		defaultGuardedMineRow(interactable.GemstoneMine, nextToRoad),
+		defaultGuardedMineRow(interactable.AlchemyLab, nextToRoad),
+	}
+}
+
+// defaultGuardedMineRow builds a single guarded mine row with the given
+// distance rule.
+func defaultGuardedMineRow(sid string, distanceRule models.ContentRuleRowSave) models.ZoneContentRowSave {
+	return models.ZoneContentRowSave{
+		Sid:    sid,
+		Count:  1,
+		IsMine: true,
+		Rules: []models.ContentRuleRowSave{
+			{Name: guardedRuleName, IsGuarded: new(true)},
+			distanceRule,
+		},
+	}
+}
+
+// defaultPlayerZoneTreasureRows returns the guarded treasures: a pandora box
+// and an epic random item.
+func defaultPlayerZoneTreasureRows() []models.ZoneContentRowSave {
 	resources := registry.GetMapObjectResourceValues()
 	randomItems := registry.GetMapObjectRandomItemValues()
-	randomHires := registry.GetMandatoryContentRandomHiresBuildingValues()
-	basicRandomHires := registry.GetMandatoryContentBasicRandomHiresBuildingValues()
-	basicResourceBanks := registry.GetMandatoryContentBasicResourceBanksBuildingValues()
 
 	trueVal := true
 	return []models.ZoneContentRowSave{
 		{
-			Sid:    interactable.WoodMine,
-			Count:  1,
-			IsMine: true,
-			Rules: []models.ContentRuleRowSave{
-				{Name: "Guarded", IsGuarded: &trueVal},
-				{Name: "Distance to town", DistanceName: "Near"},
-			},
-		},
-		{
-			Sid:    interactable.OreMine,
-			Count:  1,
-			IsMine: true,
-			Rules: []models.ContentRuleRowSave{
-				{Name: "Guarded", IsGuarded: &trueVal},
-				{Name: "Distance to town", DistanceName: "Near"},
-			},
-		},
-		{
-			Sid:    interactable.GoldMine,
-			Count:  1,
-			IsMine: true,
-			Rules: []models.ContentRuleRowSave{
-				{Name: "Guarded", IsGuarded: &trueVal},
-				{Name: "Distance to town", DistanceName: "Near"},
-			},
-		},
-		{
-			Sid:    interactable.CrystalMine,
-			Count:  1,
-			IsMine: true,
-			Rules: []models.ContentRuleRowSave{
-				{Name: "Guarded", IsGuarded: &trueVal},
-				{Name: "Distance to road", DistanceName: "Next To"},
-			},
-		},
-		{
-			Sid:    interactable.MercuryMine,
-			Count:  1,
-			IsMine: true,
-			Rules: []models.ContentRuleRowSave{
-				{Name: "Guarded", IsGuarded: &trueVal},
-				{Name: "Distance to road", DistanceName: "Next To"},
-			},
-		},
-		{
-			Sid:    interactable.GemstoneMine,
-			Count:  1,
-			IsMine: true,
-			Rules: []models.ContentRuleRowSave{
-				{Name: "Guarded", IsGuarded: &trueVal},
-				{Name: "Distance to road", DistanceName: "Next To"},
-			},
-		},
-		{
-			Sid:    interactable.AlchemyLab,
-			Count:  1,
-			IsMine: true,
-			Rules: []models.ContentRuleRowSave{
-				{Name: "Guarded", IsGuarded: &trueVal},
-				{Name: "Distance to road", DistanceName: "Next To"},
-			},
-		},
-		{
 			Sid:   resources.PandoraBox,
 			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:   randomItems.RandomItemEpic,
 			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
+	}
+}
+
+// defaultPlayerZoneHireAndBankRows returns the guarded random-hire and
+// resource-bank group rows.
+func defaultPlayerZoneHireAndBankRows() []models.ZoneContentRowSave {
+	randomHires := registry.GetMandatoryContentRandomHiresBuildingValues()
+	basicRandomHires := registry.GetMandatoryContentBasicRandomHiresBuildingValues()
+	basicResourceBanks := registry.GetMandatoryContentBasicResourceBanksBuildingValues()
+
+	trueVal := true // To not allocate multiple times
+	return []models.ZoneContentRowSave{
 		{
 			Sid:     randomHires.RandomHiresLowTier,
 			Count:   2,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     randomHires.RandomHiresHighTier,
 			Count:   1,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     basicRandomHires.BasicRandomHires,
 			Count:   1,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     basicResourceBanks.BasicResourceBanksTier1,
 			Count:   2,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     basicResourceBanks.BasicResourceBanksTier2,
 			Count:   1,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 	}
 }

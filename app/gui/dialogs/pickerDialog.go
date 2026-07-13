@@ -297,45 +297,7 @@ func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pic
 		return material.Clickable(gtx, clk, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
 			dims := layout.UniformInset(constants.DefaultPaddingSmall-2).
-				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(16))
-							mark := " "
-							if checked {
-								mark = "v"
-							}
-							label := material.Body1(theme, mark)
-							label.Color = themes.ColorAccentBright
-							label.Font = font.Font{Weight: font.Bold, Style: font.Italic}
-							return label.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							if entry.badge == "" {
-								return layout.Dimensions{}
-							}
-
-							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(34))
-							label := material.Overline(theme, entry.badge)
-							label.Color = themes.ColorTextDim
-							return label.Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-							label := material.Body2(theme, entry.label)
-							label.Color = themes.ColorText
-							return label.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							if entry.trailing == "" {
-								return layout.Dimensions{}
-							}
-
-							label := material.Overline(theme, entry.trailing)
-							label.Color = themes.ColorTextDim
-							return label.Layout(gtx)
-						}),
-					)
-				})
+				Layout(gtx, getLeafRowContentWidget(theme, entry, checked))
 			call := macro.Stop()
 			if checked {
 				paint.FillShape(gtx.Ops, checkedRowBg, clip.Rect{Max: dims.Size}.Op())
@@ -345,6 +307,52 @@ func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pic
 			call.Add(gtx.Ops)
 			return dims
 		})
+	}
+}
+
+// getLeafRowContentWidget lays out a leaf row's checkmark, optional badge,
+// label and optional trailing text.
+func getLeafRowContentWidget(theme *material.Theme, entry pickerEntry, checked bool) layout.Widget {
+	// TODO: check scroll wheel action in dialog
+	// this is probably not the correct spot because it doesn't work everywhere
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(16))
+				mark := " "
+				if checked {
+					mark = "v"
+				}
+				label := material.Body1(theme, mark)
+				label.Color = themes.ColorAccentBright
+				label.Font = font.Font{Weight: font.Bold, Style: font.Italic}
+				return label.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				if entry.badge == "" {
+					return layout.Dimensions{}
+				}
+
+				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(34))
+				label := material.Overline(theme, entry.badge)
+				label.Color = themes.ColorTextDim
+				return label.Layout(gtx)
+			}),
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				label := material.Body2(theme, entry.label)
+				label.Color = themes.ColorText
+				return label.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				if entry.trailing == "" {
+					return layout.Dimensions{}
+				}
+
+				label := material.Overline(theme, entry.trailing)
+				label.Color = themes.ColorTextDim
+				return label.Layout(gtx)
+			}),
+		)
 	}
 }
 

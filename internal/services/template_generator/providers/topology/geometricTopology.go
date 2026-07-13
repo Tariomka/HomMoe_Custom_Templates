@@ -101,53 +101,73 @@ func (this *GeometricTopologyService) createGeometricLayout(
 	petals := make([]petal, playerCount)
 	for index := range playerCount {
 		axis := startAngle + 2.0*math.Pi*float64(index)/float64(playerCount)
-		tipX := centreX + math.Cos(axis)*tipRadius
-		tipY := centreY + math.Sin(axis)*tipRadius
-		leftCtrl := axis + bowAngle
-		rightCtrl := axis - bowAngle
-		plan := petalPlans[index]
-		leftCount := (len(plan) + 1) / 2
-		rightCount := len(plan) - leftCount
-
-		// leafPoint samples the bowed leaf edge on the given side at fraction t
-		// (0 = centre, 1 = tip) via a quadratic Bézier centre→control→tip.
-		leafPoint := func(ctrlAngle, t float64) models.Position {
-			mt := 1.0 - t
-			p1x := centreX + math.Cos(ctrlAngle)*ctrlDist
-			p1y := centreY + math.Sin(ctrlAngle)*ctrlDist
-			return data.NewVec2(
-				mt*mt*centreX+2*mt*t*p1x+t*t*tipX,
-				mt*mt*centreY+2*mt*t*p1y+t*t*tipY)
-		}
-
-		var ring []int
-		addNode := func(planIndex int, point models.Position) {
-			ring = append(ring, len(allLabels))
-			allLabels = append(allLabels, neutralZones[planIndex].Label)
-			positions.Add(point)
-		}
-
-		// Left edge: from the base near the centre out toward the tip.
-		for j := 1; j <= leftCount; j++ {
-			t := float64(j) / float64(leftCount+1)
-			addNode(plan[j-1], leafPoint(leftCtrl, t))
-		}
-		// Tip: the player zone, almost at the canvas edge.
-		playerIndex := len(allLabels)
-		allLabels = append(allLabels, playerLabels[index])
-		positions.Add(data.NewVec2(tipX, tipY))
-		ring = append(ring, playerIndex)
-		// Right edge: from the tip back down to the base near the centre.
-		for j := rightCount; j >= 1; j-- {
-			t := float64(j) / float64(rightCount+1)
-			addNode(plan[leftCount+rightCount-j], leafPoint(rightCtrl, t))
-		}
-
-		petals[index] = petal{ring: ring, player: playerIndex}
+		petals[index] = buildPetal(
+			axis, bowAngle, ctrlDist, tipRadius,
+			playerLabels[index], petalPlans[index], neutralZones,
+			&allLabels, &positions)
 	}
 
 	pairs := this.createGeometricPairs(centreIndex, petals, playerCount)
 	return allLabels, positions, pairs
+}
+
+// buildPetal places one player's fat teardrop leaf: the neutral zones trace the
+// two bowed Bézier edges from the centre-facing bases out to the tip, where the
+// player zone sits almost at the canvas edge. Labels and positions are appended
+// in place; the returned petal records the ring order base → tip → base.
+func buildPetal(
+	axis, bowAngle, ctrlDist, tipRadius float64,
+	playerLabel string,
+	plan []int,
+	neutralZones neutralZone.Plans,
+	allLabels *[]string,
+	positions *models.Positions) petal {
+	const (
+		centreX = 0.5
+		centreY = 0.5
+	)
+	tipX := centreX + math.Cos(axis)*tipRadius
+	tipY := centreY + math.Sin(axis)*tipRadius
+	leftCtrl := axis + bowAngle
+	rightCtrl := axis - bowAngle
+	leftCount := (len(plan) + 1) / 2
+	rightCount := len(plan) - leftCount
+
+	// leafPoint samples the bowed leaf edge on the given side at fraction t
+	// (0 = centre, 1 = tip) via a quadratic Bézier centre→control→tip.
+	leafPoint := func(ctrlAngle, t float64) models.Position {
+		mt := 1.0 - t
+		p1x := centreX + math.Cos(ctrlAngle)*ctrlDist
+		p1y := centreY + math.Sin(ctrlAngle)*ctrlDist
+		return data.NewVec2(
+			mt*mt*centreX+2*mt*t*p1x+t*t*tipX,
+			mt*mt*centreY+2*mt*t*p1y+t*t*tipY)
+	}
+
+	var ring []int
+	addNode := func(planIndex int, point models.Position) {
+		ring = append(ring, len(*allLabels))
+		*allLabels = append(*allLabels, neutralZones[planIndex].Label)
+		positions.Add(point)
+	}
+
+	// Left edge: from the base near the centre out toward the tip.
+	for j := 1; j <= leftCount; j++ {
+		t := float64(j) / float64(leftCount+1)
+		addNode(plan[j-1], leafPoint(leftCtrl, t))
+	}
+	// Tip: the player zone, almost at the canvas edge.
+	playerIndex := len(*allLabels)
+	*allLabels = append(*allLabels, playerLabel)
+	positions.Add(data.NewVec2(tipX, tipY))
+	ring = append(ring, playerIndex)
+	// Right edge: from the tip back down to the base near the centre.
+	for j := rightCount; j >= 1; j-- {
+		t := float64(j) / float64(rightCount+1)
+		addNode(plan[leftCount+rightCount-j], leafPoint(rightCtrl, t))
+	}
+
+	return petal{ring: ring, player: playerIndex}
 }
 
 func (this *GeometricTopologyService) createGeometricPairs(
