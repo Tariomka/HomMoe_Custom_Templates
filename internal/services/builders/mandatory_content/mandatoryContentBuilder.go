@@ -2,7 +2,6 @@ package mandatory_content
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 )
 
 type MandatoryContentBuilder struct {
@@ -38,8 +37,3 @@ func (this *MandatoryContentBuilder) WithRulesCallback(
 	return this.WithRules(callback()...)
 }
 func (this *MandatoryContentBuilder) Build() entities.MandatoryContentItem { return this.item }
-
-func (this *MandatoryContentBuilder) WithRoadDistance(
-	distance placement_rule.Distance) *MandatoryContentBuilder { // TODO: probably not needed
-	return this.WithRules(placement_rule.NewPlacementRuleBuilder().BuildRoadRule(distance, 1))
-}

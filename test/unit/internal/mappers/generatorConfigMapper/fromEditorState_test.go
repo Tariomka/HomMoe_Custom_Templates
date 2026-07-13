@@ -22,7 +22,6 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 	playerCount := gofakeit.Number(2, 8)
 	mapSize := gofakeit.Number(96, 224)
 	maxPortals := gofakeit.Number(1, 16)
-	minNeutralsBetween := gofakeit.Number(1, 4)
 	remoteFootholds := gofakeit.Number(1, 4)
 	factionLawXp := gofakeit.Number(50, 200)
 	astrologyXp := gofakeit.Number(50, 200)
@@ -80,12 +79,6 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 			func(state *dtos.EditorStateDto) { state.MaxPortalConnections = maxPortals },
 			func(configuration *config.GeneratorConfig) any { return configuration.MaxPortalConnections },
 			maxPortals,
-		},
-		{
-			"WhenMinNeutralZonesBetweenPlayersProvided_CopiesCount",
-			func(state *dtos.EditorStateDto) { state.MinNeutralZonesBetweenPlayers = minNeutralsBetween },
-			func(configuration *config.GeneratorConfig) any { return configuration.MinNeutralZonesBetweenPlayers },
-			minNeutralsBetween,
 		},
 		{
 			"WhenMatchPlayerCastleFactionsEnabled_CopiesFlag",

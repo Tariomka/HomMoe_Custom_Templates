@@ -203,10 +203,6 @@ func nonNegativeIntFields() []intField {
 			func(state *dtos.EditorStateDto) *int { return &state.NeutralHighCastlesPerZone },
 		},
 		{"hubCastles", func(state *dtos.EditorStateDto) *int { return &state.HubZoneCastles }},
-		{
-			"minNeutralZonesBetweenPlayers",
-			func(state *dtos.EditorStateDto) *int { return &state.MinNeutralZonesBetweenPlayers },
-		},
 		{"remoteFootholdCount", func(state *dtos.EditorStateDto) *int { return &state.RemoteFootholdCount }},
 		{"maxPortalConns", func(state *dtos.EditorStateDto) *int { return &state.MaxPortalConnections }},
 	}

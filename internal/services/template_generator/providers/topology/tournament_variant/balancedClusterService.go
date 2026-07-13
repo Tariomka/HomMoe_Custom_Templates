@@ -33,7 +33,7 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	singlePlayerList := []string{playerLabel}
-	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans, 0)
+	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans)
 	rawPositions := models.CreatePositionsFromPlans(orderedLabels, singlePlayerList, allNeutralZonePlans)
 	positions := this.createPositions(rawPositions, playerIndex)
 

@@ -36,10 +36,6 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 			func(state *dtos.EditorStateDto) { state.MaxPortalConnections++ },
 		},
 		{
-			"WhenMinNeutralZonesBetweenPlayersChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.MinNeutralZonesBetweenPlayers++ },
-		},
-		{
 			"WhenAdvancedModeFlips_ReportsChanged",
 			func(state *dtos.EditorStateDto) { state.AdvancedMode = !state.AdvancedMode },
 		},

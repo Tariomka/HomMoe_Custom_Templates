@@ -154,7 +154,6 @@ func (this *GeneralPanel) LoadFromState() {
 }
 
 func (this *GeneralPanel) SaveToState() {
-	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))

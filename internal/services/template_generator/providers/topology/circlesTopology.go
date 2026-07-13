@@ -30,7 +30,7 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 		neutralLabels[i] = zonePlan.Label
 	}
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones, 0)
+	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
 	positions := models.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
 	pairs := this.createCirclesPairs(positions.CreateDelaunayTriangulation(), allLabels, playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)

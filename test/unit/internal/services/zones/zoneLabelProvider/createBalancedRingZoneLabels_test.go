@@ -13,7 +13,7 @@ func TestWhenNoPlayerLabelsProvided_ReturnsBalancedNeutralRing(t *testing.T) {
 	provider := zones.NewZoneLabelProvider()
 
 	// Act
-	ordered := provider.CreateBalancedRingZoneLabels(nil, mediumPlans("C", "D"), 0)
+	ordered := provider.CreateBalancedRingZoneLabels(nil, mediumPlans("C", "D"))
 
 	// Assert
 	assert.Equal(t, []string{"C", "D"}, ordered)
@@ -25,7 +25,7 @@ func TestWhenNoNeutralZonesProvided_ReturnsPlayerLabelsUnchanged(t *testing.T) {
 	provider := zones.NewZoneLabelProvider()
 
 	// Act
-	ordered := provider.CreateBalancedRingZoneLabels([]string{"A", "B"}, nil, 0)
+	ordered := provider.CreateBalancedRingZoneLabels([]string{"A", "B"}, nil)
 
 	// Assert
 	assert.Equal(t, []string{"A", "B"}, ordered)
@@ -37,7 +37,7 @@ func TestWhenPlayersAndNeutralsProvided_InterleavesNeutralsIntoGaps(t *testing.T
 	provider := zones.NewZoneLabelProvider()
 
 	// Act
-	ordered := provider.CreateBalancedRingZoneLabels([]string{"A", "B"}, mediumPlans("C", "D"), 0)
+	ordered := provider.CreateBalancedRingZoneLabels([]string{"A", "B"}, mediumPlans("C", "D"))
 
 	// Assert
 	assert.Equal(t, []string{"A", "C", "B", "D"}, ordered)

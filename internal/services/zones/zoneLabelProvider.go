@@ -38,8 +38,9 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 	maxNeutral := max(0, len(this.zoneLabels)-configuration.PlayerCount)
 
 	add := func(requested int, quality neutralZone.Quality, castleCount int) {
-		count := helpers.Clamp(requested, 0, 30)                // TODO: Clamp up to labelCount - playerCount
-		for i := 0; i < count && len(plans) < maxNeutral; i++ { // TODO: Is plans length needed?
+		count := helpers.Clamp(requested, 0, maxNeutral)
+		// The plans-length guard enforces the label capacity cumulatively across add calls.
+		for i := 0; i < count && len(plans) < maxNeutral; i++ {
 			plans.AddPlan(this.zoneLabels[configuration.PlayerCount+len(plans)], quality, castleCount)
 		}
 	}
@@ -101,56 +102,22 @@ func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 	playerLabels []string,
 	neutralZones neutralZone.Plans,
 	isRing bool) []string {
+	if configuration.Topology == config.TopologyCircles {
+		if isRing {
+			return this.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
+		}
+		return this.CreateBalancedChainZoneLabels(playerLabels, neutralZones)
+	}
+
 	neutralLabels := linq.FromSlice(neutralZones).
 		SelectString(func(x neutralZone.Plan) string { return x.Label }).
 		ToSlice()
-
-	if configuration.Topology == config.TopologyCircles {
-		separationCount := 0
-		if configuration.MinNeutralZonesBetweenPlayers > 0 && configuration.CanHonorNeutralSeparation() {
-			separationCount = configuration.MinNeutralZonesBetweenPlayers
-		}
-		if isRing {
-			return this.CreateBalancedRingZoneLabels(playerLabels, neutralZones, separationCount)
-		}
-		return this.CreateBalancedChainZoneLabels(playerLabels, neutralZones, separationCount)
-	}
-
-	separationCount := configuration.MinNeutralZonesBetweenPlayers
-	if separationCount <= 0 || configuration.RandomPortals || !configuration.CanHonorNeutralSeparation() {
-		return append(playerLabels, neutralLabels...)
-	}
-
-	var orderedLabels []string
-	queue := make([]string, len(neutralLabels))
-	copy(queue, neutralLabels)
-	qi := 0
-	for i, pl := range playerLabels {
-		orderedLabels = append(orderedLabels, pl)
-		needsSep := isRing || i < len(playerLabels)-1
-		if !needsSep {
-			continue
-		}
-		for j := 0; j < separationCount && qi < len(queue); j++ {
-			orderedLabels = append(orderedLabels, queue[qi])
-			qi++
-		}
-	}
-	for qi < len(queue) {
-		orderedLabels = append(orderedLabels, queue[qi])
-		qi++
-	}
-	if len(orderedLabels) == 0 {
-		return append(playerLabels, neutralLabels...)
-	}
-
-	return orderedLabels
+	return append(playerLabels, neutralLabels...)
 }
 
 func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
-	separationCount int) []string {
+	neutralZones neutralZone.Plans) []string {
 	if len(playerLabels) == 0 {
 		return this.CreateBalancedNeutralRingZoneLabels(neutralZones, 1)
 	}
@@ -159,7 +126,7 @@ func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
 		return playerLabels
 	}
 
-	caps := utils.GetEvenGapCapacities(len(playerLabels), len(neutralZones), separationCount)
+	caps := utils.GetEvenGapCapacities(len(playerLabels), len(neutralZones))
 	gaps := utils.AssignNeutralZonesToGaps(neutralZones, caps, false)
 	var ordered []string
 	for i, playerLabel := range playerLabels {
@@ -173,8 +140,7 @@ func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
 
 func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
-	minimumSeparation int) []string {
+	neutralZones neutralZone.Plans) []string {
 	if len(playerLabels) == 0 {
 		return linq.FromSlice(neutralZones).
 			SelectString(func(x neutralZone.Plan) string { return x.Label }).
@@ -184,24 +150,17 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 	gapCount := len(playerLabels) + 1
 	capacities := make([]int, gapCount)
 	remaining := len(neutralZones)
-	reqInterior := max(0, len(playerLabels)-1) * minimumSeparation
-	if minimumSeparation > 0 && len(neutralZones) >= reqInterior {
-		for i := 1; i < gapCount-1; i++ {
-			capacities[i] = minimumSeparation
-		}
-		remaining -= reqInterior
-	}
 	// Distribute extra neutrals only into interior gaps so that the first
 	// and last positions of the chain are always player zones. Degenerate cases (0 or 1
 	// player) fall back to even distribution across every gap
 	interiorGapCount := max(0, gapCount-2)
 	if interiorGapCount > 0 {
-		extras := utils.GetEvenGapCapacities(interiorGapCount, remaining, 0)
+		extras := utils.GetEvenGapCapacities(interiorGapCount, remaining)
 		for i := 1; i < gapCount-1; i++ {
 			capacities[i] += extras[i-1]
 		}
 	} else {
-		extras := utils.GetEvenGapCapacities(gapCount, remaining, 0)
+		extras := utils.GetEvenGapCapacities(gapCount, remaining)
 		for i := range gapCount {
 			capacities[i] += extras[i]
 		}
@@ -224,14 +183,7 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 			orderedLabels = append(orderedLabels, zonePlan.Label)
 		}
 	}
-	if len(orderedLabels) > 0 {
-		return orderedLabels
-	}
-
-	return append(playerLabels,
-		linq.FromSlice(neutralZones).
-			SelectString(func(x neutralZone.Plan) string { return x.Label }).
-			ToSlice()...)
+	return orderedLabels
 }
 
 func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
@@ -245,7 +197,7 @@ func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
 		return labels
 	}
 
-	caps := utils.GetEvenGapCapacities(max(1, playerCount), len(neutralZones), 0)
+	caps := utils.GetEvenGapCapacities(max(1, playerCount), len(neutralZones))
 	gaps := utils.AssignNeutralZonesToGaps(neutralZones, caps, false)
 	var labels []string
 	for _, gap := range gaps {

@@ -33,7 +33,6 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.RemoteFootholdCount = editorState.RemoteFootholdCount
 	generatorSettings.NoDirectPlayerConnections = editorState.NoDirectPlayerConn
 	generatorSettings.MaxPortalConnections = editorState.MaxPortalConnections
-	generatorSettings.MinNeutralZonesBetweenPlayers = editorState.MinNeutralZonesBetweenPlayers
 	generatorSettings.MatchPlayerCastleFactions = editorState.MatchPlayerCastleFactions
 	generatorSettings.BannedItems = editorState.BannedItems
 	generatorSettings.BannedMagics = editorState.BannedMagics

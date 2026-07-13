@@ -47,11 +47,7 @@ func (this *HubTopologyService) createOuterLabels(
 	playerLabels []string,
 	neutralZones neutralZone.Plans) []string {
 	if configuration.Topology == config.TopologyCircles {
-		sep := 0
-		if configuration.MinNeutralZonesBetweenPlayers > 0 && configuration.CanHonorNeutralSeparation() {
-			sep = configuration.MinNeutralZonesBetweenPlayers
-		}
-		return this.ZoneLabelProvider.CreateBalancedChainZoneLabels(playerLabels, neutralZones, sep)
+		return this.ZoneLabelProvider.CreateBalancedChainZoneLabels(playerLabels, neutralZones)
 	}
 
 	return append(playerLabels,

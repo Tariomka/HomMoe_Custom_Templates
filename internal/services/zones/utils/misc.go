@@ -7,7 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
-func GetEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
+func GetEvenGapCapacities(gapCount, itemCount int) []int {
 	if gapCount <= 0 {
 		return nil
 	}
@@ -15,17 +15,8 @@ func GetEvenGapCapacities(gapCount, itemCount, minimumPerGap int) []int {
 	if itemCount <= 0 {
 		return capacities
 	}
-	minimum := max(0, minimumPerGap)
-	reserved := minimum * gapCount
-	remaining := itemCount
-	if minimum > 0 && itemCount >= reserved {
-		for i := range capacities {
-			capacities[i] = minimum
-		}
-		remaining -= reserved
-	}
-	for i := range remaining {
-		gap := int(math.Floor((float64(i) + 0.5) * float64(gapCount) / float64(remaining)))
+	for i := range itemCount {
+		gap := int(math.Floor((float64(i) + 0.5) * float64(gapCount) / float64(itemCount)))
 		capacities[helpers.Clamp(gap, 0, gapCount-1)]++
 	}
 	return capacities

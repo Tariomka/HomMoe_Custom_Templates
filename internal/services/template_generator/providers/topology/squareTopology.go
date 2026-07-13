@@ -52,7 +52,7 @@ func (this *SquareTopologyService) createSquareLayout(
 	interiorPlans := neutralZones[len(neutralZones)-interiorCount:]
 
 	// Even player spacing around the perimeter, separated by the edge neutrals.
-	perimeterLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, perimeterPlans, 0)
+	perimeterLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, perimeterPlans)
 
 	var allLabels []string
 	var positions models.Positions

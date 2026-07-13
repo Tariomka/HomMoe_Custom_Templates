@@ -573,7 +573,17 @@ Beyond those covered above (§1.8, §2.3, §2.4), the linter flags:
 | [buildNonAdjacentDerangement](../internal/services/template_generator/providers/topology/base/topologyBase.go#L741) (cognit 36) | gocognit | Deterministic-fallback safety net; extract the fallback into `buildDeterministicDerangement(count)` — also makes the "practically unreachable" branch (test_observations #2) directly testable. |
 | [generateAllTopologies_test.go](../test/unit/internal/services/template_generator/templateGenerator/generateAllTopologies_test.go#L57) (cognit 33) | gocognit | Convert inner assertions into table-driven `t.Run` subtests per zone-field. |
 
-### 5.2 🟡 goconst — magic rule/tier strings (7 findings)
+### 5.2 🟡 goconst — magic rule/tier strings (7 findings) — ✅ FIXED
+
+✅ **FIXED** (commit `94969a2` + earlier user commit for "Guarded"): `"Guarded"` ×14
+covered by the user's `guardedRuleName` const in editorStateDto.go (landed with §5.1,
+commit `c57a715`); `"Generator Default"` ×4 → private `generatorDefaultLabel` const in
+connectionEditor.go; `"Connection"` ×3 in topologyBase.go now reads
+`registry.GetRoadConnectionTypeValues().Connection` — the same canonical source
+`RefBuilder.BuildConnectionType` uses to build those roads, so comparison and wire
+value cannot drift. Distance-name literals ("Near"/"Next To"/"Distance to town"/
+"Distance to road") no longer flagged (below goconst threshold after the §5.1 split).
+Existing literal-asserting tests pass unchanged — values proven identical. Lint 74→72.
 
 `"Guarded"` ×14, `"Distance to town"`, `"Distance to road"`, `"Near"`, `"Next To"`,
 `"Connection"`, `"Generator Default"`. These are **serialized rule identifiers** — a typo
@@ -585,7 +595,12 @@ owners: rule names in `internal/services/content_rules` (e.g.
 [editorStateDto.go](../internal/dtos/editorStateDto.go#L223)'s default tables and
 [topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go#L298).
 
-### 5.3 🟡 revive unexported-return (6 findings)
+### 5.3 🟡 revive unexported-return (6 findings) — 👤 OWNER'S RESPONSIBILITY
+
+👤 **OWNER'S RESPONSIBILITY** (2026-07-13): the repository owner will resolve the
+unexported-return exports (`MultiSelectPicker`, `PairSet`, `HubZoneCandidates`,
+`VictoryConditions`) and the `selectedIds`→`selectedIDs` rename personally.
+Agents should skip this item.
 
 `NewItemPickerDialog`/`NewSpellPickerDialog`/`NewValueOverridePickerDialog` →
 `*multiSelectPicker`; `GetVictoryConditionValues` → `victoryConditions`; `NewPairSet` →

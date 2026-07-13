@@ -60,20 +60,6 @@ func (this *LayoutPanel) getConnectivityWidget(theme *material.Theme) layout.Wid
 				widgets.NewLabeledSliderWidget(theme, &this.sldAbandonedOutposts,
 					utils.RoundedRangeString(this.sldAbandonedOutposts.Value, 0, 4)))(gtx)
 		},
-		// TODO: Fuck this shit, it doesn't actually honor anything, the backend logic is lost somewhere,
-		// need to remove this option completely from UI, Internal and any dtos.
-		// Fable tried but its not worth it to have this here, and I don't want spaghetti to honor it.
-		// widgets.NewLabeledRowWidget(theme, "Min neutrals between players", constants.DefaultLabelWidthLong,
-		// 	widgets.NewLabeledSliderWidget(theme, &this.sldMinNeutralBetween,
-		// 		utils.RoundedRangeString(this.sldMinNeutralBetween.Value, 0, 8))),
-		// func(gtx layout.Context) layout.Dimensions {
-		// 	label := material.Caption(theme,
-		// 		"Honored for Ring, Circles, Chain, Hub & Spoke and Shared Web topologies when enough "+
-		// 			"neutral zones exist and random portals are off; ignored otherwise.")
-		// 	label.Color = themes.ColorTextDim
-		// 	return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidthLong + 8)}.
-		// 		Layout(gtx, label.Layout)
-		// },
 	})
 }
 

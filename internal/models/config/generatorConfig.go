@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
@@ -28,14 +27,13 @@ type GeneratorConfig struct {
 
 	HeroSettings HeroSettings
 
-	NoDirectPlayerConnections     bool // isolate player zones from each other
-	RandomPortals                 bool
-	MaxPortalConnections          int
-	SpawnRemoteFootholds          bool
-	RemoteFootholdCount           int
-	GenerateRoads                 bool
-	MatchPlayerCastleFactions     bool
-	MinNeutralZonesBetweenPlayers int
+	NoDirectPlayerConnections bool // isolate player zones from each other
+	RandomPortals             bool
+	MaxPortalConnections      int
+	SpawnRemoteFootholds      bool
+	RemoteFootholdCount       int
+	GenerateRoads             bool
+	MatchPlayerCastleFactions bool
 
 	BannedItems        string
 	BannedMagics       string
@@ -184,47 +182,4 @@ func (this *GeneratorConfig) EnsureNameExists() {
 	if this.TemplateName == "" {
 		this.TemplateName = defaultTemplateName
 	}
-}
-
-func (this *GeneratorConfig) CanHonorNeutralSeparation() bool {
-	minimumNeutralZones := this.MinNeutralZonesBetweenPlayers
-	if minimumNeutralZones <= 0 {
-		return true
-	}
-
-	if this.RandomPortals {
-		return false
-	}
-
-	neutralZoneCount := this.getNeutralZoneCount()
-	switch this.Topology {
-	case config_inner.TopologyRing, config_inner.TopologyCircles:
-		return neutralZoneCount >= this.PlayerCount*minimumNeutralZones
-	case config_inner.TopologyChain:
-		return neutralZoneCount >= (this.PlayerCount-1)*minimumNeutralZones
-	case config_inner.TopologyHubAndSpoke:
-		return minimumNeutralZones <= 1
-	case config_inner.TopologySharedWeb:
-		return minimumNeutralZones <= 1 && neutralZoneCount >= 1
-	default:
-		return false
-	}
-}
-
-func (this *GeneratorConfig) getNeutralZoneCount() int {
-	advancedTotal := this.ZoneConfiguration.Advanced.NeutralLowNoCastleCount +
-		this.ZoneConfiguration.Advanced.NeutralLowCastleCount +
-		this.ZoneConfiguration.Advanced.NeutralMediumNoCastleCount +
-		this.ZoneConfiguration.Advanced.NeutralMediumCastleCount +
-		this.ZoneConfiguration.Advanced.NeutralHighNoCastleCount +
-		this.ZoneConfiguration.Advanced.NeutralHighCastleCount
-
-	count := helpers.BoolToInt(this.Topology == config_inner.TopologySharedWeb)
-	if advancedTotal > 0 {
-		count += advancedTotal
-	} else {
-		count += this.ZoneConfiguration.NeutralZoneCount
-	}
-
-	return count
 }

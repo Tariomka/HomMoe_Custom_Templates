@@ -29,27 +29,6 @@ func NewToolbar(state *drivers.State, resetCallback func()) *Toolbar {
 }
 
 func (this *Toolbar) GetWidget(theme *material.Theme) layout.Widget {
-	// TODO: try using this, maybe it will work instead of ascii icons
-	// "gioui.org/x/vector/icon"
-	// "golang.org/x/exp/shiny/materialdesign/icons"
-	// docIcon, _ := icon.NewIcon(icons.ActionDescription) // Standard file description vector
-	// return layout.Flex{
-	//     Axis:      layout.Horizontal,
-	//     Alignment: layout.Middle,
-	// }.Layout(gtx,
-	//     // The Vector Icon
-	//     layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-	//         return layout.Inset{Right: unit.Dp(4)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-	//             // Set explicitly matching icon color and size
-	//             return docIcon.Layout(gtx, th.Palette.Fg)
-	//         })
-	//     }),
-	//     // The Text
-	//     layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-	//         return material.Body2(th, "New").Layout(gtx)
-	//     }),
-	// )
-
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(0.5, this.getButtonsWidget(theme)),

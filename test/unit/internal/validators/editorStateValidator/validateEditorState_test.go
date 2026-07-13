@@ -144,8 +144,6 @@ func TestWhenCountFieldIsNegative_ReturnsIssue(t *testing.T) {
 			func(state *dtos.EditorStateDto, value int) { state.NeutralHighCastlesPerZone = value }},
 		{"HubCastlesIsNegative_ReturnsIssue", "hubCastles",
 			func(state *dtos.EditorStateDto, value int) { state.HubZoneCastles = value }},
-		{"MinNeutralZonesBetweenPlayersIsNegative_ReturnsIssue", "minNeutralZonesBetweenPlayers",
-			func(state *dtos.EditorStateDto, value int) { state.MinNeutralZonesBetweenPlayers = value }},
 		{"RemoteFootholdCountIsNegative_ReturnsIssue", "remoteFootholdCount",
 			func(state *dtos.EditorStateDto, value int) { state.RemoteFootholdCount = value }},
 		{"MaxPortalConnsIsNegative_ReturnsIssue", "maxPortalConns",

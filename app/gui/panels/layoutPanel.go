@@ -24,7 +24,6 @@ type LayoutPanel struct {
 	chkMatchPlayerFactions widget.Bool
 	chkAbandonedOutposts   widget.Bool
 	sldAbandonedOutposts   widget.Float
-	sldMinNeutralBetween   widget.Float
 
 	chkAdvancedZones       widget.Bool
 	sldNeutralLowNoCastle  widget.Float
@@ -125,7 +124,6 @@ func (this *LayoutPanel) LoadFromState() {
 	this.chkMatchPlayerFactions.Value = settings.MatchPlayerCastleFactions
 	this.chkAbandonedOutposts.Value = settings.SpawnAbandonedOutposts
 	this.sldAbandonedOutposts.Value = utils.Normalize(float32(settings.AbandonedOutpostCount), 0, 4)
-	this.sldMinNeutralBetween.Value = utils.Normalize(float32(settings.MinNeutralZonesBetweenPlayers), 0, 8)
 
 	this.chkAdvancedZones.Value = settings.AdvancedMode
 	this.sldNeutralCount.Value = utils.Normalize(float32(settings.NeutralZoneCount), 0, 16)
@@ -153,7 +151,6 @@ func (this *LayoutPanel) LoadFromState() {
 }
 
 func (this *LayoutPanel) SaveToState() {
-	// TODO: check `.Update(gtx)` and on true update the value
 	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
 		settings.Topology = this.getCurrentTopology().Type
 
@@ -166,7 +163,6 @@ func (this *LayoutPanel) SaveToState() {
 		settings.MatchPlayerCastleFactions = this.chkMatchPlayerFactions.Value
 		settings.SpawnAbandonedOutposts = this.chkAbandonedOutposts.Value
 		settings.AbandonedOutpostCount = utils.RoundedRange(this.sldAbandonedOutposts.Value, 0, 4)
-		settings.MinNeutralZonesBetweenPlayers = utils.RoundedRange(this.sldMinNeutralBetween.Value, 0, 8)
 
 		settings.AdvancedMode = this.chkAdvancedZones.Value
 		settings.NeutralZoneCount = utils.RoundedRange(this.sldNeutralCount.Value, 0, 16)

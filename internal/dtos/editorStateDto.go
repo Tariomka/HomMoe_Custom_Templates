@@ -14,28 +14,27 @@ const guardedRuleName = "Guarded"
 // EditorStateDto is the serialized .gen.json file produced and consumed by the
 // editor.
 type EditorStateDto struct {
-	TemplateName                  string `json:"templateName"`
-	GameMode                      string `json:"gameMode"`
-	MapSize                       int    `json:"mapSize"`
-	PlayerCount                   int    `json:"playerCount"`
-	NeutralZoneCount              int    `json:"neutralZoneCount"`
-	PlayerOwnedCastles            int    `json:"playerOwnedCastles"`
-	PlayerZoneCastles             int    `json:"playerCastles"`
-	NeutralZoneCastles            int    `json:"neutralCastles"`
-	SpawnAbandonedOutposts        bool   `json:"spawnAbandonedOutposts"`
-	AbandonedOutpostCount         int    `json:"abandonedOutpostCount"`
-	AdvancedMode                  bool   `json:"advancedMode"`
-	NeutralLowNoCastleCount       int    `json:"neutralLowNoCastle"`
-	NeutralLowCastleCount         int    `json:"neutralLowCastle"`
-	NeutralMediumNoCastleCount    int    `json:"neutralMediumNoCastle"`
-	NeutralMediumCastleCount      int    `json:"neutralMediumCastle"`
-	NeutralHighNoCastleCount      int    `json:"neutralHighNoCastle"`
-	NeutralHighCastleCount        int    `json:"neutralHighCastle"`
-	NeutralLowCastlesPerZone      int    `json:"neutralLowCastlesPerZone"`
-	NeutralMediumCastlesPerZone   int    `json:"neutralMedCastlesPerZone"`
-	NeutralHighCastlesPerZone     int    `json:"neutralHighCastlesPerZone"`
-	MatchPlayerCastleFactions     bool   `json:"matchPlayerCastleFactions"`
-	MinNeutralZonesBetweenPlayers int    `json:"minNeutralZonesBetweenPlayers"`
+	TemplateName                string `json:"templateName"`
+	GameMode                    string `json:"gameMode"`
+	MapSize                     int    `json:"mapSize"`
+	PlayerCount                 int    `json:"playerCount"`
+	NeutralZoneCount            int    `json:"neutralZoneCount"`
+	PlayerOwnedCastles          int    `json:"playerOwnedCastles"`
+	PlayerZoneCastles           int    `json:"playerCastles"`
+	NeutralZoneCastles          int    `json:"neutralCastles"`
+	SpawnAbandonedOutposts      bool   `json:"spawnAbandonedOutposts"`
+	AbandonedOutpostCount       int    `json:"abandonedOutpostCount"`
+	AdvancedMode                bool   `json:"advancedMode"`
+	NeutralLowNoCastleCount     int    `json:"neutralLowNoCastle"`
+	NeutralLowCastleCount       int    `json:"neutralLowCastle"`
+	NeutralMediumNoCastleCount  int    `json:"neutralMediumNoCastle"`
+	NeutralMediumCastleCount    int    `json:"neutralMediumCastle"`
+	NeutralHighNoCastleCount    int    `json:"neutralHighNoCastle"`
+	NeutralHighCastleCount      int    `json:"neutralHighCastle"`
+	NeutralLowCastlesPerZone    int    `json:"neutralLowCastlesPerZone"`
+	NeutralMediumCastlesPerZone int    `json:"neutralMedCastlesPerZone"`
+	NeutralHighCastlesPerZone   int    `json:"neutralHighCastlesPerZone"`
+	MatchPlayerCastleFactions   bool   `json:"matchPlayerCastleFactions"`
 
 	ExperimentalMapSizes         bool               `json:"experimentalMapSizes"`
 	PlayerZoneSize               float64            `json:"playerZoneSize"`
@@ -147,7 +146,6 @@ func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDt
 		this.RandomPortals != incoming.RandomPortals ||
 		this.NoDirectPlayerConn != incoming.NoDirectPlayerConn ||
 		this.MaxPortalConnections != incoming.MaxPortalConnections ||
-		this.MinNeutralZonesBetweenPlayers != incoming.MinNeutralZonesBetweenPlayers ||
 		this.zoneCountOptionsChanged(incoming)
 }
 
@@ -237,8 +235,7 @@ func (this *EditorStateDto) zoneOptionScalarsEqual(other *EditorStateDto) bool {
 		this.NeutralLowCastlesPerZone == other.NeutralLowCastlesPerZone &&
 		this.NeutralMediumCastlesPerZone == other.NeutralMediumCastlesPerZone &&
 		this.NeutralHighCastlesPerZone == other.NeutralHighCastlesPerZone &&
-		this.MatchPlayerCastleFactions == other.MatchPlayerCastleFactions &&
-		this.MinNeutralZonesBetweenPlayers == other.MinNeutralZonesBetweenPlayers
+		this.MatchPlayerCastleFactions == other.MatchPlayerCastleFactions
 }
 
 // generationOptionScalarsEqual compares the map generation options (second

@@ -121,34 +121,11 @@ func TestWhenIsolatedPlayersAreAdjacentOuterLabels_SkipsTheirPseudoConnection(t 
 	assert.NotContains(t, connectionNames(variant), "Pseudo-A-B")
 }
 
-func TestWhenCirclesTopologyCannotHonorSeparation_BalancesOuterLabelsWithoutSeparation(t *testing.T) {
+func TestWhenCirclesTopologyProvided_CreatesHubPlusOuterZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCircles
-	configuration.MinNeutralZonesBetweenPlayers = 0
-	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewHubTopologyService()
-
-	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
-
-	// Assert
-	assert.Len(t, variant.Zones, 5)
-}
-
-func TestWhenCirclesTopologyHonorsNeutralSeparation_CreatesHubPlusOuterZones(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyCircles
-	configuration.MinNeutralZonesBetweenPlayers = 1
-	configuration.PlayerCount = 2
-	configuration.ZoneConfiguration.NeutralZoneCount = 2
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutralZone.Plans{}
 	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
