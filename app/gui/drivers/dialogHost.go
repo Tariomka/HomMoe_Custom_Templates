@@ -56,7 +56,7 @@ func (this *DialogHost) GetActiveDialogWidget(theme *material.Theme) layout.Widg
 
 		// Scrim: a darkened, click-absorbing barrier over the entire window so the
 		// underlying UI cannot be interacted with while the modal is open.
-		paint.FillShape(gtx.Ops, themes.ColorScrim, clip.Rect{Max: full}.Op())
+		paint.FillShape(gtx.Ops, themes.ColorsBase.Scrim, clip.Rect{Max: full}.Op())
 		this.scrim.Layout(gtx, func(layout.Context) layout.Dimensions {
 			return layout.Dimensions{Size: full}
 		})
@@ -90,8 +90,8 @@ func (this *DialogHost) layoutPanel(gtx layout.Context, theme *material.Theme) l
 	size := gtx.Constraints.Max
 	radius := gtx.Dp(constants.DefaultRoundnessLarge)
 	rect := image.Rectangle{Max: size}
-	paint.FillShape(gtx.Ops, themes.ColorPanel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, themes.ColorAccent, clip.Stroke{
+	paint.FillShape(gtx.Ops, themes.ColorsBase.Panel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, themes.ColorsBase.Accent, clip.Stroke{
 		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 		Width: float32(gtx.Dp(unit.Dp(1))),
 	}.Op())
@@ -104,7 +104,7 @@ func (this *DialogHost) layoutPanel(gtx layout.Context, theme *material.Theme) l
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					width := gtx.Constraints.Max.X
 					height := gtx.Dp(unit.Dp(1))
-					paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Rect{Max: image.Pt(width, height)}.Op())
+					paint.FillShape(gtx.Ops, themes.ColorsBase.Border, clip.Rect{Max: image.Pt(width, height)}.Op())
 					return layout.Dimensions{Size: image.Pt(width, height)}
 				}),
 				layout.Rigid(widgets.NewHorizontalSpacerWidget(10)),
@@ -133,7 +133,7 @@ func (this *DialogHost) getHeaderWidget(theme *material.Theme) layout.Widget {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 				title := material.Subtitle1(theme, this.getDialogTitle())
-				title.Color = themes.ColorAccentBright
+				title.Color = themes.ColorsBase.AccentBright
 				title.Font = font.Font{Weight: font.SemiBold}
 				return title.Layout(gtx)
 			}),
@@ -142,9 +142,9 @@ func (this *DialogHost) getHeaderWidget(theme *material.Theme) layout.Widget {
 					return layout.UniformInset(constants.DefaultPaddingSmall-2).
 						Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 							label := material.Body1(theme, "✕")
-							label.Color = themes.ColorTextDim
+							label.Color = themes.ColorsBase.TextDim
 							if this.closeBtn.Hovered() {
-								label.Color = themes.ColorAccentBright
+								label.Color = themes.ColorsBase.AccentBright
 							}
 							return label.Layout(gtx)
 						})

@@ -18,16 +18,16 @@ import (
 
 // NewButtonWidget returns a Widget that renders a button with the given text.
 func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickable, disabled bool) layout.Widget {
-	textColor := themes.ColorText
-	backgroundColor := themes.ColorButton
-	borderColor := themes.ColorBorder
+	textColor := themes.ColorsBase.Text
+	backgroundColor := themes.ColorsBase.Button
+	borderColor := themes.ColorsBase.Border
 	return func(gtx layout.Context) layout.Dimensions {
 		if disabled {
 			gtx = gtx.Disabled()
-			textColor = themes.ColorTextDim
+			textColor = themes.ColorsBase.TextDim
 		}
 		if !disabled && button.Hovered() {
-			borderColor = themes.ColorHover
+			borderColor = themes.ColorsBase.Hover
 		}
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
@@ -51,17 +51,17 @@ func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickab
 // NewToggleButtonWidget returns a Widget that renders a toggle button with the given text.
 // If the button is active, it looks like Bright button widget, otherwise it looks like a standard button widget.
 func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.Clickable, active bool) layout.Widget {
-	textColor := themes.ColorText
-	backgroundColor := themes.ColorButton
-	borderColor := themes.ColorBorder
+	textColor := themes.ColorsBase.Text
+	backgroundColor := themes.ColorsBase.Button
+	borderColor := themes.ColorsBase.Border
 	return func(gtx layout.Context) layout.Dimensions {
 		if button.Hovered() {
-			borderColor = themes.ColorHover
+			borderColor = themes.ColorsBase.Hover
 		}
 		if active {
-			textColor = themes.ColorAccentBright
-			backgroundColor = themes.ColorPrimaryButton
-			borderColor = themes.ColorAccent
+			textColor = themes.ColorsBase.AccentBright
+			backgroundColor = themes.ColorsBase.PrimaryButton
+			borderColor = themes.ColorsBase.Accent
 		}
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
@@ -85,17 +85,17 @@ func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.C
 // NewSegmentButtonWidget returns a Widget that renders a segment button with the given text.
 // If the button is active, it looks like Bright button widget, otherwise it looks like a disabled button widget.
 func NewSegmentButtonWidget(theme *material.Theme, label string, button *widget.Clickable, active bool) layout.Widget {
-	textColor := themes.ColorTextDim
-	backgroundColor := themes.ColorInput
-	borderColor := themes.ColorBorder
+	textColor := themes.ColorsBase.TextDim
+	backgroundColor := themes.ColorsBase.Input
+	borderColor := themes.ColorsBase.Border
 	return func(gtx layout.Context) layout.Dimensions {
 		if button.Hovered() && !active {
-			borderColor = themes.ColorHover
+			borderColor = themes.ColorsBase.Hover
 		}
 		if active {
-			backgroundColor = themes.ColorPrimaryButton
-			textColor = themes.ColorAccentBright
-			borderColor = themes.ColorAccent
+			backgroundColor = themes.ColorsBase.PrimaryButton
+			textColor = themes.ColorsBase.AccentBright
+			borderColor = themes.ColorsBase.Accent
 		}
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
@@ -127,17 +127,17 @@ func NewDropdownRowButtonWidget(
 	label string,
 	button *widget.Clickable,
 	active bool) layout.Widget {
-	textColor := themes.ColorText
+	textColor := themes.ColorsBase.Text
 	textFont := font.Font{Weight: font.Normal}
-	backgroundColor := themes.ColorInput
+	backgroundColor := themes.ColorsBase.Input
 	return func(gtx layout.Context) layout.Dimensions {
 		if active {
-			textColor = themes.ColorAccent
+			textColor = themes.ColorsBase.Accent
 			textFont = font.Font{Weight: font.SemiBold}
-			backgroundColor = themes.ColorSelection
+			backgroundColor = themes.ColorsBase.Selection
 		}
 		if button.Hovered() {
-			backgroundColor = themes.ColorHover
+			backgroundColor = themes.ColorsBase.Hover
 		}
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
@@ -160,19 +160,19 @@ func NewDropdownRowButtonWidget(
 }
 
 func NewBrightButtonWidget(theme *material.Theme, label string, button *widget.Clickable, disabled bool) layout.Widget {
-	textColor := themes.ColorAccentBright
-	backgroundColor := themes.ColorPrimaryButton
-	borderColor := themes.ColorAccent
+	textColor := themes.ColorsBase.AccentBright
+	backgroundColor := themes.ColorsBase.PrimaryButton
+	borderColor := themes.ColorsBase.Accent
 	buttonStyle := font.Font{Weight: font.SemiBold}
 	return func(gtx layout.Context) layout.Dimensions {
 		if disabled {
 			gtx = gtx.Disabled()
-			textColor = themes.ColorTextDim
-			backgroundColor = themes.ColorButtonDisabled
-			borderColor = themes.ColorBorderDisabled
+			textColor = themes.ColorsBase.TextDim
+			backgroundColor = themes.ColorsBase.ButtonDisabled
+			borderColor = themes.ColorsBase.BorderDisabled
 		}
 		if button.Hovered() {
-			borderColor = themes.ColorAccentBright
+			borderColor = themes.ColorsBase.AccentBright
 		}
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
@@ -198,17 +198,17 @@ func NewBrightButtonLargeWidget(
 	label string,
 	button *widget.Clickable,
 	disabled bool) layout.Widget {
-	textColor := themes.ColorAccentBright
-	backgroundColor := themes.ColorPrimaryButton
-	borderColor := themes.ColorAccent
+	textColor := themes.ColorsBase.AccentBright
+	backgroundColor := themes.ColorsBase.PrimaryButton
+	borderColor := themes.ColorsBase.Accent
 	return func(gtx layout.Context) layout.Dimensions {
 		if disabled {
 			gtx = gtx.Disabled()
-			textColor = themes.ColorTextDim
-			backgroundColor = themes.ColorButtonDisabled
-			borderColor = themes.ColorBorderDisabled
+			textColor = themes.ColorsBase.TextDim
+			backgroundColor = themes.ColorsBase.ButtonDisabled
+			borderColor = themes.ColorsBase.BorderDisabled
 		} else if button.Hovered() {
-			borderColor = themes.ColorAccentBright
+			borderColor = themes.ColorsBase.AccentBright
 		}
 
 		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {

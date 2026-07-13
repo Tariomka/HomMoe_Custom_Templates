@@ -14,14 +14,14 @@ func NewLabeledSliderWidget(theme *material.Theme, slider *widget.Float, value s
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 				slider := material.Slider(theme, slider)
-				slider.Color = themes.ColorAccent
+				slider.Color = themes.ColorsBase.Accent
 				return slider.Layout(gtx)
 			}),
 			layout.Rigid(NewHorizontalSpacerWidget(6)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Min.X = gtx.Dp(32)
 				return NewLabelBuilder(theme).WithSizeDefault().
-					WithText(value).WithColor(themes.ColorAccent).WithAlignment(text.End).Build(gtx)
+					WithText(value).WithColor(themes.ColorsBase.Accent).WithAlignment(text.End).Build(gtx)
 			}),
 		)
 	}

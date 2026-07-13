@@ -20,7 +20,7 @@ func NewCenteredMessageWidget(
 		macro := op.Record(gtx.Ops)
 		gtx.Constraints.Min = image.Point{}
 		gtx.Constraints.Max = innerCanvasSize
-		dims := NewLabelWidget(theme, message, themes.ColorTextDim)(gtx)
+		dims := NewLabelWidget(theme, message, themes.ColorsBase.TextDim)(gtx)
 		call := macro.Stop()
 
 		tx := (innerCanvasSize.X - dims.Size.X) / 2

@@ -55,7 +55,7 @@ func (this *ZoneEditorDialog) drawSnapGrid(gtx layout.Context) {
 			path.Close()
 		}
 	}
-	paint.FillShape(gtx.Ops, themes.ColorEditorGridLine, clip.Outline{Path: path.End()}.Op())
+	paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.GridLine, clip.Outline{Path: path.End()}.Op())
 }
 
 // drawSnapGuides draws thin green lines across the canvas where the dragged
@@ -68,12 +68,12 @@ func (this *ZoneEditorDialog) drawSnapGuides(gtx layout.Context) {
 	if this.snapGuideXActive {
 		guide := int(math.Round(this.snapGuideX))
 		line := clip.Rect{Min: image.Pt(guide, 0), Max: image.Pt(guide+1, this.side)}
-		paint.FillShape(gtx.Ops, themes.ColorEditorSnapGuide, line.Op())
+		paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.SnapGuide, line.Op())
 	}
 	if this.snapGuideYActive {
 		guide := int(math.Round(this.snapGuideY))
 		line := clip.Rect{Min: image.Pt(0, guide), Max: image.Pt(this.side, guide+1)}
-		paint.FillShape(gtx.Ops, themes.ColorEditorSnapGuide, line.Op())
+		paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.SnapGuide, line.Op())
 	}
 }
 

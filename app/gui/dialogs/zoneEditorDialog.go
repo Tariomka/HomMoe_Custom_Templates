@@ -265,7 +265,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 		connections := derefConnections(this.working)
 		if connection_editor.ComputeHasErrors(this.zones, connections) {
 			label := material.Body2(theme, "⚠ A connection references a missing zone - fix before export.")
-			label.Color = themes.ColorError
+			label.Color = themes.ColorsBase.Error
 			label.TextSize = unit.Sp(12)
 			label.MaxLines = 2
 			return label.Layout(gtx)
@@ -286,7 +286,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 			)
 		}
 		label := material.Body2(theme, message)
-		label.Color = themes.ColorTextDim
+		label.Color = themes.ColorsBase.TextDim
 		label.TextSize = unit.Sp(12)
 		label.MaxLines = 2
 		return label.Layout(gtx)
@@ -311,8 +311,8 @@ func (this *ZoneEditorDialog) layoutSidePanel(gtx layout.Context, theme *materia
 	size := image.Pt(width, gtx.Constraints.Max.Y)
 	radius := gtx.Dp(4)
 	rect := image.Rectangle{Max: size}
-	paint.FillShape(gtx.Ops, themes.ColorPanel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-	paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
+	paint.FillShape(gtx.Ops, themes.ColorsBase.Panel, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, themes.ColorsBase.Border, clip.Stroke{
 		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 		Width: float32(gtx.Dp(1)),
 	}.Op())
@@ -356,7 +356,7 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 		gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			label := material.Body1(theme, "Nothing selected")
-			label.Color = themes.ColorText
+			label.Color = themes.ColorsBase.Text
 			label.Font = font.Font{Weight: font.SemiBold}
 			return label.Layout(gtx)
 		}),

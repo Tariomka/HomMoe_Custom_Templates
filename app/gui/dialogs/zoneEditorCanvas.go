@@ -23,12 +23,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 )
 
-var (
-	colorEdgeSelected = themes.ColorEditorEdgeSelected
-	colorUserAddedDot = themes.ColorEditorUserAddedDot
-	colorGuardLabel   = themes.ColorEditorGuardLabel
-)
-
 // connEdgeGeom is the per-frame drawn geometry of one connection: a quadratic
 // Bézier from p0 to p1 bulged through ctrl, with mid the curve's midpoint used
 // for the guard-value label and the user-added marker.
@@ -57,10 +51,10 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	offsetY := (maxY - side) / 2
 	defer op.Offset(image.Pt(offsetX, offsetY)).Push(gtx.Ops).Pop()
 
-	paint.FillShape(gtx.Ops, themes.ColorPreviewBg, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
+	paint.FillShape(gtx.Ops, themes.ColorsPreview.Background, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
 	frameRadius := gtx.Dp(unit.Dp(6))
 	frame := image.Rectangle{Min: image.Pt(4, 4), Max: image.Pt(side-4, side-4)}
-	paint.FillShape(gtx.Ops, themes.ColorPreviewFrame, clip.Stroke{
+	paint.FillShape(gtx.Ops, themes.ColorsPreview.Frame, clip.Stroke{
 		Path:  clip.UniformRRect(frame, frameRadius).Path(gtx.Ops),
 		Width: 2,
 	}.Op())
@@ -353,14 +347,14 @@ func (this *ZoneEditorDialog) obstacleBulge(a, b image.Point, normalX, normalY f
 func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Theme) {
 	for i := range this.edges {
 		edge := this.edges[i]
-		lineColor := themes.ColorPreviewDirectLine
+		lineColor := themes.ColorsPreview.DirectLine
 		width := float32(gtx.Dp(unit.Dp(2)))
 		if strings.EqualFold(edge.conn.ConnectionType, "Portal") {
-			lineColor = themes.ColorPreviewPortalLine
+			lineColor = themes.ColorsPreview.PortalLine
 			width = float32(gtx.Dp(unit.Dp(1.6)))
 		}
 		if edge.conn == this.selected {
-			lineColor = colorEdgeSelected
+			lineColor = themes.ColorsZoneEditor.EdgeSelected
 			width = float32(gtx.Dp(unit.Dp(3)))
 		}
 		var path clip.Path
@@ -372,7 +366,7 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 		if edge.conn.IsUserAdded {
 			marker := gtx.Dp(unit.Dp(3))
 			dot := image.Rect(edge.mid.X-marker, edge.mid.Y-marker, edge.mid.X+marker, edge.mid.Y+marker)
-			paint.FillShape(gtx.Ops, colorUserAddedDot, clip.UniformRRect(dot, marker).Op(gtx.Ops))
+			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.UserAddedDot, clip.UniformRRect(dot, marker).Op(gtx.Ops))
 		}
 		drawCanvasText(
 			gtx,
@@ -380,7 +374,7 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 			image.Pt(edge.mid.X, edge.mid.Y-gtx.Dp(unit.Dp(9))),
 			strconv.Itoa(edge.conn.GuardValue),
 			9,
-			colorGuardLabel,
+			themes.ColorsZoneEditor.GuardLabel,
 		)
 	}
 }
@@ -397,7 +391,11 @@ func (this *ZoneEditorDialog) drawRubberBand(gtx layout.Context) {
 	path.Begin(gtx.Ops)
 	path.MoveTo(f32.Pt(float32(center.X), float32(center.Y)))
 	path.LineTo(f32.Pt(float32(this.dragPos.X), float32(this.dragPos.Y)))
-	paint.FillShape(gtx.Ops, colorEdgeSelected, clip.Stroke{Path: path.End(), Width: float32(gtx.Dp(unit.Dp(2)))}.Op())
+	paint.FillShape(
+		gtx.Ops,
+		themes.ColorsZoneEditor.EdgeSelected,
+		clip.Stroke{Path: path.End(), Width: float32(gtx.Dp(unit.Dp(2)))}.Op(),
+	)
 }
 
 func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Theme) {
@@ -417,7 +415,7 @@ func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Them
 		if center, ok := this.positions[this.pendingFrom]; ok {
 			reach := this.radius + 4
 			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
-			paint.FillShape(gtx.Ops, colorEdgeSelected, clip.Stroke{
+			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
 				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
 				Width: float32(gtx.Dp(unit.Dp(2))),
 			}.Op())
@@ -427,7 +425,7 @@ func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Them
 		if center, ok := this.positions[this.selectedZone]; ok {
 			reach := this.radius + 4
 			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
-			paint.FillShape(gtx.Ops, colorEdgeSelected, clip.Stroke{
+			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
 				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
 				Width: float32(gtx.Dp(unit.Dp(2))),
 			}.Op())

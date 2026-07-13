@@ -19,7 +19,7 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 	rows := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Body1(theme, connection.From+"  →  "+connection.To)
-			label.Color = themes.ColorAccentBright
+			label.Color = themes.ColorsBase.AccentBright
 			label.Font = font.Font{Weight: font.SemiBold}
 			return label.Layout(gtx)
 		},

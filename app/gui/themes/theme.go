@@ -12,10 +12,10 @@ func NewTheme() *material.Theme {
 	theme := material.NewTheme()
 	theme.Shaper = text.NewShaper(text.WithCollection(gofont.Collection()))
 	theme.Palette = material.Palette{
-		Bg:         ColorBackground,
-		Fg:         ColorText,
-		ContrastBg: ColorPrimaryButton,
-		ContrastFg: ColorText,
+		Bg:         ColorsBase.Background,
+		Fg:         ColorsBase.Text,
+		ContrastBg: ColorsBase.PrimaryButton,
+		ContrastFg: ColorsBase.Text,
 	}
 	return theme
 }

@@ -178,17 +178,17 @@ func FindSpell(sid string) (SpellEntry, bool) {
 func GetSpellSchoolColorFromDisplayName(displayName string) color.NRGBA {
 	switch displayName {
 	case "High Neutral":
-		return themes.ColorSchoolHighNeutral
+		return themes.ColorsSpellSchools.HighNeutral
 	case "Daylight":
-		return themes.ColorSchoolDaylight
+		return themes.ColorsSpellSchools.Daylight
 	case "Nightshade":
-		return themes.ColorSchoolNightshade
+		return themes.ColorsSpellSchools.Nightshade
 	case "Arcane":
-		return themes.ColorSchoolArcane
+		return themes.ColorsSpellSchools.Arcane
 	case "Primal":
-		return themes.ColorSchoolPrimal
+		return themes.ColorsSpellSchools.Primal
 	}
-	return themes.ColorAccent
+	return themes.ColorsBase.Accent
 }
 
 // GetSpellSchoolColor maps a school display name to its accent color.
@@ -196,17 +196,17 @@ func GetSpellSchoolColor(schoolName string) color.NRGBA {
 	spellSchoolValues := registry.GetSpellSchoolTypeValues()
 	switch schoolName {
 	case spellSchoolValues.HighNeutral:
-		return themes.ColorSchoolHighNeutral
+		return themes.ColorsSpellSchools.HighNeutral
 	case spellSchoolValues.Daylight:
-		return themes.ColorSchoolDaylight
+		return themes.ColorsSpellSchools.Daylight
 	case spellSchoolValues.Nightshade:
-		return themes.ColorSchoolNightshade
+		return themes.ColorsSpellSchools.Nightshade
 	case spellSchoolValues.Arcane:
-		return themes.ColorSchoolArcane
+		return themes.ColorsSpellSchools.Arcane
 	case spellSchoolValues.Primal:
-		return themes.ColorSchoolPrimal
+		return themes.ColorsSpellSchools.Primal
 	}
-	return themes.ColorAccent
+	return themes.ColorsBase.Accent
 }
 
 func CompareSpellEntries(a, b SpellEntry) int {

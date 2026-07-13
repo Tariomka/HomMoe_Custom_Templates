@@ -253,7 +253,7 @@ func (this *FileExplorerDialog) getListWidget(theme *material.Theme) layout.Widg
 			message = "(unable to read folder)"
 		}
 		return func(gtx layout.Context) layout.Dimensions {
-			return layout.Center.Layout(gtx, widgets.NewLabelBigWidget(theme, message, themes.ColorTextDim))
+			return layout.Center.Layout(gtx, widgets.NewLabelBigWidget(theme, message, themes.ColorsBase.TextDim))
 		}
 	}
 
@@ -273,10 +273,10 @@ func (this *FileExplorerDialog) getEntryRowWidget(theme *material.Theme, entry f
 		}
 		selected := !entry.isDir && entry.path == this.selectedPath
 		badgeText := ""
-		textColor := themes.ColorText
+		textColor := themes.ColorsBase.Text
 		if entry.isDir {
 			badgeText = "DIR"
-			textColor = themes.ColorAccentBright
+			textColor = themes.ColorsBase.AccentBright
 		}
 		return material.Clickable(gtx, clk, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
@@ -286,16 +286,16 @@ func (this *FileExplorerDialog) getEntryRowWidget(theme *material.Theme, entry f
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = gtx.Dp(unit.Dp(38))
 							return widgets.NewStyledLabelWidget(
-								theme, badgeText, themes.ColorAccent, font.Font{Weight: font.SemiBold})(gtx)
+								theme, badgeText, themes.ColorsBase.Accent, font.Font{Weight: font.SemiBold})(gtx)
 						}),
 						layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
 							WithText(entry.name).WithColor(textColor).WithMaxLines(1).Build))
 				})
 			call := macro.Stop()
 			if selected {
-				paint.FillShape(gtx.Ops, themes.ColorSelection, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Selection, clip.Rect{Max: dims.Size}.Op())
 			} else if clk.Hovered() {
-				paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Hover, clip.Rect{Max: dims.Size}.Op())
 			}
 			call.Add(gtx.Ops)
 			return dims
@@ -311,7 +311,7 @@ func (this *FileExplorerDialog) getErrorLineWidget(theme *material.Theme) layout
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: constants.DefaultPaddingSmall}.
 			Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
-				WithText(this.listErr).WithColor(themes.ColorError).WithMaxLines(2).Build)
+				WithText(this.listErr).WithColor(themes.ColorsBase.Error).WithMaxLines(2).Build)
 	}
 }
 
@@ -324,7 +324,7 @@ func (this *FileExplorerDialog) getSaveRowWidget(theme *material.Theme) layout.W
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(widgets.NewLabelBigWidget(theme, "Save as:", themes.ColorTextDim)),
+				layout.Rigid(widgets.NewLabelBigWidget(theme, "Save as:", themes.ColorsBase.TextDim)),
 				widgets.NewDefaultComponentSpacer(),
 				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, hint, false)),
 			)
@@ -342,7 +342,7 @@ func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) lay
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(widgets.NewLabelBigWidget(theme, "New folder:", themes.ColorTextDim)),
+						layout.Rigid(widgets.NewLabelBigWidget(theme, "New folder:", themes.ColorsBase.TextDim)),
 						widgets.NewDefaultComponentSpacer(),
 						layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
 						widgets.NewDefaultComponentSpacer(),
@@ -358,7 +358,7 @@ func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) lay
 
 					return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.
 						Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
-							WithText(this.newFolderErr).WithColor(themes.ColorError).WithMaxLines(2).Build)
+							WithText(this.newFolderErr).WithColor(themes.ColorsBase.Error).WithMaxLines(2).Build)
 				}),
 			)
 		})
@@ -370,7 +370,8 @@ func (this *FileExplorerDialog) getFooterWidget(theme *material.Theme) layout.Wi
 		return func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
-					WithText("File already exists. Overwrite?").WithColor(themes.ColorWarnText).WithMaxLines(1).Build),
+					WithText("File already exists. Overwrite?").
+					WithColor(themes.ColorsBase.WarnText).WithMaxLines(1).Build),
 				layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.overwriteCancelBtn, false)),
 				widgets.NewDefaultComponentSpacer(),
 				layout.Rigid(widgets.NewBrightButtonWidget(theme, "Overwrite", &this.overwriteConfirmBtn, false)),

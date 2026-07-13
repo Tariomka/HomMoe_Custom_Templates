@@ -54,7 +54,7 @@ func (this *Window) Layout(gtx layout.Context, theme *material.Theme) layout.Dim
 	}
 	this.handleClicks(gtx)
 
-	paint.FillShape(gtx.Ops, themes.ColorBackground, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
+	paint.FillShape(gtx.Ops, themes.ColorsBase.Background, clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Op())
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {

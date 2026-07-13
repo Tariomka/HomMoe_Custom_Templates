@@ -27,10 +27,10 @@ func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int)
 		return
 	}
 
-	lineColor := themes.ColorPreviewDirectLine
+	lineColor := themes.ColorsPreview.DirectLine
 	lineWidth := float32(gtx.Dp(unit.Dp(2.0)))
 	if conn.Portal {
-		lineColor = themes.ColorPreviewPortalLine
+		lineColor = themes.ColorsPreview.PortalLine
 		lineWidth = float32(gtx.Dp(unit.Dp(1.5)))
 	}
 	drawCurve(gtx, start, conn.Ctrl, end, lineWidth, lineColor)
@@ -54,7 +54,7 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zon
 
 	label := zoneLabel(zone)
 	if label != "" {
-		drawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, themes.ColorPreviewZoneLabel)
+		drawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, themes.ColorsPreview.ZoneLabel)
 	}
 	if zone.HasCastle && zone.Castles > 0 {
 		// Small badge in lower right.
@@ -66,7 +66,7 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zon
 			image.Pt(badgeX, badgeY),
 			fmt.Sprintf("⌂%d", zone.Castles),
 			10,
-			themes.ColorPreviewCastleBadge,
+			themes.ColorsPreview.CastleBadge,
 		)
 	}
 }
@@ -114,17 +114,17 @@ func drawOffsetText(
 func zoneColors(zone preview.Zone) (fill, edge color.NRGBA) {
 	switch {
 	case zone.IsPlayer:
-		return themes.ColorPreviewSpawnFill, themes.ColorPreviewSpawnEdge
+		return themes.ColorsPreview.SpawnFill, themes.ColorsPreview.SpawnEdge
 	case zone.IsHub:
-		return themes.ColorPreviewHubFill, themes.ColorPreviewHubEdge
+		return themes.ColorsPreview.HubFill, themes.ColorsPreview.HubEdge
 	}
 	switch zone.Tier {
 	case 3:
-		return themes.ColorPreviewGoldFill, themes.ColorPreviewGoldEdge
+		return themes.ColorsPreview.GoldFill, themes.ColorsPreview.GoldEdge
 	case 2:
-		return themes.ColorPreviewSilverFill, themes.ColorPreviewSilverEdge
+		return themes.ColorsPreview.SilverFill, themes.ColorsPreview.SilverEdge
 	default:
-		return themes.ColorPreviewBronzeFill, themes.ColorPreviewBronzeEdge
+		return themes.ColorsPreview.BronzeFill, themes.ColorsPreview.BronzeEdge
 	}
 }
 

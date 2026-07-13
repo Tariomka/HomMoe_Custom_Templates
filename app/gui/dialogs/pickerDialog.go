@@ -20,9 +20,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
-// checkedRowBg is the highlight behind a selected picker row.
-var checkedRowBg = themes.ColorSelection
-
 // pickerEntry is one selectable row in a multiSelectPicker.
 type pickerEntry struct {
 	id       string
@@ -145,7 +142,7 @@ func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min.X = gtx.Dp(unit.Dp(100))
 					label := material.Caption(theme, "Guard value")
-					label.Color = themes.ColorTextDim
+					label.Color = themes.ColorsBase.TextDim
 					return label.Layout(gtx)
 				}),
 				layout.Flexed(1, widgets.NewTextboxWidget(theme, guardEdit, "5000", false)))
@@ -190,7 +187,7 @@ func (this *multiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			if len(rows) == 0 {
 				label := material.Body2(theme, "(no matches)")
-				label.Color = themes.ColorTextDim
+				label.Color = themes.ColorsBase.TextDim
 				return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.Layout(gtx, label.Layout)
 			}
 
@@ -258,7 +255,7 @@ func (this *multiSelectPicker) getRowWidgets(theme *material.Theme, filter strin
 }
 
 func (this *multiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group string, count int) layout.Widget {
-	groupTextColor := themes.ColorAccent
+	groupTextColor := themes.ColorsBase.Accent
 	if this.groupColor != nil {
 		groupTextColor = this.groupColor(group)
 	}
@@ -275,7 +272,7 @@ func (this *multiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group
 					layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						label := material.Overline(theme, fmt.Sprintf("(%d)", count))
-						label.Color = themes.ColorTextDim
+						label.Color = themes.ColorsBase.TextDim
 						return label.Layout(gtx)
 					}),
 				)
@@ -300,9 +297,9 @@ func (this *multiSelectPicker) getLeafRowWidget(theme *material.Theme, entry pic
 				Layout(gtx, getLeafRowContentWidget(theme, entry, checked))
 			call := macro.Stop()
 			if checked {
-				paint.FillShape(gtx.Ops, checkedRowBg, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Selection, clip.Rect{Max: dims.Size}.Op())
 			} else if clk.Hovered() {
-				paint.FillShape(gtx.Ops, themes.ColorHover, clip.Rect{Max: dims.Size}.Op())
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Hover, clip.Rect{Max: dims.Size}.Op())
 			}
 			call.Add(gtx.Ops)
 			return dims
@@ -322,7 +319,7 @@ func getLeafRowContentWidget(theme *material.Theme, entry pickerEntry, checked b
 					mark = "v"
 				}
 				label := material.Body1(theme, mark)
-				label.Color = themes.ColorAccentBright
+				label.Color = themes.ColorsBase.AccentBright
 				label.Font = font.Font{Weight: font.Bold, Style: font.Italic}
 				return label.Layout(gtx)
 			}),
@@ -333,12 +330,12 @@ func getLeafRowContentWidget(theme *material.Theme, entry pickerEntry, checked b
 
 				gtx.Constraints.Min.X = gtx.Dp(unit.Dp(34))
 				label := material.Overline(theme, entry.badge)
-				label.Color = themes.ColorTextDim
+				label.Color = themes.ColorsBase.TextDim
 				return label.Layout(gtx)
 			}),
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 				label := material.Body2(theme, entry.label)
-				label.Color = themes.ColorText
+				label.Color = themes.ColorsBase.Text
 				return label.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -347,7 +344,7 @@ func getLeafRowContentWidget(theme *material.Theme, entry pickerEntry, checked b
 				}
 
 				label := material.Overline(theme, entry.trailing)
-				label.Color = themes.ColorTextDim
+				label.Color = themes.ColorsBase.TextDim
 				return label.Layout(gtx)
 			}),
 		)

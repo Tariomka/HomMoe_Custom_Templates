@@ -85,13 +85,13 @@ func (this *DropdownSelector) GetWidget(theme *material.Theme) layout.Widget {
 func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		arrowText := "▼"
-		borderColor := themes.ColorBorder
+		borderColor := themes.ColorsBase.Border
 		if this.toggle.Hovered() {
-			borderColor = themes.ColorHover
+			borderColor = themes.ColorsBase.Hover
 		}
 		if this.isOpen {
 			arrowText = "▲"
-			borderColor = themes.ColorAccent
+			borderColor = themes.ColorsBase.Accent
 		}
 		return material.Clickable(gtx, &this.toggle, func(gtx layout.Context) layout.Dimensions {
 			macro := op.Record(gtx.Ops)
@@ -101,12 +101,12 @@ func (this *DropdownSelector) getTriggerWidget(theme *material.Theme) layout.Wid
 						layout.Flexed(1, widgets.NewLabelBuilder(theme).
 							WithSizeDefault().WithText(this.value()).WithColorDefault().WithMaxLines(1).Build),
 						layout.Rigid(widgets.NewLabelBuilder(theme).
-							WithSize(10).WithText(arrowText).WithColor(themes.ColorAccentDim).Build))
+							WithSize(10).WithText(arrowText).WithColor(themes.ColorsBase.AccentDim).Build))
 				})
 			call := macro.Stop()
 			radius := gtx.Dp(constants.DefaultRoundness)
 			rect := image.Rectangle{Max: dims.Size}
-			paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+			paint.FillShape(gtx.Ops, themes.ColorsBase.Input, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
 				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 				Width: float32(gtx.Dp(1)),
@@ -129,8 +129,8 @@ func (this *DropdownSelector) getListWidget(theme *material.Theme) layout.Widget
 		call := macro.Stop()
 		radius := gtx.Dp(constants.DefaultRoundness)
 		rect := image.Rectangle{Max: dims.Size}
-		paint.FillShape(gtx.Ops, themes.ColorInput, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-		paint.FillShape(gtx.Ops, themes.ColorBorder, clip.Stroke{
+		paint.FillShape(gtx.Ops, themes.ColorsBase.Input, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+		paint.FillShape(gtx.Ops, themes.ColorsBase.Border, clip.Stroke{
 			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
 			Width: float32(gtx.Dp(1)),
 		}.Op())

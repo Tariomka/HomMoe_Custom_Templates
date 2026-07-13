@@ -46,22 +46,22 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 				Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					label := material.Body2(theme, this.name)
 					label.Alignment = text.Middle
-					label.Color = themes.ColorTextDim
+					label.Color = themes.ColorsBase.TextDim
 					if this.isSelected {
-						label.Color = themes.ColorAccent
+						label.Color = themes.ColorsBase.Accent
 						label.Font = font.Font{Weight: font.SemiBold}
 					}
 					return label.Layout(gtx)
 				})
 			call := macro.Stop()
-			bgColor := themes.ColorInput
-			border := themes.ColorBorder
+			bgColor := themes.ColorsBase.Input
+			border := themes.ColorsBase.Border
 			if this.button.Hovered() && !this.isSelected {
-				border = themes.ColorHover
+				border = themes.ColorsBase.Hover
 			}
 			if this.isSelected {
-				bgColor = themes.ColorPanel
-				border = themes.ColorAccent
+				bgColor = themes.ColorsBase.Panel
+				border = themes.ColorsBase.Accent
 			}
 			rect := image.Rectangle{Max: dims.Size}
 			radius := gtx.Dp(constants.DefaultRoundnessLarge)

@@ -21,7 +21,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 	rows := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Body1(theme, zone.Name)
-			label.Color = themes.ColorAccentBright
+			label.Color = themes.ColorsBase.AccentBright
 			label.Font = font.Font{Weight: font.SemiBold}
 			return label.Layout(gtx)
 		},

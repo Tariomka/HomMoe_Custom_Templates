@@ -12,7 +12,7 @@ func NewTitleBarWidget(theme *material.Theme, title string) layout.Widget {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.End}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				label := material.H6(theme, title)
-				label.Color = themes.ColorAccent
+				label.Color = themes.ColorsBase.Accent
 				label.Font = font.Font{Weight: font.SemiBold}
 				return label.Layout(gtx)
 			}))

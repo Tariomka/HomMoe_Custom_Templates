@@ -152,7 +152,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Dp(120)
 						label := material.Caption(theme, "Add preset:")
-						label.Color = themes.ColorTextDim
+						label.Color = themes.ColorsBase.TextDim
 						return label.Layout(gtx)
 					}),
 					layout.Flexed(1, this.addPreset.GetWidget(theme)),
@@ -163,7 +163,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			func(gtx layout.Context) layout.Dimensions {
 				if len(this.rows) == 0 {
 					label := material.Caption(theme, "(no items)")
-					label.Color = themes.ColorTextDim
+					label.Color = themes.ColorsBase.TextDim
 					return layout.Inset{Top: unit.Dp(4), Left: unit.Dp(4)}.Layout(gtx, label.Layout)
 				}
 				children := make([]layout.FlexChild, 0, len(this.rows)*2)
@@ -203,7 +203,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 							label := material.Body1(theme, rowDisplayName(row))
-							label.Color = themes.ColorAccent
+							label.Color = themes.ColorsBase.Accent
 							label.TextSize = unit.Sp(13)
 							return label.Layout(gtx)
 						}),
@@ -237,12 +237,12 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 		markers := ruleMarkers(row.Mapping, row.rules)
 		if markers == "" {
 			label := material.Body2(theme, "(none)")
-			label.Color = themes.ColorTextDim
+			label.Color = themes.ColorsBase.TextDim
 			label.TextSize = unit.Sp(12)
 			return label.Layout(gtx)
 		}
 		label := material.Body1(theme, markers)
-		label.Color = themes.ColorAccentBright
+		label.Color = themes.ColorsBase.AccentBright
 		label.TextSize = unit.Sp(13)
 		return label.Layout(gtx)
 	}

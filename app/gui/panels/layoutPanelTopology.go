@@ -16,7 +16,7 @@ func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.
 		widgets.NewLabeledRowWidget(theme, "Topology", constants.DefaultLabelWidth, this.topology.GetWidget(theme)),
 		func(gtx layout.Context) layout.Dimensions {
 			label := material.Caption(theme, this.getCurrentTopology().Description)
-			label.Color = themes.ColorTextDim
+			label.Color = themes.ColorsBase.TextDim
 			return layout.Inset{Top: unit.Dp(2), Left: unit.Dp(constants.DefaultLabelWidth + 8)}.
 				Layout(gtx, label.Layout)
 		},

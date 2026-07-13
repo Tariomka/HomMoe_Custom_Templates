@@ -49,7 +49,7 @@ func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 			layout.Rigid(this.getStatusMessageWidget(theme)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-					layout.Flexed(1, widgets.NewLabelBigWidget(theme, "Output directory:", themes.ColorText)),
+					layout.Flexed(1, widgets.NewLabelBigWidget(theme, "Output directory:", themes.ColorsBase.Text)),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(widgets.NewButtonWidget(theme, "Browse", &this.btnPickOutput, false)),
@@ -93,7 +93,7 @@ func (this *PreviewPanel) HandleClicks(gtx layout.Context) {
 
 func (this *PreviewPanel) getHeaderWidget(theme *material.Theme) layout.Widget {
 	label := material.Body1(theme, "Preview")
-	label.Color = themes.ColorAccent
+	label.Color = themes.ColorsBase.Accent
 	label.Font = font.Font{Weight: font.SemiBold}
 	return label.Layout
 }
@@ -107,7 +107,7 @@ func (this *PreviewPanel) getTemplateNameWidget(theme *material.Theme) layout.Wi
 	}
 
 	label := material.Overline(theme, name)
-	label.Color = themes.ColorTextDim
+	label.Color = themes.ColorsBase.TextDim
 	label.MaxLines = 1
 	label.Truncator = "..."
 	label.Alignment = text.End
@@ -128,9 +128,9 @@ func (this *PreviewPanel) getStatusMessageWidget(theme *material.Theme) layout.W
 		label := material.Caption(theme, message)
 		label.MaxLines = 3
 		label.Alignment = text.Middle
-		label.Color = themes.ColorTextDim
+		label.Color = themes.ColorsBase.TextDim
 		if isError {
-			label.Color = themes.ColorError
+			label.Color = themes.ColorsBase.Error
 		}
 
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -183,8 +183,8 @@ func getPreviewCanvasSizes(gtx layout.Context) (outerCanvasSize, innerCanvasSize
 
 // renderPreviewCanvas paints the canvas backdrop and its rounded frame.
 func renderPreviewCanvas(gtx layout.Context, canvasSize image.Point) {
-	paint.FillShape(gtx.Ops, themes.ColorPreviewBg, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
-	paint.FillShape(gtx.Ops, themes.ColorPreviewFrame, clip.Stroke{
+	paint.FillShape(gtx.Ops, themes.ColorsPreview.Background, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
+	paint.FillShape(gtx.Ops, themes.ColorsPreview.Frame, clip.Stroke{
 		Path: clip.UniformRRect(
 			image.Rect(0, 0, canvasSize.X, canvasSize.Y),
 			gtx.Dp(constants.DefaultRoundnessLarge)).Path(gtx.Ops),
@@ -253,7 +253,7 @@ func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
 						layout.Rigid(widgets.NewHorizontalSpacerWidget(4)),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							label := material.Overline(theme, item.Label)
-							label.Color = themes.ColorTextDim
+							label.Color = themes.ColorsBase.TextDim
 							return label.Layout(gtx)
 						}),
 					)

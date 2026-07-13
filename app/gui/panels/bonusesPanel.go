@@ -20,16 +20,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
-// Category dot colors come from the central theme palette.
-var (
-	dotMovement = themes.ColorDotMovement
-	dotCombat   = themes.ColorDotCombat
-	dotMagic    = themes.ColorDotMagic
-	dotSet      = themes.ColorDotSet
-	dotResource = themes.ColorDotResource
-	dotDefault  = themes.ColorDotDefault
-)
-
 type BonusesPanel struct {
 	bonuses        []config.BonusEntry
 	bannedItems    []string
@@ -173,8 +163,16 @@ func (this *BonusesPanel) getValueOverridesWidgets(theme *material.Theme) []layo
 
 	for i, line := range this.valueOverrides {
 		name, value := overrideLabel(line)
-		overrideRows = append(overrideRows,
-			this.getEntryRowWidget(theme, dotResource, name, value, &this.overrideRemoveBtns[i]))
+		overrideRows = append(
+			overrideRows,
+			this.getEntryRowWidget(
+				theme,
+				themes.ColorsDotCategories.Resource,
+				name,
+				value,
+				&this.overrideRemoveBtns[i],
+			),
+		)
 	}
 	return overrideRows
 }
@@ -196,7 +194,7 @@ func (this *BonusesPanel) getEntryRowWidget(
 						return layout.Dimensions{Size: image.Pt(size, size)}
 					}),
 					widgets.NewDefaultComponentSpacer(),
-					layout.Rigid(widgets.NewLabelBigWidget(theme, name, themes.ColorText)),
+					layout.Rigid(widgets.NewLabelBigWidget(theme, name, themes.ColorsBase.Text)),
 					widgets.NewDefaultComponentSpacer(),
 					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 						if trailing == "" {
@@ -327,15 +325,15 @@ func bonusReceiverLabel(entry config.BonusEntry) string {
 func bonusDotColor(typ config.BonusPresetType) color.NRGBA {
 	switch typ {
 	case config.BonusTownPortalFree, config.BonusSpell:
-		return dotMagic
+		return themes.ColorsDotCategories.Magic
 	case config.BonusUnitMultiplier:
-		return dotCombat
+		return themes.ColorsDotCategories.Combat
 	case config.BonusMovementBonus:
-		return dotMovement
+		return themes.ColorsDotCategories.Movement
 	case config.BonusStartingItem:
-		return dotSet
+		return themes.ColorsDotCategories.Set
 	default:
-		return dotResource
+		return themes.ColorsDotCategories.Resource
 	}
 }
 
@@ -343,17 +341,17 @@ func bonusDotColor(typ config.BonusPresetType) color.NRGBA {
 func banCategoryColor(category string) color.NRGBA {
 	switch category {
 	case "Movement":
-		return dotMovement
+		return themes.ColorsDotCategories.Movement
 	case "Diplomacy":
-		return dotResource
+		return themes.ColorsDotCategories.Resource
 	case "Combat":
-		return dotCombat
+		return themes.ColorsDotCategories.Combat
 	case "Magic", "Spell":
-		return dotMagic
+		return themes.ColorsDotCategories.Magic
 	case "Set":
-		return dotSet
+		return themes.ColorsDotCategories.Set
 	}
-	return dotDefault
+	return themes.ColorsDotCategories.Default
 }
 
 // spellLabel resolves a spell SID to its display name, with a generic

@@ -165,7 +165,7 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 			}
 
 			return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx,
-				widgets.NewLabelWidget(theme, this.errorText, themes.ColorError))
+				widgets.NewLabelWidget(theme, this.errorText, themes.ColorsBase.Error))
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(12)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
