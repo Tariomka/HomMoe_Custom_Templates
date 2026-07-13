@@ -765,7 +765,7 @@ running `go build ./...` and `go test ./test/unit/...` (skip lint/coverage there
 the Gio apt-get deps in [setup-steps/action.yml](../.github/workflows/setup-steps/action.yml)
 with `if: runner.os == 'Linux'`).
 
-### 7.5 🟡 Release workflow hardening
+### 7.5 ✅ FIXED 🟡 Release workflow hardening
 
 [release.yml](../.github/workflows/release.yml):
 1. Add `-trimpath` and version injection:
