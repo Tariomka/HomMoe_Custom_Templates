@@ -18,8 +18,9 @@ type Zone struct {
 type ZoneTier int
 
 const (
-	TierUnknown ZoneTier = iota
+	TierPlastic ZoneTier = iota
 	TierBronze
 	TierSilver
 	TierGold
+	TierPlatinum
 )

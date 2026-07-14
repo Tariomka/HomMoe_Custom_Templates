@@ -1,0 +1,32 @@
+A new topology is required. The base idea was taken from 2 main templates: "One for All" and "Shamrock" (under "./data/Images/One for All.png" and "./data/Images/Shamrock.png" respectfully - the template data is under ./data/ExampleTemples/<template name>.rmg.json). I generated several proof of concept template ideas inside `./output` where the name indicates how many zones with what type are present inside the topology and template. Go through the pngs to understand the zone placement pattern.
+
+Some general topology guide lines and zone placement rules are:
+
+0. The full shape of topology implies that the user has selected enough neutral zones, so how it acts when we have less zones is unclear, so you will need to investigate some simple patterns from the given sample pngs or maybe it will come out naturally from the overarching algorithm;
+1. 6 zones including 1 player zone form a perfect hexagon (if I refer to this layout as "circle", know that it's actually a hexagon, not a literal circle);
+2. from each player a separate circle/hexagon forms;
+3. each circle connects to a central hub zone (player zones are at the outer size of the hexagon, so with 1 player, 1 central zone and 4 other zones form a hexagon in which 2 zones separate player zone from the central zone from each side);
+4. 2 adjacent circles can have "common zones", i.e. 2 hexagons can have a common edge(you will observer this patter for example with 3 players and 13 total zones forming 3 hexagons, each pair of hexagons having 2 "common" zones and a single common connection between those zones);
+5. each hexagon by itself only have "edge" connections (meaning the 6 zones only connect to adjacent zones and the hexagon is not "cut in half" - there is no direct connection between player and central zone and between opposite zones)
+6. After forming a hexagon, subsequent additional zones should be placed inside the circles, keeping the hexagon shape;
+7. A single additional zone inside a hexagon is placed in the center, and the connections split the hexagon into 3 Rhombuses, each central circle zone connects to the central/hub zone and never connects to the player zone;
+8. If there are more than one zone inside the hexagon, each zone inside the circle connects to the central zone, to each other but only to a single hexagon "non central zone", possible example would be under `./output/2Players-2Low-4Medium-7High.png`;
+9. Placement of different quality zones aren't strict per say, but in general hub is always the highest tier zone, the 2 zones closest to the player zone are "more stable" (if possible they stay at medium zone quality), the 2 zones closer to the central zone are "more volatile"(when lower quality zones are selected, these zones become lower quality, if higher zones are selected, these become higher quality zones - zones closer to the player try to stay at medium quality, but if the choice is between low and high quality, these zones become the low quality zones while zones next to the player become higher quality), and all additional central circle zones are higher quality;
+10. The central topology zone should always be "Hub" zone;
+11. Connections to the central zone should always be portal connections.
+
+The new topology should be called "Geometric Hub" (the intent is to in the future completely remove "Geometric" and "Hub" topologies and permanently replace it with this new and improved topology).
+
+Along with the new topology, few more changes need to be done:
+
+1. A need set of neutral assets need to be added - "neutral_highest*.png" - effectively a platinum tier neutral zone assert (make sure it's easily distinguishable from medium/silver assets), similarly to current medium being silver, high being gold, etc;
+2. 2 new Neutral zone profiles need to be added to existing Low, Medium and High ones: "Lowest"(lower than the current low, using the existing "neutral_none*.png" assets) and "Highest"(higher than the current high, using the newly created "neutral_highest*.png" assets);
+3. The 2 new zone profiles need to be scaled equivalently to the current differences in low, medium and high (you can calculate the exact multipliers and numeric values, I will only list out pools and sids):
+3.1. Highest zone profile should have double T5 guarded and unguarded content pools, resource content pool TreasureZoneRich and primary and extra buildings construction sids UltraRich;
+3.2. Lowest zone profile should have T1 guarded and unguarded content pools, resource content pool StartZoneVeryPoor, primary and extra buildings construction sids ExtraPoor.
+4. The new lowest zone profile should be able to be accessed in the advanced Zone section like the other zone types as well as in the manual zone editor same as the other zone qualities, while the highest zone profile is not accessible through the ui and is reserved for Hub zone. The new lowest tier should also be seeable in the preview panel and manual zone editor dialog, as well as as having a legend entry (named Plastic) (as a side tweak - each zone legend name should have a notation eluding to the tier of the zone for neutral zones (something like "Plastic (T0)", "Bronze (T1)", "Silver (T2)", "Gold (T3)", "Hub (T4)"));
+5. Hub zone should use the new Highest zone profile, not inlined values like it currently is using (effectively Hub zone becomes the highest tier zone available to "Hub" and "Geometric Hub" topologies, so the zone information can be tracked as such);
+6. When generating preview png, the hub(s) should be rendered with the new "neutral_highest*.png" asset;
+7. I believe it is beneficial that `preview.Zone` struct starts using zone tier enum (an enum is already created, TierBronze to TierGold matches the tiers 1-3 or low to high, the TierPlastic becomes the lowest tier zone(previously the tier 0 was effectively unused, so now lowest tiers effectively becomes the default tier) and the TierPlatinum becomes the new Highest tier) instead on an int to track zone tier(this may or may not be a sizeable refactor, I'm not sure).
+
+For this job firstly investigate what will need to be done where, make a plan (you can create a new md file under `./todo/` folder) with detailed steps how you will proceed with this task, you are encouraged to use subagents where ever you see fit to make your job faster and easier both in the planing and in the implementation stage so you can note that in the new md file, and after your planning is done, we will proceed if the implementation of the new functionality.
