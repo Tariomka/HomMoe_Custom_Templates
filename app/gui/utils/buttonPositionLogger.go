@@ -29,6 +29,7 @@ func (this *ButtonPositionLogger) LogButtonPositions(operations *op.Ops) {
 		return
 	}
 
+	this.logger.Debug("====== New Frame ======")
 	this.router.Frame(operations)
 	for _, node := range this.router.AppendSemantics(nil) {
 		if node.Desc.Class != semantic.Button || node.Desc.Label == "" {
