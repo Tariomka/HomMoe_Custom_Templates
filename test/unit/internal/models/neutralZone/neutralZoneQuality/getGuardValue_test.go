@@ -14,9 +14,11 @@ func TestWhenQualityVaries_ReturnsMatchingGuardValue(t *testing.T) {
 		quality            neutralZone.Quality
 		expectedGuardValue int
 	}{
+		{"WhenQualityIsHighest_ReturnsThirtyThousand", neutralZone.QualityHighest, 30_000},
 		{"WhenQualityIsHigh_ReturnsTwentyFiveThousand", neutralZone.QualityHigh, 25_000},
 		{"WhenQualityIsMedium_ReturnsTwentyThousand", neutralZone.QualityMedium, 20_000},
 		{"WhenQualityIsLow_ReturnsFifteenThousand", neutralZone.QualityLow, 15_000},
+		{"WhenQualityIsLowest_ReturnsTenThousand", neutralZone.QualityLowest, 10_000},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {

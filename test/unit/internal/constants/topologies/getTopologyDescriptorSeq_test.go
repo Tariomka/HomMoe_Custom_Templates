@@ -16,6 +16,7 @@ func TestWhenSequenceIsIterated_YieldsAllTopologiesInDropdownOrder(t *testing.T)
 		config.TopologyRing,
 		config.TopologyCircles,
 		config.TopologyHubAndSpoke,
+		config.TopologyGeometricHub,
 		config.TopologyChain,
 		config.TopologySharedWeb,
 		config.TopologySquare,

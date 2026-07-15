@@ -56,6 +56,7 @@ type GeneratorConfig struct {
 	// Optional extra mandatory content seeded by the UI; appended to the
 	// player-zone defaults built by ZoneContentManager.
 	PlayerZoneMandatoryContent    []entities.MandatoryContentItem
+	LowestNeutralMandatoryContent []entities.MandatoryContentItem
 	LowNeutralMandatoryContent    []entities.MandatoryContentItem
 	MediumNeutralMandatoryContent []entities.MandatoryContentItem
 	HighNeutralMandatoryContent   []entities.MandatoryContentItem
@@ -127,7 +128,8 @@ func (this *GeneratorConfig) IsCityHoldMode() bool {
 }
 
 func (this *GeneratorConfig) IsHubCityToHold() bool {
-	return this.Topology == config_inner.TopologyHubAndSpoke && this.IsCityHoldMode()
+	return (this.Topology == config_inner.TopologyHubAndSpoke || this.Topology == config_inner.TopologyGeometricHub) &&
+		this.IsCityHoldMode()
 }
 
 func (this *GeneratorConfig) IsSingleHeroMode() bool {

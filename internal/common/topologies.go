@@ -13,16 +13,17 @@ type TopologyDescriptor struct {
 }
 
 type TopologyDescriptors struct {
-	Default     TopologyDescriptor
-	Circles     TopologyDescriptor
-	Random      TopologyDescriptor
-	HubAndSpoke TopologyDescriptor
-	Chain       TopologyDescriptor
-	SharedWeb   TopologyDescriptor
-	Square      TopologyDescriptor
-	Geometric   TopologyDescriptor
-	Cross       TopologyDescriptor
-	Fractal     TopologyDescriptor
+	Default      TopologyDescriptor
+	Circles      TopologyDescriptor
+	Random       TopologyDescriptor
+	HubAndSpoke  TopologyDescriptor
+	GeometricHub TopologyDescriptor
+	Chain        TopologyDescriptor
+	SharedWeb    TopologyDescriptor
+	Square       TopologyDescriptor
+	Geometric    TopologyDescriptor
+	Cross        TopologyDescriptor
+	Fractal      TopologyDescriptor
 }
 
 var descriptorValues = TopologyDescriptors{
@@ -45,6 +46,11 @@ var descriptorValues = TopologyDescriptors{
 		Type:        config.TopologyHubAndSpoke,
 		Label:       "Hub",
 		Description: "Hub: central neutral hub connects all player zones.",
+	},
+	GeometricHub: TopologyDescriptor{
+		Type:        config.TopologyGeometricHub,
+		Label:       "Geometric Hub",
+		Description: "Geometric Hub: each player forms a hexagon around a shared central hub; extra zones fill the hexagons.",
 	},
 	Chain: TopologyDescriptor{
 		Type:        config.TopologyChain,
@@ -83,6 +89,7 @@ var topologies = []TopologyDescriptor{
 	descriptorValues.Default,
 	descriptorValues.Circles,
 	descriptorValues.HubAndSpoke,
+	descriptorValues.GeometricHub,
 	descriptorValues.Chain,
 	descriptorValues.SharedWeb,
 	descriptorValues.Square,

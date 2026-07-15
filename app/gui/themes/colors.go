@@ -63,16 +63,20 @@ var ColorsPreview = struct {
 	Background color.NRGBA // #19161A canvas
 	Frame      color.NRGBA // #9C2E42 crimson frame
 
-	BronzeFill color.NRGBA
-	BronzeEdge color.NRGBA
-	SilverFill color.NRGBA
-	SilverEdge color.NRGBA
-	GoldFill   color.NRGBA
-	GoldEdge   color.NRGBA
-	SpawnFill  color.NRGBA
-	SpawnEdge  color.NRGBA
-	HubFill    color.NRGBA
-	HubEdge    color.NRGBA
+	BronzeFill   color.NRGBA
+	BronzeEdge   color.NRGBA
+	SilverFill   color.NRGBA
+	SilverEdge   color.NRGBA
+	GoldFill     color.NRGBA
+	GoldEdge     color.NRGBA
+	PlasticFill  color.NRGBA
+	PlasticEdge  color.NRGBA
+	PlatinumFill color.NRGBA
+	PlatinumEdge color.NRGBA
+	SpawnFill    color.NRGBA
+	SpawnEdge    color.NRGBA
+	HubFill      color.NRGBA
+	HubEdge      color.NRGBA
 
 	DirectLine color.NRGBA // crimson roads
 	PortalLine color.NRGBA // portals stay cool blue
@@ -80,22 +84,26 @@ var ColorsPreview = struct {
 	ZoneLabel   color.NRGBA // zone value text
 	CastleBadge color.NRGBA // castle-count badge
 }{
-	Background:  color.NRGBA{R: 0x19, G: 0x16, B: 0x1A, A: 0xFF},
-	Frame:       color.NRGBA{R: 0x9C, G: 0x2E, B: 0x42, A: 0xFF},
-	BronzeFill:  color.NRGBA{R: 0x5E, G: 0x40, B: 0x26, A: 0xFF},
-	BronzeEdge:  color.NRGBA{R: 0xCD, G: 0x7F, B: 0x32, A: 0xFF},
-	SilverFill:  color.NRGBA{R: 0x46, G: 0x4A, B: 0x52, A: 0xFF},
-	SilverEdge:  color.NRGBA{R: 0xC4, G: 0xC6, B: 0xCC, A: 0xFF},
-	GoldFill:    color.NRGBA{R: 0x75, G: 0x58, B: 0x16, A: 0xFF},
-	GoldEdge:    color.NRGBA{R: 0xFF, G: 0xD2, B: 0x32, A: 0xFF},
-	SpawnFill:   color.NRGBA{R: 0x28, G: 0x58, B: 0x34, A: 0xFF},
-	SpawnEdge:   color.NRGBA{R: 0x64, G: 0xC8, B: 0x78, A: 0xFF},
-	HubFill:     color.NRGBA{R: 0x35, G: 0x4E, B: 0x60, A: 0xFF},
-	HubEdge:     color.NRGBA{R: 0x82, G: 0xB4, B: 0xC8, A: 0xFF},
-	DirectLine:  color.NRGBA{R: 0xC4, G: 0x44, B: 0x58, A: 0xFF},
-	PortalLine:  color.NRGBA{R: 0x5A, G: 0xAA, B: 0xD2, A: 0xB4},
-	ZoneLabel:   color.NRGBA{R: 0xF2, G: 0xEE, B: 0xF2, A: 0xFF},
-	CastleBadge: color.NRGBA{R: 0xFF, G: 0xD9, B: 0x9C, A: 0xFF},
+	Background:   color.NRGBA{R: 0x19, G: 0x16, B: 0x1A, A: 0xFF},
+	Frame:        color.NRGBA{R: 0x9C, G: 0x2E, B: 0x42, A: 0xFF},
+	BronzeFill:   color.NRGBA{R: 0x5E, G: 0x40, B: 0x26, A: 0xFF},
+	BronzeEdge:   color.NRGBA{R: 0xCD, G: 0x7F, B: 0x32, A: 0xFF},
+	SilverFill:   color.NRGBA{R: 0x46, G: 0x4A, B: 0x52, A: 0xFF},
+	SilverEdge:   color.NRGBA{R: 0xC4, G: 0xC6, B: 0xCC, A: 0xFF},
+	GoldFill:     color.NRGBA{R: 0x75, G: 0x58, B: 0x16, A: 0xFF},
+	GoldEdge:     color.NRGBA{R: 0xFF, G: 0xD2, B: 0x32, A: 0xFF},
+	PlasticFill:  color.NRGBA{R: 0x3A, G: 0x36, B: 0x2F, A: 0xFF},
+	PlasticEdge:  color.NRGBA{R: 0x8A, G: 0x7F, B: 0x6E, A: 0xFF},
+	PlatinumFill: color.NRGBA{R: 0x4A, G: 0x5A, B: 0x66, A: 0xFF},
+	PlatinumEdge: color.NRGBA{R: 0xDC, G: 0xE8, B: 0xF0, A: 0xFF},
+	SpawnFill:    color.NRGBA{R: 0x28, G: 0x58, B: 0x34, A: 0xFF},
+	SpawnEdge:    color.NRGBA{R: 0x64, G: 0xC8, B: 0x78, A: 0xFF},
+	HubFill:      color.NRGBA{R: 0x35, G: 0x4E, B: 0x60, A: 0xFF},
+	HubEdge:      color.NRGBA{R: 0x82, G: 0xB4, B: 0xC8, A: 0xFF},
+	DirectLine:   color.NRGBA{R: 0xC4, G: 0x44, B: 0x58, A: 0xFF},
+	PortalLine:   color.NRGBA{R: 0x5A, G: 0xAA, B: 0xD2, A: 0xB4},
+	ZoneLabel:    color.NRGBA{R: 0xF2, G: 0xEE, B: 0xF2, A: 0xFF},
+	CastleBadge:  color.NRGBA{R: 0xFF, G: 0xD9, B: 0x9C, A: 0xFF},
 }
 
 // ColorsZoneEditor - Zone-editor canvas accents.

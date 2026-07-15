@@ -46,13 +46,17 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 	}
 
 	advanced := configuration.ZoneConfiguration.Advanced
-	advancedTotal := advanced.NeutralLowNoCastleCount + advanced.NeutralLowCastleCount +
+	advancedTotal := advanced.NeutralLowestNoCastleCount + advanced.NeutralLowestCastleCount +
+		advanced.NeutralLowNoCastleCount + advanced.NeutralLowCastleCount +
 		advanced.NeutralMediumNoCastleCount + advanced.NeutralMediumCastleCount +
 		advanced.NeutralHighNoCastleCount + advanced.NeutralHighCastleCount
 	if advancedTotal > 0 {
+		lowestCastlesPerZone := helpers.Clamp(advanced.NeutralLowestCastlesPerZone, 0, 4)
 		lowCastlesPerZone := helpers.Clamp(advanced.NeutralLowCastlesPerZone, 0, 4)
 		medCastlesPerZone := helpers.Clamp(advanced.NeutralMediumCastlesPerZone, 0, 4)
 		highCastlesPerZone := helpers.Clamp(advanced.NeutralHighCastlesPerZone, 0, 4)
+		add(advanced.NeutralLowestNoCastleCount, neutralZone.QualityLowest, 0)
+		add(advanced.NeutralLowestCastleCount, neutralZone.QualityLowest, lowestCastlesPerZone)
 		add(advanced.NeutralLowNoCastleCount, neutralZone.QualityLow, 0)
 		add(advanced.NeutralLowCastleCount, neutralZone.QualityLow, lowCastlesPerZone)
 		add(advanced.NeutralMediumNoCastleCount, neutralZone.QualityMedium, 0)

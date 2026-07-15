@@ -29,9 +29,11 @@ var (
 	loadAssetProvider = sync.OnceValues(buildAssetProvider)
 
 	neutralAssetNames = []string{
+		"neutral_none", "neutral_none_castle",
 		"neutral_low", "neutral_low_castle",
 		"neutral_medium", "neutral_medium_castle",
 		"neutral_high", "neutral_high_castle",
+		"neutral_highest", "neutral_highest_castle",
 	}
 )
 
@@ -157,14 +159,18 @@ func (this *AssetProvider) calculateBilinearInterpolation(asset image.Image, pos
 }
 
 func (this *AssetProvider) getNeutralZoneAsset(zone preview.Zone) image.Image {
-	quality := "low"
+	quality := "none"
 	switch zone.Tier {
-	case 3:
+	case preview.TierPlatinum:
+		quality = "highest"
+	case preview.TierGold:
 		quality = "high"
-	case 2:
+	case preview.TierSilver:
 		quality = "medium"
-	case 1:
+	case preview.TierBronze:
 		quality = "low"
+	case preview.TierPlastic:
+		quality = "none"
 	}
 	name := "neutral_" + quality
 	if zone.HasCastle {

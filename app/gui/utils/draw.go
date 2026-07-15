@@ -119,12 +119,18 @@ func zoneColors(zone preview.Zone) (fill, edge color.NRGBA) {
 		return themes.ColorsPreview.HubFill, themes.ColorsPreview.HubEdge
 	}
 	switch zone.Tier {
-	case 3:
+	case preview.TierPlatinum:
+		return themes.ColorsPreview.PlatinumFill, themes.ColorsPreview.PlatinumEdge
+	case preview.TierGold:
 		return themes.ColorsPreview.GoldFill, themes.ColorsPreview.GoldEdge
-	case 2:
+	case preview.TierSilver:
 		return themes.ColorsPreview.SilverFill, themes.ColorsPreview.SilverEdge
-	default:
+	case preview.TierBronze:
 		return themes.ColorsPreview.BronzeFill, themes.ColorsPreview.BronzeEdge
+	case preview.TierPlastic:
+		fallthrough
+	default:
+		return themes.ColorsPreview.PlasticFill, themes.ColorsPreview.PlasticEdge
 	}
 }
 
@@ -143,11 +149,17 @@ func zoneLabel(zone preview.Zone) string {
 		return "Hub"
 	}
 	switch zone.Tier {
-	case 3:
+	case preview.TierPlatinum:
+		return "Pt"
+	case preview.TierGold:
 		return "G"
-	case 2:
+	case preview.TierSilver:
 		return "S"
-	default:
+	case preview.TierBronze:
 		return "B"
+	case preview.TierPlastic:
+		fallthrough
+	default:
+		return "P"
 	}
 }

@@ -23,14 +23,41 @@ type Profile struct {
 
 func NewNeutralZoneProfile(quality Quality) Profile {
 	switch quality {
+	case QualityHighest:
+		return newNeutralZoneProfileHighestQuality()
 	case QualityHigh:
 		return newNeutralZoneProfileHighQuality()
 	case QualityMedium:
 		return newNeutralZoneProfileMediumQuality()
+	case QualityLowest:
+		return newNeutralZoneProfileLowestQuality()
 	case QualityLow:
 		fallthrough
 	default:
 		return newNeutralZoneProfileLowQuality()
+	}
+}
+
+func newNeutralZoneProfileLowestQuality() Profile {
+	layoutValues := registry.GetLayoutValues()
+	constructionValues := registry.GetBuildingsConstructionSidValues()
+	return Profile{
+		Layout:                       layoutValues.Sides,
+		GuardReactionDistribution:    []int{0, 10, 10, 10, 10, 0},
+		GuardMultiplier:              0.9,
+		GuardedContentPool:           registry.GetGuardedContentPoolT1List(),
+		UnguardedContentPool:         registry.GetUnguardedContentPoolT1List(),
+		ResourcesContentPool:         []string{registry.GetResourcesContentPoolValues().StartZoneVeryPoor},
+		GuardedContentValue:          60000,
+		GuardedContentValuePerArea:   500,
+		UnguardedContentValue:        16000,
+		UnguardedContentValuePerArea: 130,
+		ResourcesValue:               16000,
+		ResourcesValuePerArea:        140,
+		PrimaryCityGuardValue:        2000,
+		ExtraCityGuardValue:          1000,
+		PrimaryBuildingsCSid:         constructionValues.ExtraPoor,
+		ExtraBuildingsCSid:           constructionValues.ExtraPoor,
 	}
 }
 
@@ -104,5 +131,32 @@ func newNeutralZoneProfileHighQuality() Profile {
 		ExtraCityGuardValue:          8000,
 		PrimaryBuildingsCSid:         constructionValues.Rich,
 		ExtraBuildingsCSid:           constructionValues.Rich,
+	}
+}
+
+func newNeutralZoneProfileHighestQuality() Profile {
+	layoutValues := registry.GetLayoutValues()
+	constructionValues := registry.GetBuildingsConstructionSidValues()
+	return Profile{
+		Layout:                    layoutValues.Center,
+		GuardReactionDistribution: []int{0, 10, 10, 20, 10, 0},
+		GuardMultiplier:           2.3,
+		GuardedContentPool: append(
+			registry.GetGuardedContentPoolT5List(),
+			registry.GetGuardedContentPoolT5List()...),
+		UnguardedContentPool: append(
+			registry.GetUnguardedContentPoolT5List(),
+			registry.GetUnguardedContentPoolT5List()...),
+		ResourcesContentPool:         []string{registry.GetResourcesContentPoolValues().TreasureZoneRich},
+		GuardedContentValue:          960000,
+		GuardedContentValuePerArea:   4500,
+		UnguardedContentValue:        168000,
+		UnguardedContentValuePerArea: 1280,
+		ResourcesValue:               147000,
+		ResourcesValuePerArea:        800,
+		PrimaryCityGuardValue:        32000,
+		ExtraCityGuardValue:          16000,
+		PrimaryBuildingsCSid:         constructionValues.UltraRich,
+		ExtraBuildingsCSid:           constructionValues.UltraRich,
 	}
 }

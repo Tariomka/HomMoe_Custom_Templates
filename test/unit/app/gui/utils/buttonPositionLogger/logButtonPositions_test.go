@@ -75,6 +75,18 @@ func attrValue(record slog.Record, key string) string {
 	return value
 }
 
+// buttonRecords filters the captured records down to per-button log entries,
+// dropping the intended once-per-call "====== New Frame ======" marker.
+func buttonRecords(handler *recordingHandler) []slog.Record {
+	filtered := make([]slog.Record, 0, len(handler.records))
+	for _, record := range handler.records {
+		if record.Message == "Button position" {
+			filtered = append(filtered, record)
+		}
+	}
+	return filtered
+}
+
 func TestWhenOpsContainOffsetButton_LogsAbsoluteCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -90,8 +102,9 @@ func TestWhenOpsContainOffsetButton_LogsAbsoluteCenter(t *testing.T) {
 	logger.LogButtonPositions(operations)
 
 	// Assert
-	require.Len(t, handler.records, 1)
-	assert.Equal(t, expectedCenter.String(), attrValue(handler.records[0], "center"))
+	buttons := buttonRecords(handler)
+	require.Len(t, buttons, 1)
+	assert.Equal(t, expectedCenter.String(), attrValue(buttons[0], "center"))
 }
 
 func TestWhenOpsContainLabeledButton_LogsLabel(t *testing.T) {
@@ -107,8 +120,9 @@ func TestWhenOpsContainLabeledButton_LogsLabel(t *testing.T) {
 	logger.LogButtonPositions(operations)
 
 	// Assert
-	require.Len(t, handler.records, 1)
-	assert.Equal(t, label, attrValue(handler.records[0], "label"))
+	buttons := buttonRecords(handler)
+	require.Len(t, buttons, 1)
+	assert.Equal(t, label, attrValue(buttons[0], "label"))
 }
 
 func TestWhenOpsContainMultipleButtons_LogsEachButton(t *testing.T) {
@@ -124,7 +138,7 @@ func TestWhenOpsContainMultipleButtons_LogsEachButton(t *testing.T) {
 	logger.LogButtonPositions(operations)
 
 	// Assert
-	assert.Len(t, handler.records, 2)
+	assert.Len(t, buttonRecords(handler), 2)
 }
 
 func TestWhenDebugLoggingIsDisabled_LogsNothing(t *testing.T) {
@@ -155,7 +169,27 @@ func TestWhenOpsContainNoButtons_LogsNothing(t *testing.T) {
 	logger.LogButtonPositions(operations)
 
 	// Assert
-	assert.Empty(t, handler.records)
+	assert.Empty(t, buttonRecords(handler))
+}
+
+func TestWhenLoggingFrame_EmitsSingleNewFrameRecord(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := newRecordingHandler(levelDebug)
+	logger := utils.NewButtonPositionLogger(newSlogLogger(handler))
+	operations := new(op.Ops)
+
+	// Act
+	logger.LogButtonPositions(operations)
+
+	// Assert
+	frameMarkers := make([]slog.Record, 0, len(handler.records))
+	for _, record := range handler.records {
+		if record.Message == "====== New Frame ======" {
+			frameMarkers = append(frameMarkers, record)
+		}
+	}
+	assert.Len(t, frameMarkers, 1)
 }
 
 func TestWhenButtonHasNoLabel_SkipsButton(t *testing.T) {
@@ -170,5 +204,5 @@ func TestWhenButtonHasNoLabel_SkipsButton(t *testing.T) {
 	logger.LogButtonPositions(operations)
 
 	// Assert
-	assert.Empty(t, handler.records)
+	assert.Empty(t, buttonRecords(handler))
 }

@@ -19,16 +19,16 @@ func TestWhenNeutralZoneIsDrawn_CanvasIsMutated(t *testing.T) {
 	assert.NotEqual(t, blankPixels, canvas.Pix)
 }
 
-func TestWhenTierIsUnknown_FallsBackToLowQualitySprite(t *testing.T) {
+func TestWhenTierIsPlastic_DrawsDifferentSpriteThanLow(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	lowTierCanvas := renderNeutral(t, preview.Zone{Tier: 1})
+	lowTierCanvas := renderNeutral(t, preview.Zone{Tier: preview.TierBronze})
 
 	// Act
-	canvas := renderNeutral(t, preview.Zone{Tier: 0})
+	canvas := renderNeutral(t, preview.Zone{Tier: preview.TierPlastic})
 
 	// Assert
-	assert.Equal(t, lowTierCanvas.Pix, canvas.Pix)
+	assert.NotEqual(t, lowTierCanvas.Pix, canvas.Pix)
 }
 
 func TestWhenTierIsMedium_DrawsDifferentSpriteThanLow(t *testing.T) {
@@ -53,6 +53,18 @@ func TestWhenTierIsHigh_DrawsDifferentSpriteThanMedium(t *testing.T) {
 
 	// Assert
 	assert.NotEqual(t, mediumTierCanvas.Pix, canvas.Pix)
+}
+
+func TestWhenTierIsPlatinum_DrawsDifferentSpriteThanHigh(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	highTierCanvas := renderNeutral(t, preview.Zone{Tier: preview.TierGold})
+
+	// Act
+	canvas := renderNeutral(t, preview.Zone{Tier: preview.TierPlatinum})
+
+	// Assert
+	assert.NotEqual(t, highTierCanvas.Pix, canvas.Pix)
 }
 
 func TestWhenZoneHasCastle_DrawsDifferentSpriteThanWithoutCastle(t *testing.T) {

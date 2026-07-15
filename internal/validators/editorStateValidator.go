@@ -187,12 +187,18 @@ func nonNegativeIntFields() []intField {
 		{"playerCastles", func(state *dtos.EditorStateDto) *int { return &state.PlayerZoneCastles }},
 		{"neutralCastles", func(state *dtos.EditorStateDto) *int { return &state.NeutralZoneCastles }},
 		{"abandonedOutpostCount", func(state *dtos.EditorStateDto) *int { return &state.AbandonedOutpostCount }},
+		{"neutralLowestNoCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralLowestNoCastleCount }},
+		{"neutralLowestCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralLowestCastleCount }},
 		{"neutralLowNoCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralLowNoCastleCount }},
 		{"neutralLowCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralLowCastleCount }},
 		{"neutralMediumNoCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralMediumNoCastleCount }},
 		{"neutralMediumCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralMediumCastleCount }},
 		{"neutralHighNoCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralHighNoCastleCount }},
 		{"neutralHighCastle", func(state *dtos.EditorStateDto) *int { return &state.NeutralHighCastleCount }},
+		{
+			"neutralLowestCastlesPerZone",
+			func(state *dtos.EditorStateDto) *int { return &state.NeutralLowestCastlesPerZone },
+		},
 		{"neutralLowCastlesPerZone", func(state *dtos.EditorStateDto) *int { return &state.NeutralLowCastlesPerZone }},
 		{
 			"neutralMedCastlesPerZone",

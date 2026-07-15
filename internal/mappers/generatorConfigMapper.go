@@ -39,6 +39,8 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.Bonuses = editorState.Bonuses
 	generatorSettings.PlayerZoneMandatoryContent = this.contentProvider.CreateContentItemsFrom(
 		editorState.PlayerZoneContentRows)
+	generatorSettings.LowestNeutralMandatoryContent = this.contentProvider.CreateContentItemsFrom(
+		editorState.LowestNeutralContentRows)
 	generatorSettings.LowNeutralMandatoryContent = this.contentProvider.CreateContentItemsFrom(
 		editorState.LowNeutralContentRows)
 	generatorSettings.MediumNeutralMandatoryContent = this.contentProvider.CreateContentItemsFrom(
@@ -75,12 +77,15 @@ func (this *GeneratorConfigMapper) mapZoneConfig(editorState dtos.EditorStateDto
 		HubZoneCastles:              editorState.HubZoneCastles,
 		Advanced: config.AdvancedSettings{
 			Enabled:                     editorState.AdvancedMode,
+			NeutralLowestNoCastleCount:  editorState.NeutralLowestNoCastleCount,
+			NeutralLowestCastleCount:    editorState.NeutralLowestCastleCount,
 			NeutralLowNoCastleCount:     editorState.NeutralLowNoCastleCount,
 			NeutralLowCastleCount:       editorState.NeutralLowCastleCount,
 			NeutralMediumNoCastleCount:  editorState.NeutralMediumNoCastleCount,
 			NeutralMediumCastleCount:    editorState.NeutralMediumCastleCount,
 			NeutralHighNoCastleCount:    editorState.NeutralHighNoCastleCount,
 			NeutralHighCastleCount:      editorState.NeutralHighCastleCount,
+			NeutralLowestCastlesPerZone: editorState.NeutralLowestCastlesPerZone,
 			NeutralLowCastlesPerZone:    editorState.NeutralLowCastlesPerZone,
 			NeutralMediumCastlesPerZone: editorState.NeutralMediumCastlesPerZone,
 			NeutralHighCastlesPerZone:   editorState.NeutralHighCastlesPerZone,

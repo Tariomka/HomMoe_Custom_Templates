@@ -70,3 +70,11 @@ Still unit-untestable (dialog-callback or Gio territory):
   generation-then-castle-option-change sequence entangled with the real
   mapper; exercised by the integration suite's manual-edit scenarios.
 
+## Unreachable defensive branches (unit-test coverage gaps by design)
+
+- internal/services/template_generator/providers/topology/geometricHubLayout.go -
+  `connectInteriorStables` early-return for `len(stables) == 0`: the growth
+  ladder in `distributeGeometricHubSlots` only assigns interiors after every
+  gap holds 2 stables, so a hexagon with interiors always has both flanking
+  stables. The guard is purely defensive; do not add seams to reach it.
+

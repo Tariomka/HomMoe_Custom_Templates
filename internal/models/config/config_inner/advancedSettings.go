@@ -8,12 +8,15 @@ import (
 
 type AdvancedSettings struct {
 	Enabled                     bool
+	NeutralLowestNoCastleCount  int
+	NeutralLowestCastleCount    int
 	NeutralLowNoCastleCount     int
 	NeutralLowCastleCount       int
 	NeutralMediumNoCastleCount  int
 	NeutralMediumCastleCount    int
 	NeutralHighNoCastleCount    int
 	NeutralHighCastleCount      int
+	NeutralLowestCastlesPerZone int
 	NeutralLowCastlesPerZone    int
 	NeutralMediumCastlesPerZone int
 	NeutralHighCastlesPerZone   int

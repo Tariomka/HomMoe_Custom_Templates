@@ -78,13 +78,17 @@ func neutralCastleTarget(
 	}
 
 	switch neutralZone.GetQualityFrom(zone) {
-	case neutralZone.QualityHigh:
+	case neutralZone.QualityHigh, neutralZone.QualityHighest:
 		if changes.NeutralHigh {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralHighCastlesPerZone, 0, 4), true
 		}
 	case neutralZone.QualityLow:
 		if changes.NeutralLow {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowCastlesPerZone, 0, 4), true
+		}
+	case neutralZone.QualityLowest:
+		if changes.NeutralLowest {
+			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowestCastlesPerZone, 0, 4), true
 		}
 	case neutralZone.QualityMedium:
 		fallthrough

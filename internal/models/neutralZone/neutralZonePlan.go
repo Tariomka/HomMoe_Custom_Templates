@@ -17,14 +17,18 @@ type Plan struct {
 func (this Plan) GetBalanceScore() float64 {
 	var qualityScore float64
 	switch this.Quality {
+	case QualityHighest:
+		qualityScore = 4.0
 	case QualityHigh:
 		qualityScore = 3.0
 	case QualityMedium:
 		qualityScore = 2.0
 	case QualityLow:
+		qualityScore = 1.0
+	case QualityLowest:
 		fallthrough
 	default:
-		qualityScore = 1.0
+		qualityScore = 0.5
 	}
 
 	return qualityScore + math.Min(float64(this.CastleCount), 4)*0.15
@@ -83,14 +87,18 @@ func (this *Plans) GetTier(label string) int {
 		return 1
 	}
 	switch plan.Quality {
+	case QualityHighest:
+		return 4
 	case QualityHigh:
 		return 3
 	case QualityMedium:
 		return 2
 	case QualityLow:
+		return 1
+	case QualityLowest:
 		fallthrough
 	default:
-		return 1
+		return 0
 	}
 }
 

@@ -36,6 +36,9 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	case config.TopologyHubAndSpoke:
 		return topology.NewHubTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
+	case config.TopologyGeometricHub:
+		return topology.NewGeometricHubTopologyService().
+			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
 		return topology.NewChainTopologyService().
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)

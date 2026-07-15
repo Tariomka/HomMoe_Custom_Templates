@@ -93,11 +93,11 @@ func bucketNeutralsPerPlayer(neutralZones neutralZone.Plans, playerCount int) [3
 	tierBuckets := [3][]int{}
 	for index, plan := range neutralZones {
 		switch plan.Quality {
-		case neutralZone.QualityHigh:
+		case neutralZone.QualityHigh, neutralZone.QualityHighest:
 			tierBuckets[2] = append(tierBuckets[2], index)
 		case neutralZone.QualityMedium:
 			tierBuckets[1] = append(tierBuckets[1], index)
-		case neutralZone.QualityLow:
+		case neutralZone.QualityLow, neutralZone.QualityLowest:
 			fallthrough
 		default:
 			tierBuckets[0] = append(tierBuckets[0], index)

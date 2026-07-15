@@ -187,27 +187,28 @@ func (this *TopologyBase) CreateHubZone(
 	if isHoldCity && castleCount < 1 {
 		castleCount = 1
 	}
+	profile := neutralZone.NewNeutralZoneProfile(neutralZone.QualityHighest)
 
 	zoneBuilder := variant_content.NewZoneBuilder().
 		WithName("Hub").
 		WithSize(utils.NormalizeZoneSize(size)).
-		WithLayoutCenter().
+		WithLayout(profile.Layout).
 		WithGuardCutoffValue(2000).
 		WithGuardRandomization(0.05).
-		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(1.5)).
+		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)).
 		WithGuardWeeklyIncrement(0.20).
-		WithGuardReactionDistribution([]int{0, 10, 10, 20, 10, 0}).
+		WithGuardReactionDistribution(profile.GuardReactionDistribution).
 		WithDiplomacyModifier(-0.5).
-		WithGuardedContentPool(registry.GetGuardedContentPoolT3List()).
-		WithUnguardedContentPool(registry.GetUnguardedContentPoolT3List()).
-		WithResourcesContentPool([]string{resourceContentPool.StartZoneMedium}).
+		WithGuardedContentPool(profile.GuardedContentPool).
+		WithUnguardedContentPool(profile.UnguardedContentPool).
+		WithResourcesContentPool(profile.ResourcesContentPool).
 		WithContentCountLimits(buildSideContentLimits()).
-		WithGuardedContentValue(tuning.ScaleByStructureDensity(300000 * tuning.ContentScale)).
-		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(2400 * math.Sqrt(tuning.ContentScale))).
-		WithUnguardedContentValue(tuning.ScaleByStructureDensity(50000 * tuning.ContentScale)).
-		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(600 * math.Sqrt(tuning.ContentScale))).
-		WithResourcesValue(tuning.ScaleByResourceDensity(80000 * tuning.ContentScale)).
-		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale))).
+		WithGuardedContentValue(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValue) * tuning.ContentScale)).
+		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
+		WithUnguardedContentValue(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValue) * tuning.ContentScale)).
+		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
+		WithResourcesValue(tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)).
+		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
 		WithMainObjects(this.CreateHubZoneCastles(tuning, castleCount, isHoldCity)).
 		WithCrossroadsPosition(0).
 		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, 0, generateRoads))

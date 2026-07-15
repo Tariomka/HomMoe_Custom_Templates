@@ -153,8 +153,9 @@ var zoneLabels = []string{
 }
 
 // QualityLabels are the display names of the neutral-zone quality presets,
-// indexed by neutralZone.Quality.
-var QualityLabels = []string{"Low", "Medium", "High"}
+// indexed by neutralZone.Quality. QualityHighest is deliberately absent: it is
+// reserved for the Hub zone and not selectable in the manual zone editor.
+var QualityLabels = []string{"Lowest", "Low", "Medium", "High"}
 
 // NextFreeZoneLabel returns the first generator label not used by any zone, or
 // "" when the pool is exhausted.

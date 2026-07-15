@@ -94,7 +94,7 @@ func GetZoneTier(zoneName string, zones []entities.Zone, playerZoneNames map[str
 		return ZoneTierBronze
 	}
 	if zone.Name == "Hub" || strings.HasPrefix(zone.Name, "Hub-") {
-		return ZoneTierBronze
+		return ZoneTierGold
 	}
 
 	if strings.HasPrefix(zone.Name, "Neutral-") {

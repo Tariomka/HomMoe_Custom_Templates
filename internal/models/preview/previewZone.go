@@ -9,12 +9,13 @@ type Zone struct {
 	Center    image.Point
 	IsPlayer  bool
 	IsHub     bool
-	Tier      int // 0 unknown, 1 bronze, 2 silver, 3 gold
+	Tier      ZoneTier
 	Owner     int
 	HasCastle bool
 	Castles   int
 }
 
+// ZoneTier is the preview quality tier of a zone, ordered lowest to highest.
 type ZoneTier int
 
 const (

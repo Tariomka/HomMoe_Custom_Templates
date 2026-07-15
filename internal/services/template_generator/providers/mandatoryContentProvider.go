@@ -41,11 +41,13 @@ func (this *MandatoryContentProvider) CreateContents(
 	for _, zone := range neutralZones {
 		var content []entities.MandatoryContentItem
 		switch zone.Quality {
+		case neutralZone.QualityLowest:
+			content = cloneContentItems(configuration.LowestNeutralMandatoryContent)
 		case neutralZone.QualityLow:
 			content = cloneContentItems(configuration.LowNeutralMandatoryContent)
 		case neutralZone.QualityMedium:
 			content = cloneContentItems(configuration.MediumNeutralMandatoryContent)
-		case neutralZone.QualityHigh:
+		case neutralZone.QualityHigh, neutralZone.QualityHighest:
 			content = cloneContentItems(configuration.HighNeutralMandatoryContent)
 		}
 		if zone.CastleCount == 0 {
@@ -134,13 +136,14 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 }
 
 // hubContentGroup builds the hub zone's mandatory-content group from the
-// configured hub rows. It only exists for the Hub & Spoke topology and only
-// when the user actually configured hub content, matching the parallel C#
-// editor which references "mandatory_content_hub" only when hub rows are set.
-// The hub zone has no remote-foothold roads, so no foothold item is added.
+// configured hub rows. It only exists for the topologies that create a Hub
+// zone and only when the user actually configured hub content, matching the
+// parallel C# editor which references "mandatory_content_hub" only when hub
+// rows are set. The hub zone has no remote-foothold roads, so no foothold
+// item is added.
 func (this *MandatoryContentProvider) hubContentGroup(
 	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
-	if configuration.Topology != config.TopologyHubAndSpoke || len(configuration.HubZoneMandatoryContent) == 0 {
+	if !usesHubZone(configuration.Topology) || len(configuration.HubZoneMandatoryContent) == 0 {
 		return entities.MandatoryContent{}, false
 	}
 
@@ -149,6 +152,11 @@ func (this *MandatoryContentProvider) hubContentGroup(
 		content = stripNearCastleRules(content)
 	}
 	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
+}
+
+// usesHubZone reports whether the topology creates a central Hub zone.
+func usesHubZone(topology config.MapTopology) bool {
+	return topology == config.TopologyHubAndSpoke || topology == config.TopologyGeometricHub
 }
 
 func (this *MandatoryContentProvider) createContentItemFrom(
@@ -258,9 +266,11 @@ func neutralRowsForQuality(
 	configuration config.GeneratorConfig,
 	quality neutralZone.Quality) []entities.MandatoryContentItem {
 	switch quality {
+	case neutralZone.QualityLowest:
+		return configuration.LowestNeutralMandatoryContent
 	case neutralZone.QualityLow:
 		return configuration.LowNeutralMandatoryContent
-	case neutralZone.QualityHigh:
+	case neutralZone.QualityHigh, neutralZone.QualityHighest:
 		return configuration.HighNeutralMandatoryContent
 	case neutralZone.QualityMedium:
 		fallthrough

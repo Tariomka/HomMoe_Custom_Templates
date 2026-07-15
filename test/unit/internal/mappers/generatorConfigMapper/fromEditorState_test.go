@@ -168,12 +168,15 @@ func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 	state.HubZoneSize = 1.5
 	state.HubZoneCastles = 1
 	state.AdvancedMode = true
+	state.NeutralLowestNoCastleCount = 2
+	state.NeutralLowestCastleCount = 1
 	state.NeutralLowNoCastleCount = 1
 	state.NeutralLowCastleCount = 2
 	state.NeutralMediumNoCastleCount = 3
 	state.NeutralMediumCastleCount = 2
 	state.NeutralHighNoCastleCount = 4
 	state.NeutralHighCastleCount = 1
+	state.NeutralLowestCastlesPerZone = 1
 	state.NeutralLowCastlesPerZone = 1
 	state.NeutralMediumCastlesPerZone = 2
 	state.NeutralHighCastlesPerZone = 3
@@ -195,12 +198,15 @@ func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 		HubZoneCastles:              1,
 		Advanced: config.AdvancedSettings{
 			Enabled:                     true,
+			NeutralLowestNoCastleCount:  2,
+			NeutralLowestCastleCount:    1,
 			NeutralLowNoCastleCount:     1,
 			NeutralLowCastleCount:       2,
 			NeutralMediumNoCastleCount:  3,
 			NeutralMediumCastleCount:    2,
 			NeutralHighNoCastleCount:    4,
 			NeutralHighCastleCount:      1,
+			NeutralLowestCastlesPerZone: 1,
 			NeutralLowCastlesPerZone:    1,
 			NeutralMediumCastlesPerZone: 2,
 			NeutralHighCastlesPerZone:   3,

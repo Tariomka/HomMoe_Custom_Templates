@@ -237,7 +237,8 @@ func isScatterTopology(topology config.MapTopology) bool {
 // the intended shape instead of relaxing it into a scatter.
 func isFixedGeometryTopology(topology config.MapTopology) bool {
 	switch topology {
-	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross, config.TopologyFractal:
+	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross,
+		config.TopologyFractal, config.TopologyGeometricHub:
 		return true
 	default:
 		return false

@@ -49,7 +49,7 @@ func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
 	zones := []entities.Zone{{
 		Name:               "Neutral-C",
-		GuardedContentPool: []string{"classic_template_pool_random_t1_item"},
+		GuardedContentPool: []string{"classic_template_pool_random_t2_item"},
 		MainObjects:        []entities.MainObject{{Type: "City"}},
 	}}
 
@@ -58,6 +58,27 @@ func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, []string{"low_only"}, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
+}
+
+func TestWhenZonePoolIsLowestTier_UsesLowestTierRows(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	provider := providers.NewMandatoryContentProvider()
+	configuration := config.NewGeneratorConfig()
+	configuration.SpawnRemoteFootholds = false
+	configuration.LowestNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "lowest_only"}}
+	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
+	zones := []entities.Zone{{
+		Name:               "Neutral-C",
+		GuardedContentPool: []string{"classic_template_pool_random_t1_item"},
+		MainObjects:        []entities.MainObject{{Type: "City"}},
+	}}
+
+	// Act
+	groups := provider.CreateContentsForZones(*configuration, zones)
+
+	// Assert
+	assert.Equal(t, []string{"lowest_only"}, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
 }
 
 func TestWhenZonePoolIsUnrecognized_FallsBackToMediumTierRows(t *testing.T) {

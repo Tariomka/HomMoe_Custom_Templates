@@ -16,6 +16,7 @@ func allGeneratorTopologies() []config.MapTopology {
 		config.TopologyRing,
 		config.TopologyChain,
 		config.TopologyHubAndSpoke,
+		config.TopologyGeometricHub,
 		config.TopologySharedWeb,
 		config.TopologyRandom,
 		config.TopologyCircles,

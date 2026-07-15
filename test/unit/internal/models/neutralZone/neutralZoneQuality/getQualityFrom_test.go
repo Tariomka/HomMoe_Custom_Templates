@@ -17,7 +17,7 @@ func TestWhenGuardedPoolIsInspected_ReturnsMatchingQuality(t *testing.T) {
 	}{
 		{"WhenPoolIsTier4_ReturnsHigh", []string{"pool_t4_x"}, neutralZone.QualityHigh},
 		{"WhenPoolIsTier5_ReturnsHigh", []string{"pool_t5_x"}, neutralZone.QualityHigh},
-		{"WhenPoolIsTier1_ReturnsLow", []string{"pool_t1_x"}, neutralZone.QualityLow},
+		{"WhenPoolIsTier1_ReturnsLowest", []string{"pool_t1_x"}, neutralZone.QualityLowest},
 		{"WhenPoolIsTier2_ReturnsLow", []string{"pool_t2_x"}, neutralZone.QualityLow},
 		{"WhenPoolIsTier3_ReturnsMedium", []string{"pool_t3_x"}, neutralZone.QualityMedium},
 		{"WhenPoolIsEmpty_ReturnsMedium", nil, neutralZone.QualityMedium},
@@ -35,4 +35,36 @@ func TestWhenGuardedPoolIsInspected_ReturnsMatchingQuality(t *testing.T) {
 			assert.Equal(t, testCase.expected, quality)
 		})
 	}
+}
+
+func TestWhenTier5PoolHasRichTreasureResources_ReturnsHighest(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	zone := entities.Zone{
+		Name:                 "Hub",
+		GuardedContentPool:   []string{"pool_t5_x"},
+		ResourcesContentPool: []string{"content_pool_general_resources_treasure_zone_rich"},
+	}
+
+	// Act
+	quality := neutralZone.GetQualityFrom(zone)
+
+	// Assert
+	assert.Equal(t, neutralZone.QualityHighest, quality)
+}
+
+func TestWhenTier4PoolHasRichTreasureResources_ReturnsHigh(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	zone := entities.Zone{
+		Name:                 "Neutral-Z",
+		GuardedContentPool:   []string{"pool_t4_x"},
+		ResourcesContentPool: []string{"content_pool_general_resources_treasure_zone_rich"},
+	}
+
+	// Act
+	quality := neutralZone.GetQualityFrom(zone)
+
+	// Assert
+	assert.Equal(t, neutralZone.QualityHigh, quality)
 }

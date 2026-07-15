@@ -15,6 +15,11 @@ func TestWhenQualityAndCastleCountVary_ComputesScoreFromQualityAndCappedCastles(
 		expectedScore float64
 	}{
 		{
+			"WhenQualityIsLowestWithoutCastles_ScoresHalf",
+			neutralZone.Plan{Quality: neutralZone.QualityLowest, CastleCount: 0},
+			0.5,
+		},
+		{
 			"WhenQualityIsLowWithoutCastles_ScoresOne",
 			neutralZone.Plan{Quality: neutralZone.QualityLow, CastleCount: 0},
 			1.0,
@@ -28,6 +33,11 @@ func TestWhenQualityAndCastleCountVary_ComputesScoreFromQualityAndCappedCastles(
 			"WhenQualityIsHighWithoutCastles_ScoresThree",
 			neutralZone.Plan{Quality: neutralZone.QualityHigh, CastleCount: 0},
 			3.0,
+		},
+		{
+			"WhenQualityIsHighestWithoutCastles_ScoresFour",
+			neutralZone.Plan{Quality: neutralZone.QualityHighest, CastleCount: 0},
+			4.0,
 		},
 		{
 			"WhenLowZoneHasTwoCastles_AddsFifteenHundredthsPerCastle",

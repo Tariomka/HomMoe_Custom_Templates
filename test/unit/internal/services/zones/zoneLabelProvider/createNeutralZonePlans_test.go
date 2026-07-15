@@ -49,6 +49,29 @@ func TestWhenSimpleCastleCountExceedsFour_ClampsCastlesToFour(t *testing.T) {
 	assert.Equal(t, neutralZone.Plans{{Label: "C", Quality: neutralZone.QualityMedium, CastleCount: 4}}, plans)
 }
 
+func TestWhenAdvancedLowestCountsAreSet_CreatesLowestPlansBeforeLowPlans(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	provider := zones.NewZoneLabelProvider()
+	configuration := simpleCountConfig(2, 0, 0)
+	configuration.ZoneConfiguration.Advanced.NeutralLowestNoCastleCount = 1
+	configuration.ZoneConfiguration.Advanced.NeutralLowestCastleCount = 1
+	configuration.ZoneConfiguration.Advanced.NeutralLowestCastlesPerZone = 2
+	configuration.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1
+	configuration.ZoneConfiguration.Advanced.NeutralLowCastlesPerZone = 1
+	expected := neutralZone.Plans{
+		{Label: "C", Quality: neutralZone.QualityLowest, CastleCount: 0},
+		{Label: "D", Quality: neutralZone.QualityLowest, CastleCount: 2},
+		{Label: "E", Quality: neutralZone.QualityLow, CastleCount: 1},
+	}
+
+	// Act
+	plans := provider.CreateNeutralZonePlans(configuration)
+
+	// Assert
+	assert.Equal(t, expected, plans)
+}
+
 func TestWhenAdvancedCountsAreSet_CreatesPlansInTierOrder(t *testing.T) {
 	t.Parallel()
 	// Arrange

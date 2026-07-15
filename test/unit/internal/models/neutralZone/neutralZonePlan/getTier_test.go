@@ -14,9 +14,11 @@ func TestWhenLabelQualityVaries_MapsQualityToTier(t *testing.T) {
 		quality      neutralZone.Quality
 		expectedTier int
 	}{
+		{"WhenLabelHasHighestQuality_ReturnsTierFour", neutralZone.QualityHighest, 4},
 		{"WhenLabelHasHighQuality_ReturnsTierThree", neutralZone.QualityHigh, 3},
 		{"WhenLabelHasMediumQuality_ReturnsTierTwo", neutralZone.QualityMedium, 2},
 		{"WhenLabelHasLowQuality_ReturnsTierOne", neutralZone.QualityLow, 1},
+		{"WhenLabelHasLowestQuality_ReturnsTierZero", neutralZone.QualityLowest, 0},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {

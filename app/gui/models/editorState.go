@@ -39,6 +39,8 @@ func (this *EditorState) UpdateCurrentState(updateFunc func(state *dtos.EditorSt
 	if this.current.AdvancedMode {
 		this.current.NeutralZoneCount = 0
 	} else {
+		this.current.NeutralLowestNoCastleCount = 0
+		this.current.NeutralLowestCastleCount = 0
 		this.current.NeutralLowNoCastleCount = 0
 		this.current.NeutralLowCastleCount = 0
 		this.current.NeutralMediumNoCastleCount = 0
