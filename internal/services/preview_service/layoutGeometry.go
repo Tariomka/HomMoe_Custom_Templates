@@ -18,6 +18,10 @@ const (
 	csHubRadiusMin    = 28.0
 	csMinGap          = 6.0
 	csConnectionGap   = 26.0 // ring layout - visible chord clearance between zones
+	// csGeoHubEdgeInset pulls the Geometric Hub figure away from the canvas
+	// border: the fill-fit would otherwise push the player zones right up to
+	// the padded edge, hiding the hub-centric shape of the layout.
+	csGeoHubEdgeInset = 48.0
 	scatterIdealMult  = 3.2
 	scatterMinDist    = 3.8
 	scatterEdgeClear  = 1.2

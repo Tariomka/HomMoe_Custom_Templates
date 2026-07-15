@@ -104,3 +104,30 @@ func spreadOf(values []float64) float64 {
 	}
 	return highest - lowest
 }
+
+// interiorAngleAt returns the interior angle (degrees) of the hexagon ring at
+// zone `at`, formed by its ring neighbors `previous` and `next`.
+func interiorAngleAt(variant entities.Variant, previous, at, next string) float64 {
+	previousPosition := positionOf(variant, previous)
+	atPosition := positionOf(variant, at)
+	nextPosition := positionOf(variant, next)
+	toPreviousX := previousPosition[0] - atPosition[0]
+	toPreviousY := previousPosition[1] - atPosition[1]
+	toNextX := nextPosition[0] - atPosition[0]
+	toNextY := nextPosition[1] - atPosition[1]
+	dot := toPreviousX*toNextX + toPreviousY*toNextY
+	magnitudes := math.Hypot(toPreviousX, toPreviousY) * math.Hypot(toNextX, toNextY)
+	return math.Acos(dot/magnitudes) * 180 / math.Pi
+}
+
+// perimeterFreeAngles returns the interior angles (degrees) at the five
+// non-hub vertices of a hexagon perimeter listed hub-first.
+func perimeterFreeAngles(variant entities.Variant, perimeter [6]string) []float64 {
+	angles := make([]float64, 0, 5)
+	for index := 1; index < len(perimeter); index++ {
+		previous := perimeter[index-1]
+		next := perimeter[(index+1)%len(perimeter)]
+		angles = append(angles, interiorAngleAt(variant, previous, perimeter[index], next))
+	}
+	return angles
+}

@@ -477,6 +477,49 @@ func TestWhenThreePlayersFillFullHexagons_HexagonSidesAreEqualLength(t *testing.
 		"3-player hexagons must be regular: %v", sides)
 }
 
+func TestWhenFourPlayersFillFullHexagons_UnsharedVerticesAreExactly120Degrees(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	playerLabels := []string{"A", "B", "C", "D"}
+	plans := mixedPlans(
+		[]string{"E", "F", "G", "H", "I", "J", "K", "L"}, []string{"M", "N", "O", "P"}, nil)
+
+	// Act
+	variant := buildGeoHubVariant(playerLabels, plans)
+
+	// Assert
+	// Hexagon A's perimeter is Hub - cL(M) - sL(L) - player - sR(E) - cR(P).
+	// The hub angle is locked to the 90-degree sector, so the stables and the
+	// player keep the regular hexagon's 120 degrees while the two shared
+	// corners absorb the forced surplus (135 degrees each).
+	angles := perimeterFreeAngles(variant,
+		[6]string{"Hub", "Neutral-M", "Neutral-L", "Spawn-A", "Neutral-E", "Neutral-P"})
+	assert.InDeltaSlice(t, []float64{135, 120, 120, 120, 135}, angles, 0.000001,
+		"4-player hexagons must keep 120 degrees on every unshared vertex: %v", angles)
+}
+
+func TestWhenFivePlayersFillFullHexagons_UnsharedVerticesAreExactly120Degrees(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	playerLabels := []string{"A", "B", "C", "D", "E"}
+	plans := mixedPlans(
+		[]string{"F", "G", "H", "I", "J", "K", "L", "M", "N", "O"},
+		[]string{"P", "Q", "R", "S", "T"}, nil)
+
+	// Act
+	variant := buildGeoHubVariant(playerLabels, plans)
+
+	// Assert
+	// Hexagon A's perimeter is Hub - cL(P) - sL(O) - player - sR(F) - cR(T).
+	// The hub angle is locked to the 72-degree sector, so the stables and the
+	// player keep the regular hexagon's 120 degrees while the two shared
+	// corners absorb the forced surplus (144 degrees each).
+	angles := perimeterFreeAngles(variant,
+		[6]string{"Hub", "Neutral-P", "Neutral-O", "Spawn-A", "Neutral-F", "Neutral-T"})
+	assert.InDeltaSlice(t, []float64{144, 120, 120, 120, 144}, angles, 0.000001,
+		"5-player hexagons must keep 120 degrees on every unshared vertex: %v", angles)
+}
+
 func TestWhenFewPlayersCompareToMany_FewPlayersSitCloserToHub(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -540,6 +583,30 @@ func TestWhenHexagonHasTwoInteriors_ChainSpacingIsEven(t *testing.T) {
 	}
 	assert.InDelta(t, 0, spreadOf(spacings), 0.001,
 		"k=2 chain must be evenly spaced: %v", spacings)
+}
+
+func TestWhenFourPlayerHexagonHasTwoInteriors_ChainSpacingIsEven(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	playerLabels := []string{"A", "B", "C", "D"}
+	plans := mixedPlans(
+		[]string{"E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+			"O", "P", "Q", "R", "S", "T", "U", "V", "W", "X"}, nil, nil)
+
+	// Act
+	variant := buildGeoHubVariant(playerLabels, plans)
+
+	// Assert
+	// The equiangular geometry solves the k=2 circumradius from the actual
+	// stable positions: hexagon A's chain sL(T) - x1(E) - x2(I) - sR(M) must
+	// stay evenly spaced under the 4-player blueprint too.
+	spacings := []float64{
+		distanceBetween(variant, "Neutral-T", "Neutral-E"),
+		distanceBetween(variant, "Neutral-E", "Neutral-I"),
+		distanceBetween(variant, "Neutral-I", "Neutral-M"),
+	}
+	assert.InDelta(t, 0, spreadOf(spacings), 0.000001,
+		"4-player k=2 chain must be evenly spaced: %v", spacings)
 }
 
 func TestWhenEightPlayersHaveManyInteriors_AllPositionsStayInsideUnitSquare(t *testing.T) {

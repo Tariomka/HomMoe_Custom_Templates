@@ -9,25 +9,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 )
 
-// Geometric Hub layout tuning. Every hexagon derives from true regular-hexagon
-// ratios (hexagon side s = half the player radius): the hub sits on one vertex,
-// the merged corners at radius s on the gap mid-angles, the stables at √3·s at
-// ±30° off the player axis, and the player at 2·s. The ±30° stable offset is
-// exact for 3 players; narrower sectors (5+ players) fall back to a sector
-// fraction. Players sit closer to the hub for 2-4 players (larger hexagons
-// read better) and further out for 5+ (narrow sectors need the spread).
-const (
-	geoHubPlayerRadius        = 0.46
-	geoHubPlayerRadiusClose   = 0.38
-	geoHubClosePlayerMaximum  = 4
-	geoHubStableAngleFraction = 0.35
-	geoHubStableIdealOffset   = math.Pi / 6
-	// geoHubInteriorPolygonFactor is the interior k-gon circumradius as a
-	// fraction of the hexagon side, chosen so the k=2 chain sL-x1-x2-sR is
-	// evenly spaced (exact solution ≈ 0.3568 for the regular hexagon).
-	geoHubInteriorPolygonFactor = 0.357
-)
-
 // geometricHubLayout is the computed slot structure of the Geometric Hub
 // topology: which neutral plan occupies which hexagon slot, the normalized
 // position of every zone, the direct ring/interior edges, and the labels that
@@ -152,64 +133,51 @@ func (this *geometricHubLayout) assignPlans(
 }
 
 // computePositions stamps every player and neutral label with its normalized
-// regular-hexagon position (see the geoHub* constant block for the geometry).
+// hexagon position (see [newGeoHubGeometry] for the per-player-count shape).
 func (this *geometricHubLayout) computePositions(playerLabels []string) {
 	playerCount := len(playerLabels)
 	sector := 2 * math.Pi / float64(playerCount)
 	playerAngle := func(index int) float64 { return -math.Pi/2 + float64(index)*sector }
-	playerRadius := geoHubPlayerRadiusFor(playerCount)
-	hexagonSide := playerRadius / 2
-	stableRadius := playerRadius * math.Sqrt(3) / 2
-	stableOffset := math.Min(geoHubStableIdealOffset, geoHubStableAngleFraction*sector)
+	geometry := newGeoHubGeometry(playerCount)
 
 	for index, label := range playerLabels {
-		this.positions[label] = circlePoint(playerAngle(index), playerRadius)
+		this.positions[label] = circlePoint(playerAngle(index), geometry.playerRadius)
 	}
 	for gap, stables := range this.gapStables {
 		gapMidAngle := playerAngle(gap) + sector/2
 		if len(stables) == 1 {
-			this.positions[stables[0]] = circlePoint(gapMidAngle, stableRadius)
+			this.positions[stables[0]] = circlePoint(gapMidAngle, geometry.stableRadius)
 		} else if len(stables) == 2 {
-			this.positions[stables[0]] = circlePoint(playerAngle(gap)+stableOffset, stableRadius)
-			this.positions[stables[1]] = circlePoint(playerAngle(gap+1)-stableOffset, stableRadius)
+			this.positions[stables[0]] = circlePoint(playerAngle(gap)+geometry.stableOffset, geometry.stableRadius)
+			this.positions[stables[1]] = circlePoint(playerAngle(gap+1)-geometry.stableOffset, geometry.stableRadius)
 		}
 	}
 	for gap, corners := range this.gapCorners {
 		if len(corners) == 1 {
-			this.positions[corners[0]] = circlePoint(playerAngle(gap)+sector/2, hexagonSide)
+			this.positions[corners[0]] = circlePoint(playerAngle(gap)+sector/2, geometry.cornerRadius)
 		}
 	}
 	for hexagon, interiors := range this.hexInteriors {
-		this.computeInteriorPositions(playerAngle(hexagon), hexagonSide, interiors)
+		this.computeInteriorPositions(playerAngle(hexagon), geometry, interiors)
 	}
-}
-
-// geoHubPlayerRadiusFor picks the player circle radius: 2-4 players sit close
-// to the hub, 5+ keep the wider spread that suits narrow sectors.
-func geoHubPlayerRadiusFor(playerCount int) float64 {
-	if playerCount <= geoHubClosePlayerMaximum {
-		return geoHubPlayerRadiusClose
-	}
-	return geoHubPlayerRadius
 }
 
 // computeInteriorPositions places a hexagon's k interiors as a regular k-gon
-// centered at radius hexagonSide along the player axis (the hexagon center),
-// with the x1-x2 edge facing the hub: vertex x(m+1) sits at
+// centered on the hexagon's centroid (radius interiorCenter along the player
+// axis), with the x1-x2 edge facing the hub: vertex x(m+1) sits at
 // hub-relative angle ±(2⌈(m+1)/2⌉-1)·π/k, odd vertices on the sL side.
 // A single interior sits exactly on the hexagon center (rule 7).
 func (this *geometricHubLayout) computeInteriorPositions(
-	playerAxisAngle, hexagonSide float64, interiors []string) {
+	playerAxisAngle float64, geometry geoHubGeometry, interiors []string) {
 	vertexCount := len(interiors)
 	if vertexCount == 0 {
 		return
 	}
-	center := circlePoint(playerAxisAngle, hexagonSide)
+	center := circlePoint(playerAxisAngle, geometry.interiorCenter)
 	if vertexCount == 1 {
 		this.positions[interiors[0]] = center
 		return
 	}
-	circumradius := geoHubInteriorPolygonFactor * hexagonSide
 	for index, label := range interiors {
 		step := float64(2*((index+2)/2) - 1)
 		side := 1.0
@@ -218,8 +186,8 @@ func (this *geometricHubLayout) computeInteriorPositions(
 		}
 		vertexAngle := playerAxisAngle + math.Pi + side*step*math.Pi/float64(vertexCount)
 		this.positions[label] = data.NewVec2(
-			center.X+circumradius*math.Cos(vertexAngle),
-			center.Y+circumradius*math.Sin(vertexAngle))
+			center.X+geometry.interiorCircumradius*math.Cos(vertexAngle),
+			center.Y+geometry.interiorCircumradius*math.Sin(vertexAngle))
 	}
 }
 

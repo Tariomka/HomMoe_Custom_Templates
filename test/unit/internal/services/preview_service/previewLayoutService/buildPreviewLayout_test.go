@@ -121,6 +121,29 @@ func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing
 	assert.Equal(t, image.Pt((left.X+right.X)/2, (left.Y+right.Y)/2), middle)
 }
 
+func TestWhenGeometricHubTopologyIsLaidOut_FigureKeepsExtraBorderClearance(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.1, 0.5),
+		positionedZone("Neutral-B", 0.5, 0.5),
+		positionedZone("Spawn-C", 0.9, 0.5),
+	}
+
+	// Act
+	hubLayout := service.BuildPreviewLayout(
+		templateWith(zones, nil), config.TopologyGeometricHub, layoutSide)
+	squareLayout := service.BuildPreviewLayout(
+		templateWith(zones, nil), config.TopologySquare, layoutSide)
+
+	// Assert - the same figure must span less width under Geometric Hub than
+	// under the other fixed-geometry topologies (extra edge inset applied).
+	hubWidth := hubLayout.Positions["Spawn-C"].X - hubLayout.Positions["Spawn-A"].X
+	squareWidth := squareLayout.Positions["Spawn-C"].X - squareLayout.Positions["Spawn-A"].X
+	assert.Less(t, hubWidth, squareWidth)
+}
+
 func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
