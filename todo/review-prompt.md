@@ -104,7 +104,7 @@ fix sessions will be held against:
 10. **Docs & DX** — README/QUICKSTART accuracy vs. actual layout, stale paths,
     onboarding gaps, missing platform notes.
 
-## Output format (mirror `todo/review-fable-07-12.md` — this structure is the contract)
+## Output format (this structure is the contract)
 
 - **Header**: date, model, toolchain versions, lint issue count, which prior
   documents this supersedes.
@@ -133,9 +133,9 @@ fix sessions will be held against:
 
 ## Quality bar
 
-- Be at least as thorough as `todo/review-fable-07-12.md` (~50 findings across
-  9 dimensions with per-item fix plans). Depth beats breadth: one verified 🔴
-  with a correct fix plan outweighs ten vague 🟡s.
+- Be thorough (for example: ~50 findings across 9 dimensions with per-item fix
+  plans). Depth beats breadth: one verified 🔴 with a correct fix plan
+  outweighs ten vague 🟡s.
 - Actively hunt for the classes of bug that survived previous reviews: value
   semantics (struct copies mutated and discarded), aliasing (shallow copies
   sharing slices), UI state not surviving save/load round-trips, error paths
