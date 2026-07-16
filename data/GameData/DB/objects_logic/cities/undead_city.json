@@ -302,7 +302,7 @@
 							"nodePos": { "xPos": 7, "yPos": 0 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 2000 },
+								{ "name": "gold",		"cost": 2500 },
 								{ "name": "mercury",	"cost": 5 }
 							]
 						},
@@ -314,7 +314,7 @@
 							"nodePos": { "xPos": 7, "yPos": 1 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 1250 },
+								{ "name": "gold",		"cost": 1750 },
 								{ "name": "mercury",	"cost": 5 },
 								{ "name": "dust",		"cost": 20 }
 							]
@@ -323,7 +323,7 @@
 
 					"unitsHire":
 					{
-						"units": [ { "sids": [ "flicker", "flicker_upg", "flicker_upg_alt" ], "weeklyIncrement": 16 } ]
+						"units": [ { "sids": [ "flicker", "flicker_upg", "flicker_upg_alt" ], "weeklyIncrement": 19 } ]
 					}
 				},
 				{
@@ -348,7 +348,7 @@
 							"nodePos": { "xPos": 4, "yPos": 1 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 2750 },
+								{ "name": "gold",		"cost": 3000 },
 								{ "name": "wood",		"cost": 10 }
 							]
 						},
@@ -360,7 +360,7 @@
 							"nodePos": { "xPos": 5, "yPos": 2 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 2500 },
+								{ "name": "gold",		"cost": 2750 },
 								{ "name": "wood",		"cost": 5 },
 								{ "name": "dust",		"cost": 30 }
 							]
@@ -369,7 +369,7 @@
 
 					"unitsHire":
 					{
-						"units": [ { "sids": [ "pet", "pet_upg", "pet_upg_alt" ], "weeklyIncrement": 13 } ]
+						"units": [ { "sids": [ "pet", "pet_upg", "pet_upg_alt" ], "weeklyIncrement": 14 } ]
 					}
 				},
 				{
@@ -494,7 +494,7 @@
 							"nodePos": { "xPos": 4, "yPos": 3 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 7000 },
+								{ "name": "gold",		"cost": 6000 },
 								{ "name": "wood",		"cost": 5 },
 								{ "name": "ore",		"cost": 10 }
 							]
@@ -507,7 +507,7 @@
 							"nodePos": { "xPos": 4, "yPos": 4 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 5000 },
+								{ "name": "gold",		"cost": 4000 },
 								{ "name": "ore",		"cost": 15 },
 								{ "name": "mercury",	"cost": 10 },
 								{ "name": "dust",		"cost": 75 }

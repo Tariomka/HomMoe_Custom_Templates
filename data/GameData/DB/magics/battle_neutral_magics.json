@@ -315,7 +315,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -375,7 +375,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -435,7 +435,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -495,7 +495,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -555,7 +555,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -618,7 +618,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -681,7 +681,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -744,7 +744,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -807,7 +807,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -870,7 +870,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -933,7 +933,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -996,7 +996,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -1059,7 +1059,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -1122,7 +1122,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":
@@ -1185,7 +1185,7 @@
 			"useExpandTooltip": "true",
 			"usedOnMap": false,
 			"school_": "neutral",
-			"rank": 3,
+			"rank": 4,
 			"upgradeCost": [ 10, 10, 10 ],
 			"manaCost": [ 0, 0, 0, 0 ],
 			"battleMagic":

@@ -398,7 +398,7 @@
 				{ "name": "mercury", "cost": 2 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 9, 9, 9, 9 ],
+			"manaCost": [ 11, 11, 11, 11 ],
 			"battleMagic":
 			{
 				"cd": -99,
@@ -695,14 +695,14 @@
 			"icon": "night_11_magic_vulnerability",
 			"magicTypeDescription": " ",			
 			"description": [ 
-				"night_11_magic_vulnerability_description_spec",
-				"night_11_magic_vulnerability_description_spec",
-				"night_11_magic_vulnerability_description_spec",
-				"night_11_magic_vulnerability_description_1_spec"
+				"night_11_magic_vulnerability_description_new",
+				"night_11_magic_vulnerability_description_new",
+				"night_11_magic_vulnerability_description_spec_new",
+				"night_11_magic_vulnerability_description_1_spec_new"
 			],
 			"bonusDescriptions": [ 
 				{"level": 2, "description": "night_11_magic_vulnerability_description_up_level_bonus_2"}, 
-				{"level": 3, "description": "night_11_magic_vulnerability_description_up_level_bonus_3"}, 
+				{"level": 3, "description": "night_11_magic_vulnerability_description_up_level_bonus_3_alt"}, 
 				{"level": 4, "description": "description_up_effect_enemies_adjacent"}
 			],
 
@@ -716,7 +716,7 @@
 				{ "name": "mercury", "cost": 8 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 11, 11, 11, 11 ],
+			"manaCost": [ 8, 8, 8, 8 ],
 			"battleMagic":
 			{
 				"cd": -99,

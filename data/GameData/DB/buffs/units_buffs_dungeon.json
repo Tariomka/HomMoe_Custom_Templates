@@ -405,7 +405,7 @@
 			"data": {
 				"stats":
 				{
-					"outAllDmgMod": 0.25
+					"outAllDmgMod": -0.25
 				}
 			}
 		},

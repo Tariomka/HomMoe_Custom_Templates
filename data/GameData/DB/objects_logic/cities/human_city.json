@@ -355,7 +355,7 @@
 							"nodePos": { "xPos": 7, "yPos": 1 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 1500 },
+								{ "name": "gold",		"cost": 1250 },
 								{ "name": "wood",		"cost": 5 },
 								{ "name": "dust",		"cost": 20 }
 							]
@@ -389,7 +389,7 @@
 							"nodePos": { "xPos": 6, "yPos": 1 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 3250 },
+								{ "name": "gold",		"cost": 3500 },
 								{ "name": "wood",		"cost": 5 },
 								{ "name": "ore",		"cost": 5 }
 							]

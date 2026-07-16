@@ -488,7 +488,7 @@
 						{
 							"prevBuildings":
 							[
-								{ "sid": "Build_Tier_4", "level": 1 }
+								{ "sid": "Build_Tier_3", "level": 1 }
 							],
 							"nodePos": { "xPos": 5, "yPos": 2 },
 							"costs":

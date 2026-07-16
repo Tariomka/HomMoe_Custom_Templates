@@ -296,7 +296,7 @@
 							"nodePos": { "xPos": 4, "yPos": 0 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 1250 },
+								{ "name": "gold",		"cost": 1000 },
 								{ "name": "ore",		"cost": 5 }
 							]
 						},
@@ -341,7 +341,7 @@
 							"nodePos": { "xPos": 6, "yPos": 0 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 1500 },
+								{ "name": "gold",		"cost": 2000 },
 								{ "name": "wood",		"cost": 5 },
 								{ "name": "gemstones",	"cost": 1 },
 								{ "name": "crystals",	"cost": 1 },
@@ -356,7 +356,7 @@
 							"nodePos": { "xPos": 6, "yPos": 1 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 1250 },
+								{ "name": "gold",		"cost": 1750 },
 								{ "name": "wood",		"cost": 5 },
 								{ "name": "gemstones",	"cost": 1 },
 								{ "name": "dust",		"cost": 20 }
@@ -392,7 +392,7 @@
 							"nodePos": { "xPos": 5, "yPos": 1 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 1000 },
+								{ "name": "gold",		"cost": 1250 },
 								{ "name": "ore",		"cost": 5 },
 								{ "name": "gemstones",	"cost": 2 },
 								{ "name": "crystals",	"cost": 2 },
@@ -455,7 +455,7 @@
 							"nodePos": { "xPos": 6, "yPos": 2 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 3000 },
+								{ "name": "gold",		"cost": 3250 },
 								{ "name": "wood",		"cost": 5 },
 								{ "name": "ore",		"cost": 10 },
 								{ "name": "dust",		"cost": 40 }
@@ -541,7 +541,7 @@
 							"nodePos": { "xPos": 6, "yPos": 3 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 4000 },
+								{ "name": "gold",		"cost": 3500 },
 								{ "name": "wood",		"cost": 10 },
 								{ "name": "ore",		"cost": 5 },
 								{ "name": "gemstones",	"cost": 10 }
@@ -555,8 +555,8 @@
 							"nodePos": { "xPos": 6, "yPos": 4 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 2500 },
-								{ "name": "wood",		"cost": 15 },
+								{ "name": "gold",		"cost": 2000 },
+								{ "name": "wood",		"cost": 10 },
 								{ "name": "ore",		"cost": 10 },
 								{ "name": "gemstones",	"cost": 10 },
 								{ "name": "dust",		"cost": 75 }
@@ -608,6 +608,8 @@
 							"costs":
 							[
 								{ "name": "gold",		"cost": 22500 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 },
 								{ "name": "gemstones",	"cost": 25 },
 								{ "name": "dust",		"cost": 100 }
 							]

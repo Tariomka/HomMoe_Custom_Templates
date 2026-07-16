@@ -30,7 +30,7 @@
 				{ "name": "mercury", "cost": 2 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 6, 6, 6, 6 ],
+			"manaCost": [ 8, 8, 8, 8 ],
 			"battleMagic":
 			{
 				"attackTimeBefore": 0.1,
@@ -62,7 +62,7 @@
 						"buff": 
 						{
 							"sid": "magic_early_start_effect_0",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -91,7 +91,7 @@
 						"buff": 
 						{
 							"sid": "magic_early_start_effect_1",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -120,7 +120,7 @@
 						"buff": 
 						{
 							"sid": "magic_early_start_effect_2",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -149,7 +149,7 @@
 						"buff": 
 						{
 							"sid": "magic_early_start_effect_3",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					}
@@ -345,7 +345,7 @@
 				{ "name": "mercury", "cost": 2 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 11, 8, 8, 8 ],
+			"manaCost": [ 9, 7, 7, 7 ],
 			"battleMagic":
 			{
 
@@ -611,10 +611,10 @@
 			"icon": "space_5_magic_trap_jaws",
 			"magicTypeDescription": " ",			
 			"description": [ 
-				"space_5_magic_trap_jaws_description",
-				"space_5_magic_trap_jaws_description",
-				"space_5_magic_trap_jaws_description",
-				"space_5_magic_trap_jaws_description"
+				"space_5_magic_trap_jaws_description_1",
+				"space_5_magic_trap_jaws_description_1",
+				"space_5_magic_trap_jaws_description_1",
+				"space_5_magic_trap_jaws_description_1"
 			],
 			"bonusDescriptions": [ 
 				{"level": 2, "description": "description_up_effect_trap_damage_percent_per_sp_0_1"}, 
@@ -632,7 +632,7 @@
 				{ "name": "mercury", "cost": 6 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 9, 9, 9, 9 ],
+			"manaCost": [ 11, 11, 11, 11 ],
 			"battleMagic":
 			{
 
@@ -1177,7 +1177,7 @@
 				{ "name": "mercury", "cost": 4 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 14, 11, 11, 11 ],
+			"manaCost": [ 18, 14, 14, 14 ],
 			"battleMagic":
 			{
 				"magicDealers": 
@@ -1347,7 +1347,7 @@
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
 
-						"levelDmg": 20
+						"levelDmg": 15
 					},
 					{
 						"instacast": true,
@@ -1374,7 +1374,7 @@
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
 
-						"levelDmg": 30
+						"levelDmg": 25
 					},
 					{
 						"instacast": true,
@@ -1401,7 +1401,7 @@
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
 
-						"levelDmg": 45
+						"levelDmg": 40
 					},
 					{
 						"instacast": true,
@@ -1428,7 +1428,7 @@
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "absolute",
 
-						"levelDmg": 45
+						"levelDmg": 40
 					}
 				],
 				"dealersPerLevels":

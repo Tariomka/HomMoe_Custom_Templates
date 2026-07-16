@@ -207,7 +207,7 @@
 				}
 			],
 
-			"unitsData":  {  "units": [ { "sids": [ "flicker", "flicker_upg", "flicker_upg_alt" ], "weeklyIncrement": 16 } ]  },
+			"unitsData":  {  "units": [ { "sids": [ "flicker", "flicker_upg", "flicker_upg_alt" ], "weeklyIncrement": 19 } ]  },
 			"guardUnits": [  ]
 		},
 		{
@@ -230,7 +230,7 @@
 				}
 			],
 
-			"unitsData":  {  "units": [ { "sids": [ "pet", "pet_upg", "pet_upg_alt" ], "weeklyIncrement": 13 } ]  },
+			"unitsData":  {  "units": [ { "sids": [ "pet", "pet_upg", "pet_upg_alt" ], "weeklyIncrement": 14 } ]  },
 			"guardUnits": [  ]
 		},
 		{

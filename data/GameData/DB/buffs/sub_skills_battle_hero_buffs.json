@@ -19,8 +19,8 @@
 			"data": {
 				"stats":
 				{
-					"damageMin": 12,
-					"damageMax": 12
+					"damageMin": 6,
+					"damageMax": 6
 				}
 			}
 		},
@@ -43,8 +43,8 @@
 			"data": {
 				"stats":
 				{
-					"damageMin": 16,
-					"damageMax": 16
+					"damageMin": 8,
+					"damageMax": 8
 				}
 			}
 		},
@@ -67,8 +67,8 @@
 			"data": {
 				"stats":
 				{
-					"damageMin": 20,
-					"damageMax": 20
+					"damageMin": 10,
+					"damageMax": 10
 				}
 			}
 		},
@@ -91,10 +91,12 @@
 			"data": {
 				"stats":
 				{
-					"damageMin": 24,
-					"damageMax": 24
+					"damageMin": 12,
+					"damageMax": 12
 				}
-			}
+			},
+
+			"statOverrides": [  {  "stat": "hp", "value": 3  }  ]
 		},
 
 		{
@@ -115,10 +117,12 @@
 			"data": {
 				"stats":
 				{
-					"damageMin": 28,
-					"damageMax": 28
+					"damageMin": 14,
+					"damageMax": 14
 				}
-			}
+			},
+
+			"statOverrides": [  {  "stat": "hp", "value": 3  }  ]
 		},
 
 		{
@@ -136,12 +140,7 @@
 
 			"addition": "duration",
 
-			"data": {
-				"stats":
-				{
-					"offence": 10
-				}
-			}
+			"statOverrides": [  {  "stat": "hp", "value": 4  }  ]
 		},
 
 		{
@@ -159,36 +158,7 @@
 
 			"addition": "duration",
 
-			"data": {
-				"stats":
-				{
-					"defence": 10
-				}
-			}
-		},
-
-		{
-			"id": "sub_skill_summoner_3_unit_bonus",
-
-			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
-
-			"icon": "subskill_summoner_1_unit_bonus_icon",
-			"name_": "subskill_summoner_1_unit_bonus_name",
-			"description_": "subskill_summoner_1_unit_bonus_description",
-
-			"tags": [ "positive" ],
-
-			"maxDuration": 1,
-
-			"addition": "duration",
-
-			"data": {
-				"stats":
-				{
-					"speed": 2,
-					"initiative": 2
-				}
-			}
+			"statOverrides": [  {  "stat": "hp", "value": 5  }  ]
 		},
 
 		{
@@ -486,6 +456,108 @@
 			"statOverrides": [  {  "stat": "moral", "value": 0  }  ]
 		},
 
+
+
+		{
+			"id": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "monster_head_artifact_unit_bonus_icon",
+			"name_": "monster_head_artifact_unit_bonus_name",
+			"description_": "monster_head_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {	
+
+				"immunities": 
+				[ 
+					{ "type": "mechanic", "tags": [ "berserk" ] },
+					{ "type": "mechanic", "tags": [ "revenge_berserk" ] }
+				]
+			}
+		},
+
+		{
+			"id": "gifts_of_dwarven_lords_protective_belt_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "monster_head_artifact_unit_bonus_icon",
+			"name_": "monster_head_artifact_unit_bonus_name",
+			"description_": "monster_head_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {	
+
+				"immunities": 
+				[ 
+					{ "type": "effect", "tags": [ "sleep_effect" ] }
+				]
+			}
+		},
+
+		{
+			"id": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "monster_head_artifact_unit_bonus_icon",
+			"name_": "monster_head_artifact_unit_bonus_name",
+			"description_": "monster_head_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {	
+
+				"immunities": 
+				[ 
+					{ "type": "effect", "tags": [ "twilightEffect" ] },
+					{ "type": "effect", "tags": [ "shacklesEffect" ] }
+				]
+			}
+		},
+
+		{
+			"id": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "monster_head_artifact_unit_bonus_icon",
+			"name_": "monster_head_artifact_unit_bonus_name",
+			"description_": "monster_head_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {	
+
+				"immunities": 
+				[ 
+					{ "type": "mechanic", "tags": [ "kill_stacks" ] }
+				]
+			}
+		},
+
+
+
 		{
 			"id": "sub_skill_siege_2_unit_bonus",
 
@@ -517,7 +589,7 @@
 		{
 			"id": "sub_class_nature_warrior_1_unit_bonus",
 
-			"infinite": true, "hidden": false, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
 
 			"icon": "sub_class_undead_magic_1_unit_bonus_icon",
 			"name_": "sub_class_undead_magic_1_unit_bonus_name",

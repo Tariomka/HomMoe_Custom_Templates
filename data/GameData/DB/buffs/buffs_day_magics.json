@@ -14,7 +14,7 @@
 			"tags": [ "positive" ],	"addition": "duration",
 			"isPositive": true,
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.20 }	]	}	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.15 }	]	}	}	}
 		},
 		{
 			"id": "magic_sharp_edge_effect_1",
@@ -29,7 +29,7 @@
 			"tags": [ "positive" ],	"addition": "duration",
 			"isPositive": true,
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.25 }	]	}	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.20 }	]	}	}	}
 		},
 		{
 			"id": "magic_sharp_edge_effect_2",
@@ -44,7 +44,7 @@
 			"tags": [ "positive" ],	"addition": "duration",
 			"isPositive": true,
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.35 }	]	}	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.30 }	]	}	}	}
 		},
 
 
@@ -153,7 +153,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": 0.25 } , { "t": "range_attack", "v": 0.25 }	]	}	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": 0.30 } , { "t": "range_attack", "v": 0.30 }	]	}	}	}
 		},
 		{
 			"id": "magic_favorable_wind_effect_2",
@@ -170,7 +170,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": 0.35 } , { "t": "range_attack", "v": 0.35 }	]	}	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": 0.40 } , { "t": "range_attack", "v": 0.40 }	]	}	}	}
 		},
 		{
 			"id": "magic_favorable_wind_effect_3",
@@ -180,14 +180,14 @@
 
 			"icon": "magic_favorable_wind_effect_icon",
 			"name_": "day_4_magic_favorable_wind_name",
-			"description_": "magic_favorable_wind_effect_description",
+			"description_": "magic_favorable_wind_effect_2_description",
 
 			"tags": [ "positive" ],
 			"isPositive": true,
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": 0.50 } , { "t": "range_attack", "v": 0.50 }	]	}	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": 0.40 } , { "t": "range_attack", "v": 0.40 }	]	}	}, "ignoreShootDmgBuff": true	}
 		},
 
 
@@ -272,7 +272,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"defence": -2,	"offence": -2	}	}
+			"data": {	"stats": 	{	"defence": -3,	"offence": -3	}	}
 		},
 		{
 			"id": "magic_shorten_shadow_effect_1",
@@ -289,7 +289,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"defence": -2,	"offence": -2	}	},
+			"data": {	"stats": 	{	"defence": -3,	"offence": -3	}	},
 
 			"actions":
 			[
@@ -381,7 +381,7 @@
 			
 			"addition": "data",
 
-			"data": {	"stats": 	{	"defence": -2,	"offence": -2	}	}
+			"data": {	"stats": 	{	"defence": -3,	"offence": -3	}	}
 		},
 
 		{
@@ -399,7 +399,7 @@
 			
 			"addition": "combined",
 
-			"data": {	"stats": 	{	"defence": -4,	"offence": -4	}	}
+			"data": {	"stats": 	{	"defence": -6,	"offence": -6	}	}
 		},
 
 
@@ -818,7 +818,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"inAllDmgMod": -0.20	}	}
+			"data": {	"stats": 	{	"inAllDmgMod": -0.15	}	}
 		},
 		{
 			"id": "magic_radiant_armor_effect_1",
@@ -834,7 +834,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"inAllDmgMod": -0.30	}	}
+			"data": {	"stats": 	{	"inAllDmgMod": -0.25	}	}
 		},
 		{
 			"id": "magic_radiant_armor_effect_2",
@@ -850,7 +850,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"inAllDmgMod": -0.40	}	}
+			"data": {	"stats": 	{	"inAllDmgMod": -0.35	}	}
 		},
 
 
@@ -1568,7 +1568,7 @@
 			"tags": [ "positive" ],	"addition": "duration",
 			"isPositive": true,
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.20 }	]	}	,	"alwaysMaxDmg":	true	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.15 }	]	}	,	"alwaysMaxDmg":	true	}	}
 		},
 		{
 			"id": "magic_sharp_edge_effect_1_special",
@@ -1583,7 +1583,7 @@
 			"tags": [ "positive" ],	"addition": "duration",
 			"isPositive": true,
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.25 }	]	}	,	"alwaysMaxDmg":	true	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.20 }	]	}	,	"alwaysMaxDmg":	true	}	}
 		},
 		{
 			"id": "magic_sharp_edge_effect_2_special",
@@ -1598,7 +1598,7 @@
 			"tags": [ "positive" ],	"addition": "duration",
 			"isPositive": true,
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.35 }	]	}	,	"alwaysMaxDmg":	true	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "normal_damage", "v": 0.30 }	]	}	,	"alwaysMaxDmg":	true	}	}
 		},
 
 
