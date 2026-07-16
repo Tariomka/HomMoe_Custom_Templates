@@ -49,10 +49,10 @@ func GetQualityFrom(zone entities.Zone) Quality {
 		return QualityHighest
 	case strings.Contains(pool, "_t4_") || strings.Contains(pool, "_t5_"):
 		return QualityHigh
-	case strings.Contains(pool, "_t1_"):
-		return QualityLowest
 	case strings.Contains(pool, "_t2_"):
 		return QualityLow
+	case strings.Contains(pool, "_t1_"):
+		return QualityLowest
 	case strings.Contains(pool, "_t3_"):
 		fallthrough
 	default:

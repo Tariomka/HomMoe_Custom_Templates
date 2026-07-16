@@ -1,6 +1,6 @@
 [
 	{
-		"name": "template_pool_jebus_cross_guarded_start_zone",
+		"name": "template_pool_jebus_tournament_guarded_start_zone",
 
 		"valueDistribution": 
 		{ 
@@ -35,7 +35,7 @@
 			},
 
 			{ 	"weight": 340000,
-				"includeLists":		[ "template_pool_jebus_cross_guarded_start_zone_pandora_box" ]
+				"includeLists":		[ "template_pool_jebus_tournament_guarded_start_zone_pandora_box" ]
 			},
 			{ 	"weight": 0,
 				"includeLists":		[ "basic_content_list_pickup_pandora_box" ]
@@ -95,7 +95,7 @@
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_3" ]
 			},
 			{ 	"weight": 5000,
-				"includeLists": 	[ "template_pool_jebus_cross_guarded_resource_banks_tier_3_pro" ]
+				"includeLists": 	[ "template_pool_jebus_tournament_guarded_resource_banks_tier_3_pro" ]
 			},
 
 			{ 	"weight": 300000,
@@ -107,7 +107,7 @@
 	},
 
 	{
-		"name": "template_pool_jebus_cross_unguarded_start_zone",
+		"name": "template_pool_jebus_tournament_unguarded_start_zone",
 
 		"valueDistribution": 
 		{ 
@@ -173,7 +173,7 @@
 
 
 	{
-		"name": "template_pool_jebus_cross_guarded_side_zone",
+		"name": "template_pool_jebus_tournament_guarded_side_zone",
 
 		"valueDistribution": 
 		{ 
@@ -208,7 +208,7 @@
 			},
 
 			{ 	"weight": 300000,
-				"includeLists":		[ "template_pool_jebus_cross_guarded_side_zone_pandora_box" ]
+				"includeLists":		[ "template_pool_jebus_tournament_guarded_side_zone_pandora_box" ]
 			},
 			{ 	"weight": 0,
 				"includeLists":		[ "basic_content_list_pickup_pandora_box" ]
@@ -268,7 +268,7 @@
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_3" ]
 			},
 			{ 	"weight": 40000,
-				"includeLists": 	[ "template_pool_jebus_cross_guarded_resource_banks_tier_3_pro" ]
+				"includeLists": 	[ "template_pool_jebus_tournament_guarded_resource_banks_tier_3_pro" ]
 			},
 
 			{ 	"weight": 250000,
@@ -280,7 +280,7 @@
 	},
 
 	{
-		"name": "template_pool_jebus_cross_unguarded_side_zone",
+		"name": "template_pool_jebus_tournament_unguarded_side_zone",
 
 		"valueDistribution": 
 		{ 
@@ -346,7 +346,7 @@
 
 
 	{
-		"name": "template_pool_jebus_cross_guarded_center_zone",
+		"name": "template_pool_jebus_tournament_guarded_center_zone",
 
 		"valueDistribution": 
 		{
@@ -355,7 +355,7 @@
 
 		"groups":
 		[
-			{ 	"weight": 250000,
+			{ 	"weight": 350000,
 				"includeLists": 	[ "basic_content_list_pickup_random_items" ],
 				"content": 			[ { "sid" : "random_item_common", "weight": 0 }, { "sid" : "random_item_rare", "weight": 50 }, { "sid" : "random_item_epic", "weight": 50 }, { "sid" : "random_item_legendary", "weight": 150 } ]
 			},
@@ -377,8 +377,8 @@
 				"includeLists": 	[ "basic_content_list_pickup_scroll_box" ]
 			},
 
-			{ 	"weight": 225000,
-				"includeLists":		[ "template_pool_jebus_cross_guarded_center_zone_pandora_box" ]
+			{ 	"weight": 275000,
+				"includeLists":		[ "template_pool_jebus_tournament_guarded_center_zone_pandora_box" ]
 			},
 			{ 	"weight": 0,
 				"includeLists":		[ "basic_content_list_pickup_pandora_box" ]
@@ -405,7 +405,7 @@
 			{ 	"weight": 30000,
 				"includeLists": 	[ "basic_content_list_building_hero_stats_and_skills_tier_2" ]
 			},
-			{ 	"weight": 60000,
+			{ 	"weight": 90000,
 				"includeLists": 	[ "basic_content_list_building_hero_stats_and_skills_tier_3" ]
 			},
 			{ 	"weight": 10000,
@@ -433,15 +433,15 @@
 			{ 	"weight": 10000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_3" ]
 			},
-			{ 	"weight": 20000,
-				"includeLists": 	[ "template_pool_jebus_cross_guarded_resource_banks_tier_3_pro" ],
+			{ 	"weight": 50000,
+				"includeLists": 	[ "template_pool_jebus_tournament_guarded_resource_banks_tier_3_pro" ],
 				"content": 			[ { "sid" : "unstable_ruins", "weight": 50 } ]			
 			},
-			{ 	"weight": 20000,
-				"includeLists": 	[ "template_pool_jebus_cross_guarded_resource_banks_tier_3_base" ]
+			{ 	"weight": 30000,
+				"includeLists": 	[ "template_pool_jebus_tournament_guarded_resource_banks_tier_3_base" ]
 			},
 
-			{ 	"weight": 250000,
+			{ 	"weight": 160000,
 				"includeLists": 	[ "basic_content_list_building_guarded_units_banks_no_biome_restriction" ],
 				"content": 			[ { "sid" : "point_of_balance", "weight": 50 } ]			
 			}
@@ -450,7 +450,7 @@
 	},
 
 	{
-		"name": "template_pool_jebus_cross_unguarded_center_zone",
+		"name": "template_pool_jebus_tournament_unguarded_center_zone",
 
 		"valueDistribution": 
 		{ 
@@ -496,11 +496,11 @@
 			{ 	"weight": 15000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2" ]
 			},
-			{ 	"weight": 15000,
+			{ 	"weight": 25000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_3" ]
 			},
 
-			{ 	"weight": 100000,
+			{ 	"weight": 50000,
 				"includeLists": 	[ "basic_content_list_building_guarded_units_banks_no_biome_restriction" ],
 				"content": 			[ { "sid" : "point_of_balance", "weight": 50 } ]			
 			}

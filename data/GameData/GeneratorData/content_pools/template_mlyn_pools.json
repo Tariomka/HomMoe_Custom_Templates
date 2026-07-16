@@ -225,13 +225,13 @@
 				"includeLists": 	[ "content_list_building_uncommon_hero_stats" ],
 				"content": 			[ { "sid" : "fort", "weight": 200 }, { "sid" : "orb_observatory", "weight": 200 }, { "sid" : "college_of_wonder", "weight": 50 } ]
 			},
-			{ 	"weight": 10,
+			{ 	"weight": 5,
 				"includeLists": 	[ "content_list_building_uncommon_resource_banks" ]
 			},
-			{ 	"weight": 15,
+			{ 	"weight": 10,
 				"includeLists": 	[ "content_list_building_uncommons_magic" ]
 			},
-			{ 	"weight": 20,
+			{ 	"weight": 10,
 				"includeLists": 	[ "content_list_building_uncommon_guarded_resource_banks" ]
 			},
 			{ 	"weight": 1,
@@ -240,7 +240,7 @@
 
 			}
 		],
-		"bans": [ {"sid": "monty_hall", "variant":3} ]
+		"bans": [ {"sid": "research_laboratory"}, {"sid": "monty_hall", "variant":3} ]
 	},
 
 	{

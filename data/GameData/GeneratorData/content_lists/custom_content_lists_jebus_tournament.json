@@ -1,6 +1,6 @@
 [
 	{
-		"name": "template_pool_jebus_cross_guarded_start_zone_pandora_box",
+		"name": "template_pool_jebus_tournament_guarded_start_zone_pandora_box",
 		"content": 
 		[
 			{ "sid" : "pandora_box",	"variant": 0,	"weight": 216	},			
@@ -33,7 +33,7 @@
 	},
 
 	{
-		"name": "template_pool_jebus_cross_guarded_side_zone_pandora_box",
+		"name": "template_pool_jebus_tournament_guarded_side_zone_pandora_box",
 		"content": 
 		[
 			{ "sid" : "pandora_box",	"variant": 0,	"weight": 0	},			
@@ -54,7 +54,7 @@
 	},
 
 	{
-		"name": "template_pool_jebus_cross_guarded_center_zone_pandora_box",
+		"name": "template_pool_jebus_tournament_guarded_center_zone_pandora_box",
 		"content": 
 		[	
 			{ "sid" : "pandora_box",	"variant": 2,	"weight": 840	},
@@ -84,7 +84,7 @@
 	},
 
 		{
-		"name": "template_pool_jebus_cross_guarded_resource_banks_tier_3_base",
+		"name": "template_pool_jebus_tournament_guarded_resource_banks_tier_3_base",
 		"content": 
 		[
 			{ "sid": "troglodyte_throne",		"weight": 100	},
@@ -93,7 +93,7 @@
 	},
 
 	{
-		"name": "template_pool_jebus_cross_guarded_resource_banks_tier_3_pro",
+		"name": "template_pool_jebus_tournament_guarded_resource_banks_tier_3_pro",
 		"content": 
 		[
 			{ "sid": "unstable_ruins",			"weight": 100	},
