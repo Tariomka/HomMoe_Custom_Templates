@@ -25,7 +25,7 @@ Priority meaning:
 
 ## Findings
 
-### CQ-01 - Lowest-tier mandatory content does not lift content limits
+### CQ-01 - Lowest-tier mandatory content does not lift content limits - DONE
 
 **Priority:** P0 - correctness
 
