@@ -26,6 +26,7 @@
         "gofmt",
         "gofont",
         "golines",
+        "gosec",
         "govet",
         "heros",
         "hommoe",
