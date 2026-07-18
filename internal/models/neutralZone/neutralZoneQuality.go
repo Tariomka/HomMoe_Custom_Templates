@@ -62,6 +62,23 @@ func (this Quality) GetIndex() int {
 	return int(this)
 }
 
+func GetQualityFromIndex(index int) Quality {
+	switch index {
+	case int(QualityLowest):
+		return QualityLowest
+	case int(QualityLow):
+		return QualityLow
+	case int(QualityMedium):
+		return QualityMedium
+	case int(QualityHigh):
+		return QualityHigh
+	case int(QualityHighest):
+		return QualityHighest
+	default:
+		return QualityUnknown
+	}
+}
+
 func GetQualityFrom(zone entities.Zone) Quality {
 	// v2 of GetQualityFrom, assumes the Quality by the same values as Profile information
 	// Will need to make it more robust in the future, if rmg.json files will be loaded

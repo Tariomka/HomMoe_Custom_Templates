@@ -81,7 +81,7 @@ func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 	}
 	if zone_helpers.IsZoneNameNeutral(zone.Name) &&
 		(this.qualityDropdown.WasUpdated || this.castleDropdown.WasUpdated) {
-		quality := neutralZone.Quality(this.qualityDropdown.GetSelectedIndex())
+		quality := neutralZone.GetQualityFromIndex(this.qualityDropdown.GetSelectedIndex())
 		castles := this.castleDropdown.GetSelectedIndex()
 		connection_editor.ApplyNeutralZoneQuality(zone, quality, castles, this.tuning)
 		this.geometryDirty = true // tier color / castle glyph live in previewZones
