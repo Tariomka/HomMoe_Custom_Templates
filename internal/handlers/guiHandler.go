@@ -67,10 +67,6 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 		return dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid
 	}
 
-	if templateDto.Config.PlayerCount < 2 || templateDto.Config.PlayerCount > 8 {
-		return dtos.TemplateLoadDto{}, common_errors.ErrInvalidPlayerCount
-	}
-
 	newTemplate := *templateDto.Template
 	newTemplate.Variants = slices.Clone(templateDto.Template.Variants)
 	newTemplate.Variants[0].Zones = templateDto.Zones
