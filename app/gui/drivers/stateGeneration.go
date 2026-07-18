@@ -112,6 +112,9 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 	status := fmt.Sprintf(
 		"Template '%s' generated with latest changes - %d zones, %d connections.",
 		this.lastTemplate.Name, zoneCount, connectionCount)
+	if len(dto.Warnings) > 0 {
+		status += fmt.Sprintf(" Note that %d warning(s) were found and fixed.", len(dto.Warnings))
+	}
 	if reapplyManual {
 		status += " (Manual zone edits reapplied.)"
 	}

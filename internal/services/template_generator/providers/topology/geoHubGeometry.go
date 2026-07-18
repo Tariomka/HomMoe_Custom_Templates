@@ -48,6 +48,7 @@ type geoHubGeometry struct {
 // keep the legacy regular-hexagon-ratio layout (sqrt(3)/2 stable radius,
 // +-30 degree ideal offset with a sector-fraction fallback).
 func newGeoHubGeometry(playerCount int) geoHubGeometry {
+	playerCount = max(playerCount, 2)
 	sector := 2 * math.Pi / float64(playerCount)
 	playerRadius := geoHubPlayerRadiusFor(playerCount)
 	if playerCount >= geoHubEquiangularMinPlayers && playerCount <= geoHubEquiangularMaxPlayers {

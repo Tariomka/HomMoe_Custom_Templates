@@ -15,7 +15,7 @@ const defaultTemplateName = "Custom Template"
 type GeneratorConfig struct {
 	TemplateName string
 	GameMode     string // [registry.gameModes]
-	PlayerCount  int    // 1..8
+	PlayerCount  int    // 2..8
 	MapSize      int    // raw map size in tiles (e.g. 160). sizeX = sizeZ = MapSize.
 
 	HeroSettings HeroSettings
