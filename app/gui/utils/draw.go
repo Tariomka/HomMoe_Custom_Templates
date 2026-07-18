@@ -30,7 +30,7 @@ func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int)
 
 	lineColor := themes.ColorsPreview.DirectLine
 	lineWidth := float32(gtx.Dp(unit.Dp(2.0)))
-	if conn.Portal {
+	if conn.IsPortal() {
 		lineColor = themes.ColorsPreview.PortalLine
 		lineWidth = float32(gtx.Dp(unit.Dp(1.5)))
 	}
@@ -96,9 +96,7 @@ func drawOffsetText(
 	}()
 	call := macro.Stop()
 
-	tx := offset.X - dims.Size.X/2
-	ty := offset.Y - dims.Size.Y/2
-	stack := op.Offset(image.Pt(tx, ty)).Push(gtx.Ops)
+	stack := op.Offset(offset.Sub(dims.Size.Div(2))).Push(gtx.Ops)
 	call.Add(gtx.Ops)
 	stack.Pop()
 }
@@ -109,7 +107,7 @@ func zoneColors(zone preview.Zone) (fill, edge color.NRGBA) {
 		return themes.ColorsPreview.SpawnFill, themes.ColorsPreview.SpawnEdge
 	case preview.ZoneTypeHub:
 		return themes.ColorsPreview.HubFill, themes.ColorsPreview.HubEdge
-	case preview.ZoneTypeNeutralZone, preview.ZoneTypeUnknown:
+	case preview.ZoneTypeNeutral, preview.ZoneTypeUnknown:
 	}
 
 	switch zone.Quality {

@@ -195,7 +195,9 @@ func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 		NeutralStackStrengthPercent: 110,
 		BorderGuardStrengthPercent:  90,
 		HubZoneSize:                 1.5,
-		HubZoneCastles:              1,
+		PlayerZoneSize:              1.2,
+		NeutralZoneSize:             0.8,
+		GuardRandomization:          0.1,
 		Advanced: config.AdvancedSettings{
 			Enabled:                     true,
 			NeutralLowestNoCastleCount:  2,
@@ -210,9 +212,7 @@ func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 			NeutralLowCastlesPerZone:    1,
 			NeutralMediumCastlesPerZone: 2,
 			NeutralHighCastlesPerZone:   3,
-			PlayerZoneSize:              1.2,
-			NeutralZoneSize:             0.8,
-			GuardRandomization:          0.1,
+			HubZoneCastles:              1,
 		},
 	}
 

@@ -1,4 +1,4 @@
-package mandatoryContentBuilder_test
+package mandatoryContentItemBuilder_test
 
 import (
 	"testing"
@@ -13,7 +13,7 @@ func TestWhenSoloEncounterIsChosen_MarksBuiltItemAsSoloEncounter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedSid := gofakeit.Word()
-	builder := mandatory_content.NewContentBuilder(expectedSid)
+	builder := mandatory_content.NewContentItemBuilder(expectedSid)
 
 	// Act
 	item := builder.WithSoloEncounter().Build()

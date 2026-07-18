@@ -88,7 +88,7 @@ func TestWhenAdvancedSettingsAreEnabled_UsesConfiguredGuardRandomization(t *test
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.Enabled = true
-	configuration.ZoneConfiguration.Advanced.GuardRandomization = 0.2
+	configuration.ZoneConfiguration.GuardRandomization = 0.2
 
 	// Act
 	tuning := models.NewGenerationTuning(configuration, 5)

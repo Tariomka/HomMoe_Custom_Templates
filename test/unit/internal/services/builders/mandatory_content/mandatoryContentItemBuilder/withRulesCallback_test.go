@@ -1,4 +1,4 @@
-package mandatoryContentBuilder_test
+package mandatoryContentItemBuilder_test
 
 import (
 	"testing"
@@ -17,7 +17,7 @@ func TestWhenRulesCallbackIsProvided_AppendsCallbackRulesOnBuiltItem(t *testing.
 		{Type: "Road", Weight: gofakeit.Number(1, 100)},
 		{Type: "MainObject", Weight: gofakeit.Number(1, 100)},
 	}
-	builder := mandatory_content.NewContentBuilder(expectedSid)
+	builder := mandatory_content.NewContentItemBuilder(expectedSid)
 
 	// Act
 	item := builder.WithRulesCallback(func() []entities.PlacementRule { return expectedRules }).Build()

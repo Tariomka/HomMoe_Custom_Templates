@@ -3,6 +3,7 @@ package zones
 import (
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -16,14 +17,7 @@ type ZoneLabelProvider struct {
 }
 
 func NewZoneLabelProvider() *ZoneLabelProvider {
-	return &ZoneLabelProvider{
-		zoneLabels: []string{
-			"A", "B", "C", "D", "E", "F", "G", "H",
-			"I", "J", "K", "L", "M", "N", "O", "P",
-			"Q", "R", "S", "T", "U", "V", "W", "X",
-			"Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF",
-		},
-	}
+	return &ZoneLabelProvider{zoneLabels: common.GetZoneLabels()}
 }
 
 func (this *ZoneLabelProvider) CreatePlayerLabels(playerCount int) []string {
@@ -97,9 +91,10 @@ func (this *ZoneLabelProvider) GetHoldCityLabel(
 
 func (this *ZoneLabelProvider) CreateZoneName(label string, playerLabels []string) string {
 	if slices.Contains(playerLabels, label) {
-		return "Spawn-" + label
+		return common.PlayerZonePrefix + label
 	}
-	return "Neutral-" + label
+
+	return common.NeutralZonePrefix + label
 }
 
 func (this *ZoneLabelProvider) CreateOrderedZoneLabels(

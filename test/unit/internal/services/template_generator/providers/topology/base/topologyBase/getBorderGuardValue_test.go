@@ -85,7 +85,7 @@ func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *test
 	assert.Equal(t, 15000, guardValue)
 }
 
-func TestWhenNeutralLabelHasNoPlan_MediumQualityGuardIsUsed(t *testing.T) {
+func TestWhenNeutralLabelHasNoPlan_UsesUnknownQualityGuard(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
@@ -95,7 +95,7 @@ func TestWhenNeutralLabelHasNoPlan_MediumQualityGuardIsUsed(t *testing.T) {
 		"A", "Z", []string{"A", "B"}, nil, newUnitTuning())
 
 	// Assert
-	assert.Equal(t, 20000, guardValue)
+	assert.Equal(t, 0, guardValue)
 }
 
 func TestWhenBorderGuardMultiplierIsDoubled_PlayerBorderGuardIsScaled(t *testing.T) {

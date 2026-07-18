@@ -1,4 +1,4 @@
-package mandatoryContentBuilder_test
+package mandatoryContentItemBuilder_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ func TestWhenNameIsProvided_SetsNameOnBuiltItem(t *testing.T) {
 	// Arrange
 	expectedSid := gofakeit.Word()
 	expectedName := gofakeit.Word()
-	builder := mandatory_content.NewContentBuilder(expectedSid)
+	builder := mandatory_content.NewContentItemBuilder(expectedSid)
 
 	// Act
 	item := builder.WithName(expectedName).Build()

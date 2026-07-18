@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -71,7 +72,7 @@ func (this *GeometricHubTopologyService) createConnectionNameIndex(
 	for _, label := range layout.hubPortalLabels {
 		name := "Portal-Hub-" + label
 		names[label] = append(names[label], name)
-		names["Hub"] = append(names["Hub"], name)
+		names[common.HubZoneName] = append(names[common.HubZoneName], name)
 	}
 	return names
 }
@@ -93,15 +94,15 @@ func (this *GeometricHubTopologyService) createZones(
 		hubContentName = "mandatory_content_hub"
 	}
 	zones := []entities.Zone{this.CreateHubZone(
-		connectionNames["Hub"], tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
-		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
+		connectionNames[common.HubZoneName], tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
+		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
 	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
 
 	for index, label := range playerLabels {
 		zone := this.CreateSpawnZone(
 			label, fmt.Sprintf("Player%d", index+1), connectionNames[label],
 			configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-			configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+			configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
 			configuration.GenerateRoads, tuning)
 		position := layout.positions[label]
 		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
@@ -109,7 +110,7 @@ func (this *GeometricHubTopologyService) createZones(
 	}
 	for _, plan := range neutralZones {
 		zone := this.CreateNeutralZone(
-			plan, connectionNames[plan.Label], configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+			plan, connectionNames[plan.Label], configuration.ZoneConfiguration.NeutralZoneSize,
 			tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false)
 		position := layout.positions[plan.Label]
 		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
@@ -149,7 +150,7 @@ func (this *GeometricHubTopologyService) createConnections(
 		}
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName("Portal-Hub-"+label).
-			WithFrom("Hub").
+			WithFrom(common.HubZoneName).
 			WithTo(this.ZoneLabelProvider.CreateZoneName(label, playerLabels)).
 			WithConnectionTypePortal().
 			WithPortalPlacementRulesFrom(portalRule).

@@ -216,7 +216,7 @@ func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.ZoneConfiguration.HubZoneCastles = 3
+	configuration.ZoneConfiguration.Advanced.HubZoneCastles = 3
 	zones := []entities.Zone{
 		{Name: "Hub", MainObjects: []entities.MainObject{{Type: "City"}}},
 	}
@@ -233,7 +233,7 @@ func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.ZoneConfiguration.HubZoneCastles = 2
+	configuration.ZoneConfiguration.Advanced.HubZoneCastles = 2
 	zones := []entities.Zone{
 		{Name: "Hub-A", MainObjects: []entities.MainObject{{Type: "City"}}},
 	}

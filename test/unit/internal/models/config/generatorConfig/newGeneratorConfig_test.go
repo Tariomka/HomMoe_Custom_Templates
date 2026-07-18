@@ -35,12 +35,11 @@ func TestWhenConfigIsCreated_ReturnsDocumentedDefaults(t *testing.T) {
 			StructureDensityPercent:     100,
 			NeutralStackStrengthPercent: 100,
 			BorderGuardStrengthPercent:  100,
+			PlayerZoneSize:              1.0,
+			NeutralZoneSize:             1.0,
+			GuardRandomization:          0.05,
 			HubZoneSize:                 1.0,
-			Advanced: config.AdvancedSettings{
-				PlayerZoneSize:     1.0,
-				NeutralZoneSize:    1.0,
-				GuardRandomization: 0.05,
-			},
+			Advanced:                    config.AdvancedSettings{},
 		},
 		GameEndConditions: &config.GameEndConditions{
 			VictoryCondition: "win_condition_1",

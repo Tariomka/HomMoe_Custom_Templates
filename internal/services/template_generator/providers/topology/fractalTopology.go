@@ -98,9 +98,8 @@ func bucketNeutralsPerPlayer(neutralZones neutralZone.Plans, playerCount int) [3
 		case neutralZone.QualityMedium:
 			tierBuckets[1] = append(tierBuckets[1], index)
 		case neutralZone.QualityLow, neutralZone.QualityLowest:
-			fallthrough
-		default:
 			tierBuckets[0] = append(tierBuckets[0], index)
+		case neutralZone.QualityUnknown:
 		}
 	}
 	return [3][][]int{

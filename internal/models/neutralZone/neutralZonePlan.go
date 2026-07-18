@@ -47,16 +47,9 @@ func (this *Plans) AddPlan(label string, quality Quality, castleCount int) {
 }
 
 func (this *Plans) GetQuality(label string) Quality {
-	// TODO: change this to actual values, i.e. default is unknown,
-	// but Im not sure if everything will work correctly and with this scope,
-	// it will be hard to see what caused a failure
-	if len(*this) == 0 {
-		return QualityMedium
-	}
-
 	plan, ok := linq.FromSlice(*this).First(func(x Plan) bool { return x.Label == label })
 	if !ok {
-		return QualityMedium
+		return QualityUnknown
 	}
 
 	return plan.Quality

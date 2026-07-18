@@ -19,7 +19,7 @@ func TestWhenZoneNamesVary_ReturnsMatchingZoneType(t *testing.T) {
 		{"WhenNameIsHubLowercase_ReturnsHubType", "hub", preview.ZoneTypeHub},
 		{"WhenNameHasHubPrefix_ReturnsHubType", "Hub-A", preview.ZoneTypeHub},
 		{"WhenNameHasSpawnPrefix_ReturnsPlayerType", "Spawn-A", preview.ZoneTypePlayer},
-		{"WhenNameHasNeutralPrefix_ReturnsNeutralType", "Neutral-C", preview.ZoneTypeNeutralZone},
+		{"WhenNameHasNeutralPrefix_ReturnsNeutralType", "Neutral-C", preview.ZoneTypeNeutral},
 		{"WhenNameHasNoKnownPrefix_ReturnsUnknownType", "Colosseum", preview.ZoneTypeUnknown},
 		{"WhenNameIsEmpty_ReturnsUnknownType", "", preview.ZoneTypeUnknown},
 	}

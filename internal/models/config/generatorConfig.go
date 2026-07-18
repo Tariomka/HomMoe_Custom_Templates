@@ -87,12 +87,11 @@ func NewGeneratorConfig() *GeneratorConfig {
 			StructureDensityPercent:     100,
 			NeutralStackStrengthPercent: 100,
 			BorderGuardStrengthPercent:  100,
+			PlayerZoneSize:              1.0,
+			NeutralZoneSize:             1.0,
 			HubZoneSize:                 1.0,
-			Advanced: AdvancedSettings{
-				PlayerZoneSize:     1.0,
-				NeutralZoneSize:    1.0,
-				GuardRandomization: 0.05,
-			},
+			GuardRandomization:          0.05,
+			Advanced:                    AdvancedSettings{},
 		},
 		GameEndConditions: &GameEndConditions{
 			VictoryCondition: registry.GetWinningConditionValues().Standard,

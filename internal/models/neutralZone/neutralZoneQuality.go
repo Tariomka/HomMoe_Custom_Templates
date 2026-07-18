@@ -3,6 +3,7 @@ package neutralZone
 import (
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -65,7 +66,7 @@ func GetQualityFrom(zone entities.Zone) Quality {
 	// v2 of GetQualityFrom, assumes the Quality by the same values as Profile information
 	// Will need to make it more robust in the future, if rmg.json files will be loaded
 
-	if strings.HasPrefix(zone.Name, "Spawn-") {
+	if strings.HasPrefix(zone.Name, common.PlayerZonePrefix) {
 		return QualityUnknown // Player spawn zones are not neutral zones
 	}
 

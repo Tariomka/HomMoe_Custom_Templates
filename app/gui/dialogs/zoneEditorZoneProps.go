@@ -11,12 +11,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
 func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *entities.Zone) []layout.Widget {
-	isNeutral := strings.HasPrefix(zone.Name, "Neutral-")
+	isNeutral := zone_helpers.IsZoneNameNeutral(zone.Name)
 	isSpawn := this.playerZones[zone.Name]
 	rows := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
@@ -78,7 +79,8 @@ func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 	if value, err := strconv.ParseFloat(strings.TrimSpace(this.zoneWeeklyEdit.Text()), 64); err == nil {
 		zone.GuardWeeklyIncrement = value
 	}
-	if strings.HasPrefix(zone.Name, "Neutral-") && (this.qualityDropdown.WasUpdated || this.castleDropdown.WasUpdated) {
+	if zone_helpers.IsZoneNameNeutral(zone.Name) &&
+		(this.qualityDropdown.WasUpdated || this.castleDropdown.WasUpdated) {
 		quality := neutralZone.Quality(this.qualityDropdown.GetSelectedIndex())
 		castles := this.castleDropdown.GetSelectedIndex()
 		connection_editor.ApplyNeutralZoneQuality(zone, quality, castles, this.tuning)

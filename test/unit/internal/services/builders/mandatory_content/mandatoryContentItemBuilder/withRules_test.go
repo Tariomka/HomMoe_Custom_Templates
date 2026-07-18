@@ -1,4 +1,4 @@
-package mandatoryContentBuilder_test
+package mandatoryContentItemBuilder_test
 
 import (
 	"testing"
@@ -16,7 +16,7 @@ func TestWhenRulesAreProvidedTwice_AppendsAllRulesOnBuiltItem(t *testing.T) {
 	firstRule := entities.PlacementRule{Type: "Road", Weight: gofakeit.Number(1, 100)}
 	secondRule := entities.PlacementRule{Type: "Crossroads", Weight: gofakeit.Number(1, 100)}
 	thirdRule := entities.PlacementRule{Type: "MainObject", Weight: gofakeit.Number(1, 100)}
-	builder := mandatory_content.NewContentBuilder(expectedSid)
+	builder := mandatory_content.NewContentItemBuilder(expectedSid)
 
 	// Act
 	item := builder.WithRules(firstRule, secondRule).WithRules(thirdRule).Build()

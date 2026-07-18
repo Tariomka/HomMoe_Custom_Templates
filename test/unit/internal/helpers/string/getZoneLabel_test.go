@@ -16,6 +16,7 @@ func TestWhenZoneNamesVary_ExtractsTrailingLabelAccordingly(t *testing.T) {
 	}{
 		{"WhenNameHasSpawnPrefix_ReturnsLabelAfterPrefix", "Spawn-A", "A"},
 		{"WhenNameHasNeutralPrefix_ReturnsLabelAfterPrefix", "Neutral-C", "C"},
+		{"WhenNameHasAnyOtherPrefix_ReturnsLabelAfterPrefix", "Hub-G", "G"},
 		{"WhenNameHasNoKnownPrefix_ReturnsNameUnchanged", "Hub", "Hub"},
 		{"WhenNameIsEmpty_ReturnsEmptyString", "", ""},
 	}
@@ -25,7 +26,7 @@ func TestWhenZoneNamesVary_ExtractsTrailingLabelAccordingly(t *testing.T) {
 			// Arrange
 
 			// Act
-			actual := helpers.ExtractZoneLabel(testCase.zoneName)
+			actual := helpers.GetZoneLabel(testCase.zoneName)
 
 			// Assert
 			assert.Equal(t, testCase.expected, actual)

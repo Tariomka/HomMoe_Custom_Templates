@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
@@ -158,19 +159,10 @@ func NewDefaultConnection(from, to string, zones []entities.Zone, playerZoneName
 		ConnectionType:       "Direct",
 		GuardValue:           TierExtras[int(tier)][0].Value,
 		GuardZone:            from,
-		GuardMatchGroup:      "rnd_guard_" + ZoneLetterFromName(from) + "_" + ZoneLetterFromName(to),
+		GuardMatchGroup:      "rnd_guard_" + helpers.GetZoneLabel(from) + "_" + helpers.GetZoneLabel(to),
 		GuardWeeklyIncrement: WeeklyIncrementValues[2],
 		IsUserAdded:          true,
 	}
-}
-
-// ZoneLetterFromName extracts the identifier after the first dash in a zone name,
-// e.g. "Spawn-A" → "A", "Neutral-C" → "C".
-func ZoneLetterFromName(zoneName string) string {
-	if _, after, ok := strings.Cut(zoneName, "-"); ok {
-		return after
-	}
-	return zoneName
 }
 
 // FindIsolatedZones returns the names of zones not referenced by any connection.

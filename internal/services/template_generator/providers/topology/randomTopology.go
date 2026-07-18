@@ -127,15 +127,15 @@ func (this *RandomTopologyService) createZones(
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
 					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
 					configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
 						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
+					myConns, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
 	}
 	return zones

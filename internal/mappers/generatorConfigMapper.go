@@ -74,7 +74,9 @@ func (this *GeneratorConfigMapper) mapZoneConfig(editorState dtos.EditorStateDto
 		NeutralStackStrengthPercent: editorState.NeutralStackStrengthPercent,
 		BorderGuardStrengthPercent:  editorState.BorderGuardStrengthPercent,
 		HubZoneSize:                 editorState.HubZoneSize,
-		HubZoneCastles:              editorState.HubZoneCastles,
+		PlayerZoneSize:              editorState.PlayerZoneSize,
+		NeutralZoneSize:             editorState.NeutralZoneSize,
+		GuardRandomization:          editorState.GuardRandomization,
 		Advanced: config.AdvancedSettings{
 			Enabled:                     editorState.AdvancedMode,
 			NeutralLowestNoCastleCount:  editorState.NeutralLowestNoCastleCount,
@@ -89,9 +91,7 @@ func (this *GeneratorConfigMapper) mapZoneConfig(editorState dtos.EditorStateDto
 			NeutralLowCastlesPerZone:    editorState.NeutralLowCastlesPerZone,
 			NeutralMediumCastlesPerZone: editorState.NeutralMediumCastlesPerZone,
 			NeutralHighCastlesPerZone:   editorState.NeutralHighCastlesPerZone,
-			PlayerZoneSize:              editorState.PlayerZoneSize,
-			NeutralZoneSize:             editorState.NeutralZoneSize,
-			GuardRandomization:          editorState.GuardRandomization,
+			HubZoneCastles:              editorState.HubZoneCastles,
 		},
 	}
 }

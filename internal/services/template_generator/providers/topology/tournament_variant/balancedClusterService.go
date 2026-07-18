@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -260,28 +261,19 @@ func (this *BalancedClusterService) createZones(
 	for index, label := range orderedLabels {
 		myConns := connectionNames[index]
 		if label == playerLabel {
-			zones = append(zones, this.CreateSpawnZone(
-				label,
-				fmt.Sprintf("Player%d", playerIndex+1),
-				myConns,
-				configuration.ZoneConfiguration.PlayerZoneCastles,
-				configuration.MatchPlayerCastleFactions,
-				configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
-				tuning.RemoteFootholdCount,
-				configuration.GenerateRoads,
-				tuning,
-			))
+			zones = append(zones,
+				this.CreateSpawnZone(
+					label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
+					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
+					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning))
 		} else {
-			zones = append(zones, this.CreateNeutralZone(
-				linq.FromSlice(allNeutralZonePlans).
-					FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-				myConns,
-				configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-				tuning.RemoteFootholdCount,
-				configuration.GenerateRoads,
-				tuning,
-				false,
-			))
+			zones = append(zones,
+				this.CreateNeutralZone(
+					linq.FromSlice(allNeutralZonePlans).
+						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
+					myConns, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning, false))
 		}
 	}
 	return zones
@@ -306,13 +298,13 @@ func (this *BalancedClusterService) createConnections(
 		nameLookup[indexA]++
 		nameLookup[indexB]++
 
-		fromZone := "Spawn-" + labelFrom
+		fromZone := common.PlayerZonePrefix + labelFrom
 		if labelFrom != playerLabel {
-			fromZone = "Neutral-" + labelFrom
+			fromZone = common.NeutralZonePrefix + labelFrom
 		}
-		toZone := "Spawn-" + labelTo
+		toZone := common.PlayerZonePrefix + labelTo
 		if labelTo != playerLabel {
-			toZone = "Neutral-" + labelTo
+			toZone = common.NeutralZonePrefix + labelTo
 		}
 		connections = append(connections, entities.Connection{
 			Name:           connName,
@@ -322,12 +314,7 @@ func (this *BalancedClusterService) createConnections(
 			GuardZone:      fromZone,
 			SimTurnSquad:   true,
 			GuardValue: this.GetBorderGuardValue(
-				labelFrom,
-				labelTo,
-				[]string{playerLabel},
-				allNeutralZonePlans,
-				tuning,
-			),
+				labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning),
 			GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup:      fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo),
 		})

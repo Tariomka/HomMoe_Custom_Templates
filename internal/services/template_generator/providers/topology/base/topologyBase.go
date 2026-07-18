@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -17,12 +18,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
-)
-
-const (
-	hubZoneName       = "Hub"
-	playerZonePrefix  = "Spawn-"
-	neutralZonePrefix = "Neutral-"
 )
 
 type TopologyBase struct {
@@ -51,9 +46,9 @@ func (this *TopologyBase) CreateVariant(
 	}
 
 	if slices.Contains(playerLabels, firstLabel) {
-		orientationBuilder.WithZeroAngleZone(playerZonePrefix + firstLabel)
+		orientationBuilder.WithZeroAngleZone(common.PlayerZonePrefix + firstLabel)
 	} else {
-		orientationBuilder.WithZeroAngleZone(neutralZonePrefix + firstLabel)
+		orientationBuilder.WithZeroAngleZone(common.NeutralZonePrefix + firstLabel)
 	}
 
 	return variant_content.NewVariantBuilder().
@@ -100,7 +95,7 @@ func (this *TopologyBase) CreateSpawnZone(
 	}
 
 	return variant_content.NewZoneBuilder().
-		WithName(playerZonePrefix + label).
+		WithName(common.PlayerZonePrefix + label).
 		WithSize(utils.NormalizeZoneSize(zoneSize)).
 		WithLayoutSpawns().
 		WithGuardCutoffValue(2000).
@@ -147,7 +142,7 @@ func (this *TopologyBase) CreateNeutralZone(
 	totalMainObjects := plan.CastleCount + tuning.AbandonedOutpostCount
 
 	zoneBuilder := variant_content.NewZoneBuilder().
-		WithName(neutralZonePrefix + plan.Label).
+		WithName(common.NeutralZonePrefix + plan.Label).
 		WithSize(utils.NormalizeZoneSize(zoneSize)).
 		WithLayout(profile.Layout).
 		WithGuardCutoffValue(2000).
@@ -194,7 +189,7 @@ func (this *TopologyBase) CreateHubZone(
 	profile := neutralZone.NewNeutralZoneProfile(neutralZone.QualityHighest)
 
 	zoneBuilder := variant_content.NewZoneBuilder().
-		WithName(hubZoneName).
+		WithName(common.HubZoneName).
 		WithSize(utils.NormalizeZoneSize(size)).
 		WithLayout(profile.Layout).
 		WithGuardCutoffValue(2000).
@@ -292,7 +287,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 	}
 	var additionalConns []entities.Connection
 	for _, label := range playerLabels {
-		zoneName := playerZonePrefix + label
+		zoneName := common.PlayerZonePrefix + label
 		zone, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == zoneName })
 		if !ok {
 			continue
@@ -313,7 +308,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 		}
 
 		additionalConns = append(additionalConns, entities.Connection{
-			Name: fallbackName, From: zoneName, To: playerZonePrefix + partner,
+			Name: fallbackName, From: zoneName, To: common.PlayerZonePrefix + partner,
 			ConnectionType: "Direct", GuardZone: zoneName, SimTurnSquad: true,
 			GuardValue: this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: "fallback_guard_" + fallbackName,
@@ -340,7 +335,7 @@ func spawnZoneHasConnection(zone entities.Zone, connNames map[string]bool) bool 
 // main object to the freshly created fallback connection.
 func appendSpawnFallbackRoads(zones []entities.Zone, label, partner, fallbackName string) {
 	for _, playerLabel := range []string{label, partner} {
-		spawnZoneName := playerZonePrefix + playerLabel
+		spawnZoneName := common.PlayerZonePrefix + playerLabel
 		zoneIndex := slices.IndexFunc(
 			zones,
 			func(candidate entities.Zone) bool { return candidate.Name == spawnZoneName })

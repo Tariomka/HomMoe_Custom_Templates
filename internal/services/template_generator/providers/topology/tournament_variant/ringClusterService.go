@@ -3,6 +3,7 @@ package tournament_variant
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -94,13 +95,13 @@ func (this *RingClusterService) createZones(
 			zones = append(zones, this.CreateSpawnZone(
 				label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
 				configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-				configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+				configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
 				configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones, this.CreateNeutralZone(
 				linq.FromSlice(allNeutralZonePlans).
 					FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+				myConns, configuration.ZoneConfiguration.NeutralZoneSize,
 				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
 	}
@@ -114,7 +115,7 @@ func (this *RingClusterService) createSinglePlayerZone(
 	tuning models.GenerationTuning) entities.Zone {
 	return this.CreateSpawnZone(
 		playerLabel, fmt.Sprintf("Player%d", playerIndex+1), nil, configuration.ZoneConfiguration.PlayerZoneCastles,
-		configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+		configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.PlayerZoneSize,
 		tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning)
 }
 
@@ -140,18 +141,18 @@ func (this *RingClusterService) createConnections(
 			WithGuardMatchGroup(fmt.Sprintf("tourney_ring_guard_%s_%s", labelFrom, labelTo))
 
 		if currentIndex != 0 {
-			zoneFrom := "Neutral-" + labelFrom
+			zoneFrom := common.NeutralZonePrefix + labelFrom
 			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
 		} else {
-			zoneFrom := "Spawn-" + labelFrom
+			zoneFrom := common.PlayerZonePrefix + labelFrom
 			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
 		}
 
 		if nextIndex != 0 {
-			zoneTo := "Neutral-" + labelTo
+			zoneTo := common.NeutralZonePrefix + labelTo
 			connectionBuilder.WithTo(zoneTo)
 		} else {
-			zoneTo := "Spawn-" + labelTo
+			zoneTo := common.PlayerZonePrefix + labelTo
 			connectionBuilder.WithTo(zoneTo)
 		}
 

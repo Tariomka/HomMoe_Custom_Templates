@@ -3,6 +3,7 @@ package tournament_variant
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -62,15 +63,15 @@ func (this *ChainClusterService) createZones(
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
 					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
 					configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(allNeutralZonePlans).
 						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-					myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
+					myConns, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning, false))
 		}
 	}
 	return zones
@@ -87,16 +88,16 @@ func (this *ChainClusterService) createConnections(
 		labelTo := chainLabels[index+1]
 		connectionBuilder := variant_content.NewConnectionBuilder().
 			WithName(name).
-			WithTo("Neutral-" + labelTo).
+			WithTo(common.NeutralZonePrefix + labelTo).
 			WithConnectionTypeDirect().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
 			WithGuardWeeklyIncrement(0.15).
 			WithGuardMatchGroup(fmt.Sprintf("tourney_guard_%s_%s", labelFrom, labelTo))
 
 		if index > 0 {
-			connectionBuilder = connectionBuilder.WithFrom("Neutral-" + labelFrom)
+			connectionBuilder = connectionBuilder.WithFrom(common.NeutralZonePrefix + labelFrom)
 		} else {
-			connectionBuilder = connectionBuilder.WithFrom("Spawn-" + labelFrom)
+			connectionBuilder = connectionBuilder.WithFrom(common.PlayerZonePrefix + labelFrom)
 		}
 
 		connections = append(connections, connectionBuilder.Build())

@@ -236,7 +236,7 @@ func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T)
 
 	// Assert
 	require.Len(t, layout.Connections, 1)
-	assert.True(t, layout.Connections[0].Portal)
+	assert.True(t, layout.Connections[0].IsPortal())
 }
 
 func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
@@ -602,7 +602,7 @@ func TestWhenDirectConnectionExists_DoesNotFlagItAsPortal(t *testing.T) {
 
 	// Assert
 	require.Len(t, layout.Connections, 1)
-	assert.False(t, layout.Connections[0].Portal)
+	assert.False(t, layout.Connections[0].IsPortal())
 }
 
 func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
@@ -622,7 +622,7 @@ func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
 	// Assert
 	portalCount := 0
 	for _, previewConnection := range layout.Connections {
-		if previewConnection.Portal {
+		if previewConnection.IsPortal() {
 			portalCount++
 		}
 	}

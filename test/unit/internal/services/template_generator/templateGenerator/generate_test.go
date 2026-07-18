@@ -728,7 +728,7 @@ func TestWhenAdvancedGuardRandomizationExceedsMaximum_ClampsGuardRandomization(t
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.Enabled = true
-	configuration.ZoneConfiguration.Advanced.GuardRandomization = gofakeit.Float64Range(0.6, 10.0)
+	configuration.ZoneConfiguration.GuardRandomization = gofakeit.Float64Range(0.6, 10.0)
 	generator := template_generator.NewTemplateGenerator(configuration)
 
 	// Act

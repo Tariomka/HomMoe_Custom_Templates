@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenPlanListIsEmpty_ReturnsMediumQuality(t *testing.T) {
+func TestWhenPlanListIsEmpty_ReturnsUnknownQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	plans := neutralZone.Plans{}
@@ -16,10 +16,10 @@ func TestWhenPlanListIsEmpty_ReturnsMediumQuality(t *testing.T) {
 	quality := plans.GetQuality("A")
 
 	// Assert
-	assert.Equal(t, neutralZone.QualityMedium, quality)
+	assert.Equal(t, neutralZone.QualityUnknown, quality)
 }
 
-func TestWhenLabelIsNotFound_ReturnsMediumQuality(t *testing.T) {
+func TestWhenLabelIsNotFound_ReturnsUnknownQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	plans := neutralZone.Plans{{Label: "A", Quality: neutralZone.QualityHigh}}
@@ -28,7 +28,7 @@ func TestWhenLabelIsNotFound_ReturnsMediumQuality(t *testing.T) {
 	quality := plans.GetQuality("missing")
 
 	// Assert
-	assert.Equal(t, neutralZone.QualityMedium, quality)
+	assert.Equal(t, neutralZone.QualityUnknown, quality)
 }
 
 func TestWhenLabelIsFound_ReturnsThatPlanQuality(t *testing.T) {

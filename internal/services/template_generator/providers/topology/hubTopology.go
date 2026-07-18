@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -64,7 +65,7 @@ func (this *HubTopologyService) createZones(
 	hubIsHoldCity bool) []entities.Zone {
 	hubConns := make([]string, len(outerLabels))
 	for index, label := range outerLabels {
-		hubConns[index] = "Hub-" + label
+		hubConns[index] = common.HubZonePrefix + label
 	}
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
@@ -72,23 +73,23 @@ func (this *HubTopologyService) createZones(
 	}
 	zones := []entities.Zone{this.CreateHubZone(
 		hubConns, tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
-		configuration.ZoneConfiguration.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
+		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
 
 	for _, label := range outerLabels {
-		spokeConnectionNames := []string{"Hub-" + label}
+		spokeConnectionNames := []string{common.HubZonePrefix + label}
 		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
 			zones = append(zones,
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", playerIndex+1), spokeConnectionNames,
 					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
 					configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
 						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-					spokeConnectionNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+					spokeConnectionNames, configuration.ZoneConfiguration.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
 	}
@@ -110,21 +111,21 @@ func (this *HubTopologyService) createConnections(
 		outerZone := this.ZoneLabelProvider.CreateZoneName(label, playerLabels)
 		connections = append(connections,
 			variant_content.NewConnectionBuilder().
-				WithName("Hub-"+label).
-				WithFrom("Hub").
+				WithName(common.HubZonePrefix+label).
+				WithFrom(common.HubZoneName).
 				WithTo(outerZone).
 				WithConnectionTypeDirect().
-				WithGuardZone("Hub").
+				WithGuardZone(common.HubZoneName).
 				WithSimTurnSquad().
 				WithGuardValue(hubGuard).
 				WithGuardWeeklyIncrement(0.15).
 				WithGuardMatchGroup("hub_guard_"+label).
 				Build(),
 			variant_content.NewConnectionBuilder().
-				WithFrom("Hub").
+				WithFrom(common.HubZoneName).
 				WithTo(outerZone).
 				WithConnectionTypeDirect().
-				WithGuardZone("Hub").
+				WithGuardZone(common.HubZoneName).
 				WithSimTurnSquad().
 				WithGuardValue(hubGuard).
 				WithGuardWeeklyIncrement(0.15).

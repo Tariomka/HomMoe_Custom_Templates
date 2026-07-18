@@ -1,4 +1,4 @@
-package mandatoryContentBuilder_test
+package mandatoryContentItemBuilder_test
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestWhenMultipleOptionsAreChained_ReturnsItemWithAllAccumulatedValues(t *te
 	expectedSid := gofakeit.Word()
 	expectedName := gofakeit.Word()
 	expectedRule := entities.PlacementRule{Type: "Road", Weight: gofakeit.Number(1, 100)}
-	builder := mandatory_content.NewContentBuilder(expectedSid)
+	builder := mandatory_content.NewContentItemBuilder(expectedSid)
 
 	// Act
 	item := builder.

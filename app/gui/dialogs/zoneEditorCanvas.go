@@ -21,6 +21,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
@@ -207,10 +209,12 @@ func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection 
 		edge := this.edges[i]
 		for step := range 21 {
 			t := float64(step) / 20.0
-			mt := 1 - t
-			bx := mt*mt*float64(edge.p0.X) + 2*mt*t*float64(edge.ctrl.X) + t*t*float64(edge.p1.X)
-			by := mt*mt*float64(edge.p0.Y) + 2*mt*t*float64(edge.ctrl.Y) + t*t*float64(edge.p1.Y)
-			distance := math.Hypot(float64(pos.X)-bx, float64(pos.Y)-by)
+			bezierPoint := helpers.GetVectorOnQuadraticBezierCurve(
+				data.NewVec2(float64(edge.p0.X), float64(edge.p0.Y)),
+				data.NewVec2(float64(edge.ctrl.X), float64(edge.ctrl.Y)),
+				data.NewVec2(float64(edge.p1.X), float64(edge.p1.Y)),
+				t)
+			distance := math.Hypot(float64(pos.X)-bezierPoint.X, float64(pos.Y)-bezierPoint.Y)
 			if distance < bestDistance {
 				bestDistance = distance
 				best = edge.conn

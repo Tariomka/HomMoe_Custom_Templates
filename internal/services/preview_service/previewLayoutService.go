@@ -103,7 +103,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 
 		previewZone := preview.Zone{
 			Name:    zone.Name,
-			Label:   helpers.ExtractZoneLabel(zone.Name),
+			Label:   helpers.GetZoneLabel(zone.Name),
 			Center:  pos,
 			Quality: neutralZone.GetQualityFrom(zone),
 			Type:    zone_helpers.GetZoneTypeFromName(zone.Name),
@@ -190,9 +190,13 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 		isPortal := connection.ConnectionType == registry.GetConnectionTypeValues().Portal ||
 			len(connection.PortalPlacementRulesFrom) > 0 ||
 			len(connection.PortalPlacementRulesTo) > 0
+		connectionType := preview.ConnectionTypeDirect
+		if isPortal {
+			connectionType = preview.ConnectionTypePortal
+		}
 		result = append(
 			result,
-			preview.Connection{Start: startPoint, End: endPoint, Ctrl: ctrl, Portal: isPortal},
+			preview.Connection{Start: startPoint, End: endPoint, Ctrl: ctrl, Type: connectionType},
 		)
 	}
 	return result

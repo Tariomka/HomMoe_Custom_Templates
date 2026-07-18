@@ -1,4 +1,4 @@
-package mandatoryContentBuilder_test
+package mandatoryContentItemBuilder_test
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestWhenBuilderIsFreshlyCreated_ProducesItemWithOnlyProvidedSid(t *testing.
 	expectedSid := gofakeit.Word()
 
 	// Act
-	builder := mandatory_content.NewContentBuilder(expectedSid)
+	builder := mandatory_content.NewContentItemBuilder(expectedSid)
 
 	// Assert
 	assert.Equal(t, entities.MandatoryContentItem{SID: expectedSid}, builder.Build())

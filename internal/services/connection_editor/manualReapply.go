@@ -6,21 +6,17 @@ package connection_editor
 // manual edits, and only when they changed since the last generation.
 
 import (
-	"strings"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
-
-// IsNeutralZoneName reports whether the zone is a generator neutral zone, the
-// only kind whose quality preset and castle count are editable in the manual
-// zone editor.
-func IsNeutralZoneName(name string) bool { return strings.HasPrefix(name, "Neutral-") }
 
 // ApplyCastleSettingChanges rewrites the castles of the manually edited zones
 // whose castle-count option changed, in place. Everything else about the
@@ -43,19 +39,20 @@ func ApplyCastleSettingChanges(
 	topology := base.NewTopologyBase()
 	for i := range zones {
 		zone := &zones[i]
-		switch {
-		case strings.HasPrefix(zone.Name, "Spawn-"):
+		switch zone_helpers.GetZoneTypeFromName(zone.Name) {
+		case preview.ZoneTypePlayer:
 			if changes.PlayerCastles {
 				rebuildSpawnZoneCastles(zone, configuration, tuning, &topology)
 			}
-		case zone.Name == "Hub" || strings.HasPrefix(zone.Name, "Hub-"):
+		case preview.ZoneTypeHub:
 			if changes.Hub {
-				rebuildHubZoneCastles(zone, configuration.ZoneConfiguration.HubZoneCastles, tuning, &topology)
+				rebuildHubZoneCastles(zone, configuration.ZoneConfiguration.Advanced.HubZoneCastles, tuning, &topology)
 			}
-		case IsNeutralZoneName(zone.Name):
+		case preview.ZoneTypeNeutral:
 			if count, update := neutralCastleTarget(*zone, changes, configuration); update {
 				SetNeutralZoneCastleCount(zone, count, tuning)
 			}
+		case preview.ZoneTypeUnknown:
 		}
 	}
 }
@@ -78,9 +75,17 @@ func neutralCastleTarget(
 	}
 
 	switch neutralZone.GetQualityFrom(zone) {
-	case neutralZone.QualityHigh, neutralZone.QualityHighest:
+	case neutralZone.QualityHighest:
+		if changes.Hub {
+			return helpers.Clamp(zoneConfiguration.Advanced.HubZoneCastles, 0, 4), true
+		}
+	case neutralZone.QualityHigh:
 		if changes.NeutralHigh {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralHighCastlesPerZone, 0, 4), true
+		}
+	case neutralZone.QualityMedium:
+		if changes.NeutralMedium {
+			return helpers.Clamp(zoneConfiguration.Advanced.NeutralMediumCastlesPerZone, 0, 4), true
 		}
 	case neutralZone.QualityLow:
 		if changes.NeutralLow {
@@ -90,12 +95,7 @@ func neutralCastleTarget(
 		if changes.NeutralLowest {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowestCastlesPerZone, 0, 4), true
 		}
-	case neutralZone.QualityMedium:
-		fallthrough
-	default:
-		if changes.NeutralMedium {
-			return helpers.Clamp(zoneConfiguration.Advanced.NeutralMediumCastlesPerZone, 0, 4), true
-		}
+	case neutralZone.QualityUnknown:
 	}
 	return 0, false
 }
@@ -121,9 +121,10 @@ func rebuildSpawnZoneCastles(
 	configuration *config.GeneratorConfig,
 	tuning models.GenerationTuning,
 	topology *base.TopologyBase) {
-	if len(zone.MainObjects) == 0 || !strings.EqualFold(zone.MainObjects[0].Type, "Spawn") {
+	if len(zone.MainObjects) == 0 || zone.MainObjects[0].Type != registry.GetMainObjectTypeValues().Spawn {
 		return
 	}
+
 	spawnCastle := zone.MainObjects[0]
 	matchFactions := configuration.MatchPlayerCastleFactions
 	mainObjects := []entities.MainObject{spawnCastle}
@@ -157,7 +158,7 @@ func rebuildHubZoneCastles(
 // preserve both.
 func splitOutNonCastles(mainObjects []entities.MainObject) (preserved []entities.MainObject, isHoldCity bool) {
 	for _, mainObject := range mainObjects {
-		if strings.EqualFold(mainObject.Type, "City") {
+		if mainObject.Type == registry.GetMainObjectTypeValues().City {
 			isHoldCity = isHoldCity || mainObject.HoldCityWinCon
 			continue
 		}

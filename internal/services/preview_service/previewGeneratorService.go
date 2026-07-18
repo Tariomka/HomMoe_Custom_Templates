@@ -84,7 +84,7 @@ func (this *PreviewGeneratorService) drawConnections(
 			continue
 		}
 
-		if conn.Portal {
+		if conn.IsPortal() {
 			this.drawDashedLine(canvas, startPoint, controlPoint, endPoint)
 		} else {
 			this.drawSolidLine(canvas, startPoint, controlPoint, endPoint)
@@ -96,7 +96,7 @@ func (this *PreviewGeneratorService) drawSolidLine(canvas *image.RGBA, start, ct
 	previousPoint := start
 	for i := range segmentsSolid {
 		t := float64(i+1) / segmentsSolid
-		currentPoint := this.getPointOnQuadraticBezierCurve(start, ctrl, end, t)
+		currentPoint := helpers.GetPointOnQuadraticBezierCurve(start, ctrl, end, t)
 		this.drawLine(canvas, previousPoint, currentPoint)
 		previousPoint = currentPoint
 	}
@@ -108,7 +108,7 @@ func (this *PreviewGeneratorService) drawDashedLine(canvas *image.RGBA, start, c
 	previousPoint := start
 	for i := range segmentsDashed {
 		t := float64(i+1) / segmentsDashed
-		currentPoint := this.getPointOnQuadraticBezierCurve(start, ctrl, end, t)
+		currentPoint := helpers.GetPointOnQuadraticBezierCurve(start, ctrl, end, t)
 		segmentLength := math.Hypot(
 			float64(currentPoint.X-previousPoint.X),
 			float64(currentPoint.Y-previousPoint.Y))
@@ -138,19 +138,4 @@ func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end ima
 			Intersect(canvas.Bounds()) // Square brush around the center, clipped to the canvas.
 		draw.Draw(canvas, brush, brushSource, image.Point{}, draw.Src)
 	}
-}
-
-// getPointOnQuadraticBezierCurve evaluates the quadratic Bézier (start(P0)→ctrl(P1)→end(P2)) at
-// the point along the curve t in [0,1] by applying this formula:
-//
-// B(t) = (1-t)²*P0 + 2*(1-t)*t*P1 + t²*P2.
-func (this *PreviewGeneratorService) getPointOnQuadraticBezierCurve(
-	start, ctrl, end image.Point,
-	t float64) image.Point {
-	mt := 1 - t
-	point := data.Vec2FromPoint[float64](start).MultiplyScalar(mt * mt).
-		Add(data.Vec2FromPoint[float64](ctrl).MultiplyScalar(2 * mt * t)).
-		Add(data.Vec2FromPoint[float64](end).MultiplyScalar(t * t)).
-		ToPointRounded()
-	return point
 }

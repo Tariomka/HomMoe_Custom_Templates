@@ -26,6 +26,6 @@ type ZoneType uint8
 const (
 	ZoneTypeUnknown ZoneType = iota
 	ZoneTypePlayer
-	ZoneTypeNeutralZone
+	ZoneTypeNeutral
 	ZoneTypeHub
 )

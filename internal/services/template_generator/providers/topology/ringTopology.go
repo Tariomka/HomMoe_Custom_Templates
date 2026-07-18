@@ -82,15 +82,15 @@ func (this *RingTopologyService) createZones(
 			zones = append(zones,
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", pi+1), connNames, configuration.ZoneConfiguration.PlayerZoneCastles,
-					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.PlayerZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
 						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-					connNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
+					connNames, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
 	}
 	return zones

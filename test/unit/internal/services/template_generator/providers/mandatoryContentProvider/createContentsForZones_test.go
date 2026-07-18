@@ -85,7 +85,7 @@ func TestWhenZonePoolIsLowestTier_UsesLowestTierRows(t *testing.T) {
 	assert.Equal(t, []string{"lowest_only"}, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
 }
 
-func TestWhenZonePoolIsUnrecognized_FallsBackToMediumTierRows(t *testing.T) {
+func TestWhenZoneHasNoRecognizableQuality_CreatesAnEmptyGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
@@ -101,7 +101,7 @@ func TestWhenZonePoolIsUnrecognized_FallsBackToMediumTierRows(t *testing.T) {
 	groups := provider.CreateContentsForZones(*configuration, zones)
 
 	// Assert
-	assert.Equal(t, []string{"medium_only"}, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
+	assert.Empty(t, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
 }
 
 // A castle-less neutral zone must still receive content (with near-castle rules
@@ -115,6 +115,7 @@ func TestWhenZoneHasNoCastles_KeepsConfiguredRows(t *testing.T) {
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "treasure"}}
 	zones := []entities.Zone{{
 		Name:               "Neutral-H",
+		Layout:             registry.GetLayoutValues().TreasureZone,
 		GuardedContentPool: []string{"classic_template_pool_random_t3_item"},
 	}}
 

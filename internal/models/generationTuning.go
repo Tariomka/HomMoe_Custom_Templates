@@ -34,7 +34,7 @@ func NewGenerationTuning(configuration *config.GeneratorConfig, totalZoneCount i
 		StructureDensityMultiplier:     float64(configuration.ZoneConfiguration.StructureDensityPercent) / 100.0,
 		NeutralStackStrengthMultiplier: float64(configuration.ZoneConfiguration.NeutralStackStrengthPercent) / 100.0,
 		BorderGuardStrengthMultiplier:  float64(configuration.ZoneConfiguration.BorderGuardStrengthPercent) / 100.0,
-		GuardRandomization:             configuration.ZoneConfiguration.Advanced.GetEffectiveGuardRandomization(),
+		GuardRandomization:             configuration.ZoneConfiguration.GetEffectiveGuardRandomization(),
 		RemoteFootholdCount:            remoteFootholdCount,
 		AbandonedOutpostCount:          abandonedOutpostCount,
 		PlayerOwnedCastles:             configuration.ZoneConfiguration.PlayerOwnedCastles,

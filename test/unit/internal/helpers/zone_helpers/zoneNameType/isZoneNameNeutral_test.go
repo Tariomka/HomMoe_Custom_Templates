@@ -7,26 +7,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenNameHasNeutralPrefix_ReturnsTrue(t *testing.T) {
+func TestWhenZoneNameIsChecked_RecognizesOnlyNeutralPrefix(t *testing.T) {
 	t.Parallel()
-	// Arrange
-	zoneName := "Neutral-B"
+	testCases := []struct {
+		name     string
+		zoneName string
+		expected bool
+	}{
+		{"WhenNameHasNeutralPrefix_ReturnsTrue", "Neutral-G", true},
+		{"WhenNameIsSpawnZone_ReturnsFalse", "Spawn-A", false},
+		{"WhenNameIsHub_ReturnsFalse", "Hub", false},
+		{"WhenNameIsEmpty_ReturnsFalse", "", false},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
 
-	// Act
-	isNeutral := zone_helpers.IsZoneNameNeutral(zoneName)
+			// Act
+			isNeutral := zone_helpers.IsZoneNameNeutral(testCase.zoneName)
 
-	// Assert
-	assert.True(t, isNeutral)
-}
-
-func TestWhenNameHasSpawnPrefix_IsZoneNameNeutralReturnsFalse(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	zoneName := "Spawn-B"
-
-	// Act
-	isNeutral := zone_helpers.IsZoneNameNeutral(zoneName)
-
-	// Assert
-	assert.False(t, isNeutral)
+			// Assert
+			assert.Equal(t, testCase.expected, isNeutral)
+		})
+	}
 }

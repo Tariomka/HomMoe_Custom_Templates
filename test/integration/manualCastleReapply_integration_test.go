@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
@@ -42,7 +43,7 @@ func retierZone(state *drivers.State, zones []entities.Zone, index int, quality 
 func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutralZone.Quality) int {
 	t.Helper()
 	for i, zone := range zones {
-		if connection_editor.IsNeutralZoneName(zone.Name) && neutralZone.GetQualityFrom(zone) == quality {
+		if zone_helpers.IsZoneNameNeutral(zone.Name) && neutralZone.GetQualityFrom(zone) == quality {
 			return i
 		}
 	}
@@ -89,7 +90,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	require.NotNil(t, got)
 	require.NotEmpty(t, got.Variants)
 	for _, zone := range got.Variants[0].Zones {
-		if !connection_editor.IsNeutralZoneName(zone.Name) {
+		if !zone_helpers.IsZoneNameNeutral(zone.Name) {
 			continue
 		}
 		assert.Equalf(t, 3, connection_editor.CountZoneCastles(zone),
@@ -108,7 +109,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	// The updated counts must be persisted back into the snapshot so saves and
 	// later regenerations carry them.
 	for _, save := range state.GetStateData().ManualZones {
-		if connection_editor.IsNeutralZoneName(save.Zone.Name) {
+		if zone_helpers.IsZoneNameNeutral(save.Zone.Name) {
 			assert.Equal(t, 3, connection_editor.CountZoneCastles(save.Zone))
 		}
 	}
@@ -145,7 +146,7 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 	require.NotNil(t, got)
 	require.NotEmpty(t, got.Variants)
 	for _, zone := range got.Variants[0].Zones {
-		if !connection_editor.IsNeutralZoneName(zone.Name) {
+		if !zone_helpers.IsZoneNameNeutral(zone.Name) {
 			continue
 		}
 		expected := 1
