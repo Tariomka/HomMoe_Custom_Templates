@@ -46,9 +46,7 @@ func BoolToInt(boolean bool) int {
 
 // CalculatePointTowards returns `from` moved toward `toward` by `distance` pixels.
 // ok is false when the two points are coincident.
-func CalculatePointTowards(
-	from, toward image.Point,
-	distance float64) (movedPoint image.Point, ok bool) {
+func CalculatePointTowards(from, toward image.Point, distance float64) (movedPoint image.Point, ok bool) {
 	delta := data.Vec2FromPoint[float64](toward.Sub(from))
 	deltaDistance := math.Hypot(delta.X, delta.Y)
 	if deltaDistance < 1 {

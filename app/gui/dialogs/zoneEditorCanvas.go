@@ -61,14 +61,8 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	}.Op())
 
 	if len(this.zones) == 0 {
-		return widgets.NewCenteredMessageWidget(
-			theme,
-			"No zones to edit - generate a template first.",
-			canvasSize,
-			outer,
-		)(
-			gtx,
-		)
+		return widgets.NewCenteredMessageWidget(theme,
+			"No zones to edit - generate a template first.", canvasSize, outer)(gtx)
 	}
 
 	area := clip.Rect{Max: canvasSize}.Push(gtx.Ops)

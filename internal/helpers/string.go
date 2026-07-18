@@ -17,9 +17,9 @@ func SanitizeFilename(name string) string {
 	return string(out)
 }
 
-// ExtractZoneLabel returns the trailing letter portion of a zone name like
+// ExtractZoneLabelWithPassThrough returns the trailing label portion of a zone name like
 // "Spawn-A" → "A" or "Neutral-C" → "C". Plain names (e.g. "Hub") pass through.
-func ExtractZoneLabel(zoneName string) string {
+func ExtractZoneLabelWithPassThrough(zoneName string) string {
 	if after, ok := strings.CutPrefix(zoneName, "Spawn-"); ok {
 		return after
 	}

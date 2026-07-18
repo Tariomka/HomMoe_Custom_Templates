@@ -148,8 +148,8 @@ When orchestrating subagents, pick the model per task using these ratings
 | model           | cost | intelligence | taste |
 |-----------------|------|--------------|-------|
 | claude-fable-5  | 2    | 9            | 9     |
-| gpt-5.6-sol     | 7    | 7            | 6     |
-| gpt-5.6-terra   | 6    | 7            | 5     |
+| gpt-5.6-sol     | 6    | 7            | 6     |
+| gpt-5.6-terra   | 7    | 7            | 5     |
 | gpt-5.5         | 5    | 6            | 5     |
 | claude-opus-4.8 | 4    | 7            | 8     |
 | sonnet-5        | 5    | 5            | 7     |
@@ -203,7 +203,7 @@ any file you *do* touch must leave the repo in conformance.
 - **No single-letter variables** and **no cryptic abbreviations**. Use
   descriptive names (`zoneIndex`, `playerCount`, `templatePath`).
 - **Allowed exceptions** — only the well-established Go idioms:
-  - `i`, `j` for loop indices only, but if a single for loop better use `index`
+  - `i`, `j` for loop indices only, but if a single for loop, better use `index`
   - `err` for errors
   - `ok` for the comma-ok idiom
   - `ctx` for `context.Context`
@@ -284,6 +284,9 @@ one assertion. If a scenario allows several independent assertions, write a
 separate test per assertion. Table-driven tests are allowed when each case
 runs in a named `t.Run` subtest whose name follows the same
 `{Scenario}_{ExpectedBehavior}` convention.
+
+**Parallel test**: each unit test must contain `t.Parallel()` at the start of
+the test and inside every `t.Run` (`paralleltest` linter checks missing t.Parallel() directives).
 
 **Libraries**: only `testify` (`assert`, `require`, `mock`) for assertions and
 mocking; use `gofakeit` for fuzzed input data wherever possible.

@@ -360,31 +360,17 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(
-				theme,
-				"Click a zone to edit its size, quality and guards - drag it to move it.",
-			),
-		),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Click a zone to edit its size, quality and guards - drag it to move it.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(theme, "Click a connection line to edit its guard, type and growth."),
-		),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Click a connection line to edit its guard, type and growth.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(
-				theme,
-				"Use “Add connection”, then drag from one zone to another to create a link.",
-			),
-		),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Use “Add connection”, then drag from one zone to another to create a link.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(
-				theme,
-				"Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.",
-			),
-		),
-	)
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.")))
 }
 
 func (this *ZoneEditorDialog) addConnection(from, to string) {

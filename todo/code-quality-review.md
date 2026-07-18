@@ -127,7 +127,7 @@ meaning intentionally differs.
   `test/unit/internal/services/connection_editor/connectionEditor/` green to
   prove the guard-bracket mapping did not change accidentally.
 
-### CQ-03 - Mandatory-content tier selection is duplicated in the same provider
+### CQ-03 - Mandatory-content tier selection is duplicated in the same provider - DONE
 
 **Priority:** P2 - maintenance and future correctness
 
@@ -418,7 +418,7 @@ When picker interaction coverage is next expanded, assert header counts along
 with the existing visible-row behaviour. Run the existing GUI/integration suite
 after the refactor.
 
-### CQ-12 - A few public behaviours lack dedicated unit coverage
+### CQ-12 - A few public behaviors lack dedicated unit coverage
 
 **Priority:** P2 - regression prevention
 
