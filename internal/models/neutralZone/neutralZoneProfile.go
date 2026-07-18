@@ -17,8 +17,8 @@ type Profile struct {
 	ResourcesValuePerArea        int
 	PrimaryCityGuardValue        int
 	ExtraCityGuardValue          int
-	PrimaryBuildingsCSid         string
-	ExtraBuildingsCSid           string
+	PrimaryBuildingsSid          string
+	ExtraBuildingsSid            string
 }
 
 func NewNeutralZoneProfile(quality Quality) Profile {
@@ -29,12 +29,12 @@ func NewNeutralZoneProfile(quality Quality) Profile {
 		return newNeutralZoneProfileHighQuality()
 	case QualityMedium:
 		return newNeutralZoneProfileMediumQuality()
-	case QualityLowest:
-		return newNeutralZoneProfileLowestQuality()
 	case QualityLow:
+		return newNeutralZoneProfileLowQuality()
+	case QualityLowest, QualityUnknown:
 		fallthrough
 	default:
-		return newNeutralZoneProfileLowQuality()
+		return newNeutralZoneProfileLowestQuality()
 	}
 }
 
@@ -56,8 +56,8 @@ func newNeutralZoneProfileLowestQuality() Profile {
 		ResourcesValuePerArea:        140,
 		PrimaryCityGuardValue:        2000,
 		ExtraCityGuardValue:          1000,
-		PrimaryBuildingsCSid:         constructionValues.ExtraPoor,
-		ExtraBuildingsCSid:           constructionValues.ExtraPoor,
+		PrimaryBuildingsSid:          constructionValues.ExtraPoor,
+		ExtraBuildingsSid:            constructionValues.ExtraPoor,
 	}
 }
 
@@ -79,8 +79,8 @@ func newNeutralZoneProfileLowQuality() Profile {
 		ResourcesValuePerArea:        240,
 		PrimaryCityGuardValue:        4000,
 		ExtraCityGuardValue:          2000,
-		PrimaryBuildingsCSid:         constructionValues.Poor,
-		ExtraBuildingsCSid:           constructionValues.Poor,
+		PrimaryBuildingsSid:          constructionValues.Poor,
+		ExtraBuildingsSid:            constructionValues.Poor,
 	}
 }
 
@@ -102,8 +102,8 @@ func newNeutralZoneProfileMediumQuality() Profile {
 		ResourcesValuePerArea:        420,
 		PrimaryCityGuardValue:        8000,
 		ExtraCityGuardValue:          4000,
-		PrimaryBuildingsCSid:         constructionValues.Rich,
-		ExtraBuildingsCSid:           constructionValues.Poor,
+		PrimaryBuildingsSid:          constructionValues.Rich,
+		ExtraBuildingsSid:            constructionValues.Poor,
 	}
 }
 
@@ -129,8 +129,8 @@ func newNeutralZoneProfileHighQuality() Profile {
 		ResourcesValuePerArea:        580,
 		PrimaryCityGuardValue:        16000,
 		ExtraCityGuardValue:          8000,
-		PrimaryBuildingsCSid:         constructionValues.Rich,
-		ExtraBuildingsCSid:           constructionValues.Rich,
+		PrimaryBuildingsSid:          constructionValues.Rich,
+		ExtraBuildingsSid:            constructionValues.Rich,
 	}
 }
 
@@ -156,7 +156,7 @@ func newNeutralZoneProfileHighestQuality() Profile {
 		ResourcesValuePerArea:        800,
 		PrimaryCityGuardValue:        32000,
 		ExtraCityGuardValue:          16000,
-		PrimaryBuildingsCSid:         constructionValues.UltraRich,
-		ExtraBuildingsCSid:           constructionValues.UltraRich,
+		PrimaryBuildingsSid:          constructionValues.UltraRich,
+		ExtraBuildingsSid:            constructionValues.UltraRich,
 	}
 }

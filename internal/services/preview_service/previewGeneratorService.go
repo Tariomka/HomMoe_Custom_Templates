@@ -59,12 +59,12 @@ func (this *PreviewGeneratorService) CreatePreviewImage(
 
 	this.drawConnections(canvas, layout.Connections, fitterCallback, assetRadius*scale)
 	for _, zone := range layout.Zones {
-		if !zone.IsPlayer {
+		if zone.Type != preview.ZoneTypePlayer {
 			this.assetProvider.DrawNeutralZone(canvas, zone, fitterCallback(zone.Center), scale)
 		}
 	}
 	for _, zone := range layout.Zones {
-		if zone.IsPlayer {
+		if zone.Type == preview.ZoneTypePlayer {
 			this.assetProvider.DrawPlayerZone(canvas, zone, fitterCallback(zone.Center), scale)
 		}
 	}

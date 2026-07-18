@@ -20,7 +20,7 @@ func newAssetFitter(zones []preview.Zone, scale float64) assetFitter {
 	fit := 1.0
 	for _, zone := range zones {
 		extendedFromCenter := 28.0 * scale // artwork overhang beyond the zone center
-		if zone.IsPlayer {
+		if zone.Type == preview.ZoneTypePlayer {
 			extendedFromCenter = 41.0 * scale
 		}
 		allowedDeviation := center - borderInset - extendedFromCenter // max center-to-center deviation

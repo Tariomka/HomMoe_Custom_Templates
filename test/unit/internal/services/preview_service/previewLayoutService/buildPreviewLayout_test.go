@@ -7,6 +7,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/stretchr/testify/assert"
@@ -157,7 +158,7 @@ func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 	// Assert
 	playerFlags := map[string]bool{}
 	for _, zone := range layout.Zones {
-		playerFlags[zone.Name] = zone.IsPlayer
+		playerFlags[zone.Name] = zone.Type == preview.ZoneTypePlayer
 	}
 	assert.Equal(t, map[string]bool{"Spawn-A": true, "Neutral-B": false}, playerFlags)
 }
@@ -176,7 +177,7 @@ func TestWhenZoneIsNamedHub_MarksZoneAsHub(t *testing.T) {
 	// Assert
 	hubFlags := map[string]bool{}
 	for _, zone := range layout.Zones {
-		hubFlags[zone.Name] = zone.IsHub
+		hubFlags[zone.Name] = zone.Type == preview.ZoneTypeHub
 	}
 	assert.Equal(t, map[string]bool{"Spawn-A": false, "Hub": true}, hubFlags)
 }
@@ -398,7 +399,7 @@ func TestWhenNeutralTouchesEverySpawn_DoesNotFlagItAsHub(t *testing.T) {
 	// Assert
 	flaggedHubs := []string{}
 	for _, previewZone := range layout.Zones {
-		if previewZone.IsHub {
+		if previewZone.Type == preview.ZoneTypeHub {
 			flaggedHubs = append(flaggedHubs, previewZone.Name)
 		}
 	}
@@ -421,7 +422,7 @@ func TestWhenNeutralOnlyConnectsTwoSpawns_FlagsNoHub(t *testing.T) {
 	// Assert
 	flaggedHubs := []string{}
 	for _, previewZone := range layout.Zones {
-		if previewZone.IsHub {
+		if previewZone.Type == preview.ZoneTypeHub {
 			flaggedHubs = append(flaggedHubs, previewZone.Name)
 		}
 	}
@@ -444,7 +445,7 @@ func TestWhenZoneIsExplicitlyNamedHub_FlagsOnlyThatZoneAsHub(t *testing.T) {
 	// Assert
 	flaggedHubs := []string{}
 	for _, previewZone := range layout.Zones {
-		if previewZone.IsHub {
+		if previewZone.Type == preview.ZoneTypeHub {
 			flaggedHubs = append(flaggedHubs, previewZone.Name)
 		}
 	}
@@ -688,13 +689,13 @@ func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) 
 		{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
 	}
 	expected := preview.Zone{
-		Name:      "Spawn-A",
-		Letter:    "A",
-		Center:    image.Pt(300, 300),
-		IsPlayer:  true,
-		HasCastle: true,
-		Castles:   1,
-		Owner:     1,
+		Name:    "Spawn-A",
+		Label:   "A",
+		Center:  image.Pt(300, 300),
+		Type:    preview.ZoneTypePlayer,
+		Quality: neutralZone.QualityUnknown,
+		Castles: 1,
+		Owner:   1,
 	}
 
 	// Act

@@ -11,6 +11,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
@@ -80,7 +81,7 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 	}
 	this.typeDropdown.SetItems(connection_editor.UserCreatableConnectionTypes())
 	if !this.typeDropdown.SelectByName(connection.ConnectionType) {
-		this.typeDropdown.SelectByName("Direct")
+		this.typeDropdown.SelectByName(registry.GetConnectionTypeValues().Direct)
 	}
 	this.guardZoneDropdown.SetItems([]string{connection.From, connection.To})
 	if !this.guardZoneDropdown.SelectByName(connection.GuardZone) {

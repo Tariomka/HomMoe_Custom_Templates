@@ -99,7 +99,7 @@ func TestWhenQualityIsLowest_UsesExtraPoorConstructionSids(t *testing.T) {
 
 	// Assert
 	expected := registry.GetBuildingsConstructionSidValues().ExtraPoor
-	assert.Equal(t, [2]string{expected, expected}, [2]string{profile.PrimaryBuildingsCSid, profile.ExtraBuildingsCSid})
+	assert.Equal(t, [2]string{expected, expected}, [2]string{profile.PrimaryBuildingsSid, profile.ExtraBuildingsSid})
 }
 
 func TestWhenQualityIsHighest_UsesDoubledTier5GuardedPool(t *testing.T) {
@@ -150,7 +150,7 @@ func TestWhenQualityIsHighest_UsesUltraRichConstructionSids(t *testing.T) {
 
 	// Assert
 	expected := registry.GetBuildingsConstructionSidValues().UltraRich
-	assert.Equal(t, [2]string{expected, expected}, [2]string{profile.PrimaryBuildingsCSid, profile.ExtraBuildingsCSid})
+	assert.Equal(t, [2]string{expected, expected}, [2]string{profile.PrimaryBuildingsSid, profile.ExtraBuildingsSid})
 }
 
 func TestWhenQualityIsHighest_UsesCenterLayout(t *testing.T) {

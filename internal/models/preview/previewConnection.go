@@ -9,5 +9,15 @@ import "image"
 // side so each connection stays individually visible.
 type Connection struct {
 	Start, Ctrl, End image.Point
-	Portal           bool
+	Portal           bool // TODO: change to ConnectionType
+	Type             ConnectionType
 }
+
+type ConnectionType uint8
+
+const (
+	ConnectionTypeDirect ConnectionType = iota
+	ConnectionTypePortal
+	ConnectionTypeGladiatorArena
+	ConnectionTypeProximity
+)

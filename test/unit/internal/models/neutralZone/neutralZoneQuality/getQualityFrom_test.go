@@ -5,31 +5,175 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenGuardedPoolIsInspected_ReturnsMatchingQuality(t *testing.T) {
+func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 	t.Parallel()
+	layoutValues := registry.GetLayoutValues()
+	resourcePools := registry.GetResourcesContentPoolValues()
 	testCases := []struct {
-		name     string
-		pool     []string
-		expected neutralZone.Quality
+		subtestName string
+		zone        entities.Zone
+		expected    neutralZone.Quality
 	}{
-		{"WhenPoolIsTier4_ReturnsHigh", []string{"pool_t4_x"}, neutralZone.QualityHigh},
-		{"WhenPoolIsTier5_ReturnsHigh", []string{"pool_t5_x"}, neutralZone.QualityHigh},
-		{"WhenPoolIsTier1_ReturnsLowest", []string{"pool_t1_x"}, neutralZone.QualityLowest},
-		{"WhenPoolIsTier2_ReturnsLow", []string{"pool_t2_x"}, neutralZone.QualityLow},
-		{"WhenPoolIsTier3_ReturnsMedium", []string{"pool_t3_x"}, neutralZone.QualityMedium},
-		{"WhenPoolIsEmpty_ReturnsMedium", nil, neutralZone.QualityMedium},
+		{
+			"WhenZoneIsPlayerSpawn_ReturnsUnknown",
+			entities.Zone{Name: "Spawn-A", Layout: layoutValues.Center},
+			neutralZone.QualityUnknown,
+		},
+		{
+			"WhenLayoutIsUnrecognized_ReturnsUnknown",
+			entities.Zone{Name: "Neutral-B", Layout: "zone_layout_back"},
+			neutralZone.QualityUnknown,
+		},
+		{
+			"WhenCenterLayoutHasRichTreasureResources_ReturnsHighest",
+			entities.Zone{
+				Name:                 "Hub",
+				Layout:               layoutValues.Center,
+				GuardedContentPool:   []string{"pool_t5_treasure"},
+				ResourcesContentPool: []string{resourcePools.TreasureZoneRich},
+			},
+			neutralZone.QualityHighest,
+		},
+		{
+			"WhenCenterLayoutHasOnlyTier5GuardedPool_ReturnsHighest",
+			entities.Zone{
+				Name:               "Hub",
+				Layout:             layoutValues.Center,
+				GuardedContentPool: []string{"pool_t5_treasure", "pool_t5_item"},
+			},
+			neutralZone.QualityHighest,
+		},
+		{
+			"WhenCenterLayoutHasNoContentPools_ReturnsUnknown",
+			entities.Zone{Name: "Hub", Layout: layoutValues.Center},
+			neutralZone.QualityUnknown,
+		},
+		{
+			"WhenCenterLayoutPoolsCarryNoTier5Marker_ReturnsUnknown",
+			entities.Zone{
+				Name:               "Hub",
+				Layout:             layoutValues.Center,
+				GuardedContentPool: []string{"pool_t3_stuff"},
+			},
+			neutralZone.QualityUnknown,
+		},
+		{
+			"WhenTreasureLayoutHasRichStartResources_ReturnsHigh",
+			entities.Zone{
+				Name:                 "Neutral-B",
+				Layout:               layoutValues.TreasureZone,
+				GuardedContentPool:   []string{"pool_without_tier_marker"},
+				ResourcesContentPool: []string{resourcePools.StartZoneRich},
+			},
+			neutralZone.QualityHigh,
+		},
+		{
+			"WhenTreasureLayoutHasMixedTier4AndTier5Pools_ReturnsHigh",
+			entities.Zone{
+				Name:               "Neutral-B",
+				Layout:             layoutValues.TreasureZone,
+				GuardedContentPool: []string{"pool_t4_stuff", "pool_t5_stuff"},
+			},
+			neutralZone.QualityHigh,
+		},
+		{
+			"WhenTreasureLayoutHasOnlyTier3Pools_ReturnsMedium",
+			entities.Zone{
+				Name:                 "Neutral-B",
+				Layout:               layoutValues.TreasureZone,
+				GuardedContentPool:   []string{"pool_t3_stuff"},
+				UnguardedContentPool: []string{"pool_t3_other"},
+			},
+			neutralZone.QualityMedium,
+		},
+		{
+			"WhenTreasureLayoutHasMediumStartResources_ReturnsMedium",
+			entities.Zone{
+				Name:                 "Neutral-B",
+				Layout:               layoutValues.TreasureZone,
+				GuardedContentPool:   []string{"pool_without_tier_marker"},
+				ResourcesContentPool: []string{resourcePools.StartZoneMedium},
+			},
+			neutralZone.QualityMedium,
+		},
+		{
+			"WhenTreasureLayoutHasNoContentPools_ReturnsUnknown",
+			entities.Zone{Name: "Neutral-B", Layout: layoutValues.TreasureZone},
+			neutralZone.QualityUnknown,
+		},
+		{
+			"WhenTreasureLayoutPoolsCarryNoKnownMarker_ReturnsUnknown",
+			entities.Zone{
+				Name:               "Neutral-B",
+				Layout:             layoutValues.TreasureZone,
+				GuardedContentPool: []string{"pool_t1_stuff"},
+			},
+			neutralZone.QualityUnknown,
+		},
+		{
+			"WhenSidesLayoutHasOnlyTier2Pools_ReturnsLow",
+			entities.Zone{
+				Name:               "Neutral-B",
+				Layout:             layoutValues.Sides,
+				GuardedContentPool: []string{"pool_t2_stuff"},
+			},
+			neutralZone.QualityLow,
+		},
+		{
+			"WhenSidesLayoutHasPoorStartResources_ReturnsLow",
+			entities.Zone{
+				Name:                 "Neutral-B",
+				Layout:               layoutValues.Sides,
+				GuardedContentPool:   []string{"pool_without_tier_marker"},
+				ResourcesContentPool: []string{resourcePools.StartZonePoor},
+			},
+			neutralZone.QualityLow,
+		},
+		{
+			"WhenSidesLayoutHasOnlyTier1Pools_ReturnsLowest",
+			entities.Zone{
+				Name:               "Neutral-B",
+				Layout:             layoutValues.Sides,
+				GuardedContentPool: []string{"pool_t1_stuff"},
+			},
+			neutralZone.QualityLowest,
+		},
+		{
+			"WhenSidesLayoutHasVeryPoorStartResources_ReturnsLowest",
+			entities.Zone{
+				Name:                 "Neutral-B",
+				Layout:               layoutValues.Sides,
+				GuardedContentPool:   []string{"pool_without_tier_marker"},
+				ResourcesContentPool: []string{resourcePools.StartZoneVeryPoor},
+			},
+			neutralZone.QualityLowest,
+		},
+		{
+			"WhenSidesLayoutHasNoContentPools_ReturnsUnknown",
+			entities.Zone{Name: "Neutral-B", Layout: layoutValues.Sides},
+			neutralZone.QualityUnknown,
+		},
+		{
+			"WhenSidesLayoutPoolsCarryNoKnownMarker_ReturnsUnknown",
+			entities.Zone{
+				Name:               "Neutral-B",
+				Layout:             layoutValues.Sides,
+				GuardedContentPool: []string{"pool_t3_stuff"},
+			},
+			neutralZone.QualityUnknown,
+		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
+		t.Run(testCase.subtestName, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			zone := entities.Zone{Name: "Neutral-Z", GuardedContentPool: testCase.pool}
 
 			// Act
-			quality := neutralZone.GetQualityFrom(zone)
+			quality := neutralZone.GetQualityFrom(testCase.zone)
 
 			// Assert
 			assert.Equal(t, testCase.expected, quality)
@@ -37,34 +181,36 @@ func TestWhenGuardedPoolIsInspected_ReturnsMatchingQuality(t *testing.T) {
 	}
 }
 
-func TestWhenTier5PoolHasRichTreasureResources_ReturnsHighest(t *testing.T) {
+func TestWhenGeneratedProfileRoundTrips_EveryQualityIsDetectedBack(t *testing.T) {
 	t.Parallel()
-	// Arrange
-	zone := entities.Zone{
-		Name:                 "Hub",
-		GuardedContentPool:   []string{"pool_t5_x"},
-		ResourcesContentPool: []string{"content_pool_general_resources_treasure_zone_rich"},
+	testCases := []struct {
+		subtestName string
+		quality     neutralZone.Quality
+	}{
+		{"WhenProfileQualityIsLowest_DetectsSameQuality", neutralZone.QualityLowest},
+		{"WhenProfileQualityIsLow_DetectsSameQuality", neutralZone.QualityLow},
+		{"WhenProfileQualityIsMedium_DetectsSameQuality", neutralZone.QualityMedium},
+		{"WhenProfileQualityIsHigh_DetectsSameQuality", neutralZone.QualityHigh},
+		{"WhenProfileQualityIsHighest_DetectsSameQuality", neutralZone.QualityHighest},
 	}
+	for _, testCase := range testCases {
+		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			profile := neutralZone.NewNeutralZoneProfile(testCase.quality)
+			zone := entities.Zone{
+				Name:                 "Neutral-Z",
+				Layout:               profile.Layout,
+				GuardedContentPool:   profile.GuardedContentPool,
+				UnguardedContentPool: profile.UnguardedContentPool,
+				ResourcesContentPool: profile.ResourcesContentPool,
+			}
 
-	// Act
-	quality := neutralZone.GetQualityFrom(zone)
+			// Act
+			quality := neutralZone.GetQualityFrom(zone)
 
-	// Assert
-	assert.Equal(t, neutralZone.QualityHighest, quality)
-}
-
-func TestWhenTier4PoolHasRichTreasureResources_ReturnsHigh(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	zone := entities.Zone{
-		Name:                 "Neutral-Z",
-		GuardedContentPool:   []string{"pool_t4_x"},
-		ResourcesContentPool: []string{"content_pool_general_resources_treasure_zone_rich"},
+			// Assert
+			assert.Equal(t, testCase.quality, quality)
+		})
 	}
-
-	// Act
-	quality := neutralZone.GetQualityFrom(zone)
-
-	// Assert
-	assert.Equal(t, neutralZone.QualityHigh, quality)
 }

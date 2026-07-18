@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
@@ -160,20 +161,20 @@ func (this *AssetProvider) calculateBilinearInterpolation(asset image.Image, pos
 
 func (this *AssetProvider) getNeutralZoneAsset(zone preview.Zone) image.Image {
 	quality := "none"
-	switch zone.Tier {
-	case preview.TierPlatinum:
+	switch zone.Quality {
+	case neutralZone.QualityHighest:
 		quality = "highest"
-	case preview.TierGold:
+	case neutralZone.QualityHigh:
 		quality = "high"
-	case preview.TierSilver:
+	case neutralZone.QualityMedium:
 		quality = "medium"
-	case preview.TierBronze:
+	case neutralZone.QualityLow:
 		quality = "low"
-	case preview.TierPlastic:
-		quality = "none"
+	case neutralZone.QualityLowest, neutralZone.QualityUnknown:
 	}
+
 	name := "neutral_" + quality
-	if zone.HasCastle {
+	if zone.HasCastles() {
 		name += "_castle"
 	}
 	return this.neutralZones[name]

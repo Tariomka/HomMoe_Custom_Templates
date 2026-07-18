@@ -47,8 +47,11 @@ func (this *MandatoryContentProvider) CreateContents(
 			content = cloneContentItems(configuration.LowNeutralMandatoryContent)
 		case neutralZone.QualityMedium:
 			content = cloneContentItems(configuration.MediumNeutralMandatoryContent)
-		case neutralZone.QualityHigh, neutralZone.QualityHighest:
+		case neutralZone.QualityHigh:
 			content = cloneContentItems(configuration.HighNeutralMandatoryContent)
+		case neutralZone.QualityHighest:
+			content = cloneContentItems(configuration.HubZoneMandatoryContent)
+		case neutralZone.QualityUnknown:
 		}
 		if zone.CastleCount == 0 {
 			content = stripNearCastleRules(content)

@@ -215,12 +215,12 @@ func renderPreviewTemplate(gtx layout.Context, theme *material.Theme, previewLay
 		utils.DrawConnection(gtx, connection, previewLayout.ZoneRadius)
 	}
 	for _, zone := range previewLayout.Zones {
-		if !zone.IsPlayer {
+		if zone.Type != preview.ZoneTypePlayer {
 			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
 	}
 	for _, zone := range previewLayout.Zones {
-		if zone.IsPlayer {
+		if zone.Type == preview.ZoneTypePlayer {
 			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
 	}

@@ -4,10 +4,10 @@ import (
 	"image"
 	"math"
 	"sort"
-	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 const (
@@ -173,7 +173,8 @@ func minMax(values []float64) (float64, float64) {
 // isStructuralIgnored reports whether a connection type is skipped when the
 // connection graph drives geometry (adjacency, hub spokes).
 func isStructuralIgnored(connectionType string) bool {
-	return connectionType == "Proximity" || connectionType == "Portal"
+	connectionTypes := registry.GetConnectionTypeValues()
+	return connectionType == connectionTypes.Proximity || connectionType == connectionTypes.Portal
 }
 
 func orderZonesByZeroAngle(zones []entities.Zone, zeroAngleZone string) []entities.Zone {
@@ -297,7 +298,7 @@ func positionAngle(z entities.Zone, rawCx, rawCy float64) float64 {
 }
 
 // sortIndicesByAngle returns the given zone indices reordered by their raw
-// generator position's angle around the raw centroid, preserving neighbour
+// generator position's angle around the raw centroid, preserving neighbor
 // ordering when zones are re-projected onto a canvas ring.
 func sortIndicesByAngle(zones []entities.Zone, indices []int, rawCx, rawCy float64) []int {
 	sorted := append([]int(nil), indices...)
@@ -306,10 +307,4 @@ func sortIndicesByAngle(zones []entities.Zone, indices []int, rawCx, rawCy float
 			positionAngle(zones[sorted[j]], rawCx, rawCy)
 	})
 	return sorted
-}
-
-// hasHubName reports whether the zone name marks an explicit hub ("Hub" or
-// "Hub-*"). Connectivity is never used to guess an implicit hub.
-func hasHubName(name string) bool {
-	return strings.EqualFold(name, "Hub") || strings.HasPrefix(name, "Hub-")
 }

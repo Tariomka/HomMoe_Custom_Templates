@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 // ZoneTier classifies a zone by its expected guard-strength bracket.
@@ -59,7 +61,11 @@ var (
 // UserCreatableConnectionTypes lists the connection types a user may add in the
 // editor. Proximity is generator-only and intentionally excluded.
 func UserCreatableConnectionTypes() []string {
-	return []string{"Direct", "Portal"}
+	connectionTypes := registry.GetConnectionTypeValues()
+	return []string{
+		connectionTypes.Direct,
+		connectionTypes.Portal,
+	}
 }
 
 // GuardPresetsForTier returns the five guard-strength values for the given tier.
@@ -93,11 +99,12 @@ func GetZoneTier(zoneName string, zones []entities.Zone, playerZoneNames map[str
 	if playerZoneNames[zone.Name] {
 		return ZoneTierBronze
 	}
-	if zone.Name == "Hub" || strings.HasPrefix(zone.Name, "Hub-") {
+
+	if zone_helpers.IsZoneNameHub(zone.Name) {
 		return ZoneTierGold
 	}
 
-	if strings.HasPrefix(zone.Name, "Neutral-") {
+	if zone_helpers.IsZoneNameNeutral(zone.Name) {
 		pool := ""
 		if len(zone.GuardedContentPool) > 0 {
 			pool = zone.GuardedContentPool[0]

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"math"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -17,6 +16,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
@@ -123,7 +123,7 @@ func NewZoneEditorDialog(
 	onApply func([]entities.Zone, []entities.Connection)) *ZoneEditorDialog {
 	players := make(map[string]bool)
 	for _, zone := range zones {
-		if strings.HasPrefix(zone.Name, "Spawn-") {
+		if zone_helpers.IsZoneNamePlayer(zone.Name) {
 			players[zone.Name] = true
 		}
 	}
@@ -282,8 +282,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 				"%d zones · %d connections · %d isolated zone(s)",
 				len(this.zones),
 				len(connections),
-				len(isolated),
-			)
+				len(isolated))
 		}
 		label := material.Body2(theme, message)
 		label.Color = themes.ColorsBase.TextDim

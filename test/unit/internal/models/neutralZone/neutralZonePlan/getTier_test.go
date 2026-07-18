@@ -35,7 +35,7 @@ func TestWhenLabelQualityVaries_MapsQualityToTier(t *testing.T) {
 	}
 }
 
-func TestWhenLabelIsNotFound_ReturnsTierOne(t *testing.T) {
+func TestWhenLabelIsNotFound_ReturnsUnknownTierIndex(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	plans := neutralZone.Plans{{Label: "A", Quality: neutralZone.QualityHigh}}
@@ -44,5 +44,5 @@ func TestWhenLabelIsNotFound_ReturnsTierOne(t *testing.T) {
 	tier := plans.GetTier("missing")
 
 	// Assert
-	assert.Equal(t, 1, tier)
+	assert.Equal(t, neutralZone.QualityUnknown.GetIndex(), tier)
 }

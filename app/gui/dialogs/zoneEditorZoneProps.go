@@ -27,48 +27,30 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 		},
 	}
 	if isSpawn {
-		rows = append(
-			rows,
-			widgets.NewDimmedLabelWidget(theme, "Player spawn zone - content is managed by the generator."),
-		)
+		rows = append(rows,
+			widgets.NewDimmedLabelWidget(theme, "Player spawn zone - content is managed by the generator."))
 	} else if !isNeutral {
 		rows = append(rows, widgets.NewDimmedLabelWidget(theme, "Quality presets apply to neutral zones only."))
 	}
-	rows = append(
-		rows,
+	rows = append(rows,
 		widgets.NewVerticalSpacerWidget(6),
-		widgets.NewLabeledRowWidget(
-			theme,
-			"Size",
-			110,
-			widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 - 2.0", false),
-		),
+		widgets.NewLabeledRowWidget(theme, "Size", 110,
+			widgets.NewTextboxWidget(theme, &this.zoneSizeEdit, "0.1 - 2.0", false)),
 		widgets.NewVerticalSpacerWidget(4),
-		widgets.NewLabeledRowWidget(
-			theme,
-			"Guard x",
-			110,
-			widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier", false),
-		),
-		widgets.NewLabeledRowWidget(
-			theme,
-			"Weekly +",
-			110,
-			widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15", false),
-		),
-	)
+		widgets.NewLabeledRowWidget(theme, "Guard x", 110,
+			widgets.NewTextboxWidget(theme, &this.zoneGuardEdit, "guard multiplier", false)),
+		widgets.NewLabeledRowWidget(theme, "Weekly +", 110,
+			widgets.NewTextboxWidget(theme, &this.zoneWeeklyEdit, "0.15", false)))
 	if isNeutral {
 		rows = append(rows,
 			widgets.NewVerticalSpacerWidget(4),
 			widgets.NewLabeledRowWidget(theme, "Quality", 110, this.qualityDropdown.GetWidget(theme)),
 			widgets.NewLabeledRowWidget(theme, "Castles", 110, this.castleDropdown.GetWidget(theme)),
-			widgets.NewDimmedLabelWidget(theme, "Changing quality or castles regenerates the zone's content."),
-		)
+			widgets.NewDimmedLabelWidget(theme, "Changing quality or castles regenerates the zone's content."))
 	}
 	rows = append(rows,
 		widgets.NewVerticalSpacerWidget(10),
-		widgets.NewButtonWidget(theme, "Delete this zone", &this.sideZoneDelete, isSpawn),
-	)
+		widgets.NewButtonWidget(theme, "Delete this zone", &this.sideZoneDelete, isSpawn))
 	return rows
 }
 
@@ -76,7 +58,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 // Called once whenever the zone selection changes.
 func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 	quality := neutralZone.GetQualityFrom(*zone)
-	this.qualityDropdown.SelectByName(connection_editor.QualityLabels[int(quality)])
+	this.qualityDropdown.SelectByName(connection_editor.QualityLabels[quality.GetIndex()])
 	castles := min(connection_editor.CountZoneCastles(*zone), 4)
 	this.castleDropdown.SelectByName(strconv.Itoa(castles))
 	this.zoneSizeEdit.SetText(strconv.FormatFloat(zone.Size, 'f', -1, 64))

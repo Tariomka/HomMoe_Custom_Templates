@@ -1,21 +1,21 @@
-package zoneClassifier_test
+package string_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenZoneNamesVary_ExtractsTrailingLetterAccordingly(t *testing.T) {
+func TestWhenZoneNamesVary_ExtractsTrailingLabelAccordingly(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		subtestName string
 		zoneName    string
 		expected    string
 	}{
-		{"WhenNameHasSpawnPrefix_ReturnsLetterAfterPrefix", "Spawn-A", "A"},
-		{"WhenNameHasNeutralPrefix_ReturnsLetterAfterPrefix", "Neutral-C", "C"},
+		{"WhenNameHasSpawnPrefix_ReturnsLabelAfterPrefix", "Spawn-A", "A"},
+		{"WhenNameHasNeutralPrefix_ReturnsLabelAfterPrefix", "Neutral-C", "C"},
 		{"WhenNameHasNoKnownPrefix_ReturnsNameUnchanged", "Hub", "Hub"},
 		{"WhenNameIsEmpty_ReturnsEmptyString", "", ""},
 	}
@@ -25,7 +25,7 @@ func TestWhenZoneNamesVary_ExtractsTrailingLetterAccordingly(t *testing.T) {
 			// Arrange
 
 			// Act
-			actual := preview_service.ExtractZoneLetter(testCase.zoneName)
+			actual := helpers.ExtractZoneLabel(testCase.zoneName)
 
 			// Assert
 			assert.Equal(t, testCase.expected, actual)

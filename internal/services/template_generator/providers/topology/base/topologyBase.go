@@ -19,7 +19,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
-var resourceContentPool = registry.GetResourcesContentPoolValues()
+const (
+	hubZoneName       = "Hub"
+	playerZonePrefix  = "Spawn-"
+	neutralZonePrefix = "Neutral-"
+)
 
 type TopologyBase struct {
 	ZoneLabelProvider *zones.ZoneLabelProvider
@@ -47,9 +51,9 @@ func (this *TopologyBase) CreateVariant(
 	}
 
 	if slices.Contains(playerLabels, firstLabel) {
-		orientationBuilder.WithZeroAngleZone("Spawn-" + firstLabel)
+		orientationBuilder.WithZeroAngleZone(playerZonePrefix + firstLabel)
 	} else {
-		orientationBuilder.WithZeroAngleZone("Neutral-" + firstLabel)
+		orientationBuilder.WithZeroAngleZone(neutralZonePrefix + firstLabel)
 	}
 
 	return variant_content.NewVariantBuilder().
@@ -96,7 +100,7 @@ func (this *TopologyBase) CreateSpawnZone(
 	}
 
 	return variant_content.NewZoneBuilder().
-		WithName("Spawn-" + label).
+		WithName(playerZonePrefix + label).
 		WithSize(utils.NormalizeZoneSize(zoneSize)).
 		WithLayoutSpawns().
 		WithGuardCutoffValue(2000).
@@ -107,7 +111,7 @@ func (this *TopologyBase) CreateSpawnZone(
 		WithDiplomacyModifier(-0.5).
 		WithGuardedContentPool(registry.GetGuardedContentPoolT2List()).
 		WithUnguardedContentPool(registry.GetUnguardedContentPoolT2List()).
-		WithResourcesContentPool([]string{resourceContentPool.StartZonePoor}).
+		WithResourcesContentPool([]string{registry.GetResourcesContentPoolValues().StartZonePoor}).
 		WithMandatoryContent("mandatory_content_side_" + label).
 		WithContentCountLimits(buildSideContentLimits()).
 		WithGuardedContentValue(tuning.ScaleByStructureDensity(200000 * tuning.ContentScale)).
@@ -143,7 +147,7 @@ func (this *TopologyBase) CreateNeutralZone(
 	totalMainObjects := plan.CastleCount + tuning.AbandonedOutpostCount
 
 	zoneBuilder := variant_content.NewZoneBuilder().
-		WithName("Neutral-" + plan.Label).
+		WithName(neutralZonePrefix + plan.Label).
 		WithSize(utils.NormalizeZoneSize(zoneSize)).
 		WithLayout(profile.Layout).
 		WithGuardCutoffValue(2000).
@@ -190,7 +194,7 @@ func (this *TopologyBase) CreateHubZone(
 	profile := neutralZone.NewNeutralZoneProfile(neutralZone.QualityHighest)
 
 	zoneBuilder := variant_content.NewZoneBuilder().
-		WithName("Hub").
+		WithName(hubZoneName).
 		WithSize(utils.NormalizeZoneSize(size)).
 		WithLayout(profile.Layout).
 		WithGuardCutoffValue(2000).
@@ -288,7 +292,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 	}
 	var additionalConns []entities.Connection
 	for _, label := range playerLabels {
-		zoneName := "Spawn-" + label
+		zoneName := playerZonePrefix + label
 		zone, ok := linq.FromSlice(zones).First(func(z entities.Zone) bool { return z.Name == zoneName })
 		if !ok {
 			continue
@@ -309,7 +313,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 		}
 
 		additionalConns = append(additionalConns, entities.Connection{
-			Name: fallbackName, From: zoneName, To: "Spawn-" + partner,
+			Name: fallbackName, From: zoneName, To: playerZonePrefix + partner,
 			ConnectionType: "Direct", GuardZone: zoneName, SimTurnSquad: true,
 			GuardValue: this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
 			GuardMatchGroup: "fallback_guard_" + fallbackName,
@@ -336,7 +340,7 @@ func spawnZoneHasConnection(zone entities.Zone, connNames map[string]bool) bool 
 // main object to the freshly created fallback connection.
 func appendSpawnFallbackRoads(zones []entities.Zone, label, partner, fallbackName string) {
 	for _, playerLabel := range []string{label, partner} {
-		spawnZoneName := "Spawn-" + playerLabel
+		spawnZoneName := playerZonePrefix + playerLabel
 		zoneIndex := slices.IndexFunc(
 			zones,
 			func(candidate entities.Zone) bool { return candidate.Name == spawnZoneName })
@@ -501,7 +505,7 @@ func (this *TopologyBase) GetBorderGuardValue(
 		qualityA := neutralZones.GetQuality(labelA)
 		qualityB := neutralZones.GetQuality(labelB)
 		higher := qualityA
-		if int(qualityB) > int(qualityA) {
+		if qualityB.GetIndex() > qualityA.GetIndex() {
 			higher = qualityB
 		}
 		return tuning.ScaleByBorderGuardStrength(higher.GetGuardValue())
@@ -531,7 +535,7 @@ func (this *TopologyBase) CreatePlayerOwnedCastles(
 			WithCastleQualityPoor().
 			WithPlacementUniform()
 		if matchPlayerFaction {
-			objectBuilder = objectBuilder.WithFaction("Match", "0")
+			objectBuilder = objectBuilder.WithFactionMatch()
 		} else {
 			objectBuilder = objectBuilder.WithFaction("Random")
 		}
@@ -558,7 +562,7 @@ func (this *TopologyBase) CreatePlayerUnclaimedCastles(
 			WithPlacementUniform().
 			WithPlacementArgs("false", "-0.8", "3")
 		if matchPlayerFaction {
-			objectBuilder = objectBuilder.WithFaction("Match", "0")
+			objectBuilder = objectBuilder.WithFactionMatch()
 		} else {
 			objectBuilder = objectBuilder.WithFaction("Random")
 		}
@@ -579,7 +583,7 @@ func (this *TopologyBase) CreateHubZoneCastles(
 		return variant_content.NewObjectBuilder().
 			WithTypeCity().
 			WithGuardWeeklyIncrement(0.10).
-			WithFaction("FromList")
+			WithFactionFromList()
 	}
 	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
 		return builder.
@@ -624,7 +628,10 @@ func (this *TopologyBase) buildZoneAdjacency(
 		zoneNameToIdx[this.ZoneLabelProvider.CreateZoneName(label, playerLabels)] = index
 	}
 	for connection := range linq.FromSlice(connections).
-		Where(func(x entities.Connection) bool { return x.ConnectionType == "Direct" || x.ConnectionType == "Portal" }).
+		Where(func(x entities.Connection) bool {
+			connectionTypes := registry.GetConnectionTypeValues()
+			return x.ConnectionType == connectionTypes.Direct || x.ConnectionType == connectionTypes.Portal
+		}).
 		Where(func(x entities.Connection) bool {
 			_, okA := zoneNameToIdx[x.From]
 			_, okB := zoneNameToIdx[x.To]
@@ -707,7 +714,7 @@ func CreateNeutralZoneCastles(
 			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardWeeklyIncrement(0.10).
-			WithFaction("FromList")
+			WithFactionFromList()
 
 		if isHoldCityZone {
 			objectBuilder = objectBuilder.
@@ -718,7 +725,7 @@ func CreateNeutralZoneCastles(
 		} else {
 			objectBuilder = objectBuilder.
 				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.PrimaryCityGuardValue)).
-				WithCastleQuality(profile.PrimaryBuildingsCSid).
+				WithCastleQuality(profile.PrimaryBuildingsSid).
 				WithPlacementUniform().
 				WithPlacementArgs("true", "0.8", "2")
 		}
@@ -732,8 +739,8 @@ func CreateNeutralZoneCastles(
 			WithGuardChance(1).
 			WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
 			WithGuardWeeklyIncrement(0.10).
-			WithCastleQuality(profile.ExtraBuildingsCSid).
-			WithFaction("FromList").
+			WithCastleQuality(profile.ExtraBuildingsSid).
+			WithFactionFromList().
 			WithPlacementUniform().
 			WithPlacementArgs("false", "-0.8", "3")
 
@@ -758,8 +765,8 @@ func createAbandonedOutposts(
 				WithGuardChance(1).
 				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
 				WithGuardWeeklyIncrement(0.10).
-				WithCastleQuality(profile.ExtraBuildingsCSid).
-				WithFaction("FromList").
+				WithCastleQuality(profile.ExtraBuildingsSid).
+				WithFactionFromList().
 				WithPlacementUniform().
 				WithPlacementArgs("false", "-0.8", "3").
 				Build())

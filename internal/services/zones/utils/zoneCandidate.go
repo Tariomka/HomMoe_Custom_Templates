@@ -8,11 +8,11 @@ import (
 )
 
 type candidate struct {
-	letter    string
-	minDist   int
-	variance  float64
-	quality   int
-	hasCastle int
+	letter      string
+	minDist     int
+	variance    float64
+	quality     int
+	castleCount int
 }
 
 type hubZoneCandidates []candidate
@@ -72,8 +72,8 @@ func (this *hubZoneCandidates) SortForHubCity() *hubZoneCandidates {
 			return comparison
 		}
 
-		// a.hasCastle > b.hasCastle
-		return cmp.Compare(b.hasCastle, a.hasCastle)
+		// a.castleCount > b.castleCount
+		return cmp.Compare(b.castleCount, a.castleCount)
 	})
 
 	return this

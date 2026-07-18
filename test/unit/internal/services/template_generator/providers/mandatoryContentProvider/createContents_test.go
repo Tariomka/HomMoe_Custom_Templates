@@ -121,6 +121,26 @@ func TestWhenHighTierRowsConfigured_CopiesRowsIntoHighNeutralZone(t *testing.T) 
 		"high neutral rows must reach a high-tier zone, not be dropped")
 }
 
+func TestWhenHighestTierPlanExists_CopiesHubZoneRowsIntoThatNeutralZone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	provider := providers.NewMandatoryContentProvider()
+	configuration := config.NewGeneratorConfig()
+	configuration.SpawnRemoteFootholds = false
+	configuration.HighNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "high_only"}}
+	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
+	plans := neutralZone.Plans{}
+	plans.AddPlan("V", neutralZone.QualityHighest, 1)
+
+	// Act
+	groups := provider.CreateContents(*configuration, nil, plans)
+
+	// Assert
+	assert.Equal(t, []string{"hub_treasure"},
+		itemSids(groupContent(groups, "mandatory_content_neutral_V")),
+		"a Highest-quality plan must receive the hub zone rows, not the high-tier rows")
+}
+
 func TestWhenNeutralZoneHasNoCastles_StripsNearCastlePlacementRules(t *testing.T) {
 	t.Parallel()
 	// Arrange

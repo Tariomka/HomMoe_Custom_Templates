@@ -15,23 +15,7 @@ type Plan struct {
 }
 
 func (this Plan) GetBalanceScore() float64 {
-	var qualityScore float64
-	switch this.Quality {
-	case QualityHighest:
-		qualityScore = 4.0
-	case QualityHigh:
-		qualityScore = 3.0
-	case QualityMedium:
-		qualityScore = 2.0
-	case QualityLow:
-		qualityScore = 1.0
-	case QualityLowest:
-		fallthrough
-	default:
-		qualityScore = 0.5
-	}
-
-	return qualityScore + math.Min(float64(this.CastleCount), 4)*0.15
+	return this.Quality.GetBalanceScore() + math.Min(float64(this.CastleCount), 4)*0.15
 }
 
 type Plans []Plan
@@ -62,44 +46,29 @@ func (this *Plans) AddPlan(label string, quality Quality, castleCount int) {
 	})
 }
 
-func (this *Plans) AddMediumPlan(label string, castleCount int) {
-	*this = append(*this, Plan{
-		Label:       label,
-		Quality:     QualityMedium,
-		CastleCount: castleCount,
-	})
-}
-
 func (this *Plans) GetQuality(label string) Quality {
+	// TODO: change this to actual values, i.e. default is unknown,
+	// but Im not sure if everything will work correctly and with this scope,
+	// it will be hard to see what caused a failure
 	if len(*this) == 0 {
 		return QualityMedium
 	}
+
 	plan, ok := linq.FromSlice(*this).First(func(x Plan) bool { return x.Label == label })
 	if !ok {
 		return QualityMedium
 	}
+
 	return plan.Quality
 }
 
 func (this *Plans) GetTier(label string) int {
 	plan, ok := linq.FromSlice(*this).First(func(x Plan) bool { return x.Label == label })
 	if !ok {
-		return 1
+		return QualityUnknown.GetIndex()
 	}
-	switch plan.Quality {
-	case QualityHighest:
-		return 4
-	case QualityHigh:
-		return 3
-	case QualityMedium:
-		return 2
-	case QualityLow:
-		return 1
-	case QualityLowest:
-		fallthrough
-	default:
-		return 0
-	}
+
+	return plan.Quality.GetIndex()
 }
 
 func (this *Plans) Any() bool {

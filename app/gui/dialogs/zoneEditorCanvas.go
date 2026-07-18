@@ -21,6 +21,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
 // connEdgeGeom is the per-frame drawn geometry of one connection: a quadratic
@@ -400,13 +401,13 @@ func (this *ZoneEditorDialog) drawRubberBand(gtx layout.Context) {
 
 func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Theme) {
 	for _, zone := range this.previewZones {
-		if zone.IsPlayer {
+		if zone.Type == preview.ZoneTypePlayer {
 			continue
 		}
 		utils.DrawPreviewZone(gtx, theme, zone, this.radius)
 	}
 	for _, zone := range this.previewZones {
-		if !zone.IsPlayer {
+		if zone.Type != preview.ZoneTypePlayer {
 			continue
 		}
 		utils.DrawPreviewZone(gtx, theme, zone, this.radius)

@@ -16,3 +16,17 @@ func SanitizeFilename(name string) string {
 	}
 	return string(out)
 }
+
+// ExtractZoneLabel returns the trailing letter portion of a zone name like
+// "Spawn-A" → "A" or "Neutral-C" → "C". Plain names (e.g. "Hub") pass through.
+func ExtractZoneLabel(zoneName string) string {
+	if after, ok := strings.CutPrefix(zoneName, "Spawn-"); ok {
+		return after
+	}
+
+	if after, ok := strings.CutPrefix(zoneName, "Neutral-"); ok {
+		return after
+	}
+
+	return zoneName
+}

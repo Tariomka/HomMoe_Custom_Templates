@@ -68,8 +68,9 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 		add(configuration.ZoneConfiguration.NeutralZoneCount, neutralZone.QualityMedium, castleCount)
 	}
 	if configuration.Topology == config.TopologySharedWeb && len(plans) == 0 && maxNeutral > 0 {
-		plans.AddMediumPlan(
+		plans.AddPlan(
 			this.zoneLabels[configuration.PlayerCount],
+			neutralZone.QualityMedium,
 			helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 0, 4))
 	}
 	return plans

@@ -58,7 +58,7 @@ Use an existing default-capped SID, configure two or more Lowest rows, and
 assert the matching output limit is raised. Keep the existing Player/Low/Medium
 tests as regression coverage for all tally sources.
 
-### CQ-02 - Three incompatible implementations infer a zone's quality from pool SIDs
+### CQ-02 - Three incompatible implementations infer a zone's quality from pool SIDs - DONE
 
 **Priority:** P1 - domain correctness and deduplication
 
