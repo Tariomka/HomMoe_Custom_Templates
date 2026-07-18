@@ -85,7 +85,8 @@ func positionOf(variant entities.Variant, zoneName string) [2]float64 {
 			return *zone.GeneratorPosition
 		}
 	}
-	return [2]float64{}
+
+	panic("zone not found: " + zoneName)
 }
 
 // distanceBetween returns the Euclidean distance between two zones' positions.
