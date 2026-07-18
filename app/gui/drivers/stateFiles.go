@@ -16,7 +16,7 @@ import (
 // call time - onLoaded runs inside the pick handler, after the loaded state
 // has been installed and only when loading succeeded.
 func (this *State) Load(onLoaded func()) {
-	dir, err := os.Getwd()
+	dir, err := os.Getwd() // Editor state by default is loaded from the same directory as the executable
 	if err != nil {
 		dir = this.suggestDirectory()
 	}
@@ -37,7 +37,7 @@ func (this *State) Save() {
 }
 
 func (this *State) SaveAs(templateName string) {
-	dir, err := os.Getwd()
+	dir, err := os.Getwd() // Editor state by default is saved in the same directory as the executable
 	if err != nil {
 		dir = this.suggestDirectory()
 	}

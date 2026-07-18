@@ -10,6 +10,7 @@ import (
 	"github.com/andygrunwald/vdf"
 )
 
+const windowsOS = "windows"
 const oldenEraID = "3105440"
 
 // FindOldenEraTemplatesDir tries to locate a template folder in common directories.
@@ -19,7 +20,7 @@ func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 	customTemplateRelativeGlob := filepath.Join(
 		"AppData", "LocalLow", "Unfrozen", "HeroesOldenEra", "users", "*", "my_map_templates")
 
-	if !useInstallDir && runtime.GOOS == "windows" {
+	if !useInstallDir && runtime.GOOS == windowsOS {
 		userPath, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
@@ -39,7 +40,7 @@ func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 		return "", common_errors.ErrGameInVDFNotFound
 	}
 
-	if !useInstallDir /*&& runtime.GOOS != "windows" is redundant here*/ {
+	if !useInstallDir /*&& runtime.GOOS != windowsOS is redundant here*/ {
 		templatePathPattern := filepath.Join(
 			directory,
 			"steamapps", "compatdata", oldenEraID, "pfx", "drive_c", "users", "steamuser",
@@ -54,7 +55,7 @@ func FindOldenEraTemplatesDir(useInstallDir bool) (string, error) {
 		"HeroesOldenEra_Data",
 		"StreamingAssets",
 		"map_templates")
-	if _, err := os.Stat(directory); os.IsNotExist(err) {
+	if _, err := os.Stat(directory); err != nil {
 		return "", err
 	}
 
@@ -81,15 +82,14 @@ func getVDFContent() (map[string]any, error) {
 func getVDFFilePath() (path string, err error) {
 	steamPath := getSteamPath()
 	vdfPath := filepath.Join(steamPath, "steamapps", "libraryfolders.vdf")
-	if _, err := os.Stat(vdfPath); os.IsNotExist(err) {
+	if _, err := os.Stat(vdfPath); err != nil {
 		return "", err
 	}
 	return vdfPath, nil
 }
 
 func getSteamPath() string {
-	switch runtime.GOOS {
-	case "windows":
+	if runtime.GOOS == windowsOS {
 		if registryPath := getSteamPathFromRegistry(); registryPath != "" {
 			return registryPath
 		}
@@ -99,19 +99,18 @@ func getSteamPath() string {
 		}
 
 		return `C:\Program Files (x86)\Steam`
-
-	default:
-		userPath, err := os.UserHomeDir()
-		if err != nil {
-			return ""
-		}
-
-		steamPath := filepath.Join(userPath, ".local", "share", "Steam")
-		if _, err := os.Stat(steamPath); os.IsNotExist(err) {
-			steamPath = filepath.Join(userPath, ".steam", "steam")
-		}
-		return steamPath
 	}
+
+	userPath, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	steamPath := filepath.Join(userPath, ".local", "share", "Steam")
+	if _, err := os.Stat(steamPath); os.IsNotExist(err) {
+		steamPath = filepath.Join(userPath, ".steam", "steam")
+	}
+	return steamPath
 }
 
 func getBasePath(vdfContent map[string]any) string {

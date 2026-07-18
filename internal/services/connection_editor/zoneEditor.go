@@ -7,7 +7,6 @@ package connection_editor
 import (
 	"fmt"
 	"math"
-	"strconv"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -19,36 +18,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
-// connectionRefType is the TypedRef.Type used for a road endpoint that targets a
-// zone connection.
-const connectionRefType = "Connection"
-
-// mainObjectRefType is the TypedRef.Type used for a road endpoint that targets a
-// zone main object (a castle, abandoned outpost, etc.).
-const mainObjectRefType = "MainObject"
-
 // isCastleRoad reports whether a road connects two of the zone's own main
 // objects (the stone castle<->castle roads). These must be regenerated whenever
 // the zone's main-object count changes, otherwise added castles end up with no
 // road and removed castles leave dangling roads.
 func isCastleRoad(road entities.Road) bool {
-	return road.From.Type == mainObjectRefType && road.To.Type == mainObjectRefType
-}
-
-// buildCastleRoads returns the stone roads linking the primary main object
-// (index 0) to every other main object, matching the generator's
-// castle<->castle roads. Returns nil for zones with fewer than two main objects.
-func buildCastleRoads(mainObjectCount int) []entities.Road {
-	var roads []entities.Road
-	for i := 1; i < mainObjectCount; i++ {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithStoneType().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i))).
-				Build())
-	}
-	return roads
+	connectionTypes := registry.GetRoadConnectionTypeValues()
+	return road.From.Type == connectionTypes.MainObject && road.To.Type == connectionTypes.MainObject
 }
 
 // EnsureConnectionNames assigns a unique name to every connection that does not
@@ -108,6 +84,7 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 		}
 	}
 
+	connectionTypes := registry.GetRoadConnectionTypeValues()
 	for i := range zones {
 		zone := &zones[i]
 
@@ -116,7 +93,7 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 		// below to match the current main-object count).
 		preserved := make([]entities.Road, 0, len(zone.Roads))
 		for _, road := range zone.Roads {
-			if road.From.Type == connectionRefType || road.To.Type == connectionRefType {
+			if road.From.Type == connectionTypes.Connection || road.To.Type == connectionTypes.Connection {
 				continue
 			}
 
@@ -127,13 +104,11 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 			preserved = append(preserved, road)
 		}
 
-		// Regenerate the castle<->castle roads first so they keep the leading
-		// position the generator gives them.
-		roads := buildCastleRoads(len(zone.MainObjects))
-		roads = append(roads, preserved...)
+		mainObjectCount := len(zone.MainObjects)
+		roads := append(topology.CreateOuterZoneRoads(nil, mainObjectCount, 0, true), preserved...)
 
 		names := connectionsByZone[zone.Name]
-		if len(zone.MainObjects) > 0 {
+		if mainObjectCount > 0 {
 			for _, name := range names {
 				roads = append(roads, variant_content.NewRoadBuilder().
 					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).

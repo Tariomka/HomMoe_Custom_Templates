@@ -157,7 +157,7 @@ one mapping to update.
 directory cover both paths. Add no test-only seam; run those focused tests to
 prove byte-identical output.
 
-### CQ-04 - Manually added neutral zones create orphan mandatory-content groups
+### CQ-04 - Manually added neutral zones create orphan mandatory-content groups - NON ISSUE / REJECTED
 
 **Priority:** P1 - correctness decision required
 
@@ -197,7 +197,7 @@ For the recommended policy, assert both the zone reference and matching group
 are present after `GUIHandler.UpdateTemplate`; for the alternative, assert no
 orphan group is emitted.
 
-### CQ-05 - Generator/editor duplicate zone labels, castle counting, and castle-road construction
+### CQ-05 - Generator/editor duplicate zone labels, castle counting, and castle-road construction - DONE
 
 **Priority:** P2 - targeted deduplication
 
@@ -241,7 +241,7 @@ reintroduce duplicate zone names, wrong castle totals, or dangling roads.
 the topology-base road tests. Add a zones-package test that proves
 `AllZoneLabels` is equivalent to the player-label prefix and mutation-safe.
 
-### CQ-06 - Hub-zone predicate is duplicated across GUI and generation
+### CQ-06 - Hub-zone predicate is duplicated across GUI and generation - DONE
 
 **Priority:** P2 - domain policy deduplication
 
@@ -270,7 +270,7 @@ cross-layer feature omission later.
 model tests covering all topology constants. Existing GUI/generator tests then
 continue to cover their consumers indirectly.
 
-### CQ-07 - Bonus picker applies defaults using the previous selected type
+### CQ-07 - Bonus picker applies defaults using the previous selected type - DONE
 
 **Priority:** P1 - user-visible correctness
 
@@ -300,7 +300,7 @@ is `20`; switch from the initial type to Wood and assert it is not empty. If
 the existing test seams cannot inspect the textbox value, add only the smallest
 test-only accessor or record the Gio-bound gap in `todo/test_observations.md`.
 
-### CQ-08 - Load and Save As bypass their own directory suggestion policy
+### CQ-08 - Load and Save As bypass their own directory suggestion policy - NON ISSUE / REJECTED
 
 **Priority:** P1 - common workflow and dead-code recovery
 
@@ -329,7 +329,7 @@ already working.
 and working-directory cases. Assert the fake dialog receives the directory of
 the loaded settings file first, then the configured output directory, then CWD.
 
-### CQ-09 - File-name sanitization is not sufficient for Windows paths
+### CQ-09 - File-name sanitization is not sufficient for Windows paths - DONE
 
 **Priority:** P1 - cross-platform correctness
 
@@ -362,7 +362,7 @@ names, extensions on device names, trailing dots/spaces, control runes, and an
 all-trimmed input. Existing SaveTemplate and SavePreviewImage fallback tests
 should continue to prove the shared fallback behaviour.
 
-### CQ-10 - Steam path discovery can report unreadable paths as successful
+### CQ-10 - Steam path discovery can report unreadable paths as successful - DONE
 
 **Priority:** P2 - error propagation
 
@@ -445,7 +445,7 @@ not require Gio seams.
 configuration rules. Tests make them explicit and bring the implementation in
 line with the repository's per-public-function test convention.
 
-## Low-Risk Cleanup Batch
+## Low-Risk Cleanup Batch - Semi fixed
 
 These are individually small and should be bundled only when touching the
 surrounding file; they do not justify standalone churn.
@@ -454,17 +454,17 @@ surrounding file; they do not justify standalone churn.
   production references. The rule dialog already uses
   `content_rules.GetDistanceDisplayNames()`.
 - Remove the unused `_ = i` in `app/gui/dialogs/zoneContent.go` and the stale
-  commented assignment in `app/gui/models/editorState.go`.
+  commented assignment in `app/gui/models/editorState.go`. - DONE
 - Correct stale comments in `internal/models/zoneContentRowSave.go` and
   `internal/services/content_rules/contentRuleManager.go`: they describe
   deprecated flat rule fields and RoadDistance normalization that no longer
   exist. Accurate comments prevent a future compatibility assumption from
-  becoming a silent data-loss bug.
+  becoming a silent data-loss bug. - DONE
 - Rename FileService parameters named `filepath` and `image`, which shadow
-  packages imported by the same file, to `path` and `previewImage`.
+  packages imported by the same file, to `path` and `previewImage`. - DONE
 - Replace `slices.EqualFunc(..., func(left, right config.BonusEntry) bool {
   return left == right })` in `EditorStateDto.EqualsIgnoringManualEdits` with
-  `slices.Equal`; `BonusEntry` is comparable and the result is identical.
+  `slices.Equal`; `BonusEntry` is comparable and the result is identical. - DONE
 
 ## Explicit Non-Findings
 

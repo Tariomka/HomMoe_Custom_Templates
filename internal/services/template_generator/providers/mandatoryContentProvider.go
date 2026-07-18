@@ -11,9 +11,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
@@ -86,7 +86,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			})
 
 		case preview.ZoneTypeNeutral:
-			castleCount := countCityMainObjects(zone)
+			castleCount := connection_editor.CountZoneCastles(zone)
 			content := cloneContentItems(neutralRowsForQuality(configuration, neutralZone.GetQualityFrom(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
@@ -103,7 +103,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			}
 
 			content := cloneContentItems(configuration.HubZoneMandatoryContent)
-			if countCityMainObjects(zone) == 0 {
+			if connection_editor.CountZoneCastles(zone) == 0 {
 				content = stripNearCastleRules(content)
 			}
 			groups = append(groups, entities.MandatoryContent{Name: "mandatory_content_hub", Content: content})
@@ -141,7 +141,7 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 // item is added.
 func (this *MandatoryContentProvider) hubContentGroup(
 	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
-	if !usesHubZone(configuration.Topology) || len(configuration.HubZoneMandatoryContent) == 0 {
+	if !configuration.Topology.IsHubBased() || len(configuration.HubZoneMandatoryContent) == 0 {
 		return entities.MandatoryContent{}, false
 	}
 
@@ -150,11 +150,6 @@ func (this *MandatoryContentProvider) hubContentGroup(
 		content = stripNearCastleRules(content)
 	}
 	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
-}
-
-// usesHubZone reports whether the topology creates a central Hub zone.
-func usesHubZone(topology config.MapTopology) bool {
-	return topology == config.TopologyHubAndSpoke || topology == config.TopologyGeometricHub
 }
 
 func (this *MandatoryContentProvider) createContentItemFrom(
@@ -279,16 +274,4 @@ func neutralRowsForQuality(
 	default:
 		return nil
 	}
-}
-
-// countCityMainObjects returns the number of City main objects (castles) in a
-// zone, ignoring abandoned outposts and other object types.
-func countCityMainObjects(zone entities.Zone) int {
-	count := 0
-	for _, mainObject := range zone.MainObjects {
-		if mainObject.Type == registry.GetMainObjectTypeValues().City {
-			count++
-		}
-	}
-	return count
 }

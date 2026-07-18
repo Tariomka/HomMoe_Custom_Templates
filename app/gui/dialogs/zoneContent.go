@@ -131,7 +131,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 		}
 		// Process per-row clicks (collect indices to remove).
 		keep := this.rows[:0]
-		for i, row := range this.rows {
+		for _, row := range this.rows {
 			if row.removeBtn.Clicked(gtx) {
 				continue
 			}
@@ -141,7 +141,6 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 				keep = append(keep, clone)
 				continue
 			}
-			_ = i
 			keep = append(keep, row)
 		}
 		this.rows = keep

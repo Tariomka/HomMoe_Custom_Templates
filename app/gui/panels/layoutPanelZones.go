@@ -11,7 +11,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.Widget {
@@ -19,12 +18,6 @@ func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.W
 		widgets.NewBrightButtonLargeWidget(theme, "Manual zone editor...", &this.editConnectionsBtn, false),
 		widgets.NewDimmedLabelWidget(theme, "Visually add, move and edit zones and connections on the generated map."),
 	})
-}
-
-// topologyUsesHubZone reports whether the topology creates a central Hub zone
-// and should therefore show the hub-specific options.
-func topologyUsesHubZone(topology config.MapTopology) bool {
-	return topology == config.TopologyHubAndSpoke || topology == config.TopologyGeometricHub
 }
 
 func (this *LayoutPanel) getZonesWidget(theme *material.Theme) layout.Widget {
@@ -91,7 +84,7 @@ func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, titl
 // advanced options) only while advanced zone control is enabled.
 func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		if !topologyUsesHubZone(this.state.GetStateData().Topology) {
+		if !this.state.GetStateData().Topology.IsHubBased() {
 			return layout.Dimensions{}
 		}
 

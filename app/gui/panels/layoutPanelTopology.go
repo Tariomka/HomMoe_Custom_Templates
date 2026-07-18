@@ -66,7 +66,7 @@ func (this *LayoutPanel) getZoneSizesWidget(theme *material.Theme) layout.Widget
 		widgets.NewSliderRowWidget(theme, "Neutral zone size", constants.DefaultLabelWidth,
 			&this.sldNeutralZoneSize, utils.MultiplierFormatter(0.5, 1.5)),
 		func(gtx layout.Context) layout.Dimensions {
-			if !topologyUsesHubZone(this.state.GetStateData().Topology) {
+			if !this.state.GetStateData().Topology.IsHubBased() {
 				return layout.Dimensions{}
 			}
 

@@ -177,5 +177,6 @@ func rebuildCastleRoads(zone *entities.Zone) {
 		}
 		kept = append(kept, road)
 	}
-	zone.Roads = append(buildCastleRoads(len(zone.MainObjects)), kept...)
+	topology := base.NewTopologyBase()
+	zone.Roads = append(topology.CreateOuterZoneRoads(nil, len(zone.MainObjects), 0, true), kept...)
 }

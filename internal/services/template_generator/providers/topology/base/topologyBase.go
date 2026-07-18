@@ -118,7 +118,7 @@ func (this *TopologyBase) CreateSpawnZone(
 		WithMainObjects(mainObjects).
 		WithBiomeMatchMainObject("0").
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, roadMainObjectCount, footholdCount, generateRoads)).
+		WithRoads(this.CreateOuterZoneRoads(connectionNames, roadMainObjectCount, footholdCount, generateRoads)).
 		Build()
 }
 
@@ -164,7 +164,7 @@ func (this *TopologyBase) CreateNeutralZone(
 		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
 		WithMainObjects(mainObjects).
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, totalMainObjects, footholdCount, generateRoads))
+		WithRoads(this.CreateOuterZoneRoads(connectionNames, totalMainObjects, footholdCount, generateRoads))
 
 	if totalMainObjects > 0 {
 		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
@@ -210,7 +210,7 @@ func (this *TopologyBase) CreateHubZone(
 		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
 		WithMainObjects(this.CreateHubZoneCastles(tuning, castleCount, isHoldCity)).
 		WithCrossroadsPosition(0).
-		WithRoads(this.createOuterZoneRoads(connectionNames, castleCount, 0, generateRoads))
+		WithRoads(this.CreateOuterZoneRoads(connectionNames, castleCount, 0, generateRoads))
 
 	if mandatoryContentName != "" {
 		zoneBuilder = zoneBuilder.WithMandatoryContent(mandatoryContentName)
@@ -612,6 +612,45 @@ func (this *TopologyBase) CreateHubZoneCastles(
 	return castles
 }
 
+func (this *TopologyBase) CreateOuterZoneRoads(
+	connectionNames []string,
+	mainObjectCount int,
+	footholdCount int, generateRoads bool) []entities.Road {
+	if !generateRoads {
+		return nil
+	}
+
+	if mainObjectCount == 0 {
+		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
+	}
+
+	var roads []entities.Road
+	for i := range mainObjectCount - 1 {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithStoneType().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i+1))).
+				Build())
+	}
+	for i := range footholdCount {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().
+					BuildMandatoryContentType(fmt.Sprintf("name_remote_foothold_%d", i+1))).
+				Build())
+	}
+	for _, name := range connectionNames {
+		roads = append(roads,
+			variant_content.NewRoadBuilder().
+				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
+				Build())
+	}
+	return roads
+}
+
 // buildZoneAdjacency indexes every zone label and links the indexes of zones
 // already joined by a Direct or Portal connection.
 func (this *TopologyBase) buildZoneAdjacency(
@@ -649,49 +688,6 @@ func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue 
 		WithPlacementUniform().
 		WithPlacementArgs("true", "0.7", "0").
 		Build()
-}
-
-// createOuterZoneRoads builds a castle zone's roads: a stone road from the
-// primary main object (index 0) to every other main object, a road to each
-// remote foothold, and a road to each connection. mainObjectCount is the TOTAL
-// number of main objects in the zone; a zone with none (mainObjectCount == 0)
-// is a pure pass-through connector instead.
-func (this *TopologyBase) createOuterZoneRoads(
-	connectionNames []string,
-	mainObjectCount int,
-	footholdCount int, generateRoads bool) []entities.Road {
-	if !generateRoads {
-		return nil
-	}
-
-	if mainObjectCount == 0 {
-		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
-	}
-
-	var roads []entities.Road
-	for i := 1; i < mainObjectCount; i++ {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithStoneType().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i))).
-				Build())
-	}
-	for i := 1; i <= footholdCount; i++ {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMandatoryContentType(fmt.Sprintf("name_remote_foothold_%d", i))).
-				Build())
-	}
-	for _, name := range connectionNames {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
-				Build())
-	}
-	return roads
 }
 
 // CreateNeutralZoneCastles builds the City main objects of a neutral zone.
@@ -812,7 +808,7 @@ func tryRandomDerangement(count int) ([]int, bool) {
 }
 
 // pickDerangementTarget returns the position (within candidates) of the first
-// unused candidate that is neither i nor a ring neighbour of i; when none
+// unused candidate that is neither i nor a ring neighbor of i; when none
 // exists it falls back to any unused candidate other than i, or -1.
 func pickDerangementTarget(candidates []int, used []bool, i, count int) int {
 	for j := range candidates {

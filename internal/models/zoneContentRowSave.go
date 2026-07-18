@@ -16,13 +16,11 @@ type ZoneContentRowSave struct {
 	// the generated MandatoryContentItem).
 	IsMine bool `json:"isMine,omitempty"`
 
-	// Rules is the serialized list of content rules for the row. New settings
-	// files use this in place of the deprecated flat fields above.
+	// Rules is the serialized list of content rules for the row.
 	Rules []ContentRuleRowSave `json:"rules,omitempty"`
 }
 
-// Normalized returns a copy with the default values applied
-// (Count >= 1, RoadDistance == "Any" when empty and no rules are present).
+// Normalized returns a copy with the default values applied.
 func (this ZoneContentRowSave) Normalized() ZoneContentRowSave {
 	out := this
 	if out.Count < 1 {

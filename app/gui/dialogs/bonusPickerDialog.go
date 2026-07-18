@@ -145,7 +145,7 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			dims := widgets.NewLabeledRowWidget(theme, "Type", 90, this.typeDropdown.GetWidget(theme))(gtx)
 			if this.typeDropdown.WasUpdated {
-				this.applyTypeDefaults(presetType)
+				this.applyTypeDefaults(this.getSelectedType())
 			}
 			return dims
 		}),

@@ -190,8 +190,7 @@ func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) boo
 		this.generationOptionScalarsEqual(other) &&
 		this.gameRuleScalarsEqual(other) &&
 		(this.Bonuses == nil) == (other.Bonuses == nil) &&
-		slices.EqualFunc(this.Bonuses, other.Bonuses,
-			func(left, right config.BonusEntry) bool { return left == right }) &&
+		slices.Equal(this.Bonuses, other.Bonuses) &&
 		contentRowSlicesEqual(this.PlayerZoneContentRows, other.PlayerZoneContentRows) &&
 		contentRowSlicesEqual(this.LowestNeutralContentRows, other.LowestNeutralContentRows) &&
 		contentRowSlicesEqual(this.LowNeutralContentRows, other.LowNeutralContentRows) &&
