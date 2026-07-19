@@ -1,24 +1,24 @@
 //go:build integration_test
 
-// Package performance_test benchmarks the editor.Window UI. The SAME benchmark
-// runs in one of two modes selected at runtime:
+// Package integration_common holds shared helpers for the gated integration and
+// performance suites (build tag integration_test). AppRunner drives a real
+// editor.Window in one of two modes selected at runtime:
 //
 //   - default: no window, no display and no app.Main - safe for CI.
-//   - headed: pass "headed" after -args (go test ... -args headed) to run a
-//     real gioui.org/app.Window opens on screen and renders the UI
-//     while the benchmark drives it.
+//   - headed: pass "headed" after -args (go test ... -args headed) so a real
+//     gioui.org/app.Window opens on screen and renders the UI while the test
+//     drives it.
 //
 // Both modes drive the UI through a single shared input.Router that lays out the
 // real editor.Window and injects synthetic pointer/key events (a real app.Window
 // exposes no event-injection API, so even in windowed mode the clicks are
 // processed through this router while the on-screen window passively mirrors the
-// resulting state). AppRunner hides the difference: write a benchmark once and it
+// resulting state). AppRunner hides the difference: write a test once and it
 // behaves identically in either mode, the windowed mode merely also renders.
-package performance_test
+package integration_common
 
 import (
 	"image"
-	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -26,6 +26,7 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/f32"
+	"gioui.org/gpu/headless"
 	"gioui.org/io/input"
 	"gioui.org/io/key"
 	"gioui.org/io/pointer"
@@ -34,47 +35,22 @@ import (
 	"gioui.org/op"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
 const (
-	benchWindowWidth  = 1600
-	benchWindowHeight = 900
+	// WindowWidth is the fixed layout width AppRunner drives the editor at.
+	WindowWidth = 1600
+	// WindowHeight is the fixed layout height AppRunner drives the editor at.
+	WindowHeight = 900
 )
 
-// isHeadless reports whether the "headed" argument was passed to the test
-// binary (e.g. `go test ... -args headed`). os.Args is scanned directly rather
-// than using a registered flag because TestMain must decide whether to start
-// app.Main before the testing framework parses flags.
-func isHeadless() bool {
-	for _, arg := range os.Args[1:] {
-		if arg == "headed" || arg == "-headed" || arg == "--headed" {
-			return false
-		}
-	}
-
-	return true
-}
-
-// TestMain runs the Gio event system on the main goroutine (required by
-// app.Window) in windowed mode, while the benchmarks run on a separate
-// goroutine. In headless mode app.Main is never started, so the package needs no
-// display and is safe to run anywhere.
-func TestMain(m *testing.M) {
-	if isHeadless() {
-		os.Exit(m.Run())
-	}
-	go func() {
-		os.Exit(m.Run())
-	}()
-	app.Main()
-}
-
-// AppRunner drives a real editor.Window for a benchmark. In windowed mode it also
-// owns an app.Window that renders the same editor.Window on a background
-// goroutine; in headless mode window is nil and Start/Stop are no-ops.
+// AppRunner drives a real editor.Window for a test or benchmark. In windowed
+// mode it also owns an app.Window that renders the same editor.Window on a
+// background goroutine; in headless mode window is nil and Start/Stop are
+// no-ops.
 //
 // All synthetic input is applied through the aux input.Router (router/ops) by
 // laying out the shared editor.Window. Because that widget tree is also laid out
@@ -97,6 +73,16 @@ type AppRunner struct {
 	// human can watch the UI change. It only applies in windowed mode and is 0
 	// by default so headless timings stay clean.
 	renderDelay time.Duration
+
+	// snapshot verification (see appRunnerSnapshots.go); nil snapshotTest means
+	// snapshotting is disabled (the default, e.g. for benchmarks).
+	snapshotTest *testing.T
+	snapshotFile string
+	actionCount  int
+	headlessWin  *headless.Window
+	masker       SnapshotMasker
+	comparer     SnapshotComparer
+	store        SnapshotStore
 }
 
 // NewAppRunner builds a runner. The window is created only in windowed mode; a
@@ -106,7 +92,7 @@ func NewAppRunner() *AppRunner {
 		App:   editor.NewWindow(),
 		theme: themes.NewTheme(),
 	}
-	if !isHeadless() {
+	if !IsHeadless() {
 		runner.window = new(app.Window)
 	}
 	return runner
@@ -123,8 +109,8 @@ func (this *AppRunner) Start() {
 	}
 
 	this.window.Option(
-		app.Title("Olden Era - Custom Templates (perf benchmark)"),
-		app.Size(unit.Dp(benchWindowWidth), unit.Dp(benchWindowHeight)))
+		app.Title("Olden Era - Custom Templates (test runner)"),
+		app.Size(unit.Dp(WindowWidth), unit.Dp(WindowHeight)))
 	this.done = make(chan struct{})
 	go this.runWindow()
 }
@@ -149,11 +135,11 @@ func (this *AppRunner) NextFrame() {
 	this.invalidate()
 }
 
-// ClickAt injects a synthetic touch tap (press + release) at p. The leading frame
-// registers the input areas, the trailing frame processes the tap. Both run under
-// one lock so a render cannot observe a half-applied click.
-func (this *AppRunner) ClickAt(p image.Point) {
-	pos := f32.Pt(float32(p.X), float32(p.Y))
+// ClickAt injects a synthetic touch tap (press + release) at clickPoint. The
+// leading frame registers the input areas, the trailing frame processes the tap.
+// Both run under one lock so a render cannot observe a half-applied click.
+func (this *AppRunner) ClickAt(clickPoint image.Point) {
+	pos := f32.Pt(float32(clickPoint.X), float32(clickPoint.Y))
 	this.mu.Lock()
 	this.frameLocked()
 	this.router.Queue(
@@ -163,6 +149,7 @@ func (this *AppRunner) ClickAt(p image.Point) {
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
+	this.verifySnapshot()
 }
 
 // DragTo injects a synthetic drag from one point to another (press, a series of
@@ -195,17 +182,19 @@ func (this *AppRunner) DragTo(from, to image.Point) {
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
+	this.verifySnapshot()
 }
 
 // InputText injects text into the currently focused widget (focus a field first,
 // e.g. with ClickAt). The text replaces the focused editor's current selection.
-func (this *AppRunner) InputText(s string) {
+func (this *AppRunner) InputText(text string) {
 	this.mu.Lock()
 	this.frameLocked()
-	this.router.Queue(key.EditEvent{Text: s})
+	this.router.Queue(key.EditEvent{Text: text})
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
+	this.verifySnapshot()
 }
 
 // SelectedTabIndex returns the editor's selected tab, taken under the lock so it
@@ -237,9 +226,39 @@ func (this *AppRunner) CloseTopDialog() {
 	this.mu.Unlock()
 }
 
+// CurrentState returns the editor's current state snapshot (lock-guarded).
+func (this *AppRunner) CurrentState() dtos.EditorStateDto {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.CurrentState()
+}
+
+// LoadStateFromFile loads an editor state file programmatically, mirroring the
+// Load dialog picking a file (lock-guarded).
+func (this *AppRunner) LoadStateFromFile(path string) {
+	this.mu.Lock()
+	this.App.LoadStateFromFile(path)
+	this.mu.Unlock()
+}
+
+// SaveStateToFile saves the current editor state to a file programmatically,
+// mirroring the Save dialog (lock-guarded).
+func (this *AppRunner) SaveStateToFile(path string) {
+	this.mu.Lock()
+	this.App.SaveStateToFile(path)
+	this.mu.Unlock()
+}
+
+// Status returns the state driver's status message and error flag (lock-guarded).
+func (this *AppRunner) Status() (string, bool) {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.GetStateDriver().GetStatus()
+}
+
 // runWindow is the real app.Window event loop, mirroring gui.eventLoop. It only
-// renders; all UI logic is driven through the aux router on the benchmark
-// goroutine. It performs a graceful close once Stop requests it.
+// renders; all UI logic is driven through the aux router on the test goroutine.
+// It performs a graceful close once Stop requests it.
 func (this *AppRunner) runWindow() {
 	defer close(this.done)
 	var ops op.Ops
@@ -281,7 +300,7 @@ func (this *AppRunner) frameLocked() {
 	this.ops.Reset()
 	gtx := layout.Context{
 		Ops:         &this.ops,
-		Constraints: layout.Exact(image.Pt(benchWindowWidth, benchWindowHeight)),
+		Constraints: layout.Exact(image.Pt(WindowWidth, WindowHeight)),
 		Metric:      unit.Metric{PxPerDp: 1, PxPerSp: 1},
 		Source:      this.router.Source(),
 		Now:         time.Now(),

@@ -106,4 +106,8 @@
     ],
     "coverage-gutters.showLineCoverage": false, // Still not sure about this one to be honest
     "coverage-gutters.showGutterCoverage": true,
+    "workbench.editorAssociations": {
+        "*.golden": "imagePreview.previewEditor",
+		"*.failure": "imagePreview.previewEditor",
+    },
 }

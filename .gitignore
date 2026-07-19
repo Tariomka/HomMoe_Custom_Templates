@@ -19,6 +19,9 @@ lcov.info
 # Output directories
 output/
 
+# Failing snapshot screenshots (goldens are committed, failures are scratch)
+test/test_helpers/integration_common/__snapshots__/**/*.failure
+
 # Dependency directories
 vendor/
 

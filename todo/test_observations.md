@@ -69,6 +69,13 @@ Still unit-untestable (dialog-callback or Gio territory):
 - stateGeneration.go - `reapplyManualEdits` castle-change branch requires a
   generation-then-castle-option-change sequence entangled with the real
   mapper; exercised by the integration suite's manual-edit scenarios.
+- test/test_helpers/integration_common - the `integration_test`-tagged files
+  (`appRunner.go`, `appRunnerSnapshots.go`, `runMode.go`, `tabCalibration.go`)
+  need `editor.Window` + a headless GPU context, so §4.6 forbids unit tests;
+  they are exercised by the gated integration/performance suites (snapshot
+  capture/validation via `window_snapshot_integration_test.go`). The untagged
+  helpers (`snapshotComparer.go`, `snapshotMasker.go`, `snapshotStore.go`) have
+  dedicated unit tests under `test/unit/test/test_helpers/integration_common/`.
 
 ## Unreachable defensive branches (unit-test coverage gaps by design)
 
