@@ -7,8 +7,6 @@ import (
 	"unicode"
 )
 
-// SanitizeFilename replaces filesystem-unsafe runes in name with underscores
-// and trims surrounding whitespace.
 func SanitizeFilename(name string) string {
 	bad := []rune{'/', '\\', ':', '*', '?', '"', '<', '>', '|'}
 	out := []rune(strings.TrimSpace(name))
