@@ -239,6 +239,7 @@ jobs:
         run: nvidia-smi # Ensures the runner recognizes the GPU session
 
       - name: Run GUI integration tests
+        timeout-minutes: 10 
         run: |
           docker run --gpus all \
             --init \

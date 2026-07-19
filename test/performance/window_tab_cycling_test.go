@@ -7,7 +7,6 @@ package performance_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
@@ -28,17 +27,16 @@ func BenchmarkEditorWindow_TabCycling(b *testing.B) {
 	runner.Start()
 	defer runner.Stop()
 
-	points := integration_common.CalibrateTabPoints(b, runner)
-	runner.SetRenderDelay(100 * time.Millisecond)
-
-	// TODO: add benchmark assertion with
-	// actual := testing.Benchmark()
-	// assert.LessOrEqual(b, actual.AllocedBytesPerOp(), 155_000)
+	handler := integration_common.NewHandler(runner)
 
 	for b.Loop() {
-		for idx := range points {
-			runner.ClickAt(points[idx])
-			assert.Equal(b, idx, runner.SelectedTabIndex())
-		}
+		handler.ClickGeneralTab()
+		assert.Equal(b, 0, runner.SelectedTabIndex())
+		handler.ClickLayoutAndZonesTab()
+		assert.Equal(b, 1, runner.SelectedTabIndex())
+		handler.ClickBonusesAndBansTab()
+		assert.Equal(b, 2, runner.SelectedTabIndex())
+		handler.ClickGeneralTab()
+		assert.Equal(b, 0, runner.SelectedTabIndex())
 	}
 }

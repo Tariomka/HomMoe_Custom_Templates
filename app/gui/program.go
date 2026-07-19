@@ -41,7 +41,7 @@ func eventLoop(version string) {
 			gtx := app.NewContext(&ops, event)
 			windowLayout.Layout(gtx, theme)
 			event.Frame(gtx.Ops)
-			positionLogger.LogButtonPositions(gtx.Ops)
+			positionLogger.LogButtonPositions(gtx.Ops, gtx.Metric, event.Size)
 		}
 	}
 }

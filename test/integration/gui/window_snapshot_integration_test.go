@@ -5,10 +5,9 @@ package gui_test
 import (
 	"image"
 	"testing"
+	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // previewMask blanks the right-hand preview column (preview panel is capped at
@@ -30,16 +29,14 @@ func TestWindowSnapshots_TabClicksMatchGoldens(t *testing.T) {
 	runner.Start()
 	defer runner.Stop()
 
-	// Calibrate BEFORE enabling snapshots: probing performs many throwaway
-	// clicks that must not produce snapshots.
-	points := integration_common.CalibrateTabPoints(t, runner)
-	require.NotEmpty(t, points)
-
 	runner.EnableSnapshots(t)
 	runner.MaskRect(previewMask)
+	runner.SetRenderDelay(500 * time.Millisecond)
 
-	for tabIndex, tabPoint := range points {
-		runner.ClickAt(tabPoint)
-		assert.Equal(t, tabIndex, runner.SelectedTabIndex())
-	}
+	handler := integration_common.NewHandler(runner)
+
+	handler.ClickGeneralTab().
+		ClickLayoutAndZonesTab().
+		ClickBonusesAndBansTab().
+		ClickGeneralTab()
 }

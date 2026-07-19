@@ -4,7 +4,6 @@ import (
 	"image"
 
 	"gioui.org/font"
-	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -14,6 +13,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 )
 
 // NewButtonWidget returns a Widget that renders a button with the given text.
@@ -42,7 +42,7 @@ func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickab
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
-			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 			return buttonDimensions
 		})
 	}
@@ -76,7 +76,7 @@ func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.C
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
-			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 			return buttonDimensions
 		})
 	}
@@ -113,7 +113,7 @@ func NewSegmentButtonWidget(theme *material.Theme, label string, button *widget.
 						Width: float32(gtx.Dp(1)),
 					}.Op())
 					call.Add(gtx.Ops)
-					addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+					utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 					return buttonDimensions
 				})
 		})
@@ -150,7 +150,7 @@ func NewDropdownRowButtonWidget(
 			rect := image.Rectangle{Max: buttonDimensions.Size}
 			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
 			call.Add(gtx.Ops)
-			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 			if buttonDimensions.Size.X < gtx.Constraints.Min.X {
 				buttonDimensions.Size.X = gtx.Constraints.Min.X
 			}
@@ -187,7 +187,7 @@ func NewBrightButtonWidget(theme *material.Theme, label string, button *widget.C
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
-			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 			return buttonDimensions
 		})
 	}
@@ -229,7 +229,7 @@ func NewBrightButtonLargeWidget(
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
-			addButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 			return buttonDimensions
 		})
 	}
@@ -242,16 +242,4 @@ func newButtonInset() layout.Inset {
 		Left:   constants.DefaultPaddingLarge,
 		Right:  constants.DefaultPaddingLarge,
 	}
-}
-
-// addButtonSemantics records the button class and label in a nested, handler-free
-// clip area sized to the button. The input router keeps semantics of such areas
-// intact (areas with an input handler lose them unless a gesture filter is
-// registered), which lets utils.ButtonPositionLogger resolve every button's
-// absolute window bounds from a replayed frame.
-func addButtonSemantics(operations *op.Ops, label string, size image.Point) {
-	area := clip.Rect(image.Rectangle{Max: size}).Push(operations)
-	semantic.Button.Add(operations)
-	semantic.LabelOp(label).Add(operations)
-	area.Pop()
 }

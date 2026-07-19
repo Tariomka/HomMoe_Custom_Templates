@@ -139,29 +139,26 @@ func (this *AppRunner) NextFrame() {
 // ClickAt injects a synthetic touch tap (press + release) at clickPoint. The
 // leading frame registers the input areas, the trailing frame processes the tap.
 // Both run under one lock so a render cannot observe a half-applied click.
-func (this *AppRunner) ClickAt(clickPoint image.Point) {
-	pos := f32.Pt(float32(clickPoint.X), float32(clickPoint.Y))
+func (this *AppRunner) ClickAt(point f32.Point) {
 	this.mu.Lock()
 	this.frameLocked()
 	this.router.Queue(
-		pointer.Event{Kind: pointer.Press, Source: pointer.Touch, Position: pos},
-		pointer.Event{Kind: pointer.Release, Source: pointer.Touch, Position: pos},
-	)
+		pointer.Event{Kind: pointer.Press, Source: pointer.Touch, Position: point},
+		pointer.Event{Kind: pointer.Release, Source: pointer.Touch, Position: point},
+		pointer.Event{Kind: pointer.Move, Source: pointer.Touch, Position: f32.Point{}})
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
 	this.verifySnapshot()
 }
 
-// MoveAt injects a synthetic touch move at point. The leading frame registers
+// MoveTo injects a synthetic touch move at point. The leading frame registers
 // the input areas, the trailing frame processes the move. Both run under one
 // lock so a render cannot observe a half-applied move.
-func (this *AppRunner) MoveAt(point f32.Point) {
+func (this *AppRunner) MoveTo(point f32.Point) {
 	this.mu.Lock()
 	this.frameLocked()
-	this.router.Queue(
-		pointer.Event{Kind: pointer.Move, Source: pointer.Touch, Position: point},
-	)
+	this.router.Queue(pointer.Event{Kind: pointer.Move, Source: pointer.Touch, Position: point})
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
@@ -173,11 +170,8 @@ func (this *AppRunner) DragTo(from, to image.Point) {
 	const steps = 8
 	this.mu.Lock()
 	this.frameLocked()
-	this.router.Queue(pointer.Event{
-		Kind:     pointer.Press,
-		Source:   pointer.Touch,
-		Position: f32.Pt(float32(from.X), float32(from.Y)),
-	})
+	this.router.Queue(
+		pointer.Event{Kind: pointer.Press, Source: pointer.Touch, Position: f32.Pt(float32(from.X), float32(from.Y))})
 	this.frameLocked()
 	for i := 1; i <= steps; i++ {
 		x := from.X + (to.X-from.X)*i/steps
