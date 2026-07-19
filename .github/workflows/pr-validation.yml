@@ -222,7 +222,7 @@ jobs:
   run-gui-integration-tests:
     name: Run GUI Integration Tests
     if: github.event_name == 'pull_request'
-    runs-on: [self-hosted, linux, gpu] 
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -235,16 +235,25 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Verify GPU Access
-        run: nvidia-smi # Ensures the runner recognizes the GPU session
+      - name: Install Mesa software renderer and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb mesa-utils libegl1 libgles2 libgl1-mesa-dri \
+            libx11-dev libxkbcommon-x11-dev libwayland-dev libvulkan-dev
 
       - name: Run GUI integration tests
-        timeout-minutes: 10 
+        timeout-minutes: 10
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1" # force Mesa llvmpipe (no physical GPU on hosted runners)
         run: |
-          docker run --gpus all \
-            --init \
-            -e GOCACHE=/workspace/.gocache \
-            -v $(pwd):/workspace \
-            -w /workspace \
-            my-test-image:latest \
-            xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" go test -v -json -tags "integration_test && gui" ./test/integration/gui/...
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
+            go test -v -tags "integration_test,gui" ./test/integration/gui/...
+
+      - name: Upload snapshot failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gui-snapshot-failures
+          path: test/integration/gui/__snapshots__/**/*.failure
+          if-no-files-found: ignore
