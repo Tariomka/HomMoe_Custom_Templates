@@ -7,6 +7,9 @@ DISCLAIMER: This is a semi-AI generated rewrite of the original [Olden Era - Tem
 for personal use, developing on Windows and using on Linux (SteamDeck).
 All credit and inspiration goes to the people behind that project.
 Don't use this project, instead go to the original.
+Don't contribute to this project - some of this stuff is already AI generated,
+I don't want to maintain other people code on top of that.
+![Don't touch my garbage](docs/garbage.jpg)
 
 The app lets you configure every knob the game's RMG exposes (players, map
 size, topology, zone counts, victory conditions, neutral zone quality
