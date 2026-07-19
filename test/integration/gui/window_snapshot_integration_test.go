@@ -22,7 +22,9 @@ func TestWindowSnapshots_TabClicksMatchGoldens(t *testing.T) {
 
 	runner.EnableSnapshots(t)
 	runner.MaskRect(previewMask)
-	runner.SetRenderDelay(500 * time.Millisecond)
+	if !integration_common.IsHeadless() {
+		runner.SetRenderDelay(500 * time.Millisecond)
+	}
 
 	handler := integration_common.NewHandler(runner)
 
