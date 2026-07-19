@@ -255,5 +255,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: gui-snapshot-failures
-          path: test/integration/gui/__snapshots__/**/*.failure
+          path: test/test_helpers/integration_common/snapshot/__snapshots__/**/*.failure
           if-no-files-found: ignore
