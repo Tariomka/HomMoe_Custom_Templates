@@ -70,7 +70,7 @@
         "Voodoosh"
     ],
     "gopls": {
-        "build.buildFlags": ["-tags=integration_test"],
+        "build.buildFlags": ["-tags=integration_test && gui"],
         "ui.semanticTokens": true,
         "ui.diagnostic.staticcheck": true,
         "ui.diagnostic.analyses": {

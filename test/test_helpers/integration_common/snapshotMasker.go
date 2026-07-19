@@ -11,19 +11,19 @@ import (
 // saved as a golden or compared against one. The same mask is applied to both
 // sides, so masked regions can never cause a difference.
 type SnapshotMasker struct {
-	rects []image.Rectangle
+	masks []image.Rectangle
 }
 
 // AddRect registers a rectangle (in window pixel coordinates) to be masked.
 func (this *SnapshotMasker) AddRect(rect image.Rectangle) {
-	this.rects = append(this.rects, rect)
+	this.masks = append(this.masks, rect)
 }
 
 // Apply paints every registered rectangle onto the screenshot in place,
 // clamping each rectangle to the screenshot bounds.
 func (this *SnapshotMasker) Apply(screenshot *image.RGBA) {
 	maskFill := image.NewUniform(color.NRGBA{A: 255})
-	for _, rect := range this.rects {
+	for _, rect := range this.masks {
 		clamped := rect.Intersect(screenshot.Bounds())
 		if clamped.Empty() {
 			continue

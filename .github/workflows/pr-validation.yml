@@ -218,3 +218,6 @@ jobs:
 
       - name: Run performance tests
         run: go test -v -tags integration_test ./test/performance/... -bench . -benchmem -benchtime 500x -timeout 30s
+
+      - name: Run GUI integration tests
+        run: go test -v -tags "integration_test && gui" ./test/integration/gui/...

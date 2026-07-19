@@ -1,6 +1,6 @@
-//go:build integration_test
+//go:build integration_test && gui
 
-package integration_test
+package gui_test
 
 import (
 	"image"
