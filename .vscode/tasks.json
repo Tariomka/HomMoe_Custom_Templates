@@ -28,6 +28,13 @@
             "problemMatcher": "$go"
         },
         {
+            "label": "Go: Run UI Integration tests w/ headed mode",
+            "type": "shell",
+            "command": "go test '-tags=integration_test && gui' ./test/integration/gui/... -count 1 -args headed",
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
             "label": "Go: Update UI Integration tests snapshots",
             "type": "shell",
             "command": "go",

@@ -219,5 +219,29 @@ jobs:
       - name: Run performance tests
         run: go test -v -tags integration_test ./test/performance/... -bench . -benchmem -benchtime 500x -timeout 30s
 
+  run-gui-integration-tests:
+    name: Run GUI Integration Tests
+    if: github.event_name == 'pull_request'
+    runs-on: [self-hosted, linux, gpu] 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Project
+        uses: ./.github/workflows/setup-steps
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Verify GPU Access
+        run: nvidia-smi # Ensures the runner recognizes the GPU session
+
       - name: Run GUI integration tests
-        run: go test -v -tags "integration_test && gui" ./test/integration/gui/...
+        run: |
+          docker run --gpus all \
+            -v $(pwd):/workspace \
+            -w /workspace \
+            my-test-image:latest \
+            xvfb-run --server-args="-screen 0 1920x1080x24" go test -v -tags "integration_test && gui" ./test/integration/gui/...

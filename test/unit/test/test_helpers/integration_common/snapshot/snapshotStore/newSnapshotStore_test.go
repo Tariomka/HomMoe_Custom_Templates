@@ -17,5 +17,5 @@ func TestWhenConstructed_RootsUnderIntegrationCommonSnapshots(t *testing.T) {
 	goldenPath := store.GoldenPath("someFile", "SomeTest", 1)
 
 	// Assert
-	assert.Contains(t, goldenPath, filepath.Join("test_helpers", "integration_common", "__snapshots__"))
+	assert.Contains(t, goldenPath, filepath.Join("test_helpers", "integration_common", "snapshot", "__snapshots__"))
 }

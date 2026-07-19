@@ -232,14 +232,14 @@ go test ./test/models/ -run TestSettingsFile_RoundTrip
 # Integration tests
 go test -tags integration_test ./test/integration/... -count=1
 
+# Integration tests with UI
+go test '-tags=integration_test && gui' ./test/integration/gui/... -count 1 -args headed
+
 # Performance tests
 go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
 
-# Performance tests with UI
-go test -tags integration_test ./test/performance/... -bench . -benchtime 3x -timeout 30s -args headed
-
-# Performance tests with UI and profiling
-go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s -args headed
+# Performance tests with profiling
+go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s
 ```
 
 ## Notes
