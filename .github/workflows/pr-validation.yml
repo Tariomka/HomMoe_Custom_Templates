@@ -248,7 +248,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: "1" # force Mesa llvmpipe (no physical GPU on hosted runners)
         run: |
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
-            go test -v '-tags=integration_test && gui' -count=1 ./test/integration/gui/...
+            go test -v '-tags=integration_test,gui' -count=1 ./test/integration/gui/...
 
       - name: Upload snapshot failures
         if: failure()
