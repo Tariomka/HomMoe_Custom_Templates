@@ -38,6 +38,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
 
 const (
@@ -80,9 +81,9 @@ type AppRunner struct {
 	snapshotFile string
 	actionCount  int
 	headlessWin  *headless.Window
-	masker       SnapshotMasker
-	comparer     SnapshotComparer
-	store        SnapshotStore
+	masker       snapshot.SnapshotMasker
+	comparer     snapshot.SnapshotComparer
+	store        snapshot.SnapshotStore
 }
 
 // NewAppRunner builds a runner. The window is created only in windowed mode; a

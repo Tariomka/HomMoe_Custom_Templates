@@ -3,7 +3,7 @@ package snapshotStore_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,7 +11,7 @@ import (
 func TestWhenFileExists_RemovesIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := integration_common.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
 	failurePath := store.FailurePath("someFile", "SomeTest", 1)
 	require.NoError(t, store.SaveFailure(failurePath, sampleScreenshot()))
 
@@ -26,7 +26,7 @@ func TestWhenFileExists_RemovesIt(t *testing.T) {
 func TestWhenFileIsMissing_ReturnsNil(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := integration_common.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
 
 	// Act
 	err := store.DeleteFailure(store.FailurePath("someFile", "NeverSaved", 1))

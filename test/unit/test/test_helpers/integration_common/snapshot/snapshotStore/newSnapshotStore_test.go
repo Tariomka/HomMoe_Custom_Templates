@@ -4,14 +4,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenConstructed_RootsUnderIntegrationCommonSnapshots(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := integration_common.NewSnapshotStore()
+	store := snapshot.NewSnapshotStore()
 
 	// Act
 	goldenPath := store.GoldenPath("someFile", "SomeTest", 1)

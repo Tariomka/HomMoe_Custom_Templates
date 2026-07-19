@@ -1,4 +1,4 @@
-package integration_common
+package snapshot
 
 import (
 	"fmt"

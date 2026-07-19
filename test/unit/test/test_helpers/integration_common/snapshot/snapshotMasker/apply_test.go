@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,78 +41,78 @@ func maskedExpectation(source *image.RGBA, rects ...image.Rectangle) *image.RGBA
 func TestWhenRectIsInsideBounds_MasksOnlyThatRegion(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	screenshot := checkeredImage(8, 6)
+	screenshotImage := checkeredImage(8, 6)
 	maskRect := image.Rect(2, 1, 5, 4)
-	expected := maskedExpectation(screenshot, maskRect)
-	masker := integration_common.SnapshotMasker{}
+	expected := maskedExpectation(screenshotImage, maskRect)
+	masker := snapshot.SnapshotMasker{}
 	masker.AddRect(maskRect)
 
 	// Act
-	masker.Apply(screenshot)
+	masker.Apply(screenshotImage)
 
 	// Assert
-	assert.Equal(t, expected, screenshot)
+	assert.Equal(t, expected, screenshotImage)
 }
 
 func TestWhenRectExceedsBounds_ClampsToScreenshot(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	screenshot := checkeredImage(8, 6)
+	screenshotImage := checkeredImage(8, 6)
 	maskRect := image.Rect(5, 3, 20, 20)
-	expected := maskedExpectation(screenshot, maskRect)
-	masker := integration_common.SnapshotMasker{}
+	expected := maskedExpectation(screenshotImage, maskRect)
+	masker := snapshot.SnapshotMasker{}
 	masker.AddRect(maskRect)
 
 	// Act
-	masker.Apply(screenshot)
+	masker.Apply(screenshotImage)
 
 	// Assert
-	assert.Equal(t, expected, screenshot)
+	assert.Equal(t, expected, screenshotImage)
 }
 
 func TestWhenNoRects_LeavesScreenshotUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	screenshot := checkeredImage(8, 6)
-	expected := maskedExpectation(screenshot)
-	masker := integration_common.SnapshotMasker{}
+	screenshotImage := checkeredImage(8, 6)
+	expected := maskedExpectation(screenshotImage)
+	masker := snapshot.SnapshotMasker{}
 
 	// Act
-	masker.Apply(screenshot)
+	masker.Apply(screenshotImage)
 
 	// Assert
-	assert.Equal(t, expected, screenshot)
+	assert.Equal(t, expected, screenshotImage)
 }
 
 func TestWhenMultipleRects_MasksAllRegions(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	screenshot := checkeredImage(8, 6)
+	screenshotImage := checkeredImage(8, 6)
 	firstRect := image.Rect(0, 0, 2, 2)
 	secondRect := image.Rect(5, 4, 8, 6)
-	expected := maskedExpectation(screenshot, firstRect, secondRect)
-	masker := integration_common.SnapshotMasker{}
+	expected := maskedExpectation(screenshotImage, firstRect, secondRect)
+	masker := snapshot.SnapshotMasker{}
 	masker.AddRect(firstRect)
 	masker.AddRect(secondRect)
 
 	// Act
-	masker.Apply(screenshot)
+	masker.Apply(screenshotImage)
 
 	// Assert
-	assert.Equal(t, expected, screenshot)
+	assert.Equal(t, expected, screenshotImage)
 }
 
 func TestWhenRectIsFullyOutsideBounds_LeavesScreenshotUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	screenshot := checkeredImage(8, 6)
-	expected := maskedExpectation(screenshot)
-	masker := integration_common.SnapshotMasker{}
+	screenshotImage := checkeredImage(8, 6)
+	expected := maskedExpectation(screenshotImage)
+	masker := snapshot.SnapshotMasker{}
 	masker.AddRect(image.Rect(10, 10, 20, 20))
 
 	// Act
-	masker.Apply(screenshot)
+	masker.Apply(screenshotImage)
 
 	// Assert
-	assert.Equal(t, expected, screenshot)
+	assert.Equal(t, expected, screenshotImage)
 }

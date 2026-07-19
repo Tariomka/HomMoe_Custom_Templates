@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,7 +32,7 @@ func TestWhenImagesAreIdentical_ReturnsZero(t *testing.T) {
 	}
 	golden := solidImage(4, 3, fill)
 	actual := solidImage(4, 3, fill)
-	comparer := integration_common.NewSnapshotComparer()
+	comparer := snapshot.NewSnapshotComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)
@@ -47,7 +47,7 @@ func TestWhenImagesAreFullyInverted_ReturnsOne(t *testing.T) {
 	// Arrange
 	golden := solidImage(4, 3, color.NRGBA{})
 	actual := solidImage(4, 3, color.NRGBA{R: 255, G: 255, B: 255})
-	comparer := integration_common.NewSnapshotComparer()
+	comparer := snapshot.NewSnapshotComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)
@@ -63,7 +63,7 @@ func TestWhenSinglePixelDiffers_ReturnsScaledMeanDistance(t *testing.T) {
 	golden := solidImage(2, 2, color.NRGBA{R: 100, G: 100, B: 100})
 	actual := solidImage(2, 2, color.NRGBA{R: 100, G: 100, B: 100})
 	actual.SetRGBA(1, 0, color.RGBA{R: 110, G: 120, B: 130, A: 255})
-	comparer := integration_common.NewSnapshotComparer()
+	comparer := snapshot.NewSnapshotComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)
@@ -78,7 +78,7 @@ func TestWhenDimensionsDiffer_ReturnsError(t *testing.T) {
 	// Arrange
 	golden := solidImage(4, 3, color.NRGBA{})
 	actual := solidImage(3, 4, color.NRGBA{})
-	comparer := integration_common.NewSnapshotComparer()
+	comparer := snapshot.NewSnapshotComparer()
 
 	// Act
 	_, err := comparer.Compare(golden, actual)
@@ -92,7 +92,7 @@ func TestWhenImagesAreEmpty_ReturnsZero(t *testing.T) {
 	// Arrange
 	golden := image.NewRGBA(image.Rect(0, 0, 0, 0))
 	actual := image.NewRGBA(image.Rect(0, 0, 0, 0))
-	comparer := integration_common.NewSnapshotComparer()
+	comparer := snapshot.NewSnapshotComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)

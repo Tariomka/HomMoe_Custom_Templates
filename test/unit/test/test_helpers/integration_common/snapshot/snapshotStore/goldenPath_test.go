@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +15,7 @@ func TestWhenPathRequested_JoinsRootFileNameAndNumberedGolden(t *testing.T) {
 	// Arrange
 	root := t.TempDir()
 	actionNumber := gofakeit.Number(1, 9)
-	store := integration_common.NewSnapshotStoreWithRoot(root)
+	store := snapshot.NewSnapshotStoreWithRoot(root)
 
 	// Act
 	goldenPath := store.GoldenPath("window_snapshot_integration_test", "TestTabs_Snapshot", actionNumber)
@@ -35,7 +35,7 @@ func TestWhenPathRequested_JoinsRootFileNameAndNumberedGolden(t *testing.T) {
 func TestWhenTestNameHasSubtestSlash_SanitizesToUnderscore(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := integration_common.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
 
 	// Act
 	goldenPath := store.GoldenPath("someFile", "TestParent/sub case", 1)

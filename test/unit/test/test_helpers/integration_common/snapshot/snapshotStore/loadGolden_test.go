@@ -4,7 +4,7 @@ import (
 	"image"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +12,7 @@ import (
 func TestWhenGoldenExists_RoundTripsImagePixels(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := integration_common.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
 	goldenPath := store.GoldenPath("someFile", "SomeTest", 1)
 	saved := sampleScreenshot()
 	require.NoError(t, store.SaveGolden(goldenPath, saved))
@@ -28,7 +28,7 @@ func TestWhenGoldenExists_RoundTripsImagePixels(t *testing.T) {
 func TestWhenGoldenIsMissing_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := integration_common.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
 
 	// Act
 	_, err := store.LoadGolden(store.GoldenPath("someFile", "MissingTest", 1))

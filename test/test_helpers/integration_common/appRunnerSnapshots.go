@@ -14,6 +14,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/unit"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
 
 // EnableSnapshots turns on golden-snapshot verification for this runner: after
@@ -33,8 +34,8 @@ func (this *AppRunner) EnableSnapshots(t *testing.T) {
 
 	this.snapshotTest = t
 	this.snapshotFile = strings.TrimSuffix(filepath.Base(callerFile), ".go")
-	this.comparer = NewSnapshotComparer()
-	this.store = NewSnapshotStore()
+	this.comparer = snapshot.NewSnapshotComparer()
+	this.store = snapshot.NewSnapshotStore()
 
 	if !IsHeadless() && !IsUpdate() {
 		return // headed without -update: no capture, no validation.
