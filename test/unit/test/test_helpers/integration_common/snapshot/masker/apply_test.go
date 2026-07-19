@@ -1,4 +1,4 @@
-package snapshotMasker_test
+package masker_test
 
 import (
 	"image"
@@ -22,12 +22,12 @@ func checkeredImage(width, height int) *image.RGBA {
 	return result
 }
 
-// maskedExpectation clones the source and paints the given rects black, the
+// maskedExpectation clones the source and paints the given marks black, the
 // way a correct Apply should.
-func maskedExpectation(source *image.RGBA, rects ...image.Rectangle) *image.RGBA {
+func maskedExpectation(source *image.RGBA, marks ...image.Rectangle) *image.RGBA {
 	expected := image.NewRGBA(source.Bounds())
 	copy(expected.Pix, source.Pix)
-	for _, rect := range rects {
+	for _, rect := range marks {
 		clamped := rect.Intersect(source.Bounds())
 		for row := clamped.Min.Y; row < clamped.Max.Y; row++ {
 			for column := clamped.Min.X; column < clamped.Max.X; column++ {
@@ -42,10 +42,10 @@ func TestWhenRectIsInsideBounds_MasksOnlyThatRegion(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	screenshotImage := checkeredImage(8, 6)
-	maskRect := image.Rect(2, 1, 5, 4)
-	expected := maskedExpectation(screenshotImage, maskRect)
-	masker := snapshot.SnapshotMasker{}
-	masker.AddRect(maskRect)
+	mask := image.Rect(2, 1, 5, 4)
+	expected := maskedExpectation(screenshotImage, mask)
+	masker := snapshot.Masker{}
+	masker.AddRect(mask)
 
 	// Act
 	masker.Apply(screenshotImage)
@@ -58,10 +58,10 @@ func TestWhenRectExceedsBounds_ClampsToScreenshot(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	screenshotImage := checkeredImage(8, 6)
-	maskRect := image.Rect(5, 3, 20, 20)
-	expected := maskedExpectation(screenshotImage, maskRect)
-	masker := snapshot.SnapshotMasker{}
-	masker.AddRect(maskRect)
+	mark := image.Rect(5, 3, 20, 20)
+	expected := maskedExpectation(screenshotImage, mark)
+	masker := snapshot.Masker{}
+	masker.AddRect(mark)
 
 	// Act
 	masker.Apply(screenshotImage)
@@ -75,7 +75,7 @@ func TestWhenNoRects_LeavesScreenshotUntouched(t *testing.T) {
 	// Arrange
 	screenshotImage := checkeredImage(8, 6)
 	expected := maskedExpectation(screenshotImage)
-	masker := snapshot.SnapshotMasker{}
+	masker := snapshot.Masker{}
 
 	// Act
 	masker.Apply(screenshotImage)
@@ -88,12 +88,12 @@ func TestWhenMultipleRects_MasksAllRegions(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	screenshotImage := checkeredImage(8, 6)
-	firstRect := image.Rect(0, 0, 2, 2)
-	secondRect := image.Rect(5, 4, 8, 6)
-	expected := maskedExpectation(screenshotImage, firstRect, secondRect)
-	masker := snapshot.SnapshotMasker{}
-	masker.AddRect(firstRect)
-	masker.AddRect(secondRect)
+	firstMark := image.Rect(0, 0, 2, 2)
+	secondMark := image.Rect(5, 4, 8, 6)
+	expected := maskedExpectation(screenshotImage, firstMark, secondMark)
+	masker := snapshot.Masker{}
+	masker.AddRect(firstMark)
+	masker.AddRect(secondMark)
 
 	// Act
 	masker.Apply(screenshotImage)
@@ -107,7 +107,7 @@ func TestWhenRectIsFullyOutsideBounds_LeavesScreenshotUntouched(t *testing.T) {
 	// Arrange
 	screenshotImage := checkeredImage(8, 6)
 	expected := maskedExpectation(screenshotImage)
-	masker := snapshot.SnapshotMasker{}
+	masker := snapshot.Masker{}
 	masker.AddRect(image.Rect(10, 10, 20, 20))
 
 	// Act

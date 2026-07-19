@@ -1,4 +1,4 @@
-package snapshotComparer_test
+package comparer_test
 
 import (
 	"image"
@@ -32,7 +32,7 @@ func TestWhenImagesAreIdentical_ReturnsZero(t *testing.T) {
 	}
 	golden := solidImage(4, 3, fill)
 	actual := solidImage(4, 3, fill)
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)
@@ -47,7 +47,7 @@ func TestWhenImagesAreFullyInverted_ReturnsOne(t *testing.T) {
 	// Arrange
 	golden := solidImage(4, 3, color.NRGBA{})
 	actual := solidImage(4, 3, color.NRGBA{R: 255, G: 255, B: 255})
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)
@@ -63,7 +63,7 @@ func TestWhenSinglePixelDiffers_ReturnsScaledMeanDistance(t *testing.T) {
 	golden := solidImage(2, 2, color.NRGBA{R: 100, G: 100, B: 100})
 	actual := solidImage(2, 2, color.NRGBA{R: 100, G: 100, B: 100})
 	actual.SetRGBA(1, 0, color.RGBA{R: 110, G: 120, B: 130, A: 255})
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)
@@ -78,7 +78,7 @@ func TestWhenDimensionsDiffer_ReturnsError(t *testing.T) {
 	// Arrange
 	golden := solidImage(4, 3, color.NRGBA{})
 	actual := solidImage(3, 4, color.NRGBA{})
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	_, err := comparer.Compare(golden, actual)
@@ -92,7 +92,7 @@ func TestWhenImagesAreEmpty_ReturnsZero(t *testing.T) {
 	// Arrange
 	golden := image.NewRGBA(image.Rect(0, 0, 0, 0))
 	actual := image.NewRGBA(image.Rect(0, 0, 0, 0))
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	difference, err := comparer.Compare(golden, actual)

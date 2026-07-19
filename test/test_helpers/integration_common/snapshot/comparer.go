@@ -9,22 +9,22 @@ import (
 // distance between a golden snapshot and an actual screenshot (1%).
 const DefaultSnapshotThreshold = 0.01
 
-// SnapshotComparer measures how different two screenshots are using a
+// Comparer measures how different two screenshots are using a
 // normalized mean color distance over the RGB channels (alpha is ignored:
 // screenshots are opaque). 0 means identical, 1 means maximally different.
-type SnapshotComparer struct {
+type Comparer struct {
 	Threshold float64
 }
 
-// NewSnapshotComparer builds a comparer with the default 1% threshold.
-func NewSnapshotComparer() SnapshotComparer {
-	return SnapshotComparer{Threshold: DefaultSnapshotThreshold}
+// NewComparer builds a comparer with the default 1% threshold.
+func NewComparer() Comparer {
+	return Comparer{Threshold: DefaultSnapshotThreshold}
 }
 
 // Compare returns the normalized mean color distance between the two images:
 // sum(|deltaR|+|deltaG|+|deltaB|) / (width*height*3*255). It errors when the
 // image dimensions differ (callers treat that as a validation failure).
-func (this SnapshotComparer) Compare(golden, actual image.Image) (float64, error) {
+func (this Comparer) Compare(golden, actual image.Image) (float64, error) {
 	goldenBounds := golden.Bounds()
 	actualBounds := actual.Bounds()
 	if goldenBounds.Dx() != actualBounds.Dx() || goldenBounds.Dy() != actualBounds.Dy() {
@@ -56,7 +56,7 @@ func (this SnapshotComparer) Compare(golden, actual image.Image) (float64, error
 
 // Matches reports whether a difference returned by Compare is within the
 // allowed threshold.
-func (this SnapshotComparer) Matches(difference float64) bool {
+func (this Comparer) Matches(difference float64) bool {
 	return difference < this.Threshold
 }
 

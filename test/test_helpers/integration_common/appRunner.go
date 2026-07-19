@@ -81,9 +81,9 @@ type AppRunner struct {
 	snapshotFile string
 	actionCount  int
 	headlessWin  *headless.Window
-	masker       snapshot.SnapshotMasker
-	comparer     snapshot.SnapshotComparer
-	store        snapshot.SnapshotStore
+	masker       snapshot.Masker
+	comparer     snapshot.Comparer
+	store        snapshot.Store
 }
 
 // NewAppRunner builds a runner. The window is created only in windowed mode; a
@@ -151,6 +151,20 @@ func (this *AppRunner) ClickAt(clickPoint image.Point) {
 	this.mu.Unlock()
 	this.invalidate()
 	this.verifySnapshot()
+}
+
+// MoveAt injects a synthetic touch move at point. The leading frame registers
+// the input areas, the trailing frame processes the move. Both run under one
+// lock so a render cannot observe a half-applied move.
+func (this *AppRunner) MoveAt(point f32.Point) {
+	this.mu.Lock()
+	this.frameLocked()
+	this.router.Queue(
+		pointer.Event{Kind: pointer.Move, Source: pointer.Touch, Position: point},
+	)
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
 }
 
 // DragTo injects a synthetic drag from one point to another (press, a series of

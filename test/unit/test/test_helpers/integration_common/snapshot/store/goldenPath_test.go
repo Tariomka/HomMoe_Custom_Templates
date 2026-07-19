@@ -1,4 +1,4 @@
-package snapshotStore_test
+package store_test
 
 import (
 	"path/filepath"
@@ -15,7 +15,7 @@ func TestWhenPathRequested_JoinsRootFileNameAndNumberedGolden(t *testing.T) {
 	// Arrange
 	root := t.TempDir()
 	actionNumber := gofakeit.Number(1, 9)
-	store := snapshot.NewSnapshotStoreWithRoot(root)
+	store := snapshot.NewStoreWithRoot(root)
 
 	// Act
 	goldenPath := store.GoldenPath("window_snapshot_integration_test", "TestTabs_Snapshot", actionNumber)
@@ -35,7 +35,7 @@ func TestWhenPathRequested_JoinsRootFileNameAndNumberedGolden(t *testing.T) {
 func TestWhenTestNameHasSubtestSlash_SanitizesToUnderscore(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 
 	// Act
 	goldenPath := store.GoldenPath("someFile", "TestParent/sub case", 1)

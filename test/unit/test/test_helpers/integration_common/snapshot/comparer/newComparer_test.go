@@ -1,4 +1,4 @@
-package snapshotComparer_test
+package comparer_test
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 func TestWhenConstructed_UsesDefaultThreshold(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Assert
 	assert.InEpsilon(t, snapshot.DefaultSnapshotThreshold, comparer.Threshold, 1e-12)

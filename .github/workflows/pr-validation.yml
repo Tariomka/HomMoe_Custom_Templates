@@ -241,7 +241,9 @@ jobs:
       - name: Run GUI integration tests
         run: |
           docker run --gpus all \
+            --init \
+            -e GOCACHE=/workspace/.gocache \
             -v $(pwd):/workspace \
             -w /workspace \
             my-test-image:latest \
-            xvfb-run --server-args="-screen 0 1920x1080x24" go test -v -tags "integration_test && gui" ./test/integration/gui/...
+            xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" go test -v -tags "integration_test && gui" ./test/integration/gui/...

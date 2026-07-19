@@ -1,4 +1,4 @@
-package snapshotStore_test
+package store_test
 
 import (
 	"image"
@@ -12,7 +12,7 @@ import (
 func TestWhenGoldenExists_RoundTripsImagePixels(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 	goldenPath := store.GoldenPath("someFile", "SomeTest", 1)
 	saved := sampleScreenshot()
 	require.NoError(t, store.SaveGolden(goldenPath, saved))
@@ -28,7 +28,7 @@ func TestWhenGoldenExists_RoundTripsImagePixels(t *testing.T) {
 func TestWhenGoldenIsMissing_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 
 	// Act
 	_, err := store.LoadGolden(store.GoldenPath("someFile", "MissingTest", 1))

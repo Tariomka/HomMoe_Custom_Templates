@@ -1,4 +1,4 @@
-package snapshotStore_test
+package store_test
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 func TestWhenCalled_WritesFailureFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 	failurePath := store.FailurePath("someFile", "SomeTest", 3)
 
 	// Act

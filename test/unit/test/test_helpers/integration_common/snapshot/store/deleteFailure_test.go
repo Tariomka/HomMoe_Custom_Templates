@@ -1,4 +1,4 @@
-package snapshotStore_test
+package store_test
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 func TestWhenFileExists_RemovesIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 	failurePath := store.FailurePath("someFile", "SomeTest", 1)
 	require.NoError(t, store.SaveFailure(failurePath, sampleScreenshot()))
 
@@ -26,7 +26,7 @@ func TestWhenFileExists_RemovesIt(t *testing.T) {
 func TestWhenFileIsMissing_ReturnsNil(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 
 	// Act
 	err := store.DeleteFailure(store.FailurePath("someFile", "NeverSaved", 1))

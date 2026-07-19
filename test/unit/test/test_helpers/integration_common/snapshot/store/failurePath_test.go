@@ -1,4 +1,4 @@
-package snapshotStore_test
+package store_test
 
 import (
 	"path/filepath"
@@ -12,7 +12,7 @@ func TestWhenPathRequested_UsesFailureExtension(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	root := t.TempDir()
-	store := snapshot.NewSnapshotStoreWithRoot(root)
+	store := snapshot.NewStoreWithRoot(root)
 
 	// Act
 	failurePath := store.FailurePath("someFile", "SomeTest", 2)

@@ -34,8 +34,8 @@ func (this *AppRunner) EnableSnapshots(t *testing.T) {
 
 	this.snapshotTest = t
 	this.snapshotFile = strings.TrimSuffix(filepath.Base(callerFile), ".go")
-	this.comparer = snapshot.NewSnapshotComparer()
-	this.store = snapshot.NewSnapshotStore()
+	this.comparer = snapshot.NewComparer()
+	this.store = snapshot.NewStore()
 
 	if !IsHeadless() && !IsUpdate() {
 		return // headed without -update: no capture, no validation.

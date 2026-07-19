@@ -1,4 +1,4 @@
-package snapshotMasker_test
+package masker_test
 
 import (
 	"image"
@@ -13,7 +13,7 @@ func TestWhenRectAdded_ApplyMasksItsPixels(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	screenshotImage := checkeredImage(6, 7)
-	masker := snapshot.SnapshotMasker{}
+	masker := snapshot.Masker{}
 
 	// Act
 	masker.AddRect(image.Rect(1, 1, 3, 3))

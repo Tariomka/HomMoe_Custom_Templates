@@ -1,4 +1,4 @@
-package snapshotStore_test
+package store_test
 
 import (
 	"image"
@@ -26,7 +26,7 @@ func sampleScreenshot() *image.RGBA {
 func TestWhenDirectoriesMissing_CreatesThemAndWritesFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 	goldenPath := store.GoldenPath("someFile", "SomeTest", 1)
 
 	// Act
@@ -40,7 +40,7 @@ func TestWhenDirectoriesMissing_CreatesThemAndWritesFile(t *testing.T) {
 func TestWhenStaleFailureExists_RemovesIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	store := snapshot.NewSnapshotStoreWithRoot(t.TempDir())
+	store := snapshot.NewStoreWithRoot(t.TempDir())
 	goldenPath := store.GoldenPath("someFile", "SomeTest", 1)
 	failurePath := store.FailurePath("someFile", "SomeTest", 1)
 	require.NoError(t, store.SaveFailure(failurePath, sampleScreenshot()))
@@ -58,7 +58,7 @@ func TestWhenRootIsExistingFile_ReturnsError(t *testing.T) {
 	// Arrange
 	blockingFile := filepath.Join(t.TempDir(), "blocking")
 	require.NoError(t, os.WriteFile(blockingFile, []byte("not a directory"), 0o644))
-	store := snapshot.NewSnapshotStoreWithRoot(blockingFile)
+	store := snapshot.NewStoreWithRoot(blockingFile)
 
 	// Act
 	err := store.SaveGolden(store.GoldenPath("someFile", "SomeTest", 1), sampleScreenshot())

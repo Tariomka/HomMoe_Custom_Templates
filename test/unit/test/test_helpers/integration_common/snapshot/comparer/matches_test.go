@@ -1,4 +1,4 @@
-package snapshotComparer_test
+package comparer_test
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 func TestWhenDifferenceIsBelowThreshold_ReturnsTrue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	matches := comparer.Matches(0.0099)
@@ -22,7 +22,7 @@ func TestWhenDifferenceIsBelowThreshold_ReturnsTrue(t *testing.T) {
 func TestWhenDifferenceEqualsThreshold_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	matches := comparer.Matches(snapshot.DefaultSnapshotThreshold)
@@ -34,7 +34,7 @@ func TestWhenDifferenceEqualsThreshold_ReturnsFalse(t *testing.T) {
 func TestWhenDifferenceIsAboveThreshold_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	comparer := snapshot.NewSnapshotComparer()
+	comparer := snapshot.NewComparer()
 
 	// Act
 	matches := comparer.Matches(0.02)
