@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 // GeometricTopologyService arranges zones into a centrally symmetric flower: a
@@ -30,7 +30,7 @@ func NewGeometricTopologyService() *GeometricTopologyService {
 func (this *GeometricTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	return this.createVariantFromLayout(
@@ -55,7 +55,7 @@ type petal struct {
 // are built purely from player and neutral zones with no dedicated hub.
 func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
-	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		tipRadius  = 0.46 // player tip, almost at the canvas edge
 		startAngle = -math.Pi / 2.0
@@ -118,7 +118,7 @@ func buildPetal(
 	axis, bowAngle, ctrlDist, tipRadius float64,
 	playerLabel string,
 	plan []int,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	allLabels *[]string,
 	positions *models.Positions) petal {
 	var ring []int

@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
@@ -26,7 +26,7 @@ func NewMandatoryContentProvider() *MandatoryContentProvider {
 func (this *MandatoryContentProvider) CreateContents(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans) []entities.MandatoryContent {
+	neutralZones neutral_zone.Plans) []entities.MandatoryContent {
 	var groups []entities.MandatoryContent
 	footholdCount := 0
 	if configuration.SpawnRemoteFootholds {
@@ -87,7 +87,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 
 		case preview.ZoneTypeNeutral:
 			castleCount := connection_editor.CountZoneCastles(zone)
-			content := cloneContentItems(neutralRowsForQuality(configuration, neutralZone.GetQualityFrom(zone)))
+			content := cloneContentItems(neutralRowsForQuality(configuration, neutral_zone.GetQualityFrom(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}
@@ -257,19 +257,19 @@ func cloneContentItems(items []entities.MandatoryContentItem) []entities.Mandato
 // neutral zone's quality tier.
 func neutralRowsForQuality(
 	configuration config.GeneratorConfig,
-	quality neutralZone.Quality) []entities.MandatoryContentItem {
+	quality neutral_zone.Quality) []entities.MandatoryContentItem {
 	switch quality {
-	case neutralZone.QualityHighest:
+	case neutral_zone.QualityHighest:
 		return configuration.HubZoneMandatoryContent
-	case neutralZone.QualityHigh:
+	case neutral_zone.QualityHigh:
 		return configuration.HighNeutralMandatoryContent
-	case neutralZone.QualityMedium:
+	case neutral_zone.QualityMedium:
 		return configuration.MediumNeutralMandatoryContent
-	case neutralZone.QualityLow:
+	case neutral_zone.QualityLow:
 		return configuration.LowNeutralMandatoryContent
-	case neutralZone.QualityLowest:
+	case neutral_zone.QualityLowest:
 		return configuration.LowestNeutralMandatoryContent
-	case neutralZone.QualityUnknown:
+	case neutral_zone.QualityUnknown:
 		fallthrough
 	default:
 		return nil

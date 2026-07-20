@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +14,11 @@ func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 	// Arrange
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
-		{Name: "Neutral-Gold", GuardedContentPool: []string{"pool_t4_x"}},
+		{
+			Name:               "Neutral-Gold",
+			Layout:             registry.GetLayoutValues().TreasureZone,
+			GuardedContentPool: []string{"pool_t4_x"},
+		},
 	}
 	playerZoneNames := map[string]bool{"Spawn-A": true}
 	expected := entities.Connection{

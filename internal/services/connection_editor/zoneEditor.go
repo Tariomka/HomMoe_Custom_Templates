@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
@@ -123,11 +123,6 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 	}
 }
 
-// QualityLabels are the display names of the neutral-zone quality presets,
-// indexed by neutralZone.Quality. QualityHighest is deliberately absent: it is
-// reserved for the Hub zone and not selectable in the manual zone editor.
-var QualityLabels = []string{"Lowest", "Low", "Medium", "High"}
-
 // NextFreeZoneLabel returns the first generator label not used by any zone, or
 // "" when the pool is exhausted.
 func NextFreeZoneLabel(zones []entities.Zone) string {
@@ -135,7 +130,7 @@ func NextFreeZoneLabel(zones []entities.Zone) string {
 	for _, zone := range zones {
 		used[helpers.GetZoneLabel(zone.Name)] = true
 	}
-	for _, label := range common.GetZoneLabels() {
+	for _, label := range constants.GetZoneLabels() {
 		if !used[label] {
 			return label
 		}
@@ -149,12 +144,12 @@ func NextFreeZoneLabel(zones []entities.Zone) string {
 // because no template-level definition exists for a manual zone.
 func NewDefaultNeutralZone(
 	label string,
-	quality neutralZone.Quality,
+	quality neutral_zone.Quality,
 	castleCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
 	topology := base.NewTopologyBase()
-	plan := neutralZone.Plan{Label: label, Quality: quality, CastleCount: castleCount}
+	plan := neutral_zone.Plan{Label: label, Quality: quality, CastleCount: castleCount}
 	zone := topology.CreateNeutralZone(plan, nil, 1.0, tuning.RemoteFootholdCount, generateRoads, tuning, false)
 	zone.MandatoryContent = nil
 	return zone
@@ -176,10 +171,10 @@ func CountZoneCastles(zone entities.Zone) int {
 // the requested count. Only meaningful for neutral zones.
 func ApplyNeutralZoneQuality(
 	zone *entities.Zone,
-	quality neutralZone.Quality,
+	quality neutral_zone.Quality,
 	castleCount int,
 	tuning models.GenerationTuning) {
-	profile := neutralZone.NewNeutralZoneProfile(quality)
+	profile := neutral_zone.NewNeutralZoneProfile(quality)
 	zone.Layout = profile.Layout
 	zone.GuardMultiplier = tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)
 	zone.GuardReactionDistribution = profile.GuardReactionDistribution

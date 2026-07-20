@@ -16,7 +16,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
@@ -111,17 +111,17 @@ func zoneColors(zone preview.Zone) (fill, edge color.NRGBA) {
 	}
 
 	switch zone.Quality {
-	case neutralZone.QualityHighest:
+	case neutral_zone.QualityHighest:
 		return themes.ColorsPreview.PlatinumFill, themes.ColorsPreview.PlatinumEdge
-	case neutralZone.QualityHigh:
+	case neutral_zone.QualityHigh:
 		return themes.ColorsPreview.GoldFill, themes.ColorsPreview.GoldEdge
-	case neutralZone.QualityMedium:
+	case neutral_zone.QualityMedium:
 		return themes.ColorsPreview.SilverFill, themes.ColorsPreview.SilverEdge
-	case neutralZone.QualityLow:
+	case neutral_zone.QualityLow:
 		return themes.ColorsPreview.BronzeFill, themes.ColorsPreview.BronzeEdge
-	case neutralZone.QualityLowest:
+	case neutral_zone.QualityLowest:
 		return themes.ColorsPreview.PlasticFill, themes.ColorsPreview.PlasticEdge
-	case neutralZone.QualityUnknown:
+	case neutral_zone.QualityUnknown:
 		fallthrough
 	default:
 		// shouldn't happen, but if it does, at least it's visible
@@ -148,17 +148,17 @@ func zoneLabel(zone preview.Zone) string {
 	}
 
 	switch zone.Quality {
-	case neutralZone.QualityHighest:
+	case neutral_zone.QualityHighest:
 		return "Pt"
-	case neutralZone.QualityHigh:
+	case neutral_zone.QualityHigh:
 		return "G"
-	case neutralZone.QualityMedium:
+	case neutral_zone.QualityMedium:
 		return "S"
-	case neutralZone.QualityLow:
+	case neutral_zone.QualityLow:
 		return "B"
-	case neutralZone.QualityLowest:
+	case neutral_zone.QualityLowest:
 		return "p"
-	case neutralZone.QualityUnknown:
+	case neutral_zone.QualityUnknown:
 		fallthrough
 	default:
 		return "?"

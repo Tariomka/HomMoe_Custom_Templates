@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,13 +18,13 @@ func TestWhenTwoPlayersAndSixNeutralPlansProvided_CreatesZonePerLabel(t *testing
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N2", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N3", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N4", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N5", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N6", neutralZone.QualityHigh, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
 	tuning := models.NewGenerationTuning(configuration, 8)
 	service := topology.NewSquareTopologyService()
 
@@ -41,13 +41,13 @@ func TestWhenSquareIsLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing.T)
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N3", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N4", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N5", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N6", neutralZone.QualityHigh, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N4", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
 	tuning := models.NewGenerationTuning(configuration, 8)
 	service := topology.NewSquareTopologyService()
 
@@ -64,10 +64,10 @@ func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCenter(t *testing.T)
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N3", neutralZone.QualityHigh, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N3", neutral_zone.QualityHigh, 1)
 	tuning := models.NewGenerationTuning(configuration, 5)
 	service := topology.NewSquareTopologyService()
 
@@ -92,13 +92,13 @@ func TestWhenSquareIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) 
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySquare
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N2", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N3", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N4", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N5", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N6", neutralZone.QualityHigh, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
 	tuning := models.NewGenerationTuning(configuration, 8)
 	service := topology.NewSquareTopologyService()
 
@@ -116,9 +116,9 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	configuration.Topology = config.TopologySquare
 	configuration.NoDirectPlayerConnections = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 4)
 	service := topology.NewSquareTopologyService()
 
@@ -136,11 +136,11 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	configuration.Topology = config.TopologySquare
 	configuration.RandomPortals = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N3", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N4", neutralZone.QualityHigh, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N4", neutral_zone.QualityHigh, 1)
 	tuning := models.NewGenerationTuning(configuration, 6)
 	service := topology.NewSquareTopologyService()
 

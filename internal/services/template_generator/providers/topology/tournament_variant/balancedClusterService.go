@@ -6,13 +6,13 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
 )
@@ -30,7 +30,7 @@ func NewBalancedClusterService() *BalancedClusterService {
 func (this *BalancedClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	singlePlayerList := []string{playerLabel}
@@ -113,7 +113,7 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 func (this *BalancedClusterService) createSortedPairs(
 	orderedLabels []string,
 	rawPositions models.Positions,
-	allNeutralZonePlans neutralZone.Plans) [][2]int {
+	allNeutralZonePlans neutral_zone.Plans) [][2]int {
 	tierIndices := bucketIndicesByTier(orderedLabels, allNeutralZonePlans)
 	tierKeys := make([]int, 0, len(tierIndices))
 	for tier := range tierIndices {
@@ -147,7 +147,7 @@ func (this *BalancedClusterService) createSortedPairs(
 }
 
 // bucketIndicesByTier groups the ordered label indexes by their neutral-plan tier.
-func bucketIndicesByTier(orderedLabels []string, allNeutralZonePlans neutralZone.Plans) map[int][]int {
+func bucketIndicesByTier(orderedLabels []string, allNeutralZonePlans neutral_zone.Plans) map[int][]int {
 	tierIndices := map[int][]int{}
 	for index, label := range orderedLabels {
 		tier := allNeutralZonePlans.GetTier(label)
@@ -255,7 +255,7 @@ func (this *BalancedClusterService) createZones(
 	playerIndex int,
 	orderedLabels []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans neutral_zone.Plans,
 	connectionNames [][]string) []entities.Zone {
 	var zones []entities.Zone
 	for index, label := range orderedLabels {
@@ -271,7 +271,7 @@ func (this *BalancedClusterService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(allNeutralZonePlans).
-						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
 					myConns, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
 					configuration.GenerateRoads, tuning, false))
 		}
@@ -283,7 +283,7 @@ func (this *BalancedClusterService) createConnections(
 	playerLabel string,
 	orderedLabels []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans neutral_zone.Plans,
 	connectionNames [][]string,
 	sortedPairs [][2]int) []entities.Connection {
 	nameLookup := make(map[int]int, len(orderedLabels))
@@ -298,13 +298,13 @@ func (this *BalancedClusterService) createConnections(
 		nameLookup[indexA]++
 		nameLookup[indexB]++
 
-		fromZone := common.PlayerZonePrefix + labelFrom
+		fromZone := constants.PlayerZonePrefix + labelFrom
 		if labelFrom != playerLabel {
-			fromZone = common.NeutralZonePrefix + labelFrom
+			fromZone = constants.NeutralZonePrefix + labelFrom
 		}
-		toZone := common.PlayerZonePrefix + labelTo
+		toZone := constants.PlayerZonePrefix + labelTo
 		if labelTo != playerLabel {
-			toZone = common.NeutralZonePrefix + labelTo
+			toZone = constants.NeutralZonePrefix + labelTo
 		}
 		connections = append(connections, entities.Connection{
 			Name:           connName,

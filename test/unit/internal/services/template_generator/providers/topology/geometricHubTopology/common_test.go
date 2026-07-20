@@ -7,13 +7,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 )
 
 // buildGeoHubVariant runs the Geometric Hub topology service with the given
 // players and plans using default generator options (no random portals).
-func buildGeoHubVariant(playerLabels []string, plans neutralZone.Plans) entities.Variant {
+func buildGeoHubVariant(playerLabels []string, plans neutral_zone.Plans) entities.Variant {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
@@ -64,16 +64,16 @@ func spawnNeighborsOf(variant entities.Variant, zoneName string) []string {
 
 // mixedPlans builds the standard test plan set: mediums first, then lows,
 // then highs, so tier-to-slot assignment is observable by label.
-func mixedPlans(mediumLabels, lowLabels, highLabels []string) neutralZone.Plans {
-	plans := neutralZone.Plans{}
+func mixedPlans(mediumLabels, lowLabels, highLabels []string) neutral_zone.Plans {
+	plans := neutral_zone.Plans{}
 	for _, label := range mediumLabels {
-		plans.AddPlan(label, neutralZone.QualityMedium, 1)
+		plans.AddPlan(label, neutral_zone.QualityMedium, 1)
 	}
 	for _, label := range lowLabels {
-		plans.AddPlan(label, neutralZone.QualityLow, 0)
+		plans.AddPlan(label, neutral_zone.QualityLow, 0)
 	}
 	for _, label := range highLabels {
-		plans.AddPlan(label, neutralZone.QualityHigh, 1)
+		plans.AddPlan(label, neutral_zone.QualityHigh, 1)
 	}
 	return plans
 }

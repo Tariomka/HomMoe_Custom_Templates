@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -27,7 +27,7 @@ func NewHubTopologyService() *HubTopologyService {
 func (this *HubTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	hubIsHoldCity bool) entities.Variant {
 	outerLabels := this.createOuterLabels(configuration, playerLabels, neutralZones)
@@ -46,14 +46,14 @@ func (this *HubTopologyService) CreateTopologyVariant(
 func (this *HubTopologyService) createOuterLabels(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans) []string {
+	neutralZones neutral_zone.Plans) []string {
 	if configuration.Topology == config.TopologyCircles {
 		return this.ZoneLabelProvider.CreateBalancedChainZoneLabels(playerLabels, neutralZones)
 	}
 
 	return append(playerLabels,
 		linq.FromSlice(neutralZones).
-			SelectString(func(nz neutralZone.Plan) string { return nz.Label }).
+			SelectString(func(nz neutral_zone.Plan) string { return nz.Label }).
 			ToSlice()...)
 }
 
@@ -61,11 +61,11 @@ func (this *HubTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	hubIsHoldCity bool) []entities.Zone {
 	hubConns := make([]string, len(outerLabels))
 	for index, label := range outerLabels {
-		hubConns[index] = common.HubZonePrefix + label
+		hubConns[index] = constants.HubZonePrefix + label
 	}
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
@@ -76,7 +76,7 @@ func (this *HubTopologyService) createZones(
 		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
 
 	for _, label := range outerLabels {
-		spokeConnectionNames := []string{common.HubZonePrefix + label}
+		spokeConnectionNames := []string{constants.HubZonePrefix + label}
 		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
 			zones = append(zones,
 				this.CreateSpawnZone(
@@ -88,7 +88,7 @@ func (this *HubTopologyService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
 					spokeConnectionNames, configuration.ZoneConfiguration.NeutralZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
@@ -100,7 +100,7 @@ func (this *HubTopologyService) createConnections(
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones neutralZone.Plans) []entities.Connection {
+	neutralZones neutral_zone.Plans) []entities.Connection {
 	var connections []entities.Connection
 	for index, label := range outerLabels {
 		hubAnchor := label
@@ -111,21 +111,21 @@ func (this *HubTopologyService) createConnections(
 		outerZone := this.ZoneLabelProvider.CreateZoneName(label, playerLabels)
 		connections = append(connections,
 			variant_content.NewConnectionBuilder().
-				WithName(common.HubZonePrefix+label).
-				WithFrom(common.HubZoneName).
+				WithName(constants.HubZonePrefix+label).
+				WithFrom(constants.HubZoneName).
 				WithTo(outerZone).
 				WithConnectionTypeDirect().
-				WithGuardZone(common.HubZoneName).
+				WithGuardZone(constants.HubZoneName).
 				WithSimTurnSquad().
 				WithGuardValue(hubGuard).
 				WithGuardWeeklyIncrement(0.15).
 				WithGuardMatchGroup("hub_guard_"+label).
 				Build(),
 			variant_content.NewConnectionBuilder().
-				WithFrom(common.HubZoneName).
+				WithFrom(constants.HubZoneName).
 				WithTo(outerZone).
 				WithConnectionTypeDirect().
-				WithGuardZone(common.HubZoneName).
+				WithGuardZone(constants.HubZoneName).
 				WithSimTurnSquad().
 				WithGuardValue(hubGuard).
 				WithGuardWeeklyIncrement(0.15).

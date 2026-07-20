@@ -10,7 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
@@ -105,7 +105,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 			Name:    zone.Name,
 			Label:   helpers.GetZoneLabel(zone.Name),
 			Center:  pos,
-			Quality: neutralZone.GetQualityFrom(zone),
+			Quality: neutral_zone.GetQualityFrom(zone),
 			Type:    zone_helpers.GetZoneTypeFromName(zone.Name),
 		}
 		applyMainObjects(zone, &previewZone)

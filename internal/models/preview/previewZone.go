@@ -3,7 +3,7 @@ package preview
 import (
 	"image"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 // Zone is one zone laid out on the preview canvas.
@@ -12,7 +12,7 @@ type Zone struct {
 	Label   string
 	Center  image.Point
 	Type    ZoneType
-	Quality neutralZone.Quality
+	Quality neutral_zone.Quality
 	Owner   int
 	Castles int
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +18,7 @@ import (
 func buildVariantInputs(
 	configuration *config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans) models.GenerationTuning {
+	neutralZones neutral_zone.Plans) models.GenerationTuning {
 	return models.NewGenerationTuning(configuration, len(playerLabels)+len(neutralZones))
 }
 
@@ -40,9 +40,9 @@ func TestWhenRingTopologySelected_CreatesZonePerLabelAndNeutralPlan(t *testing.T
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("C", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("D", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
 	provider := providers.NewTopologyProvider()
 
@@ -59,8 +59,8 @@ func TestWhenHubAndSpokeTopologySelected_CreatesHubZone(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	playerLabels := []string{"A", "B", "C"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("D", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
 	provider := providers.NewTopologyProvider()
 
@@ -89,9 +89,9 @@ func TestWhenTournamentModeWithTwoPlayerLabels_CreatesTournamentVariant(t *testi
 		PointsToWin:        2,
 	}
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("C", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("D", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
 	provider := providers.NewTopologyProvider()
 
@@ -121,8 +121,8 @@ func TestWhenTournamentModeWithThreePlayerLabels_UsesSelectedTopology(t *testing
 		PointsToWin:        2,
 	}
 	playerLabels := []string{"A", "B", "C"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("D", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
 	provider := providers.NewTopologyProvider()
 

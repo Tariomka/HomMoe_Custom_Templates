@@ -3,7 +3,7 @@ package misc_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/utils"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -12,11 +12,11 @@ import (
 func TestWhenPlayerIsNotAtEnd_OrdersStrongestZoneFirst(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	strongZone := neutralZone.Plan{Label: "A", Quality: neutralZone.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
-	mediumZone := neutralZone.Plan{Label: "B", Quality: neutralZone.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
-	weakZone := neutralZone.Plan{Label: "C", Quality: neutralZone.QualityLow, CastleCount: gofakeit.Number(0, 4)}
-	neutralZones := neutralZone.Plans{weakZone, strongZone, mediumZone}
-	expected := neutralZone.Plans{strongZone, mediumZone, weakZone}
+	strongZone := neutral_zone.Plan{Label: "A", Quality: neutral_zone.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
+	mediumZone := neutral_zone.Plan{Label: "B", Quality: neutral_zone.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
+	weakZone := neutral_zone.Plan{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: gofakeit.Number(0, 4)}
+	neutralZones := neutral_zone.Plans{weakZone, strongZone, mediumZone}
+	expected := neutral_zone.Plans{strongZone, mediumZone, weakZone}
 
 	// Act
 	ordered := utils.OrderEdgeGap(neutralZones, false)
@@ -28,11 +28,11 @@ func TestWhenPlayerIsNotAtEnd_OrdersStrongestZoneFirst(t *testing.T) {
 func TestWhenPlayerIsAtEnd_OrdersStrongestZoneLast(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	strongZone := neutralZone.Plan{Label: "A", Quality: neutralZone.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
-	mediumZone := neutralZone.Plan{Label: "B", Quality: neutralZone.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
-	weakZone := neutralZone.Plan{Label: "C", Quality: neutralZone.QualityLow, CastleCount: gofakeit.Number(0, 4)}
-	neutralZones := neutralZone.Plans{weakZone, strongZone, mediumZone}
-	expected := neutralZone.Plans{weakZone, mediumZone, strongZone}
+	strongZone := neutral_zone.Plan{Label: "A", Quality: neutral_zone.QualityHigh, CastleCount: gofakeit.Number(0, 4)}
+	mediumZone := neutral_zone.Plan{Label: "B", Quality: neutral_zone.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
+	weakZone := neutral_zone.Plan{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: gofakeit.Number(0, 4)}
+	neutralZones := neutral_zone.Plans{weakZone, strongZone, mediumZone}
+	expected := neutral_zone.Plans{weakZone, mediumZone, strongZone}
 
 	// Act
 	ordered := utils.OrderEdgeGap(neutralZones, true)
@@ -44,24 +44,24 @@ func TestWhenPlayerIsAtEnd_OrdersStrongestZoneLast(t *testing.T) {
 func TestWhenGapIsEmptyAndPlayerIsAtEnd_ReturnsEmptyPlans(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	neutralZones := neutralZone.Plans{}
+	neutralZones := neutral_zone.Plans{}
 
 	// Act
 	ordered := utils.OrderEdgeGap(neutralZones, true)
 
 	// Assert
-	assert.Equal(t, neutralZone.Plans{}, ordered)
+	assert.Equal(t, neutral_zone.Plans{}, ordered)
 }
 
 func TestWhenGapHasSingleZoneAndPlayerIsAtEnd_ReturnsThatZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := neutralZone.Plan{Label: "A", Quality: neutralZone.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
-	neutralZones := neutralZone.Plans{zone}
+	zone := neutral_zone.Plan{Label: "A", Quality: neutral_zone.QualityMedium, CastleCount: gofakeit.Number(0, 4)}
+	neutralZones := neutral_zone.Plans{zone}
 
 	// Act
 	ordered := utils.OrderEdgeGap(neutralZones, true)
 
 	// Assert
-	assert.Equal(t, neutralZone.Plans{zone}, ordered)
+	assert.Equal(t, neutral_zone.Plans{zone}, ordered)
 }

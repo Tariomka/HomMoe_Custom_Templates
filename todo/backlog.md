@@ -26,8 +26,14 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
     Chain/Ring/Circles topologies, which would also fix the `default` branch
     modelling Hub & Spoke as a sequential ring instead of its real star graph.
 
-- clicking on hub in manual zone editor panics the program. UI completely doesn't handle the highest tier of zone - no guard presets, no hub editing disallow/hub information
-
 - need to add untracked zone tier property to Entities and/or method. This will be the source of truth for all tier related operations.
   As currently there is no reading of rmg.json files, deserialization doesn't matter so the entity can assume the tier from the content currently inside the zone.
   Or maybe Zone doesn't actually need a property, neutralZone.Quality can be used to track and infer this information as well as neutralZone.Profile can have this property.
+
+- need to consolidate road distances - there are multiple implementations and UI uses services directly
+
+- need to add that anything inside app should only use entities, models, handlers and commons, not services
+
+- need to use common (either from commons or models) values for template generation
+
+- either random portals or connections in general to hub have incorrect guard values

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
@@ -32,7 +32,7 @@ func NewGeometricHubTopologyService() *GeometricHubTopologyService {
 func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	hubIsHoldCity bool) entities.Variant {
 	layout := newGeometricHubLayout(playerLabels, neutralZones)
@@ -51,7 +51,7 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	return this.CreateVariant(playerLabels, playerLabels[0], len(allLabels)+1, zones, conns)
 }
 
-func neutralLabelsOf(neutralZones neutralZone.Plans) []string {
+func neutralLabelsOf(neutralZones neutral_zone.Plans) []string {
 	labels := make([]string, len(neutralZones))
 	for index, plan := range neutralZones {
 		labels[index] = plan.Label
@@ -72,7 +72,7 @@ func (this *GeometricHubTopologyService) createConnectionNameIndex(
 	for _, label := range layout.hubPortalLabels {
 		name := "Portal-Hub-" + label
 		names[label] = append(names[label], name)
-		names[common.HubZoneName] = append(names[common.HubZoneName], name)
+		names[constants.HubZoneName] = append(names[constants.HubZoneName], name)
 	}
 	return names
 }
@@ -84,7 +84,7 @@ func geometricHubEdgeName(edge [2]string) string {
 func (this *GeometricHubTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	layout *geometricHubLayout,
 	connectionNames map[string][]string,
 	tuning models.GenerationTuning,
@@ -94,7 +94,7 @@ func (this *GeometricHubTopologyService) createZones(
 		hubContentName = "mandatory_content_hub"
 	}
 	zones := []entities.Zone{this.CreateHubZone(
-		connectionNames[common.HubZoneName], tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
+		connectionNames[constants.HubZoneName], tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
 		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
 	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
 
@@ -121,7 +121,7 @@ func (this *GeometricHubTopologyService) createZones(
 
 func (this *GeometricHubTopologyService) createConnections(
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	layout *geometricHubLayout,
 	tuning models.GenerationTuning) []entities.Connection {
 	var connections []entities.Connection
@@ -150,7 +150,7 @@ func (this *GeometricHubTopologyService) createConnections(
 		}
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName("Portal-Hub-"+label).
-			WithFrom(common.HubZoneName).
+			WithFrom(constants.HubZoneName).
 			WithTo(this.ZoneLabelProvider.CreateZoneName(label, playerLabels)).
 			WithConnectionTypePortal().
 			WithPortalPlacementRulesFrom(portalRule).

@@ -12,7 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
@@ -74,28 +74,28 @@ func neutralCastleTarget(
 		return 0, false
 	}
 
-	switch neutralZone.GetQualityFrom(zone) {
-	case neutralZone.QualityHighest:
+	switch neutral_zone.GetQualityFrom(zone) {
+	case neutral_zone.QualityHighest:
 		if changes.Hub {
 			return helpers.Clamp(zoneConfiguration.Advanced.HubZoneCastles, 0, 4), true
 		}
-	case neutralZone.QualityHigh:
+	case neutral_zone.QualityHigh:
 		if changes.NeutralHigh {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralHighCastlesPerZone, 0, 4), true
 		}
-	case neutralZone.QualityMedium:
+	case neutral_zone.QualityMedium:
 		if changes.NeutralMedium {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralMediumCastlesPerZone, 0, 4), true
 		}
-	case neutralZone.QualityLow:
+	case neutral_zone.QualityLow:
 		if changes.NeutralLow {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowCastlesPerZone, 0, 4), true
 		}
-	case neutralZone.QualityLowest:
+	case neutral_zone.QualityLowest:
 		if changes.NeutralLowest {
 			return helpers.Clamp(zoneConfiguration.Advanced.NeutralLowestCastlesPerZone, 0, 4), true
 		}
-	case neutralZone.QualityUnknown:
+	case neutral_zone.QualityUnknown:
 	}
 	return 0, false
 }
@@ -105,7 +105,7 @@ func neutralCastleTarget(
 // non-castle main objects (abandoned outposts) untouched - unlike
 // ApplyNeutralZoneQuality, which re-profiles the whole zone.
 func SetNeutralZoneCastleCount(zone *entities.Zone, castleCount int, tuning models.GenerationTuning) {
-	profile := neutralZone.NewNeutralZoneProfile(neutralZone.GetQualityFrom(*zone))
+	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.GetQualityFrom(*zone))
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
 		base.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),

@@ -6,7 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 // geometricHubLayout is the computed slot structure of the Geometric Hub
@@ -40,7 +40,7 @@ type geometricHubLayout struct {
 // corners (1 per adjacent-player pair) -> interiors (round-robin per hexagon,
 // uncapped). Interiors take the highest-quality plans, corners the lowest,
 // stables the middle.
-func newGeometricHubLayout(playerLabels []string, plans neutralZone.Plans) *geometricHubLayout {
+func newGeometricHubLayout(playerLabels []string, plans neutral_zone.Plans) *geometricHubLayout {
 	playerCount := len(playerLabels)
 	layout := &geometricHubLayout{
 		gapStables:   make([][]string, playerCount),
@@ -50,7 +50,7 @@ func newGeometricHubLayout(playerLabels []string, plans neutralZone.Plans) *geom
 	}
 
 	stableCounts, cornerCounts, interiorCounts := distributeGeometricHubSlots(playerCount, len(plans))
-	layout.assignPlans(*neutralZone.NewNeutralZonePlansSorted(plans), stableCounts, cornerCounts, interiorCounts)
+	layout.assignPlans(*neutral_zone.NewNeutralZonePlansSorted(plans), stableCounts, cornerCounts, interiorCounts)
 	layout.computePositions(playerLabels)
 	layout.buildEdges(playerLabels)
 	return layout
@@ -98,7 +98,7 @@ func fillRoundRobin(bucketCount, budget, capPerBucket int) []int {
 // Interiors are dealt in polygon-vertex order (x1 first), so the hub-facing
 // vertices of every hexagon carry its best plans.
 func (this *geometricHubLayout) assignPlans(
-	sortedPlans neutralZone.Plans,
+	sortedPlans neutral_zone.Plans,
 	stableCounts, cornerCounts, interiorCounts []int) {
 	popHighest := func() string {
 		label := sortedPlans[0].Label

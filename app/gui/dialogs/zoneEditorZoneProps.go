@@ -12,7 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
@@ -58,8 +58,8 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 // syncZoneProps loads the zone property widgets from the selected zone.
 // Called once whenever the zone selection changes.
 func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
-	quality := neutralZone.GetQualityFrom(*zone)
-	this.qualityDropdown.SelectByName(connection_editor.QualityLabels[quality.GetIndex()])
+	quality := neutral_zone.GetQualityFrom(*zone)
+	this.qualityDropdown.SelectByName(quality.GetName())
 	castles := min(connection_editor.CountZoneCastles(*zone), 4)
 	this.castleDropdown.SelectByName(strconv.Itoa(castles))
 	this.zoneSizeEdit.SetText(strconv.FormatFloat(zone.Size, 'f', -1, 64))
@@ -81,7 +81,7 @@ func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 	}
 	if zone_helpers.IsZoneNameNeutral(zone.Name) &&
 		(this.qualityDropdown.WasUpdated || this.castleDropdown.WasUpdated) {
-		quality := neutralZone.GetQualityFromIndex(this.qualityDropdown.GetSelectedIndex())
+		quality := neutral_zone.GetQualityFromIndex(this.qualityDropdown.GetSelectedIndex())
 		castles := this.castleDropdown.GetSelectedIndex()
 		connection_editor.ApplyNeutralZoneQuality(zone, quality, castles, this.tuning)
 		this.geometryDirty = true // tier color / castle glyph live in previewZones

@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,9 +16,9 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesZonePerLabel(t *testing
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 4)
 	service := topology.NewChainTopologyService()
 
@@ -35,9 +35,9 @@ func TestWhenFourLabelsFormTheChain_CreatesConnectionPerAdjacentPair(t *testing.
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 4)
 	service := topology.NewChainTopologyService()
 
@@ -54,9 +54,9 @@ func TestWhenChainIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyChain
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 4)
 	service := topology.NewChainTopologyService()
 
@@ -74,7 +74,7 @@ func TestWhenIsolatedPlayersAreAdjacentInTheChain_SkipsTheirChainConnection(t *t
 	configuration.Topology = config.TopologyChain
 	configuration.NoDirectPlayerConnections = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
+	neutralZones := neutral_zone.Plans{}
 	tuning := models.NewGenerationTuning(configuration, 2)
 	service := topology.NewChainTopologyService()
 
@@ -92,11 +92,11 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	configuration.Topology = config.TopologyChain
 	configuration.RandomPortals = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N3", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N4", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 6)
 	service := topology.NewChainTopologyService()
 

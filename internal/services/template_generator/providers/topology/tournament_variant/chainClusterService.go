@@ -3,12 +3,12 @@ package tournament_variant
 import (
 	"fmt"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -26,12 +26,12 @@ func NewChainClusterService() *ChainClusterService {
 func (this *ChainClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	chainLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).
-			SelectString(func(x neutralZone.Plan) string { return x.Label }).
+			SelectString(func(x neutral_zone.Plan) string { return x.Label }).
 			ToSlice()...)
 	connectionNames := make([]string, len(chainLabels)-1)
 	for index := range connectionNames {
@@ -47,7 +47,7 @@ func (this *ChainClusterService) createZones(
 	configuration config.GeneratorConfig,
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans neutral_zone.Plans,
 	playerIndex int) []entities.Zone {
 	var zones []entities.Zone
 	for index, label := range chainLabels {
@@ -69,7 +69,7 @@ func (this *ChainClusterService) createZones(
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(allNeutralZonePlans).
-						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
+						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
 					myConns, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
 					configuration.GenerateRoads, tuning, false))
 		}
@@ -80,7 +80,7 @@ func (this *ChainClusterService) createZones(
 func (this *ChainClusterService) createConnections(
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans neutral_zone.Plans,
 	playerLabel string) []entities.Connection {
 	var connections []entities.Connection
 	for index, name := range connectionNames {
@@ -88,16 +88,16 @@ func (this *ChainClusterService) createConnections(
 		labelTo := chainLabels[index+1]
 		connectionBuilder := variant_content.NewConnectionBuilder().
 			WithName(name).
-			WithTo(common.NeutralZonePrefix + labelTo).
+			WithTo(constants.NeutralZonePrefix + labelTo).
 			WithConnectionTypeDirect().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
 			WithGuardWeeklyIncrement(0.15).
 			WithGuardMatchGroup(fmt.Sprintf("tourney_guard_%s_%s", labelFrom, labelTo))
 
 		if index > 0 {
-			connectionBuilder = connectionBuilder.WithFrom(common.NeutralZonePrefix + labelFrom)
+			connectionBuilder = connectionBuilder.WithFrom(constants.NeutralZonePrefix + labelFrom)
 		} else {
-			connectionBuilder = connectionBuilder.WithFrom(common.PlayerZonePrefix + labelFrom)
+			connectionBuilder = connectionBuilder.WithFrom(constants.PlayerZonePrefix + labelFrom)
 		}
 
 		connections = append(connections, connectionBuilder.Build())

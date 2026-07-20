@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	service_constants "github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
@@ -71,7 +71,7 @@ func NewLayoutPanel(state *drivers.State) *LayoutPanel {
 	panel := &LayoutPanel{
 		topology: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
-			for topology := range service_constants.GetTopologyDescriptorSeq() {
+			for topology := range common_topologies.GetTopologyDescriptorSeq() {
 				labels = append(labels, topology.Label)
 			}
 			return labels
@@ -117,7 +117,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 func (this *LayoutPanel) LoadFromState() {
 	settings := this.state.GetStateData()
 
-	this.topology.SelectByName(service_constants.GetTopologyDescriptorFromType(settings.Topology).Label)
+	this.topology.SelectByName(common_topologies.GetTopologyDescriptorFromType(settings.Topology).Label)
 
 	this.chkRoads.Value = settings.GenerateRoads
 	this.chkPortals.Value = settings.RandomPortals
@@ -200,6 +200,6 @@ func (this *LayoutPanel) SaveToState() {
 	})
 }
 
-func (this *LayoutPanel) getCurrentTopology() service_constants.TopologyDescriptor {
-	return service_constants.GetTopologyDescriptorFromIndex(this.topology.GetSelectedIndex())
+func (this *LayoutPanel) getCurrentTopology() common_topologies.TopologyDescriptor {
+	return common_topologies.GetTopologyDescriptorFromIndex(this.topology.GetSelectedIndex())
 }

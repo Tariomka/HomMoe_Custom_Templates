@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/stretchr/testify/assert"
 )
@@ -60,7 +60,7 @@ func TestWhenNoNeutralZonesSelected_EveryPlayerConnectsToHub(t *testing.T) {
 	playerLabels := []string{"A", "B", "C", "D"}
 
 	// Act
-	variant := buildGeoHubVariant(playerLabels, neutralZone.Plans{})
+	variant := buildGeoHubVariant(playerLabels, neutral_zone.Plans{})
 
 	// Assert
 	assert.ElementsMatch(t,
@@ -74,7 +74,7 @@ func TestWhenNoNeutralZonesSelected_NoPlayerToPlayerConnectionsExist(t *testing.
 	playerLabels := []string{"A", "B", "C", "D"}
 
 	// Act
-	variant := buildGeoHubVariant(playerLabels, neutralZone.Plans{})
+	variant := buildGeoHubVariant(playerLabels, neutral_zone.Plans{})
 
 	// Assert
 	playerToPlayer := 0
@@ -527,8 +527,8 @@ func TestWhenFewPlayersCompareToMany_FewPlayersSitCloserToHub(t *testing.T) {
 	sixPlayerLabels := []string{"A", "B", "C", "D", "E", "F"}
 
 	// Act
-	threePlayerVariant := buildGeoHubVariant(threePlayerLabels, neutralZone.Plans{})
-	sixPlayerVariant := buildGeoHubVariant(sixPlayerLabels, neutralZone.Plans{})
+	threePlayerVariant := buildGeoHubVariant(threePlayerLabels, neutral_zone.Plans{})
+	sixPlayerVariant := buildGeoHubVariant(sixPlayerLabels, neutral_zone.Plans{})
 
 	// Assert
 	assert.Less(t,

@@ -3,7 +3,7 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,9 +24,9 @@ func TestWhenBothLabelsArePlayers_GuardValueIsPlayerBorderStrength(t *testing.T)
 func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	neutralPlans := neutralZone.Plans{
-		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
-		{Label: "D", Quality: neutralZone.QualityHigh, CastleCount: 0},
+	neutralPlans := neutral_zone.Plans{
+		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
+		{Label: "D", Quality: neutral_zone.QualityHigh, CastleCount: 0},
 	}
 	testCases := []struct {
 		name       string
@@ -57,8 +57,8 @@ func TestWhenOnlyFirstLabelIsPlayer_NeutralSecondLabelQualityDrivesGuard(t *test
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
-	neutralPlans := neutralZone.Plans{
-		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
+	neutralPlans := neutral_zone.Plans{
+		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
 	}
 
 	// Act
@@ -73,8 +73,8 @@ func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *test
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase()
-	neutralPlans := neutralZone.Plans{
-		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
+	neutralPlans := neutral_zone.Plans{
+		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
 	}
 
 	// Act
@@ -95,7 +95,7 @@ func TestWhenNeutralLabelHasNoPlan_UsesUnknownQualityGuard(t *testing.T) {
 		"A", "Z", []string{"A", "B"}, nil, newUnitTuning())
 
 	// Assert
-	assert.Equal(t, 0, guardValue)
+	assert.Equal(t, 30000, guardValue)
 }
 
 func TestWhenBorderGuardMultiplierIsDoubled_PlayerBorderGuardIsScaled(t *testing.T) {

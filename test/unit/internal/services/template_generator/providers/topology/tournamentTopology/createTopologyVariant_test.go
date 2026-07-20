@@ -6,7 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,12 +17,12 @@ func newChainTournamentConfig() *config.GeneratorConfig {
 	return configuration
 }
 
-func newFourNeutralPlans() neutralZone.Plans {
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("C", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("E", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("F", neutralZone.QualityHigh, 1)
+func newFourNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("E", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("F", neutral_zone.QualityHigh, 1)
 	return neutralZones
 }
 

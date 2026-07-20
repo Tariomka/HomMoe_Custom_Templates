@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -80,7 +80,7 @@ func (this *TemplateGenerator) createGenerationTuning(totalZoneCount int) models
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {
 	parts := []string{
-		common.GetTopologyDescriptorFromType(this.configuration.Topology).Label + " layout",
+		common_topologies.GetTopologyDescriptorFromType(this.configuration.Topology).Label + " layout",
 		formatPhraseWithCount(neutralCount, "neutral zone", "neutral zones"),
 		formatPhraseWithCount(
 			1+this.configuration.ZoneConfiguration.PlayerZoneCastles+

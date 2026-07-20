@@ -7,7 +7,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/stretchr/testify/assert"
@@ -693,7 +693,7 @@ func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) 
 		Label:   "A",
 		Center:  image.Pt(300, 300),
 		Type:    preview.ZoneTypePlayer,
-		Quality: neutralZone.QualityUnknown,
+		Quality: neutral_zone.QualityUnknown,
 		Castles: 1,
 		Owner:   1,
 	}
