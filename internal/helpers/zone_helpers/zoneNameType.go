@@ -76,7 +76,9 @@ func GetZoneGuardQuality(zoneName string, zones []entities.Zone, playerNames []s
 		return neutral_zone.QualityUnknown
 	case preview.ZoneTypeNeutral:
 		return neutral_zone.GetQualityFrom(zone)
+	case preview.ZoneTypeUnknown:
+		fallthrough
+	default:
+		return neutral_zone.QualityUnknown
 	}
-
-	return neutral_zone.QualityUnknown
 }
