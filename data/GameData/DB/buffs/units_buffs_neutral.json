@@ -69,10 +69,7 @@
 				"immunities":
 				[
 					{ "type": "damage", "tags": [ "magic_damage" ] },
-					
-					{ "type": "magic_level", "tags": [ "5" ] },
-					
-					{ "type": "ability_rank", "tags": [ "5" ] }
+					{ "type": "effect", "tags": [ "negative" ] }
 				]
 			}
 		},

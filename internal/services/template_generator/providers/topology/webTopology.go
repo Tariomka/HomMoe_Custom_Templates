@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -26,7 +27,7 @@ func NewSharedWebTopologyService() *SharedWebTopologyService {
 func (this *SharedWebTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) entities.Variant {
 	neutralLabels := this.createLabels(playerLabels, neutralZones, configuration.Topology == config.TopologyCircles)
@@ -50,7 +51,7 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 
 func (this *SharedWebTopologyService) createLabels(
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	isBalanced bool) []string {
 	var neutrals []string
 	if isBalanced {
@@ -108,7 +109,7 @@ func (this *SharedWebTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, neutralLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	holdCityNeutralLabel string,
 	playerSpokes, neutralSpokes map[string][]string,
 	connectionNames []string) []entities.Zone {
@@ -124,9 +125,9 @@ func (this *SharedWebTopologyService) createZones(
 		}
 		neutralConnNames = linq.FromSlice(append(neutralConnNames, neutralSpokes[label]...)).Distinct().ToSlice()
 		zonePlan := linq.FromSlice(neutralZones).
-			FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label })
+			FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label })
 		zone := this.CreateNeutralZone(
-			zonePlan, neutralConnNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+			zonePlan, neutralConnNames, configuration.ZoneConfiguration.NeutralZoneSize,
 			tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning,
 			label == holdCityNeutralLabel)
 		if zonePlan.CastleCount == 0 && tuning.AbandonedOutpostCount == 0 {
@@ -140,7 +141,7 @@ func (this *SharedWebTopologyService) createZones(
 			this.CreateSpawnZone(
 				label, fmt.Sprintf("Player%d", i+1), playerSpokes[label],
 				configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-				configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+				configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
 				configuration.GenerateRoads, tuning))
 	}
 
@@ -150,7 +151,7 @@ func (this *SharedWebTopologyService) createZones(
 func (this *SharedWebTopologyService) createConnections(
 	playerLabels, neutralLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	playerSpokes map[string][]string,
 	connectionNames []string) []entities.Connection {
 	neutralCount := len(neutralLabels)
@@ -161,10 +162,10 @@ func (this *SharedWebTopologyService) createConnections(
 			nextLabel := strings.Split(connectionName, "-")[2]
 			connections = append(connections, variant_content.NewConnectionBuilder().
 				WithName(connectionName).
-				WithFrom("Spawn-"+label).
-				WithTo("Neutral-"+nextLabel).
+				WithFrom(constants.PlayerZonePrefix+label).
+				WithTo(constants.NeutralZonePrefix+nextLabel).
 				WithConnectionTypeDirect().
-				WithGuardZone("Neutral-"+nextLabel).
+				WithGuardZone(constants.NeutralZonePrefix+nextLabel).
 				WithSimTurnSquad().
 				WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
 				WithGuardWeeklyIncrement(0.15).
@@ -182,10 +183,10 @@ func (this *SharedWebTopologyService) createConnections(
 		nextLabel := neutralLabels[next]
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(connectionNames[i]).
-			WithFrom("Neutral-"+label).
-			WithTo("Neutral-"+nextLabel).
+			WithFrom(constants.NeutralZonePrefix+label).
+			WithTo(constants.NeutralZonePrefix+nextLabel).
 			WithConnectionTypeDirect().
-			WithGuardZone("Neutral-"+label).
+			WithGuardZone(constants.NeutralZonePrefix+label).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(0.15).

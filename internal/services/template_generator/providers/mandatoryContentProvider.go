@@ -3,14 +3,17 @@ package providers
 import (
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
@@ -23,7 +26,7 @@ func NewMandatoryContentProvider() *MandatoryContentProvider {
 func (this *MandatoryContentProvider) CreateContents(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans) []entities.MandatoryContent {
+	neutralZones neutral_zone.Plans) []entities.MandatoryContent {
 	var groups []entities.MandatoryContent
 	footholdCount := 0
 	if configuration.SpawnRemoteFootholds {
@@ -39,15 +42,7 @@ func (this *MandatoryContentProvider) CreateContents(
 		})
 	}
 	for _, zone := range neutralZones {
-		var content []entities.MandatoryContentItem
-		switch zone.Quality {
-		case neutralZone.QualityLow:
-			content = cloneContentItems(configuration.LowNeutralMandatoryContent)
-		case neutralZone.QualityMedium:
-			content = cloneContentItems(configuration.MediumNeutralMandatoryContent)
-		case neutralZone.QualityHigh:
-			content = cloneContentItems(configuration.HighNeutralMandatoryContent)
-		}
+		content := cloneContentItems(neutralRowsForQuality(configuration, zone.Quality))
 		if zone.CastleCount == 0 {
 			content = stripNearCastleRules(content)
 		}
@@ -80,36 +75,41 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 	var groups []entities.MandatoryContent
 	hubGroupAdded := false
 	for _, zone := range zones {
-		switch {
-		case strings.HasPrefix(zone.Name, "Spawn-"):
+		switch zone_helpers.GetZoneTypeFromName(zone.Name) {
+		case preview.ZoneTypePlayer:
 			groups = append(groups, entities.MandatoryContent{
-				Name: "mandatory_content_side_" + strings.TrimPrefix(zone.Name, "Spawn-"),
+				Name: "mandatory_content_side_" + helpers.GetZoneLabel(zone.Name),
 				Content: this.createContentItemsWithFoothold(
 					cloneContentItems(configuration.PlayerZoneMandatoryContent),
 					footholdCount,
 					configuration.ZoneConfiguration.PlayerZoneCastles),
 			})
-		case strings.HasPrefix(zone.Name, "Neutral-"):
-			castleCount := countCityMainObjects(zone)
-			content := cloneContentItems(neutralRowsForQuality(configuration, neutralZone.GetQualityFrom(zone)))
+
+		case preview.ZoneTypeNeutral:
+			castleCount := connection_editor.CountZoneCastles(zone)
+			content := cloneContentItems(neutralRowsForQuality(configuration, neutral_zone.GetQualityFrom(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}
 			groups = append(groups, entities.MandatoryContent{
-				Name:    "mandatory_content_neutral_" + strings.TrimPrefix(zone.Name, "Neutral-"),
+				Name:    "mandatory_content_neutral_" + helpers.GetZoneLabel(zone.Name),
 				Content: this.createContentItemsWithFoothold(content, footholdCount, castleCount),
 			})
-		case zone.Name == "Hub" || strings.HasPrefix(zone.Name, "Hub-"):
+
+		case preview.ZoneTypeHub:
 			// One shared hub group even if several hub zones exist (tournament).
 			if hubGroupAdded || len(configuration.HubZoneMandatoryContent) == 0 {
 				continue
 			}
+
 			content := cloneContentItems(configuration.HubZoneMandatoryContent)
-			if countCityMainObjects(zone) == 0 {
+			if connection_editor.CountZoneCastles(zone) == 0 {
 				content = stripNearCastleRules(content)
 			}
 			groups = append(groups, entities.MandatoryContent{Name: "mandatory_content_hub", Content: content})
 			hubGroupAdded = true
+
+		case preview.ZoneTypeUnknown:
 		}
 	}
 	return groups
@@ -134,18 +134,19 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 }
 
 // hubContentGroup builds the hub zone's mandatory-content group from the
-// configured hub rows. It only exists for the Hub & Spoke topology and only
-// when the user actually configured hub content, matching the parallel C#
-// editor which references "mandatory_content_hub" only when hub rows are set.
-// The hub zone has no remote-foothold roads, so no foothold item is added.
+// configured hub rows. It only exists for the topologies that create a Hub
+// zone and only when the user actually configured hub content, matching the
+// parallel C# editor which references "mandatory_content_hub" only when hub
+// rows are set. The hub zone has no remote-foothold roads, so no foothold
+// item is added.
 func (this *MandatoryContentProvider) hubContentGroup(
 	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
-	if configuration.Topology != config.TopologyHubAndSpoke || len(configuration.HubZoneMandatoryContent) == 0 {
+	if !configuration.Topology.IsHubBased() || len(configuration.HubZoneMandatoryContent) == 0 {
 		return entities.MandatoryContent{}, false
 	}
 
 	content := cloneContentItems(configuration.HubZoneMandatoryContent)
-	if configuration.ZoneConfiguration.HubZoneCastles == 0 {
+	if configuration.ZoneConfiguration.Advanced.HubZoneCastles == 0 {
 		content = stripNearCastleRules(content)
 	}
 	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
@@ -181,7 +182,7 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 func (this *MandatoryContentProvider) createFootholdContentItem(
 	index int,
 	castleCount int) entities.MandatoryContentItem {
-	return mandatory_content.NewContentBuilder(nonContentObjects.RemoteFoothold).
+	return mandatory_content.NewContentItemBuilder(nonContentObjects.RemoteFoothold).
 		WithName(fmt.Sprintf("name_remote_foothold_%d", index)).
 		WithSoloEncounter().
 		WithRulesCallback(func() []entities.PlacementRule {
@@ -256,27 +257,21 @@ func cloneContentItems(items []entities.MandatoryContentItem) []entities.Mandato
 // neutral zone's quality tier.
 func neutralRowsForQuality(
 	configuration config.GeneratorConfig,
-	quality neutralZone.Quality) []entities.MandatoryContentItem {
+	quality neutral_zone.Quality) []entities.MandatoryContentItem {
 	switch quality {
-	case neutralZone.QualityLow:
-		return configuration.LowNeutralMandatoryContent
-	case neutralZone.QualityHigh:
+	case neutral_zone.QualityHighest:
+		return configuration.HubZoneMandatoryContent
+	case neutral_zone.QualityHigh:
 		return configuration.HighNeutralMandatoryContent
-	case neutralZone.QualityMedium:
+	case neutral_zone.QualityMedium:
+		return configuration.MediumNeutralMandatoryContent
+	case neutral_zone.QualityLow:
+		return configuration.LowNeutralMandatoryContent
+	case neutral_zone.QualityLowest:
+		return configuration.LowestNeutralMandatoryContent
+	case neutral_zone.QualityUnknown:
 		fallthrough
 	default:
-		return configuration.MediumNeutralMandatoryContent
+		return nil
 	}
-}
-
-// countCityMainObjects returns the number of City main objects (castles) in a
-// zone, ignoring abandoned outposts and other object types.
-func countCityMainObjects(zone entities.Zone) int {
-	count := 0
-	for _, mainObject := range zone.MainObjects {
-		if strings.EqualFold(mainObject.Type, "City") {
-			count++
-		}
-	}
-	return count
 }

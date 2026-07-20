@@ -1,0 +1,23 @@
+{
+	"array":
+	[
+		
+		{
+			"id": "exodus_poor_buildings_banlist",
+			"buildings":
+			[
+				{ "sid": "Build_Training_Range", 		 	"level": 1 },
+
+				{ "sid": "Build_Skeleton_Converter", 	 	"level": 1 },
+
+				{ "sid": "Build_Rebirth_Of_Shrine", 	 	"level": 1 },
+
+				{ "sid": "Build_Portal_Summoning", 		 	"level": 1 },
+
+				{ "sid": "Build_Lyceum", 		 			"level": 1 },
+
+				{ "sid": "Build_Mycelium_Roots", 		 	"level": 1 }
+			]
+		}
+	]
+}

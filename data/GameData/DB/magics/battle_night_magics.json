@@ -227,7 +227,7 @@
 						"buff": 
 						{
 							"sid": "magic_web_effect_0",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 5, 1 ]
 						},
 						"targetMechanics":
@@ -260,7 +260,7 @@
 						"buff": 
 						{
 							"sid": "magic_web_effect_1",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 5, 1 ]
 						},
 						"targetMechanics":
@@ -293,7 +293,7 @@
 						"buff": 
 						{
 							"sid": "magic_web_effect_1",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 5, 1 ]
 						},
 						"targetMechanics":
@@ -327,7 +327,7 @@
 						"buff": 
 						{
 							"sid": "magic_web_effect_2",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 5, 1 ]
 						},
 						"targetMechanics":
@@ -552,7 +552,7 @@
 				{ "name": "mercury", "cost": 2 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 9, 9, 9, 9 ],
+			"manaCost": [ 11, 11, 11, 11 ],
 			"battleMagic":
 			{
 				"attackTimeBefore": 0.1,
@@ -1021,7 +1021,7 @@
 						"buff": 
 						{
 							"sid": "magic_fatal_decay_effect_0",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -1050,7 +1050,7 @@
 						"buff": 
 						{
 							"sid": "magic_fatal_decay_effect_1",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -1079,7 +1079,7 @@
 						"buff": 
 						{
 							"sid": "magic_fatal_decay_effect_2",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -1108,7 +1108,7 @@
 						"buff": 
 						{
 							"sid": "magic_fatal_decay_effect_3",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					}
@@ -1157,34 +1157,6 @@
 				"attackTimeBefore": 1.6,
 				"magicDealers": 
 				[
-					{
-						"tags": [ "demon_immunities", "undead_immunities", "embodiment_immunities", "construct_immunities" ],
-
-						"castTargetParams":   
-						{ 
-							"targetTags": [ "unit" ],
-							"castTarget_": "enemy",
-							"targetCondition_": "alive",
-							"selection": "object"
-						},
-
-						"affectTargetParams":   
-						{ 
-							"targetTags": [ "unit" ],
-							"castTarget_": "enemy",
-							"targetCondition_": "alive",
-							"selection": "object"
-						},
-
-						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
-
-						"buffTarget_": "enemy",
-						"buff": 
-						{
-							"sid": "magic_sleep_effect_0",
-							"duration": 1
-						}
-					},
 					{
 						"tags": [ "demon_immunities", "undead_immunities", "embodiment_immunities", "construct_immunities" ],
 
@@ -1265,8 +1237,36 @@
 						"buffTarget_": "enemy",
 						"buff": 
 						{
+							"sid": "magic_sleep_effect_0",
+							"duration": 4
+						}
+					},
+					{
+						"tags": [ "demon_immunities", "undead_immunities", "embodiment_immunities", "construct_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
 							"sid": "magic_sleep_effect_1",
-							"duration": 3
+							"duration": 4
 						}
 					}
 				],
@@ -1611,12 +1611,12 @@
 			"description": [ 
 				"night_11_magic_vulnerability_description",
 				"night_11_magic_vulnerability_description",
-				"night_11_magic_vulnerability_description",
-				"night_11_magic_vulnerability_description_1"
+				"night_11_magic_vulnerability_description_spec",
+				"night_11_magic_vulnerability_description_1_spec"
 			],
 			"bonusDescriptions": [ 
 				{"level": 2, "description": "night_11_magic_vulnerability_description_up_level_bonus_2"}, 
-				{"level": 3, "description": "night_11_magic_vulnerability_description_up_level_bonus_3"}, 
+				{"level": 3, "description": "night_11_magic_vulnerability_description_up_level_bonus_3_alt"}, 
 				{"level": 4, "description": "description_up_effect_enemies_adjacent"}
 			],
 
@@ -1630,7 +1630,7 @@
 				{ "name": "mercury", "cost": 8 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 11, 11, 11, 11 ],
+			"manaCost": [ 8, 8, 8, 8 ],
 			"battleMagic":
 			{
 				"effect": "Prefabs_vfx/magic_vulnerability_hex",

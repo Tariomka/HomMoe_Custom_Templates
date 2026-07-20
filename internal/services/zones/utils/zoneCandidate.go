@@ -4,22 +4,22 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 type candidate struct {
-	letter    string
-	minDist   int
-	variance  float64
-	quality   int
-	hasCastle int
+	letter      string
+	minDist     int
+	variance    float64
+	quality     int
+	castleCount int
 }
 
 type hubZoneCandidates []candidate
 
 //nolint:revive // private helper struct, not intended for external use, besides GetFirstCandidateLabel()
 func CreateHubZoneCandidates(
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	distancesByPlayer []map[string]int) *hubZoneCandidates {
 	var candidates hubZoneCandidates
 	for _, plan := range neutralZones {
@@ -72,8 +72,8 @@ func (this *hubZoneCandidates) SortForHubCity() *hubZoneCandidates {
 			return comparison
 		}
 
-		// a.hasCastle > b.hasCastle
-		return cmp.Compare(b.hasCastle, a.hasCastle)
+		// a.castleCount > b.castleCount
+		return cmp.Compare(b.castleCount, a.castleCount)
 	})
 
 	return this

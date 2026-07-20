@@ -173,3 +173,20 @@ func TestWhenMandatoryContentUsesUnlimitedSid_AddsNoNewLimitEntry(t *testing.T) 
 	// Assert
 	assert.Equal(t, defaultGroups[0].Limits, groups[0].Limits)
 }
+
+func TestWhenLowestTierRequestsMoreThanDefaultCap_LiftsLimit(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
+	provider := providers.NewContentLimitProvider()
+	configuration := config.NewGeneratorConfig()
+	configuration.LowestNeutralMandatoryContent = []entities.MandatoryContentItem{
+		{SID: fountainSid}, {SID: fountainSid}, {SID: fountainSid},
+	}
+
+	// Act
+	groups := provider.CreateContentCountLimits(*configuration)
+
+	// Assert
+	assert.Equal(t, 3, maxCountFor(t, groups, fountainSid))
+}

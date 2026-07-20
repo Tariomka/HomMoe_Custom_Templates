@@ -26,10 +26,12 @@
         "gofmt",
         "gofont",
         "golines",
+        "gosec",
         "govet",
         "heros",
         "hommoe",
         "Huntsmans",
+        "ineffassign",
         "Insara",
         "Insaras",
         "Interactable",
@@ -69,7 +71,7 @@
         "Voodoosh"
     ],
     "gopls": {
-        "build.buildFlags": ["-tags=integration_test"],
+        "build.buildFlags": ["-tags=integration_test,gui"],
         "ui.semanticTokens": true,
         "ui.diagnostic.staticcheck": true,
         "ui.diagnostic.analyses": {
@@ -105,4 +107,8 @@
     ],
     "coverage-gutters.showLineCoverage": false, // Still not sure about this one to be honest
     "coverage-gutters.showGutterCoverage": true,
+    "workbench.editorAssociations": {
+        "*.golden": "imagePreview.previewEditor",
+		"*.failure": "imagePreview.previewEditor",
+    },
 }

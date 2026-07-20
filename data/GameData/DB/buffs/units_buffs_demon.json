@@ -490,7 +490,7 @@
 
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "lava_larva_damage", "v": 1.0 }	]	}	}	}
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "lava_larva_damage", "v": 0.5 }	]	}	}	}
 		},
 
 		{

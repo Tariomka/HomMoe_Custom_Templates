@@ -239,10 +239,10 @@
 			{
 				"stats":
 				{
-					"heroOffenceModifier": 1,
-					"heroDefenceModifier": 1,
-					"heroSpellPowerModifier": 1,
-					"heroIntelligenceModifier": 1
+					"heroOffenceModifier": 0.5,
+					"heroDefenceModifier": 0.5,
+					"heroSpellPowerModifier": 0.5,
+					"heroIntelligenceModifier": 0.5
 				}
 			}
 		},

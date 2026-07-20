@@ -152,6 +152,22 @@
 	},
 
 	{
+		"name": "basic_content_list_pickup_pandora_box_magic",
+		"content":
+		[
+			{ "sid" : "pandora_box",	"variant": 19,	"weight": 100	},			
+			{ "sid" : "pandora_box",	"variant": 20,	"weight": 100	},
+			{ "sid" : "pandora_box",	"variant": 21,	"weight": 100	},
+			{ "sid" : "pandora_box",	"variant": 22,	"weight": 100	},
+			{ "sid" : "pandora_box",	"variant": 23,	"weight": 125	},			
+			{ "sid" : "pandora_box",	"variant": 24,	"weight": 100	},
+			{ "sid" : "pandora_box",	"variant": 25,	"weight": 75	},
+			{ "sid" : "pandora_box",	"variant": 26,	"weight": 50	},
+			{ "sid" : "pandora_box",	"variant": 27,	"weight": 25	}
+		]
+	},
+
+	{
 		"name": "basic_content_list_pickup_pandora_box_all_default",
 		"content": 
 		[

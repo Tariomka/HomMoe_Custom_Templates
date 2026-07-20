@@ -7,6 +7,7 @@ package editor_state_dto
 type CastleSettingChanges struct {
 	PlayerCastles bool // PlayerZoneCastles or PlayerOwnedCastles
 	NeutralSimple bool // NeutralZoneCastles (simple mode: every neutral zone)
+	NeutralLowest bool // NeutralLowestCastlesPerZone (advanced mode)
 	NeutralLow    bool // NeutralLowCastlesPerZone (advanced mode)
 	NeutralMedium bool // NeutralMediumCastlesPerZone (advanced mode)
 	NeutralHigh   bool // NeutralHighCastlesPerZone (advanced mode)
@@ -14,6 +15,6 @@ type CastleSettingChanges struct {
 }
 
 func (this CastleSettingChanges) Any() bool {
-	return this.PlayerCastles || this.NeutralSimple ||
+	return this.PlayerCastles || this.NeutralSimple || this.NeutralLowest ||
 		this.NeutralLow || this.NeutralMedium || this.NeutralHigh || this.Hub
 }

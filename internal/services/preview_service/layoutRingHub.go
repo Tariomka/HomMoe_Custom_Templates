@@ -5,6 +5,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 )
 
@@ -28,7 +29,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 	// Multi-hub tournament layout: clusters fan out around the canvas.
 	var hubIndices []int
 	for i, zone := range zones {
-		if strings.HasPrefix(zone.Name, "Hub-") {
+		if strings.HasPrefix(zone.Name, constants.HubZonePrefix) {
 			hubIndices = append(hubIndices, i)
 		}
 	}
@@ -39,7 +40,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 
 	hubIdx := -1
 	for i, zone := range zones {
-		if zone.Name == "Hub" {
+		if zone.Name == constants.HubZoneName {
 			hubIdx = i
 			break
 		}

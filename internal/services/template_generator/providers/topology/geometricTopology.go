@@ -4,10 +4,11 @@ import (
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 // GeometricTopologyService arranges zones into a centrally symmetric flower: a
@@ -29,7 +30,7 @@ func NewGeometricTopologyService() *GeometricTopologyService {
 func (this *GeometricTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	return this.createVariantFromLayout(
@@ -54,7 +55,7 @@ type petal struct {
 // are built purely from player and neutral zones with no dedicated hub.
 func (this *GeometricTopologyService) createGeometricLayout(
 	playerLabels []string,
-	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const (
 		tipRadius  = 0.46 // player tip, almost at the canvas edge
 		startAngle = -math.Pi / 2.0
@@ -117,48 +118,45 @@ func buildPetal(
 	axis, bowAngle, ctrlDist, tipRadius float64,
 	playerLabel string,
 	plan []int,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	allLabels *[]string,
 	positions *models.Positions) petal {
-	tipX := layoutCenter + math.Cos(axis)*tipRadius
-	tipY := layoutCenter + math.Sin(axis)*tipRadius
-	leftCtrl := axis + bowAngle
-	rightCtrl := axis - bowAngle
-	leftCount := (len(plan) + 1) / 2
-	rightCount := len(plan) - leftCount
-
-	// leafPoint samples the bowed leaf edge on the given side at fraction t
-	// (0 = center, 1 = tip) via a quadratic Bézier center→control→tip.
-	leafPoint := func(ctrlAngle, t float64) models.Position {
-		mt := 1.0 - t
-		p1x := layoutCenter + math.Cos(ctrlAngle)*ctrlDist
-		p1y := layoutCenter + math.Sin(ctrlAngle)*ctrlDist
-		return data.NewVec2(
-			mt*mt*layoutCenter+2*mt*t*p1x+t*t*tipX,
-			mt*mt*layoutCenter+2*mt*t*p1y+t*t*tipY)
-	}
-
 	var ring []int
 	addNode := func(planIndex int, point models.Position) {
 		ring = append(ring, len(*allLabels))
 		*allLabels = append(*allLabels, neutralZones[planIndex].Label)
 		positions.Add(point)
 	}
+	createPosition := func(angle, radius float64) models.Position {
+		return data.NewVec2(
+			layoutCenter+math.Cos(angle)*radius,
+			layoutCenter+math.Sin(angle)*radius)
+	}
+
+	startPosition := data.NewVec2(layoutCenter, layoutCenter)
+	endPosition := createPosition(axis, tipRadius)
+	leftCtrl := axis + bowAngle
+	rightCtrl := axis - bowAngle
+	leftCount := (len(plan) + 1) / 2
+	rightCount := len(plan) - leftCount
 
 	// Left edge: from the base near the center out toward the tip.
-	for j := 1; j <= leftCount; j++ {
-		t := float64(j) / float64(leftCount+1)
-		addNode(plan[j-1], leafPoint(leftCtrl, t))
+	for index := 1; index <= leftCount; index++ {
+		t := float64(index) / float64(leftCount+1)
+		addNode(plan[index-1], helpers.GetVectorOnQuadraticBezierCurve(
+			startPosition, createPosition(leftCtrl, ctrlDist), endPosition, t))
 	}
 	// Tip: the player zone, almost at the canvas edge.
 	playerIndex := len(*allLabels)
 	*allLabels = append(*allLabels, playerLabel)
-	positions.Add(data.NewVec2(tipX, tipY))
+	positions.Add(endPosition)
 	ring = append(ring, playerIndex)
 	// Right edge: from the tip back down to the base near the center.
-	for j := rightCount; j >= 1; j-- {
-		t := float64(j) / float64(rightCount+1)
-		addNode(plan[leftCount+rightCount-j], leafPoint(rightCtrl, t))
+	for index := rightCount; index >= 1; index-- {
+		t := float64(index) / float64(rightCount+1)
+		addNode(plan[leftCount+rightCount-index],
+			helpers.GetVectorOnQuadraticBezierCurve(
+				startPosition, createPosition(rightCtrl, ctrlDist), endPosition, t))
 	}
 
 	return petal{ring: ring, player: playerIndex}

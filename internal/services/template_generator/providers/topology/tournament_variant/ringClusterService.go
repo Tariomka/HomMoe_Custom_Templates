@@ -3,11 +3,12 @@ package tournament_variant
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -25,7 +26,7 @@ func NewRingClusterService() *RingClusterService {
 func (this *RingClusterService) CreateClusterVariant(
 	configuration config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans, playerNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	ringLabels := this.createLabels(playerNeutralZonePlans, playerLabel)
@@ -46,14 +47,14 @@ func (this *RingClusterService) CreateClusterVariant(
 }
 
 func (this *RingClusterService) createLabels(
-	playerNeutralZonePlans neutralZone.Plans,
+	playerNeutralZonePlans neutral_zone.Plans,
 	playerLabel string) []string {
-	sortedNeutralZonePlans := neutralZone.Plans{}
+	sortedNeutralZonePlans := neutral_zone.Plans{}
 	sortedNeutralZonePlans.AddPlans(playerNeutralZonePlans...)
 	sortedNeutralZonePlans.SortByBalanceScoreAscending()
 
 	zoneCount := len(sortedNeutralZonePlans)
-	orderedNeutralZonePlans := make(neutralZone.Plans, zoneCount)
+	orderedNeutralZonePlans := make(neutral_zone.Plans, zoneCount)
 	lowIndex, highIndex := 0, zoneCount-1
 	for index, zonePlan := range sortedNeutralZonePlans {
 		if index%2 == 0 {
@@ -67,7 +68,7 @@ func (this *RingClusterService) createLabels(
 
 	return append([]string{playerLabel},
 		linq.FromSlice(orderedNeutralZonePlans).
-			SelectString(func(x neutralZone.Plan) string { return x.Label }).
+			SelectString(func(x neutral_zone.Plan) string { return x.Label }).
 			ToSlice()...)
 }
 
@@ -75,7 +76,7 @@ func (this *RingClusterService) createZones(
 	configuration config.GeneratorConfig,
 	ringLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans neutral_zone.Plans,
 	playerIndex int) []entities.Zone {
 	count := len(ringLabels)
 
@@ -94,13 +95,13 @@ func (this *RingClusterService) createZones(
 			zones = append(zones, this.CreateSpawnZone(
 				label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
 				configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-				configuration.ZoneConfiguration.Advanced.PlayerZoneSize, tuning.RemoteFootholdCount,
+				configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
 				configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones, this.CreateNeutralZone(
 				linq.FromSlice(allNeutralZonePlans).
-					FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-				myConns, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
+					FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
+				myConns, configuration.ZoneConfiguration.NeutralZoneSize,
 				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
 		}
 	}
@@ -114,14 +115,14 @@ func (this *RingClusterService) createSinglePlayerZone(
 	tuning models.GenerationTuning) entities.Zone {
 	return this.CreateSpawnZone(
 		playerLabel, fmt.Sprintf("Player%d", playerIndex+1), nil, configuration.ZoneConfiguration.PlayerZoneCastles,
-		configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+		configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.PlayerZoneSize,
 		tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning)
 }
 
 func (this *RingClusterService) createConnections(
 	ringLabels, connectionNames []string,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans neutralZone.Plans,
+	allNeutralZonePlans neutral_zone.Plans,
 	playerLabel string) []entities.Connection {
 	ringCount := len(ringLabels)
 
@@ -140,18 +141,18 @@ func (this *RingClusterService) createConnections(
 			WithGuardMatchGroup(fmt.Sprintf("tourney_ring_guard_%s_%s", labelFrom, labelTo))
 
 		if currentIndex != 0 {
-			zoneFrom := "Neutral-" + labelFrom
+			zoneFrom := constants.NeutralZonePrefix + labelFrom
 			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
 		} else {
-			zoneFrom := "Spawn-" + labelFrom
+			zoneFrom := constants.PlayerZonePrefix + labelFrom
 			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
 		}
 
 		if nextIndex != 0 {
-			zoneTo := "Neutral-" + labelTo
+			zoneTo := constants.NeutralZonePrefix + labelTo
 			connectionBuilder.WithTo(zoneTo)
 		} else {
-			zoneTo := "Spawn-" + labelTo
+			zoneTo := constants.PlayerZonePrefix + labelTo
 			connectionBuilder.WithTo(zoneTo)
 		}
 

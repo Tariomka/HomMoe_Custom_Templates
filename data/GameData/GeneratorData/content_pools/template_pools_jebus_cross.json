@@ -34,7 +34,7 @@
 				"includeLists": 	[ "basic_content_list_pickup_scroll_box" ]
 			},
 
-			{ 	"weight": 400000,
+			{ 	"weight": 340000,
 				"includeLists":		[ "template_pool_jebus_cross_guarded_start_zone_pandora_box" ]
 			},
 			{ 	"weight": 0,
@@ -77,7 +77,7 @@
 			},
 			{ 	"weight": 7500,
 				"includeLists": 	[ "basic_content_list_building_epic_interact" ],
-				"content": 			[ { "sid" : "tree_of_abundance", "weight": 50 } ]
+				"content": 			[ { "sid" : "tree_of_abundance", "weight": 50 }, { "sid" : "eternal_dragon", "weight": 0 } ]
 			},
 
 			{ 	"weight": 80000,
@@ -162,9 +162,9 @@
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_3" ]
 			},
 
-			{ 	"weight": 80000,
+			{ 	"weight": 40000,
 				"includeLists": 	[ "basic_content_list_building_guarded_units_banks_no_biome_restriction" ],
-				"content": 			[ { "sid" : "point_of_balance", "weight": 30 } ]			
+				"content": 			[ { "sid" : "point_of_balance", "weight": 0 } ]			
 			}
 		],
 		"bans": [  ]

@@ -390,7 +390,7 @@
 				{ "name": "mercury", "cost": 2 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 6, 6, 6, 6 ],
+			"manaCost": [ 8, 8, 8, 8 ],
 			"battleMagic":
 			{
 				"cd": -99,
@@ -427,7 +427,7 @@
 						"buff": 
 						{
 							"sid": "magic_haste_effect_0",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						},
 						"targetMechanics":
@@ -463,7 +463,7 @@
 						"buff": 
 						{
 							"sid": "magic_haste_effect_1",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						},
 						"targetMechanics":
@@ -499,7 +499,7 @@
 						"buff": 
 						{
 							"sid": "magic_haste_effect_1",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						},
 						"targetMechanics":
@@ -537,7 +537,7 @@
 						"buff": 
 						{
 							"sid": "magic_haste_effect_2",
-							"duration": 1,
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						},
 						"targetMechanics":

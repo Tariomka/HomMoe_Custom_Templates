@@ -7,46 +7,24 @@ package connection_editor
 import (
 	"fmt"
 	"math"
-	"strconv"
-	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
-
-// connectionRefType is the TypedRef.Type used for a road endpoint that targets a
-// zone connection.
-const connectionRefType = "Connection"
-
-// mainObjectRefType is the TypedRef.Type used for a road endpoint that targets a
-// zone main object (a castle, abandoned outpost, etc.).
-const mainObjectRefType = "MainObject"
 
 // isCastleRoad reports whether a road connects two of the zone's own main
 // objects (the stone castle<->castle roads). These must be regenerated whenever
 // the zone's main-object count changes, otherwise added castles end up with no
 // road and removed castles leave dangling roads.
 func isCastleRoad(road entities.Road) bool {
-	return road.From.Type == mainObjectRefType && road.To.Type == mainObjectRefType
-}
-
-// buildCastleRoads returns the stone roads linking the primary main object
-// (index 0) to every other main object, matching the generator's
-// castle<->castle roads. Returns nil for zones with fewer than two main objects.
-func buildCastleRoads(mainObjectCount int) []entities.Road {
-	var roads []entities.Road
-	for i := 1; i < mainObjectCount; i++ {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithStoneType().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i))).
-				Build())
-	}
-	return roads
+	connectionTypes := registry.GetRoadConnectionTypeValues()
+	return road.From.Type == connectionTypes.MainObject && road.To.Type == connectionTypes.MainObject
 }
 
 // EnsureConnectionNames assigns a unique name to every connection that does not
@@ -64,9 +42,10 @@ func EnsureConnectionNames(connections []entities.Connection) {
 		if connections[i].Name != "" {
 			continue
 		}
+
 		prefix := fmt.Sprintf("Manual-%s-%s",
-			ZoneLetterFromName(connections[i].From),
-			ZoneLetterFromName(connections[i].To))
+			helpers.GetZoneLabel(connections[i].From),
+			helpers.GetZoneLabel(connections[i].To))
 		name := prefix
 		for suffix := 2; used[name]; suffix++ {
 			name = fmt.Sprintf("%s-%d", prefix, suffix)
@@ -105,6 +84,7 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 		}
 	}
 
+	connectionTypes := registry.GetRoadConnectionTypeValues()
 	for i := range zones {
 		zone := &zones[i]
 
@@ -113,28 +93,27 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 		// below to match the current main-object count).
 		preserved := make([]entities.Road, 0, len(zone.Roads))
 		for _, road := range zone.Roads {
-			if road.From.Type == connectionRefType || road.To.Type == connectionRefType {
+			if road.From.Type == connectionTypes.Connection || road.To.Type == connectionTypes.Connection {
 				continue
 			}
+
 			if isCastleRoad(road) {
 				continue
 			}
+
 			preserved = append(preserved, road)
 		}
 
-		// Regenerate the castle<->castle roads first so they keep the leading
-		// position the generator gives them.
-		roads := buildCastleRoads(len(zone.MainObjects))
-		roads = append(roads, preserved...)
+		mainObjectCount := len(zone.MainObjects)
+		roads := append(topology.CreateOuterZoneRoads(nil, mainObjectCount, 0, true), preserved...)
 
 		names := connectionsByZone[zone.Name]
-		if len(zone.MainObjects) > 0 {
+		if mainObjectCount > 0 {
 			for _, name := range names {
-				roads = append(roads,
-					variant_content.NewRoadBuilder().
-						WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-						WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
-						Build())
+				roads = append(roads, variant_content.NewRoadBuilder().
+					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
+					WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
+					Build())
 			}
 		} else {
 			roads = append(roads, topology.CreateConnectorZoneRoads(names, true)...)
@@ -144,30 +123,19 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 	}
 }
 
-// zoneLabels mirrors the generator's label pool (zones.ZoneLabelProvider).
-var zoneLabels = []string{
-	"A", "B", "C", "D", "E", "F", "G", "H",
-	"I", "J", "K", "L", "M", "N", "O", "P",
-	"Q", "R", "S", "T", "U", "V", "W", "X",
-	"Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF",
-}
-
-// QualityLabels are the display names of the neutral-zone quality presets,
-// indexed by neutralZone.Quality.
-var QualityLabels = []string{"Low", "Medium", "High"}
-
 // NextFreeZoneLabel returns the first generator label not used by any zone, or
 // "" when the pool is exhausted.
 func NextFreeZoneLabel(zones []entities.Zone) string {
 	used := make(map[string]bool, len(zones))
 	for _, zone := range zones {
-		used[ZoneLetterFromName(zone.Name)] = true
+		used[helpers.GetZoneLabel(zone.Name)] = true
 	}
-	for _, label := range zoneLabels {
+	for _, label := range constants.GetZoneLabels() {
 		if !used[label] {
 			return label
 		}
 	}
+
 	return ""
 }
 
@@ -176,12 +144,12 @@ func NextFreeZoneLabel(zones []entities.Zone) string {
 // because no template-level definition exists for a manual zone.
 func NewDefaultNeutralZone(
 	label string,
-	quality neutralZone.Quality,
+	quality neutral_zone.Quality,
 	castleCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
 	topology := base.NewTopologyBase()
-	plan := neutralZone.Plan{Label: label, Quality: quality, CastleCount: castleCount}
+	plan := neutral_zone.Plan{Label: label, Quality: quality, CastleCount: castleCount}
 	zone := topology.CreateNeutralZone(plan, nil, 1.0, tuning.RemoteFootholdCount, generateRoads, tuning, false)
 	zone.MandatoryContent = nil
 	return zone
@@ -191,7 +159,7 @@ func NewDefaultNeutralZone(
 func CountZoneCastles(zone entities.Zone) int {
 	count := 0
 	for _, mainObject := range zone.MainObjects {
-		if strings.EqualFold(mainObject.Type, "City") {
+		if mainObject.Type == registry.GetMainObjectTypeValues().City {
 			count++
 		}
 	}
@@ -203,10 +171,10 @@ func CountZoneCastles(zone entities.Zone) int {
 // the requested count. Only meaningful for neutral zones.
 func ApplyNeutralZoneQuality(
 	zone *entities.Zone,
-	quality neutralZone.Quality,
+	quality neutral_zone.Quality,
 	castleCount int,
 	tuning models.GenerationTuning) {
-	profile := neutralZone.NewNeutralZoneProfile(quality)
+	profile := neutral_zone.NewNeutralZoneProfile(quality)
 	zone.Layout = profile.Layout
 	zone.GuardMultiplier = tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)
 	zone.GuardReactionDistribution = profile.GuardReactionDistribution
@@ -228,7 +196,7 @@ func ApplyNeutralZoneQuality(
 
 	// Regenerate the castle<->castle roads so the rebuilt castles are
 	// road-connected. Other roads (connection and foothold roads) are left for
-	// RebuildZoneConnectionRoads to finalise once the edit is applied.
+	// RebuildZoneConnectionRoads to finalize once the edit is applied.
 	rebuildCastleRoads(zone)
 }
 

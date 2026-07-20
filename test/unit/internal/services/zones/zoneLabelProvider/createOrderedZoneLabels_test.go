@@ -4,15 +4,15 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
-func mediumPlans(labels ...string) []neutralZone.Plan {
-	plans := make([]neutralZone.Plan, len(labels))
+func mediumPlans(labels ...string) []neutral_zone.Plan {
+	plans := make([]neutral_zone.Plan, len(labels))
 	for i, label := range labels {
-		plans[i] = neutralZone.Plan{Label: label, Quality: neutralZone.QualityMedium}
+		plans[i] = neutral_zone.Plan{Label: label, Quality: neutral_zone.QualityMedium}
 	}
 	return plans
 }

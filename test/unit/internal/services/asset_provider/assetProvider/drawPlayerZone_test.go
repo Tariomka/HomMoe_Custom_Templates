@@ -13,7 +13,7 @@ func TestWhenPlayerZoneIsDrawn_CanvasIsMutated(t *testing.T) {
 	blankPixels := append([]uint8(nil), newCanvas().Pix...)
 
 	// Act
-	canvas := renderPlayer(t, preview.Zone{Owner: 1, IsPlayer: true})
+	canvas := renderPlayer(t, preview.Zone{Owner: 1, Type: preview.ZoneTypePlayer})
 
 	// Assert
 	assert.NotEqual(t, blankPixels, canvas.Pix)
@@ -22,10 +22,10 @@ func TestWhenPlayerZoneIsDrawn_CanvasIsMutated(t *testing.T) {
 func TestWhenOwnerIsBelowRange_FallsBackToFirstPlayerSprite(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	firstPlayerCanvas := renderPlayer(t, preview.Zone{Owner: 1, IsPlayer: true})
+	firstPlayerCanvas := renderPlayer(t, preview.Zone{Owner: 1, Type: preview.ZoneTypePlayer})
 
 	// Act
-	canvas := renderPlayer(t, preview.Zone{Owner: 0, IsPlayer: true})
+	canvas := renderPlayer(t, preview.Zone{Owner: 0, Type: preview.ZoneTypePlayer})
 
 	// Assert
 	assert.Equal(t, firstPlayerCanvas.Pix, canvas.Pix)
@@ -34,10 +34,10 @@ func TestWhenOwnerIsBelowRange_FallsBackToFirstPlayerSprite(t *testing.T) {
 func TestWhenOwnerIsAboveRange_FallsBackToLastPlayerSprite(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	lastPlayerCanvas := renderPlayer(t, preview.Zone{Owner: 8, IsPlayer: true})
+	lastPlayerCanvas := renderPlayer(t, preview.Zone{Owner: 8, Type: preview.ZoneTypePlayer})
 
 	// Act
-	canvas := renderPlayer(t, preview.Zone{Owner: 99, IsPlayer: true})
+	canvas := renderPlayer(t, preview.Zone{Owner: 99, Type: preview.ZoneTypePlayer})
 
 	// Assert
 	assert.Equal(t, lastPlayerCanvas.Pix, canvas.Pix)
@@ -46,10 +46,10 @@ func TestWhenOwnerIsAboveRange_FallsBackToLastPlayerSprite(t *testing.T) {
 func TestWhenOwnersDiffer_DrawsDifferentSprites(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	firstPlayerCanvas := renderPlayer(t, preview.Zone{Owner: 1, IsPlayer: true})
+	firstPlayerCanvas := renderPlayer(t, preview.Zone{Owner: 1, Type: preview.ZoneTypePlayer})
 
 	// Act
-	canvas := renderPlayer(t, preview.Zone{Owner: 2, IsPlayer: true})
+	canvas := renderPlayer(t, preview.Zone{Owner: 2, Type: preview.ZoneTypePlayer})
 
 	// Assert
 	assert.NotEqual(t, firstPlayerCanvas.Pix, canvas.Pix)

@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
@@ -29,9 +30,11 @@ var (
 	loadAssetProvider = sync.OnceValues(buildAssetProvider)
 
 	neutralAssetNames = []string{
+		"neutral_none", "neutral_none_castle",
 		"neutral_low", "neutral_low_castle",
 		"neutral_medium", "neutral_medium_castle",
 		"neutral_high", "neutral_high_castle",
+		"neutral_highest", "neutral_highest_castle",
 	}
 )
 
@@ -157,17 +160,21 @@ func (this *AssetProvider) calculateBilinearInterpolation(asset image.Image, pos
 }
 
 func (this *AssetProvider) getNeutralZoneAsset(zone preview.Zone) image.Image {
-	quality := "low"
-	switch zone.Tier {
-	case 3:
+	quality := "none"
+	switch zone.Quality {
+	case neutral_zone.QualityHighest:
+		quality = "highest"
+	case neutral_zone.QualityHigh:
 		quality = "high"
-	case 2:
+	case neutral_zone.QualityMedium:
 		quality = "medium"
-	case 1:
+	case neutral_zone.QualityLow:
 		quality = "low"
+	case neutral_zone.QualityLowest, neutral_zone.QualityUnknown:
 	}
+
 	name := "neutral_" + quality
-	if zone.HasCastle {
+	if zone.HasCastles() {
 		name += "_castle"
 	}
 	return this.neutralZones[name]

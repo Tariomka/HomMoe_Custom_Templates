@@ -22,9 +22,6 @@ type RmgTemplate struct {
 
 	ValueOverrides []template_override.ValueOverride `json:"valueOverrides,omitempty"`
 
-	// A handful of templates ("OctoJebus") declare a stray top-level `orientation` /
-	// `border` block alongside `variants`. These hold the same data as Variant's own
-	// orientation/border and are preserved here for round-trip fidelity.
 	Orientation *template_variant.Orientation `json:"orientation,omitempty"`
 	Border      *template_variant.Border      `json:"border,omitempty"`
 

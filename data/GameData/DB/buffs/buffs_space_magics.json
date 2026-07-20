@@ -179,7 +179,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.25 }	]	}	}	}
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.30 }	]	}	}	}
 		},
 		{
 			"id": "magic_optical_illusion_effect_1",
@@ -196,7 +196,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.50 }	]	}	}	}
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.60 }	]	}	}	}
 		},
 		{
 			"id": "magic_optical_illusion_effect_2",
@@ -213,7 +213,7 @@
 			
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.50 },	{ "t": "range_attack", "v": -0.50 }	]	}	}	}
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.60 },	{ "t": "range_attack", "v": -0.60 }	]	}	}	}
 		},
 
 
@@ -278,8 +278,8 @@
 			"name_": "space_10_magic_mirror_copy_name",
 			"description_": "magic_mirror_copy_effect_description",
 
-			"tags": [ "negative" ],
-			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+			"tags": [  ],
+			"isPositive": true,	"hidden": false,	"canDispel": false,	"ignoreDurationBuffs": true,
 
 			"addition": "duration",
 
@@ -330,8 +330,8 @@
 			"name_": "space_10_magic_mirror_copy_name",
 			"description_": "magic_mirror_copy_effect_description",
 
-			"tags": [ "negative" ],
-			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+			"tags": [  ],
+			"isPositive": true,	"hidden": false,	"canDispel": false,	"ignoreDurationBuffs": true,
 
 			"addition": "duration",
 
@@ -383,8 +383,8 @@
 			"name_": "space_10_magic_mirror_copy_name",
 			"description_": "magic_mirror_copy_effect_description",
 
-			"tags": [ "negative" ],
-			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+			"tags": [  ],
+			"isPositive": true,	"hidden": false,	"canDispel": false,	"ignoreDurationBuffs": true,
 
 			"addition": "duration",
 
@@ -436,8 +436,8 @@
 			"name_": "space_10_magic_mirror_copy_name",
 			"description_": "magic_mirror_copy_effect_description",
 
-			"tags": [ "negative" ],
-			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+			"tags": [  ],
+			"isPositive": true,	"hidden": false,	"canDispel": false,	"ignoreDurationBuffs": true,
 
 			"addition": "duration",
 

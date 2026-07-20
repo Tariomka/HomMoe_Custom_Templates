@@ -9,5 +9,18 @@ import "image"
 // side so each connection stays individually visible.
 type Connection struct {
 	Start, Ctrl, End image.Point
-	Portal           bool
+	Type             ConnectionType
 }
+
+func (this Connection) IsPortal() bool {
+	return this.Type == ConnectionTypePortal
+}
+
+type ConnectionType uint8
+
+const (
+	ConnectionTypeDirect ConnectionType = iota
+	ConnectionTypePortal
+	ConnectionTypeGladiatorArena
+	ConnectionTypeProximity
+)

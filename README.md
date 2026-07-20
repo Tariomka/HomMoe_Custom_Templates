@@ -7,6 +7,9 @@ DISCLAIMER: This is a semi-AI generated rewrite of the original [Olden Era - Tem
 for personal use, developing on Windows and using on Linux (SteamDeck).
 All credit and inspiration goes to the people behind that project.
 Don't use this project, instead go to the original.
+Don't contribute to this project - some of this stuff is already AI generated,
+I don't want to maintain other people code on top of that.
+![Don't touch my garbage](docs/garbage.jpg)
 
 The app lets you configure every knob the game's RMG exposes (players, map
 size, topology, zone counts, victory conditions, neutral zone quality
@@ -232,14 +235,14 @@ go test ./test/models/ -run TestSettingsFile_RoundTrip
 # Integration tests
 go test -tags integration_test ./test/integration/... -count=1
 
+# Integration tests with UI
+go test '-tags=integration_test,gui' ./test/integration/gui/... -count=1 -args headed
+
 # Performance tests
 go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
 
-# Performance tests with UI
-go test -tags integration_test ./test/performance/... -bench . -benchtime 3x -timeout 30s -args headed
-
-# Performance tests with UI and profiling
-go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s -args headed
+# Performance tests with profiling
+go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s
 ```
 
 ## Notes

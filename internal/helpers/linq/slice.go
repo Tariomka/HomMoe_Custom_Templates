@@ -123,6 +123,39 @@ func (this Query[T]) Any() bool {
 	return found
 }
 
+func (this Query[T]) AnyFunc(predicate Predicate[T]) bool {
+	found := false
+
+	this.Iterate(func(item T) bool {
+		if predicate(item) {
+			found = true
+			return false
+		}
+
+		return true
+	})
+
+	return found
+}
+
+func (this Query[T]) AllFunc(predicate Predicate[T]) bool {
+	if !this.Any() {
+		return false
+	}
+
+	all := true
+	this.Iterate(func(item T) bool {
+		if !predicate(item) {
+			all = false
+			return false
+		}
+
+		return true
+	})
+
+	return all
+}
+
 // Distinct method returns distinct elements from a collection. The result is an
 // unordered collection that contains no duplicate values.
 func (this Query[T]) Distinct() Query[T] {

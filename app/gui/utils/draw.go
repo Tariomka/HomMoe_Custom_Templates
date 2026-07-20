@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"strings"
 
 	"gioui.org/f32"
 	"gioui.org/font"
@@ -16,6 +15,8 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
@@ -29,7 +30,7 @@ func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int)
 
 	lineColor := themes.ColorsPreview.DirectLine
 	lineWidth := float32(gtx.Dp(unit.Dp(2.0)))
-	if conn.Portal {
+	if conn.IsPortal() {
 		lineColor = themes.ColorsPreview.PortalLine
 		lineWidth = float32(gtx.Dp(unit.Dp(1.5)))
 	}
@@ -38,11 +39,10 @@ func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int)
 
 func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zone, zoneRadius int) {
 	radius := zoneRadius
-	if zone.IsHub && radius < 28 {
-		radius = 28
+	if zone.Type == preview.ZoneTypeHub {
+		radius = max(radius, 28)
 	}
-	cx, cy := zone.Center.X, zone.Center.Y
-	rect := image.Rect(cx-radius, cy-radius, cx+radius, cy+radius)
+	rect := image.Rect(zone.Center.X-radius, zone.Center.Y-radius, zone.Center.X+radius, zone.Center.Y+radius)
 
 	fill, edge := zoneColors(zone)
 	circle := clip.UniformRRect(rect, radius).Op(gtx.Ops)
@@ -54,20 +54,12 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zon
 
 	label := zoneLabel(zone)
 	if label != "" {
-		drawOffsetText(gtx, theme, image.Pt(cx, cy), label, 12, themes.ColorsPreview.ZoneLabel)
+		drawOffsetText(gtx, theme, zone.Center, label, 12, themes.ColorsPreview.ZoneLabel)
 	}
-	if zone.HasCastle && zone.Castles > 0 {
-		// Small badge in lower right.
-		badgeX := cx + radius/2
-		badgeY := cy + radius/2
+	if zone.HasCastles() {
 		drawOffsetText(
-			gtx,
-			theme,
-			image.Pt(badgeX, badgeY),
-			fmt.Sprintf("⌂%d", zone.Castles),
-			10,
-			themes.ColorsPreview.CastleBadge,
-		)
+			gtx, theme, zone.Center.Add(image.Pt(radius/2, radius/2)),
+			fmt.Sprintf("⌂%d", zone.Castles), 10, themes.ColorsPreview.CastleBadge)
 	}
 }
 
@@ -104,50 +96,71 @@ func drawOffsetText(
 	}()
 	call := macro.Stop()
 
-	tx := offset.X - dims.Size.X/2
-	ty := offset.Y - dims.Size.Y/2
-	stack := op.Offset(image.Pt(tx, ty)).Push(gtx.Ops)
+	stack := op.Offset(offset.Sub(dims.Size.Div(2))).Push(gtx.Ops)
 	call.Add(gtx.Ops)
 	stack.Pop()
 }
 
 func zoneColors(zone preview.Zone) (fill, edge color.NRGBA) {
-	switch {
-	case zone.IsPlayer:
+	switch zone.Type {
+	case preview.ZoneTypePlayer:
 		return themes.ColorsPreview.SpawnFill, themes.ColorsPreview.SpawnEdge
-	case zone.IsHub:
+	case preview.ZoneTypeHub:
 		return themes.ColorsPreview.HubFill, themes.ColorsPreview.HubEdge
+	case preview.ZoneTypeNeutral, preview.ZoneTypeUnknown:
 	}
-	switch zone.Tier {
-	case 3:
+
+	switch zone.Quality {
+	case neutral_zone.QualityHighest:
+		return themes.ColorsPreview.PlatinumFill, themes.ColorsPreview.PlatinumEdge
+	case neutral_zone.QualityHigh:
 		return themes.ColorsPreview.GoldFill, themes.ColorsPreview.GoldEdge
-	case 2:
+	case neutral_zone.QualityMedium:
 		return themes.ColorsPreview.SilverFill, themes.ColorsPreview.SilverEdge
-	default:
+	case neutral_zone.QualityLow:
 		return themes.ColorsPreview.BronzeFill, themes.ColorsPreview.BronzeEdge
+	case neutral_zone.QualityLowest:
+		return themes.ColorsPreview.PlasticFill, themes.ColorsPreview.PlasticEdge
+	case neutral_zone.QualityUnknown:
+		fallthrough
+	default:
+		// shouldn't happen, but if it does, at least it's visible
+		return color.NRGBA{A: 255}, color.NRGBA{R: 255, G: 255, B: 255, A: 255}
 	}
 }
 
 func zoneLabel(zone preview.Zone) string {
-	if zone.IsPlayer {
+	if zone.Type == preview.ZoneTypePlayer {
 		if zone.Owner > 0 {
 			return fmt.Sprintf("P%d", zone.Owner)
 		}
+
 		// Spawn-1 / Spawn-2 → "P1"...
-		if strings.HasPrefix(zone.Name, "Spawn-") {
+		if zone_helpers.IsZoneNamePlayer(zone.Name) {
 			return "P" + zone.Name[len("Spawn-"):]
 		}
-		return zone.Letter
+
+		return zone.Label
 	}
-	if zone.IsHub {
+
+	if zone.Type == preview.ZoneTypeHub {
 		return "Hub"
 	}
-	switch zone.Tier {
-	case 3:
+
+	switch zone.Quality {
+	case neutral_zone.QualityHighest:
+		return "Pt"
+	case neutral_zone.QualityHigh:
 		return "G"
-	case 2:
+	case neutral_zone.QualityMedium:
 		return "S"
-	default:
+	case neutral_zone.QualityLow:
 		return "B"
+	case neutral_zone.QualityLowest:
+		return "p"
+	case neutral_zone.QualityUnknown:
+		fallthrough
+	default:
+		return "?"
 	}
 }

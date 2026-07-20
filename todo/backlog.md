@@ -8,6 +8,8 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
   editor geometry. Related: `Zone.GeneratorPosition *[2]float64` in the
   read-only schema would ideally share that Vec2 type.
 
+- remove the [2]float from the template entities for example entities/template/template_variant/zone.go. It's easier to use Vec2 instead
+
 - **`createTopologyAdjacency` dead Chain/Ring branches**:
   `internal/services/zones/zoneLabelProvider.go` — the `case TopologyChain` and
   `case TopologyRing, TopologyCircles` branches (plus the `isIsolated` guard
@@ -24,4 +26,14 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
     Chain/Ring/Circles topologies, which would also fix the `default` branch
     modelling Hub & Spoke as a sequential ring instead of its real star graph.
 
-- remove the [2]float from the template entities for example entities/template/template_variant/zone.go. It's easier to use Vec2 instead
+- need to add untracked zone tier property to Entities and/or method. This will be the source of truth for all tier related operations.
+  As currently there is no reading of rmg.json files, deserialization doesn't matter so the entity can assume the tier from the content currently inside the zone.
+  Or maybe Zone doesn't actually need a property, neutralZone.Quality can be used to track and infer this information as well as neutralZone.Profile can have this property.
+
+- need to consolidate road distances - there are multiple implementations and UI uses services directly
+
+- need to add that anything inside app should only use entities, models, handlers and commons, not services
+
+- need to use common (either from commons or models) values for template generation
+
+- either random portals or connections in general to hub have incorrect guard values

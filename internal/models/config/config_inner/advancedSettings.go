@@ -1,36 +1,23 @@
 package config_inner
 
-import (
-	"math"
-
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-)
-
 type AdvancedSettings struct {
-	Enabled                     bool
-	NeutralLowNoCastleCount     int
-	NeutralLowCastleCount       int
+	NeutralLowestNoCastleCount  int
+	NeutralLowestCastleCount    int
+	NeutralLowestCastlesPerZone int
+
+	NeutralLowNoCastleCount  int
+	NeutralLowCastleCount    int
+	NeutralLowCastlesPerZone int
+
 	NeutralMediumNoCastleCount  int
 	NeutralMediumCastleCount    int
-	NeutralHighNoCastleCount    int
-	NeutralHighCastleCount      int
-	NeutralLowCastlesPerZone    int
 	NeutralMediumCastlesPerZone int
-	NeutralHighCastlesPerZone   int
-	PlayerZoneSize              float64
-	NeutralZoneSize             float64
-	GuardRandomization          float64
-}
 
-func (this AdvancedSettings) GetEffectiveGuardRandomization() float64 {
-	if !this.Enabled {
-		return 0.05
-	}
+	NeutralHighNoCastleCount  int
+	NeutralHighCastleCount    int
+	NeutralHighCastlesPerZone int
 
-	randomizationValue := this.GuardRandomization
-	if math.IsNaN(randomizationValue) || math.IsInf(randomizationValue, 0) {
-		return 0.05
-	}
+	HubZoneCastles int
 
-	return helpers.RoundWithPrecision(math.Max(0, math.Min(randomizationValue, 0.5)), 3)
+	Enabled bool
 }

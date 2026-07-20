@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/stretchr/testify/assert"
 )
@@ -90,4 +91,72 @@ func TestWhenHubHasMultipleCastles_MainObjectCountMatchesCastleCount(t *testing.
 
 	// Assert
 	assert.Len(t, zone.MainObjects, 3)
+}
+
+func TestWhenHubZoneIsCreated_UsesHighestProfileGuardedPool(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	zone := topologyBase.CreateHubZone(nil, newUnitTuning(), false, 1.0, 1, true, "")
+
+	// Assert
+	assert.Equal(
+		t,
+		neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityHighest).GuardedContentPool,
+		zone.GuardedContentPool,
+	)
+}
+
+func TestWhenHubZoneIsCreated_UsesHighestProfileResourcesPool(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	zone := topologyBase.CreateHubZone(nil, newUnitTuning(), false, 1.0, 1, true, "")
+
+	// Assert
+	assert.Equal(
+		t,
+		neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityHighest).ResourcesContentPool,
+		zone.ResourcesContentPool,
+	)
+}
+
+func TestWhenHubZoneIsCreated_UsesHighestProfileGuardedContentValue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	zone := topologyBase.CreateHubZone(nil, newUnitTuning(), false, 1.0, 1, true, "")
+
+	// Assert
+	assert.Equal(t, 960000, zone.GuardedContentValue)
+}
+
+func TestWhenHubZoneIsCreated_UsesHighestProfileGuardMultiplier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	zone := topologyBase.CreateHubZone(nil, newUnitTuning(), false, 1.0, 1, true, "")
+
+	// Assert
+	assert.InDelta(t, 2.3, zone.GuardMultiplier, 1e-9)
+}
+
+func TestWhenHubZoneIsCreated_ClassifiesAsHighestQuality(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	zone := topologyBase.CreateHubZone(nil, newUnitTuning(), false, 1.0, 1, true, "")
+
+	// Assert
+	assert.Equal(t, neutral_zone.QualityHighest, neutral_zone.GetQualityFrom(zone))
 }

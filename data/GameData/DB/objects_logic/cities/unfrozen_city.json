@@ -489,9 +489,10 @@
 							"nodePos": { "xPos": 4, "yPos": 2 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 4750 },
+								{ "name": "gold",		"cost": 3750 },
 								{ "name": "wood",		"cost": 5 },
-								{ "name": "ore",		"cost": 5 }
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "mercury",	"cost": 5 }
 							]
 						},
 						{
@@ -502,7 +503,7 @@
 							"nodePos": { "xPos": 4, "yPos": 3 },
 							"costs":
 							[
-								{ "name": "gold",		"cost": 1500 },
+								{ "name": "gold",		"cost": 2000 },
 								{ "name": "wood",		"cost": 15 },
 								{ "name": "ore",		"cost": 15 },
 								{ "name": "dust",		"cost": 50 }
@@ -537,9 +538,10 @@
 							"nodePos": { "xPos": 5, "yPos": 3 },
 							"costs":
 							[
-								{ "name": "gold", 		"cost": 7750 },
+								{ "name": "gold", 		"cost": 6250 },
 								{ "name": "wood",		"cost": 5 },
-								{ "name": "ore",		"cost": 5 }
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "mercury",	"cost": 5 }
 							]
 						},
 						{
@@ -586,10 +588,10 @@
 							"nodePos": { "xPos": 6, "yPos": 2 },
 							"costs":
 							[
-								{ "name": "gold", 		"cost": 12500 },
+								{ "name": "gold", 		"cost": 15000 },
 								{ "name": "gemstones",	"cost": 5 },
 								{ "name": "crystals",	"cost": 5 },
-								{ "name": "mercury",		"cost": 20 }
+								{ "name": "mercury",	"cost": 15 }
 							]
 						},
 						{

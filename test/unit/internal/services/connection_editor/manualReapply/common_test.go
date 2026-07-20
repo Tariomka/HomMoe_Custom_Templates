@@ -5,7 +5,7 @@ package manualReapply_test
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
@@ -23,7 +23,7 @@ func defaultTuning() models.GenerationTuning {
 
 // makeNeutralZone builds a generator-shaped neutral zone for the given quality
 // and castle count.
-func makeNeutralZone(label string, quality neutralZone.Quality, castleCount int) entities.Zone {
+func makeNeutralZone(label string, quality neutral_zone.Quality, castleCount int) entities.Zone {
 	return connection_editor.NewDefaultNeutralZone(label, quality, castleCount, false, defaultTuning())
 }
 

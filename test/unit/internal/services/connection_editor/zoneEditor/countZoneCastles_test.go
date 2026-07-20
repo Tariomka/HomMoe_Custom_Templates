@@ -27,7 +27,7 @@ func TestWhenZoneHasMixedMainObjects_CountsOnlyCities(t *testing.T) {
 	assert.Equal(t, 2, count)
 }
 
-func TestWhenCityTypeDiffersInCase_CountsIt(t *testing.T) {
+func TestWhenCityTypeDiffersInCase_DoesNotCountIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	zone := entities.Zone{
@@ -38,7 +38,7 @@ func TestWhenCityTypeDiffersInCase_CountsIt(t *testing.T) {
 	count := connection_editor.CountZoneCastles(zone)
 
 	// Assert
-	assert.Equal(t, 1, count)
+	assert.Equal(t, 0, count)
 }
 
 func TestWhenZoneHasNoMainObjects_ReturnsZero(t *testing.T) {

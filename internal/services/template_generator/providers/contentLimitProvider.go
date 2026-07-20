@@ -29,6 +29,7 @@ func (this *ContentLimitProvider) CreateContentCountLimits(
 		}
 	}
 	tally(settings.PlayerZoneMandatoryContent)
+	tally(settings.LowestNeutralMandatoryContent)
 	tally(settings.LowNeutralMandatoryContent)
 	tally(settings.MediumNeutralMandatoryContent)
 	tally(settings.HighNeutralMandatoryContent)

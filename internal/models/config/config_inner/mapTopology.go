@@ -4,14 +4,19 @@ package config_inner
 type MapTopology string
 
 const (
-	TopologyRing        MapTopology = "Default"
-	TopologyHubAndSpoke MapTopology = "HubAndSpoke"
-	TopologyChain       MapTopology = "Chain"
-	TopologySharedWeb   MapTopology = "SharedWeb"
-	TopologyRandom      MapTopology = "Random"
-	TopologyCircles     MapTopology = "Circles"
-	TopologySquare      MapTopology = "Square"
-	TopologyGeometric   MapTopology = "Geometric"
-	TopologyCross       MapTopology = "Cross"
-	TopologyFractal     MapTopology = "Fractal"
+	TopologyRing         MapTopology = "Default"
+	TopologyHubAndSpoke  MapTopology = "HubAndSpoke"
+	TopologyChain        MapTopology = "Chain"
+	TopologySharedWeb    MapTopology = "SharedWeb"
+	TopologyRandom       MapTopology = "Random"
+	TopologyCircles      MapTopology = "Circles"
+	TopologySquare       MapTopology = "Square"
+	TopologyGeometric    MapTopology = "Geometric"
+	TopologyCross        MapTopology = "Cross"
+	TopologyFractal      MapTopology = "Fractal"
+	TopologyGeometricHub MapTopology = "GeometricHub"
 )
+
+func (this MapTopology) IsHubBased() bool {
+	return this == TopologyHubAndSpoke || this == TopologyGeometricHub
+}

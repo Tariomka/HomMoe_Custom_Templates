@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
@@ -26,7 +26,7 @@ func NewRingTopologyService() *RingTopologyService {
 func (this *RingTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
@@ -51,7 +51,7 @@ func (this *RingTopologyService) createZones(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	holdCityNeutralLabel string) []entities.Zone {
 	labelCount := len(orderedLabels)
 
@@ -82,15 +82,15 @@ func (this *RingTopologyService) createZones(
 			zones = append(zones,
 				this.CreateSpawnZone(
 					label, fmt.Sprintf("Player%d", pi+1), connNames, configuration.ZoneConfiguration.PlayerZoneCastles,
-					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.Advanced.PlayerZoneSize,
+					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.PlayerZoneSize,
 					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
 		} else {
 			zones = append(zones,
 				this.CreateNeutralZone(
 					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x neutralZone.Plan) bool { return x.Label == label }),
-					connNames, configuration.ZoneConfiguration.Advanced.NeutralZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
+						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
+					connNames, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
+					configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
 		}
 	}
 	return zones
@@ -100,7 +100,7 @@ func (this *RingTopologyService) createConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones neutralZone.Plans) []entities.Connection {
+	neutralZones neutral_zone.Plans) []entities.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
 		return nil

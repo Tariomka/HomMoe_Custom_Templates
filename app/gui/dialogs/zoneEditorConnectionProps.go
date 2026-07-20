@@ -11,7 +11,11 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widget {
@@ -34,32 +38,20 @@ func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widge
 		widgets.NewLabeledRowWidget(theme, "Guard zone", 110, this.guardZoneDropdown.GetWidget(theme)),
 		widgets.NewVerticalSpacerWidget(4),
 		widgets.NewLabeledRowWidget(theme, "Guard preset", 110, this.guardDropdown.GetWidget(theme)),
-		widgets.NewLabeledRowWidget(
-			theme,
-			"Guard value",
-			110,
-			widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false),
-		),
+		widgets.NewLabeledRowWidget(theme, "Guard value", 110,
+			widgets.NewTextboxWidget(theme, &this.guardValueEdit, "guard value", false)),
 		widgets.NewVerticalSpacerWidget(4),
 		widgets.NewLabeledRowWidget(theme, "Weekly +", 110, this.weeklyDropdown.GetWidget(theme)),
-		widgets.NewLabeledRowWidget(
-			theme,
-			"Increment",
-			110,
-			widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false),
-		),
+		widgets.NewLabeledRowWidget(theme, "Increment", 110,
+			widgets.NewTextboxWidget(theme, &this.weeklyEdit, "0.15", false)),
 		widgets.NewVerticalSpacerWidget(6),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.advancedBool, "Advanced options"),
 	)
 	if this.advancedBool.Value {
 		rows = append(
 			rows,
-			widgets.NewLabeledRowWidget(
-				theme,
-				"Match group",
-				110,
-				widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_...", false),
-			),
+			widgets.NewLabeledRowWidget(theme, "Match group", 110,
+				widgets.NewTextboxWidget(theme, &this.matchGroupEdit, "rnd_guard_...", false)),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.escapeBool, "Guard escape"),
 			widgets.NewLabeledCheckboxRowWidget(theme, &this.simSquadBool, "Sim turn squad"),
 		)
@@ -78,21 +70,22 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 	if connection == nil {
 		return
 	}
-	this.typeDropdown.SetItems(connection_editor.UserCreatableConnectionTypes())
+	this.typeDropdown.SetItems(common_connections.GetConnectionTypes())
 	if !this.typeDropdown.SelectByName(connection.ConnectionType) {
-		this.typeDropdown.SelectByName("Direct")
+		this.typeDropdown.SelectByName(registry.GetConnectionTypeValues().Direct)
 	}
 	this.guardZoneDropdown.SetItems([]string{connection.From, connection.To})
 	if !this.guardZoneDropdown.SelectByName(connection.GuardZone) {
 		this.guardZoneDropdown.SelectByName(connection.From)
 	}
-	tier := connection_editor.HigherTierOf(connection.From, connection.To, this.zones, this.playerZones)
-	labels, values := guardPresetItems(tier)
+	quality := zone_helpers.GetZoneConnectionGuardQuality(
+		connection.From, connection.To, this.zones, linq.FromMap(this.playerZones).SelectKeys().ToSlice())
+	labels, values := guardPresetItems(quality)
 	this.guardPresetValues = values
 	this.guardDropdown.SetItems(labels)
 	this.guardDropdown.SelectByName(matchGuardLabel(labels, values, connection.GuardValue))
 	this.guardValueEdit.SetText(strconv.Itoa(connection.GuardValue))
-	this.weeklyDropdown.SetItems(connection_editor.WeeklyIncrementLabels)
+	this.weeklyDropdown.SetItems(common_connections.GetGuardWeeklyIncrementLabels())
 	this.weeklyDropdown.SelectByName(matchWeeklyLabel(connection.GuardWeeklyIncrement))
 	this.weeklyEdit.SetText(formatIncrement(connection.GuardWeeklyIncrement))
 	this.matchGroupEdit.SetText(connection.GuardMatchGroup)
@@ -107,7 +100,7 @@ func (this *ZoneEditorDialog) writebackProps() {
 	if connection == nil {
 		return
 	}
-	typeItems := connection_editor.UserCreatableConnectionTypes()
+	typeItems := common_connections.GetConnectionTypes()
 	if index := this.typeDropdown.GetSelectedIndex(); index >= 0 && index < len(typeItems) {
 		connection.ConnectionType = typeItems[index]
 	}
@@ -124,9 +117,10 @@ func (this *ZoneEditorDialog) writebackProps() {
 		connection.GuardValue = value
 	}
 	if this.weeklyDropdown.WasUpdated {
+		weeklyIncrementValues := common_connections.GetGuardWeeklyIncrementValues()
 		if index := this.weeklyDropdown.GetSelectedIndex(); index >= 0 &&
-			index < len(connection_editor.WeeklyIncrementValues) {
-			this.weeklyEdit.SetText(formatIncrement(connection_editor.WeeklyIncrementValues[index]))
+			index < len(weeklyIncrementValues) {
+			this.weeklyEdit.SetText(formatIncrement(weeklyIncrementValues[index]))
 		}
 	}
 	if value, err := strconv.ParseFloat(strings.TrimSpace(this.weeklyEdit.Text()), 64); err == nil {
@@ -137,15 +131,10 @@ func (this *ZoneEditorDialog) writebackProps() {
 	connection.SimTurnSquad = this.simSquadBool.Value
 }
 
-func guardPresetItems(tier connection_editor.ZoneTier) (labels []string, values []int) {
-	for _, extra := range connection_editor.ExtrasForTier(tier) {
-		labels = append(labels, fmt.Sprintf("%s (%d)", extra.Label, extra.Value))
-		values = append(values, extra.Value)
-	}
-	presets := connection_editor.GuardPresetsForTier(tier)
-	for i, strength := range connection_editor.StrengthLabels {
-		labels = append(labels, fmt.Sprintf("%s (%d)", strength, presets[i]))
-		values = append(values, presets[i])
+func guardPresetItems(quality neutral_zone.Quality) (labels []string, values []int) {
+	for _, guardStrengths := range common_connections.GetGuardStrengthListForQuality(quality) {
+		labels = append(labels, fmt.Sprintf("%s (%d)", guardStrengths.Key, guardStrengths.Value))
+		values = append(values, guardStrengths.Value)
 	}
 	return labels, values
 }
@@ -160,9 +149,9 @@ func matchGuardLabel(labels []string, values []int, value int) string {
 }
 
 func matchWeeklyLabel(value float64) string {
-	for i, candidate := range connection_editor.WeeklyIncrementValues {
-		if math.Abs(candidate-value) < 1e-9 {
-			return connection_editor.WeeklyIncrementLabels[i]
+	for _, candidate := range common_connections.GetGuardWeeklyIncrementList() {
+		if math.Abs(candidate.Value-value) < 1e-9 {
+			return candidate.Key
 		}
 	}
 	return ""

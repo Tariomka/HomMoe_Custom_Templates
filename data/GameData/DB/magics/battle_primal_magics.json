@@ -821,8 +821,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 75,
-						"maxBaseDmg": 75,
+						"minBaseDmg": 50,
+						"maxBaseDmg": 50,
 						"minStackDmg": 10,
 						"maxStackDmg": 10,
 
@@ -853,8 +853,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 150,
-						"maxBaseDmg": 150,
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
 						"minStackDmg": 10,
 						"maxStackDmg": 10,
 
@@ -885,8 +885,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 150,
-						"maxBaseDmg": 150,
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
 						"minStackDmg": 15,
 						"maxStackDmg": 15,
 
@@ -917,8 +917,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 150,
-						"maxBaseDmg": 150,
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
 						"minStackDmg": 15,
 						"maxStackDmg": 15,
 
@@ -1077,7 +1077,7 @@
 				{ "name": "mercury", "cost": 6 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 10, 10, 10, 10 ],
+			"manaCost": [ 12, 12, 12, 12 ],
 			"battleMagic":
 			{
 				"hexEffect": "Prefabs_vfx/magic_cave_in_big_hex",
@@ -1103,8 +1103,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 50,
-						"maxBaseDmg": 50,
+						"minBaseDmg": 75,
+						"maxBaseDmg": 75,
 						"minStackDmg": 15,
 						"maxStackDmg": 15,
 						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
@@ -1129,8 +1129,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 100,
-						"maxBaseDmg": 100,
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
 						"minStackDmg": 15,
 						"maxStackDmg": 15,
 						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
@@ -1155,8 +1155,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 100,
-						"maxBaseDmg": 100,
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
 						"minStackDmg": 15,
 						"maxStackDmg": 15,
 						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle_1", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
@@ -1181,8 +1181,8 @@
 						},
 						
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
-						"minBaseDmg": 100,
-						"maxBaseDmg": 100,
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
 						"minStackDmg": 20,
 						"maxStackDmg": 20,
 						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle_1", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
@@ -1355,7 +1355,7 @@
 				{ "name": "mercury", "cost": 8 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 16, 16, 16, 16 ],
+			"manaCost": [ 12, 12, 12, 12 ],
 			"battleMagic":
 			{
 
@@ -1974,7 +1974,7 @@
 				{ "name": "mercury", "cost": 8 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 19, 19, 19, 19 ],
+			"manaCost": [ 21, 21, 21, 21 ],
 			"battleMagic":
 			{
 				"hexEffect": "Prefabs_vfx/magic_avalanche_hex",
@@ -2455,7 +2455,7 @@
 				{ "name": "mercury", "cost": 6 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 18, 18, 18, 18 ],
+			"manaCost": [ 11, 11, 11, 11 ],
 			"battleMagic":
 			{
 				"hexEffect": "Prefabs_vfx/magic_stones_fangs_hex",

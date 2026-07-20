@@ -11,7 +11,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.Widget {
@@ -29,7 +28,7 @@ func (this *LayoutPanel) getZonesWidget(theme *material.Theme) layout.Widget {
 			&this.sldPlayerCastles, utils.RoundedRangeFormatter(0, 4)),
 		widgets.NewBrightButtonLargeWidget(theme, "Edit player zone content...", &this.btnPlayerContent, false),
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.chkAdvancedZones,
-			"Advanced zone control (split low / medium / high tiers)"),
+			"Advanced zone control (split lowest / low / medium / high tiers)"),
 		func(gtx layout.Context) layout.Dimensions {
 			if !this.chkAdvancedZones.Value {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -48,6 +47,9 @@ func (this *LayoutPanel) getZonesWidget(theme *material.Theme) layout.Widget {
 
 func (this *LayoutPanel) getAdvancedZonesWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Advanced options", []layout.Widget{
+		this.getNeutralTierSectionWidget(theme, "Lowest tier",
+			&this.sldNeutralLowestNoCastle, &this.sldNeutralLowestCastle,
+			&this.sldNeutralLowestCastlesPerZone, &this.btnLowestContent),
 		this.getNeutralTierSectionWidget(theme, "Low tier",
 			&this.sldNeutralLowNoCastle, &this.sldNeutralLowCastle,
 			&this.sldNeutralLowCastlesPerZone, &this.btnLowContent),
@@ -78,11 +80,11 @@ func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, titl
 }
 
 // getHubTierSectionWidget renders the advanced Hub sub-section. It only appears
-// for the Hub & Spoke topology and (being nested inside the advanced options)
-// only while advanced zone control is enabled.
+// for the topologies that create a Hub zone and (being nested inside the
+// advanced options) only while advanced zone control is enabled.
 func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		if this.state.GetStateData().Topology != config.TopologyHubAndSpoke {
+		if !this.state.GetStateData().Topology.IsHubBased() {
 			return layout.Dimensions{}
 		}
 
@@ -129,6 +131,9 @@ func (this *LayoutPanel) handleZoneContentDialogClicks(gtx layout.Context) {
 	case this.btnPlayerContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Player", true, settings.PlayerZoneContentRows,
 			func(s *dtos.EditorStateDto, rows []models.ZoneContentRowSave) { s.PlayerZoneContentRows = rows })
+	case this.btnLowestContent.Clicked(gtx):
+		this.openZoneContentDialog("Zone Content: Lowest Neutral", false, settings.LowestNeutralContentRows,
+			func(s *dtos.EditorStateDto, rows []models.ZoneContentRowSave) { s.LowestNeutralContentRows = rows })
 	case this.btnLowContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Low Neutral", false, settings.LowNeutralContentRows,
 			func(s *dtos.EditorStateDto, rows []models.ZoneContentRowSave) { s.LowNeutralContentRows = rows })

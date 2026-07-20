@@ -5,15 +5,15 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 	"github.com/stretchr/testify/assert"
 )
 
-func newTwoNeutralPlans() neutralZone.Plans {
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("C", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutralZone.QualityHigh, 1)
+func newTwoNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityHigh, 1)
 	return neutralZones
 }
 
@@ -89,7 +89,7 @@ func TestWhenPlayerHasNoNeutralPlans_CreatesOnlySpawnZoneWithoutConnections(t *t
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	emptyPlans := neutralZone.Plans{}
+	emptyPlans := neutral_zone.Plans{}
 	tuning := models.NewGenerationTuning(configuration, 1)
 	service := tournament_variant.NewChainClusterService()
 

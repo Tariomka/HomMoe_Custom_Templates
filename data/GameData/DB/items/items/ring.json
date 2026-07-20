@@ -217,7 +217,7 @@
 			"icon": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact",
 
 			"name": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_name",
-			"description": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_description",
+			"description": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_alt_description",
 			"upgradeDescription": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_upgradeDescription",
 			"narrativeDescription": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_narrativeDescription",
 
@@ -239,6 +239,10 @@
 						"increment": -0.1,
 						"levelStep": 1
 					}
+				},
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_bonus" ]
 				}
 			]
 		},
@@ -279,7 +283,7 @@
 			"icon": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact",
 
 			"name": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_name",
-			"description": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_description",
+			"description": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_alt_description",
 			"upgradeDescription": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_upgradeDescription",
 			"narrativeDescription": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_narrativeDescription",
 
@@ -301,6 +305,10 @@
 						"increment": -0.05,
 						"levelStep": 1
 					}
+				},
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_bonus" ]
 				}
 			]
 		},

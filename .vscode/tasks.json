@@ -2,14 +2,55 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Go: Run Integration tests",
+            "label": "Go: Run Integration tests w/out UI",
             "type": "shell",
             "command": "go",
             "args": [
                 "test",
                 "-tags=integration_test",
                 "-count=1",
-                "./test/integration/...",
+                "./test/integration/..."
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Run UI Integration tests",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-tags", "integration_test,gui",
+                "-count=1",
+                "./test/integration/gui/...",
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Run UI Integration tests w/ headed mode",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-tags", "integration_test,gui",
+                "./test/integration/gui/...",
+                "-count=1",
+                "-args", "headed"
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Update UI Integration tests snapshots",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-tags", "integration_test,gui",
+                "./test/integration/gui/...",
+                "-count=1",
+                "-update"
             ],
             "group": "test",
             "problemMatcher": "$go"
@@ -30,7 +71,7 @@
                 // "-memprofile='memory.prof'",
                 "-benchtime=20x",
                 "-timeout=120s",
-                // "-args=headed"
+                "-args", "headed"
             ],
             "group": "test",
             "problemMatcher": "$go"

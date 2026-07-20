@@ -137,7 +137,7 @@
 			
 			"addition": "duration",
 			
-			"data":	{	"stats": 	{	"offence": 2,	"defence": 2	}	}
+			"data":	{	"stats": 	{	"offence": 3,	"defence": 3	}	}
 		},
 		{
 			"id": "magic_enlarge_shadow_effect_1",
@@ -154,7 +154,7 @@
 			
 			"addition": "duration",
 			
-			"data":	{	"stats": 	{	"offence": 2,	"defence": 2	}	},
+			"data":	{	"stats": 	{	"offence": 3,	"defence": 3	}	},
 
 			"actions":
 			[
@@ -246,7 +246,7 @@
 			
 			"addition": "duration",
 			
-			"data":	{	"stats": 	{	"offence": 2,	"defence": 2	}	}
+			"data":	{	"stats": 	{	"offence": 3,	"defence": 3	}	}
 		},
 
 		{
@@ -264,7 +264,7 @@
 			
 			"addition": "data",
 			
-			"data":	{	"stats": 	{	"offence": 4,	"defence": 4	}	}
+			"data":	{	"stats": 	{	"offence": 6,	"defence": 6	}	}
 		},
 
 
@@ -353,8 +353,8 @@
 						"damageType_": "absolute",
 						"statDmgMult": 0.0,
 
-						"minBaseDmg": 20,
-						"maxBaseDmg": 20,
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10,
 						"minStackDmg": 10,
 						"maxStackDmg": 10
 					}
@@ -416,8 +416,8 @@
 						"damageType_": "absolute",
 						"statDmgMult": 0.0,
 
-						"minBaseDmg": 30,
-						"maxBaseDmg": 30,
+						"minBaseDmg": 15,
+						"maxBaseDmg": 15,
 						"minStackDmg": 15,
 						"maxStackDmg": 15
 					}
@@ -479,8 +479,8 @@
 						"damageType_": "absolute",
 						"statDmgMult": 0.0,
 
-						"minBaseDmg": 20,
-						"maxBaseDmg": 20,
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10,
 						"minStackDmg": 10,
 						"maxStackDmg": 10
 					}
@@ -542,8 +542,8 @@
 						"damageType_": "absolute",
 						"statDmgMult": 0.0,
 
-						"minBaseDmg": 30,
-						"maxBaseDmg": 30,
+						"minBaseDmg": 15,
+						"maxBaseDmg": 15,
 						"minStackDmg": 15,
 						"maxStackDmg": 15
 					}
@@ -1175,14 +1175,14 @@
 			
 			"icon": "magic_vulnerability_effect_icon",
 			"name_": "night_11_magic_vulnerability_name",
-			"description_": "magic_vulnerability_effect_description",
+			"description_": "magic_vulnerability_effect_description_special",
 
 			"tags": [ "negative" ],
 			"isPositive": false,
 
 			"addition": "duration",
 
-			"data": {	"stats": 	{	"inAllDmgMod": 0.50	}	}
+			"data": {	"stats": 	{	"inAllDmgMod": 0.30		,	"alwaysTakeMaxDmg":	true	}	}
 		},
 
 
@@ -2712,14 +2712,14 @@
 			
 			"icon": "magic_vulnerability_effect_icon_special",
 			"name_": "night_11_magic_vulnerability_name",
-			"description_": "magic_vulnerability_effect_description_special",
+			"description_": "magic_vulnerability_effect_description",
 
 			"tags": [ "negative" ],
 			"isPositive": false,
 
-			"addition": "duration",
+			"addition": "combined",
 
-			"data": {	"stats": 	{	"inAllDmgMod": 0.20		,	"alwaysTakeMaxDmg":	true	}	}
+			"data": {	"stats": 	{	"inAllDmgMod": 0.20	}	}
 		},
 		{
 			"id": "magic_vulnerability_effect_1_special",
@@ -2729,14 +2729,14 @@
 			
 			"icon": "magic_vulnerability_effect_icon_special",
 			"name_": "night_11_magic_vulnerability_name",
-			"description_": "magic_vulnerability_effect_description_special",
+			"description_": "magic_vulnerability_effect_description",
 
 			"tags": [ "negative" ],
 			"isPositive": false,
 
-			"addition": "duration",
+			"addition": "combined",
 
-			"data": {	"stats": 	{	"inAllDmgMod": 0.30		,	"alwaysTakeMaxDmg":	true	}	}
+			"data": {	"stats": 	{	"inAllDmgMod": 0.30	}	}
 		},
 		{
 			"id": "magic_vulnerability_effect_2_special",
@@ -2751,9 +2751,9 @@
 			"tags": [ "negative" ],
 			"isPositive": false,
 
-			"addition": "duration",
+			"addition": "combined",
 
-			"data": {	"stats": 	{	"inAllDmgMod": 0.50		,	"alwaysTakeMaxDmg":	true	}	}
+			"data": {	"stats": 	{	"inAllDmgMod": 0.30		,	"alwaysTakeMaxDmg":	true	}	}
 		}
 	]
 }

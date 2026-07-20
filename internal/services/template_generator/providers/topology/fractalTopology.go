@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 // FractalTopologyService grows one self-similar fractal per player. Every player
@@ -31,7 +31,7 @@ func NewFractalTopologyService() *FractalTopologyService {
 func (this *FractalTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
 	return this.createVariantFromLayout(
@@ -54,7 +54,7 @@ type fractalTree struct {
 // of high zones at the center - a self-similar, converging branch per player.
 func (this *FractalTopologyService) createFractalLayout(
 	playerLabels []string,
-	neutralZones neutralZone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	const startAngle = -math.Pi / 2.0
 	playerCount := len(playerLabels)
 
@@ -89,18 +89,17 @@ func (this *FractalTopologyService) createFractalLayout(
 // pool's incoming order, then spreads each tier evenly across the players so
 // every fractal grows at the same rate and the overall pattern stays
 // rotationally balanced.
-func bucketNeutralsPerPlayer(neutralZones neutralZone.Plans, playerCount int) [3][][]int {
+func bucketNeutralsPerPlayer(neutralZones neutral_zone.Plans, playerCount int) [3][][]int {
 	tierBuckets := [3][]int{}
 	for index, plan := range neutralZones {
 		switch plan.Quality {
-		case neutralZone.QualityHigh:
+		case neutral_zone.QualityHigh, neutral_zone.QualityHighest:
 			tierBuckets[2] = append(tierBuckets[2], index)
-		case neutralZone.QualityMedium:
+		case neutral_zone.QualityMedium:
 			tierBuckets[1] = append(tierBuckets[1], index)
-		case neutralZone.QualityLow:
-			fallthrough
-		default:
+		case neutral_zone.QualityLow, neutral_zone.QualityLowest:
 			tierBuckets[0] = append(tierBuckets[0], index)
+		case neutral_zone.QualityUnknown:
 		}
 	}
 	return [3][][]int{
@@ -118,7 +117,7 @@ func placePlayerFractal(
 	axis, sectorHalf float64,
 	playerLabel string,
 	playerPlans [3][]int,
-	neutralZones neutralZone.Plans,
+	neutralZones neutral_zone.Plans,
 	allLabels *[]string,
 	positions *models.Positions) fractalTree {
 	const playerRadius = 0.45 // base of every fractal, on the outer ring

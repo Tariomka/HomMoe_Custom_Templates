@@ -29,14 +29,15 @@ const (
 )
 
 const (
-	TopologyRing        MapTopology = config_inner.TopologyRing
-	TopologyHubAndSpoke MapTopology = config_inner.TopologyHubAndSpoke
-	TopologyChain       MapTopology = config_inner.TopologyChain
-	TopologySharedWeb   MapTopology = config_inner.TopologySharedWeb
-	TopologyRandom      MapTopology = config_inner.TopologyRandom
-	TopologyCircles     MapTopology = config_inner.TopologyCircles
-	TopologySquare      MapTopology = config_inner.TopologySquare
-	TopologyGeometric   MapTopology = config_inner.TopologyGeometric
-	TopologyCross       MapTopology = config_inner.TopologyCross
-	TopologyFractal     MapTopology = config_inner.TopologyFractal
+	TopologyRing         MapTopology = config_inner.TopologyRing
+	TopologyHubAndSpoke  MapTopology = config_inner.TopologyHubAndSpoke
+	TopologyChain        MapTopology = config_inner.TopologyChain
+	TopologySharedWeb    MapTopology = config_inner.TopologySharedWeb
+	TopologyRandom       MapTopology = config_inner.TopologyRandom
+	TopologyCircles      MapTopology = config_inner.TopologyCircles
+	TopologySquare       MapTopology = config_inner.TopologySquare
+	TopologyGeometric    MapTopology = config_inner.TopologyGeometric
+	TopologyCross        MapTopology = config_inner.TopologyCross
+	TopologyFractal      MapTopology = config_inner.TopologyFractal
+	TopologyGeometricHub MapTopology = config_inner.TopologyGeometricHub
 )

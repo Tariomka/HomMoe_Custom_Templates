@@ -1,25 +1,31 @@
 package preview
 
-import "image"
+import (
+	"image"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+)
 
 // Zone is one zone laid out on the preview canvas.
 type Zone struct {
-	Name      string
-	Letter    string
-	Center    image.Point
-	IsPlayer  bool
-	IsHub     bool
-	Tier      int // 0 unknown, 1 bronze, 2 silver, 3 gold
-	Owner     int
-	HasCastle bool
-	Castles   int
+	Name    string
+	Label   string
+	Center  image.Point
+	Type    ZoneType
+	Quality neutral_zone.Quality
+	Owner   int
+	Castles int
 }
 
-type ZoneTier int
+func (this Zone) HasCastles() bool {
+	return this.Castles > 0
+}
+
+type ZoneType uint8
 
 const (
-	TierUnknown ZoneTier = iota
-	TierBronze
-	TierSilver
-	TierGold
+	ZoneTypeUnknown ZoneType = iota
+	ZoneTypePlayer
+	ZoneTypeNeutral
+	ZoneTypeHub
 )

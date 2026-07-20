@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,10 +21,11 @@ func TestWhenZoneManuallyPromotedToHighTier_UsesHighTierRows(t *testing.T) {
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
 	configuration.HighNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "high_only"}}
-	// A zone the generator labelled "G" but whose pool was manually raised to a
-	// high tier (t4) with three castles.
+	// A zone the generator labelled "G" but whose profile was manually raised to
+	// the high tier (treasure layout, t4 pool) with three castles.
 	zones := []entities.Zone{{
 		Name:               "Neutral-G",
+		Layout:             registry.GetLayoutValues().TreasureZone,
 		GuardedContentPool: []string{"classic_template_pool_random_t4_item"},
 		MainObjects: []entities.MainObject{
 			{Type: "City"}, {Type: "City"}, {Type: "City"},
@@ -49,7 +51,8 @@ func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
 	zones := []entities.Zone{{
 		Name:               "Neutral-C",
-		GuardedContentPool: []string{"classic_template_pool_random_t1_item"},
+		Layout:             registry.GetLayoutValues().Sides,
+		GuardedContentPool: []string{"classic_template_pool_random_t2_item"},
 		MainObjects:        []entities.MainObject{{Type: "City"}},
 	}}
 
@@ -60,7 +63,29 @@ func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 	assert.Equal(t, []string{"low_only"}, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
 }
 
-func TestWhenZonePoolIsUnrecognized_FallsBackToMediumTierRows(t *testing.T) {
+func TestWhenZonePoolIsLowestTier_UsesLowestTierRows(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	provider := providers.NewMandatoryContentProvider()
+	configuration := config.NewGeneratorConfig()
+	configuration.SpawnRemoteFootholds = false
+	configuration.LowestNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "lowest_only"}}
+	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
+	zones := []entities.Zone{{
+		Name:               "Neutral-C",
+		Layout:             registry.GetLayoutValues().Sides,
+		GuardedContentPool: []string{"classic_template_pool_random_t1_item"},
+		MainObjects:        []entities.MainObject{{Type: "City"}},
+	}}
+
+	// Act
+	groups := provider.CreateContentsForZones(*configuration, zones)
+
+	// Assert
+	assert.Equal(t, []string{"lowest_only"}, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
+}
+
+func TestWhenZoneHasNoRecognizableQuality_CreatesAnEmptyGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := providers.NewMandatoryContentProvider()
@@ -76,7 +101,7 @@ func TestWhenZonePoolIsUnrecognized_FallsBackToMediumTierRows(t *testing.T) {
 	groups := provider.CreateContentsForZones(*configuration, zones)
 
 	// Assert
-	assert.Equal(t, []string{"medium_only"}, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
+	assert.Empty(t, itemSids(groupContent(groups, "mandatory_content_neutral_C")))
 }
 
 // A castle-less neutral zone must still receive content (with near-castle rules
@@ -90,6 +115,7 @@ func TestWhenZoneHasNoCastles_KeepsConfiguredRows(t *testing.T) {
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "treasure"}}
 	zones := []entities.Zone{{
 		Name:               "Neutral-H",
+		Layout:             registry.GetLayoutValues().TreasureZone,
 		GuardedContentPool: []string{"classic_template_pool_random_t3_item"},
 	}}
 

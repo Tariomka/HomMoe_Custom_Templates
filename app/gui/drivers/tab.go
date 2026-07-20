@@ -15,6 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
@@ -71,6 +72,7 @@ func (this *Tab) GetWidget(theme *material.Theme) layout.Widget {
 				Width: float32(gtx.Dp(1)),
 			}.Op())
 			call.Add(gtx.Ops)
+			utils.AddButtonSemantics(gtx.Ops, this.name, dims.Size)
 			return dims
 		})
 	}

@@ -9,8 +9,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,15 +35,15 @@ func connectionKeys(connections []entities.Connection) map[[3]string]bool {
 	return keys
 }
 
-func retierZone(state *drivers.State, zones []entities.Zone, index int, quality neutralZone.Quality, castles int) {
+func retierZone(state *drivers.State, zones []entities.Zone, index int, quality neutral_zone.Quality, castles int) {
 	tuning := models.NewGenerationTuning(state.GetGeneratorConfig(), len(zones))
 	connection_editor.ApplyNeutralZoneQuality(&zones[index], quality, castles, tuning)
 }
 
-func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutralZone.Quality) int {
+func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutral_zone.Quality) int {
 	t.Helper()
 	for i, zone := range zones {
-		if connection_editor.IsNeutralZoneName(zone.Name) && neutralZone.GetQualityFrom(zone) == quality {
+		if zone_helpers.IsZoneNameNeutral(zone.Name) && neutral_zone.GetQualityFrom(zone) == quality {
 			return i
 		}
 	}
@@ -68,8 +69,8 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	// Manual session: re-tier one neutral zone to High, stamp positions and
 	// add a user connection.
 	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
-	retiered := findNeutralOfQuality(t, zones, neutralZone.QualityMedium)
-	retierZone(state, zones, retiered, neutralZone.QualityHigh, 1)
+	retiered := findNeutralOfQuality(t, zones, neutral_zone.QualityMedium)
+	retierZone(state, zones, retiered, neutral_zone.QualityHigh, 1)
 	retieredName := zones[retiered].Name
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.05 * float64(i+1)}
@@ -89,13 +90,13 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	require.NotNil(t, got)
 	require.NotEmpty(t, got.Variants)
 	for _, zone := range got.Variants[0].Zones {
-		if !connection_editor.IsNeutralZoneName(zone.Name) {
+		if !zone_helpers.IsZoneNameNeutral(zone.Name) {
 			continue
 		}
 		assert.Equalf(t, 3, connection_editor.CountZoneCastles(zone),
 			"zone %s must follow the new simple-mode castle count", zone.Name)
 		if zone.Name == retieredName {
-			assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone),
+			assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone),
 				"the manual quality change must survive the castle update")
 		}
 		assert.NotNilf(t, zone.ManualPosition, "zone %s lost its manual position", zone.Name)
@@ -108,7 +109,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	// The updated counts must be persisted back into the snapshot so saves and
 	// later regenerations carry them.
 	for _, save := range state.GetStateData().ManualZones {
-		if connection_editor.IsNeutralZoneName(save.Zone.Name) {
+		if zone_helpers.IsZoneNameNeutral(save.Zone.Name) {
 			assert.Equal(t, 3, connection_editor.CountZoneCastles(save.Zone))
 		}
 	}
@@ -133,8 +134,8 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 
 	// Manually promote one of the Low zones to High.
 	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
-	promoted := findNeutralOfQuality(t, zones, neutralZone.QualityLow)
-	retierZone(state, zones, promoted, neutralZone.QualityHigh, 1)
+	promoted := findNeutralOfQuality(t, zones, neutral_zone.QualityLow)
+	retierZone(state, zones, promoted, neutral_zone.QualityHigh, 1)
 	promotedName := zones[promoted].Name
 	state.ApplyEditedZones(zones, template.Variants[0].Connections)
 
@@ -145,17 +146,17 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 	require.NotNil(t, got)
 	require.NotEmpty(t, got.Variants)
 	for _, zone := range got.Variants[0].Zones {
-		if !connection_editor.IsNeutralZoneName(zone.Name) {
+		if !zone_helpers.IsZoneNameNeutral(zone.Name) {
 			continue
 		}
 		expected := 1
-		if neutralZone.GetQualityFrom(zone) == neutralZone.QualityHigh {
+		if neutral_zone.GetQualityFrom(zone) == neutral_zone.QualityHigh {
 			expected = 3
 		}
 		assert.Equalf(t, expected, connection_editor.CountZoneCastles(zone),
-			"zone %s (quality %v)", zone.Name, neutralZone.GetQualityFrom(zone))
+			"zone %s (quality %v)", zone.Name, neutral_zone.GetQualityFrom(zone))
 		if zone.Name == promotedName {
-			assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone))
+			assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone))
 		}
 	}
 }
@@ -174,8 +175,8 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 	require.NotEmpty(t, template.Variants)
 
 	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
-	edited := findNeutralOfQuality(t, zones, neutralZone.QualityMedium)
-	retierZone(state, zones, edited, neutralZone.QualityHigh, 2)
+	edited := findNeutralOfQuality(t, zones, neutral_zone.QualityMedium)
+	retierZone(state, zones, edited, neutral_zone.QualityHigh, 2)
 	zones[edited].GuardMultiplier = 7.5 // explicit manual guard edit
 	editedName := zones[edited].Name
 	state.ApplyEditedZones(zones, template.Variants[0].Connections)
@@ -197,7 +198,7 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 			"a non-castle option change must not touch the manual castle count")
 		assert.Equal(t, 7.5, zone.GuardMultiplier,
 			"a non-castle option change must not touch manual guard values")
-		assert.Equal(t, neutralZone.QualityHigh, neutralZone.GetQualityFrom(zone))
+		assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone))
 	}
 	assert.True(t, found, "manually edited zone disappeared from the regenerated template")
 }

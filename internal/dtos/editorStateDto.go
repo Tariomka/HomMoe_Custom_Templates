@@ -25,12 +25,15 @@ type EditorStateDto struct {
 	SpawnAbandonedOutposts      bool   `json:"spawnAbandonedOutposts"`
 	AbandonedOutpostCount       int    `json:"abandonedOutpostCount"`
 	AdvancedMode                bool   `json:"advancedMode"`
+	NeutralLowestNoCastleCount  int    `json:"neutralLowestNoCastle"`
+	NeutralLowestCastleCount    int    `json:"neutralLowestCastle"`
 	NeutralLowNoCastleCount     int    `json:"neutralLowNoCastle"`
 	NeutralLowCastleCount       int    `json:"neutralLowCastle"`
 	NeutralMediumNoCastleCount  int    `json:"neutralMediumNoCastle"`
 	NeutralMediumCastleCount    int    `json:"neutralMediumCastle"`
 	NeutralHighNoCastleCount    int    `json:"neutralHighNoCastle"`
 	NeutralHighCastleCount      int    `json:"neutralHighCastle"`
+	NeutralLowestCastlesPerZone int    `json:"neutralLowestCastlesPerZone"`
 	NeutralLowCastlesPerZone    int    `json:"neutralLowCastlesPerZone"`
 	NeutralMediumCastlesPerZone int    `json:"neutralMedCastlesPerZone"`
 	NeutralHighCastlesPerZone   int    `json:"neutralHighCastlesPerZone"`
@@ -81,6 +84,7 @@ type EditorStateDto struct {
 
 	// ── Mandatory content rows per zone type ─────────────────────────────
 	PlayerZoneContentRows    []models.ZoneContentRowSave `json:"playerZoneContentRows,omitempty"`
+	LowestNeutralContentRows []models.ZoneContentRowSave `json:"lowestNeutralContentRows,omitempty"`
 	LowNeutralContentRows    []models.ZoneContentRowSave `json:"lowNeutralContentRows,omitempty"`
 	MediumNeutralContentRows []models.ZoneContentRowSave `json:"mediumNeutralContentRows,omitempty"`
 	HighNeutralContentRows   []models.ZoneContentRowSave `json:"highNeutralContentRows,omitempty"`
@@ -100,6 +104,7 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		MapSize:                      160,
 		PlayerCount:                  2,
 		NeutralZoneCastles:           1,
+		NeutralLowestCastlesPerZone:  1,
 		NeutralLowCastlesPerZone:     1,
 		NeutralMediumCastlesPerZone:  1,
 		NeutralHighCastlesPerZone:    1,
@@ -161,6 +166,7 @@ func (this *EditorStateDto) DiffCastleSettings(incoming *EditorStateDto) editor_
 		Hub: this.HubZoneCastles != incoming.HubZoneCastles,
 	}
 	if incoming.AdvancedMode {
+		changes.NeutralLowest = this.NeutralLowestCastlesPerZone != incoming.NeutralLowestCastlesPerZone
 		changes.NeutralLow = this.NeutralLowCastlesPerZone != incoming.NeutralLowCastlesPerZone
 		changes.NeutralMedium = this.NeutralMediumCastlesPerZone != incoming.NeutralMediumCastlesPerZone
 		changes.NeutralHigh = this.NeutralHighCastlesPerZone != incoming.NeutralHighCastlesPerZone
@@ -184,9 +190,9 @@ func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) boo
 		this.generationOptionScalarsEqual(other) &&
 		this.gameRuleScalarsEqual(other) &&
 		(this.Bonuses == nil) == (other.Bonuses == nil) &&
-		slices.EqualFunc(this.Bonuses, other.Bonuses,
-			func(left, right config.BonusEntry) bool { return left == right }) &&
+		slices.Equal(this.Bonuses, other.Bonuses) &&
 		contentRowSlicesEqual(this.PlayerZoneContentRows, other.PlayerZoneContentRows) &&
+		contentRowSlicesEqual(this.LowestNeutralContentRows, other.LowestNeutralContentRows) &&
 		contentRowSlicesEqual(this.LowNeutralContentRows, other.LowNeutralContentRows) &&
 		contentRowSlicesEqual(this.MediumNeutralContentRows, other.MediumNeutralContentRows) &&
 		contentRowSlicesEqual(this.HighNeutralContentRows, other.HighNeutralContentRows) &&
@@ -202,6 +208,8 @@ func (this *EditorStateDto) HasManualEdits() bool {
 func (this *EditorStateDto) zoneCountOptionsChanged(incoming *EditorStateDto) bool {
 	return this.AdvancedMode != incoming.AdvancedMode ||
 		this.NeutralZoneCount != incoming.NeutralZoneCount ||
+		this.NeutralLowestNoCastleCount != incoming.NeutralLowestNoCastleCount ||
+		this.NeutralLowestCastleCount != incoming.NeutralLowestCastleCount ||
 		this.NeutralLowNoCastleCount != incoming.NeutralLowNoCastleCount ||
 		this.NeutralLowCastleCount != incoming.NeutralLowCastleCount ||
 		this.NeutralMediumNoCastleCount != incoming.NeutralMediumNoCastleCount ||
@@ -226,12 +234,15 @@ func (this *EditorStateDto) zoneOptionScalarsEqual(other *EditorStateDto) bool {
 		this.SpawnAbandonedOutposts == other.SpawnAbandonedOutposts &&
 		this.AbandonedOutpostCount == other.AbandonedOutpostCount &&
 		this.AdvancedMode == other.AdvancedMode &&
+		this.NeutralLowestNoCastleCount == other.NeutralLowestNoCastleCount &&
+		this.NeutralLowestCastleCount == other.NeutralLowestCastleCount &&
 		this.NeutralLowNoCastleCount == other.NeutralLowNoCastleCount &&
 		this.NeutralLowCastleCount == other.NeutralLowCastleCount &&
 		this.NeutralMediumNoCastleCount == other.NeutralMediumNoCastleCount &&
 		this.NeutralMediumCastleCount == other.NeutralMediumCastleCount &&
 		this.NeutralHighNoCastleCount == other.NeutralHighNoCastleCount &&
 		this.NeutralHighCastleCount == other.NeutralHighCastleCount &&
+		this.NeutralLowestCastlesPerZone == other.NeutralLowestCastlesPerZone &&
 		this.NeutralLowCastlesPerZone == other.NeutralLowCastlesPerZone &&
 		this.NeutralMediumCastlesPerZone == other.NeutralMediumCastlesPerZone &&
 		this.NeutralHighCastlesPerZone == other.NeutralHighCastlesPerZone &&

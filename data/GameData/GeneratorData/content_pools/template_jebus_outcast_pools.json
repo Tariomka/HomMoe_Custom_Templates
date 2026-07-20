@@ -59,7 +59,9 @@
 			{ 	"weight": 15000,
 				"includeLists": 	[ "content_list_building_uncommons_magic" ]
 			},
-
+			{ 	"weight": 35000,
+				"includeLists": 	[ "content_list_buildings_control_spells" ]
+			},
 			{ 	"weight": 15000,
 				"includeLists": 	[ "content_list_building_common_resource_banks" ]
 			},
@@ -143,6 +145,9 @@
 
 			{ 	"weight": 15000,
 				"includeLists": 	[ "content_list_building_uncommons_magic" ]
+			},
+			{ 	"weight": 35000,
+				"includeLists": 	[ "content_list_buildings_control_spells" ]
 			},
 
 			{ 	"weight": 15000,
@@ -228,7 +233,9 @@
 			{ 	"weight": 15000,
 				"includeLists": 	[ "content_list_building_uncommons_magic" ]
 			},
-
+			{ 	"weight": 35000,
+				"includeLists": 	[ "content_list_buildings_control_spells" ]
+			},
 			{ 	"weight": 15000,
 				"includeLists": 	[ "content_list_building_common_resource_banks" ]
 			},
@@ -584,7 +591,9 @@
 			{ 	"weight": 10000,
 				"includeLists": 	[ "content_list_building_uncommon_resource_banks" ]
 			},
-
+			{ 	"weight": 35000,
+				"includeLists": 	[ "content_list_buildings_control_spells" ]
+			},
 			{ 	"weight": 10000,
 				"includeLists": 	[ "content_list_building_common_guarded_resource_banks" ]
 			},

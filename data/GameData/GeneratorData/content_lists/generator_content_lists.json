@@ -186,6 +186,13 @@
 		]
 	},
 	{
+		"name": "content_list_buildings_control_spells",
+		"content":
+		[
+			{ "sid" : "mystical_tower"	}
+		]
+	},
+	{
 		"name": "content_list_building_common_interact_no_imbalance",
 		"content": 
 		[
@@ -716,6 +723,7 @@
 			{ "sid" : "enchanted_scroll_box",	"variant": 69,	"weight": 1	}
 		]
 	},
+
 	{
 		"name": "content_list_pickup_pandora_box_army",
 		"content":

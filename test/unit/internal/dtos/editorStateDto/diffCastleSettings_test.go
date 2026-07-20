@@ -52,6 +52,21 @@ func TestWhenAdvancedModeHighCountChanges_FlagsNeutralHighOnly(t *testing.T) {
 	assert.Equal(t, editor_state_dto.CastleSettingChanges{NeutralHigh: true}, changes)
 }
 
+func TestWhenAdvancedModeLowestCountChanges_FlagsNeutralLowestOnly(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	previous := dtos.NewDefaultEditorStateDto()
+	previous.AdvancedMode = true
+	current := previous
+	current.NeutralLowestCastlesPerZone = 4
+
+	// Act
+	changes := previous.DiffCastleSettings(&current)
+
+	// Assert
+	assert.Equal(t, editor_state_dto.CastleSettingChanges{NeutralLowest: true}, changes)
+}
+
 func TestWhenPlayerAndHubCountsChange_FlagsPlayerCastlesAndHub(t *testing.T) {
 	t.Parallel()
 	// Arrange

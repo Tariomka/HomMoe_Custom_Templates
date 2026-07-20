@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,14 +18,14 @@ func TestWhenThreePlayersAndSevenNeutralPlansProvided_CreatesZonePerLabel(t *tes
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
 	playerLabels := []string{"A", "B", "C"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N3", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N4", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N5", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N6", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N7", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N4", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N5", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N6", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N7", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 10)
 	service := topology.NewGeometricTopologyService()
 
@@ -42,10 +42,10 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCenter(t *testing.T) 
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N3", neutralZone.QualityLow, 0)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
 	tuning := models.NewGenerationTuning(configuration, 5)
 	service := topology.NewGeometricTopologyService()
 
@@ -70,14 +70,14 @@ func TestWhenFlowerIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) 
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
 	playerLabels := []string{"A", "B", "C"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N3", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N4", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N5", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N6", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N7", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N4", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N5", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N6", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N7", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 10)
 	service := topology.NewGeometricTopologyService()
 
@@ -94,7 +94,7 @@ func TestWhenNoNeutralZonesExist_FallsBackToClosedPlayerPolygon(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometric
 	playerLabels := []string{"A", "B", "C"}
-	neutralZones := neutralZone.Plans{}
+	neutralZones := neutral_zone.Plans{}
 	tuning := models.NewGenerationTuning(configuration, 3)
 	service := topology.NewGeometricTopologyService()
 
@@ -112,9 +112,9 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	configuration.Topology = config.TopologyGeometric
 	configuration.NoDirectPlayerConnections = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityMedium, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 4)
 	service := topology.NewGeometricTopologyService()
 
@@ -132,11 +132,11 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	configuration.Topology = config.TopologyGeometric
 	configuration.RandomPortals = true
 	playerLabels := []string{"A", "B"}
-	neutralZones := neutralZone.Plans{}
-	neutralZones.AddPlan("N1", neutralZone.QualityHigh, 1)
-	neutralZones.AddPlan("N2", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N3", neutralZone.QualityLow, 0)
-	neutralZones.AddPlan("N4", neutralZone.QualityMedium, 1)
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	tuning := models.NewGenerationTuning(configuration, 6)
 	service := topology.NewGeometricTopologyService()
 

@@ -6,14 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-const (
-	defaultTemplateName = "Custom Template"
-)
-
-var (
-	winConditions = registry.GetWinningConditionValues()
-	gameModes     = registry.GetGameModeValues()
-)
+const defaultTemplateName = "Custom Template"
 
 // GeneratorConfig is the input model for the template generator
 //
@@ -22,7 +15,7 @@ var (
 type GeneratorConfig struct {
 	TemplateName string
 	GameMode     string // [registry.gameModes]
-	PlayerCount  int    // 1..8
+	PlayerCount  int    // 2..8
 	MapSize      int    // raw map size in tiles (e.g. 160). sizeX = sizeZ = MapSize.
 
 	HeroSettings HeroSettings
@@ -56,6 +49,7 @@ type GeneratorConfig struct {
 	// Optional extra mandatory content seeded by the UI; appended to the
 	// player-zone defaults built by ZoneContentManager.
 	PlayerZoneMandatoryContent    []entities.MandatoryContentItem
+	LowestNeutralMandatoryContent []entities.MandatoryContentItem
 	LowNeutralMandatoryContent    []entities.MandatoryContentItem
 	MediumNeutralMandatoryContent []entities.MandatoryContentItem
 	HighNeutralMandatoryContent   []entities.MandatoryContentItem
@@ -70,7 +64,7 @@ type GeneratorConfig struct {
 func NewGeneratorConfig() *GeneratorConfig {
 	return &GeneratorConfig{
 		TemplateName: defaultTemplateName,
-		GameMode:     gameModes.Classic,
+		GameMode:     registry.GetGameModeValues().Classic,
 		PlayerCount:  2,
 		MapSize:      160,
 		HeroSettings: HeroSettings{
@@ -93,15 +87,14 @@ func NewGeneratorConfig() *GeneratorConfig {
 			StructureDensityPercent:     100,
 			NeutralStackStrengthPercent: 100,
 			BorderGuardStrengthPercent:  100,
+			PlayerZoneSize:              1.0,
+			NeutralZoneSize:             1.0,
 			HubZoneSize:                 1.0,
-			Advanced: AdvancedSettings{
-				PlayerZoneSize:     1.0,
-				NeutralZoneSize:    1.0,
-				GuardRandomization: 0.05,
-			},
+			GuardRandomization:          0.05,
+			Advanced:                    AdvancedSettings{},
 		},
 		GameEndConditions: &GameEndConditions{
-			VictoryCondition: winConditions.Standard,
+			VictoryCondition: registry.GetWinningConditionValues().Standard,
 			LostStartCityDay: 3,
 			CityHoldDays:     6,
 		},
@@ -118,20 +111,21 @@ func NewGeneratorConfig() *GeneratorConfig {
 
 func (this *GeneratorConfig) IsTournamentMode() bool {
 	return (this.TournamentRules != nil && this.TournamentRules.Enabled) ||
-		(this.GameEndConditions != nil && this.GameEndConditions.VictoryCondition == winConditions.Tournament)
+		(this.GameEndConditions != nil && this.GameEndConditions.VictoryCondition == registry.GetWinningConditionValues().Tournament)
 }
 
 func (this *GeneratorConfig) IsCityHoldMode() bool {
 	return this.GameEndConditions != nil &&
-		(this.GameEndConditions.CityHold || this.GameEndConditions.VictoryCondition == winConditions.CityHold)
+		(this.GameEndConditions.CityHold || this.GameEndConditions.VictoryCondition == registry.GetWinningConditionValues().CityHold)
 }
 
 func (this *GeneratorConfig) IsHubCityToHold() bool {
-	return this.Topology == config_inner.TopologyHubAndSpoke && this.IsCityHoldMode()
+	return (this.Topology == config_inner.TopologyHubAndSpoke || this.Topology == config_inner.TopologyGeometricHub) &&
+		this.IsCityHoldMode()
 }
 
 func (this *GeneratorConfig) IsSingleHeroMode() bool {
-	return this.GameMode == gameModes.SingleHero
+	return this.GameMode == registry.GetGameModeValues().SingleHero
 }
 
 func (this *GeneratorConfig) GetVictoryCondition() string {
@@ -139,7 +133,7 @@ func (this *GeneratorConfig) GetVictoryCondition() string {
 		return this.GameEndConditions.VictoryCondition
 	}
 
-	return winConditions.Standard
+	return registry.GetWinningConditionValues().Standard
 }
 
 func (this *GeneratorConfig) GetHeroSettings() HeroSettings {
@@ -158,7 +152,7 @@ func (this *GeneratorConfig) GetGameEndConditions() GameEndConditions {
 		return *this.GameEndConditions
 	}
 	return GameEndConditions{
-		VictoryCondition: winConditions.Standard,
+		VictoryCondition: registry.GetWinningConditionValues().Standard,
 		LostStartCityDay: 3,
 		CityHoldDays:     6,
 	}

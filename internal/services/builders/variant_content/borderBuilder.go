@@ -5,8 +5,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var waterTypes = registry.GetWaterTypeValues()
-
 type BorderBuilder struct {
 	item entities.Border
 }
@@ -34,7 +32,7 @@ func (this *BorderBuilder) WithWaterNoise(amplitude float64, frequency int) *Bor
 	return this
 }
 func (this *BorderBuilder) WithWaterTypeWaterGrass() *BorderBuilder {
-	return this.withWaterType(waterTypes.WaterGrass)
+	return this.withWaterType(registry.GetWaterTypeValues().WaterGrass)
 }
 func (this *BorderBuilder) Build() entities.Border { return this.item }
 

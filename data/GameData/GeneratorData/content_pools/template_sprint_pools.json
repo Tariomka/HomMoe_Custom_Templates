@@ -73,7 +73,7 @@
 				"content": 			[ { "sid" : "random_hire_1", "weight": 125 }, { "sid" : "random_hire_2", "weight": 100 }, { "sid" : "random_hire_3", "weight": 100 }, { "sid" : "random_hire_4", "weight": 80 }, { "sid" : "random_hire_5", "weight": 70 }, { "sid" : "random_hire_6", "weight": 50 }, { "sid" : "random_hire_7", "weight": 25 } ]
 			}
 		],
-		"bans": [ ]
+		"bans": [ { "sid" : "stables" } ]
 	},
 
   	{"name": "content_pool_template_sprint_guarded_red_zone",
@@ -135,7 +135,9 @@
 				"includeLists": 	[ "content_list_building_random_hires" ],
 				"content": 			[ { "sid" : "random_hire_1", "weight": 75 }, { "sid" : "random_hire_2", "weight": 100 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 0 }, { "sid" : "random_hire_6", "weight": 0 }, { "sid" : "random_hire_7", "weight": 0 } ]
 			}
-		]	},
+		],
+			"bans": [ { "sid" : "stables" } ]
+	},
 	{	"name": "content_pool_template_sprint_guarded_orange_zone",
 
 		"valueDistribution": { "priceBounds": [ 3999, 8999, 11999 ], "weights": [ 3, 14, 13, 6 ] },
@@ -183,7 +185,9 @@
 				"includeLists": 	[ "content_list_building_random_hires" ],
 				"content": 			[ { "sid" : "random_hire_1", "weight": 0 }, { "sid" : "random_hire_2", "weight": 0 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 20 }, { "sid" : "random_hire_6", "weight": 15 }, { "sid" : "random_hire_7", "weight": 0 }  ]
 			}
-		]	},
+		],
+			"bans": [ { "sid" : "stables" } ]
+	},
 	{
 		"name": "content_pool_template_sprint_unguarded_orange_zone",
 
@@ -206,7 +210,9 @@
 			{ 	"weight": 10000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2" ]
 			}
-		]
+		],
+				"bans": [ { "sid" : "stables" } ]
+
 	},
 	{	"name": "content_pool_template_sprint_guarded_yellow_zone",
 
@@ -263,7 +269,9 @@
 				"content": 			[ { "sid" : "troglodyte_throne", "weight": 40 }, { "sid" : "twilight_bloom", "weight": 80 }, { "sid" : "unstable_ruins", "weight": 0 },{ "sid" : "dragon_utopia", "weight": 0 },{ "sid": "research_laboratory",	"weight": 0	}]
 
 			}
-		]
+		],
+						"bans": [ { "sid" : "stables" } ]
+
 	},
 	{
 		"name": "content_pool_template_sprint_unguarded_yellow_zone",
@@ -287,7 +295,9 @@
 			{ 	"weight": 20000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2" ]
 			}
-		]
+		],
+						"bans": [ { "sid" : "stables" } ]
+
 	},
 		{	"name": "content_pool_template_sprint_guarded_green_zone",
 
@@ -342,7 +352,9 @@
 				"includeLists": 	[ "content_list_building_random_hires" ],
 				"content": 			[ { "sid" : "random_hire_1", "weight": 0 }, { "sid" : "random_hire_2", "weight": 0 }, { "sid" : "random_hire_3", "weight": 0 }, { "sid" : "random_hire_4", "weight": 0 }, { "sid" : "random_hire_5", "weight": 20 }, { "sid" : "random_hire_6", "weight": 15 }, { "sid" : "random_hire_7", "weight": 0 }  ]
 			}
-		]
+		],
+								"bans": [ { "sid" : "stables" } ]
+
 	},
 	{
 		"name": "content_pool_template_sprint_unguarded_green_zone",
@@ -366,7 +378,9 @@
 			{ 	"weight": 20000,
 				"includeLists": 	[ "basic_content_list_building_guarded_resource_banks_tier_2" ]
 			}
-		]
+		],
+								"bans": [ { "sid" : "stables" } ]
+
 	},
 	{
 		"name": "content_pool_template_sprint_guarded_blue_zone",

@@ -42,6 +42,12 @@ func NewGuiHandler() *GUIHandler {
 }
 
 func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
+	warnings := []string{}
+	for _, issue := range validators.ValidateEditorState(&stateDto) {
+		issue.Fix(&stateDto)
+		warnings = append(warnings, issue.Message)
+	}
+
 	configuration := this.mapper.FromEditorState(stateDto)
 	if configuration.TemplateName == "" {
 		return dtos.TemplateLoadDto{}, common_errors.ErrNoTemplateName
@@ -53,7 +59,7 @@ func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.Tem
 		return dtos.TemplateLoadDto{}, common_errors.ErrGeneratedTemplateInvalid
 	}
 
-	return dtos.TemplateLoadDto{Template: template}, nil
+	return dtos.TemplateLoadDto{Template: template, Warnings: warnings}, nil
 }
 
 func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {

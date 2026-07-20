@@ -6,9 +6,13 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type PreviewLayoutService struct {
@@ -74,7 +78,7 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 	case (topology == config.TopologyCircles) && allHaveRing(zones):
 		this.layoutBalancedRings(zones, side)
 	case isFixedGeometryTopology(topology) && allHavePosition(zones):
-		this.layoutFixedPositions(zones, side)
+		this.layoutFixedPositions(zones, side, fixedGeometryEdgeInset(topology))
 	case isScatterTopology(topology) && allHavePosition(zones):
 		this.layoutScatter(zones, connections, side)
 	default:
@@ -96,13 +100,13 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 		if !ok {
 			continue
 		}
+
 		previewZone := preview.Zone{
-			Name:     zone.Name,
-			Letter:   ExtractZoneLetter(zone.Name),
-			Center:   pos,
-			Tier:     ClassifyZoneTier(zone),
-			IsHub:    hasHubName(zone.Name),
-			IsPlayer: strings.HasPrefix(zone.Name, "Spawn-"),
+			Name:    zone.Name,
+			Label:   helpers.GetZoneLabel(zone.Name),
+			Center:  pos,
+			Quality: neutral_zone.GetQualityFrom(zone),
+			Type:    zone_helpers.GetZoneTypeFromName(zone.Name),
 		}
 		applyMainObjects(zone, &previewZone)
 		this.layout.Zones = append(this.layout.Zones, previewZone)
@@ -112,10 +116,10 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 // applyMainObjects folds the zone's Spawn/City main objects into the preview
 // zone's castle count and player-owner number.
 func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
+	objectTypes := registry.GetMainObjectTypeValues()
 	for _, mainObject := range zone.MainObjects {
-		switch {
-		case strings.EqualFold(mainObject.Type, "Spawn"):
-			previewZone.HasCastle = true
+		switch mainObject.Type {
+		case objectTypes.Spawn:
 			previewZone.Castles++
 			if strings.HasPrefix(mainObject.Spawn, "Player") {
 				for _, ch := range mainObject.Spawn[len("Player"):] {
@@ -124,8 +128,7 @@ func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 					}
 				}
 			}
-		case strings.EqualFold(mainObject.Type, "City"):
-			previewZone.HasCastle = true
+		case objectTypes.City:
 			previewZone.Castles++
 		}
 	}
@@ -184,12 +187,16 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 			// ( x, y ) → ( y, -x ) rotates it 90°
 			Add(data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance)).
 			ToPointRounded()
-		isPortal := connection.ConnectionType == "Portal" ||
+		isPortal := connection.ConnectionType == registry.GetConnectionTypeValues().Portal ||
 			len(connection.PortalPlacementRulesFrom) > 0 ||
 			len(connection.PortalPlacementRulesTo) > 0
+		connectionType := preview.ConnectionTypeDirect
+		if isPortal {
+			connectionType = preview.ConnectionTypePortal
+		}
 		result = append(
 			result,
-			preview.Connection{Start: startPoint, End: endPoint, Ctrl: ctrl, Portal: isPortal},
+			preview.Connection{Start: startPoint, End: endPoint, Ctrl: ctrl, Type: connectionType},
 		)
 	}
 	return result

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/stretchr/testify/assert"
@@ -121,6 +122,29 @@ func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing
 	assert.Equal(t, image.Pt((left.X+right.X)/2, (left.Y+right.Y)/2), middle)
 }
 
+func TestWhenGeometricHubTopologyIsLaidOut_FigureKeepsExtraBorderClearance(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{
+		positionedZone("Spawn-A", 0.1, 0.5),
+		positionedZone("Neutral-B", 0.5, 0.5),
+		positionedZone("Spawn-C", 0.9, 0.5),
+	}
+
+	// Act
+	hubLayout := service.BuildPreviewLayout(
+		templateWith(zones, nil), config.TopologyGeometricHub, layoutSide)
+	squareLayout := service.BuildPreviewLayout(
+		templateWith(zones, nil), config.TopologySquare, layoutSide)
+
+	// Assert - the same figure must span less width under Geometric Hub than
+	// under the other fixed-geometry topologies (extra edge inset applied).
+	hubWidth := hubLayout.Positions["Spawn-C"].X - hubLayout.Positions["Spawn-A"].X
+	squareWidth := squareLayout.Positions["Spawn-C"].X - squareLayout.Positions["Spawn-A"].X
+	assert.Less(t, hubWidth, squareWidth)
+}
+
 func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -134,7 +158,7 @@ func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 	// Assert
 	playerFlags := map[string]bool{}
 	for _, zone := range layout.Zones {
-		playerFlags[zone.Name] = zone.IsPlayer
+		playerFlags[zone.Name] = zone.Type == preview.ZoneTypePlayer
 	}
 	assert.Equal(t, map[string]bool{"Spawn-A": true, "Neutral-B": false}, playerFlags)
 }
@@ -153,7 +177,7 @@ func TestWhenZoneIsNamedHub_MarksZoneAsHub(t *testing.T) {
 	// Assert
 	hubFlags := map[string]bool{}
 	for _, zone := range layout.Zones {
-		hubFlags[zone.Name] = zone.IsHub
+		hubFlags[zone.Name] = zone.Type == preview.ZoneTypeHub
 	}
 	assert.Equal(t, map[string]bool{"Spawn-A": false, "Hub": true}, hubFlags)
 }
@@ -212,7 +236,7 @@ func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T)
 
 	// Assert
 	require.Len(t, layout.Connections, 1)
-	assert.True(t, layout.Connections[0].Portal)
+	assert.True(t, layout.Connections[0].IsPortal())
 }
 
 func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
@@ -375,7 +399,7 @@ func TestWhenNeutralTouchesEverySpawn_DoesNotFlagItAsHub(t *testing.T) {
 	// Assert
 	flaggedHubs := []string{}
 	for _, previewZone := range layout.Zones {
-		if previewZone.IsHub {
+		if previewZone.Type == preview.ZoneTypeHub {
 			flaggedHubs = append(flaggedHubs, previewZone.Name)
 		}
 	}
@@ -398,7 +422,7 @@ func TestWhenNeutralOnlyConnectsTwoSpawns_FlagsNoHub(t *testing.T) {
 	// Assert
 	flaggedHubs := []string{}
 	for _, previewZone := range layout.Zones {
-		if previewZone.IsHub {
+		if previewZone.Type == preview.ZoneTypeHub {
 			flaggedHubs = append(flaggedHubs, previewZone.Name)
 		}
 	}
@@ -421,7 +445,7 @@ func TestWhenZoneIsExplicitlyNamedHub_FlagsOnlyThatZoneAsHub(t *testing.T) {
 	// Assert
 	flaggedHubs := []string{}
 	for _, previewZone := range layout.Zones {
-		if previewZone.IsHub {
+		if previewZone.Type == preview.ZoneTypeHub {
 			flaggedHubs = append(flaggedHubs, previewZone.Name)
 		}
 	}
@@ -578,7 +602,7 @@ func TestWhenDirectConnectionExists_DoesNotFlagItAsPortal(t *testing.T) {
 
 	// Assert
 	require.Len(t, layout.Connections, 1)
-	assert.False(t, layout.Connections[0].Portal)
+	assert.False(t, layout.Connections[0].IsPortal())
 }
 
 func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
@@ -598,7 +622,7 @@ func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
 	// Assert
 	portalCount := 0
 	for _, previewConnection := range layout.Connections {
-		if previewConnection.Portal {
+		if previewConnection.IsPortal() {
 			portalCount++
 		}
 	}
@@ -665,13 +689,13 @@ func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) 
 		{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
 	}
 	expected := preview.Zone{
-		Name:      "Spawn-A",
-		Letter:    "A",
-		Center:    image.Pt(300, 300),
-		IsPlayer:  true,
-		HasCastle: true,
-		Castles:   1,
-		Owner:     1,
+		Name:    "Spawn-A",
+		Label:   "A",
+		Center:  image.Pt(300, 300),
+		Type:    preview.ZoneTypePlayer,
+		Quality: neutral_zone.QualityUnknown,
+		Castles: 1,
+		Owner:   1,
 	}
 
 	// Act

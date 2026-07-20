@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/stretchr/testify/assert"
 )
@@ -107,9 +107,9 @@ func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
-	neutralPlans := neutralZone.Plans{
-		{Label: "C", Quality: neutralZone.QualityLow, CastleCount: 0},
-		{Label: "D", Quality: neutralZone.QualityHigh, CastleCount: 0},
+	neutralPlans := neutral_zone.Plans{
+		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
+		{Label: "D", Quality: neutral_zone.QualityHigh, CastleCount: 0},
 	}
 	expectedConnections := []entities.Connection{
 		{

@@ -12,10 +12,10 @@
 			"icon": "space_1_magic_early_start",
 			"magicTypeDescription": " ",			
 			"description": [ 
-				"space_1_magic_early_start_description_spec",
-				"space_1_magic_early_start_description_spec",
-				"space_1_magic_early_start_description_spec",
-				"space_1_magic_early_start_description_spec"
+				"space_1_magic_early_start_description_spec_new",
+				"space_1_magic_early_start_description_spec_new",
+				"space_1_magic_early_start_description_spec_new",
+				"space_1_magic_early_start_description_spec_new"
 			],
 			"bonusDescriptions": [ 
 				{"level": 2, "description": "space_1_magic_early_start_description_up_level_bonus_2"}, 
@@ -33,7 +33,7 @@
 				{ "name": "mercury", "cost": 2 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 6, 6, 6, 6 ],
+			"manaCost": [ 8, 8, 8, 8 ],
 			"battleMagic":
 			{
 				"cd": -99,
@@ -60,14 +60,17 @@
 							"targetCondition_": "alive",
 							"selection": "object"
 						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
 
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
 
 						"buffTarget_": "ally",
 						"buff": 
 						{
-							"sid": "magic_early_start_effect_0_special",
-							"duration": 1,
+							"sid": "magic_early_start_effect_0",
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -89,14 +92,17 @@
 							"targetCondition_": "alive",
 							"selection": "object"
 						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
 
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
 
 						"buffTarget_": "ally",
 						"buff": 
 						{
-							"sid": "magic_early_start_effect_1_special",
-							"duration": 1,
+							"sid": "magic_early_start_effect_1",
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -118,14 +124,17 @@
 							"targetCondition_": "alive",
 							"selection": "object"
 						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
 
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
 
 						"buffTarget_": "ally",
 						"buff": 
 						{
-							"sid": "magic_early_start_effect_2_special",
-							"duration": 1,
+							"sid": "magic_early_start_effect_2",
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					},
@@ -147,14 +156,17 @@
 							"targetCondition_": "alive",
 							"selection": "object"
 						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
 
 						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
 
 						"buffTarget_": "ally",
 						"buff": 
 						{
-							"sid": "magic_early_start_effect_3_special",
-							"duration": 1,
+							"sid": "magic_early_start_effect_3",
+							"duration": 2,
 							"durationPerStack": [ 4, 1 ]
 						}
 					}
@@ -439,7 +451,7 @@
 				{ "name": "mercury", "cost": 4 }
 			],
 			"upgradeCost": [ 25, 25, 25 ],
-			"manaCost": [ 14, 11, 11, 11 ],
+			"manaCost": [ 18, 14, 14, 14 ],
 			"battleMagic":
 			{
 				"cd": -99,

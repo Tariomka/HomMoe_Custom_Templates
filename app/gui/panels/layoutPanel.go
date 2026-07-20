@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	service_constants "github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
@@ -25,17 +25,20 @@ type LayoutPanel struct {
 	chkAbandonedOutposts   widget.Bool
 	sldAbandonedOutposts   widget.Float
 
-	chkAdvancedZones       widget.Bool
-	sldNeutralLowNoCastle  widget.Float
-	sldNeutralLowCastle    widget.Float
-	sldNeutralMedNoCastle  widget.Float
-	sldNeutralMedCastle    widget.Float
-	sldNeutralHighNoCastle widget.Float
-	sldNeutralHighCastle   widget.Float
+	chkAdvancedZones         widget.Bool
+	sldNeutralLowestNoCastle widget.Float
+	sldNeutralLowestCastle   widget.Float
+	sldNeutralLowNoCastle    widget.Float
+	sldNeutralLowCastle      widget.Float
+	sldNeutralMedNoCastle    widget.Float
+	sldNeutralMedCastle      widget.Float
+	sldNeutralHighNoCastle   widget.Float
+	sldNeutralHighCastle     widget.Float
 
-	sldNeutralLowCastlesPerZone  widget.Float
-	sldNeutralMedCastlesPerZone  widget.Float
-	sldNeutralHighCastlesPerZone widget.Float
+	sldNeutralLowestCastlesPerZone widget.Float
+	sldNeutralLowCastlesPerZone    widget.Float
+	sldNeutralMedCastlesPerZone    widget.Float
+	sldNeutralHighCastlesPerZone   widget.Float
 
 	sldNeutralCount       widget.Float
 	sldPlayerOwnedCastles widget.Float
@@ -53,6 +56,7 @@ type LayoutPanel struct {
 
 	editConnectionsBtn widget.Clickable
 	btnPlayerContent   widget.Clickable
+	btnLowestContent   widget.Clickable
 	btnLowContent      widget.Clickable
 	btnMedContent      widget.Clickable
 	btnHighContent     widget.Clickable
@@ -67,7 +71,7 @@ func NewLayoutPanel(state *drivers.State) *LayoutPanel {
 	panel := &LayoutPanel{
 		topology: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
-			for topology := range service_constants.GetTopologyDescriptorSeq() {
+			for topology := range common_topologies.GetTopologyDescriptorSeq() {
 				labels = append(labels, topology.Label)
 			}
 			return labels
@@ -113,7 +117,7 @@ func (this *LayoutPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 func (this *LayoutPanel) LoadFromState() {
 	settings := this.state.GetStateData()
 
-	this.topology.SelectByName(service_constants.GetTopologyDescriptorFromType(settings.Topology).Label)
+	this.topology.SelectByName(common_topologies.GetTopologyDescriptorFromType(settings.Topology).Label)
 
 	this.chkRoads.Value = settings.GenerateRoads
 	this.chkPortals.Value = settings.RandomPortals
@@ -130,12 +134,15 @@ func (this *LayoutPanel) LoadFromState() {
 	this.sldPlayerOwnedCastles.Value = utils.Normalize(float32(settings.PlayerOwnedCastles), 0, 4)
 	this.sldPlayerCastles.Value = utils.Normalize(float32(settings.PlayerZoneCastles), 0, 4)
 	this.sldNeutralCastles.Value = utils.Normalize(float32(settings.NeutralZoneCastles), 0, 4)
+	this.sldNeutralLowestNoCastle.Value = utils.Normalize(float32(settings.NeutralLowestNoCastleCount), 0, 8)
+	this.sldNeutralLowestCastle.Value = utils.Normalize(float32(settings.NeutralLowestCastleCount), 0, 8)
 	this.sldNeutralLowNoCastle.Value = utils.Normalize(float32(settings.NeutralLowNoCastleCount), 0, 8)
 	this.sldNeutralLowCastle.Value = utils.Normalize(float32(settings.NeutralLowCastleCount), 0, 8)
 	this.sldNeutralMedNoCastle.Value = utils.Normalize(float32(settings.NeutralMediumNoCastleCount), 0, 8)
 	this.sldNeutralMedCastle.Value = utils.Normalize(float32(settings.NeutralMediumCastleCount), 0, 8)
 	this.sldNeutralHighNoCastle.Value = utils.Normalize(float32(settings.NeutralHighNoCastleCount), 0, 8)
 	this.sldNeutralHighCastle.Value = utils.Normalize(float32(settings.NeutralHighCastleCount), 0, 8)
+	this.sldNeutralLowestCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralLowestCastlesPerZone), 1, 4)
 	this.sldNeutralLowCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralLowCastlesPerZone), 1, 4)
 	this.sldNeutralMedCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralMediumCastlesPerZone), 1, 4)
 	this.sldNeutralHighCastlesPerZone.Value = utils.Normalize(float32(settings.NeutralHighCastlesPerZone), 1, 4)
@@ -169,12 +176,15 @@ func (this *LayoutPanel) SaveToState() {
 		settings.PlayerOwnedCastles = utils.RoundedRange(this.sldPlayerOwnedCastles.Value, 0, 4)
 		settings.PlayerZoneCastles = utils.RoundedRange(this.sldPlayerCastles.Value, 0, 4)
 		settings.NeutralZoneCastles = utils.RoundedRange(this.sldNeutralCastles.Value, 0, 4)
+		settings.NeutralLowestNoCastleCount = utils.RoundedRange(this.sldNeutralLowestNoCastle.Value, 0, 8)
+		settings.NeutralLowestCastleCount = utils.RoundedRange(this.sldNeutralLowestCastle.Value, 0, 8)
 		settings.NeutralLowNoCastleCount = utils.RoundedRange(this.sldNeutralLowNoCastle.Value, 0, 8)
 		settings.NeutralLowCastleCount = utils.RoundedRange(this.sldNeutralLowCastle.Value, 0, 8)
 		settings.NeutralMediumNoCastleCount = utils.RoundedRange(this.sldNeutralMedNoCastle.Value, 0, 8)
 		settings.NeutralMediumCastleCount = utils.RoundedRange(this.sldNeutralMedCastle.Value, 0, 8)
 		settings.NeutralHighNoCastleCount = utils.RoundedRange(this.sldNeutralHighNoCastle.Value, 0, 8)
 		settings.NeutralHighCastleCount = utils.RoundedRange(this.sldNeutralHighCastle.Value, 0, 8)
+		settings.NeutralLowestCastlesPerZone = utils.RoundedRange(this.sldNeutralLowestCastlesPerZone.Value, 1, 4)
 		settings.NeutralLowCastlesPerZone = utils.RoundedRange(this.sldNeutralLowCastlesPerZone.Value, 1, 4)
 		settings.NeutralMediumCastlesPerZone = utils.RoundedRange(this.sldNeutralMedCastlesPerZone.Value, 1, 4)
 		settings.NeutralHighCastlesPerZone = utils.RoundedRange(this.sldNeutralHighCastlesPerZone.Value, 1, 4)
@@ -190,6 +200,6 @@ func (this *LayoutPanel) SaveToState() {
 	})
 }
 
-func (this *LayoutPanel) getCurrentTopology() service_constants.TopologyDescriptor {
-	return service_constants.GetTopologyDescriptorFromIndex(this.topology.GetSelectedIndex())
+func (this *LayoutPanel) getCurrentTopology() common_topologies.TopologyDescriptor {
+	return common_topologies.GetTopologyDescriptorFromIndex(this.topology.GetSelectedIndex())
 }

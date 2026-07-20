@@ -166,7 +166,7 @@
 			"icon": "gifts_of_dwarven_lords_protective_belt_artifact",
 
 			"name": "gifts_of_dwarven_lords_protective_belt_artifact_name",
-			"description": "gifts_of_dwarven_lords_protective_belt_artifact_description",
+			"description": "gifts_of_dwarven_lords_protective_belt_artifact_alt_description",
 			"upgradeDescription": "gifts_of_dwarven_lords_protective_belt_artifact_upgradeDescription",
 			"narrativeDescription": "gifts_of_dwarven_lords_protective_belt_artifact_narrativeDescription",
 
@@ -188,6 +188,10 @@
 
 					"type": "unitStat",
 					"parameters": [ "modifierSet", "inDmgMods", "magic_damage", "-0.05" ]
+				},
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "gifts_of_dwarven_lords_protective_belt_artifact_bonus" ]
 				}
 			]
 		},

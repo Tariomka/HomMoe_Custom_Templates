@@ -18,17 +18,17 @@
 			{ "sid" : "pandora_box",	"variant": 11,	"weight": 1016	},
 			{ "sid" : "pandora_box",	"variant": 12,	"weight": 1016	},
 
-			{ "sid" : "pandora_box",	"variant": 15,	"weight": 872	},	
-			{ "sid" : "pandora_box",	"variant": 16,	"weight": 472	},	
+			{ "sid" : "pandora_box",	"variant": 15,	"weight": 1872	},	
+			{ "sid" : "pandora_box",	"variant": 16,	"weight": 1272	},	
 
-			{ "sid" : "pandora_box",	"variant": 19,	"weight": 386	},			
-			{ "sid" : "pandora_box",	"variant": 20,	"weight": 386	},
-			{ "sid" : "pandora_box",	"variant": 21,	"weight": 386	},
-			{ "sid" : "pandora_box",	"variant": 22,	"weight": 386	},
+			{ "sid" : "pandora_box",	"variant": 19,	"weight": 886	},			
+			{ "sid" : "pandora_box",	"variant": 20,	"weight": 886	},
+			{ "sid" : "pandora_box",	"variant": 21,	"weight": 886	},
+			{ "sid" : "pandora_box",	"variant": 22,	"weight": 886	},
 
-			{ "sid" : "pandora_box",	"variant": 23,	"weight": 870	},			
-			{ "sid" : "pandora_box",	"variant": 24,	"weight": 870	},
-			{ "sid" : "pandora_box",	"variant": 25,	"weight": 870	}
+			{ "sid" : "pandora_box",	"variant": 23,	"weight": 1970	},			
+			{ "sid" : "pandora_box",	"variant": 24,	"weight": 1670	},
+			{ "sid" : "pandora_box",	"variant": 25,	"weight": 1370	}
 		]
 	},
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"math"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -16,10 +15,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutralZone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -123,7 +124,7 @@ func NewZoneEditorDialog(
 	onApply func([]entities.Zone, []entities.Connection)) *ZoneEditorDialog {
 	players := make(map[string]bool)
 	for _, zone := range zones {
-		if strings.HasPrefix(zone.Name, "Spawn-") {
+		if zone_helpers.IsZoneNamePlayer(zone.Name) {
 			players[zone.Name] = true
 		}
 	}
@@ -138,17 +139,19 @@ func NewZoneEditorDialog(
 		onApply:           onApply,
 		geometryDirty:     true,
 		layoutService:     preview_service.NewPreviewLayoutService(),
-		typeDropdown:      components.NewDropdownSelector(connection_editor.UserCreatableConnectionTypes()),
+		typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
 		guardZoneDropdown: components.NewDropdownSelector(nil),
 		guardDropdown:     components.NewDropdownSelector(nil),
-		weeklyDropdown:    components.NewDropdownSelector(connection_editor.WeeklyIncrementLabels),
-		qualityDropdown:   components.NewDropdownSelector(connection_editor.QualityLabels),
+		weeklyDropdown:    components.NewDropdownSelector(common_connections.GetGuardWeeklyIncrementLabels()),
+		qualityDropdown:   components.NewDropdownSelector(neutral_zone.GetQualityNames()),
 		castleDropdown:    components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
 	}
 	for i := range connections {
 		working := connections[i]
 		dialog.working = append(dialog.working, &working)
-		dialog.original = append(dialog.original, connection_editor.CloneConnection(connections[i], false))
+		clone := connections[i]
+		clone.IsUserAdded = false
+		dialog.original = append(dialog.original, clone)
 	}
 	dialog.sideScroll.Axis = layout.Vertical
 	dialog.guardValueEdit.SingleLine = true
@@ -282,8 +285,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 				"%d zones · %d connections · %d isolated zone(s)",
 				len(this.zones),
 				len(connections),
-				len(isolated),
-			)
+				len(isolated))
 		}
 		label := material.Body2(theme, message)
 		label.Color = themes.ColorsBase.TextDim
@@ -361,31 +363,17 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(
-				theme,
-				"Click a zone to edit its size, quality and guards - drag it to move it.",
-			),
-		),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Click a zone to edit its size, quality and guards - drag it to move it.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(theme, "Click a connection line to edit its guard, type and growth."),
-		),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Click a connection line to edit its guard, type and growth.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(
-				theme,
-				"Use “Add connection”, then drag from one zone to another to create a link.",
-			),
-		),
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Use “Add connection”, then drag from one zone to another to create a link.")),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(6)),
-		layout.Rigid(
-			widgets.NewDimmedLabelWidget(
-				theme,
-				"Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.",
-			),
-		),
-	)
+		layout.Rigid(widgets.NewDimmedLabelWidget(theme,
+			"Use “Add zone”, then click empty spots to place neutral zones. Right-click a line to delete it.")))
 }
 
 func (this *ZoneEditorDialog) addConnection(from, to string) {
@@ -414,7 +402,8 @@ func (this *ZoneEditorDialog) resetToOriginal() {
 	this.zones = append([]entities.Zone(nil), this.originalZones...)
 	this.working = this.working[:0]
 	for i := range this.original {
-		clone := connection_editor.CloneConnection(this.original[i], false)
+		clone := this.original[i]
+		clone.IsUserAdded = false
 		this.working = append(this.working, &clone)
 	}
 	this.selected = nil
@@ -502,7 +491,7 @@ func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
 	}
 	this.ensureManualPositions()
 	zone := connection_editor.NewDefaultNeutralZone(
-		label, neutralZone.QualityMedium, 1, this.generateRoads, this.tuning)
+		label, neutral_zone.QualityMedium, 1, this.generateRoads, this.tuning)
 	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
 	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}

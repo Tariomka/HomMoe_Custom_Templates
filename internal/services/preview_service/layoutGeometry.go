@@ -4,10 +4,10 @@ import (
 	"image"
 	"math"
 	"sort"
-	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 const (
@@ -18,6 +18,10 @@ const (
 	csHubRadiusMin    = 28.0
 	csMinGap          = 6.0
 	csConnectionGap   = 26.0 // ring layout - visible chord clearance between zones
+	// csGeoHubEdgeInset pulls the Geometric Hub figure away from the canvas
+	// border: the fill-fit would otherwise push the player zones right up to
+	// the padded edge, hiding the hub-centric shape of the layout.
+	csGeoHubEdgeInset = 48.0
 	scatterIdealMult  = 3.2
 	scatterMinDist    = 3.8
 	scatterEdgeClear  = 1.2
@@ -169,7 +173,8 @@ func minMax(values []float64) (float64, float64) {
 // isStructuralIgnored reports whether a connection type is skipped when the
 // connection graph drives geometry (adjacency, hub spokes).
 func isStructuralIgnored(connectionType string) bool {
-	return connectionType == "Proximity" || connectionType == "Portal"
+	connectionTypes := registry.GetConnectionTypeValues()
+	return connectionType == connectionTypes.Proximity || connectionType == connectionTypes.Portal
 }
 
 func orderZonesByZeroAngle(zones []entities.Zone, zeroAngleZone string) []entities.Zone {
@@ -237,7 +242,8 @@ func isScatterTopology(topology config.MapTopology) bool {
 // the intended shape instead of relaxing it into a scatter.
 func isFixedGeometryTopology(topology config.MapTopology) bool {
 	switch topology {
-	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross, config.TopologyFractal:
+	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross,
+		config.TopologyFractal, config.TopologyGeometricHub:
 		return true
 	default:
 		return false
@@ -292,7 +298,7 @@ func positionAngle(z entities.Zone, rawCx, rawCy float64) float64 {
 }
 
 // sortIndicesByAngle returns the given zone indices reordered by their raw
-// generator position's angle around the raw centroid, preserving neighbour
+// generator position's angle around the raw centroid, preserving neighbor
 // ordering when zones are re-projected onto a canvas ring.
 func sortIndicesByAngle(zones []entities.Zone, indices []int, rawCx, rawCy float64) []int {
 	sorted := append([]int(nil), indices...)
@@ -301,10 +307,4 @@ func sortIndicesByAngle(zones []entities.Zone, indices []int, rawCx, rawCy float
 			positionAngle(zones[sorted[j]], rawCx, rawCy)
 	})
 	return sorted
-}
-
-// hasHubName reports whether the zone name marks an explicit hub ("Hub" or
-// "Hub-*"). Connectivity is never used to guess an implicit hub.
-func hasHubName(name string) bool {
-	return strings.EqualFold(name, "Hub") || strings.HasPrefix(name, "Hub-")
 }
