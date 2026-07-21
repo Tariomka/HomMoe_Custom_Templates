@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 // NewDefaultConnection builds a user-added Direct connection between two zones,
@@ -23,7 +24,7 @@ func NewDefaultConnection(from, to string, zones []entities.Zone, playerZoneName
 	return entities.Connection{
 		From:                 from,
 		To:                   to,
-		ConnectionType:       "Direct",
+		ConnectionType:       registry.GetConnectionTypeValues().Direct,
 		GuardValue:           common_connections.GetGuardStrengthForQuality(quality).Default,
 		GuardZone:            from,
 		GuardMatchGroup:      "rnd_guard_" + helpers.GetZoneLabel(from) + "_" + helpers.GetZoneLabel(to),

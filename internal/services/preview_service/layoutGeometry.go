@@ -22,6 +22,12 @@ const (
 	// border: the fill-fit would otherwise push the player zones right up to
 	// the padded edge, hiding the hub-centric shape of the layout.
 	csGeoHubEdgeInset = 48.0
+	// csGeoHubEdgeInsetCrowded replaces csGeoHubEdgeInset once
+	// csGeoHubCrowdedMinPlayers or more players share the figure: the smaller
+	// inset lets the fill-fit scale the figure further out, spacing the
+	// player zones away from the central hub.
+	csGeoHubEdgeInsetCrowded  = 12.0
+	csGeoHubCrowdedMinPlayers = 6
 	scatterIdealMult  = 3.2
 	scatterMinDist    = 3.8
 	scatterEdgeClear  = 1.2

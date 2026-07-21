@@ -78,7 +78,7 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 	case (topology == config.TopologyCircles) && allHaveRing(zones):
 		this.layoutBalancedRings(zones, side)
 	case isFixedGeometryTopology(topology) && allHavePosition(zones):
-		this.layoutFixedPositions(zones, side, fixedGeometryEdgeInset(topology))
+		this.layoutFixedPositions(zones, side, fixedGeometryEdgeInset(topology, zones))
 	case isScatterTopology(topology) && allHavePosition(zones):
 		this.layoutScatter(zones, connections, side)
 	default:

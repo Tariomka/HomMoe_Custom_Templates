@@ -145,6 +145,40 @@ func TestWhenGeometricHubTopologyIsLaidOut_FigureKeepsExtraBorderClearance(t *te
 	assert.Less(t, hubWidth, squareWidth)
 }
 
+func TestWhenGeometricHubHasSixPlayers_FigureSitsCloserToBorder(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	crowdedZones := []entities.Zone{
+		positionedZone("Spawn-A", 0.1, 0.5),
+		positionedZone("Spawn-B", 0.3, 0.2),
+		positionedZone("Spawn-C", 0.5, 0.8),
+		positionedZone("Spawn-D", 0.7, 0.2),
+		positionedZone("Spawn-E", 0.9, 0.5),
+		positionedZone("Spawn-F", 0.5, 0.5),
+	}
+	sparseZones := []entities.Zone{
+		positionedZone("Spawn-A", 0.1, 0.5),
+		positionedZone("Neutral-B", 0.3, 0.2),
+		positionedZone("Neutral-C", 0.5, 0.8),
+		positionedZone("Neutral-D", 0.7, 0.2),
+		positionedZone("Spawn-E", 0.9, 0.5),
+		positionedZone("Neutral-F", 0.5, 0.5),
+	}
+
+	// Act
+	crowdedLayout := service.BuildPreviewLayout(
+		templateWith(crowdedZones, nil), config.TopologyGeometricHub, layoutSide)
+	sparseLayout := service.BuildPreviewLayout(
+		templateWith(sparseZones, nil), config.TopologyGeometricHub, layoutSide)
+
+	// Assert - six or more players shrink the edge inset, letting the same
+	// figure scale further toward the border (players further from the hub).
+	crowdedWidth := crowdedLayout.Positions["Spawn-E"].X - crowdedLayout.Positions["Spawn-A"].X
+	sparseWidth := sparseLayout.Positions["Spawn-E"].X - sparseLayout.Positions["Spawn-A"].X
+	assert.Greater(t, crowdedWidth, sparseWidth)
+}
+
 func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
