@@ -24,7 +24,7 @@ func renderFrames(runner *integration_common.AppRunner, frameCount int) {
 // TestWindow_RendersFramesWithoutPanic ensures the entire editor UI (toolbar,
 // tabs, every panel and the live preview) lays out cleanly across many frames.
 func TestWindow_RendersFramesWithoutPanic(t *testing.T) {
-	runner := integration_common.NewAppRunner()
+	runner := integration_common.NewAppRunner(t)
 	require.NotPanics(t, func() { renderFrames(runner, 10) })
 
 	// The first frames auto-generate a preview from the default state.
@@ -52,7 +52,7 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	require.False(t, irError)
 	assert.Equal(t, "Saved "+savedPath, message)
 
-	runner := integration_common.NewAppRunner()
+	runner := integration_common.NewAppRunner(t)
 
 	// Render baseline frames at the defaults.
 	renderFrames(runner, 3)

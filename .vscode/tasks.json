@@ -77,6 +77,27 @@
             "problemMatcher": "$go"
         },
         {
+            "label": "Go: Run Performance tests with profiling",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-v",
+                "-bench=BenchmarkEditorWindow_TabCycling",
+                "-run=xxx",
+                "./test/performance/...",
+                "-tags=integration_test",
+                "-benchmem",
+                "-cpuprofile='cpu.prof'",
+                "-memprofile='memory.prof'",
+                "-benchtime=1x",
+                "-timeout=120s",
+                "-args", "headed"
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
             "label": "Go: Run Unit tests",
             "type": "shell",
             "command": "go",

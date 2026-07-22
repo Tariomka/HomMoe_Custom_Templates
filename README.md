@@ -243,6 +243,10 @@ go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -
 
 # Performance tests with profiling
 go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s
+
+# Profiling
+go test -bench=BenchmarkEditorWindow_TabCycling ./test/performance/... -tags=integration_test -benchmem -cpuprofile='cpu.prof' -memprofile='memory.prof' -benchtime=1x -timeout=120s -args headed
+go tool pprof -http :42069 cpu.prof
 ```
 
 ## Notes

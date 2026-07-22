@@ -23,9 +23,7 @@ func TestMain(m *testing.M) {
 // a real on-screen window (the latter additionally renders the UI); select the
 // mode with `go test ... -args headed`.
 func BenchmarkEditorWindow_TabCycling(b *testing.B) {
-	runner := integration_common.NewAppRunner()
-	runner.Start()
-	defer runner.Stop()
+	runner := integration_common.NewAppRunner(b)
 
 	handler := integration_common.NewHandler(runner)
 
