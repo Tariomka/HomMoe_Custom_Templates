@@ -49,7 +49,7 @@ func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
-	tuning := this.createGenerationTuning(this.configuration.PlayerCount + len(neutralZones))
+	tuning := models.NewGenerationTuning(this.configuration, this.configuration.PlayerCount+len(neutralZones))
 
 	return &entities.RmgTemplate{
 		Name:                this.configuration.TemplateName,
@@ -72,10 +72,6 @@ func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
 		ContentPools:       []entities.ContentPool{},
 		ContentLists:       []entities.ContentList{},
 	}
-}
-
-func (this *TemplateGenerator) createGenerationTuning(totalZoneCount int) models.GenerationTuning {
-	return models.NewGenerationTuning(this.configuration, totalZoneCount)
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {

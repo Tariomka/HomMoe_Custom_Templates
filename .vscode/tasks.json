@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Go: Run Integration tests w/out UI",
+            "label": "Go: Run Integration tests",
             "type": "shell",
             "command": "go",
             "args": [
@@ -15,7 +15,7 @@
             "problemMatcher": "$go"
         },
         {
-            "label": "Go: Run UI Integration tests",
+            "label": "Go: Run UI Integration tests headlessly",
             "type": "shell",
             "command": "go",
             "args": [
@@ -28,7 +28,7 @@
             "problemMatcher": "$go"
         },
         {
-            "label": "Go: Run UI Integration tests w/ headed mode",
+            "label": "Go: Run UI Integration tests in headed mode",
             "type": "shell",
             "command": "go",
             "args": [

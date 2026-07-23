@@ -6,6 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -37,7 +38,10 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	hubIsHoldCity bool) entities.Variant {
 	layout := newGeometricHubLayout(playerLabels, neutralZones)
 	allLabels := append(append([]string{}, playerLabels...),
-		neutralLabelsOf(neutralZones)...)
+		linq.FromSlice(neutralZones).
+			SelectString(func(plan neutral_zone.Plan) string { return plan.Label }).
+			ToSlice()...)
+	// neutralLabelsOf(neutralZones)...)
 
 	connectionNames := this.createConnectionNameIndex(layout)
 	zones := this.createZones(
@@ -49,14 +53,6 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 				playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(allLabels)+1, zones, conns)
-}
-
-func neutralLabelsOf(neutralZones neutral_zone.Plans) []string {
-	labels := make([]string, len(neutralZones))
-	for index, plan := range neutralZones {
-		labels[index] = plan.Label
-	}
-	return labels
 }
 
 // createConnectionNameIndex maps every label (and "Hub") to the names of its

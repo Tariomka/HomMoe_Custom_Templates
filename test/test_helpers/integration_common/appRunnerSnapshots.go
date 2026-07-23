@@ -26,7 +26,7 @@ import (
 // __snapshots__/{caller test file name}/{test name}_{action number}.golden.
 func (this *AppRunner) EnableSnapshots() {
 	this.tb.Helper()
-	_, callerFile, _, ok := runtime.Caller(1)
+	_, callerFile, _, ok := runtime.Caller(2)
 	if !ok {
 		this.tb.Fatal("EnableSnapshots: cannot resolve the calling test file")
 	}
