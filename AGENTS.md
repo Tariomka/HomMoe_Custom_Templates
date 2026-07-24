@@ -496,5 +496,5 @@ no prior memory must be able to resume work from it alone.
 
 **TL;DR:** Don't touch [data/](data/),
 [internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/). Stay cross-platform.
-Cover everything you write with tests. Cap sessions at 17–20 messages and
+Cover everything you write with tests. Cap sessions at 38–50 messages and
 hand off via `./.agent/session-carry-forward.md`.
