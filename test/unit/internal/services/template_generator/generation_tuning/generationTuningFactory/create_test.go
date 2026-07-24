@@ -1,10 +1,11 @@
-package generationTuning_test
+package generationTuningFactory_test
 
 import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/utils"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -42,14 +43,14 @@ func TestWhenAllOptionalSpawnsAreEnabled_BuildsTuningFromConfiguredPercentages(t
 		StructureDensityMultiplier:     float64(structureDensity) / 100.0,
 		NeutralStackStrengthMultiplier: float64(neutralStrength) / 100.0,
 		BorderGuardStrengthMultiplier:  float64(borderStrength) / 100.0,
-		GuardRandomization:             0.05, // advanced settings disabled -> default
+		GuardRandomization:             0.05,
 		RemoteFootholdCount:            footholdCount,
 		AbandonedOutpostCount:          outpostCount,
 		PlayerOwnedCastles:             ownedCastles,
 	}
 
 	// Act
-	tuning := models.NewGenerationTuning(configuration, totalZoneCount)
+	tuning := generation_tuning.NewGenerationTuningFactory().Create(configuration, totalZoneCount)
 
 	// Assert
 	assert.Equal(t, expected, tuning)
@@ -63,7 +64,7 @@ func TestWhenRemoteFootholdsAreDisabled_ZeroesFootholdCount(t *testing.T) {
 	configuration.RemoteFootholdCount = gofakeit.Number(1, 4)
 
 	// Act
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := generation_tuning.NewGenerationTuningFactory().Create(configuration, 5)
 
 	// Assert
 	assert.Equal(t, 0, tuning.RemoteFootholdCount)
@@ -77,7 +78,7 @@ func TestWhenAbandonedOutpostsAreDisabled_ZeroesOutpostCount(t *testing.T) {
 	configuration.ZoneConfiguration.AbandonedOutpostCount = gofakeit.Number(1, 4)
 
 	// Act
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := generation_tuning.NewGenerationTuningFactory().Create(configuration, 5)
 
 	// Assert
 	assert.Equal(t, 0, tuning.AbandonedOutpostCount)
@@ -91,7 +92,7 @@ func TestWhenAdvancedSettingsAreEnabled_UsesConfiguredGuardRandomization(t *test
 	configuration.ZoneConfiguration.GuardRandomization = 0.2
 
 	// Act
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := generation_tuning.NewGenerationTuningFactory().Create(configuration, 5)
 
 	// Assert
 	assert.InDelta(t, 0.2, tuning.GuardRandomization, test_helpers.Delta)

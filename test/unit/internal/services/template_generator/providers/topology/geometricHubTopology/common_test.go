@@ -1,11 +1,11 @@
 package geometricHubTopology_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"math"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -17,7 +17,7 @@ func buildGeoHubVariant(playerLabels []string, plans neutral_zone.Plans) entitie
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
-	tuning := models.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
 	return topology.NewGeometricHubTopologyService().
 		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, false)
 }

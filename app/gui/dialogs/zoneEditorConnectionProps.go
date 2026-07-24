@@ -12,8 +12,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
@@ -78,8 +76,12 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 	if !this.guardZoneDropdown.SelectByName(connection.GuardZone) {
 		this.guardZoneDropdown.SelectByName(connection.From)
 	}
-	quality := zone_helpers.GetZoneConnectionGuardQuality(
-		connection.From, connection.To, this.zones, linq.FromMap(this.playerZones).SelectKeys().ToSlice())
+	quality := this.zoneHandler.GetZoneConnectionGuardQuality(
+		connection.From,
+		connection.To,
+		this.zones,
+		this.playerZones,
+	)
 	labels, values := guardPresetItems(quality)
 	this.guardPresetValues = values
 	this.guardDropdown.SetItems(labels)

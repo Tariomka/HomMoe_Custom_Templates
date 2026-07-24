@@ -3,6 +3,7 @@ package neutralZoneProfile_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -29,7 +30,7 @@ func TestWhenQualityVaries_SelectsMatchingProfileGuardMultiplier(t *testing.T) {
 			quality := testCase.quality
 
 			// Act
-			profile := neutral_zone.NewNeutralZoneProfile(quality)
+			profile := common_zones.GetNeutralZoneProfile(quality)
 
 			// Assert
 			assert.InDelta(t, testCase.expectedMultiplier, profile.GuardMultiplier, test_helpers.Delta)
@@ -57,7 +58,7 @@ func TestWhenQualityVaries_SelectsMatchingCityGuardValues(t *testing.T) {
 			quality := testCase.quality
 
 			// Act
-			profile := neutral_zone.NewNeutralZoneProfile(quality)
+			profile := common_zones.GetNeutralZoneProfile(quality)
 
 			// Assert
 			assert.Equal(t, testCase.expectedPrimaryGuard, profile.PrimaryCityGuardValue)
@@ -71,7 +72,7 @@ func TestWhenQualityIsLowest_UsesTier1GuardedPool(t *testing.T) {
 	quality := neutral_zone.QualityLowest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	assert.Equal(t, registry.GetGuardedContentPoolT1List(), profile.GuardedContentPool)
@@ -83,7 +84,7 @@ func TestWhenQualityIsLowest_UsesVeryPoorResourcesPool(t *testing.T) {
 	quality := neutral_zone.QualityLowest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	assert.Equal(t, []string{registry.GetResourcesContentPoolValues().StartZoneVeryPoor}, profile.ResourcesContentPool)
@@ -95,7 +96,7 @@ func TestWhenQualityIsLowest_UsesExtraPoorConstructionSids(t *testing.T) {
 	quality := neutral_zone.QualityLowest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	expected := registry.GetBuildingsConstructionSidValues().ExtraPoor
@@ -108,7 +109,7 @@ func TestWhenQualityIsHighest_UsesDoubledTier5GuardedPool(t *testing.T) {
 	quality := neutral_zone.QualityHighest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	tier5List := registry.GetGuardedContentPoolT5List()
@@ -121,7 +122,7 @@ func TestWhenQualityIsHighest_UsesDoubledTier5UnguardedPool(t *testing.T) {
 	quality := neutral_zone.QualityHighest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	tier5List := registry.GetUnguardedContentPoolT5List()
@@ -134,7 +135,7 @@ func TestWhenQualityIsHighest_UsesRichTreasureResourcesPool(t *testing.T) {
 	quality := neutral_zone.QualityHighest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	assert.Equal(t, []string{registry.GetResourcesContentPoolValues().TreasureZoneRich}, profile.ResourcesContentPool)
@@ -146,7 +147,7 @@ func TestWhenQualityIsHighest_UsesUltraRichConstructionSids(t *testing.T) {
 	quality := neutral_zone.QualityHighest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	expected := registry.GetBuildingsConstructionSidValues().UltraRich
@@ -159,8 +160,22 @@ func TestWhenQualityIsHighest_UsesCenterLayout(t *testing.T) {
 	quality := neutral_zone.QualityHighest
 
 	// Act
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 
 	// Assert
 	assert.Equal(t, registry.GetLayoutValues().Center, profile.Layout)
+}
+
+func TestWhenReturnedPoolIsMutated_NextProfileRetainsCatalogValues(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	firstProfile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityLowest)
+	expected := registry.GetGuardedContentPoolT1List()[0]
+
+	// Act
+	firstProfile.GuardedContentPool[0] = "mutated"
+	secondProfile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityLowest)
+
+	// Assert
+	assert.Equal(t, expected, secondProfile.GuardedContentPool[0])
 }

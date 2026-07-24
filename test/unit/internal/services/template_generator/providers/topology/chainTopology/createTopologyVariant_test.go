@@ -1,9 +1,9 @@
 package chainTopology_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -19,7 +19,7 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesZonePerLabel(t *testing
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewChainTopologyService()
 
 	// Act
@@ -38,7 +38,7 @@ func TestWhenFourLabelsFormTheChain_CreatesConnectionPerAdjacentPair(t *testing.
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewChainTopologyService()
 
 	// Act
@@ -57,7 +57,7 @@ func TestWhenChainIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewChainTopologyService()
 
 	// Act
@@ -75,7 +75,7 @@ func TestWhenIsolatedPlayersAreAdjacentInTheChain_SkipsTheirChainConnection(t *t
 	configuration.NoDirectPlayerConnections = true
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
-	tuning := models.NewGenerationTuning(configuration, 2)
+	tuning := test_helpers.NewGenerationTuning(configuration, 2)
 	service := topology.NewChainTopologyService()
 
 	// Act
@@ -97,7 +97,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewChainTopologyService()
 
 	// Act

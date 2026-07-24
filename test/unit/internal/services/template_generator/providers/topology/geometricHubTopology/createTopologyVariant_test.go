@@ -2,12 +2,12 @@ package geometricHubTopology_test
 
 import (
 	"fmt"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"math"
 	"strings"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -24,7 +24,7 @@ func TestWhenRandomPortalsEnabled_AddsExtraPortalConnections(t *testing.T) {
 	configuration.PlayerCount = len(playerLabels)
 	configuration.RandomPortals = true
 	configuration.MaxPortalConnections = 4
-	tuning := models.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
 	baseline := buildGeoHubVariant(playerLabels, plans)
 
 	// Act
@@ -44,7 +44,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentGroup(t *t
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_item"}}
-	tuning := models.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
 
 	// Act
 	variant := topology.NewGeometricHubTopologyService().

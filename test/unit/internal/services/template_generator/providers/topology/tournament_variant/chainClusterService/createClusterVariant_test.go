@@ -1,9 +1,9 @@
 package chainClusterService_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
@@ -22,7 +22,7 @@ func TestWhenPlayerHasTwoNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T)
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 3)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
 	service := tournament_variant.NewChainClusterService()
 
 	// Act
@@ -41,7 +41,7 @@ func TestWhenChainIsBuilt_CreatesConnectionPerAdjacentPair(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 3)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
 	service := tournament_variant.NewChainClusterService()
 
 	// Act
@@ -60,7 +60,7 @@ func TestWhenFirstChainLinkIsBuilt_ConnectsSpawnToFirstNeutral(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 3)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
 	service := tournament_variant.NewChainClusterService()
 
 	// Act
@@ -75,7 +75,7 @@ func TestWhenLaterChainLinkIsBuilt_ConnectsNeutralToNextNeutral(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 3)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
 	service := tournament_variant.NewChainClusterService()
 
 	// Act
@@ -90,7 +90,7 @@ func TestWhenPlayerHasNoNeutralPlans_CreatesOnlySpawnZoneWithoutConnections(t *t
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	emptyPlans := neutral_zone.Plans{}
-	tuning := models.NewGenerationTuning(configuration, 1)
+	tuning := test_helpers.NewGenerationTuning(configuration, 1)
 	service := tournament_variant.NewChainClusterService()
 
 	// Act
@@ -106,7 +106,7 @@ func TestWhenSecondPlayerClusterIsBuilt_SpawnCastleBelongsToPlayerTwo(t *testing
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 3)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
 	service := tournament_variant.NewChainClusterService()
 
 	// Act

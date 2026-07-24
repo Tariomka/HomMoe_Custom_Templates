@@ -7,9 +7,12 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/graph"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -133,7 +136,7 @@ func (this *TopologyBase) CreateNeutralZone(
 	if isHoldCity && plan.CastleCount < 1 {
 		plan.CastleCount = 1
 	}
-	profile := neutral_zone.NewNeutralZoneProfile(plan.Quality)
+	profile := common_zones.GetNeutralZoneProfile(plan.Quality)
 
 	// Abandoned outposts are spawned in addition to the zone's castles, with
 	// their own count slider instead of being tied to the castle count.
@@ -186,7 +189,7 @@ func (this *TopologyBase) CreateHubZone(
 	if isHoldCity && castleCount < 1 {
 		castleCount = 1
 	}
-	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityHighest)
+	profile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityHighest)
 
 	zoneBuilder := variant_content.NewZoneBuilder().
 		WithName(constants.HubZoneName).
@@ -369,8 +372,12 @@ func (this *TopologyBase) CreateMissingConnections(
 
 	var additionalConns []entities.Connection
 	for {
-		components := adjacency.FindIndexes(len(allLabels))
-		bestIndexes, ok := positions.GetShortestDistanceIndex(components)
+		nodes := make([]int, len(allLabels))
+		for index := range nodes {
+			nodes[index] = index
+		}
+		components := graph.ConnectedComponents(adjacency, nodes)
+		bestIndexes, ok := geometry.FindClosestAcrossComponents(positions, components)
 		if !ok {
 			break
 		}
@@ -383,7 +390,7 @@ func (this *TopologyBase) CreateMissingConnections(
 		if connNameSet[bridgeName] {
 			// The existing bridge already connects the two components; link them so the
 			// loop progresses instead of reselecting the same pair forever.
-			adjacency.Link(bestIndexes.X, bestIndexes.Y)
+			graph.Link(adjacency, bestIndexes.X, bestIndexes.Y)
 			continue
 		}
 
@@ -404,7 +411,7 @@ func (this *TopologyBase) CreateMissingConnections(
 
 		appendBridgeRoads(zones, zoneFrom, zoneTo, bridgeName)
 
-		adjacency.Link(bestIndexes.X, bestIndexes.Y)
+		graph.Link(adjacency, bestIndexes.X, bestIndexes.Y)
 	}
 
 	return additionalConns
@@ -650,8 +657,12 @@ func (this *TopologyBase) CreateOuterZoneRoads(
 // already joined by a Direct or Portal connection.
 func (this *TopologyBase) buildZoneAdjacency(
 	playerLabels, allLabels []string,
-	connections []entities.Connection) *models.ZoneIndexAdjacency {
-	adjacency := models.NewZoneIndexAdjacency(len(allLabels))
+	connections []entities.Connection) graph.Adjacency[int] {
+	nodes := make([]int, len(allLabels))
+	for index := range nodes {
+		nodes[index] = index
+	}
+	adjacency := graph.NewAdjacency(nodes)
 	zoneNameToIdx := map[string]int{}
 	for index, label := range allLabels {
 		zoneNameToIdx[this.ZoneLabelProvider.CreateZoneName(label, playerLabels)] = index
@@ -666,7 +677,7 @@ func (this *TopologyBase) buildZoneAdjacency(
 			_, okB := zoneNameToIdx[x.To]
 			return okA && okB
 		}).Iterate {
-		adjacency.Link(zoneNameToIdx[connection.From], zoneNameToIdx[connection.To])
+		graph.Link(adjacency, zoneNameToIdx[connection.From], zoneNameToIdx[connection.To])
 	}
 	return adjacency
 }

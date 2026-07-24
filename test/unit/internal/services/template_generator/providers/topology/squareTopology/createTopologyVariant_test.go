@@ -1,10 +1,10 @@
 package squareTopology_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -25,7 +25,7 @@ func TestWhenTwoPlayersAndSixNeutralPlansProvided_CreatesZonePerLabel(t *testing
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
 	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewSquareTopologyService()
 
 	// Act
@@ -48,7 +48,7 @@ func TestWhenSquareIsLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing.T)
 	neutralZones.AddPlan("N4", neutral_zone.QualityHigh, 1)
 	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
 	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewSquareTopologyService()
 
 	// Act
@@ -68,7 +68,7 @@ func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCenter(t *testing.T)
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
 	service := topology.NewSquareTopologyService()
 
 	// Act
@@ -99,7 +99,7 @@ func TestWhenSquareIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) 
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
 	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewSquareTopologyService()
 
 	// Act
@@ -119,7 +119,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewSquareTopologyService()
 
 	// Act
@@ -141,7 +141,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewSquareTopologyService()
 
 	// Act

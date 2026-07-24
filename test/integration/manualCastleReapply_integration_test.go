@@ -6,14 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
+
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,14 +40,14 @@ func connectionKeys(connections []entities.Connection) map[[3]string]bool {
 
 func retierZone(state *drivers.State, zones []entities.Zone, index int, quality neutral_zone.Quality, castles int) {
 	configuration := mappers.NewConfigMapper().FromEditorState(state.GetStateData())
-	tuning := models.NewGenerationTuning(configuration, len(zones))
+	tuning := test_helpers.NewGenerationTuning(configuration, len(zones))
 	connection_editor.ApplyNeutralZoneQuality(&zones[index], quality, castles, tuning)
 }
 
 func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutral_zone.Quality) int {
 	t.Helper()
 	for i, zone := range zones {
-		if zone_helpers.IsZoneNameNeutral(zone.Name) && neutral_zone.GetQualityFrom(zone) == quality {
+		if zone_helpers.IsZoneNameNeutral(zone.Name) && zone_services.NewZoneClassifier().GetQuality(zone) == quality {
 			return i
 		}
 	}
@@ -98,7 +100,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 		assert.Equalf(t, 3, connection_editor.CountZoneCastles(zone),
 			"zone %s must follow the new simple-mode castle count", zone.Name)
 		if zone.Name == retieredName {
-			assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone),
+			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone),
 				"the manual quality change must survive the castle update")
 		}
 		assert.NotNilf(t, zone.ManualPosition, "zone %s lost its manual position", zone.Name)
@@ -152,13 +154,13 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 			continue
 		}
 		expected := 1
-		if neutral_zone.GetQualityFrom(zone) == neutral_zone.QualityHigh {
+		if zone_services.NewZoneClassifier().GetQuality(zone) == neutral_zone.QualityHigh {
 			expected = 3
 		}
 		assert.Equalf(t, expected, connection_editor.CountZoneCastles(zone),
-			"zone %s (quality %v)", zone.Name, neutral_zone.GetQualityFrom(zone))
+			"zone %s (quality %v)", zone.Name, zone_services.NewZoneClassifier().GetQuality(zone))
 		if zone.Name == promotedName {
-			assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone))
+			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
 		}
 	}
 }
@@ -200,7 +202,7 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 			"a non-castle option change must not touch the manual castle count")
 		assert.Equal(t, 7.5, zone.GuardMultiplier,
 			"a non-castle option change must not touch manual guard values")
-		assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone))
+		assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
 	}
 	assert.True(t, found, "manually edited zone disappeared from the regenerated template")
 }

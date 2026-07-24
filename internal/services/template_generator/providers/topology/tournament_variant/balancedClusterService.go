@@ -9,21 +9,25 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
 )
 
 type BalancedClusterService struct {
 	base.TopologyBase
+	positionLayoutService *position_layout.PositionLayoutService
 }
 
 func NewBalancedClusterService() *BalancedClusterService {
 	return &BalancedClusterService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase:          base.NewTopologyBase(),
+		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }
 
@@ -35,7 +39,11 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	singlePlayerList := []string{playerLabel}
 	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans)
-	rawPositions := models.CreatePositionsFromPlans(orderedLabels, singlePlayerList, allNeutralZonePlans)
+	rawPositions := this.positionLayoutService.CreatePositionsFromPlans(
+		orderedLabels,
+		singlePlayerList,
+		allNeutralZonePlans,
+	)
 	positions := this.createPositions(rawPositions, playerIndex)
 
 	sortedPairs := this.createSortedPairs(orderedLabels, rawPositions, allNeutralZonePlans)
@@ -81,7 +89,7 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 		return models.Positions{}
 	}
 
-	minimumPosition, maximumPosition := rawPositions.GetMinAndMaxPositions()
+	minimumPosition, maximumPosition := geometry.GetPositionBounds(rawPositions)
 	spanX := math.Max(maximumPosition.X-minimumPosition.X, 0.001)
 	spanY := math.Max(maximumPosition.Y-minimumPosition.Y, 0.001)
 

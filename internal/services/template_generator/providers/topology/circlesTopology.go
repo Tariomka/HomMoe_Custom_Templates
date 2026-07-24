@@ -4,18 +4,22 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 )
 
 type CirclesTopologyService struct {
 	RandomTopologyService
+	positionLayoutService *position_layout.PositionLayoutService
 }
 
 func NewCirclesTopologyService() *CirclesTopologyService {
 	return &CirclesTopologyService{
 		RandomTopologyService: *NewRandomTopologyService(),
+		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }
 
@@ -31,8 +35,13 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 	}
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
-	positions := models.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
-	pairs := this.createCirclesPairs(positions.CreateDelaunayTriangulation(), allLabels, playerLabels, neutralZones)
+	positions := this.positionLayoutService.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
+	pairs := this.createCirclesPairs(
+		geometry.CreateDelaunayTriangulation(positions),
+		allLabels,
+		playerLabels,
+		neutralZones,
+	)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
 
 	zones := this.createZones(

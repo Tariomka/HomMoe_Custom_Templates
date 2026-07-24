@@ -3,6 +3,7 @@ package topologyBase_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
@@ -12,7 +13,7 @@ import (
 func TestWhenNeutralCastleCountIsZero_NoNeutralCastlesAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityMedium)
+	profile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityMedium)
 
 	// Act
 	castles := base.CreateNeutralZoneCastles(profile, newUnitTuning(), 0, false)
@@ -24,7 +25,7 @@ func TestWhenNeutralCastleCountIsZero_NoNeutralCastlesAreCreated(t *testing.T) {
 func TestWhenZoneIsHoldCity_PrimaryCastleIsUltraRichCenteredHoldCityCastle(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityHigh)
+	profile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityHigh)
 	expectedCastles := []entities.MainObject{
 		{
 			Type:                     "City",
@@ -60,7 +61,7 @@ func TestWhenHoldCityProfileGuardExceedsFloor_ProfileGuardValueIsUsed(t *testing
 func TestWhenZoneIsNotHoldCity_PrimaryCastleUsesProfileQualityAndGuard(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityLow)
+	profile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityLow)
 	expectedCastles := []entities.MainObject{
 		{
 			Type:                     "City",
@@ -84,7 +85,7 @@ func TestWhenZoneIsNotHoldCity_PrimaryCastleUsesProfileQualityAndGuard(t *testin
 func TestWhenMultipleNeutralCastlesAreRequested_ExtraCastlesUseExtraProfileValues(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityMedium)
+	profile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityMedium)
 	expectedExtraCastle := entities.MainObject{
 		Type:                     "City",
 		GuardChance:              1,
@@ -106,7 +107,7 @@ func TestWhenMultipleNeutralCastlesAreRequested_ExtraCastlesUseExtraProfileValue
 func TestWhenBorderGuardMultiplierIsDoubled_NeutralCastleGuardsAreScaled(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityLow)
+	profile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityLow)
 	tuning := newUnitTuning()
 	tuning.BorderGuardStrengthMultiplier = 2.0
 

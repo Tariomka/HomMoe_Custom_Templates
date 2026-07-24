@@ -1,20 +1,20 @@
-package position_test
+package closestAcrossComponents_test
 
 import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenOnlyOneComponentExists_ReportsNoPair(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	positions := models.Positions{data.NewVec2(0.1, 0.1), data.NewVec2(0.9, 0.9)}
+	positions := []data.Vec2[float64]{data.NewVec2(0.1, 0.1), data.NewVec2(0.9, 0.9)}
 
 	// Act
-	_, found := positions.GetShortestDistanceIndex([][]int{{0, 1}})
+	_, found := geometry.FindClosestAcrossComponents(positions, [][]int{{0, 1}})
 
 	// Assert
 	assert.False(t, found)
@@ -23,19 +23,19 @@ func TestWhenOnlyOneComponentExists_ReportsNoPair(t *testing.T) {
 func TestWhenComponentListIsEmpty_ReturnsNegativeIndexes(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	positions := models.Positions{data.NewVec2(0.1, 0.1)}
+	positions := []data.Vec2[float64]{data.NewVec2(0.1, 0.1)}
 
 	// Act
-	indexes, _ := positions.GetShortestDistanceIndex(nil)
+	indexes, _ := geometry.FindClosestAcrossComponents(positions, nil)
 
 	// Assert
 	assert.Equal(t, data.NewVec2(-1, -1), indexes)
 }
 
-func TestWhenTwoComponentsExist_PicksClosestCrossComponentPair(t *testing.T) {
+func TestWhenComponentsAreDisconnected_ReturnsClosestCrossComponentPair(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	positions := models.Positions{
+	positions := []data.Vec2[float64]{
 		data.NewVec2(0.0, 0.0),
 		data.NewVec2(0.4, 0.4),
 		data.NewVec2(0.5, 0.5),
@@ -43,7 +43,7 @@ func TestWhenTwoComponentsExist_PicksClosestCrossComponentPair(t *testing.T) {
 	}
 
 	// Act
-	indexes, _ := positions.GetShortestDistanceIndex([][]int{{0, 1}, {2, 3}})
+	indexes, _ := geometry.FindClosestAcrossComponents(positions, [][]int{{0, 1}, {2, 3}})
 
 	// Assert
 	assert.Equal(t, data.NewVec2(1, 2), indexes)

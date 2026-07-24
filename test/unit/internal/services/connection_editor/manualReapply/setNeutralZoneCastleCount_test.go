@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,7 @@ func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
 	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone))
+	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {

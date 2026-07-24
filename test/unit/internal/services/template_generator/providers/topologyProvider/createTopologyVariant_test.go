@@ -1,6 +1,7 @@
 package topologyProvider_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"sort"
 	"strings"
 	"testing"
@@ -19,7 +20,7 @@ func buildVariantInputs(
 	configuration *config.GeneratorConfig,
 	playerLabels []string,
 	neutralZones neutral_zone.Plans) models.GenerationTuning {
-	return models.NewGenerationTuning(configuration, len(playerLabels)+len(neutralZones))
+	return test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(neutralZones))
 }
 
 // spawnZoneNames returns the sorted names of the variant's spawn zones.

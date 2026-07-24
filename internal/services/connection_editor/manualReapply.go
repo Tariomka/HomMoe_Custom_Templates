@@ -6,6 +6,7 @@ package connection_editor
 // manual edits, and only when they changed since the last generation.
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
@@ -15,7 +16,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // ApplyCastleSettingChanges rewrites the castles of the manually edited zones
@@ -35,8 +38,9 @@ func ApplyCastleSettingChanges(
 	if !changes.Any() {
 		return
 	}
-	tuning := models.NewGenerationTuning(configuration, len(zones))
+	tuning := generation_tuning.NewGenerationTuningFactory().Create(configuration, len(zones))
 	topology := base.NewTopologyBase()
+	zoneClassifier := zone_services.NewZoneClassifier()
 	for i := range zones {
 		zone := &zones[i]
 		switch zone_helpers.GetZoneTypeFromName(zone.Name) {
@@ -49,7 +53,7 @@ func ApplyCastleSettingChanges(
 				rebuildHubZoneCastles(zone, configuration.ZoneConfiguration.Advanced.HubZoneCastles, tuning, &topology)
 			}
 		case preview.ZoneTypeNeutral:
-			if count, update := neutralCastleTarget(*zone, changes, configuration); update {
+			if count, update := neutralCastleTarget(*zone, changes, configuration, zoneClassifier); update {
 				SetNeutralZoneCastleCount(zone, count, tuning)
 			}
 		case preview.ZoneTypeUnknown:
@@ -64,7 +68,9 @@ func ApplyCastleSettingChanges(
 func neutralCastleTarget(
 	zone entities.Zone,
 	changes editor_state_dto.CastleSettingChanges,
-	configuration *config.GeneratorConfig) (int, bool) {
+	configuration *config.GeneratorConfig,
+	zoneClassifier *zone_services.ZoneClassifier,
+) (int, bool) {
 	zoneConfiguration := configuration.ZoneConfiguration
 	if changes.NeutralSimple {
 		return helpers.Clamp(zoneConfiguration.NeutralZoneCastles, 0, 4), true
@@ -74,7 +80,7 @@ func neutralCastleTarget(
 		return 0, false
 	}
 
-	switch neutral_zone.GetQualityFrom(zone) {
+	switch zoneClassifier.GetQuality(zone) {
 	case neutral_zone.QualityHighest:
 		if changes.Hub {
 			return helpers.Clamp(zoneConfiguration.Advanced.HubZoneCastles, 0, 4), true
@@ -105,7 +111,8 @@ func neutralCastleTarget(
 // non-castle main objects (abandoned outposts) untouched - unlike
 // ApplyNeutralZoneQuality, which re-profiles the whole zone.
 func SetNeutralZoneCastleCount(zone *entities.Zone, castleCount int, tuning models.GenerationTuning) {
-	profile := neutral_zone.NewNeutralZoneProfile(neutral_zone.GetQualityFrom(*zone))
+	quality := zone_services.NewZoneClassifier().GetQuality(*zone)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
 		base.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),

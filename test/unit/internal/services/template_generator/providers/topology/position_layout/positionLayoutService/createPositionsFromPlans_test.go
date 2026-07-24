@@ -1,4 +1,4 @@
-package position_test
+package positionLayoutService_test
 
 import (
 	"math"
@@ -7,16 +7,18 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenNoLabelsAreProvided_ReturnsNil(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := position_layout.NewPositionLayoutService()
 	var orderedLabels []string
 
 	// Act
-	positions := models.CreatePositionsFromPlans(orderedLabels, nil, neutral_zone.Plans{})
+	positions := service.CreatePositionsFromPlans(orderedLabels, nil, neutral_zone.Plans{})
 
 	// Assert
 	assert.Nil(t, positions)
@@ -25,6 +27,7 @@ func TestWhenNoLabelsAreProvided_ReturnsNil(t *testing.T) {
 func TestWhenSinglePlayerLabelIsProvided_PlacesItOnPlayerRingRadius(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := position_layout.NewPositionLayoutService()
 	orderedLabels := []string{"P1"}
 	playerLabels := []string{"P1"}
 	expected := models.Positions{data.NewVec2(
@@ -33,7 +36,7 @@ func TestWhenSinglePlayerLabelIsProvided_PlacesItOnPlayerRingRadius(t *testing.T
 	)}
 
 	// Act
-	positions := models.CreatePositionsFromPlans(orderedLabels, playerLabels, neutral_zone.Plans{})
+	positions := service.CreatePositionsFromPlans(orderedLabels, playerLabels, neutral_zone.Plans{})
 
 	// Assert
 	assert.Equal(t, expected, positions)
@@ -42,6 +45,7 @@ func TestWhenSinglePlayerLabelIsProvided_PlacesItOnPlayerRingRadius(t *testing.T
 func TestWhenLabelsSpanEveryTier_ReturnsOnePositionPerLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := position_layout.NewPositionLayoutService()
 	orderedLabels := []string{"P1", "P2", "L1", "M1", "H1"}
 	playerLabels := []string{"P1", "P2"}
 	plans := neutral_zone.Plans{
@@ -51,7 +55,7 @@ func TestWhenLabelsSpanEveryTier_ReturnsOnePositionPerLabel(t *testing.T) {
 	}
 
 	// Act
-	positions := models.CreatePositionsFromPlans(orderedLabels, playerLabels, plans)
+	positions := service.CreatePositionsFromPlans(orderedLabels, playerLabels, plans)
 
 	// Assert
 	assert.Len(t, positions, 5)
@@ -60,6 +64,7 @@ func TestWhenLabelsSpanEveryTier_ReturnsOnePositionPerLabel(t *testing.T) {
 func TestWhenManyLabelsArePlaced_ClampsEveryPositionInsideCanvasMargins(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := position_layout.NewPositionLayoutService()
 	orderedLabels := []string{"P1", "P2", "P3", "L1", "L2", "M1", "M2", "H1", "H2"}
 	playerLabels := []string{"P1", "P2", "P3"}
 	plans := neutral_zone.Plans{
@@ -72,7 +77,7 @@ func TestWhenManyLabelsArePlaced_ClampsEveryPositionInsideCanvasMargins(t *testi
 	}
 
 	// Act
-	positions := models.CreatePositionsFromPlans(orderedLabels, playerLabels, plans)
+	positions := service.CreatePositionsFromPlans(orderedLabels, playerLabels, plans)
 
 	// Assert
 	outOfBoundsCount := 0

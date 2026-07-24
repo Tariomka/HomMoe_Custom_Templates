@@ -1,10 +1,10 @@
 package tournamentTopology_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -31,7 +31,7 @@ func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeu
 	// Arrange
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -46,7 +46,7 @@ func TestWhenTournamentIsBuilt_EveryConnectionReferencesExistingZones(t *testing
 	// Arrange
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -62,7 +62,7 @@ func TestWhenPortalsAreDisabled_PlayerClustersStayIsolatedAsTwoComponents(t *tes
 	configuration := newChainTournamentConfig()
 	configuration.RandomPortals = false
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -77,7 +77,7 @@ func TestWhenTwoPlayersAreProvided_EachPlayerGetsOwnSpawnZone(t *testing.T) {
 	// Arrange
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -95,7 +95,7 @@ func TestWhenTopologyIsHubAndSpoke_CreatesHubZonePerPlayer(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -113,7 +113,7 @@ func TestWhenTopologyIsRing_CreatesRingClusterConnections(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -129,7 +129,7 @@ func TestWhenTopologyIsCircles_CreatesBalancedClusterConnections(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyCircles
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -145,7 +145,7 @@ func TestWhenTopologyIsUnhandled_FallsBackToChainClusterConnections(t *testing.T
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologySharedWeb
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -161,7 +161,7 @@ func TestWhenRandomPortalsAreEnabled_AddsPortalConnections(t *testing.T) {
 	configuration := newChainTournamentConfig()
 	configuration.RandomPortals = true
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act
@@ -177,7 +177,7 @@ func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T
 	configuration := newChainTournamentConfig()
 	configuration.RandomPortals = false
 	neutralZones := newFourNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService()
 
 	// Act

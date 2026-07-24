@@ -1,9 +1,9 @@
 package fractalTopology_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -29,7 +29,7 @@ func TestWhenTwoPlayersAndSixTieredNeutralPlansProvided_CreatesZonePerLabel(t *t
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -47,7 +47,7 @@ func TestWhenEveryTierIsPopulated_NoRandomConnectionJoinsTwoSpawnZones(t *testin
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -65,7 +65,7 @@ func TestWhenFractalsAreLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -83,7 +83,7 @@ func TestWhenFractalsAreBuilt_EveryConnectionReferencesExistingZones(t *testing.
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -102,7 +102,7 @@ func TestWhenFewerNeutralZonesThanPlayers_CreatesZonePerLabel(t *testing.T) {
 	playerLabels := []string{"A", "B", "C"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -121,7 +121,7 @@ func TestWhenFewerNeutralZonesThanPlayers_EveryConnectionReferencesExistingZones
 	playerLabels := []string{"A", "B", "C"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -138,7 +138,7 @@ func TestWhenNoNeutralZonesExist_CreatesOnlyPlayerZones(t *testing.T) {
 	configuration.Topology = config.TopologyFractal
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
-	tuning := models.NewGenerationTuning(configuration, 2)
+	tuning := test_helpers.NewGenerationTuning(configuration, 2)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -157,7 +157,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewFractalTopologyService()
 
 	// Act
@@ -176,7 +176,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
-	tuning := models.NewGenerationTuning(configuration, 8)
+	tuning := test_helpers.NewGenerationTuning(configuration, 8)
 	service := topology.NewFractalTopologyService()
 
 	// Act

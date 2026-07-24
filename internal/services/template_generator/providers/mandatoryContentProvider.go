@@ -15,12 +15,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
-type MandatoryContentProvider struct{}
+type MandatoryContentProvider struct {
+	zoneClassifier *zone_services.ZoneClassifier
+}
 
 func NewMandatoryContentProvider() *MandatoryContentProvider {
-	return &MandatoryContentProvider{}
+	return &MandatoryContentProvider{zoneClassifier: zone_services.NewZoneClassifier()}
 }
 
 func (this *MandatoryContentProvider) CreateContents(
@@ -87,7 +90,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 
 		case preview.ZoneTypeNeutral:
 			castleCount := connection_editor.CountZoneCastles(zone)
-			content := cloneContentItems(neutralRowsForQuality(configuration, neutral_zone.GetQualityFrom(zone)))
+			content := cloneContentItems(neutralRowsForQuality(configuration, this.zoneClassifier.GetQuality(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}

@@ -1,10 +1,10 @@
 package crossTopology_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -24,7 +24,7 @@ func TestWhenTwoPlayersAndFiveNeutralPlansProvided_CreatesZonePerLabel(t *testin
 	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N5", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 7)
+	tuning := test_helpers.NewGenerationTuning(configuration, 7)
 	service := topology.NewCrossTopologyService()
 
 	// Act
@@ -44,7 +44,7 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheCrossCenter(t *testing.T) {
 	neutralZones.AddPlan("N1", neutral_zone.QualityHigh, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
 	service := topology.NewCrossTopologyService()
 
 	// Act
@@ -74,7 +74,7 @@ func TestWhenCrossIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N5", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 7)
+	tuning := test_helpers.NewGenerationTuning(configuration, 7)
 	service := topology.NewCrossTopologyService()
 
 	// Act
@@ -115,7 +115,7 @@ func TestWhenNoNeutralZonesExist_JoinsPlayerTipsInARing(t *testing.T) {
 			configuration.Topology = config.TopologyCross
 			configuration.PlayerCount = len(testCase.playerLabels)
 			neutralZones := neutral_zone.Plans{}
-			tuning := models.NewGenerationTuning(configuration, len(testCase.playerLabels))
+			tuning := test_helpers.NewGenerationTuning(configuration, len(testCase.playerLabels))
 			service := topology.NewCrossTopologyService()
 
 			// Act
@@ -138,7 +138,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewCrossTopologyService()
 
 	// Act
@@ -160,7 +160,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewCrossTopologyService()
 
 	// Act

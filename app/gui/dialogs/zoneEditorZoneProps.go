@@ -58,7 +58,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 // syncZoneProps loads the zone property widgets from the selected zone.
 // Called once whenever the zone selection changes.
 func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
-	quality := neutral_zone.GetQualityFrom(*zone)
+	quality := this.zoneHandler.GetZoneQuality(*zone)
 	this.qualityDropdown.SelectByName(quality.GetName())
 	castles := min(this.zoneHandler.CountZoneCastles(*zone), 4)
 	this.castleDropdown.SelectByName(strconv.Itoa(castles))

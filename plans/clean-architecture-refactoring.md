@@ -216,20 +216,20 @@ Handler characterization tests cover every new public operation, and a headless 
 
 ## Phase 2: Restore Model And Algorithm Ownership
 
-Status: Not started
+Status: Complete
 
-- [ ] Reduce `internal/models/position.go` to position/connection-index data aliases or simple collection behavior.
-- [ ] Create a focused topology `PositionLayoutService` under `internal/services/template_generator/providers/topology` for `CreatePositionsFromPlans`, because tier radii and plan placement are generation policy.
-- [ ] Move generic Delaunay triangulation, bounds, and closest-cross-component calculations into `internal/helpers/geometry` as narrowly named pure functions such as `CreateDelaunayTriangulation(positions []data.Vec2[float64])` and `FindClosestAcrossComponents(positions, components)`. Introduce a struct only if a real configurable dependency appears. This removes algorithms from data models without wrapping stateless math in empty objects.
-- [ ] Update random, circles, tournament-balanced, and topology-base callers to use the new owners through fields initialized by constructors.
-- [ ] Move zone graph traversal out of `internal/models/zoneAdjacency.go` into `internal/helpers/graph` as pure `Link`, `DistancesFrom`, and `ConnectedComponents` operations over generic/passive adjacency data. Keep zone-specific label selection in `internal/services/zones`. This matches the requested helper role and avoids an empty stateless service wrapper.
-- [ ] Move entity-derived quality classification from `neutral_zone.GetQualityFrom` into `internal/services/zones.ZoneClassifier` with a receiver method such as `GetQuality(zone entities.Zone) neutral_zone.Quality`.
-- [ ] Keep `Quality.GetName`, `GetIndex`, `GetGuardValue`, `GetBalanceScore`, and index conversion as value/enum behavior in models.
-- [ ] Keep zone-name parsing that is truly lexical in `internal/helpers/zone_helpers`; move any policy using entity contents, connection guard rules, or registry profiles into `ZoneClassifier` or another zone service.
-- [ ] Replace preview, mandatory-content, connection-editor, and handler callers of model classification with the classifier dependency.
-- [ ] Move neutral profile assembly from `neutral_zone.NewNeutralZoneProfile` to `internal/common/common_zones.GetNeutralZoneProfile`. Keep `neutral_zone.Profile` as passive data, keep registry access inside the common factory, and return fresh slices so callers cannot mutate catalog state.
-- [ ] Evaluate `NewGenerationTuning` separately. Move construction to `GenerationTuningFactory` only if callers otherwise require generator config in a lower-level model package; keep scalar `ScaleBy*` methods on the value object.
-- [ ] Move tests with the implementation ownership and preserve one public method per test file as required by `AGENTS.md`.
+- [x] Reduce `internal/models/position.go` to position/connection-index data aliases or simple collection behavior.
+- [x] Create a focused topology `PositionLayoutService` under `internal/services/template_generator/providers/topology` for `CreatePositionsFromPlans`, because tier radii and plan placement are generation policy.
+- [x] Move generic Delaunay triangulation, bounds, and closest-cross-component calculations into `internal/helpers/geometry` as narrowly named pure functions such as `CreateDelaunayTriangulation(positions []data.Vec2[float64])` and `FindClosestAcrossComponents(positions, components)`. Introduce a struct only if a real configurable dependency appears. This removes algorithms from data models without wrapping stateless math in empty objects.
+- [x] Update random, circles, tournament-balanced, and topology-base callers to use the new owners through fields initialized by constructors.
+- [x] Move zone graph traversal out of `internal/models/zoneAdjacency.go` into `internal/helpers/graph` as pure `Link`, `DistancesFrom`, and `ConnectedComponents` operations over generic/passive adjacency data. Keep zone-specific label selection in `internal/services/zones`. This matches the requested helper role and avoids an empty stateless service wrapper.
+- [x] Move entity-derived quality classification from `neutral_zone.GetQualityFrom` into `internal/services/zones.ZoneClassifier` with a receiver method such as `GetQuality(zone entities.Zone) neutral_zone.Quality`.
+- [x] Keep `Quality.GetName`, `GetIndex`, `GetGuardValue`, `GetBalanceScore`, and index conversion as value/enum behavior in models.
+- [x] Keep zone-name parsing that is truly lexical in `internal/helpers/zone_helpers`; move any policy using entity contents, connection guard rules, or registry profiles into `ZoneClassifier` or another zone service.
+- [x] Replace preview, mandatory-content, connection-editor, and handler callers of model classification with the classifier dependency.
+- [x] Move neutral profile assembly from `neutral_zone.NewNeutralZoneProfile` to `internal/common/common_zones.GetNeutralZoneProfile`. Keep `neutral_zone.Profile` as passive data, keep registry access inside the common factory, and return fresh slices so callers cannot mutate catalog state.
+- [x] Evaluate `NewGenerationTuning` separately. Move construction to `GenerationTuningFactory` only if callers otherwise require generator config in a lower-level model package; keep scalar `ScaleBy*` methods on the value object.
+- [x] Move tests with the implementation ownership and preserve one public method per test file as required by `AGENTS.md`.
 
 ### Phase 2 Verification Plan
 
@@ -242,7 +242,13 @@ Status: Not started
 
 ### Phase 2 Summary
 
-Pending phase completion.
+Complete. Reduced `internal/models/position.go` to passive aliases plus append behavior. Generation-specific tier placement now belongs to `topology/position_layout.PositionLayoutService`; generic Delaunay triangulation, component bounds, and closest-cross-component selection now live as pure functions in `internal/helpers/geometry`. Delaunay edges are normalized and lexicographically sorted, making the previously map-ordered result deterministic. Focused tests cover 0/1/2 points, duplicate and collinear positions, winding independence, bounds, disconnected components, and deterministic edge output.
+
+Replaced `internal/models/zoneAdjacency.go` with generic `internal/helpers/graph` adjacency operations for undirected linking, breadth-first distances, and connected components. Zone-specific topology construction remains in `internal/services/zones` and topology services. Entity-derived neutral quality and connection-guard classification now belong to `zones.ZoneClassifier`; preview, mandatory-content, manual-edit, zone-editor, handler, and GUI callers use the classifier directly or through focused GUI port methods. `internal/helpers/zone_helpers` now contains lexical name parsing only, while neutral quality enum labels, indexes, guard values, and balance scores remain model value behavior.
+
+Moved registry-backed neutral profile assembly to `common/common_zones.GetNeutralZoneProfile`; `neutral_zone.Profile` is passive data and every returned slice is fresh. Moved generator-config tuning construction into the cycle-free `template_generator/generation_tuning.GenerationTuningFactory` because the old model constructor imported a generator service utility; scalar `ScaleBy*` methods remain on `models.GenerationTuning`. Tests moved with implementation ownership, and topology fixtures use one shared test helper that delegates to the production factory.
+
+Final verification passed: `go build ./...`; exact unit coverage at 64.2%, above the 64.1% Phase 1 checkpoint; `go test ./test/unit/... -count=1`; `go test ./test/... -count=1`; tagged integration; tagged headless GUI integration; tagged performance package checks; diagnostics; architecture guard; and `git diff --check`. A Fable read-only review found no hard bugs and approved the phase. It confirmed preview, mandatory-content, manual-edit, and zone-editor behavior is preserved; deterministic normalized Delaunay edge order is the only intentional behavioral change. No file under `data/`, `internal/entities/template/`, or `internal/registry/` was modified.
 
 ## Phase 3: Convert Functional Packages To Cohesive Services
 

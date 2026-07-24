@@ -1,12 +1,12 @@
 package guiHandler_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func TestWhenFullVariantZoneCountIsProvided_ReturnsMappedZoneEditorOptions(t *te
 	configuration := mappers.NewConfigMapper().FromEditorState(state)
 	expected := dtos.ZoneEditorOptionsDto{
 		Topology:      state.Topology,
-		Tuning:        models.NewGenerationTuning(configuration, fullVariantZoneCount),
+		Tuning:        test_helpers.NewGenerationTuning(configuration, fullVariantZoneCount),
 		GenerateRoads: state.GenerateRoads,
 	}
 

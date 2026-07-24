@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
@@ -174,7 +175,7 @@ func ApplyNeutralZoneQuality(
 	quality neutral_zone.Quality,
 	castleCount int,
 	tuning models.GenerationTuning) {
-	profile := neutral_zone.NewNeutralZoneProfile(quality)
+	profile := common_zones.GetNeutralZoneProfile(quality)
 	zone.Layout = profile.Layout
 	zone.GuardMultiplier = tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)
 	zone.GuardReactionDistribution = profile.GuardReactionDistribution

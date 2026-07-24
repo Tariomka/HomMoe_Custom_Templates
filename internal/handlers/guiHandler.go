@@ -10,12 +10,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
 
@@ -26,6 +29,8 @@ type GUIHandler struct {
 	fileService       *file_service.FileService
 	previewGenerator  *preview_service.PreviewGeneratorService
 	previewLayout     *preview_service.PreviewLayoutService
+	zoneClassifier    *zone_services.ZoneClassifier
+	tuningFactory     *generation_tuning.GenerationTuningFactory
 }
 
 func NewGuiHandler() *GUIHandler {
@@ -43,6 +48,8 @@ func NewGuiHandler() *GUIHandler {
 		fileService:       file_service.NewFileService(),
 		previewGenerator:  previewGenerator,
 		previewLayout:     preview_service.NewPreviewLayoutService(),
+		zoneClassifier:    zone_services.NewZoneClassifier(),
+		tuningFactory:     generation_tuning.NewGenerationTuningFactory(),
 	}
 }
 
@@ -110,13 +117,29 @@ func (this *GUIHandler) GetZoneEditorOptions(
 	configuration := this.mapper.FromEditorState(state)
 	return dtos.ZoneEditorOptionsDto{
 		Topology:      state.Topology,
-		Tuning:        models.NewGenerationTuning(configuration, totalZoneCount),
+		Tuning:        this.tuningFactory.Create(configuration, totalZoneCount),
 		GenerateRoads: state.GenerateRoads,
 	}
 }
 
 func (this *GUIHandler) CountZoneCastles(zone entities.Zone) int {
 	return connection_editor.CountZoneCastles(zone)
+}
+
+func (this *GUIHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
+	return this.zoneClassifier.GetQuality(zone)
+}
+
+func (this *GUIHandler) GetZoneConnectionGuardQuality(
+	from, to string,
+	zones []entities.Zone,
+	playerZoneNames map[string]bool,
+) neutral_zone.Quality {
+	playerNames := make([]string, 0, len(playerZoneNames))
+	for playerName := range playerZoneNames {
+		playerNames = append(playerNames, playerName)
+	}
+	return this.zoneClassifier.GetConnectionGuardQuality(from, to, zones, playerNames)
 }
 
 func (this *GUIHandler) ApplyZoneEditorQuality(

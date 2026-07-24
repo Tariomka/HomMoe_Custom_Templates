@@ -3,9 +3,11 @@ package topologyBase_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -104,7 +106,7 @@ func TestWhenHubZoneIsCreated_UsesHighestProfileGuardedPool(t *testing.T) {
 	// Assert
 	assert.Equal(
 		t,
-		neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityHighest).GuardedContentPool,
+		common_zones.GetNeutralZoneProfile(neutral_zone.QualityHighest).GuardedContentPool,
 		zone.GuardedContentPool,
 	)
 }
@@ -120,7 +122,7 @@ func TestWhenHubZoneIsCreated_UsesHighestProfileResourcesPool(t *testing.T) {
 	// Assert
 	assert.Equal(
 		t,
-		neutral_zone.NewNeutralZoneProfile(neutral_zone.QualityHighest).ResourcesContentPool,
+		common_zones.GetNeutralZoneProfile(neutral_zone.QualityHighest).ResourcesContentPool,
 		zone.ResourcesContentPool,
 	)
 }
@@ -158,5 +160,5 @@ func TestWhenHubZoneIsCreated_ClassifiesAsHighestQuality(t *testing.T) {
 	zone := topologyBase.CreateHubZone(nil, newUnitTuning(), false, 1.0, 1, true, "")
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHighest, neutral_zone.GetQualityFrom(zone))
+	assert.Equal(t, neutral_zone.QualityHighest, zone_services.NewZoneClassifier().GetQuality(zone))
 }

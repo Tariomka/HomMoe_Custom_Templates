@@ -11,15 +11,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // NewDefaultConnection builds a user-added Direct connection between two zones,
 // seeded with the tier's generator-default guard value and the standard (15%)
 // weekly increment.
 func NewDefaultConnection(from, to string, zones []entities.Zone, playerZoneNames map[string]bool) entities.Connection {
-	quality := zone_helpers.GetZoneConnectionGuardQuality(
+	quality := zone_services.NewZoneClassifier().GetConnectionGuardQuality(
 		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
 	return entities.Connection{
 		From:                 from,

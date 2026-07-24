@@ -1,23 +1,24 @@
-package zoneAdjacency_test
+package adjacency_test
 
 import (
 	"slices"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/graph"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenGraphHasTwoComponents_ReturnsBothComponentsWithTheirMembers(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	adjacency := models.NewZoneIndexAdjacency(5)
-	adjacency.Link(0, 1)
-	adjacency.Link(1, 2)
-	adjacency.Link(3, 4)
+	nodes := []int{0, 1, 2, 3, 4}
+	adjacency := graph.NewAdjacency(nodes)
+	graph.Link(adjacency, 0, 1)
+	graph.Link(adjacency, 1, 2)
+	graph.Link(adjacency, 3, 4)
 
 	// Act
-	components := adjacency.FindIndexes(5)
+	components := graph.ConnectedComponents(adjacency, nodes)
 
 	// Assert
 	sortedComponents := make([][]int, 0, len(components))
@@ -32,10 +33,11 @@ func TestWhenGraphHasTwoComponents_ReturnsBothComponentsWithTheirMembers(t *test
 func TestWhenNoLinksExist_ReturnsOneComponentPerNode(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	adjacency := models.NewZoneIndexAdjacency(3)
+	nodes := []int{0, 1, 2}
+	adjacency := graph.NewAdjacency(nodes)
 
 	// Act
-	components := adjacency.FindIndexes(3)
+	components := graph.ConnectedComponents(adjacency, nodes)
 
 	// Assert
 	assert.Equal(t, [][]int{{0}, {1}, {2}}, components)

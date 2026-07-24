@@ -10,17 +10,18 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type PreviewLayoutService struct {
-	layout *preview.Layout
+	layout         *preview.Layout
+	zoneClassifier *zone_services.ZoneClassifier
 }
 
 func NewPreviewLayoutService() *PreviewLayoutService {
-	return &PreviewLayoutService{}
+	return &PreviewLayoutService{zoneClassifier: zone_services.NewZoneClassifier()}
 }
 
 // BuildPreviewLayout computes zone positions, radius and connections for a
@@ -105,7 +106,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 			Name:    zone.Name,
 			Label:   helpers.GetZoneLabel(zone.Name),
 			Center:  pos,
-			Quality: neutral_zone.GetQualityFrom(zone),
+			Quality: this.zoneClassifier.GetQuality(zone),
 			Type:    zone_helpers.GetZoneTypeFromName(zone.Name),
 		}
 		applyMainObjects(zone, &previewZone)

@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -19,6 +20,8 @@ type TemplateHandlerMock struct {
 	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []entities.Zone
 	GetZoneEditorOptionsFunc        func(dtos.EditorStateDto, int) dtos.ZoneEditorOptionsDto
 	CountZoneCastlesFunc            func(entities.Zone) int
+	GetZoneQualityFunc              func(entities.Zone) neutral_zone.Quality
+	GetZoneConnectionQualityFunc    func(string, string, []entities.Zone, map[string]bool) neutral_zone.Quality
 	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) entities.Zone
 	DescribeZoneEditorGraphFunc     func([]entities.Zone, []entities.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) entities.Connection
@@ -65,6 +68,24 @@ func (this *TemplateHandlerMock) CountZoneCastles(zone entities.Zone) int {
 		return this.CountZoneCastlesFunc(zone)
 	}
 	return 0
+}
+
+func (this *TemplateHandlerMock) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
+	if this.GetZoneQualityFunc != nil {
+		return this.GetZoneQualityFunc(zone)
+	}
+	return neutral_zone.QualityUnknown
+}
+
+func (this *TemplateHandlerMock) GetZoneConnectionGuardQuality(
+	from, to string,
+	zones []entities.Zone,
+	playerZoneNames map[string]bool,
+) neutral_zone.Quality {
+	if this.GetZoneConnectionQualityFunc != nil {
+		return this.GetZoneConnectionQualityFunc(from, to, zones, playerZoneNames)
+	}
+	return neutral_zone.QualityUnknown
 }
 
 func (this *TemplateHandlerMock) ApplyZoneEditorQuality(

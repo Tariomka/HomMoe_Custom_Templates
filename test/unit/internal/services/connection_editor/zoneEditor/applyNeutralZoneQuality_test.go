@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +19,7 @@ func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
 	connection_editor.ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHigh, neutral_zone.GetQualityFrom(zone))
+	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
 }
 
 func TestWhenTwoCastlesAreRequested_RebuildsTwoCastles(t *testing.T) {

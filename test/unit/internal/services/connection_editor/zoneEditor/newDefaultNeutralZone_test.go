@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -71,7 +72,7 @@ func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
 			zone := connection_editor.NewDefaultNeutralZone("Z", testCase.quality, 1, false, defaultTuning())
 
 			// Assert
-			assert.Equal(t, testCase.quality, neutral_zone.GetQualityFrom(zone))
+			assert.Equal(t, testCase.quality, zone_services.NewZoneClassifier().GetQuality(zone))
 		})
 	}
 }

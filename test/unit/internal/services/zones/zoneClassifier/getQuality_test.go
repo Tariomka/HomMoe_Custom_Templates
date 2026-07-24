@@ -1,16 +1,19 @@
-package neutralZoneQuality_test
+package zoneClassifier_test
 
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 	t.Parallel()
+	classifier := zones.NewZoneClassifier()
 	layoutValues := registry.GetLayoutValues()
 	resourcePools := registry.GetResourcesContentPoolValues()
 	testCases := []struct {
@@ -173,7 +176,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 			// Arrange
 
 			// Act
-			quality := neutral_zone.GetQualityFrom(testCase.zone)
+			quality := classifier.GetQuality(testCase.zone)
 
 			// Assert
 			assert.Equal(t, testCase.expected, quality)
@@ -183,6 +186,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 
 func TestWhenGeneratedProfileRoundTrips_EveryQualityIsDetectedBack(t *testing.T) {
 	t.Parallel()
+	classifier := zones.NewZoneClassifier()
 	testCases := []struct {
 		subtestName string
 		quality     neutral_zone.Quality
@@ -197,7 +201,7 @@ func TestWhenGeneratedProfileRoundTrips_EveryQualityIsDetectedBack(t *testing.T)
 		t.Run(testCase.subtestName, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			profile := neutral_zone.NewNeutralZoneProfile(testCase.quality)
+			profile := common_zones.GetNeutralZoneProfile(testCase.quality)
 			zone := entities.Zone{
 				Name:                 "Neutral-Z",
 				Layout:               profile.Layout,
@@ -207,7 +211,7 @@ func TestWhenGeneratedProfileRoundTrips_EveryQualityIsDetectedBack(t *testing.T)
 			}
 
 			// Act
-			quality := neutral_zone.GetQualityFrom(zone)
+			quality := classifier.GetQuality(zone)
 
 			// Assert
 			assert.Equal(t, testCase.quality, quality)

@@ -1,10 +1,10 @@
 package hubTopology_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
@@ -21,7 +21,7 @@ func TestWhenOuterLabelsSurroundTheHub_CreatesSingleHubZone(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
 	// Act
@@ -46,7 +46,7 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesHubPlusOuterZones(t *te
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
 	// Act
@@ -65,7 +65,7 @@ func TestWhenHubAndSpokesAreBuilt_EveryConnectionReferencesExistingZones(t *test
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
 	// Act
@@ -84,7 +84,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentName(t *te
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewHubTopologyService()
 
 	// Act
@@ -111,7 +111,7 @@ func TestWhenIsolatedPlayersAreAdjacentOuterLabels_SkipsTheirPseudoConnection(t 
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := topology.NewHubTopologyService()
 
 	// Act
@@ -130,7 +130,7 @@ func TestWhenCirclesTopologyProvided_CreatesHubPlusOuterZones(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
 	service := topology.NewHubTopologyService()
 
 	// Act
@@ -152,7 +152,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 7)
+	tuning := test_helpers.NewGenerationTuning(configuration, 7)
 	service := topology.NewHubTopologyService()
 
 	// Act

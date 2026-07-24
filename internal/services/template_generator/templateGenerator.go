@@ -6,8 +6,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
@@ -15,6 +15,7 @@ import (
 type TemplateGenerator struct {
 	configuration     *config.GeneratorConfig
 	zoneLabelProvider *zones.ZoneLabelProvider
+	tuningFactory     *generation_tuning.GenerationTuningFactory
 
 	contentLimitProvider *providers.ContentLimitProvider
 	contentProvider      *providers.MandatoryContentProvider
@@ -30,6 +31,7 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) *TemplateGenera
 	return &TemplateGenerator{
 		configuration:        configuration,
 		zoneLabelProvider:    zones.NewZoneLabelProvider(),
+		tuningFactory:        generation_tuning.NewGenerationTuningFactory(),
 		contentLimitProvider: providers.NewContentLimitProvider(),
 		contentProvider:      providers.NewMandatoryContentProvider(),
 		gameRulesProvider:    providers.NewGameRulesProvider(),
@@ -49,7 +51,7 @@ func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
-	tuning := models.NewGenerationTuning(this.configuration, this.configuration.PlayerCount+len(neutralZones))
+	tuning := this.tuningFactory.Create(this.configuration, this.configuration.PlayerCount+len(neutralZones))
 
 	return &entities.RmgTemplate{
 		Name:                this.configuration.TemplateName,
