@@ -9,6 +9,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -123,18 +126,23 @@ func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
 	assert.Len(t, loadDto.Template.Variants[0].Zones, 1)
 }
 
-func TestWhenConfigIsProvided_MandatoryContentIsRebuiltFromZones(t *testing.T) {
+func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	template.MandatoryContent = nil
-	configuration := mappers.NewConfigMapper().FromEditorState(dtos.NewDefaultEditorStateDto())
+	editorState := dtos.NewDefaultEditorStateDto()
+	configuration := mappers.NewConfigMapper().FromEditorState(editorState)
+	expectedContent := providers.NewMandatoryContentProvider().CreateContentsForZones(
+		*configuration,
+		template.Variants[0].Zones,
+	)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       template.Variants[0].Zones,
 		Connections: template.Variants[0].Connections,
-		Config:      configuration,
+		EditorState: &editorState,
 	}
 
 	// Act
@@ -142,10 +150,42 @@ func TestWhenConfigIsProvided_MandatoryContentIsRebuiltFromZones(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.NotEmpty(t, loadDto.Template.MandatoryContent)
+	assert.Equal(t, expectedContent, loadDto.Template.MandatoryContent)
 }
 
-func TestWhenConfigIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
+func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	zones := []entities.Zone{{
+		Name:               "Neutral-G",
+		Layout:             registry.GetLayoutValues().TreasureZone,
+		GuardedContentPool: []string{"classic_template_pool_random_t4_item"},
+		MainObjects:        []entities.MainObject{{Type: "City"}},
+	}}
+	template := &entities.RmgTemplate{Variants: []entities.Variant{{Zones: zones}}}
+	editorState := dtos.NewDefaultEditorStateDto()
+	editorState.SpawnRemoteFootholds = false
+	editorState.MediumNeutralContentRows = []models.ZoneContentRowSave{{Sid: "medium_only", Count: 1}}
+	editorState.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "high_only", Count: 1}}
+	templateDto := dtos.TemplateUpdateDto{
+		Template:    template,
+		Zones:       zones,
+		Connections: nil,
+		EditorState: &editorState,
+	}
+
+	// Act
+	loadDto, err := handler.UpdateTemplate(templateDto)
+
+	// Assert
+	require.NoError(t, err)
+	require.Len(t, loadDto.Template.MandatoryContent, 1)
+	require.Len(t, loadDto.Template.MandatoryContent[0].Content, 1)
+	assert.Equal(t, "high_only", loadDto.Template.MandatoryContent[0].Content[0].SID)
+}
+
+func TestWhenEditorStateIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := handlers.NewGuiHandler()

@@ -11,7 +11,7 @@ import (
 )
 
 func stateWithManualEdits() *models.EditorState {
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetManualEdits([]entities.Zone{{Name: "Zone A"}}, nil)
 	return state
 }
@@ -19,7 +19,7 @@ func stateWithManualEdits() *models.EditorState {
 func TestWhenNoManualEditsExist_ReapplyIsRefused(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	shouldReapply := state.ShouldReapplyManualEdits()

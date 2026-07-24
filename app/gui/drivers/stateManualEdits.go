@@ -8,7 +8,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
@@ -25,11 +24,12 @@ func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entitie
 }
 
 func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []entities.Connection) {
+	editorState := this.innerState.GetCurrentState()
 	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    this.lastTemplate,
 		Zones:       zones,
 		Connections: connections,
-		Config:      this.GetGeneratorConfig(),
+		EditorState: &editorState,
 	})
 
 	if err != nil && errors.Is(err, common_errors.ErrProvidedTemplateInvalid) {
@@ -63,7 +63,11 @@ func (this *State) reapplyManualEdits(castleChanges editor_state_dto.CastleSetti
 	zones := this.innerState.GetManualZones()
 	connections := this.innerState.GetManualConnections()
 	if castleChanges.Any() {
-		connection_editor.ApplyCastleSettingChanges(zones, castleChanges, this.GetGeneratorConfig())
+		zones = this.handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{
+			Zones:       zones,
+			Changes:     castleChanges,
+			EditorState: this.innerState.GetCurrentState(),
+		})
 		this.innerState.SetManualEdits(zones, connections)
 	}
 	this.handleUpdateTemplate(zones, connections)

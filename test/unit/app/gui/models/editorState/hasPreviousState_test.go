@@ -1,16 +1,14 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenNoSnapshotWasTaken_ReportsNoPreviousState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	hasPrevious := state.HasPreviousState()
@@ -22,7 +20,7 @@ func TestWhenNoSnapshotWasTaken_ReportsNoPreviousState(t *testing.T) {
 func TestWhenSnapshotWasTaken_ReportsPreviousState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 
 	// Act

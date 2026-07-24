@@ -1,17 +1,15 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenNoSnapshotExists_DoesNotReportLayoutUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	layoutUnchanged := state.WasLayoutUnchanged()
@@ -23,7 +21,7 @@ func TestWhenNoSnapshotExists_DoesNotReportLayoutUnchanged(t *testing.T) {
 func TestWhenPlayerCountChangedSinceSnapshot_DoesNotReportLayoutUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
 
@@ -37,7 +35,7 @@ func TestWhenPlayerCountChangedSinceSnapshot_DoesNotReportLayoutUnchanged(t *tes
 func TestWhenOnlyHeroCountChangedSinceSnapshot_ReportsLayoutUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.HeroCountMax++ })
 

@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
@@ -26,10 +27,11 @@ import (
 // behaviour so the integration tests can drive the real frame loop without a
 // display.
 func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func()) {
-	state = drivers.NewUIState()
+	backend := handlers.NewGuiHandler()
+	state = drivers.NewUIStateWithBackend(backend)
 	editorPanels := []interfaces.IPanel{
 		panels.NewGeneralPanel(state),
-		panels.NewLayoutPanel(state),
+		panels.NewLayoutPanel(state, backend, backend, backend),
 		panels.NewBonusesPanel(state),
 	}
 	saveFrame = func() {

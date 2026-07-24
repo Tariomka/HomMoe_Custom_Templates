@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
@@ -36,7 +37,8 @@ func connectionKeys(connections []entities.Connection) map[[3]string]bool {
 }
 
 func retierZone(state *drivers.State, zones []entities.Zone, index int, quality neutral_zone.Quality, castles int) {
-	tuning := models.NewGenerationTuning(state.GetGeneratorConfig(), len(zones))
+	configuration := mappers.NewConfigMapper().FromEditorState(state.GetStateData())
+	tuning := models.NewGenerationTuning(configuration, len(zones))
 	connection_editor.ApplyNeutralZoneQuality(&zones[index], quality, castles, tuning)
 }
 

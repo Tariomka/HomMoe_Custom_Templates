@@ -1,18 +1,16 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenTopologyChangedSinceSnapshot_ReportsLayoutChanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.Topology = config_inner.TopologyChain })
 
@@ -26,7 +24,7 @@ func TestWhenTopologyChangedSinceSnapshot_ReportsLayoutChanged(t *testing.T) {
 func TestWhenOnlyDensityChangedSinceSnapshot_ReportsLayoutNotChanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.ResourceDensityPercent = 50 })
 

@@ -9,7 +9,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -111,16 +110,16 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 
 	activeVariant := lastTemplate.Variants[0]
 	settings := this.state.GetStateData()
-	generatorConfig := this.state.GetGeneratorConfig()
-	tuning := models.NewGenerationTuning(generatorConfig, len(activeVariant.Zones))
+	options := this.zoneEditorHandler.GetZoneEditorOptions(settings, len(activeVariant.Zones))
 	this.state.GetDialogHost().Open(dialogs.NewZoneEditorDialog(
 		activeVariant.Zones,
 		activeVariant.Connections,
-		settings.Topology,
-		tuning,
-		settings.GenerateRoads,
-		func(zones []entities.Zone, conns []entities.Connection) { this.state.ApplyEditedZones(zones, conns) },
-	))
+		options.Topology,
+		options.Tuning,
+		options.GenerateRoads,
+		this.previewHandler,
+		this.zoneEditorHandler,
+		this.state.ApplyEditedZones))
 }
 
 // handleZoneContentDialogClicks opens the single-tier zone-content editor for
@@ -157,7 +156,7 @@ func (this *LayoutPanel) openZoneContentDialog(
 	rows []models.ZoneContentRowSave,
 	set func(*dtos.EditorStateDto, []models.ZoneContentRowSave)) {
 	this.state.GetDialogHost().Open(dialogs.NewZoneContentDialog(
-		title, isPlayerTier, rows, this.state.GetDialogHost().Open,
+		title, isPlayerTier, rows, this.contentRuleHandler, this.state.GetDialogHost().Open,
 		func(updated []models.ZoneContentRowSave) {
 			this.state.UpdateState(func(s *dtos.EditorStateDto) { set(s, updated) })
 		}))

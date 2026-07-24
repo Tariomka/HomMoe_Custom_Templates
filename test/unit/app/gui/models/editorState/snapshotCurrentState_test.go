@@ -1,17 +1,15 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenSnapshotIsTaken_PreviousStateExists(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	state.SnapshotCurrentState()
@@ -23,7 +21,7 @@ func TestWhenSnapshotIsTaken_PreviousStateExists(t *testing.T) {
 func TestWhenCurrentStateChangesAfterSnapshot_SnapshotKeepsOldValues(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 
 	// Act

@@ -71,6 +71,26 @@ func TestWhenTemplateExists_ManualEditsAreStoredInState(t *testing.T) {
 	assert.True(t, stateData.HasManualEdits())
 }
 
+func TestWhenTemplateExists_CurrentEditorStateIsSentForUpdate(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectedState := state.GetStateData()
+	updatedTemplate := test_helpers.GetDefaultTemplate()
+	var updateRequest dtos.TemplateUpdateDto
+	handlerMock.On("UpdateTemplate", mock.Anything).
+		Run(func(arguments mock.Arguments) {
+			updateRequest = arguments.Get(0).(dtos.TemplateUpdateDto)
+		}).
+		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
+
+	// Act
+	state.ApplyEditedZones(zones, connections)
+
+	// Assert
+	assert.Equal(t, &expectedState, updateRequest.EditorState)
+}
+
 func TestWhenTemplateExists_StatusReportsAppliedCounts(t *testing.T) {
 	t.Parallel()
 	// Arrange

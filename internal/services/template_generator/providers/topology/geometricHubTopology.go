@@ -41,7 +41,6 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 		linq.FromSlice(neutralZones).
 			SelectString(func(plan neutral_zone.Plan) string { return plan.Label }).
 			ToSlice()...)
-	// neutralLabelsOf(neutralZones)...)
 
 	connectionNames := this.createConnectionNameIndex(layout)
 	zones := this.createZones(

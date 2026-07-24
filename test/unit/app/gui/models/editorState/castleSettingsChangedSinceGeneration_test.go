@@ -1,18 +1,16 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenNothingWasGeneratedYet_NoCastleChangesAreReported(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerZoneCastles++ })
 
 	// Act
@@ -25,7 +23,7 @@ func TestWhenNothingWasGeneratedYet_NoCastleChangesAreReported(t *testing.T) {
 func TestWhenPlayerCastleCountChangedSinceSnapshot_PlayerCastleChangeIsReported(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerZoneCastles++ })
 
@@ -39,7 +37,7 @@ func TestWhenPlayerCastleCountChangedSinceSnapshot_PlayerCastleChangeIsReported(
 func TestWhenCastleCountsAreUnchangedSinceSnapshot_NoCastleChangesAreReported(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.ResourceDensityPercent = 50 })
 

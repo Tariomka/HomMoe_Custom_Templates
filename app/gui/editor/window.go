@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 )
 
 type Window struct {
@@ -31,14 +32,15 @@ type Window struct {
 }
 
 func NewWindow() *Window {
-	window := Window{state: drivers.NewUIState()}
+	backend := handlers.NewGuiHandler()
+	window := Window{state: drivers.NewUIStateWithBackend(backend)}
 	window.toolbar = NewToolbar(window.state, window.load)
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),
-		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state)),
+		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state, backend, backend, backend)),
 		drivers.NewTab("Bonuses & Bans", panels.NewBonusesPanel(window.state)),
 	}
-	window.previewPanel = panels.NewPreviewPanel(window.state)
+	window.previewPanel = panels.NewPreviewPanel(window.state, backend)
 	window.tabs[0].SetSelected(true)
 	return &window
 }

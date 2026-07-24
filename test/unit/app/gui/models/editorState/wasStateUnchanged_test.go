@@ -1,17 +1,15 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenNoSnapshotExists_DoesNotReportUnchangedState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	wasUnchanged := state.WasStateUnchanged()
@@ -23,7 +21,7 @@ func TestWhenNoSnapshotExists_DoesNotReportUnchangedState(t *testing.T) {
 func TestWhenStateEqualsSnapshot_ReportsUnchangedState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 
 	// Act
@@ -36,7 +34,7 @@ func TestWhenStateEqualsSnapshot_ReportsUnchangedState(t *testing.T) {
 func TestWhenStateDivergedFromSnapshot_DoesNotReportUnchangedState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
 

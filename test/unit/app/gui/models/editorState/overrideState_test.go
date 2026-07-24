@@ -1,19 +1,17 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestWhenStateIsOverridden_CurrentStateMatchesProvidedState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	incoming := dtos.NewDefaultEditorStateDto()
 	incoming.TemplateName = gofakeit.Name()
 	incoming.PlayerCount = gofakeit.Number(3, 8)
@@ -28,7 +26,7 @@ func TestWhenStateIsOverridden_CurrentStateMatchesProvidedState(t *testing.T) {
 func TestWhenStateWithSnapshotIsOverridden_PreviousStateIsDropped(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	require.True(t, state.HasPreviousState())
 
@@ -42,7 +40,7 @@ func TestWhenStateWithSnapshotIsOverridden_PreviousStateIsDropped(t *testing.T) 
 func TestWhenStateWithNextStateIsOverridden_NextStateIsDropped(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetNextState(state.GetCurrentState())
 	require.True(t, state.HasNextState())
 

@@ -1,17 +1,15 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenNoNextStateExistsYet_ReportsCapture(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	wasCaptured := state.SetNextFromCurrentIfStateIsBeingUpdated()
@@ -23,7 +21,7 @@ func TestWhenNoNextStateExistsYet_ReportsCapture(t *testing.T) {
 func TestWhenNoNextStateExistsYet_NextStateIsSet(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	state.SetNextFromCurrentIfStateIsBeingUpdated()
@@ -35,7 +33,7 @@ func TestWhenNoNextStateExistsYet_NextStateIsSet(t *testing.T) {
 func TestWhenNextStateAlreadyMatchesCurrent_ReportsNoCapture(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetNextFromCurrentIfStateIsBeingUpdated()
 
 	// Act
@@ -48,7 +46,7 @@ func TestWhenNextStateAlreadyMatchesCurrent_ReportsNoCapture(t *testing.T) {
 func TestWhenCurrentStateMovedPastNextState_ReportsCapture(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetNextFromCurrentIfStateIsBeingUpdated()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
 
@@ -62,7 +60,7 @@ func TestWhenCurrentStateMovedPastNextState_ReportsCapture(t *testing.T) {
 func TestWhenCurrentStateMovedPastNextState_PendingChangesAreCleared(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetNextFromCurrentIfStateIsBeingUpdated()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
 

@@ -20,6 +20,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
@@ -235,7 +236,18 @@ func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 			Connections: derefConnections(this.working),
 		}},
 	}
-	layoutData := this.layoutService.BuildPreviewLayout(mini, this.topology, float64(side))
+	response, err := this.previewHandler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
+		Template:   mini,
+		Topology:   this.topology,
+		CanvasSide: float64(side),
+	})
+	if err != nil {
+		this.positions = map[string]image.Point{}
+		this.previewZones = nil
+		this.radius = 0
+		return
+	}
+	layoutData := response.Layout
 	this.positions = layoutData.Positions
 	this.previewZones = layoutData.Zones
 	this.radius = layoutData.ZoneRadius

@@ -1,17 +1,15 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenNoManualEditsWereSet_ReportsNoManualEdits(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	hasEdits := state.HasManualEdits()
@@ -23,7 +21,7 @@ func TestWhenNoManualEditsWereSet_ReportsNoManualEdits(t *testing.T) {
 func TestWhenManualZonesWereStored_ReportsManualEdits(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetManualEdits([]entities.Zone{{Name: "Zone A"}}, nil)
 
 	// Act

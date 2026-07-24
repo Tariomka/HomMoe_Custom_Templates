@@ -1,20 +1,21 @@
 package models
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
 
 type EditorState struct {
-	current  *dtos.EditorStateDto
-	previous *dtos.EditorStateDto
-	next     *dtos.EditorStateDto
+	validationHandler interfaces.IStateValidationHandler
+	current           *dtos.EditorStateDto
+	previous          *dtos.EditorStateDto
+	next              *dtos.EditorStateDto
 }
 
-func NewEditorState() *EditorState {
-	state := new(EditorState)
+func NewEditorState(validationHandler interfaces.IStateValidationHandler) *EditorState {
+	state := &EditorState{validationHandler: validationHandler}
 	state.ResetState()
 	return state
 }
@@ -33,9 +34,8 @@ func (this *EditorState) GetCurrentState() dtos.EditorStateDto {
 
 func (this *EditorState) UpdateCurrentState(updateFunc func(state *dtos.EditorStateDto)) {
 	updateFunc(this.current)
-	for _, issue := range validators.ValidateEditorState(this.current) {
-		issue.Fix(this.current)
-	}
+	validation := this.validationHandler.ValidateEditorState(*this.current, true)
+	*this.current = validation.State
 	if this.current.AdvancedMode {
 		this.current.NeutralZoneCount = 0
 	} else {

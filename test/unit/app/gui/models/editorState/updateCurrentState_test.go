@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/brianvoe/gofakeit/v7"
@@ -13,7 +12,7 @@ import (
 func TestWhenUpdateChangesPlayerCount_ChangeIsApplied(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	playerCount := gofakeit.Number(3, 8)
 
 	// Act
@@ -26,7 +25,7 @@ func TestWhenUpdateChangesPlayerCount_ChangeIsApplied(t *testing.T) {
 func TestWhenUpdateEnablesAdvancedMode_SimpleNeutralZoneCountIsZeroed(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) {
@@ -41,7 +40,7 @@ func TestWhenUpdateEnablesAdvancedMode_SimpleNeutralZoneCountIsZeroed(t *testing
 func TestWhenUpdateStaysInSimpleMode_AdvancedNeutralCountsAreZeroed(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) {
@@ -60,7 +59,13 @@ func TestWhenUpdateStaysInSimpleMode_AdvancedNeutralCountsAreZeroed(t *testing.T
 func TestWhenUpdateSetsPlayerCountAboveMaximum_PlayerCountIsClamped(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorStateWithValidation(func(
+		stateDto dtos.EditorStateDto,
+		_ bool,
+	) dtos.EditorStateValidationDto {
+		stateDto.PlayerCount = 8
+		return dtos.EditorStateValidationDto{State: stateDto}
+	})
 	tooManyPlayers := gofakeit.Number(9, 100)
 
 	// Act
@@ -73,7 +78,13 @@ func TestWhenUpdateSetsPlayerCountAboveMaximum_PlayerCountIsClamped(t *testing.T
 func TestWhenUpdateSetsUnknownGameMode_GameModeIsResetToClassic(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorStateWithValidation(func(
+		stateDto dtos.EditorStateDto,
+		_ bool,
+	) dtos.EditorStateValidationDto {
+		stateDto.GameMode = registry.GetGameModeValues().Classic
+		return dtos.EditorStateValidationDto{State: stateDto}
+	})
 
 	// Act
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.GameMode = "NotARealGameMode" })

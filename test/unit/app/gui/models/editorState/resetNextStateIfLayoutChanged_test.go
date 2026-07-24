@@ -10,7 +10,7 @@ import (
 )
 
 func layoutChangedStateWithNext() *models.EditorState {
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.SetNextState(state.GetCurrentState())
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.Topology = config_inner.TopologyChain })
@@ -18,7 +18,7 @@ func layoutChangedStateWithNext() *models.EditorState {
 }
 
 func nonLayoutChangedStateWithNext() *models.EditorState {
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.SetNextState(state.GetCurrentState())
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.ResourceDensityPercent = 50 })

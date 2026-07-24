@@ -25,9 +25,12 @@ func TestWhenLabelIsResolved_ReturnsMatchingPresetAndFoundFlag(t *testing.T) {
 			expected: distanceLookupResult{Distance: placement_rule.DistanceNextTo, Found: true},
 		},
 		{
-			name:     "WhenLabelIsNear_ReturnsNearPreset",
-			label:    "Near",
-			expected: distanceLookupResult{Distance: placement_rule.DistanceNear, Found: true},
+			name:  "WhenLabelIsNear_ReturnsNearPreset",
+			label: "Near",
+			expected: distanceLookupResult{
+				Distance: placement_rule.Distance{Min: 0.075, Max: 0.35},
+				Found:    true,
+			},
 		},
 		{
 			name:     "WhenLabelIsMedium_ReturnsMediumPreset",

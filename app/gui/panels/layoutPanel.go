@@ -6,6 +6,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
@@ -64,10 +65,18 @@ type LayoutPanel struct {
 
 	scroll widget.List
 
-	state *drivers.State
+	state              *drivers.State
+	previewHandler     interfaces.IPreviewHandler
+	contentRuleHandler interfaces.IContentRuleHandler
+	zoneEditorHandler  interfaces.IZoneEditorHandler
 }
 
-func NewLayoutPanel(state *drivers.State) *LayoutPanel {
+func NewLayoutPanel(
+	state *drivers.State,
+	previewHandler interfaces.IPreviewHandler,
+	contentRuleHandler interfaces.IContentRuleHandler,
+	zoneEditorHandler interfaces.IZoneEditorHandler,
+) *LayoutPanel {
 	panel := &LayoutPanel{
 		topology: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
@@ -76,7 +85,10 @@ func NewLayoutPanel(state *drivers.State) *LayoutPanel {
 			}
 			return labels
 		}()),
-		state: state,
+		state:              state,
+		previewHandler:     previewHandler,
+		contentRuleHandler: contentRuleHandler,
+		zoneEditorHandler:  zoneEditorHandler,
 	}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()

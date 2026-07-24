@@ -17,8 +17,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 const (
@@ -26,9 +24,10 @@ const (
 	configFileExtension = ".gen.json"
 )
 
+var _ interfaces.IBackend = (*handlers.GUIHandler)(nil)
+
 type State struct {
-	handler interfaces.ITemplateHandler
-	mapper  *mappers.GeneratorConfigMapper
+	handler interfaces.IBackend
 
 	innerState *models.EditorState
 
@@ -53,7 +52,11 @@ type State struct {
 }
 
 func NewUIState() *State {
-	state := NewUIStateWithHandler(handlers.NewGuiHandler())
+	return NewUIStateWithBackend(handlers.NewGuiHandler())
+}
+
+func NewUIStateWithBackend(handler interfaces.IBackend) *State {
+	state := NewUIStateWithHandler(handler)
 
 	templateDir, err := helpers.FindOldenEraTemplatesDir(false)
 	if templateDir == "" {
@@ -74,11 +77,10 @@ func NewUIState() *State {
 // NewUIStateWithHandler builds a State around the given template handler
 // without probing the disk for the game templates directory. Production code
 // uses NewUIState; tests inject a mock handler here.
-func NewUIStateWithHandler(handler interfaces.ITemplateHandler) *State {
+func NewUIStateWithHandler(handler interfaces.IBackend) *State {
 	state := &State{
 		handler:    handler,
-		mapper:     mappers.NewConfigMapper(),
-		innerState: models.NewEditorState(),
+		innerState: models.NewEditorState(handler),
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
@@ -90,10 +92,6 @@ func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg,
 func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
 func (this *State) GetStateData() dtos.EditorStateDto { return this.innerState.GetCurrentState() }
-
-func (this *State) GetGeneratorConfig() *config.GeneratorConfig {
-	return this.mapper.FromEditorState(this.innerState.GetCurrentState())
-}
 
 func (this *State) GetCurrentPath() string { return this.currentPath }
 

@@ -9,7 +9,7 @@ import (
 )
 
 func unchangedStateWithNext() *models.EditorState {
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.SetNextState(state.GetCurrentState())
 	return state
@@ -72,7 +72,7 @@ func TestWhenStateDiffersFromSnapshot_NextStateIsKept(t *testing.T) {
 func TestWhenNoSnapshotExistsYet_ReportsNoReset(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetNextState(state.GetCurrentState())
 
 	// Act

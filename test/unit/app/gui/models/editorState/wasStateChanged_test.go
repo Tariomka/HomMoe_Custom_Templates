@@ -1,18 +1,16 @@
 package editorState_test
 
 import (
-	"testing"
-
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhenNoSnapshotExists_ReportsStateNotChanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
 
 	// Act
@@ -25,7 +23,7 @@ func TestWhenNoSnapshotExists_ReportsStateNotChanged(t *testing.T) {
 func TestWhenStateDivergedFromSnapshot_ReportsStateChanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
 
@@ -39,7 +37,7 @@ func TestWhenStateDivergedFromSnapshot_ReportsStateChanged(t *testing.T) {
 func TestWhenStateEqualsSnapshot_ReportsStateNotChanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 
 	// Act
@@ -52,7 +50,7 @@ func TestWhenStateEqualsSnapshot_ReportsStateNotChanged(t *testing.T) {
 func TestWhenOnlyManualEditsDifferFromSnapshot_ReportsStateNotChanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.SetManualEdits(
 		[]entities.Zone{{Name: "Zone A"}},

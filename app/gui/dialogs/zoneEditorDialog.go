@@ -13,17 +13,17 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 )
 
 // ZoneEditorDialog is the Manual Zone Editor. It renders zones as
@@ -33,16 +33,17 @@ import (
 // on private copies of the zone and connection lists; Apply commits, Cancel/✕
 // discards.
 type ZoneEditorDialog struct {
-	zones         []entities.Zone
-	originalZones []entities.Zone
-	playerZones   map[string]bool
-	topology      config.MapTopology
-	tuning        models.GenerationTuning
-	generateRoads bool
-	working       []*entities.Connection
-	original      []entities.Connection
-	onApply       func([]entities.Zone, []entities.Connection)
-	layoutService *preview_service.PreviewLayoutService
+	zones          []entities.Zone
+	originalZones  []entities.Zone
+	playerZones    map[string]bool
+	topology       config.MapTopology
+	tuning         models.GenerationTuning
+	generateRoads  bool
+	working        []*entities.Connection
+	original       []entities.Connection
+	onApply        func([]entities.Zone, []entities.Connection)
+	previewHandler interfaces.IPreviewHandler
+	zoneHandler    interfaces.IZoneEditorHandler
 
 	// Geometry derived from BuildPreviewLayout. Recomputed only when a
 	// mutator sets geometryDirty or the canvas side changes (geometrySide
@@ -121,6 +122,8 @@ func NewZoneEditorDialog(
 	topology config.MapTopology,
 	tuning models.GenerationTuning,
 	generateRoads bool,
+	previewHandler interfaces.IPreviewHandler,
+	zoneHandler interfaces.IZoneEditorHandler,
 	onApply func([]entities.Zone, []entities.Connection)) *ZoneEditorDialog {
 	players := make(map[string]bool)
 	for _, zone := range zones {
@@ -138,7 +141,8 @@ func NewZoneEditorDialog(
 		generateRoads:     generateRoads,
 		onApply:           onApply,
 		geometryDirty:     true,
-		layoutService:     preview_service.NewPreviewLayoutService(),
+		previewHandler:    previewHandler,
+		zoneHandler:       zoneHandler,
 		typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
 		guardZoneDropdown: components.NewDropdownSelector(nil),
 		guardDropdown:     components.NewDropdownSelector(nil),
@@ -266,7 +270,8 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		connections := derefConnections(this.working)
-		if connection_editor.ComputeHasErrors(this.zones, connections) {
+		graph := this.zoneHandler.DescribeZoneEditorGraph(this.zones, connections)
+		if graph.HasErrors {
 			label := material.Body2(theme, "⚠ A connection references a missing zone - fix before export.")
 			label.Color = themes.ColorsBase.Error
 			label.TextSize = unit.Sp(12)
@@ -274,18 +279,19 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 			return label.Layout(gtx)
 		}
 		message := fmt.Sprintf("%d zones · %d connections", len(this.zones), len(connections))
-		if this.hint != "" {
+		switch {
+		case this.hint != "":
 			message = this.hint
-		} else if this.addMode {
+		case this.addMode:
 			message = "Add mode: press a zone and drag to another to connect. Repeat to add more."
-		} else if this.addZoneMode {
+		case this.addZoneMode:
 			message = "Add zone mode: click an empty spot to place a zone. Repeat to add more."
-		} else if isolated := connection_editor.FindIsolatedZones(this.zones, connections); len(isolated) > 0 {
+		case graph.IsolatedZoneCount > 0:
 			message = fmt.Sprintf(
 				"%d zones · %d connections · %d isolated zone(s)",
 				len(this.zones),
 				len(connections),
-				len(isolated))
+				graph.IsolatedZoneCount)
 		}
 		label := material.Body2(theme, message)
 		label.Color = themes.ColorsBase.TextDim
@@ -377,7 +383,12 @@ func (this *ZoneEditorDialog) layoutSideHint(gtx layout.Context, theme *material
 }
 
 func (this *ZoneEditorDialog) addConnection(from, to string) {
-	connection := connection_editor.NewDefaultConnection(from, to, this.zones, this.playerZones)
+	connection := this.zoneHandler.CreateZoneEditorConnection(dtos.ZoneEditorConnectionRequestDto{
+		From:            from,
+		To:              to,
+		Zones:           this.zones,
+		PlayerZoneNames: this.playerZones,
+	})
 	this.working = append(this.working, &connection)
 	this.selected = &connection
 	this.syncedFor = nil
@@ -461,7 +472,7 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 				float64(pos.Y) / float64(this.side),
 			}
 		} else {
-			open := connection_editor.FindOpenPosition(this.manualPositions())
+			open := this.zoneHandler.FindOpenZonePosition(this.manualPositions())
 			this.zones[i].ManualPosition = &open
 		}
 	}
@@ -484,14 +495,19 @@ func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
 	if this.side <= 0 {
 		return
 	}
-	label := connection_editor.NextFreeZoneLabel(this.zones)
+	label := this.zoneHandler.GetNextZoneLabel(this.zones)
 	if label == "" {
 		this.hint = "Zone label pool exhausted - cannot add more zones."
 		return
 	}
 	this.ensureManualPositions()
-	zone := connection_editor.NewDefaultNeutralZone(
-		label, neutral_zone.QualityMedium, 1, this.generateRoads, this.tuning)
+	zone := this.zoneHandler.CreateZoneEditorNeutralZone(dtos.ZoneEditorNeutralZoneRequestDto{
+		Label:         label,
+		Quality:       neutral_zone.QualityMedium,
+		CastleCount:   1,
+		GenerateRoads: this.generateRoads,
+		Tuning:        this.tuning,
+	})
 	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
 	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
@@ -505,15 +521,19 @@ func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
 // deleteZone removes a zone and every connection referencing it. Spawn zones
 // are protected; player count is managed in the General tab.
 func (this *ZoneEditorDialog) deleteZone(name string) {
-	if !connection_editor.CanDeleteZone(name, this.playerZones) {
+	if !this.zoneHandler.CanDeleteZone(name, this.playerZones) {
 		this.hint = "Spawn zones can't be deleted - change player count in the General tab."
 		return
 	}
-	zones, connections := connection_editor.RemoveZone(this.zones, derefConnections(this.working), name)
-	this.zones = zones
+	mutation := this.zoneHandler.RemoveZoneEditorZone(dtos.ZoneEditorRemoveRequestDto{
+		Zones:       this.zones,
+		Connections: derefConnections(this.working),
+		ZoneName:    name,
+	})
+	this.zones = mutation.Zones
 	this.working = this.working[:0]
-	for i := range connections {
-		this.working = append(this.working, &connections[i])
+	for i := range mutation.Connections {
+		this.working = append(this.working, &mutation.Connections[i])
 	}
 	this.geometryDirty = true
 	this.selected = nil
