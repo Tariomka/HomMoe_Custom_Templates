@@ -7,8 +7,8 @@ working on the **HomMoe Custom Templates** repository. Follow them strictly.
 
 ## 1. Project Snapshot
 
-- **Language / Toolchain:** Go 1.26.3, single module `github.com/Tariomka/hommoe_custom_templates`.
-- **UI:** Gio (`gioui.org v0.9.0`) — immediate-mode desktop GUI.
+- **Language / Toolchain:** Go 1.26.5, single module `github.com/Tariomka/hommoe_custom_templates`.
+- **UI:** Gio (`gioui.org v0.10.0`) — immediate-mode desktop GUI.
 - **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
   and Magic: Olden Era* and persist editor state as `.gen.json` files.
 - **Entry point:** [main.go](main.go) → [app/gui/program.go](app/gui/program.go) (`StartApplication`).
@@ -78,10 +78,12 @@ The project must build and run on **both Windows and Linux**. Therefore:
   go tool cover '-func=coverage.txt'
   ```
 
-- Run `go test ./test/... -count=1` before declaring a task complete.
-- The integration and performance suites are gated behind the `integration_test`
-  build tag and are skipped by a plain `go test ./...`; run them explicitly
-  with `go test -tags=integration_test ./test/integration/... ./test/performance/...`
+- Run `go test ./test/unit/... -count=1` before declaring a task complete.
+- The integration and ui test suites are gated behind the `integration_test`
+  and `integration_test,gui` build tags respectfully and are skipped by a
+  plain `go test ./...`; run them explicitly with
+  `go test -tags=integration_test ./test/integration/...` and
+  `go test -tags='integration_test,gui' ./test/integration/gui/...` respectfully.
   (see §4.6.1). Never make `integration_test` a global/default test tag.
 - Tests must also be cross-platform (no hard-coded paths, no `\` separators,
   no shell-outs that exist only on one OS).
@@ -129,10 +131,9 @@ current session. Skip for trivial single-session tasks.
 
 ### 3.3 After editing
 
-1. Run `go build ./...` and `go test ./test/...`.
+1. Run `go build ./...` and `go test ./test/unit/...`.
 2. If you touched editor internals or the gated suites, also run
-   `go test -tags=integration_test ./test/integration/... ./test/performance/...`
-   (see §4.6.1).
+   `go test -tags='integration_test,gui' ./test/integration/...` (see §4.6.1).
 3. Report any new errors and fix them before handing back.
 4. Briefly summarize: files touched, behaviour changed, tests added.
 
@@ -342,8 +343,14 @@ include them.
 # Default run — everything EXCEPT the gated dirs (no tag):
 go test ./test/... -count=1
 
-# Integration + performance only (tag scoped to these two dirs):
-go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1
+# Integration:
+go test -tags=integration_test ./test/integration/... -count=1
+
+# UI Integration only:
+go test -tags='integration_test,gui' ./test/integration/gui/... -count=1
+
+# Performance only:
+go test -v -tags=integration_test -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s
 ```
 
 In VS Code use the tasks in [.vscode/tasks.json](.vscode/tasks.json): *"go: test
@@ -405,10 +412,10 @@ as having a soft budget.
 
 ### 5.1 Session budget
 
-- **Recommended length: <20 messages per session.**
-- Around message **18**, warn the user that the session is approaching the
+- **Recommended length: <50 messages per session.**
+- Around message **38**, warn the user that the session is approaching the
   recommended limit.
-- At message **20** (or sooner if context feels saturated, tools start
+- At message **50** (or sooner if context feels saturated, tools start
   failing, or summaries become lossy), **stop taking new work** and produce a
   carry-forward document instead.
 
@@ -475,8 +482,9 @@ no prior memory must be able to resume work from it alone.
 | -------------------------- | ------------------------------------------------------ |
 | Build                      | `go build ./...`                                       |
 | Run GUI                    | `go run .`                                             |
-| Run all tests              | `go test ./test/... -count=1`                          |
-| Run integration/perf tests | `go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1` |
+| Run unit tests             | `go test ./test/unit... -count=1`                      |
+| Run integration tests      | `go test -tags=integration_test ./test/integration/... -count=1` |
+| Run ui integration tests   | `go test -tags=integration_test,gui ./test/integration/gui/... -count=1` |
 | Run with race detector     | `go test -race ./test/...`                             |
 | Unit test coverage report  | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` (see §2.3; VS Code task *"Go: Generate code coverage report"*) |
 | Lint (report only)         | `golangci-lint-v2 run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
@@ -486,7 +494,7 @@ no prior memory must be able to resume work from it alone.
 
 ---
 
-**TL;DR:** Don't touch [data/](data/) or
-[internal/entities/template/](internal/entities/template/). Stay cross-platform.
+**TL;DR:** Don't touch [data/](data/),
+[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/). Stay cross-platform.
 Cover everything you write with tests. Cap sessions at 17–20 messages and
 hand off via `./.agent/session-carry-forward.md`.
