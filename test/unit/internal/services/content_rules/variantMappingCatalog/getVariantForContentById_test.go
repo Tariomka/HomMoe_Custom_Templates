@@ -1,4 +1,4 @@
-package variantMappingManager_test
+package variantMappingCatalog_test
 
 import (
 	"testing"
@@ -13,9 +13,10 @@ import (
 func TestWhenVariantIdExists_ReturnsItsSingleEntryMapping(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	mapping, ok := content_rules.GetVariantForContentByID(constants.ContentIDs.DragonUtopia, 2)
+	mapping, ok := catalog.GetVariantForContentByID(constants.ContentIDs.DragonUtopia, 2)
 
 	// Assert
 	require.True(t, ok)
@@ -25,9 +26,10 @@ func TestWhenVariantIdExists_ReturnsItsSingleEntryMapping(t *testing.T) {
 func TestWhenVariantIdIsUnknown_ReturnsNotOk(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	_, ok := content_rules.GetVariantForContentByID(constants.ContentIDs.DragonUtopia, 99)
+	_, ok := catalog.GetVariantForContentByID(constants.ContentIDs.DragonUtopia, 99)
 
 	// Assert
 	assert.False(t, ok)
@@ -36,9 +38,10 @@ func TestWhenVariantIdIsUnknown_ReturnsNotOk(t *testing.T) {
 func TestWhenContentHasNoVariants_ReturnsNotOk(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	_, ok := content_rules.GetVariantForContentByID(constants.ContentIDs.Watchtower, 0)
+	_, ok := catalog.GetVariantForContentByID(constants.ContentIDs.Watchtower, 0)
 
 	// Assert
 	assert.False(t, ok)

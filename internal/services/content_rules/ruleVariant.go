@@ -25,7 +25,7 @@ type RuleVariant struct {
 // variant id is supplied it uses the lowest defined variant id for determinism.
 // It returns an error when the resolved id is not present in the mapping.
 func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVariant, error) {
-	resolved := UtopiaVariants
+	resolved := NewVariantMappingCatalog().GetDefaultMapping()
 	if mapping != nil {
 		resolved = *mapping
 	}

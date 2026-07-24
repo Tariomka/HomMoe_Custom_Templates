@@ -18,13 +18,17 @@ func issueMessages(issues []validators.ValidationIssue) []string {
 	return messages
 }
 
+func validate(state *dtos.EditorStateDto) []validators.ValidationIssue {
+	return validators.NewEditorStateValidator().Validate(state)
+}
+
 func TestWhenStateIsDefault_ReturnsNoIssues(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
 
 	// Act
-	issues := validators.ValidateEditorState(&state)
+	issues := validate(&state)
 
 	// Assert
 	assert.Empty(t, issues)
@@ -44,7 +48,7 @@ func TestWhenStateHasInvalidValues_DoesNotModifyState(t *testing.T) {
 	original := state
 
 	// Act
-	validators.ValidateEditorState(&state)
+	validate(&state)
 
 	// Assert
 	assert.Equal(t, original, state)
@@ -99,7 +103,7 @@ func TestWhenRangedFieldIsOutOfRange_ReturnsIssue(t *testing.T) {
 			testCase.mutate(&state)
 
 			// Act
-			issues := validators.ValidateEditorState(&state)
+			issues := validate(&state)
 
 			// Assert
 			assert.Contains(t, issueMessages(issues), testCase.expectedMessage)
@@ -158,7 +162,7 @@ func TestWhenCountFieldIsNegative_ReturnsIssue(t *testing.T) {
 			testCase.mutate(&state, negativeValue)
 
 			// Act
-			issues := validators.ValidateEditorState(&state)
+			issues := validate(&state)
 
 			// Assert
 			assert.Contains(t, issueMessages(issues),
@@ -175,7 +179,7 @@ func TestWhenHeroMaxIsLessThanHeroMin_ReturnsIssue(t *testing.T) {
 	state.HeroCountMax = 5
 
 	// Act
-	issues := validators.ValidateEditorState(&state)
+	issues := validate(&state)
 
 	// Assert
 	assert.Contains(t, issueMessages(issues), "heroMax 5 is less than heroMin 6")
@@ -188,7 +192,7 @@ func TestWhenMapSizeIsUnknown_ReturnsIssueWithNearestSize(t *testing.T) {
 	state.MapSize = 100
 
 	// Act
-	issues := validators.ValidateEditorState(&state)
+	issues := validate(&state)
 
 	// Assert
 	assert.Contains(t, issueMessages(issues), "mapSize 100 is not a valid map size (nearest: 96)")
@@ -201,7 +205,7 @@ func TestWhenGameModeIsUnknown_ReturnsIssue(t *testing.T) {
 	state.GameMode = "NotARealGameMode"
 
 	// Act
-	issues := validators.ValidateEditorState(&state)
+	issues := validate(&state)
 
 	// Assert
 	assert.Contains(t, issueMessages(issues), `gameMode "NotARealGameMode" is not a known game mode`)
@@ -214,7 +218,7 @@ func TestWhenVictoryConditionIsUnknown_ReturnsIssue(t *testing.T) {
 	state.VictoryCondition = "NotARealCondition"
 
 	// Act
-	issues := validators.ValidateEditorState(&state)
+	issues := validate(&state)
 
 	// Assert
 	assert.Contains(t, issueMessages(issues),

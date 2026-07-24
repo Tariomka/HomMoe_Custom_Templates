@@ -1,4 +1,4 @@
-package contentRuleManager_test
+package contentRuleService_test
 
 import (
 	"testing"
@@ -11,17 +11,15 @@ import (
 func TestWhenRowHasSerializedRules_RestoresEachRule(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	row := models.ZoneContentRowSave{
-		Sid: "x",
-		Rules: []models.ContentRuleRowSave{
-			{Name: "Guarded", IsGuarded: &isGuarded},
-			{Name: "Distance to road", DistanceName: "Far"},
-		},
-	}
+	row := models.ZoneContentRowSave{Sid: "x", Rules: []models.ContentRuleRowSave{
+		{Name: "Guarded", IsGuarded: &isGuarded},
+		{Name: "Distance to road", DistanceName: "Far"},
+	}}
 
 	// Act
-	rules := content_rules.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
+	rules := service.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
 
 	// Assert
 	ruleNames := make([]string, 0, len(rules))
@@ -34,10 +32,11 @@ func TestWhenRowHasSerializedRules_RestoresEachRule(t *testing.T) {
 func TestWhenRowHasNoRules_ReturnsNoRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	row := models.ZoneContentRowSave{Sid: "x"}
 
 	// Act
-	rules := content_rules.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
+	rules := service.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
 
 	// Assert
 	assert.Empty(t, rules)
@@ -46,17 +45,15 @@ func TestWhenRowHasNoRules_ReturnsNoRules(t *testing.T) {
 func TestWhenSavedRuleIsInvalid_SkipsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	row := models.ZoneContentRowSave{
-		Sid: "x",
-		Rules: []models.ContentRuleRowSave{
-			{Name: "Nope"},
-			{Name: "Guarded", IsGuarded: &isGuarded},
-		},
-	}
+	row := models.ZoneContentRowSave{Sid: "x", Rules: []models.ContentRuleRowSave{
+		{Name: "Nope"},
+		{Name: "Guarded", IsGuarded: &isGuarded},
+	}}
 
 	// Act
-	rules := content_rules.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
+	rules := service.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
 
 	// Assert
 	assert.Len(t, rules, 1)

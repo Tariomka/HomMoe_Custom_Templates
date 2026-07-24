@@ -14,7 +14,7 @@ import (
 // requiring that at least one issue was found.
 func applyAllFixes(t *testing.T, state *dtos.EditorStateDto) {
 	t.Helper()
-	issues := validators.ValidateEditorState(state)
+	issues := validators.NewEditorStateValidator().Validate(state)
 	require.NotEmpty(t, issues)
 	for _, issue := range issues {
 		issue.Fix(state)

@@ -21,30 +21,29 @@ const (
 	percentHighest       = 200
 )
 
-// intField names a .gen.json integer field and provides access to it, so a
-// single check can both read the value (validation) and write it (fix).
-type intField struct {
-	name  string
-	value func(state *dtos.EditorStateDto) *int
+type EditorStateValidator struct{}
+
+func NewEditorStateValidator() *EditorStateValidator {
+	return &EditorStateValidator{}
 }
 
-// ValidateEditorState checks an editor state loaded from a .gen.json file
+// Validate checks an editor state loaded from a .gen.json file
 // against the editor's allowed ranges and the known registry values. It never
 // modifies the state; each returned issue carries a Fix that applies the
 // correction. An empty result means the state is valid.
-func ValidateEditorState(state *dtos.EditorStateDto) []ValidationIssue {
-	issues := validateRangedFields(state)
-	issues = append(issues, validateNonNegativeFields(state)...)
-	issues = append(issues, validateHeroCountOrder(state)...)
-	issues = append(issues, validateMapSize(state)...)
-	issues = append(issues, validateGameMode(state)...)
-	issues = append(issues, validateVictoryCondition(state)...)
+func (this *EditorStateValidator) Validate(state *dtos.EditorStateDto) []ValidationIssue {
+	issues := this.validateRangedFields(state)
+	issues = append(issues, this.validateNonNegativeFields(state)...)
+	issues = append(issues, this.validateHeroCountOrder(state)...)
+	issues = append(issues, this.validateMapSize(state)...)
+	issues = append(issues, this.validateGameMode(state)...)
+	issues = append(issues, this.validateVictoryCondition(state)...)
 	return issues
 }
 
-func validateRangedFields(state *dtos.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateRangedFields(state *dtos.EditorStateDto) []ValidationIssue {
 	issues := []ValidationIssue{}
-	for _, check := range rangedIntFields() {
+	for _, check := range this.rangedIntFields() {
 		currentValue := *check.field.value(state)
 		if currentValue >= check.lowest && currentValue <= check.highest {
 			continue
@@ -61,9 +60,9 @@ func validateRangedFields(state *dtos.EditorStateDto) []ValidationIssue {
 	return issues
 }
 
-func validateNonNegativeFields(state *dtos.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateNonNegativeFields(state *dtos.EditorStateDto) []ValidationIssue {
 	issues := []ValidationIssue{}
-	for _, field := range nonNegativeIntFields() {
+	for _, field := range this.nonNegativeIntFields() {
 		currentValue := *field.value(state)
 		if currentValue >= 0 {
 			continue
@@ -79,7 +78,7 @@ func validateNonNegativeFields(state *dtos.EditorStateDto) []ValidationIssue {
 	return issues
 }
 
-func validateHeroCountOrder(state *dtos.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateHeroCountOrder(state *dtos.EditorStateDto) []ValidationIssue {
 	if state.HeroCountMax >= state.HeroCountMin {
 		return nil
 	}
@@ -91,7 +90,7 @@ func validateHeroCountOrder(state *dtos.EditorStateDto) []ValidationIssue {
 	}}
 }
 
-func validateMapSize(state *dtos.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateMapSize(state *dtos.EditorStateDto) []ValidationIssue {
 	nearest := common.GetNearestMapSize(state.MapSize)
 	if nearest.Size == state.MapSize {
 		return nil
@@ -104,7 +103,7 @@ func validateMapSize(state *dtos.EditorStateDto) []ValidationIssue {
 	}}
 }
 
-func validateGameMode(state *dtos.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateGameMode(state *dtos.EditorStateDto) []ValidationIssue {
 	if slices.Contains(registry.GetGameModeList(), state.GameMode) {
 		return nil
 	}
@@ -116,7 +115,7 @@ func validateGameMode(state *dtos.EditorStateDto) []ValidationIssue {
 	}}
 }
 
-func validateVictoryCondition(state *dtos.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateVictoryCondition(state *dtos.EditorStateDto) []ValidationIssue {
 	winConditionValues := registry.GetWinningConditionValues()
 	validConditions := []string{
 		winConditionValues.Standard,
@@ -137,13 +136,7 @@ func validateVictoryCondition(state *dtos.EditorStateDto) []ValidationIssue {
 	}}
 }
 
-type rangedIntField struct {
-	field   intField
-	lowest  int
-	highest int
-}
-
-func rangedIntFields() []rangedIntField {
+func (this *EditorStateValidator) rangedIntFields() []rangedIntField {
 	return []rangedIntField{
 		{intField{"playerCount", func(state *dtos.EditorStateDto) *int { return &state.PlayerCount }},
 			playerCountLowest, playerCountHighest},
@@ -180,7 +173,7 @@ func rangedIntFields() []rangedIntField {
 	}
 }
 
-func nonNegativeIntFields() []intField {
+func (this *EditorStateValidator) nonNegativeIntFields() []intField {
 	return []intField{
 		{"neutralZoneCount", func(state *dtos.EditorStateDto) *int { return &state.NeutralZoneCount }},
 		{"playerOwnedCastles", func(state *dtos.EditorStateDto) *int { return &state.PlayerOwnedCastles }},

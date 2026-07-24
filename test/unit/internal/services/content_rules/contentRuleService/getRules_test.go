@@ -1,4 +1,4 @@
-package contentRuleManager_test
+package contentRuleService_test
 
 import (
 	"testing"
@@ -10,16 +10,11 @@ import (
 func TestWhenRulesAreListed_ReturnsEveryKnownRuleInManagerOrder(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := []string{
-		"Distance to road",
-		"Distance to town",
-		"Guarded",
-		"Variant",
-		"Solo Encounter",
-	}
+	service := content_rules.NewContentRuleService()
+	expected := []string{"Distance to road", "Distance to town", "Guarded", "Variant", "Solo Encounter"}
 
 	// Act
-	rules := content_rules.GetRules()
+	rules := service.GetRules()
 
 	// Assert
 	ruleNames := make([]string, 0, len(rules))

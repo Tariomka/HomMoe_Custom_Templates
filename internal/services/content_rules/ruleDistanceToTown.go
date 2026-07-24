@@ -23,7 +23,7 @@ type RuleDistanceToTown struct {
 // NewRuleDistanceToTown creates a town-distance rule, defaulting to Medium when
 // no distance is supplied.
 func NewRuleDistanceToTown(distance *DistanceVariation) *RuleDistanceToTown {
-	resolved := DistanceMedium
+	resolved := defaultDistanceVariation()
 	if distance != nil {
 		resolved = *distance
 	}

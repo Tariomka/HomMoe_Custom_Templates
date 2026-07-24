@@ -1,4 +1,4 @@
-package variantMappingManager_test
+package variantMappingCatalog_test
 
 import (
 	"testing"
@@ -12,6 +12,7 @@ import (
 
 func TestWhenContentHasVariants_ReturnsOneMappingPerVariant(t *testing.T) {
 	t.Parallel()
+	catalog := content_rules.NewVariantMappingCatalog()
 	testCases := []struct {
 		name          string
 		content       models.SidMapping
@@ -27,7 +28,7 @@ func TestWhenContentHasVariants_ReturnsOneMappingPerVariant(t *testing.T) {
 			// Arrange
 
 			// Act
-			mappings := content_rules.GetVariantsForContent(testCase.content)
+			mappings := catalog.GetVariantsForContent(testCase.content)
 
 			// Assert
 			assert.Len(t, mappings, testCase.expectedCount)
@@ -38,9 +39,10 @@ func TestWhenContentHasVariants_ReturnsOneMappingPerVariant(t *testing.T) {
 func TestWhenContentHasNoVariants_ReturnsEmptySlice(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	mappings := content_rules.GetVariantsForContent(constants.ContentIDs.Watchtower)
+	mappings := catalog.GetVariantsForContent(constants.ContentIDs.Watchtower)
 
 	// Assert
 	assert.Empty(t, mappings)
@@ -49,17 +51,17 @@ func TestWhenContentHasNoVariants_ReturnsEmptySlice(t *testing.T) {
 func TestWhenVariantsAreReturned_OrdersThemByVariantId(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	mappings := content_rules.GetVariantsForContent(constants.ContentIDs.DragonUtopia)
+	mappings := catalog.GetVariantsForContent(constants.ContentIDs.DragonUtopia)
 
 	// Assert
 	variantIDs := make([]int, 0, len(mappings))
 	for _, mapping := range mappings {
 		require.Len(t, mapping.Variants, 1)
-
-		for _, variantID := range mapping.Variants {
-			variantIDs = append(variantIDs, variantID.Key)
+		for _, variant := range mapping.Variants {
+			variantIDs = append(variantIDs, variant.Key)
 		}
 	}
 	assert.Equal(t, []int{0, 1, 2, 3}, variantIDs)
@@ -68,11 +70,27 @@ func TestWhenVariantsAreReturned_OrdersThemByVariantId(t *testing.T) {
 func TestWhenVariantsAreReturned_BindsRequestedContent(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	mappings := content_rules.GetVariantsForContent(constants.ContentIDs.MontyHall)
+	mappings := catalog.GetVariantsForContent(constants.ContentIDs.MontyHall)
 
 	// Assert
 	require.NotEmpty(t, mappings)
 	assert.Equal(t, constants.ContentIDs.MontyHall, mappings[0].Content)
+}
+
+func TestWhenReturnedVariantIsMutated_NextResultRetainsCatalogValue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	catalog := content_rules.NewVariantMappingCatalog()
+	firstResult := catalog.GetVariantsForContent(constants.ContentIDs.DragonUtopia)
+	expected := firstResult[0].Variants[0].Value
+
+	// Act
+	firstResult[0].Variants[0].Value = "mutated"
+	secondResult := catalog.GetVariantsForContent(constants.ContentIDs.DragonUtopia)
+
+	// Assert
+	assert.Equal(t, expected, secondResult[0].Variants[0].Value)
 }

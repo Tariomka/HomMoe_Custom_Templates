@@ -19,11 +19,15 @@ import (
 )
 
 type MandatoryContentProvider struct {
-	zoneClassifier *zone_services.ZoneClassifier
+	zoneClassifier     *zone_services.ZoneClassifier
+	contentRuleService *content_rules.ContentRuleService
 }
 
 func NewMandatoryContentProvider() *MandatoryContentProvider {
-	return &MandatoryContentProvider{zoneClassifier: zone_services.NewZoneClassifier()}
+	return &MandatoryContentProvider{
+		zoneClassifier:     zone_services.NewZoneClassifier(),
+		contentRuleService: content_rules.NewContentRuleService(),
+	}
 }
 
 func (this *MandatoryContentProvider) CreateContents(
@@ -165,8 +169,8 @@ func (this *MandatoryContentProvider) createContentItemFrom(
 	} else {
 		item.SID = row.Sid
 	}
-	rules := content_rules.RestoreRulesFromRow(row, models.SidMapping{Sid: row.Sid})
-	content_rules.ApplyRulesToItem(&item, rules)
+	rules := this.contentRuleService.RestoreRulesFromRow(row, models.SidMapping{Sid: row.Sid})
+	this.contentRuleService.ApplyRulesToItem(&item, rules)
 	return item
 }
 

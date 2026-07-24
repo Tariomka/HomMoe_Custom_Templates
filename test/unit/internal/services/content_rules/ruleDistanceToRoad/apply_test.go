@@ -11,7 +11,7 @@ import (
 func TestWhenRuleIsApplied_AppendsRoadPlacementRuleWithDistanceBounds(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	distance := content_rules.DistanceNear
+	distance := content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}
 	rule := content_rules.NewRuleDistanceToRoad(&distance)
 	item := entities.MandatoryContentItem{SID: "x"}
 

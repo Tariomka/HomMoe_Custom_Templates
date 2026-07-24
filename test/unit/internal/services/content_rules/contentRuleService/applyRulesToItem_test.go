@@ -1,4 +1,4 @@
-package contentRuleManager_test
+package contentRuleService_test
 
 import (
 	"testing"
@@ -12,13 +12,12 @@ import (
 func TestWhenRoadDistanceRuleIsApplied_AppendsRoadPlacementRule(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
-	near := content_rules.DistanceNear
+	near := content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
-	content_rules.ApplyRulesToItem(&item, []content_rules.ContentRule{
-		content_rules.NewRuleDistanceToRoad(&near),
-	})
+	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleDistanceToRoad(&near)})
 
 	// Assert
 	assert.Equal(t, []entities.PlacementRule{
@@ -29,13 +28,12 @@ func TestWhenRoadDistanceRuleIsApplied_AppendsRoadPlacementRule(t *testing.T) {
 func TestWhenTownDistanceRuleIsApplied_AppendsMainObjectPlacementRule(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
-	near := content_rules.DistanceNear
+	near := content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
-	content_rules.ApplyRulesToItem(&item, []content_rules.ContentRule{
-		content_rules.NewRuleDistanceToTown(&near),
-	})
+	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleDistanceToTown(&near)})
 
 	// Assert
 	assert.Equal(t, []entities.PlacementRule{
@@ -46,12 +44,11 @@ func TestWhenTownDistanceRuleIsApplied_AppendsMainObjectPlacementRule(t *testing
 func TestWhenGuardedRuleIsApplied_SetsIsGuarded(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	content_rules.ApplyRulesToItem(&item, []content_rules.ContentRule{
-		content_rules.NewRuleGuarded(true),
-	})
+	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleGuarded(true)})
 
 	// Assert
 	assert.True(t, item.IsGuarded)
@@ -60,12 +57,11 @@ func TestWhenGuardedRuleIsApplied_SetsIsGuarded(t *testing.T) {
 func TestWhenGuardedRuleIsApplied_AddsNoPlacementRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	content_rules.ApplyRulesToItem(&item, []content_rules.ContentRule{
-		content_rules.NewRuleGuarded(true),
-	})
+	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleGuarded(true)})
 
 	// Assert
 	assert.Empty(t, item.Rules)
@@ -74,12 +70,11 @@ func TestWhenGuardedRuleIsApplied_AddsNoPlacementRules(t *testing.T) {
 func TestWhenSoloEncounterRuleIsApplied_SetsSoloEncounter(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	content_rules.ApplyRulesToItem(&item, []content_rules.ContentRule{
-		content_rules.NewRuleSoloEncounter(true),
-	})
+	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleSoloEncounter(true)})
 
 	// Assert
 	assert.True(t, item.SoloEncounter)
@@ -88,13 +83,15 @@ func TestWhenSoloEncounterRuleIsApplied_SetsSoloEncounter(t *testing.T) {
 func TestWhenVariantRuleIsApplied_SetsVariantId(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "dragon_utopia"}
 	variantID := 3
-	variantRule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
+	defaultMapping := content_rules.NewVariantMappingCatalog().GetDefaultMapping()
+	variantRule, err := content_rules.NewRuleVariant(&defaultMapping, &variantID)
 	require.NoError(t, err)
 
 	// Act
-	content_rules.ApplyRulesToItem(&item, []content_rules.ContentRule{variantRule})
+	service.ApplyRulesToItem(&item, []content_rules.ContentRule{variantRule})
 
 	// Assert
 	require.NotNil(t, item.Variant)
@@ -104,13 +101,11 @@ func TestWhenVariantRuleIsApplied_SetsVariantId(t *testing.T) {
 func TestWhenRuleListContainsNil_SkipsItWithoutPanicking(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	content_rules.ApplyRulesToItem(&item, []content_rules.ContentRule{
-		nil,
-		content_rules.NewRuleGuarded(true),
-	})
+	service.ApplyRulesToItem(&item, []content_rules.ContentRule{nil, content_rules.NewRuleGuarded(true)})
 
 	// Assert
 	assert.True(t, item.IsGuarded)

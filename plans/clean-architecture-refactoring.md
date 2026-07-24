@@ -252,13 +252,13 @@ Final verification passed: `go build ./...`; exact unit coverage at 64.2%, above
 
 ## Phase 3: Convert Functional Packages To Cohesive Services
 
-Status: Not started
+Status: In progress
 
-- [ ] Introduce `validators.EditorStateValidator` with `NewEditorStateValidator` and `Validate`. Convert validation helpers that are part of its policy to receiver methods; keep field descriptor types private and in separate files if required by the one-struct-per-file rule.
-- [ ] Inject one validator instance into the relevant handler workflow. Remove the package-level `ValidateEditorState` after callers and tests migrate.
-- [ ] Introduce `content_rules.ContentRuleService` owning rule prototypes, restore/create/apply operations, a distance catalog dependency, and a variant catalog dependency.
-- [ ] Introduce `content_rules.VariantMappingCatalog` with immutable constructor-owned mappings instead of exported mutable globals. Return copies from query methods.
-- [ ] Keep each concrete `ContentRule` implementation as its existing focused object; do not fold all rule behavior into one switch-based service.
+- [x] Introduce `validators.EditorStateValidator` with `NewEditorStateValidator` and `Validate`. Convert validation helpers that are part of its policy to receiver methods; keep field descriptor types private and in separate files if required by the one-struct-per-file rule.
+- [x] Inject one validator instance into the relevant handler workflow. Remove the package-level `ValidateEditorState` after callers and tests migrate.
+- [x] Introduce `content_rules.ContentRuleService` owning rule prototypes, restore/create/apply operations, a distance catalog dependency, and a variant catalog dependency.
+- [x] Introduce `content_rules.VariantMappingCatalog` with immutable constructor-owned mappings instead of exported mutable globals. Return copies from query methods.
+- [x] Keep each concrete `ContentRule` implementation as its existing focused object; do not fold all rule behavior into one switch-based service.
 - [ ] Introduce `connection_editor.ConnectionEditorService` for default connections, duplicate-name checks, isolated-zone discovery, and connection error computation.
 - [ ] Introduce `connection_editor.ZoneEditorService` for zone defaults, quality changes, castle counts, deletion, open-position selection, connection naming, and road rebuilding.
 - [ ] Introduce `connection_editor.ManualReapplyService` for castle-setting propagation and neutral/hub castle rebuilds. Inject shared zone/castle/road collaborators rather than importing generator topology internals long term.
@@ -278,7 +278,9 @@ Status: Not started
 
 ### Phase 3 Summary
 
-Pending phase completion.
+In progress. `EditorStateValidator` now owns editor-state policy and is injected into `GUIHandler`. `ContentRuleService` now owns rule prototypes, restoration, creation, and application through constructor-owned `DistanceCatalog` and `VariantMappingCatalog` collaborators. The handler and mandatory-content provider each use one service instance; concrete rule objects remain focused and unchanged in responsibility. Legacy package functions and exported mutable distance/variant catalogs were removed, and catalog queries return fresh slices including deep copies of nested variant tuples.
+
+Checkpoint verification passed: focused content-rule, handler, and mandatory-content suites; full unit coverage at 64.3%, above the 64.2% Phase 2 baseline; `go test ./test/unit/... -count=1`; and `go build ./...`. Connection-editor conversion and the remaining Phase 3 constructor, mapper, and cohesion audits are still pending.
 
 ## Phase 4: Consolidate Catalogs And Common Types
 

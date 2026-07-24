@@ -23,14 +23,16 @@ import (
 )
 
 type GUIHandler struct {
-	templateGenerator *template_generator.TemplateGenerator
-	mapper            *mappers.GeneratorConfigMapper
-	contentProvider   *providers.MandatoryContentProvider
-	fileService       *file_service.FileService
-	previewGenerator  *preview_service.PreviewGeneratorService
-	previewLayout     *preview_service.PreviewLayoutService
-	zoneClassifier    *zone_services.ZoneClassifier
-	tuningFactory     *generation_tuning.GenerationTuningFactory
+	templateGenerator  *template_generator.TemplateGenerator
+	mapper             *mappers.GeneratorConfigMapper
+	contentProvider    *providers.MandatoryContentProvider
+	fileService        *file_service.FileService
+	previewGenerator   *preview_service.PreviewGeneratorService
+	previewLayout      *preview_service.PreviewLayoutService
+	zoneClassifier     *zone_services.ZoneClassifier
+	tuningFactory      *generation_tuning.GenerationTuningFactory
+	editorValidator    *validators.EditorStateValidator
+	contentRuleService *content_rules.ContentRuleService
 }
 
 func NewGuiHandler() *GUIHandler {
@@ -42,14 +44,16 @@ func NewGuiHandler() *GUIHandler {
 	}
 
 	return &GUIHandler{
-		templateGenerator: template_generator.NewTemplateGenerator(nil),
-		mapper:            mappers.NewConfigMapper(),
-		contentProvider:   providers.NewMandatoryContentProvider(),
-		fileService:       file_service.NewFileService(),
-		previewGenerator:  previewGenerator,
-		previewLayout:     preview_service.NewPreviewLayoutService(),
-		zoneClassifier:    zone_services.NewZoneClassifier(),
-		tuningFactory:     generation_tuning.NewGenerationTuningFactory(),
+		templateGenerator:  template_generator.NewTemplateGenerator(nil),
+		mapper:             mappers.NewConfigMapper(),
+		contentProvider:    providers.NewMandatoryContentProvider(),
+		fileService:        file_service.NewFileService(),
+		previewGenerator:   previewGenerator,
+		previewLayout:      preview_service.NewPreviewLayoutService(),
+		zoneClassifier:     zone_services.NewZoneClassifier(),
+		tuningFactory:      generation_tuning.NewGenerationTuningFactory(),
+		editorValidator:    validators.NewEditorStateValidator(),
+		contentRuleService: content_rules.NewContentRuleService(),
 	}
 }
 
@@ -281,7 +285,7 @@ func (this *GUIHandler) GetContentRuleEditorOptions(
 		},
 	}
 
-	variants := contentRuleVariantOptions(content)
+	variants := this.contentRuleVariantOptions(content)
 	if len(variants) > 0 {
 		rules = append(rules, dtos.ContentRuleOptionDto{
 			Key:         dtos.ContentRuleKeyVariant,
@@ -295,7 +299,7 @@ func (this *GUIHandler) GetContentRuleEditorOptions(
 
 	return dtos.ContentRuleEditorOptionsDto{
 		Rules:     rules,
-		Distances: content_rules.GetDistanceDisplayNames(),
+		Distances: this.contentRuleService.GetDistanceDisplayNames(),
 		Variants:  variants,
 	}
 }
@@ -309,7 +313,7 @@ func (this *GUIHandler) DescribeContentRule(
 		DisplayText: savedRule.Name,
 		SavedRule:   savedRule,
 	}
-	rule := content_rules.CreateRuleFromSavedRule(savedRule, content)
+	rule := this.contentRuleService.CreateRuleFromSavedRule(savedRule, content)
 	if rule == nil {
 		return description
 	}
@@ -318,7 +322,7 @@ func (this *GUIHandler) DescribeContentRule(
 	description.Marker = rule.Marker()
 	description.Valid = true
 	if savedRule.VariantID != nil {
-		variant, ok := content_rules.GetVariantForContentByID(content, *savedRule.VariantID)
+		variant, ok := this.contentRuleService.GetVariantForContentByID(content, *savedRule.VariantID)
 		if ok {
 			description.VariantLabel, _ = variant.GetVariantByID(*savedRule.VariantID)
 		}
@@ -326,8 +330,10 @@ func (this *GUIHandler) DescribeContentRule(
 	return description
 }
 
-func contentRuleVariantOptions(content models.SidMapping) []dtos.ContentRuleVariantOptionDto {
-	variants := content_rules.GetVariantsForContent(content)
+func (this *GUIHandler) contentRuleVariantOptions(
+	content models.SidMapping,
+) []dtos.ContentRuleVariantOptionDto {
+	variants := this.contentRuleService.GetVariantsForContent(content)
 	options := make([]dtos.ContentRuleVariantOptionDto, 0, len(variants))
 	for _, variant := range variants {
 		for _, tuple := range variant.Variants {
@@ -358,7 +364,7 @@ func (this *GUIHandler) ValidateEditorState(
 	stateDto dtos.EditorStateDto,
 	fixIssues bool,
 ) dtos.EditorStateValidationDto {
-	issues := validators.ValidateEditorState(&stateDto)
+	issues := this.editorValidator.Validate(&stateDto)
 	warnings := make([]string, 0, len(issues))
 	for _, issue := range issues {
 		if fixIssues {

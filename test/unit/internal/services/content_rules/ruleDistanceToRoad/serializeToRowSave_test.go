@@ -11,7 +11,7 @@ import (
 func TestWhenRuleIsSerialized_WritesNameAndDistanceName(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	distance := content_rules.DistanceFar
+	distance := content_rules.DistanceVariation{Name: "Far", Min: 0.5, Max: 0.75}
 	rule := content_rules.NewRuleDistanceToRoad(&distance)
 
 	// Act

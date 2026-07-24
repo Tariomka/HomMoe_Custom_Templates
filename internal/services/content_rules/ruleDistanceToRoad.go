@@ -23,7 +23,7 @@ type RuleDistanceToRoad struct {
 // NewRuleDistanceToRoad creates a road-distance rule, defaulting to Medium when
 // no distance is supplied.
 func NewRuleDistanceToRoad(distance *DistanceVariation) *RuleDistanceToRoad {
-	resolved := DistanceMedium
+	resolved := defaultDistanceVariation()
 	if distance != nil {
 		resolved = *distance
 	}
