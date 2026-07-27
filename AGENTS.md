@@ -148,12 +148,13 @@ When orchestrating subagents, pick the model per task using these ratings
 
 | model           | cost | intelligence | taste |
 |-----------------|------|--------------|-------|
+| claude-opus-5   | 5    | 9            | 9     |
 | claude-fable-5  | 2    | 9            | 9     |
 | gpt-5.6-sol     | 6    | 7            | 6     |
 | gpt-5.6-terra   | 7    | 7            | 5     |
-| gpt-5.5         | 5    | 6            | 5     |
+| gpt-5.5         | 4    | 6            | 5     |
 | claude-opus-4.8 | 4    | 7            | 8     |
-| sonnet-5        | 5    | 5            | 7     |
+| sonnet-5        | 4    | 4            | 6     |
 
 Application directives:
 
@@ -165,12 +166,12 @@ Application directives:
   things before moving the work to a more expensive option.
 - Anything user-facing (UI, API design, copy) or project-maintainability
   related requires taste > 7.
-- Review of plans/implementations must be done by fable-5 or opus-4.8;
-  optionally add gpt-5.5 as an extra independent perspective.
+- Review of plans/implementations must be done by fable-5 or opus-5;
+  optionally add gpt-5.6-terra as an extra independent perspective.
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (gpt-5.5,
-  sonnet-5) for read-only exploration, searching, summarizing, and
-  mechanical/repetitive edits; reserve fable-5/opus-4.8 for design
+- Match model to task shape: use cheap, high-cost-rating models (gpt-5.6-terra,
+  gpt-5.5, sonnet-5) for read-only exploration, searching, summarizing, and
+  mechanical/repetitive edits; reserve opus-5/fable-5 for design
   decisions, tricky debugging, and final review.
 - Parallelize independent exploration across cheap subagents rather than
   serializing everything through one expensive model.
