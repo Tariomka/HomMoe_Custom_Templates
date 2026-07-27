@@ -148,12 +148,12 @@ When orchestrating subagents, pick the model per task using these ratings
 
 | model           | cost | intelligence | taste |
 |-----------------|------|--------------|-------|
-| claude-opus-5   | 5    | 9            | 9     |
+| claude-opus-5   | 5    | 8            | 9     |
 | claude-fable-5  | 2    | 9            | 9     |
 | gpt-5.6-sol     | 6    | 7            | 6     |
 | gpt-5.6-terra   | 7    | 7            | 5     |
 | gpt-5.5         | 4    | 6            | 5     |
-| claude-opus-4.8 | 4    | 7            | 8     |
+| claude-opus-4.8 | 4    | 7            | 7     |
 | sonnet-5        | 4    | 4            | 6     |
 
 Application directives:
