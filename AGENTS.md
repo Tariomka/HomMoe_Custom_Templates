@@ -166,7 +166,8 @@ Application directives:
   things before moving the work to a more expensive option.
 - Anything user-facing (UI, API design, copy) or project-maintainability
   related requires taste > 7.
-- Review of plans/implementations must be done by opus-5 or fable-5;
+- Review of plans/implementations must be done by opus-5 preferably
+  (use fable-5 sparingly as it is much more costly);
   optionally add gpt-5.6-terra as an extra independent perspective.
 - **Never use Haiku models.**
 - Match model to task shape: use cheap, high-cost-rating models (gpt-5.6-terra,
