@@ -18,6 +18,9 @@ type ConnectionEditorService struct {
 }
 
 func NewConnectionEditorService(zoneClassifier *zone_services.ZoneClassifier) *ConnectionEditorService {
+	if zoneClassifier == nil {
+		zoneClassifier = zone_services.NewZoneClassifier()
+	}
 	return &ConnectionEditorService{zoneClassifier: zoneClassifier}
 }
 

@@ -39,6 +39,15 @@ func NewManualReapplyServiceWithDependencies(
 	zoneClassifier *zone_services.ZoneClassifier,
 	tuningFactory *generation_tuning.GenerationTuningFactory,
 ) *ManualReapplyService {
+	if zoneEditor == nil {
+		zoneEditor = NewZoneEditorService()
+	}
+	if zoneClassifier == nil {
+		zoneClassifier = zone_services.NewZoneClassifier()
+	}
+	if tuningFactory == nil {
+		tuningFactory = generation_tuning.NewGenerationTuningFactory()
+	}
 	return &ManualReapplyService{
 		zoneEditor:     zoneEditor,
 		zoneClassifier: zoneClassifier,
@@ -88,6 +97,24 @@ func (this *ManualReapplyService) ApplyCastleSettingChanges(
 	}
 }
 
+// SetNeutralZoneCastleCount rebuilds only the zone's City castles for the new
+// count, keeping the quality profile, guard values, content pools and any
+// non-castle main objects (abandoned outposts) untouched - unlike
+// ApplyNeutralZoneQuality, which re-profiles the whole zone.
+func (this *ManualReapplyService) SetNeutralZoneCastleCount(
+	zone *entities.Zone,
+	castleCount int,
+	tuning models.GenerationTuning,
+) {
+	quality := this.zoneClassifier.GetQuality(*zone)
+	profile := common_zones.GetNeutralZoneProfile(quality)
+	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
+	zone.MainObjects = append(
+		this.zoneEditor.createNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
+		preserved...)
+	this.zoneEditor.rebuildCastleRoads(zone)
+}
+
 // neutralCastleTarget decides whether a changed option drives the neutral
 // zone's castle count, and with which count. Simple mode has a single count
 // for every neutral zone; advanced mode has per-tier counts that apply only
@@ -130,24 +157,6 @@ func (this *ManualReapplyService) neutralCastleTarget(
 	case neutral_zone.QualityUnknown:
 	}
 	return 0, false
-}
-
-// SetNeutralZoneCastleCount rebuilds only the zone's City castles for the new
-// count, keeping the quality profile, guard values, content pools and any
-// non-castle main objects (abandoned outposts) untouched - unlike
-// ApplyNeutralZoneQuality, which re-profiles the whole zone.
-func (this *ManualReapplyService) SetNeutralZoneCastleCount(
-	zone *entities.Zone,
-	castleCount int,
-	tuning models.GenerationTuning,
-) {
-	quality := this.zoneClassifier.GetQuality(*zone)
-	profile := common_zones.GetNeutralZoneProfile(quality)
-	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
-	zone.MainObjects = append(
-		this.zoneEditor.createNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
-		preserved...)
-	this.zoneEditor.rebuildCastleRoads(zone)
 }
 
 // rebuildSpawnZoneCastles rebuilds a player spawn zone's extra castles for the

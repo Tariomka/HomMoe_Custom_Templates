@@ -2,7 +2,7 @@
 
 ## Session goal
 
-Continue Phase 3 of `plans/clean-architecture-refactoring.md` by converting functional packages to cohesive services while preserving editor, generation, content-rule, road, and castle behavior.
+Complete the two remaining Phase 3 items in `plans/clean-architecture-refactoring.md`: injectable `GUIHandler` construction and focused internal workflow decomposition behind the unchanged GUI-facing facade.
 
 ## Fixes applied
 
@@ -12,6 +12,9 @@ Continue Phase 3 of `plans/clean-architecture-refactoring.md` by converting func
 - Replaced connection-editor package functions with `ConnectionEditorService`, `ZoneEditorService`, and `ManualReapplyService`.
 - Centralized topology-backed castle/road operations behind private `ZoneEditorService` methods; manual reapply depends on that service.
 - Moved editor-row-to-mandatory-item conversion from `MandatoryContentProvider` to `mappers.MandatoryContentItemMapper`.
+- Split `GUIHandler` into focused template-workflow, state-persistence, template-persistence, preview, content-rule, and zone-editor handlers while retaining every facade method.
+- Added validated `GUIHandlerDependencies` injection plus production default wiring in `NewGuiHandler`.
+- Made connection-editor dependency constructors replace nil mandatory collaborators with usable defaults.
 
 ## Features added / changed
 
@@ -20,6 +23,7 @@ Continue Phase 3 of `plans/clean-architecture-refactoring.md` by converting func
 - Content-rule and connection-editor public APIs now expose constructors and receiver methods only.
 - Per user decision, `GeneratorConfigMapper` now preserves `EditorStateDto.CityHold` exactly instead of deriving it from `VictoryCondition`; downstream `IsCityHoldMode` and game-rule generation still interpret the City Hold victory condition.
 - Per user decision, preview-generator initialization remains optional: startup logs failure and preview-image saving is skipped.
+- Tests can inject workflow fakes through `NewGuiHandlerWithDependencies`; production still shares mapper, validator, classifier, zone-editor, tuning, connection-editor, and file-service instances where policy must remain identical.
 
 ## File modifications
 
@@ -35,6 +39,8 @@ Created or renamed production owners:
 Major edited/deleted files:
 
 - `internal/handlers/guiHandler.go` — injected validator/content/connection/zone/manual services.
+- `internal/handlers/guiHandlerDependencies.go` and `*Operations.go` — explicit injectable workflow contract.
+- `internal/handlers/{templateWorkflow,statePersistence,templatePersistence,preview,contentRule,zoneEditor,stateValidation}Handler.go` — focused private workflow owners.
 - `internal/mappers/generatorConfigMapper.go` — uses `MandatoryContentItemMapper`; copies `CityHold` directly.
 - `internal/services/template_generator/providers/mandatoryContentProvider.go` — removed row mapping and content-rule dependency.
 - Old `connectionEditor.go`, `zoneEditor.go`, `manualReapply.go`, content-rule manager/catalog files, and their old test ownership folders were deleted/replaced.
@@ -48,23 +54,28 @@ Tests were moved to implementation-matching folders under:
 
 Handler and `test/integration/manualCastleReapply_integration_test.go` fixtures now call service receiver APIs.
 
+New handler constructor/delegation tests live in `test/unit/internal/handlers/guiHandler/newGuiHandlerWithDependencies_test.go`; nil-default constructor coverage was added to the matching connection-editor service test folders.
+
 ## Tests added or updated
 
-Latest verified state:
+Latest verified state after Phase 3 completion:
 
 - Focused content-rule, connection-editor, mapper, handler, and provider suites: passed.
-- `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`: passed at 64.3% (Phase 2 baseline 64.2%).
-- `go test ./test/unit/... -count=1`: passed.
+- `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`: passed at 64.6% (Phase 3 checkpoint 64.3%; Phase 2 baseline 64.2%).
+- Complete unit suite: 2,104 tests passed.
 - `go build ./...`: passed.
+- `go test ./test/... -count=1`: passed.
 - `go test -tags=integration_test ./test/integration/... -count=1`: passed.
-- `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1`: passed at the connection-editor checkpoint; mapper changes do not touch GUI rendering.
-- `git diff --check`: passed before the mapper slice; rerun at resume.
-- Fable reviews approved the content-rule, connection-editor, and mapper checkpoints with no hard findings.
+- `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1`: passed.
+- `go test -tags=integration_test ./test/performance/... -count=1`: passed.
+- Architecture dependency guard, diagnostics, handler lint, and `git diff --check`: passed.
+- Broader package lint reports only eight pre-existing formatting findings in untouched tests.
+- Claude Fable 5 approved final Phase 3 completion with no hard findings.
 
 ## Git status snapshot
 
 - Branch: `AD/refactoring-07-21`, up to date with `origin/AD/refactoring-07-21` at the latest check.
-- All current Phase 3 changes are unstaged; replacement service/mapper files and test folders are untracked while old owner files appear deleted.
+- Current Phase 3 handler/dependency changes and plan/handoff updates are unstaged; new focused handler/interface and test files are untracked.
 - No files were staged, unstaged, committed, or reverted by the agent.
 - `coverage.txt` was regenerated by required coverage runs.
 - No changes were made under `data/`, `internal/entities/template/`, or `internal/registry/`.
@@ -76,25 +87,23 @@ Latest verified state:
 - The user chose optional preview initialization, declining a startup-failing handler constructor.
 - One Opus review attempt hit the prior credit limit; the required reviews were completed successfully with Claude Fable 5.
 - Two patches were rejected on stale context and applied nothing; each was reapplied in smaller validated edits.
+- One combined patch was rejected for duplicate file sections and reapplied in valid smaller edits; one partial-file lint invocation failed because same-package siblings were omitted, then package lint completed.
 
 ## Open questions
 
-- Phase 3 has two remaining checklist items: injectable handler construction and internal `GUIHandler` workflow decomposition.
-- `NewConnectionEditorService(nil)` and `NewManualReapplyServiceWithDependencies` currently accept nil collaborators; constructor design should prevent partially usable handlers/services before Phase 3 closes.
-- `GUIHandler` still has roughly 13 concrete collaborators and 22 public methods across unrelated workflows; preserve its GUI-facing facade while splitting internals.
+- Phase 3 has no blockers and is marked Complete.
+- A caller can still pass a typed-nil implementation through a `GUIHandlerDependencies` interface field; only tests use this constructor today, and Fable classified reflection-based guarding as unnecessary unless external use appears.
 - `ContentRuleService.GetRules` ignores the impossible built-in `NewRuleVariant` error; Fable classified this as non-blocking because the private default catalog is hardcoded non-empty.
-- `HasDuplicateName` is test-only production API; defer deletion decision to the planned cleanup phase unless a missing GUI use is discovered.
-- VS Code may retain stale diagnostics for moved `zoneEditor.go`/`manualReapply.go`; compiler and tests are authoritative.
+- `HasDuplicateName` remains test-only production API and is deferred to Phase 8 cleanup.
 
 ## Next recommended actions
 
-1. Read `AGENTS.md`, Phase 3 in the plan, and this handoff.
+1. Read `AGENTS.md`, Phase 4 in the plan, and this handoff.
 2. Recheck `git status --short` and `git diff --check` without altering staging.
-3. Design a `GUIHandler` production constructor plus an explicit dependency/test constructor that cannot create partially initialized mandatory workflows while keeping preview optional.
-4. Split internal orchestration into focused workflow, persistence, preview, content-rule, validation, and zone-editor handlers behind the unchanged `GUIHandler` facade.
-5. Add focused constructor/delegation tests, then run coverage, full unit/build, tagged integration/headless GUI, and Fable review.
-6. Mark Phase 3 Complete only after both remaining checklist items and all verification gates pass.
+3. Preserve the completed Phase 3 handler facade and constructor contracts while beginning Phase 4 catalog/common-type consolidation.
+4. Record a fresh coverage comparison point before Phase 4 edits.
+5. Follow the Phase 4 distance-context constraint: preserve content `Near = 0.1..0.25` and portal `Near = 0.075..0.35` unless the user explicitly approves a product change.
 
 ## Carry-forward prompt
 
-Read `AGENTS.md` first, then read `plans/clean-architecture-refactoring.md` and `.agent/session-carry-forward.md`. Never modify `data/`, `internal/entities/template/`, or `internal/registry/`; preserve Windows/Linux portability; add tests for non-trivial logic and do not reduce coverage. Phase 3 is In progress: validator, content-rule/catalog, connection-editor services, private-helper audit, mapper audit, and service-cohesion audit are complete and Fable-approved at 64.3% coverage. The user decided that mapper `CityHold` preserves only the persisted flag and preview initialization remains optional. Resume from the current unstaged worktree with the two remaining Phase 3 items: injectable `GUIHandler` construction and focused internal workflow decomposition while preserving the GUI-facing facade. Use `.agent/session-carry-forward.md` for the full handoff.
+Read `AGENTS.md` first, then read `plans/clean-architecture-refactoring.md` and `.agent/session-carry-forward.md`. Never modify `data/`, `internal/entities/template/`, or `internal/registry/`; preserve Windows/Linux portability; add tests for non-trivial logic and do not reduce coverage. Phase 3 is Complete and Fable-approved at 64.6% coverage: `GUIHandler` is an injectable thin facade over six focused workflow handlers, preview initialization remains optional, and mapper `CityHold` preserves only the persisted flag. Resume from the current unstaged worktree at Phase 4 only after checking status and recording its baseline. Use `.agent/session-carry-forward.md` for the full handoff.
