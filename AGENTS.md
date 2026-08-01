@@ -174,8 +174,9 @@ Application directives:
   gpt-5.5, sonnet-5) for read-only exploration, searching, summarizing, and
   mechanical/repetitive edits; reserve opus-5/fable-5 for design
   decisions, tricky debugging, and final review.
-- Parallelize independent exploration across cheap subagents rather than
-  serializing everything through one expensive model.
+- Parallelize independent exploration and/or action execution
+  (like running tests) across cheap subagents rather than serializing
+  everything through one expensive model.
 - Give each subagent a self-contained brief (goal, constraints, expected
   output format) — subagents are stateless, and a weaker model with a
   precise brief beats a stronger model with a vague one.
