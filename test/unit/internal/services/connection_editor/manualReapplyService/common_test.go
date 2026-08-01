@@ -1,6 +1,6 @@
 // Package manualReapply_test contains shared arrangement helpers for the
 // manualReapply.go unit tests.
-package manualReapply_test
+package manualReapplyService_test
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -24,7 +24,7 @@ func defaultTuning() models.GenerationTuning {
 // makeNeutralZone builds a generator-shaped neutral zone for the given quality
 // and castle count.
 func makeNeutralZone(label string, quality neutral_zone.Quality, castleCount int) entities.Zone {
-	return connection_editor.NewDefaultNeutralZone(label, quality, castleCount, false, defaultTuning())
+	return connection_editor.NewZoneEditorService().NewDefaultNeutralZone(label, quality, castleCount, false, defaultTuning())
 }
 
 // makeSpawnZone builds a player spawn zone with the spawn castle as the primary

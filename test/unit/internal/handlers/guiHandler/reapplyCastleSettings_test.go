@@ -26,7 +26,7 @@ func TestWhenCastleSettingsChange_ReturnsServiceEquivalentZones(t *testing.T) {
 	editorState.NeutralZoneCastles = 2
 	changes := editor_state_dto.CastleSettingChanges{NeutralSimple: true}
 	configuration := mappers.NewConfigMapper().FromEditorState(editorState)
-	connection_editor.ApplyCastleSettingChanges(expectedZones, changes, configuration)
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(expectedZones, changes, configuration)
 
 	// Act
 	result := handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{

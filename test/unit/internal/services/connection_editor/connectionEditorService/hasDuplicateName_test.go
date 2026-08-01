@@ -1,23 +1,25 @@
-package connectionEditor_test
+package connectionEditorService_test
 
 import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "main-road"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "main-road"},
 	}
 
 	// Act
-	hasDuplicate := connection_editor.HasDuplicateName(connections, &connections[0])
+	hasDuplicate := service.HasDuplicateName(connections, &connections[0])
 
 	// Assert
 	assert.True(t, hasDuplicate)
@@ -26,13 +28,14 @@ func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
 func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "Main-Road"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "main-road"},
 	}
 
 	// Act
-	hasDuplicate := connection_editor.HasDuplicateName(connections, &connections[1])
+	hasDuplicate := service.HasDuplicateName(connections, &connections[1])
 
 	// Assert
 	assert.True(t, hasDuplicate)
@@ -41,13 +44,14 @@ func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
 func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "alpha"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "beta"},
 	}
 
 	// Act
-	hasDuplicate := connection_editor.HasDuplicateName(connections, &connections[0])
+	hasDuplicate := service.HasDuplicateName(connections, &connections[0])
 
 	// Assert
 	assert.False(t, hasDuplicate)
@@ -56,12 +60,11 @@ func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
 func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	connections := []entities.Connection{
-		{From: "Spawn-A", To: "Neutral-1", Name: "alpha"},
-	}
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1", Name: "alpha"}}
 
 	// Act
-	hasDuplicate := connection_editor.HasDuplicateName(connections, nil)
+	hasDuplicate := service.HasDuplicateName(connections, nil)
 
 	// Assert
 	assert.False(t, hasDuplicate)
@@ -70,13 +73,14 @@ func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
 func TestWhenCurrentNameIsEmpty_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
 	connections := []entities.Connection{
-		{From: "Spawn-A", To: "Neutral-1", Name: ""},
-		{From: "Neutral-1", To: "Neutral-2", Name: ""},
+		{From: "Spawn-A", To: "Neutral-1"},
+		{From: "Neutral-1", To: "Neutral-2"},
 	}
 
 	// Act
-	hasDuplicate := connection_editor.HasDuplicateName(connections, &connections[0])
+	hasDuplicate := service.HasDuplicateName(connections, &connections[0])
 
 	// Assert
 	assert.False(t, hasDuplicate)

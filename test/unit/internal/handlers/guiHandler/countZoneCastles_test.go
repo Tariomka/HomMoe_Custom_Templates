@@ -19,7 +19,7 @@ func TestWhenZoneContainsMixedMainObjects_ReturnsServiceEquivalentCount(t *testi
 		{Type: "AbandonedOutpost"},
 		{Type: "City"},
 	}}
-	expected := connection_editor.CountZoneCastles(zone)
+	expected := connection_editor.NewZoneEditorService().CountZoneCastles(zone)
 
 	// Act
 	result := handler.CountZoneCastles(zone)

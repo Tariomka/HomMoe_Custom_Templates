@@ -17,9 +17,34 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
+
+type ManualReapplyService struct {
+	zoneEditor     *ZoneEditorService
+	zoneClassifier *zone_services.ZoneClassifier
+	tuningFactory  *generation_tuning.GenerationTuningFactory
+}
+
+func NewManualReapplyService() *ManualReapplyService {
+	return NewManualReapplyServiceWithDependencies(
+		NewZoneEditorService(),
+		zone_services.NewZoneClassifier(),
+		generation_tuning.NewGenerationTuningFactory(),
+	)
+}
+
+func NewManualReapplyServiceWithDependencies(
+	zoneEditor *ZoneEditorService,
+	zoneClassifier *zone_services.ZoneClassifier,
+	tuningFactory *generation_tuning.GenerationTuningFactory,
+) *ManualReapplyService {
+	return &ManualReapplyService{
+		zoneEditor:     zoneEditor,
+		zoneClassifier: zoneClassifier,
+		tuningFactory:  tuningFactory,
+	}
+}
 
 // ApplyCastleSettingChanges rewrites the castles of the manually edited zones
 // whose castle-count option changed, in place. Everything else about the
@@ -31,30 +56,32 @@ import (
 //     advanced mode, the per-tier count matching the zone's CURRENT (possibly
 //     manually re-tiered) quality - castle-less zones then keep their
 //     no-castle plan.
-func ApplyCastleSettingChanges(
+func (this *ManualReapplyService) ApplyCastleSettingChanges(
 	zones []entities.Zone,
 	changes editor_state_dto.CastleSettingChanges,
 	configuration *config.GeneratorConfig) {
 	if !changes.Any() {
 		return
 	}
-	tuning := generation_tuning.NewGenerationTuningFactory().Create(configuration, len(zones))
-	topology := base.NewTopologyBase()
-	zoneClassifier := zone_services.NewZoneClassifier()
+	tuning := this.tuningFactory.Create(configuration, len(zones))
 	for i := range zones {
 		zone := &zones[i]
 		switch zone_helpers.GetZoneTypeFromName(zone.Name) {
 		case preview.ZoneTypePlayer:
 			if changes.PlayerCastles {
-				rebuildSpawnZoneCastles(zone, configuration, tuning, &topology)
+				this.rebuildSpawnZoneCastles(zone, configuration, tuning)
 			}
 		case preview.ZoneTypeHub:
 			if changes.Hub {
-				rebuildHubZoneCastles(zone, configuration.ZoneConfiguration.Advanced.HubZoneCastles, tuning, &topology)
+				this.rebuildHubZoneCastles(
+					zone,
+					configuration.ZoneConfiguration.Advanced.HubZoneCastles,
+					tuning,
+				)
 			}
 		case preview.ZoneTypeNeutral:
-			if count, update := neutralCastleTarget(*zone, changes, configuration, zoneClassifier); update {
-				SetNeutralZoneCastleCount(zone, count, tuning)
+			if count, update := this.neutralCastleTarget(*zone, changes, configuration); update {
+				this.SetNeutralZoneCastleCount(zone, count, tuning)
 			}
 		case preview.ZoneTypeUnknown:
 		}
@@ -65,22 +92,21 @@ func ApplyCastleSettingChanges(
 // zone's castle count, and with which count. Simple mode has a single count
 // for every neutral zone; advanced mode has per-tier counts that apply only
 // to with-castle zones of the matching quality.
-func neutralCastleTarget(
+func (this *ManualReapplyService) neutralCastleTarget(
 	zone entities.Zone,
 	changes editor_state_dto.CastleSettingChanges,
 	configuration *config.GeneratorConfig,
-	zoneClassifier *zone_services.ZoneClassifier,
 ) (int, bool) {
 	zoneConfiguration := configuration.ZoneConfiguration
 	if changes.NeutralSimple {
 		return helpers.Clamp(zoneConfiguration.NeutralZoneCastles, 0, 4), true
 	}
 
-	if CountZoneCastles(zone) == 0 {
+	if this.zoneEditor.CountZoneCastles(zone) == 0 {
 		return 0, false
 	}
 
-	switch zoneClassifier.GetQuality(zone) {
+	switch this.zoneClassifier.GetQuality(zone) {
 	case neutral_zone.QualityHighest:
 		if changes.Hub {
 			return helpers.Clamp(zoneConfiguration.Advanced.HubZoneCastles, 0, 4), true
@@ -110,24 +136,28 @@ func neutralCastleTarget(
 // count, keeping the quality profile, guard values, content pools and any
 // non-castle main objects (abandoned outposts) untouched - unlike
 // ApplyNeutralZoneQuality, which re-profiles the whole zone.
-func SetNeutralZoneCastleCount(zone *entities.Zone, castleCount int, tuning models.GenerationTuning) {
-	quality := zone_services.NewZoneClassifier().GetQuality(*zone)
+func (this *ManualReapplyService) SetNeutralZoneCastleCount(
+	zone *entities.Zone,
+	castleCount int,
+	tuning models.GenerationTuning,
+) {
+	quality := this.zoneClassifier.GetQuality(*zone)
 	profile := common_zones.GetNeutralZoneProfile(quality)
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		base.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
+		this.zoneEditor.createNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
 		preserved...)
-	rebuildCastleRoads(zone)
+	this.zoneEditor.rebuildCastleRoads(zone)
 }
 
 // rebuildSpawnZoneCastles rebuilds a player spawn zone's extra castles for the
 // current player-castle options. The spawn castle (main object 0) is kept
 // verbatim so the player assignment and faction survive.
-func rebuildSpawnZoneCastles(
+func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 	zone *entities.Zone,
 	configuration *config.GeneratorConfig,
 	tuning models.GenerationTuning,
-	topology *base.TopologyBase) {
+) {
 	if len(zone.MainObjects) == 0 || zone.MainObjects[0].Type != registry.GetMainObjectTypeValues().Spawn {
 		return
 	}
@@ -136,28 +166,28 @@ func rebuildSpawnZoneCastles(
 	matchFactions := configuration.MatchPlayerCastleFactions
 	mainObjects := []entities.MainObject{spawnCastle}
 	mainObjects = append(mainObjects,
-		topology.CreatePlayerOwnedCastles(matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles)...)
+		this.zoneEditor.createPlayerOwnedCastles(matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles)...)
 	mainObjects = append(mainObjects,
-		topology.CreatePlayerUnclaimedCastles(
+		this.zoneEditor.createPlayerUnclaimedCastles(
 			matchFactions,
 			tuning.ScaleByNeutralGuardStrength(5000),
 			configuration.ZoneConfiguration.PlayerZoneCastles)...)
 	zone.MainObjects = mainObjects
-	rebuildCastleRoads(zone)
+	this.zoneEditor.rebuildCastleRoads(zone)
 }
 
 // rebuildHubZoneCastles rebuilds a hub zone's castles for the current
 // hub-castle option, keeping any non-castle main objects.
-func rebuildHubZoneCastles(
+func (this *ManualReapplyService) rebuildHubZoneCastles(
 	zone *entities.Zone,
 	castleCount int,
 	tuning models.GenerationTuning,
-	topology *base.TopologyBase) {
+) {
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		topology.CreateHubZoneCastles(tuning, castleCount, isHoldCity),
+		this.zoneEditor.createHubZoneCastles(tuning, castleCount, isHoldCity),
 		preserved...)
-	rebuildCastleRoads(zone)
+	this.zoneEditor.rebuildCastleRoads(zone)
 }
 
 // splitOutNonCastles returns the zone's non-City main objects and whether any
@@ -172,18 +202,4 @@ func splitOutNonCastles(mainObjects []entities.MainObject) (preserved []entities
 		preserved = append(preserved, mainObject)
 	}
 	return preserved, isHoldCity
-}
-
-// rebuildCastleRoads regenerates the stone castle<->castle roads for the
-// zone's current main objects, keeping all other roads.
-func rebuildCastleRoads(zone *entities.Zone) {
-	kept := make([]entities.Road, 0, len(zone.Roads))
-	for _, road := range zone.Roads {
-		if isCastleRoad(road) {
-			continue
-		}
-		kept = append(kept, road)
-	}
-	topology := base.NewTopologyBase()
-	zone.Roads = append(topology.CreateOuterZoneRoads(nil, len(zone.MainObjects), 0, true), kept...)
 }

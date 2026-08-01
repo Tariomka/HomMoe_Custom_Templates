@@ -65,3 +65,15 @@ func TestWhenVariantIdIsNotInMapping_ReturnsError(t *testing.T) {
 	// Assert
 	assert.Error(t, err)
 }
+
+func TestWhenMappingHasNoVariants_ReturnsError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	mapping := models.NewVariantMapping(models.SidMapping{Sid: "x"}, nil)
+
+	// Act
+	_, err := content_rules.NewRuleVariant(&mapping, nil)
+
+	// Assert
+	assert.Error(t, err)
+}

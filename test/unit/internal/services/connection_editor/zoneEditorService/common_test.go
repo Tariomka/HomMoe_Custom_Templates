@@ -1,6 +1,6 @@
 // Package zoneEditor_test contains shared arrangement helpers for the
-// zoneEditor.go unit tests.
-package zoneEditor_test
+// zoneEditorService.go unit tests.
+package zoneEditorService_test
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"

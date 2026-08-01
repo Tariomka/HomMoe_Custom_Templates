@@ -34,7 +34,11 @@ func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVarian
 	if variantID != nil {
 		id = *variantID
 	} else {
-		id = resolved.GetVariantIDsInOrder()[0]
+		variantIDs := resolved.GetVariantIDsInOrder()
+		if len(variantIDs) == 0 {
+			return nil, fmt.Errorf("provided variant mapping has no variants")
+		}
+		id = variantIDs[0]
 	}
 
 	if _, ok := resolved.GetVariantByID(id); !ok {

@@ -28,7 +28,7 @@ func TestWhenNeutralZoneIsCreated_ReturnsServiceEquivalentZone(t *testing.T) {
 			BorderGuardStrengthMultiplier:  1,
 		},
 	}
-	expected := connection_editor.NewDefaultNeutralZone(
+	expected := connection_editor.NewZoneEditorService().NewDefaultNeutralZone(
 		request.Label, request.Quality, request.CastleCount, request.GenerateRoads, request.Tuning)
 
 	// Act

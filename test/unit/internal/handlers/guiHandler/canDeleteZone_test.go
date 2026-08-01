@@ -14,7 +14,7 @@ func TestWhenZoneIsNeutral_ReturnsServiceEquivalentDecision(t *testing.T) {
 	handler := handlers.NewGuiHandler()
 	zoneName := "Neutral-C"
 	playerZoneNames := map[string]bool{"Spawn-A": true}
-	expected := connection_editor.CanDeleteZone(zoneName, playerZoneNames)
+	expected := connection_editor.NewZoneEditorService().CanDeleteZone(zoneName, playerZoneNames)
 
 	// Act
 	result := handler.CanDeleteZone(zoneName, playerZoneNames)

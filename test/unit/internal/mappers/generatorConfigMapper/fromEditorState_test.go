@@ -265,7 +265,7 @@ func TestWhenManualCityHoldOptionsProvided_PopulatesGameEndConditions(t *testing
 	assert.Equal(t, expected, configuration.GameEndConditions)
 }
 
-func TestWhenVictoryConditionIsCityHoldCondition_ForcesCityHoldEnabled(t *testing.T) {
+func TestWhenVictoryConditionIsCityHoldAndFlagIsFalse_PreservesFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
@@ -276,7 +276,7 @@ func TestWhenVictoryConditionIsCityHoldCondition_ForcesCityHoldEnabled(t *testin
 	configuration := mappers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
-	assert.True(t, configuration.GameEndConditions.CityHold)
+	assert.False(t, configuration.GameEndConditions.CityHold)
 }
 
 func TestWhenGladiatorArenaOptionsProvided_PopulatesGladiatorArenaRules(t *testing.T) {

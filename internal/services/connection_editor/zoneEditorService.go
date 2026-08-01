@@ -19,6 +19,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 )
 
+type ZoneEditorService struct {
+	topology base.TopologyBase
+}
+
+func NewZoneEditorService() *ZoneEditorService {
+	return &ZoneEditorService{topology: base.NewTopologyBase()}
+}
+
 // isCastleRoad reports whether a road connects two of the zone's own main
 // objects (the stone castle<->castle roads). These must be regenerated whenever
 // the zone's main-object count changes, otherwise added castles end up with no
@@ -32,7 +40,7 @@ func isCastleRoad(road entities.Road) bool {
 // already have one. Connections added in the manual zone editor start nameless,
 // but a road can only target a connection by name, so an unnamed connection can
 // never receive a road. Names are mutated in place.
-func EnsureConnectionNames(connections []entities.Connection) {
+func (this *ZoneEditorService) EnsureConnectionNames(connections []entities.Connection) {
 	used := make(map[string]bool, len(connections))
 	for _, connection := range connections {
 		if connection.Name != "" {
@@ -69,10 +77,11 @@ func EnsureConnectionNames(connections []entities.Connection) {
 // quality/castle count; without this, zones keep their generation-time roads and
 // any connection added in the editor - or castle added by re-tiering a zone -
 // ends up without a road.
-func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Connection) {
-	topology := base.NewTopologyBase()
-
-	EnsureConnectionNames(connections)
+func (this *ZoneEditorService) RebuildZoneConnectionRoads(
+	zones []entities.Zone,
+	connections []entities.Connection,
+) {
+	this.EnsureConnectionNames(connections)
 
 	connectionsByZone := make(map[string][]string)
 	for _, connection := range connections {
@@ -106,7 +115,7 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 		}
 
 		mainObjectCount := len(zone.MainObjects)
-		roads := append(topology.CreateOuterZoneRoads(nil, mainObjectCount, 0, true), preserved...)
+		roads := append(this.topology.CreateOuterZoneRoads(nil, mainObjectCount, 0, true), preserved...)
 
 		names := connectionsByZone[zone.Name]
 		if mainObjectCount > 0 {
@@ -117,7 +126,7 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 					Build())
 			}
 		} else {
-			roads = append(roads, topology.CreateConnectorZoneRoads(names, true)...)
+			roads = append(roads, this.topology.CreateConnectorZoneRoads(names, true)...)
 		}
 
 		zone.Roads = roads
@@ -126,7 +135,7 @@ func RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Co
 
 // NextFreeZoneLabel returns the first generator label not used by any zone, or
 // "" when the pool is exhausted.
-func NextFreeZoneLabel(zones []entities.Zone) string {
+func (this *ZoneEditorService) NextFreeZoneLabel(zones []entities.Zone) string {
 	used := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		used[helpers.GetZoneLabel(zone.Name)] = true
@@ -143,21 +152,28 @@ func NextFreeZoneLabel(zones []entities.Zone) string {
 // NewDefaultNeutralZone builds a manually-added neutral zone with the same
 // builder the generator uses. The mandatory-content reference is cleared
 // because no template-level definition exists for a manual zone.
-func NewDefaultNeutralZone(
+func (this *ZoneEditorService) NewDefaultNeutralZone(
 	label string,
 	quality neutral_zone.Quality,
 	castleCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
-	topology := base.NewTopologyBase()
 	plan := neutral_zone.Plan{Label: label, Quality: quality, CastleCount: castleCount}
-	zone := topology.CreateNeutralZone(plan, nil, 1.0, tuning.RemoteFootholdCount, generateRoads, tuning, false)
+	zone := this.topology.CreateNeutralZone(
+		plan,
+		nil,
+		1.0,
+		tuning.RemoteFootholdCount,
+		generateRoads,
+		tuning,
+		false,
+	)
 	zone.MandatoryContent = nil
 	return zone
 }
 
 // CountZoneCastles returns the number of City main objects in the zone.
-func CountZoneCastles(zone entities.Zone) int {
+func (this *ZoneEditorService) CountZoneCastles(zone entities.Zone) int {
 	count := 0
 	for _, mainObject := range zone.MainObjects {
 		if mainObject.Type == registry.GetMainObjectTypeValues().City {
@@ -170,7 +186,7 @@ func CountZoneCastles(zone entities.Zone) int {
 // ApplyNeutralZoneQuality re-applies the quality profile (layout, guard
 // multiplier, content pools and values) and rebuilds the zone's castles for
 // the requested count. Only meaningful for neutral zones.
-func ApplyNeutralZoneQuality(
+func (this *ZoneEditorService) ApplyNeutralZoneQuality(
 	zone *entities.Zone,
 	quality neutral_zone.Quality,
 	castleCount int,
@@ -193,23 +209,23 @@ func ApplyNeutralZoneQuality(
 	zone.ResourcesValue = tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)
 	zone.ResourcesValuePerArea = tuning.ScaleByResourceDensity(
 		float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))
-	zone.MainObjects = base.CreateNeutralZoneCastles(profile, tuning, castleCount, false)
+	zone.MainObjects = this.createNeutralZoneCastles(profile, tuning, castleCount, false)
 
 	// Regenerate the castle<->castle roads so the rebuilt castles are
 	// road-connected. Other roads (connection and foothold roads) are left for
 	// RebuildZoneConnectionRoads to finalize once the edit is applied.
-	rebuildCastleRoads(zone)
+	this.rebuildCastleRoads(zone)
 }
 
 // CanDeleteZone reports whether the zone may be removed in the editor. Spawn
 // zones are owned by the General tab's player count and cannot be deleted.
-func CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
+func (this *ZoneEditorService) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
 	return !playerZoneNames[zoneName]
 }
 
 // RemoveZone returns the zone and connection lists without the named zone and
 // without any connection referencing it.
-func RemoveZone(
+func (this *ZoneEditorService) RemoveZone(
 	zones []entities.Zone,
 	connections []entities.Connection,
 	zoneName string) ([]entities.Zone, []entities.Connection) {
@@ -230,7 +246,7 @@ func RemoveZone(
 
 // FindOpenPosition returns a normalized position on a coarse interior grid
 // that maximizes the distance to the occupied positions.
-func FindOpenPosition(occupied [][2]float64) [2]float64 {
+func (this *ZoneEditorService) FindOpenPosition(occupied [][2]float64) [2]float64 {
 	const gridSteps = 7
 	best := [2]float64{0.5, 0.5}
 	bestScore := -1.0
@@ -254,4 +270,48 @@ func FindOpenPosition(occupied [][2]float64) [2]float64 {
 		}
 	}
 	return best
+}
+
+func (this *ZoneEditorService) createNeutralZoneCastles(
+	profile neutral_zone.Profile,
+	tuning models.GenerationTuning,
+	castleCount int,
+	isHoldCityZone bool,
+) []entities.MainObject {
+	return base.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCityZone)
+}
+
+func (this *ZoneEditorService) createPlayerOwnedCastles(
+	matchPlayerFaction bool,
+	owner string,
+	castleCount int,
+) []entities.MainObject {
+	return this.topology.CreatePlayerOwnedCastles(matchPlayerFaction, owner, castleCount)
+}
+
+func (this *ZoneEditorService) createPlayerUnclaimedCastles(
+	matchPlayerFaction bool,
+	guardValue int,
+	castleCount int,
+) []entities.MainObject {
+	return this.topology.CreatePlayerUnclaimedCastles(matchPlayerFaction, guardValue, castleCount)
+}
+
+func (this *ZoneEditorService) createHubZoneCastles(
+	tuning models.GenerationTuning,
+	castleCount int,
+	isHoldCityZone bool,
+) []entities.MainObject {
+	return this.topology.CreateHubZoneCastles(tuning, castleCount, isHoldCityZone)
+}
+
+func (this *ZoneEditorService) rebuildCastleRoads(zone *entities.Zone) {
+	kept := make([]entities.Road, 0, len(zone.Roads))
+	for _, road := range zone.Roads {
+		if isCastleRoad(road) {
+			continue
+		}
+		kept = append(kept, road)
+	}
+	zone.Roads = append(this.topology.CreateOuterZoneRoads(nil, len(zone.MainObjects), 0, true), kept...)
 }

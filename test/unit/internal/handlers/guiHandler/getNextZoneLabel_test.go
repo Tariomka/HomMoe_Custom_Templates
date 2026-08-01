@@ -14,7 +14,7 @@ func TestWhenLabelsAreOccupied_ReturnsServiceEquivalentLabel(t *testing.T) {
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-B"}}
-	expected := connection_editor.NextFreeZoneLabel(zones)
+	expected := connection_editor.NewZoneEditorService().NextFreeZoneLabel(zones)
 
 	// Act
 	result := handler.GetNextZoneLabel(zones)

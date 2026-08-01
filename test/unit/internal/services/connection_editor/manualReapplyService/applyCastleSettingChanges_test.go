@@ -1,4 +1,4 @@
-package manualReapply_test
+package manualReapplyService_test
 
 import (
 	"testing"
@@ -19,10 +19,10 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 	zones := []entities.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
 
 	// Act
-	connection_editor.ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.CountZoneCastles(zones[0]))
+	assert.Equal(t, 1, connection_editor.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 // applySimpleModeChange runs the simple-mode neutral castle propagation over a
@@ -35,7 +35,7 @@ func applySimpleModeChange() []entities.Zone {
 		makeNeutralZone("H", neutral_zone.QualityHigh, 0),
 		makeSpawnZone("A", "Player1", 1),
 	}
-	connection_editor.ApplyCastleSettingChanges(
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{NeutralSimple: true}, configuration)
 	return zones
 }
@@ -46,7 +46,7 @@ func TestWhenSimpleModeCountChanges_UpdatesCastledNeutralZone(t *testing.T) {
 	zones := applySimpleModeChange()
 
 	// Assert
-	assert.Equal(t, 2, connection_editor.CountZoneCastles(zones[0]))
+	assert.Equal(t, 2, connection_editor.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenSimpleModeCountChanges_UpdatesCastleLessNeutralZoneToo(t *testing.T) {
@@ -55,7 +55,7 @@ func TestWhenSimpleModeCountChanges_UpdatesCastleLessNeutralZoneToo(t *testing.T
 	zones := applySimpleModeChange()
 
 	// Assert
-	assert.Equal(t, 2, connection_editor.CountZoneCastles(zones[1]))
+	assert.Equal(t, 2, connection_editor.NewZoneEditorService().CountZoneCastles(zones[1]))
 }
 
 func TestWhenSimpleModeCountChanges_LeavesSpawnZoneUntouched(t *testing.T) {
@@ -77,7 +77,7 @@ func applyAdvancedHighChange() []entities.Zone {
 		makeNeutralZone("H", neutral_zone.QualityLow, 1),
 		makeNeutralZone("I", neutral_zone.QualityHigh, 0),
 	}
-	connection_editor.ApplyCastleSettingChanges(
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{NeutralHigh: true}, configuration)
 	return zones
 }
@@ -88,7 +88,7 @@ func TestWhenHighTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
 	zones := applyAdvancedHighChange()
 
 	// Assert
-	assert.Equal(t, 3, connection_editor.CountZoneCastles(zones[0]))
+	assert.Equal(t, 3, connection_editor.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenHighTierCountChanges_LeavesOtherQualityZoneUntouched(t *testing.T) {
@@ -97,7 +97,7 @@ func TestWhenHighTierCountChanges_LeavesOtherQualityZoneUntouched(t *testing.T) 
 	zones := applyAdvancedHighChange()
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.CountZoneCastles(zones[1]))
+	assert.Equal(t, 1, connection_editor.NewZoneEditorService().CountZoneCastles(zones[1]))
 }
 
 func TestWhenHighTierCountChanges_KeepsCastleLessZoneWithoutCastles(t *testing.T) {
@@ -106,7 +106,7 @@ func TestWhenHighTierCountChanges_KeepsCastleLessZoneWithoutCastles(t *testing.T
 	zones := applyAdvancedHighChange()
 
 	// Assert
-	assert.Equal(t, 0, connection_editor.CountZoneCastles(zones[2]))
+	assert.Equal(t, 0, connection_editor.NewZoneEditorService().CountZoneCastles(zones[2]))
 }
 
 // applyPlayerCastleChange runs the player-castle propagation over a spawn zone
@@ -119,7 +119,7 @@ func applyPlayerCastleChange() []entities.Zone {
 		makeSpawnZone("A", "Player1", 0),
 		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
 	}
-	connection_editor.ApplyCastleSettingChanges(
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{PlayerCastles: true}, configuration)
 	return zones
 }
@@ -190,7 +190,7 @@ func TestWhenPlayerCastlesChange_LeavesNeutralZoneUntouched(t *testing.T) {
 	zones := applyPlayerCastleChange()
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.CountZoneCastles(zones[1]),
+	assert.Equal(t, 1, connection_editor.NewZoneEditorService().CountZoneCastles(zones[1]),
 		"neutral zones must not react to a player option")
 }
 
@@ -204,7 +204,7 @@ func TestWhenSpawnZoneLacksSpawnCastle_LeavesItUntouched(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.ApplyCastleSettingChanges(
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{PlayerCastles: true}, configuration)
 
 	// Assert
@@ -222,11 +222,11 @@ func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.ApplyCastleSettingChanges(
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
-	assert.Equal(t, 3, connection_editor.CountZoneCastles(zones[0]))
+	assert.Equal(t, 3, connection_editor.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
@@ -239,11 +239,11 @@ func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.ApplyCastleSettingChanges(
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
-	assert.Equal(t, 2, connection_editor.CountZoneCastles(zones[0]))
+	assert.Equal(t, 2, connection_editor.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *testing.T) {
@@ -254,7 +254,7 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 	zones := []entities.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
 
 	// Act
-	connection_editor.ApplyCastleSettingChanges(
+	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(
 		zones, editor_state_dto.CastleSettingChanges{NeutralSimple: true}, configuration)
 
 	// Assert

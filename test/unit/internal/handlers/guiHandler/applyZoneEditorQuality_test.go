@@ -22,9 +22,9 @@ func TestWhenQualityChanges_ReturnsServiceEquivalentZone(t *testing.T) {
 		NeutralStackStrengthMultiplier: 1,
 		BorderGuardStrengthMultiplier:  1,
 	}
-	zone := connection_editor.NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, true, tuning)
+	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, true, tuning)
 	expected := zone
-	connection_editor.ApplyNeutralZoneQuality(&expected, neutral_zone.QualityHigh, 3, tuning)
+	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&expected, neutral_zone.QualityHigh, 3, tuning)
 
 	// Act
 	result := handler.ApplyZoneEditorQuality(dtos.ZoneEditorQualityRequestDto{

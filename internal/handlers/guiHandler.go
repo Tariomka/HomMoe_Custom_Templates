@@ -30,6 +30,9 @@ type GUIHandler struct {
 	previewGenerator   *preview_service.PreviewGeneratorService
 	previewLayout      *preview_service.PreviewLayoutService
 	zoneClassifier     *zone_services.ZoneClassifier
+	connectionEditor   *connection_editor.ConnectionEditorService
+	zoneEditor         *connection_editor.ZoneEditorService
+	manualReapply      *connection_editor.ManualReapplyService
 	tuningFactory      *generation_tuning.GenerationTuningFactory
 	editorValidator    *validators.EditorStateValidator
 	contentRuleService *content_rules.ContentRuleService
@@ -42,6 +45,9 @@ func NewGuiHandler() *GUIHandler {
 			"Preview Generator failed to initialize, preview images will not be generated",
 			slog.String("error", err.Error()))
 	}
+	zoneClassifier := zone_services.NewZoneClassifier()
+	zoneEditor := connection_editor.NewZoneEditorService()
+	tuningFactory := generation_tuning.NewGenerationTuningFactory()
 
 	return &GUIHandler{
 		templateGenerator:  template_generator.NewTemplateGenerator(nil),
@@ -50,8 +56,15 @@ func NewGuiHandler() *GUIHandler {
 		fileService:        file_service.NewFileService(),
 		previewGenerator:   previewGenerator,
 		previewLayout:      preview_service.NewPreviewLayoutService(),
-		zoneClassifier:     zone_services.NewZoneClassifier(),
-		tuningFactory:      generation_tuning.NewGenerationTuningFactory(),
+		zoneClassifier:     zoneClassifier,
+		connectionEditor:   connection_editor.NewConnectionEditorService(zoneClassifier),
+		zoneEditor:         zoneEditor,
+		manualReapply: connection_editor.NewManualReapplyServiceWithDependencies(
+			zoneEditor,
+			zoneClassifier,
+			tuningFactory,
+		),
+		tuningFactory:      tuningFactory,
 		editorValidator:    validators.NewEditorStateValidator(),
 		contentRuleService: content_rules.NewContentRuleService(),
 	}
@@ -85,7 +98,7 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	newTemplate.Variants[0].Zones = templateDto.Zones
 	newTemplate.Variants[0].Connections = templateDto.Connections
 
-	connection_editor.RebuildZoneConnectionRoads(
+	this.zoneEditor.RebuildZoneConnectionRoads(
 		newTemplate.Variants[0].Zones,
 		newTemplate.Variants[0].Connections)
 
@@ -99,7 +112,10 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	}
 
 	var err error
-	if connection_editor.ComputeHasErrors(newTemplate.Variants[0].Zones, newTemplate.Variants[0].Connections) {
+	if this.connectionEditor.ComputeHasErrors(
+		newTemplate.Variants[0].Zones,
+		newTemplate.Variants[0].Connections,
+	) {
 		err = common_errors.ErrZonesMissing
 	}
 
@@ -110,7 +126,7 @@ func (this *GUIHandler) ReapplyCastleSettings(
 	request dtos.CastleSettingsReapplyRequestDto,
 ) []entities.Zone {
 	configuration := this.mapper.FromEditorState(request.EditorState)
-	connection_editor.ApplyCastleSettingChanges(request.Zones, request.Changes, configuration)
+	this.manualReapply.ApplyCastleSettingChanges(request.Zones, request.Changes, configuration)
 	return request.Zones
 }
 
@@ -127,7 +143,7 @@ func (this *GUIHandler) GetZoneEditorOptions(
 }
 
 func (this *GUIHandler) CountZoneCastles(zone entities.Zone) int {
-	return connection_editor.CountZoneCastles(zone)
+	return this.zoneEditor.CountZoneCastles(zone)
 }
 
 func (this *GUIHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
@@ -149,7 +165,7 @@ func (this *GUIHandler) GetZoneConnectionGuardQuality(
 func (this *GUIHandler) ApplyZoneEditorQuality(
 	request dtos.ZoneEditorQualityRequestDto,
 ) entities.Zone {
-	connection_editor.ApplyNeutralZoneQuality(
+	this.zoneEditor.ApplyNeutralZoneQuality(
 		&request.Zone,
 		request.Quality,
 		request.CastleCount,
@@ -163,15 +179,15 @@ func (this *GUIHandler) DescribeZoneEditorGraph(
 	connections []entities.Connection,
 ) dtos.ZoneEditorGraphDto {
 	return dtos.ZoneEditorGraphDto{
-		HasErrors:         connection_editor.ComputeHasErrors(zones, connections),
-		IsolatedZoneCount: len(connection_editor.FindIsolatedZones(zones, connections)),
+		HasErrors:         this.connectionEditor.ComputeHasErrors(zones, connections),
+		IsolatedZoneCount: len(this.connectionEditor.FindIsolatedZones(zones, connections)),
 	}
 }
 
 func (this *GUIHandler) CreateZoneEditorConnection(
 	request dtos.ZoneEditorConnectionRequestDto,
 ) entities.Connection {
-	return connection_editor.NewDefaultConnection(
+	return this.connectionEditor.NewDefaultConnection(
 		request.From,
 		request.To,
 		request.Zones,
@@ -180,17 +196,17 @@ func (this *GUIHandler) CreateZoneEditorConnection(
 }
 
 func (this *GUIHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
-	return connection_editor.FindOpenPosition(occupied)
+	return this.zoneEditor.FindOpenPosition(occupied)
 }
 
 func (this *GUIHandler) GetNextZoneLabel(zones []entities.Zone) string {
-	return connection_editor.NextFreeZoneLabel(zones)
+	return this.zoneEditor.NextFreeZoneLabel(zones)
 }
 
 func (this *GUIHandler) CreateZoneEditorNeutralZone(
 	request dtos.ZoneEditorNeutralZoneRequestDto,
 ) entities.Zone {
-	return connection_editor.NewDefaultNeutralZone(
+	return this.zoneEditor.NewDefaultNeutralZone(
 		request.Label,
 		request.Quality,
 		request.CastleCount,
@@ -200,13 +216,13 @@ func (this *GUIHandler) CreateZoneEditorNeutralZone(
 }
 
 func (this *GUIHandler) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
-	return connection_editor.CanDeleteZone(zoneName, playerZoneNames)
+	return this.zoneEditor.CanDeleteZone(zoneName, playerZoneNames)
 }
 
 func (this *GUIHandler) RemoveZoneEditorZone(
 	request dtos.ZoneEditorRemoveRequestDto,
 ) dtos.ZoneEditorMutationDto {
-	zones, connections := connection_editor.RemoveZone(
+	zones, connections := this.zoneEditor.RemoveZone(
 		request.Zones,
 		request.Connections,
 		request.ZoneName,

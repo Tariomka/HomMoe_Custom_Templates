@@ -13,7 +13,7 @@ func TestWhenPositionsAreOccupied_ReturnsServiceEquivalentPosition(t *testing.T)
 	// Arrange
 	handler := handlers.NewGuiHandler()
 	occupied := [][2]float64{{0.2, 0.2}, {0.5, 0.5}}
-	expected := connection_editor.FindOpenPosition(occupied)
+	expected := connection_editor.NewZoneEditorService().FindOpenPosition(occupied)
 
 	// Act
 	result := handler.FindOpenZonePosition(occupied)

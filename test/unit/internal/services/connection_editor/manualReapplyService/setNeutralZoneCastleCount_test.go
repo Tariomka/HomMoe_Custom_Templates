@@ -1,4 +1,4 @@
-package manualReapply_test
+package manualReapplyService_test
 
 import (
 	"testing"
@@ -19,10 +19,10 @@ func TestWhenCountIncreases_RebuildsRequestedCastleCount(t *testing.T) {
 	zone := makeNeutralZone("G", neutral_zone.QualityHigh, 1)
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, 3, connection_editor.CountZoneCastles(zone))
+	assert.Equal(t, 3, connection_editor.NewZoneEditorService().CountZoneCastles(zone))
 }
 
 func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
@@ -31,7 +31,7 @@ func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
 	zone := makeNeutralZone("G", neutral_zone.QualityHigh, 1)
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
@@ -44,7 +44,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
 	originalGuardMultiplier := zone.GuardMultiplier
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
 	assert.InDelta(t, originalGuardMultiplier, zone.GuardMultiplier, test_helpers.Delta,
@@ -58,7 +58,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentPool(t *testing.T) {
 	originalPool := zone.GuardedContentPool
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
 	assert.Equal(t, originalPool, zone.GuardedContentPool, "content pools must not be re-profiled")
@@ -71,7 +71,7 @@ func TestWhenCastlesAreRebuilt_KeepsGuardedContentValue(t *testing.T) {
 	originalGuardedValue := zone.GuardedContentValue
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
 	assert.Equal(t, originalGuardedValue, zone.GuardedContentValue, "content values must not be re-profiled")
@@ -85,7 +85,7 @@ func TestWhenZoneSizeWasEditedManually_KeepsIt(t *testing.T) {
 	zone.Size = manualSize
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
 	assert.InDelta(t, manualSize, zone.Size, test_helpers.Delta)
@@ -98,7 +98,7 @@ func TestWhenZoneHasAbandonedOutpost_PreservesIt(t *testing.T) {
 	zone.MainObjects = append(zone.MainObjects, entities.MainObject{Type: "AbandonedOutpost"})
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 2, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 2, defaultTuning())
 
 	// Assert
 	outpostCount := 0
@@ -117,9 +117,9 @@ func TestWhenPrimaryCastleHoldsWinCondition_PreservesHoldCityFlag(t *testing.T) 
 	zone.MainObjects[0].HoldCityWinCon = true
 
 	// Act
-	connection_editor.SetNeutralZoneCastleCount(&zone, 2, defaultTuning())
+	connection_editor.NewManualReapplyService().SetNeutralZoneCastleCount(&zone, 2, defaultTuning())
 
 	// Assert
-	require.Equal(t, 2, connection_editor.CountZoneCastles(zone))
+	require.Equal(t, 2, connection_editor.NewZoneEditorService().CountZoneCastles(zone))
 	assert.True(t, zone.MainObjects[0].HoldCityWinCon, "hold-city win condition was lost by the rebuild")
 }

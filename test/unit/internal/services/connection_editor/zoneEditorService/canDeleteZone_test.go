@@ -1,4 +1,4 @@
-package zoneEditor_test
+package zoneEditorService_test
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func TestWhenZoneIsChecked_ProtectsOnlyPlayerZones(t *testing.T) {
 			// Arrange
 
 			// Act
-			canDelete := connection_editor.CanDeleteZone(testCase.zoneName, playerZoneNames)
+			canDelete := connection_editor.NewZoneEditorService().CanDeleteZone(testCase.zoneName, playerZoneNames)
 
 			// Assert
 			assert.Equal(t, testCase.expected, canDelete)

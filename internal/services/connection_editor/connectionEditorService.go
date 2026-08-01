@@ -1,7 +1,5 @@
 // Package connection_editor contains the model- and logic-layer behaviour of the
-// Zone Connection Editor: guard-strength presets, zone tier classification,
-// connection cloning, and graph-validation helpers. The visual canvas itself is
-// rendered by the GUI layer; everything testable lives here.
+// Zone Connection Editor. The visual canvas itself remains in the GUI layer.
 package connection_editor
 
 import (
@@ -15,12 +13,26 @@ import (
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
-// NewDefaultConnection builds a user-added Direct connection between two zones,
-// seeded with the tier's generator-default guard value and the standard (15%)
-// weekly increment.
-func NewDefaultConnection(from, to string, zones []entities.Zone, playerZoneNames map[string]bool) entities.Connection {
-	quality := zone_services.NewZoneClassifier().GetConnectionGuardQuality(
-		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
+type ConnectionEditorService struct {
+	zoneClassifier *zone_services.ZoneClassifier
+}
+
+func NewConnectionEditorService(zoneClassifier *zone_services.ZoneClassifier) *ConnectionEditorService {
+	return &ConnectionEditorService{zoneClassifier: zoneClassifier}
+}
+
+func (this *ConnectionEditorService) NewDefaultConnection(
+	from string,
+	to string,
+	zones []entities.Zone,
+	playerZoneNames map[string]bool,
+) entities.Connection {
+	quality := this.zoneClassifier.GetConnectionGuardQuality(
+		from,
+		to,
+		zones,
+		linq.FromMap(playerZoneNames).SelectKeys().ToSlice(),
+	)
 	return entities.Connection{
 		From:                 from,
 		To:                   to,
@@ -33,8 +45,10 @@ func NewDefaultConnection(from, to string, zones []entities.Zone, playerZoneName
 	}
 }
 
-// FindIsolatedZones returns the names of zones not referenced by any connection.
-func FindIsolatedZones(zones []entities.Zone, connections []entities.Connection) []string {
+func (this *ConnectionEditorService) FindIsolatedZones(
+	zones []entities.Zone,
+	connections []entities.Connection,
+) []string {
 	var isolated []string
 	for _, zone := range zones {
 		referenced := false
@@ -51,9 +65,10 @@ func FindIsolatedZones(zones []entities.Zone, connections []entities.Connection)
 	return isolated
 }
 
-// ComputeHasErrors reports whether any connection references a zone name that
-// does not exist in the zone list.
-func ComputeHasErrors(zones []entities.Zone, connections []entities.Connection) bool {
+func (this *ConnectionEditorService) ComputeHasErrors(
+	zones []entities.Zone,
+	connections []entities.Connection,
+) bool {
 	zoneNames := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		zoneNames[zone.Name] = true
@@ -66,18 +81,18 @@ func ComputeHasErrors(zones []entities.Zone, connections []entities.Connection) 
 	return false
 }
 
-// HasDuplicateName reports whether a connection other than current shares its
-// (case-insensitive) name. current must be an element of connections; identity is
-// compared by pointer to mirror the C# ReferenceEquals check.
-func HasDuplicateName(connections []entities.Connection, current *entities.Connection) bool {
+func (this *ConnectionEditorService) HasDuplicateName(
+	connections []entities.Connection,
+	current *entities.Connection,
+) bool {
 	if current == nil || len(current.Name) == 0 {
 		return false
 	}
-	for i := range connections {
-		if &connections[i] == current {
+	for index := range connections {
+		if &connections[index] == current {
 			continue
 		}
-		if strings.EqualFold(connections[i].Name, current.Name) {
+		if strings.EqualFold(connections[index].Name, current.Name) {
 			return true
 		}
 	}

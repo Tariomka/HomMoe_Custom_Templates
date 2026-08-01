@@ -7,26 +7,24 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type MandatoryContentProvider struct {
-	zoneClassifier     *zone_services.ZoneClassifier
-	contentRuleService *content_rules.ContentRuleService
+	zoneClassifier *zone_services.ZoneClassifier
+	zoneEditor     *connection_editor.ZoneEditorService
 }
 
 func NewMandatoryContentProvider() *MandatoryContentProvider {
 	return &MandatoryContentProvider{
-		zoneClassifier:     zone_services.NewZoneClassifier(),
-		contentRuleService: content_rules.NewContentRuleService(),
+		zoneClassifier: zone_services.NewZoneClassifier(),
+		zoneEditor:     connection_editor.NewZoneEditorService(),
 	}
 }
 
@@ -93,7 +91,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			})
 
 		case preview.ZoneTypeNeutral:
-			castleCount := connection_editor.CountZoneCastles(zone)
+			castleCount := this.zoneEditor.CountZoneCastles(zone)
 			content := cloneContentItems(neutralRowsForQuality(configuration, this.zoneClassifier.GetQuality(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
@@ -110,7 +108,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			}
 
 			content := cloneContentItems(configuration.HubZoneMandatoryContent)
-			if connection_editor.CountZoneCastles(zone) == 0 {
+			if this.zoneEditor.CountZoneCastles(zone) == 0 {
 				content = stripNearCastleRules(content)
 			}
 			groups = append(groups, entities.MandatoryContent{Name: "mandatory_content_hub", Content: content})
@@ -120,24 +118,6 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 		}
 	}
 	return groups
-}
-
-func (this *MandatoryContentProvider) CreateContentItemsFrom(
-	rows []models.ZoneContentRowSave) []entities.MandatoryContentItem {
-	if len(rows) == 0 {
-		return nil
-	}
-	var out []entities.MandatoryContentItem
-	for _, raw := range rows {
-		row := raw.Normalized()
-		if row.Sid == "" {
-			continue
-		}
-		for range row.Count {
-			out = append(out, this.createContentItemFrom(row))
-		}
-	}
-	return out
 }
 
 // hubContentGroup builds the hub zone's mandatory-content group from the
@@ -157,21 +137,6 @@ func (this *MandatoryContentProvider) hubContentGroup(
 		content = stripNearCastleRules(content)
 	}
 	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
-}
-
-func (this *MandatoryContentProvider) createContentItemFrom(
-	row models.ZoneContentRowSave) entities.MandatoryContentItem {
-	item := entities.MandatoryContentItem{
-		IsMine: row.IsMine,
-	}
-	if row.IsGroup {
-		item.IncludeLists = []string{row.Sid}
-	} else {
-		item.SID = row.Sid
-	}
-	rules := this.contentRuleService.RestoreRulesFromRow(row, models.SidMapping{Sid: row.Sid})
-	this.contentRuleService.ApplyRulesToItem(&item, rules)
-	return item
 }
 
 func (this *MandatoryContentProvider) createContentItemsWithFoothold(
