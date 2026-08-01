@@ -1,13 +1,13 @@
 package circlesTopology_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"strings"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -85,6 +85,32 @@ func TestWhenPlayerZonesSitOnTheOuterRing_TheirRingIndexIsZero(t *testing.T) {
 		}
 	}
 	assert.Empty(t, spawnZonesOffOuterRing)
+}
+
+func TestWhenNeutralZonesAreStamped_TheirRingIndexMatchesPlanTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyCircles
+	playerLabels := []string{"A", "B"}
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N3", neutral_zone.QualityHigh, 2)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewCirclesTopologyService()
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	actual := map[string]int{}
+	for _, zone := range variant.Zones {
+		if strings.HasPrefix(zone.Name, "Neutral-") && zone.GeneratorRing != nil {
+			actual[zone.Name] = *zone.GeneratorRing
+		}
+	}
+	assert.Equal(t, map[string]int{"Neutral-N1": 1, "Neutral-N2": 2, "Neutral-N3": 3}, actual)
 }
 
 func TestWhenCirclesAreBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {

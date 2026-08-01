@@ -227,12 +227,17 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 			continue
 		}
 
-		additionalConns = append(additionalConns, entities.Connection{
-			Name: fallbackName, From: zoneName, To: constants.PlayerZonePrefix + partner,
-			ConnectionType: "Direct", GuardZone: zoneName, SimTurnSquad: true,
-			GuardValue: this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning), GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup: "fallback_guard_" + fallbackName,
-		})
+		additionalConns = append(additionalConns, variant_content.NewConnectionBuilder().
+			WithName(fallbackName).
+			WithFrom(zoneName).
+			WithTo(constants.PlayerZonePrefix+partner).
+			WithConnectionTypeDirect().
+			WithGuardZone(zoneName).
+			WithSimTurnSquad().
+			WithGuardValue(this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning)).
+			WithGuardWeeklyIncrement(0.15).
+			WithGuardMatchGroup("fallback_guard_"+fallbackName).
+			Build())
 		connNames[fallbackName] = true
 		appendSpawnFallbackRoads(zones, label, partner, fallbackName)
 	}

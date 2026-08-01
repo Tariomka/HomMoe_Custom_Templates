@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -28,9 +27,9 @@ const (
 	// player zones away from the central hub.
 	csGeoHubEdgeInsetCrowded  = 12.0
 	csGeoHubCrowdedMinPlayers = 6
-	scatterIdealMult  = 3.2
-	scatterMinDist    = 3.8
-	scatterEdgeClear  = 1.2
+	scatterIdealMult          = 3.2
+	scatterMinDist            = 3.8
+	scatterEdgeClear          = 1.2
 )
 
 // canvasMetrics bundles the canvas-side-scaled layout distances every
@@ -228,32 +227,6 @@ func allHaveRing(zones []entities.Zone) bool {
 		}
 	}
 	return true
-}
-
-// isScatterTopology reports whether the topology lays out zones from their
-// GeneratorPosition stamps using the organic scatter renderer (mean-edge
-// scaling plus the relaxation passes that nudge zones apart).
-func isScatterTopology(topology config.MapTopology) bool {
-	switch topology {
-	case config.TopologyRandom, config.TopologyCircles:
-		return true
-	default:
-		return false
-	}
-}
-
-// isFixedGeometryTopology reports whether the topology defines an exact,
-// deterministic geometric figure from its GeneratorPosition stamps. These are
-// placed verbatim (only centered and scaled to fit) so the preview reproduces
-// the intended shape instead of relaxing it into a scatter.
-func isFixedGeometryTopology(topology config.MapTopology) bool {
-	switch topology {
-	case config.TopologySquare, config.TopologyGeometric, config.TopologyCross,
-		config.TopologyFractal, config.TopologyGeometricHub:
-		return true
-	default:
-		return false
-	}
 }
 
 func connectedComponents(n int, adj [][]int) [][]int {

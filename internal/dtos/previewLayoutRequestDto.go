@@ -6,7 +6,10 @@ import (
 )
 
 type PreviewLayoutRequestDto struct {
-	Template   *entities.RmgTemplate
-	Topology   config.MapTopology
-	CanvasSide float64
+	// Template takes precedence; Zones and Connections provide an editor-only preview when it is nil.
+	Template    *entities.RmgTemplate
+	Zones       []entities.Zone
+	Connections []entities.Connection
+	Topology    config.MapTopology
+	CanvasSide  float64
 }

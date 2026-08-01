@@ -3,6 +3,7 @@ package mappers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
@@ -37,12 +38,18 @@ func (this *MandatoryContentItemMapper) FromRows(
 func (this *MandatoryContentItemMapper) fromRow(
 	row models.ZoneContentRowSave,
 ) entities.MandatoryContentItem {
-	item := entities.MandatoryContentItem{IsMine: row.IsMine}
+	sid := row.Sid
 	if row.IsGroup {
-		item.IncludeLists = []string{row.Sid}
-	} else {
-		item.SID = row.Sid
+		sid = ""
 	}
+	builder := mandatory_content.NewContentItemBuilder(sid)
+	if row.IsGroup {
+		builder.WithIncludeList(row.Sid)
+	}
+	if row.IsMine {
+		builder.WithMine()
+	}
+	item := builder.Build()
 
 	rules := this.contentRuleService.RestoreRulesFromRow(row, models.SidMapping{Sid: row.Sid})
 	this.contentRuleService.ApplyRulesToItem(&item, rules)

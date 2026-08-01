@@ -13,7 +13,7 @@ import (
 )
 
 type CirclesTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 
 	positionLayoutService *position_layout.PositionLayoutService
 }
@@ -26,8 +26,8 @@ func NewCirclesTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *CirclesTopologyService {
 	return &CirclesTopologyService{
-		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
-		positionLayoutService: position_layout.NewPositionLayoutService(),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
+		positionLayoutService:     position_layout.NewPositionLayoutService(),
 	}
 }
 
@@ -37,11 +37,15 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	neutralLabels := make([]string, len(neutralZones))
-	for i, zonePlan := range neutralZones {
-		neutralLabels[i] = zonePlan.Label
-	}
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel,
+		this.createCirclesLayout, stampGeneratorRings)
+}
+
+func (this *CirclesTopologyService) createCirclesLayout(
+	playerLabels []string,
+	neutralZones neutral_zone.Plans,
+) ([]string, models.Positions, []models.ConnectionIndexes) {
 	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
 	positions := this.positionLayoutService.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
 	pairs := this.createCirclesPairs(
@@ -50,31 +54,21 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 		playerLabels,
 		neutralZones,
 	)
-	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
+	return allLabels, positions, pairs
+}
 
-	zones := this.createZones(
-		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
+func stampGeneratorRings(
+	zones []entities.Zone,
+	allLabels, playerLabels []string,
+	neutralZones neutral_zone.Plans,
+) {
 	for index := range zones {
-		position := positions[index]
-		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
 		tier := 0
 		if !slices.Contains(playerLabels, allLabels[index]) {
 			tier = neutralZones.GetTier(allLabels[index])
 		}
 		zones[index].GeneratorRing = &tier
 	}
-
-	conns := this.createConnections(playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
-	if configuration.RandomPortals {
-		conns = append(conns,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
-	}
-	if isIsolated {
-		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
-	}
-	conns = append(conns,
-		this.CreateMissingConnections(playerLabels, allLabels, positions, zones, conns, tuning, neutralZones)...)
-	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, conns)
 }
 
 func (this *CirclesTopologyService) createCirclesPairs(

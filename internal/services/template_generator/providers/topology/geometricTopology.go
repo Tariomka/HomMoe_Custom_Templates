@@ -19,7 +19,7 @@ import (
 // rounded petals of the example templates (Shamrock, One for All, Nuclear,
 // Kerberos, Infinity).
 type GeometricTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 }
 
 func NewGeometricTopologyService() *GeometricTopologyService {
@@ -30,7 +30,7 @@ func NewGeometricTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *GeometricTopologyService {
 	return &GeometricTopologyService{
-		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
 	}
 }
 
@@ -40,8 +40,8 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	return this.createVariantFromLayout(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createGeometricLayout)
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createGeometricLayout, nil)
 }
 
 // petal holds the zone indices that make up one flower petal in ring order:

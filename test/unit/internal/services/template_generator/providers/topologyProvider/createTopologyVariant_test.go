@@ -1,7 +1,6 @@
 package topologyProvider_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"sort"
 	"strings"
 	"testing"
@@ -11,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,6 +76,47 @@ func TestWhenHubAndSpokeTopologySelected_CreatesHubZone(t *testing.T) {
 		}
 	}
 	assert.Equal(t, 1, hubZoneCount)
+}
+
+func TestWhenGeometricHubTopologySelected_CreatesPositionedHubZone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyGeometricHub
+	playerLabels := []string{"A", "B"}
+	tuning := buildVariantInputs(configuration, playerLabels, nil)
+	provider := providers.NewTopologyProvider()
+
+	// Act
+	variant := provider.CreateTopologyVariant(*configuration, playerLabels, nil, tuning, "")
+
+	// Assert
+	var hubPosition *[2]float64
+	for _, zone := range variant.Zones {
+		if zone.Name == "Hub" {
+			hubPosition = zone.GeneratorPosition
+		}
+	}
+	assert.NotNil(t, hubPosition)
+}
+
+func TestWhenTopologyIsUnknown_UsesRingProvider(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.MapTopology("Unknown")
+	playerLabels := []string{"A", "B"}
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
+	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
+	provider := providers.NewTopologyProvider()
+
+	// Act
+	variant := provider.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	assert.Len(t, variant.Connections, 4)
 }
 
 func TestWhenTournamentModeWithTwoPlayerLabels_CreatesTournamentVariant(t *testing.T) {

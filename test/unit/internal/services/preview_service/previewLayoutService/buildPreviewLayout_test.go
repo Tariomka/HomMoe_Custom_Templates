@@ -353,6 +353,25 @@ func TestWhenRingTopologyProvided_PositionsEveryZone(t *testing.T) {
 	assert.Len(t, layout.Positions, 3)
 }
 
+func TestWhenTopologyIsUnknown_UsesRingLayout(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B"), namedZone("Neutral-C")}
+	connections := []entities.Connection{
+		directConnection("Spawn-A", "Neutral-B"),
+		directConnection("Neutral-B", "Neutral-C"),
+	}
+	template := templateWith(zones, connections)
+	expected := service.BuildPreviewLayout(template, config.TopologyRing, layoutSide)
+
+	// Act
+	actual := service.BuildPreviewLayout(template, config.MapTopology("Unknown"), layoutSide)
+
+	// Assert
+	assert.Equal(t, expected.Positions, actual.Positions)
+}
+
 func TestWhenRingTopologyProvided_ComputesPositiveZoneRadius(t *testing.T) {
 	t.Parallel()
 	// Arrange

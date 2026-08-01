@@ -68,3 +68,25 @@ func TestWhenTemplateIsNil_ReturnsEmptyServiceLayout(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expected, result.Layout)
 }
+
+func TestWhenRequestContainsZones_BuildsPreviewTemplate(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	request := dtos.PreviewLayoutRequestDto{
+		Zones: []entities.Zone{
+			{Name: "Spawn-A"},
+			{Name: "Neutral-B"},
+		},
+		Connections: []entities.Connection{{From: "Spawn-A", To: "Neutral-B"}},
+		Topology:    config.TopologyRing,
+		CanvasSide:  600,
+	}
+	handler := handlers.NewGuiHandler()
+
+	// Act
+	result, err := handler.BuildPreviewLayout(request)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, result.Layout.Positions, 2)
+}

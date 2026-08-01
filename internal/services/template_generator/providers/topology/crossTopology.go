@@ -16,7 +16,7 @@ import (
 // its tip, so the zones and connections form a cross / star whose number of
 // arms follows the player count.
 type CrossTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 }
 
 func NewCrossTopologyService() *CrossTopologyService {
@@ -27,7 +27,7 @@ func NewCrossTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *CrossTopologyService {
 	return &CrossTopologyService{
-		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
 	}
 }
 
@@ -37,8 +37,8 @@ func (this *CrossTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	return this.createVariantFromLayout(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createCrossLayout)
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createCrossLayout, nil)
 }
 
 // createCrossLayout places the central zone first, then walks each arm from the

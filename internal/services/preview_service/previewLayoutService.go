@@ -5,10 +5,12 @@ import (
 	"math"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -73,14 +75,15 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 	connections []entities.Connection,
 	topology config.MapTopology,
 	side float64) {
+	capabilities := common_topologies.GetTopologyCapabilities(topology)
 	switch {
 	case allHaveManualPosition(zones):
 		this.layoutManualPositions(zones, side)
-	case (topology == config.TopologyCircles) && allHaveRing(zones):
+	case capabilities.UsesGeneratorRing && allHaveRing(zones):
 		this.layoutBalancedRings(zones, side)
-	case isFixedGeometryTopology(topology) && allHavePosition(zones):
+	case capabilities.LayoutKind == models.TopologyLayoutFixedGeometry && allHavePosition(zones):
 		this.layoutFixedPositions(zones, side, fixedGeometryEdgeInset(topology, zones))
-	case isScatterTopology(topology) && allHavePosition(zones):
+	case capabilities.LayoutKind == models.TopologyLayoutScatter && allHavePosition(zones):
 		this.layoutScatter(zones, connections, side)
 	default:
 		this.layoutRingOrHub(zones, connections, side)

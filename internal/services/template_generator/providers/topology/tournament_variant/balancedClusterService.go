@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
@@ -322,18 +323,18 @@ func (this *BalancedClusterService) createConnections(
 		if labelTo != playerLabel {
 			toZone = constants.NeutralZonePrefix + labelTo
 		}
-		connections = append(connections, entities.Connection{
-			Name:           connName,
-			From:           fromZone,
-			To:             toZone,
-			ConnectionType: "Direct",
-			GuardZone:      fromZone,
-			SimTurnSquad:   true,
-			GuardValue: this.GetBorderGuardValue(
-				labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning),
-			GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup:      fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo),
-		})
+		connections = append(connections, variant_content.NewConnectionBuilder().
+			WithName(connName).
+			WithFrom(fromZone).
+			WithTo(toZone).
+			WithConnectionTypeDirect().
+			WithGuardZone(fromZone).
+			WithSimTurnSquad().
+			WithGuardValue(this.GetBorderGuardValue(
+				labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
+			WithGuardWeeklyIncrement(0.15).
+			WithGuardMatchGroup(fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo)).
+			Build())
 	}
 	return connections
 }

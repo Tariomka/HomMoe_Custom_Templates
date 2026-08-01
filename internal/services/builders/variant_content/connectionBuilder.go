@@ -43,6 +43,11 @@ func (this *ConnectionBuilder) WithSimTurnSquad() *ConnectionBuilder {
 	return this
 }
 
+func (this *ConnectionBuilder) WithIsUserAdded() *ConnectionBuilder {
+	this.item.IsUserAdded = true
+	return this
+}
+
 func (this *ConnectionBuilder) WithRoad(road bool) *ConnectionBuilder {
 	this.item.Road = &road
 	return this

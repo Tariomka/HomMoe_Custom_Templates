@@ -230,16 +230,11 @@ func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection 
 // bulging around intermediate nodes.
 func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 	this.side = side
-	mini := &entities.RmgTemplate{
-		Variants: []entities.Variant{{
-			Zones:       this.zones,
-			Connections: derefConnections(this.working),
-		}},
-	}
 	response, err := this.previewHandler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
-		Template:   mini,
-		Topology:   this.topology,
-		CanvasSide: float64(side),
+		Zones:       this.zones,
+		Connections: derefConnections(this.working),
+		Topology:    this.topology,
+		CanvasSide:  float64(side),
 	})
 	if err != nil {
 		this.positions = map[string]image.Point{}

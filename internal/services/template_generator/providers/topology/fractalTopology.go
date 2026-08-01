@@ -20,7 +20,7 @@ import (
 // no two players ever border each other - the design itself keeps them apart,
 // without relying on the NoDirectPlayerConnections flag.
 type FractalTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 }
 
 func NewFractalTopologyService() *FractalTopologyService {
@@ -31,7 +31,7 @@ func NewFractalTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *FractalTopologyService {
 	return &FractalTopologyService{
-		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
 	}
 }
 
@@ -41,8 +41,8 @@ func (this *FractalTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	return this.createVariantFromLayout(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createFractalLayout)
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createFractalLayout, nil)
 }
 
 // fractalTree holds the zone indices of one player's fractal. levels[0] are the

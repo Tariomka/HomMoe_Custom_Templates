@@ -46,10 +46,12 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
 		return topology.NewHubTopologyServiceWithCreationServices(this.creationServices).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
+			CreateTopologyVariant(
+				configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyGeometricHub:
 		return topology.NewGeometricHubTopologyServiceWithCreationServices(this.creationServices).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
+			CreateTopologyVariant(
+				configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
 		return topology.NewChainTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)

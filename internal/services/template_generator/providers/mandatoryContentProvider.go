@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
@@ -142,7 +143,8 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 // item is added.
 func (this *MandatoryContentProvider) hubContentGroup(
 	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
-	if !configuration.Topology.IsHubBased() || len(configuration.HubZoneMandatoryContent) == 0 {
+	if !common_topologies.GetTopologyCapabilities(configuration.Topology).UsesHub ||
+		len(configuration.HubZoneMandatoryContent) == 0 {
 		return entities.MandatoryContent{}, false
 	}
 

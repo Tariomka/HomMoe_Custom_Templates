@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
@@ -36,16 +36,16 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 		zones,
 		linq.FromMap(playerZoneNames).SelectKeys().ToSlice(),
 	)
-	return entities.Connection{
-		From:                 from,
-		To:                   to,
-		ConnectionType:       registry.GetConnectionTypeValues().Direct,
-		GuardValue:           common_connections.GetGuardStrengthForQuality(quality).Default,
-		GuardZone:            from,
-		GuardMatchGroup:      "rnd_guard_" + helpers.GetZoneLabel(from) + "_" + helpers.GetZoneLabel(to),
-		GuardWeeklyIncrement: common_connections.GetGuardWeeklyIncrements().Standard,
-		IsUserAdded:          true,
-	}
+	return variant_content.NewConnectionBuilder().
+		WithFrom(from).
+		WithTo(to).
+		WithConnectionTypeDirect().
+		WithGuardValue(common_connections.GetGuardStrengthForQuality(quality).Default).
+		WithGuardZone(from).
+		WithGuardMatchGroup("rnd_guard_" + helpers.GetZoneLabel(from) + "_" + helpers.GetZoneLabel(to)).
+		WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
+		WithIsUserAdded().
+		Build()
 }
 
 func (this *ConnectionEditorService) FindIsolatedZones(

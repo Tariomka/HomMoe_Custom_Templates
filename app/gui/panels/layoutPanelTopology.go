@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 )
 
 func (this *LayoutPanel) getTopologySectionWidget(theme *material.Theme) layout.Widget {
@@ -66,7 +67,7 @@ func (this *LayoutPanel) getZoneSizesWidget(theme *material.Theme) layout.Widget
 		widgets.NewSliderRowWidget(theme, "Neutral zone size", constants.DefaultLabelWidth,
 			&this.sldNeutralZoneSize, utils.MultiplierFormatter(0.5, 1.5)),
 		func(gtx layout.Context) layout.Dimensions {
-			if !this.state.GetStateData().Topology.IsHubBased() {
+			if !common_topologies.GetTopologyCapabilities(this.state.GetStateData().Topology).UsesHub {
 				return layout.Dimensions{}
 			}
 

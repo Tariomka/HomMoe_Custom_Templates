@@ -421,18 +421,21 @@ fixed and their owning tests rerun. No file under `data/`,
 
 ## Phase 6: Standardize Builders And Topology Composition
 
-Status: Not started
+Status: Complete
 
-- [ ] Document and enforce the local construction rule: use existing builders for invariant-rich generated `Zone`, `Connection`, `Road`, `MainObject`, `Variant`, `TypedRef`, `Orientation`, `Border`, `PlacementRule`, and mandatory-content items; allow simple literals for DTO/model/test data and root aggregates without construction invariants.
-- [ ] Add `ConnectionBuilder.WithIsUserAdded`: the runtime-only field already exists and `connection_editor.NewDefaultConnection` currently sets it directly. Do not modify the entity type.
-- [ ] Convert direct production connection literals in connection editing, missing-player repair, and tournament balanced clusters to `ConnectionBuilder`.
-- [ ] Audit direct production entity literals one entity type at a time. Convert only cases where an existing builder centralizes defaults or prevents invalid combinations; record justified exceptions in this plan's phase summary.
-- [ ] Preserve explicit second-stage mutations for derived topology metadata (`GeneratorPosition`, `GeneratorRing`) unless moving them into the initial build makes ordering clearer and does not require recomputation.
-- [ ] Extract the position/pair-to-variant pipeline from `RandomTopologyService` into a narrowly named `PositionedTopologyBuilder` or `GraphLayoutVariantBuilder`.
-- [ ] Make random, circles, square, geometric, cross, fractal, and geometric-hub services compose the shared builder instead of embedding a service whose name does not describe their behavior.
-- [ ] Add a passive `TopologyCapabilities`/descriptor model and immutable common factory capturing `UsesHub`, `LayoutKind`, `UsesGeneratorPosition`, `UsesGeneratorRing`, and other capabilities currently duplicated by generation and preview switches.
-- [ ] Make topology provider dispatch and preview layout dispatch consume that shared descriptor. Keep topology algorithms in their existing service objects.
-- [ ] Remove duplicated `isFixedGeometryTopology`, `isScatterTopology`, and equivalent hub capability switches after parity tests prove the shared descriptor.
+Baseline recorded before Phase 6 edits: branch `AD/refactoring-07-21` was clean and
+up to date with `origin/AD/refactoring-07-21`; unit coverage passed at 64.9%.
+
+- [x] Document and enforce the local construction rule: use existing builders for invariant-rich generated `Zone`, `Connection`, `Road`, `MainObject`, `Variant`, `TypedRef`, `Orientation`, `Border`, `PlacementRule`, and mandatory-content items; allow simple literals for DTO/model/test data and root aggregates without construction invariants.
+- [x] Add `ConnectionBuilder.WithIsUserAdded`: the runtime-only field already exists and `connection_editor.NewDefaultConnection` currently sets it directly. Do not modify the entity type.
+- [x] Convert direct production connection literals in connection editing, missing-player repair, and tournament balanced clusters to `ConnectionBuilder`.
+- [x] Audit direct production entity literals one entity type at a time. Convert only cases where an existing builder centralizes defaults or prevents invalid combinations; record justified exceptions in this plan's phase summary.
+- [x] Preserve explicit second-stage mutations for derived topology metadata (`GeneratorPosition`, `GeneratorRing`) unless moving them into the initial build makes ordering clearer and does not require recomputation.
+- [x] Extract the position/pair-to-variant pipeline from `RandomTopologyService` into a narrowly named `PositionedTopologyBuilder` or `GraphLayoutVariantBuilder`.
+- [x] Make random, circles, square, geometric, cross, and fractal services compose the shared builder; retain geometric-hub's custom `TopologyBase` pipeline because its shared central hub and portal graph do not fit the positioned pair pipeline.
+- [x] Add a passive `TopologyCapabilities`/descriptor model and immutable common factory capturing `UsesHub`, `LayoutKind`, `UsesGeneratorPosition`, `UsesGeneratorRing`, and other capabilities currently duplicated by generation and preview switches.
+- [x] Make topology capability consumers and preview layout dispatch consume the shared descriptor; keep generator algorithm dispatch explicit so a new hub capability cannot silently select the wrong implementation.
+- [x] Remove duplicated `isFixedGeometryTopology`, `isScatterTopology`, and GUI/content hub capability switches after parity tests prove the shared descriptor.
 
 ### Phase 6 Verification Plan
 
@@ -444,7 +447,41 @@ Status: Not started
 
 ### Phase 6 Summary
 
-Pending phase completion.
+Standardized invariant-rich entity construction around existing builders, added
+runtime connection and mandatory-content include-list builder options, and added
+an AST architecture guard. The guard scans production `app`/`internal` code and
+detects explicit plus elided slice, array, map, pointer, and nested literals.
+Simple root aggregates, passive DTO/model/test data, and existing entity values
+placed into slices remain justified literal exceptions.
+
+Extracted `PositionedTopologyBuilder` for label/position/pair assembly, zone
+creation, direct connections, portals, isolation repair, connectivity repair,
+and final variant construction. Random, Circles, Square, Geometric, Cross, and
+Fractal now use it; Circles supplies a typed zone decorator for one-based neutral
+generator rings. Geometric Hub intentionally remains on `TopologyBase`: its
+central Hub, portal-only hub edges, and custom graph are incompatible with the
+generic positioned pipeline. Derived `GeneratorPosition`/`GeneratorRing` values
+remain explicit post-build metadata.
+
+Centralized immutable topology capabilities and preview classification. Unknown
+topology descriptors, capabilities, preview, and provider generation all fall
+back to Ring. Generator service selection remains an explicit switch after Opus
+identified that capability-gated hub dispatch could silently route a future hub
+topology to the wrong algorithm. `GeneratorConfig.IsHubCityToHold` remains an
+explicit two-topology check because importing the common catalog into `config`
+would create a package cycle; this is the sole justified hub-capability switch.
+The zone-editor preview aggregate is assembled behind the handler boundary so
+`app/gui` does not import concrete internal builders.
+
+Final verification passed: `go build ./...`; complete unit/default suites;
+topology/provider tests at `-count=20`; tagged integration and headless GUI
+integration; the headed 20-iteration performance benchmark; diagnostics;
+protected-path check; and `git diff --check`. Unit coverage is 64.9%, equal to
+the Phase 6 baseline. Touched provider tests have zero lint findings; the broad
+lint report contains only pre-existing repository debt. Claude Opus 5 reported
+no blocking findings; its medium dispatch, guard-bypass, and Circles parity
+findings were fixed and their focused/full gates rerun. No file under `data/`,
+`internal/entities/template/`, or `internal/registry/` was modified.
 
 ## Phase 7: Simplify Coordinators And GUI Composition
 

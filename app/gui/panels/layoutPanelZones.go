@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -83,7 +84,7 @@ func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, titl
 // advanced options) only while advanced zone control is enabled.
 func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		if !this.state.GetStateData().Topology.IsHubBased() {
+		if !common_topologies.GetTopologyCapabilities(this.state.GetStateData().Topology).UsesHub {
 			return layout.Dimensions{}
 		}
 
