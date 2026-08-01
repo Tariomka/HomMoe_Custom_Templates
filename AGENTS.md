@@ -213,6 +213,28 @@ any file you *do* touch must leave the repo in conformance.
   - `ctx` for `context.Context`
   - Standard short receiver names are **not** allowed — see §4.3.
 
+### 4.2.1 Interfaces
+
+- Interface types **must use `I` prefix** (`IDialog`, `IPanel`, `IBackend`).
+
+  ```go
+  type IBackend interface {
+    ITemplateWorkflowHandler
+    IStatePersistenceHandler
+    IStateValidationHandler
+    IPreviewHandler
+    IContentRuleHandler
+    IZoneEditorHandler
+  }
+  ```
+
+- Interface file names **must use `Interface` suffix** (`dialogInterface.go`,
+  `panelInterface.go`, `backendInterface.go`).
+
+- Interfaces must be separated from the implementation files.
+
+- Apply this consistently across every interface file.
+
 ### 4.3 Method receivers
 
 - The receiver for any method attached to a struct **must be named `this`**.
