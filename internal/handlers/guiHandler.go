@@ -37,13 +37,14 @@ func NewGuiHandler() *GUIHandler {
 			slog.String("error", err.Error()))
 	}
 	zoneClassifier := zone_services.NewZoneClassifier()
-	zoneEditor := connection_editor.NewZoneEditorService()
+	creationServices := zone_services.NewCreationServices(nil, nil)
+	zoneEditor := connection_editor.NewZoneEditorServiceWithCreationServices(creationServices)
 	tuningFactory := generation_tuning.NewGenerationTuningFactory()
 	fileService := file_service.NewFileService()
 	stateValidation := newStateValidationHandler(validators.NewEditorStateValidator())
 	mapper := mappers.NewConfigMapper()
 	connectionEditor := connection_editor.NewConnectionEditorService(zoneClassifier)
-	contentProvider := providers.NewMandatoryContentProvider()
+	contentProvider := providers.NewMandatoryContentProviderWithDependencies(zoneClassifier, zoneEditor)
 	manualReapply := connection_editor.NewManualReapplyServiceWithDependencies(
 		zoneEditor,
 		zoneClassifier,
@@ -52,7 +53,7 @@ func NewGuiHandler() *GUIHandler {
 
 	dependencies := GUIHandlerDependencies{
 		TemplateWorkflow: newTemplateWorkflowHandler(
-			template_generator.NewTemplateGenerator(nil),
+			template_generator.NewTemplateGeneratorWithCreationServices(nil, creationServices),
 			mapper,
 			contentProvider,
 			connectionEditor,

@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type ChainTopologyService struct {
@@ -18,8 +19,14 @@ type ChainTopologyService struct {
 }
 
 func NewChainTopologyService() *ChainTopologyService {
+	return NewChainTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewChainTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *ChainTopologyService {
 	return &ChainTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
 	}
 }
 

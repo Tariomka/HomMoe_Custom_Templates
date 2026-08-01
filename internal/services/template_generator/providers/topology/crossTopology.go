@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // CrossTopologyService radiates one arm per player out of a central zone. Each
@@ -19,8 +20,14 @@ type CrossTopologyService struct {
 }
 
 func NewCrossTopologyService() *CrossTopologyService {
+	return NewCrossTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewCrossTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *CrossTopologyService {
 	return &CrossTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
 	}
 }
 

@@ -16,15 +16,30 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type ZoneEditorService struct {
-	topology base.TopologyBase
+	zoneFactory   *zone_services.ZoneFactory
+	castleFactory *zone_services.CastleFactory
+	roadFactory   *zone_services.RoadFactory
 }
 
 func NewZoneEditorService() *ZoneEditorService {
-	return &ZoneEditorService{topology: base.NewTopologyBase()}
+	return NewZoneEditorServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewZoneEditorServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *ZoneEditorService {
+	if creationServices == nil {
+		creationServices = zone_services.NewCreationServices(nil, nil)
+	}
+	return &ZoneEditorService{
+		zoneFactory:   creationServices.ZoneFactory,
+		castleFactory: creationServices.CastleFactory,
+		roadFactory:   creationServices.RoadFactory,
+	}
 }
 
 // isCastleRoad reports whether a road connects two of the zone's own main
@@ -115,7 +130,7 @@ func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 		}
 
 		mainObjectCount := len(zone.MainObjects)
-		roads := append(this.topology.CreateOuterZoneRoads(nil, mainObjectCount, 0, true), preserved...)
+		roads := append(this.roadFactory.CreateOuterZoneRoads(nil, mainObjectCount, 0, true), preserved...)
 
 		names := connectionsByZone[zone.Name]
 		if mainObjectCount > 0 {
@@ -126,7 +141,7 @@ func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 					Build())
 			}
 		} else {
-			roads = append(roads, this.topology.CreateConnectorZoneRoads(names, true)...)
+			roads = append(roads, this.roadFactory.CreateConnectorZoneRoads(names, true)...)
 		}
 
 		zone.Roads = roads
@@ -158,18 +173,17 @@ func (this *ZoneEditorService) NewDefaultNeutralZone(
 	castleCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
-	plan := neutral_zone.Plan{Label: label, Quality: quality, CastleCount: castleCount}
-	zone := this.topology.CreateNeutralZone(
-		plan,
-		nil,
-		1.0,
-		tuning.RemoteFootholdCount,
-		generateRoads,
-		tuning,
-		false,
-	)
-	zone.MandatoryContent = nil
-	return zone
+	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreation{
+		Name:               constants.NeutralZonePrefix + label,
+		Quality:            quality,
+		Size:               1.0,
+		CastleCount:        castleCount,
+		OutpostCount:       tuning.AbandonedOutpostCount,
+		FootholdCount:      tuning.RemoteFootholdCount,
+		GuardRandomization: tuning.GuardRandomization,
+		GenerateRoads:      generateRoads,
+		Tuning:             tuning,
+	})
 }
 
 // CountZoneCastles returns the number of City main objects in the zone.
@@ -278,7 +292,7 @@ func (this *ZoneEditorService) createNeutralZoneCastles(
 	castleCount int,
 	isHoldCityZone bool,
 ) []entities.MainObject {
-	return base.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCityZone)
+	return this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCityZone)
 }
 
 func (this *ZoneEditorService) createPlayerOwnedCastles(
@@ -286,7 +300,7 @@ func (this *ZoneEditorService) createPlayerOwnedCastles(
 	owner string,
 	castleCount int,
 ) []entities.MainObject {
-	return this.topology.CreatePlayerOwnedCastles(matchPlayerFaction, owner, castleCount)
+	return this.castleFactory.CreatePlayerOwnedCastles(matchPlayerFaction, owner, castleCount)
 }
 
 func (this *ZoneEditorService) createPlayerUnclaimedCastles(
@@ -294,7 +308,7 @@ func (this *ZoneEditorService) createPlayerUnclaimedCastles(
 	guardValue int,
 	castleCount int,
 ) []entities.MainObject {
-	return this.topology.CreatePlayerUnclaimedCastles(matchPlayerFaction, guardValue, castleCount)
+	return this.castleFactory.CreatePlayerUnclaimedCastles(matchPlayerFaction, guardValue, castleCount)
 }
 
 func (this *ZoneEditorService) createHubZoneCastles(
@@ -302,7 +316,7 @@ func (this *ZoneEditorService) createHubZoneCastles(
 	castleCount int,
 	isHoldCityZone bool,
 ) []entities.MainObject {
-	return this.topology.CreateHubZoneCastles(tuning, castleCount, isHoldCityZone)
+	return this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCityZone)
 }
 
 func (this *ZoneEditorService) rebuildCastleRoads(zone *entities.Zone) {
@@ -313,5 +327,5 @@ func (this *ZoneEditorService) rebuildCastleRoads(zone *entities.Zone) {
 		}
 		kept = append(kept, road)
 	}
-	zone.Roads = append(this.topology.CreateOuterZoneRoads(nil, len(zone.MainObjects), 0, true), kept...)
+	zone.Roads = append(this.roadFactory.CreateOuterZoneRoads(nil, len(zone.MainObjects), 0, true), kept...)
 }

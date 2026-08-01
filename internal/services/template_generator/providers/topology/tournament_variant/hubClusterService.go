@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type HubClusterService struct {
@@ -18,8 +19,14 @@ type HubClusterService struct {
 }
 
 func NewHubClusterService() *HubClusterService {
+	return NewHubClusterServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewHubClusterServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *HubClusterService {
 	return &HubClusterService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
 	}
 }
 
@@ -59,9 +66,8 @@ func (this *HubClusterService) createZones(
 		hubContentName = "mandatory_content_hub"
 	}
 	hubZone := this.CreateHubZone(
-		spokeConnNames, tuning, false, configuration.ZoneConfiguration.HubZoneSize,
+		hubName, spokeConnNames, tuning, false, configuration.ZoneConfiguration.HubZoneSize,
 		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)
-	hubZone.Name = hubName
 	zones = append(zones, hubZone)
 
 	for index, label := range spokeLabels {

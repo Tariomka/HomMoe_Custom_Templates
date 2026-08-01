@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -25,18 +26,31 @@ type TemplateGenerator struct {
 }
 
 func NewTemplateGenerator(configuration *config.GeneratorConfig) *TemplateGenerator {
+	return NewTemplateGeneratorWithCreationServices(configuration, zones.NewCreationServices(nil, nil))
+}
+
+func NewTemplateGeneratorWithCreationServices(
+	configuration *config.GeneratorConfig,
+	creationServices *zones.CreationServices,
+) *TemplateGenerator {
 	if configuration == nil {
 		configuration = config.NewGeneratorConfig()
+	}
+	if creationServices == nil {
+		creationServices = zones.NewCreationServices(nil, nil)
 	}
 	return &TemplateGenerator{
 		configuration:        configuration,
 		zoneLabelProvider:    zones.NewZoneLabelProvider(),
 		tuningFactory:        generation_tuning.NewGenerationTuningFactory(),
 		contentLimitProvider: providers.NewContentLimitProvider(),
-		contentProvider:      providers.NewMandatoryContentProvider(),
-		gameRulesProvider:    providers.NewGameRulesProvider(),
-		topologyProvider:     providers.NewTopologyProvider(),
-		zoneLayoutProvider:   providers.NewZoneLayoutProvider(),
+		contentProvider: providers.NewMandatoryContentProviderWithDependencies(
+			nil,
+			connection_editor.NewZoneEditorServiceWithCreationServices(creationServices),
+		),
+		gameRulesProvider:  providers.NewGameRulesProvider(),
+		topologyProvider:   providers.NewTopologyProviderWithCreationServices(creationServices),
+		zoneLayoutProvider: providers.NewZoneLayoutProvider(),
 	}
 }
 

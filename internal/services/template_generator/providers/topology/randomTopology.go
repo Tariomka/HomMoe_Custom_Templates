@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type RandomTopologyService struct {
@@ -21,8 +22,14 @@ type RandomTopologyService struct {
 }
 
 func NewRandomTopologyService() *RandomTopologyService {
+	return NewRandomTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewRandomTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *RandomTopologyService {
 	return &RandomTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
 	}
 }
 

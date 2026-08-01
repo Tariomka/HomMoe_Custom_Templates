@@ -352,22 +352,25 @@ approved Phase 4 with no hard findings. No protected directory was modified.
 
 ## Phase 5: Consolidate Neutral And Hub Zone Creation
 
-Status: Not started
+Status: Complete
+
+Baseline recorded before Phase 5 edits: branch `AD/refactoring-07-21` was clean and
+up to date with `origin/AD/refactoring-07-21`; unit coverage passed at 64.7%.
 
 The initial model that a hub is "just a highest-quality neutral zone" is correct for the shared profile-based zone shell, but incomplete for current behavior. Hub castle strategy, hold-city guards, shared mandatory-content grouping, foothold/outpost exclusion, road counting, randomization, and tournament naming differ. The common factory must expose those differences explicitly rather than erase them.
 
-- [ ] Extract reusable zone, castle, and road creation from `template_generator/providers/topology/base.TopologyBase` into focused services under `internal/services/zones` (for example `ZoneFactory`, `CastleFactory`, and `RoadFactory`). Keep topology graph assembly in the topology packages.
-- [ ] Define passive creation input models with explicit fields rather than booleans whose meaning is unclear. The neutral-like zone input must include name, quality/profile, size, connection names, mandatory-content name, castle strategy, hold-city state, outpost count, foothold count, guard randomization, road generation, and biome-match policy.
-- [ ] Construct these collaborators once in `NewTopologyBase(zoneFactory, castleFactory, roadFactory)` or a dependency struct and pass the same factories to `connection_editor.NewZoneEditorService`. Do not use package globals; shared construction policy must be replaceable in focused tests.
-- [ ] Implement one private/shared neutral-like construction path in `ZoneFactory` that applies profile fields and delegates castle/road creation.
-- [ ] Implement `CreateNeutralZone` as a clear wrapper supplying per-label mandatory content, configured neutral profile, neutral castle strategy, optional outposts/footholds, and configured guard randomization.
-- [ ] Implement `CreateHubZone` as a clear wrapper supplying `QualityHighest`, explicit hub name, optional shared hub mandatory content, hub castle strategy, no outposts, no footholds, current hub guard randomization, and hub road counting.
-- [ ] Preserve hub-specific castle behavior: non-hold guard chance/value/buildings, hold-city value/quality/placement/win condition, and extra-castle behavior must remain distinct from highest-quality neutral castles unless a separate product change is approved.
-- [ ] Pass `Hub` or `Hub-<label>` into the factory. Remove tournament post-construction `hubZone.Name = hubName`.
-- [ ] Preserve mandatory-content behavior: one shared `mandatory_content_hub` group for multi-hub tournament generation, no hub footholds, and removal of near-castle rules when a hub has no castles.
-- [ ] Preserve road behavior: hub roads count castles only; neutral roads account for neutral main objects/outposts and footholds exactly as before.
-- [ ] Make `connection_editor.ZoneEditorService` depend on the shared zone/castle/road services rather than importing `template_generator/providers/topology/base`.
-- [ ] Keep temporary forwarding methods on `TopologyBase` while topology callers migrate, then remove them in Phase 8.
+- [x] Extract reusable zone, castle, and road creation from `template_generator/providers/topology/base.TopologyBase` into focused services under `internal/services/zones` (for example `ZoneFactory`, `CastleFactory`, and `RoadFactory`). Keep topology graph assembly in the topology packages.
+- [x] Define passive creation input models with explicit fields rather than booleans whose meaning is unclear. The neutral-like zone input must include name, quality/profile, size, connection names, mandatory-content name, castle strategy, hold-city state, outpost count, foothold count, guard randomization, road generation, and biome-match policy.
+- [x] Construct these collaborators once in `NewTopologyBase(zoneFactory, castleFactory, roadFactory)` or a dependency struct and pass the same factories to `connection_editor.NewZoneEditorService`. Do not use package globals; shared construction policy must be replaceable in focused tests.
+- [x] Implement one private/shared neutral-like construction path in `ZoneFactory` that applies profile fields and delegates castle/road creation.
+- [x] Implement `CreateNeutralZone` as a clear wrapper supplying per-label mandatory content, configured neutral profile, neutral castle strategy, optional outposts/footholds, and configured guard randomization.
+- [x] Implement `CreateHubZone` as a clear wrapper supplying `QualityHighest`, explicit hub name, optional shared hub mandatory content, hub castle strategy, no outposts, no footholds, current hub guard randomization, and hub road counting.
+- [x] Preserve hub-specific castle behavior: non-hold guard chance/value/buildings, hold-city value/quality/placement/win condition, and extra-castle behavior must remain distinct from highest-quality neutral castles unless a separate product change is approved.
+- [x] Pass `Hub` or `Hub-<label>` into the factory. Remove tournament post-construction `hubZone.Name = hubName`.
+- [x] Preserve mandatory-content behavior: one shared `mandatory_content_hub` group for multi-hub tournament generation, no hub footholds, and removal of near-castle rules when a hub has no castles.
+- [x] Preserve road behavior: hub roads count castles only; neutral roads account for neutral main objects/outposts and footholds exactly as before.
+- [x] Make `connection_editor.ZoneEditorService` depend on the shared zone/castle/road services rather than importing `template_generator/providers/topology/base`.
+- [x] Keep temporary forwarding methods on `TopologyBase` while topology callers migrate, then remove them in Phase 8.
 
 ### Phase 5 Verification Plan
 
@@ -379,7 +382,42 @@ The initial model that a hub is "just a highest-quality neutral zone" is correct
 
 ### Phase 5 Summary
 
-Pending phase completion.
+Complete. Extracted `ZoneFactory`, `CastleFactory`, and `RoadFactory` under
+`internal/services/zones`. `ZoneFactory` owns spawn and the shared neutral-like
+zone shell; explicit passive creation inputs preserve neutral quality, hub
+highest-quality profile selection, hold-city behavior, mandatory-content names,
+outposts, footholds, guard randomization, biome matching, and road policy.
+`CastleFactory` retains distinct player, neutral, and hub castle strategies,
+including hub non-hold guards and rich buildings, centered ultra-rich hold-city
+castles, and extra-castle behavior. `RoadFactory` retains connector fanout and
+outer-zone main-object, foothold, and connection roads.
+
+Added `CreationServices` as the shared factory bundle and propagated it through
+the production GUI composition root, `TemplateGenerator`, topology provider,
+every topology and tournament-cluster constructor, `TopologyBase`, mandatory
+content construction, and `connection_editor.ZoneEditorService`. The manual
+editor no longer imports topology `base`; generation and editor workflows use
+the same castle and road policy instances. Existing constructors and
+`TopologyBase` forwarding methods remain as compatibility shims for Phase 8.
+
+Hub callers now pass `Hub` or `Hub-<label>` directly, so tournament generation
+does not rename a built zone. Hubs structurally exclude outposts and footholds,
+continue using one shared `mandatory_content_hub` group, and count castles only
+for roads. Neutral zones retain per-label mandatory content and count castles,
+outposts, and footholds as before. Spawn-zone naming uses the shared prefix
+constant. Public factory tests cover creation semantics, factory-bundle
+identity/defaults, and the live NaN/infinity/clamp/round size-normalization
+path; topology characterization tests exercise the full neutral/hub branches.
+
+Final verification passed: `go build ./...`; exact unit coverage at 64.9%,
+above the 64.7% Phase 5 baseline; complete unit/default tests; tagged
+integration; tagged headless GUI integration; tagged performance packages;
+all template-generator tests repeated 20 times; focused new-package lint with
+zero issues; code diagnostics; architecture searches; protected-path check;
+and `git diff --check`. Claude Opus 5 reviewed the final phase; both hard
+findings (spawn prefix ownership and live size-normalization coverage) were
+fixed and their owning tests rerun. No file under `data/`,
+`internal/entities/template/`, or `internal/registry/` was modified.
 
 ## Phase 6: Standardize Builders And Topology Composition
 

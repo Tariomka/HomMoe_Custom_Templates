@@ -8,17 +8,29 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type TournamentTopologyService struct {
 	base.TopologyBase
 
-	clusterService tournament_variant.IClusterService
+	clusterService   tournament_variant.IClusterService
+	creationServices *zone_services.CreationServices
 }
 
 func NewTournamentTopologyService() *TournamentTopologyService {
+	return NewTournamentTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewTournamentTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *TournamentTopologyService {
+	if creationServices == nil {
+		creationServices = zone_services.NewCreationServices(nil, nil)
+	}
 	return &TournamentTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase:     base.NewTopologyBaseWithCreationServices(creationServices),
+		creationServices: creationServices,
 	}
 }
 
@@ -31,14 +43,14 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
-		this.clusterService = tournament_variant.NewHubClusterService()
+		this.clusterService = tournament_variant.NewHubClusterServiceWithCreationServices(this.creationServices)
 	case config.TopologyCircles:
-		this.clusterService = tournament_variant.NewBalancedClusterService()
+		this.clusterService = tournament_variant.NewBalancedClusterServiceWithCreationServices(this.creationServices)
 	case config.TopologyRing:
-		this.clusterService = tournament_variant.NewRingClusterService()
+		this.clusterService = tournament_variant.NewRingClusterServiceWithCreationServices(this.creationServices)
 	default:
 		// Chain, SharedWeb, Random → chain-per-cluster fallback.
-		this.clusterService = tournament_variant.NewChainClusterService()
+		this.clusterService = tournament_variant.NewChainClusterServiceWithCreationServices(this.creationServices)
 	}
 
 	var zones []entities.Zone

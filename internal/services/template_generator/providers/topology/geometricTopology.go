@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // GeometricTopologyService arranges zones into a centrally symmetric flower: a
@@ -22,8 +23,14 @@ type GeometricTopologyService struct {
 }
 
 func NewGeometricTopologyService() *GeometricTopologyService {
+	return NewGeometricTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewGeometricTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *GeometricTopologyService {
 	return &GeometricTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
 	}
 }
 

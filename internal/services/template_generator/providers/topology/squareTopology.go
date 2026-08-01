@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // SquareTopologyService lays the player zones out along the edges of a square.
@@ -17,8 +18,14 @@ type SquareTopologyService struct {
 }
 
 func NewSquareTopologyService() *SquareTopologyService {
+	return NewSquareTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewSquareTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *SquareTopologyService {
 	return &SquareTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // FractalTopologyService grows one self-similar fractal per player. Every player
@@ -23,8 +24,14 @@ type FractalTopologyService struct {
 }
 
 func NewFractalTopologyService() *FractalTopologyService {
+	return NewFractalTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewFractalTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *FractalTopologyService {
 	return &FractalTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
 	}
 }
 

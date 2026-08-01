@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 // GeometricHubTopologyService builds the "Geometric Hub" topology: every
@@ -25,8 +26,14 @@ type GeometricHubTopologyService struct {
 }
 
 func NewGeometricHubTopologyService() *GeometricHubTopologyService {
+	return NewGeometricHubTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewGeometricHubTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *GeometricHubTopologyService {
 	return &GeometricHubTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
 	}
 }
 
@@ -89,7 +96,8 @@ func (this *GeometricHubTopologyService) createZones(
 		hubContentName = "mandatory_content_hub"
 	}
 	zones := []entities.Zone{this.CreateHubZone(
-		connectionNames[constants.HubZoneName], tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
+		constants.HubZoneName, connectionNames[constants.HubZoneName], tuning, hubIsHoldCity,
+		configuration.ZoneConfiguration.HubZoneSize,
 		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
 	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
 

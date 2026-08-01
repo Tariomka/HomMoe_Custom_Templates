@@ -2,15 +2,11 @@ package base
 
 import (
 	"fmt"
-	"math"
 	"math/rand/v2"
 	"slices"
-	"strconv"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/graph"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -19,17 +15,29 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type TopologyBase struct {
 	ZoneLabelProvider *zones.ZoneLabelProvider
+	castleFactory     *zones.CastleFactory
+	roadFactory       *zones.RoadFactory
+	zoneFactory       *zones.ZoneFactory
 }
 
 func NewTopologyBase() TopologyBase {
+	return NewTopologyBaseWithCreationServices(zones.NewCreationServices(nil, nil))
+}
+
+func NewTopologyBaseWithCreationServices(creationServices *zones.CreationServices) TopologyBase {
+	if creationServices == nil {
+		creationServices = zones.NewCreationServices(nil, nil)
+	}
 	return TopologyBase{
 		ZoneLabelProvider: zones.NewZoneLabelProvider(),
+		castleFactory:     creationServices.CastleFactory,
+		roadFactory:       creationServices.RoadFactory,
+		zoneFactory:       creationServices.ZoneFactory,
 	}
 }
 
@@ -78,51 +86,17 @@ func (this *TopologyBase) CreateSpawnZone(
 	footholdCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
-	mainObjects := []entities.MainObject{
-		this.createPlayerSpawnCastle(playerName, tuning.ScaleByNeutralGuardStrength(5000)),
-	}
-	mainObjects = append(mainObjects,
-		this.CreatePlayerOwnedCastles(matchFactions, playerName, tuning.PlayerOwnedCastles)...)
-	mainObjects = append(mainObjects,
-		this.CreatePlayerUnclaimedCastles(matchFactions, tuning.ScaleByNeutralGuardStrength(5000), castleCount)...)
-
-	// Roads connect the spawn castle (main object 0) to every other castle in
-	// the zone; player-owned extras are road-linked just like unclaimed ones.
-	// A zone with no extra castles at all stays a pass-through connector, so
-	// pass 0 main objects in that case; otherwise pass the full main-object
-	// count so every extra castle gets a road.
-	roadCastleCount := castleCount + tuning.PlayerOwnedCastles
-	roadMainObjectCount := 0
-	if roadCastleCount > 0 {
-		roadMainObjectCount = len(mainObjects)
-	}
-
-	return variant_content.NewZoneBuilder().
-		WithName(constants.PlayerZonePrefix + label).
-		WithSize(utils.NormalizeZoneSize(zoneSize)).
-		WithLayoutSpawns().
-		WithGuardCutoffValue(2000).
-		WithGuardRandomization(tuning.GuardRandomization).
-		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(1.0)).
-		WithGuardWeeklyIncrement(0.20).
-		WithGuardReactionDistribution([]int{60, 20, 10, 10, 2, 0}).
-		WithDiplomacyModifier(-0.5).
-		WithGuardedContentPool(registry.GetGuardedContentPoolT2List()).
-		WithUnguardedContentPool(registry.GetUnguardedContentPoolT2List()).
-		WithResourcesContentPool([]string{registry.GetResourcesContentPoolValues().StartZonePoor}).
-		WithMandatoryContent("mandatory_content_side_" + label).
-		WithContentCountLimits(buildSideContentLimits()).
-		WithGuardedContentValue(tuning.ScaleByStructureDensity(200000 * tuning.ContentScale)).
-		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(2000 * math.Sqrt(tuning.ContentScale))).
-		WithUnguardedContentValue(tuning.ScaleByStructureDensity(50000 * tuning.ContentScale)).
-		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(400 * math.Sqrt(tuning.ContentScale))).
-		WithResourcesValue(tuning.ScaleByResourceDensity(80000 * tuning.ContentScale)).
-		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(600 * math.Sqrt(tuning.ContentScale))).
-		WithMainObjects(mainObjects).
-		WithBiomeMatchMainObject("0").
-		WithCrossroadsPosition(0).
-		WithRoads(this.CreateOuterZoneRoads(connectionNames, roadMainObjectCount, footholdCount, generateRoads)).
-		Build()
+	return this.zoneFactory.CreateSpawnZone(
+		label,
+		playerName,
+		connectionNames,
+		castleCount,
+		matchFactions,
+		zoneSize,
+		footholdCount,
+		generateRoads,
+		tuning,
+	)
 }
 
 func (this *TopologyBase) CreateNeutralZone(
@@ -133,52 +107,24 @@ func (this *TopologyBase) CreateNeutralZone(
 	generateRoads bool,
 	tuning models.GenerationTuning,
 	isHoldCity bool) entities.Zone {
-	if isHoldCity && plan.CastleCount < 1 {
-		plan.CastleCount = 1
-	}
-	profile := common_zones.GetNeutralZoneProfile(plan.Quality)
-
-	// Abandoned outposts are spawned in addition to the zone's castles, with
-	// their own count slider instead of being tied to the castle count.
-	mainObjects := CreateNeutralZoneCastles(profile, tuning, plan.CastleCount, isHoldCity)
-	mainObjects = append(mainObjects, createAbandonedOutposts(profile, tuning, tuning.AbandonedOutpostCount)...)
-	totalMainObjects := plan.CastleCount + tuning.AbandonedOutpostCount
-
-	zoneBuilder := variant_content.NewZoneBuilder().
-		WithName(constants.NeutralZonePrefix + plan.Label).
-		WithSize(utils.NormalizeZoneSize(zoneSize)).
-		WithLayout(profile.Layout).
-		WithGuardCutoffValue(2000).
-		WithGuardRandomization(tuning.GuardRandomization).
-		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)).
-		WithGuardWeeklyIncrement(0.20).
-		WithGuardReactionDistribution(profile.GuardReactionDistribution).
-		WithDiplomacyModifier(-0.5).
-		WithGuardedContentPool(profile.GuardedContentPool).
-		WithUnguardedContentPool(profile.UnguardedContentPool).
-		WithResourcesContentPool(profile.ResourcesContentPool).
-		WithMandatoryContent("mandatory_content_neutral_" + plan.Label).
-		WithContentCountLimits(buildSideContentLimits()).
-		WithGuardedContentValue(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValue) * tuning.ContentScale)).
-		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithUnguardedContentValue(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValue) * tuning.ContentScale)).
-		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithResourcesValue(tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)).
-		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithMainObjects(mainObjects).
-		WithCrossroadsPosition(0).
-		WithRoads(this.CreateOuterZoneRoads(connectionNames, totalMainObjects, footholdCount, generateRoads))
-
-	if totalMainObjects > 0 {
-		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
-	} else {
-		zoneBuilder = zoneBuilder.WithBiomeMatchZone()
-	}
-
-	return zoneBuilder.Build()
+	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreation{
+		Name:                 constants.NeutralZonePrefix + plan.Label,
+		Quality:              plan.Quality,
+		Size:                 zoneSize,
+		ConnectionNames:      connectionNames,
+		MandatoryContentName: "mandatory_content_neutral_" + plan.Label,
+		CastleCount:          plan.CastleCount,
+		HoldCity:             isHoldCity,
+		OutpostCount:         tuning.AbandonedOutpostCount,
+		FootholdCount:        footholdCount,
+		GuardRandomization:   tuning.GuardRandomization,
+		GenerateRoads:        generateRoads,
+		Tuning:               tuning,
+	})
 }
 
 func (this *TopologyBase) CreateHubZone(
+	name string,
 	connectionNames []string,
 	tuning models.GenerationTuning,
 	isHoldCity bool,
@@ -186,46 +132,17 @@ func (this *TopologyBase) CreateHubZone(
 	castleCount int,
 	generateRoads bool,
 	mandatoryContentName string) entities.Zone {
-	if isHoldCity && castleCount < 1 {
-		castleCount = 1
-	}
-	profile := common_zones.GetNeutralZoneProfile(neutral_zone.QualityHighest)
-
-	zoneBuilder := variant_content.NewZoneBuilder().
-		WithName(constants.HubZoneName).
-		WithSize(utils.NormalizeZoneSize(size)).
-		WithLayout(profile.Layout).
-		WithGuardCutoffValue(2000).
-		WithGuardRandomization(0.05).
-		WithGuardMultiplier(tuning.ScaleByNeutralGuardStrengthPrecise(profile.GuardMultiplier)).
-		WithGuardWeeklyIncrement(0.20).
-		WithGuardReactionDistribution(profile.GuardReactionDistribution).
-		WithDiplomacyModifier(-0.5).
-		WithGuardedContentPool(profile.GuardedContentPool).
-		WithUnguardedContentPool(profile.UnguardedContentPool).
-		WithResourcesContentPool(profile.ResourcesContentPool).
-		WithContentCountLimits(buildSideContentLimits()).
-		WithGuardedContentValue(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValue) * tuning.ContentScale)).
-		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.GuardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithUnguardedContentValue(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValue) * tuning.ContentScale)).
-		WithUnguardedContentValuePerArea(tuning.ScaleByStructureDensity(float64(profile.UnguardedContentValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithResourcesValue(tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)).
-		WithResourcesValuePerArea(tuning.ScaleByResourceDensity(float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))).
-		WithMainObjects(this.CreateHubZoneCastles(tuning, castleCount, isHoldCity)).
-		WithCrossroadsPosition(0).
-		WithRoads(this.CreateOuterZoneRoads(connectionNames, castleCount, 0, generateRoads))
-
-	if mandatoryContentName != "" {
-		zoneBuilder = zoneBuilder.WithMandatoryContent(mandatoryContentName)
-	}
-
-	if castleCount > 0 {
-		zoneBuilder = zoneBuilder.WithBiomeMatchMainObject("0")
-	} else {
-		zoneBuilder = zoneBuilder.WithBiomeMatchZone()
-	}
-
-	return zoneBuilder.Build()
+	return this.zoneFactory.CreateHubZone(models.HubZoneCreation{
+		Name:                 name,
+		Size:                 size,
+		ConnectionNames:      connectionNames,
+		MandatoryContentName: mandatoryContentName,
+		CastleCount:          castleCount,
+		HoldCity:             isHoldCity,
+		GuardRandomization:   0.05,
+		GenerateRoads:        generateRoads,
+		Tuning:               tuning,
+	})
 }
 
 func (this *TopologyBase) CreateRandomPortalConnections(
@@ -465,31 +382,7 @@ func appendBridgeRoads(zones []entities.Zone, zoneFrom, zoneTo, bridgeName strin
 }
 
 func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []entities.Road {
-	if !generateRoads {
-		return nil
-	}
-
-	distinctNames := helpers.GetUniqueElements(connectionNames)
-	if len(distinctNames) == 0 {
-		return nil
-	}
-
-	if len(distinctNames) == 1 {
-		return []entities.Road{
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
-				WithTo(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
-				Build()}
-	}
-	var roads []entities.Road
-	for _, name := range distinctNames[1:] {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
-				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
-				Build())
-	}
-	return roads
+	return this.roadFactory.CreateConnectorZoneRoads(connectionNames, generateRoads)
 }
 
 func (this *TopologyBase) GetBorderGuardValue(
@@ -524,21 +417,7 @@ func (this *TopologyBase) CreatePlayerOwnedCastles(
 	matchPlayerFaction bool,
 	owner string,
 	castleCount int) []entities.MainObject {
-	var castles []entities.MainObject
-	for range castleCount {
-		objectBuilder := variant_content.NewObjectBuilder().
-			WithTypeCity().
-			WithOwner(owner).
-			WithCastleQualityPoor().
-			WithPlacementUniform()
-		if matchPlayerFaction {
-			objectBuilder = objectBuilder.WithFactionMatch()
-		} else {
-			objectBuilder = objectBuilder.WithFaction("Random")
-		}
-		castles = append(castles, objectBuilder.Build())
-	}
-	return castles
+	return this.castleFactory.CreatePlayerOwnedCastles(matchPlayerFaction, owner, castleCount)
 }
 
 // CreatePlayerUnclaimedCastles builds the extra neutral City castles that sit
@@ -548,24 +427,7 @@ func (this *TopologyBase) CreatePlayerOwnedCastles(
 func (this *TopologyBase) CreatePlayerUnclaimedCastles(
 	matchPlayerFaction bool,
 	guardValue, castleCount int) []entities.MainObject {
-	var castles []entities.MainObject
-	for range castleCount {
-		objectBuilder := variant_content.NewObjectBuilder().
-			WithTypeCity().
-			WithGuardChance(1).
-			WithGuardValue(guardValue).
-			WithGuardWeeklyIncrement(0.15).
-			WithCastleQualityMedium().
-			WithPlacementUniform().
-			WithPlacementArgs("false", "-0.8", "3")
-		if matchPlayerFaction {
-			objectBuilder = objectBuilder.WithFactionMatch()
-		} else {
-			objectBuilder = objectBuilder.WithFaction("Random")
-		}
-		castles = append(castles, objectBuilder.Build())
-	}
-	return castles
+	return this.castleFactory.CreatePlayerUnclaimedCastles(matchPlayerFaction, guardValue, castleCount)
 }
 
 // CreateHubZoneCastles builds the City main objects of a hub zone. Exported
@@ -575,82 +437,19 @@ func (this *TopologyBase) CreateHubZoneCastles(
 	tuning models.GenerationTuning,
 	castleCount int,
 	isHoldCityZone bool) []entities.MainObject {
-	var castles []entities.MainObject
-	newCastleBuilder := func() *variant_content.MainObjectBuilder {
-		return variant_content.NewObjectBuilder().
-			WithTypeCity().
-			WithGuardWeeklyIncrement(0.10).
-			WithFactionFromList()
-	}
-	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
-		return builder.
-			WithGuardChance(1).
-			WithGuardValue(tuning.ScaleByNeutralGuardStrength(25_000)).
-			WithCastleQualityUltraRich().
-			WithPlacementCenter().
-			WithHoldCityWinCon().
-			Build()
-	}
-	buildCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
-		return builder.
-			WithGuardChance(0.5).
-			WithGuardValue(tuning.ScaleByNeutralGuardStrength(16_000)).
-			WithCastleQualityRich().
-			WithPlacementUniform().
-			WithPlacementArgs("true", "0.8", "2").
-			Build()
-	}
-
-	if castleCount > 0 && isHoldCityZone {
-		castles = append(castles, buildHoldCityCastle(newCastleBuilder()))
-	} else if castleCount > 0 {
-		castles = append(castles, buildCastle(newCastleBuilder()))
-	}
-
-	for range castleCount - 1 {
-		castles = append(castles, buildCastle(newCastleBuilder()))
-	}
-
-	return castles
+	return this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCityZone)
 }
 
 func (this *TopologyBase) CreateOuterZoneRoads(
 	connectionNames []string,
 	mainObjectCount int,
 	footholdCount int, generateRoads bool) []entities.Road {
-	if !generateRoads {
-		return nil
-	}
-
-	if mainObjectCount == 0 {
-		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
-	}
-
-	var roads []entities.Road
-	for i := range mainObjectCount - 1 {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithStoneType().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildMainObjectType(strconv.Itoa(i+1))).
-				Build())
-	}
-	for i := range footholdCount {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().
-					BuildMandatoryContentType(fmt.Sprintf("name_remote_foothold_%d", i+1))).
-				Build())
-	}
-	for _, name := range connectionNames {
-		roads = append(roads,
-			variant_content.NewRoadBuilder().
-				WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
-				WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
-				Build())
-	}
-	return roads
+	return this.roadFactory.CreateOuterZoneRoads(
+		connectionNames,
+		mainObjectCount,
+		footholdCount,
+		generateRoads,
+	)
 }
 
 // buildZoneAdjacency indexes every zone label and links the indexes of zones
@@ -682,20 +481,6 @@ func (this *TopologyBase) buildZoneAdjacency(
 	return adjacency
 }
 
-func (this *TopologyBase) createPlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
-	return variant_content.NewObjectBuilder().
-		WithTypeSpawn().
-		WithSpawn(playerName).
-		WithNoGuardWhenOwned().
-		WithGuardChance(1).
-		WithGuardValue(guardValue).
-		WithGuardWeeklyIncrement(0.10).
-		WithCastleQualityDefault().
-		WithPlacementUniform().
-		WithPlacementArgs("true", "0.7", "0").
-		Build()
-}
-
 // CreateNeutralZoneCastles builds the City main objects of a neutral zone.
 // Exported so the manual zone editor can rebuild castles when the user edits
 // a zone's quality or castle count.
@@ -704,81 +489,12 @@ func CreateNeutralZoneCastles(
 	tuning models.GenerationTuning,
 	castleCount int,
 	isHoldCityZone bool) []entities.MainObject {
-	var castles []entities.MainObject
-
-	if castleCount > 0 {
-		objectBuilder := variant_content.NewObjectBuilder().
-			WithTypeCity().
-			WithGuardChance(1).
-			WithGuardWeeklyIncrement(0.10).
-			WithFactionFromList()
-
-		if isHoldCityZone {
-			objectBuilder = objectBuilder.
-				WithGuardValue(tuning.ScaleByBorderGuardStrength(max(profile.PrimaryCityGuardValue, 20_000))).
-				WithCastleQualityUltraRich().
-				WithPlacementCenter().
-				WithHoldCityWinCon()
-		} else {
-			objectBuilder = objectBuilder.
-				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.PrimaryCityGuardValue)).
-				WithCastleQuality(profile.PrimaryBuildingsSid).
-				WithPlacementUniform().
-				WithPlacementArgs("true", "0.8", "2")
-		}
-
-		castles = append(castles, objectBuilder.Build())
-	}
-
-	for range castleCount - 1 {
-		objectBuilder := variant_content.NewObjectBuilder().
-			WithTypeCity().
-			WithGuardChance(1).
-			WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
-			WithGuardWeeklyIncrement(0.10).
-			WithCastleQuality(profile.ExtraBuildingsSid).
-			WithFactionFromList().
-			WithPlacementUniform().
-			WithPlacementArgs("false", "-0.8", "3")
-
-		castles = append(castles, objectBuilder.Build())
-	}
-
-	return castles
-}
-
-// createAbandonedOutposts builds extra AbandonedOutpost main objects that sit
-// in a neutral zone alongside its City castles. The number of outposts is
-// driven by the dedicated count rather than the zone's castle count.
-func createAbandonedOutposts(
-	profile neutral_zone.Profile,
-	tuning models.GenerationTuning,
-	count int) []entities.MainObject {
-	var outposts []entities.MainObject
-	for range count {
-		outposts = append(outposts,
-			variant_content.NewObjectBuilder().
-				WithTypeAbandonedOutpost().
-				WithGuardChance(1).
-				WithGuardValue(tuning.ScaleByBorderGuardStrength(profile.ExtraCityGuardValue)).
-				WithGuardWeeklyIncrement(0.10).
-				WithCastleQuality(profile.ExtraBuildingsSid).
-				WithFactionFromList().
-				WithPlacementUniform().
-				WithPlacementArgs("false", "-0.8", "3").
-				Build())
-	}
-	return outposts
-}
-
-func buildSideContentLimits() entities.StringList {
-	var limits []string
-	for a := 1; a <= 5; a++ {
-		for b := a + 1; b <= 6; b++ {
-			limits = append(limits, fmt.Sprintf("content_limits_side_%d_%d", a, b))
-		}
-	}
-	return limits
+	return zones.NewCastleFactory().CreateNeutralZoneCastles(
+		profile,
+		tuning,
+		castleCount,
+		isHoldCityZone,
+	)
 }
 
 func buildNonAdjacentDerangement(count int) []int {

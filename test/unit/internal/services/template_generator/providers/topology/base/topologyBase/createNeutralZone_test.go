@@ -107,3 +107,32 @@ func TestWhenAbandonedOutpostCountIsPositive_AppendsOutpostsAfterCastles(t *test
 	}
 	assert.Equal(t, []string{"City", "AbandonedOutpost", "AbandonedOutpost"}, mainObjectTypes)
 }
+
+func TestWhenNeutralZoneHasOutpostsAndFootholds_RoadsIncludeBoth(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityMedium, CastleCount: 1}
+	tuning := newUnitTuning()
+	tuning.AbandonedOutpostCount = 1
+	topologyBase := base.NewTopologyBase()
+
+	// Act
+	zone := topologyBase.CreateNeutralZone(plan, []string{"Gate-D"}, 1.0, 1, true, tuning, false)
+
+	// Assert
+	assert.Equal(t, []entities.Road{
+		{
+			Type: "Stone",
+			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+		},
+		{
+			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+		},
+		{
+			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   entities.TypedRef{Type: "Connection", Args: []string{"Gate-D"}},
+		},
+	}, zone.Roads)
+}

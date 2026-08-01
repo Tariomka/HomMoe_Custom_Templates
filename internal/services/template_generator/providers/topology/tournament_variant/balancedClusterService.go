@@ -17,16 +17,24 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type BalancedClusterService struct {
 	base.TopologyBase
+
 	positionLayoutService *position_layout.PositionLayoutService
 }
 
 func NewBalancedClusterService() *BalancedClusterService {
+	return NewBalancedClusterServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewBalancedClusterServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *BalancedClusterService {
 	return &BalancedClusterService{
-		TopologyBase:          base.NewTopologyBase(),
+		TopologyBase:          base.NewTopologyBaseWithCreationServices(creationServices),
 		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }

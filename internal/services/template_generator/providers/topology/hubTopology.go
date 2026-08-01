@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type HubTopologyService struct {
@@ -19,8 +20,14 @@ type HubTopologyService struct {
 }
 
 func NewHubTopologyService() *HubTopologyService {
+	return NewHubTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewHubTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *HubTopologyService {
 	return &HubTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
 	}
 }
 
@@ -72,7 +79,7 @@ func (this *HubTopologyService) createZones(
 		hubContentName = "mandatory_content_hub"
 	}
 	zones := []entities.Zone{this.CreateHubZone(
-		hubConns, tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
+		constants.HubZoneName, hubConns, tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
 		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
 
 	for _, label := range outerLabels {

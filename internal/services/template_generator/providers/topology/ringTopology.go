@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type RingTopologyService struct {
@@ -18,8 +19,14 @@ type RingTopologyService struct {
 }
 
 func NewRingTopologyService() *RingTopologyService {
+	return NewRingTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewRingTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *RingTopologyService {
 	return &RingTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
 	}
 }
 

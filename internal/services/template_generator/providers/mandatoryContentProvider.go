@@ -23,9 +23,22 @@ type MandatoryContentProvider struct {
 }
 
 func NewMandatoryContentProvider() *MandatoryContentProvider {
+	return NewMandatoryContentProviderWithDependencies(nil, nil)
+}
+
+func NewMandatoryContentProviderWithDependencies(
+	zoneClassifier *zone_services.ZoneClassifier,
+	zoneEditor *connection_editor.ZoneEditorService,
+) *MandatoryContentProvider {
+	if zoneClassifier == nil {
+		zoneClassifier = zone_services.NewZoneClassifier()
+	}
+	if zoneEditor == nil {
+		zoneEditor = connection_editor.NewZoneEditorService()
+	}
 	return &MandatoryContentProvider{
-		zoneClassifier: zone_services.NewZoneClassifier(),
-		zoneEditor:     connection_editor.NewZoneEditorService(),
+		zoneClassifier: zoneClassifier,
+		zoneEditor:     zoneEditor,
 	}
 }
 

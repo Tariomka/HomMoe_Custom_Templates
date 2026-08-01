@@ -9,14 +9,25 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type TopologyProvider struct {
 	shufflePlayerZones bool
+	creationServices   *zones.CreationServices
 }
 
 func NewTopologyProvider() *TopologyProvider {
-	return &TopologyProvider{}
+	return NewTopologyProviderWithCreationServices(zones.NewCreationServices(nil, nil))
+}
+
+func NewTopologyProviderWithCreationServices(
+	creationServices *zones.CreationServices,
+) *TopologyProvider {
+	if creationServices == nil {
+		creationServices = zones.NewCreationServices(nil, nil)
+	}
+	return &TopologyProvider{creationServices: creationServices}
 }
 
 func (this *TopologyProvider) CreateTopologyVariant(
@@ -28,43 +39,43 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabelsCopy := this.copyLabels(playerLabels)
 
 	if configuration.IsTournamentMode() && len(playerLabelsCopy) == 2 {
-		return topology.NewTournamentTopologyService().
+		return topology.NewTournamentTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning)
 	}
 
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
-		return topology.NewHubTopologyService().
+		return topology.NewHubTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyGeometricHub:
-		return topology.NewGeometricHubTopologyService().
+		return topology.NewGeometricHubTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
-		return topology.NewChainTopologyService().
+		return topology.NewChainTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySharedWeb:
-		return topology.NewSharedWebTopologyService().
+		return topology.NewSharedWebTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyRandom:
-		return topology.NewRandomTopologyService().
+		return topology.NewRandomTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyCircles:
-		return topology.NewCirclesTopologyService().
+		return topology.NewCirclesTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySquare:
-		return topology.NewSquareTopologyService().
+		return topology.NewSquareTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyGeometric:
-		return topology.NewGeometricTopologyService().
+		return topology.NewGeometricTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyCross:
-		return topology.NewCrossTopologyService().
+		return topology.NewCrossTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyFractal:
-		return topology.NewFractalTopologyService().
+		return topology.NewFractalTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	default: // config.TopologyDefault
-		return topology.NewRingTopologyService().
+		return topology.NewRingTopologyServiceWithCreationServices(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	}
 }

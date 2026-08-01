@@ -9,16 +9,24 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type CirclesTopologyService struct {
 	RandomTopologyService
+
 	positionLayoutService *position_layout.PositionLayoutService
 }
 
 func NewCirclesTopologyService() *CirclesTopologyService {
+	return NewCirclesTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewCirclesTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *CirclesTopologyService {
 	return &CirclesTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		RandomTopologyService: *NewRandomTopologyServiceWithCreationServices(creationServices),
 		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }

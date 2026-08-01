@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type SharedWebTopologyService struct {
@@ -19,8 +20,14 @@ type SharedWebTopologyService struct {
 }
 
 func NewSharedWebTopologyService() *SharedWebTopologyService {
+	return NewSharedWebTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+}
+
+func NewSharedWebTopologyServiceWithCreationServices(
+	creationServices *zone_services.CreationServices,
+) *SharedWebTopologyService {
 	return &SharedWebTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
 	}
 }
 
