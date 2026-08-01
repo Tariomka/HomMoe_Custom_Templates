@@ -294,18 +294,22 @@ The connection-editor dependency constructors now replace nil mandatory collabor
 
 ## Phase 4: Consolidate Catalogs And Common Types
 
-Status: Not started
+Status: Complete
 
-- [ ] Add passive model types for `DistancePreset`, `MapSize`, `GuardStrength`, `GuardWeeklyIncrement`, and `TopologyDescriptor`, each in its own correctly named file under `internal/models` or a focused model subpackage.
-- [ ] Move only the type declarations out of `internal/common`; keep immutable values and copy-returning getters/factories there.
-- [ ] Replace public mutable slices/maps in common catalogs with private values and getters that return copies.
-- [ ] Create one distance vocabulary/catalog owner. Preserve separate semantic contexts initially: `ContentDistance` and `PortalPlacementDistance` (or equivalent explicit names).
-- [ ] Represent shared labels and the four identical bounds once. Represent the differing `Near` values explicitly by context so the discrepancy cannot be hidden behind the same global variable.
-- [ ] Default decision: preserve current behavior (`Content Near = 0.1..0.25`, `Portal Near = 0.075..0.35`) because changing portal bounds changes generated templates. Use the source/history evidence recorded before this phase to propose a correction; unify the numeric value only after the owner explicitly confirms that the divergence is a bug and characterization tests are intentionally updated.
-- [ ] Make `PlacementRuleBuilder` consume the portal-placement catalog and `ContentRuleService` consume the content catalog.
-- [ ] Make the handler expose distance option DTOs to the GUI. Delete `app/gui/constants/roadDistances.go` once no caller remains.
-- [ ] Audit `app/gui/constants/contentIds.go`, `includeListIds.go`, and `contentItemGroups.go` by usage. A catalog is domain-owned when production `internal/` code needs the same semantic value; it is presentation-only when all production references are under `app/gui/`. Move only domain catalogs to `internal/common` with model types; do not move them preemptively.
-- [ ] Keep `app/gui/themes` in place, as decided in the non-goals.
+Baseline recorded before Phase 4 edits: branch `AD/refactoring-07-21` was clean and
+up to date with `origin/AD/refactoring-07-21`; `git diff --check` passed; unit
+coverage passed at 64.7%.
+
+- [x] Add passive model types for `DistancePreset`, `MapSize`, `GuardStrength`, `GuardWeeklyIncrement`, and `TopologyDescriptor`, each in its own correctly named file under `internal/models` or a focused model subpackage.
+- [x] Move only the type declarations out of `internal/common`; keep immutable values and copy-returning getters/factories there.
+- [x] Replace public mutable slices/maps in common catalogs with private values and getters that return copies.
+- [x] Create one distance vocabulary/catalog owner. Preserve separate semantic contexts initially: `ContentDistance` and `PortalPlacementDistance` (or equivalent explicit names).
+- [x] Represent shared labels and the four identical bounds once. Represent the differing `Near` values explicitly by context so the discrepancy cannot be hidden behind the same global variable.
+- [x] Default decision: preserve current behavior (`Content Near = 0.1..0.25`, `Portal Near = 0.075..0.35`) because changing portal bounds changes generated templates. Use the source/history evidence recorded before this phase to propose a correction; unify the numeric value only after the owner explicitly confirms that the divergence is a bug and characterization tests are intentionally updated.
+- [x] Make `PlacementRuleBuilder` consume the portal-placement catalog and `ContentRuleService` consume the content catalog.
+- [x] Make the handler expose distance option DTOs to the GUI. Delete `app/gui/constants/roadDistances.go` once no caller remains.
+- [x] Audit `app/gui/constants/contentIds.go`, `includeListIds.go`, and `contentItemGroups.go` by usage. A catalog is domain-owned when production `internal/` code needs the same semantic value; it is presentation-only when all production references are under `app/gui/`. Move only domain catalogs to `internal/common` with model types; do not move them preemptively.
+- [x] Keep `app/gui/themes` in place, as decided in the non-goals.
 
 ### Phase 4 Verification Plan
 
@@ -317,7 +321,34 @@ Status: Not started
 
 ### Phase 4 Summary
 
-Pending phase completion.
+Complete. Moved `MapSize`, `GuardStrength`, `GuardWeeklyIncrement`,
+`TopologyDescriptor`, its aggregate catalog shape, and `DistancePreset` into
+one-struct-per-file passive models. `internal/common` now declares no public
+structs. Map-size catalog slices are private and every public slice getter
+returns a copy; GUI callers retain the same base-prefix/all-size index
+semantics.
+
+Added `common/common_distances` as the single distance vocabulary owner. The
+four shared bands are assembled once while explicit context factories preserve
+content `Near = 0.1..0.25` and portal placement `Near = 0.075..0.35`.
+`ContentRuleService` consumes the content catalog, and `PlacementRuleBuilder`
+uses the portal catalog for near-castle and near-crossroads rules. The unused
+mutable GUI `RoadDistances` list and the duplicate placement/content distance
+types were removed. Existing handler DTOs remain the sole GUI distance-option
+path, with display order `Next To`, `Near`, `Medium`, `Far`, `Very Far`;
+historical `Any` behavior is unchanged because it was never part of the live
+content catalog or persisted rule options.
+
+Production usage confirmed `contentIds.go`, `includeListIds.go`, and
+`contentItemGroups.go` are presentation-only; internal references are tests,
+so the catalogs remain under `app/gui/constants`. `app/gui/themes` was left
+unchanged. Final verification passed at 64.7% coverage, equal to the Phase 4
+baseline: complete unit and default suites, `go build ./...`, tagged
+integration, tagged headless GUI integration, tagged performance packages,
+architecture/diagnostic checks, focused new-package lint, and
+`git diff --check`. Broader touched-package lint reported only existing
+global-catalog/style findings outside the new distance package. Claude Fable 5
+approved Phase 4 with no hard findings. No protected directory was modified.
 
 ## Phase 5: Consolidate Neutral And Hub Zone Creation
 

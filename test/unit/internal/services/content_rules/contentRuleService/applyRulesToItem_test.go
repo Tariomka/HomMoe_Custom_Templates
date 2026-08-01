@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,7 @@ func TestWhenRoadDistanceRuleIsApplied_AppendsRoadPlacementRule(t *testing.T) {
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
-	near := content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}
+	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleDistanceToRoad(&near)})
@@ -30,7 +31,7 @@ func TestWhenTownDistanceRuleIsApplied_AppendsMainObjectPlacementRule(t *testing
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	item := entities.MandatoryContentItem{SID: "x"}
-	near := content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}
+	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleDistanceToTown(&near)})

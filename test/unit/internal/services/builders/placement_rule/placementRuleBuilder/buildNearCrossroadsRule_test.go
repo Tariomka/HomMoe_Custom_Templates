@@ -9,19 +9,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenNearCastleRuleIsBuilt_TargetsPrimaryMainObjectAtNearDistance(t *testing.T) {
+func TestWhenNearCrossroadsRuleIsBuilt_TargetsPortalNearDistance(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedWeight := gofakeit.Number(1, 100)
 	builder := placement_rule.NewPlacementRuleBuilder()
 
 	// Act
-	rule := builder.BuildNearCastleRule(expectedWeight)
+	rule := builder.BuildNearCrossroadsRule(expectedWeight)
 
 	// Assert
 	assert.Equal(t, entities.PlacementRule{
-		Type:      "MainObject",
-		Args:      []any{"0"},
+		Type:      "Crossroads",
 		TargetMin: 0.075,
 		TargetMax: 0.35,
 		Weight:    expectedWeight,

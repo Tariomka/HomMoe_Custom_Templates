@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
 type LayoutPanel struct {
@@ -212,6 +213,6 @@ func (this *LayoutPanel) SaveToState() {
 	})
 }
 
-func (this *LayoutPanel) getCurrentTopology() common_topologies.TopologyDescriptor {
+func (this *LayoutPanel) getCurrentTopology() models.TopologyDescriptor {
 	return common_topologies.GetTopologyDescriptorFromIndex(this.topology.GetSelectedIndex())
 }

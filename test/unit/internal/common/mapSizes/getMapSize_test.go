@@ -11,7 +11,8 @@ import (
 func TestWhenSizeMatchesKnownSize_ReturnsMatchingEntry(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := common.AllMapSizes[gofakeit.Number(0, len(common.AllMapSizes)-1)]
+	mapSizes := common.GetMapSizes(true)
+	expected := mapSizes[gofakeit.Number(0, len(mapSizes)-1)]
 
 	// Act
 	result := common.GetMapSize(expected.Size)
@@ -24,10 +25,11 @@ func TestWhenSizeIsUnknown_ReturnsSmallestBaseSize(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	unknownSize := 999
+	expected := common.GetMapSizes(false)[0]
 
 	// Act
 	result := common.GetMapSize(unknownSize)
 
 	// Assert
-	assert.Equal(t, common.BaseMapSizes[0], result)
+	assert.Equal(t, expected, result)
 }

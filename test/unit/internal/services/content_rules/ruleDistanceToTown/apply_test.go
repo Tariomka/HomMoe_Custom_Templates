@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +12,7 @@ import (
 func TestWhenRuleIsApplied_AppendsMainObjectPlacementRuleWithDistanceBounds(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	distance := content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}
+	distance := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 	rule := content_rules.NewRuleDistanceToTown(&distance)
 	item := entities.MandatoryContentItem{SID: "x"}
 

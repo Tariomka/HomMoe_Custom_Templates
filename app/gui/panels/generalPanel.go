@@ -77,13 +77,7 @@ func NewGeneralPanel(state *drivers.State) *GeneralPanel {
 			return labels
 		}()),
 		mapSizeSelector: components.NewDropdownSelector(func() []string {
-			if state.GetStateData().ExperimentalMapSizes {
-				return linq.FromSlice(constants.AllMapSizes).
-					SelectString(func(ms constants.MapSize) string { return ms.Label }).
-					ToSlice()
-			}
-
-			return linq.FromSlice(constants.BaseMapSizes).
+			return linq.FromSlice(constants.GetMapSizes(state.GetStateData().ExperimentalMapSizes)).
 				SelectString(func(ms constants.MapSize) string { return ms.Label }).
 				ToSlice()
 		}()),
@@ -354,7 +348,7 @@ func (this *GeneralPanel) updateConditionOptions() {
 }
 
 func (this *GeneralPanel) getCurrentMapSize() constants.MapSize {
-	return constants.AllMapSizes[this.mapSizeSelector.GetSelectedIndex()]
+	return constants.GetMapSizes(true)[this.mapSizeSelector.GetSelectedIndex()]
 }
 
 func (this *GeneralPanel) getCurrentVictoryCondition() constants.Victory {

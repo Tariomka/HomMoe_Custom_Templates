@@ -11,7 +11,8 @@ import (
 func TestWhenSizeIsAlreadyValid_ReturnsSameSize(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	valid := common.AllMapSizes[gofakeit.Number(0, len(common.AllMapSizes)-1)]
+	mapSizes := common.GetMapSizes(true)
+	valid := mapSizes[gofakeit.Number(0, len(mapSizes)-1)]
 
 	// Act
 	result := common.GetNearestMapSize(valid.Size)
@@ -24,19 +25,21 @@ func TestWhenSizeIsBelowSmallest_ReturnsSmallestSize(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tooSmall := gofakeit.Number(-1000, 63)
+	expected := common.GetMapSizes(false)[0]
 
 	// Act
 	result := common.GetNearestMapSize(tooSmall)
 
 	// Assert
-	assert.Equal(t, common.BaseMapSizes[0], result)
+	assert.Equal(t, expected, result)
 }
 
 func TestWhenSizeIsAboveLargest_ReturnsLargestSize(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tooLarge := gofakeit.Number(513, 100000)
-	largest := common.ExpandedMapSizes[len(common.ExpandedMapSizes)-1]
+	mapSizes := common.GetMapSizes(true)
+	largest := mapSizes[len(mapSizes)-1]
 
 	// Act
 	result := common.GetNearestMapSize(tooLarge)
@@ -48,7 +51,7 @@ func TestWhenSizeIsAboveLargest_ReturnsLargestSize(t *testing.T) {
 func TestWhenSizeIsBetweenTwoSizes_ReturnsClosestSize(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	betweenSize := 230 // between 208 and 240, closer to 240
+	betweenSize := 230
 
 	// Act
 	result := common.GetNearestMapSize(betweenSize)
@@ -60,7 +63,7 @@ func TestWhenSizeIsBetweenTwoSizes_ReturnsClosestSize(t *testing.T) {
 func TestWhenSizeIsEquidistantBetweenTwoSizes_ReturnsSmallerSize(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	equidistantSize := 72 // exactly between 64 and 80
+	equidistantSize := 72
 
 	// Act
 	result := common.GetNearestMapSize(equidistantSize)

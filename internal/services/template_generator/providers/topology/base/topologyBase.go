@@ -243,7 +243,7 @@ func (this *TopologyBase) CreateRandomPortalConnections(
 	}
 	rand.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
 
-	rule := placement_rule.NewPlacementRuleBuilder().BuildCrossroadsRule(placement_rule.DistanceNear, 2)
+	rule := placement_rule.NewPlacementRuleBuilder().BuildNearCrossroadsRule(2)
 	var conns []entities.Connection
 	for i := range min(count, maxCount) {
 		idx := indices[i]

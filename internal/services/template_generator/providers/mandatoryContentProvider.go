@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
@@ -160,14 +161,14 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 		WithRulesCallback(func() []entities.PlacementRule {
 			rules := []entities.PlacementRule{
 				placement_rule.NewPlacementRuleBuilder().
-					BuildCrossroadsRule(placement_rule.Distance{Min: 0.2, Max: 0.3}, 0),
+					BuildCrossroadsRule(models.DistancePreset{Min: 0.2, Max: 0.3}, 0),
 			}
 			if castleCount > 0 {
 				rules = append(rules,
 					placement_rule.NewPlacementRuleBuilder().
 						WithTypeMainObject().
 						WithArgs("0").
-						WithDistance(placement_rule.Distance{Min: 0.2, Max: 0.4}).
+						WithDistance(models.DistancePreset{Min: 0.2, Max: 0.4}).
 						WithWeight(0).
 						Build())
 			}
@@ -176,7 +177,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 					placement_rule.NewPlacementRuleBuilder().
 						WithTypeMainObject().
 						WithArgs("1").
-						WithDistance(placement_rule.Distance{Min: 0.5, Max: 0.5}).
+						WithDistance(models.DistancePreset{Min: 0.5, Max: 0.5}).
 						WithWeight(2).
 						Build())
 			}

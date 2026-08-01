@@ -12,7 +12,8 @@ import (
 func TestWhenSizeIsKnown_ReturnsSameEntryAsInternalConstants(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	size := common.AllMapSizes[gofakeit.Number(0, len(common.AllMapSizes)-1)].Size
+	mapSizes := common.GetMapSizes(true)
+	size := mapSizes[gofakeit.Number(0, len(mapSizes)-1)].Size
 
 	// Act
 	result := gui_constants.GetMapSize(size)

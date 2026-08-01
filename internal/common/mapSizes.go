@@ -1,11 +1,12 @@
 package common
 
-type MapSize struct {
-	Size  int
-	Label string
-}
+import (
+	"slices"
 
-var BaseMapSizes = []MapSize{
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+)
+
+var baseMapSizes = []models.MapSize{
 	{Size: 64, Label: "64x64 - S"},
 	{Size: 80, Label: "80x80 - M"},
 	{Size: 96, Label: "96x96 - M"},
@@ -19,7 +20,7 @@ var BaseMapSizes = []MapSize{
 	{Size: 240, Label: "240x240 - G"},
 }
 
-var ExpandedMapSizes = []MapSize{
+var expandedMapSizes = []models.MapSize{
 	{Size: 256, Label: "256x256 - C"},
 	{Size: 272, Label: "272x272 - C"},
 	{Size: 288, Label: "288x288 - C"},
@@ -39,29 +40,29 @@ var ExpandedMapSizes = []MapSize{
 	{Size: 512, Label: "512x512 - C"},
 }
 
-var AllMapSizes = append(BaseMapSizes, ExpandedMapSizes...)
+var allMapSizes = append(slices.Clone(baseMapSizes), expandedMapSizes...)
 
-func GetMapSize(size int) MapSize {
-	for _, mapSize := range AllMapSizes {
+func GetMapSize(size int) models.MapSize {
+	for _, mapSize := range allMapSizes {
 		if mapSize.Size == size {
 			return mapSize
 		}
 	}
-	return BaseMapSizes[0]
+	return baseMapSizes[0]
 }
 
-func GetMapSizes(withExperimental bool) []MapSize {
+func GetMapSizes(withExperimental bool) []models.MapSize {
 	if withExperimental {
-		return AllMapSizes
+		return slices.Clone(allMapSizes)
 	}
-	return BaseMapSizes
+	return slices.Clone(baseMapSizes)
 }
 
 // GetNearestMapSize returns the valid map size closest to the given size.
 // Ties resolve to the smaller size.
-func GetNearestMapSize(size int) MapSize {
-	nearest := AllMapSizes[0]
-	for _, candidate := range AllMapSizes[1:] {
+func GetNearestMapSize(size int) models.MapSize {
+	nearest := allMapSizes[0]
+	for _, candidate := range allMapSizes[1:] {
 		if absoluteDifference(candidate.Size, size) < absoluteDifference(nearest.Size, size) {
 			nearest = candidate
 		}

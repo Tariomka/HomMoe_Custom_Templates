@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +14,7 @@ func TestWhenQualityVaries_ReturnsMatchingGuardStrength(t *testing.T) {
 	testCases := []struct {
 		subtestName string
 		quality     neutral_zone.Quality
-		expected    common_connections.GuardStrength
+		expected    models.GuardStrength
 	}{
 		{
 			"WhenQualityIsLowest_ReturnsBronzeStrength",

@@ -1,7 +1,9 @@
 package placement_rule
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_distances"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -23,7 +25,7 @@ func (this *PlacementRuleBuilder) WithTypeMainObject() *PlacementRuleBuilder {
 	return this.withType(registry.GetRuleTypeValues().MainObject)
 }
 
-func (this *PlacementRuleBuilder) WithDistance(distance Distance) *PlacementRuleBuilder {
+func (this *PlacementRuleBuilder) WithDistance(distance models.DistancePreset) *PlacementRuleBuilder {
 	this.item.TargetMin = distance.Min
 	this.item.TargetMax = distance.Max
 	return this
@@ -41,7 +43,10 @@ func (this *PlacementRuleBuilder) WithArgs(arguments ...any) *PlacementRuleBuild
 
 func (this *PlacementRuleBuilder) Build() entities.PlacementRule { return this.item }
 
-func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) entities.PlacementRule {
+func (this *PlacementRuleBuilder) BuildRoadRule(
+	distance models.DistancePreset,
+	weight int,
+) entities.PlacementRule {
 	return this.
 		WithTypeRoad().
 		WithDistance(distance).
@@ -49,7 +54,10 @@ func (this *PlacementRuleBuilder) BuildRoadRule(distance Distance, weight int) e
 		Build()
 }
 
-func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight int) entities.PlacementRule {
+func (this *PlacementRuleBuilder) BuildCrossroadsRule(
+	distance models.DistancePreset,
+	weight int,
+) entities.PlacementRule {
 	return this.
 		WithTypeCrossroads().
 		WithDistance(distance).
@@ -57,7 +65,10 @@ func (this *PlacementRuleBuilder) BuildCrossroadsRule(distance Distance, weight 
 		Build()
 }
 
-func (this *PlacementRuleBuilder) BuildCastleRule(distance Distance, weight int) entities.PlacementRule {
+func (this *PlacementRuleBuilder) BuildCastleRule(
+	distance models.DistancePreset,
+	weight int,
+) entities.PlacementRule {
 	return this.
 		WithTypeMainObject().
 		WithArgs("0").
@@ -70,9 +81,22 @@ func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) entities.Place
 	return this.
 		WithTypeMainObject().
 		WithArgs("0").
-		WithDistance(DistanceNear).
+		WithDistance(getPortalPlacementNearDistance()).
 		WithWeight(weight).
 		Build()
+}
+
+func (this *PlacementRuleBuilder) BuildNearCrossroadsRule(weight int) entities.PlacementRule {
+	return this.
+		WithTypeCrossroads().
+		WithDistance(getPortalPlacementNearDistance()).
+		WithWeight(weight).
+		Build()
+}
+
+func getPortalPlacementNearDistance() models.DistancePreset {
+	distance, _ := common_distances.GetPortalPlacementDistancePreset("Near")
+	return distance
 }
 
 func (this *PlacementRuleBuilder) withType(ruleType string) *PlacementRuleBuilder {

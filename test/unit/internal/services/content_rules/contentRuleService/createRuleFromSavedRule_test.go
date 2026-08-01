@@ -13,8 +13,8 @@ import (
 func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 	t.Parallel()
 	service := content_rules.NewContentRuleService()
-	far := content_rules.DistanceVariation{Name: "Far", Min: 0.5, Max: 0.75}
-	near := content_rules.DistanceVariation{Name: "Near", Min: 0.1, Max: 0.25}
+	far := models.DistancePreset{Name: "Far", Min: 0.5, Max: 0.75}
+	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 	utopiaVariantID := 1
 	defaultMapping := content_rules.NewVariantMappingCatalog().GetDefaultMapping()
 	utopiaVariantRule, err := content_rules.NewRuleVariant(&defaultMapping, &utopiaVariantID)

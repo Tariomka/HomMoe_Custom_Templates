@@ -16,7 +16,7 @@ func TestWhenExperimentalIsFalse_ReturnsSameBaseSizesAsInternalConstants(t *test
 	result := gui_constants.GetMapSizes(false)
 
 	// Assert
-	assert.Equal(t, common.BaseMapSizes, result)
+	assert.Equal(t, common.GetMapSizes(false), result)
 }
 
 func TestWhenExperimentalIsTrue_ReturnsSameAllSizesAsInternalConstants(t *testing.T) {
@@ -27,5 +27,5 @@ func TestWhenExperimentalIsTrue_ReturnsSameAllSizesAsInternalConstants(t *testin
 	result := gui_constants.GetMapSizes(true)
 
 	// Assert
-	assert.Equal(t, common.AllMapSizes, result)
+	assert.Equal(t, common.GetMapSizes(true), result)
 }

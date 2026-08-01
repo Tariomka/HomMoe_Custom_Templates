@@ -17,13 +17,13 @@ const (
 
 // RuleDistanceToTown constrains how far the content spawns from the nearest town.
 type RuleDistanceToTown struct {
-	Distance DistanceVariation
+	Distance models.DistancePreset
 }
 
 // NewRuleDistanceToTown creates a town-distance rule, defaulting to Medium when
 // no distance is supplied.
-func NewRuleDistanceToTown(distance *DistanceVariation) *RuleDistanceToTown {
-	resolved := defaultDistanceVariation()
+func NewRuleDistanceToTown(distance *models.DistancePreset) *RuleDistanceToTown {
+	resolved := defaultDistancePreset()
 	if distance != nil {
 		resolved = *distance
 	}
@@ -40,7 +40,7 @@ func (this *RuleDistanceToTown) DisplayText() string {
 
 func (this *RuleDistanceToTown) Apply(item *entities.MandatoryContentItem) {
 	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().
-		BuildCastleRule(placement_rule.Distance{Min: this.Distance.Min, Max: this.Distance.Max}, 1))
+		BuildCastleRule(this.Distance, 1))
 }
 
 func (this *RuleDistanceToTown) SerializeToRowSave() models.ContentRuleRowSave {

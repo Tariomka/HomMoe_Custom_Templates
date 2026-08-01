@@ -136,7 +136,7 @@ func (this *GeometricHubTopologyService) createConnections(
 	}
 
 	// Rule 11: every connection that touches the Hub is a portal.
-	portalRule := placement_rule.NewPlacementRuleBuilder().BuildCrossroadsRule(placement_rule.DistanceNear, 2)
+	portalRule := placement_rule.NewPlacementRuleBuilder().BuildNearCrossroadsRule(2)
 	guardAnchor := playerLabels[0]
 	for _, label := range layout.hubPortalLabels {
 		guardLabel := label
