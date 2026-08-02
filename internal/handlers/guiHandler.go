@@ -21,12 +21,12 @@ import (
 )
 
 type GUIHandler struct {
-	templateWorkflow    TemplateWorkflowOperations
-	templatePersistence TemplatePersistenceOperations
-	preview             PreviewOperations
-	statePersistence    StatePersistenceOperations
-	contentRule         ContentRuleOperations
-	zoneEditor          ZoneEditorOperations
+	templateWorkflow    ITemplateWorkflowOperations
+	templatePersistence ITemplatePersistenceOperations
+	preview             IPreviewOperations
+	statePersistence    IStatePersistenceOperations
+	contentRule         IContentRuleOperations
+	zoneEditor          IZoneEditorOperations
 }
 
 func NewGuiHandler() *GUIHandler {

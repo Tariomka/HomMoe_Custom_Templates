@@ -27,21 +27,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
-// connEdgeGeom is the per-frame drawn geometry of one connection: a quadratic
-// Bézier from p0 to p1 bulged through ctrl, with mid the curve's midpoint used
-// for the guard-value label and the user-added marker.
-type connEdgeGeom struct {
-	conn *entities.Connection
-	p0   f32.Point
-	p1   f32.Point
-	ctrl f32.Point
-	mid  image.Point
-}
-
-// connPairKey identifies an unordered zone pair whose connections are drawn
-// as one spread group of parallel curves.
-type connPairKey struct{ a, b string }
-
 // layoutCanvas draws the node/edge canvas and processes pointer interaction. All
 // coordinates are square-local because the centring offset is pushed first and
 // the pointer area is registered within that transform.
@@ -211,14 +196,14 @@ func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection 
 		for step := range 21 {
 			t := float64(step) / 20.0
 			bezierPoint := helpers.GetVectorOnQuadraticBezierCurve(
-				data.NewVec2(float64(edge.p0.X), float64(edge.p0.Y)),
-				data.NewVec2(float64(edge.ctrl.X), float64(edge.ctrl.Y)),
-				data.NewVec2(float64(edge.p1.X), float64(edge.p1.Y)),
+				data.NewVec2(float64(edge.startPoint.X), float64(edge.startPoint.Y)),
+				data.NewVec2(float64(edge.controlPoint.X), float64(edge.controlPoint.Y)),
+				data.NewVec2(float64(edge.endPoint.X), float64(edge.endPoint.Y)),
 				t)
 			distance := math.Hypot(float64(pos.X)-bezierPoint.X, float64(pos.Y)-bezierPoint.Y)
 			if distance < bestDistance {
 				bestDistance = distance
-				best = edge.conn
+				best = edge.connection
 			}
 		}
 	}
@@ -280,12 +265,12 @@ func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 			ctrlY := midY + 2.0*bulge*normalY
 			labelX := 0.25*float64(p0.X) + 0.5*ctrlX + 0.25*float64(p1.X)
 			labelY := 0.25*float64(p0.Y) + 0.5*ctrlY + 0.25*float64(p1.Y)
-			this.edges = append(this.edges, connEdgeGeom{
-				conn: connection,
-				p0:   f32.Pt(float32(p0.X), float32(p0.Y)),
-				p1:   f32.Pt(float32(p1.X), float32(p1.Y)),
-				ctrl: f32.Pt(float32(ctrlX), float32(ctrlY)),
-				mid:  image.Pt(int(labelX), int(labelY)),
+			this.edges = append(this.edges, connectionEdgeGeometry{
+				connection:   connection,
+				startPoint:   f32.Pt(float32(p0.X), float32(p0.Y)),
+				endPoint:     f32.Pt(float32(p1.X), float32(p1.Y)),
+				controlPoint: f32.Pt(float32(ctrlX), float32(ctrlY)),
+				midPoint:     image.Pt(int(labelX), int(labelY)),
 			})
 		}
 	}
@@ -294,15 +279,15 @@ func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 // groupConnectionsByPair buckets the working connections by unordered endpoint
 // pair, preserving first-seen order so parallel edges spread deterministically
 // from frame to frame.
-func (this *ZoneEditorDialog) groupConnectionsByPair() ([]connPairKey, map[connPairKey][]*entities.Connection) {
-	groups := make(map[connPairKey][]*entities.Connection)
-	order := make([]connPairKey, 0)
+func (this *ZoneEditorDialog) groupConnectionsByPair() ([]connectionPairKey, map[connectionPairKey][]*entities.Connection) {
+	groups := make(map[connectionPairKey][]*entities.Connection)
+	order := make([]connectionPairKey, 0)
 	for _, connection := range this.working {
 		a, b := connection.From, connection.To
 		if a > b {
 			a, b = b, a
 		}
-		key := connPairKey{a, b}
+		key := connectionPairKey{a, b}
 		if _, seen := groups[key]; !seen {
 			order = append(order, key)
 		}
@@ -355,30 +340,35 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 		edge := this.edges[i]
 		lineColor := themes.ColorsPreview.DirectLine
 		width := float32(gtx.Dp(unit.Dp(2)))
-		if strings.EqualFold(edge.conn.ConnectionType, "Portal") {
+		if strings.EqualFold(edge.connection.ConnectionType, "Portal") {
 			lineColor = themes.ColorsPreview.PortalLine
 			width = float32(gtx.Dp(unit.Dp(1.6)))
 		}
-		if edge.conn == this.selected {
+		if edge.connection == this.selected {
 			lineColor = themes.ColorsZoneEditor.EdgeSelected
 			width = float32(gtx.Dp(unit.Dp(3)))
 		}
 		var path clip.Path
 		path.Begin(gtx.Ops)
-		path.MoveTo(edge.p0)
-		path.QuadTo(edge.ctrl, edge.p1)
+		path.MoveTo(edge.startPoint)
+		path.QuadTo(edge.controlPoint, edge.endPoint)
 		paint.FillShape(gtx.Ops, lineColor, clip.Stroke{Path: path.End(), Width: width}.Op())
 
-		if edge.conn.IsUserAdded {
+		if edge.connection.IsUserAdded {
 			marker := gtx.Dp(unit.Dp(3))
-			dot := image.Rect(edge.mid.X-marker, edge.mid.Y-marker, edge.mid.X+marker, edge.mid.Y+marker)
+			dot := image.Rect(
+				edge.midPoint.X-marker,
+				edge.midPoint.Y-marker,
+				edge.midPoint.X+marker,
+				edge.midPoint.Y+marker,
+			)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.UserAddedDot, clip.UniformRRect(dot, marker).Op(gtx.Ops))
 		}
 		drawCanvasText(
 			gtx,
 			theme,
-			image.Pt(edge.mid.X, edge.mid.Y-gtx.Dp(unit.Dp(9))),
-			strconv.Itoa(edge.conn.GuardValue),
+			image.Pt(edge.midPoint.X, edge.midPoint.Y-gtx.Dp(unit.Dp(9))),
+			strconv.Itoa(edge.connection.GuardValue),
 			9,
 			themes.ColorsZoneEditor.GuardLabel,
 		)

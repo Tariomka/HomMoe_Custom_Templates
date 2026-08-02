@@ -1,4 +1,4 @@
-package handlers
+package interfaces
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
-type ZoneEditorOperations interface {
+type IZoneEditorHandler interface {
 	GetZoneEditorOptions(state dtos.EditorStateDto, totalZoneCount int) dtos.ZoneEditorOptionsDto
 	CountZoneCastles(zone entities.Zone) int
 	GetZoneQuality(zone entities.Zone) neutral_zone.Quality
@@ -16,10 +16,7 @@ type ZoneEditorOperations interface {
 		playerZoneNames map[string]bool,
 	) neutral_zone.Quality
 	ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone
-	DescribeZoneEditorGraph(
-		zones []entities.Zone,
-		connections []entities.Connection,
-	) dtos.ZoneEditorGraphDto
+	DescribeZoneEditorGraph(zones []entities.Zone, connections []entities.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) entities.Connection
 	FindOpenZonePosition(occupied [][2]float64) [2]float64
 	GetNextZoneLabel(zones []entities.Zone) string

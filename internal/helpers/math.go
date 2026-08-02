@@ -13,7 +13,7 @@ func RoundWithPrecision(value float64, decimalPrecision int) float64 {
 }
 
 // Clamp returns value clamped to [lowest, highest].
-func Clamp[T data.Numeric](value, lowest, highest T) T {
+func Clamp[T data.INumeric](value, lowest, highest T) T {
 	if value < lowest {
 		return lowest
 	}

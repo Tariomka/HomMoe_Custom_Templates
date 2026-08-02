@@ -2,20 +2,9 @@ package components
 
 import (
 	"gioui.org/layout"
-	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
-
-// segmentButton represents a single selectable option in a row of segments.
-type segmentButton struct {
-	label  string
-	button widget.Clickable
-}
-
-func newSegmentButton(label string) *segmentButton {
-	return &segmentButton{label: label}
-}
 
 // SegmentButtonGroup is a horizontal row of mutually-exclusive segment buttons.
 type SegmentButtonGroup struct {

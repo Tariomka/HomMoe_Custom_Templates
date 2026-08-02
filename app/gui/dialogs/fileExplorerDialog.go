@@ -52,7 +52,7 @@ type fileEntry struct {
 // It runs entirely inside the UI loop: results are delivered through the onPick
 // / onSave callbacks (invoked synchronously when the user confirms) and the
 // dialog then closes by returning done=true from Body. There is no blocking and
-// there are no goroutines. Implements interfaces.Dialog structurally.
+// there are no goroutines. Implements interfaces.IDialog structurally.
 type FileExplorerDialog struct {
 	mode  fileDialogMode
 	title string

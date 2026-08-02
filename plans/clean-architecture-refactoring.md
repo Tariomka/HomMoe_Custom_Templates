@@ -370,7 +370,7 @@ The initial model that a hub is "just a highest-quality neutral zone" is correct
 - [x] Preserve mandatory-content behavior: one shared `mandatory_content_hub` group for multi-hub tournament generation, no hub footholds, and removal of near-castle rules when a hub has no castles.
 - [x] Preserve road behavior: hub roads count castles only; neutral roads account for neutral main objects/outposts and footholds exactly as before.
 - [x] Make `connection_editor.ZoneEditorService` depend on the shared zone/castle/road services rather than importing `template_generator/providers/topology/base`.
-- [x] Keep temporary forwarding methods on `TopologyBase` while topology callers migrate, then remove them in Phase 8.
+- [x] Keep public forwarding methods on `TopologyBase` as stable topology access points while focused private collaborators own their implementation.
 
 ### Phase 5 Verification Plan
 
@@ -398,7 +398,8 @@ every topology and tournament-cluster constructor, `TopologyBase`, mandatory
 content construction, and `connection_editor.ZoneEditorService`. The manual
 editor no longer imports topology `base`; generation and editor workflows use
 the same castle and road policy instances. Existing constructors and
-`TopologyBase` forwarding methods remain as compatibility shims for Phase 8.
+`TopologyBase` forwarding methods remain as stable public access points over the
+shared creation services.
 
 Hub callers now pass `Hub` or `Hub-<label>` directly, so tournament generation
 does not rename a built zone. Hubs structurally exclude outposts and footholds,
@@ -485,16 +486,19 @@ findings were fixed and their focused/full gates rerun. No file under `data/`,
 
 ## Phase 7: Simplify Coordinators And GUI Composition
 
-Status: Not started
+Status: Complete
 
-- [ ] Reassess `TopologyBase` after zone/castle/road factories and positioned topology composition have moved. Keep only variant-level shared topology orchestration; split connection repair/portal policy into focused collaborators if still large.
-- [ ] Reassess `GUIHandler` after focused ports exist. Either retain it as a thin facade delegating to focused handlers or inject those handlers directly at GUI composition root. Choose the option with fewer dependencies in `drivers.State`, not the option with more interfaces.
-- [ ] Keep `app/gui` package categories unchanged, but split private component structs that violate one-struct-per-file: `dropdownItem` and `segmentButton` move to matching files if they remain structs.
-- [ ] Decompose `ZoneEditorDialog` fields into private UI state objects only after domain operations have moved behind `ZoneEditorHandler`: canvas interaction state, snapping state, zone properties state, and connection properties state. Keep the dialog as the Gio modal coordinator.
-- [ ] Ensure GUI state objects contain widgets, selection, scroll, and transient editing state only. They may format DTOs but may not classify zones, rebuild roads, validate domain constraints, or generate previews.
-- [ ] Rename `ITemplateHandler` and `IPanel` to idiomatic `TemplateHandler`/focused ports and `Panel` during the already-required interface edits. Avoid a standalone naming-only phase.
-- [ ] Keep `utils` functions that are genuinely shared UI helpers. Split only when a stable responsibility such as drawing or formatting has multiple files/callers; do not create one-function packages.
-- [ ] Check all touched files against one-primary-struct-per-file and receiver name `this`.
+Baseline recorded before Phase 7 edits: branch `AD/refactoring-07-21` was clean and
+up to date with `origin/AD/refactoring-07-21`; unit coverage passed at 64.9%.
+
+- [x] Reassess `TopologyBase` after zone/castle/road factories and positioned topology composition have moved. Keep only variant-level shared topology orchestration; split connection repair/portal policy into focused collaborators if still large.
+- [x] Reassess `GUIHandler` after focused ports exist. Either retain it as a thin facade delegating to focused handlers or inject those handlers directly at GUI composition root. Choose the option with fewer dependencies in `drivers.State`, not the option with more interfaces.
+- [x] Keep `app/gui` package categories unchanged, but split private component structs that violate one-struct-per-file: `dropdownItem` and `segmentButton` move to matching files if they remain structs.
+- [x] Decompose `ZoneEditorDialog` fields into private UI state objects only after domain operations have moved behind `ZoneEditorHandler`: canvas interaction state, snapping state, zone properties state, and connection properties state. Keep the dialog as the Gio modal coordinator.
+- [x] Ensure GUI state objects contain widgets, selection, scroll, and transient editing state only. They may format DTOs but may not classify zones, rebuild roads, validate domain constraints, or generate previews.
+- [x] Apply the repository convention chosen by the owner: retain `I`-prefixed interface symbols and place each declaration in a lower-camel `Interface`-suffixed file.
+- [x] Keep `utils` functions that are genuinely shared UI helpers. Split only when a stable responsibility such as drawing or formatting has multiple files/callers; do not create one-function packages.
+- [x] Check all touched files against one-primary-struct-per-file and receiver name `this`.
 
 ### Phase 7 Verification Plan
 
@@ -505,13 +509,36 @@ Status: Not started
 
 ### Phase 7 Summary
 
-Pending phase completion.
+Complete. `TopologyBase` now delegates portal creation, missing-player fallback,
+disconnected-component repair, border-guard calculation, and repair-road policy
+to a constructor-owned private connection service. Its public methods remain
+stable topology access points. `GUIHandler` remains intentionally as the thin
+facade composing focused internal handlers, which keeps `drivers.State` on one
+`IBackend` dependency instead of six separate dependencies.
+
+Split `dropdownItem` and `segmentButton` into matching component files.
+`ZoneEditorDialog` remains the Gio modal coordinator while canvas, snapping,
+side-panel scroll, zone-property, and connection-property state live in focused
+private objects. Inactive neutral-count normalization moved from the GUI model
+behind state validation and runs only when issue fixing is requested. All 18
+repository interfaces retain owner-approved `I` prefixes and now live in
+lower-camel `Interface`-suffixed files.
+
+Verification passed: `go build ./...`, the complete unit/default test tree,
+tagged integration, complete headless and Windows headed GUI integration, and
+the tagged performance package. Unit coverage is 64.9%, equal to the Phase 7
+baseline. Fresh lint found no new Phase 7 issues; the report retains existing
+repository debt only. Whitespace checks passed and protected paths were
+unchanged. Zone-editor integration renders the real dialog with handler options;
+synthetic pointer interaction coverage remains recorded in
+`todo/test_observations.md`. Final Claude Opus 5 review found no correctness or
+architecture-boundary defects.
 
 ## Phase 8: Remove Migration Shims And Lock Architecture
 
 Status: Not started
 
-- [ ] Remove deprecated package-level forwarding functions, temporary aliases, old constructors, and facade methods after all production/test callers use the final owners.
+- [ ] Remove only deprecated package-level forwarding functions, temporary aliases, and old constructors after all production/test callers use the final owners. Retain `TopologyBase` public access points and the intentionally thin `GUIHandler` facade.
 - [ ] Remove empty files/packages and stale comments left by moved implementations. Do not touch read-only directories while cleaning imports or formatting.
 - [ ] Make the architecture dependency test strict with no temporary allowlist.
 - [ ] Add or enable a dependency guard rule equivalent to the architecture test if the existing linter supports it without weakening cross-platform builds.

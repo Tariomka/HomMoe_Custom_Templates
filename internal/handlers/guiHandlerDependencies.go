@@ -1,10 +1,10 @@
 package handlers
 
 type GUIHandlerDependencies struct {
-	TemplateWorkflow    TemplateWorkflowOperations
-	StatePersistence    StatePersistenceOperations
-	TemplatePersistence TemplatePersistenceOperations
-	Preview             PreviewOperations
-	ContentRule         ContentRuleOperations
-	ZoneEditor          ZoneEditorOperations
+	TemplateWorkflow    ITemplateWorkflowOperations
+	StatePersistence    IStatePersistenceOperations
+	TemplatePersistence ITemplatePersistenceOperations
+	Preview             IPreviewOperations
+	ContentRule         IContentRuleOperations
+	ZoneEditor          IZoneEditorOperations
 }

@@ -6,10 +6,10 @@ import (
 	"gioui.org/widget/material"
 )
 
-// Dialog is a modal view rendered on top of the main window by the DialogHost.
+// IDialog is a modal view rendered on top of the main window by the DialogHost.
 // Implementations draw only their body; the host supplies the scrim, the
 // centered panel chrome, and a title bar with a close button.
-type Dialog interface {
+type IDialog interface {
 	// Title is shown in the modal header.
 	Title() string
 	// Body draws the dialog content inside the panel and returns true when the
@@ -23,4 +23,4 @@ type Dialog interface {
 // DialogOpener opens a modal dialog. The DialogHost.Open method value satisfies
 // this type, letting components request dialogs without a direct dependency on
 // the host's concrete type.
-type DialogOpener = func(Dialog)
+type DialogOpener = func(IDialog)

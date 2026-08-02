@@ -18,7 +18,7 @@ func TestWhenRoadDistanceRuleIsApplied_AppendsRoadPlacementRule(t *testing.T) {
 	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
-	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleDistanceToRoad(&near)})
+	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleDistanceToRoad(&near)})
 
 	// Assert
 	assert.Equal(t, []entities.PlacementRule{
@@ -34,7 +34,7 @@ func TestWhenTownDistanceRuleIsApplied_AppendsMainObjectPlacementRule(t *testing
 	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
-	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleDistanceToTown(&near)})
+	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleDistanceToTown(&near)})
 
 	// Assert
 	assert.Equal(t, []entities.PlacementRule{
@@ -49,7 +49,7 @@ func TestWhenGuardedRuleIsApplied_SetsIsGuarded(t *testing.T) {
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleGuarded(true)})
+	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleGuarded(true)})
 
 	// Assert
 	assert.True(t, item.IsGuarded)
@@ -62,7 +62,7 @@ func TestWhenGuardedRuleIsApplied_AddsNoPlacementRules(t *testing.T) {
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleGuarded(true)})
+	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleGuarded(true)})
 
 	// Assert
 	assert.Empty(t, item.Rules)
@@ -75,7 +75,7 @@ func TestWhenSoloEncounterRuleIsApplied_SetsSoloEncounter(t *testing.T) {
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	service.ApplyRulesToItem(&item, []content_rules.ContentRule{content_rules.NewRuleSoloEncounter(true)})
+	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleSoloEncounter(true)})
 
 	// Assert
 	assert.True(t, item.SoloEncounter)
@@ -92,7 +92,7 @@ func TestWhenVariantRuleIsApplied_SetsVariantId(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	service.ApplyRulesToItem(&item, []content_rules.ContentRule{variantRule})
+	service.ApplyRulesToItem(&item, []content_rules.IContentRule{variantRule})
 
 	// Assert
 	require.NotNil(t, item.Variant)
@@ -106,7 +106,7 @@ func TestWhenRuleListContainsNil_SkipsItWithoutPanicking(t *testing.T) {
 	item := entities.MandatoryContentItem{SID: "x"}
 
 	// Act
-	service.ApplyRulesToItem(&item, []content_rules.ContentRule{nil, content_rules.NewRuleGuarded(true)})
+	service.ApplyRulesToItem(&item, []content_rules.IContentRule{nil, content_rules.NewRuleGuarded(true)})
 
 	// Assert
 	assert.True(t, item.IsGuarded)

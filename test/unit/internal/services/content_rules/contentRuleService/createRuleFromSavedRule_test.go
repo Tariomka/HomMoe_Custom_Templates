@@ -22,7 +22,7 @@ func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		original content_rules.ContentRule
+		original content_rules.IContentRule
 		content  models.SidMapping
 	}{
 		{"WhenRuleIsRoadDistance_RoundTrips", content_rules.NewRuleDistanceToRoad(&far), models.SidMapping{Sid: "x"}},

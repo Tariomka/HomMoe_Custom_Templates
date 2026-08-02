@@ -5,7 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-type ContentRuleOperations interface {
+type IContentRuleOperations interface {
 	GetContentRuleEditorOptions(content models.SidMapping) dtos.ContentRuleEditorOptionsDto
 	DescribeContentRule(
 		content models.SidMapping,

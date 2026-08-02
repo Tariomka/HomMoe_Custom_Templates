@@ -74,7 +74,7 @@ func NewUIStateWithBackend(handler interfaces.IBackend) *State {
 	return state
 }
 
-// NewUIStateWithHandler builds a State around the given template handler
+// NewUIStateWithHandler builds a State around the given backend
 // without probing the disk for the game templates directory. Production code
 // uses NewUIState; tests inject a mock handler here.
 func NewUIStateWithHandler(handler interfaces.IBackend) *State {

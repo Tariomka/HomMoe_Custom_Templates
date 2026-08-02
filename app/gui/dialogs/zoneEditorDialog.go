@@ -23,7 +23,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
 // ZoneEditorDialog is the Manual Zone Editor. It renders zones as
@@ -33,6 +32,12 @@ import (
 // on private copies of the zone and connection lists; Apply commits, Cancel/✕
 // discards.
 type ZoneEditorDialog struct {
+	zoneEditorCanvasState
+	zoneEditorSnapState
+	zoneEditorSidePanelState
+	zoneEditorConnectionPropertiesState
+	zoneEditorZonePropertiesState
+
 	zones          []entities.Zone
 	originalZones  []entities.Zone
 	playerZones    map[string]bool
@@ -45,72 +50,13 @@ type ZoneEditorDialog struct {
 	previewHandler interfaces.IPreviewHandler
 	zoneHandler    interfaces.IZoneEditorHandler
 
-	// Geometry derived from BuildPreviewLayout. Recomputed only when a
-	// mutator sets geometryDirty or the canvas side changes (geometrySide
-	// tracks the side the geometry was last computed for; side itself is
-	// refreshed every frame before pointer handling for drag normalization).
-	positions     map[string]image.Point
-	previewZones  []preview.Zone
-	radius        int
-	side          int
-	edges         []connEdgeGeom
-	geometryDirty bool
-	geometrySide  int
-
-	// Canvas interaction.
-	canvasTag     int
-	selected      *entities.Connection
-	selectedZone  string
-	addMode       bool
-	addZoneMode   bool
-	pendingFrom   string
-	dragging      bool
-	dragPos       image.Point
-	zoneDragName  string
-	zoneDragMoved bool
-	pressPos      image.Point
-	hint          string
-
-	// Active zone-alignment snap guides (canvas px), valid while a zone is
-	// being dragged and holding onto another zone's edge/center extension.
-	snapGuideX       float64
-	snapGuideY       float64
-	snapGuideXActive bool
-	snapGuideYActive bool
-
 	// Toolbar / footer.
 	addBtn     widget.Clickable
 	addZoneBtn widget.Clickable
 	deleteBtn  widget.Clickable
 	resetBtn   widget.Clickable
-	snapBool   widget.Bool
 	applyBtn   widget.Clickable
 	cancelBtn  widget.Clickable
-
-	// Property panel.
-	sideScroll        widget.List
-	syncedFor         *entities.Connection
-	typeDropdown      *components.DropdownSelector
-	guardZoneDropdown *components.DropdownSelector
-	guardDropdown     *components.DropdownSelector
-	guardPresetValues []int
-	weeklyDropdown    *components.DropdownSelector
-	guardValueEdit    widget.Editor
-	weeklyEdit        widget.Editor
-	matchGroupEdit    widget.Editor
-	advancedBool      widget.Bool
-	escapeBool        widget.Bool
-	simSquadBool      widget.Bool
-	sidePropDelete    widget.Clickable
-
-	// Zone property panel.
-	syncedZoneFor   string
-	qualityDropdown *components.DropdownSelector
-	castleDropdown  *components.DropdownSelector
-	zoneSizeEdit    widget.Editor
-	zoneGuardEdit   widget.Editor
-	zoneWeeklyEdit  widget.Editor
-	sideZoneDelete  widget.Clickable
 }
 
 // NewZoneEditorDialog builds an editor over copies of the given zones and
@@ -133,22 +79,29 @@ func NewZoneEditorDialog(
 	}
 
 	dialog := &ZoneEditorDialog{
-		zones:             append([]entities.Zone(nil), zones...),
-		originalZones:     append([]entities.Zone(nil), zones...),
-		playerZones:       players,
-		topology:          topology,
-		tuning:            tuning,
-		generateRoads:     generateRoads,
-		onApply:           onApply,
-		geometryDirty:     true,
-		previewHandler:    previewHandler,
-		zoneHandler:       zoneHandler,
-		typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
-		guardZoneDropdown: components.NewDropdownSelector(nil),
-		guardDropdown:     components.NewDropdownSelector(nil),
-		weeklyDropdown:    components.NewDropdownSelector(common_connections.GetGuardWeeklyIncrementLabels()),
-		qualityDropdown:   components.NewDropdownSelector(neutral_zone.GetQualityNames()),
-		castleDropdown:    components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
+		zones:          append([]entities.Zone(nil), zones...),
+		originalZones:  append([]entities.Zone(nil), zones...),
+		playerZones:    players,
+		topology:       topology,
+		tuning:         tuning,
+		generateRoads:  generateRoads,
+		onApply:        onApply,
+		previewHandler: previewHandler,
+		zoneHandler:    zoneHandler,
+		zoneEditorCanvasState: zoneEditorCanvasState{
+			geometryDirty: true,
+		},
+		zoneEditorConnectionPropertiesState: zoneEditorConnectionPropertiesState{
+			typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
+			guardZoneDropdown: components.NewDropdownSelector(nil),
+			guardDropdown:     components.NewDropdownSelector(nil),
+			weeklyDropdown: components.NewDropdownSelector(
+				common_connections.GetGuardWeeklyIncrementLabels()),
+		},
+		zoneEditorZonePropertiesState: zoneEditorZonePropertiesState{
+			qualityDropdown: components.NewDropdownSelector(neutral_zone.GetQualityNames()),
+			castleDropdown:  components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
+		},
 	}
 	for i := range connections {
 		working := connections[i]
@@ -157,7 +110,7 @@ func NewZoneEditorDialog(
 		clone.IsUserAdded = false
 		dialog.original = append(dialog.original, clone)
 	}
-	dialog.sideScroll.Axis = layout.Vertical
+	dialog.scroll.Axis = layout.Vertical
 	dialog.guardValueEdit.SingleLine = true
 	dialog.weeklyEdit.SingleLine = true
 	dialog.matchGroupEdit.SingleLine = true
@@ -334,7 +287,7 @@ func (this *ZoneEditorDialog) layoutSidePanel(gtx layout.Context, theme *materia
 				this.syncedZoneFor = zone.Name
 			}
 			rows := this.zonePropertyRows(theme, zone)
-			dims := material.List(theme, &this.sideScroll).
+			dims := material.List(theme, &this.scroll).
 				Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
 					return rows[index](gtx)
 				})
@@ -349,7 +302,7 @@ func (this *ZoneEditorDialog) layoutSidePanel(gtx layout.Context, theme *materia
 			this.syncedFor = this.selected
 		}
 		rows := this.propertyRows(theme)
-		dims := material.List(theme, &this.sideScroll).
+		dims := material.List(theme, &this.scroll).
 			Layout(gtx, len(rows), func(gtx layout.Context, index int) layout.Dimensions {
 				return rows[index](gtx)
 			})

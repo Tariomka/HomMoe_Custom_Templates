@@ -28,17 +28,19 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   (behavior-preserving split of `handleConfirm`); synthetic-click coverage via
   the test/performance AppRunner pattern is possible future work.
 
-- app/gui/dialogs/zoneEditorDialog.go + zoneEditorCanvas.go + zoneEditorSnap.go +
-  zoneEditorConnectionProps.go + zoneEditorZoneProps.go - the Manual Zone Editor
-  (one struct, method-split across five files in review item §2.3, 2026-07-12).
+- app/gui/dialogs/zoneEditorDialog.go with its canvas, snap, property-panel,
+  geometry, and transient-state sibling files - the Manual Zone Editor
+  (one primary dialog struct with rendering methods and UI state split by
+  responsibility).
   Everything runs off `layout.Context` frames: canvas drawing/hit-testing uses
   the previous frame's geometry, property panels are `widget.Editor`/dropdown
   driven, and pointer flows (drag-to-connect, zone drag + snapping) need
   synthetic pointer events. The extracted `groupConnectionsByPair` and the snap
   helpers are private and only reachable through `Body`. Zone/connection
-  *business* logic is unit-tested in internal/services/connection_editor;
-  dialog interaction coverage would need the test/performance AppRunner
-  synthetic-click pattern (future work — no integration scenario exists yet).
+  *business* logic is unit-tested in internal/services/connection_editor. The
+  integration suite renders the real dialog and verifies handler-provided
+  options; pointer interactions still need the test/performance AppRunner
+  synthetic-click pattern as future work.
 
 - app/gui/panels/layoutPanel.go + layoutPanelTopology.go + layoutPanelZones.go
   and previewPanel.go - Layout/Preview panels (layoutPanel method-split by

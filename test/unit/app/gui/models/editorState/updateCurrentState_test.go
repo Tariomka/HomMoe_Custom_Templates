@@ -22,40 +22,6 @@ func TestWhenUpdateChangesPlayerCount_ChangeIsApplied(t *testing.T) {
 	assert.Equal(t, playerCount, state.GetCurrentState().PlayerCount)
 }
 
-func TestWhenUpdateEnablesAdvancedMode_SimpleNeutralZoneCountIsZeroed(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	state := newEditorState()
-
-	// Act
-	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) {
-		dto.AdvancedMode = true
-		dto.NeutralZoneCount = gofakeit.Number(1, 10)
-	})
-
-	// Assert
-	assert.Equal(t, 0, state.GetCurrentState().NeutralZoneCount)
-}
-
-func TestWhenUpdateStaysInSimpleMode_AdvancedNeutralCountsAreZeroed(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	state := newEditorState()
-
-	// Act
-	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) {
-		dto.NeutralLowNoCastleCount = gofakeit.Number(1, 5)
-		dto.NeutralLowCastleCount = gofakeit.Number(1, 5)
-		dto.NeutralMediumNoCastleCount = gofakeit.Number(1, 5)
-		dto.NeutralMediumCastleCount = gofakeit.Number(1, 5)
-		dto.NeutralHighNoCastleCount = gofakeit.Number(1, 5)
-		dto.NeutralHighCastleCount = gofakeit.Number(1, 5)
-	})
-
-	// Assert
-	assert.Equal(t, dtos.NewDefaultEditorStateDto(), state.GetCurrentState())
-}
-
 func TestWhenUpdateSetsPlayerCountAboveMaximum_PlayerCountIsClamped(t *testing.T) {
 	t.Parallel()
 	// Arrange

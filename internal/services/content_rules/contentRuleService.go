@@ -19,10 +19,10 @@ func NewContentRuleService() *ContentRuleService {
 	}
 }
 
-func (this *ContentRuleService) GetRules() []ContentRule {
+func (this *ContentRuleService) GetRules() []IContentRule {
 	defaultMapping := this.variantMappingCatalog.GetDefaultMapping()
 	variantRule, _ := NewRuleVariant(&defaultMapping, nil)
-	return []ContentRule{
+	return []IContentRule{
 		NewRuleDistanceToRoad(nil),
 		NewRuleDistanceToTown(nil),
 		NewRuleGuarded(false),
@@ -33,7 +33,7 @@ func (this *ContentRuleService) GetRules() []ContentRule {
 
 func (this *ContentRuleService) ApplyRulesToItem(
 	item *entities.MandatoryContentItem,
-	rules []ContentRule,
+	rules []IContentRule,
 ) {
 	for _, rule := range rules {
 		if rule != nil {
@@ -45,7 +45,7 @@ func (this *ContentRuleService) ApplyRulesToItem(
 func (this *ContentRuleService) CreateRuleFromSavedRule(
 	saved models.ContentRuleRowSave,
 	content models.SidMapping,
-) ContentRule {
+) IContentRule {
 	switch {
 	case strings.EqualFold(saved.Name, RuleDistanceToRoadName):
 		if variation, ok := this.distanceCatalog.GetByName(saved.DistanceName); ok {
@@ -82,8 +82,8 @@ func (this *ContentRuleService) CreateRuleFromSavedRule(
 func (this *ContentRuleService) RestoreRulesFromRow(
 	row models.ZoneContentRowSave,
 	content models.SidMapping,
-) []ContentRule {
-	var result []ContentRule
+) []IContentRule {
+	var result []IContentRule
 	for _, savedRule := range row.Rules {
 		if rule := this.CreateRuleFromSavedRule(savedRule, content); rule != nil {
 			result = append(result, rule)

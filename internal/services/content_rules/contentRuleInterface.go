@@ -5,11 +5,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-// ContentRule is the polymorphic interface implemented by every content rule.
+// IContentRule is the polymorphic interface implemented by every content rule.
 // It mirrors the C# IContentRule contract: rules describe a configurable
 // constraint in the UI, know how to serialize themselves, and know how to
 // apply their effect to a final content item.
-type ContentRule interface {
+type IContentRule interface {
 	// Name uniquely identifies the rule and matches the persisted
 	// ContentRuleRowSave.Name field.
 	Name() string

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -93,4 +94,55 @@ func TestWhenStateHasMultipleIssues_ReturnsMessagesInValidationOrder(t *testing.
 		"playerCount 50 is outside [2, 8]",
 		"neutralZoneCount -1 is negative",
 	}, result.Warnings)
+}
+
+func TestWhenAdvancedModeIsEnabled_ZeroesSimpleNeutralCount(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto.AdvancedMode = true
+	stateDto.NeutralZoneCount = gofakeit.Number(1, 10)
+
+	// Act
+	result := handler.ValidateEditorState(stateDto, true)
+
+	// Assert
+	assert.Zero(t, result.State.NeutralZoneCount)
+}
+
+func TestWhenSimpleModeIsEnabled_ZeroesAdvancedNeutralCounts(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto.NeutralLowestNoCastleCount = gofakeit.Number(1, 10)
+	stateDto.NeutralLowestCastleCount = gofakeit.Number(1, 10)
+	stateDto.NeutralLowNoCastleCount = gofakeit.Number(1, 10)
+	stateDto.NeutralLowCastleCount = gofakeit.Number(1, 10)
+	stateDto.NeutralMediumNoCastleCount = gofakeit.Number(1, 10)
+	stateDto.NeutralMediumCastleCount = gofakeit.Number(1, 10)
+	stateDto.NeutralHighNoCastleCount = gofakeit.Number(1, 10)
+	stateDto.NeutralHighCastleCount = gofakeit.Number(1, 10)
+	expected := dtos.NewDefaultEditorStateDto()
+
+	// Act
+	result := handler.ValidateEditorState(stateDto, true)
+
+	// Assert
+	assert.Equal(t, expected, result.State)
+}
+
+func TestWhenFixIssuesIsFalse_PreservesInactiveNeutralCounts(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := handlers.NewGuiHandler()
+	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto.NeutralLowNoCastleCount = gofakeit.Number(1, 10)
+
+	// Act
+	result := handler.ValidateEditorState(stateDto, false)
+
+	// Assert
+	assert.Equal(t, stateDto, result.State)
 }

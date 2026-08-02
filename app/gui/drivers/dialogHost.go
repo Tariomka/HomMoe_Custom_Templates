@@ -23,13 +23,13 @@ import (
 // and resume once the child is dismissed. It is stored on State so any
 // component can open a dialog from deep in the tree.
 type DialogHost struct {
-	stack    []interfaces.Dialog
+	stack    []interfaces.IDialog
 	scrim    widget.Clickable
 	closeBtn widget.Clickable
 }
 
 // Open pushes the given dialog onto the stack, making it the active modal.
-func (this *DialogHost) Open(dialog interfaces.Dialog) {
+func (this *DialogHost) Open(dialog interfaces.IDialog) {
 	this.stack = append(this.stack, dialog)
 }
 
@@ -155,7 +155,7 @@ func (this *DialogHost) getHeaderWidget(theme *material.Theme) layout.Widget {
 }
 
 // getTopDialog returns the active (top-most) dialog, or nil when the stack is empty.
-func (this *DialogHost) getTopDialog() interfaces.Dialog {
+func (this *DialogHost) getTopDialog() interfaces.IDialog {
 	if len(this.stack) == 0 {
 		return nil
 	}
