@@ -4,7 +4,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -49,7 +49,7 @@ func (this *CirclesTopologyService) createCirclesLayout(
 	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
 	positions := this.positionLayoutService.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
 	pairs := this.createCirclesPairs(
-		geometry.CreateDelaunayTriangulation(positions),
+		geometry_helpers.CreateDelaunayTriangulation(positions),
 		allLabels,
 		playerLabels,
 		neutralZones,

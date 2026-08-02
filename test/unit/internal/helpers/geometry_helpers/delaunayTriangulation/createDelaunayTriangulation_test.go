@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenNoPositionsAreProvided_ReturnsNoEdges(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	edges := geometry.CreateDelaunayTriangulation(nil)
+	edges := geometry_helpers.CreateDelaunayTriangulation(nil)
 
 	// Assert
 	assert.Nil(t, edges)
@@ -23,7 +23,7 @@ func TestWhenOnePositionIsProvided_ReturnsNoEdges(t *testing.T) {
 	positions := []data.Vec2[float64]{data.NewVec2(0.5, 0.5)}
 
 	// Act
-	edges := geometry.CreateDelaunayTriangulation(positions)
+	edges := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Assert
 	assert.Nil(t, edges)
@@ -35,7 +35,7 @@ func TestWhenTwoPositionsAreProvided_ReturnsSingleEdge(t *testing.T) {
 	positions := []data.Vec2[float64]{data.NewVec2(0.1, 0.1), data.NewVec2(0.9, 0.9)}
 
 	// Act
-	edges := geometry.CreateDelaunayTriangulation(positions)
+	edges := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Assert
 	assert.Equal(t, []data.Vec2[int]{data.NewVec2(0, 1)}, edges)
@@ -52,7 +52,7 @@ func TestWhenThreePositionsFormTriangle_ReturnsNormalizedEdgesInOrder(t *testing
 	expected := []data.Vec2[int]{data.NewVec2(0, 1), data.NewVec2(0, 2), data.NewVec2(1, 2)}
 
 	// Act
-	edges := geometry.CreateDelaunayTriangulation(positions)
+	edges := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Assert
 	assert.Equal(t, expected, edges)
@@ -69,7 +69,7 @@ func TestWhenTriangleWindingIsReversed_ReturnsAllTriangleEdges(t *testing.T) {
 	expected := []data.Vec2[int]{data.NewVec2(0, 1), data.NewVec2(0, 2), data.NewVec2(1, 2)}
 
 	// Act
-	edges := geometry.CreateDelaunayTriangulation(positions)
+	edges := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Assert
 	assert.Equal(t, expected, edges)
@@ -84,10 +84,10 @@ func TestWhenFourPositionsFormSquare_ReturnsDeterministicEdges(t *testing.T) {
 		data.NewVec2(1.0, 1.0),
 		data.NewVec2(0.0, 1.0),
 	}
-	expected := geometry.CreateDelaunayTriangulation(positions)
+	expected := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Act
-	actual := geometry.CreateDelaunayTriangulation(positions)
+	actual := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Assert
 	assert.Equal(t, expected, actual)
@@ -103,7 +103,7 @@ func TestWhenPositionsAreCollinear_ReturnsNoTriangleEdges(t *testing.T) {
 	}
 
 	// Act
-	edges := geometry.CreateDelaunayTriangulation(positions)
+	edges := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Assert
 	assert.Empty(t, edges)
@@ -120,7 +120,7 @@ func TestWhenPositionsContainDuplicate_ReturnsNoInvalidIndexes(t *testing.T) {
 	}
 
 	// Act
-	edges := geometry.CreateDelaunayTriangulation(positions)
+	edges := geometry_helpers.CreateDelaunayTriangulation(positions)
 
 	// Assert
 	invalidCount := 0

@@ -1,4 +1,4 @@
-package geometry
+package geometry_helpers
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 

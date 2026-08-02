@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -54,6 +54,6 @@ func (this *RandomTopologyService) createRandomLayout(
 	for range labelCount {
 		positions.Add(data.NewVec2(rand.Float64()*0.9+0.05, rand.Float64()*0.9+0.05))
 	}
-	pairs := geometry.CreateDelaunayTriangulation(positions)
+	pairs := geometry_helpers.CreateDelaunayTriangulation(positions)
 	return allLabels, positions, pairs
 }

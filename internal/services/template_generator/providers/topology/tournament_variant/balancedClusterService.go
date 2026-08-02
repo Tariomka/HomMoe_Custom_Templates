@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -98,7 +98,7 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 		return models.Positions{}
 	}
 
-	minimumPosition, maximumPosition := geometry.GetPositionBounds(rawPositions)
+	minimumPosition, maximumPosition := geometry_helpers.GetPositionBounds(rawPositions)
 	spanX := math.Max(maximumPosition.X-minimumPosition.X, 0.001)
 	spanY := math.Max(maximumPosition.Y-minimumPosition.Y, 0.001)
 

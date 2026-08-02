@@ -7,7 +7,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/graph"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -147,10 +147,9 @@ func (this *topologyConnectionService) createMissingConnections(
 		for index := range nodes {
 			nodes[index] = index
 		}
-		bestIndexes, ok := geometry.FindClosestAcrossComponents(
+		bestIndexes, ok := geometry_helpers.FindClosestAcrossComponents(
 			positions,
-			graph.ConnectedComponents(adjacency, nodes),
-		)
+			graph.ConnectedComponents(adjacency, nodes))
 		if !ok {
 			break
 		}
