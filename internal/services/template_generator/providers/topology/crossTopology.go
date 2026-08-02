@@ -27,7 +27,7 @@ func NewCrossTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *CrossTopologyService {
 	return &CrossTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
 	}
 }
 

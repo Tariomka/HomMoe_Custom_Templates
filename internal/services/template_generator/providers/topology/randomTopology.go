@@ -24,7 +24,7 @@ func NewRandomTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *RandomTopologyService {
 	return &RandomTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
 	}
 }
 

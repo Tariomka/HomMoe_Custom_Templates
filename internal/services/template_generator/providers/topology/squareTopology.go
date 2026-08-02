@@ -25,7 +25,7 @@ func NewSquareTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *SquareTopologyService {
 	return &SquareTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
 	}
 }
 

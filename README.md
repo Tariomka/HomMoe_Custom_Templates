@@ -48,38 +48,38 @@ Generated template preview:
 │   │   ├── components/                      # Dropdown + segment-button widgets
 │   │   ├── widgets/                         # Reusable buttons, sliders, sections, textboxes…
 │   │   ├── drivers/                         # UI state, tabs, dialog host (calls handlers)
-│   │   ├── interfaces/                      # Panel / dialog interfaces
+│   │   ├── interfaces/                      # GUI ports plus panel / dialog interfaces
 │   │   ├── themes/                          # Color palette + Gio material theme (single color source)
 │   │   ├── constants/                       # UI-only constants
-│   │   └── utils/                           # Drawing, file IO, math, SID lookup
+│   │   └── utils/                           # Shared drawing, math and SID lookup helpers
 │   ├── tui/                                 # Placeholder for a future terminal UI
 │   └── web/                                 # Placeholder for a future web UI
 ├── internal/
-│   ├── handlers/                            # GUIHandler: orchestrates GUI ↔ services via DTOs
+│   ├── handlers/                            # Thin GUIHandler facade over focused use-case handlers
 │   ├── dtos/                                # Editor-state / template transfer objects
-│   ├── common/                              # Shared error values
-│   ├── constants/                           # Display-name catalogs (topologies, sizes, victories…)
+│   ├── common/                              # Shared errors, constants and immutable catalogs
 │   ├── registry/                            # Pure game SIDs / enum pools (items, spells, factions…)
 │   ├── helpers/                             # IO (Steam VDF detect), math, slice, string, linq
 │   ├── entities/                            # Read-only .rmg.json schema (template/ + re-export aliases)
+│   ├── mappers/                             # Editor-state DTO to generator-config mapping
 │   ├── models/                              # GeneratorConfig + settings, mappings, plans, tuning
 │   │   └── config/                          # GeneratorConfig (config_inner: topology, zone, hero, rules)
+│   ├── validators/                          # Editor-state validation rules
 │   └── services/                            # Business logic
-│       ├── template_generator/              # TemplateGenerator + providers (topology, builders, content…)
+│       ├── asset_provider/                  # Embedded game-data and preview assets
+│       ├── builders/                        # Invariant-rich template entity builders
 │       ├── connection_editor/               # Manual zone/connection editing logic
-│       ├── content_rules/                   # Per-row content placement rules
-│       ├── zones/                           # Zone label provider
-│       ├── previewassets/                   # Embedded in-game-style preview sprites (PNG)
-│       ├── previewLayout.go                 # Computes preview zone geometry
-│       ├── previewRenderer.go               # PNG export of the preview canvas
-│       ├── templateWriter.go                # Marshal + write <Name>.rmg.json
-│       └── settingsFileLoader.go            # Load/save .gen.json editor state
-└── test/                                    # Mirrors internal/ (models, services, helpers)
+│       ├── content_rules/                   # Per-row content placement rules and catalogs
+│       ├── file_service/                    # .gen.json and .rmg.json persistence
+│       ├── preview_service/                 # Preview layout and PNG rendering
+│       ├── template_generator/              # Generator + topology/content/rule providers
+│       └── zones/                           # Shared zone, castle and road construction
+└── test/                                    # Unit, architecture, integration and performance suites
 ```
 
 ## Features
 
-- **Gio desktop GUI** (`gioui.org v0.9.0`) with four configuration tabs, a
+- **Gio desktop GUI** (`gioui.org v0.10.0`) with four configuration tabs, a
   live preview sidebar and a generate/save footer:
   1. **General** — template name, players, map size, game mode, hero counts,
      faction-laws & astrology XP, victory condition and win/loss rules
@@ -105,12 +105,12 @@ Generated template preview:
   sprites and writes a `<Name>.png` next to the template on save.
 - **Settings persistence** — load/save editor state as `.gen.json`; emit
   `.rmg.json` templates compatible with the in-game RMG.
-- **Ten topologies**, map sizes 64–240 (experimental up to 512), 2–8 players,
+- **Eleven topologies**, map sizes 64–240 (experimental up to 512), 2–8 players,
   quality-tiered neutral zones, and content-count limits.
 
 ## Building & Running
 
-Requires **Go 1.26.3** or later (see [go.mod](go.mod)).
+Requires **Go 1.26.5** or later (see [go.mod](go.mod)).
 
 ```powershell
 # Run directly
@@ -151,6 +151,7 @@ Hot reload via [air](https://github.com/air-verse/air) is configured in
 | Shared Web    | `config.TopologySharedWeb`     | Players connected through shared neutral zones.              |
 | Square        | `config.TopologySquare`        | Players line the edges of a square; neutrals on edges and inside. |
 | Geometric     | `config.TopologyGeometric`     | Symmetric geometric shapes built around a central zone.      |
+| Geometric Hub | `config.TopologyGeometricHub`  | Symmetric player branches joined through a shared central hub. |
 | Cross         | `config.TopologyCross`         | Zones and connections radiate from a center into cross arms. |
 | Fractal       | `config.TopologyFractal`       | Each player is the base of a fractal that branches inward (low tiers nearest, high tiers at the woven center); players never border directly. |
 
@@ -181,43 +182,46 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
    widgets, themes, with view state in `drivers`). `app/tui` and `app/web` are
    placeholders. The UI only renders and collects input; it delegates all
    logic to handlers.
-2. **Handlers** (`internal/handlers`) — `GUIHandler` is the UI's entry point:
-   `GenerateTemplate`, `UpdateTemplate`, `SaveTemplate`, `LoadState`,
-   `SaveState`. It exchanges DTOs (`internal/dtos`) with the UI and calls
-   services.
+2. **Handlers** (`internal/handlers`) — `GUIHandler` is the UI's thin entry
+   point. It composes focused workflow, persistence, validation, preview,
+   content-rule and zone-editor handlers behind GUI-owned interfaces and
+   exchanges DTOs (`internal/dtos`) with the UI.
 3. **Services** (`internal/services`) — generation (`template_generator` with
    topology/content/rule providers), the manual `connection_editor`,
-   `content_rules`, `zones`, preview layout/rendering, and `.gen.json` /
-   `.rmg.json` IO (`SettingsToGenerator`, `WriteTemplate`, settings loader).
+   `content_rules`, shared zone/castle/road factories, preview layout/rendering,
+   and `.gen.json` / `.rmg.json` IO.
 4. **Models** (`internal/models`) — `config.GeneratorConfig` (the generator
    input) plus mappings, neutral-zone plans, generation tuning and positions.
 5. **Entities** (`internal/entities`) — the on-disk `.rmg.json` schema
    (`RmgTemplate`, `Variant`, `Zone`, `GameRules`, content pools…). Read-only;
    guarantees game compatibility.
-6. **Registry & constants** (`internal/registry`, `internal/constants`) — pure
-   game SIDs / enum pools and the display-name catalogs that reference them.
-7. **Common & helpers** (`internal/common`, `internal/helpers`) — shared error
-   values and cross-cutting utilities, including Steam library detection.
+6. **Registry & common catalogs** (`internal/registry`, `internal/common`) —
+   pure game SIDs / enum pools plus immutable shared constants and catalogs.
+7. **Mappers, validators & helpers** (`internal/mappers`,
+   `internal/validators`, `internal/helpers`) — boundary mapping, editor-state
+   validation and cross-cutting utilities including Steam library detection.
 
 ### Generation Flow
 
 ```
-app/gui (panels, drivers.State)
+app/gui (panels, dialogs, drivers.State)
    │   collects widget input into dtos.EditorStateDto
+   │   invokes app/gui/interfaces.IBackend
    ▼
-handlers.GUIHandler.GenerateTemplate
-   │   services.SettingsToGenerator(stateDto) → config.GeneratorConfig
+handlers.GUIHandler → templateWorkflowHandler.GenerateTemplate
+   │   validates state and maps it through mappers.GeneratorConfigMapper
    ▼
 template_generator.TemplateGenerator.Generate
-   ├── zones.ZoneLabelProvider          (player + neutral labels)
-   ├── providers.TopologyProvider       (variant: zones + connections)
-   ├── providers.GameRulesProvider      (win/loss, heroes, tournament…)
+   ├── zones.ZoneLabelProvider             (player + neutral labels)
+   ├── providers.TopologyProvider          (variant: zones + connections)
+   ├── providers.GameRulesProvider         (win/loss, heroes, tournament…)
    ├── providers.MandatoryContentProvider / ContentLimitProvider
    └── providers.ZoneLayoutProvider
    ▼
 entities.RmgTemplate
-   ├──► services.BuildPreviewLayout / preview renderer  (preview panel + PNG)
-   └──► services.WriteTemplate                          ──► <Name>.rmg.json
+   ├──► handlers.previewHandler → preview_service       (preview panel + PNG)
+   └──► handlers.templatePersistenceHandler
+           └──► file_service.FileService                ──► <Name>.rmg.json
 ```
 
 ## Testing
@@ -226,11 +230,11 @@ entities.RmgTemplate
 # Full suite
 go test ./test/... -count=1
 
-# Just the services tests
-go test ./test/services/...
+# Just the service unit tests
+go test ./test/unit/internal/services/... -count=1
 
 # A single test (by name)
-go test ./test/models/ -run TestSettingsFile_RoundTrip
+go test ./test/unit/internal/services/file_service/... -run TestWhenStateIsSaved
 
 # Integration tests
 go test -tags integration_test ./test/integration/... -count=1
@@ -257,8 +261,8 @@ go tool pprof -http :42069 cpu.prof
 - Read-only by design: the `.rmg.json` schema in
   [internal/entities/template](internal/entities/template) and the game data
   under [data/](data) are kept verbatim for game compatibility.
-- The generator and the example templates are kept in sync by the
-  round-trip tests under [test/models/template](test/models/template).
+- Generator and persistence compatibility are covered by the unit and
+   integration suites under [test/](test/).
 
 ## Related
 

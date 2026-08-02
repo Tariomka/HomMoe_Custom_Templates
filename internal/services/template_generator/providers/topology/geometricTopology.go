@@ -30,7 +30,7 @@ func NewGeometricTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *GeometricTopologyService {
 	return &GeometricTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 
 type TopologyBase struct {
 	ZoneLabelProvider *zones.ZoneLabelProvider
-	castleFactory     *zones.CastleFactory
 	roadFactory       *zones.RoadFactory
 	zoneFactory       *zones.ZoneFactory
 	connectionService *topologyConnectionService
@@ -30,7 +29,6 @@ func NewTopologyBaseWithCreationServices(creationServices *zones.CreationService
 	zoneLabelProvider := zones.NewZoneLabelProvider()
 	return TopologyBase{
 		ZoneLabelProvider: zoneLabelProvider,
-		castleFactory:     creationServices.CastleFactory,
 		roadFactory:       creationServices.RoadFactory,
 		zoneFactory:       creationServices.ZoneFactory,
 		connectionService: newTopologyConnectionService(zoneLabelProvider),
@@ -189,64 +187,4 @@ func (this *TopologyBase) GetBorderGuardValue(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning) int {
 	return this.connectionService.getBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)
-}
-
-// CreatePlayerOwnedCastles builds the extra City castles that the player owns
-// from the very start of the game. Because they already have an owner, their
-// guards are dropped immediately so the player can use them right away.
-// Exported so the manual zone editor can rebuild a spawn zone's castles when
-// the player-castle options change after manual editing.
-func (this *TopologyBase) CreatePlayerOwnedCastles(
-	matchPlayerFaction bool,
-	owner string,
-	castleCount int) []entities.MainObject {
-	return this.castleFactory.CreatePlayerOwnedCastles(matchPlayerFaction, owner, castleCount)
-}
-
-// CreatePlayerUnclaimedCastles builds the extra neutral City castles that sit
-// inside a player's zone but stay unowned until someone captures them.
-// Exported so the manual zone editor can rebuild a spawn zone's castles when
-// the player-castle options change after manual editing.
-func (this *TopologyBase) CreatePlayerUnclaimedCastles(
-	matchPlayerFaction bool,
-	guardValue, castleCount int) []entities.MainObject {
-	return this.castleFactory.CreatePlayerUnclaimedCastles(matchPlayerFaction, guardValue, castleCount)
-}
-
-// CreateHubZoneCastles builds the City main objects of a hub zone. Exported
-// so the manual zone editor can rebuild hub castles when the hub-castle
-// option changes after manual editing.
-func (this *TopologyBase) CreateHubZoneCastles(
-	tuning models.GenerationTuning,
-	castleCount int,
-	isHoldCityZone bool) []entities.MainObject {
-	return this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCityZone)
-}
-
-func (this *TopologyBase) CreateOuterZoneRoads(
-	connectionNames []string,
-	mainObjectCount int,
-	footholdCount int, generateRoads bool) []entities.Road {
-	return this.roadFactory.CreateOuterZoneRoads(
-		connectionNames,
-		mainObjectCount,
-		footholdCount,
-		generateRoads,
-	)
-}
-
-// CreateNeutralZoneCastles builds the City main objects of a neutral zone.
-// Exported so the manual zone editor can rebuild castles when the user edits
-// a zone's quality or castle count.
-func CreateNeutralZoneCastles(
-	profile neutral_zone.Profile,
-	tuning models.GenerationTuning,
-	castleCount int,
-	isHoldCityZone bool) []entities.MainObject {
-	return zones.NewCastleFactory().CreateNeutralZoneCastles(
-		profile,
-		tuning,
-		castleCount,
-		isHoldCityZone,
-	)
 }

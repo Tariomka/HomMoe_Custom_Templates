@@ -18,11 +18,7 @@ type PositionedTopologyBuilder struct {
 	base.TopologyBase
 }
 
-func NewPositionedTopologyBuilder() *PositionedTopologyBuilder {
-	return NewPositionedTopologyBuilderWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewPositionedTopologyBuilderWithCreationServices(
+func NewPositionedTopologyBuilder(
 	creationServices *zone_services.CreationServices,
 ) *PositionedTopologyBuilder {
 	return &PositionedTopologyBuilder{

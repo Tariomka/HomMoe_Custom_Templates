@@ -4,7 +4,13 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
+
+func newChainTopologyService() *topology.ChainTopologyService {
+	return topology.NewChainTopologyService(zones.NewCreationServices(nil, nil))
+}
 
 // zoneNameSet returns the set of zone names present in the variant.
 func zoneNameSet(variant entities.Variant) map[string]bool {

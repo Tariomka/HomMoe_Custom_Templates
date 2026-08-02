@@ -536,17 +536,20 @@ architecture-boundary defects.
 
 ## Phase 8: Remove Migration Shims And Lock Architecture
 
-Status: Not started
+Status: Complete
 
-- [ ] Remove only deprecated package-level forwarding functions, temporary aliases, and old constructors after all production/test callers use the final owners. Retain `TopologyBase` public access points and the intentionally thin `GUIHandler` facade.
-- [ ] Remove empty files/packages and stale comments left by moved implementations. Do not touch read-only directories while cleaning imports or formatting.
-- [ ] Make the architecture dependency test strict with no temporary allowlist.
-- [ ] Add or enable a dependency guard rule equivalent to the architecture test if the existing linter supports it without weakening cross-platform builds.
-- [ ] Update `README.md` architecture and generation-flow sections to match actual final boundaries. Do not claim that GUI uses only handlers until the import guard proves it.
-- [ ] Update `todo/test_observations.md` only for genuinely untestable Gio/window code discovered during implementation; do not use it to excuse testable service branches.
-- [ ] Run `gofmt` only on touched Go files and never on `data/`.
-- [ ] Run a final dead-code/import scan and verify no duplicate distance catalog, zone quality classifier, neutral profile factory, topology capability switch, or zone construction path remains.
-- [ ] Perform final review with special attention to serialized compatibility, pointer/slice copy semantics, hidden mutable globals, and accidental dependency inversion.
+Baseline recorded before Phase 8 edits: branch `AD/refactoring-07-21` was clean and
+up to date with `origin/AD/refactoring-07-21`; unit coverage passed at 64.9%.
+
+- [x] Remove only deprecated package-level forwarding functions, temporary aliases, and old constructors after all production/test callers use the final owners. Retain `TopologyBase` public access points and the intentionally thin `GUIHandler` facade.
+- [x] Remove empty files/packages and stale comments left by moved implementations. Do not touch read-only directories while cleaning imports or formatting.
+- [x] Make the architecture dependency test strict with no temporary allowlist.
+- [x] Add or enable a dependency guard rule equivalent to the architecture test if the existing linter supports it without weakening cross-platform builds.
+- [x] Update `README.md` architecture and generation-flow sections to match actual final boundaries. Do not claim that GUI uses only handlers until the import guard proves it.
+- [x] Update `todo/test_observations.md` only for genuinely untestable Gio/window code discovered during implementation; do not use it to excuse testable service branches.
+- [x] Run `gofmt` only on touched Go files and never on `data/`.
+- [x] Run a final dead-code/import scan and verify no duplicate distance catalog, zone quality classifier, neutral profile factory, topology capability switch, or zone construction path remains.
+- [x] Perform final review with special attention to serialized compatibility, pointer/slice copy semantics, hidden mutable globals, and accidental dependency inversion.
 
 ### Phase 8 Verification Plan
 
@@ -560,7 +563,41 @@ Status: Not started
 
 ### Phase 8 Summary
 
-Pending phase completion.
+Complete. Removed obsolete `TopologyBase` castle/road delegates and their
+duplicate tests, leaving `CastleFactory`, `RoadFactory`, and `ZoneFactory` as
+the canonical construction owners. Collapsed the Chain topology and positioned
+topology builder migration constructor pairs into dependency-explicit final
+constructors. Other zero-argument constructors remain deliberately: several are
+documented or production APIs, while 17 topology/provider constructors remain
+as test-only entry points used throughout the existing characterization suite.
+They contain no alternate policy and build the same default dependency graph;
+removing them would be test-fixture churn rather than dead production cleanup.
+
+The architecture dependency test now requires the exact two permanent GUI
+composition roots that may import concrete handlers and rejects all other
+handler imports. Matching `depguard` rules prohibit `app` from importing domain
+services and prohibit concrete handler imports outside those roots. The existing
+target-architecture allowlist remains limited to passive DTO, entity, model,
+helper, registry, and common-data packages. Dead-code and empty-file scans found
+no remaining production remnants; distance, topology capability, zone
+classification, neutral-plan, and zone-construction responsibilities each have
+one canonical owner.
+
+Updated `README.md` to the final package tree, Go/Gio versions, eleven
+topologies, focused handler composition, generation flow, service ownership,
+and current test paths. Recorded private `topologyConnectionService` coverage
+through `TopologyBase` rather than exposing test-only seams.
+
+Verification passed on Windows: `go build ./...`, the complete default/unit
+suite, tagged integration, complete headless and headed GUI integration, and the
+tagged performance benchmark. Unit coverage is 64.9%, unchanged from the Phase
+8 baseline and above the 63.9% Phase 0 baseline. Strict lint on touched Go
+packages, architecture tests, `depguard`, unused-code scan, whitespace checks,
+and protected-path checks all passed. Full lint retains pre-existing repository
+debt only. A Windows-hosted Linux cross-build cannot compile Gio's Vulkan
+backend without a Linux native/CGO toolchain; Linux CI remains the deployment
+build gate. Final Claude Opus 5 review found no correctness, behavior, or
+architecture blocker; all closure findings were applied.
 
 ## Cross-Phase Test Matrix
 
@@ -591,7 +628,22 @@ Pending phase completion.
 
 ## Final Recap
 
-Pending completion of all phases. Summarize final package boundaries, major behavior owners, compatibility results, coverage change, and any deliberately retained exceptions here.
+All eight phases are complete. The GUI now owns rendering, widgets, transient
+state, and focused ports; a thin `GUIHandler` facade composes validation,
+workflow, persistence, preview, content-rule, and zone-editor handlers. Domain
+policy lives in cohesive services, with builders and shared zone/castle/road
+factories owning invariant-rich entity construction. Topology graph assembly
+uses shared positioned composition where appropriate while preserving custom
+algorithms and stable `TopologyBase` access points.
+
+Characterization, unit, architecture, integration, GUI, and performance tests
+preserve `.gen.json` and `.rmg.json` behavior. No authoritative game data,
+template schema, or registry file was modified. Coverage increased from the
+63.9% Phase 0 baseline to 64.9%. Deliberately retained exceptions are the thin
+`GUIHandler` facade, stable public `TopologyBase` orchestration methods,
+documented production constructors, test-only default topology constructors,
+and direct GUI imports of passive internal DTO/model/
+entity/helper/common/registry data permitted by the target architecture.
 
 ## Deployment Plan
 

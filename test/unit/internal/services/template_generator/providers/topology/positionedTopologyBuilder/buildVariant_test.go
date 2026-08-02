@@ -10,16 +10,21 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
+
+func newPositionedTopologyBuilder() *topology.PositionedTopologyBuilder {
+	return topology.NewPositionedTopologyBuilder(zones.NewCreationServices(nil, nil))
+}
 
 func TestWhenLayoutIsBuilt_StampsGeneratorPosition(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	tuning := test_helpers.NewGenerationTuning(configuration, 1)
-	builder := topology.NewPositionedTopologyBuilder()
+	builder := newPositionedTopologyBuilder()
 	expectedPosition := [2]float64{0.25, 0.75}
 	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 		return []string{"A"}, models.Positions{data.NewVec2(expectedPosition[0], expectedPosition[1])}, nil
@@ -39,7 +44,7 @@ func TestWhenLayoutContainsPair_CreatesDirectConnection(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 2)
-	builder := topology.NewPositionedTopologyBuilder()
+	builder := newPositionedTopologyBuilder()
 	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 		return []string{"A", "N"}, models.Positions{data.NewVec2(0.0, 0.0), data.NewVec2(1.0, 0.0)},
 			[]models.ConnectionIndexes{{X: 0, Y: 1}}
@@ -58,7 +63,7 @@ func TestWhenDirectPlayerConnectionsAreDisabled_SkipsLayoutPlayerPair(t *testing
 	configuration := config.NewGeneratorConfig()
 	configuration.NoDirectPlayerConnections = true
 	tuning := test_helpers.NewGenerationTuning(configuration, 2)
-	builder := topology.NewPositionedTopologyBuilder()
+	builder := newPositionedTopologyBuilder()
 	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 		return []string{"A", "B"}, models.Positions{data.NewVec2(0.0, 0.0), data.NewVec2(1.0, 0.0)},
 			[]models.ConnectionIndexes{{X: 0, Y: 1}}
@@ -81,7 +86,7 @@ func TestWhenRandomPortalsAreEnabled_AddsPortalConnection(t *testing.T) {
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	builder := topology.NewPositionedTopologyBuilder()
+	builder := newPositionedTopologyBuilder()
 	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 		return []string{"A", "N1", "N2"}, models.Positions{
 			data.NewVec2(0.0, 0.0), data.NewVec2(0.5, 0.0), data.NewVec2(1.0, 0.0)}, nil
@@ -102,7 +107,7 @@ func TestWhenLayoutIsDisconnected_AddsBridgeConnection(t *testing.T) {
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	builder := topology.NewPositionedTopologyBuilder()
+	builder := newPositionedTopologyBuilder()
 	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 		return []string{"A", "N1", "N2"}, models.Positions{
 				data.NewVec2(0.0, 0.0), data.NewVec2(0.5, 0.0), data.NewVec2(1.0, 0.0)},
@@ -121,7 +126,7 @@ func TestWhenZoneDecoratorProvided_AppliesItToBuiltZones(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	tuning := test_helpers.NewGenerationTuning(configuration, 1)
-	builder := topology.NewPositionedTopologyBuilder()
+	builder := newPositionedTopologyBuilder()
 	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 		return []string{"A"}, models.Positions{data.NewVec2(0.0, 0.0)}, nil
 	}

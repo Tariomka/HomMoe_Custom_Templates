@@ -31,7 +31,7 @@ func NewFractalTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *FractalTopologyService {
 	return &FractalTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
 	}
 }
 

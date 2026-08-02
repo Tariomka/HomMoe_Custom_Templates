@@ -41,6 +41,22 @@ func TestWhenAppImportsAreScanned_DoesNotDependOnForbiddenInternalPackages(t *te
 	assert.Empty(t, violations)
 }
 
+func TestWhenAppHandlerImportsAreScanned_OnlyCompositionRootsDependOnConcreteHandlers(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	repositoryRoot := getRepositoryRoot(t)
+	expected := map[string][]string{
+		"app/gui/drivers/state.go": {modulePath + "/internal/handlers"},
+		"app/gui/editor/window.go": {modulePath + "/internal/handlers"},
+	}
+
+	// Act
+	actual := findImportsWithPrefix(t, repositoryRoot, "app", modulePath+"/internal/handlers")
+
+	// Assert
+	assert.Equal(t, expected, actual)
+}
+
 func getRepositoryRoot(t *testing.T) string {
 	t.Helper()
 	_, currentFile, _, ok := runtime.Caller(0)

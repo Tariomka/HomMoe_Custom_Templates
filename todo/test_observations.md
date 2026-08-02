@@ -79,6 +79,12 @@ Still unit-untestable (dialog-callback or Gio territory):
   helpers (`snapshotComparer.go`, `snapshotMasker.go`, `snapshotStore.go`) have
   dedicated unit tests under `test/unit/test/test_helpers/integration_common/`.
 
+- internal/services/template_generator/providers/topology/base/topologyConnectionService.go -
+  private connection, portal, repair, guard, and road policy is reachable through
+  the public `TopologyBase` methods and covered by that file's mirrored unit-test
+  folder. Do not add test-only exports or a duplicate public service solely for
+  per-file coverage attribution.
+
 ## Unreachable defensive branches (unit-test coverage gaps by design)
 
 - internal/services/template_generator/providers/topology/geometricHubLayout.go -

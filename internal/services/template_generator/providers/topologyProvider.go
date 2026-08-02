@@ -53,7 +53,7 @@ func (this *TopologyProvider) CreateTopologyVariant(
 			CreateTopologyVariant(
 				configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
-		return topology.NewChainTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewChainTopologyService(this.creationServices).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySharedWeb:
 		return topology.NewSharedWebTopologyServiceWithCreationServices(this.creationServices).

@@ -26,7 +26,7 @@ func NewCirclesTopologyServiceWithCreationServices(
 	creationServices *zone_services.CreationServices,
 ) *CirclesTopologyService {
 	return &CirclesTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilderWithCreationServices(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
 		positionLayoutService:     position_layout.NewPositionLayoutService(),
 	}
 }

@@ -18,11 +18,7 @@ type ChainTopologyService struct {
 	base.TopologyBase
 }
 
-func NewChainTopologyService() *ChainTopologyService {
-	return NewChainTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewChainTopologyServiceWithCreationServices(
+func NewChainTopologyService(
 	creationServices *zone_services.CreationServices,
 ) *ChainTopologyService {
 	return &ChainTopologyService{
