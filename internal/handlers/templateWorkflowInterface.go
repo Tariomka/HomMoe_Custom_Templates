@@ -5,7 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 )
 
-type ITemplateWorkflowOperations interface {
+type ITemplateWorkflow interface {
 	GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error)
 	UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error)
 	ReapplyCastleSettings(request dtos.CastleSettingsReapplyRequestDto) []entities.Zone

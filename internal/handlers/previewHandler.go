@@ -15,9 +15,7 @@ func newPreviewHandler(previewLayout *preview_service.PreviewLayoutService) *pre
 	return &previewHandler{previewLayout: previewLayout}
 }
 
-func (this *previewHandler) BuildPreviewLayout(
-	request dtos.PreviewLayoutRequestDto,
-) (dtos.PreviewLayoutDto, error) {
+func (this *previewHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error) {
 	template := request.Template
 	if template == nil && (request.Zones != nil || request.Connections != nil) {
 		template = &entities.RmgTemplate{

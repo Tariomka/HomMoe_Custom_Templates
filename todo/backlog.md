@@ -37,3 +37,7 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
 - need to use common (either from commons or models) values for template generation
 
 - either random portals or connections in general to hub have incorrect guard values
+
+- rework EditorStateDto, the dto content should be in entities, it should be wrapped in a model and model should be embedded to the dto.
+
+- types inside entities should be moved to template, template package should be renamed to template_entity

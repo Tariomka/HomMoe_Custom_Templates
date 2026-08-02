@@ -21,12 +21,12 @@ import (
 )
 
 type GUIHandler struct {
-	templateWorkflow    ITemplateWorkflowOperations
-	templatePersistence ITemplatePersistenceOperations
-	preview             IPreviewOperations
-	statePersistence    IStatePersistenceOperations
-	contentRule         IContentRuleOperations
-	zoneEditor          IZoneEditorOperations
+	templateWorkflow    ITemplateWorkflow
+	templatePersistence ITemplatePersistence
+	preview             IPreview
+	statePersistence    IStatePersistence
+	contentRule         IContentRule
+	zoneEditor          IZoneEditor
 }
 
 func NewGuiHandler() *GUIHandler {
@@ -120,16 +120,11 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	return this.templateWorkflow.UpdateTemplate(templateDto)
 }
 
-func (this *GUIHandler) ReapplyCastleSettings(
-	request dtos.CastleSettingsReapplyRequestDto,
-) []entities.Zone {
+func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
 	return this.templateWorkflow.ReapplyCastleSettings(request)
 }
 
-func (this *GUIHandler) GetZoneEditorOptions(
-	state dtos.EditorStateDto,
-	totalZoneCount int,
-) dtos.ZoneEditorOptionsDto {
+func (this *GUIHandler) GetZoneEditorOptions(state dtos.EditorStateDto, totalZoneCount int) dtos.ZoneEditorOptionsDto {
 	return this.zoneEditor.GetZoneEditorOptions(state, totalZoneCount)
 }
 
@@ -144,27 +139,22 @@ func (this *GUIHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality 
 func (this *GUIHandler) GetZoneConnectionGuardQuality(
 	from, to string,
 	zones []entities.Zone,
-	playerZoneNames map[string]bool,
-) neutral_zone.Quality {
+	playerZoneNames map[string]bool) neutral_zone.Quality {
 	return this.zoneEditor.GetZoneConnectionGuardQuality(from, to, zones, playerZoneNames)
 }
 
-func (this *GUIHandler) ApplyZoneEditorQuality(
-	request dtos.ZoneEditorQualityRequestDto,
-) entities.Zone {
+func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {
 	return this.zoneEditor.ApplyZoneEditorQuality(request)
 }
 
 func (this *GUIHandler) DescribeZoneEditorGraph(
 	zones []entities.Zone,
-	connections []entities.Connection,
-) dtos.ZoneEditorGraphDto {
+	connections []entities.Connection) dtos.ZoneEditorGraphDto {
 	return this.zoneEditor.DescribeZoneEditorGraph(zones, connections)
 }
 
 func (this *GUIHandler) CreateZoneEditorConnection(
-	request dtos.ZoneEditorConnectionRequestDto,
-) entities.Connection {
+	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
 	return this.zoneEditor.CreateZoneEditorConnection(request)
 }
 
@@ -176,9 +166,7 @@ func (this *GUIHandler) GetNextZoneLabel(zones []entities.Zone) string {
 	return this.zoneEditor.GetNextZoneLabel(zones)
 }
 
-func (this *GUIHandler) CreateZoneEditorNeutralZone(
-	request dtos.ZoneEditorNeutralZoneRequestDto,
-) entities.Zone {
+func (this *GUIHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone {
 	return this.zoneEditor.CreateZoneEditorNeutralZone(request)
 }
 
@@ -186,9 +174,7 @@ func (this *GUIHandler) CanDeleteZone(zoneName string, playerZoneNames map[strin
 	return this.zoneEditor.CanDeleteZone(zoneName, playerZoneNames)
 }
 
-func (this *GUIHandler) RemoveZoneEditorZone(
-	request dtos.ZoneEditorRemoveRequestDto,
-) dtos.ZoneEditorMutationDto {
+func (this *GUIHandler) RemoveZoneEditorZone(request dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto {
 	return this.zoneEditor.RemoveZoneEditorZone(request)
 }
 
@@ -196,36 +182,26 @@ func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, 
 	return this.templatePersistence.SaveTemplate(templateDto)
 }
 
-func (this *GUIHandler) BuildPreviewLayout(
-	request dtos.PreviewLayoutRequestDto,
-) (dtos.PreviewLayoutDto, error) {
+func (this *GUIHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error) {
 	return this.preview.BuildPreviewLayout(request)
 }
 
-func (this *GUIHandler) GetContentRuleEditorOptions(
-	content models.SidMapping,
-) dtos.ContentRuleEditorOptionsDto {
+func (this *GUIHandler) GetContentRuleEditorOptions(content models.SidMapping) dtos.ContentRuleEditorOptionsDto {
 	return this.contentRule.GetContentRuleEditorOptions(content)
 }
 
 func (this *GUIHandler) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave,
-) dtos.ContentRuleDescriptionDto {
+	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
 	return this.contentRule.DescribeContentRule(content, savedRule)
 }
 
 func (this *GUIHandler) ValidateEditorState(
 	stateDto dtos.EditorStateDto,
-	fixIssues bool,
-) dtos.EditorStateValidationDto {
+	fixIssues bool) dtos.EditorStateValidationDto {
 	return this.templateWorkflow.ValidateEditorState(stateDto, fixIssues)
 }
 
-// LoadState reads an editor state from the given .gen.json path and
-// validates it against the editor's allowed values. When fixIssues is true,
-// every detected issue is corrected in the returned state; the returned
-// warnings describe the issues found either way.
 func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
 	return this.statePersistence.LoadState(path, fixIssues)
 }

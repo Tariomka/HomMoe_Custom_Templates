@@ -15,18 +15,14 @@ type statePersistenceHandler struct {
 
 func newStatePersistenceHandler(
 	fileService *file_service.FileService,
-	stateValidation *stateValidationHandler,
-) *statePersistenceHandler {
+	stateValidation *stateValidationHandler) *statePersistenceHandler {
 	return &statePersistenceHandler{
 		fileService:     fileService,
 		stateValidation: stateValidation,
 	}
 }
 
-func (this *statePersistenceHandler) LoadState(
-	path string,
-	fixIssues bool,
-) (*dtos.EditorStateDto, []string, error) {
+func (this *statePersistenceHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
 		return nil, nil, common_errors.ErrNoOutputPath
