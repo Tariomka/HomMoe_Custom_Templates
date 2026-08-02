@@ -8,8 +8,7 @@ import (
 
 func FindClosestAcrossComponents(
 	positions []data.Vec2[float64],
-	componentIndexes [][]int,
-) (indexes data.Vec2[int], found bool) {
+	componentIndexes [][]int) (indexes data.Vec2[int], found bool) {
 	indexes = data.NewVec2(-1, -1)
 	if len(componentIndexes) <= 1 {
 		return indexes, false

@@ -64,7 +64,7 @@ func (this Query[T]) SelectString(selector func(T) string) Query[string] {
 	}
 }
 
-// func (this Query[T]) Select[TResult any](selector func(T) TResult) Query[TResult] { // With go1.26.3 this is not valid
+// func (this Query[T]) Select[TResult any](selector func(T) TResult) Query[TResult] { // Should be valid with 1.27
 // 	return Query[TResult]{
 // 		Iterate: func(yield func(TResult) bool) {
 // 			this.Iterate(func(item T) bool {

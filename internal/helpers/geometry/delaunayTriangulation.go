@@ -43,8 +43,7 @@ func normalizeEdge(firstIndex, secondIndex int) data.Vec2[int] {
 func insertPointIntoTriangulation(
 	triangleIndexes []data.Vec3[int],
 	superPoints []data.Vec2[float64],
-	index int,
-) []data.Vec3[int] {
+	index int) []data.Vec3[int] {
 	point := superPoints[index]
 	edgeCount := map[data.Vec2[int]]int{}
 	var kept []data.Vec3[int]

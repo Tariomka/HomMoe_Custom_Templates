@@ -32,6 +32,4 @@ func IsZoneNamePlayer(zoneName string) bool {
 	return GetZoneTypeFromName(zoneName) == preview.ZoneTypePlayer
 }
 
-func IsZoneNameHub(zoneName string) bool {
-	return GetZoneTypeFromName(zoneName) == preview.ZoneTypeHub
-}
+func IsZoneNameHub(zoneName string) bool { return GetZoneTypeFromName(zoneName) == preview.ZoneTypeHub }

@@ -15,9 +15,7 @@ func NewMandatoryContentItemMapper() *MandatoryContentItemMapper {
 	return &MandatoryContentItemMapper{contentRuleService: content_rules.NewContentRuleService()}
 }
 
-func (this *MandatoryContentItemMapper) FromRows(
-	rows []models.ZoneContentRowSave,
-) []entities.MandatoryContentItem {
+func (this *MandatoryContentItemMapper) FromRows(rows []models.ZoneContentRowSave) []entities.MandatoryContentItem {
 	if len(rows) == 0 {
 		return nil
 	}
@@ -35,9 +33,7 @@ func (this *MandatoryContentItemMapper) FromRows(
 	return items
 }
 
-func (this *MandatoryContentItemMapper) fromRow(
-	row models.ZoneContentRowSave,
-) entities.MandatoryContentItem {
+func (this *MandatoryContentItemMapper) fromRow(row models.ZoneContentRowSave) entities.MandatoryContentItem {
 	sid := row.Sid
 	if row.IsGroup {
 		sid = ""
