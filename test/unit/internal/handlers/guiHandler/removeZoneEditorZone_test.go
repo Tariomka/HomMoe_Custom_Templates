@@ -22,7 +22,8 @@ func TestWhenZoneIsRemoved_ReturnsServiceEquivalentMutation(t *testing.T) {
 		},
 		ZoneName: "Neutral-C",
 	}
-	zones, connections := connection_editor.NewZoneEditorService().RemoveZone(request.Zones, request.Connections, request.ZoneName)
+	zones, connections := connection_editor.NewZoneEditorService().
+		RemoveZone(request.Zones, request.Connections, request.ZoneName)
 	expected := dtos.ZoneEditorMutationDto{Zones: zones, Connections: connections}
 
 	// Act

@@ -1,10 +1,11 @@
 package editorState_test
 
 import (
+	"testing"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestWhenStoredManualEditsAreCleared_NoManualEditsRemain(t *testing.T) {

@@ -31,10 +31,7 @@ func (this *ContentRuleService) GetRules() []IContentRule {
 	}
 }
 
-func (this *ContentRuleService) ApplyRulesToItem(
-	item *entities.MandatoryContentItem,
-	rules []IContentRule,
-) {
+func (this *ContentRuleService) ApplyRulesToItem(item *entities.MandatoryContentItem, rules []IContentRule) {
 	for _, rule := range rules {
 		if rule != nil {
 			rule.Apply(item)
@@ -44,8 +41,7 @@ func (this *ContentRuleService) ApplyRulesToItem(
 
 func (this *ContentRuleService) CreateRuleFromSavedRule(
 	saved models.ContentRuleRowSave,
-	content models.SidMapping,
-) IContentRule {
+	content models.SidMapping) IContentRule {
 	switch {
 	case strings.EqualFold(saved.Name, RuleDistanceToRoadName):
 		if variation, ok := this.distanceCatalog.GetByName(saved.DistanceName); ok {
@@ -76,13 +72,13 @@ func (this *ContentRuleService) CreateRuleFromSavedRule(
 			return rule
 		}
 	}
+
 	return nil
 }
 
 func (this *ContentRuleService) RestoreRulesFromRow(
 	row models.ZoneContentRowSave,
-	content models.SidMapping,
-) []IContentRule {
+	content models.SidMapping) []IContentRule {
 	var result []IContentRule
 	for _, savedRule := range row.Rules {
 		if rule := this.CreateRuleFromSavedRule(savedRule, content); rule != nil {
@@ -102,7 +98,6 @@ func (this *ContentRuleService) GetVariantsForContent(content models.SidMapping)
 
 func (this *ContentRuleService) GetVariantForContentByID(
 	content models.SidMapping,
-	variantID int,
-) (models.VariantMapping, bool) {
+	variantID int) (models.VariantMapping, bool) {
 	return this.variantMappingCatalog.GetVariantForContentByID(content, variantID)
 }

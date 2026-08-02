@@ -6,11 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var (
-	castleQualities = registry.GetBuildingsConstructionSidValues()
-	objectTypes     = registry.GetMainObjectTypeValues()
-	placements      = registry.GetPlacementValues()
-)
+var castleQualities = registry.GetBuildingsConstructionSidValues()
 
 type MainObjectBuilder struct {
 	item entities.MainObject
@@ -19,13 +15,13 @@ type MainObjectBuilder struct {
 func NewObjectBuilder() *MainObjectBuilder { return &MainObjectBuilder{item: entities.MainObject{}} }
 
 func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder {
-	return this.withType(objectTypes.Spawn)
+	return this.withType(registry.GetMainObjectTypeValues().Spawn)
 }
 func (this *MainObjectBuilder) WithTypeCity() *MainObjectBuilder {
-	return this.withType(objectTypes.City)
+	return this.withType(registry.GetMainObjectTypeValues().City)
 }
 func (this *MainObjectBuilder) WithTypeAbandonedOutpost() *MainObjectBuilder {
-	return this.withType(objectTypes.AbandonedOutpost)
+	return this.withType(registry.GetMainObjectTypeValues().AbandonedOutpost)
 }
 
 func (this *MainObjectBuilder) WithSpawn(spawn string) *MainObjectBuilder {
@@ -103,16 +99,16 @@ func (this *MainObjectBuilder) WithFactions(factions ...string) *MainObjectBuild
 }
 
 func (this *MainObjectBuilder) WithPlacementCenter() *MainObjectBuilder {
-	return this.withPlacement(placements.Center)
+	return this.withPlacement(registry.GetPlacementValues().Center)
 }
 func (this *MainObjectBuilder) WithPlacementConnection() *MainObjectBuilder {
-	return this.withPlacement(placements.Connection)
+	return this.withPlacement(registry.GetPlacementValues().Connection)
 }
 func (this *MainObjectBuilder) WithPlacementNearZone() *MainObjectBuilder {
-	return this.withPlacement(placements.NearZone)
+	return this.withPlacement(registry.GetPlacementValues().NearZone)
 }
 func (this *MainObjectBuilder) WithPlacementUniform() *MainObjectBuilder {
-	return this.withPlacement(placements.Uniform)
+	return this.withPlacement(registry.GetPlacementValues().Uniform)
 }
 
 func (this *MainObjectBuilder) WithPlacementArgs(arguments ...string) *MainObjectBuilder {

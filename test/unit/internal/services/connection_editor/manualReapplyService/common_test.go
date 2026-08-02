@@ -24,7 +24,8 @@ func defaultTuning() models.GenerationTuning {
 // makeNeutralZone builds a generator-shaped neutral zone for the given quality
 // and castle count.
 func makeNeutralZone(label string, quality neutral_zone.Quality, castleCount int) entities.Zone {
-	return connection_editor.NewZoneEditorService().NewDefaultNeutralZone(label, quality, castleCount, false, defaultTuning())
+	return connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone(label, quality, castleCount, false, defaultTuning())
 }
 
 // makeSpawnZone builds a player spawn zone with the spawn castle as the primary

@@ -49,6 +49,7 @@ func (this *ZoneClassifier) GetGuardQuality(
 	if !ok {
 		return neutral_zone.QualityLow
 	}
+
 	if slices.Contains(playerNames, zone.Name) {
 		return neutral_zone.QualityUnknown
 	}
@@ -89,13 +90,12 @@ func (this *ZoneClassifier) getCenterQuality(zone entities.Zone) neutral_zone.Qu
 
 	isHighestTier := func(value string) bool { return strings.Contains(value, "_t5_") }
 	if linq.FromSlice(zone.ResourcesContentPool).
-		AllFunc(func(value string) bool {
-			return value == registry.GetResourcesContentPoolValues().TreasureZoneRich
-		}) ||
+		AllFunc(func(value string) bool { return value == registry.GetResourcesContentPoolValues().TreasureZoneRich }) ||
 		linq.FromSlice(zone.GuardedContentPool).AllFunc(isHighestTier) ||
 		linq.FromSlice(zone.UnguardedContentPool).AllFunc(isHighestTier) {
 		return neutral_zone.QualityHighest
 	}
+
 	return neutral_zone.QualityUnknown
 }
 
@@ -104,13 +104,9 @@ func (this *ZoneClassifier) getTreasureQuality(zone entities.Zone) neutral_zone.
 		return neutral_zone.QualityUnknown
 	}
 
-	isHighTier := func(value string) bool {
-		return strings.Contains(value, "_t4_") || strings.Contains(value, "_t5_")
-	}
+	isHighTier := func(value string) bool { return strings.Contains(value, "_t4_") || strings.Contains(value, "_t5_") }
 	if linq.FromSlice(zone.ResourcesContentPool).
-		AllFunc(func(value string) bool {
-			return value == registry.GetResourcesContentPoolValues().StartZoneRich
-		}) ||
+		AllFunc(func(value string) bool { return value == registry.GetResourcesContentPoolValues().StartZoneRich }) ||
 		linq.FromSlice(zone.GuardedContentPool).AllFunc(isHighTier) ||
 		linq.FromSlice(zone.UnguardedContentPool).AllFunc(isHighTier) {
 		return neutral_zone.QualityHigh
@@ -118,13 +114,12 @@ func (this *ZoneClassifier) getTreasureQuality(zone entities.Zone) neutral_zone.
 
 	isMediumTier := func(value string) bool { return strings.Contains(value, "_t3_") }
 	if linq.FromSlice(zone.ResourcesContentPool).
-		AllFunc(func(value string) bool {
-			return value == registry.GetResourcesContentPoolValues().StartZoneMedium
-		}) ||
+		AllFunc(func(value string) bool { return value == registry.GetResourcesContentPoolValues().StartZoneMedium }) ||
 		linq.FromSlice(zone.GuardedContentPool).AllFunc(isMediumTier) ||
 		linq.FromSlice(zone.UnguardedContentPool).AllFunc(isMediumTier) {
 		return neutral_zone.QualityMedium
 	}
+
 	return neutral_zone.QualityUnknown
 }
 
@@ -135,9 +130,7 @@ func (this *ZoneClassifier) getSidesQuality(zone entities.Zone) neutral_zone.Qua
 
 	isLowTier := func(value string) bool { return strings.Contains(value, "_t2_") }
 	if linq.FromSlice(zone.ResourcesContentPool).
-		AllFunc(func(value string) bool {
-			return value == registry.GetResourcesContentPoolValues().StartZonePoor
-		}) ||
+		AllFunc(func(value string) bool { return value == registry.GetResourcesContentPoolValues().StartZonePoor }) ||
 		linq.FromSlice(zone.GuardedContentPool).AllFunc(isLowTier) ||
 		linq.FromSlice(zone.UnguardedContentPool).AllFunc(isLowTier) {
 		return neutral_zone.QualityLow
@@ -145,12 +138,11 @@ func (this *ZoneClassifier) getSidesQuality(zone entities.Zone) neutral_zone.Qua
 
 	isLowestTier := func(value string) bool { return strings.Contains(value, "_t1_") }
 	if linq.FromSlice(zone.ResourcesContentPool).
-		AllFunc(func(value string) bool {
-			return value == registry.GetResourcesContentPoolValues().StartZoneVeryPoor
-		}) ||
+		AllFunc(func(value string) bool { return value == registry.GetResourcesContentPoolValues().StartZoneVeryPoor }) ||
 		linq.FromSlice(zone.GuardedContentPool).AllFunc(isLowestTier) ||
 		linq.FromSlice(zone.UnguardedContentPool).AllFunc(isLowestTier) {
 		return neutral_zone.QualityLowest
 	}
+
 	return neutral_zone.QualityUnknown
 }

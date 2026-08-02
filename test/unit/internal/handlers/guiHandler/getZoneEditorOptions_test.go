@@ -1,12 +1,12 @@
 package guiHandler_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,9 +1,10 @@
 package editorState_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestWhenExistingNextStateIsReset_NextStateIsGone(t *testing.T) {

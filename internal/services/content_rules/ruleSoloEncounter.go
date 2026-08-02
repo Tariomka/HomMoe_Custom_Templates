@@ -32,6 +32,7 @@ func (this *RuleSoloEncounter) Marker() string {
 	if this.IsSoloEncounter {
 		return RuleSoloEncounterMarker
 	}
+
 	return "!" + RuleSoloEncounterMarker
 }
 

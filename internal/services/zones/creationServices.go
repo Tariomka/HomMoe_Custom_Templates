@@ -6,10 +6,7 @@ type CreationServices struct {
 	RoadFactory   *RoadFactory
 }
 
-func NewCreationServices(
-	castleFactory *CastleFactory,
-	roadFactory *RoadFactory,
-) *CreationServices {
+func NewCreationServices(castleFactory *CastleFactory, roadFactory *RoadFactory) *CreationServices {
 	if castleFactory == nil {
 		castleFactory = NewCastleFactory()
 	}

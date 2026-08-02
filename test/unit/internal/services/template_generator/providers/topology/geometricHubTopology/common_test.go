@@ -1,7 +1,6 @@
 package geometricHubTopology_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"math"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
 // buildGeoHubVariant runs the Geometric Hub topology service with the given

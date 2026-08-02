@@ -16,7 +16,11 @@ func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
 	zones := []entities.Zone{
 		{Name: "Spawn-A"},
-		{Name: "Neutral-Gold", Layout: registry.GetLayoutValues().TreasureZone, GuardedContentPool: []string{"pool_t4_x"}},
+		{
+			Name:               "Neutral-Gold",
+			Layout:             registry.GetLayoutValues().TreasureZone,
+			GuardedContentPool: []string{"pool_t4_x"},
+		},
 	}
 	playerZoneNames := map[string]bool{"Spawn-A": true}
 	expected := entities.Connection{

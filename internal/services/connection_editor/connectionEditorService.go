@@ -21,6 +21,7 @@ func NewConnectionEditorService(zoneClassifier *zone_services.ZoneClassifier) *C
 	if zoneClassifier == nil {
 		zoneClassifier = zone_services.NewZoneClassifier()
 	}
+
 	return &ConnectionEditorService{zoneClassifier: zoneClassifier}
 }
 
@@ -28,14 +29,12 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 	from string,
 	to string,
 	zones []entities.Zone,
-	playerZoneNames map[string]bool,
-) entities.Connection {
+	playerZoneNames map[string]bool) entities.Connection {
 	quality := this.zoneClassifier.GetConnectionGuardQuality(
 		from,
 		to,
 		zones,
-		linq.FromMap(playerZoneNames).SelectKeys().ToSlice(),
-	)
+		linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
 	return variant_content.NewConnectionBuilder().
 		WithFrom(from).
 		WithTo(to).
@@ -50,9 +49,9 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 
 func (this *ConnectionEditorService) FindIsolatedZones(
 	zones []entities.Zone,
-	connections []entities.Connection,
-) []string {
+	connections []entities.Connection) []string {
 	var isolated []string
+
 	for _, zone := range zones {
 		referenced := false
 		for _, connection := range connections {
@@ -68,10 +67,7 @@ func (this *ConnectionEditorService) FindIsolatedZones(
 	return isolated
 }
 
-func (this *ConnectionEditorService) ComputeHasErrors(
-	zones []entities.Zone,
-	connections []entities.Connection,
-) bool {
+func (this *ConnectionEditorService) ComputeHasErrors(zones []entities.Zone, connections []entities.Connection) bool {
 	zoneNames := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		zoneNames[zone.Name] = true
@@ -86,11 +82,11 @@ func (this *ConnectionEditorService) ComputeHasErrors(
 
 func (this *ConnectionEditorService) HasDuplicateName(
 	connections []entities.Connection,
-	current *entities.Connection,
-) bool {
+	current *entities.Connection) bool {
 	if current == nil || len(current.Name) == 0 {
 		return false
 	}
+
 	for index := range connections {
 		if &connections[index] == current {
 			continue
@@ -99,5 +95,6 @@ func (this *ConnectionEditorService) HasDuplicateName(
 			return true
 		}
 	}
+
 	return false
 }

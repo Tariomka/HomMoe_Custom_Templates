@@ -19,7 +19,8 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 	zones := []entities.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
 
 	// Act
-	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
+	connection_editor.NewManualReapplyService().
+		ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
 
 	// Assert
 	assert.Equal(t, 1, connection_editor.NewZoneEditorService().CountZoneCastles(zones[0]))

@@ -87,18 +87,19 @@ func (this *VariantMappingCatalog) GetVariantsForContent(content models.SidMappi
 		}
 		return cloneVariantMappings(result)
 	}
+
 	return []models.VariantMapping{}
 }
 
 func (this *VariantMappingCatalog) GetVariantForContentByID(
 	content models.SidMapping,
-	variantID int,
-) (models.VariantMapping, bool) {
+	variantID int) (models.VariantMapping, bool) {
 	for _, mapping := range this.GetVariantsForContent(content) {
 		if _, ok := mapping.GetVariantByID(variantID); ok {
 			return cloneVariantMapping(mapping), true
 		}
 	}
+
 	return models.VariantMapping{}, false
 }
 

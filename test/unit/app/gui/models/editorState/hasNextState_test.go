@@ -1,8 +1,9 @@
 package editorState_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenNextStateWasNeverSet_ReportsNoNextState(t *testing.T) {

@@ -54,7 +54,7 @@ func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
 	// Arrange
 	topologyBase := base.NewTopologyBase()
 	portalRoad := true
-	crossroadsRule := entities.PlacementRule{Type: "Crossroads", TargetMin: 0.075, TargetMax: 0.35, Weight: 2}
+	crossroadsRule := entities.PlacementRule{Type: "Crossroads", TargetMin: 0.1, TargetMax: 0.25, Weight: 2}
 	expectedConnections := []entities.Connection{
 		{
 			Name: "Portal-A-B", From: "Spawn-A", To: "Spawn-B",

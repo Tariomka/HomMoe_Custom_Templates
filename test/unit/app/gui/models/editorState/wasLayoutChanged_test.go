@@ -1,10 +1,11 @@
 package editorState_test
 
 import (
+	"testing"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestWhenTopologyChangedSinceSnapshot_ReportsLayoutChanged(t *testing.T) {

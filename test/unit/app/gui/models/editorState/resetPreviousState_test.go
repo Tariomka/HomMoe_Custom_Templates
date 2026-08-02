@@ -1,9 +1,10 @@
 package editorState_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestWhenExistingSnapshotIsReset_PreviousStateIsGone(t *testing.T) {

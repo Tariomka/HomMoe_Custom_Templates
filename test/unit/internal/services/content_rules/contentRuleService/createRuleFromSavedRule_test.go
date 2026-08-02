@@ -75,10 +75,20 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 		{"WhenGuardedValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Guarded"}},
 		{"WhenSoloEncounterValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Solo Encounter"}},
 		{"WhenVariantIdIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Variant"}},
-		{"WhenRoadDistanceNameIsUnknown_ReturnsNil", models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Whatever"}},
-		{"WhenTownDistanceNameIsUnknown_ReturnsNil", models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Whatever"}},
-		{"WhenVariantIdIsNotDefinedForContent_ReturnsNil", models.ContentRuleRowSave{Name: "Variant", VariantID: &invalidVariantID}},
+		{
+			"WhenRoadDistanceNameIsUnknown_ReturnsNil",
+			models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Whatever"},
+		},
+		{
+			"WhenTownDistanceNameIsUnknown_ReturnsNil",
+			models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Whatever"},
+		},
+		{
+			"WhenVariantIdIsNotDefinedForContent_ReturnsNil",
+			models.ContentRuleRowSave{Name: "Variant", VariantID: &invalidVariantID},
+		},
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()

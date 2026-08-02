@@ -1,9 +1,10 @@
 package editorState_test
 
 import (
+	"testing"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestWhenSnapshotIsTaken_PreviousStateExists(t *testing.T) {

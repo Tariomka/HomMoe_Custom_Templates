@@ -22,8 +22,8 @@ func TestWhenNearCastleRuleIsBuilt_TargetsPrimaryMainObjectAtNearDistance(t *tes
 	assert.Equal(t, entities.PlacementRule{
 		Type:      "MainObject",
 		Args:      []any{"0"},
-		TargetMin: 0.075,
-		TargetMax: 0.35,
+		TargetMin: 0.1,
+		TargetMax: 0.25,
 		Weight:    expectedWeight,
 	}, rule)
 }

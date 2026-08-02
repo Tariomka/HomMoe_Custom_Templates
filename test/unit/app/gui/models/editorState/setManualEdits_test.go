@@ -1,11 +1,12 @@
 package editorState_test
 
 import (
+	"testing"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestWhenZonesAreApplied_ManualZoneSavesAreStoredInCurrentState(t *testing.T) {

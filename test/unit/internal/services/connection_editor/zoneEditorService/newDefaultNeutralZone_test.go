@@ -14,7 +14,8 @@ func TestWhenLabelIsGiven_NamesZoneNeutralLabel(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
 	assert.Equal(t, "Neutral-Q", zone.Name)
@@ -25,7 +26,8 @@ func TestWhenZoneIsCreatedManually_ClearsMandatoryContentReference(t *testing.T)
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
 	assert.Nil(t, zone.MandatoryContent)
@@ -36,7 +38,8 @@ func TestWhenCastleCountIsOne_CreatesOneCastle(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
 	assert.Equal(t, 1, connection_editor.NewZoneEditorService().CountZoneCastles(zone))
@@ -47,7 +50,8 @@ func TestWhenCastleCountIsZero_CreatesNoCastles(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("R", neutral_zone.QualityLow, 0, false, defaultTuning())
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("R", neutral_zone.QualityLow, 0, false, defaultTuning())
 
 	// Assert
 	assert.Equal(t, 0, connection_editor.NewZoneEditorService().CountZoneCastles(zone))
@@ -69,7 +73,8 @@ func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
 			// Arrange
 
 			// Act
-			zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Z", testCase.quality, 1, false, defaultTuning())
+			zone := connection_editor.NewZoneEditorService().
+				NewDefaultNeutralZone("Z", testCase.quality, 1, false, defaultTuning())
 
 			// Assert
 			assert.Equal(t, testCase.quality, zone_services.NewZoneClassifier().GetQuality(zone))

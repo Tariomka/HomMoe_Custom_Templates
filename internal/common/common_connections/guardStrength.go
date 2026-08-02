@@ -73,7 +73,7 @@ func GetGuardStrengthListForQuality(zoneQuality neutral_zone.Quality) []data.Tup
 	case neutral_zone.QualityHighest:
 		strength = GetHubGuardStrength()
 	case neutral_zone.QualityUnknown:
-		fallthrough // Assume without checking that no problems arose and this is a player-to-player connection.
+		fallthrough // Assume this is a player-to-player connection.
 	default:
 		strength = GetPlayerToPlayerGuardStrength()
 	}
@@ -99,7 +99,7 @@ func GetGuardStrengthForQuality(zoneQuality neutral_zone.Quality) models.GuardSt
 	case neutral_zone.QualityHighest:
 		return GetHubGuardStrength()
 	case neutral_zone.QualityUnknown:
-		fallthrough // Assume without checking that no problems arose and this is a player-to-player connection.
+		fallthrough // Assume this is a player-to-player connection.
 	default:
 		return GetPlayerToPlayerGuardStrength()
 	}

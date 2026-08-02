@@ -20,10 +20,12 @@ func (this *TypedRefBuilder) WithType(refType string) *TypedRefBuilder {
 	this.item.Type = refType
 	return this
 }
+
 func (this *TypedRefBuilder) WithArgs(args ...string) *TypedRefBuilder {
 	this.item.Args = append(this.item.Args, args...)
 	return this
 }
+
 func (this *TypedRefBuilder) Build() entities.TypedRef { return this.item }
 
 func (this *TypedRefBuilder) BuildMainObjectType(args ...string) entities.TypedRef {

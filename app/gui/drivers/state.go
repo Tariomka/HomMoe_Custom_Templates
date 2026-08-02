@@ -24,8 +24,6 @@ const (
 	configFileExtension = ".gen.json"
 )
 
-var _ interfaces.IBackend = (*handlers.GUIHandler)(nil)
-
 type State struct {
 	handler interfaces.IBackend
 

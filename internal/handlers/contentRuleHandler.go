@@ -17,8 +17,7 @@ func newContentRuleHandler(contentRuleService *content_rules.ContentRuleService)
 }
 
 func (this *contentRuleHandler) GetContentRuleEditorOptions(
-	content models.SidMapping,
-) dtos.ContentRuleEditorOptionsDto {
+	content models.SidMapping) dtos.ContentRuleEditorOptionsDto {
 	rules := []dtos.ContentRuleOptionDto{
 		{
 			Key:         dtos.ContentRuleKeyDistanceToRoad,
@@ -75,8 +74,7 @@ func (this *contentRuleHandler) GetContentRuleEditorOptions(
 
 func (this *contentRuleHandler) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave,
-) dtos.ContentRuleDescriptionDto {
+	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
 	description := dtos.ContentRuleDescriptionDto{
 		Key:         contentRuleKeyFromName(savedRule.Name),
 		DisplayText: savedRule.Name,
@@ -100,8 +98,7 @@ func (this *contentRuleHandler) DescribeContentRule(
 }
 
 func (this *contentRuleHandler) contentRuleVariantOptions(
-	content models.SidMapping,
-) []dtos.ContentRuleVariantOptionDto {
+	content models.SidMapping) []dtos.ContentRuleVariantOptionDto {
 	variants := this.contentRuleService.GetVariantsForContent(content)
 	options := make([]dtos.ContentRuleVariantOptionDto, 0, len(variants))
 	for _, variant := range variants {

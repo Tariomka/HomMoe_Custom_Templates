@@ -3,6 +3,7 @@ package content_rules
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -36,7 +37,7 @@ func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVarian
 	} else {
 		variantIDs := resolved.GetVariantIDsInOrder()
 		if len(variantIDs) == 0 {
-			return nil, fmt.Errorf("provided variant mapping has no variants")
+			return nil, common_errors.ErrNoVariantProvided
 		}
 		id = variantIDs[0]
 	}

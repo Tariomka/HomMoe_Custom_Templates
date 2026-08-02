@@ -92,4 +92,3 @@ Still unit-untestable (dialog-callback or Gio territory):
   ladder in `distributeGeometricHubSlots` only assigns interiors after every
   gap holds 2 stables, so a hexagon with interiors always has both flanking
   stables. The guard is purely defensive; do not add seams to reach it.
-

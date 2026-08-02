@@ -13,7 +13,8 @@ func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, false, tuning)
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, false, tuning)
 
 	// Act
 	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
@@ -26,7 +27,8 @@ func TestWhenTwoCastlesAreRequested_RebuildsTwoCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, false, tuning)
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, false, tuning)
 
 	// Act
 	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
@@ -42,7 +44,8 @@ func TestWhenCastlesAreAddedToConnectorZone_RegeneratesCastleRoads(t *testing.T)
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Z", neutral_zone.QualityMedium, 0, true, tuning)
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("Z", neutral_zone.QualityMedium, 0, true, tuning)
 
 	// Act
 	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 3, tuning)
@@ -57,7 +60,8 @@ func TestWhenCastleCountShrinksToOne_RemovesStaleCastleRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().NewDefaultNeutralZone("Z", neutral_zone.QualityHigh, 3, true, tuning)
+	zone := connection_editor.NewZoneEditorService().
+		NewDefaultNeutralZone("Z", neutral_zone.QualityHigh, 3, true, tuning)
 
 	// Act
 	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 1, tuning)

@@ -95,7 +95,7 @@ func (this *PlacementRuleBuilder) BuildNearCrossroadsRule(weight int) entities.P
 }
 
 func getPortalPlacementNearDistance() models.DistancePreset {
-	distance, _ := common_distances.GetPortalPlacementDistancePreset("Near")
+	distance, _ := common_distances.GetContentDistancePreset("Near")
 	return distance
 }
 

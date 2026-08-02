@@ -16,9 +16,9 @@ func NewCastleFactory() *CastleFactory {
 func (this *CastleFactory) CreatePlayerOwnedCastles(
 	matchPlayerFaction bool,
 	owner string,
-	castleCount int,
-) []entities.MainObject {
+	castleCount int) []entities.MainObject {
 	var castles []entities.MainObject
+
 	for range castleCount {
 		objectBuilder := variant_content.NewObjectBuilder().
 			WithTypeCity().
@@ -37,9 +37,9 @@ func (this *CastleFactory) CreatePlayerOwnedCastles(
 
 func (this *CastleFactory) CreatePlayerUnclaimedCastles(
 	matchPlayerFaction bool,
-	guardValue, castleCount int,
-) []entities.MainObject {
+	guardValue, castleCount int) []entities.MainObject {
 	var castles []entities.MainObject
+
 	for range castleCount {
 		objectBuilder := variant_content.NewObjectBuilder().
 			WithTypeCity().
@@ -63,8 +63,7 @@ func (this *CastleFactory) CreateNeutralZoneCastles(
 	profile neutral_zone.Profile,
 	tuning models.GenerationTuning,
 	castleCount int,
-	isHoldCityZone bool,
-) []entities.MainObject {
+	isHoldCityZone bool) []entities.MainObject {
 	var castles []entities.MainObject
 
 	if castleCount > 0 {
@@ -110,8 +109,7 @@ func (this *CastleFactory) CreateNeutralZoneCastles(
 func (this *CastleFactory) CreateHubZoneCastles(
 	tuning models.GenerationTuning,
 	castleCount int,
-	isHoldCityZone bool,
-) []entities.MainObject {
+	isHoldCityZone bool) []entities.MainObject {
 	var castles []entities.MainObject
 	newCastleBuilder := func() *variant_content.MainObjectBuilder {
 		return variant_content.NewObjectBuilder().
@@ -168,9 +166,9 @@ func (this *CastleFactory) createPlayerSpawnCastle(playerName string, guardValue
 func (this *CastleFactory) createAbandonedOutposts(
 	profile neutral_zone.Profile,
 	tuning models.GenerationTuning,
-	count int,
-) []entities.MainObject {
+	count int) []entities.MainObject {
 	var outposts []entities.MainObject
+
 	for range count {
 		outposts = append(outposts,
 			variant_content.NewObjectBuilder().

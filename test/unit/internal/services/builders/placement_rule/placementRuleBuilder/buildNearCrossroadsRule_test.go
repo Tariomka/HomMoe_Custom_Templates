@@ -21,8 +21,8 @@ func TestWhenNearCrossroadsRuleIsBuilt_TargetsPortalNearDistance(t *testing.T) {
 	// Assert
 	assert.Equal(t, entities.PlacementRule{
 		Type:      "Crossroads",
-		TargetMin: 0.075,
-		TargetMax: 0.35,
+		TargetMin: 0.1,
+		TargetMax: 0.25,
 		Weight:    expectedWeight,
 	}, rule)
 }
