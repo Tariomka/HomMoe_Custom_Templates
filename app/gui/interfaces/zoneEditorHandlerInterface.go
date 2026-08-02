@@ -13,8 +13,7 @@ type IZoneEditorHandler interface {
 	GetZoneConnectionGuardQuality(
 		from, to string,
 		zones []entities.Zone,
-		playerZoneNames map[string]bool,
-	) neutral_zone.Quality
+		playerZoneNames map[string]bool) neutral_zone.Quality
 	ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone
 	DescribeZoneEditorGraph(zones []entities.Zone, connections []entities.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) entities.Connection

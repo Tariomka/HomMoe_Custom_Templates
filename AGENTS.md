@@ -97,6 +97,12 @@ and how to deploy. Any future agent can resume from it with zero prior context.
 Use when planning multi-step / multi-session work that may outlive the
 current session. Skip for trivial single-session tasks.
 
+### 2.5 Staging and Committing
+
+You **MUST NOT** stage any changes you do and/or commit them to origin or any other brach.
+If you notice staged changes, **NEVER** unstage them - it is done by the author
+after he reviews and ensures the changes are correct.
+
 ---
 
 ## 3. Workflow Rules

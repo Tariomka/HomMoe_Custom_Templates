@@ -7,8 +7,5 @@ import (
 
 type IContentRuleHandler interface {
 	GetContentRuleEditorOptions(content models.SidMapping) dtos.ContentRuleEditorOptionsDto
-	DescribeContentRule(
-		content models.SidMapping,
-		savedRule models.ContentRuleRowSave,
-	) dtos.ContentRuleDescriptionDto
+	DescribeContentRule(content models.SidMapping, savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto
 }
