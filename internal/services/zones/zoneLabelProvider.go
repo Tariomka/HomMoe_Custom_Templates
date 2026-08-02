@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/graph"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -81,7 +81,7 @@ func (this *ZoneLabelProvider) GetHoldCityLabel(
 	adjacency := this.createTopologyAdjacency(configuration, playerLabels, neutralZones)
 	var distancesByPlayer []map[string]int
 	for _, label := range playerLabels {
-		distancesByPlayer = append(distancesByPlayer, graph.DistancesFrom(adjacency, label))
+		distancesByPlayer = append(distancesByPlayer, adjacency.DistancesFrom(label))
 	}
 
 	return utils.CreateHubZoneCandidates(neutralZones, distancesByPlayer).
@@ -211,8 +211,8 @@ func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
 func (this *ZoneLabelProvider) createTopologyAdjacency(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutral_zone.Plans) graph.Adjacency[string] {
-	adjacency := graph.Adjacency[string]{}
+	neutralZones neutral_zone.Plans) data.Adjacency[string] {
+	adjacency := data.NewAdjacency[string](nil)
 
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	// This is reached only for hub-capable topologies (GetHoldCityLabel gates on IsHubCityToHold).
@@ -228,7 +228,7 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 				slices.Contains(playerLabels, orderedLabels[next]) {
 				continue
 			}
-			graph.Link(adjacency, orderedLabels[current], orderedLabels[next])
+			adjacency.Link(orderedLabels[current], orderedLabels[next])
 		}
 	case config.TopologyRing, config.TopologyCircles:
 		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
@@ -239,13 +239,13 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 				slices.Contains(playerLabels, orderedLabels[next]) {
 				continue
 			}
-			graph.Link(adjacency, orderedLabels[current], orderedLabels[next])
+			adjacency.Link(orderedLabels[current], orderedLabels[next])
 		}
 	default:
 		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
 		for current := range orderedLabels {
 			next := (current + 1) % len(orderedLabels)
-			graph.Link(adjacency, orderedLabels[current], orderedLabels[next])
+			adjacency.Link(orderedLabels[current], orderedLabels[next])
 		}
 	}
 

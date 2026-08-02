@@ -7,8 +7,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/graph"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -149,7 +149,7 @@ func (this *topologyConnectionService) createMissingConnections(
 		}
 		bestIndexes, ok := geometry_helpers.FindClosestAcrossComponents(
 			positions,
-			graph.ConnectedComponents(adjacency, nodes))
+			adjacency.ConnectedComponents(nodes))
 		if !ok {
 			break
 		}
@@ -160,7 +160,7 @@ func (this *topologyConnectionService) createMissingConnections(
 		}
 		bridgeName := fmt.Sprintf("Bridge-%s-%s", labelA, labelB)
 		if connectionNames[bridgeName] {
-			graph.Link(adjacency, bestIndexes.X, bestIndexes.Y)
+			adjacency.Link(bestIndexes.X, bestIndexes.Y)
 			continue
 		}
 
@@ -170,7 +170,7 @@ func (this *topologyConnectionService) createMissingConnections(
 			bridgeName, zoneFrom, zoneTo, labelA, labelB, playerLabels, neutralZones, tuning))
 		connectionNames[bridgeName] = true
 		appendBridgeRoads(zones, zoneFrom, zoneTo, bridgeName)
-		graph.Link(adjacency, bestIndexes.X, bestIndexes.Y)
+		adjacency.Link(bestIndexes.X, bestIndexes.Y)
 	}
 
 	return additionalConnections
@@ -222,12 +222,12 @@ func (this *topologyConnectionService) getBorderGuardValue(
 func (this *topologyConnectionService) buildZoneAdjacency(
 	playerLabels, allLabels []string,
 	connections []entities.Connection,
-) graph.Adjacency[int] {
+) data.Adjacency[int] {
 	nodes := make([]int, len(allLabels))
 	for index := range nodes {
 		nodes[index] = index
 	}
-	adjacency := graph.NewAdjacency(nodes)
+	adjacency := data.NewAdjacency(nodes)
 	zoneNameToIndex := map[string]int{}
 	for index, label := range allLabels {
 		zoneNameToIndex[this.zoneLabelProvider.CreateZoneName(label, playerLabels)] = index
@@ -243,7 +243,7 @@ func (this *topologyConnectionService) buildZoneAdjacency(
 			_, hasTo := zoneNameToIndex[candidate.To]
 			return hasFrom && hasTo
 		}).Iterate {
-		graph.Link(adjacency, zoneNameToIndex[connection.From], zoneNameToIndex[connection.To])
+		adjacency.Link(zoneNameToIndex[connection.From], zoneNameToIndex[connection.To])
 	}
 	return adjacency
 }
