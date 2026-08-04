@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +14,7 @@ func TestWhenLabelIsGiven_NamesZoneNeutralLabel(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewDefaultZoneEditorService().
+	zone := test_helpers.NewZoneEditorService().
 		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
@@ -26,7 +26,7 @@ func TestWhenZoneIsCreatedManually_ClearsMandatoryContentReference(t *testing.T)
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewDefaultZoneEditorService().
+	zone := test_helpers.NewZoneEditorService().
 		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
@@ -38,11 +38,11 @@ func TestWhenCastleCountIsOne_CreatesOneCastle(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewDefaultZoneEditorService().
+	zone := test_helpers.NewZoneEditorService().
 		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone))
+	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zone))
 }
 
 func TestWhenCastleCountIsZero_CreatesNoCastles(t *testing.T) {
@@ -50,11 +50,11 @@ func TestWhenCastleCountIsZero_CreatesNoCastles(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewDefaultZoneEditorService().
+	zone := test_helpers.NewZoneEditorService().
 		NewDefaultNeutralZone("R", neutral_zone.QualityLow, 0, false, defaultTuning())
 
 	// Assert
-	assert.Equal(t, 0, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone))
+	assert.Equal(t, 0, test_helpers.NewZoneEditorService().CountZoneCastles(zone))
 }
 
 func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
@@ -73,7 +73,7 @@ func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
 			// Arrange
 
 			// Act
-			zone := connection_editor.NewDefaultZoneEditorService().
+			zone := test_helpers.NewZoneEditorService().
 				NewDefaultNeutralZone("Z", testCase.quality, 1, false, defaultTuning())
 
 			// Assert

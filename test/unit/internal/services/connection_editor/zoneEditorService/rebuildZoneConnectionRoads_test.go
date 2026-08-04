@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,7 +61,7 @@ func TestWhenZoneHasTwoConnections_KeepsRoadToExistingConnection(t *testing.T) {
 	zones, connections := buildFootholdScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.True(t, roadTargets(zones[0], "Connection")["Rnd-A-B"],
@@ -74,7 +74,7 @@ func TestWhenConnectionWasAddedInEditor_CreatesRoadForIt(t *testing.T) {
 	zones, connections := buildFootholdScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.True(t, roadTargets(zones[0], "Connection")["Rnd-A-C"],
@@ -87,7 +87,7 @@ func TestWhenZoneHasFootholdRoad_KeepsIt(t *testing.T) {
 	zones, connections := buildFootholdScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.True(t, roadTargets(zones[0], "MandatoryContent")["name_remote_foothold_1"],
@@ -100,7 +100,7 @@ func TestWhenNewConnectionTouchesAnotherZone_CreatesRoadOnThatZoneToo(t *testing
 	zones, connections := buildFootholdScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.True(t, roadTargets(zones[2], "Connection")["Rnd-A-C"],
@@ -132,7 +132,7 @@ func TestWhenManualConnectionIsNameless_AssignsItAName(t *testing.T) {
 	zones, connections := buildNamelessManualScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.NotEmpty(t, connections[0].Name,
@@ -145,7 +145,7 @@ func TestWhenManualConnectionIsNameless_CreatesRoadOnFromZone(t *testing.T) {
 	zones, connections := buildNamelessManualScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	require.NotEmpty(t, connections[0].Name)
@@ -159,7 +159,7 @@ func TestWhenManualConnectionIsNameless_CreatesRoadOnToZone(t *testing.T) {
 	zones, connections := buildNamelessManualScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	require.NotEmpty(t, connections[0].Name)
@@ -192,7 +192,7 @@ func TestWhenZoneGainedCastlesWithoutCastleRoads_CreatesStoneRoadsToEachCastle(t
 	zones, connections := buildCastleGrowthScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.Equal(t, []string{"1", "2"}, castleRoadTargets(zones[0]),
@@ -205,7 +205,7 @@ func TestWhenCastleRoadsAreRegenerated_KeepsConnectionRoad(t *testing.T) {
 	zones, connections := buildCastleGrowthScenario()
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.True(t, roadTargets(zones[0], "Connection")["Rnd-G-H"],
@@ -235,7 +235,7 @@ func TestWhenCastleCountShrank_DropsDanglingCastleRoads(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, nil)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, nil)
 
 	// Assert
 	assert.Empty(t, castleRoadTargets(zones[0]),
@@ -254,7 +254,7 @@ func TestWhenZoneHasNoMainObjects_CreatesConnectorRoads(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.NewDefaultZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
+	test_helpers.NewZoneEditorService().RebuildZoneConnectionRoads(zones, connections)
 
 	// Assert
 	assert.True(t, roadTargets(zones[0], "Connection")["Rnd-K-L"],

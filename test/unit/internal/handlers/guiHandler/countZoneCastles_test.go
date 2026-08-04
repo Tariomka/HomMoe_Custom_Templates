@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ func TestWhenZoneContainsMixedMainObjects_ReturnsServiceEquivalentCount(t *testi
 		{Type: "AbandonedOutpost"},
 		{Type: "City"},
 	}}
-	expected := connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone)
+	expected := test_helpers.NewZoneEditorService().CountZoneCastles(zone)
 
 	// Act
 	result := handler.CountZoneCastles(zone)

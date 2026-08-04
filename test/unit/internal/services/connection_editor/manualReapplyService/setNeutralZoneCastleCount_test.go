@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -22,7 +21,7 @@ func TestWhenCountIncreases_RebuildsRequestedCastleCount(t *testing.T) {
 	newManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, 3, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone))
+	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zone))
 }
 
 func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
@@ -120,6 +119,6 @@ func TestWhenPrimaryCastleHoldsWinCondition_PreservesHoldCityFlag(t *testing.T) 
 	newManualReapplyService().SetNeutralZoneCastleCount(&zone, 2, defaultTuning())
 
 	// Assert
-	require.Equal(t, 2, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone))
+	require.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zone))
 	assert.True(t, zone.MainObjects[0].HoldCityWinCon, "hold-city win condition was lost by the rebuild")
 }

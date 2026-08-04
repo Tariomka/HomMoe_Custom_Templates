@@ -9,13 +9,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
 // newManualReapplyService builds the service with the same collaborators the
 // application wires.
 func newManualReapplyService() *connection_editor.ManualReapplyService {
 	return connection_editor.NewManualReapplyService(
-		connection_editor.NewDefaultZoneEditorService(),
+		test_helpers.NewZoneEditorService(),
 		zone_services.NewZoneClassifier(),
 		generation_tuning.NewGenerationTuningFactory(),
 	)
@@ -36,7 +37,7 @@ func defaultTuning() models.GenerationTuning {
 // makeNeutralZone builds a generator-shaped neutral zone for the given quality
 // and castle count.
 func makeNeutralZone(label string, quality neutral_zone.Quality, castleCount int) entities.Zone {
-	return connection_editor.NewDefaultZoneEditorService().
+	return test_helpers.NewZoneEditorService().
 		NewDefaultNeutralZone(label, quality, castleCount, false, defaultTuning())
 }
 

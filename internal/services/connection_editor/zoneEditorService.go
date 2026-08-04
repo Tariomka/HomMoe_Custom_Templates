@@ -26,24 +26,10 @@ type ZoneEditorService struct {
 	roadFactory   *zone_services.RoadFactory
 }
 
-func NewDefaultZoneEditorService() *ZoneEditorService {
-	return NewZoneEditorService(nil, nil, nil)
-}
-
 func NewZoneEditorService(
 	castleFactory *zone_services.CastleFactory,
 	roadFactory *zone_services.RoadFactory,
 	zoneFactory *zone_services.ZoneFactory) *ZoneEditorService {
-	if castleFactory == nil {
-		castleFactory = zone_services.NewCastleFactory()
-	}
-	if roadFactory == nil {
-		roadFactory = zone_services.NewRoadFactory()
-	}
-	if zoneFactory == nil {
-		zoneFactory = zone_services.NewZoneFactory(castleFactory, roadFactory)
-	}
-
 	return &ZoneEditorService{
 		zoneFactory:   zoneFactory,
 		CastleFactory: castleFactory,

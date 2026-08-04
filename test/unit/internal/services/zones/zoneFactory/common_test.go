@@ -1,6 +1,13 @@
 package zoneFactory_test
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+)
+
+func newZoneFactory() *zones.ZoneFactory {
+	return zones.NewZoneFactory(zones.NewCastleFactory(), zones.NewRoadFactory())
+}
 
 func newUnitTuning() models.GenerationTuning {
 	return models.GenerationTuning{

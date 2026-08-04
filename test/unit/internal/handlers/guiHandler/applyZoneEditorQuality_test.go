@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,10 +21,10 @@ func TestWhenQualityChanges_ReturnsServiceEquivalentZone(t *testing.T) {
 		NeutralStackStrengthMultiplier: 1,
 		BorderGuardStrengthMultiplier:  1,
 	}
-	zone := connection_editor.NewDefaultZoneEditorService().
+	zone := test_helpers.NewZoneEditorService().
 		NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, true, tuning)
 	expected := zone
-	connection_editor.NewDefaultZoneEditorService().
+	test_helpers.NewZoneEditorService().
 		ApplyNeutralZoneQuality(&expected, neutral_zone.QualityHigh, 3, tuning)
 
 	// Act

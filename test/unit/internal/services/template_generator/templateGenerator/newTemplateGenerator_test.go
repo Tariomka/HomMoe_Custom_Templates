@@ -20,16 +20,6 @@ func TestWhenConfigurationProvided_ReturnsNonNilGenerator(t *testing.T) {
 	assert.NotNil(t, generator)
 }
 
-func TestWhenConfigurationIsNil_FallsBackToDefaultConfiguration(t *testing.T) {
-	t.Parallel()
-	// Arrange & Act
-	generator := newTemplateGenerator(nil)
-
-	// Assert
-	generated := generator.Generate()
-	assert.Equal(t, "Custom Template", generated.Name)
-}
-
 func TestWhenConfigurationProvided_GeneratesFromProvidedConfiguration(t *testing.T) {
 	t.Parallel()
 	// Arrange

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +13,7 @@ func TestWhenLabelsAreOccupied_ReturnsServiceEquivalentLabel(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-B"}}
-	expected := connection_editor.NewDefaultZoneEditorService().NextFreeZoneLabel(zones)
+	expected := test_helpers.NewZoneEditorService().NextFreeZoneLabel(zones)
 
 	// Act
 	result := handler.GetNextZoneLabel(zones)

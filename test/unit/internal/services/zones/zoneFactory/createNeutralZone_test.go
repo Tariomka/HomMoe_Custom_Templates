@@ -6,14 +6,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenNeutralZoneIsCreated_PreservesExplicitName(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	factory := zones.NewZoneFactory(nil, nil)
+	factory := newZoneFactory()
 	input := models.NeutralZoneCreation{
 		Name:               "Neutral-Q",
 		Quality:            neutral_zone.QualityMedium,
@@ -50,7 +49,7 @@ func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			factory := zones.NewZoneFactory(nil, nil)
+			factory := newZoneFactory()
 			input := models.NeutralZoneCreation{
 				Name:    "Neutral-Q",
 				Quality: neutral_zone.QualityMedium,

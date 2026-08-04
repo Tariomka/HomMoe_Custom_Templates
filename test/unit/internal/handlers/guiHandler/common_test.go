@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,7 +37,7 @@ func newProductionGuiHandler() handler_interfaces.IGuiHandler {
 // collaborators the handler graph wires.
 func newManualReapplyService() *connection_editor.ManualReapplyService {
 	return connection_editor.NewManualReapplyService(
-		connection_editor.NewDefaultZoneEditorService(),
+		test_helpers.NewZoneEditorService(),
 		zone_services.NewZoneClassifier(),
 		generation_tuning.NewGenerationTuningFactory(),
 	)
@@ -47,6 +48,6 @@ func newManualReapplyService() *connection_editor.ManualReapplyService {
 func newMandatoryContentProvider() *providers.MandatoryContentProvider {
 	return providers.NewMandatoryContentProvider(
 		zone_services.NewZoneClassifier(),
-		connection_editor.NewDefaultZoneEditorService(),
+		test_helpers.NewZoneEditorService(),
 	)
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +13,7 @@ func TestWhenZoneListIsEmpty_ReturnsLabelA(t *testing.T) {
 	// Arrange
 
 	// Act
-	label := connection_editor.NewDefaultZoneEditorService().NextFreeZoneLabel(nil)
+	label := test_helpers.NewZoneEditorService().NextFreeZoneLabel(nil)
 
 	// Assert
 	assert.Equal(t, "A", label)
@@ -28,7 +28,7 @@ func TestWhenFirstLettersAreUsed_ReturnsNextFreeLetter(t *testing.T) {
 	}
 
 	// Act
-	label := connection_editor.NewDefaultZoneEditorService().NextFreeZoneLabel(zones)
+	label := test_helpers.NewZoneEditorService().NextFreeZoneLabel(zones)
 
 	// Assert
 	assert.Equal(t, "C", label)
@@ -43,7 +43,7 @@ func TestWhenSameLetterIsUsedAcrossPrefixes_CountsItOnce(t *testing.T) {
 	}
 
 	// Act
-	label := connection_editor.NewDefaultZoneEditorService().NextFreeZoneLabel(zones)
+	label := test_helpers.NewZoneEditorService().NextFreeZoneLabel(zones)
 
 	// Assert
 	assert.Equal(t, "B", label)

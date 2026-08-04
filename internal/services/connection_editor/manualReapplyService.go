@@ -30,16 +30,6 @@ func NewManualReapplyService(
 	zoneEditor *ZoneEditorService,
 	zoneClassifier *zone_services.ZoneClassifier,
 	tuningFactory *generation_tuning.GenerationTuningFactory) *ManualReapplyService {
-	if zoneEditor == nil {
-		zoneEditor = NewDefaultZoneEditorService()
-	}
-	if zoneClassifier == nil {
-		zoneClassifier = zone_services.NewZoneClassifier()
-	}
-	if tuningFactory == nil {
-		tuningFactory = generation_tuning.NewGenerationTuningFactory()
-	}
-
 	return &ManualReapplyService{
 		zoneEditor:     zoneEditor,
 		zoneClassifier: zoneClassifier,

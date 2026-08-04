@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +21,7 @@ func TestWhenZoneIsRemoved_KeepsOnlyOtherZones(t *testing.T) {
 	}
 
 	// Act
-	keptZones, _ := connection_editor.NewDefaultZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
+	keptZones, _ := test_helpers.NewZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
 
 	// Assert
 	assert.Equal(t, []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-D"}}, keptZones)
@@ -42,7 +42,7 @@ func TestWhenZoneIsRemoved_DropsConnectionsTouchingIt(t *testing.T) {
 	}
 
 	// Act
-	_, keptConnections := connection_editor.NewDefaultZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
+	_, keptConnections := test_helpers.NewZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
 
 	// Assert
 	assert.Equal(t, []entities.Connection{{From: "Spawn-A", To: "Neutral-D"}}, keptConnections)

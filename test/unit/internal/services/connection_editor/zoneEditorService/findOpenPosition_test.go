@@ -3,7 +3,7 @@ package zoneEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +12,7 @@ func TestWhenBoardIsEmpty_PicksCornerFarthestFromCenter(t *testing.T) {
 	// Arrange
 
 	// Act
-	position := connection_editor.NewDefaultZoneEditorService().FindOpenPosition(nil)
+	position := test_helpers.NewZoneEditorService().FindOpenPosition(nil)
 
 	// Assert
 	assert.InDeltaSlice(
@@ -30,7 +30,7 @@ func TestWhenCornerIsCrowded_PicksPositionAwayFromIt(t *testing.T) {
 	occupied := [][2]float64{{0.1, 0.1}, {0.1, 0.2}, {0.2, 0.1}}
 
 	// Act
-	position := connection_editor.NewDefaultZoneEditorService().FindOpenPosition(occupied)
+	position := test_helpers.NewZoneEditorService().FindOpenPosition(occupied)
 
 	// Assert
 	assert.Greater(t, position[0]+position[1], 1.0,

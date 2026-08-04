@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,7 @@ func TestWhenNeutralZoneIsCreated_ReturnsServiceEquivalentZone(t *testing.T) {
 			BorderGuardStrengthMultiplier:  1,
 		},
 	}
-	expected := connection_editor.NewDefaultZoneEditorService().NewDefaultNeutralZone(
+	expected := test_helpers.NewZoneEditorService().NewDefaultNeutralZone(
 		request.Label, request.Quality, request.CastleCount, request.GenerateRoads, request.Tuning)
 
 	// Act

@@ -547,22 +547,22 @@ as the standing baseline.
 
 ## Phase 4: Remove Nil-Defaulting
 
-Status: Not started
+Status: Complete
 
 With wire supplying every dependency, a missing dependency should be a compile error, not a silent
 second instance. Remove the fallbacks; do not replace them with panics.
 
-- [ ] `zones.NewCreationServices` — **absorbed into Phase 1.5** (the type is gone).
-- [ ] `connection_editor.NewDefaultZoneEditorService` — delete, along with the nil branches in
+- [x] `zones.NewCreationServices` — **absorbed into Phase 1.5** (the type is gone).
+- [x] `connection_editor.NewDefaultZoneEditorService` — delete, along with the nil branches in
       `NewZoneEditorService`.
-- [ ] `template_generator.NewTemplateGenerator` — drop the `configuration == nil` branch (the
+- [x] `template_generator.NewTemplateGenerator` — drop the `configuration == nil` branch (the
       factory parameters became explicit in Phase 1.5).
-- [ ] `providers.NewTopologyProvider` — **absorbed into Phase 1.5**.
-- [ ] `providers.NewMandatoryContentProvider` — remove any nil-tolerant parameters (currently called
+- [x] `providers.NewTopologyProvider` — **absorbed into Phase 1.5**.
+- [x] `providers.NewMandatoryContentProvider` — remove any nil-tolerant parameters (currently called
       with a nil classifier from `NewTemplateGenerator`).
-- [ ] Sweep for remaining `New...(nil` call sites across `internal/` and `test/` and update them to pass
+- [x] Sweep for remaining `New...(nil` call sites across `internal/` and `test/` and update them to pass
       real collaborators or testify mocks.
-- [ ] `config.NewGeneratorConfig()` stays as-is — it is a value factory, not a dependency fallback.
+- [x] `config.NewGeneratorConfig()` stays as-is — it is a value factory, not a dependency fallback.
 
 ### Verification Plan
 
@@ -574,7 +574,76 @@ second instance. Remove the fallbacks; do not replace them with panics.
 
 ### Phase Summary
 
-_(write when phase completes)_
+Every constructor under `internal/` now takes its collaborators and stores them verbatim. A missing
+dependency is a compile error.
+
+**Production constructors cleaned (5 files):**
+
+| File | Change |
+| --- | --- |
+| `internal/services/connection_editor/zoneEditorService.go` | `NewDefaultZoneEditorService()` deleted; `NewZoneEditorService(castleFactory, roadFactory, zoneFactory)` returns the struct with no nil branches |
+| `internal/services/connection_editor/manualReapplyService.go` | three nil branches removed from `NewManualReapplyService` |
+| `internal/services/connection_editor/connectionEditorService.go` | nil branch removed; body is a single `return` |
+| `internal/services/template_generator/providers/mandatoryContentProvider.go` | both nil branches removed |
+| `internal/services/template_generator/templateGenerator.go` | `if configuration == nil { configuration = config.NewGeneratorConfig() }` removed |
+
+**Test-side collaborator helper.** `NewDefaultZoneEditorService` had 79 call sites across 26 files,
+all of them tests. Rather than repeat the three-line wiring in every test, a
+`test_helpers.NewZoneEditorService()` factory was added at
+[test/test_helpers/zoneEditorService.go](test/test_helpers/zoneEditorService.go), mirroring the
+`test_helpers.NewZoneFactories()` precedent introduced in Phase 1.5. The convenience lives in the test
+helper package, never in production code — production callers keep passing collaborators explicitly, so
+the compiler still catches a forgotten dependency. 23 test files were updated mechanically; the
+`connection_editor` import was dropped from 20 of them and retained in 3 that use the package for other
+reasons.
+
+**Tests removed** (they asserted the deleted fallback behaviour, so they had no subject any more):
+
+- `zoneEditorService/newDefaultZoneEditorService_test.go` — whole file; the sibling
+  `newZoneEditorService_test.go` already covers the explicit constructor.
+- `connectionEditorService/newConnectionEditorService_test.go` → `TestWhenClassifierIsNil_ReturnsUsableService`
+- `manualReapplyService/newManualReapplyService_test.go` → `TestWhenDependenciesAreNil_ReturnsUsableService`
+- `templateGenerator/newTemplateGenerator_test.go` → `TestWhenConfigurationIsNil_FallsBackToDefaultConfiguration`
+
+Newly-unused imports were pruned from each of those files.
+
+**`New...(nil` sweep.** The five remaining `zones.NewZoneFactory(nil, nil)` call sites in
+`test/unit/internal/services/zones/zoneFactory/` were compiling only because the nil factories were
+never dereferenced. They now use a package-local `newZoneFactory()` helper in `common_test.go` that
+wires `NewCastleFactory()` and `NewRoadFactory()`, and `TestWhenDependenciesAreOmitted_ReturnsUsableFactory`
+was renamed to `TestWhenDependenciesAreProvided_ReturnsInstance`.
+
+**Deliberately left alone** — these pass optional *data*, not dependencies, so `nil` is a meaningful
+argument rather than a fallback trigger:
+
+- `content_rules.NewRuleDistanceToRoad(nil)`, `NewRuleDistanceToTown(nil)`, `NewRuleVariant(nil, nil)` —
+  a nil `*models.DistancePreset` / `*models.VariantMapping` means "no preset", which is a real rule state.
+- `components.NewDropdownSelector(nil)` in `app/gui/dialogs/zoneEditorDialog.go` — an empty option list.
+- `config.NewGeneratorConfig()` — a value factory, per the checklist above.
+- `TemplateGenerator.SetConfiguration`'s `if configuration != nil` guard. It is a setter over a value,
+  not a constructor over a dependency, so it falls outside this phase's grep criterion; its only caller
+  ([internal/handlers/templateHandler.go](internal/handlers/templateHandler.go#L63)) already passes a
+  non-nil mapper result.
+
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `grep "(nil, nil)"` under `internal/services` (production) | no matches |
+| `grep "== nil {"` under `internal/handlers` | 4 matches, all runtime data validation (`rule`, `stateDto.State`, `template`, `templateDto.Template`) |
+| `grep "== nil {"` / `"!= nil {"` under `internal/services` (production) | no constructor dependency defaults remain |
+| `go build ./...` | clean |
+| `go vet -tags='integration_test,gui' ./...` | clean |
+| `go test ./test/unit/... -count=1` | green |
+| `go test -tags=integration_test ./test/integration/... -count=1` | ok 0.574s |
+| `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | ok 2.849s |
+| `wire diff ./internal/composition/...` | exit 0 — no constructor signature changed, `wire_gen.go` still current |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | 42 issues (40 `gochecknoglobals`, 2 `dupl`) — back to the Phase 3 baseline after `--fix` cleared the 18 `gci`/`gofmt`/`golines` findings the mechanical edits introduced |
+| Unit coverage | 64.7% — unchanged |
+
+Coverage held rather than rose: the deleted nil branches were exercised by the very tests that were
+deleted with them, so numerator and denominator moved together again. 64.7% remains the standing
+baseline for Phase 6.
 
 ## Phase 5: Prebuild The Topology Lookup
 

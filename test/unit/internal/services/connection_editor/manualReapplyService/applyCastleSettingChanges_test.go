@@ -7,7 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +23,7 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 		ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[0]))
+	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 // applySimpleModeChange runs the simple-mode neutral castle propagation over a
@@ -47,7 +47,7 @@ func TestWhenSimpleModeCountChanges_UpdatesCastledNeutralZone(t *testing.T) {
 	zones := applySimpleModeChange()
 
 	// Assert
-	assert.Equal(t, 2, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[0]))
+	assert.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenSimpleModeCountChanges_UpdatesCastleLessNeutralZoneToo(t *testing.T) {
@@ -56,7 +56,7 @@ func TestWhenSimpleModeCountChanges_UpdatesCastleLessNeutralZoneToo(t *testing.T
 	zones := applySimpleModeChange()
 
 	// Assert
-	assert.Equal(t, 2, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[1]))
+	assert.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zones[1]))
 }
 
 func TestWhenSimpleModeCountChanges_LeavesSpawnZoneUntouched(t *testing.T) {
@@ -89,7 +89,7 @@ func TestWhenHighTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
 	zones := applyAdvancedHighChange()
 
 	// Assert
-	assert.Equal(t, 3, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[0]))
+	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenHighTierCountChanges_LeavesOtherQualityZoneUntouched(t *testing.T) {
@@ -98,7 +98,7 @@ func TestWhenHighTierCountChanges_LeavesOtherQualityZoneUntouched(t *testing.T) 
 	zones := applyAdvancedHighChange()
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[1]))
+	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zones[1]))
 }
 
 func TestWhenHighTierCountChanges_KeepsCastleLessZoneWithoutCastles(t *testing.T) {
@@ -107,7 +107,7 @@ func TestWhenHighTierCountChanges_KeepsCastleLessZoneWithoutCastles(t *testing.T
 	zones := applyAdvancedHighChange()
 
 	// Assert
-	assert.Equal(t, 0, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[2]))
+	assert.Equal(t, 0, test_helpers.NewZoneEditorService().CountZoneCastles(zones[2]))
 }
 
 // applyPlayerCastleChange runs the player-castle propagation over a spawn zone
@@ -191,7 +191,7 @@ func TestWhenPlayerCastlesChange_LeavesNeutralZoneUntouched(t *testing.T) {
 	zones := applyPlayerCastleChange()
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[1]),
+	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zones[1]),
 		"neutral zones must not react to a player option")
 }
 
@@ -227,7 +227,7 @@ func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
 		zones, editor_state_dto.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
-	assert.Equal(t, 3, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[0]))
+	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
@@ -244,7 +244,7 @@ func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
 		zones, editor_state_dto.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
-	assert.Equal(t, 2, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zones[0]))
+	assert.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
 func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *testing.T) {

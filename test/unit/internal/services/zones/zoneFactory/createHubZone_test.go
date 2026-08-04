@@ -4,14 +4,13 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenTournamentHubIsCreated_PreservesExplicitName(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	factory := zones.NewZoneFactory(nil, nil)
+	factory := newZoneFactory()
 	input := models.HubZoneCreation{
 		Name:               "Hub-B",
 		Size:               1,

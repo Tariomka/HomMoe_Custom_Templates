@@ -33,10 +33,6 @@ func NewTemplateGenerator(
 	gameRulesProvider *providers.GameRulesProvider,
 	topologyProvider *providers.TopologyProvider,
 	zoneLayoutProvider *providers.ZoneLayoutProvider) *TemplateGenerator {
-	if configuration == nil {
-		configuration = config.NewGeneratorConfig()
-	}
-
 	return &TemplateGenerator{
 		configuration:        configuration,
 		zoneLabelProvider:    zoneLabelProvider,

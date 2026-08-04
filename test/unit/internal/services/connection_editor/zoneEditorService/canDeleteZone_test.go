@@ -3,7 +3,7 @@ package zoneEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +26,7 @@ func TestWhenZoneIsChecked_ProtectsOnlyPlayerZones(t *testing.T) {
 			// Arrange
 
 			// Act
-			canDelete := connection_editor.NewDefaultZoneEditorService().
+			canDelete := test_helpers.NewZoneEditorService().
 				CanDeleteZone(testCase.zoneName, playerZoneNames)
 
 			// Assert
