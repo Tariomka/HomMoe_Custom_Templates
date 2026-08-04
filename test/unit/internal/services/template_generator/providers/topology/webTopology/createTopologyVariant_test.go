@@ -21,7 +21,7 @@ func TestWhenTwoPlayersAndThreeNeutralPlansProvided_CreatesZonePerLabel(t *testi
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -41,7 +41,7 @@ func TestWhenThreeNeutralZonesFormTheRing_CreatesNeutralRingConnectionPerPair(t 
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -61,7 +61,7 @@ func TestWhenPlayersAttachToTheNeutralRing_CreatesTwoWebSpokesPerPlayer(t *testi
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -79,7 +79,7 @@ func TestWhenOnlyOneNeutralZoneExists_CreatesNoNeutralRingConnections(t *testing
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -99,7 +99,7 @@ func TestWhenWebIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -119,7 +119,7 @@ func TestWhenCirclesTopologySelected_BalancesNeutralLabelsAcrossPlayers(t *testi
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -139,7 +139,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoDirectConnectionJoinsTwoSpawnZones(
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -161,7 +161,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewSharedWebTopologyService()
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")

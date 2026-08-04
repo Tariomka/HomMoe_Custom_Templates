@@ -19,12 +19,6 @@ type ZoneFactory struct {
 }
 
 func NewZoneFactory(castleFactory *CastleFactory, roadFactory *RoadFactory) *ZoneFactory {
-	if castleFactory == nil {
-		castleFactory = NewCastleFactory()
-	}
-	if roadFactory == nil {
-		roadFactory = NewRoadFactory()
-	}
 	return &ZoneFactory{
 		castleFactory: castleFactory,
 		roadFactory:   roadFactory,

@@ -8,7 +8,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +36,7 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	playerCount := gofakeit.Number(2, 8)
-	generator := template_generator.NewTemplateGenerator(
+	generator := newTemplateGenerator(
 		newTournamentConfiguration(config.TopologyRing, playerCount, gofakeit.Number(1, 20)))
 
 	// Act
@@ -50,7 +49,7 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubGuardGroups(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(
+	generator := newTemplateGenerator(
 		newTournamentConfiguration(config.TopologyHubAndSpoke, 2, gofakeit.Number(1, 20)))
 
 	// Act
@@ -78,7 +77,7 @@ func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *test
 		t.Run(subTestName, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			generator := template_generator.NewTemplateGenerator(
+			generator := newTemplateGenerator(
 				newTournamentConfiguration(topology, 2, gofakeit.Number(1, 20)))
 
 			// Act
@@ -114,10 +113,12 @@ func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *test
 func TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := newTournamentConfiguration(config.TopologyRing, gofakeit.Number(2, 8), gofakeit.Number(1, 20))
+	// Portals are drawn from each player's own neutral cluster, so the zone
+	// count must stay high enough for both clusters to offer portal targets.
+	configuration := newTournamentConfiguration(config.TopologyRing, gofakeit.Number(2, 8), gofakeit.Number(8, 20))
 	configuration.RandomPortals = true
 	configuration.MaxPortalConnections = 4
-	generator := template_generator.NewTemplateGenerator(configuration)
+	generator := newTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()

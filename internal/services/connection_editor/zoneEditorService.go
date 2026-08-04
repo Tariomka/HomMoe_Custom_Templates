@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/road_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -20,35 +21,34 @@ import (
 )
 
 type ZoneEditorService struct {
+	CastleFactory *zone_services.CastleFactory
 	zoneFactory   *zone_services.ZoneFactory
-	castleFactory *zone_services.CastleFactory
 	roadFactory   *zone_services.RoadFactory
 }
 
-func NewZoneEditorService() *ZoneEditorService {
-	return NewZoneEditorServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
+func NewDefaultZoneEditorService() *ZoneEditorService {
+	return NewZoneEditorService(nil, nil, nil)
 }
 
-func NewZoneEditorServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
-) *ZoneEditorService {
-	if creationServices == nil {
-		creationServices = zone_services.NewCreationServices(nil, nil)
+func NewZoneEditorService(
+	castleFactory *zone_services.CastleFactory,
+	roadFactory *zone_services.RoadFactory,
+	zoneFactory *zone_services.ZoneFactory) *ZoneEditorService {
+	if castleFactory == nil {
+		castleFactory = zone_services.NewCastleFactory()
 	}
+	if roadFactory == nil {
+		roadFactory = zone_services.NewRoadFactory()
+	}
+	if zoneFactory == nil {
+		zoneFactory = zone_services.NewZoneFactory(castleFactory, roadFactory)
+	}
+
 	return &ZoneEditorService{
-		zoneFactory:   creationServices.ZoneFactory,
-		castleFactory: creationServices.CastleFactory,
-		roadFactory:   creationServices.RoadFactory,
+		zoneFactory:   zoneFactory,
+		CastleFactory: castleFactory,
+		roadFactory:   roadFactory,
 	}
-}
-
-// isCastleRoad reports whether a road connects two of the zone's own main
-// objects (the stone castle<->castle roads). These must be regenerated whenever
-// the zone's main-object count changes, otherwise added castles end up with no
-// road and removed castles leave dangling roads.
-func isCastleRoad(road entities.Road) bool {
-	connectionTypes := registry.GetRoadConnectionTypeValues()
-	return road.From.Type == connectionTypes.MainObject && road.To.Type == connectionTypes.MainObject
 }
 
 // EnsureConnectionNames assigns a unique name to every connection that does not
@@ -94,8 +94,7 @@ func (this *ZoneEditorService) EnsureConnectionNames(connections []entities.Conn
 // ends up without a road.
 func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 	zones []entities.Zone,
-	connections []entities.Connection,
-) {
+	connections []entities.Connection) {
 	this.EnsureConnectionNames(connections)
 
 	connectionsByZone := make(map[string][]string)
@@ -109,7 +108,6 @@ func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 		}
 	}
 
-	connectionTypes := registry.GetRoadConnectionTypeValues()
 	for i := range zones {
 		zone := &zones[i]
 
@@ -118,11 +116,11 @@ func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 		// below to match the current main-object count).
 		preserved := make([]entities.Road, 0, len(zone.Roads))
 		for _, road := range zone.Roads {
-			if road.From.Type == connectionTypes.Connection || road.To.Type == connectionTypes.Connection {
+			if road_helpers.IsRoadTypeConnection(road) {
 				continue
 			}
 
-			if isCastleRoad(road) {
+			if road_helpers.IsRoadTypeCastle(road) {
 				continue
 			}
 
@@ -223,7 +221,7 @@ func (this *ZoneEditorService) ApplyNeutralZoneQuality(
 	zone.ResourcesValue = tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)
 	zone.ResourcesValuePerArea = tuning.ScaleByResourceDensity(
 		float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))
-	zone.MainObjects = this.createNeutralZoneCastles(profile, tuning, castleCount, false)
+	zone.MainObjects = this.CastleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, false)
 
 	// Regenerate the castle<->castle roads so the rebuilt castles are
 	// road-connected. Other roads (connection and foothold roads) are left for
@@ -286,43 +284,10 @@ func (this *ZoneEditorService) FindOpenPosition(occupied [][2]float64) [2]float6
 	return best
 }
 
-func (this *ZoneEditorService) createNeutralZoneCastles(
-	profile neutral_zone.Profile,
-	tuning models.GenerationTuning,
-	castleCount int,
-	isHoldCityZone bool,
-) []entities.MainObject {
-	return this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCityZone)
-}
-
-func (this *ZoneEditorService) createPlayerOwnedCastles(
-	matchPlayerFaction bool,
-	owner string,
-	castleCount int,
-) []entities.MainObject {
-	return this.castleFactory.CreatePlayerOwnedCastles(matchPlayerFaction, owner, castleCount)
-}
-
-func (this *ZoneEditorService) createPlayerUnclaimedCastles(
-	matchPlayerFaction bool,
-	guardValue int,
-	castleCount int,
-) []entities.MainObject {
-	return this.castleFactory.CreatePlayerUnclaimedCastles(matchPlayerFaction, guardValue, castleCount)
-}
-
-func (this *ZoneEditorService) createHubZoneCastles(
-	tuning models.GenerationTuning,
-	castleCount int,
-	isHoldCityZone bool,
-) []entities.MainObject {
-	return this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCityZone)
-}
-
 func (this *ZoneEditorService) rebuildCastleRoads(zone *entities.Zone) {
 	kept := make([]entities.Road, 0, len(zone.Roads))
 	for _, road := range zone.Roads {
-		if isCastleRoad(road) {
+		if road_helpers.IsRoadTypeCastle(road) {
 			continue
 		}
 		kept = append(kept, road)

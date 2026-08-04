@@ -13,7 +13,7 @@ func TestWhenZoneListIsEmpty_ReturnsLabelA(t *testing.T) {
 	// Arrange
 
 	// Act
-	label := connection_editor.NewZoneEditorService().NextFreeZoneLabel(nil)
+	label := connection_editor.NewDefaultZoneEditorService().NextFreeZoneLabel(nil)
 
 	// Assert
 	assert.Equal(t, "A", label)
@@ -28,7 +28,7 @@ func TestWhenFirstLettersAreUsed_ReturnsNextFreeLetter(t *testing.T) {
 	}
 
 	// Act
-	label := connection_editor.NewZoneEditorService().NextFreeZoneLabel(zones)
+	label := connection_editor.NewDefaultZoneEditorService().NextFreeZoneLabel(zones)
 
 	// Assert
 	assert.Equal(t, "C", label)
@@ -43,7 +43,7 @@ func TestWhenSameLetterIsUsedAcrossPrefixes_CountsItOnce(t *testing.T) {
 	}
 
 	// Act
-	label := connection_editor.NewZoneEditorService().NextFreeZoneLabel(zones)
+	label := connection_editor.NewDefaultZoneEditorService().NextFreeZoneLabel(zones)
 
 	// Assert
 	assert.Equal(t, "B", label)

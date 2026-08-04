@@ -9,13 +9,13 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -25,7 +25,7 @@ const (
 )
 
 type State struct {
-	handler interfaces.IBackend
+	handler handler_interfaces.IGuiHandler
 
 	innerState *models.EditorState
 
@@ -50,10 +50,10 @@ type State struct {
 }
 
 func NewUIState() *State {
-	return NewUIStateWithBackend(handlers.NewGuiHandler())
+	return NewUIStateWithBackend(handlers.NewDefaultGuiHandler())
 }
 
-func NewUIStateWithBackend(handler interfaces.IBackend) *State {
+func NewUIStateWithBackend(handler handler_interfaces.IGuiHandler) *State {
 	state := NewUIStateWithHandler(handler)
 
 	templateDir, err := helpers.FindOldenEraTemplatesDir(false)
@@ -75,7 +75,7 @@ func NewUIStateWithBackend(handler interfaces.IBackend) *State {
 // NewUIStateWithHandler builds a State around the given backend
 // without probing the disk for the game templates directory. Production code
 // uses NewUIState; tests inject a mock handler here.
-func NewUIStateWithHandler(handler interfaces.IBackend) *State {
+func NewUIStateWithHandler(handler handler_interfaces.IGuiHandler) *State {
 	state := &State{
 		handler:    handler,
 		innerState: models.NewEditorState(handler),

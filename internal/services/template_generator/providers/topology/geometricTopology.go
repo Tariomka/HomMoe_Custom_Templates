@@ -22,15 +22,12 @@ type GeometricTopologyService struct {
 	PositionedTopologyBuilder
 }
 
-func NewGeometricTopologyService() *GeometricTopologyService {
-	return NewGeometricTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewGeometricTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewGeometricTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *GeometricTopologyService {
 	return &GeometricTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
 	}
 }
 

@@ -18,7 +18,7 @@ func buildGeoHubVariant(playerLabels []string, plans neutral_zone.Plans) entitie
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
 	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
-	return topology.NewGeometricHubTopologyService().
+	return topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
 		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, false)
 }
 

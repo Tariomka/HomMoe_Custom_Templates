@@ -12,7 +12,7 @@ func TestWhenBoardIsEmpty_PicksCornerFarthestFromCenter(t *testing.T) {
 	// Arrange
 
 	// Act
-	position := connection_editor.NewZoneEditorService().FindOpenPosition(nil)
+	position := connection_editor.NewDefaultZoneEditorService().FindOpenPosition(nil)
 
 	// Assert
 	assert.InDeltaSlice(
@@ -30,7 +30,7 @@ func TestWhenCornerIsCrowded_PicksPositionAwayFromIt(t *testing.T) {
 	occupied := [][2]float64{{0.1, 0.1}, {0.1, 0.2}, {0.2, 0.1}}
 
 	// Act
-	position := connection_editor.NewZoneEditorService().FindOpenPosition(occupied)
+	position := connection_editor.NewDefaultZoneEditorService().FindOpenPosition(occupied)
 
 	// Assert
 	assert.Greater(t, position[0]+position[1], 1.0,

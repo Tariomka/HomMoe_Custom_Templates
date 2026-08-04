@@ -17,7 +17,7 @@ import (
 func TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := handlers.NewDefaultGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
 	generated, err := handler.GenerateTemplate(state)
 	require.NoError(t, err)

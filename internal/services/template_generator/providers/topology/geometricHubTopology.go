@@ -25,15 +25,12 @@ type GeometricHubTopologyService struct {
 	base.TopologyBase
 }
 
-func NewGeometricHubTopologyService() *GeometricHubTopologyService {
-	return NewGeometricHubTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewGeometricHubTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewGeometricHubTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *GeometricHubTopologyService {
 	return &GeometricHubTopologyService{
-		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
 	}
 }
 

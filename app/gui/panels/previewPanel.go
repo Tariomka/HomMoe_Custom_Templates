@@ -15,11 +15,11 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
@@ -31,10 +31,10 @@ type PreviewPanel struct {
 	btnRevealOutput widget.Clickable
 
 	state          *drivers.State
-	previewHandler interfaces.IPreviewHandler
+	previewHandler handler_interfaces.IPreviewHandler
 }
 
-func NewPreviewPanel(state *drivers.State, previewHandler interfaces.IPreviewHandler) *PreviewPanel {
+func NewPreviewPanel(state *drivers.State, previewHandler handler_interfaces.IPreviewHandler) *PreviewPanel {
 	return &PreviewPanel{state: state, previewHandler: previewHandler}
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +16,7 @@ func TestWhenNeutralZoneIsCreated_NameCombinesNeutralPrefixWithPlanLabel(t *test
 	// Arrange
 	label := gofakeit.LetterN(3)
 	plan := neutral_zone.Plan{Label: label, Quality: neutral_zone.QualityMedium, CastleCount: 1}
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, nil, 1.0, 0, true, newUnitTuning(), false)
@@ -28,7 +29,7 @@ func TestWhenPlanHasCastles_MainObjectCountMatchesCastleCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityMedium, CastleCount: 2}
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, nil, 1.0, 0, true, newUnitTuning(), false)
@@ -41,7 +42,7 @@ func TestWhenHoldCityZoneHasNoPlannedCastles_ForcesSingleCastle(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityMedium, CastleCount: 0}
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, nil, 1.0, 0, true, newUnitTuning(), true)
@@ -54,7 +55,7 @@ func TestWhenZoneIsHoldCity_PrimaryCastleCarriesHoldCityWinCondition(t *testing.
 	t.Parallel()
 	// Arrange
 	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityHigh, CastleCount: 1}
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, nil, 1.0, 0, true, newUnitTuning(), true)
@@ -67,7 +68,7 @@ func TestWhenZoneHasNoMainObjects_BiomeMatchesZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityLow, CastleCount: 0}
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, nil, 1.0, 0, true, newUnitTuning(), false)
@@ -80,7 +81,7 @@ func TestWhenZoneHasMainObjects_BiomeMatchesPrimaryMainObject(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityLow, CastleCount: 1}
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, nil, 1.0, 0, true, newUnitTuning(), false)
@@ -95,7 +96,7 @@ func TestWhenAbandonedOutpostCountIsPositive_AppendsOutpostsAfterCastles(t *test
 	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityMedium, CastleCount: 1}
 	tuning := newUnitTuning()
 	tuning.AbandonedOutpostCount = 2
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, nil, 1.0, 0, true, tuning, false)
@@ -114,7 +115,7 @@ func TestWhenNeutralZoneHasOutpostsAndFootholds_RoadsIncludeBoth(t *testing.T) {
 	plan := neutral_zone.Plan{Label: "D", Quality: neutral_zone.QualityMedium, CastleCount: 1}
 	tuning := newUnitTuning()
 	tuning.AbandonedOutpostCount = 1
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateNeutralZone(plan, []string{"Gate-D"}, 1.0, 1, true, tuning, false)

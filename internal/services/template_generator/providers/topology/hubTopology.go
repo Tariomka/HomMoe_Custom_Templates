@@ -19,15 +19,12 @@ type HubTopologyService struct {
 	base.TopologyBase
 }
 
-func NewHubTopologyService() *HubTopologyService {
-	return NewHubTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewHubTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewHubTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *HubTopologyService {
 	return &HubTopologyService{
-		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
 	}
 }
 

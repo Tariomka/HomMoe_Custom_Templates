@@ -25,31 +25,25 @@ type TemplateGenerator struct {
 	zoneLayoutProvider   *providers.ZoneLayoutProvider
 }
 
-func NewTemplateGenerator(configuration *config.GeneratorConfig) *TemplateGenerator {
-	return NewTemplateGeneratorWithCreationServices(configuration, zones.NewCreationServices(nil, nil))
-}
-
-func NewTemplateGeneratorWithCreationServices(
+func NewTemplateGenerator(
 	configuration *config.GeneratorConfig,
-	creationServices *zones.CreationServices,
-) *TemplateGenerator {
+	castleFactory *zones.CastleFactory,
+	roadFactory *zones.RoadFactory,
+	zoneFactory *zones.ZoneFactory) *TemplateGenerator {
 	if configuration == nil {
 		configuration = config.NewGeneratorConfig()
 	}
-	if creationServices == nil {
-		creationServices = zones.NewCreationServices(nil, nil)
-	}
+
 	return &TemplateGenerator{
 		configuration:        configuration,
 		zoneLabelProvider:    zones.NewZoneLabelProvider(),
 		tuningFactory:        generation_tuning.NewGenerationTuningFactory(),
 		contentLimitProvider: providers.NewContentLimitProvider(),
-		contentProvider: providers.NewMandatoryContentProviderWithDependencies(
+		contentProvider: providers.NewMandatoryContentProvider(
 			nil,
-			connection_editor.NewZoneEditorServiceWithCreationServices(creationServices),
-		),
+			connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)),
 		gameRulesProvider:  providers.NewGameRulesProvider(),
-		topologyProvider:   providers.NewTopologyProviderWithCreationServices(creationServices),
+		topologyProvider:   providers.NewTopologyProvider(zoneFactory, roadFactory),
 		zoneLayoutProvider: providers.NewZoneLayoutProvider(),
 	}
 }

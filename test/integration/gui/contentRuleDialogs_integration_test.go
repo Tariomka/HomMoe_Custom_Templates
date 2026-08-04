@@ -26,7 +26,7 @@ func TestWhenManageRulesDialogHasVariantRule_RendersContent(t *testing.T) {
 	dialog := dialogs.NewManageRulesDialog(
 		constants.ContentIDs.DragonUtopia,
 		[]models.ContentRuleRowSave{{Name: "Variant", VariantID: &variantID}},
-		handlers.NewGuiHandler(),
+		handlers.NewDefaultGuiHandler(),
 		nil,
 	)
 	gtx, frameRouter := newDialogContext(image.Pt(540, 500))
@@ -57,7 +57,7 @@ func TestWhenZoneContentDialogRenders_PreservesSavedRules(t *testing.T) {
 		"Zone Content: High Neutral",
 		false,
 		expected,
-		handlers.NewGuiHandler(),
+		handlers.NewDefaultGuiHandler(),
 		nil,
 		func(rows []models.ZoneContentRowSave) { persisted = rows },
 	)

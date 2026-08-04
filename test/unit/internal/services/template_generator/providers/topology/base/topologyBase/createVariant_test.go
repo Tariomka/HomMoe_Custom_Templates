@@ -5,13 +5,14 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenFirstLabelIsPlayer_ZeroAngleZoneIsThatSpawnZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := topologyBase.CreateVariant([]string{"A", "B"}, "A", 4, nil, nil)
@@ -23,7 +24,7 @@ func TestWhenFirstLabelIsPlayer_ZeroAngleZoneIsThatSpawnZone(t *testing.T) {
 func TestWhenFirstLabelIsNeutral_ZeroAngleZoneIsThatNeutralZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := topologyBase.CreateVariant([]string{"A", "B"}, "C", 4, nil, nil)
@@ -35,7 +36,7 @@ func TestWhenFirstLabelIsNeutral_ZeroAngleZoneIsThatNeutralZone(t *testing.T) {
 func TestWhenZoneCountIsPositive_RandomAngleStepDividesFullCircleByZoneCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := topologyBase.CreateVariant([]string{"A"}, "A", 8, nil, nil)
@@ -47,7 +48,7 @@ func TestWhenZoneCountIsPositive_RandomAngleStepDividesFullCircleByZoneCount(t *
 func TestWhenZoneCountIsZero_RandomAngleStepStaysUnset(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := topologyBase.CreateVariant([]string{"A"}, "A", 0, nil, nil)
@@ -59,7 +60,7 @@ func TestWhenZoneCountIsZero_RandomAngleStepStaysUnset(t *testing.T) {
 func TestWhenZonesProvided_VariantCarriesZonesVerbatim(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-C"}}
 
 	// Act
@@ -72,7 +73,7 @@ func TestWhenZonesProvided_VariantCarriesZonesVerbatim(t *testing.T) {
 func TestWhenConnectionsProvided_VariantCarriesConnectionsVerbatim(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	connections := []entities.Connection{{Name: "Ring-A-C", From: "Spawn-A", To: "Neutral-C"}}
 
 	// Act

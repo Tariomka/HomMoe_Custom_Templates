@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,7 +13,7 @@ import (
 func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.TemplateName = ""
 
@@ -28,7 +27,7 @@ func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
 func TestWhenStateIsDefault_ReturnsNoError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 
 	// Act
@@ -41,7 +40,7 @@ func TestWhenStateIsDefault_ReturnsNoError(t *testing.T) {
 func TestWhenStateIsDefault_ReturnsGeneratedTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 
 	// Act
@@ -55,7 +54,7 @@ func TestWhenStateIsDefault_ReturnsGeneratedTemplate(t *testing.T) {
 func TestWhenStateCarriesCustomName_GeneratedTemplateUsesThatName(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.TemplateName = gofakeit.ProductName()
 
@@ -70,7 +69,7 @@ func TestWhenStateCarriesCustomName_GeneratedTemplateUsesThatName(t *testing.T) 
 func TestWhenStateIsDefault_GeneratedTemplateHasOneVariant(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 
 	// Act
@@ -84,7 +83,7 @@ func TestWhenStateIsDefault_GeneratedTemplateHasOneVariant(t *testing.T) {
 func TestWhenPlayerCountIsAboveMaximum_ReturnsValidationWarning(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.PlayerCount = 50
 

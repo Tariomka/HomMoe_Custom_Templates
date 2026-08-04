@@ -21,7 +21,7 @@ func TestWhenZoneHasMixedMainObjects_CountsOnlyCities(t *testing.T) {
 	}
 
 	// Act
-	count := connection_editor.NewZoneEditorService().CountZoneCastles(zone)
+	count := connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone)
 
 	// Assert
 	assert.Equal(t, 2, count)
@@ -35,7 +35,7 @@ func TestWhenCityTypeDiffersInCase_DoesNotCountIt(t *testing.T) {
 	}
 
 	// Act
-	count := connection_editor.NewZoneEditorService().CountZoneCastles(zone)
+	count := connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone)
 
 	// Assert
 	assert.Equal(t, 0, count)
@@ -47,7 +47,7 @@ func TestWhenZoneHasNoMainObjects_ReturnsZero(t *testing.T) {
 	zone := entities.Zone{}
 
 	// Act
-	count := connection_editor.NewZoneEditorService().CountZoneCastles(zone)
+	count := connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone)
 
 	// Assert
 	assert.Equal(t, 0, count)

@@ -30,7 +30,7 @@ func TestWhenTwoPlayersAndSixTieredNeutralPlansProvided_CreatesZonePerLabel(t *t
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
 	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -48,7 +48,7 @@ func TestWhenEveryTierIsPopulated_NoRandomConnectionJoinsTwoSpawnZones(t *testin
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
 	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -66,7 +66,7 @@ func TestWhenFractalsAreLaidOut_EveryZoneGetsPositionInsideUnitSquare(t *testing
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
 	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -84,7 +84,7 @@ func TestWhenFractalsAreBuilt_EveryConnectionReferencesExistingZones(t *testing.
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
 	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -103,7 +103,7 @@ func TestWhenFewerNeutralZonesThanPlayers_CreatesZonePerLabel(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -122,7 +122,7 @@ func TestWhenFewerNeutralZonesThanPlayers_EveryConnectionReferencesExistingZones
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -139,7 +139,7 @@ func TestWhenNoNeutralZonesExist_CreatesOnlyPlayerZones(t *testing.T) {
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	tuning := test_helpers.NewGenerationTuning(configuration, 2)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -158,7 +158,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
 	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -177,7 +177,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	addTieredNeutralPlans(&neutralZones)
 	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewFractalTopologyService()
+	service := topology.NewFractalTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")

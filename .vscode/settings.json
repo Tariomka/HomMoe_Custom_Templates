@@ -24,6 +24,7 @@
         "gioui",
         "gochecknoglobals",
         "gofakeit",
+        "goforj",
         "gofmt",
         "gofont",
         "golines",
@@ -33,6 +34,7 @@
         "hommoe",
         "Huntsmans",
         "ineffassign",
+        "injector",
         "Insara",
         "Insaras",
         "Interactable",
@@ -69,7 +71,8 @@
         "Ukhtabar",
         "uncommons",
         "Uurdt",
-        "Voodoosh"
+        "Voodoosh",
+        "wireinject"
     ],
     "gopls": {
         "build.buildFlags": ["-tags=integration_test,gui"],

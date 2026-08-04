@@ -51,7 +51,9 @@ func TestWhenAppHandlerImportsAreScanned_OnlyCompositionRootsDependOnConcreteHan
 	}
 
 	// Act
-	actual := findImportsWithPrefix(t, repositoryRoot, "app", modulePath+"/internal/handlers")
+	actual := findImports(t, repositoryRoot, "app", func(importPath string) bool {
+		return importPath == modulePath+"/internal/handlers"
+	})
 
 	// Assert
 	assert.Equal(t, expected, actual)

@@ -14,7 +14,7 @@ func TestWhenLabelIsGiven_NamesZoneNeutralLabel(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
@@ -26,7 +26,7 @@ func TestWhenZoneIsCreatedManually_ClearsMandatoryContentReference(t *testing.T)
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
@@ -38,11 +38,11 @@ func TestWhenCastleCountIsOne_CreatesOneCastle(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Q", neutral_zone.QualityMedium, 1, false, defaultTuning())
 
 	// Assert
-	assert.Equal(t, 1, connection_editor.NewZoneEditorService().CountZoneCastles(zone))
+	assert.Equal(t, 1, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone))
 }
 
 func TestWhenCastleCountIsZero_CreatesNoCastles(t *testing.T) {
@@ -50,11 +50,11 @@ func TestWhenCastleCountIsZero_CreatesNoCastles(t *testing.T) {
 	// Arrange
 
 	// Act
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("R", neutral_zone.QualityLow, 0, false, defaultTuning())
 
 	// Assert
-	assert.Equal(t, 0, connection_editor.NewZoneEditorService().CountZoneCastles(zone))
+	assert.Equal(t, 0, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone))
 }
 
 func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
@@ -73,7 +73,7 @@ func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
 			// Arrange
 
 			// Act
-			zone := connection_editor.NewZoneEditorService().
+			zone := connection_editor.NewDefaultZoneEditorService().
 				NewDefaultNeutralZone("Z", testCase.quality, 1, false, defaultTuning())
 
 			// Assert

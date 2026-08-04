@@ -25,7 +25,7 @@ func TestWhenPlayerHasThreeNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -40,7 +40,7 @@ func TestWhenRingIsBuilt_FirstZoneIsPlayerSpawn(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -55,7 +55,7 @@ func TestWhenRingIsBuilt_CreatesConnectionPerRingSegment(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -70,7 +70,7 @@ func TestWhenRingIsBuilt_EveryConnectionNameCarriesRingPrefix(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -91,7 +91,7 @@ func TestWhenRingIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -116,7 +116,7 @@ func TestWhenPlayerHasNoNeutralPlans_CreatesLoneSpawnZoneWithoutConnections(t *t
 	configuration := config.NewGeneratorConfig()
 	emptyPlans := neutral_zone.Plans{}
 	tuning := test_helpers.NewGenerationTuning(configuration, 1)
-	service := tournament_variant.NewRingClusterService()
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, connections := service.CreateClusterVariant(*configuration, tuning, emptyPlans, emptyPlans, 0, "A")
@@ -132,7 +132,7 @@ func TestWhenSecondPlayerClusterIsBuilt_SpawnCastleBelongsToPlayerTwo(t *testing
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 1, "B")

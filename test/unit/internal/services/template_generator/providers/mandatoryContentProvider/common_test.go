@@ -2,7 +2,19 @@ package mandatoryContentProvider_test
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
+
+// newMandatoryContentProvider builds the provider with the same collaborators
+// the application wires.
+func newMandatoryContentProvider() *providers.MandatoryContentProvider {
+	return providers.NewMandatoryContentProvider(
+		zone_services.NewZoneClassifier(),
+		connection_editor.NewDefaultZoneEditorService(),
+	)
+}
 
 // groupContent returns the content items of the mandatory-content group with
 // the given name, or nil when no such group exists.

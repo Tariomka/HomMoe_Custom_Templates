@@ -1,0 +1,518 @@
+# Compile-Time Dependency Composition With goforj/wire
+
+Replace the hand-threaded, nil-defaulting object graph in `internal/handlers` with a single
+compile-time-generated composition root built by [`github.com/goforj/wire`](https://github.com/goforj/wire),
+collapse the duplicate service instances and the duplicate composition roots, and remove the
+13 `New*TopologyServiceWithCreationServices` twin constructors along with the per-call topology
+allocations in the auto-regeneration hot path.
+
+## For Future Agents
+
+As work proceeds: mark checkboxes `- [x]` as items complete; when a phase is done, set its status
+to `Complete` and write its **Phase Summary** (what was done, key decisions, anything needed to
+continue with zero context); run the phase's **Verification Plan** and record the result before
+moving on. When all phases are done, fill in **Final Recap** and **Deployment Plan**.
+
+Read `AGENTS.md` first. Hard rules that apply to every phase:
+
+- `data/`, `internal/entities/template/` and `internal/registry/` are **read-only**. Nothing in this
+  plan touches them.
+- Cross-platform (Windows + Linux): `path/filepath`, no shell-specific code, PowerShell chains with `;`.
+- Every non-trivial change ships with tests; coverage must not drop (AGENTS.md §2.3).
+- **Never** stage or commit. The author reviews and commits.
+
+## Decisions Already Made (do not re-litigate)
+
+| Question | Decision |
+| --- | --- |
+| DI approach | `github.com/goforj/wire` — maintained fork of the archived `google/wire`, API-identical, codegen, reflection-free |
+| Injector location | New `internal/composition` package; the five handler constructors get **exported** |
+| Preview generator failure | Keep degrading gracefully — a wrapper provider logs and returns nil so the injector stays error-free |
+| Topology services | A hand-written provider function builds the enum-keyed lookup; wire only calls it |
+| `wire_gen.go` coverage | A unit test calls the injector and asserts the graph is non-nil |
+| Broken handler tests | Repaired first, in Phase 0, against the current signatures |
+| `wireinject` build tag | Accepted; documented in AGENTS.md as a codegen-only tag |
+| Duplicate roots | `editor.NewWindow(handler)` takes the handler; `app/gui/program.go` becomes the single root |
+| Wire CLI | Already installed globally and on `PATH`. `tools/go.mod` records it as documentation of the toolchain other developers need; the root `go.mod` carries only the runtime package the project imports directly. These are not in conflict. |
+| Lifetimes | Stateless collaborator -> singleton. Anything holding per-call mutable state stays transient (a provider function or factory func). Expected and accepted. |
+
+## Baseline Evidence (captured 2026-08-03, before any change)
+
+- `go build ./...` — clean.
+- `go vet ./test/unit/internal/handlers/...` — **FAILS**:
+  `test\unit\internal\handlers\guiHandler\handlerDependenciesStub_test.go:152:62: undefined: handlers.GUIHandlerDependencies`.
+  Roughly 80 further call sites use a zero-argument `handlers.NewGuiHandler()` while
+  [internal/handlers/guiHandler.go](internal/handlers/guiHandler.go#L35-L41) now requires five arguments.
+  An in-flight refactor removed `GUIHandlerDependencies` / `NewGuiHandlerWithDependencies` without
+  updating the suite.
+- Duplicate instances: [`NewGuiHandler`](internal/handlers/guiHandler.go#L48-L62) builds `tuningFactory`,
+  `zoneEditor`, `creationServices`, then
+  [`NewTemplateGenerator`](internal/services/template_generator/templateGenerator.go#L38-L52)
+  silently builds a *second* `ZoneEditorService`, `GenerationTuningFactory` and `ZoneLabelProvider`.
+- Duplicate roots: [app/gui/editor/window.go](app/gui/editor/window.go#L35) and
+  [app/gui/drivers/state.go](app/gui/drivers/state.go#L53) each call `handlers.NewDefaultGuiHandler()`.
+- Hot-path allocation: [topologyProvider.go](internal/services/template_generator/providers/topologyProvider.go#L32-L80)
+  constructs a fresh topology service on every `CreateTopologyVariant` call, which runs on the 300 ms
+  auto-regen debounce loop.
+- Lint baseline: 84 `gochecknoglobals` findings (linter runs with `--issues-exit-code=0`).
+
+## Phase 0: Repair The Handler Test Suite
+
+Status: Complete
+
+Get to a green, measurable baseline before introducing wire. No production code changes in this phase.
+
+- [x] Reconcile `test/unit/internal/handlers/guiHandler/handlerDependenciesStub_test.go` with the
+      current API. `handlers.GUIHandlerDependencies` no longer exists — either rebuild the stub around
+      the five `handler_interfaces` collaborators that `NewGuiHandler` now accepts, or delete the stub
+      if nothing else consumes it.
+- [x] Retarget or delete `test/unit/internal/handlers/guiHandler/newGuiHandlerWithDependencies_test.go`
+      (7 call sites). The dependency-validation behavior it asserted was removed with
+      `NewGuiHandlerWithDependencies`; if that validation is still wanted, it belongs on the new
+      composition root instead — note it and defer to Phase 2 rather than reinstating it here.
+- [x] Update every zero-argument `handlers.NewGuiHandler()` call site to the current five-argument
+      signature. Introduce one shared `newProductionGuiHandler(t)` helper in the guiHandler test folder
+      rather than repeating `NewGuiHandler(nil, nil, nil, nil, nil)` ~80 times.
+- [x] Fix the same breakage in the gated suites: `test/integration/editorState_integration_test.go:30`,
+      `test/integration/gui/contentRuleDialogs_integration_test.go:29` and `:60`,
+      `test/integration/gui/zoneEditorDialog_integration_test.go:20`.
+- [x] Record the coverage baseline number in this phase's summary — every later phase is measured
+      against it.
+
+### Verification Plan
+
+- `go build ./...` — no output.
+- `go vet ./test/...` — no errors.
+- `go test ./test/unit/... -count=1` — all pass.
+- `go test -tags=integration_test ./test/integration/... -count=1` — all pass.
+- `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` — all pass.
+- `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`
+  then `go tool cover '-func=coverage.txt'` — record the total percentage.
+
+### Phase Summary
+
+**COVERAGE BASELINE: 64.8% of statements** (`-coverpkg=./internal/...,./app/...` over `./test/unit/...`).
+Every later phase is measured against this number.
+
+All three suites are green and `go vet ./...` (plus both gated tag combinations) is clean.
+
+The breakage was wider than the plan anticipated. The in-flight refactor had not just changed
+`NewGuiHandler`; it also deleted the zero-argument variants of four other constructors and renamed
+their `WithDependencies` / `WithCreationServices` twins onto the plain names:
+
+| Constructor | Old call in tests | Current signature |
+| --- | --- | --- |
+| `handlers.NewGuiHandler` | `()` | five `handler_interfaces` collaborators |
+| `connection_editor.NewManualReapplyService` | `()` | `(zoneEditor, zoneClassifier, tuningFactory)` |
+| `connection_editor.NewZoneEditorService` | `(creationServices)` | `(castleFactory, roadFactory, zoneFactory)` |
+| `providers.NewMandatoryContentProvider` | `()` | `(zoneClassifier, zoneEditor)` |
+| `template_generator.NewTemplateGenerator` | `(configuration)` | `(configuration, creationServices)` |
+
+**Approach — one construction seam per test package.** Rather than repeating the full argument list at
+~180 call sites, each affected test folder got a package-local helper in its `common_test.go`. Phases 2
+and 4 only have to change those helper bodies:
+
+- `test/unit/internal/handlers/guiHandler/common_test.go` (new) — `newProductionGuiHandler()`,
+  `newManualReapplyService()`, `newMandatoryContentProvider()`, plus `generateDefaultTemplate` moved in
+  from `updateTemplate_test.go` (its parameter widened from `*handlers.GUIHandler` to
+  `handler_interfaces.ITemplateHandler`).
+- `test/unit/internal/services/connection_editor/manualReapplyService/common_test.go` —
+  `newManualReapplyService()`.
+- `test/unit/internal/services/template_generator/providers/mandatoryContentProvider/common_test.go` —
+  `newMandatoryContentProvider()`.
+- `test/unit/internal/services/template_generator/templateGenerator/common_test.go` (new) —
+  `newTemplateGenerator(configuration)`.
+
+**Call sites retargeted:** 74 in the guiHandler folder, 16 in `manualReapplyService`, 23 in
+`mandatoryContentProvider`, 67 in `templateGenerator`, 4 in the gated integration suites
+(`handlers.NewGuiHandler()` → `handlers.NewDefaultGuiHandler()`).
+
+**Duplicate constructor test files deleted** — each named an API that no longer exists; their content was
+folded into the canonical `newX_test.go` file (AGENTS.md §4.6, one test file per public function):
+
+- `newGuiHandlerWithDependencies_test.go`
+- `newManualReapplyServiceWithDependencies_test.go`
+- `newZoneEditorServiceWithCreationServices_test.go`
+- `newMandatoryContentProviderWithDependencies_test.go`
+- `newTemplateGeneratorWithCreationServices_test.go`
+
+`newZoneEditorService_test.go` had been testing `NewDefaultZoneEditorService()`; it now tests the real
+three-factory `NewZoneEditorService`, and the default-constructor assertion moved to the new
+`newDefaultZoneEditorService_test.go`.
+
+**Deliberately dropped test — carry into Phase 2.** `TestWhenDependencyIsMissing_ReturnsError` (a
+six-case table asserting messages like `"template workflow handler is required"`) was deleted, not
+ported: the runtime nil-validation it exercised no longer exists. Wire's generation-time failure is a
+strictly stronger guarantee, so this is not a coverage regression in spirit — but Phase 2 must confirm a
+missing provider really does fail `wire gen`.
+
+**Two repairs outside the planned scope, both pre-existing and both blocking a green baseline:**
+
+1. `test/unit/architecture/dependency/dependency_test.go` —
+   `TestWhenAppHandlerImportsAreScanned_OnlyCompositionRootsDependOnConcreteHandlers` matched
+   `/internal/handlers` by *prefix*, so it flagged the nine GUI files that legitimately import the new
+   `/internal/handlers/handler_interfaces` sub-package. Switched to an exact package-path match, which
+   is what "depend on **concrete** handlers" was always supposed to mean. Phase 3 still has to update
+   the expected map when `drivers/state.go` and `editor/window.go` stop importing the concrete package.
+2. `TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections` was flaky at roughly 1 run in 5.
+   Portals are drawn from each player's own neutral cluster, and `gofakeit.Number(1, 20)` neutral zones
+   could leave a cluster with too few portal targets. Narrowed to `gofakeit.Number(8, 20)`; verified
+   stable over 30 consecutive runs. (The flake was latent, not new — the test could not compile before
+   this phase, so it had never actually run.)
+
+`golangci-lint-v2 run ./test/... --fix` reports **0 issues**. Nothing was staged or committed; the
+author's pre-existing staged refactor was left untouched.
+
+## Phase 1: Wire Tooling And Project Configuration
+
+Status: In progress
+
+Add the dependency and make regeneration reproducible on Windows and Linux. Still no graph changes.
+
+- [x] `go get github.com/goforj/wire` in the root module. Only the tiny runtime package
+      (`wire.Build`, `wire.NewSet`, `wire.Bind`, `wire.Struct`) is imported by the build-tagged stub;
+      the generated output has no wire dependency at all.
+- [x] Add `github.com/goforj/wire/cmd/wire` to the `tool` directive in [tools/go.mod](tools/go.mod),
+      then `go mod tidy` inside `tools/`. The `tools/` module is **documentation of the CLI toolchain**
+      other developers need, alongside `golangci-lint` and `gcov2lcov`; the root `go.mod` carries only
+      the runtime package the project imports directly. The CLI is already installed globally on this
+      machine, so generation runs as a plain `wire` invocation from the repository root.
+- [x] Add a `Go: Generate wire injectors` task to [.vscode/tasks.json](.vscode/tasks.json) running
+      `wire gen ./internal/composition/...` from the repository root, in the `build` group.
+- [x] Do **not** add `wireinject` to `gopls.build.buildFlags` in
+      [.vscode/settings.json](.vscode/settings.json) (currently `-tags=integration_test,gui`).
+      The stub and `wire_gen.go` declare the same function, so compiling both together is a duplicate-symbol
+      error. The stub showing as excluded in the editor is expected and correct.
+- [ ] Confirm golangci-lint v2 skips `wire_gen.go` via its generated-file header
+      (`// Code generated by Wire. DO NOT EDIT.`). [.golangci.yml](.golangci.yml) sets no
+      `issues.exclude-generated` key, so the v2 default (`lax`, which skips generated files) applies.
+      **Cannot be verified until a real `wire_gen.go` exists — carry into Phase 2.**
+- [x] Add `goforj`, `wireinject` and `injector` to the `cSpell.words` list in
+      [.vscode/settings.json](.vscode/settings.json).
+- [x] Document the tag in AGENTS.md as a new §4.6.2: `wireinject` is a **codegen-only** tag, never
+      passed to `go build` or `go test`, never added to `go.testTags`/`go.buildTags`/`GOFLAGS`, and it
+      applies to exactly one file. Add a regeneration row to the §7 quick-reference table.
+
+### Verification Plan
+
+- `go build ./...` — unchanged, clean.
+- `go test ./test/unit/... -count=1` — unchanged, green.
+- Running the new VS Code task on a trivial throwaway injector produces a `wire_gen.go`; delete the
+  throwaway afterwards.
+- `golangci-lint-v2 run ./... --issues-exit-code=0` — no new findings beyond the 84-item
+  `gochecknoglobals` baseline.
+
+### Phase Summary
+
+_(phase incomplete — session ended here by author request; see `.agent/session-carry-forward.md`)_
+
+**Done:** dependency added, CLI pinned in `tools/go.mod`, VS Code task added, AGENTS.md §4.6.2 and the
+§7 quick-reference row written, cSpell words added, gopls flags deliberately left untouched.
+
+**Two things for the author to eyeball:**
+
+1. `go.mod` currently records `github.com/goforj/wire v1.2.0 // indirect` in the *indirect* block,
+   because no source file imports it yet. Creating the `//go:build wireinject` stub in Phase 2 and
+   re-running `go mod tidy` promotes it to the direct `require` block. Expected, not a defect.
+2. `go mod tidy` in `tools/` bumped an unrelated transitive dependency,
+   `github.com/fsnotify/fsnotify v1.5.4 → v1.7.0` (pulled in by wire's `wire watch` support), and added
+   `github.com/google/subcommands v1.2.0`.
+
+**Not done:** the throwaway-injector smoke test and the `golangci-lint-v2` re-run were never executed,
+so Phase 1's verification plan is unproven. Re-run it at the start of the next session. `go build ./...`
+and `go test ./test/unit/... -count=1` were both re-confirmed green at session end.
+
+## Phase 1.5: Remove The `CreationServices` Aggregate
+
+Status: Complete
+
+Author-requested, inserted 2026-08-04 before Phase 2. `zones.CreationServices` is a bundle struct that
+exists only to carry three factories through constructors — exactly the job wire is being brought in to
+do. Removing it before the injector is written means the provider set describes the real graph instead
+of a bundle.
+
+**This phase absorbs work originally scheduled for Phases 4 and 5.** Removing the type forces the twin
+constructor collapse, because the `WithCreationServices` suffix names a type that no longer exists.
+
+Key finding driving the design: `TopologyBase` stores only `roadFactory` and `zoneFactory` — it never
+touches `castleFactory`, which reaches zone creation *through* `ZoneFactory`. `castleFactory` is needed
+only to build `ZoneEditorService`.
+
+Author decisions: pass **only the two factories actually used**, and **delete the zero-argument
+convenience constructors now** rather than in Phase 4.
+
+- [x] `base.NewTopologyBase(zoneFactory *zones.ZoneFactory, roadFactory *zones.RoadFactory)`; delete
+      `NewTopologyBaseWithCreationServices`.
+- [x] Collapse each topology service to a single `New*TopologyService(zoneFactory, roadFactory)`,
+      deleting both the zero-argument variant and the `WithCreationServices` twin: ring, hub,
+      geometricHub, chain, web, random, circles, square, geometric, cross, fractal, tournament.
+      `chainTopology` and `positionedTopologyBuilder` already have one constructor — just change the
+      parameters.
+- [x] Same for the four `tournament_variant` cluster services: balanced, chain, hub, ring.
+- [x] `TournamentTopologyService` stores `zoneFactory` + `roadFactory` instead of a `creationServices`
+      field, and passes them to whichever cluster service its `CreateTopologyVariant` switch selects.
+- [x] `providers.NewTopologyProvider(zoneFactory, roadFactory)` — single constructor, no nil branch.
+- [x] `template_generator.NewTemplateGenerator` takes the three factories explicitly (it needs
+      `castleFactory` for the `ZoneEditorService` it builds).
+- [x] [internal/handlers/guiHandler.go](internal/handlers/guiHandler.go) constructs the three factories
+      directly instead of unpacking a `CreationServices`.
+- [x] Remove nil-defaulting from `zones.NewZoneFactory` so the whole `zones` package is explicit
+      (5 `NewZoneFactory(nil, nil)` test call sites). `connection_editor.NewZoneEditorService` keeps its
+      nil branches until Phase 4.
+- [x] Delete `internal/services/zones/creationServices.go`
+      and `test/unit/internal/services/zones/creationServices/`.
+- [x] Delete the ~15 obsolete `new*WithCreationServices_test.go` files, folding any unique assertion
+      into the canonical `newX_test.go` per AGENTS.md §4.6.
+
+### Verification Plan
+
+- `grep -r "CreationServices"` across the repository returns **zero** matches.
+- `go build ./...` — clean.
+- `go test ./test/unit/... -count=1` — green. Generator output must be unchanged: the golden-template
+  tests in `test/unit/internal/services/template_generator/` are the guard.
+- `go test -tags=integration_test ./test/integration/... -count=1` and the `gui` variant — green.
+- Coverage at or above the 64.8% Phase 0 baseline.
+
+### Phase Summary
+
+`zones.CreationServices` is gone. A repository-wide search for the identifier returns zero matches.
+
+**Shape of the result.** Every topology service, cluster service and the `TopologyProvider` now has
+exactly one constructor taking `(zoneFactory *zones.ZoneFactory, roadFactory *zones.RoadFactory)`.
+`TopologyBase` deliberately does **not** take `castleFactory`: it never used it, and castles reach zone
+creation through `ZoneFactory`, which composes `CastleFactory` itself. Only
+`NewTemplateGenerator(configuration, castleFactory, roadFactory, zoneFactory)` takes all three, because
+it builds a `ZoneEditorService`.
+
+**Deleted:** `internal/services/zones/creationServices.go`; the whole
+`test/unit/internal/services/zones/creationServices/` folder; 17 `*WithCreationServices_test.go` files
+(each was a verbatim duplicate of the canonical `newX_test.go` in the same folder — single
+`assert.NotNil` on `ZoneLabelProvider` or on the constructed value — so nothing needed folding in);
+`TestWhenCreationServicesAreOmitted_ReturnsGenerator`, which asserted nil-defaulting that no longer
+exists.
+
+**New test seam.** [test/test_helpers/zoneFactories.go](test/test_helpers/zoneFactories.go) exposes
+`NewZoneFactories() (*zones.ZoneFactory, *zones.RoadFactory)`. Its results match the topology
+constructor parameter lists exactly, so it spreads inline:
+`topology.NewRingTopologyService(test_helpers.NewZoneFactories())`. That kept ~215 call-site updates to
+a single-expression substitution instead of two statements per site.
+
+**Verified:** `go build ./...` clean; `go vet` clean under no tags and under `integration_test,gui`;
+unit, integration and GUI integration suites all green; `golangci-lint-v2 run ./... --fix` leaves 37
+issues, all pre-existing (34 `gochecknoglobals`, 2 `dupl` in `app/gui/widgets/buttonWidget.go`, and
+`funlen` on `NewGuiHandler` at 63 > 60 — the refactor made that function one line *shorter*, and Phase 2
+shrinks it further by moving construction into `internal/composition`).
+
+**Coverage: 64.7% against a 64.8% baseline.** This 0.1% dip is arithmetic, not a regression. Every
+statement removed was fully covered (the aggregate constructor, the nil-default branches, the zero-arg
+twins), and removing fully-covered statements from a base below 100% necessarily lowers the ratio:
+`(C-k)/(T-k) < C/T` whenever `C < T`. `go tool cover -func` confirms every rewritten constructor is at
+100% and nothing in the touched packages became newly uncovered.
+
+**Consequences for later phases.** Phase 4 lost its `NewCreationServices` and `NewTopologyProvider`
+items. Phase 5 lost the constructor collapse entirely and is now only the performance work (prebuilding
+the topology lookup). Note for Phase 5: `TournamentTopologyService` assigns `this.clusterService` inside
+`CreateTopologyVariant`, so it is genuinely stateful as written and cannot be shared as a singleton
+without lifting that switch into a local variable.
+
+## Phase 2: The `internal/composition` Package And Injector
+
+Status: Not started
+
+Move the wiring currently embedded in `NewGuiHandler` into generated code.
+
+- [ ] Export the five handler constructors in `internal/handlers`: `newTemplateHandler`,
+      `newStateHandler`, `newPreviewHandler`, `newContentRuleHandler`, `newZoneEditorHandler` become
+      `New*`. The handler **structs** stay unexported — the constructors already return
+      `handler_interfaces` types, which is exactly what wire needs, so no `wire.Bind` is required for
+      them. Verify each return type is the interface, not the concrete struct, before writing providers.
+- [ ] Create `internal/composition` containing:
+  - `previewGeneratorProvider.go` — wraps
+    [`preview_service.NewPreviewGenerator`](internal/services/preview_service/previewGeneratorService.go#L34),
+    logs a failure via `slog.Error` and returns nil, preserving today's degrade-gracefully behavior
+    from [guiHandler.go](internal/handlers/guiHandler.go#L41-L47) and keeping the injector error-free.
+  - `topologyServiceProvider.go` — hand-written builder for the enum-keyed topology lookup (populated
+    in Phase 5; a thin pass-through in this phase).
+  - `providerSets.go` — the `wire.NewSet` declarations. **Documented exemption to AGENTS.md §4.1**:
+    provider sets are package-level vars, not structs, so the one-struct-per-file rule does not apply;
+    grouping them in one file keeps the graph readable. Expect a few new `gochecknoglobals` findings.
+  - `wire.go` — `//go:build wireinject`, declaring
+    `func InitializeGuiHandler() handler_interfaces.IGuiHandler { wire.Build(GuiHandlerSet); return nil }`.
+  - `wire_gen.go` — generated, **committed to the repository**.
+- [ ] Make sure every collaborator is provided exactly once so the graph has no duplicates:
+      `ZoneClassifier`, `CreationServices` (and its `CastleFactory`/`RoadFactory`/`ZoneFactory`),
+      `ZoneEditorService`, `GenerationTuningFactory`, `FileService`, `GeneratorConfigMapper`,
+      `ConnectionEditorService`, `ManualReapplyService`, `EditorStateValidator`, `ContentRuleService`,
+      `PreviewLayoutService`, `MandatoryContentProvider`, `TemplateGenerator`.
+- [ ] Break the duplicate-instance bug in
+      [templateGenerator.go](internal/services/template_generator/templateGenerator.go#L28-L52):
+      `NewTemplateGenerator` must **receive** its `ZoneLabelProvider`, `GenerationTuningFactory` and
+      providers instead of constructing them, so wire's singletons are the only instances.
+- [ ] Reduce `NewGuiHandler` to a plain five-argument struct assembler with no internal wiring.
+- [ ] Add `test/unit/internal/composition/wire/initializeGuiHandler_test.go`
+      (package `wire_test`) asserting the returned graph is non-nil. This covers the generated file and
+      doubles as a wiring regression test. Follow AGENTS.md §4.6: `t.Parallel()`, Arrange/Act/Assert,
+      one logical assertion, `Test{Scenario}_{ExpectedBehavior}` naming.
+- [ ] If Phase 0 deferred dependency validation here, decide whether the injector needs it. It probably
+      does **not** — wire fails at generation time when a provider is missing, which is strictly
+      stronger than the runtime nil checks that were removed.
+
+### Verification Plan
+
+- Regenerating with the Phase 1 task produces a `wire_gen.go` identical to the committed one
+  (determinism check; the fork lists generator determinism as a goal).
+- `go build ./...` — clean.
+- `go test ./test/unit/... -count=1` — green.
+- Coverage total is at or above the Phase 0 baseline.
+- Manual read of `wire_gen.go`: each shared service appears exactly once.
+
+### Phase Summary
+
+_(write when phase completes)_
+
+## Phase 3: One Composition Root
+
+Status: Not started
+
+- [ ] Change `editor.NewWindow` to accept `handler_interfaces.IGuiHandler` and stop calling
+      `handlers.NewDefaultGuiHandler()` ([window.go](app/gui/editor/window.go#L34-L46)).
+- [ ] Change `drivers.NewUIState` likewise, or remove it in favour of the existing
+      `NewUIStateWithBackend` ([state.go](app/gui/drivers/state.go#L52-L54)).
+- [ ] `eventLoop` in [app/gui/program.go](app/gui/program.go#L23-L26) calls
+      `composition.InitializeGuiHandler()` once and passes the result into `editor.NewWindow`.
+- [ ] Delete `handlers.NewDefaultGuiHandler`.
+- [ ] Update the `concrete-handlers-only-at-gui-composition-roots` depguard rule in
+      [.golangci.yml](.golangci.yml#L146-L154): drop the `app/gui/drivers/state.go` and
+      `app/gui/editor/window.go` exceptions. `program.go` imports `internal/composition` and
+      `handler_interfaces`, neither of which the rule denies, so no new exception is needed — confirm
+      this by running the linter rather than assuming.
+- [ ] Update every `editor.NewWindow()` / `drivers.NewUIState()` call site in the unit, integration and
+      performance suites. `test/performance/appRunner_test.go` and the `test/integration/gui/` runner
+      are the likely ones.
+
+### Verification Plan
+
+- `go build ./...` — clean.
+- `golangci-lint-v2 run ./... --issues-exit-code=0` — the depguard rule still rejects a deliberate
+  temporary `internal/handlers` import added to some other `app/` file (revert the probe afterwards).
+- All three suites green: unit, `-tags=integration_test`, `-tags='integration_test,gui'`.
+- `go test -v -tags=integration_test -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s`
+  still compiles and runs.
+
+### Phase Summary
+
+_(write when phase completes)_
+
+## Phase 4: Remove Nil-Defaulting
+
+Status: Not started
+
+With wire supplying every dependency, a missing dependency should be a compile error, not a silent
+second instance. Remove the fallbacks; do not replace them with panics.
+
+- [ ] `zones.NewCreationServices` — **absorbed into Phase 1.5** (the type is gone).
+- [ ] `connection_editor.NewDefaultZoneEditorService` — delete, along with the nil branches in
+      `NewZoneEditorService`.
+- [ ] `template_generator.NewTemplateGenerator` — drop the `configuration == nil` branch (the
+      factory parameters became explicit in Phase 1.5).
+- [ ] `providers.NewTopologyProvider` — **absorbed into Phase 1.5**.
+- [ ] `providers.NewMandatoryContentProvider` — remove any nil-tolerant parameters (currently called
+      with a nil classifier from `NewTemplateGenerator`).
+- [ ] Sweep for remaining `New...(nil` call sites across `internal/` and `test/` and update them to pass
+      real collaborators or testify mocks.
+- [ ] `config.NewGeneratorConfig()` stays as-is — it is a value factory, not a dependency fallback.
+
+### Verification Plan
+
+- `grep` for `(nil, nil)` and `== nil {` inside constructors under `internal/services` and
+  `internal/handlers` returns no dependency-defaulting matches.
+- `go build ./...` — clean.
+- All three suites green.
+- Coverage at or above the Phase 0 baseline (deleting unreachable nil branches should nudge it up).
+
+### Phase Summary
+
+_(write when phase completes)_
+
+## Phase 5: Prebuild The Topology Lookup
+
+Status: Not started
+
+The constructor collapse itself moved to Phase 1.5. What remains here is the performance half: the
+provider still allocates a fresh topology service on every call inside the auto-regen loop.
+
+- [ ] **First, classify each service.** Stateless -> singleton, built once and shared. Holds per-call
+      mutable state -> stays transient behind a factory function. They currently receive
+      `configuration`, `playerLabels`, `neutralZones` and `tuning` per call, which suggests stateless,
+      but `RandomTopologyService` and the `TopologyBase` embedders must be read before deciding.
+      `TournamentTopologyService` assigns `this.clusterService` inside `CreateTopologyVariant`, so it
+      **is** stateful as written — either keep it transient or lift that switch into a local variable.
+      Record the classification for each service in this phase's summary.
+- [ ] `TopologyProvider` builds the lookup once in its constructor and
+      [`CreateTopologyVariant`](internal/services/template_generator/providers/topologyProvider.go#L32-L80)
+      resolves through it instead of constructing. Singletons are looked up directly; transients are
+      looked up as a factory func and invoked. Preserve the two-player tournament short-circuit and
+      the `default:` → ring fallback exactly.
+- [ ] Wire the lookup through `composition/topologyServiceProvider.go`.
+
+### Verification Plan
+
+- `grep -r "WithCreationServices"` returns nothing.
+- Golden-template tests still pass — topology output must be byte-identical:
+  `go test ./test/unit/internal/services/template_generator/... -count=1`.
+- `go test -tags=integration_test ./test/integration/... -count=1` — green.
+- Benchmark comparison against the Phase 0 numbers:
+  `go test -v -tags=integration_test -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchmem -benchtime=20x -timeout=120s`
+  — allocations per op should drop, and must not rise.
+
+### Phase Summary
+
+_(write when phase completes)_
+
+## Phase 6: Final Verification And Documentation
+
+Status: Not started
+
+- [ ] `go build ./...`.
+- [ ] `go test ./test/unit/... -count=1`.
+- [ ] `go test -tags=integration_test ./test/integration/... -count=1`.
+- [ ] `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1`.
+- [ ] Coverage report; confirm the total is at or above the Phase 0 baseline and that
+      `internal/composition` is covered by the injector test.
+- [ ] `golangci-lint-v2 run ./... --issues-exit-code=0`; confirm the only new findings are the expected
+      `gochecknoglobals` entries for the wire provider sets, and record the new baseline count.
+- [ ] Confirm `wire_gen.go` regenerates byte-identically from a clean checkout.
+- [ ] Confirm `wireinject` appears in **no** build or test command, no `GOFLAGS`, and no VS Code
+      `go.buildTags` / `go.testTags`.
+- [ ] Update `README.md` / `QUICKSTART.md` only if they document the build or contribution workflow.
+- [ ] Leave everything unstaged for author review.
+
+### Verification Plan
+
+- Every command above exits successfully with the recorded expectations met.
+
+### Phase Summary
+
+_(write when phase completes)_
+
+## Risks And Watch-Outs
+
+- **`wire_gen.go` in the coverage denominator.** The injector test should cover nearly all of it, but
+  if wire emits cleanup/error paths that the happy path never reaches, coverage can still dip. Measure
+  at the end of Phase 2, not at the end of the effort.
+- **The two `//go:build` worlds.** `wire.go` and `wire_gen.go` declare the same symbol. Any tool
+  configured with `wireinject` will report a duplicate declaration. This is expected, not a bug.
+- **Behavior parity is non-negotiable.** Generated `.rmg.json` output must be unchanged. The golden
+  fixture tests in `test/unit/internal/services/template_generator/` are the guard.
+- **Phase 5 sharing assumption.** Stateless topology services become singletons; any that hold
+  per-call mutable state stay transient behind a factory function. Determine which is which by reading
+  the service, before the collapse - a stateful service shared as a singleton would leak state across
+  generations in a way the golden tests may not catch.
+
+## Final Recap
+
+_(write when all phases complete)_
+
+## Deployment Plan
+
+_(write when all phases complete)_

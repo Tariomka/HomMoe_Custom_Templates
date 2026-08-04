@@ -18,15 +18,12 @@ type CirclesTopologyService struct {
 	positionLayoutService *position_layout.PositionLayoutService
 }
 
-func NewCirclesTopologyService() *CirclesTopologyService {
-	return NewCirclesTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewCirclesTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewCirclesTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *CirclesTopologyService {
 	return &CirclesTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
 		positionLayoutService:     position_layout.NewPositionLayoutService(),
 	}
 }

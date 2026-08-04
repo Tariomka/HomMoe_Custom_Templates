@@ -5,14 +5,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenConnectionIsCreated_ReturnsServiceEquivalentConnection(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	request := dtos.ZoneEditorConnectionRequestDto{
 		From:            "Spawn-A",
 		To:              "Spawn-B",

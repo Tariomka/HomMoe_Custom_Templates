@@ -7,9 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +16,7 @@ import (
 func TestWhenCastleSettingsChange_ReturnsServiceEquivalentZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := test_helpers.GetDefaultTemplate()
 	expectedZones := cloneZones(t, template.Variants[0].Zones)
 	actualZones := cloneZones(t, template.Variants[0].Zones)
@@ -26,7 +24,7 @@ func TestWhenCastleSettingsChange_ReturnsServiceEquivalentZones(t *testing.T) {
 	editorState.NeutralZoneCastles = 2
 	changes := editor_state_dto.CastleSettingChanges{NeutralSimple: true}
 	configuration := mappers.NewConfigMapper().FromEditorState(editorState)
-	connection_editor.NewManualReapplyService().ApplyCastleSettingChanges(expectedZones, changes, configuration)
+	newManualReapplyService().ApplyCastleSettingChanges(expectedZones, changes, configuration)
 
 	// Act
 	result := handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{

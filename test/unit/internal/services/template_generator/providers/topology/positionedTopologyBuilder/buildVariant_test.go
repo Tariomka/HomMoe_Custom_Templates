@@ -10,13 +10,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func newPositionedTopologyBuilder() *topology.PositionedTopologyBuilder {
-	return topology.NewPositionedTopologyBuilder(zones.NewCreationServices(nil, nil))
+	return topology.NewPositionedTopologyBuilder(test_helpers.NewZoneFactories())
 }
 
 func TestWhenLayoutIsBuilt_StampsGeneratorPosition(t *testing.T) {

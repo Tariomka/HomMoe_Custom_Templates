@@ -45,7 +45,7 @@ func TestWhenRingTopologySelected_CreatesZonePerLabelAndNeutralPlan(t *testing.T
 	neutralZones.AddPlan("C", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
-	provider := providers.NewTopologyProvider()
+	provider := providers.NewTopologyProvider(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -63,7 +63,7 @@ func TestWhenHubAndSpokeTopologySelected_CreatesHubZone(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
-	provider := providers.NewTopologyProvider()
+	provider := providers.NewTopologyProvider(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -85,7 +85,7 @@ func TestWhenGeometricHubTopologySelected_CreatesPositionedHubZone(t *testing.T)
 	configuration.Topology = config.TopologyGeometricHub
 	playerLabels := []string{"A", "B"}
 	tuning := buildVariantInputs(configuration, playerLabels, nil)
-	provider := providers.NewTopologyProvider()
+	provider := providers.NewTopologyProvider(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, nil, tuning, "")
@@ -110,7 +110,7 @@ func TestWhenTopologyIsUnknown_UsesRingProvider(t *testing.T) {
 	neutralZones.AddPlan("C", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
-	provider := providers.NewTopologyProvider()
+	provider := providers.NewTopologyProvider(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -135,7 +135,7 @@ func TestWhenTournamentModeWithTwoPlayerLabels_CreatesTournamentVariant(t *testi
 	neutralZones.AddPlan("C", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
-	provider := providers.NewTopologyProvider()
+	provider := providers.NewTopologyProvider(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -166,7 +166,7 @@ func TestWhenTournamentModeWithThreePlayerLabels_UsesSelectedTopology(t *testing
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
 	tuning := buildVariantInputs(configuration, playerLabels, neutralZones)
-	provider := providers.NewTopologyProvider()
+	provider := providers.NewTopologyProvider(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")

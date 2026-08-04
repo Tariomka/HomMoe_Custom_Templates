@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -40,7 +41,7 @@ func NewZoneContentDialog(
 	title string,
 	isPlayerTier bool,
 	rows []models.ZoneContentRowSave,
-	contentRuleHandler interfaces.IContentRuleHandler,
+	contentRuleHandler handler_interfaces.IContentRuleHandler,
 	opener interfaces.DialogOpener,
 	onApply func([]models.ZoneContentRowSave),
 ) *ZoneContentDialog {

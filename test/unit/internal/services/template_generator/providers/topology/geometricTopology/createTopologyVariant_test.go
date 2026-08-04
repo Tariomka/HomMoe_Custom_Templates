@@ -27,7 +27,7 @@ func TestWhenThreePlayersAndSevenNeutralPlansProvided_CreatesZonePerLabel(t *tes
 	neutralZones.AddPlan("N6", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N7", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 10)
-	service := topology.NewGeometricTopologyService()
+	service := topology.NewGeometricTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -47,7 +47,7 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCenter(t *testing.T) 
 	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := topology.NewGeometricTopologyService()
+	service := topology.NewGeometricTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -79,7 +79,7 @@ func TestWhenFlowerIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) 
 	neutralZones.AddPlan("N6", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N7", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 10)
-	service := topology.NewGeometricTopologyService()
+	service := topology.NewGeometricTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -96,7 +96,7 @@ func TestWhenNoNeutralZonesExist_FallsBackToClosedPlayerPolygon(t *testing.T) {
 	playerLabels := []string{"A", "B", "C"}
 	neutralZones := neutral_zone.Plans{}
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	service := topology.NewGeometricTopologyService()
+	service := topology.NewGeometricTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -116,7 +116,7 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := topology.NewGeometricTopologyService()
+	service := topology.NewGeometricTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -138,7 +138,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N3", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewGeometricTopologyService()
+	service := topology.NewGeometricTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")

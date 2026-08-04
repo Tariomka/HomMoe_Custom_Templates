@@ -25,7 +25,7 @@ func TestWhenPlayerHasTwoNeutralPlans_CreatesHubSpawnAndNeutralZones(t *testing.
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -44,7 +44,7 @@ func TestWhenClusterIsBuilt_HubZoneIsNamedAfterPlayerLabel(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 1, "B")
@@ -59,7 +59,7 @@ func TestWhenSpokesAreBuilt_CreatesSpokeConnectionPerSpokeZone(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -80,7 +80,7 @@ func TestWhenSpokeConnectionsAreBuilt_EverySpokeStartsAtHubZone(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -105,7 +105,7 @@ func TestWhenProximityRingIsBuilt_CreatesProximityConnectionPerSpokePair(t *test
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -127,7 +127,7 @@ func TestWhenHubMandatoryContentIsConfigured_HubZoneReferencesHubContentGroup(t 
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{}}
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -143,7 +143,7 @@ func TestWhenHubMandatoryContentIsEmpty_HubZoneHasNoMandatoryContent(t *testing.
 	configuration.HubZoneMandatoryContent = nil
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")

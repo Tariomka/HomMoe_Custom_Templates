@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +12,7 @@ import (
 func TestWhenSavedRuleIsValid_ReturnsDisplayTextAndMarker(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	savedRule := models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Far"}
 	expected := dtos.ContentRuleDescriptionDto{
 		Key:         dtos.ContentRuleKeyDistanceToRoad,
@@ -33,7 +32,7 @@ func TestWhenSavedRuleIsValid_ReturnsDisplayTextAndMarker(t *testing.T) {
 func TestWhenBooleanRuleIsFalse_ReturnsNegatedMarker(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	value := false
 	savedRule := models.ContentRuleRowSave{Name: "Guarded", IsGuarded: &value}
 
@@ -47,7 +46,7 @@ func TestWhenBooleanRuleIsFalse_ReturnsNegatedMarker(t *testing.T) {
 func TestWhenVariantRuleIsValid_ReturnsVariantLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	variantID := 2
 	content := models.SidMapping{
 		Sid:  registry.GetMapObjectT3GuardedResourceBankValues().DragonUtopia,
@@ -72,7 +71,7 @@ func TestWhenVariantRuleIsValid_ReturnsVariantLabel(t *testing.T) {
 func TestWhenSavedRuleIsInvalid_ReturnsFallbackDescription(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	savedRule := models.ContentRuleRowSave{Name: "Unknown rule"}
 	expected := dtos.ContentRuleDescriptionDto{
 		DisplayText: "Unknown rule",

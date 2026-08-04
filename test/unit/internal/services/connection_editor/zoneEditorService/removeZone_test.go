@@ -21,7 +21,7 @@ func TestWhenZoneIsRemoved_KeepsOnlyOtherZones(t *testing.T) {
 	}
 
 	// Act
-	keptZones, _ := connection_editor.NewZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
+	keptZones, _ := connection_editor.NewDefaultZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
 
 	// Assert
 	assert.Equal(t, []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-D"}}, keptZones)
@@ -42,7 +42,7 @@ func TestWhenZoneIsRemoved_DropsConnectionsTouchingIt(t *testing.T) {
 	}
 
 	// Act
-	_, keptConnections := connection_editor.NewZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
+	_, keptConnections := connection_editor.NewDefaultZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
 
 	// Assert
 	assert.Equal(t, []entities.Connection{{From: "Spawn-A", To: "Neutral-D"}}, keptConnections)

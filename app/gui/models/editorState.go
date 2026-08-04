@@ -1,20 +1,20 @@
 package models
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 )
 
 type EditorState struct {
-	validationHandler interfaces.IStateValidationHandler
+	validationHandler handler_interfaces.IStateValidationHandler
 	current           *dtos.EditorStateDto
 	previous          *dtos.EditorStateDto
 	next              *dtos.EditorStateDto
 }
 
-func NewEditorState(validationHandler interfaces.IStateValidationHandler) *EditorState {
+func NewEditorState(validationHandler handler_interfaces.IStateValidationHandler) *EditorState {
 	state := &EditorState{validationHandler: validationHandler}
 	state.ResetState()
 	return state

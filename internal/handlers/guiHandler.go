@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"errors"
 	"log/slog"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -21,191 +21,177 @@ import (
 )
 
 type GUIHandler struct {
-	templateWorkflow    ITemplateWorkflow
-	templatePersistence ITemplatePersistence
-	preview             IPreview
-	statePersistence    IStatePersistence
-	contentRule         IContentRule
-	zoneEditor          IZoneEditor
+	templateHandler    handler_interfaces.ITemplateHandler
+	previewHandler     handler_interfaces.IPreviewHandler
+	stateHandler       handler_interfaces.IStateHandler
+	contentRuleHandler handler_interfaces.IContentRuleHandler
+	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
 }
 
-func NewGuiHandler() *GUIHandler {
+func NewDefaultGuiHandler() handler_interfaces.IGuiHandler {
+	return NewGuiHandler(nil, nil, nil, nil, nil)
+}
+
+func NewGuiHandler(
+	templateHandler handler_interfaces.ITemplateHandler,
+	stateHandler handler_interfaces.IStateHandler,
+	previewHandler handler_interfaces.IPreviewHandler,
+	contentRuleHandler handler_interfaces.IContentRuleHandler,
+	zoneEditorHandler handler_interfaces.IZoneEditorHandler) handler_interfaces.IGuiHandler {
 	previewGenerator, err := preview_service.NewPreviewGenerator()
 	if err != nil {
 		slog.Error(
 			"Preview Generator failed to initialize, preview images will not be generated",
 			slog.String("error", err.Error()))
 	}
+
 	zoneClassifier := zone_services.NewZoneClassifier()
-	creationServices := zone_services.NewCreationServices(nil, nil)
-	zoneEditor := connection_editor.NewZoneEditorServiceWithCreationServices(creationServices)
+	castleFactory := zone_services.NewCastleFactory()
+	roadFactory := zone_services.NewRoadFactory()
+	zoneFactory := zone_services.NewZoneFactory(castleFactory, roadFactory)
+	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)
 	tuningFactory := generation_tuning.NewGenerationTuningFactory()
 	fileService := file_service.NewFileService()
-	stateValidation := newStateValidationHandler(validators.NewEditorStateValidator())
 	mapper := mappers.NewConfigMapper()
 	connectionEditor := connection_editor.NewConnectionEditorService(zoneClassifier)
-	contentProvider := providers.NewMandatoryContentProviderWithDependencies(zoneClassifier, zoneEditor)
-	manualReapply := connection_editor.NewManualReapplyServiceWithDependencies(
+	manualReapply := connection_editor.NewManualReapplyService(
 		zoneEditor,
 		zoneClassifier,
-		tuningFactory,
-	)
+		tuningFactory)
 
-	dependencies := GUIHandlerDependencies{
-		TemplateWorkflow: newTemplateWorkflowHandler(
-			template_generator.NewTemplateGeneratorWithCreationServices(nil, creationServices),
-			mapper,
-			contentProvider,
-			connectionEditor,
-			zoneEditor,
-			manualReapply,
-			stateValidation,
-		),
-		TemplatePersistence: newTemplatePersistenceHandler(fileService, previewGenerator),
-		Preview:             newPreviewHandler(preview_service.NewPreviewLayoutService()),
-		StatePersistence:    newStatePersistenceHandler(fileService, stateValidation),
-		ContentRule:         newContentRuleHandler(content_rules.NewContentRuleService()),
-		ZoneEditor: newZoneEditorHandler(
+	if previewHandler == nil {
+		previewHandler = newPreviewHandler(preview_service.NewPreviewLayoutService())
+	}
+	if contentRuleHandler == nil {
+		contentRuleHandler = newContentRuleHandler(content_rules.NewContentRuleService())
+	}
+	if stateHandler == nil {
+		stateHandler = newStateHandler(fileService, validators.NewEditorStateValidator())
+	}
+	if zoneEditorHandler == nil {
+		zoneEditorHandler = newZoneEditorHandler(
 			mapper,
 			zoneClassifier,
 			connectionEditor,
 			zoneEditor,
-			tuningFactory,
-		),
+			tuningFactory)
 	}
-	handler, err := NewGuiHandlerWithDependencies(dependencies)
-	if err != nil {
-		panic(err)
-	}
-	return handler
-}
-
-func NewGuiHandlerWithDependencies(
-	dependencies GUIHandlerDependencies,
-) (*GUIHandler, error) {
-	if dependencies.TemplateWorkflow == nil {
-		return nil, errors.New("template workflow handler is required")
-	}
-	if dependencies.StatePersistence == nil {
-		return nil, errors.New("state persistence handler is required")
-	}
-	if dependencies.TemplatePersistence == nil {
-		return nil, errors.New("template persistence handler is required")
-	}
-	if dependencies.Preview == nil {
-		return nil, errors.New("preview handler is required")
-	}
-	if dependencies.ContentRule == nil {
-		return nil, errors.New("content rule handler is required")
-	}
-	if dependencies.ZoneEditor == nil {
-		return nil, errors.New("zone editor handler is required")
+	if templateHandler == nil {
+		templateHandler = newTemplateHandler(
+			template_generator.NewTemplateGenerator(nil, castleFactory, roadFactory, zoneFactory),
+			mapper,
+			providers.NewMandatoryContentProvider(zoneClassifier, zoneEditor),
+			connectionEditor,
+			zoneEditor,
+			manualReapply,
+			fileService,
+			previewGenerator,
+			stateHandler)
 	}
 
 	return &GUIHandler{
-		templateWorkflow:    dependencies.TemplateWorkflow,
-		statePersistence:    dependencies.StatePersistence,
-		templatePersistence: dependencies.TemplatePersistence,
-		preview:             dependencies.Preview,
-		contentRule:         dependencies.ContentRule,
-		zoneEditor:          dependencies.ZoneEditor,
-	}, nil
+		templateHandler:    templateHandler,
+		stateHandler:       stateHandler,
+		previewHandler:     previewHandler,
+		contentRuleHandler: contentRuleHandler,
+		zoneEditorHandler:  zoneEditorHandler,
+	}
 }
 
 func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	return this.templateWorkflow.GenerateTemplate(stateDto)
+	return this.templateHandler.GenerateTemplate(stateDto)
 }
 
 func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {
-	return this.templateWorkflow.UpdateTemplate(templateDto)
+	return this.templateHandler.UpdateTemplate(templateDto)
 }
 
 func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
-	return this.templateWorkflow.ReapplyCastleSettings(request)
+	return this.templateHandler.ReapplyCastleSettings(request)
 }
 
 func (this *GUIHandler) GetZoneEditorOptions(state dtos.EditorStateDto, totalZoneCount int) dtos.ZoneEditorOptionsDto {
-	return this.zoneEditor.GetZoneEditorOptions(state, totalZoneCount)
+	return this.zoneEditorHandler.GetZoneEditorOptions(state, totalZoneCount)
 }
 
 func (this *GUIHandler) CountZoneCastles(zone entities.Zone) int {
-	return this.zoneEditor.CountZoneCastles(zone)
+	return this.zoneEditorHandler.CountZoneCastles(zone)
 }
 
 func (this *GUIHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
-	return this.zoneEditor.GetZoneQuality(zone)
+	return this.zoneEditorHandler.GetZoneQuality(zone)
 }
 
 func (this *GUIHandler) GetZoneConnectionGuardQuality(
 	from, to string,
 	zones []entities.Zone,
 	playerZoneNames map[string]bool) neutral_zone.Quality {
-	return this.zoneEditor.GetZoneConnectionGuardQuality(from, to, zones, playerZoneNames)
+	return this.zoneEditorHandler.GetZoneConnectionGuardQuality(from, to, zones, playerZoneNames)
 }
 
 func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {
-	return this.zoneEditor.ApplyZoneEditorQuality(request)
+	return this.zoneEditorHandler.ApplyZoneEditorQuality(request)
 }
 
 func (this *GUIHandler) DescribeZoneEditorGraph(
 	zones []entities.Zone,
 	connections []entities.Connection) dtos.ZoneEditorGraphDto {
-	return this.zoneEditor.DescribeZoneEditorGraph(zones, connections)
+	return this.zoneEditorHandler.DescribeZoneEditorGraph(zones, connections)
 }
 
 func (this *GUIHandler) CreateZoneEditorConnection(
 	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
-	return this.zoneEditor.CreateZoneEditorConnection(request)
+	return this.zoneEditorHandler.CreateZoneEditorConnection(request)
 }
 
 func (this *GUIHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
-	return this.zoneEditor.FindOpenZonePosition(occupied)
+	return this.zoneEditorHandler.FindOpenZonePosition(occupied)
 }
 
 func (this *GUIHandler) GetNextZoneLabel(zones []entities.Zone) string {
-	return this.zoneEditor.GetNextZoneLabel(zones)
+	return this.zoneEditorHandler.GetNextZoneLabel(zones)
 }
 
 func (this *GUIHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone {
-	return this.zoneEditor.CreateZoneEditorNeutralZone(request)
+	return this.zoneEditorHandler.CreateZoneEditorNeutralZone(request)
 }
 
 func (this *GUIHandler) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
-	return this.zoneEditor.CanDeleteZone(zoneName, playerZoneNames)
+	return this.zoneEditorHandler.CanDeleteZone(zoneName, playerZoneNames)
 }
 
 func (this *GUIHandler) RemoveZoneEditorZone(request dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto {
-	return this.zoneEditor.RemoveZoneEditorZone(request)
+	return this.zoneEditorHandler.RemoveZoneEditorZone(request)
 }
 
 func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {
-	return this.templatePersistence.SaveTemplate(templateDto)
+	return this.templateHandler.SaveTemplate(templateDto)
 }
 
 func (this *GUIHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error) {
-	return this.preview.BuildPreviewLayout(request)
+	return this.previewHandler.BuildPreviewLayout(request)
 }
 
 func (this *GUIHandler) GetContentRuleEditorOptions(content models.SidMapping) dtos.ContentRuleEditorOptionsDto {
-	return this.contentRule.GetContentRuleEditorOptions(content)
+	return this.contentRuleHandler.GetContentRuleEditorOptions(content)
 }
 
 func (this *GUIHandler) DescribeContentRule(
 	content models.SidMapping,
 	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
-	return this.contentRule.DescribeContentRule(content, savedRule)
+	return this.contentRuleHandler.DescribeContentRule(content, savedRule)
 }
 
 func (this *GUIHandler) ValidateEditorState(
 	stateDto dtos.EditorStateDto,
 	fixIssues bool) dtos.EditorStateValidationDto {
-	return this.templateWorkflow.ValidateEditorState(stateDto, fixIssues)
+	return this.stateHandler.ValidateEditorState(stateDto, fixIssues)
 }
 
 func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
-	return this.statePersistence.LoadState(path, fixIssues)
+	return this.stateHandler.LoadState(path, fixIssues)
 }
 
 func (this *GUIHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
-	return this.statePersistence.SaveState(stateDto)
+	return this.stateHandler.SaveState(stateDto)
 }

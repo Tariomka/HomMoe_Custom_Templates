@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +36,7 @@ func TestWhenRequestContainsTemplate_ReturnsServiceLayoutUnchanged(t *testing.T)
 		request.Topology,
 		request.CanvasSide,
 	)
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 
 	// Act
 	result, err := handler.BuildPreviewLayout(request)
@@ -59,7 +58,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyServiceLayout(t *testing.T) {
 		request.Topology,
 		request.CanvasSide,
 	)
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 
 	// Act
 	result, err := handler.BuildPreviewLayout(request)
@@ -81,7 +80,7 @@ func TestWhenRequestContainsZones_BuildsPreviewTemplate(t *testing.T) {
 		Topology:    config.TopologyRing,
 		CanvasSide:  600,
 	}
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 
 	// Act
 	result, err := handler.BuildPreviewLayout(request)

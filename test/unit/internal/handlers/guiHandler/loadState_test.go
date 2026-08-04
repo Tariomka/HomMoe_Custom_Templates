@@ -7,7 +7,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +15,7 @@ import (
 func TestWhenStateFilePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 
 	// Act
 	_, _, err := handler.LoadState("", true)
@@ -28,7 +27,7 @@ func TestWhenStateFilePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 
 	// Act
 	_, _, err := handler.LoadState("  \t  ", true)
@@ -40,7 +39,7 @@ func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T
 func TestWhenStateFileDoesNotExist_ReturnsNotExistError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	missingPath := filepath.Join(t.TempDir(), "missing-state.gen.json")
 
 	// Act
@@ -53,7 +52,7 @@ func TestWhenStateFileDoesNotExist_ReturnsNotExistError(t *testing.T) {
 func TestWhenStateFileContainsInvalidJson_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	corruptPath := filepath.Join(t.TempDir(), "corrupt-state.gen.json")
 	require.NoError(t, os.WriteFile(corruptPath, []byte("this is { not valid json"), 0o644))
 
@@ -67,7 +66,7 @@ func TestWhenStateFileContainsInvalidJson_ReturnsError(t *testing.T) {
 func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "roundtrip-state.gen.json")
 	savedState := dtos.NewDefaultEditorStateDto()
 	savedState.TemplateName = gofakeit.ProductName()
@@ -89,7 +88,7 @@ func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.
 func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "valid-state.gen.json")
 	savedState := dtos.NewDefaultEditorStateDto()
 	_, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
@@ -109,7 +108,7 @@ func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
 func TestWhenStateFileHasOutOfRangeValues_ReturnsWarnings(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 
@@ -124,7 +123,7 @@ func TestWhenStateFileHasOutOfRangeValues_ReturnsWarnings(t *testing.T) {
 func TestWhenFixIssuesIsTrue_ReturnsStateWithIssuesFixed(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 
@@ -139,7 +138,7 @@ func TestWhenFixIssuesIsTrue_ReturnsStateWithIssuesFixed(t *testing.T) {
 func TestWhenFixIssuesIsFalse_ReturnsStateWithIssuesUnfixed(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 
@@ -154,7 +153,7 @@ func TestWhenFixIssuesIsFalse_ReturnsStateWithIssuesUnfixed(t *testing.T) {
 func TestWhenFixIssuesIsFalse_StillReturnsWarnings(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "invalid-state.gen.json")
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 

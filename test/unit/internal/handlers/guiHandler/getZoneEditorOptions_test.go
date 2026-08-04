@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +12,7 @@ import (
 func TestWhenFullVariantZoneCountIsProvided_ReturnsMappedZoneEditorOptions(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
 	fullVariantZoneCount := state.PlayerCount + state.NeutralZoneCount
 	configuration := mappers.NewConfigMapper().FromEditorState(state)

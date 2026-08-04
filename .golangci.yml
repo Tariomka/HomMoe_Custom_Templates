@@ -150,7 +150,7 @@ linters:
             - "!**/app/gui/editor/window.go"
             - "!$test"
           deny:
-            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/handlers
+            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/handlers$
               desc: concrete handlers may only be imported by GUI composition roots
 
         config-inner-private:

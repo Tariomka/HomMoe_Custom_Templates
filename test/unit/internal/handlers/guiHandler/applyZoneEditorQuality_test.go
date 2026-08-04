@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
@@ -14,7 +13,7 @@ import (
 func TestWhenQualityChanges_ReturnsServiceEquivalentZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	tuning := models.GenerationTuning{
 		ContentScale:                   1,
 		ResourceDensityMultiplier:      0.5,
@@ -22,10 +21,11 @@ func TestWhenQualityChanges_ReturnsServiceEquivalentZone(t *testing.T) {
 		NeutralStackStrengthMultiplier: 1,
 		BorderGuardStrengthMultiplier:  1,
 	}
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, true, tuning)
 	expected := zone
-	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&expected, neutral_zone.QualityHigh, 3, tuning)
+	connection_editor.NewDefaultZoneEditorService().
+		ApplyNeutralZoneQuality(&expected, neutral_zone.QualityHigh, 3, tuning)
 
 	// Act
 	result := handler.ApplyZoneEditorQuality(dtos.ZoneEditorQualityRequestDto{

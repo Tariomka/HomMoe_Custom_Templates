@@ -8,13 +8,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenHubZoneIsCreated_NameIsHub(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
@@ -26,7 +27,7 @@ func TestWhenHubZoneIsCreated_NameIsHub(t *testing.T) {
 func TestWhenHoldCityHubHasNoCastles_ForcesSingleCastle(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), true, 1.0, 0, true, "")
@@ -38,7 +39,7 @@ func TestWhenHoldCityHubHasNoCastles_ForcesSingleCastle(t *testing.T) {
 func TestWhenHubIsHoldCity_PrimaryCastleCarriesHoldCityWinCondition(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), true, 1.0, 1, true, "")
@@ -50,7 +51,7 @@ func TestWhenHubIsHoldCity_PrimaryCastleCarriesHoldCityWinCondition(t *testing.T
 func TestWhenMandatoryContentNameProvided_ZoneReferencesIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone(
@@ -63,7 +64,7 @@ func TestWhenMandatoryContentNameProvided_ZoneReferencesIt(t *testing.T) {
 func TestWhenMandatoryContentNameIsEmpty_ZoneHasNoMandatoryContent(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
@@ -75,7 +76,7 @@ func TestWhenMandatoryContentNameIsEmpty_ZoneHasNoMandatoryContent(t *testing.T)
 func TestWhenHubHasNoCastlesAndIsNotHoldCity_BiomeMatchesZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 0, true, "")
@@ -87,7 +88,7 @@ func TestWhenHubHasNoCastlesAndIsNotHoldCity_BiomeMatchesZone(t *testing.T) {
 func TestWhenHubHasMultipleCastles_MainObjectCountMatchesCastleCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 3, true, "")
@@ -99,7 +100,7 @@ func TestWhenHubHasMultipleCastles_MainObjectCountMatchesCastleCount(t *testing.
 func TestWhenHubZoneIsCreated_UsesHighestProfileGuardedPool(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
@@ -115,7 +116,7 @@ func TestWhenHubZoneIsCreated_UsesHighestProfileGuardedPool(t *testing.T) {
 func TestWhenHubZoneIsCreated_UsesHighestProfileResourcesPool(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
@@ -131,7 +132,7 @@ func TestWhenHubZoneIsCreated_UsesHighestProfileResourcesPool(t *testing.T) {
 func TestWhenHubZoneIsCreated_UsesHighestProfileGuardedContentValue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
@@ -143,7 +144,7 @@ func TestWhenHubZoneIsCreated_UsesHighestProfileGuardedContentValue(t *testing.T
 func TestWhenHubZoneIsCreated_UsesHighestProfileGuardMultiplier(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
@@ -155,7 +156,7 @@ func TestWhenHubZoneIsCreated_UsesHighestProfileGuardMultiplier(t *testing.T) {
 func TestWhenHubZoneIsCreated_ClassifiesAsHighestQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
@@ -170,7 +171,7 @@ func TestWhenHubZoneIsCreated_RoadsCountCastlesOnly(t *testing.T) {
 	tuning := newUnitTuning()
 	tuning.AbandonedOutpostCount = 2
 	tuning.RemoteFootholdCount = 2
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateHubZone("Hub", []string{"Hub-Gate"}, tuning, false, 1.0, 2, true, "")

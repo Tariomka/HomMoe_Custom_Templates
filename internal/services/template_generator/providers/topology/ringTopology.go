@@ -18,15 +18,12 @@ type RingTopologyService struct {
 	base.TopologyBase
 }
 
-func NewRingTopologyService() *RingTopologyService {
-	return NewRingTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewRingTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewRingTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *RingTopologyService {
 	return &RingTopologyService{
-		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
 	}
 }
 

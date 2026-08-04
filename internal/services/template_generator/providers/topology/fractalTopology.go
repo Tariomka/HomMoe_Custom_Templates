@@ -23,15 +23,12 @@ type FractalTopologyService struct {
 	PositionedTopologyBuilder
 }
 
-func NewFractalTopologyService() *FractalTopologyService {
-	return NewFractalTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewFractalTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewFractalTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *FractalTopologyService {
 	return &FractalTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
 	}
 }
 

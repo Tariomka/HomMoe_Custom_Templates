@@ -26,20 +26,12 @@ type ManualReapplyService struct {
 	tuningFactory  *generation_tuning.GenerationTuningFactory
 }
 
-func NewManualReapplyService() *ManualReapplyService {
-	return NewManualReapplyServiceWithDependencies(
-		NewZoneEditorService(),
-		zone_services.NewZoneClassifier(),
-		generation_tuning.NewGenerationTuningFactory(),
-	)
-}
-
-func NewManualReapplyServiceWithDependencies(
+func NewManualReapplyService(
 	zoneEditor *ZoneEditorService,
 	zoneClassifier *zone_services.ZoneClassifier,
 	tuningFactory *generation_tuning.GenerationTuningFactory) *ManualReapplyService {
 	if zoneEditor == nil {
-		zoneEditor = NewZoneEditorService()
+		zoneEditor = NewDefaultZoneEditorService()
 	}
 	if zoneClassifier == nil {
 		zoneClassifier = zone_services.NewZoneClassifier()
@@ -104,13 +96,12 @@ func (this *ManualReapplyService) ApplyCastleSettingChanges(
 func (this *ManualReapplyService) SetNeutralZoneCastleCount(
 	zone *entities.Zone,
 	castleCount int,
-	tuning models.GenerationTuning,
-) {
+	tuning models.GenerationTuning) {
 	quality := this.zoneClassifier.GetQuality(*zone)
 	profile := common_zones.GetNeutralZoneProfile(quality)
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		this.zoneEditor.createNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
+		this.zoneEditor.CastleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
 		preserved...)
 	this.zoneEditor.rebuildCastleRoads(zone)
 }
@@ -175,9 +166,10 @@ func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 	matchFactions := configuration.MatchPlayerCastleFactions
 	mainObjects := []entities.MainObject{spawnCastle}
 	mainObjects = append(mainObjects,
-		this.zoneEditor.createPlayerOwnedCastles(matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles)...)
+		this.zoneEditor.CastleFactory.CreatePlayerOwnedCastles(
+			matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles)...)
 	mainObjects = append(mainObjects,
-		this.zoneEditor.createPlayerUnclaimedCastles(
+		this.zoneEditor.CastleFactory.CreatePlayerUnclaimedCastles(
 			matchFactions,
 			tuning.ScaleByNeutralGuardStrength(5000),
 			configuration.ZoneConfiguration.PlayerZoneCastles)...)
@@ -194,7 +186,7 @@ func (this *ManualReapplyService) rebuildHubZoneCastles(
 ) {
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		this.zoneEditor.createHubZoneCastles(tuning, castleCount, isHoldCity),
+		this.zoneEditor.CastleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity),
 		preserved...)
 	this.zoneEditor.rebuildCastleRoads(zone)
 }
@@ -203,8 +195,9 @@ func (this *ManualReapplyService) rebuildHubZoneCastles(
 // of its City castles carries the hold-city win condition, so a rebuild can
 // preserve both.
 func splitOutNonCastles(mainObjects []entities.MainObject) (preserved []entities.MainObject, isHoldCity bool) {
+	mainObjectType := registry.GetMainObjectTypeValues().City
 	for _, mainObject := range mainObjects {
-		if mainObject.Type == registry.GetMainObjectTypeValues().City {
+		if mainObject.Type == mainObjectType {
 			isHoldCity = isHoldCity || mainObject.HoldCityWinCon
 			continue
 		}

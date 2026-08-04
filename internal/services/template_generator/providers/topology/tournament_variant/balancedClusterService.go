@@ -27,15 +27,12 @@ type BalancedClusterService struct {
 	positionLayoutService *position_layout.PositionLayoutService
 }
 
-func NewBalancedClusterService() *BalancedClusterService {
-	return NewBalancedClusterServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewBalancedClusterServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewBalancedClusterService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *BalancedClusterService {
 	return &BalancedClusterService{
-		TopologyBase:          base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase:          base.NewTopologyBase(zoneFactory, roadFactory),
 		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }

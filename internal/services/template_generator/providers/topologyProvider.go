@@ -14,20 +14,15 @@ import (
 
 type TopologyProvider struct {
 	shufflePlayerZones bool
-	creationServices   *zones.CreationServices
+	zoneFactory        *zones.ZoneFactory
+	roadFactory        *zones.RoadFactory
 }
 
-func NewTopologyProvider() *TopologyProvider {
-	return NewTopologyProviderWithCreationServices(zones.NewCreationServices(nil, nil))
-}
-
-func NewTopologyProviderWithCreationServices(
-	creationServices *zones.CreationServices,
+func NewTopologyProvider(
+	zoneFactory *zones.ZoneFactory,
+	roadFactory *zones.RoadFactory,
 ) *TopologyProvider {
-	if creationServices == nil {
-		creationServices = zones.NewCreationServices(nil, nil)
-	}
-	return &TopologyProvider{creationServices: creationServices}
+	return &TopologyProvider{zoneFactory: zoneFactory, roadFactory: roadFactory}
 }
 
 func (this *TopologyProvider) CreateTopologyVariant(
@@ -39,45 +34,45 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabelsCopy := this.copyLabels(playerLabels)
 
 	if configuration.IsTournamentMode() && len(playerLabelsCopy) == 2 {
-		return topology.NewTournamentTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewTournamentTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning)
 	}
 
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
-		return topology.NewHubTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewHubTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(
 				configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyGeometricHub:
-		return topology.NewGeometricHubTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewGeometricHubTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(
 				configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
 	case config.TopologyChain:
-		return topology.NewChainTopologyService(this.creationServices).
+		return topology.NewChainTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySharedWeb:
-		return topology.NewSharedWebTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewSharedWebTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyRandom:
-		return topology.NewRandomTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewRandomTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyCircles:
-		return topology.NewCirclesTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewCirclesTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologySquare:
-		return topology.NewSquareTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewSquareTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyGeometric:
-		return topology.NewGeometricTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewGeometricTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyCross:
-		return topology.NewCrossTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewCrossTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	case config.TopologyFractal:
-		return topology.NewFractalTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewFractalTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	default: // config.TopologyDefault
-		return topology.NewRingTopologyServiceWithCreationServices(this.creationServices).
+		return topology.NewRingTopologyService(this.zoneFactory, this.roadFactory).
 			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	}
 }

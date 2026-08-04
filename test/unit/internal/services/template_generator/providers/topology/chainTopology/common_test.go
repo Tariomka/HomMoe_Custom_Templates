@@ -5,11 +5,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
 func newChainTopologyService() *topology.ChainTopologyService {
-	return topology.NewChainTopologyService(zones.NewCreationServices(nil, nil))
+	return topology.NewChainTopologyService(test_helpers.NewZoneFactories())
 }
 
 // zoneNameSet returns the set of zone names present in the variant.

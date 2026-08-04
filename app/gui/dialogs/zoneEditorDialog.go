@@ -13,12 +13,12 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -47,8 +47,8 @@ type ZoneEditorDialog struct {
 	working        []*entities.Connection
 	original       []entities.Connection
 	onApply        func([]entities.Zone, []entities.Connection)
-	previewHandler interfaces.IPreviewHandler
-	zoneHandler    interfaces.IZoneEditorHandler
+	previewHandler handler_interfaces.IPreviewHandler
+	zoneHandler    handler_interfaces.IZoneEditorHandler
 
 	// Toolbar / footer.
 	addBtn     widget.Clickable
@@ -68,8 +68,8 @@ func NewZoneEditorDialog(
 	topology config.MapTopology,
 	tuning models.GenerationTuning,
 	generateRoads bool,
-	previewHandler interfaces.IPreviewHandler,
-	zoneHandler interfaces.IZoneEditorHandler,
+	previewHandler handler_interfaces.IPreviewHandler,
+	zoneHandler handler_interfaces.IZoneEditorHandler,
 	onApply func([]entities.Zone, []entities.Connection)) *ZoneEditorDialog {
 	players := make(map[string]bool)
 	for _, zone := range zones {

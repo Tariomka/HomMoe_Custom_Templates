@@ -18,19 +18,12 @@ type TopologyBase struct {
 	connectionService *topologyConnectionService
 }
 
-func NewTopologyBase() TopologyBase {
-	return NewTopologyBaseWithCreationServices(zones.NewCreationServices(nil, nil))
-}
-
-func NewTopologyBaseWithCreationServices(creationServices *zones.CreationServices) TopologyBase {
-	if creationServices == nil {
-		creationServices = zones.NewCreationServices(nil, nil)
-	}
+func NewTopologyBase(zoneFactory *zones.ZoneFactory, roadFactory *zones.RoadFactory) TopologyBase {
 	zoneLabelProvider := zones.NewZoneLabelProvider()
 	return TopologyBase{
 		ZoneLabelProvider: zoneLabelProvider,
-		roadFactory:       creationServices.RoadFactory,
-		zoneFactory:       creationServices.ZoneFactory,
+		roadFactory:       roadFactory,
+		zoneFactory:       zoneFactory,
 		connectionService: newTopologyConnectionService(zoneLabelProvider),
 	}
 }

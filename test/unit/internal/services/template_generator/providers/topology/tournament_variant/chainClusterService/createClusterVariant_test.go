@@ -23,7 +23,7 @@ func TestWhenPlayerHasTwoNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T)
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	service := tournament_variant.NewChainClusterService()
+	service := tournament_variant.NewChainClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -42,7 +42,7 @@ func TestWhenChainIsBuilt_CreatesConnectionPerAdjacentPair(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	service := tournament_variant.NewChainClusterService()
+	service := tournament_variant.NewChainClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -61,7 +61,7 @@ func TestWhenFirstChainLinkIsBuilt_ConnectsSpawnToFirstNeutral(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	service := tournament_variant.NewChainClusterService()
+	service := tournament_variant.NewChainClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -76,7 +76,7 @@ func TestWhenLaterChainLinkIsBuilt_ConnectsNeutralToNextNeutral(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	service := tournament_variant.NewChainClusterService()
+	service := tournament_variant.NewChainClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -91,7 +91,7 @@ func TestWhenPlayerHasNoNeutralPlans_CreatesOnlySpawnZoneWithoutConnections(t *t
 	configuration := config.NewGeneratorConfig()
 	emptyPlans := neutral_zone.Plans{}
 	tuning := test_helpers.NewGenerationTuning(configuration, 1)
-	service := tournament_variant.NewChainClusterService()
+	service := tournament_variant.NewChainClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, connections := service.CreateClusterVariant(*configuration, tuning, emptyPlans, emptyPlans, 0, "A")
@@ -107,7 +107,7 @@ func TestWhenSecondPlayerClusterIsBuilt_SpawnCastleBelongsToPlayerTwo(t *testing
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 3)
-	service := tournament_variant.NewChainClusterService()
+	service := tournament_variant.NewChainClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 1, "B")

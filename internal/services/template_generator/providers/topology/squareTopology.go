@@ -17,15 +17,12 @@ type SquareTopologyService struct {
 	PositionedTopologyBuilder
 }
 
-func NewSquareTopologyService() *SquareTopologyService {
-	return NewSquareTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewSquareTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewSquareTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *SquareTopologyService {
 	return &SquareTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +14,7 @@ func TestWhenSpawnZoneIsCreated_NameCombinesSpawnPrefixWithLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	label := gofakeit.LetterN(3)
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateSpawnZone(label, "Player1", nil, 1, false, 1.0, 0, true, newUnitTuning())
@@ -25,7 +26,7 @@ func TestWhenSpawnZoneIsCreated_NameCombinesSpawnPrefixWithLabel(t *testing.T) {
 func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expected := entities.MainObject{
 		Type:                     "Spawn",
 		Spawn:                    "Player1",
@@ -48,7 +49,7 @@ func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing
 func TestWhenOwnedAndUnclaimedCastlesRequested_MainObjectCountIsSpawnPlusOwnedPlusUnclaimed(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	tuning := newUnitTuning()
 	tuning.PlayerOwnedCastles = 1
 
@@ -62,7 +63,7 @@ func TestWhenOwnedAndUnclaimedCastlesRequested_MainObjectCountIsSpawnPlusOwnedPl
 func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
@@ -81,7 +82,7 @@ func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *test
 func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			Type: "Stone",
@@ -105,7 +106,7 @@ func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle
 func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			Type: "Stone",
@@ -132,7 +133,7 @@ func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T)
 func TestWhenRoadGenerationIsDisabled_ZoneHasNoRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateSpawnZone(

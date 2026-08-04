@@ -18,15 +18,12 @@ type HubClusterService struct {
 	base.TopologyBase
 }
 
-func NewHubClusterService() *HubClusterService {
-	return NewHubClusterServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewHubClusterServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewHubClusterService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *HubClusterService {
 	return &HubClusterService{
-		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
 	}
 }
 

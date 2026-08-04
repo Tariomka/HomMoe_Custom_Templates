@@ -13,11 +13,11 @@ func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, false, tuning)
 
 	// Act
-	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
+	connection_editor.NewDefaultZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
@@ -27,14 +27,14 @@ func TestWhenTwoCastlesAreRequested_RebuildsTwoCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Z", neutral_zone.QualityLow, 0, false, tuning)
 
 	// Act
-	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
+	connection_editor.NewDefaultZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
 
 	// Assert
-	assert.Equal(t, 2, connection_editor.NewZoneEditorService().CountZoneCastles(zone))
+	assert.Equal(t, 2, connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone))
 }
 
 // Adding castles to a former connector zone (0 -> 3 castles) must produce the
@@ -44,11 +44,11 @@ func TestWhenCastlesAreAddedToConnectorZone_RegeneratesCastleRoads(t *testing.T)
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Z", neutral_zone.QualityMedium, 0, true, tuning)
 
 	// Act
-	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 3, tuning)
+	connection_editor.NewDefaultZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 3, tuning)
 
 	// Assert
 	assert.Equal(t, []string{"1", "2"}, castleRoadTargets(zone),
@@ -60,11 +60,11 @@ func TestWhenCastleCountShrinksToOne_RemovesStaleCastleRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tuning := defaultTuning()
-	zone := connection_editor.NewZoneEditorService().
+	zone := connection_editor.NewDefaultZoneEditorService().
 		NewDefaultNeutralZone("Z", neutral_zone.QualityHigh, 3, true, tuning)
 
 	// Act
-	connection_editor.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 1, tuning)
+	connection_editor.NewDefaultZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 1, tuning)
 
 	// Assert
 	assert.Empty(t, castleRoadTargets(zone),

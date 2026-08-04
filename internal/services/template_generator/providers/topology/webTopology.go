@@ -19,15 +19,12 @@ type SharedWebTopologyService struct {
 	base.TopologyBase
 }
 
-func NewSharedWebTopologyService() *SharedWebTopologyService {
-	return NewSharedWebTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewSharedWebTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewSharedWebTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *SharedWebTopologyService {
 	return &SharedWebTopologyService{
-		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
 	}
 }
 

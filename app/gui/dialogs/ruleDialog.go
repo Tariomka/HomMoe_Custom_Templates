@@ -9,11 +9,11 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -26,7 +26,7 @@ type ManageRulesDialog struct {
 	rules   []models.ContentRuleRowSave
 	onApply func([]models.ContentRuleRowSave)
 
-	contentRuleHandler interfaces.IContentRuleHandler
+	contentRuleHandler handler_interfaces.IContentRuleHandler
 	types              []dtos.ContentRuleOptionDto
 	distanceNames      []string
 	variantIDs         []int
@@ -50,7 +50,7 @@ type ManageRulesDialog struct {
 func NewManageRulesDialog(
 	mapping models.SidMapping,
 	rules []models.ContentRuleRowSave,
-	contentRuleHandler interfaces.IContentRuleHandler,
+	contentRuleHandler handler_interfaces.IContentRuleHandler,
 	onApply func([]models.ContentRuleRowSave)) *ManageRulesDialog {
 	options := contentRuleHandler.GetContentRuleEditorOptions(mapping)
 	dialog := &ManageRulesDialog{

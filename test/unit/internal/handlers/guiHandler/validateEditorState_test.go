@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +11,7 @@ import (
 func TestWhenStateIsValid_ReturnsNoWarnings(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 
 	// Act
@@ -25,7 +24,7 @@ func TestWhenStateIsValid_ReturnsNoWarnings(t *testing.T) {
 func TestWhenFixIssuesIsTrue_ReturnsNormalizedState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.PlayerCount = 50
 
@@ -39,7 +38,7 @@ func TestWhenFixIssuesIsTrue_ReturnsNormalizedState(t *testing.T) {
 func TestWhenFixIssuesIsFalse_ReturnsOriginalState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.PlayerCount = 50
 
@@ -53,7 +52,7 @@ func TestWhenFixIssuesIsFalse_ReturnsOriginalState(t *testing.T) {
 func TestWhenFixIssuesIsFalse_ReturnsIssueMessages(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.PlayerCount = 50
 
@@ -67,7 +66,7 @@ func TestWhenFixIssuesIsFalse_ReturnsIssueMessages(t *testing.T) {
 func TestWhenStateIsInvalid_ReturnsIssueMessages(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.PlayerCount = 50
 
@@ -81,7 +80,7 @@ func TestWhenStateIsInvalid_ReturnsIssueMessages(t *testing.T) {
 func TestWhenStateHasMultipleIssues_ReturnsMessagesInValidationOrder(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.PlayerCount = 50
 	stateDto.NeutralZoneCount = -1
@@ -99,7 +98,7 @@ func TestWhenStateHasMultipleIssues_ReturnsMessagesInValidationOrder(t *testing.
 func TestWhenAdvancedModeIsEnabled_ZeroesSimpleNeutralCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.AdvancedMode = true
 	stateDto.NeutralZoneCount = gofakeit.Number(1, 10)
@@ -114,7 +113,7 @@ func TestWhenAdvancedModeIsEnabled_ZeroesSimpleNeutralCount(t *testing.T) {
 func TestWhenSimpleModeIsEnabled_ZeroesAdvancedNeutralCounts(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.NeutralLowestNoCastleCount = gofakeit.Number(1, 10)
 	stateDto.NeutralLowestCastleCount = gofakeit.Number(1, 10)
@@ -136,7 +135,7 @@ func TestWhenSimpleModeIsEnabled_ZeroesAdvancedNeutralCounts(t *testing.T) {
 func TestWhenFixIssuesIsFalse_PreservesInactiveNeutralCounts(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateDto := dtos.NewDefaultEditorStateDto()
 	stateDto.NeutralLowNoCastleCount = gofakeit.Number(1, 10)
 

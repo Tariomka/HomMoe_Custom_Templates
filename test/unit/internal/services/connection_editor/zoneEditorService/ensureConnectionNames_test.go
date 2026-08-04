@@ -16,7 +16,7 @@ func TestWhenConnectionIsNameless_AssignsManualName(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.NewZoneEditorService().EnsureConnectionNames(connections)
+	connection_editor.NewDefaultZoneEditorService().EnsureConnectionNames(connections)
 
 	// Assert
 	assert.Equal(t, "Manual-A-B", connections[0].Name)
@@ -30,7 +30,7 @@ func TestWhenConnectionAlreadyHasName_KeepsIt(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.NewZoneEditorService().EnsureConnectionNames(connections)
+	connection_editor.NewDefaultZoneEditorService().EnsureConnectionNames(connections)
 
 	// Assert
 	assert.Equal(t, "Rnd-A-B", connections[0].Name)
@@ -45,7 +45,7 @@ func TestWhenManualNameIsAlreadyTaken_AppendsNumericSuffix(t *testing.T) {
 	}
 
 	// Act
-	connection_editor.NewZoneEditorService().EnsureConnectionNames(connections)
+	connection_editor.NewDefaultZoneEditorService().EnsureConnectionNames(connections)
 
 	// Assert
 	assert.Equal(t, "Manual-A-B-2", connections[1].Name)
@@ -60,7 +60,7 @@ func TestWhenTwoNamelessConnectionsSharePair_AssignsDistinctNames(t *testing.T) 
 	}
 
 	// Act
-	connection_editor.NewZoneEditorService().EnsureConnectionNames(connections)
+	connection_editor.NewDefaultZoneEditorService().EnsureConnectionNames(connections)
 
 	// Assert
 	assert.NotEqual(t, connections[0].Name, connections[1].Name)

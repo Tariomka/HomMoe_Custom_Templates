@@ -27,7 +27,7 @@ import (
 // behaviour so the integration tests can drive the real frame loop without a
 // display.
 func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func()) {
-	backend := handlers.NewGuiHandler()
+	backend := handlers.NewDefaultGuiHandler()
 	state = drivers.NewUIStateWithBackend(backend)
 	editorPanels := []interfaces.IPanel{
 		panels.NewGeneralPanel(state),

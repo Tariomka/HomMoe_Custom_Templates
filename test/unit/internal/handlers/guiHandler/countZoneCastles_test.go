@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,14 +11,14 @@ import (
 func TestWhenZoneContainsMixedMainObjects_ReturnsServiceEquivalentCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	zone := entities.Zone{MainObjects: []entities.MainObject{
 		{Type: "Spawn"},
 		{Type: "City"},
 		{Type: "AbandonedOutpost"},
 		{Type: "City"},
 	}}
-	expected := connection_editor.NewZoneEditorService().CountZoneCastles(zone)
+	expected := connection_editor.NewDefaultZoneEditorService().CountZoneCastles(zone)
 
 	// Act
 	result := handler.CountZoneCastles(zone)

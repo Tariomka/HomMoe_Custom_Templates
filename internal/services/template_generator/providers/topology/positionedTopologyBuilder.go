@@ -19,10 +19,11 @@ type PositionedTopologyBuilder struct {
 }
 
 func NewPositionedTopologyBuilder(
-	creationServices *zone_services.CreationServices,
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *PositionedTopologyBuilder {
 	return &PositionedTopologyBuilder{
-		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
 	}
 }
 

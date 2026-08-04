@@ -18,15 +18,12 @@ type ChainClusterService struct {
 	base.TopologyBase
 }
 
-func NewChainClusterService() *ChainClusterService {
-	return NewChainClusterServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewChainClusterServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewChainClusterService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *ChainClusterService {
 	return &ChainClusterService{
-		TopologyBase: base.NewTopologyBaseWithCreationServices(creationServices),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
 	}
 }
 

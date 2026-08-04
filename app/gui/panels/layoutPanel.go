@@ -6,11 +6,11 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -67,16 +67,16 @@ type LayoutPanel struct {
 	scroll widget.List
 
 	state              *drivers.State
-	previewHandler     interfaces.IPreviewHandler
-	contentRuleHandler interfaces.IContentRuleHandler
-	zoneEditorHandler  interfaces.IZoneEditorHandler
+	previewHandler     handler_interfaces.IPreviewHandler
+	contentRuleHandler handler_interfaces.IContentRuleHandler
+	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
 }
 
 func NewLayoutPanel(
 	state *drivers.State,
-	previewHandler interfaces.IPreviewHandler,
-	contentRuleHandler interfaces.IContentRuleHandler,
-	zoneEditorHandler interfaces.IZoneEditorHandler,
+	previewHandler handler_interfaces.IPreviewHandler,
+	contentRuleHandler handler_interfaces.IContentRuleHandler,
+	zoneEditorHandler handler_interfaces.IZoneEditorHandler,
 ) *LayoutPanel {
 	panel := &LayoutPanel{
 		topology: components.NewDropdownSelector(func() []string {

@@ -16,6 +16,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -61,7 +62,7 @@ type ZoneContentSection struct {
 	addPreset          *components.DropdownSelector
 	addBtn             widget.Clickable
 	openDialog         interfaces.DialogOpener
-	contentRuleHandler interfaces.IContentRuleHandler
+	contentRuleHandler handler_interfaces.IContentRuleHandler
 }
 
 func NewZoneContentSection(
@@ -69,8 +70,7 @@ func NewZoneContentSection(
 	items []models.SidMapping,
 	maxCount int,
 	showNear bool,
-	contentRuleHandler interfaces.IContentRuleHandler,
-) *ZoneContentSection {
+	contentRuleHandler handler_interfaces.IContentRuleHandler) *ZoneContentSection {
 	// Present the "add content" dropdown alphabetically by display name. Sort a
 	// copy so the shared ContentItemGroup global keeps its authored order.
 	sorted := make([]models.SidMapping, len(items))

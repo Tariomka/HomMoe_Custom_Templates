@@ -6,7 +6,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +13,7 @@ import (
 func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateSaveDto := dtos.EditorStateSaveDto{
 		State:      nil,
 		OutputPath: filepath.Join(t.TempDir(), "state.gen.json"),
@@ -30,7 +29,7 @@ func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: ""}
 
@@ -44,7 +43,7 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: " \t  "}
 
@@ -58,7 +57,7 @@ func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing
 func TestWhenStateAndOutputPathAreValid_ReturnsOutputPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "valid-state.gen.json")
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
@@ -74,7 +73,7 @@ func TestWhenStateAndOutputPathAreValid_ReturnsOutputPath(t *testing.T) {
 func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "written-state.gen.json")
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
@@ -90,7 +89,7 @@ func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 func TestWhenStateOutputDirectoryDoesNotExist_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "no-such-directory", "state.gen.json")
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}

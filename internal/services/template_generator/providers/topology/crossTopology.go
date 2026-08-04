@@ -19,15 +19,12 @@ type CrossTopologyService struct {
 	PositionedTopologyBuilder
 }
 
-func NewCrossTopologyService() *CrossTopologyService {
-	return NewCrossTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewCrossTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewCrossTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *CrossTopologyService {
 	return &CrossTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
 	}
 }
 

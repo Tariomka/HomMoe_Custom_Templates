@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
@@ -14,7 +13,7 @@ import (
 func TestWhenContentHasNoVariants_ReturnsBaseOptionsInDialogOrder(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	content := models.SidMapping{Sid: "content_without_variants", Name: "Content"}
 	expected := dtos.ContentRuleEditorOptionsDto{
 		Rules: []dtos.ContentRuleOptionDto{
@@ -65,7 +64,7 @@ func TestWhenContentHasNoVariants_ReturnsBaseOptionsInDialogOrder(t *testing.T) 
 func TestWhenContentHasVariants_AppendsVariantRule(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	content := models.SidMapping{
 		Sid:  registry.GetMapObjectT3GuardedResourceBankValues().DragonUtopia,
 		Name: "Dragon Utopia",
@@ -89,7 +88,7 @@ func TestWhenContentHasVariants_AppendsVariantRule(t *testing.T) {
 func TestWhenContentHasVariants_ReturnsOptionsInVariantIdOrder(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	content := models.SidMapping{
 		Sid:  registry.GetMapObjectT3GuardedResourceBankValues().DragonUtopia,
 		Name: "Dragon Utopia",

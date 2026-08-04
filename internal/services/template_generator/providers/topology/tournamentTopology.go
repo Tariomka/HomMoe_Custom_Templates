@@ -14,23 +14,19 @@ import (
 type TournamentTopologyService struct {
 	base.TopologyBase
 
-	clusterService   tournament_variant.IClusterService
-	creationServices *zone_services.CreationServices
+	clusterService tournament_variant.IClusterService
+	zoneFactory    *zone_services.ZoneFactory
+	roadFactory    *zone_services.RoadFactory
 }
 
-func NewTournamentTopologyService() *TournamentTopologyService {
-	return NewTournamentTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewTournamentTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewTournamentTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *TournamentTopologyService {
-	if creationServices == nil {
-		creationServices = zone_services.NewCreationServices(nil, nil)
-	}
 	return &TournamentTopologyService{
-		TopologyBase:     base.NewTopologyBaseWithCreationServices(creationServices),
-		creationServices: creationServices,
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
+		zoneFactory:  zoneFactory,
+		roadFactory:  roadFactory,
 	}
 }
 
@@ -43,14 +39,14 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 
 	switch configuration.Topology {
 	case config.TopologyHubAndSpoke:
-		this.clusterService = tournament_variant.NewHubClusterServiceWithCreationServices(this.creationServices)
+		this.clusterService = tournament_variant.NewHubClusterService(this.zoneFactory, this.roadFactory)
 	case config.TopologyCircles:
-		this.clusterService = tournament_variant.NewBalancedClusterServiceWithCreationServices(this.creationServices)
+		this.clusterService = tournament_variant.NewBalancedClusterService(this.zoneFactory, this.roadFactory)
 	case config.TopologyRing:
-		this.clusterService = tournament_variant.NewRingClusterServiceWithCreationServices(this.creationServices)
+		this.clusterService = tournament_variant.NewRingClusterService(this.zoneFactory, this.roadFactory)
 	default:
 		// Chain, SharedWeb, Random → chain-per-cluster fallback.
-		this.clusterService = tournament_variant.NewChainClusterServiceWithCreationServices(this.creationServices)
+		this.clusterService = tournament_variant.NewChainClusterService(this.zoneFactory, this.roadFactory)
 	}
 
 	var zones []entities.Zone

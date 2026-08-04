@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +12,7 @@ import (
 func TestWhenZoneIsRemoved_ReturnsServiceEquivalentMutation(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	request := dtos.ZoneEditorRemoveRequestDto{
 		Zones: []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-C"}, {Name: "Neutral-D"}},
 		Connections: []entities.Connection{
@@ -22,7 +21,7 @@ func TestWhenZoneIsRemoved_ReturnsServiceEquivalentMutation(t *testing.T) {
 		},
 		ZoneName: "Neutral-C",
 	}
-	zones, connections := connection_editor.NewZoneEditorService().
+	zones, connections := connection_editor.NewDefaultZoneEditorService().
 		RemoveZone(request.Zones, request.Connections, request.ZoneName)
 	expected := dtos.ZoneEditorMutationDto{Zones: zones, Connections: connections}
 

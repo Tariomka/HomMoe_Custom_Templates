@@ -5,13 +5,14 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenFewerThanTwoLabelsExist_NoPortalsAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	connections := topologyBase.CreateRandomPortalConnections(
@@ -24,7 +25,7 @@ func TestWhenFewerThanTwoLabelsExist_NoPortalsAreCreated(t *testing.T) {
 func TestWhenMaxCountIsBelowLabelCount_PortalCountEqualsMaxCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	orderedLabels := []string{"A", "B", "C", "D", "E"}
 
 	// Act
@@ -38,7 +39,7 @@ func TestWhenMaxCountIsBelowLabelCount_PortalCountEqualsMaxCount(t *testing.T) {
 func TestWhenMaxCountExceedsLabelCount_EveryLabelGetsOnePortal(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	orderedLabels := []string{"A", "B", "C", "D"}
 
 	// Act
@@ -52,7 +53,7 @@ func TestWhenMaxCountExceedsLabelCount_EveryLabelGetsOnePortal(t *testing.T) {
 func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	portalRoad := true
 	crossroadsRule := entities.PlacementRule{Type: "Crossroads", TargetMin: 0.1, TargetMax: 0.25, Weight: 2}
 	expectedConnections := []entities.Connection{
@@ -83,7 +84,7 @@ func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
 func TestWhenManyLabelsArePortalLinked_NoPortalLinksZoneToItself(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	orderedLabels := []string{"A", "B", "C", "D", "E", "F"}
 	var selfLinkedNames []string
 
@@ -103,7 +104,7 @@ func TestWhenManyLabelsArePortalLinked_NoPortalLinksZoneToItself(t *testing.T) {
 func TestWhenLabelsMixPlayersAndNeutrals_PortalEndpointsUseMatchingZonePrefixes(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedZoneNames := []string{"Spawn-A", "Spawn-B", "Neutral-C", "Neutral-D"}
 	var endpointNames []string
 

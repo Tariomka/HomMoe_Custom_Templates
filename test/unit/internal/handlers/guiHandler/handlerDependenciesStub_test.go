@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
@@ -119,6 +120,19 @@ func (this *handlerDependenciesStub) DescribeZoneEditorGraph(
 	return dtos.ZoneEditorGraphDto{}
 }
 
+func (this *handlerDependenciesStub) ComputeHasErrors(
+	[]entities.Zone,
+	[]entities.Connection,
+) bool {
+	return false
+}
+
+func (this *handlerDependenciesStub) RebuildZoneConnectionRoads(
+	[]entities.Zone,
+	[]entities.Connection,
+) {
+}
+
 func (this *handlerDependenciesStub) CreateZoneEditorConnection(
 	dtos.ZoneEditorConnectionRequestDto,
 ) entities.Connection {
@@ -149,13 +163,6 @@ func (this *handlerDependenciesStub) RemoveZoneEditorZone(
 	return dtos.ZoneEditorMutationDto{}
 }
 
-func (this *handlerDependenciesStub) dependencies() handlers.GUIHandlerDependencies {
-	return handlers.GUIHandlerDependencies{
-		TemplateWorkflow:    this,
-		StatePersistence:    this,
-		TemplatePersistence: this,
-		Preview:             this,
-		ContentRule:         this,
-		ZoneEditor:          this,
-	}
+func (this *handlerDependenciesStub) newHandler() handler_interfaces.IGuiHandler {
+	return handlers.NewGuiHandler(this, this, this, this, this)
 }

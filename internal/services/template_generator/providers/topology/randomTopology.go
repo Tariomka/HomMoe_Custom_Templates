@@ -16,15 +16,12 @@ type RandomTopologyService struct {
 	PositionedTopologyBuilder
 }
 
-func NewRandomTopologyService() *RandomTopologyService {
-	return NewRandomTopologyServiceWithCreationServices(zone_services.NewCreationServices(nil, nil))
-}
-
-func NewRandomTopologyServiceWithCreationServices(
-	creationServices *zone_services.CreationServices,
+func NewRandomTopologyService(
+	zoneFactory *zone_services.ZoneFactory,
+	roadFactory *zone_services.RoadFactory,
 ) *RandomTopologyService {
 	return &RandomTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(creationServices),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
 	}
 }
 

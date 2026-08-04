@@ -6,7 +6,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,7 +45,7 @@ func countNeutralMainObjectsOfType(generated *entities.RmgTemplate, objectType s
 func TestWhenAbandonedOutpostsDisabled_AddsNoAbandonedOutpostMainObjects(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newAbandonedOutpostConfiguration(false))
+	generator := newTemplateGenerator(newAbandonedOutpostConfiguration(false))
 
 	// Act
 	actual := generator.Generate()
@@ -58,7 +57,7 @@ func TestWhenAbandonedOutpostsDisabled_AddsNoAbandonedOutpostMainObjects(t *test
 func TestWhenAbandonedOutpostsEnabled_AddsAbandonedOutpostMainObjects(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newAbandonedOutpostConfiguration(true))
+	generator := newTemplateGenerator(newAbandonedOutpostConfiguration(true))
 
 	// Act
 	actual := generator.Generate()
@@ -70,10 +69,10 @@ func TestWhenAbandonedOutpostsEnabled_AddsAbandonedOutpostMainObjects(t *testing
 func TestWhenAbandonedOutpostsEnabled_KeepsNeutralCityCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	baseline := template_generator.NewTemplateGenerator(newAbandonedOutpostConfiguration(false)).Generate()
+	baseline := newTemplateGenerator(newAbandonedOutpostConfiguration(false)).Generate()
 	baselineCityCount := countNeutralMainObjectsOfType(baseline, "City")
 	require.Positive(t, baselineCityCount, "baseline must produce neutral cities to compare against")
-	generator := template_generator.NewTemplateGenerator(newAbandonedOutpostConfiguration(true))
+	generator := newTemplateGenerator(newAbandonedOutpostConfiguration(true))
 
 	// Act
 	actual := generator.Generate()
@@ -111,7 +110,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AddsOwnedCityPerCountInEachSpawnZone(t
 	t.Parallel()
 	// Arrange
 	const ownedPerZone = 2
-	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(ownedPerZone))
+	generator := newTemplateGenerator(newPlayerOwnedCastlesConfiguration(ownedPerZone))
 
 	// Act
 	actual := generator.Generate()
@@ -128,7 +127,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AddsOwnedCityPerCountInEachSpawnZone(t
 func TestWhenPlayerOwnedCastlesConfigured_AssignsSpawnPlayerAsOwner(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
+	generator := newTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
 	actual := generator.Generate()
@@ -149,7 +148,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AssignsSpawnPlayerAsOwner(t *testing.T
 func TestWhenPlayerOwnedCastlesConfigured_KeepsConfiguredUnclaimedCastleCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
+	generator := newTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
 	actual := generator.Generate()
@@ -166,7 +165,7 @@ func TestWhenPlayerOwnedCastlesConfigured_KeepsConfiguredUnclaimedCastleCount(t 
 func TestWhenPlayerOwnedCastlesConfigured_UnclaimedCastlesKeepGuards(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := template_generator.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
+	generator := newTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
 	actual := generator.Generate()
@@ -192,7 +191,7 @@ func TestWhenPlayerZoneCastlesConfigured_CreatesSpawnPlusConfiguredCastleMainObj
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.PlayerZoneCastles = extraCastles
-	generator := template_generator.NewTemplateGenerator(configuration)
+	generator := newTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -211,7 +210,7 @@ func TestWhenGenerating_AssignsPlayerToEachSpawnMainObject(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = gofakeit.Number(2, 8)
-	generator := template_generator.NewTemplateGenerator(configuration)
+	generator := newTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()

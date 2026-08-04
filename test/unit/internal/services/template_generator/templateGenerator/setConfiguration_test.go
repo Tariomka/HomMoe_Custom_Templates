@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +12,7 @@ func TestWhenNewConfigurationProvided_GeneratesWithNewConfiguration(t *testing.T
 	t.Parallel()
 	// Arrange
 	expectedName := gofakeit.InputName()
-	generator := template_generator.NewTemplateGenerator(config.NewGeneratorConfig())
+	generator := newTemplateGenerator(config.NewGeneratorConfig())
 	newConfiguration := config.NewGeneratorConfig()
 	newConfiguration.TemplateName = expectedName
 
@@ -30,7 +29,7 @@ func TestWhenNilConfigurationProvided_KeepsPreviousConfiguration(t *testing.T) {
 	expectedName := gofakeit.InputName()
 	originalConfiguration := config.NewGeneratorConfig()
 	originalConfiguration.TemplateName = expectedName
-	generator := template_generator.NewTemplateGenerator(originalConfiguration)
+	generator := newTemplateGenerator(originalConfiguration)
 
 	// Act
 	generator.SetConfiguration(nil)

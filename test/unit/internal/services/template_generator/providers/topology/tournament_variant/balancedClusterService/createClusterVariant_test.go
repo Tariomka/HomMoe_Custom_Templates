@@ -27,7 +27,7 @@ func TestWhenPlayerHasFourNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := tournament_variant.NewBalancedClusterService()
+	service := tournament_variant.NewBalancedClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -42,7 +42,7 @@ func TestWhenClusterIsBuilt_EveryZoneReceivesGeneratorAndManualPositions(t *test
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := tournament_variant.NewBalancedClusterService()
+	service := tournament_variant.NewBalancedClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -63,7 +63,7 @@ func TestWhenFirstPlayerClusterIsBuilt_AllZonePositionsStayInLeftHalf(t *testing
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := tournament_variant.NewBalancedClusterService()
+	service := tournament_variant.NewBalancedClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -84,7 +84,7 @@ func TestWhenSecondPlayerClusterIsBuilt_AllZonePositionsStayInRightHalf(t *testi
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := tournament_variant.NewBalancedClusterService()
+	service := tournament_variant.NewBalancedClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 1, "B")
@@ -105,7 +105,7 @@ func TestWhenConnectionsAreBuilt_BalancedConnectionsCarryClusterPrefix(t *testin
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := tournament_variant.NewBalancedClusterService()
+	service := tournament_variant.NewBalancedClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -120,7 +120,7 @@ func TestWhenClusterIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T)
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := tournament_variant.NewBalancedClusterService()
+	service := tournament_variant.NewBalancedClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -145,7 +145,7 @@ func TestWhenClusterIsBuilt_AllZonesFormSingleConnectedComponent(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 5)
-	service := tournament_variant.NewBalancedClusterService()
+	service := tournament_variant.NewBalancedClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
