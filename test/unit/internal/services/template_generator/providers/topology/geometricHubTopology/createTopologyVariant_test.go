@@ -29,7 +29,7 @@ func TestWhenRandomPortalsEnabled_AddsExtraPortalConnections(t *testing.T) {
 
 	// Act
 	variant := topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
-		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, false)
+		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, "")
 
 	// Assert
 	assert.Greater(t, len(variant.Connections), len(baseline.Connections))
@@ -48,7 +48,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentGroup(t *t
 
 	// Act
 	variant := topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
-		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, false)
+		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, "")
 
 	// Assert
 	assert.Contains(t, variant.Zones[0].MandatoryContent, "mandatory_content_hub")

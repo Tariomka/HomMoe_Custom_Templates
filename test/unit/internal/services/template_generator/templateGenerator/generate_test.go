@@ -56,7 +56,7 @@ func TestWhenDefaultConfigurationWithShuffleDisabled_ReturnsGoldenTemplate(t *te
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ShufflePlayerZones = false // Deterministic player-zone ordering for a stable golden comparison.
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 	expected := test_helpers.GetDefaultTemplate()
 
 	// Act
@@ -71,7 +71,7 @@ func TestWhenTemplateNameIsEmpty_SetsDefaultName(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.TemplateName = ""
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -86,7 +86,7 @@ func TestWhenTemplateNameProvided_SetsProvidedName(t *testing.T) {
 	expectedName := gofakeit.InputName()
 	configuration := config.NewGeneratorConfig()
 	configuration.TemplateName = expectedName
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -101,7 +101,7 @@ func TestWhenMapSizeProvided_SetsSizeX(t *testing.T) {
 	expectedSize := gofakeit.Number(20, 900)
 	configuration := config.NewGeneratorConfig()
 	configuration.MapSize = expectedSize
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -116,7 +116,7 @@ func TestWhenMapSizeProvided_SetsSizeZ(t *testing.T) {
 	expectedSize := gofakeit.Number(20, 900)
 	configuration := config.NewGeneratorConfig()
 	configuration.MapSize = expectedSize
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -130,7 +130,7 @@ func TestWhenGameModeProvided_PropagatesGameModeToTemplate(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.GameMode = "SingleHero"
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -148,7 +148,7 @@ func TestWhenVictoryConditionProvided_PropagatesToDisplayWinCondition(t *testing
 		LostStartCityDay: 3,
 		CityHoldDays:     6,
 	}
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -162,7 +162,7 @@ func TestWhenGameEndConditionsAreNil_UsesStandardWinCondition(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.GameEndConditions = nil
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -180,7 +180,7 @@ func TestWhenRingTopologyAndPlayerCountProvided_CreatesSpawnZonePerPlayer(t *tes
 	configuration := config.NewGeneratorConfig()
 	configuration.PlayerCount = playerCount
 	configuration.Topology = config.TopologyRing
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -196,7 +196,7 @@ func TestWhenRingTopologyAndNeutralZoneCountProvided_CreatesNeutralZonePerCount(
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.NeutralZoneCount = expectedNeutralZoneCount
 	configuration.Topology = config.TopologyRing
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -214,7 +214,7 @@ func TestWhenChainTopologySelected_CreatesZoneCountMinusOneConnections(t *testin
 	configuration.Topology = config.TopologyChain
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -231,7 +231,7 @@ func TestWhenHubAndSpokeTopologySelected_CreatesSingleHubZone(t *testing.T) {
 	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -250,7 +250,7 @@ func TestWhenSharedWebTopologyWithZeroNeutralZones_CreatesOneNeutralZone(t *test
 	configuration.Topology = config.TopologySharedWeb
 	configuration.PlayerCount = gofakeit.Number(3, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = 0
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -267,7 +267,7 @@ func TestWhenSharedWebTopologyWithZeroNeutralZones_NamesForcedNeutralZoneAfterPl
 	configuration.Topology = config.TopologySharedWeb
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.NeutralZoneCount = 0
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -307,7 +307,7 @@ func TestWhenPositionDrivenTopologySelected_SetsGeneratorPositionOnAllZones(t *t
 			configuration.Topology = testCase.topology
 			configuration.PlayerCount = gofakeit.Number(2, 8)
 			configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
-			generator := newTemplateGenerator(configuration)
+			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
 			actual := generator.Generate()
@@ -327,7 +327,7 @@ func TestWhenCirclesTopologySelected_SetsGeneratorRingOnAllZones(t *testing.T) {
 	configuration.Topology = config.TopologyCircles
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -352,7 +352,7 @@ func TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign(t *tes
 	// graph stays connected without any direct player-to-player bridge.
 	configuration.ZoneConfiguration.NeutralZoneCount = playerCount + gofakeit.Number(3, 8)
 	configuration.NoDirectPlayerConnections = false
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -378,7 +378,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	configuration.ZoneConfiguration.NeutralZoneCount = 4
 	configuration.RandomPortals = true
 	configuration.MaxPortalConnections = gofakeit.Number(1, 8)
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -398,7 +398,7 @@ func TestWhenRandomPortalsDisabled_AddsNoPortalConnections(t *testing.T) {
 	configuration.PlayerCount = 4
 	configuration.ZoneConfiguration.NeutralZoneCount = 4
 	configuration.RandomPortals = false
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -419,7 +419,7 @@ func TestWhenNoDirectPlayerConnectionsEnabled_OmitsDirectPlayerConnections(t *te
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.NeutralZoneCount = playerCount + gofakeit.Number(0, 4)
 	configuration.NoDirectPlayerConnections = true
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -446,7 +446,7 @@ func TestWhenRoadsEnabled_ProducesRoads(t *testing.T) {
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
 	configuration.GenerateRoads = true
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -466,7 +466,7 @@ func TestWhenRoadsDisabled_ProducesNoRoads(t *testing.T) {
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
 	configuration.GenerateRoads = false
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -489,7 +489,7 @@ func TestWhenMatchPlayerCastleFactionsEnabled_SetsMatchFactionOnExtraPlayerCastl
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.PlayerZoneCastles = 2
 	configuration.MatchPlayerCastleFactions = true
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -508,7 +508,7 @@ func TestWhenMatchPlayerCastleFactionsDisabled_SetsRandomFactionOnExtraPlayerCas
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.PlayerZoneCastles = 2
 	configuration.MatchPlayerCastleFactions = false
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -533,7 +533,7 @@ func TestWhenCityHoldEnabled_MarksHoldCityWinConditionObjectInZones(t *testing.T
 		CityHoldDays:     gofakeit.Number(1, 10),
 		LostStartCityDay: 3,
 	}
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -561,7 +561,7 @@ func TestWhenCityHoldEnabledWithHubAndSpokeTopology_MarksHubAsHoldCity(t *testin
 		CityHoldDays:     6,
 		CityHold:         true,
 	}
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -593,7 +593,7 @@ func TestWhenTournamentEnabledWithTwoPlayersAndRingTopology_CreatesRingGuardGrou
 		Interval:           7,
 		PointsToWin:        2,
 	}
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -621,7 +621,7 @@ func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubPerPlayer(t *tes
 		Interval:           7,
 		PointsToWin:        2,
 	}
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -643,7 +643,7 @@ func TestWhenTournamentEnabledWithChainTopology_CreatesChainGuardGroups(t *testi
 		Interval:           7,
 		PointsToWin:        2,
 	}
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -670,7 +670,7 @@ func TestWhenTournamentEnabledWithCirclesTopology_CreatesBalancedGuardGroups(t *
 		Interval:           7,
 		PointsToWin:        2,
 	}
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -713,7 +713,7 @@ func TestWhenAdvancedNeutralMixEnabled_CreatesNeutralZonePerConfiguredTierCount(
 	configuration.ZoneConfiguration.Advanced.NeutralMediumCastleCount = mediumCastleCount
 	configuration.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = highNoCastleCount
 	configuration.ZoneConfiguration.Advanced.NeutralHighCastleCount = highCastleCount
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -728,7 +728,7 @@ func TestWhenAdvancedGuardRandomizationExceedsMaximum_ClampsGuardRandomization(t
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.Enabled = true
 	configuration.ZoneConfiguration.GuardRandomization = gofakeit.Float64Range(0.6, 10.0)
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -744,7 +744,7 @@ func TestWhenAdvancedGuardRandomizationExceedsMaximum_ClampsGuardRandomization(t
 func TestWhenGenerating_ProducesExactlyOneVariant(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := newTemplateGenerator(config.NewGeneratorConfig())
+	generator := test_helpers.NewTemplateGenerator(config.NewGeneratorConfig())
 
 	// Act
 	actual := generator.Generate()
@@ -756,7 +756,7 @@ func TestWhenGenerating_ProducesExactlyOneVariant(t *testing.T) {
 func TestWhenGenerating_ProducesFourZoneLayouts(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := newTemplateGenerator(config.NewGeneratorConfig())
+	generator := test_helpers.NewTemplateGenerator(config.NewGeneratorConfig())
 
 	// Act
 	actual := generator.Generate()
@@ -768,7 +768,7 @@ func TestWhenGenerating_ProducesFourZoneLayouts(t *testing.T) {
 func TestWhenGenerating_ProducesContentCountLimits(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := newTemplateGenerator(config.NewGeneratorConfig())
+	generator := test_helpers.NewTemplateGenerator(config.NewGeneratorConfig())
 
 	// Act
 	actual := generator.Generate()
@@ -786,7 +786,7 @@ func TestWhenChainTopologySelected_IncludesTopologyNameInDescription(t *testing.
 	configuration.Topology = config.TopologyChain
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -806,7 +806,7 @@ func TestWhenDescriptionOptionsEnabled_AppendsOptionPhrases(t *testing.T) {
 	configuration.RandomPortals = true
 	configuration.SpawnRemoteFootholds = false
 	configuration.GenerateRoads = false
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -839,7 +839,7 @@ func TestWhenGenerating_CreatesMandatoryContentGroupPerPlayer(t *testing.T) {
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(1, 6)
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -861,7 +861,7 @@ func TestWhenGenerating_CreatesMandatoryContentGroupPerNeutralZone(t *testing.T)
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -884,7 +884,7 @@ func TestWhenGenerating_PlacesSpawnMainObjectFirstInEachSpawnZone(t *testing.T) 
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = playerCount
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()

@@ -25,7 +25,7 @@ func TestWhenOuterLabelsSurroundTheHub_CreatesSingleHubZone(t *testing.T) {
 	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
 	hubZoneCount := 0
@@ -50,7 +50,7 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesHubPlusOuterZones(t *te
 	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
 	assert.Len(t, variant.Zones, 5)
@@ -69,7 +69,7 @@ func TestWhenHubAndSpokesAreBuilt_EveryConnectionReferencesExistingZones(t *test
 	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
 	assert.Empty(t, danglingConnectionNames(variant))
@@ -88,7 +88,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentName(t *te
 	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
 	var hubZone entities.Zone
@@ -115,7 +115,7 @@ func TestWhenIsolatedPlayersAreAdjacentOuterLabels_SkipsTheirPseudoConnection(t 
 	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
 	assert.NotContains(t, connectionNames(variant), "Pseudo-A-B")
@@ -134,7 +134,7 @@ func TestWhenCirclesTopologyProvided_CreatesHubPlusOuterZones(t *testing.T) {
 	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
 	assert.Len(t, variant.Zones, 5)
@@ -156,7 +156,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, false)
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
 	assert.NotZero(t, countPortalConnections(variant))

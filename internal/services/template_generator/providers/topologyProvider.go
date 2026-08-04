@@ -8,21 +8,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
 type TopologyProvider struct {
 	shufflePlayerZones bool
-	zoneFactory        *zones.ZoneFactory
-	roadFactory        *zones.RoadFactory
+	services           *TopologyServiceLookup
 }
 
-func NewTopologyProvider(
-	zoneFactory *zones.ZoneFactory,
-	roadFactory *zones.RoadFactory,
-) *TopologyProvider {
-	return &TopologyProvider{zoneFactory: zoneFactory, roadFactory: roadFactory}
+func NewTopologyProvider(services *TopologyServiceLookup) *TopologyProvider {
+	return &TopologyProvider{services: services}
 }
 
 func (this *TopologyProvider) CreateTopologyVariant(
@@ -34,47 +28,12 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabelsCopy := this.copyLabels(playerLabels)
 
 	if configuration.IsTournamentMode() && len(playerLabelsCopy) == 2 {
-		return topology.NewTournamentTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning)
+		return this.services.Tournament()(
+			configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	}
 
-	switch configuration.Topology {
-	case config.TopologyHubAndSpoke:
-		return topology.NewHubTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(
-				configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
-	case config.TopologyGeometricHub:
-		return topology.NewGeometricHubTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(
-				configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
-	case config.TopologyChain:
-		return topology.NewChainTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologySharedWeb:
-		return topology.NewSharedWebTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyRandom:
-		return topology.NewRandomTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyCircles:
-		return topology.NewCirclesTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologySquare:
-		return topology.NewSquareTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyGeometric:
-		return topology.NewGeometricTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyCross:
-		return topology.NewCrossTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyFractal:
-		return topology.NewFractalTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	default: // config.TopologyDefault
-		return topology.NewRingTopologyService(this.zoneFactory, this.roadFactory).
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	}
+	return this.services.Resolve(configuration.Topology)(
+		configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 }
 
 func (this *TopologyProvider) ShufflePlayerZones(enabled bool) *TopologyProvider {

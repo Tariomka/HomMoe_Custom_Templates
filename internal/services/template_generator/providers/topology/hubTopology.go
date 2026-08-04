@@ -33,10 +33,10 @@ func (this *HubTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	hubIsHoldCity bool) entities.Variant {
+	_ string) entities.Variant {
 	outerLabels := this.createOuterLabels(configuration, playerLabels, neutralZones)
 
-	zones := this.createZones(configuration, playerLabels, outerLabels, tuning, neutralZones, hubIsHoldCity)
+	zones := this.createZones(configuration, playerLabels, outerLabels, tuning, neutralZones)
 	conns := this.createConnections(
 		playerLabels, outerLabels, tuning, configuration.NoDirectPlayerConnections, neutralZones)
 	if configuration.RandomPortals {
@@ -65,8 +65,7 @@ func (this *HubTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones neutral_zone.Plans,
-	hubIsHoldCity bool) []entities.Zone {
+	neutralZones neutral_zone.Plans) []entities.Zone {
 	hubConns := make([]string, len(outerLabels))
 	for index, label := range outerLabels {
 		hubConns[index] = constants.HubZonePrefix + label
@@ -75,9 +74,13 @@ func (this *HubTopologyService) createZones(
 	if len(configuration.HubZoneMandatoryContent) > 0 {
 		hubContentName = "mandatory_content_hub"
 	}
-	zones := []entities.Zone{this.CreateHubZone(
-		constants.HubZoneName, hubConns, tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
-		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
+	zones := []entities.Zone{
+		this.CreateHubZone(
+			constants.HubZoneName, hubConns, tuning, configuration.IsHubCityToHold(),
+			configuration.ZoneConfiguration.HubZoneSize,
+			configuration.ZoneConfiguration.Advanced.HubZoneCastles,
+			configuration.GenerateRoads, hubContentName),
+	}
 
 	for _, label := range outerLabels {
 		spokeConnectionNames := []string{constants.HubZonePrefix + label}

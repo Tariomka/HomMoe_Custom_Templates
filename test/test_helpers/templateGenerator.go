@@ -1,6 +1,4 @@
-// Package templateGenerator_test contains shared arrangement helpers for the
-// templateGenerator.go unit tests.
-package templateGenerator_test
+package test_helpers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -11,9 +9,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
-// newTemplateGenerator builds the generator with the same collaborators the
-// application wires.
-func newTemplateGenerator(configuration *config.GeneratorConfig) *template_generator.TemplateGenerator {
+// NewTemplateGenerator builds the generator with the same collaborators
+// internal/composition wires for production.
+func NewTemplateGenerator(configuration *config.GeneratorConfig) *template_generator.TemplateGenerator {
 	castleFactory := zones.NewCastleFactory()
 	roadFactory := zones.NewRoadFactory()
 	zoneFactory := zones.NewZoneFactory(castleFactory, roadFactory)
@@ -27,6 +25,6 @@ func newTemplateGenerator(configuration *config.GeneratorConfig) *template_gener
 		providers.NewContentLimitProvider(),
 		providers.NewMandatoryContentProvider(zoneClassifier, zoneEditor),
 		providers.NewGameRulesProvider(),
-		providers.NewTopologyProvider(zoneFactory, roadFactory),
+		providers.NewTopologyProvider(NewTopologyServiceLookup(zoneFactory, roadFactory)),
 		providers.NewZoneLayoutProvider())
 }

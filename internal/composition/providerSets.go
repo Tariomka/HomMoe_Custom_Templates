@@ -40,6 +40,7 @@ var GenerationSet = wire.NewSet(
 	providers.NewMandatoryContentProvider,
 	providers.NewTopologyProvider,
 	providers.NewZoneLayoutProvider,
+	provideTopologyServices,
 	template_generator.NewTemplateGenerator,
 )
 

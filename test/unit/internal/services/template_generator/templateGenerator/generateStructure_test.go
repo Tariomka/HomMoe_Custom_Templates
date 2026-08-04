@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +19,7 @@ func TestWhenRingTopologySelected_CreatesConnectionPerZone(t *testing.T) {
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -35,7 +36,7 @@ func TestWhenRingTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegre
 	configuration.PlayerCount = 4
 	configuration.ZoneConfiguration.NeutralZoneCount = 4
 	configuration.ShufflePlayerZones = false // Deterministic zero-angle zone.
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()
@@ -71,7 +72,7 @@ func TestWhenTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
 			configuration.Topology = testCase.topology
 			configuration.PlayerCount = 2
 			configuration.ZoneConfiguration.NeutralZoneCount = 1
-			generator := newTemplateGenerator(configuration)
+			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
 			actual := generator.Generate()
@@ -99,7 +100,7 @@ func newCirclesMixedNeutralConfiguration() *config.GeneratorConfig {
 func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesZoneForEveryPlannedZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := newTemplateGenerator(newCirclesMixedNeutralConfiguration())
+	generator := test_helpers.NewTemplateGenerator(newCirclesMixedNeutralConfiguration())
 
 	// Act
 	actual := generator.Generate()
@@ -111,7 +112,7 @@ func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesZoneForEveryPlannedZone
 func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesConnections(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := newTemplateGenerator(newCirclesMixedNeutralConfiguration())
+	generator := test_helpers.NewTemplateGenerator(newCirclesMixedNeutralConfiguration())
 
 	// Act
 	actual := generator.Generate()
@@ -143,8 +144,8 @@ func TestWhenNeutralZonesAreHighQuality_ProducesStrongerBorderGuardsThanLowQuali
 		configuration.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = lowCount
 		return configuration
 	}
-	highQualityGenerator := newTemplateGenerator(newQualityConfiguration(4, 0))
-	lowQualityGenerator := newTemplateGenerator(newQualityConfiguration(0, 4))
+	highQualityGenerator := test_helpers.NewTemplateGenerator(newQualityConfiguration(4, 0))
+	lowQualityGenerator := test_helpers.NewTemplateGenerator(newQualityConfiguration(0, 4))
 
 	// Act
 	highQualityTotal := sumConnectionGuardValues(highQualityGenerator.Generate())
@@ -171,7 +172,7 @@ func TestWhenCityHoldEnabledWithMixedNeutralTiers_MarksExactlyOneHoldCityMainObj
 	configuration.ZoneConfiguration.Advanced.NeutralMediumCastlesPerZone = 1
 	configuration.ZoneConfiguration.Advanced.NeutralHighCastleCount = 2
 	configuration.ZoneConfiguration.Advanced.NeutralHighCastlesPerZone = 1
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()

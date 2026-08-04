@@ -647,24 +647,25 @@ baseline for Phase 6.
 
 ## Phase 5: Prebuild The Topology Lookup
 
-Status: Not started
+Status: Complete
 
 The constructor collapse itself moved to Phase 1.5. What remains here is the performance half: the
 provider still allocates a fresh topology service on every call inside the auto-regen loop.
 
-- [ ] **First, classify each service.** Stateless -> singleton, built once and shared. Holds per-call
+- [x] **First, classify each service.** Stateless -> singleton, built once and shared. Holds per-call
       mutable state -> stays transient behind a factory function. They currently receive
       `configuration`, `playerLabels`, `neutralZones` and `tuning` per call, which suggests stateless,
       but `RandomTopologyService` and the `TopologyBase` embedders must be read before deciding.
       `TournamentTopologyService` assigns `this.clusterService` inside `CreateTopologyVariant`, so it
       **is** stateful as written — either keep it transient or lift that switch into a local variable.
       Record the classification for each service in this phase's summary.
-- [ ] `TopologyProvider` builds the lookup once in its constructor and
-      [`CreateTopologyVariant`](internal/services/template_generator/providers/topologyProvider.go#L32-L80)
+- [x] `TopologyProvider` builds the lookup once in its constructor and
+      [`CreateTopologyVariant`](internal/services/template_generator/providers/topologyProvider.go#L22-L36)
       resolves through it instead of constructing. Singletons are looked up directly; transients are
       looked up as a factory func and invoked. Preserve the two-player tournament short-circuit and
-      the `default:` → ring fallback exactly.
-- [ ] Wire the lookup through `composition/topologyServiceProvider.go`.
+      the `default:` → ring fallback exactly. **Author decision: the lookup is built by the composition
+      provider and injected**, see the summary.
+- [x] Wire the lookup through `composition/topologyServiceProvider.go`.
 
 ### Verification Plan
 
@@ -678,7 +679,116 @@ provider still allocates a fresh topology service on every call inside the auto-
 
 ### Phase Summary
 
-_(write when phase completes)_
+`CreateTopologyVariant` no longer constructs anything. Every topology service is built once, at
+composition time, and the hot path is a map lookup plus a call through a func value.
+
+**Classification (all read before deciding).**
+
+| Service | Verdict | Evidence |
+| --- | --- | --- |
+| `Ring`, `Chain`, `SharedWeb`, `Hub`, `GeometricHub` | **Stateless -> singleton** | embed only `base.TopologyBase`; no field assignment outside the constructor |
+| `Random`, `Circles`, `Square`, `Geometric`, `Cross`, `Fractal` | **Stateless -> singleton** | embed `PositionedTopologyBuilder` (itself only `TopologyBase`); `Circles` additionally holds a `PositionLayoutService`, which is `struct{}` |
+| `TopologyBase` | Stateless | `ZoneLabelProvider`, both factories and `connectionService` are set once in `NewTopologyBase` |
+| `tournament_variant` `Hub`/`Balanced`/`Ring`/`Chain` cluster services | **Stateless -> singleton** | same shape; no per-call field writes |
+| `TournamentTopologyService` | **Was stateful, now stateless -> singleton** | `this.clusterService` was assigned inside `CreateTopologyVariant`; see below |
+
+The only `this.X = ...` hits outside constructors in the whole topology tree are in
+`geometricHubLayout.go` and `geometryHelpers.go` — both are per-call helper objects
+(`newGeometricHubLayout`, `newPairBuilder`) created inside a single `CreateTopologyVariant` call, not
+services. Nothing needed a transient factory func, so the "transients are looked up as a factory func"
+half of the checklist did not apply.
+
+**`TournamentTopologyService` was made stateless.** The four cluster services are now built in the
+constructor and held in four dedicated fields; the `switch` moved into a private
+`selectClusterService(config.MapTopology)` that returns one of them into a local variable. The
+`zoneFactory`/`roadFactory` fields it kept only to feed that switch are gone. The case-to-service
+mapping — including the `default:` chain-per-cluster fallback for Chain/SharedWeb/Random — is byte-for-
+byte the same.
+
+**Where the lookup is assembled — author decision.** The plan's decision table
+("a hand-written provider function builds the enum-keyed lookup; wire only calls it") and the Phase 5
+checklist ("`TopologyProvider` builds the lookup in its constructor") could not both hold without one
+artifact becoming the identity wrapper Phase 2 rejected. The author chose the decision-table reading:
+
+- [internal/composition/topologyServiceProvider.go](internal/composition/topologyServiceProvider.go) —
+  `provideTopologyServices(zoneFactory, roadFactory)` constructs all twelve services once and returns
+  the lookup. Added to `GenerationSet`; `wire_gen.go` now calls it exactly once.
+- [providers/topologyServiceLookup.go](internal/services/template_generator/providers/topologyServiceLookup.go) —
+  `TopologyServiceLookup` owns the enum-to-service mapping. `Resolve` returns the mapped creator or
+  falls back to ring, which reproduces the old `default:` arm for both `config.TopologyRing`
+  (whose value is the string `"Default"`) and any unknown topology. `Tournament()` exposes the
+  short-circuit creator separately, because tournament mode is selected by generation mode, not by
+  topology.
+- [providers/topologyVariantCreator.go](internal/services/template_generator/providers/topologyVariantCreator.go) —
+  the one func type every `CreateTopologyVariant` implements directly.
+- `NewTopologyProvider(services *TopologyServiceLookup)`; `TopologyProvider` keeps
+  `shufflePlayerZones`, `copyLabels` and the two-player tournament short-circuit unchanged.
+
+The mapping stays in `internal/services` rather than in `composition` on purpose: which enum picks
+which service is generation behaviour, not wiring. Composition only constructs.
+
+**Signatures were unified instead of adapted.** The three `CreateTopologyVariant` shapes were first
+reconciled by two private adapters (`newTournamentVariantCreator`, `newHubCityVariantCreator`). The
+author then moved the `configuration.IsHubCityToHold()` lookup inside `hubTopology.createZones` and
+`geometricHubTopology.createZones`, making their `hubIsHoldCity bool` parameter redundant. All twelve
+services now declare the identical `TopologyVariantCreator` signature — hub/geometricHub and tournament
+take `_ string` for the hold-city label they do not use — so both adapters were deleted and the map
+stores bare method values. Behaviour is unchanged; the affected unit tests pass `""` instead of `false`.
+
+**Test seams.** [test/test_helpers/topologyServiceLookup.go](test/test_helpers/topologyServiceLookup.go)
+mirrors the composition provider, and
+[test/test_helpers/topologyProvider.go](test/test_helpers/topologyProvider.go) wraps it as
+`NewTopologyProvider()`. This follows the `NewZoneFactories()` / `NewZoneEditorService()` precedent from
+Phases 1.5 and 4 — the twelve-line construction list is duplicated in the helper package rather than
+adding a convenience constructor to production code, so production callers still have to supply the
+lookup explicitly. All 11 test call sites were retargeted.
+[test/test_helpers/templateGenerator.go](test/test_helpers/templateGenerator.go) was added later so the
+new benchmark and the `templateGenerator` unit suite share one generator arrangement.
+
+**New tests** in `test/unit/internal/services/template_generator/providers/topologyServiceLookup/`:
+`newTopologyServiceLookup_test.go`, `resolve_test.go` (mapped-topology table, hub resolution,
+unmapped-and-`TopologyRing`-fall-back-to-ring, and the `IsHubCityToHold()` pass-through) and
+`tournament_test.go`. `topologyVariantCreator.go` is a bare type declaration and needs none
+(AGENTS.md §4.6). `provideTopologyServices` and `selectClusterService` are private and covered
+indirectly — both report 100%.
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `grep "WithCreationServices"` | no matches outside this plan and the carry-forward doc |
+| `grep "topology.New"` in `topologyProvider.go` | no matches — the hot path constructs nothing |
+| `go build ./...` | clean |
+| `go vet -tags='integration_test,gui' ./...` | clean |
+| `go test ./test/unit/... -count=1` | green, including the golden-template suites |
+| `go test -tags=integration_test ./test/integration/... -count=1` | ok 2.667s |
+| `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | ok 2.936s |
+| `wire diff ./internal/composition/...` | exit 0 |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | 42 issues (40 `gochecknoglobals`, 2 `dupl`) — the standing baseline, after `--fix` cleared the `gci`/`gofmt`/`golines` findings the new files introduced |
+| Unit coverage | **64.6%** — 0.1 pp below the 64.7% baseline, purely the arithmetic effect of deleting the two fully-covered adapters; no function lost coverage and every new or rewritten function reports 100% |
+
+**Benchmark.** `BenchmarkEditorWindow_TabCycling` clicks through editor tabs and never triggers
+generation, so it does not exercise the topology path at all — it is not a valid before/after measure
+for this phase. Four headless runs gave 7.58–9.84 ms/op (heavy run-to-run noise) at a flat
+**8360–8364 allocs/op**, confirming only that nothing regressed. Phase 3's recorded 4.58 ms/op is not
+comparable: that run used the task's `-args headed`.
+
+[test/performance/template_generation_test.go](test/performance/template_generation_test.go) was added
+at the author's request to measure the real path — `BenchmarkTemplateGenerator_Generate` runs a full
+`TemplateGenerator.Generate()` per topology and needs no window. Post-change figures
+(`-benchtime=50x -benchmem`):
+
+| Case | ns/op | B/op | allocs/op |
+| --- | --- | --- | --- |
+| Ring (8p) | 127150 | 60339 | 608 |
+| HubAndSpoke (8p) | 88476 | 80251 | 637 |
+| GeometricHub (8p) | 107398 | 67605 | 619 |
+| Fractal (8p) | 122438 | 68731 | 707 |
+| Tournament (2p) | 23200 | 18939 | 163 |
+
+These are the new baseline for Phase 6. The allocation win itself is structural and visible in the
+diff — each `CreateTopologyVariant` call previously allocated a topology service plus its
+`TopologyBase` (which itself allocates a `ZoneLabelProvider` and a `topologyConnectionService`), and in
+tournament mode a cluster service on top; it now allocates none.
 
 ## Phase 6: Final Verification And Documentation
 

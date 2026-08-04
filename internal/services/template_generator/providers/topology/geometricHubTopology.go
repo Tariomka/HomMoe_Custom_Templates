@@ -39,7 +39,7 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	hubIsHoldCity bool) entities.Variant {
+	_ string) entities.Variant {
 	layout := newGeometricHubLayout(playerLabels, neutralZones)
 	allLabels := append(append([]string{}, playerLabels...),
 		linq.FromSlice(neutralZones).
@@ -47,8 +47,7 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 			ToSlice()...)
 
 	connectionNames := this.createConnectionNameIndex(layout)
-	zones := this.createZones(
-		configuration, playerLabels, neutralZones, layout, connectionNames, tuning, hubIsHoldCity)
+	zones := this.createZones(configuration, playerLabels, neutralZones, layout, connectionNames, tuning)
 	conns := this.createConnections(playerLabels, neutralZones, layout, tuning)
 	if configuration.RandomPortals {
 		conns = append(conns,
@@ -86,16 +85,17 @@ func (this *GeometricHubTopologyService) createZones(
 	neutralZones neutral_zone.Plans,
 	layout *geometricHubLayout,
 	connectionNames map[string][]string,
-	tuning models.GenerationTuning,
-	hubIsHoldCity bool) []entities.Zone {
+	tuning models.GenerationTuning) []entities.Zone {
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
 		hubContentName = "mandatory_content_hub"
 	}
-	zones := []entities.Zone{this.CreateHubZone(
-		constants.HubZoneName, connectionNames[constants.HubZoneName], tuning, hubIsHoldCity,
-		configuration.ZoneConfiguration.HubZoneSize,
-		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
+	zones := []entities.Zone{
+		this.CreateHubZone(
+			constants.HubZoneName, connectionNames[constants.HubZoneName], tuning, configuration.IsHubCityToHold(),
+			configuration.ZoneConfiguration.HubZoneSize, configuration.ZoneConfiguration.Advanced.HubZoneCastles,
+			configuration.GenerateRoads, hubContentName),
+	}
 	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
 
 	for index, label := range playerLabels {

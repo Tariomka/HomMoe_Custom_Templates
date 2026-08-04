@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ func TestWhenConfigurationProvided_ReturnsNonNilGenerator(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 
 	// Act
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Assert
 	assert.NotNil(t, generator)
@@ -28,7 +29,7 @@ func TestWhenConfigurationProvided_GeneratesFromProvidedConfiguration(t *testing
 	configuration.TemplateName = expectedName
 
 	// Act
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Assert
 	assert.Equal(t, expectedName, generator.Generate().Name)

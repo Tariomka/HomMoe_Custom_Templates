@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,7 +37,7 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	playerCount := gofakeit.Number(2, 8)
-	generator := newTemplateGenerator(
+	generator := test_helpers.NewTemplateGenerator(
 		newTournamentConfiguration(config.TopologyRing, playerCount, gofakeit.Number(1, 20)))
 
 	// Act
@@ -49,7 +50,7 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubGuardGroups(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	generator := newTemplateGenerator(
+	generator := test_helpers.NewTemplateGenerator(
 		newTournamentConfiguration(config.TopologyHubAndSpoke, 2, gofakeit.Number(1, 20)))
 
 	// Act
@@ -77,7 +78,7 @@ func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *test
 		t.Run(subTestName, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			generator := newTemplateGenerator(
+			generator := test_helpers.NewTemplateGenerator(
 				newTournamentConfiguration(topology, 2, gofakeit.Number(1, 20)))
 
 			// Act
@@ -118,7 +119,7 @@ func TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections(t *testing
 	configuration := newTournamentConfiguration(config.TopologyRing, gofakeit.Number(2, 8), gofakeit.Number(8, 20))
 	configuration.RandomPortals = true
 	configuration.MaxPortalConnections = 4
-	generator := newTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	actual := generator.Generate()

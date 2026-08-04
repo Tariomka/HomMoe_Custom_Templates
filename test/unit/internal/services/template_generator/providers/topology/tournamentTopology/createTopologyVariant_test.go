@@ -35,7 +35,7 @@ func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeu
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	assert.Len(t, variant.Zones, 6)
@@ -50,7 +50,7 @@ func TestWhenTournamentIsBuilt_EveryConnectionReferencesExistingZones(t *testing
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	assert.Empty(t, danglingConnectionNames(variant))
@@ -66,7 +66,7 @@ func TestWhenPortalsAreDisabled_PlayerClustersStayIsolatedAsTwoComponents(t *tes
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	assert.Equal(t, 2, connectedComponentCount(variant))
@@ -81,7 +81,7 @@ func TestWhenTwoPlayersAreProvided_EachPlayerGetsOwnSpawnZone(t *testing.T) {
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	names := zoneNameSet(variant)
@@ -99,7 +99,7 @@ func TestWhenTopologyIsHubAndSpoke_CreatesHubZonePerPlayer(t *testing.T) {
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	names := zoneNameSet(variant)
@@ -117,7 +117,7 @@ func TestWhenTopologyIsRing_CreatesRingClusterConnections(t *testing.T) {
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	assert.NotZero(t, countConnectionsWithPrefix(variant, "TRing-"))
@@ -133,7 +133,7 @@ func TestWhenTopologyIsCircles_CreatesBalancedClusterConnections(t *testing.T) {
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	assert.NotZero(t, countConnectionsWithPrefix(variant, "TBal-"))
@@ -149,7 +149,7 @@ func TestWhenTopologyIsUnhandled_FallsBackToChainClusterConnections(t *testing.T
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	assert.NotZero(t, countConnectionsWithPrefix(variant, "Tourney-"))
@@ -165,7 +165,7 @@ func TestWhenRandomPortalsAreEnabled_AddsPortalConnections(t *testing.T) {
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	assert.NotZero(t, countConnectionsWithPrefix(variant, "Portal-"))
@@ -181,7 +181,7 @@ func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T
 	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning)
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
 	neutralPerCluster := map[string]int{}
