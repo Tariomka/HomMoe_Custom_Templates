@@ -12,7 +12,7 @@ import (
 func TestWhenSaveAsIsCalled_DialogIsOpened(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := drivers.NewUIStateWithHandler(&test_helpers.TemplateHandlerMock{})
+	state := drivers.NewUIState(&test_helpers.TemplateHandlerMock{}, false)
 
 	// Act
 	state.SaveAs(gofakeit.ProductName())

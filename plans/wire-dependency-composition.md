@@ -792,21 +792,21 @@ tournament mode a cluster service on top; it now allocates none.
 
 ## Phase 6: Final Verification And Documentation
 
-Status: Not started
+Status: Complete
 
-- [ ] `go build ./...`.
-- [ ] `go test ./test/unit/... -count=1`.
-- [ ] `go test -tags=integration_test ./test/integration/... -count=1`.
-- [ ] `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1`.
-- [ ] Coverage report; confirm the total is at or above the Phase 0 baseline and that
+- [x] `go build ./...`.
+- [x] `go test ./test/unit/... -count=1`.
+- [x] `go test -tags=integration_test ./test/integration/... -count=1`.
+- [x] `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1`.
+- [x] Coverage report; confirm the total is at or above the Phase 0 baseline and that
       `internal/composition` is covered by the injector test.
-- [ ] `golangci-lint-v2 run ./... --issues-exit-code=0`; confirm the only new findings are the expected
+- [x] `golangci-lint-v2 run ./... --issues-exit-code=0`; confirm the only new findings are the expected
       `gochecknoglobals` entries for the wire provider sets, and record the new baseline count.
-- [ ] Confirm `wire_gen.go` regenerates byte-identically from a clean checkout.
-- [ ] Confirm `wireinject` appears in **no** build or test command, no `GOFLAGS`, and no VS Code
+- [x] Confirm `wire_gen.go` regenerates byte-identically from a clean checkout.
+- [x] Confirm `wireinject` appears in **no** build or test command, no `GOFLAGS`, and no VS Code
       `go.buildTags` / `go.testTags`.
-- [ ] Update `README.md` / `QUICKSTART.md` only if they document the build or contribution workflow.
-- [ ] Leave everything unstaged for author review.
+- [x] Update `README.md` / `QUICKSTART.md` only if they document the build or contribution workflow.
+- [x] Leave everything unstaged for author review.
 
 ### Verification Plan
 
@@ -814,7 +814,54 @@ Status: Not started
 
 ### Phase Summary
 
-_(write when phase completes)_
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `go build ./...` | clean |
+| `go vet -tags='integration_test,gui' ./...` | clean |
+| `go test ./test/unit/... -count=1` | green |
+| `go test -tags=integration_test ./test/integration/... -count=1` | ok 0.841s |
+| `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | ok 1.382s |
+| `wire gen` then `Get-FileHash internal/composition/wire_gen.go` | byte-identical before and after |
+| `wire diff ./internal/composition/...` | exit 0 |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | 42 issues (40 `gochecknoglobals`, 2 `dupl`) |
+| Unit coverage | **64.6%** |
+
+**Coverage — 0.2 pp below the Phase 0 baseline, and why that is the correct outcome.** The trajectory
+was 64.8% (Phase 0 and 2) → 64.7% (Phase 3) → 64.7% (Phase 4) → 64.6% (Phase 5). Both 0.1 pp steps are
+denominator arithmetic from deleting *covered* code, documented in place: Phase 3 removed
+`NewDefaultGuiHandler` and `newDefaultPreviewGenerator` (~22 covered statements that duplicated what
+`wire_gen.go` builds), Phase 5 removed the two fully-covered signature adapters. No statement that was
+covered at Phase 0 is uncovered now, and no uncovered code was added. `internal/composition` is covered
+by the injector test: `wire_gen.go InitializeGuiHandler` 100%, `provideTopologyServices` 100%,
+`providePreviewGenerator` 60% — the missing 40% is the asset-load failure branch, which is only
+reachable with a broken installation and would need a production seam to force (AGENTS.md §4.6
+forbids that).
+
+**Lint.** 42 issues against the Phase 0 baseline of 84 `gochecknoglobals` — a net improvement of 42.
+The six new findings are exactly the expected ones, all in
+[internal/composition/providerSets.go](internal/composition/providerSets.go): `ZoneSet`,
+`GenerationSet`, `EditorSet`, `InfrastructureSet`, `HandlerSet`, `GuiHandlerSet`. `wire.NewSet` values
+must be package-level, so these are inherent to the tool. The 2 `dupl` findings are pre-existing in
+[app/gui/widgets/buttonWidget.go](app/gui/widgets/buttonWidget.go) and unrelated to this work.
+
+**`wireinject` containment.** The tag appears only in the two build constraints
+([wire.go](internal/composition/wire.go) `//go:build wireinject`,
+[wire_gen.go](internal/composition/wire_gen.go) `//go:build !wireinject`), in the AGENTS.md §4.6.2
+prose, in a comment in [.vscode/tasks.json](.vscode/tasks.json), and in the `cSpell.words` list in
+[.vscode/settings.json](.vscode/settings.json). `go env GOFLAGS` is empty; `gopls.build.buildFlags` is
+`-tags=integration_test,gui` only; no `go.buildTags` / `go.testTags` entry exists.
+
+**Documentation.** [README.md](README.md) gained two things: a *Building & Running* paragraph stating
+that `wire_gen.go` is committed (so a plain `go build` needs no extra step), the
+`wire gen ./internal/composition/...` regeneration command, and the warning never to pass
+`-tags=wireinject`; and an eighth *Architecture → Layers* entry for `internal/composition`.
+[QUICKSTART.md](QUICKSTART.md) is end-user documentation (`go run .` / `go build .`) and documents no
+contribution workflow, so it was left unchanged. AGENTS.md §4.6.2 was already written in Phase 1 and
+remains accurate.
+
+**Working tree.** Only `README.md` is modified; nothing staged, nothing committed by the agent.
 
 ## Risks And Watch-Outs
 
@@ -832,8 +879,61 @@ _(write when phase completes)_
 
 ## Final Recap
 
-_(write when all phases complete)_
+The application now has a single compile-time composition root. Before this work, dependencies were
+constructed ad hoc: `NewGuiHandler` built one set of collaborators and `NewTemplateGenerator` silently
+built a second copy of three of them, two call sites each created an independent handler graph, and
+`TopologyProvider` allocated a fresh topology service on every call inside a 300 ms auto-regeneration
+debounce loop.
+
+| Phase | Outcome |
+| --- | --- |
+| 0 | Repaired the handler test suite left broken by an in-flight refactor; established the 64.8% coverage baseline every later phase was measured against. |
+| 1 | Adopted `github.com/goforj/wire` (maintained fork of the archived `google/wire`), recorded the CLI in `tools/go.mod`, added the *Go: Generate wire injectors* task, and documented `wireinject` in AGENTS.md §4.6.2 as a codegen-only tag. |
+| 1.5 | Deleted the `CreationServices` aggregate; constructors now take the collaborators they actually use. |
+| 2 | Created `internal/composition` — six provider sets, the `//go:build wireinject` injector stub, the committed `wire_gen.go`, and an injector test. |
+| 3 | Collapsed to one composition root: `window.go` and `drivers/state.go` both go through `composition.InitializeGuiHandler()`; `NewDefaultGuiHandler` and `newDefaultPreviewGenerator` deleted. |
+| 4 | Removed nil-defaulting fallbacks — a missing dependency is now a compile error, not a silent second instance. |
+| 5 | Prebuilt the topology lookup: twelve singleton services behind `TopologyServiceLookup`, `TournamentTopologyService` made stateless, all twelve `CreateTopologyVariant` signatures unified on `TopologyVariantCreator`, and a `TemplateGenerator.Generate` benchmark added. |
+| 6 | Final verification and documentation. |
+
+**Behaviour parity held throughout.** Generated `.rmg.json` output is unchanged — the golden-template
+suites in `test/unit/internal/services/template_generator/` guarded every phase and stayed green.
+
+**Net measurements.** Lint 84 → 42 issues. Coverage 64.8% → 64.6%, entirely from deleting covered
+duplicate code (see the Phase 6 summary). `CreateTopologyVariant` went from allocating a topology
+service plus its `TopologyBase` — and in tournament mode a cluster service — on every call, to
+allocating none; `BenchmarkTemplateGenerator_Generate` in
+[test/performance/template_generation_test.go](test/performance/template_generation_test.go) is the
+standing baseline for that path.
 
 ## Deployment Plan
 
-_(write when all phases complete)_
+This is a desktop application built from source; there is no server or release pipeline to coordinate.
+
+1. **Review the working tree.** `git status --short` — the agent staged and committed nothing. Review
+   the diff, then stage and commit on `AD/refactoring-07-21`.
+2. **Confirm `wire_gen.go` is included in the commit.** It is generated but committed on purpose; a
+   checkout without it does not build.
+3. **Run the gate locally before pushing:**
+
+   ```powershell
+   go build ./...
+   go vet -tags='integration_test,gui' ./...
+   go test ./test/unit/... -count=1
+   go test -tags=integration_test ./test/integration/... -count=1
+   go test -tags='integration_test,gui' ./test/integration/gui/... -count=1
+   wire diff ./internal/composition/...
+   ```
+
+   `wire diff` exiting 0 proves the committed `wire_gen.go` matches its providers. Note that the `wire`
+   CLI writes its banner to stderr, so PowerShell may surface a `NativeCommandError` on success — judge
+   by the exit code, not the banner.
+4. **CI.** The existing PR validation (`go build ./...`, `go vet -tags=integration_test ./...`,
+   `go test -race ./test/unit/...`) needs no change. `wire` is **not** required on CI agents because
+   `wire_gen.go` is committed; optionally add `wire diff` as a drift check, which would require
+   `go install github.com/goforj/wire/cmd/wire@latest` in the job.
+5. **Contributor onboarding.** Anyone changing a provider set or a constructor signature must install
+   the CLI (`go install github.com/goforj/wire/cmd/wire@latest`) and run the *Go: Generate wire
+   injectors* task. README *Building & Running* and AGENTS.md §4.6.2 both state this.
+6. **Rollback.** Purely a `git revert` of the merge; there is no migration, no persisted format change
+   and no state to unwind — `.gen.json` and `.rmg.json` are byte-compatible with the previous build.

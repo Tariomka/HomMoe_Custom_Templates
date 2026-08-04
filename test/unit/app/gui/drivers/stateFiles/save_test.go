@@ -12,7 +12,7 @@ func TestWhenNoCurrentPathExists_SaveOpensSaveAsDialog(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	state := drivers.NewUIStateWithHandler(handlerMock)
+	state := drivers.NewUIState(handlerMock, false)
 
 	// Act
 	state.Save()
@@ -25,7 +25,7 @@ func TestWhenNoCurrentPathExists_SaveDoesNotCallHandler(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	state := drivers.NewUIStateWithHandler(handlerMock)
+	state := drivers.NewUIState(handlerMock, false)
 
 	// Act
 	state.Save()

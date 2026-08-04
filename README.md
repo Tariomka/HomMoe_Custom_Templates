@@ -124,6 +124,18 @@ go build .
 Hot reload via [air](https://github.com/air-verse/air) is configured in
 [.air.toml](.air.toml); set `HOT_RELOAD=1` to start the window minimized.
 
+Dependencies are wired at compile time by
+[goforj/wire](https://github.com/goforj/wire). The generated
+[internal/composition/wire_gen.go](internal/composition/wire_gen.go) is committed, so a plain
+`go build` needs no extra step — but after changing any provider set or constructor signature,
+regenerate it:
+
+```powershell
+wire gen ./internal/composition/...
+```
+
+Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the generator only.
+
 ## Workflow
 
 1. Launch the GUI (`go run .`). On startup it tries to locate the game's
@@ -200,6 +212,9 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
 7. **Mappers, validators & helpers** (`internal/mappers`,
    `internal/validators`, `internal/helpers`) — boundary mapping, editor-state
    validation and cross-cutting utilities including Steam library detection.
+8. **Composition root** (`internal/composition`) — the wire provider sets and
+   the generated `InitializeGuiHandler` injector. Every dependency is
+   constructed here exactly once; nothing else builds its own collaborators.
 
 ### Generation Flow
 

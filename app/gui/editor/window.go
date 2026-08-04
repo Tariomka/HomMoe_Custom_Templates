@@ -32,7 +32,7 @@ type Window struct {
 }
 
 func NewWindow(backend handler_interfaces.IGuiHandler) *Window {
-	window := Window{state: drivers.NewUIStateWithBackend(backend)}
+	window := Window{state: drivers.NewUIState(backend, true)}
 	window.toolbar = NewToolbar(window.state, window.load)
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),

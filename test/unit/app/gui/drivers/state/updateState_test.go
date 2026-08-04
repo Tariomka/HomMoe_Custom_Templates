@@ -17,7 +17,7 @@ func newGeneratedState() *drivers.State {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state := drivers.NewUIStateWithHandler(handlerMock)
+	state := drivers.NewUIState(handlerMock, false)
 	state.Generate()
 	return state
 }
@@ -25,7 +25,7 @@ func newGeneratedState() *drivers.State {
 func TestWhenUpdateChangesState_ChangeIsApplied(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := drivers.NewUIStateWithHandler(&test_helpers.TemplateHandlerMock{})
+	state := drivers.NewUIState(&test_helpers.TemplateHandlerMock{}, false)
 	playerCount := gofakeit.Number(3, 8)
 
 	// Act

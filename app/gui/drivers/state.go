@@ -48,8 +48,16 @@ type State struct {
 	dialogs *DialogHost
 }
 
-func NewUIStateWithBackend(handler handler_interfaces.IGuiHandler) *State {
-	state := NewUIStateWithHandler(handler)
+func NewUIState(handler handler_interfaces.IGuiHandler, findTemplateDir bool) *State {
+	state := &State{
+		handler:    handler,
+		innerState: models.NewEditorState(handler),
+	}
+	state.outputPath.SingleLine = true
+	state.dialogs = &DialogHost{}
+	if !findTemplateDir {
+		return state
+	}
 
 	templateDir, err := helpers.FindOldenEraTemplatesDir(false)
 	if templateDir == "" {
@@ -64,19 +72,6 @@ func NewUIStateWithBackend(handler handler_interfaces.IGuiHandler) *State {
 		}
 	}
 	state.outputPath.SetText(templateDir)
-	return state
-}
-
-// NewUIStateWithHandler builds a State around the given backend
-// without probing the disk for the game templates directory. Production code
-// uses NewUIState; tests inject a mock handler here.
-func NewUIStateWithHandler(handler handler_interfaces.IGuiHandler) *State {
-	state := &State{
-		handler:    handler,
-		innerState: models.NewEditorState(handler),
-	}
-	state.outputPath.SingleLine = true
-	state.dialogs = &DialogHost{}
 	return state
 }
 

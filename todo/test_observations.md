@@ -55,11 +55,14 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
 
 ## app/gui/drivers.State (partially unit-tested since review item §2.2)
 
-Unit tests use `NewUIStateWithHandler` + `test_helpers.TemplateHandlerMock`.
+Unit tests use `NewUIState(handler, false)` + `test_helpers.TemplateHandlerMock`.
 Still unit-untestable (dialog-callback or Gio territory):
 
-- state.go - `NewUIState` (probes the disk for the game templates dir and
-  builds the real `GUIHandler`/preview stack) and `GetOutputPathWidget`
+- state.go - `GetOutputPathWidget`
+- state.go - the `templateDir == ""` fallback inside `NewUIState`: whether
+  `FindOldenEraTemplatesDir` succeeds depends on whether the game is installed
+  on the machine running the tests, so only the branch that is true locally is
+  ever measured.
   (returns a Gio widget). Covered by the integration suite.
 - stateFiles.go - `handleSaveState` / `handleLoadState` success paths and
   `suggestDirectory` are only reachable through file-dialog callbacks
