@@ -28,7 +28,7 @@ type templateHandler struct {
 	stateHandler      handler_interfaces.IStateHandler
 }
 
-func newTemplateHandler(
+func NewTemplateHandler(
 	templateGenerator *template_generator.TemplateGenerator,
 	mapper *mappers.GeneratorConfigMapper,
 	contentProvider *providers.MandatoryContentProvider,

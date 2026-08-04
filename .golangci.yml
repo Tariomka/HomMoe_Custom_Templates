@@ -146,12 +146,10 @@ linters:
         concrete-handlers-only-at-gui-composition-roots:
           files:
             - "**/app/**"
-            - "!**/app/gui/drivers/state.go"
-            - "!**/app/gui/editor/window.go"
             - "!$test"
           deny:
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/handlers$
-              desc: concrete handlers may only be imported by GUI composition roots
+              desc: app/* builds its handler through internal/composition
 
         config-inner-private:
           files:

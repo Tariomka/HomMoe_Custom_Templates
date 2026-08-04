@@ -45,10 +45,7 @@ func TestWhenAppHandlerImportsAreScanned_OnlyCompositionRootsDependOnConcreteHan
 	t.Parallel()
 	// Arrange
 	repositoryRoot := getRepositoryRoot(t)
-	expected := map[string][]string{
-		"app/gui/drivers/state.go": {modulePath + "/internal/handlers"},
-		"app/gui/editor/window.go": {modulePath + "/internal/handlers"},
-	}
+	expected := map[string][]string{}
 
 	// Act
 	actual := findImports(t, repositoryRoot, "app", func(importPath string) bool {
@@ -77,6 +74,7 @@ func findForbiddenAppImports(t *testing.T, repositoryRoot string) map[string][]s
 	t.Helper()
 	allowedRoots := []string{
 		modulePath + "/internal/common",
+		modulePath + "/internal/composition",
 		modulePath + "/internal/dtos",
 		modulePath + "/internal/entities",
 		modulePath + "/internal/handlers",

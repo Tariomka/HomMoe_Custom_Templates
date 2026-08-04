@@ -31,7 +31,7 @@ type PreviewGeneratorService struct {
 	layoutService *PreviewLayoutService
 }
 
-func NewPreviewGenerator() (*PreviewGeneratorService, error) {
+func NewPreviewGenerator(layoutService *PreviewLayoutService) (*PreviewGeneratorService, error) {
 	assetProvider, err := asset_provider.NewAssetProvider()
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func NewPreviewGenerator() (*PreviewGeneratorService, error) {
 
 	return &PreviewGeneratorService{
 		assetProvider: assetProvider,
-		layoutService: NewPreviewLayoutService(),
+		layoutService: layoutService,
 	}, nil
 }
 

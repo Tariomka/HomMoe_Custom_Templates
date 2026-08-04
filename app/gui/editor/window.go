@@ -14,7 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 )
 
 type Window struct {
@@ -31,8 +31,7 @@ type Window struct {
 	previewPanel *panels.PreviewPanel
 }
 
-func NewWindow() *Window {
-	backend := handlers.NewDefaultGuiHandler()
+func NewWindow(backend handler_interfaces.IGuiHandler) *Window {
 	window := Window{state: drivers.NewUIStateWithBackend(backend)}
 	window.toolbar = NewToolbar(window.state, window.load)
 	window.tabs = []*drivers.Tab{

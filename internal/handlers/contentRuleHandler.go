@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
@@ -12,7 +13,8 @@ type contentRuleHandler struct {
 	contentRuleService *content_rules.ContentRuleService
 }
 
-func newContentRuleHandler(contentRuleService *content_rules.ContentRuleService) *contentRuleHandler {
+func NewContentRuleHandler(
+	contentRuleService *content_rules.ContentRuleService) handler_interfaces.IContentRuleHandler {
 	return &contentRuleHandler{contentRuleService: contentRuleService}
 }
 

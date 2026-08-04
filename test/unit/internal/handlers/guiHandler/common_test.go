@@ -3,9 +3,9 @@ package guiHandler_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -29,7 +29,7 @@ func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateH
 
 // newProductionGuiHandler builds the same handler graph the application uses.
 func newProductionGuiHandler() handler_interfaces.IGuiHandler {
-	return handlers.NewDefaultGuiHandler()
+	return composition.InitializeGuiHandler()
 }
 
 // newManualReapplyService builds the castle re-apply service with the same

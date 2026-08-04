@@ -6,6 +6,7 @@ require (
 	gioui.org v0.10.0
 	github.com/andygrunwald/vdf v1.1.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
+	github.com/goforj/wire v1.2.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/sys v0.45.0
 )
@@ -14,7 +15,6 @@ require (
 	gioui.org/shader v1.0.8 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-text/typesetting v0.3.4 // indirect
-	github.com/goforj/wire v1.2.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect

@@ -14,7 +14,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
@@ -47,10 +46,6 @@ type State struct {
 	// dialogs renders modal dialogs (rule editors, pickers, the connection
 	// editor) over the main UI.
 	dialogs *DialogHost
-}
-
-func NewUIState() *State {
-	return NewUIStateWithBackend(handlers.NewDefaultGuiHandler())
 }
 
 func NewUIStateWithBackend(handler handler_interfaces.IGuiHandler) *State {

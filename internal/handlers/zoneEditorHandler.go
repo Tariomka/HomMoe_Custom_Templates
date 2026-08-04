@@ -19,7 +19,7 @@ type zoneEditorHandler struct {
 	tuningFactory    *generation_tuning.GenerationTuningFactory
 }
 
-func newZoneEditorHandler(
+func NewZoneEditorHandler(
 	mapper *mappers.GeneratorConfigMapper,
 	zoneClassifier *zone_services.ZoneClassifier,
 	connectionEditor *connection_editor.ConnectionEditorService,

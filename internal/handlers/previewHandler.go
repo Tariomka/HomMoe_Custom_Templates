@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 )
@@ -11,7 +12,8 @@ type previewHandler struct {
 	previewLayout *preview_service.PreviewLayoutService
 }
 
-func newPreviewHandler(previewLayout *preview_service.PreviewLayoutService) *previewHandler {
+func NewPreviewHandler(
+	previewLayout *preview_service.PreviewLayoutService) handler_interfaces.IPreviewHandler {
 	return &previewHandler{previewLayout: previewLayout}
 }
 

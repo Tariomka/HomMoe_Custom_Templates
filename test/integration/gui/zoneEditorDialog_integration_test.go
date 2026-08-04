@@ -8,8 +8,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ import (
 func TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewDefaultGuiHandler()
+	handler := composition.InitializeGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
 	generated, err := handler.GenerateTemplate(state)
 	require.NoError(t, err)

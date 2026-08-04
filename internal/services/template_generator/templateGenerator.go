@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -27,24 +26,26 @@ type TemplateGenerator struct {
 
 func NewTemplateGenerator(
 	configuration *config.GeneratorConfig,
-	castleFactory *zones.CastleFactory,
-	roadFactory *zones.RoadFactory,
-	zoneFactory *zones.ZoneFactory) *TemplateGenerator {
+	zoneLabelProvider *zones.ZoneLabelProvider,
+	tuningFactory *generation_tuning.GenerationTuningFactory,
+	contentLimitProvider *providers.ContentLimitProvider,
+	contentProvider *providers.MandatoryContentProvider,
+	gameRulesProvider *providers.GameRulesProvider,
+	topologyProvider *providers.TopologyProvider,
+	zoneLayoutProvider *providers.ZoneLayoutProvider) *TemplateGenerator {
 	if configuration == nil {
 		configuration = config.NewGeneratorConfig()
 	}
 
 	return &TemplateGenerator{
 		configuration:        configuration,
-		zoneLabelProvider:    zones.NewZoneLabelProvider(),
-		tuningFactory:        generation_tuning.NewGenerationTuningFactory(),
-		contentLimitProvider: providers.NewContentLimitProvider(),
-		contentProvider: providers.NewMandatoryContentProvider(
-			nil,
-			connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)),
-		gameRulesProvider:  providers.NewGameRulesProvider(),
-		topologyProvider:   providers.NewTopologyProvider(zoneFactory, roadFactory),
-		zoneLayoutProvider: providers.NewZoneLayoutProvider(),
+		zoneLabelProvider:    zoneLabelProvider,
+		tuningFactory:        tuningFactory,
+		contentLimitProvider: contentLimitProvider,
+		contentProvider:      contentProvider,
+		gameRulesProvider:    gameRulesProvider,
+		topologyProvider:     topologyProvider,
+		zoneLayoutProvider:   zoneLayoutProvider,
 	}
 }
 

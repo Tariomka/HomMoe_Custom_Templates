@@ -37,6 +37,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
@@ -90,7 +91,7 @@ type AppRunner struct {
 // nil window marks the runner headless.
 func NewAppRunner(tb testing.TB) *AppRunner {
 	runner := &AppRunner{
-		App:   editor.NewWindow(),
+		App:   editor.NewWindow(composition.InitializeGuiHandler()),
 		theme: themes.NewTheme(),
 		tb:    tb,
 	}

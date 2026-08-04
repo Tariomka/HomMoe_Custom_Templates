@@ -62,7 +62,7 @@ func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutral_z
 // positions and qualities stay exactly as edited.
 func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T) {
 	now := time.Now()
-	state := drivers.NewUIState()
+	state := newUIState()
 	state.UpdateState(func(s *dtos.EditorStateDto) { s.NeutralZoneCount = 4 })
 	state.AutoRegenerate(now)
 
@@ -124,7 +124,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 // MANUAL quality, not the quality the generator originally planned.
 func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 	now := time.Now()
-	state := drivers.NewUIState()
+	state := newUIState()
 	state.UpdateState(func(s *dtos.EditorStateDto) {
 		s.AdvancedMode = true
 		s.NeutralLowCastleCount = 2  // two Low zones with one castle each
@@ -170,7 +170,7 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 // castles or guard values.
 func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 	now := time.Now()
-	state := drivers.NewUIState()
+	state := newUIState()
 	state.UpdateState(func(s *dtos.EditorStateDto) { s.NeutralZoneCount = 3 })
 	state.AutoRegenerate(now)
 

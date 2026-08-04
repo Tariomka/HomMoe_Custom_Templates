@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 )
 
 func StartApplication(version string) {
@@ -23,7 +24,7 @@ func StartApplication(version string) {
 // eventLoop is a blocking function and needs to executed concurrently.
 func eventLoop(version string) {
 	window := getAndConfigureWindow(version)
-	windowLayout := editor.NewWindow()
+	windowLayout := editor.NewWindow(composition.InitializeGuiHandler())
 	windowLayout.SetOnExit(func() { window.Perform(system.ActionClose) })
 	theme := themes.NewTheme()
 	positionLogger := utils.NewButtonPositionLogger(slog.Default())

@@ -14,7 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +26,7 @@ func TestWhenManageRulesDialogHasVariantRule_RendersContent(t *testing.T) {
 	dialog := dialogs.NewManageRulesDialog(
 		constants.ContentIDs.DragonUtopia,
 		[]models.ContentRuleRowSave{{Name: "Variant", VariantID: &variantID}},
-		handlers.NewDefaultGuiHandler(),
+		composition.InitializeGuiHandler(),
 		nil,
 	)
 	gtx, frameRouter := newDialogContext(image.Pt(540, 500))
@@ -57,7 +57,7 @@ func TestWhenZoneContentDialogRenders_PreservesSavedRules(t *testing.T) {
 		"Zone Content: High Neutral",
 		false,
 		expected,
-		handlers.NewDefaultGuiHandler(),
+		composition.InitializeGuiHandler(),
 		nil,
 		func(rows []models.ZoneContentRowSave) { persisted = rows },
 	)

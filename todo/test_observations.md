@@ -92,3 +92,10 @@ Still unit-untestable (dialog-callback or Gio territory):
   ladder in `distributeGeometricHubSlots` only assigns interiors after every
   gap holds 2 stables, so a hexagon with interiors always has both flanking
   stables. The guard is purely defensive; do not add seams to reach it.
+
+- internal/composition/previewGeneratorProvider.go - the `err != nil` branch of
+  `providePreviewGenerator`: `preview_service.NewPreviewGenerator` only fails
+  when the `go:embed`-ed preview assets cannot be decoded, which cannot happen
+  in a build that compiled. The branch exists to keep the injector error-free
+  (a broken asset set degrades to "no preview images" instead of failing
+  construction); reaching it would require an injectable asset provider seam.

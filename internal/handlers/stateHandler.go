@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
@@ -14,9 +15,9 @@ type stateHandler struct {
 	editorValidator *validators.EditorStateValidator
 }
 
-func newStateHandler(
+func NewStateHandler(
 	fileService *file_service.FileService,
-	editorValidator *validators.EditorStateValidator) *stateHandler {
+	editorValidator *validators.EditorStateValidator) handler_interfaces.IStateHandler {
 	return &stateHandler{
 		fileService:     fileService,
 		editorValidator: editorValidator,

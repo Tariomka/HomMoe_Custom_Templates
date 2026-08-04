@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
@@ -41,7 +40,7 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	savedPath := filepath.Join(dir, "windowload.gen.json")
 
 	// Author a distinctive saved state through the real save path.
-	author := drivers.NewUIState()
+	author := newUIState()
 	author.UpdateState(func(s *dtos.EditorStateDto) {
 		s.TemplateName = "Window Loaded"
 		s.PlayerCount = 5

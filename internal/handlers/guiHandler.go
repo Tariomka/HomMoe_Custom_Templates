@@ -1,23 +1,11 @@
 package handlers
 
 import (
-	"log/slog"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
-	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
 
 type GUIHandler struct {
@@ -28,67 +16,12 @@ type GUIHandler struct {
 	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
 }
 
-func NewDefaultGuiHandler() handler_interfaces.IGuiHandler {
-	return NewGuiHandler(nil, nil, nil, nil, nil)
-}
-
 func NewGuiHandler(
 	templateHandler handler_interfaces.ITemplateHandler,
 	stateHandler handler_interfaces.IStateHandler,
 	previewHandler handler_interfaces.IPreviewHandler,
 	contentRuleHandler handler_interfaces.IContentRuleHandler,
 	zoneEditorHandler handler_interfaces.IZoneEditorHandler) handler_interfaces.IGuiHandler {
-	previewGenerator, err := preview_service.NewPreviewGenerator()
-	if err != nil {
-		slog.Error(
-			"Preview Generator failed to initialize, preview images will not be generated",
-			slog.String("error", err.Error()))
-	}
-
-	zoneClassifier := zone_services.NewZoneClassifier()
-	castleFactory := zone_services.NewCastleFactory()
-	roadFactory := zone_services.NewRoadFactory()
-	zoneFactory := zone_services.NewZoneFactory(castleFactory, roadFactory)
-	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)
-	tuningFactory := generation_tuning.NewGenerationTuningFactory()
-	fileService := file_service.NewFileService()
-	mapper := mappers.NewConfigMapper()
-	connectionEditor := connection_editor.NewConnectionEditorService(zoneClassifier)
-	manualReapply := connection_editor.NewManualReapplyService(
-		zoneEditor,
-		zoneClassifier,
-		tuningFactory)
-
-	if previewHandler == nil {
-		previewHandler = newPreviewHandler(preview_service.NewPreviewLayoutService())
-	}
-	if contentRuleHandler == nil {
-		contentRuleHandler = newContentRuleHandler(content_rules.NewContentRuleService())
-	}
-	if stateHandler == nil {
-		stateHandler = newStateHandler(fileService, validators.NewEditorStateValidator())
-	}
-	if zoneEditorHandler == nil {
-		zoneEditorHandler = newZoneEditorHandler(
-			mapper,
-			zoneClassifier,
-			connectionEditor,
-			zoneEditor,
-			tuningFactory)
-	}
-	if templateHandler == nil {
-		templateHandler = newTemplateHandler(
-			template_generator.NewTemplateGenerator(nil, castleFactory, roadFactory, zoneFactory),
-			mapper,
-			providers.NewMandatoryContentProvider(zoneClassifier, zoneEditor),
-			connectionEditor,
-			zoneEditor,
-			manualReapply,
-			fileService,
-			previewGenerator,
-			stateHandler)
-	}
-
 	return &GUIHandler{
 		templateHandler:    templateHandler,
 		stateHandler:       stateHandler,
