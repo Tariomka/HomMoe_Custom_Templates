@@ -22,7 +22,7 @@ func TestWhenRingTopologySelected_CreatesConnectionPerZone(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, actual.Variants[0].Connections, playerCount+neutralZoneCount)
@@ -39,7 +39,7 @@ func TestWhenRingTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegre
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	expectedOrientation := entities.Orientation{
@@ -75,7 +75,7 @@ func TestWhenTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual := generator.Generate()
+			actual, _ := generator.Generate()
 
 			// Assert
 			assert.Contains(t, actual.Description, testCase.expectedPhrase)
@@ -103,7 +103,7 @@ func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesZoneForEveryPlannedZone
 	generator := test_helpers.NewTemplateGenerator(newCirclesMixedNeutralConfiguration())
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.GreaterOrEqual(t, len(actual.Variants[0].Zones), 10, "4 player + 6 neutral zones expected")
@@ -115,7 +115,7 @@ func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesConnections(t *testing.
 	generator := test_helpers.NewTemplateGenerator(newCirclesMixedNeutralConfiguration())
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.NotEmpty(t, actual.Variants[0].Connections)
@@ -148,8 +148,10 @@ func TestWhenNeutralZonesAreHighQuality_ProducesStrongerBorderGuardsThanLowQuali
 	lowQualityGenerator := test_helpers.NewTemplateGenerator(newQualityConfiguration(0, 4))
 
 	// Act
-	highQualityTotal := sumConnectionGuardValues(highQualityGenerator.Generate())
-	lowQualityTotal := sumConnectionGuardValues(lowQualityGenerator.Generate())
+	highQualityTemplate, _ := highQualityGenerator.Generate()
+	lowQualityTemplate, _ := lowQualityGenerator.Generate()
+	highQualityTotal := sumConnectionGuardValues(highQualityTemplate)
+	lowQualityTotal := sumConnectionGuardValues(lowQualityTemplate)
 
 	// Assert
 	assert.Greater(t, highQualityTotal, lowQualityTotal)
@@ -175,7 +177,7 @@ func TestWhenCityHoldEnabledWithMixedNeutralTiers_MarksExactlyOneHoldCityMainObj
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	var holdCityObjects []entities.MainObject

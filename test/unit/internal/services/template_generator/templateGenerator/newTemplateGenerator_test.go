@@ -32,5 +32,6 @@ func TestWhenConfigurationProvided_GeneratesFromProvidedConfiguration(t *testing
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Assert
-	assert.Equal(t, expectedName, generator.Generate().Name)
+	template, _ := generator.Generate()
+	assert.Equal(t, expectedName, template.Name)
 }

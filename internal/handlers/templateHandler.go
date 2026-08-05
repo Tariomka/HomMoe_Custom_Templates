@@ -62,12 +62,13 @@ func (this *templateHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dto
 	}
 
 	this.templateGenerator.SetConfiguration(configuration)
-	template := this.templateGenerator.Generate()
+	template, generationWarnings := this.templateGenerator.Generate()
 	if template == nil {
 		return dtos.TemplateLoadDto{}, common_errors.ErrGeneratedTemplateInvalid
 	}
 
-	return dtos.TemplateLoadDto{Template: template, Warnings: validation.Warnings}, nil
+	warnings := slices.Concat(validation.Warnings, generationWarnings)
+	return dtos.TemplateLoadDto{Template: template, Warnings: warnings}, nil
 }
 
 func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {

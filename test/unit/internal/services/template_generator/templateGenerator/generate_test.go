@@ -60,7 +60,7 @@ func TestWhenDefaultConfigurationWithShuffleDisabled_ReturnsGoldenTemplate(t *te
 	expected := test_helpers.GetDefaultTemplate()
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, expected, *actual)
@@ -74,7 +74,7 @@ func TestWhenTemplateNameIsEmpty_SetsDefaultName(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, "Custom Template", actual.Name)
@@ -89,7 +89,7 @@ func TestWhenTemplateNameProvided_SetsProvidedName(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, expectedName, actual.Name)
@@ -104,7 +104,7 @@ func TestWhenMapSizeProvided_SetsSizeX(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, expectedSize, actual.SizeX)
@@ -119,7 +119,7 @@ func TestWhenMapSizeProvided_SetsSizeZ(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, expectedSize, actual.SizeZ)
@@ -133,7 +133,7 @@ func TestWhenGameModeProvided_PropagatesGameModeToTemplate(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, "SingleHero", actual.GameMode)
@@ -151,7 +151,7 @@ func TestWhenVictoryConditionProvided_PropagatesToDisplayWinCondition(t *testing
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, "win_condition_2", actual.DisplayWinCondition)
@@ -165,7 +165,7 @@ func TestWhenGameEndConditionsAreNil_UsesStandardWinCondition(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Equal(t, "win_condition_1", actual.DisplayWinCondition)
@@ -183,7 +183,7 @@ func TestWhenRingTopologyAndPlayerCountProvided_CreatesSpawnZonePerPlayer(t *tes
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, zonesWithPrefix(actual, "Spawn-"), playerCount)
@@ -199,7 +199,7 @@ func TestWhenRingTopologyAndNeutralZoneCountProvided_CreatesNeutralZonePerCount(
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, zonesWithPrefix(actual, "Neutral-"), expectedNeutralZoneCount)
@@ -217,7 +217,7 @@ func TestWhenChainTopologySelected_CreatesZoneCountMinusOneConnections(t *testin
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	expectedConnectionCount := playerCount + neutralZoneCount - 1
@@ -234,7 +234,7 @@ func TestWhenHubAndSpokeTopologySelected_CreatesSingleHubZone(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hubZones := linq.FromSlice(actual.Variants[0].Zones).
@@ -253,7 +253,7 @@ func TestWhenSharedWebTopologyWithZeroNeutralZones_CreatesOneNeutralZone(t *test
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, zonesWithPrefix(actual, "Neutral-"), 1)
@@ -270,7 +270,7 @@ func TestWhenSharedWebTopologyWithZeroNeutralZones_NamesForcedNeutralZoneAfterPl
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	neutralZones := zonesWithPrefix(actual, "Neutral-")
@@ -310,7 +310,7 @@ func TestWhenPositionDrivenTopologySelected_SetsGeneratorPositionOnAllZones(t *t
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual := generator.Generate()
+			actual, _ := generator.Generate()
 
 			// Assert
 			for _, zone := range actual.Variants[0].Zones {
@@ -330,7 +330,7 @@ func TestWhenCirclesTopologySelected_SetsGeneratorRingOnAllZones(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	for _, zone := range actual.Variants[0].Zones {
@@ -355,7 +355,7 @@ func TestWhenFractalTopologySelected_OmitsDirectPlayerConnectionsByDesign(t *tes
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	directPlayerConnections := linq.FromSlice(actual.Variants[0].Connections).
@@ -381,7 +381,7 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).
@@ -401,7 +401,7 @@ func TestWhenRandomPortalsDisabled_AddsNoPortalConnections(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).
@@ -422,7 +422,7 @@ func TestWhenNoDirectPlayerConnectionsEnabled_OmitsDirectPlayerConnections(t *te
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	// Adjacent players lose their ring edge; connectivity repair may still add
@@ -449,7 +449,7 @@ func TestWhenRoadsEnabled_ProducesRoads(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hasRoads := linq.FromSlice(actual.Variants[0].Zones).
@@ -469,7 +469,7 @@ func TestWhenRoadsDisabled_ProducesNoRoads(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	zonesWithRoads := linq.FromSlice(actual.Variants[0].Zones).
@@ -492,7 +492,7 @@ func TestWhenMatchPlayerCastleFactionsEnabled_SetsMatchFactionOnExtraPlayerCastl
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	expectedFactionTypes := slices.Repeat([]string{"Match"}, playerCount)
@@ -511,7 +511,7 @@ func TestWhenMatchPlayerCastleFactionsDisabled_SetsRandomFactionOnExtraPlayerCas
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	expectedFactionTypes := slices.Repeat([]string{"Random"}, playerCount)
@@ -536,7 +536,7 @@ func TestWhenCityHoldEnabled_MarksHoldCityWinConditionObjectInZones(t *testing.T
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	holdCityZones := linq.FromSlice(actual.Variants[0].Zones).
@@ -564,7 +564,7 @@ func TestWhenCityHoldEnabledWithHubAndSpokeTopology_MarksHubAsHoldCity(t *testin
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hubHoldsCity := linq.FromSlice(actual.Variants[0].Zones).
@@ -596,7 +596,7 @@ func TestWhenTournamentEnabledWithTwoPlayersAndRingTopology_CreatesRingGuardGrou
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hasRingGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
@@ -624,7 +624,7 @@ func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubPerPlayer(t *tes
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, zonesWithPrefix(actual, "Hub-"), expectedHubCount)
@@ -646,7 +646,7 @@ func TestWhenTournamentEnabledWithChainTopology_CreatesChainGuardGroups(t *testi
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hasChainGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
@@ -673,7 +673,7 @@ func TestWhenTournamentEnabledWithCirclesTopology_CreatesBalancedGuardGroups(t *
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	hasBalancedGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
@@ -716,7 +716,7 @@ func TestWhenAdvancedNeutralMixEnabled_CreatesNeutralZonePerConfiguredTierCount(
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, zonesWithPrefix(actual, "Neutral-"), expectedNeutralCount)
@@ -731,7 +731,7 @@ func TestWhenAdvancedGuardRandomizationExceedsMaximum_ClampsGuardRandomization(t
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	for _, zone := range actual.Variants[0].Zones {
@@ -747,7 +747,7 @@ func TestWhenGenerating_ProducesExactlyOneVariant(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(config.NewGeneratorConfig())
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, actual.Variants, 1)
@@ -759,7 +759,7 @@ func TestWhenGenerating_ProducesFourZoneLayouts(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(config.NewGeneratorConfig())
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Len(t, actual.ZoneLayouts, 4)
@@ -771,7 +771,7 @@ func TestWhenGenerating_ProducesContentCountLimits(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(config.NewGeneratorConfig())
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.NotEmpty(t, actual.ContentCountLimits)
@@ -789,7 +789,7 @@ func TestWhenChainTopologySelected_IncludesTopologyNameInDescription(t *testing.
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	assert.Contains(t, actual.Description, "Chain")
@@ -809,7 +809,7 @@ func TestWhenDescriptionOptionsEnabled_AppendsOptionPhrases(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	cases := []struct {
@@ -842,7 +842,7 @@ func TestWhenGenerating_CreatesMandatoryContentGroupPerPlayer(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	playerGroups := linq.FromSlice(actual.MandatoryContent).
@@ -864,7 +864,7 @@ func TestWhenGenerating_CreatesMandatoryContentGroupPerNeutralZone(t *testing.T)
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	neutralGroups := linq.FromSlice(actual.MandatoryContent).
@@ -887,7 +887,7 @@ func TestWhenGenerating_PlacesSpawnMainObjectFirstInEachSpawnZone(t *testing.T) 
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual := generator.Generate()
+	actual, _ := generator.Generate()
 
 	// Assert
 	expectedTypes := slices.Repeat([]string{"Spawn"}, playerCount)

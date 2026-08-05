@@ -40,7 +40,7 @@ func BenchmarkTemplateGenerator_Generate(b *testing.B) {
 
 			b.ReportAllocs()
 			for b.Loop() {
-				template = generator.Generate()
+				template, _ = generator.Generate()
 			}
 
 			require.NotEmpty(b, template.Variants)

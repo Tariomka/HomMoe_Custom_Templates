@@ -1,164 +1,238 @@
-# Session Carry-Forward — Review Remediation, Batch 3 (Durability)
+# Session Carry-Forward — Batch 4 (Input validation)
 
 ## 1. Session goal
 
-Work through `todo/review-opus5-08-04.md` batch by batch, asking go/no-go and
-clarifying questions before each batch, and stopping for owner review after each.
-This document covers **Batch 3 — Durability PR (§1.1 + §1.6 + §5.1)**.
+Work through [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) batch by
+batch: ask go/no-go, ask clarifying questions, implement, write this document,
+stop for owner review.
 
 ## 2. Fixes applied
 
-- **§1.1 🔴 non-atomic persistent writes.** Every persisted user file is now
-  written to `{directory}/TEMP-{name}{ext}`, `Sync`ed, closed, and only then
-  renamed onto the destination. A failed encode leaves the previous file
-  byte-identical and removes the temporary file.
-- **§1.6 🟠 PNG truncation + swallowed close error.** The preview goes through
-  the same writer, and the writer's `defer` uses a named return so a `Close`
-  error wins when the encode succeeded.
-- **§5.1 🟡 disagreeing directory permissions.** One `FolderPermission = 0o755`
-  constant, consumed by both the repositories and the in-app file explorer
-  (which previously used `0o750`).
+- **§1.5 🟠 — `.gen.json` integer counts had no upper bound.** All twenty count
+  fields are now range-checked instead of merely non-negative, four float fields
+  and `topology` are validated for the first time, and seven previously
+  unvalidated rules-tab integers were added.
+  [internal/validators/editorStateValidator.go](../internal/validators/editorStateValidator.go)
+- **§1.7 🟡 — malformed guard-value override lines were dropped silently.** Each
+  rejected line now produces a warning that reaches the status bar.
+  [internal/services/template_generator/providers/gameRulesProvider.go](../internal/services/template_generator/providers/gameRulesProvider.go)
 
 ## 3. Features added / changed
 
-- **New repository layer.** The pre-existing but unimplemented
-  [fileRepositoryInterface.go](../internal/repositories/fileRepositoryInterface.go)
-  now has three real implementations. Each owns its extension and encoding;
-  a shared private `atomicFileWriter` owns the temp-file/rename mechanics.
-- **`FileService` is now a controller.** It only decides the directory and the
-  requested file name and delegates; the writer sanitizes the name and falls
-  back to `Generated_Template`. `SaveTemplate` and `SavePreviewImage` were
-  replaced by a single `SaveTemplateWithPreview`, which skips the preview when
-  the image is `nil` and preserves the partial-success contract (a preview
-  failure still returns the template path).
-- **New `internal/constants` package** — the home AGENTS.md §4.4 prescribes for
-  constants, which did not exist yet.
-- **⚠ Behaviour change 1 (owner-approved):** editor-state saves now create
-  missing directories instead of failing.
-- **⚠ Behaviour change 2 (owner-approved):** the Save As dialog's file name is
-  discarded; the state is written as `{TemplateName}.gen.json`. `SaveState`
-  returns the path actually written and `drivers.State` records **that**.
+- `validators` gained `floatField` / `rangedFloatField` plus
+  `newRangedIntField` / `newRangedFloatField` constructors, so the bounds tables
+  are one compact entry per field.
+- `rangedIntFields()` is now the single declarative table of every bounded
+  integer (41 entries). `nonNegativeIntFields()` and `validateNonNegativeFields()`
+  were deleted — the `"%s %d is negative"` message no longer exists and is
+  replaced by `"%s %d is outside [0, N]"`.
+- `validateTopology` mirrors `validateGameMode`, iterating
+  `common_topologies.GetTopologyDescriptorSeq()` and falling back to
+  `config.TopologyRandom`.
+- `GameRulesProvider.CreateValueOverrides` returns
+  `([]entities.ValueOverride, []string)`. Parsing moved into an unexported
+  `parseValueOverride`.
+- `TemplateGenerator.Generate()` now returns
+  `(*entities.RmgTemplate, []string)`. It was first added as a separate
+  `GenerateWithWarnings()` to spare ~70 test call sites, but the owner rejected
+  two entry points and had the signature changed outright; every call site was
+  updated.
+- `templateHandler.GenerateTemplate` concatenates generation warnings onto
+  `validation.Warnings` with `slices.Concat`.
+
+### Ranges applied
+
+| Field(s) | Range |
+| --- | --- |
+| `neutralZoneCount` | 0..16 |
+| `abandonedOutpostCount`, `playerOwnedCastles`, `playerCastles`, `neutralCastles`, `hubCastles`, `remoteFootholdCount` | 0..4 |
+| `maxPortalConns` | 0..32 |
+| the eight neutral tier counts | 0..8 |
+| the four castles-per-zone | 0..4 |
+| `playerZoneSize`, `neutralZoneSize`, `hubZoneSize` | 0.5..2.0 |
+| `guardRandomization` | 0.0..0.5 |
+| `lostStartCityDay`, `cityHoldDays`, `gladiatorArenaCountDay` | 1..30 |
+| `gladiatorArenaDaysDelayStart` | 1..60 |
+| `tournamentFirstTournamentDay`, `tournamentInterval` | 3..30 |
+| `tournamentPointsToWin` | 1..10 |
+
+Pre-existing count fields keep a floor of **0** even where the slider starts at
+1, so states that were valid before this change keep loading without new
+warnings. The newly-validated rules-tab fields have no such history and take
+their slider minimum.
 
 ## 4. File modifications
 
 **Created**
 
-- `internal/constants/filePermissions.go` — `FolderPermission`, `FileReadWritePermission`.
-- `internal/repositories/atomicFileWriter.go` — private writer: `MkdirAll` →
-  TEMP file → `Sync` → `Close` → bounded `os.Rename` retry (5 × 20 ms) → discard
-  temp on any failure.
-- `test/unit/internal/repositories/{editorStateRepository,templateRepository,previewRepository}/`
-  — `new*_test.go`, `load_test.go`, `save_test.go` in each.
-- `test/unit/internal/services/file_service/fileService/common_test.go` —
-  generic `mockFileRepository[T]` + `newServiceWithMocks()`.
-- `test/unit/internal/services/file_service/fileService/saveTemplateWithPreview_test.go`.
+- [internal/validators/floatField.go](../internal/validators/floatField.go) —
+  named float field accessor.
+- [internal/validators/rangedFloatField.go](../internal/validators/rangedFloatField.go) —
+  float field plus bounds, with `newRangedFloatField`.
+- [test/unit/internal/services/template_generator/templateGenerator/generateWarnings_test.go](../test/unit/internal/services/template_generator/templateGenerator/generateWarnings_test.go) —
+  covers the warnings returned by `Generate`.
 
 **Edited**
 
-- `internal/repositories/editorStateRepository.go` / `templateRepository.go` /
-  `previewRepository.go` — implemented (`.gen.json` / `.rmg.json` / `.png`).
-  Only the editor state implements `Load`; the other two return
-  `common_errors.ErrNotImplemented`.
-- `internal/services/file_service/fileService.go` — rewritten as a controller;
-  `SaveSettings` now returns `(string, error)`.
-- `internal/handlers/stateHandler.go` — returns the path `SaveSettings` reports.
-- `internal/handlers/templateHandler.go` — builds the preview image (when a
-  generator exists) and makes one `SaveTemplateWithPreview` call.
-- `app/gui/drivers/stateFiles.go` — `handleSaveState` records the returned path;
-  it no longer returns a `bool` (the gating moved inside it).
-- `app/gui/dialogs/fileExplorerDialog.go` — uses `FolderPermission`.
-- `internal/composition/providerSets.go` + `wire_gen.go` — three repository
-  providers registered; injectors regenerated with `wire gen`.
-- `test/unit/architecture/dependency/dependency_test.go` — `internal/constants`
-  added to the `app/*` import allow-list.
-- `test/unit/internal/handlers/guiHandler/{loadState,saveState}_test.go` — use
-  the returned path; the "missing directory" test now asserts creation.
-- `test/integration/{editorState,window_render,stateSaveAs}_integration_test.go`
-  — read back the derived `{TemplateName}.gen.json` path.
-- `todo/review-opus5-08-04.md`, `todo/test_observations.md` — documentation.
+- [internal/validators/editorStateValidator.go](../internal/validators/editorStateValidator.go) —
+  new bound constants, `validateRangedFloatFields`, `validateTopology`, merged
+  field table, removed the non-negative path.
+- [internal/validators/rangedIntField.go](../internal/validators/rangedIntField.go) —
+  added `newRangedIntField`.
+- [internal/services/template_generator/providers/gameRulesProvider.go](../internal/services/template_generator/providers/gameRulesProvider.go) —
+  warnings, `parseValueOverride`.
+- [internal/services/template_generator/templateGenerator.go](../internal/services/template_generator/templateGenerator.go) —
+  `Generate` returns warnings.
+- [internal/handlers/templateHandler.go](../internal/handlers/templateHandler.go) —
+  concatenates generation warnings.
+- [test/unit/internal/validators/editorStateValidator/validateEditorState_test.go](../test/unit/internal/validators/editorStateValidator/validateEditorState_test.go)
+- [test/unit/internal/services/template_generator/providers/gameRulesProvider/createValueOverrides_test.go](../test/unit/internal/services/template_generator/providers/gameRulesProvider/createValueOverrides_test.go)
+- [test/unit/internal/handlers/guiHandler/validateEditorState_test.go](../test/unit/internal/handlers/guiHandler/validateEditorState_test.go) —
+  expected message updated to the ranged wording.
+- Every `Generate()` call site in
+  `test/unit/internal/services/template_generator/templateGenerator/` and
+  [test/performance/template_generation_test.go](../test/performance/template_generation_test.go)
+  now discards the warnings with `_`.
+- [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) — §1.5 and §1.7
+  marked `✅ FIXED`, §12 item 4 ticked.
 
 **Deleted**
 
-- `test/unit/internal/services/file_service/fileService/saveTemplate_test.go`
-- `test/unit/internal/services/file_service/fileService/savePreviewImage_test.go`
-
-  Both tested methods that no longer exist. Their filesystem-behaviour cases
-  moved to the repository test folders; their naming/routing cases moved to
-  `saveTemplateWithPreview_test.go`. Both files are recoverable from git.
+- `generateWithWarnings_test.go` — renamed to `generateWarnings_test.go` after
+  the method was renamed.
 
 ## 5. Tests added or updated
 
-- Nine new repository test files, including the §1.1 regression cases:
-  pre-existing destination byte-identical after a failed save, and no `TEMP-*`
-  residue. Fault injection uses `math.NaN()` (JSON) and a zero-sized
-  `image.RGBA` (PNG) — no test-only seam was needed.
-- `FileService` tests rewritten against mocked `IFileRepository[T]`.
+- `validateEditorState_test.go` (validators): shared `countFieldCases()` table
+  drives both `TestWhenCountFieldIsNegative_ReturnsIssue` and the new
+  `TestWhenCountFieldExceedsMaximum_ReturnsIssue`; added
+  `TestWhenCountFieldExceedsMaximum_FixClampsToMaximum`,
+  `TestWhenGameRuleFieldIsOutOfRange_ReturnsIssue`,
+  `TestWhenFloatFieldIsOutOfRange_ReturnsIssue`,
+  `TestWhenFloatFieldIsOutOfRange_FixClampsToNearestBound`,
+  `TestWhenTopologyIsUnknown_ReturnsIssue`,
+  `TestWhenTopologyIsUnknown_FixRestoresRandom`.
+- `createValueOverrides_test.go`: existing three tests adapted to the two-value
+  return; added `TestWhenTextIsEmpty_ReturnsNoWarnings`,
+  `TestWhenTextIsOnlyBlankLines_ReturnsNoWarnings`, and a table-driven
+  `TestWhenLineIsRejected_ReturnsWarningNamingTheLine` covering each rejection
+  class and the source-line numbering.
+- `generateWarnings_test.go`: valid text produces no warnings, a rejected
+  line produces the numbered warning, and the template is still returned.
 
-**Last run — all green:**
+**Verification results**
 
-- `go build ./...` ✓ · `go vet -tags=integration_test ./...` ✓
-- `go test -count=1 ./test/unit/...` → exit 0
-- `go test -tags=integration_test -count=1 ./test/integration/...` → exit 0
-- Coverage **64.8%** (was 64.7%). All new production files at 100% except
-  `atomicFileWriter.encodeToTemporaryFile` at 77.8% (Close/Sync error branches).
-- `golangci-lint-v2 run ./...` → **42 issues, all pre-existing categories**
-  (`dupl` 2 = §3.4, `gochecknoglobals` 40).
+| Check | Result |
+| --- | --- |
+| `go build ./...` | pass |
+| `go vet -tags=integration_test ./...` | pass |
+| `go test -count=1 ./test/unit/...` | exit 0 |
+| `go test -tags=integration_test -count=1 ./test/integration/...` | exit 0 |
+| Unit coverage | **65.0%** (was 64.8%; CI floor 60.0%) |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | **42 issues — the pre-existing baseline** (2 `dupl`, 40 `gochecknoglobals`) |
 
 ## 6. Git status snapshot
 
-Branch **`AD/refactoring-07-21`**. Nothing staged. 23 modified, 2 deleted,
-4 untracked paths — see §4. (An accidental `git rm --cached` during this session
-was immediately reverted with `git restore --staged`; the index is clean.)
+Branch `AD/refactoring-07-21`. The owner has staged the Batch 4 files himself;
+the agent stages nothing (AGENTS.md §2.5).
 
-## 7. Rejections / things the owner declined
+```
+M  .agent/session-carry-forward.md
+MM internal/handlers/templateHandler.go
+M  internal/services/template_generator/providers/gameRulesProvider.go
+MM internal/services/template_generator/templateGenerator.go
+M  internal/validators/editorStateValidator.go
+A  internal/validators/floatField.go
+A  internal/validators/rangedFloatField.go
+M  internal/validators/rangedIntField.go
+ M test/performance/template_generation_test.go
+M  test/unit/internal/handlers/guiHandler/validateEditorState_test.go
+M  test/unit/internal/services/template_generator/providers/gameRulesProvider/createValueOverrides_test.go
+ M test/unit/internal/services/template_generator/templateGenerator/generateAllTopologies_test.go
+ M test/unit/internal/services/template_generator/templateGenerator/generateCastles_test.go
+ M test/unit/internal/services/template_generator/templateGenerator/generateStructure_test.go
+ M test/unit/internal/services/template_generator/templateGenerator/generateTournament_test.go
+AD test/unit/internal/services/template_generator/templateGenerator/generateWithWarnings_test.go
+ M test/unit/internal/services/template_generator/templateGenerator/generate_test.go
+ M test/unit/internal/services/template_generator/templateGenerator/newTemplateGenerator_test.go
+ M test/unit/internal/services/template_generator/templateGenerator/setConfiguration_test.go
+M  test/unit/internal/validators/editorStateValidator/validateEditorState_test.go
+MM todo/review-opus5-08-04.md
+?? test/unit/internal/services/template_generator/templateGenerator/generateWarnings_test.go
+```
 
-- Batch 2's **§6.1** (build tag on `rmgTemplateModel_test.go`) — ❌ WILL NOT FIX,
-  documented in the review; it contradicts the current AGENTS.md §4.6.1.
-- The review's own §1.1 design (an `AtomicFileWriter` inside `file_service`) was
-  **replaced** by the owner with the repository layer described above.
-- Transactional template+PNG commit — **declined**; partial success is kept.
-- A separate `plans/` file for this remediation — declined; findings are marked
-  in place inside the review document.
+Batches 1–3 are already committed by the owner.
+
+## 7. Rejections / things declined
+
+- **Keeping two generation entry points** was declined: the owner had
+  `GenerateWithWarnings` folded back into `Generate`, accepting the ~55
+  mechanical test edits.
+- **A stateful `GetWarnings()` accessor** was declined.
+- **The zone-size "1.5 vs 2.0" discrepancy** I reported during Batch 3 is *not*
+  a bug and must not be "fixed": `MultiplierFormatter` has base 0.5 and scale
+  1.5 over a slider value in `[0, 1]`, so both the label and persistence yield
+  `[0.5, 2.0]`.
+- **The "empty sid" warning class** from the §1.7 text was implemented, proven
+  unreachable by a failing test, and removed rather than kept as dead code.
 
 ## 8. Open questions
 
-None blocking Batch 3. Blocking later batches:
+None for Batch 4. Still blocked further down the list:
 
-- **Batch 4 / §1.5** — the exact numeric ceilings for the 20 unbounded ints and
-  4 floats are a product decision.
-- **Batch 8 / §7.1** — are direct pushes to `master` intentional?
-- **Batch 9 / §9.1** — the public-API decision behind the QUICKSTART example.
-- **Batch 12** — §2.7 (finish or remove the gladiator-arena preview) and §1.8
-  (where the output directory is persisted).
-- **Batch 13 / §2.2** — scope of extracting regeneration policy from `drivers`.
+- §7.1 — are direct pushes to `master` intentional?
+- §9.1 — the public-API documentation decision.
+- §2.7 — finish or remove the gladiator-arena preview (6 dead PNGs, 2 dead enum
+  values). If removed, drop its two validator entries too.
+- §1.8 — output-directory persistence: in `.gen.json` (a) or machine-local (b);
+  the review recommends (b).
+- §2.2 — the owner must confirm the scope of extracting regeneration policy out
+  of `app/gui/drivers/`.
 
 ## 9. Next recommended actions
 
-1. Owner reviews Batch 3 and confirms the two behaviour changes in §3.
-2. **Batch 4 — Input-validation PR** (§1.5 + §1.7). Ask for the ceilings first.
-3. Batch 5 — Performance (§4.1, preview layout cache).
-4. Batch 6 — DI (§2.3, §2.4).
-5. Batches 7–13 in the order given by review §12.
+1. Review Batch 4 and commit.
+2. **Batch 5 — Performance PR.** §4.1 🟠: the preview rebuilds its layout every
+   frame (2.09 ms / 391 allocs at Random 8p/16n). Add a `templateRevision`
+   counter to `drivers.State` and a `(revision, topology, canvasSide)` cache in
+   `PreviewPanel`; reinstate `test/performance/preview_layout_test.go`.
+3. **Batch 6 — DI PR.** §2.3 (`NewMandatoryContentItemMapper` builds its own
+   `ContentRuleService`) and §2.4 (`NewTopologyBase` builds its own
+   collaborators); regenerate wire afterwards.
+4. **Batch 7 — Test-policy PR.** §6.3 *then* §6.5 — order matters or CI goes red.
+5. Batches 8–13 per §12 of the review.
+
+**Ordering constraints from §12:** §6.5 after §6.3 · §2.5 after §2.1 · §9.5
+after §2.7 · §3.2 with §5.3.
 
 ## 10. Carry-forward prompt
 
-> Read `AGENTS.md` first. Its hard rules: never modify `data/`,
-> `internal/entities/template/` or `internal/registry/`; keep everything
-> cross-platform (Windows + Linux, `path/filepath`, PowerShell chains with `;`);
-> cover every change with tests and check coverage; never stage or commit
-> anything; cap the session around 50 messages and hand off in
-> `./.agent/session-carry-forward.md`.
+> Read `AGENTS.md` first. The hard rules in one line each: never edit `data/`,
+> `internal/entities/template/` or `internal/registry/`; keep everything working
+> on both Windows and Linux via `path/filepath`; ship tests for every non-trivial
+> change and check coverage before and after; write a durable plan file for
+> multi-session work; **never stage and never commit** — the owner reviews and
+> commits.
 >
-> We are working through `todo/review-opus5-08-04.md` in the batches listed in
-> its §12. Batches 1 (security), 2 (correctness) and 3 (durability) are done —
-> Batch 3 introduced `internal/repositories` with an atomic file writer and
-> turned `FileService` into a controller. Findings are marked `✅ FIXED` /
-> `❌ WILL NOT FIX` in place inside the review document.
+> We are remediating the 46-finding review in `todo/review-opus5-08-04.md`,
+> which defines 13 PR-sized batches in §12. Findings are marked `✅ FIXED` or
+> `❌ WILL NOT FIX` **in place** inside that document — do not create a separate
+> plan file for the batch bookkeeping.
 >
-> Next is **Batch 4 — Input-validation PR (§1.5 + §1.7)**, which is blocked on
-> the owner choosing the numeric ceilings. Before starting any batch: ask
-> whether it should be done at all, document the rationale in the review file if
-> it is declined, ask every clarifying question up front, implement, rewrite this
-> carry-forward, then stop for review.
+> Batches 1–4 are done (dependency bumps; Save-As correctness; atomic file
+> writes via the new `internal/repositories` layer; input validation). Batch 4 is
+> unstaged and awaiting review.
 >
-> Full handoff: `./.agent/session-carry-forward.md`.
+> The workflow for every batch, without exception: ask whether the batch should
+> be done at all; if it is declined, document *why it should not be attempted in
+> the future* inside the review file; ask all clarifying questions before
+> writing any code; implement; rewrite `./.agent/session-carry-forward.md`; then
+> stop and wait for review.
+>
+> Next up is Batch 5, the performance PR (§4.1). See
+> `./.agent/session-carry-forward.md` for the full handoff.
+>
+> Useful gotchas: `wire gen` writes success to stderr and PowerShell renders it
+> as an error — verify by grepping `wire_gen.go`. Never pipe `go test` through
+> `Select-Object`; redirect to a temp file and `Select-String` it. The lint
+> baseline is 42 pre-existing issues and unit coverage is 65.0%.

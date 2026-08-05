@@ -454,7 +454,54 @@ content row), clone recursively and add the tripwire test below.
 
 ---
 
-### 1.5 🟠 Loaded `.gen.json` integer counts have no upper bound
+### 1.5 ✅ FIXED 🟠 Loaded `.gen.json` integer counts have no upper bound
+
+**Fixed 2026-08-05.** `nonNegativeIntFields()` / `validateNonNegativeFields()`
+are gone; all twenty count fields moved into `rangedIntFields()` in
+[editorStateValidator.go](../internal/validators/editorStateValidator.go), which
+is now a single declarative table of every bounded integer. Ceilings are named
+constants taken from the matching editor slider:
+
+| Field(s) | Range |
+| --- | --- |
+| `neutralZoneCount` | 0..16 |
+| `abandonedOutpostCount`, `playerOwnedCastles`, `playerCastles`, `neutralCastles`, `hubCastles`, `remoteFootholdCount` | 0..4 |
+| `maxPortalConns` | 0..32 |
+| the eight neutral tier counts | 0..8 |
+| the four castles-per-zone | 0..4 |
+| `playerZoneSize`, `neutralZoneSize`, `hubZoneSize` | 0.5..2.0 |
+| `guardRandomization` | 0.0..0.5 |
+| `lostStartCityDay`, `cityHoldDays`, `gladiatorArenaCountDay` | 1..30 |
+| `gladiatorArenaDaysDelayStart` | 1..60 |
+| `tournamentFirstTournamentDay`, `tournamentInterval` | 3..30 |
+| `tournamentPointsToWin` | 1..10 |
+
+**Owner decisions recorded:**
+
+- Ceilings accepted as proposed (they mirror the GUI slider maxima).
+- The twenty fields that previously lived in `nonNegativeIntFields()` **keep a
+  floor of 0** even where their slider starts at 1, so states that were valid
+  before this change keep loading without new warnings. The newly-validated
+  rules-tab fields have no such history and take their slider minimum.
+- Zone sizes are `0.5..2.0`: `MultiplierFormatter` has base 0.5 and scale 1.5
+  over a slider value in `[0, 1]`, so label and persistence agree. The `1.5`
+  discrepancy reported during implementation was incorrect — do not "fix" it.
+- The `gladiatorArena*` fields are validated even though §2.7 may later remove
+  the feature; if the feature goes, its two entries go with it.
+
+Floats are handled by a `rangedFloatFields()` sibling backed by new
+[floatField.go](../internal/validators/floatField.go) and
+[rangedFloatField.go](../internal/validators/rangedFloatField.go), reusing
+`helpers.Clamp`. `validateTopology` mirrors `validateGameMode` and falls back to
+`config.TopologyRandom`.
+
+The negative-count message changed from `"%s %d is negative"` to
+`"%s %d is outside [0, N]"`; the guiHandler test asserting the old wording was
+updated.
+
+**Original finding follows.**
+
+#### 1.5 original text
 
 **Evidence.** [editorStateValidator.go](../internal/validators/editorStateValidator.go#L62-L77)
 only clamps at zero:
@@ -575,7 +622,32 @@ a close failure is propagated as an error.
 
 ---
 
-### 1.7 🟡 Malformed guard-value override lines are dropped without telling the user
+### 1.7 ✅ FIXED 🟡 Malformed guard-value override lines are dropped without telling the user
+
+**Fixed 2026-08-05.** `CreateValueOverrides` now returns
+`([]entities.ValueOverride, []string)`; the line parsing moved into a
+`parseValueOverride` helper that returns either the override or the warning
+explaining the rejection. Blank lines stay silent, and line numbers count the
+raw source lines so they match what the user sees in the editor:
+
+- `line 4: 'foo:30000' is not sid=value` — no `=`, or `=` in first position
+- `line 4: 'foo=abc' has a non-numeric value`
+
+The "empty sid" case the original finding lists is **unreachable**: the line is
+trimmed before parsing, so an empty prefix implies `=` at index 0, which the
+first branch already rejects. That branch was written, proven dead by a failing
+test, and removed rather than left as untestable code.
+
+**Plumbing.** `TemplateGenerator.Generate()` now returns
+`(*entities.RmgTemplate, []string)`. `templateHandler` concatenates the warnings
+onto `validation.Warnings`, so they reach `dto.Warnings` and the existing
+status-bar counter. This was first done as a separate `GenerateWithWarnings()`
+method to avoid touching ~70 test call sites, but the owner rejected carrying two
+entry points and had the signature changed outright.
+
+**Original finding follows.**
+
+#### 1.7 original text
 
 **Evidence.** [gameRulesProvider.go](../internal/services/template_generator/providers/gameRulesProvider.go#L38-L57):
 
@@ -2121,7 +2193,7 @@ permanently — mark them `✅ FIXED` in place as they land.
    written as `{TemplateName}.gen.json` regardless of the name typed in the
    Save As dialog.
 
-4. **Input-validation PR.** §1.5 (bounded counts) + §1.7 (override warnings).
+4. ✅ **Input-validation PR.** §1.5 (bounded counts) + §1.7 (override warnings).
    ⚠ Owner decision on the numeric ceilings first. Depends on nothing.
 
 5. **Performance PR.** §4.1 — reinstate the benchmark, add the revision-keyed

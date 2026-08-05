@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -33,34 +34,27 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 }
 
 // CreateValueOverrides parses the newline-separated "sid=guardValue" overrides
-// edited in the UI into ValueOverride entries (one per valid line). Blank or
-// unparseable lines are skipped. Variant -1 applies the override to all variants.
-func (this *GameRulesProvider) CreateValueOverrides(configuration config.GeneratorConfig) []entities.ValueOverride {
+// edited in the UI into ValueOverride entries (one per valid line). Blank lines
+// are skipped silently; every other rejected line produces a warning so the
+// edit is not discarded without telling the user. Variant -1 applies the
+// override to all variants.
+func (this *GameRulesProvider) CreateValueOverrides(
+	configuration config.GeneratorConfig) ([]entities.ValueOverride, []string) {
 	var overrides []entities.ValueOverride
-	for line := range strings.SplitSeq(configuration.ValueOverridesText, "\n") {
-		line = strings.TrimSpace(line)
+	var warnings []string
+	for index, rawLine := range strings.Split(configuration.ValueOverridesText, "\n") {
+		line := strings.TrimSpace(rawLine)
 		if line == "" {
 			continue
 		}
-		equals := strings.Index(line, "=")
-		if equals <= 0 {
-			continue
-		}
-		sid := strings.TrimSpace(line[:equals])
-		if sid == "" {
-			continue
-		}
-		guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
+		override, err := this.parseValueOverride(line, index+1)
 		if err != nil {
+			warnings = append(warnings, err.Error())
 			continue
 		}
-		overrides = append(overrides, entities.ValueOverride{
-			SID:        sid,
-			Variant:    -1,
-			GuardValue: guardValue,
-		})
+		overrides = append(overrides, override)
 	}
-	return overrides
+	return overrides, warnings
 }
 
 // CreateGlobalBans turns the newline-separated banned item / magic SIDs edited
@@ -72,6 +66,21 @@ func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorCo
 		return nil
 	}
 	return &entities.GlobalBans{Items: items, Magics: magics}
+}
+
+func (this *GameRulesProvider) parseValueOverride(line string, lineNumber int) (entities.ValueOverride, error) {
+	equals := strings.Index(line, "=")
+	if equals <= 0 {
+		return entities.ValueOverride{}, fmt.Errorf("line %d: '%s' is not sid=value", lineNumber, line)
+	}
+
+	guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
+	if err != nil {
+		return entities.ValueOverride{}, fmt.Errorf("line %d: '%s' has a non-numeric value", lineNumber, line)
+	}
+
+	sid := strings.TrimSpace(line[:equals])
+	return entities.ValueOverride{SID: sid, Variant: -1, GuardValue: guardValue}, nil
 }
 
 func (this *GameRulesProvider) createAdvancedWinConditions(

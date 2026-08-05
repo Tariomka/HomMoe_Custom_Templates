@@ -91,7 +91,7 @@ func TestWhenStateHasMultipleIssues_ReturnsMessagesInValidationOrder(t *testing.
 	// Assert
 	assert.Equal(t, []string{
 		"playerCount 50 is outside [2, 8]",
-		"neutralZoneCount -1 is negative",
+		"neutralZoneCount -1 is outside [0, 16]",
 	}, result.Warnings)
 }
 

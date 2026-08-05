@@ -51,12 +51,15 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 	}
 }
 
-func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
+// Generate builds the template for the current configuration and returns the
+// warnings raised while parsing its free-text fields.
+func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
 	this.configuration.EnsureNameExists()
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
 	tuning := this.tuningFactory.Create(this.configuration, this.configuration.PlayerCount+len(neutralZones))
+	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
 
 	return &entities.RmgTemplate{
 		Name:                this.configuration.TemplateName,
@@ -65,7 +68,7 @@ func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
 		DisplayWinCondition: this.configuration.GetVictoryCondition(),
 		SizeX:               this.configuration.MapSize,
 		SizeZ:               this.configuration.MapSize,
-		ValueOverrides:      this.gameRulesProvider.CreateValueOverrides(*this.configuration),
+		ValueOverrides:      valueOverrides,
 		GlobalBans:          this.gameRulesProvider.CreateGlobalBans(*this.configuration),
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
 		Variants: []entities.Variant{
@@ -78,7 +81,7 @@ func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
 		ContentCountLimits: this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
 		ContentPools:       []entities.ContentPool{},
 		ContentLists:       []entities.ContentList{},
-	}
+	}, warnings
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {
