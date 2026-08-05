@@ -22,9 +22,11 @@ type SharedWebTopologyService struct {
 func NewSharedWebTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService,
 ) *SharedWebTopologyService {
 	return &SharedWebTopologyService{
-		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 

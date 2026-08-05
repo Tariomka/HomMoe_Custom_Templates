@@ -30,9 +30,11 @@ type BalancedClusterService struct {
 func NewBalancedClusterService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService,
 ) *BalancedClusterService {
 	return &BalancedClusterService{
-		TopologyBase:          base.NewTopologyBase(zoneFactory, roadFactory),
+		TopologyBase:          base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }

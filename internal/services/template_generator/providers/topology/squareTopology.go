@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
@@ -20,9 +21,11 @@ type SquareTopologyService struct {
 func NewSquareTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
-) *SquareTopologyService {
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService) *SquareTopologyService {
 	return &SquareTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 

@@ -12,19 +12,22 @@ import (
 )
 
 type TopologyBase struct {
-	ZoneLabelProvider *zones.ZoneLabelProvider
+	ZoneLabelProvider zones.IZoneLabelProvider
 	roadFactory       *zones.RoadFactory
 	zoneFactory       *zones.ZoneFactory
-	connectionService *topologyConnectionService
+	connectionService *TopologyConnectionService
 }
 
-func NewTopologyBase(zoneFactory *zones.ZoneFactory, roadFactory *zones.RoadFactory) TopologyBase {
-	zoneLabelProvider := zones.NewZoneLabelProvider()
+func NewTopologyBase(
+	zoneFactory *zones.ZoneFactory,
+	roadFactory *zones.RoadFactory,
+	zoneLabelProvider zones.IZoneLabelProvider,
+	connectionService *TopologyConnectionService) TopologyBase {
 	return TopologyBase{
 		ZoneLabelProvider: zoneLabelProvider,
 		roadFactory:       roadFactory,
 		zoneFactory:       zoneFactory,
-		connectionService: newTopologyConnectionService(zoneLabelProvider),
+		connectionService: connectionService,
 	}
 }
 
@@ -136,7 +139,7 @@ func (this *TopologyBase) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	maxCount int) []entities.Connection {
-	return this.connectionService.createRandomPortalConnections(
+	return this.connectionService.CreateRandomPortalConnections(
 		playerLabels,
 		orderedLabels,
 		tuning,
@@ -149,7 +152,7 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 	zones []entities.Zone,
 	connections []entities.Connection,
 	tuning models.GenerationTuning) []entities.Connection {
-	return this.connectionService.createMissingPlayerConnections(playerLabels, zones, connections, tuning)
+	return this.connectionService.CreateMissingPlayerConnections(playerLabels, zones, connections, tuning)
 }
 
 func (this *TopologyBase) CreateMissingConnections(
@@ -159,7 +162,7 @@ func (this *TopologyBase) CreateMissingConnections(
 	connections []entities.Connection,
 	tuning models.GenerationTuning,
 	neutralZones neutral_zone.Plans) []entities.Connection {
-	return this.connectionService.createMissingConnections(
+	return this.connectionService.CreateMissingConnections(
 		playerLabels,
 		allLabels,
 		positions,
@@ -179,5 +182,5 @@ func (this *TopologyBase) GetBorderGuardValue(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning) int {
-	return this.connectionService.getBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)
+	return this.connectionService.GetBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)
 }

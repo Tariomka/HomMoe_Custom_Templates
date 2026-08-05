@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
@@ -17,14 +18,17 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) *template_gener
 	zoneFactory := zones.NewZoneFactory(castleFactory, roadFactory)
 	zoneClassifier := zones.NewZoneClassifier()
 	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)
+	zoneLabelProvider := zones.NewZoneLabelProvider()
+	connectionService := base.NewTopologyConnectionService(zoneLabelProvider)
 
 	return template_generator.NewTemplateGenerator(
 		configuration,
-		zones.NewZoneLabelProvider(),
+		zoneLabelProvider,
 		generation_tuning.NewGenerationTuningFactory(),
 		providers.NewContentLimitProvider(),
 		providers.NewMandatoryContentProvider(zoneClassifier, zoneEditor),
 		providers.NewGameRulesProvider(),
-		providers.NewTopologyProvider(NewTopologyServiceLookup(zoneFactory, roadFactory)),
+		providers.NewTopologyProvider(
+			NewTopologyServiceLookup(zoneFactory, roadFactory, zoneLabelProvider, connectionService)),
 		providers.NewZoneLayoutProvider())
 }

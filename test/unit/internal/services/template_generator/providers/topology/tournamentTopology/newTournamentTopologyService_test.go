@@ -11,7 +11,7 @@ import (
 func TestWhenServiceIsConstructed_InitializesZoneLabelProvider(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Assert
 	assert.NotNil(t, service.ZoneLabelProvider)

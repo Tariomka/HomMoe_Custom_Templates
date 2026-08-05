@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
@@ -19,9 +20,11 @@ type RandomTopologyService struct {
 func NewRandomTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
-) *RandomTopologyService {
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService) *RandomTopologyService {
 	return &RandomTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 

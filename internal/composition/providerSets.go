@@ -18,6 +18,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/goforj/wire"
@@ -30,6 +31,8 @@ var ZoneSet = wire.NewSet(
 	zone_services.NewZoneFactory,
 	zone_services.NewZoneClassifier,
 	zone_services.NewZoneLabelProvider,
+	wire.Bind(new(zone_services.IZoneLabelProvider), new(*zone_services.ZoneLabelProvider)),
+	base.NewTopologyConnectionService,
 )
 
 // GenerationSet builds the template generator and the providers it delegates to.
@@ -51,6 +54,7 @@ var EditorSet = wire.NewSet(
 	connection_editor.NewManualReapplyService,
 	connection_editor.NewZoneEditorService,
 	content_rules.NewContentRuleService,
+	wire.Bind(new(content_rules.IContentRuleService), new(*content_rules.ContentRuleService)),
 	preview_service.NewPreviewLayoutService,
 	providePreviewGenerator,
 )
@@ -62,6 +66,7 @@ var InfrastructureSet = wire.NewSet(
 	repositories.NewTemplateRepository,
 	file_service.NewFileService,
 	mappers.NewConfigMapper,
+	mappers.NewMandatoryContentItemMapper,
 	validators.NewEditorStateValidator,
 )
 

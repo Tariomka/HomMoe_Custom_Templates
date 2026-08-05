@@ -6,13 +6,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenRowsAreEmpty_ReturnsNil(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapper := mappers.NewMandatoryContentItemMapper()
+	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
 
 	// Act
 	actual := mapper.FromRows(nil)
@@ -24,7 +25,7 @@ func TestWhenRowsAreEmpty_ReturnsNil(t *testing.T) {
 func TestWhenRowSidIsEmpty_SkipsRow(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapper := mappers.NewMandatoryContentItemMapper()
+	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
 	rows := []models.ZoneContentRowSave{{Sid: "", Count: 2}}
 
 	// Act
@@ -37,7 +38,7 @@ func TestWhenRowSidIsEmpty_SkipsRow(t *testing.T) {
 func TestWhenRowCountIsThree_CreatesThreeIdenticalItems(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapper := mappers.NewMandatoryContentItemMapper()
+	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
 	rows := []models.ZoneContentRowSave{{Sid: "sawmill", Count: 3}}
 
 	// Act
@@ -54,7 +55,7 @@ func TestWhenRowCountIsThree_CreatesThreeIdenticalItems(t *testing.T) {
 func TestWhenRowCountIsBelowOne_NormalizesToSingleItem(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapper := mappers.NewMandatoryContentItemMapper()
+	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
 	rows := []models.ZoneContentRowSave{{Sid: "sawmill", Count: 0}}
 
 	// Act
@@ -67,7 +68,7 @@ func TestWhenRowCountIsBelowOne_NormalizesToSingleItem(t *testing.T) {
 func TestWhenRowIsGroup_SetsIncludeListsInsteadOfSid(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapper := mappers.NewMandatoryContentItemMapper()
+	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
 	rows := []models.ZoneContentRowSave{{Sid: "include_list_dwellings", Count: 1, IsGroup: true}}
 
 	// Act
@@ -82,7 +83,7 @@ func TestWhenRowIsGroup_SetsIncludeListsInsteadOfSid(t *testing.T) {
 func TestWhenRowIsMine_SetsIsMineOnItem(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapper := mappers.NewMandatoryContentItemMapper()
+	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
 	rows := []models.ZoneContentRowSave{{Sid: "gold_mine", Count: 1, IsMine: true}}
 
 	// Act
@@ -96,7 +97,7 @@ func TestWhenRowHasGuardedRule_AppliesGuardedFlagToItem(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	guarded := true
-	mapper := mappers.NewMandatoryContentItemMapper()
+	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
 	rows := []models.ZoneContentRowSave{{
 		Sid:   "sawmill",
 		Count: 1,

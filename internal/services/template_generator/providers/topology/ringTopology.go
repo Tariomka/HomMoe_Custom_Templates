@@ -21,9 +21,10 @@ type RingTopologyService struct {
 func NewRingTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
-) *RingTopologyService {
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService) *RingTopologyService {
 	return &RingTopologyService{
-		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 

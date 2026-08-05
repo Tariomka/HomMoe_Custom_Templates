@@ -28,9 +28,11 @@ type GeometricHubTopologyService struct {
 func NewGeometricHubTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService,
 ) *GeometricHubTopologyService {
 	return &GeometricHubTopologyService{
-		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 

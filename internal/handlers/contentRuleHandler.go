@@ -10,11 +10,11 @@ import (
 )
 
 type contentRuleHandler struct {
-	contentRuleService *content_rules.ContentRuleService
+	contentRuleService content_rules.IContentRuleService
 }
 
 func NewContentRuleHandler(
-	contentRuleService *content_rules.ContentRuleService) handler_interfaces.IContentRuleHandler {
+	contentRuleService content_rules.IContentRuleService) handler_interfaces.IContentRuleHandler {
 	return &contentRuleHandler{contentRuleService: contentRuleService}
 }
 

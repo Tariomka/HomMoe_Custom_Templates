@@ -21,9 +21,11 @@ type ChainTopologyService struct {
 func NewChainTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService,
 ) *ChainTopologyService {
 	return &ChainTopologyService{
-		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 

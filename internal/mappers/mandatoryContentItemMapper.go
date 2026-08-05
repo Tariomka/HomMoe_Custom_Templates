@@ -8,11 +8,11 @@ import (
 )
 
 type MandatoryContentItemMapper struct {
-	contentRuleService *content_rules.ContentRuleService
+	contentRuleService content_rules.IContentRuleService
 }
 
-func NewMandatoryContentItemMapper() *MandatoryContentItemMapper {
-	return &MandatoryContentItemMapper{contentRuleService: content_rules.NewContentRuleService()}
+func NewMandatoryContentItemMapper(contentRuleService content_rules.IContentRuleService) *MandatoryContentItemMapper {
+	return &MandatoryContentItemMapper{contentRuleService: contentRuleService}
 }
 
 func (this *MandatoryContentItemMapper) FromRows(rows []models.ZoneContentRowSave) []entities.MandatoryContentItem {

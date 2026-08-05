@@ -16,3 +16,15 @@ func TestWhenBaseIsConstructed_ProvidesZoneLabelProvider(t *testing.T) {
 	// Assert
 	assert.NotNil(t, topologyBase.ZoneLabelProvider)
 }
+
+func TestWhenBaseIsConstructed_RetainsTheInjectedZoneLabelProvider(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	zoneFactory, roadFactory, zoneLabelProvider, connectionService := test_helpers.NewZoneFactories()
+
+	// Act
+	topologyBase := base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService)
+
+	// Assert
+	assert.Same(t, zoneLabelProvider, topologyBase.ZoneLabelProvider)
+}

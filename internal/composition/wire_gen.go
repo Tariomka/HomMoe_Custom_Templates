@@ -19,6 +19,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
@@ -37,11 +38,14 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	zoneEditorService := connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)
 	mandatoryContentProvider := providers.NewMandatoryContentProvider(zoneClassifier, zoneEditorService)
 	gameRulesProvider := providers.NewGameRulesProvider()
-	topologyServiceLookup := provideTopologyServices(zoneFactory, roadFactory)
+	topologyConnectionService := base.NewTopologyConnectionService(zoneLabelProvider)
+	topologyServiceLookup := provideTopologyServices(zoneFactory, roadFactory, zoneLabelProvider, topologyConnectionService)
 	topologyProvider := providers.NewTopologyProvider(topologyServiceLookup)
 	zoneLayoutProvider := providers.NewZoneLayoutProvider()
 	templateGenerator := template_generator.NewTemplateGenerator(generatorConfig, zoneLabelProvider, generationTuningFactory, contentLimitProvider, mandatoryContentProvider, gameRulesProvider, topologyProvider, zoneLayoutProvider)
-	generatorConfigMapper := mappers.NewConfigMapper()
+	contentRuleService := content_rules.NewContentRuleService()
+	mandatoryContentItemMapper := mappers.NewMandatoryContentItemMapper(contentRuleService)
+	generatorConfigMapper := mappers.NewConfigMapper(mandatoryContentItemMapper)
 	connectionEditorService := connection_editor.NewConnectionEditorService(zoneClassifier)
 	manualReapplyService := connection_editor.NewManualReapplyService(zoneEditorService, zoneClassifier, generationTuningFactory)
 	iFileRepository := repositories.NewEditorStateRepository()
@@ -54,7 +58,6 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iStateHandler := handlers.NewStateHandler(fileService, editorStateValidator)
 	iTemplateHandler := handlers.NewTemplateHandler(templateGenerator, generatorConfigMapper, mandatoryContentProvider, connectionEditorService, zoneEditorService, manualReapplyService, fileService, previewGeneratorService, iStateHandler)
 	iPreviewHandler := handlers.NewPreviewHandler(previewLayoutService)
-	contentRuleService := content_rules.NewContentRuleService()
 	iContentRuleHandler := handlers.NewContentRuleHandler(contentRuleService)
 	iZoneEditorHandler := handlers.NewZoneEditorHandler(generatorConfigMapper, zoneClassifier, connectionEditorService, zoneEditorService, generationTuningFactory)
 	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iContentRuleHandler, iZoneEditorHandler)

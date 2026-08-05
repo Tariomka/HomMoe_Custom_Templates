@@ -14,7 +14,7 @@ import (
 
 type TemplateGenerator struct {
 	configuration     *config.GeneratorConfig
-	zoneLabelProvider *zones.ZoneLabelProvider
+	zoneLabelProvider zones.IZoneLabelProvider
 	tuningFactory     *generation_tuning.GenerationTuningFactory
 
 	contentLimitProvider *providers.ContentLimitProvider
@@ -26,7 +26,7 @@ type TemplateGenerator struct {
 
 func NewTemplateGenerator(
 	configuration *config.GeneratorConfig,
-	zoneLabelProvider *zones.ZoneLabelProvider,
+	zoneLabelProvider zones.IZoneLabelProvider,
 	tuningFactory *generation_tuning.GenerationTuningFactory,
 	contentLimitProvider *providers.ContentLimitProvider,
 	contentProvider *providers.MandatoryContentProvider,

@@ -32,7 +32,7 @@ func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeu
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -47,7 +47,7 @@ func TestWhenTournamentIsBuilt_EveryConnectionReferencesExistingZones(t *testing
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -63,7 +63,7 @@ func TestWhenPortalsAreDisabled_PlayerClustersStayIsolatedAsTwoComponents(t *tes
 	configuration.RandomPortals = false
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -78,7 +78,7 @@ func TestWhenTwoPlayersAreProvided_EachPlayerGetsOwnSpawnZone(t *testing.T) {
 	configuration := newChainTournamentConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -96,7 +96,7 @@ func TestWhenTopologyIsHubAndSpoke_CreatesHubZonePerPlayer(t *testing.T) {
 	configuration.Topology = config.TopologyHubAndSpoke
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -114,7 +114,7 @@ func TestWhenTopologyIsRing_CreatesRingClusterConnections(t *testing.T) {
 	configuration.Topology = config.TopologyRing
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -130,7 +130,7 @@ func TestWhenTopologyIsCircles_CreatesBalancedClusterConnections(t *testing.T) {
 	configuration.Topology = config.TopologyCircles
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -146,7 +146,7 @@ func TestWhenTopologyIsUnhandled_FallsBackToChainClusterConnections(t *testing.T
 	configuration.Topology = config.TopologySharedWeb
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -162,7 +162,7 @@ func TestWhenRandomPortalsAreEnabled_AddsPortalConnections(t *testing.T) {
 	configuration.RandomPortals = true
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
@@ -178,7 +178,7 @@ func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T
 	configuration.RandomPortals = false
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewZoneFactories())
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")

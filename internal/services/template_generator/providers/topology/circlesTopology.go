@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
@@ -21,10 +22,13 @@ type CirclesTopologyService struct {
 func NewCirclesTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService,
 ) *CirclesTopologyService {
 	return &CirclesTopologyService{
-		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(zoneFactory, roadFactory),
-		positionLayoutService:     position_layout.NewPositionLayoutService(),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
+		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }
 

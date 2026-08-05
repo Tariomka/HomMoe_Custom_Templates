@@ -21,9 +21,10 @@ type PositionedTopologyBuilder struct {
 func NewPositionedTopologyBuilder(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
-) *PositionedTopologyBuilder {
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService) *PositionedTopologyBuilder {
 	return &PositionedTopologyBuilder{
-		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -34,8 +35,7 @@ func (this *PositionedTopologyBuilder) BuildVariant(
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string,
 	buildLayout PositionedTopologyLayoutBuilder,
-	decorateZones PositionedTopologyZoneDecorator,
-) entities.Variant {
+	decorateZones PositionedTopologyZoneDecorator) entities.Variant {
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	allLabels, positions, pairs := buildLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
@@ -69,8 +69,7 @@ func (this *PositionedTopologyBuilder) BuildVariant(
 func (this *PositionedTopologyBuilder) createConnectionNames(
 	playerLabels, allLabels []string,
 	pairs []models.ConnectionIndexes,
-	isIsolated bool,
-) map[int][]string {
+	isIsolated bool) map[int][]string {
 	connectionNamesByZone := make(map[int][]string, len(allLabels))
 	for _, pair := range pairs {
 		indexA, indexB := pair.X, pair.Y
@@ -94,8 +93,7 @@ func (this *PositionedTopologyBuilder) createZones(
 	tuning models.GenerationTuning,
 	neutralZones neutral_zone.Plans,
 	holdCityNeutralLabel string,
-	connectionNames map[int][]string,
-) []entities.Zone {
+	connectionNames map[int][]string) []entities.Zone {
 	var zones []entities.Zone
 	for index, label := range allLabels {
 		zoneConnectionNames := connectionNames[index]
@@ -124,8 +122,7 @@ func (this *PositionedTopologyBuilder) createConnections(
 	isIsolated bool,
 	neutralZones neutral_zone.Plans,
 	connectionNames map[int][]string,
-	pairs []models.ConnectionIndexes,
-) []entities.Connection {
+	pairs []models.ConnectionIndexes) []entities.Connection {
 	nameLookup := make(map[int]int, len(allLabels))
 
 	var connections []entities.Connection

@@ -23,13 +23,19 @@ type TournamentTopologyService struct {
 func NewTournamentTopologyService(
 	zoneFactory *zone_services.ZoneFactory,
 	roadFactory *zone_services.RoadFactory,
+	zoneLabelProvider zone_services.IZoneLabelProvider,
+	connectionService *base.TopologyConnectionService,
+	hubClusterService tournament_variant.IClusterService,
+	balancedClusterService tournament_variant.IClusterService,
+	ringClusterService tournament_variant.IClusterService,
+	chainClusterService tournament_variant.IClusterService,
 ) *TournamentTopologyService {
 	return &TournamentTopologyService{
-		TopologyBase:           base.NewTopologyBase(zoneFactory, roadFactory),
-		hubClusterService:      tournament_variant.NewHubClusterService(zoneFactory, roadFactory),
-		balancedClusterService: tournament_variant.NewBalancedClusterService(zoneFactory, roadFactory),
-		ringClusterService:     tournament_variant.NewRingClusterService(zoneFactory, roadFactory),
-		chainClusterService:    tournament_variant.NewChainClusterService(zoneFactory, roadFactory),
+		TopologyBase:           base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
+		hubClusterService:      hubClusterService,
+		balancedClusterService: balancedClusterService,
+		ringClusterService:     ringClusterService,
+		chainClusterService:    chainClusterService,
 	}
 }
 

@@ -18,15 +18,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 )
 
-type topologyConnectionService struct {
-	zoneLabelProvider *zones.ZoneLabelProvider
+type TopologyConnectionService struct {
+	zoneLabelProvider zones.IZoneLabelProvider
 }
 
-func newTopologyConnectionService(zoneLabelProvider *zones.ZoneLabelProvider) *topologyConnectionService {
-	return &topologyConnectionService{zoneLabelProvider: zoneLabelProvider}
+func NewTopologyConnectionService(zoneLabelProvider zones.IZoneLabelProvider) *TopologyConnectionService {
+	return &TopologyConnectionService{zoneLabelProvider: zoneLabelProvider}
 }
 
-func (this *topologyConnectionService) createRandomPortalConnections(
+func (this *TopologyConnectionService) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	maxCount int,
@@ -67,7 +67,7 @@ func (this *topologyConnectionService) createRandomPortalConnections(
 	return connections
 }
 
-func (this *topologyConnectionService) createMissingPlayerConnections(
+func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 	playerLabels []string,
 	zones []entities.Zone,
 	connections []entities.Connection,
@@ -112,7 +112,7 @@ func (this *topologyConnectionService) createMissingPlayerConnections(
 			WithConnectionTypeDirect().
 			WithGuardZone(zoneName).
 			WithSimTurnSquad().
-			WithGuardValue(this.getBorderGuardValue(label, partner, playerLabels, nil, tuning)).
+			WithGuardValue(this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning)).
 			WithGuardWeeklyIncrement(0.15).
 			WithGuardMatchGroup("fallback_guard_"+fallbackName).
 			Build())
@@ -122,7 +122,7 @@ func (this *topologyConnectionService) createMissingPlayerConnections(
 	return additionalConnections
 }
 
-func (this *topologyConnectionService) createMissingConnections(
+func (this *TopologyConnectionService) CreateMissingConnections(
 	playerLabels, allLabels []string,
 	positions models.Positions,
 	zones []entities.Zone,
@@ -176,26 +176,7 @@ func (this *topologyConnectionService) createMissingConnections(
 	return additionalConnections
 }
 
-func (this *topologyConnectionService) createBridgeConnection(
-	bridgeName, zoneFrom, zoneTo, labelA, labelB string,
-	playerLabels []string,
-	neutralZones neutral_zone.Plans,
-	tuning models.GenerationTuning,
-) entities.Connection {
-	return variant_content.NewConnectionBuilder().
-		WithName(bridgeName).
-		WithFrom(zoneFrom).
-		WithTo(zoneTo).
-		WithConnectionTypeDirect().
-		WithGuardZone(zoneFrom).
-		WithSimTurnSquad().
-		WithGuardValue(this.getBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)).
-		WithGuardWeeklyIncrement(0.15).
-		WithGuardMatchGroup(fmt.Sprintf("bridge_guard_%s-%s", labelA, labelB)).
-		Build()
-}
-
-func (this *topologyConnectionService) getBorderGuardValue(
+func (this *TopologyConnectionService) GetBorderGuardValue(
 	labelA, labelB string,
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
@@ -219,7 +200,26 @@ func (this *topologyConnectionService) getBorderGuardValue(
 	return tuning.ScaleByBorderGuardStrength(higherQuality.GetGuardValue())
 }
 
-func (this *topologyConnectionService) buildZoneAdjacency(
+func (this *TopologyConnectionService) createBridgeConnection(
+	bridgeName, zoneFrom, zoneTo, labelA, labelB string,
+	playerLabels []string,
+	neutralZones neutral_zone.Plans,
+	tuning models.GenerationTuning,
+) entities.Connection {
+	return variant_content.NewConnectionBuilder().
+		WithName(bridgeName).
+		WithFrom(zoneFrom).
+		WithTo(zoneTo).
+		WithConnectionTypeDirect().
+		WithGuardZone(zoneFrom).
+		WithSimTurnSquad().
+		WithGuardValue(this.GetBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)).
+		WithGuardWeeklyIncrement(0.15).
+		WithGuardMatchGroup(fmt.Sprintf("bridge_guard_%s-%s", labelA, labelB)).
+		Build()
+}
+
+func (this *TopologyConnectionService) buildZoneAdjacency(
 	playerLabels, allLabels []string,
 	connections []entities.Connection,
 ) data.Adjacency[int] {

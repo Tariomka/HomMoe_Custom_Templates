@@ -905,7 +905,29 @@ scope and sequencing before starting.
 
 ---
 
-### 2.3 🟠 `NewMandatoryContentItemMapper` constructs its own collaborator, bypassing wire
+### 2.3 ✅ FIXED 🟠 `NewMandatoryContentItemMapper` constructs its own collaborator, bypassing wire
+
+**Fixed.** `NewMandatoryContentItemMapper` now takes a
+`content_rules.IContentRuleService`, and the finding's blast radius turned out to
+be one level deeper than reported: `NewConfigMapper` built its own
+`MandatoryContentItemMapper`, so injecting only the mapper would have dead-ended
+there. Both constructors are now parameterised and both are registered in
+`InfrastructureSet`.
+
+**Interfaces instead of concrete types.** The finding's stated benefit — "the
+mapper cannot be unit-tested against a stub rule service" — is not delivered by
+injecting a concrete `*ContentRuleService`. `IContentRuleService` was therefore
+extracted next to the implementation per AGENTS.md §4.2.1, bound with
+`wire.Bind`, and `contentRuleHandler` widened to it as well. A reusable
+`test_helpers.ContentRuleServiceMock` now exists, and
+`TestWhenRowsAreMapped_UsesTheInjectedContentRuleService` proves the injected
+service is the one consulted.
+
+**Original finding follows.**
+
+#### 2.3 original text
+
+🟠 `NewMandatoryContentItemMapper` constructs its own collaborator, bypassing wire
 
 **Evidence.** [mandatoryContentItemMapper.go](../internal/mappers/mandatoryContentItemMapper.go#L10-L16):
 
@@ -947,7 +969,44 @@ tests can then inject a stub instead of exercising the real rule catalogue.
 
 ---
 
-### 2.4 🟠 `NewTopologyBase` constructs its own collaborators
+### 2.4 ✅ FIXED 🟠 `NewTopologyBase` constructs its own collaborators
+
+**Fixed.** `NewTopologyBase` now receives both a `zones.IZoneLabelProvider` and a
+`*base.TopologyConnectionService`. Because `TopologyBase` is embedded rather than
+wired directly, the two collaborators had to be threaded through **17**
+constructors (12 topology services, 4 cluster services and
+`PositionedTopologyBuilder`) to reach it, and `provideTopologyServices` gained
+them as parameters so wire supplies them.
+
+**Result.** The generated `wire_gen.go` now allocates **one** `zoneLabelProvider`
+and **one** `topologyConnectionService` for the whole graph. Previously every
+`TopologyBase` built its own pair, so a full graph carried 16 of each.
+
+**Exporting the connection service.** The finding says to inject
+`topologyConnectionService`, but it was unexported with unexported methods, and
+wire generates into `internal/composition`, which cannot name it. It is now
+`base.TopologyConnectionService` with its four externally consumed methods
+exported; `createBridgeConnection` and `buildZoneAdjacency` stay private, and
+`GetBorderGuardValue` was moved above them to satisfy `funcorder`. Its four
+exported methods keep their existing coverage through the `topologyBase` suites,
+which remain the intended entry point; only the new constructor gained a
+dedicated test folder.
+
+**Cluster services.** `NewTournamentTopologyService` built its own four
+`IClusterService` instances — the same anti-pattern, not named in the review.
+They are now injected too.
+
+**Test call sites.** ~60 topology tests use the spread idiom
+`base.NewTopologyBase(test_helpers.NewZoneFactories())`. `NewZoneFactories` was
+widened to return all four collaborators in constructor order, so every one of
+those call sites compiles untouched; only the tournament tests needed the new
+`test_helpers.NewTournamentTopologyDependencies()` spread helper.
+
+**Original finding follows.**
+
+#### 2.4 original text
+
+🟠 `NewTopologyBase` constructs its own collaborators
 
 **Evidence.** [topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go#L14-L29)
 creates `zones.NewZoneLabelProvider()` and `newTopologyConnectionService(...)`
@@ -2257,7 +2316,7 @@ permanently — mark them `✅ FIXED` in place as they land.
 5. ✅ **Performance PR.** §4.1 — reinstate the benchmark, add the revision-keyed
    cache, record before/after. Independent of everything above.
 
-6. **DI PR.** §2.3 + §2.4 — parameterise both constructors, register providers,
+6. ✅ **DI PR.** §2.3 + §2.4 — parameterise both constructors, register providers,
    `wire gen ./internal/composition/...`. Single PR because both touch
    `providerSets.go`.
 

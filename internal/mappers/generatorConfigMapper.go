@@ -9,9 +9,9 @@ type GeneratorConfigMapper struct {
 	contentItemMapper *MandatoryContentItemMapper
 }
 
-func NewConfigMapper() *GeneratorConfigMapper {
+func NewConfigMapper(contentItemMapper *MandatoryContentItemMapper) *GeneratorConfigMapper {
 	return &GeneratorConfigMapper{
-		contentItemMapper: NewMandatoryContentItemMapper(),
+		contentItemMapper: contentItemMapper,
 	}
 }
 

@@ -7,9 +7,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -131,7 +131,7 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 	template := generateDefaultTemplate(t, handler)
 	template.MandatoryContent = nil
 	editorState := dtos.NewDefaultEditorStateDto()
-	configuration := mappers.NewConfigMapper().FromEditorState(editorState)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(editorState)
 	expectedContent := newMandatoryContentProvider().CreateContentsForZones(
 		*configuration,
 		template.Variants[0].Zones,
