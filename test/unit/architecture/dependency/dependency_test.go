@@ -75,6 +75,7 @@ func findForbiddenAppImports(t *testing.T, repositoryRoot string) map[string][]s
 	allowedRoots := []string{
 		modulePath + "/internal/common",
 		modulePath + "/internal/composition",
+		modulePath + "/internal/constants",
 		modulePath + "/internal/dtos",
 		modulePath + "/internal/entities",
 		modulePath + "/internal/handlers",

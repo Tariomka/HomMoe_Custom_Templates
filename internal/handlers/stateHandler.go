@@ -49,12 +49,7 @@ func (this *stateHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, e
 		return "", common_errors.ErrNoOutputPath
 	}
 
-	err := this.fileService.SaveSettings(outputPath, stateDto.State)
-	if err != nil {
-		return "", err
-	}
-
-	return outputPath, nil
+	return this.fileService.SaveSettings(outputPath, stateDto.State)
 }
 
 func (this *stateHandler) ValidateEditorState(

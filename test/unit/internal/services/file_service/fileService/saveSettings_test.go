@@ -1,75 +1,77 @@
 package fileService_test
 
 import (
-	"math"
-	"os"
+	"errors"
 	"path/filepath"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestWhenStateIsSaved_WritesIndentedJson(t *testing.T) {
+func TestWhenSettingsAreSaved_UsesTheDirectoryOfTheGivenPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	settingsPath := filepath.Join(t.TempDir(), "out.gen.json")
+	service, mocks := newServiceWithMocks()
+	outputDirectory := filepath.Join("out", "states")
 	state := dtos.NewDefaultEditorStateDto()
-	state.TemplateName = gofakeit.ProductName()
-	require.NoError(t, file_service.NewFileService().SaveSettings(settingsPath, &state))
+	state.TemplateName = "My Template"
+	mocks.editorState.On("Save", outputDirectory, "My Template", state).Return("written", nil)
 
 	// Act
-	data, err := os.ReadFile(settingsPath)
+	_, err := service.SaveSettings(filepath.Join(outputDirectory, "ignored.gen.json"), &state)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Contains(t, string(data), "\n  ")
+	mocks.editorState.AssertCalled(t, "Save", outputDirectory, "My Template", state)
 }
 
-func TestWhenSavedStateIsLoaded_RoundTripsState(t *testing.T) {
+func TestWhenStateTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	settingsPath := filepath.Join(t.TempDir(), "roundtrip.gen.json")
-	service := file_service.NewFileService()
+	service, mocks := newServiceWithMocks()
 	state := dtos.NewDefaultEditorStateDto()
-	state.TemplateName = gofakeit.ProductName()
-	state.PlayerCount = gofakeit.Number(2, 8)
-	require.NoError(t, service.SaveSettings(settingsPath, &state))
+	state.TemplateName = "a/b:c"
+	mocks.editorState.On("Save", ".", "a/b:c", state).Return("written", nil)
 
 	// Act
-	loaded, err := service.LoadSettingsFile(settingsPath)
+	_, err := service.SaveSettings("ignored.gen.json", &state)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, state, *loaded)
+	mocks.editorState.AssertCalled(t, "Save", ".", "a/b:c", state)
 }
 
-func TestWhenSettingsDirectoryDoesNotExist_ReturnsError(t *testing.T) {
+func TestWhenSettingsAreSaved_ReturnsThePathTheRepositoryWrote(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	missingDirPath := filepath.Join(t.TempDir(), "missing_dir", "x.gen.json")
+	service, mocks := newServiceWithMocks()
 	state := dtos.NewDefaultEditorStateDto()
+	state.TemplateName = "Name"
+	expectedPath := filepath.Join("out", "Name.gen.json")
+	mocks.editorState.On("Save", "out", "Name", state).Return(expectedPath, nil)
 
 	// Act
-	err := file_service.NewFileService().SaveSettings(missingDirPath, &state)
+	actualPath, err := service.SaveSettings(filepath.Join("out", "whatever.gen.json"), &state)
 
 	// Assert
-	assert.Error(t, err)
+	require.NoError(t, err)
+	assert.Equal(t, expectedPath, actualPath)
 }
 
-func TestWhenStateContainsNaNValue_ReturnsError(t *testing.T) {
+func TestWhenSettingsCannotBeSaved_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	settingsPath := filepath.Join(t.TempDir(), "nan.gen.json")
+	service, mocks := newServiceWithMocks()
 	state := dtos.NewDefaultEditorStateDto()
-	state.PlayerZoneSize = math.NaN()
+	state.TemplateName = "Name"
+	expectedError := errors.New("disk full")
+	mocks.editorState.On("Save", "out", "Name", state).Return("", expectedError)
 
 	// Act
-	err := file_service.NewFileService().SaveSettings(settingsPath, &state)
+	_, err := service.SaveSettings(filepath.Join("out", "whatever.gen.json"), &state)
 
 	// Assert
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, expectedError)
 }

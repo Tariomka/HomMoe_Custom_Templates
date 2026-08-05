@@ -43,9 +43,7 @@ func (this *State) SaveAs(templateName string) {
 	}
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + configFileExtension
 	this.dialogs.Open(dialogs.NewSaveFileDialog(dir, defaultName, func(path string) {
-		if this.handleSaveState(path) {
-			this.currentPath = path
-		}
+		this.handleSaveState(path)
 	}))
 }
 
@@ -83,21 +81,20 @@ func (this *State) RevealOutputDir() {
 	this.dialogs.Open(dialogs.NewBrowseDialog(strings.TrimSpace(this.outputPath.Text())))
 }
 
-// handleSaveState writes the current editor state to path, reporting whether
-// the write succeeded so callers do not record a path that holds no file.
-func (this *State) handleSaveState(path string) bool {
-	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+func (this *State) handleSaveState(path string) {
+	savedPath, err := this.handler.SaveState(dtos.EditorStateSaveDto{
 		State:      new(this.innerState.GetCurrentState()),
 		OutputPath: path,
-	}); err != nil {
+	})
+	if err != nil {
 		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
-		return false
+		return
 	}
 
+	this.currentPath = savedPath
 	this.unsaved = false
 	this.confirmExit = false
-	this.SetStatus("Saved "+path, false)
-	return true
+	this.SetStatus("Saved "+savedPath, false)
 }
 
 func (this *State) handleLoadState(path string) bool {
@@ -115,6 +112,7 @@ func (this *State) handleLoadState(path string) bool {
 		this.SetStatus(fmt.Sprintf("Loaded %s (adjusted: %s)", path, strings.Join(warnings, "; ")), false)
 		return true
 	}
+
 	this.SetStatus("Loaded "+path, false)
 	return true
 }

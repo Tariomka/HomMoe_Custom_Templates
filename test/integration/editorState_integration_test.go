@@ -58,6 +58,9 @@ func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func
 func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "saved.gen.json")
+	// The state is written under the template name, not under the requested
+	// file name, so the reload has to target the derived path.
+	writtenPath := filepath.Join(dir, "Loaded Template.gen.json")
 
 	// Author a distinctive state and persist it through the real save path.
 	author := newUIState()
@@ -70,7 +73,7 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
 	// Fresh editor session sitting at the defaults.
 	state, _, _ := newEditorSession()
@@ -81,10 +84,10 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 
 	// Load the saved file. The panel resync is supplied as the onLoaded
 	// callback, exactly as editor.Window wires window.load().
-	state.LoadStateFromFile(savedPath)
+	state.LoadStateFromFile(writtenPath)
 	message, irError = state.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Loaded "+savedPath, message)
+	assert.Equal(t, "Loaded "+writtenPath, message)
 
 	loaded := state.GetStateData()
 	assert.Equal(t, "Loaded Template", loaded.TemplateName)
@@ -109,6 +112,7 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "manual.gen.json")
+	writtenPath := filepath.Join(dir, "Custom Template.gen.json")
 	now := time.Now()
 
 	// Generate a baseline template (the first AutoRegenerate call generates).
@@ -139,9 +143,9 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	state.SaveStateToFile(savedPath)
 	message, irError := state.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
-	raw, err := os.ReadFile(savedPath)
+	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 	var onDisk dtos.EditorStateDto
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
@@ -162,10 +166,10 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	// Load into a fresh session and regenerate; the manual layout must come
 	// back and be reapplied to the regenerated template.
 	reloaded := newUIState()
-	reloaded.LoadStateFromFile(savedPath)
+	reloaded.LoadStateFromFile(writtenPath)
 	message, irError = reloaded.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Loaded "+savedPath, message)
+	assert.Equal(t, "Loaded "+writtenPath, message)
 	reloaded.AutoRegenerate(now)
 
 	got := reloaded.GetLastTemplate()
@@ -194,14 +198,15 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "plain.gen.json")
+	writtenPath := filepath.Join(dir, "Custom Template.gen.json")
 
 	state := newUIState()
 	state.SaveStateToFile(savedPath)
 	message, irError := state.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
-	raw, err := os.ReadFile(savedPath)
+	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 
 	var onDisk dtos.EditorStateDto
@@ -247,6 +252,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 func TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "gamemode.gen.json")
+	writtenPath := filepath.Join(dir, "Custom Template.gen.json")
 	singleHero := registry.GetGameModeValues().SingleHero
 
 	// Author a state with the non-default game mode and persist it.
@@ -255,12 +261,12 @@ func TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave(t *testing.T) {
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)
-	require.Equal(t, "Saved "+savedPath, message)
+	require.Equal(t, "Saved "+writtenPath, message)
 
 	// Fresh editor session at defaults; load, resync panels (window.load()),
 	// then run the next frame's SaveToState (window.save()).
 	state, saveFrame, loadPanels := newEditorSession()
-	state.LoadStateFromFile(savedPath)
+	state.LoadStateFromFile(writtenPath)
 	loadPanels()
 	saveFrame()
 

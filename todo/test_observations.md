@@ -110,3 +110,14 @@ Still unit-untestable (dialog-callback or Gio territory):
   in a build that compiled. The branch exists to keep the injector error-free
   (a broken asset set degrades to "no preview images" instead of failing
   construction); reaching it would require an injectable asset provider seam.
+
+- internal/repositories/atomicFileWriter.go - the struct is private to the
+  package and has no test folder of its own. It is exercised through the three
+  repositories, which each have a mirror folder under
+  test/unit/internal/repositories/. Its remaining uncovered lines are the
+  `Close` and `Sync` error branches of `encodeToTemporaryFile`: making either
+  fail needs a genuinely full filesystem or a test-only seam in production
+  code, both of which AGENTS.md 4.6 rules out. Review item 1.6's requested
+  "close failure is propagated" test is therefore not written; the truncation
+  half of that item is covered by
+  `TestWhenEncodingFailsOverAnExistingPreview_LeavesTheDestinationUntouched`.

@@ -1,189 +1,164 @@
-# Session Carry-Forward — Review Remediation (`todo/review-opus5-08-04.md`)
-
-Last updated: **2026-08-05**, after **Batch 2 of 13**.
+# Session Carry-Forward — Review Remediation, Batch 3 (Durability)
 
 ## 1. Session goal
 
-Work through every finding in [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md)
-in the §12 execution order, one batch at a time, with owner approval before each
-batch and a carry-forward update after each batch.
+Work through `todo/review-opus5-08-04.md` batch by batch, asking go/no-go and
+clarifying questions before each batch, and stopping for owner review after each.
+This document covers **Batch 3 — Durability PR (§1.1 + §1.6 + §5.1)**.
 
 ## 2. Fixes applied
 
-### Batch 1 — Security PR (owner-reviewed, now committed)
-
-- **§8.1 (🔴 reachable DoS)** — `golang.org/x/text` `v0.38.0` → `v0.39.0`.
-  Closes GO-2026-5970 (infinite loop in `norm.Form.*`, reachable from
-  `app/gui/program.go:21` through Gio's text handling).
-- **§8.2 (🟠 present, uncalled)** — `golang.org/x/net` `v0.55.0` → `v0.56.0`.
-  Closes GO-2026-5942.
-- Transitive: `golang.org/x/sys` `v0.45.0` → `v0.46.0`, applied by `go mod tidy`.
-
-### Batch 2 — Correctness PR (this batch, awaiting owner review)
-
-- **§1.2 (🔴 data-loss)** — `SaveAs` no longer records `currentPath` when the
-  write failed. `handleSaveState` now returns `bool` (mirroring
-  `handleLoadState`) and the dialog callback gates the assignment on it. Without
-  this, a failed *Save As* left `currentPath` pointing at a file that was never
-  created, and every later `Save` silently retargeted that broken path.
-  ([stateFiles.go](../app/gui/drivers/stateFiles.go))
-- **§1.3 (🟠 latent nil deref)** — `WasLayoutChanged` now guards with
-  `HasPreviousState()` before comparing against `previous`.
-  ([editorState.go](../app/gui/models/editorState.go))
-- **§1.3 follow-on (owner asked for "Both")** — `ShouldReapplyManualEdits`
-  dropped its now-redundant `!this.HasPreviousState() ||` short-circuit and
-  reads as `HasManualEdits() && !WasLayoutChanged()`.
-- **§5.2 (🟡 dead comment)** — owner chose **"Uncomment it"** over the review's
-  recommended delete. `SnapshotCurrentState` now really clears `next`, with a
-  one-line comment explaining why. Traced as behaviourally a no-op today, so the
-  invariant is now explicit rather than accidental.
+- **§1.1 🔴 non-atomic persistent writes.** Every persisted user file is now
+  written to `{directory}/TEMP-{name}{ext}`, `Sync`ed, closed, and only then
+  renamed onto the destination. A failed encode leaves the previous file
+  byte-identical and removes the temporary file.
+- **§1.6 🟠 PNG truncation + swallowed close error.** The preview goes through
+  the same writer, and the writer's `defer` uses a named return so a `Close`
+  error wins when the encode succeeded.
+- **§5.1 🟡 disagreeing directory permissions.** One `FolderPermission = 0o755`
+  constant, consumed by both the repositories and the in-app file explorer
+  (which previously used `0o750`).
 
 ## 3. Features added / changed
 
-No user-visible feature changes. §1.2 changes observable behaviour only in the
-failure path: after a failed *Save As* the editor now stays "unfiled" and the
-next *Save* re-prompts instead of silently retrying a path that holds no file.
+- **New repository layer.** The pre-existing but unimplemented
+  [fileRepositoryInterface.go](../internal/repositories/fileRepositoryInterface.go)
+  now has three real implementations. Each owns its extension and encoding;
+  a shared private `atomicFileWriter` owns the temp-file/rename mechanics.
+- **`FileService` is now a controller.** It only decides the directory and the
+  requested file name and delegates; the writer sanitizes the name and falls
+  back to `Generated_Template`. `SaveTemplate` and `SavePreviewImage` were
+  replaced by a single `SaveTemplateWithPreview`, which skips the preview when
+  the image is `nil` and preserves the partial-success contract (a preview
+  failure still returns the template path).
+- **New `internal/constants` package** — the home AGENTS.md §4.4 prescribes for
+  constants, which did not exist yet.
+- **⚠ Behaviour change 1 (owner-approved):** editor-state saves now create
+  missing directories instead of failing.
+- **⚠ Behaviour change 2 (owner-approved):** the Save As dialog's file name is
+  discarded; the state is written as `{TemplateName}.gen.json`. `SaveState`
+  returns the path actually written and `drivers.State` records **that**.
 
 ## 4. File modifications
 
-| File | Change |
-| --- | --- |
-| [app/gui/drivers/stateFiles.go](../app/gui/drivers/stateFiles.go) | **M** — `handleSaveState` returns `bool`; `SaveAs` gates `currentPath` on it |
-| [app/gui/models/editorState.go](../app/gui/models/editorState.go) | **M** — `WasLayoutChanged` nil guard; `ShouldReapplyManualEdits` simplified; `SnapshotCurrentState` clears `next` |
-| [app/gui/drivers/dialogHost_testexports.go](../app/gui/drivers/dialogHost_testexports.go) | **NEW** — `//go:build integration_test`; exposes `GetTopDialog` |
-| [app/gui/dialogs/fileExplorerDialog_testexports.go](../app/gui/dialogs/fileExplorerDialog_testexports.go) | **NEW** — `//go:build integration_test`; exposes `ConfirmSave` (fires `onSave` without a `layout.Context`) |
-| [test/integration/stateSaveAs_integration_test.go](../test/integration/stateSaveAs_integration_test.go) | **NEW** — two §1.2 regression tests; legitimately tagged (consumes the two accessors above) |
-| [test/unit/app/gui/models/editorState/wasLayoutChanged_test.go](../test/unit/app/gui/models/editorState/wasLayoutChanged_test.go) | **M** — added `TestWhenNoPreviousStateExists_ReportsLayoutNotChanged` |
-| [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) | **M** — §1.2/§1.3/§5.2 marked `✅ FIXED`, §6.1 marked `❌ WILL NOT FIX`, §12 item 2 + the §6.1 summary-table row updated |
-| [todo/test_observations.md](../todo/test_observations.md) | **M** — recorded why §1.2 has no unit test |
-| `.agent/session-carry-forward.md` | **M** — this document |
+**Created**
+
+- `internal/constants/filePermissions.go` — `FolderPermission`, `FileReadWritePermission`.
+- `internal/repositories/atomicFileWriter.go` — private writer: `MkdirAll` →
+  TEMP file → `Sync` → `Close` → bounded `os.Rename` retry (5 × 20 ms) → discard
+  temp on any failure.
+- `test/unit/internal/repositories/{editorStateRepository,templateRepository,previewRepository}/`
+  — `new*_test.go`, `load_test.go`, `save_test.go` in each.
+- `test/unit/internal/services/file_service/fileService/common_test.go` —
+  generic `mockFileRepository[T]` + `newServiceWithMocks()`.
+- `test/unit/internal/services/file_service/fileService/saveTemplateWithPreview_test.go`.
+
+**Edited**
+
+- `internal/repositories/editorStateRepository.go` / `templateRepository.go` /
+  `previewRepository.go` — implemented (`.gen.json` / `.rmg.json` / `.png`).
+  Only the editor state implements `Load`; the other two return
+  `common_errors.ErrNotImplemented`.
+- `internal/services/file_service/fileService.go` — rewritten as a controller;
+  `SaveSettings` now returns `(string, error)`.
+- `internal/handlers/stateHandler.go` — returns the path `SaveSettings` reports.
+- `internal/handlers/templateHandler.go` — builds the preview image (when a
+  generator exists) and makes one `SaveTemplateWithPreview` call.
+- `app/gui/drivers/stateFiles.go` — `handleSaveState` records the returned path;
+  it no longer returns a `bool` (the gating moved inside it).
+- `app/gui/dialogs/fileExplorerDialog.go` — uses `FolderPermission`.
+- `internal/composition/providerSets.go` + `wire_gen.go` — three repository
+  providers registered; injectors regenerated with `wire gen`.
+- `test/unit/architecture/dependency/dependency_test.go` — `internal/constants`
+  added to the `app/*` import allow-list.
+- `test/unit/internal/handlers/guiHandler/{loadState,saveState}_test.go` — use
+  the returned path; the "missing directory" test now asserts creation.
+- `test/integration/{editorState,window_render,stateSaveAs}_integration_test.go`
+  — read back the derived `{TemplateName}.gen.json` path.
+- `todo/review-opus5-08-04.md`, `todo/test_observations.md` — documentation.
+
+**Deleted**
+
+- `test/unit/internal/services/file_service/fileService/saveTemplate_test.go`
+- `test/unit/internal/services/file_service/fileService/savePreviewImage_test.go`
+
+  Both tested methods that no longer exist. Their filesystem-behaviour cases
+  moved to the repository test folders; their naming/routing cases moved to
+  `saveTemplateWithPreview_test.go`. Both files are recoverable from git.
 
 ## 5. Tests added or updated
 
-| Test | Location |
-| --- | --- |
-| `TestWhenSaveAsFails_CurrentPathIsNotRecorded` | [stateSaveAs_integration_test.go](../test/integration/stateSaveAs_integration_test.go) |
-| `TestWhenSaveAsSucceeds_CurrentPathIsRecorded` | [stateSaveAs_integration_test.go](../test/integration/stateSaveAs_integration_test.go) |
-| `TestWhenNoPreviousStateExists_ReportsLayoutNotChanged` | [wasLayoutChanged_test.go](../test/unit/app/gui/models/editorState/wasLayoutChanged_test.go) |
+- Nine new repository test files, including the §1.1 regression cases:
+  pre-existing destination byte-identical after a failed save, and no `TEMP-*`
+  residue. Fault injection uses `math.NaN()` (JSON) and a zero-sized
+  `image.RGBA` (PNG) — no test-only seam was needed.
+- `FileService` tests rewritten against mocked `IFileRepository[T]`.
 
-Verification run after Batch 2:
+**Last run — all green:**
 
-| Check | Result |
-| --- | --- |
-| `go build ./...` | Pass |
-| `go vet -tags=integration_test ./...` | Pass, no output |
-| `go test -count=1 ./test/unit/...` | Pass, exit 0, no `FAIL` |
-| `go test -tags=integration_test -count=1 ./test/integration/...` | `ok ... 2.431s` |
-| Both new SaveAs tests, run by name with `-v` | `--- PASS` ×2 |
-| Unit coverage total (AGENTS.md §2.3) | **64.7%** — unchanged from the review baseline; `editorState.go` at 100% on every changed function |
-| `golangci-lint-v2 run ./app/... ./test/...` | 13 findings, **all pre-existing baseline** (2 `dupl` = §3.4, 11 `gochecknoglobals`); zero new, zero formatting findings on the new files |
-
-No existing test needed changing to accommodate the §5.2 `next = nil`
-activation — confirmation that it is the no-op it was traced to be.
-
-Batch 1 verification, for the record: `go build ./...` pass; unit suite pass;
-`govulncheck ./...` and `govulncheck -scan module` both *No vulnerabilities
-found*; `go mod tidy -diff` exit 0. (`govulncheck -scan module` rejects path
-patterns — run it bare, not with `./...`.)
+- `go build ./...` ✓ · `go vet -tags=integration_test ./...` ✓
+- `go test -count=1 ./test/unit/...` → exit 0
+- `go test -tags=integration_test -count=1 ./test/integration/...` → exit 0
+- Coverage **64.8%** (was 64.7%). All new production files at 100% except
+  `atomicFileWriter.encodeToTemporaryFile` at 77.8% (Close/Sync error branches).
+- `golangci-lint-v2 run ./...` → **42 issues, all pre-existing categories**
+  (`dupl` 2 = §3.4, `gochecknoglobals` 40).
 
 ## 6. Git status snapshot
 
-Branch: `AD/refactoring-07-21`
-
-```
- M app/gui/drivers/stateFiles.go
- M app/gui/models/editorState.go
- M test/unit/app/gui/models/editorState/wasLayoutChanged_test.go
- M todo/review-opus5-08-04.md
- M todo/test_observations.md
-?? app/gui/dialogs/fileExplorerDialog_testexports.go
-?? app/gui/drivers/dialogHost_testexports.go
-?? test/integration/stateSaveAs_integration_test.go
-```
-
-Batch 1's `go.mod` / `go.sum` changes no longer appear — the owner has already
-staged/committed them. Everything above is **Batch 2 only** and is unstaged;
-per AGENTS.md §2.5 the agent must not stage or commit. `.agent/` is untracked
-and may be added to `.gitignore` if the owner wants.
+Branch **`AD/refactoring-07-21`**. Nothing staged. 23 modified, 2 deleted,
+4 untracked paths — see §4. (An accidental `git rm --cached` during this session
+was immediately reverted with `git restore --staged`; the index is clean.)
 
 ## 7. Rejections / things the owner declined
 
-- **§6.1 — rejected outright, must not be re-attempted.** The finding asks for
-  `//go:build integration_test` on
-  [rmgTemplateModel_test.go](../test/integration/rmgTemplateModel_test.go),
-  quoting an AGENTS.md §4.6.1 that says *"every file in these two directories
-  carries the tag"*. **AGENTS.md no longer says that.** §4.6.1 was rewritten
-  after the review was authored and now reads: the tag applies *if and only if*
-  the file references an accessor declared in a `*_testexports.go` file, and it
-  is explicitly *not* a label meaning "this is an integration test". The file
-  references no such accessor (verified by grepping every accessor in
-  `window_testexports.go` and `state_testexports.go` — zero hits); it only
-  decodes `.rmg.json` files from `data/`. Tagging it would violate AGENTS.md.
-  The review's *secondary* concern is real but unaddressed: the untagged file
-  makes a plain `go test ./test/...` decode all bundled example templates, so
-  the "fast" suite is slower than it looks. Fix that with `testing.Short()` or a
-  sampled corpus if it ever hurts — never with a build tag.
-- **Separate `plans/` file declined.** Owner chose to track progress by marking
-  items `✅ FIXED` / `❌ WILL NOT FIX` in place inside
-  `todo/review-opus5-08-04.md` (the convention the review's own §12 prescribes)
-  rather than creating `plans/review-opus5-08-04-remediation.md`.
-- **Full per-batch verification declined.** Owner chose `go build ./...` +
-  `go test ./test/unit/...` as the standing per-batch gate instead of the full
-  AGENTS.md §2.3 sweep. Batch 2 additionally ran vet, the integration suite,
-  coverage and lint because it touched the gated tree and production code.
+- Batch 2's **§6.1** (build tag on `rmgTemplateModel_test.go`) — ❌ WILL NOT FIX,
+  documented in the review; it contradicts the current AGENTS.md §4.6.1.
+- The review's own §1.1 design (an `AtomicFileWriter` inside `file_service`) was
+  **replaced** by the owner with the repository layer described above.
+- Transactional template+PNG commit — **declined**; partial success is kept.
+- A separate `plans/` file for this remediation — declined; findings are marked
+  in place inside the review document.
 
 ## 8. Open questions
 
-Owner decisions still required before their batches can start (from review §12):
+None blocking Batch 3. Blocking later batches:
 
-| Batch | Decision |
-| --- | --- |
-| 3 | §1.1 — do template JSON + preview PNG commit transactionally, or keep the documented partial-success contract? |
-| 4 | §1.5 — the exact numeric ceilings for the twenty `.gen.json` int fields (and four floats). |
-| 8 | §7.1 — are direct pushes to `master` intentionally permitted? |
-| 9 | §9.1 — is external programmatic use a supported product surface? |
-| 12 | §2.7 — finish or remove the gladiator-arena preview? §1.8 — output-directory persistence shape (a) in `.gen.json` vs (b) machine-local (review recommends (b)). |
-| 13 | §2.2 — confirm scope/sequencing of the regeneration-policy refactor. |
+- **Batch 4 / §1.5** — the exact numeric ceilings for the 20 unbounded ints and
+  4 floats are a product decision.
+- **Batch 8 / §7.1** — are direct pushes to `master` intentional?
+- **Batch 9 / §9.1** — the public-API decision behind the QUICKSTART example.
+- **Batch 12** — §2.7 (finish or remove the gladiator-arena preview) and §1.8
+  (where the output directory is persisted).
+- **Batch 13 / §2.2** — scope of extracting regeneration policy from `drivers`.
 
 ## 9. Next recommended actions
 
-1. Owner reviews Batch 2 — the 8 files listed in §4 above.
-2. Ask the owner the **§1.1 transactionality** question; Batch 3 (Durability:
-   §1.1 + §1.6 + §5.1) cannot start without it. Offer the alternative of jumping
-   to an unblocked batch — **5** (performance, §4.1), **6** (DI, §2.3 + §2.4),
-   **7** (test policy, §6.3 then §6.5), **10** (duplication) or **11**
-   (coverage) — if the owner would rather not decide now.
-3. Continue batch by batch through review §12, keeping the
-   ask → implement → document → stop cadence.
+1. Owner reviews Batch 3 and confirms the two behaviour changes in §3.
+2. **Batch 4 — Input-validation PR** (§1.5 + §1.7). Ask for the ceilings first.
+3. Batch 5 — Performance (§4.1, preview layout cache).
+4. Batch 6 — DI (§2.3, §2.4).
+5. Batches 7–13 in the order given by review §12.
 
 ## 10. Carry-forward prompt
 
-> Read `AGENTS.md` first, then `todo/review-opus5-08-04.md`.
+> Read `AGENTS.md` first. Its hard rules: never modify `data/`,
+> `internal/entities/template/` or `internal/registry/`; keep everything
+> cross-platform (Windows + Linux, `path/filepath`, PowerShell chains with `;`);
+> cover every change with tests and check coverage; never stage or commit
+> anything; cap the session around 50 messages and hand off in
+> `./.agent/session-carry-forward.md`.
 >
-> Hard rules, one line each:
-> §2.1 — never modify `data/`, `internal/entities/template/` or
-> `internal/registry/`; read them freely, propose changes only.
-> §2.2 — everything must build and run on both Windows and Linux; use
-> `path/filepath`, no OS-specific syscalls without build tags, chain PowerShell
-> commands with `;` never `&&`.
-> §2.3 — every non-trivial change ships with tests in `test/`, and unit coverage
-> must not drop.
-> §2.4 — multi-session work gets a durable plan artifact (here: the owner chose
-> to mark items `✅ FIXED` in place in the review document instead).
-> §2.5 — never stage and never commit; the owner reviews and stages.
+> We are working through `todo/review-opus5-08-04.md` in the batches listed in
+> its §12. Batches 1 (security), 2 (correctness) and 3 (durability) are done —
+> Batch 3 introduced `internal/repositories` with an atomic file writer and
+> turned `FileService` into a controller. Findings are marked `✅ FIXED` /
+> `❌ WILL NOT FIX` in place inside the review document.
 >
-> Where work left off: Batches **1 (Security, §8.1 + §8.2)** and **2
-> (Correctness, §1.2 + §1.3 + §5.2)** of the 13 in review §12 are done. Batch 1
-> is committed; Batch 2 is unstaged on branch `AD/refactoring-07-21` and awaiting
-> review — build, vet, unit suite, integration suite, coverage (64.7%, flat) and
-> lint all green. **§6.1 was rejected** — read that item before touching build
-> tags and do not re-open it. Next is Batch 3 (Durability, §1.1 + §1.6 + §5.1),
-> **blocked** on an owner decision about template+PNG transactionality.
+> Next is **Batch 4 — Input-validation PR (§1.5 + §1.7)**, which is blocked on
+> the owner choosing the numeric ceilings. Before starting any batch: ask
+> whether it should be done at all, document the rationale in the review file if
+> it is declined, ask every clarifying question up front, implement, rewrite this
+> carry-forward, then stop for review.
 >
-> Process the owner asked for: before starting each batch, ask whether it should
-> be done at all — if not, document in the review file why it must not be
-> attempted again — and ask any clarifying questions up front. After each batch,
-> update `./.agent/session-carry-forward.md` and stop for owner review before
-> continuing.
->
-> See `./.agent/session-carry-forward.md` for the full handoff.
+> Full handoff: `./.agent/session-carry-forward.md`.

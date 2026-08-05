@@ -20,6 +20,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	internal_constants "github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 )
 
 // fileDialogMode selects which task the explorer performs.
@@ -669,7 +670,7 @@ func (this *FileExplorerDialog) tryCreateFolder() {
 	}
 
 	target := filepath.Join(this.currentDir, name)
-	if err := os.Mkdir(target, 0o750); err != nil {
+	if err := os.Mkdir(target, internal_constants.FolderPermission); err != nil {
 		this.newFolderErr = err.Error()
 		return
 	}

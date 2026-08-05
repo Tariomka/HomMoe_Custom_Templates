@@ -1,56 +1,56 @@
 package fileService_test
 
 import (
-	"os"
+	"errors"
 	"path/filepath"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestWhenSettingsFileIsMissing_ReturnsError(t *testing.T) {
+func TestWhenSettingsFileIsRequested_LoadsItFromTheGivenPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	missingPath := filepath.Join(t.TempDir(), "missing.gen.json")
+	service, mocks := newServiceWithMocks()
+	settingsPath := filepath.Join("any", "where", "state.gen.json")
+	mocks.editorState.On("Load", settingsPath).Return(dtos.NewDefaultEditorStateDto(), nil)
 
 	// Act
-	_, err := file_service.NewFileService().LoadSettingsFile(missingPath)
+	_, err := service.LoadSettingsFile(settingsPath)
 
 	// Assert
-	assert.Error(t, err)
+	require.NoError(t, err)
+	mocks.editorState.AssertCalled(t, "Load", settingsPath)
 }
 
-func TestWhenSettingsFileContainsInvalidJson_ReturnsError(t *testing.T) {
+func TestWhenSettingsFileIsLoaded_ReturnsTheLoadedState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	settingsPath := filepath.Join(t.TempDir(), "bad.gen.json")
-	require.NoError(t, os.WriteFile(settingsPath, []byte("{not json"), 0o644))
-
-	// Act
-	_, err := file_service.NewFileService().LoadSettingsFile(settingsPath)
-
-	// Assert
-	assert.Error(t, err)
-}
-
-func TestWhenSettingsFileContainsValidJson_OverridesPersistedFieldsOnDefaults(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	settingsPath := filepath.Join(t.TempDir(), "ok.gen.json")
-	body := `{"templateName":"X","playerCount":4,"mapSize":192}`
-	require.NoError(t, os.WriteFile(settingsPath, []byte(body), 0o644))
+	service, mocks := newServiceWithMocks()
 	expected := dtos.NewDefaultEditorStateDto()
-	expected.TemplateName = "X"
-	expected.PlayerCount = 4
-	expected.MapSize = 192
+	expected.TemplateName = "Loaded"
+	mocks.editorState.On("Load", "state.gen.json").Return(expected, nil)
 
 	// Act
-	actual, err := file_service.NewFileService().LoadSettingsFile(settingsPath)
+	actual, err := service.LoadSettingsFile("state.gen.json")
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, expected, *actual)
+}
+
+func TestWhenSettingsFileCannotBeLoaded_ReturnsError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service, mocks := newServiceWithMocks()
+	expectedError := errors.New("unreadable")
+	mocks.editorState.On("Load", "state.gen.json").Return(dtos.EditorStateDto{}, expectedError)
+
+	// Act
+	_, err := service.LoadSettingsFile("state.gen.json")
+
+	// Assert
+	assert.ErrorIs(t, err, expectedError)
 }

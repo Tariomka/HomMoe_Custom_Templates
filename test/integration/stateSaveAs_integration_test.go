@@ -20,20 +20,26 @@ import (
 // dialog's confirmation callback, which is the only path that assigns
 // currentPath. The callback is captured in the dialog's unexported onSave
 // field and is otherwise reachable only from a layout.Context, hence the
-// integration_test accessors.
-func newSaveAsProbe(t *testing.T, saveResult error) (state *drivers.State, chosenPath string) {
+// integration_test accessors. writtenPath is the path the handler reports
+// back, which is what the editor has to remember.
+func newSaveAsProbe(t *testing.T, saveResult error) (state *drivers.State, writtenPath string) {
 	t.Helper()
+	outputDirectory := t.TempDir()
+	writtenPath = filepath.Join(outputDirectory, gofakeit.Word()+".gen.json")
+	if saveResult != nil {
+		writtenPath = ""
+	}
+
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	handlerMock.On("SaveState", mock.Anything).Return("", saveResult)
+	handlerMock.On("SaveState", mock.Anything).Return(writtenPath, saveResult)
 	state = drivers.NewUIState(handlerMock, false)
-	chosenPath = filepath.Join(t.TempDir(), gofakeit.Word()+".gen.json")
 
 	state.SaveAs(gofakeit.ProductName())
 	saveDialog, isFileExplorer := state.GetDialogHost().GetTopDialog().(*dialogs.FileExplorerDialog)
 	require.True(t, isFileExplorer, "SaveAs must open the file explorer dialog in save mode")
-	saveDialog.ConfirmSave(chosenPath)
+	saveDialog.ConfirmSave(filepath.Join(outputDirectory, gofakeit.Word()+".gen.json"))
 
-	return state, chosenPath
+	return state, writtenPath
 }
 
 // TestWhenSaveAsFails_CurrentPathIsNotRecorded: a failed Save As must not
@@ -51,14 +57,14 @@ func TestWhenSaveAsFails_CurrentPathIsNotRecorded(t *testing.T) {
 }
 
 // TestWhenSaveAsSucceeds_CurrentPathIsRecorded: the successful path must still
-// record the chosen file so a later Save writes to it without re-prompting.
+// record the written file so a later Save writes to it without re-prompting.
 func TestWhenSaveAsSucceeds_CurrentPathIsRecorded(t *testing.T) {
 	// Arrange
-	state, chosenPath := newSaveAsProbe(t, nil)
+	state, writtenPath := newSaveAsProbe(t, nil)
 
 	// Act
 	currentPath := state.GetCurrentPath()
 
 	// Assert
-	assert.Equal(t, chosenPath, currentPath)
+	assert.Equal(t, writtenPath, currentPath)
 }

@@ -102,7 +102,56 @@ fixed; the ones with fresh evidence gathered this session:
 
 ## 1. Bugs & correctness
 
-### 1.1 🔴 Persistent user files are replaced non-atomically
+### 1.1 ✅ FIXED 🔴 Persistent user files are replaced non-atomically
+
+**Fixed 2026-08-05.** The owner replaced this item's proposed design (a private
+`AtomicFileWriter` inside `internal/services/file_service/`) with a repository
+layer, reusing the pre-existing but unimplemented
+[fileRepositoryInterface.go](../internal/repositories/fileRepositoryInterface.go):
+
+- [atomicFileWriter.go](../internal/repositories/atomicFileWriter.go) — private
+  to `internal/repositories`. `MkdirAll` → write `{dir}/TEMP-{name}{ext}` →
+  `Sync` → `Close` (close error wins when the encode succeeded) → bounded
+  `os.Rename` retry (5 attempts, 20 ms apart) onto `{dir}/{name}{ext}`. Every
+  failure path removes the temporary file and leaves the destination untouched.
+- [editorStateRepository.go](../internal/repositories/editorStateRepository.go),
+  [templateRepository.go](../internal/repositories/templateRepository.go),
+  [previewRepository.go](../internal/repositories/previewRepository.go) own the
+  extension (`.gen.json` / `.rmg.json` / `.png`) and the encoding.
+- [fileService.go](../internal/services/file_service/fileService.go) is now a
+  pure controller: it decides the directory and the requested name and hands
+  them to a repository, which sanitizes the name (falling back to
+  `Generated_Template`) inside the writer. It gained
+  `SaveTemplateWithPreview` — a single call that skips the preview when the
+  image is `nil` — and `SaveTemplate` / `SavePreviewImage` were removed.
+
+Point 2's Windows caveat is honoured by the retry, except that a final failure
+removes the temporary file rather than leaving it: the destination still holds
+the previous valid contents, so the half-written copy is the one to lose.
+
+Point 4 was decided by the owner in favour of **keeping the documented
+partial-success contract**: a preview failure still returns the template path so
+[stateGeneration.go](../app/gui/drivers/stateGeneration.go#L79-L85) can report it.
+
+Two deliberate behaviour changes follow from routing everything through the
+repositories, both approved by the owner:
+
+- Editor-state saves now create missing directories instead of failing.
+- The Save As dialog's file name is discarded; the state is written as
+  `{TemplateName}.gen.json`. `SaveState` therefore returns the path actually
+  written and `drivers.State` records **that**, not the requested path.
+
+**Tests.** The fault injection needed no test-only seam: `math.NaN()` in a float
+field makes `json.MarshalIndent` fail, and a zero-sized `image.RGBA` makes
+`png.Encode` fail. Each repository has a mirror folder under
+`test/unit/internal/repositories/` covering "destination byte-identical after a
+failed save", "no `TEMP-*` residue", the extension, directory creation and the
+round trip. The `FileService` folder was rewritten against mocked
+`IFileRepository[T]` collaborators and now asserts only routing decisions.
+`atomicFileWriter` is private and is covered indirectly — recorded in
+[test_observations.md](test_observations.md).
+
+**Original finding follows.**
 
 **Evidence.** [fileService.go](../internal/services/file_service/fileService.go#L45-L53):
 
@@ -460,7 +509,24 @@ them, get confirmation, then implement.
 
 ---
 
-### 1.6 🟠 PNG export truncates the destination before encoding and discards the close error
+### 1.6 ✅ FIXED 🟠 PNG export truncates the destination before encoding and discards the close error
+
+**Fixed 2026-08-05** as part of §1.1. `SavePreviewImage` no longer exists; the
+preview is written by
+[previewRepository.go](../internal/repositories/previewRepository.go) through the
+shared `atomicFileWriter`, so `png.Encode` writes into `TEMP-{name}.png` and the
+destination is only replaced once encoding succeeded. The writer uses exactly the
+named-return `defer` this item prescribes, so a `Close` error wins whenever the
+encode itself succeeded.
+
+The "close failure is propagated" test was **not** written: forcing `Close` to
+fail requires either a test-only seam in production code (forbidden by
+AGENTS.md §4.6) or filling a real filesystem. The truncation half is covered by
+`TestWhenEncodingFailsOverAnExistingPreview_LeavesTheDestinationUntouched` in
+`test/unit/internal/repositories/previewRepository/save_test.go`, and the gap is
+recorded in [test_observations.md](test_observations.md).
+
+**Original finding follows.**
 
 **Evidence.** [fileService.go](../internal/services/file_service/fileService.go#L95-L107):
 
@@ -1197,7 +1263,20 @@ super-linearly.
 
 ## 5. Readability & maintainability
 
-### 5.1 🟡 Directory-creation permissions disagree between the two layers
+### 5.1 ✅ FIXED 🟡 Directory-creation permissions disagree between the two layers
+
+**Fixed 2026-08-05** as part of §1.1, using this item's fallback rather than
+waiting for §2.1. The two permission values moved into a new
+[internal/constants/filePermissions.go](../internal/constants/filePermissions.go)
+(`FolderPermission = 0o755`, `FileReadWritePermission = 0o644`) — the package
+AGENTS.md §4.4 already prescribes for constants but which did not exist yet.
+`internal/repositories` and
+[fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go) both consume it,
+so the in-app explorer now creates `0o755` directories like every other path.
+`internal/constants` had to be added to the allow-list in
+`test/unit/architecture/dependency/dependency_test.go` so `app/*` may import it.
+
+**Original finding follows.**
 
 **Evidence.** [fileService.go](../internal/services/file_service/fileService.go#L14-L18):
 
@@ -2029,9 +2108,18 @@ permanently — mark them `✅ FIXED` in place as they land.
    rationale. §1.2's regression test landed in the integration suite, not
    `saveAs_test.go`, because the callback is not reachable headlessly.
 
-3. **Durability PR.** §1.1 + §1.6 — the atomic write helper and its tests.
-   ⚠ Owner decision on template+PNG transactionality first.
-   §5.1 (permission constant) rides along.
+3. **Durability PR.** ✅ FIXED (2026-08-05)
+   §1.1 + §1.6 + §5.1. The owner replaced this item's `atomicFileWriter.go`
+   inside `file_service` with a repository layer: `internal/repositories`
+   gained a private `atomicFileWriter` (TEMP file → `Sync` → `Close` → retried
+   `os.Rename`) plus concrete editor-state / template / preview repositories,
+   and `FileService` became a pure controller with a single
+   `SaveTemplateWithPreview` entry point. Transactionality decision: **keep the
+   documented partial-success contract**. §5.1's constants went to a new
+   `internal/constants` package instead of waiting for §2.1. Two approved
+   behaviour changes: saves now create missing directories, and editor state is
+   written as `{TemplateName}.gen.json` regardless of the name typed in the
+   Save As dialog.
 
 4. **Input-validation PR.** §1.5 (bounded counts) + §1.7 (override warnings).
    ⚠ Owner decision on the numeric ceilings first. Depends on nothing.

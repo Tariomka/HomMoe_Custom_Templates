@@ -54,20 +54,24 @@ func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
 }
 
-func TestWhenStateAndOutputPathAreValid_ReturnsOutputPath(t *testing.T) {
+func TestWhenStateAndOutputPathAreValid_ReturnsPathNamedAfterTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	outputPath := filepath.Join(t.TempDir(), "valid-state.gen.json")
+	outputDirectory := t.TempDir()
 	state := dtos.NewDefaultEditorStateDto()
-	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
+	state.TemplateName = "My Template"
+	stateSaveDto := dtos.EditorStateSaveDto{
+		State:      &state,
+		OutputPath: filepath.Join(outputDirectory, "ignored-name.gen.json"),
+	}
 
 	// Act
 	savedPath, err := handler.SaveState(stateSaveDto)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, outputPath, savedPath)
+	assert.Equal(t, filepath.Join(outputDirectory, "My Template.gen.json"), savedPath)
 }
 
 func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
@@ -86,7 +90,7 @@ func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 	assert.FileExists(t, savedPath)
 }
 
-func TestWhenStateOutputDirectoryDoesNotExist_ReturnsError(t *testing.T) {
+func TestWhenStateOutputDirectoryDoesNotExist_CreatesItAndWritesTheFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
@@ -95,8 +99,9 @@ func TestWhenStateOutputDirectoryDoesNotExist_ReturnsError(t *testing.T) {
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
 
 	// Act
-	_, err := handler.SaveState(stateSaveDto)
+	savedPath, err := handler.SaveState(stateSaveDto)
 
 	// Assert
-	assert.Error(t, err)
+	require.NoError(t, err)
+	assert.FileExists(t, savedPath)
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"image"
 	"slices"
 	"strings"
 
@@ -116,18 +117,9 @@ func (this *templateHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (str
 		return "", common_errors.ErrNoOutputPath
 	}
 
-	out, err := this.fileService.SaveTemplate(outputPath, templateDto.Template)
-	if err != nil {
-		return "", err
-	}
-
+	var previewImage *image.RGBA
 	if this.previewGenerator != nil {
-		previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
-		_, err = this.fileService.SavePreviewImage(outputPath, previewImage, templateDto.Template.Name)
-		if err != nil {
-			return out, err
-		}
+		previewImage = this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
 	}
-
-	return out, nil
+	return this.fileService.SaveTemplateWithPreview(outputPath, templateDto.Template, previewImage)
 }

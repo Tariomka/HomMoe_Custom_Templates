@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
@@ -56,6 +57,9 @@ var EditorSet = wire.NewSet(
 
 // InfrastructureSet builds the persistence and mapping collaborators.
 var InfrastructureSet = wire.NewSet(
+	repositories.NewEditorStateRepository,
+	repositories.NewPreviewRepository,
+	repositories.NewTemplateRepository,
 	file_service.NewFileService,
 	mappers.NewConfigMapper,
 	validators.NewEditorStateValidator,

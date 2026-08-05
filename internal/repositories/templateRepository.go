@@ -5,16 +5,23 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 )
 
-type TemplateRepository struct{}
+const templateExtension = ".rmg.json"
 
-func NewTemplateRepository() IFileRepository[entities.RmgTemplate] {
-	return &TemplateRepository{}
+type TemplateRepository struct {
+	writer *atomicFileWriter
 }
 
-func (this *TemplateRepository) Load(filePath string) (entities.RmgTemplate, error) {
+func NewTemplateRepository() IFileRepository[entities.RmgTemplate] {
+	return &TemplateRepository{writer: newAtomicFileWriter()}
+}
+
+func (this *TemplateRepository) Load(_ string) (entities.RmgTemplate, error) {
 	return entities.RmgTemplate{}, common_errors.ErrNotImplemented
 }
 
-func (this *TemplateRepository) Save(directory string, filename string, entity entities.RmgTemplate) (string, error) {
-	return "", nil
+func (this *TemplateRepository) Save(
+	directory string,
+	filename string,
+	entity entities.RmgTemplate) (string, error) {
+	return this.writer.WriteJSON(directory, filename, templateExtension, &entity)
 }

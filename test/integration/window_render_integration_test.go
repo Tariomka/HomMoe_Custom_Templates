@@ -38,6 +38,8 @@ func TestWindow_RendersFramesWithoutPanic(t *testing.T) {
 func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "windowload.gen.json")
+	// The state is written under the template name, not the requested one.
+	writtenPath := filepath.Join(dir, "Window Loaded.gen.json")
 
 	// Author a distinctive saved state through the real save path.
 	author := newUIState()
@@ -49,7 +51,7 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
 	runner := integration_common.NewAppRunner(t)
 
@@ -58,10 +60,10 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	require.Equal(t, 2, runner.CurrentState().PlayerCount)
 
 	// Load the saved state, mirroring the Load dialog picking a file.
-	runner.LoadStateFromFile(savedPath)
+	runner.LoadStateFromFile(writtenPath)
 	message, irError = runner.Status()
 	require.False(t, irError)
-	assert.Equal(t, "Loaded "+savedPath, message)
+	assert.Equal(t, "Loaded "+writtenPath, message)
 
 	// Render several more frames. Each frame runs the window's save() (panels →
 	// state); the loaded values must survive instead of being overwritten.

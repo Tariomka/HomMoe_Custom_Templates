@@ -70,14 +70,14 @@ func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.
 	statePath := filepath.Join(t.TempDir(), "roundtrip-state.gen.json")
 	savedState := dtos.NewDefaultEditorStateDto()
 	savedState.TemplateName = gofakeit.ProductName()
-	_, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
+	savedPath, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
 		State:      &savedState,
 		OutputPath: statePath,
 	})
 	require.NoError(t, saveErr)
 
 	// Act
-	loadedState, _, err := handler.LoadState(statePath, true)
+	loadedState, _, err := handler.LoadState(savedPath, true)
 
 	// Assert
 	require.NoError(t, err)
@@ -91,14 +91,14 @@ func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
 	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "valid-state.gen.json")
 	savedState := dtos.NewDefaultEditorStateDto()
-	_, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
+	savedPath, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
 		State:      &savedState,
 		OutputPath: statePath,
 	})
 	require.NoError(t, saveErr)
 
 	// Act
-	_, warnings, err := handler.LoadState(statePath, true)
+	_, warnings, err := handler.LoadState(savedPath, true)
 
 	// Assert
 	require.NoError(t, err)

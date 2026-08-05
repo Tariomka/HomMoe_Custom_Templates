@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
@@ -43,7 +44,10 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	generatorConfigMapper := mappers.NewConfigMapper()
 	connectionEditorService := connection_editor.NewConnectionEditorService(zoneClassifier)
 	manualReapplyService := connection_editor.NewManualReapplyService(zoneEditorService, zoneClassifier, generationTuningFactory)
-	fileService := file_service.NewFileService()
+	iFileRepository := repositories.NewEditorStateRepository()
+	repositoriesIFileRepository := repositories.NewTemplateRepository()
+	iFileRepository2 := repositories.NewPreviewRepository()
+	fileService := file_service.NewFileService(iFileRepository, repositoriesIFileRepository, iFileRepository2)
 	previewLayoutService := preview_service.NewPreviewLayoutService()
 	previewGeneratorService := providePreviewGenerator(previewLayoutService)
 	editorStateValidator := validators.NewEditorStateValidator()
