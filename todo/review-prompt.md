@@ -16,7 +16,7 @@ protocol (ask → plan → approve → implement + verify → owner commits → 
 ## Ground rules
 
 1. **Read-only review.** The only file you create or modify is the review
-   document: `todo/review-<model>-<MM-DD>.md` (e.g. `todo/review-fable-07-12.md`).
+   document: `todo/review-<model>-<MM-DD>.md`.
    Scratch verification programs are allowed only if deleted before you finish.
 2. **Respect AGENTS.md hard rules** when judging code: `data/`,
    `internal/entities/template/`, and `internal/registry/` are read-only game
@@ -37,8 +37,8 @@ protocol (ask → plan → approve → implement + verify → owner commits → 
    evidence), Invalidated/accepted-as-convention (with reason), or Carried
    forward (re-verified, with a pointer to the new section). Nothing may be
    silently dropped. State explicitly which documents yours supersedes.
-5. **Check the session-history notes** (`/memories/repo/`, `.agent/*.md`) for
-   known-stale findings, deliberate owner decisions (e.g. dead code kept on
+5. **Check the session-history notes** (`/memories/repo/`, `todo/*.md`, `.agent/*.md`)
+   for known-stale findings, deliberate owner decisions (e.g. dead code kept on
    purpose), and items already marked "owner's responsibility" — do not
    re-report those as new findings; list them in the disposition section.
 
