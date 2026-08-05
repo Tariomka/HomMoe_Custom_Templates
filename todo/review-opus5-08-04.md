@@ -1584,7 +1584,13 @@ mistaken for CI failures.
 
 ## 8. Security & dependencies
 
-### 8.1 🔴 A reachable vulnerability is present in `golang.org/x/text`
+### 8.1 ✅ FIXED 🔴 A reachable vulnerability is present in `golang.org/x/text`
+
+**Fixed 2026-08-05.** `golang.org/x/text` bumped to `v0.39.0` (and
+`golang.org/x/sys` to `v0.46.0` as a transitive consequence of `go mod tidy`).
+`govulncheck ./...` and `govulncheck -scan module` both report
+*No vulnerabilities found*; `go build ./...` and `go test ./test/unit/...` pass;
+`go mod tidy -diff` exits 0.
 
 **Evidence.** `govulncheck` symbol scan, run this session against the working
 tree:
@@ -1632,7 +1638,10 @@ executes on pushes too. No Go test applies.
 
 ---
 
-### 8.2 🟠 A second known vulnerability is present but not currently called
+### 8.2 ✅ FIXED 🟠 A second known vulnerability is present but not currently called
+
+**Fixed 2026-08-05.** `golang.org/x/net` bumped to `v0.56.0` in the same change
+as §8.1.
 
 **Evidence.** `govulncheck -scan module`:
 
@@ -1945,7 +1954,7 @@ Checked this session and found correct — recorded so they are not re-examined:
 Bugs first, PR-sized batches, blockers noted. Items keep these numbers
 permanently — mark them `✅ FIXED` in place as they land.
 
-1. **Security PR.**
+1. **Security PR.** ✅ FIXED (2026-08-05)
    §8.1 + §8.2 — bump `golang.org/x/text` to v0.39.0 and `golang.org/x/net` to
    v0.56.0, `go mod tidy`, re-run `govulncheck`. Verify with `go build ./...`
    and the unit suite.
