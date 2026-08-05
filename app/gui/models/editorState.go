@@ -41,7 +41,7 @@ func (this *EditorState) UpdateCurrentState(updateFunc func(state *dtos.EditorSt
 func (this *EditorState) SnapshotCurrentState() {
 	previousState := *this.current
 	this.previous = &previousState
-	// this.next = nil
+	this.next = nil
 }
 
 func (this *EditorState) ResetPreviousState() { this.previous = nil }
@@ -90,7 +90,7 @@ func (this *EditorState) WasStateUnchanged() bool {
 }
 
 func (this *EditorState) WasLayoutChanged() bool {
-	return this.previous.LayoutDefiningOptionsChanged(this.current)
+	return this.HasPreviousState() && this.previous.LayoutDefiningOptionsChanged(this.current)
 }
 
 func (this *EditorState) WasLayoutUnchanged() bool {
@@ -101,16 +101,8 @@ func (this *EditorState) HasPendingChanges() bool {
 	return this.HasNextState() && !this.next.EqualsIgnoringManualEdits(this.current)
 }
 
-// ── Manual zone editor edits ───────────────────────────────────────────
-// The manual zones/connections snapshot lives inside the current
-// EditorStateDto, so it is saved to and loaded from the .gen.json file with
-// the rest of the editor state and needs no separate bookkeeping.
-
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
 
-// SetManualEdits stores the manual zone editor's result as the authoritative
-// snapshot. Manual fields are ignored by the state-equality checks, so this
-// never triggers an automatic regeneration by itself.
 func (this *EditorState) SetManualEdits(zones []entities.Zone, connections []entities.Connection) {
 	this.current.ManualZones = editor_state_dto.ToManualZoneSaves(zones)
 	this.current.ManualConnections = editor_state_dto.ToManualConnectionSaves(connections)
@@ -118,6 +110,8 @@ func (this *EditorState) SetManualEdits(zones []entities.Zone, connections []ent
 
 // ClearManualEdits drops the manual snapshot, used when a layout-defining
 // option change invalidates the hand-made layout.
+// This does not clear manual edits applied to the template,
+// effectively making it useless if you want to reset the entire layout.
 func (this *EditorState) ClearManualEdits() {
 	this.current.ManualZones = nil
 	this.current.ManualConnections = nil
@@ -131,24 +125,18 @@ func (this *EditorState) GetManualConnections() []entities.Connection {
 	return editor_state_dto.FromManualConnectionSaves(this.current.ManualConnections)
 }
 
-// ShouldReapplyManualEdits reports whether the stored manual edits are still
-// valid for the current state: they exist and no layout-defining option
-// changed since the last generation. Right after a load there is no previous
-// state; the stored edits are then trusted because they were saved against
-// exactly this state.
 func (this *EditorState) ShouldReapplyManualEdits() bool {
 	if !this.HasManualEdits() {
 		return false
 	}
-	return !this.HasPreviousState() || !this.WasLayoutChanged()
+
+	return !this.WasLayoutChanged()
 }
 
-// CastleSettingsChangedSinceGeneration reports which castle-count options
-// changed since the last generated state - the only option changes that are
-// pushed into the manual snapshot. Zero-value when nothing was generated yet.
 func (this *EditorState) CastleSettingsChangedSinceGeneration() editor_state_dto.CastleSettingChanges {
 	if !this.HasPreviousState() {
 		return editor_state_dto.CastleSettingChanges{}
 	}
+
 	return this.previous.DiffCastleSettings(this.current)
 }

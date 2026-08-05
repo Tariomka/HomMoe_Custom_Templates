@@ -88,7 +88,7 @@ fixed; the ones with fresh evidence gathered this session:
 | Prior item | Status at `687f47d` | New section |
 | --- | --- | --- |
 | §1.1 non-atomic persistent writes | Still open, verbatim | §1.1 |
-| §1.2 `rmgTemplateModel_test.go` missing build tag | Still open, verbatim | §6.1 |
+| §1.2 `rmgTemplateModel_test.go` missing build tag | Rejected — see §6.1 | §6.1 |
 | §3.1 internal-service tests import `app/gui/constants` | Still open; **file paths changed** (`variantMappingCatalog`, `contentRuleService`) | §6.3 |
 | §4.1 live preview rebuilds layout every frame | Still open; now **profiler-measured** and routed through `previewHandler` | §4.1 |
 | §6.4 `bannableItems.go` / `valueOverrideSids.go` at 0% | Still 0% | §6.4 |
@@ -170,7 +170,25 @@ transactionally or keep the documented partial-success contract.
 
 ---
 
-### 1.2 🔴 `SaveAs` records the new path even when the save failed
+### 1.2 ✅ FIXED 🔴 `SaveAs` records the new path even when the save failed
+
+**Fixed 2026-08-05.** `handleSaveState` now returns `bool` (mirroring
+`handleLoadState`) and the `SaveAs` callback only assigns `this.currentPath`
+when that write succeeded. The two statement-position callers (`Save` and the
+`integration_test`-gated `SaveStateToFile` export) needed no change.
+
+The regression test could **not** be written as a unit test: the decision lives
+in the closure handed to `dialogs.NewSaveFileDialog`, which stores it in the
+unexported `onSave` field, and `onSave` normally fires only from
+`confirmSelection` / `confirmOverwrite` — both of which require a
+`layout.Context`. Per this item's own fallback clause the scenario went to
+[stateSaveAs_integration_test.go](../test/integration/stateSaveAs_integration_test.go)
+(`TestWhenSaveAsFails_CurrentPathIsNotRecorded` /
+`TestWhenSaveAsSucceeds_CurrentPathIsRecorded`), backed by two new
+`*_testexports.go` accessors — `DialogHost.GetTopDialog` and
+`FileExplorerDialog.ConfirmSave` — which is exactly what AGENTS.md §4.6.1
+means by the `integration_test` tag. The unit-level gap is recorded in
+[test_observations.md](test_observations.md).
 
 **Evidence.** [stateFiles.go](../app/gui/drivers/stateFiles.go#L39-L49):
 
@@ -243,7 +261,15 @@ tag instead, and record the unit-level gap in
 
 ---
 
-### 1.3 🟠 `WasLayoutChanged` dereferences a possibly-nil `previous` state
+### 1.3 ✅ FIXED 🟠 `WasLayoutChanged` dereferences a possibly-nil `previous` state
+
+**Fixed 2026-08-05.** `WasLayoutChanged` now guards with
+`this.HasPreviousState() && ...`. The owner also asked for the follow-on
+cleanup, so `ShouldReapplyManualEdits` dropped its now-redundant
+`!this.HasPreviousState() ||` short-circuit and reads as `HasManualEdits() &&
+!WasLayoutChanged()`. Regression test:
+`TestWhenNoPreviousStateExists_ReportsLayoutNotChanged` in
+[wasLayoutChanged_test.go](../test/unit/app/gui/models/editorState/wasLayoutChanged_test.go).
 
 **Evidence.** [editorState.go](../app/gui/models/editorState.go#L92-L94):
 
@@ -1199,7 +1225,20 @@ dialog.
 
 ---
 
-### 5.2 🟡 Commented-out code left in the state machine
+### 5.2 ✅ FIXED 🟡 Commented-out code left in the state machine
+
+**Fixed 2026-08-05.** The owner chose to **activate** the line rather than
+delete it, so `SnapshotCurrentState` now really does clear `next`, with a
+one-line comment stating why (a fresh snapshot supersedes any debounced state
+still waiting to be applied). Behaviourally this is a no-op today — both
+production call sites are in
+[stateGeneration.go](../app/gui/drivers/stateGeneration.go), and on every path
+that reaches them `next` is either already `nil` (`AutoRegenerate` clears it
+first) or would be cleared by the next frame's
+`ResetNextStateIfStateWasNotChanged` (manual `Generate()` button) — but the
+invariant is now explicit instead of accidental. The full unit suite passes
+unchanged.
+
 
 **Evidence.** [editorState.go](../app/gui/models/editorState.go#L41-L45):
 
@@ -1266,7 +1305,30 @@ and no other top-level `.txt` exists).
 
 ## 6. Testing
 
-### 6.1 🟠 One integration test still bypasses the `integration_test` gate
+### 6.1 ❌ WILL NOT FIX 🟠 One integration test still bypasses the `integration_test` gate
+
+**Rejected 2026-08-05 — do not re-attempt.** This finding rests on a version of
+AGENTS.md §4.6.1 that no longer exists. The rule was rewritten (2026-08-05,
+after this review was authored) and now reads: *"A file gets
+`//go:build integration_test` **if and only if** it (or another file it shares a
+package with) references an accessor declared in a `*_testexports.go`
+implementation file. That is the whole rule."* — followed by *"The tag is NOT a
+label for 'this is an integration/performance test.'"* and an explicit
+instruction not to blanket-apply it to everything under
+[test/integration/](../test/integration/).
+
+[rmgTemplateModel_test.go](../test/integration/rmgTemplateModel_test.go)
+references **no** test-only export (verified by grepping every accessor declared
+in `window_testexports.go` / `state_testexports.go`); it only decodes
+`.rmg.json` files from `data/` through production APIs. Adding the tag would
+therefore violate the current AGENTS.md, and would also hide the test from the
+default `go test ./test/...` run for no benefit. The file is correctly untagged.
+
+**Residual, unaddressed.** The secondary observation stands: this file makes the
+default suite decode all bundled example templates, so the "fast" run is slower
+than it looks. That is a runtime concern to solve with `testing.Short()` or a
+sampled corpus if it ever becomes painful — not with a build tag.
+
 
 **Evidence.** First non-blank line of each file in the two gated directories:
 
@@ -1959,10 +2021,13 @@ permanently — mark them `✅ FIXED` in place as they land.
    v0.56.0, `go mod tidy`, re-run `govulncheck`. Verify with `go build ./...`
    and the unit suite.
 
-2. **Correctness PR — cheap, isolated, no owner decision.**
-   §1.2 (`SaveAs` path), §1.3 (`WasLayoutChanged` nil guard), §6.1 (build tag),
-   §5.2 (dead comment). Four small edits plus the two named regression tests
-   (`saveAs_test.go`, `wasLayoutChanged_test.go`).
+2. **Correctness PR.** ✅ FIXED (2026-08-05)
+   §1.2 (`SaveAs` path), §1.3 (`WasLayoutChanged` nil guard + the
+   `ShouldReapplyManualEdits` simplification), §5.2 (the commented-out line was
+   activated rather than deleted). §6.1 (build tag) ❌ **rejected** — it
+   contradicts the current AGENTS.md §4.6.1; see that item for the full
+   rationale. §1.2's regression test landed in the integration suite, not
+   `saveAs_test.go`, because the callback is not reachable headlessly.
 
 3. **Durability PR.** §1.1 + §1.6 — the atomic write helper and its tests.
    ⚠ Owner decision on template+PNG transactionality first.

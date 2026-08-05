@@ -69,6 +69,14 @@ Still unit-untestable (dialog-callback or Gio territory):
   (`Load`/`SaveAs` pick handlers); unit tests assert the dialogs open, the
   integration suite exercises the load/save flows via the
   `integration_test`-gated `SaveStateToFile`/`LoadStateFromFile` exports.
+- stateFiles.go - `SaveAs`'s "only record `currentPath` when the write
+  succeeded" rule (review item §1.2) cannot be unit tested: the decision lives
+  in the closure handed to `dialogs.NewSaveFileDialog`, which is stored in the
+  unexported `onSave` field and normally fires only from `confirmSelection` /
+  `confirmOverwrite`, both of which need a `layout.Context`. The regression is
+  covered by `test/integration/stateSaveAs_integration_test.go` through the
+  `integration_test`-gated `DialogHost.GetTopDialog` and
+  `FileExplorerDialog.ConfirmSave` exports.
 - stateFiles.go - `PickOutputDir` / `RevealOutputDir` only open dialogs whose
   behavior lives in the dialog implementations.
 - stateGeneration.go - `reapplyManualEdits` castle-change branch requires a
