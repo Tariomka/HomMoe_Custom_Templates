@@ -1945,7 +1945,7 @@ Checked this session and found correct — recorded so they are not re-examined:
 Bugs first, PR-sized batches, blockers noted. Items keep these numbers
 permanently — mark them `✅ FIXED` in place as they land.
 
-1. **Security PR (no owner decision needed, smallest, highest value).**
+1. **Security PR.**
    §8.1 + §8.2 — bump `golang.org/x/text` to v0.39.0 and `golang.org/x/net` to
    v0.56.0, `go mod tidy`, re-run `govulncheck`. Verify with `go build ./...`
    and the unit suite.
