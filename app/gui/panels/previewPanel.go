@@ -15,6 +15,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
@@ -32,10 +33,15 @@ type PreviewPanel struct {
 
 	state          *drivers.State
 	previewHandler handler_interfaces.IPreviewHandler
+	layoutCache    *models.PreviewLayoutCache
 }
 
 func NewPreviewPanel(state *drivers.State, previewHandler handler_interfaces.IPreviewHandler) *PreviewPanel {
-	return &PreviewPanel{state: state, previewHandler: previewHandler}
+	return &PreviewPanel{
+		state:          state,
+		previewHandler: previewHandler,
+		layoutCache:    models.NewPreviewLayoutCache(),
+	}
 }
 
 func (this *PreviewPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
@@ -161,15 +167,20 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 				theme, "Adjust the options to generate the map layout.", canvasSize, outerCanvasSize)(gtx)
 		}
 
-		response, err := this.previewHandler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
-			Template:   template,
-			Topology:   this.state.GetStateData().Topology,
-			CanvasSide: float64(canvasSize.X),
-		})
+		topology := this.state.GetStateData().Topology
+		canvasSide := float64(canvasSize.X)
+		previewLayout, err := this.layoutCache.Get(this.state.GetTemplateRevision(), topology, canvasSide,
+			func() (preview.Layout, error) {
+				response, err := this.previewHandler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
+					Template:   template,
+					Topology:   topology,
+					CanvasSide: canvasSide,
+				})
+				return response.Layout, err
+			})
 		if err != nil {
 			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)
 		}
-		previewLayout := response.Layout
 		if len(previewLayout.Positions) == 0 {
 			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)
 		}

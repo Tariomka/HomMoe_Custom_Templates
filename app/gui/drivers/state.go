@@ -33,8 +33,11 @@ type State struct {
 
 	outputPath   widget.Editor
 	lastTemplate *entities.RmgTemplate
-	statusMsg    string
-	statusErr    bool
+	// templateRevision counts every replacement of lastTemplate, letting the
+	// preview cache detect a new template without comparing its contents.
+	templateRevision uint64
+	statusMsg        string
+	statusErr        bool
 
 	confirmExit bool
 	// onExit closes the application window (injected via SetOnExit) so exit
@@ -87,6 +90,8 @@ func (this *State) IsUnsaved() bool { return this.unsaved }
 
 func (this *State) GetLastTemplate() *entities.RmgTemplate { return this.lastTemplate }
 
+func (this *State) GetTemplateRevision() uint64 { return this.templateRevision }
+
 func (this *State) GetOutputPath() string { return this.outputPath.Text() }
 
 func (this *State) GetOutputPathWidget(theme *material.Theme) layout.Widget {
@@ -117,4 +122,11 @@ func (this *State) SetStatus(msg string, isErr bool) {
 
 func (this *State) hasTemplateVariants() bool {
 	return this.lastTemplate != nil && len(this.lastTemplate.Variants) > 0
+}
+
+// setLastTemplate is the only writer of lastTemplate, so templateRevision
+// cannot drift away from the template the preview is showing.
+func (this *State) setLastTemplate(template *entities.RmgTemplate) {
+	this.lastTemplate = template
+	this.templateRevision++
 }

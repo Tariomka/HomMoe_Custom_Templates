@@ -39,7 +39,7 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 		return
 	}
 
-	this.lastTemplate = dto.Template
+	this.setLastTemplate(dto.Template)
 	if err != nil {
 		this.SetStatus(
 			fmt.Sprintf(

@@ -125,7 +125,7 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 // applyGeneratedTemplate stores a freshly generated template as the live one
 // and records the editor state that produced it.
 func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
-	this.lastTemplate = template
+	this.setLastTemplate(template)
 	this.innerState.SnapshotCurrentState()
 }
 
@@ -134,7 +134,7 @@ func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
 // need no separate handling: they live inside the editor state itself, which
 // the caller is replacing.
 func (this *State) clearGeneratedState() {
-	this.lastTemplate = nil
+	this.setLastTemplate(nil)
 }
 
 func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCount int) {

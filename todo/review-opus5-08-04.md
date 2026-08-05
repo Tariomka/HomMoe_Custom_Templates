@@ -1257,7 +1257,65 @@ which proves the extraction is pixel-neutral.
 
 ## 4. Performance
 
-### 4.1 🟠 The live preview rebuilds the full topology layout on every frame — measured 2.1 ms at default settings
+### 4.1 ✅ FIXED 🟠 The live preview rebuilds the full topology layout on every frame — measured 2.1 ms at default settings
+
+**Fixed.** `PreviewPanel` now owns a `PreviewLayoutCache` and only calls
+`BuildPreviewLayout` when `(templateRevision, topology, canvasSide)` changes. A
+failed build is not cached, so the next frame retries it. The layout service
+stays stateless.
+
+**Revision counter.** `drivers.State` gained `templateRevision uint64` and
+`GetTemplateRevision()`. All three writers of `lastTemplate` — the generate
+path, `clearGeneratedState` and the manual-edit path — now go through one
+private `setLastTemplate`, so the counter cannot drift from the template on
+screen.
+
+**Placement, twice corrected.** The cache lives in `app/gui/models/`, not where
+this finding suggested:
+
+- `internal/services/preview_service/` (the first choice) is rejected by
+  [dependency_test.go](../test/unit/architecture/dependency/dependency_test.go) —
+  `app/**` may only import `internal/{common,composition,constants,dtos,entities,handlers,helpers,models,registry}`.
+- `app/gui/panels/` (this finding's own fallback) compiles and passes, but that
+  package had never appeared in a unit-test binary. Adding a test for it pulled
+  **284 untested GUI functions** into the coverage denominator and dropped the
+  reported total from 65.0% to 60.1%, which trips the *"Fail if coverage
+  drops"* gate in
+  [pr-validation.yml](../.github/workflows/pr-validation.yml). `app/gui/models/`
+  is already exercised by the `drivers` tests, so the total stays at 65.0%.
+
+**The zone-editor canvas needed nothing.**
+[zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go) already guards the
+same call with a `geometryDirty`/`geometrySide` pair that every mutator raises.
+That guard is strictly finer-grained than a layout key, because it also catches
+zone drags the key cannot express, so it was left alone rather than
+double-cached.
+
+**Benchmark tag.** This finding asked for `//go:build integration_test` on the
+reinstated benchmark. That is wrong under AGENTS.md §4.6.1: the tag applies if
+and only if the file consumes a `*_testexports.go` accessor, and this benchmark
+uses production APIs and needs no GPU. It is untagged, like
+[template_generation_test.go](../test/performance/template_generation_test.go),
+so it runs in a plain `go test ./test/...`.
+
+**Reproduced before the fix** (`-benchtime=50x`, same CPU as the original
+measurement, canvas side 600):
+
+| Case | ns/op | B/op | allocs/op |
+| --- | ---: | ---: | ---: |
+| Random, 2 players, 0 neutrals | 1 994 | 832 | 14 |
+| Random, 4 players, 8 neutrals | 467 488 | 13 360 | 204 |
+| **Random, 8 players, 16 neutrals** | **2 553 776** | 41 264 | 397 |
+| Ring, 8 players, 16 neutrals | 13 180 | 17 256 | 284 |
+| Circles, 8 players, 16 neutrals | 33 462 | 37 000 | 338 |
+
+After the fix the panel pays that cost once per input change instead of once per
+frame; the benchmark still measures the uncached service so the numbers above
+stay comparable over time.
+
+**Original finding follows.**
+
+#### 4.1 original text
 
 **Evidence.** [previewPanel.go](../app/gui/panels/previewPanel.go#L149-L172) —
 the call is inside the returned per-frame widget closure, with no cache and no
@@ -2196,7 +2254,7 @@ permanently — mark them `✅ FIXED` in place as they land.
 4. ✅ **Input-validation PR.** §1.5 (bounded counts) + §1.7 (override warnings).
    ⚠ Owner decision on the numeric ceilings first. Depends on nothing.
 
-5. **Performance PR.** §4.1 — reinstate the benchmark, add the revision-keyed
+5. ✅ **Performance PR.** §4.1 — reinstate the benchmark, add the revision-keyed
    cache, record before/after. Independent of everything above.
 
 6. **DI PR.** §2.3 + §2.4 — parameterise both constructors, register providers,
