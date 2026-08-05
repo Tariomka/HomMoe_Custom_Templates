@@ -257,14 +257,17 @@ go test -tags integration_test ./test/integration/... -count=1
 # Integration tests with UI
 go test '-tags=integration_test,gui' ./test/integration/gui/... -count=1 -args headed
 
-# Performance tests
-go test -tags integration_test ./test/performance/... -bench . -benchtime 500x -timeout 30s
+# Performance tests (GPU-free benchmarks)
+go test ./test/performance/... -bench . -run xxx -benchtime 500x -timeout 30s
+
+# Performance tests that drive the editor window (needs a GPU)
+go test '-tags=integration_test,gui' ./test/performance/... -bench . -run xxx -benchtime 500x -timeout 30s
 
 # Performance tests with profiling
-go test -tags integration_test ./test/performance/... -bench . -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s
+go test '-tags=integration_test,gui' ./test/performance/... -bench . -run xxx -cpuprofile cpu.prof -memprofile memory.prof -benchtime 1x -timeout 30s
 
 # Profiling
-go test -bench=BenchmarkEditorWindow_TabCycling ./test/performance/... -tags=integration_test -benchmem -cpuprofile='cpu.prof' -memprofile='memory.prof' -benchtime=1x -timeout=120s -args headed
+go test -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... '-tags=integration_test,gui' -benchmem -cpuprofile='cpu.prof' -memprofile='memory.prof' -benchtime=1x -timeout=120s -args headed
 go tool pprof -http :42069 cpu.prof
 ```
 

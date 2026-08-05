@@ -84,7 +84,11 @@ The project must build and run on **both Windows and Linux**. Therefore:
   plain `go test ./...`; run them explicitly with
   `go test -tags=integration_test ./test/integration/...` and
   `go test -tags='integration_test,gui' ./test/integration/gui/...` respectfully.
-  (see §4.6.1). Never make `integration_test` a global/default test tag.
+  (see §4.6.1 and §4.6.2). Never make `integration_test` or `gui` a
+  global/default test tag.
+- **Build tags are applied per file, never per directory.** Tag only the files
+  that genuinely need the tag; a test that compiles and passes without a tag
+  must not carry one just because a sibling file in the same directory does.
 - Tests must also be cross-platform (no hard-coded paths, no `\` separators,
   no shell-outs that exist only on one OS).
 
@@ -334,7 +338,8 @@ mocking; use `gofakeit` for fuzzed input data wherever possible.
 - Code that is exercised indirectly by other tests still requires its **own**
   test folder with dedicated tests, so coverage can be assessed per file.
 - `*_testexports.go` files (`//go:build integration_test`) must never be used
-  by or tested in unit tests (see §4.6.1).
+  by or tested in unit tests — unit tests assert real production code, so a
+  unit test must never carry the `integration_test` tag (see §4.6.1).
 - Gio-UI-heavy code (widgets, dialogs, panels, window/event-loop code) that
   requires a `layout.Context`/window is covered by the integration suite, not
   unit tests; list such files in [todo/test_observations.md](todo/test_observations.md).
@@ -355,42 +360,81 @@ guarded by `//go:build integration_test`. They compile **only** when the
 `integration_test` tag is passed, so production builds (`go build ./...`) never
 include them.
 
-**Scope — this tag is for integration and performance tests ONLY:**
+**Scope — the ONLY reason to add this tag is `*_testexports.go` consumption:**
 
-- The tag is used exclusively by the suites under [test/integration/](test/integration/)
-  and [test/performance/](test/performance/). Every test file in those two
-  directories carries `//go:build integration_test` at the top.
+- A file gets `//go:build integration_test` **if and only if** it (or another
+  file it shares a package with) references an accessor declared in a
+  `*_testexports.go` implementation file. That is the whole rule. Today those
+  accessors live in
+  [app/gui/editor/window_testexports.go](app/gui/editor/window_testexports.go)
+  and [app/gui/drivers/state_testexports.go](app/gui/drivers/state_testexports.go).
+- **The tag is NOT a label for "this is an integration/performance test."** An
+  integration or performance test that only touches production APIs must be
+  written **without** any tag so it runs in a plain `go test ./test/...`. Do not
+  blanket-apply the tag to every file in [test/integration/](test/integration/)
+  or [test/performance/](test/performance/) — apply it file by file.
+  (Example: [test/performance/template_generation_test.go](test/performance/template_generation_test.go)
+  benchmarks the generator through production APIs only, so it carries no tag.)
+- **Never tag a unit test with `integration_test`.** Unit tests assert real
+  implementation code and must never see test-only exports; if a unit test
+  appears to need one, the test is wrong, not the API.
 - **Do NOT** run the whole suite with the tag, and **do NOT** set it as a global
   `go.testTags`/`go.buildTags`. A normal `go test ./...` must stay tag-free; the
-  two gated directories then compile to "[no test files]" and are skipped rather
-  than failing.
-- Only files under those two directories may reference the `integration_test`
+  gated files then drop out of the build and are skipped rather than failing.
+- Only files under [test/integration/](test/integration/) and
+  [test/performance/](test/performance/) may reference the `integration_test`
   accessors. If another package needs an internal, do not widen this tag — add a
   test beside the code (`package X_test` in the same directory) instead.
+- Because build constraints apply per file, a package can be **partly** gated:
+  the untagged files compile in every run and the tagged ones only under the
+  tag. Keep any shared `TestMain`/helpers in the tagged file only if the
+  untagged files can run without them.
+
+### 4.6.2 The `gui` build tag (tests that need a GPU)
+
+Some tests drive a real Gio window or rasterize frames through
+`gioui.org/gpu/headless`, which requires a GPU/GL context. The CI pipeline has no
+GPU, so those tests must never be picked up by a catch-all run.
+
+**Scope — this tag marks GPU-dependent tests:**
+
+- Add `gui` to any test that opens an `app.Window`, renders through
+  `headless.Window` (snapshot tests), or otherwise cannot run without a GPU.
+  In practice: everything under [test/integration/gui/](test/integration/gui/)
+  and the window-driving benchmarks in [test/performance/](test/performance/)
+  (e.g. [test/performance/window_tab_cycling_test.go](test/performance/window_tab_cycling_test.go)).
+- The tag exists **to exclude** these tests from catch-all runs such as
+  `go test ./test/...` or `go test -tags=integration_test ./test/...`. They are
+  opt-in only.
+- `gui` is orthogonal to `integration_test`: combine them
+  (`//go:build integration_test && gui`) when a GPU test also needs test-only
+  exports, and use `gui` alone when it does not.
+- **Do NOT** set `gui` as a global/default test tag.
 
 **Running them:**
 
 ```powershell
-# Default run — everything EXCEPT the gated dirs (no tag):
+# Default run — everything EXCEPT the gated files (no tag):
 go test ./test/... -count=1
 
 # Integration:
 go test -tags=integration_test ./test/integration/... -count=1
 
-# UI Integration only:
+# UI Integration only (needs a GPU):
 go test -tags='integration_test,gui' ./test/integration/gui/... -count=1
 
-# Performance only:
-go test -v -tags=integration_test -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s
+# Performance, GPU-free benchmarks:
+go test -bench=. -run=xxx ./test/performance/... -benchtime=20x -timeout=120s
+
+# Performance, window-driving benchmarks (needs a GPU):
+go test -v -tags='integration_test,gui' -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s
 ```
 
-In VS Code use the tasks in [.vscode/tasks.json](.vscode/tasks.json): *"go: test
-(default, no integration_test)"* and *"go: test integration+performance
-(integration_test)"*. gopls is configured with `-tags=integration_test` for
-**analysis only** so the gated files still get IntelliSense — that does not cause
-them to run.
+In VS Code use the tasks in [.vscode/tasks.json](.vscode/tasks.json). gopls is
+configured with `-tags=integration_test` for **analysis only** so the gated files
+still get IntelliSense — that does not cause them to run.
 
-### 4.6.2 The `wireinject` build tag (code generation only)
+### 4.6.3 The `wireinject` build tag (code generation only)
 
 Dependency wiring is generated by [goforj/wire](https://github.com/goforj/wire), a
 maintained fork of the archived `google/wire`. The injector **declaration** lives in
@@ -546,12 +590,14 @@ no prior memory must be able to resume work from it alone.
 | Run unit tests             | `go test ./test/unit... -count=1`                      |
 | Run integration tests      | `go test -tags=integration_test ./test/integration/... -count=1` |
 | Run ui integration tests   | `go test -tags=integration_test,gui ./test/integration/gui/... -count=1` |
+| Run benchmarks (no GPU)    | `go test -bench=. -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` |
+| Run benchmarks (needs GPU) | `go test -tags=integration_test,gui -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` |
 | Run with race detector     | `go test -race ./test/...`                             |
 | Unit test coverage report  | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` (see §2.3; VS Code task *"Go: Generate code coverage report"*) |
 | Lint (report only)         | `golangci-lint-v2 run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
 | Lint (auto-fix)            | `golangci-lint-v2 run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |
 | Format Go code             | `gofmt -w .` (never run on `data/`)                    |
-| Regenerate DI injectors    | `wire gen ./internal/composition/...` (VS Code task *"Go: Generate wire injectors"*; see §4.6.2) |
+| Regenerate DI injectors    | `wire gen ./internal/composition/...` (VS Code task *"Go: Generate wire injectors"*; see §4.6.3) |
 | Tidy modules               | `go mod tidy`                                          |
 
 ---

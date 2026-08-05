@@ -1,8 +1,5 @@
-//go:build integration_test
+//go:build integration_test && gui
 
-// Package performance_test benchmarks the editor.Window UI through the shared
-// integration_common.AppRunner. The SAME benchmark runs headless by default
-// (CI-safe) or on screen with `go test ... -args headed`.
 package performance_test
 
 import (

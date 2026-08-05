@@ -1,5 +1,3 @@
-//go:build integration_test
-
 package performance_test
 
 import (
