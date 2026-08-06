@@ -121,3 +121,28 @@ Still unit-untestable (dialog-callback or Gio territory):
   "close failure is propagated" test is therefore not written; the truncation
   half of that item is covered by
   `TestWhenEncodingFailsOverAnExistingPreview_LeavesTheDestinationUntouched`.
+
+- internal/handlers/zoneEditorHandler.go - `ComputeHasErrors` and
+  `RebuildZoneConnectionRoads` are exported methods on the private
+  `zoneEditorHandler` struct but are absent from
+  `handler_interfaces.IZoneEditorHandler`, which is what `NewZoneEditorHandler`
+  returns. No production caller reaches them (both callers go straight to
+  `IConnectionEditorService` / `IZoneEditorService`), so they cannot be invoked
+  through the public API and stay at 0%. They look like leftovers from before
+  the handler was put behind an interface - either delete them or add them to
+  the interface; until then, no unit test is possible without a test-only seam.
+
+- internal/helpers/io.go - `getVDFContent`, `getVDFFilePath`, `getSteamPath`,
+  `getBasePath`, and internal/helpers/io_windows.go -
+  `getSteamPathFromRegistry`: this is the Steam/Olden-Era install discovery
+  chain. It reads the Windows registry and the real Steam `libraryfolders.vdf`
+  from the host filesystem, so its result depends entirely on whether the
+  machine running the tests has Steam and the game installed. Covering it needs
+  an injectable filesystem/registry seam that does not exist today; the public
+  entry points that use it are covered through their error paths instead.
+
+- internal/services/template_generator/providers/topology/base/topologyConnectionService.go -
+  `buildShiftDerangement`: reached only after `buildNonAdjacentDerangement`
+  fails 100 consecutive randomized attempts, which cannot be forced without
+  seeding control over `math/rand` inside production code. Deterministic
+  fallback, purely defensive; do not add a seam to reach it.

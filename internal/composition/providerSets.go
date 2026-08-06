@@ -53,7 +53,6 @@ var EditorSet = wire.NewSet(
 	connection_editor.NewManualReapplyService,
 	connection_editor.NewZoneEditorService,
 	content_rules.NewContentRuleService,
-	wire.Bind(new(content_rules.IContentRuleService), new(*content_rules.ContentRuleService)),
 	preview_service.NewPreviewLayoutService,
 	providePreviewGenerator,
 )

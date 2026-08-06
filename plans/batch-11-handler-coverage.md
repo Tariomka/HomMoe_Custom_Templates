@@ -392,11 +392,11 @@ Verified green: `go build ./...`, `go vet -tags=integration_test ./...`,
 already matched after the earlier regeneration in this phase.
 
 ## Phase 6: Wire regeneration
-Status: Not started
+Status: Complete
 
-- [ ] Update `providerSets.go`: drop the two now-redundant `wire.Bind` calls.
-- [ ] `wire gen ./internal/composition/...`, then `wire diff ./internal/composition/...` (exit 0).
-- [ ] Confirm `wire_gen.go` is committed and not hand-edited.
+- [x] Update `providerSets.go`: drop the ~~two~~ **one** now-redundant `wire.Bind` call.
+- [x] `wire gen ./internal/composition/...`, then `wire diff ./internal/composition/...` (exit 0).
+- [x] Confirm `wire_gen.go` is committed and not hand-edited.
 
 ### Verification Plan
 - `wire diff ./internal/composition/...` exits 0.
@@ -404,46 +404,90 @@ Status: Not started
 - `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` — zero snapshot diff.
 
 ### Phase Summary
-_(write when phase completes)_
+Only **one** `wire.Bind` was left to drop, not two — the `IZoneLabelProvider`
+bind already went away in Phase 2. The owner confirmed dropping the last one:
+`content_rules.NewContentRuleService()` now returns `IContentRuleService`
+instead of `*ContentRuleService`, so
+`wire.Bind(new(content_rules.IContentRuleService), new(*content_rules.ContentRuleService))`
+was removed from `EditorSet`. **The codebase now contains zero `wire.Bind`
+calls** — every constructor yields the interface wire needs directly.
+
+No call site needed updating: the seven `IContentRuleService` methods are the
+complete public surface of `ContentRuleService`, and the existing unit tests in
+`test/unit/internal/services/content_rules/contentRuleService/` only ever call
+those. The `wire` import in `providerSets.go` is still needed for `wire.NewSet`.
+
+`wire gen ./internal/composition/...` rewrote `wire_gen.go` (3 lines: the
+`contentRuleService` local is now typed `IContentRuleService`), and
+`wire diff ./internal/composition/...` exits **0** — the committed file is
+current. Reminder: `wire gen` writes its success banner to STDERR, so PowerShell
+reports exit 1 even on success; `wire diff` is the reliable signal.
+
+Verified green: `go build ./...`, `go vet -tags=integration_test ./...`,
+`go test -count=1 ./test/unit/...`,
+`go test -tags=integration_test -count=1 ./test/integration/...`,
+`go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...`
+(ran on the owner's GPU box; **zero snapshot diffs** — `git status` shows no
+modified files under `test/integration/gui/`), and
+`go run ./cmd/testlayoutcheck .` (`test-layout check passed`). The only three
+modified files are `providerSets.go`, `wire_gen.go` and `contentRuleService.go`.
 
 ## Phase 7: Mocks
-Status: Not started
+Status: Complete
 
-- [ ] One `testify/mock` per interface in `test/test_helpers/`, file named
+- [x] One `testify/mock` per interface in `test/test_helpers/`, file named
       `<interfaceName>Mock.go` in lower-camel, style copied from
       `contentRuleServiceMock.go` (receiver `this`, `arguments.Get(0).(T)` with
       the comma-ok form).
-- [ ] Only the mocks the handler tests actually need — do not pre-build all 21.
+- [x] Only the mocks the handler tests actually need — do not pre-build all 21.
 
 ### Verification Plan
 - `go vet ./test/...` passes; `go run ./cmd/testlayoutcheck .` prints `test-layout check passed`.
 
 ### Phase Summary
-_(write when phase completes)_
+14 new mocks live in `test/test_helpers/`, all in `package test_helpers` and all
+following the existing `contentRuleServiceMock.go` style (receiver `this`,
+comma-ok type assertions on `arguments.Get(n)`):
+`connectionEditorServiceMock.go`, `contentRuleMock.go`,
+`editorStateValidatorMock.go`, `fileServiceMock.go`,
+`generationTuningFactoryMock.go`, `generatorConfigMapperMock.go`,
+`mandatoryContentProviderMock.go`, `manualReapplyServiceMock.go`,
+`previewGeneratorServiceMock.go`, `previewLayoutServiceMock.go`,
+`stateHandlerMock.go`, `templateGeneratorMock.go`, `zoneClassifierMock.go`,
+`zoneEditorServiceMock.go`.
+
+`contentRuleMock.go` (for `content_rules.IContentRule`) was added during Phase 8
+when `describeContentRule_test.go` needed to control a restored rule's
+`DisplayText`/`Marker` — it is the only mock not anticipated by the original
+Phase 7 list. The remaining interfaces created in Phases 1–5 deliberately have
+no mock: nothing under test depends on them yet.
+
+`go vet ./test/...` exits 0 and `go run ./cmd/testlayoutcheck .` prints
+`test-layout check passed`.
 
 ## Phase 8: §6.2 handler unit tests
-Status: Not started
+Status: Complete
 
 One folder per implementation file, one `<publicMethod>_test.go` per method,
 package `<fileName>_test`, `t.Parallel()` everywhere, AAA sections, one logical
 assertion per test, `testify` + `gofakeit` only.
 
-- [ ] `test/unit/internal/handlers/stateHandler/` — `loadState_test.go`,
+- [x] `test/unit/internal/handlers/stateHandler/` — `loadState_test.go`,
       `saveState_test.go`, `validateEditorState_test.go`. Cover: empty/whitespace
       path → `ErrNoOutputPath`; loader error propagated; nil state →
       `ErrNothingToSave`; `fixIssues=false` returns warnings with an unmodified
       state; `AdvancedMode` true/false each zeroing the correct field set.
-- [ ] `test/unit/internal/handlers/previewHandler/buildPreviewLayout_test.go` —
+- [x] `test/unit/internal/handlers/previewHandler/buildPreviewLayout_test.go` —
       nil template + nil zones + nil connections; synthesised one-variant template.
-- [ ] `test/unit/internal/handlers/templateHandler/` — `generateTemplate_test.go`
+- [x] `test/unit/internal/handlers/templateHandler/` — `generateTemplate_test.go`
       (`ErrNoTemplateName`, `ErrGeneratedTemplateInvalid`, warning concatenation),
       `updateTemplate_test.go` (`ErrProvidedTemplateInvalid`, `ErrZonesMissing`,
       content rebuild only when `EditorState != nil`),
       `reapplyCastleSettings_test.go`, `saveTemplate_test.go`.
-- [ ] `test/unit/internal/handlers/contentRuleHandler/` —
+- [x] `test/unit/internal/handlers/contentRuleHandler/` —
       `getContentRuleEditorOptions_test.go` (Variant option appended only when
       variants exist), `describeContentRule_test.go` (nil rule → invalid baseline).
-- [ ] `test/unit/internal/handlers/zoneEditorHandler/` — one file per public
+- [x] `test/unit/internal/handlers/zoneEditorHandler/` — one file per public
       method (14).
 
 ### Verification Plan
@@ -452,19 +496,59 @@ assertion per test, `testify` + `gofakeit` only.
 - Coverage for `internal/handlers/*.go` rises; total does not drop.
 
 ### Phase Summary
-_(write when phase completes)_
+Five new mirrored test packages were added under `test/unit/internal/handlers/`,
+joining the pre-existing `guiHandler/`:
+
+- `stateHandler/` — `newStateHandler_test.go`, `loadState_test.go` (7),
+  `saveState_test.go` (6), `validateEditorState_test.go` (9), plus a
+  `common_test.go` with `newPassingValidator()` / `newValidatorReporting(...)`.
+- `previewHandler/` — `newPreviewHandler_test.go`, `buildPreviewLayout_test.go` (6).
+- `templateHandler/` — `common_test.go` (a `templateHandlerFixture` holding the
+  handler plus all nine mocks), `newTemplateHandler_test.go`,
+  `generateTemplate_test.go` (6), `updateTemplate_test.go` (10),
+  `reapplyCastleSettings_test.go` (2), `saveTemplate_test.go` (7).
+- `contentRuleHandler/` — `newContentRuleHandler_test.go`,
+  `getContentRuleEditorOptions_test.go` (5), `describeContentRule_test.go` (8).
+- `zoneEditorHandler/` — `common_test.go` (a `zoneEditorHandlerFixture`),
+  `newZoneEditorHandler_test.go` and one file per public interface method (12).
+
+Key decisions:
+
+- `validators.ValidationIssue.fix` is package-private, so a mock-supplied issue
+  has a nil fix. Mock-supplied issues are therefore only used with
+  `fixIssues=false`; the single test that exercises the fix-applying branch uses
+  the **real** `validators.NewEditorStateValidator()` with `PlayerCount = 99`
+  and asserts it is clamped to 8. AGENTS.md §4.6 forbids adding a test-only seam
+  to production code, so this was the correct trade-off.
+- `zoneEditorHandler.ComputeHasErrors` and
+  `zoneEditorHandler.RebuildZoneConnectionRoads` are exported on the private
+  struct but are **not** on `handler_interfaces.IZoneEditorHandler`, which is
+  what `NewZoneEditorHandler` returns, and no production code calls them. They
+  are unreachable through the public API, so per AGENTS.md §4.6 they are
+  recorded in [todo/test_observations.md](../todo/test_observations.md) instead
+  of being tested; they are candidates for deletion (owner decision).
+- `testifylint`'s `require-error` rule forces `require.NoError` over
+  `assert.NoError`; five files were adjusted accordingly.
+
+Verification: `go test -count=1 ./test/unit/internal/handlers/...` — all six
+packages `ok`. `go run ./cmd/testlayoutcheck .` — `test-layout check passed`.
+`golangci-lint-v2 run ./... --issues-exit-code=0` — `0 issues`.
+Coverage of `internal/handlers` alone is now **97.4%** (only the two unreachable
+methods above and one `contentRuleKeyFromName` switch arm remain); the overall
+`-coverpkg=./internal/...,./app/...` total rose from the Phase 0 baseline of
+**65.5%** to **68.1%** at the end of this phase.
 
 ## Phase 9: §6.4 catalogue unit tests
-Status: Not started
+Status: Complete
 
-- [ ] `test/unit/app/gui/constants/bannableItems/` — one file per public function:
+- [x] `test/unit/app/gui/constants/bannableItems/` — one file per public function:
       `getBannableItemsWithExclusions_test.go`, `findBannableItem_test.go`,
       `getBannedItemLabel_test.go`, `sidToDisplayName_test.go`,
       `compareBannableItems_test.go`.
       Invariants: no empty `Sid`/`Name`/`Category`; SIDs unique; sorted by
       category then name; excluded SIDs absent; caller's slice not mutated;
       category set is exactly the six known values. Plus 2–3 named-SID spot checks.
-- [ ] `test/unit/app/gui/constants/valueOverrideSids/getValueOverrideSidsWithExclusions_test.go`
+- [x] `test/unit/app/gui/constants/valueOverrideSids/getValueOverrideSidsWithExclusions_test.go`
       — sorted, no duplicates, no empty SIDs, exclusions removed, input not mutated.
 
 ### Verification Plan
@@ -472,40 +556,158 @@ Status: Not started
 - Both files move off 0.0% in `go tool cover -func`.
 
 ### Phase Summary
-_(write when phase completes)_
+Six new test files were added, all asserting **invariants** rather than the
+~31 hard-coded SIDs (owner decision):
+
+- `test/unit/app/gui/constants/bannableItems/` —
+  `getBannableItemsWithExclusions_test.go` (10 tests: non-empty catalogue, every
+  entry has Sid/Name/Category, SIDs unique, exactly the six known categories,
+  sorted by `CompareBannableItems`, exclusions removed, remainder kept,
+  unmatched exclusions are a no-op, caller's slice not mutated, successive calls
+  are not aliased), `findBannableItem_test.go` (3), `getBannedItemLabel_test.go`
+  (3), `sidToDisplayName_test.go` (4), `compareBannableItems_test.go` (3).
+- `test/unit/app/gui/constants/valueOverrideSids/getValueOverrideSidsWithExclusions_test.go`
+  (8 tests: non-empty, no empty SIDs, no duplicates, sorted, exclusion removed,
+  remainder kept, unmatched exclusion is a no-op, caller's slice not mutated).
+
+Verification: `go test -count=1 ./test/unit/app/gui/constants/...` — all `ok`.
+Both `bannableItems.go` and `valueOverrideSids.go` are at **100%** — zero
+functions remain at 0.0% in either file. Total coverage after this phase:
+**68.1%**.
 
 ## Phase 10: Remaining 0% scan
-Status: Not started
+Status: Complete
 
-- [ ] From the fresh profile, list every non-Gio production file still at 0% or
+- [x] From the fresh profile, list every non-Gio production file still at 0% or
       far below 80%.
-- [ ] Add tests for the pure/easy ones; record genuinely untestable or
+- [x] Add tests for the pure/easy ones; record genuinely untestable or
       GUI-bound ones in [todo/test_observations.md](../todo/test_observations.md).
 
 ### Verification Plan
 - `go test -count=1 ./test/unit/...` passes; coverage strictly above the Phase 0 baseline.
 
 ### Phase Summary
-_(write when phase completes)_
+The post-Phase-9 profile was grouped by file. Everything still at 0% fell into
+four buckets:
+
+1. **Gio-bound** (dialogs, widgets, components, drivers, themes, utils/draw) —
+   already covered by [test_observations.md](../todo/test_observations.md) and
+   the GUI integration suite. Not touched.
+2. **`internal/registry/`** — exempt by AGENTS.md §4.6 (game-data constants).
+3. **Pure and testable — now covered:**
+   - `app/gui/constants/spells.go`: `getKnownSpellsWithExclusions_test.go` (8),
+     `getSpellSchoolColor_test.go` (3),
+     `getSpellSchoolColorFromDisplayName_test.go` (3),
+     `compareSpellEntries_test.go` (4).
+   - `app/gui/constants/bonusOptions.go`: `getBonusTypeOptions_test.go` (2),
+     `getBonusReceiverOptions_test.go` (1),
+     `getBonusResourceDefaults_test.go` (2).
+   - `app/gui/constants/gameModes.go`: `getGameModes_test.go` (1).
+   - `internal/helpers/math.go`: `scaleRound_test.go` (3).
+4. **Genuinely unreachable — recorded in
+   [test_observations.md](../todo/test_observations.md):**
+   - `internal/helpers/io.go` (`getVDFContent`, `getVDFFilePath`,
+     `getSteamPath`, `getBasePath`) and `internal/helpers/io_windows.go`
+     (`getSteamPathFromRegistry`) — host Steam/registry install discovery.
+   - `internal/services/.../base/topologyConnectionService.go`
+     (`buildShiftDerangement`) — fallback reached only after 100 consecutive
+     failed randomized derangement attempts.
+
+Verification: `go test -count=1 ./test/unit/...` — all packages `ok`. Total
+coverage **68.7%**, strictly above the 65.5% Phase 0 baseline.
+
+**Gotcha for future agents:** `golangci-lint-v2 run ... --fix` duplicated the
+`package` clause on one freshly created test file
+(`getBannableItemsWithExclusions_test.go`), producing
+`expected declaration, found 'package'`. After any `--fix` run over brand-new
+files, re-run `go run ./cmd/testlayoutcheck .` and check the first two lines of
+the new files.
 
 ## Phase 11: Close out
-Status: Not started
+Status: Complete
 
-- [ ] Full suite: build, vet, testlayoutcheck, unit, integration, GUI integration,
+- [x] Full suite: build, vet, testlayoutcheck, unit, integration, GUI integration,
       coverage, lint.
-- [ ] Mark §6.2 and §6.4 `✅ FIXED` in place in `todo/review-opus5-08-04.md`, and
+- [x] Mark §6.2 and §6.4 `✅ FIXED` in place in `todo/review-opus5-08-04.md`, and
       §12 item 11 done.
-- [ ] Update repository memory with the new interface conventions.
-- [ ] Rewrite `.agent/session-carry-forward.md`.
+- [x] Update repository memory with the new interface conventions.
+- [x] Rewrite `.agent/session-carry-forward.md`.
 
 ### Verification Plan
 - Every command in AGENTS.md §7 Quick Reference passes; coverage ≥ Phase 0 baseline; lint issue count ≤ baseline.
 
 ### Phase Summary
-_(write when phase completes)_
+Full close-out run (Windows / PowerShell):
+
+| Command | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet -tags=integration_test ./...` | exit 0 |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test -count=1 ./test/unit/...` | all packages `ok` |
+| `go test -tags=integration_test -count=1 ./test/integration/...` | `ok` |
+| `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` | `ok`, zero snapshot diffs |
+| coverage (`-coverpkg=./internal/...,./app/...`) | **68.7%** (baseline 65.5%) |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | `0 issues` (baseline 0) |
+
+`coverage.html` and `lcov.info` were regenerated alongside `coverage.txt`.
+Review findings §6.2 and §6.4 are marked `✅ FIXED` in place in
+[todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md), and §12 item 11 is
+marked done. Repository memory and `.agent/session-carry-forward.md` were
+rewritten. Nothing was staged or committed — that is the owner's step.
 
 ## Final Recap
-_(write when all phases complete)_
+Batch 11 closed review findings §6.2 (no mirrored unit tests for
+`internal/handlers`) and §6.4 (two `app/gui/constants` catalogues at 0%), with
+the owner-approved expansion of converting every constructor-injected service
+under `internal/` to an `I`-prefixed interface first.
+
+What landed, in order:
+
+1. **Phases 1–5** — 21 new interfaces across the leaf packages, `zones`,
+   `topology`, `providers` and the handlers, plus a null-object preview
+   generator. Every affected factory now returns the broadest interface it
+   satisfies, per AGENTS.md §4.2.2.
+2. **Phase 6** — the last remaining `wire.Bind` was deleted; the codebase now
+   has **zero** `wire.Bind` calls because every provider already returns an
+   interface. `wire_gen.go` was regenerated and the GUI snapshot suite showed
+   no diffs.
+3. **Phase 7** — 14 `testify` mocks in `test/test_helpers/`.
+4. **Phase 8** — five mirrored handler test packages; `internal/handlers` went
+   to **97.4%**.
+5. **Phase 9** — invariant-based tests for `bannableItems.go` and
+   `valueOverrideSids.go`, both now at 100%.
+6. **Phase 10** — the residual-0% sweep also closed `spells.go`,
+   `bonusOptions.go`, `gameModes.go` and `helpers.ScaleRound`; the genuinely
+   unreachable code was recorded in
+   [todo/test_observations.md](../todo/test_observations.md).
+
+Net effect: unit-test coverage **65.5% → 68.7%**, lint stays at 0 issues, no
+production behaviour changed (the GUI snapshot suite is byte-identical), and the
+DI graph is now fully interface-driven.
+
+Two follow-ups for the owner:
+
+- `zoneEditorHandler.ComputeHasErrors` and `RebuildZoneConnectionRoads` are dead
+  code — exported on the private struct, absent from
+  `handler_interfaces.IZoneEditorHandler`, and called by nobody. Delete them or
+  add them to the interface.
+- The `internal/helpers` Steam/registry install-discovery chain remains at 0%
+  and would need an injectable filesystem seam to test.
 
 ## Deployment Plan
-_(write when all phases complete)_
+There is nothing to deploy: this batch adds tests and interfaces only, and the
+application binary's behaviour is unchanged.
+
+1. Review the working tree (`git status --short`) — 5 modified files and the new
+   `test/test_helpers/*Mock.go` plus `test/unit/**` folders.
+2. Confirm `internal/composition/wire_gen.go` is the *generated* file; if in
+   doubt run `wire diff ./internal/composition/...` (exit 0 means current).
+   Never hand-edit it.
+3. Run the AGENTS.md §7 Quick Reference commands one more time on the reviewer's
+   machine — in particular the GPU-gated
+   `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...`,
+   which requires a GPU and is skipped in tag-free runs.
+4. Stage and commit on `AD/refactoring-07-21`. `coverage.txt`, `coverage.html`
+   and `lcov.info` are regenerated artifacts — include or ignore them per the
+   existing repository convention.

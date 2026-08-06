@@ -1718,7 +1718,19 @@ after.
 
 ---
 
-### 6.2 🟠 The entire `internal/handlers` package has no unit tests
+### 6.2 ✅ FIXED — The entire `internal/handlers` package has no unit tests
+
+**Resolution (Batch 11).** Every constructor-injected service under `internal/`
+was first converted to an `I`-prefixed interface (see
+[plans/batch-11-handler-coverage.md](../plans/batch-11-handler-coverage.md),
+Phases 1–6), 14 `testify` mocks were added under `test/test_helpers/`, and five
+mirrored test packages now exist alongside the pre-existing `guiHandler/`:
+`stateHandler/`, `previewHandler/`, `templateHandler/`, `contentRuleHandler/`
+and `zoneEditorHandler/`. `internal/handlers` coverage is **97.4%**; the only
+residual gaps are `zoneEditorHandler.ComputeHasErrors` /
+`RebuildZoneConnectionRoads`, which are absent from
+`handler_interfaces.IZoneEditorHandler` and therefore unreachable through the
+public API — recorded in [test_observations.md](test_observations.md).
 
 **Evidence.** `internal/handlers/` contains `zoneEditorHandler.go` (144 LOC),
 `contentRuleHandler.go` (124), `templateHandler.go` (123),
@@ -1796,7 +1808,15 @@ still pass. The hole is now closed by the depguard scope in §6.5.
 
 ---
 
-### 6.4 🟡 Two pure, non-Gio catalogues remain at 0% coverage
+### 6.4 ✅ FIXED — Two pure, non-Gio catalogues remain at 0% coverage
+
+**Resolution (Batch 11).** `test/unit/app/gui/constants/bannableItems/`
+(5 files) and `test/unit/app/gui/constants/valueOverrideSids/` (1 file) assert
+structural invariants — no empty fields, unique SIDs, sort order, exclusions
+removed, caller slice not mutated, exactly the six known categories — plus a
+few named spot checks, rather than hard-coding the SID list (owner decision).
+Both files are now at 100%. The sweep also closed `spells.go`,
+`bonusOptions.go`, `gameModes.go` and `helpers.ScaleRound`.
 
 **Evidence.** From the deduplicated profile:
 `app/gui/constants/bannableItems.go` — **110 statements, 0.0%**;
@@ -2622,8 +2642,9 @@ permanently — mark them `✅ FIXED` in place as they land.
     `TopologyBase.CreateClusterZone`, applied to **all ten** duplicated sites
     rather than only the four tournament cluster services (owner decision).
 
-11. **Coverage PR.** §6.2 (`internal/handlers` mirrored tests — start with
-    `stateHandler` and `previewHandler`), §6.4 (the two catalogues).
+11. ✅ **Coverage PR — done (Batch 11).** §6.2 (`internal/handlers` mirrored
+    tests) and §6.4 (the two catalogues) are both closed. Total unit-test
+    coverage rose from 65.5% to 68.7%.
 
 12. **Product decisions, then implementation.**
     ✅ §2.7 decided and delivered in Batch 9 (finish, and make the generator

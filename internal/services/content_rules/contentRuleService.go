@@ -12,7 +12,7 @@ type ContentRuleService struct {
 	variantMappingCatalog *VariantMappingCatalog
 }
 
-func NewContentRuleService() *ContentRuleService {
+func NewContentRuleService() IContentRuleService {
 	return &ContentRuleService{
 		distanceCatalog:       NewDistanceCatalog(),
 		variantMappingCatalog: NewVariantMappingCatalog(),
