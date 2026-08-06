@@ -1,6 +1,6 @@
 package models
 
-type HubZoneCreation struct {
+type HubZoneCreationRequest struct {
 	Name                 string
 	Size                 float64
 	ConnectionNames      []string

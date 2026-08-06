@@ -157,7 +157,7 @@ func (this *ZoneEditorService) NewDefaultNeutralZone(
 	castleCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
-	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreation{
+	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreationRequest{
 		Name:               constants.NeutralZonePrefix + label,
 		Quality:            quality,
 		Size:               1.0,

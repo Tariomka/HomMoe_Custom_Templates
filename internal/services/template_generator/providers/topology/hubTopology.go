@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -85,21 +86,9 @@ func (this *HubTopologyService) createZones(
 
 	for _, label := range outerLabels {
 		spokeConnectionNames := []string{constants.HubZonePrefix + label}
-		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
-			zones = append(zones,
-				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), spokeConnectionNames,
-					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones,
-				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
-					spokeConnectionNames, configuration.ZoneConfiguration.NeutralZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
-		}
+		playerIndex := slices.Index(playerLabels, label)
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, spokeConnectionNames, playerIndex, playerIndex >= 0, false, tuning, neutralZones))
 	}
 	return zones
 }
@@ -126,7 +115,7 @@ func (this *HubTopologyService) createConnections(
 				WithGuardZone(constants.HubZoneName).
 				WithSimTurnSquad().
 				WithGuardValue(hubGuard).
-				WithGuardWeeklyIncrement(0.15).
+				WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 				WithGuardMatchGroup("hub_guard_"+label).
 				Build(),
 			variant_content.NewConnectionBuilder().
@@ -136,7 +125,7 @@ func (this *HubTopologyService) createConnections(
 				WithGuardZone(constants.HubZoneName).
 				WithSimTurnSquad().
 				WithGuardValue(hubGuard).
-				WithGuardWeeklyIncrement(0.15).
+				WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 				WithGuardMatchGroup(fmt.Sprintf("hub_guard_%s_%d", label, 1)).
 				Build())
 

@@ -28,7 +28,7 @@ type SpellEntry struct {
 
 func GetKnownSpellsWithExclusions(excluded []string) []SpellEntry {
 	spells := slices.DeleteFunc(
-		buildKnownSpells(),
+		slices.Clone(knownSpells),
 		func(spell SpellEntry) bool { return slices.Contains(excluded, spell.Sid) })
 	slices.SortStableFunc(spells, CompareSpellEntries)
 	return spells
@@ -37,7 +37,7 @@ func GetKnownSpellsWithExclusions(excluded []string) []SpellEntry {
 // FindSpell returns the catalog entry for a spell SID, or ok=false when the
 // SID is not in the catalog.
 func FindSpell(sid string) (SpellEntry, bool) {
-	for _, spell := range buildKnownSpells() {
+	for _, spell := range knownSpells {
 		if spell.Sid == sid {
 			return spell, true
 		}
@@ -62,6 +62,16 @@ func GetSpellSchoolDisplayName(schoolType string) string {
 	default:
 		return schoolType
 	}
+}
+
+// GetSpellNameAndSchool resolves a spell SID to its display name and school label,
+// falling back to a sentence-cased name and "Spell" for unknown SIDs.
+func GetSpellNameAndSchool(sid string) (name, school string) {
+	if spell, ok := FindSpell(sid); ok {
+		return spell.Name, GetSpellSchoolDisplayName(spell.School)
+	}
+
+	return SidToDisplayName(sid), "Spell"
 }
 
 // GetSpellSchoolColorFromDisplayName maps a school display name to its accent color.
@@ -122,7 +132,8 @@ func CompareSpellEntries(a, b SpellEntry) int {
 	return cmp.Compare(a.Name, b.Name)
 }
 
-func buildKnownSpells() []SpellEntry {
+//nolint:gochecknoglobals // semantic registry
+var knownSpells = func() []SpellEntry {
 	spells := []SpellEntry{}
 	spells = append(spells, buildHighNeutralSpells()...)
 	spells = append(spells, buildDaylightSpells()...)
@@ -130,7 +141,7 @@ func buildKnownSpells() []SpellEntry {
 	spells = append(spells, buildArcaneSpells()...)
 	spells = append(spells, buildPrimalSpells()...)
 	return spells
-}
+}()
 
 func buildHighNeutralSpells() []SpellEntry {
 	spells := registry.GetHighNeutralSpellSidValues()

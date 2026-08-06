@@ -2,19 +2,17 @@ package models
 
 import "github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 
-type NeutralLikeZoneCreation struct {
+type NeutralZoneCreationRequest struct {
 	Name                 string
-	Profile              neutral_zone.Profile
+	Quality              neutral_zone.Quality
 	Size                 float64
 	ConnectionNames      []string
 	MandatoryContentName string
-	CastleStrategy       ZoneCastleStrategy
 	CastleCount          int
 	HoldCity             bool
 	OutpostCount         int
 	FootholdCount        int
 	GuardRandomization   float64
 	GenerateRoads        bool
-	BiomeMatchPolicy     ZoneBiomeMatchPolicy
 	Tuning               GenerationTuning
 }

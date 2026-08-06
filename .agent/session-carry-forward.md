@@ -1,99 +1,91 @@
-# Session Carry-Forward — Batch 9 (Docs PR + §2.7 Gladiator Arena)
+# Session Carry-Forward — Batch 10 (Duplication cleanup)
 
 ## 1. Session goal
 
-Deliver **Batch 9** of `todo/review-opus5-08-04.md` §12 — the documentation PR
-(§9.1–§9.7) — with §2.7 (the half-landed gladiator-arena feature) folded in by
-owner decision.
+Deliver **Batch 10** of the `todo/review-opus5-08-04.md` remediation: review
+findings §3.1, §3.2, §3.3, §3.4 and §5.3 (duplicate code + positional
+constructor calls).
 
 ## 2. Fixes applied
 
-- **§2.7** — the arena was never emitted by the generator, only the win-condition
-  flag was. It is now actually placed and rendered. (Committed by the owner as
-  `89d3e14 "Batch 9-Prep Done"`.)
-- **§9.1** — QUICKSTART's "Programmatic Use" snippet referenced symbols that do
-  not exist. Replaced with a real, type-checked example.
-- **§9.2** — README/QUICKSTART described a four-tab UI with a footer and a
-  `Refresh` button. Corrected against source.
-- **§9.3** — [QUICKSTART.md](../QUICKSTART.md) said Go 1.25.8+, now 1.26.5+.
-- **§9.4** — topology count/list de-duplicated; QUICKSTART links to the README table.
-- **§9.5** — [docs/gladiator-arena-marker.md](../docs/gladiator-arena-marker.md)
-  pointed at `internal/services/previewassets/`, which never existed.
-- **§9.6** — [AGENTS.md](../AGENTS.md) claimed a single module; `cmd/testlayoutcheck`
-  was undocumented and had no VS Code task.
-- **§9.7** — Linux build prerequisites were undocumented.
+- **§3.1** — all fifteen hard-coded `WithGuardWeeklyIncrement(0.15)` call sites
+  across twelve files now read
+  `WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard)`.
+  The distinct `0.20` in [internal/services/zones/zoneFactory.go](internal/services/zones/zoneFactory.go)
+  was deliberately left alone.
+- **§3.3** — the two verbatim spell-label helpers (`bannedSpellLabel` in
+  [app/gui/panels/bonusesPanel.go](app/gui/panels/bonusesPanel.go) and
+  `spellNameAndSchool` in [app/gui/dialogs/bonusPickerDialog.go](app/gui/dialogs/bonusPickerDialog.go))
+  were deleted in favour of one exported
+  `constants.SpellNameAndSchool` in the new
+  [app/gui/constants/spellLabel.go](app/gui/constants/spellLabel.go).
+- **§3.4** — verified only. The owner had already extracted
+  `newBaseButtonWidget` + `newButtonInset` in
+  [app/gui/widgets/buttonWidget.go](app/gui/widgets/buttonWidget.go) in commit
+  `0311318`. The headless GUI snapshot suite passes with zero diff and the two
+  `dupl` lint findings are gone.
+- **§3.2 + §5.3** — see below.
 
 ## 3. Features added / changed
 
-**Generator now places a Gladiator Arena** (committed in `89d3e14`):
-
-- `GeneratorConfig.IsGladiatorArenaMode()` is the single source of truth —
-  the `gladiatorArena` rule is enabled, or the victory condition is
-  `win_condition_4` ("Guardian Arena"). `gameRulesProvider` reuses it.
-- New `providers.GladiatorArenaProvider` (wired into `GenerationSet`, called from
-  `TemplateGenerator.Generate` right after `CreateTopologyVariant`) picks the wire
-  form from what the topology produced:
-  1. hub zone present → `GladiatorArena` main object on the hub;
-  2. else the richest neutral↔neutral connection → `connectionType: "GladiatorArena"`;
-  3. else the richest neutral zone → main object;
-  4. else nothing.
-  Main-object shape is `Uniform` + `["true","0","0"]`, mirroring `Blitz.rmg.json`.
-- Preview follows both forms: `preview.Zone.Arena`/`HasArena()`,
-  `preview.Connection.IsGladiatorArena()`, the extracted `getPreviewConnectionType`
-  (now also maps `Proximity`), `neutralAssetNames` grown to fifteen entries (the
-  arena sprite wins over the castle sprite — there is no combined artwork), and
-  `AssetProvider.DrawArenaMarker` compositing the master glyph at the connection's
-  Bézier midpoint at `scale * 0.75`.
-
-**Documentation** — see §4.
+- **`...CreationRequest` struct family** (§5.3). `ZoneFactory.CreateSpawnZone`
+  and `TopologyBase.CreateNeutralZone` no longer take 7–9 positional arguments;
+  they take a request struct. For consistency the three pre-existing creation
+  structs were renamed into the same family (files renamed per AGENTS.md §4.1):
+  `NeutralZoneCreation` → `NeutralZoneCreationRequest`, `HubZoneCreation` →
+  `HubZoneCreationRequest`, `NeutralLikeZoneCreation` →
+  `NeutralLikeZoneCreationRequest`.
+- **`TopologyBase.CreateClusterZone`** (§3.2). One exported helper on
+  [topologyBase.go](internal/services/template_generator/providers/topology/base/topologyBase.go)
+  owns the spawn/neutral choice, the `Player%d` naming and the `FirstOrDefault`
+  plan lookup. Per owner decision it was applied to **all ten** duplicated call
+  sites, not only the four tournament cluster services.
+- **Behaviour note for the owner (§3.3).** Both original spell-label copies
+  ended with `if label == "" { label = spell.School }`. That branch is provably
+  a no-op — `GetSpellSchoolDisplayName` returns one of five non-empty constants
+  or the raw `schoolType`, so `label` is empty only when `spell.School` is
+  empty, in which case the assignment changes nothing. It was **dropped**
+  rather than carried into the new file as an uncoverable branch.
 
 ## 4. File modifications
 
-Committed by the owner in `89d3e14` (§2.7 implementation + its tests):
+**Created**
 
-| File | Change |
+| File | Summary |
 | --- | --- |
-| `internal/models/config/generatorConfig.go` | added `IsGladiatorArenaMode()` |
-| `internal/services/template_generator/providers/gameRulesProvider.go` | reuses `IsGladiatorArenaMode()` |
-| `internal/services/template_generator/providers/gladiatorArenaProvider.go` | **new** — `PlaceArena` + placement helpers |
-| `internal/services/builders/variant_content/mainObjectBuilder.go` | added `WithTypeGladiatorArena()` |
-| `internal/services/template_generator/templateGenerator.go` | new `gladiatorProvider` field/param; calls `PlaceArena` |
-| `internal/composition/providerSets.go`, `wire_gen.go` | provider registered, injector regenerated |
-| `test/test_helpers/templateGenerator.go` | passes the new provider |
-| `internal/models/preview/previewZone.go` | `Arena bool` + `HasArena()` |
-| `internal/models/preview/previewConnection.go` | `IsGladiatorArena()` |
-| `internal/services/preview_service/previewLayoutService.go` | arena main object → `Arena`; new `getPreviewConnectionType` |
-| `internal/services/preview_service/previewGeneratorService.go` | `arenaMarkerScale`; draws the marker on arena connections |
-| `internal/services/asset_provider/assetProvider.go` | `arenaAsset`, 15 neutral names, `arena` field, `DrawArenaMarker`, arena-beats-castle switch |
+| [app/gui/constants/spellLabel.go](app/gui/constants/spellLabel.go) | `SpellNameAndSchool(sid) (name, school)` |
+| [internal/models/spawnZoneCreationRequest.go](internal/models/spawnZoneCreationRequest.go) | Request struct for `ZoneFactory.CreateSpawnZone` |
+| [internal/models/topologyNeutralZoneCreationRequest.go](internal/models/topologyNeutralZoneCreationRequest.go) | Request struct for `TopologyBase.CreateNeutralZone` |
+| internal/models/neutralZoneCreationRequest.go | Renamed from `neutralZoneCreation.go` |
+| internal/models/hubZoneCreationRequest.go | Renamed from `hubZoneCreation.go` |
+| internal/models/neutralLikeZoneCreationRequest.go | Renamed from `neutralLikeZoneCreation.go` |
 
-Uncommitted in the working tree (this window's docs work):
+**Edited (production)**
 
-| File | Change |
-| --- | --- |
-| `QUICKSTART.md` | Go 1.26.5+; "Building on Linux"; three-region window; three real tabs; real toolbar/preview controls; no footer; §5 rewritten as "Building Another Front-End"; topology list de-duplicated to a README link; troubleshooting corrected |
-| `README.md` | source tree regenerated (adds `cmd/`, `composition/`, `repositories/`, `app/gui/models/`, `tools/`); three-tab feature list; workflow control names; `config.TopologyRing`; default topology Random; `win_condition_4` "Guardian Arena"; generation-flow diagram names `templateHandler` + `GladiatorArenaProvider`; testlayoutcheck command |
-| `docs/gladiator-arena-marker.md` | correct asset path + all six arena sprites; new "How this project places and draws the arena" section |
-| `AGENTS.md` | §1 documents both modules; §4.6.1 gained an Enforcement paragraph for `cmd/testlayoutcheck`; §7 gained a Quick Reference row |
-| `.vscode/tasks.json` | new task `Go: Check test build-tag layout` |
-| `internal/composition/wire.go` | comment `AGENTS.md 4.6.2` → `4.6.3` |
-| `todo/review-opus5-08-04.md` | §2.7 and §9.1–§9.7 marked `✅ FIXED` in place; §0.2/§0.3 rows, §12 items 9 and 12, and the blockers summary updated |
+- [internal/services/zones/zoneFactory.go](internal/services/zones/zoneFactory.go) — `CreateSpawnZone` now takes `models.SpawnZoneCreationRequest`; §3.1.
+- [internal/services/zones/castleFactory.go](internal/services/zones/castleFactory.go), [internal/services/zones/zoneFactoryNeutralLike.go](internal/services/zones/zoneFactoryNeutralLike.go) — §3.1 / rename fallout.
+- [.../topology/base/topologyBase.go](internal/services/template_generator/providers/topology/base/topologyBase.go) — new `CreateClusterZone`; both wrappers take request structs.
+- [.../topology/base/topologyConnectionService.go](internal/services/template_generator/providers/topology/base/topologyConnectionService.go) — §3.1 (3 sites).
+- `.../topology/{chain,geometricHub,hub,ring,web}Topology.go` and `.../topology/positionedTopologyBuilder.go` — converted to `CreateClusterZone`; unused `linq` imports dropped from chain/positioned/ring.
+- `.../topology/tournament_variant/{balanced,chain,hub,ring}ClusterService.go` — converted to `CreateClusterZone`.
+- [internal/services/connection_editor/zoneEditorService.go](internal/services/connection_editor/zoneEditorService.go) — rename fallout.
+- [app/gui/panels/bonusesPanel.go](app/gui/panels/bonusesPanel.go), [app/gui/dialogs/bonusPickerDialog.go](app/gui/dialogs/bonusPickerDialog.go) — §3.3.
+
+**Edited (docs)**
+
+- [todo/review-opus5-08-04.md](todo/review-opus5-08-04.md) — §3.1, §3.2, §3.3, §3.4, §5.3 marked `✅ FIXED` in place; §12 item 10 marked done.
 
 ## 5. Tests added or updated
 
-All in `89d3e14` except where noted:
+**Added**
 
-- **New:** `generatorConfig/isGladiatorArenaMode_test.go`, `previewZone/hasArena_test.go`,
-  `previewConnection/isGladiatorArena_test.go`, `previewConnection/isPortal_test.go`
-  (backfill), `mainObjectBuilder/withTypeGladiatorArena_test.go`,
-  `gladiatorArenaProvider/{newGladiatorArenaProvider,common,placeArena}_test.go`
-  (11 placement tests), `assetProvider/drawArenaMarker_test.go`.
-- **Extended:** `assetProvider/common_test.go` (`renderArenaMarker`),
-  `assetProvider/drawNeutralZone_test.go` (arena sprite + castle-vs-arena precedence),
-  `previewLayoutService/buildPreviewLayout_test.go` (arena zone, arena connection,
-  proximity connection), `assetProvider/newAssetProvider_test.go`
-  (**asset-completeness guard** — every `.png` on disk must be a wired name),
-  `previewGeneratorService/createPreviewImage_test.go` (arena connection marker,
-  arena zone bubble).
+- [test/unit/app/gui/constants/spellLabel/spellNameAndSchool_test.go](test/unit/app/gui/constants/spellLabel/spellNameAndSchool_test.go) — 4 tests (known SID name, known SID school, unknown SID sentence-cased name, unknown SID generic `"Spell"`).
+- [test/unit/.../topologyBase/createClusterZone_test.go](test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createClusterZone_test.go) — 4 tests (spawn player index, spawn name, neutral plan lookup by label, hold-city win condition).
+
+**Updated**
+
+- `.../topologyBase/common_test.go` — added `newSpawnRequest` / `newNeutralRequest` builders.
+- `.../topologyBase/createSpawnZone_test.go` (7 calls), `.../topologyBase/createNeutralZone_test.go` (8 calls), `test/unit/internal/services/zones/zoneFactory/{createSpawnZone,createNeutralZone,createHubZone}_test.go` — migrated to the request structs.
 
 **Last verification run — all green:**
 
@@ -104,82 +96,105 @@ All in `89d3e14` except where noted:
 | `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
 | `go test -count=1 ./test/unit/...` | pass |
 | `go test -tags=integration_test -count=1 ./test/integration/...` | pass |
-| `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` | pass |
-| Unit coverage (`-coverpkg=./internal/...,./app/...`) | **65.3%** (baseline 65.0%) |
-| `golangci-lint-v2 run ./... --issues-exit-code=0` | **42** (40 `gochecknoglobals`, 2 `dupl`) — unchanged |
+| `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` | pass (zero snapshot diff — this is the §3.4 verification) |
+| Unit coverage `-coverpkg=./internal/...,./app/...` | **65.6%** (baseline 65.3% — improved) |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** (baseline 42; the 2 `dupl` findings are gone) |
 
 ## 6. Git status snapshot
 
-Branch: `AD/refactoring-07-21` (origin is at `bce90cd "Batch 8 Done"`).
+Branch: **`AD/refactoring-07-21`**. Last commits: `0311318 "Task 10 Resolved"`
+(owner), `b6a3cd1 "Batch 9 Done"`.
+
+**Nothing is staged.** `git status --short`:
 
 ```
- M .vscode/tasks.json
- M AGENTS.md
- M QUICKSTART.md
- M README.md
- M docs/gladiator-arena-marker.md
- M internal/composition/wire.go
+ M app/gui/dialogs/bonusPickerDialog.go
+ M app/gui/panels/bonusesPanel.go
+ D internal/models/hubZoneCreation.go
+ D internal/models/neutralLikeZoneCreation.go
+ D internal/models/neutralZoneCreation.go
+ M internal/services/connection_editor/zoneEditorService.go
+ M internal/services/template_generator/providers/topology/base/topologyBase.go
+ M internal/services/template_generator/providers/topology/base/topologyConnectionService.go
+ M internal/services/template_generator/providers/topology/chainTopology.go
+ M internal/services/template_generator/providers/topology/geometricHubTopology.go
+ M internal/services/template_generator/providers/topology/hubTopology.go
+ M internal/services/template_generator/providers/topology/positionedTopologyBuilder.go
+ M internal/services/template_generator/providers/topology/ringTopology.go
+ M internal/services/template_generator/providers/topology/tournament_variant/balancedClusterService.go
+ M internal/services/template_generator/providers/topology/tournament_variant/chainClusterService.go
+ M internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go
+ M internal/services/template_generator/providers/topology/tournament_variant/ringClusterService.go
+ M internal/services/template_generator/providers/topology/webTopology.go
+ M internal/services/zones/castleFactory.go
+ M internal/services/zones/zoneFactory.go
+ M internal/services/zones/zoneFactoryNeutralLike.go
+ M test/unit/.../topologyBase/{common,createNeutralZone,createSpawnZone}_test.go
+ M test/unit/internal/services/zones/zoneFactory/{createHubZone,createNeutralZone,createSpawnZone}_test.go
  M todo/review-opus5-08-04.md
+?? app/gui/constants/spellLabel.go
+?? internal/models/{hubZone,neutralLikeZone,neutralZone,spawnZone,topologyNeutralZone}CreationRequest.go
+?? test/unit/app/gui/constants/spellLabel/
+?? test/unit/.../topologyBase/createClusterZone_test.go
 ```
 
-Nothing staged. Local commit `89d3e14 "Batch 9-Prep Done"` (the §2.7 code) is
-unpushed. Nothing was staged or committed by the agent.
+The three ` D` + `??` pairs under `internal/models/` are the file renames (done
+with `git mv`, then `git restore --staged internal/models/` so nothing stayed
+staged).
 
-## 7. Rejections / things the owner declined
+## 7. Rejections / things not done
 
-- **Compile-checked doc example (§9.1 prevention).** Owner: *"No compile check —
-  just fix the text."* No `examples/` package and no doc test were created. The
-  snippet was type-checked once in a throwaway package with `go vet`, then deleted.
-- **Deleting the arena assets (§2.7 "remove" path).** Owner chose the most
-  ambitious option instead: make the generator emit an arena.
-- **`Proximity` visual treatment.** The enum value is now assigned, but the
-  renderer draws it like a direct connection — deliberate.
-- **`ZoneEditorService.ApplyNeutralZoneQuality` overwriting `MainObjects`.**
-  Left alone: it already drops abandoned outposts, so this is pre-existing
-  documented behaviour, not a §2.7 regression.
+- `WithGuardWeeklyIncrement(0.20)` in `zoneFactory.go` — out of §3.1's scope, a
+  genuinely different value.
+- `NewSegmentButtonWidget` was **not** folded into `newBaseButtonWidget`; it
+  uses `layout.UniformInset(constants.DefaultPaddingSmall)`, so sharing the
+  body would move pixels.
+- `bannedItemLabel` in `bonusesPanel.go` was left untouched (not part of §3.3).
+- The `if label == "" { label = spell.School }` no-op branch was dropped, not
+  ported (see §3 above).
 
 ## 8. Open questions
 
-None for Batch 9. Still open for later batches:
-
-- **§1.8** — output-directory persistence shape (`.gen.json` vs machine-local).
-- **§2.2** — how far to go extracting regeneration policy out of `app/gui/drivers/`.
+- None blocking Batch 10. Still-open owner decisions for later batches:
+  §1.1 (transactionality), §1.5 (ceilings), §1.8 (output-directory persistence
+  shape), §2.2 (regeneration-policy refactor scope). Optional leftover: §5.4
+  (`.gitignore` blanket-ignores `/*.txt`).
+- FYI: the lint baseline dropped from 42 issues to **0** during this batch. The
+  40 `gochecknoglobals` findings are no longer reported — likely a `.golangci`
+  configuration change in the owner's `0311318`. Worth a glance.
 
 ## 9. Next recommended actions
 
-1. Owner reviews and commits the seven modified doc files.
-2. **Batch 10 — Duplication cleanup PR:** §3.1 (mechanical, 15 sites), §3.3
-   (spell helper + new tests), §3.4 (button widget — verify via GUI snapshots),
-   then §3.2 + §5.3 together.
-3. **Batch 11 — Coverage PR:** §6.2 (`internal/handlers` mirrored tests, start
-   with `stateHandler` and `previewHandler`), §6.4 (`bannableItems.go` and
-   `valueOverrideSids.go`, both at 0%).
-4. **Batch 12 — Product decision:** §1.8 only (§2.7 is done).
-5. **Batch 13 — Large refactors, plan file required (AGENTS.md §4.7):** §2.1
-   (extract filesystem policy) → unblocks §2.5; then §2.2; §2.6 opportunistically.
+1. Owner reviews and commits Batch 10.
+2. **Batch 11 — Coverage PR.** §6.2 (`internal/handlers` mirrored tests,
+   starting with `stateHandler` and `previewHandler`), §6.4 (the two 0%
+   catalogues `bannableItems.go` / `valueOverrideSids.go`).
+3. **Batch 12 — Product decisions.** Only ⚠ §1.8 remains.
+4. **Batch 13 — Large refactors.** §2.1 (extract filesystem policy) → unblocks
+   §2.5; then §2.2; §2.6 opportunistically. Needs a plan file under `plans/`
+   per AGENTS.md §4.7.
 
 ## 10. Carry-forward prompt
 
 > Read `AGENTS.md` first. Hard rules, one line each: never modify `data/`,
 > `internal/entities/template/` or `internal/registry/`; keep everything
 > cross-platform (Windows + Linux, `path/filepath`, PowerShell chains with `;`);
-> every change ships with tests and must not drop coverage; durable multi-session
-> work gets a plan file under `plans/`; **never stage and never commit** — the
-> owner reviews and commits.
+> every change ships with tests and must not drop coverage; durable
+> multi-session work gets a plan file under `plans/`; **never stage and never
+> commit** — the owner reviews and commits.
 >
-> We are remediating the 46-finding review in `todo/review-opus5-08-04.md`, which
-> defines 13 PR-sized batches in §12. Findings are marked `✅ FIXED` /
-> `❌ WILL NOT FIX` **in place** in the review document — do not create a separate
-> plan file for this.
+> We are remediating the 46-finding review in `todo/review-opus5-08-04.md`,
+> which defines 13 PR-sized batches in §12. Findings are marked `✅ FIXED` /
+> `❌ WILL NOT FIX` **in place** in the review document — do not create a
+> separate plan file for this.
 >
-> Workflow for every batch, without exception: (1) ask the owner whether the batch
-> should be done at all; (2) if declined, document in the review file why it should
-> not be attempted in future; (3) ask all clarifying questions up front;
-> (4) implement; (5) rewrite `.agent/session-carry-forward.md`; (6) stop and wait
-> for owner review.
+> Workflow for every batch, without exception: (1) ask the owner whether the
+> batch should be done at all; (2) if declined, document in the review file why
+> it should not be attempted in future; (3) ask all clarifying questions up
+> front; (4) implement; (5) rewrite `.agent/session-carry-forward.md`; (6) stop
+> and wait for owner review.
 >
-> Batches 1–9 are delivered. Batch 9 (docs §9.1–§9.7 plus §2.7, the gladiator
-> arena) is complete and verified: coverage 65.3%, lint 42, every suite green;
-> the §2.7 code is committed as `89d3e14`, the doc changes are unstaged in the
-> working tree awaiting review. Next up is **Batch 10 — Duplication cleanup**.
-> See `./.agent/session-carry-forward.md` for the full handoff.
+> Batches 1–10 are done. Batch 10 (duplication cleanup: §3.1, §3.2, §3.3, §3.4,
+> §5.3) is complete and awaiting owner review — nothing is staged. Next up is
+> Batch 11 (coverage: §6.2, §6.4). Full handoff detail is in
+> `./.agent/session-carry-forward.md`.

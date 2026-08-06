@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 )
 
-func (this *ZoneFactory) createNeutralLikeZone(input models.NeutralLikeZoneCreation) entities.Zone {
+func (this *ZoneFactory) createNeutralLikeZone(input models.NeutralLikeZoneCreationRequest) entities.Zone {
 	mainObjects := this.createNeutralLikeMainObjects(input)
 	roadMainObjectCount := len(mainObjects)
 	if input.CastleStrategy == models.ZoneCastleStrategyHub {
@@ -38,7 +38,7 @@ func (this *ZoneFactory) createNeutralLikeZone(input models.NeutralLikeZoneCreat
 }
 
 func (this *ZoneFactory) createNeutralLikeMainObjects(
-	input models.NeutralLikeZoneCreation,
+	input models.NeutralLikeZoneCreationRequest,
 ) []entities.MainObject {
 	if input.CastleStrategy == models.ZoneCastleStrategyHub {
 		return this.castleFactory.CreateHubZoneCastles(input.Tuning, input.CastleCount, input.HoldCity)
@@ -58,7 +58,7 @@ func (this *ZoneFactory) createNeutralLikeMainObjects(
 }
 
 func (this *ZoneFactory) createNeutralLikeZoneBuilder(
-	input models.NeutralLikeZoneCreation,
+	input models.NeutralLikeZoneCreationRequest,
 ) *variant_content.ZoneBuilder {
 	profile := input.Profile
 	tuning := input.Tuning

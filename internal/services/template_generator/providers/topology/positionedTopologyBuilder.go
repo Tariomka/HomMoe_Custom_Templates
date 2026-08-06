@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -97,21 +97,10 @@ func (this *PositionedTopologyBuilder) createZones(
 	var zones []entities.Zone
 	for index, label := range allLabels {
 		zoneConnectionNames := connectionNames[index]
-		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
-			zones = append(zones,
-				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), zoneConnectionNames,
-					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones,
-				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(plan neutral_zone.Plan) bool { return plan.Label == label }),
-					zoneConnectionNames, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
-		}
+		playerIndex := slices.Index(playerLabels, label)
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, zoneConnectionNames, playerIndex, playerIndex >= 0,
+			label == holdCityNeutralLabel, tuning, neutralZones))
 	}
 	return zones
 }
@@ -146,7 +135,7 @@ func (this *PositionedTopologyBuilder) createConnections(
 			WithGuardZone(zoneNameFrom).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("rnd_guard_%s_%s", labelFrom, labelTo)).
 			Build())
 	}

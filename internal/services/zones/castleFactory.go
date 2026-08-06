@@ -1,6 +1,7 @@
 package zones
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -45,7 +46,7 @@ func (this *CastleFactory) CreatePlayerUnclaimedCastles(
 			WithTypeCity().
 			WithGuardChance(1).
 			WithGuardValue(guardValue).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithCastleQualityMedium().
 			WithPlacementUniform().
 			WithPlacementArgs("false", "-0.8", "3")

@@ -414,6 +414,15 @@ func FindBannableItem(sid string) (BannableItemEntry, bool) {
 	return BannableItemEntry{}, false
 }
 
+// GetBannedItemLabel returns the display name and category for a banned artifact.
+func GetBannedItemLabel(sid string) (name, category string) {
+	if item, ok := FindBannableItem(sid); ok {
+		return item.Name, item.Category
+	}
+
+	return SidToDisplayName(sid), "Misc"
+}
+
 // SidToDisplayName converts a snake_case SID (with optional _artifact suffix)
 // to a sentence-case display name. Used as a fallback for IDs not present in
 // any catalog.

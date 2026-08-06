@@ -129,7 +129,7 @@ func (this *BonusesPanel) getBannedItemsWidgets(theme *material.Theme) []layout.
 	}
 
 	for i, sid := range this.bannedItems {
-		name, category := bannedItemLabel(sid)
+		name, category := constants.GetBannedItemLabel(sid)
 		itemRows = append(itemRows,
 			this.getEntryRowWidget(theme, banCategoryColor(category), name, category, &this.itemRemoveBtns[i]))
 	}
@@ -145,7 +145,7 @@ func (this *BonusesPanel) getBannedSpellsWidgets(theme *material.Theme) []layout
 	}
 
 	for i, sid := range this.bannedMagics {
-		name, school := bannedSpellLabel(sid)
+		name, school := constants.GetSpellNameAndSchool(sid)
 		spellRows = append(spellRows, this.getEntryRowWidget(theme,
 			constants.GetSpellSchoolColorFromDisplayName(school), name, school, &this.magicRemoveBtns[i]),
 		)
@@ -282,16 +282,29 @@ func bonusDisplayName(entry config.BonusEntry) string {
 	case config.BonusTownPortalFree:
 		return "Town Portal (free)"
 	case config.BonusSpell:
-		if entry.Param2 == "1" {
-			return "Spell (free): " + spellLabel(entry.Param)
+		label := ""
+		if spell, ok := constants.FindSpell(entry.Param); ok {
+			label = spell.Name
+		} else {
+			label = constants.SidToDisplayName(entry.Param)
 		}
-		return "Spell: " + spellLabel(entry.Param)
+		if entry.Param2 == "1" {
+			return "Spell (free): " + label
+		}
+
+		return "Spell: " + label
 	case config.BonusUnitMultiplier:
 		return "Unit multiplier x" + entry.Param
 	case config.BonusMovementBonus:
 		return "Movement bonus +" + entry.Param
 	case config.BonusStartingItem:
-		return "Starting item: " + itemLabel(entry.Param)
+		label := ""
+		if item, ok := constants.FindBannableItem(entry.Param); ok {
+			label = item.Name
+		} else {
+			label = constants.SidToDisplayName(entry.Param)
+		}
+		return "Starting item: " + label
 	case config.BonusStartingGold:
 		return "Starting gold: " + entry.Param
 	case config.BonusStartingGems:
@@ -304,8 +317,9 @@ func bonusDisplayName(entry config.BonusEntry) string {
 		return "Starting wood: " + entry.Param
 	case config.BonusStartingOre:
 		return "Starting ore: " + entry.Param
+	default:
+		return ""
 	}
-	return ""
 }
 
 // bonusReceiverLabel is the dim trailing text; hidden for resource bonuses.
@@ -352,48 +366,6 @@ func banCategoryColor(category string) color.NRGBA {
 		return themes.ColorsDotCategories.Set
 	}
 	return themes.ColorsDotCategories.Default
-}
-
-// spellLabel resolves a spell SID to its display name, with a generic
-// sentence-case fallback for unknown SIDs.
-func spellLabel(sid string) string {
-	if spell, ok := constants.FindSpell(sid); ok {
-		return spell.Name
-	}
-
-	return constants.SidToDisplayName(sid)
-}
-
-// itemLabel resolves an artifact SID to its display name, with a generic
-// sentence-case fallback for unknown SIDs.
-func itemLabel(sid string) string {
-	if item, ok := constants.FindBannableItem(sid); ok {
-		return item.Name
-	}
-
-	return constants.SidToDisplayName(sid)
-}
-
-// bannedItemLabel returns the display name and category for a banned artifact.
-func bannedItemLabel(sid string) (name, category string) {
-	if item, ok := constants.FindBannableItem(sid); ok {
-		return item.Name, item.Category
-	}
-
-	return constants.SidToDisplayName(sid), "Misc"
-}
-
-// bannedSpellLabel returns the display name and school label for a banned spell.
-func bannedSpellLabel(sid string) (name, school string) {
-	if spell, ok := constants.FindSpell(sid); ok {
-		label := constants.GetSpellSchoolDisplayName(spell.School)
-		if label == "" {
-			label = spell.School
-		}
-		return spell.Name, label
-	}
-
-	return constants.SidToDisplayName(sid), "Spell"
 }
 
 // ── small helpers ───────────────────────────────────────────────────────────

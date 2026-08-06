@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -132,10 +133,8 @@ func (this *SharedWebTopologyService) createZones(
 		neutralConnNames = linq.FromSlice(append(neutralConnNames, neutralSpokes[label]...)).Distinct().ToSlice()
 		zonePlan := linq.FromSlice(neutralZones).
 			FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label })
-		zone := this.CreateNeutralZone(
-			zonePlan, neutralConnNames, configuration.ZoneConfiguration.NeutralZoneSize,
-			tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning,
-			label == holdCityNeutralLabel)
+		zone := this.CreateClusterZone(
+			configuration, label, neutralConnNames, 0, false, label == holdCityNeutralLabel, tuning, neutralZones)
 		if zonePlan.CastleCount == 0 && tuning.AbandonedOutpostCount == 0 {
 			zone.Roads = this.CreateConnectorZoneRoads(neutralConnNames, configuration.GenerateRoads)
 		}
@@ -143,12 +142,8 @@ func (this *SharedWebTopologyService) createZones(
 	}
 
 	for i, label := range playerLabels {
-		zones = append(zones,
-			this.CreateSpawnZone(
-				label, fmt.Sprintf("Player%d", i+1), playerSpokes[label],
-				configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-				configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-				configuration.GenerateRoads, tuning))
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, playerSpokes[label], i, true, false, tuning, neutralZones))
 	}
 
 	return zones
@@ -174,7 +169,7 @@ func (this *SharedWebTopologyService) createConnections(
 				WithGuardZone(constants.NeutralZonePrefix+nextLabel).
 				WithSimTurnSquad().
 				WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
-				WithGuardWeeklyIncrement(0.15).
+				WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 				WithGuardMatchGroup(fmt.Sprintf("web_guard_%s_%s", label, nextLabel)).
 				Build())
 		}
@@ -195,7 +190,7 @@ func (this *SharedWebTopologyService) createConnections(
 			WithGuardZone(constants.NeutralZonePrefix+label).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("nring_guard_%s_%s", label, nextLabel)).
 			Build())
 	}

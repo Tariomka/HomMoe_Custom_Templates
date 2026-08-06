@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -101,19 +102,15 @@ func (this *GeometricHubTopologyService) createZones(
 	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
 
 	for index, label := range playerLabels {
-		zone := this.CreateSpawnZone(
-			label, fmt.Sprintf("Player%d", index+1), connectionNames[label],
-			configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-			configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-			configuration.GenerateRoads, tuning)
+		zone := this.CreateClusterZone(
+			configuration, label, connectionNames[label], index, true, false, tuning, neutralZones)
 		position := layout.positions[label]
 		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
 		zones = append(zones, zone)
 	}
 	for _, plan := range neutralZones {
-		zone := this.CreateNeutralZone(
-			plan, connectionNames[plan.Label], configuration.ZoneConfiguration.NeutralZoneSize,
-			tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false)
+		zone := this.CreateClusterZone(
+			configuration, plan.Label, connectionNames[plan.Label], 0, false, false, tuning, neutralZones)
 		position := layout.positions[plan.Label]
 		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
 		zones = append(zones, zone)
@@ -137,7 +134,7 @@ func (this *GeometricHubTopologyService) createConnections(
 			WithGuardZone(zoneFrom).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(edge[0], edge[1], playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("geohub_guard_%s_%s", edge[0], edge[1])).
 			Build())
 	}
@@ -159,7 +156,7 @@ func (this *GeometricHubTopologyService) createConnections(
 			WithPortalPlacementRulesTo(portalRule).
 			WithRoad(true).
 			WithGuardValue(this.GetBorderGuardValue(guardAnchor, guardLabel, playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			Build())
 	}
 	return connections

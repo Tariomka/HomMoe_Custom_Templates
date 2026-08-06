@@ -3,6 +3,7 @@ package tournament_variant
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -71,21 +72,8 @@ func (this *HubClusterService) createZones(
 
 	for index, label := range spokeLabels {
 		connectionNames := []string{spokeConnNames[index]}
-		if index == 0 {
-			zones = append(zones,
-				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), connectionNames,
-					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones,
-				this.CreateNeutralZone(
-					linq.FromSlice(allNeutralZonePlans).
-						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
-					connectionNames, configuration.ZoneConfiguration.NeutralZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
-		}
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, connectionNames, playerIndex, index == 0, false, tuning, allNeutralZonePlans))
 	}
 	return zones
 }
@@ -104,7 +92,7 @@ func (this *HubClusterService) createConnections(
 			WithGuardZone(hubName).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(playerLabel, spokeLabel, []string{playerLabel}, allNeutralZonePlans, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("tourney_hub_guard_%s_%s", playerLabel, spokeLabel))
 
 		if index != 0 {

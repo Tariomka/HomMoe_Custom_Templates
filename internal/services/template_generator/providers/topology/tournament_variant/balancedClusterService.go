@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
@@ -276,21 +277,8 @@ func (this *BalancedClusterService) createZones(
 	var zones []entities.Zone
 	for index, label := range orderedLabels {
 		myConns := connectionNames[index]
-		if label == playerLabel {
-			zones = append(zones,
-				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
-					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones,
-				this.CreateNeutralZone(
-					linq.FromSlice(allNeutralZonePlans).
-						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
-					myConns, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning, false))
-		}
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, myConns, playerIndex, label == playerLabel, false, tuning, allNeutralZonePlans))
 	}
 	return zones
 }
@@ -331,7 +319,7 @@ func (this *BalancedClusterService) createConnections(
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(
 				labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo)).
 			Build())
 	}

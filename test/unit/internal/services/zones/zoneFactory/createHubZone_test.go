@@ -11,7 +11,7 @@ func TestWhenTournamentHubIsCreated_PreservesExplicitName(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	factory := newZoneFactory()
-	input := models.HubZoneCreation{
+	input := models.HubZoneCreationRequest{
 		Name:               "Hub-B",
 		Size:               1,
 		GuardRandomization: 0.05,

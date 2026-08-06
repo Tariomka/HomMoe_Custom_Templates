@@ -391,7 +391,7 @@ func (this *BonusPickerDialog) getSpellListWidget(theme *material.Theme) layout.
 
 func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index int) layout.Widget {
 	sid := this.selectedSpells[index]
-	name, school := spellNameAndSchool(sid)
+	name, school := constants.GetSpellNameAndSchool(sid)
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: unit.Dp(2), Bottom: unit.Dp(2)}.
 			Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -411,19 +411,6 @@ func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index in
 				)
 			})
 	}
-}
-
-// spellNameAndSchool resolves a spell SID to its display name and school
-// label, with a sentence-case fallback for unknown SIDs.
-func spellNameAndSchool(sid string) (name, school string) {
-	if spell, ok := constants.FindSpell(sid); ok {
-		label := constants.GetSpellSchoolDisplayName(spell.School)
-		if label == "" {
-			label = spell.School
-		}
-		return spell.Name, label
-	}
-	return constants.SidToDisplayName(sid), "Spell"
 }
 
 func spellCountLabel(count int) string {

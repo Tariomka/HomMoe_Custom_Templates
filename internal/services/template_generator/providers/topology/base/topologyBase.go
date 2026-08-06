@@ -1,11 +1,14 @@
 package base
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -67,49 +70,61 @@ func (this *TopologyBase) CreateVariant(
 		Build()
 }
 
-func (this *TopologyBase) CreateSpawnZone(
-	label, playerName string,
+// CreateClusterZone builds either the player's spawn zone or a neutral zone for
+// the same label, which is the choice every topology service makes per zone.
+func (this *TopologyBase) CreateClusterZone(
+	configuration config.GeneratorConfig,
+	label string,
 	connectionNames []string,
-	castleCount int,
-	matchFactions bool,
-	zoneSize float64,
-	footholdCount int,
-	generateRoads bool,
-	tuning models.GenerationTuning) entities.Zone {
-	return this.zoneFactory.CreateSpawnZone(
-		label,
-		playerName,
-		connectionNames,
-		castleCount,
-		matchFactions,
-		zoneSize,
-		footholdCount,
-		generateRoads,
-		tuning,
-	)
+	playerIndex int,
+	isSpawn bool,
+	isHoldCity bool,
+	tuning models.GenerationTuning,
+	allNeutralZonePlans neutral_zone.Plans) entities.Zone {
+	if isSpawn {
+		return this.CreateSpawnZone(models.SpawnZoneCreationRequest{
+			Label:           label,
+			PlayerName:      fmt.Sprintf("Player%d", playerIndex+1),
+			ConnectionNames: connectionNames,
+			CastleCount:     configuration.ZoneConfiguration.PlayerZoneCastles,
+			MatchFactions:   configuration.MatchPlayerCastleFactions,
+			Size:            configuration.ZoneConfiguration.PlayerZoneSize,
+			FootholdCount:   tuning.RemoteFootholdCount,
+			GenerateRoads:   configuration.GenerateRoads,
+			Tuning:          tuning,
+		})
+	}
+
+	return this.CreateNeutralZone(models.TopologyNeutralZoneCreationRequest{
+		Plan: linq.FromSlice(allNeutralZonePlans).
+			FirstOrDefault(func(plan neutral_zone.Plan) bool { return plan.Label == label }),
+		ConnectionNames: connectionNames,
+		Size:            configuration.ZoneConfiguration.NeutralZoneSize,
+		FootholdCount:   tuning.RemoteFootholdCount,
+		GenerateRoads:   configuration.GenerateRoads,
+		HoldCity:        isHoldCity,
+		Tuning:          tuning,
+	})
 }
 
-func (this *TopologyBase) CreateNeutralZone(
-	plan neutral_zone.Plan,
-	connectionNames []string,
-	zoneSize float64,
-	footholdCount int,
-	generateRoads bool,
-	tuning models.GenerationTuning,
-	isHoldCity bool) entities.Zone {
-	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreation{
-		Name:                 constants.NeutralZonePrefix + plan.Label,
-		Quality:              plan.Quality,
-		Size:                 zoneSize,
-		ConnectionNames:      connectionNames,
-		MandatoryContentName: "mandatory_content_neutral_" + plan.Label,
-		CastleCount:          plan.CastleCount,
-		HoldCity:             isHoldCity,
-		OutpostCount:         tuning.AbandonedOutpostCount,
-		FootholdCount:        footholdCount,
-		GuardRandomization:   tuning.GuardRandomization,
-		GenerateRoads:        generateRoads,
-		Tuning:               tuning,
+func (this *TopologyBase) CreateSpawnZone(input models.SpawnZoneCreationRequest) entities.Zone {
+	return this.zoneFactory.CreateSpawnZone(input)
+}
+
+func (this *TopologyBase) CreateNeutralZone(input models.TopologyNeutralZoneCreationRequest) entities.Zone {
+	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreationRequest{
+		Name:                 constants.NeutralZonePrefix + input.Plan.Label,
+		Quality:              input.Plan.Quality,
+		Size:                 input.Size,
+		ConnectionNames:      input.ConnectionNames,
+		MandatoryContentName: "mandatory_content_neutral_" + input.Plan.Label,
+		CastleCount:          input.Plan.CastleCount,
+		HoldCity:             input.HoldCity,
+		OutpostCount:         input.Tuning.AbandonedOutpostCount,
+		FootholdCount:        input.FootholdCount,
+		GuardRandomization:   input.Tuning.GuardRandomization,
+		GenerateRoads:        input.GenerateRoads,
+		Tuning:               input.Tuning,
 	})
 }
 
@@ -122,7 +137,7 @@ func (this *TopologyBase) CreateHubZone(
 	castleCount int,
 	generateRoads bool,
 	mandatoryContentName string) entities.Zone {
-	return this.zoneFactory.CreateHubZone(models.HubZoneCreation{
+	return this.zoneFactory.CreateHubZone(models.HubZoneCreationRequest{
 		Name:                 name,
 		Size:                 size,
 		ConnectionNames:      connectionNames,

@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
@@ -61,7 +62,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 			WithPortalPlacementRulesTo(rule).
 			WithRoad(true).
 			WithGuardValue(tuning.ScaleByBorderGuardStrength(25000)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			Build())
 	}
 	return connections
@@ -113,7 +114,7 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 			WithGuardZone(zoneName).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup("fallback_guard_"+fallbackName).
 			Build())
 		connectionNames[fallbackName] = true
@@ -214,7 +215,7 @@ func (this *TopologyConnectionService) createBridgeConnection(
 		WithGuardZone(zoneFrom).
 		WithSimTurnSquad().
 		WithGuardValue(this.GetBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)).
-		WithGuardWeeklyIncrement(0.15).
+		WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 		WithGuardMatchGroup(fmt.Sprintf("bridge_guard_%s-%s", labelA, labelB)).
 		Build()
 }

@@ -3,6 +3,7 @@ package tournament_variant
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
@@ -97,19 +98,8 @@ func (this *RingClusterService) createZones(
 				myConns = append(myConns, name)
 			}
 		}
-		if index == 0 {
-			zones = append(zones, this.CreateSpawnZone(
-				label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
-				configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-				configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-				configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones, this.CreateNeutralZone(
-				linq.FromSlice(allNeutralZonePlans).
-					FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
-				myConns, configuration.ZoneConfiguration.NeutralZoneSize,
-				tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false))
-		}
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, myConns, playerIndex, index == 0, false, tuning, allNeutralZonePlans))
 	}
 	return zones
 }
@@ -119,10 +109,8 @@ func (this *RingClusterService) createSinglePlayerZone(
 	playerLabel string,
 	playerIndex int,
 	tuning models.GenerationTuning) entities.Zone {
-	return this.CreateSpawnZone(
-		playerLabel, fmt.Sprintf("Player%d", playerIndex+1), nil, configuration.ZoneConfiguration.PlayerZoneCastles,
-		configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.PlayerZoneSize,
-		tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning)
+	return this.CreateClusterZone(
+		configuration, playerLabel, nil, playerIndex, true, false, tuning, nil)
 }
 
 func (this *RingClusterService) createConnections(
@@ -143,7 +131,7 @@ func (this *RingClusterService) createConnections(
 			WithConnectionTypeDirect().
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("tourney_ring_guard_%s_%s", labelFrom, labelTo))
 
 		if currentIndex != 0 {

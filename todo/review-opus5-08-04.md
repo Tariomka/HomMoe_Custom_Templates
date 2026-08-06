@@ -1153,7 +1153,14 @@ caught this).
 
 ## 3. Duplicate code
 
-### 3.1 🟠 The standard guard-weekly-increment is hard-coded at fifteen production call sites
+### 3.1 ✅ FIXED 🟠 The standard guard-weekly-increment is hard-coded at fifteen production call sites
+
+**Fixed 2026-08-06 (Batch 10).** All fifteen occurrences of
+`WithGuardWeeklyIncrement(0.15)` across twelve files now read
+`WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard)`.
+The single `WithGuardWeeklyIncrement(0.20)` in
+[zoneFactory.go](../internal/services/zones/zoneFactory.go) was deliberately left
+alone — it is a distinct value, not the standard one, and was out of scope.
 
 **Evidence.** The value is already modelled —
 [guardWeeklyIncrement.go](../internal/common/common_connections/guardWeeklyIncrement.go#L13):
@@ -1198,7 +1205,23 @@ and must continue to pass unchanged — that is the verification.
 
 ---
 
-### 3.2 🟡 The four tournament cluster services duplicate zone construction verbatim
+### 3.2 ✅ FIXED 🟡 The four tournament cluster services duplicate zone construction verbatim
+
+**Fixed 2026-08-06 (Batch 10).** The owner chose to extend the fix past the four
+tournament cluster services to **all ten** duplicated sites. The shared helper is
+`TopologyBase.CreateClusterZone(configuration, label, connectionNames,
+playerIndex, isSpawn, isHoldCity, tuning, allNeutralZonePlans)` in
+[topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go);
+it performs the spawn/neutral choice, the `Player%d` naming and the
+`FirstOrDefault` plan lookup that every call site previously repeated.
+
+Converted call sites: `ringClusterService.go` (2), `hubClusterService.go`,
+`chainClusterService.go`, `balancedClusterService.go`, `chainTopology.go`,
+`geometricHubTopology.go` (2), `hubTopology.go`, `positionedTopologyBuilder.go`,
+`ringTopology.go`, `webTopology.go` (2). The now-unused `linq` imports in
+`chainTopology.go`, `positionedTopologyBuilder.go` and `ringTopology.go` were
+removed. Covered by
+[createClusterZone_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createClusterZone_test.go).
 
 **Evidence.** [ringClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/ringClusterService.go#L97-L108):
 
@@ -1250,7 +1273,20 @@ neutral branches.
 
 ---
 
-### 3.3 🟡 The spell-label helper exists twice, verbatim, under two names
+### 3.3 ✅ FIXED 🟡 The spell-label helper exists twice, verbatim, under two names
+
+**Fixed 2026-08-06 (Batch 10).** Both copies (`bannedSpellLabel` in
+[bonusesPanel.go](../app/gui/panels/bonusesPanel.go) and `spellNameAndSchool` in
+[bonusPickerDialog.go](../app/gui/dialogs/bonusPickerDialog.go)) were deleted in
+favour of a single exported `constants.SpellNameAndSchool` in the new
+[spellLabel.go](../app/gui/constants/spellLabel.go), with four unit tests in
+[spellNameAndSchool_test.go](../test/unit/app/gui/constants/spellLabel/spellNameAndSchool_test.go).
+
+**Behaviour note.** Both originals ended with `if label == "" { label =
+spell.School }`. That branch is provably a no-op — `GetSpellSchoolDisplayName`
+returns one of five non-empty constants or the raw `schoolType`, so `label` is
+empty only when `spell.School` is empty, in which case the assignment changes
+nothing. It was dropped rather than carried forward as an uncoverable branch.
 
 **Evidence.** [bonusesPanel.go](../app/gui/panels/bonusesPanel.go#L386-L397):
 
@@ -1300,7 +1336,20 @@ falls back to the raw school; unknown SID returns sentence-cased name and
 
 ---
 
-### 3.4 🟡 `buttonWidget.go` duplicates its render body (the repository's only `dupl` findings)
+### 3.4 ✅ FIXED 🟡 `buttonWidget.go` duplicates its render body (the repository's only `dupl` findings)
+
+**Fixed by the owner in `0311318`, verified 2026-08-06 (Batch 10).**
+[buttonWidget.go](../app/gui/widgets/buttonWidget.go) now has a private
+`newBaseButtonWidget(label, labelWidget, backgroundColor, borderColor)` plus
+`newButtonInset()`; `NewButtonWidget` and `NewToggleButtonWidget` delegate to it.
+`NewSegmentButtonWidget` was deliberately **not** folded in — it uses
+`layout.UniformInset(constants.DefaultPaddingSmall)`, a different inset, so
+sharing the body would move pixels.
+
+Verification was the headless GUI snapshot suite
+(`go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...`),
+which passes with zero snapshot diff. `golangci-lint-v2 run ./...` now reports
+**0 issues** — the two `dupl` findings are gone.
 
 **Evidence.** Both current `dupl` issues:
 
@@ -1549,7 +1598,24 @@ only consumer of the debounce pointer.
 
 ---
 
-### 5.3 🟡 Nine-argument positional constructor calls in the cluster/topology services
+### 5.3 ✅ FIXED 🟡 Nine-argument positional constructor calls in the cluster/topology services
+
+**Fixed 2026-08-06 (Batch 10).** Both offending signatures now take a request
+struct:
+
+- `ZoneFactory.CreateSpawnZone(models.SpawnZoneCreationRequest)` — new
+  [spawnZoneCreationRequest.go](../internal/models/spawnZoneCreationRequest.go).
+- `TopologyBase.CreateNeutralZone(models.TopologyNeutralZoneCreationRequest)` —
+  new [topologyNeutralZoneCreationRequest.go](../internal/models/topologyNeutralZoneCreationRequest.go).
+
+For naming consistency the pre-existing creation structs were renamed to the
+same `...CreationRequest` family, with their files renamed per AGENTS.md §4.1:
+`NeutralZoneCreation` → `NeutralZoneCreationRequest`, `HubZoneCreation` →
+`HubZoneCreationRequest`, `NeutralLikeZoneCreation` →
+`NeutralLikeZoneCreationRequest`.
+
+Most call sites disappeared entirely because §3.2's `CreateClusterZone` now
+owns them; both wrappers stay exported and keep their unit tests.
 
 **Evidence.** `CreateSpawnZone` is called with nine positional arguments at four
 sites (see §3.2), `CreateNeutralZone` with eight; both interleave `string`,
@@ -2548,9 +2614,13 @@ permanently — mark them `✅ FIXED` in place as they land.
    example for §9.1: "no compile check — just fix the text". Repository memory
    updated in the same batch.
 
-10. **Duplication cleanup PR.** §3.1 (mechanical, 15 sites), §3.3 (spell helper
-    + its new tests), §3.4 (button widget — verify via GUI snapshots), then
-    §3.2 + §5.3 together.
+10. **Duplication cleanup PR.** ✅ FIXED (2026-08-06)
+    §3.1 (15 sites → `common_connections.GetGuardWeeklyIncrements().Standard`),
+    §3.3 (`constants.SpellNameAndSchool` + 4 tests), §3.4 (verified by the owner's
+    `newBaseButtonWidget`, GUI snapshots clean, `dupl` findings gone), and
+    §3.2 + §5.3 together: the `...CreationRequest` struct family plus
+    `TopologyBase.CreateClusterZone`, applied to **all ten** duplicated sites
+    rather than only the four tournament cluster services (owner decision).
 
 11. **Coverage PR.** §6.2 (`internal/handlers` mirrored tests — start with
     `stateHandler` and `previewHandler`), §6.4 (the two catalogues).

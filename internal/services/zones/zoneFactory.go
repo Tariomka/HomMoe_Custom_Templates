@@ -25,39 +25,33 @@ func NewZoneFactory(castleFactory *CastleFactory, roadFactory *RoadFactory) *Zon
 	}
 }
 
-func (this *ZoneFactory) CreateSpawnZone(
-	label, playerName string,
-	connectionNames []string,
-	castleCount int,
-	matchFactions bool,
-	zoneSize float64,
-	footholdCount int,
-	generateRoads bool,
-	tuning models.GenerationTuning,
-) entities.Zone {
+func (this *ZoneFactory) CreateSpawnZone(input models.SpawnZoneCreationRequest) entities.Zone {
 	mainObjects := []entities.MainObject{
 		this.castleFactory.createPlayerSpawnCastle(
-			playerName,
-			tuning.ScaleByNeutralGuardStrength(5000),
+			input.PlayerName,
+			input.Tuning.ScaleByNeutralGuardStrength(5000),
 		),
 	}
 	mainObjects = append(mainObjects,
-		this.castleFactory.CreatePlayerOwnedCastles(matchFactions, playerName, tuning.PlayerOwnedCastles)...)
+		this.castleFactory.CreatePlayerOwnedCastles(
+			input.MatchFactions, input.PlayerName, input.Tuning.PlayerOwnedCastles)...)
 	mainObjects = append(mainObjects,
 		this.castleFactory.CreatePlayerUnclaimedCastles(
-			matchFactions,
-			tuning.ScaleByNeutralGuardStrength(5000),
-			castleCount,
+			input.MatchFactions,
+			input.Tuning.ScaleByNeutralGuardStrength(5000),
+			input.CastleCount,
 		)...)
 
 	roadMainObjectCount := 0
-	if castleCount+tuning.PlayerOwnedCastles > 0 {
+	if input.CastleCount+input.Tuning.PlayerOwnedCastles > 0 {
 		roadMainObjectCount = len(mainObjects)
 	}
 
+	tuning := input.Tuning
+
 	return variant_content.NewZoneBuilder().
-		WithName(constants.PlayerZonePrefix + label).
-		WithSize(normalizeZoneSize(zoneSize)).
+		WithName(constants.PlayerZonePrefix + input.Label).
+		WithSize(normalizeZoneSize(input.Size)).
 		WithLayoutSpawns().
 		WithGuardCutoffValue(2000).
 		WithGuardRandomization(tuning.GuardRandomization).
@@ -68,7 +62,7 @@ func (this *ZoneFactory) CreateSpawnZone(
 		WithGuardedContentPool(registry.GetGuardedContentPoolT2List()).
 		WithUnguardedContentPool(registry.GetUnguardedContentPoolT2List()).
 		WithResourcesContentPool([]string{registry.GetResourcesContentPoolValues().StartZonePoor}).
-		WithMandatoryContent("mandatory_content_side_" + label).
+		WithMandatoryContent("mandatory_content_side_" + input.Label).
 		WithContentCountLimits(buildSideContentLimits()).
 		WithGuardedContentValue(tuning.ScaleByStructureDensity(200000 * tuning.ContentScale)).
 		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(2000 * math.Sqrt(tuning.ContentScale))).
@@ -80,19 +74,19 @@ func (this *ZoneFactory) CreateSpawnZone(
 		WithBiomeMatchMainObject("0").
 		WithCrossroadsPosition(0).
 		WithRoads(this.roadFactory.CreateOuterZoneRoads(
-			connectionNames,
+			input.ConnectionNames,
 			roadMainObjectCount,
-			footholdCount,
-			generateRoads,
+			input.FootholdCount,
+			input.GenerateRoads,
 		)).
 		Build()
 }
 
-func (this *ZoneFactory) CreateNeutralZone(input models.NeutralZoneCreation) entities.Zone {
+func (this *ZoneFactory) CreateNeutralZone(input models.NeutralZoneCreationRequest) entities.Zone {
 	if input.HoldCity && input.CastleCount < 1 {
 		input.CastleCount = 1
 	}
-	return this.createNeutralLikeZone(models.NeutralLikeZoneCreation{
+	return this.createNeutralLikeZone(models.NeutralLikeZoneCreationRequest{
 		Name:                 input.Name,
 		Profile:              common_zones.GetNeutralZoneProfile(input.Quality),
 		Size:                 input.Size,
@@ -110,11 +104,11 @@ func (this *ZoneFactory) CreateNeutralZone(input models.NeutralZoneCreation) ent
 	})
 }
 
-func (this *ZoneFactory) CreateHubZone(input models.HubZoneCreation) entities.Zone {
+func (this *ZoneFactory) CreateHubZone(input models.HubZoneCreationRequest) entities.Zone {
 	if input.HoldCity && input.CastleCount < 1 {
 		input.CastleCount = 1
 	}
-	return this.createNeutralLikeZone(models.NeutralLikeZoneCreation{
+	return this.createNeutralLikeZone(models.NeutralLikeZoneCreationRequest{
 		Name:                 input.Name,
 		Profile:              common_zones.GetNeutralZoneProfile(neutral_zone.QualityHighest),
 		Size:                 input.Size,

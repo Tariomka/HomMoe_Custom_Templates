@@ -13,7 +13,7 @@ func TestWhenNeutralZoneIsCreated_PreservesExplicitName(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	factory := newZoneFactory()
-	input := models.NeutralZoneCreation{
+	input := models.NeutralZoneCreationRequest{
 		Name:               "Neutral-Q",
 		Quality:            neutral_zone.QualityMedium,
 		Size:               1,
@@ -50,7 +50,7 @@ func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
 			t.Parallel()
 			// Arrange
 			factory := newZoneFactory()
-			input := models.NeutralZoneCreation{
+			input := models.NeutralZoneCreationRequest{
 				Name:    "Neutral-Q",
 				Quality: neutral_zone.QualityMedium,
 				Size:    testCase.zoneSize,
