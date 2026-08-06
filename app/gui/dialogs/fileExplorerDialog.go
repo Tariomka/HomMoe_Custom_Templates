@@ -1,13 +1,9 @@
 package dialogs
 
 import (
+	"errors"
 	"fmt"
 	"image"
-	"os"
-	"path/filepath"
-	"runtime"
-	"slices"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -20,7 +16,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	internal_constants "github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
 // fileDialogMode selects which task the explorer performs.
@@ -37,13 +35,6 @@ const (
 // recognizable double extension.
 const saveFileSuffix = ".gen.json"
 
-// fileEntry is one selectable row in the listing.
-type fileEntry struct {
-	name  string
-	path  string
-	isDir bool
-}
-
 // FileExplorerDialog is a self-contained, cross-platform file/folder picker
 // rendered as a modal by the DialogHost. It replaces the OS-native pickers
 // (gioui.org/x/explorer, PowerShell folder dialog, xdg-open) so behavior is
@@ -55,6 +46,10 @@ type fileEntry struct {
 // dialog then closes by returning done=true from Body. There is no blocking and
 // there are no goroutines. Implements interfaces.IDialog structurally.
 type FileExplorerDialog struct {
+	// fileSystem is the only route to the disk; the dialog itself performs no
+	// path arithmetic and never imports os or path/filepath.
+	fileSystem handler_interfaces.IFileSystemHandler
+
 	mode  fileDialogMode
 	title string
 
@@ -62,10 +57,10 @@ type FileExplorerDialog struct {
 	// (case-insensitive suffix match). Empty means "all files".
 	filterSuffixes []string
 
-	currentDir string      // "" => Windows drive-list view ("This PC")
-	entries    []fileEntry // cached listing for currentDir; rebuilt only on navigation
-	listErr    string      // inline read error; the dialog never panics
-	showHidden bool        // when false, hidden/system entries are filtered out
+	currentDir string                  // "" => Windows drive-list view ("This PC")
+	entries    []models.DirectoryEntry // cached listing for currentDir; rebuilt only on navigation
+	listErr    string                  // inline read error; the dialog never panics
+	showHidden bool                    // when false, hidden/system entries are filtered out
 
 	selectedPath string // modeOpenFile: the highlighted file
 
@@ -103,11 +98,15 @@ type FileExplorerDialog struct {
 	onSave func(path string)
 }
 
-func newFileExplorerDialog(mode fileDialogMode, title string) *FileExplorerDialog {
+func newFileExplorerDialog(
+	fileSystem handler_interfaces.IFileSystemHandler,
+	mode fileDialogMode,
+	title string) *FileExplorerDialog {
 	dialog := &FileExplorerDialog{
-		mode:      mode,
-		title:     title,
-		rowClicks: map[string]*widget.Clickable{},
+		fileSystem: fileSystem,
+		mode:       mode,
+		title:      title,
+		rowClicks:  map[string]*widget.Clickable{},
 	}
 	dialog.list.Axis = layout.Vertical
 	dialog.filenameEd.SingleLine = true
@@ -119,11 +118,15 @@ func newFileExplorerDialog(mode fileDialogMode, title string) *FileExplorerDialo
 // NewOpenFileDialog builds a single-file picker starting at initialDir. Only
 // files whose name ends with one of filterSuffixes (case-insensitive) are shown;
 // pass nil to list every file. onPick receives the chosen absolute file path.
-func NewOpenFileDialog(initialDir string, filterSuffixes []string, onPick func(path string)) *FileExplorerDialog {
-	dialog := newFileExplorerDialog(modeOpenFile, "Open File")
+func NewOpenFileDialog(
+	fileSystem handler_interfaces.IFileSystemHandler,
+	initialDir string,
+	filterSuffixes []string,
+	onPick func(path string)) *FileExplorerDialog {
+	dialog := newFileExplorerDialog(fileSystem, modeOpenFile, "Open File")
 	dialog.filterSuffixes = filterSuffixes
 	dialog.onPick = onPick
-	dialog.loadDir(resolveInitialDir(initialDir))
+	dialog.loadDir(fileSystem.ResolveStartDirectory(initialDir))
 	return dialog
 }
 
@@ -131,28 +134,36 @@ func NewOpenFileDialog(initialDir string, filterSuffixes []string, onPick func(p
 // the filename field prefilled to defaultName. onSave receives the chosen
 // absolute path (with a guaranteed .gen.json suffix) after any overwrite
 // confirmation.
-func NewSaveFileDialog(initialDir, defaultName string, onSave func(path string)) *FileExplorerDialog {
-	dialog := newFileExplorerDialog(modeSaveFile, "Save File")
+func NewSaveFileDialog(
+	fileSystem handler_interfaces.IFileSystemHandler,
+	initialDir, defaultName string,
+	onSave func(path string)) *FileExplorerDialog {
+	dialog := newFileExplorerDialog(fileSystem, modeSaveFile, "Save File")
 	dialog.onSave = onSave
 	dialog.filenameEd.SetText(defaultName)
-	dialog.loadDir(resolveInitialDir(initialDir))
+	dialog.loadDir(fileSystem.ResolveStartDirectory(initialDir))
 	return dialog
 }
 
 // NewPickFolderDialog builds a single-folder picker starting at initialDir.
 // onPick receives the directory the user navigated into and confirmed.
-func NewPickFolderDialog(initialDir string, onPick func(dir string)) *FileExplorerDialog {
-	dialog := newFileExplorerDialog(modePickFolder, "Select Folder")
+func NewPickFolderDialog(
+	fileSystem handler_interfaces.IFileSystemHandler,
+	initialDir string,
+	onPick func(dir string)) *FileExplorerDialog {
+	dialog := newFileExplorerDialog(fileSystem, modePickFolder, "Select Folder")
 	dialog.onPick = onPick
-	dialog.loadDir(resolveInitialDir(initialDir))
+	dialog.loadDir(fileSystem.ResolveStartDirectory(initialDir))
 	return dialog
 }
 
 // NewBrowseDialog builds a read-only viewer starting at initialDir; it has no
 // confirm action and is used to inspect a directory's contents in-app.
-func NewBrowseDialog(initialDir string) *FileExplorerDialog {
-	dialog := newFileExplorerDialog(modeBrowse, "Browse")
-	dialog.loadDir(resolveInitialDir(initialDir))
+func NewBrowseDialog(
+	fileSystem handler_interfaces.IFileSystemHandler,
+	initialDir string) *FileExplorerDialog {
+	dialog := newFileExplorerDialog(fileSystem, modeBrowse, "Browse")
+	dialog.loadDir(fileSystem.ResolveStartDirectory(initialDir))
 	return dialog
 }
 
@@ -265,16 +276,18 @@ func (this *FileExplorerDialog) getListWidget(theme *material.Theme) layout.Widg
 	}
 }
 
-func (this *FileExplorerDialog) getEntryRowWidget(theme *material.Theme, entry fileEntry) layout.Widget {
+func (this *FileExplorerDialog) getEntryRowWidget(
+	theme *material.Theme,
+	entry models.DirectoryEntry) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		clk := this.clickFor(entry.path)
+		clk := this.clickFor(entry.Path)
 		if clk.Clicked(gtx) {
 			this.onEntryClicked(entry)
 		}
-		selected := !entry.isDir && entry.path == this.selectedPath
+		selected := !entry.IsDir && entry.Path == this.selectedPath
 		badgeText := ""
 		textColor := themes.ColorsBase.Text
-		if entry.isDir {
+		if entry.IsDir {
 			badgeText = "DIR"
 			textColor = themes.ColorsBase.AccentBright
 		}
@@ -289,7 +302,7 @@ func (this *FileExplorerDialog) getEntryRowWidget(theme *material.Theme, entry f
 								theme, badgeText, themes.ColorsBase.Accent, font.Font{Weight: font.SemiBold})(gtx)
 						}),
 						layout.Flexed(1, widgets.NewLabelBuilder(theme).WithSizeBig().
-							WithText(entry.name).WithColor(textColor).WithMaxLines(1).Build))
+							WithText(entry.Name).WithColor(textColor).WithMaxLines(1).Build))
 				})
 			call := macro.Stop()
 			if selected {
@@ -491,7 +504,7 @@ func (this *FileExplorerDialog) confirmSelection(gtx layout.Context) bool {
 		return false
 	}
 
-	if _, err := os.Stat(path); err == nil {
+	if this.fileSystem.PathExists(path) {
 		this.overwriteActive = true
 		return false
 	}
@@ -516,13 +529,13 @@ func (this *FileExplorerDialog) loadDir(dir string) {
 
 	if dir == "" {
 		this.currentDir = ""
-		this.entries = listWindowsDrives()
+		this.entries = this.fileSystem.ListRoots()
 		this.rowClicks = map[string]*widget.Clickable{}
 		this.resetScroll()
 		return
 	}
 
-	osEntries, err := os.ReadDir(dir)
+	entries, err := this.fileSystem.ListEntries(dir, this.filterSuffixes, this.showHidden)
 	if err != nil {
 		// Keep the current location; only adopt dir on the very first load so
 		// the path bar is coherent when the initial directory is unreadable.
@@ -533,84 +546,17 @@ func (this *FileExplorerDialog) loadDir(dir string) {
 		return
 	}
 
-	dirs := make([]fileEntry, 0, len(osEntries))
-	files := make([]fileEntry, 0, len(osEntries))
-	for _, entry := range osEntries {
-		name := entry.Name()
-		if !this.showHidden && this.isHidden(name, entry) {
-			continue
-		}
-		full := filepath.Join(dir, name)
-		if entry.IsDir() {
-			dirs = append(dirs, fileEntry{name: name, path: full, isDir: true})
-			continue
-		}
-		if this.mode == modeOpenFile && !this.matchesFilter(name) {
-			continue
-		}
-		files = append(files, fileEntry{name: name, path: full, isDir: false})
-	}
-	slices.SortStableFunc(dirs, func(a, b fileEntry) int {
-		return strings.Compare(strings.ToLower(a.name), strings.ToLower(b.name))
-	})
-	slices.SortStableFunc(files, func(a, b fileEntry) int {
-		return strings.Compare(strings.ToLower(a.name), strings.ToLower(b.name))
-	})
-
 	this.currentDir = dir
-	this.entries = slices.Concat(dirs, files)
+	this.entries = entries
 	this.rowClicks = map[string]*widget.Clickable{}
 	this.resetScroll()
-}
-
-// isHidden reports whether an entry should be filtered out while showHidden is
-// off: dotfiles everywhere, plus hidden/system entries on Windows.
-func (this *FileExplorerDialog) isHidden(name string, entry os.DirEntry) bool {
-	if strings.HasPrefix(name, ".") {
-		return true
-	}
-
-	info, err := entry.Info()
-	if err != nil {
-		return false
-	}
-
-	return hasHiddenAttr(info)
-}
-
-func (this *FileExplorerDialog) matchesFilter(name string) bool {
-	if len(this.filterSuffixes) == 0 {
-		return true
-	}
-
-	lower := strings.ToLower(name)
-	for _, suffix := range this.filterSuffixes {
-		if strings.HasSuffix(lower, strings.ToLower(suffix)) {
-			return true
-		}
-	}
-
-	return false
 }
 
 // parentDir returns the directory to ascend to, or the current directory when
 // already at the top (so the Up button can be disabled). On Windows the volume
 // root ascends to the synthetic drive list ("").
 func (this *FileExplorerDialog) parentDir() string {
-	if this.currentDir == "" {
-		return ""
-	}
-
-	parent := filepath.Dir(this.currentDir)
-	if parent == this.currentDir {
-		if runtime.GOOS == "windows" {
-			return ""
-		}
-
-		return this.currentDir
-	}
-
-	return parent
+	return this.fileSystem.ParentDirectory(this.currentDir)
 }
 
 func (this *FileExplorerDialog) requestNav(dir string) {
@@ -618,17 +564,17 @@ func (this *FileExplorerDialog) requestNav(dir string) {
 	this.hasPendingDir = true
 }
 
-func (this *FileExplorerDialog) onEntryClicked(entry fileEntry) {
-	if entry.isDir {
-		this.requestNav(entry.path)
+func (this *FileExplorerDialog) onEntryClicked(entry models.DirectoryEntry) {
+	if entry.IsDir {
+		this.requestNav(entry.Path)
 		return
 	}
 
 	switch this.mode {
 	case modeOpenFile:
-		this.selectedPath = entry.path
+		this.selectedPath = entry.Path
 	case modeSaveFile:
-		this.filenameEd.SetText(entry.name)
+		this.filenameEd.SetText(entry.Name)
 		this.overwriteActive = false
 	case modePickFolder, modeBrowse: // noop
 	}
@@ -638,39 +584,19 @@ func (this *FileExplorerDialog) onEntryClicked(entry fileEntry) {
 // stripping any directory components for safety and enforcing the .gen.json
 // suffix. ok is false when the field is empty.
 func (this *FileExplorerDialog) resolveSaveTarget() (string, bool) {
-	name := strings.TrimSpace(this.filenameEd.Text())
-	if name == "" {
-		return "", false
-	}
-
-	name = filepath.Base(name)
-	if name == "." || name == ".." || name == string(os.PathSeparator) {
-		return "", false
-	}
-
-	if !strings.HasSuffix(strings.ToLower(name), saveFileSuffix) {
-		name += saveFileSuffix
-	}
-	return filepath.Join(this.currentDir, name), true
+	return this.fileSystem.ResolveSaveTarget(this.currentDir, this.filenameEd.Text(), saveFileSuffix)
 }
 
 func (this *FileExplorerDialog) tryCreateFolder() {
-	name := strings.TrimSpace(this.newFolderEd.Text())
-	if name == "" {
+	target, err := this.fileSystem.CreateDirectory(this.currentDir, this.newFolderEd.Text())
+	switch {
+	case errors.Is(err, common_errors.ErrDirectoryNameEmpty):
 		this.newFolderErr = "Enter a folder name."
 		return
-	}
-
-	if name == "." || name == ".." ||
-		strings.ContainsRune(name, '/') ||
-		strings.ContainsRune(name, os.PathSeparator) ||
-		strings.ContainsRune(name, ':') {
+	case errors.Is(err, common_errors.ErrDirectoryNameInvalid):
 		this.newFolderErr = "Invalid folder name."
 		return
-	}
-
-	target := filepath.Join(this.currentDir, name)
-	if err := os.Mkdir(target, internal_constants.FolderPermission); err != nil {
+	case err != nil:
 		this.newFolderErr = err.Error()
 		return
 	}
@@ -695,56 +621,4 @@ func (this *FileExplorerDialog) clickFor(path string) *widget.Clickable {
 
 func (this *FileExplorerDialog) resetScroll() {
 	this.list.Position = layout.Position{}
-}
-
-// listWindowsDrives enumerates the existing fixed/removable drive roots. It is
-// only ever shown after ascending past a Windows volume root; on other systems
-// it returns an empty slice (and is never reached).
-func listWindowsDrives() []fileEntry {
-	drives := make([]fileEntry, 0, 26)
-	for letter := 'A'; letter <= 'Z'; letter++ {
-		root := string(letter) + `:\`
-		if _, err := os.Stat(root); err == nil {
-			drives = append(drives, fileEntry{name: root, path: root, isDir: true})
-		}
-	}
-	return drives
-}
-
-// resolveInitialDir normalizes the requested start directory and guarantees an
-// existing directory is returned: it climbs to the nearest existing ancestor
-// (also handling being handed a file path), then falls back to the user's home
-// directory and finally the working directory.
-func resolveInitialDir(dir string) string {
-	dir = strings.TrimSpace(dir)
-	if dir != "" {
-		if abs, err := filepath.Abs(dir); err == nil {
-			dir = abs
-		}
-		dir = filepath.Clean(dir)
-		for candidate := dir; ; {
-			if info, err := os.Stat(candidate); err == nil && info.IsDir() {
-				return candidate
-			}
-
-			parent := filepath.Dir(candidate)
-			if parent == candidate {
-				break
-			}
-
-			candidate = parent
-		}
-	}
-
-	if home, err := os.UserHomeDir(); err == nil {
-		if info, err := os.Stat(home); err == nil && info.IsDir() {
-			return home
-		}
-	}
-
-	if workingDir, err := os.Getwd(); err == nil {
-		return workingDir
-	}
-
-	return "."
 }

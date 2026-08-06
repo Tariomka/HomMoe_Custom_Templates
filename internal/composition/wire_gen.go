@@ -15,6 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -63,4 +64,11 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iZoneEditorHandler := handlers.NewZoneEditorHandler(iGeneratorConfigMapper, iZoneClassifier, iConnectionEditorService, iZoneEditorService, iGenerationTuningFactory)
 	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iContentRuleHandler, iZoneEditorHandler)
 	return iGuiHandler
+}
+
+func InitializeFileSystemHandler() handler_interfaces.IFileSystemHandler {
+	iDirectoryBrowserService := file_system.NewDirectoryBrowserService()
+	iPathResolutionService := file_system.NewPathResolutionService()
+	iFileSystemHandler := handlers.NewFileSystemHandler(iDirectoryBrowserService, iPathResolutionService)
+	return iFileSystemHandler
 }

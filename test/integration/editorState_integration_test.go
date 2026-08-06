@@ -23,7 +23,10 @@ import (
 
 // newUIState builds a driver state on the application's own object graph.
 func newUIState() *drivers.State {
-	return drivers.NewUIState(composition.InitializeGuiHandler(), true)
+	return drivers.NewUIState(
+		composition.InitializeGuiHandler(),
+		composition.InitializeFileSystemHandler(),
+		true)
 }
 
 // newEditorSession builds a State plus the three editor panels bound to it,
@@ -33,7 +36,7 @@ func newUIState() *drivers.State {
 // display.
 func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func()) {
 	backend := composition.InitializeGuiHandler()
-	state = drivers.NewUIState(backend, true)
+	state = drivers.NewUIState(backend, composition.InitializeFileSystemHandler(), true)
 	editorPanels := []interfaces.IPanel{
 		panels.NewGeneralPanel(state),
 		panels.NewLayoutPanel(state, backend, backend, backend),

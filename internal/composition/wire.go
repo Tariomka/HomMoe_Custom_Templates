@@ -15,3 +15,8 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	wire.Build(GuiHandlerSet)
 	return nil
 }
+
+func InitializeFileSystemHandler() handler_interfaces.IFileSystemHandler {
+	wire.Build(FileSystemSet)
+	return nil
+}

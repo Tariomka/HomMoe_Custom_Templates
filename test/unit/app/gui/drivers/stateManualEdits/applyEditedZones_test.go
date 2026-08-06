@@ -21,7 +21,7 @@ func newGeneratedState() (
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state := drivers.NewUIState(handlerMock, false)
+	state := drivers.NewUIState(handlerMock, test_helpers.NewFileSystemHandler(), false)
 	state.Generate()
 	return state, handlerMock, template.Variants[0].Zones, template.Variants[0].Connections
 }
@@ -30,7 +30,7 @@ func TestWhenNoTemplateWasGenerated_EditsAreIgnored(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	state := drivers.NewUIState(handlerMock, false)
+	state := drivers.NewUIState(handlerMock, test_helpers.NewFileSystemHandler(), false)
 
 	// Act
 	state.ApplyEditedZones(nil, nil)

@@ -31,15 +31,17 @@ type Window struct {
 	previewPanel *panels.PreviewPanel
 }
 
-func NewWindow(backend handler_interfaces.IGuiHandler) *Window {
-	window := Window{state: drivers.NewUIState(backend, true)}
+func NewWindow(
+	handler handler_interfaces.IGuiHandler,
+	fileSystem handler_interfaces.IFileSystemHandler) *Window {
+	window := Window{state: drivers.NewUIState(handler, fileSystem, true)}
 	window.toolbar = NewToolbar(window.state, window.load)
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),
-		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state, backend, backend, backend)),
+		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state, handler, handler, handler)),
 		drivers.NewTab("Bonuses & Bans", panels.NewBonusesPanel(window.state)),
 	}
-	window.previewPanel = panels.NewPreviewPanel(window.state, backend)
+	window.previewPanel = panels.NewPreviewPanel(window.state, handler)
 	window.tabs[0].SetSelected(true)
 	return &window
 }

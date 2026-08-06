@@ -3,7 +3,6 @@ package drivers
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"gioui.org/layout"
@@ -24,7 +23,8 @@ const (
 )
 
 type State struct {
-	handler handler_interfaces.IGuiHandler
+	handler    handler_interfaces.IGuiHandler
+	fileSystem handler_interfaces.IFileSystemHandler
 
 	innerState *models.EditorState
 
@@ -51,9 +51,13 @@ type State struct {
 	dialogs *DialogHost
 }
 
-func NewUIState(handler handler_interfaces.IGuiHandler, findTemplateDir bool) *State {
+func NewUIState(
+	handler handler_interfaces.IGuiHandler,
+	fileSystem handler_interfaces.IFileSystemHandler,
+	findTemplateDir bool) *State {
 	state := &State{
 		handler:    handler,
+		fileSystem: fileSystem,
 		innerState: models.NewEditorState(handler),
 	}
 	state.outputPath.SingleLine = true
@@ -70,9 +74,7 @@ func NewUIState(handler handler_interfaces.IGuiHandler, findTemplateDir bool) *S
 			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)
 		}
 
-		if workingDir, err := os.Getwd(); err == nil {
-			templateDir = workingDir
-		}
+		templateDir = state.workingDirectory()
 	}
 	state.outputPath.SetText(templateDir)
 	return state

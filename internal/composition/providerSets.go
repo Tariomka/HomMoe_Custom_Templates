@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -85,4 +86,13 @@ var GuiHandlerSet = wire.NewSet(
 	InfrastructureSet,
 	HandlerSet,
 	handlers.NewGuiHandler,
+)
+
+// FileSystemSet is the complete graph behind InitializeFileSystemHandler. It is
+// deliberately disjoint from GuiHandlerSet: browsing the local disk shares no
+// collaborator with template editing.
+var FileSystemSet = wire.NewSet(
+	file_system.NewDirectoryBrowserService,
+	file_system.NewPathResolutionService,
+	handlers.NewFileSystemHandler,
 )

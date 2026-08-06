@@ -24,7 +24,9 @@ func StartApplication(version string) {
 // eventLoop is a blocking function and needs to executed concurrently.
 func eventLoop(version string) {
 	window := getAndConfigureWindow(version)
-	windowLayout := editor.NewWindow(composition.InitializeGuiHandler())
+	windowLayout := editor.NewWindow(
+		composition.InitializeGuiHandler(),
+		composition.InitializeFileSystemHandler())
 	windowLayout.SetOnExit(func() { window.Perform(system.ActionClose) })
 	theme := themes.NewTheme()
 	positionLogger := utils.NewButtonPositionLogger(slog.Default())

@@ -12,7 +12,7 @@ import (
 func TestWhenStatusIsSet_GetStatusReturnsMessageAndSeverity(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := drivers.NewUIState(&test_helpers.TemplateHandlerMock{}, false)
+	state := drivers.NewUIState(&test_helpers.TemplateHandlerMock{}, test_helpers.NewFileSystemHandler(), false)
 	expectedMessage := gofakeit.Sentence(5)
 	expectedIsError := gofakeit.Bool()
 

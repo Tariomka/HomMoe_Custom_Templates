@@ -9,6 +9,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +33,7 @@ func newSaveAsProbe(t *testing.T, saveResult error) (state *drivers.State, writt
 
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	handlerMock.On("SaveState", mock.Anything).Return(writtenPath, saveResult)
-	state = drivers.NewUIState(handlerMock, false)
+	state = drivers.NewUIState(handlerMock, composition.InitializeFileSystemHandler(), false)
 
 	state.SaveAs(gofakeit.ProductName())
 	saveDialog, isFileExplorer := state.GetDialogHost().GetTopDialog().(*dialogs.FileExplorerDialog)

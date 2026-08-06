@@ -91,7 +91,9 @@ type AppRunner struct {
 // nil window marks the runner headless.
 func NewAppRunner(tb testing.TB) *AppRunner {
 	runner := &AppRunner{
-		App:   editor.NewWindow(composition.InitializeGuiHandler()),
+		App: editor.NewWindow(
+			composition.InitializeGuiHandler(),
+			composition.InitializeFileSystemHandler()),
 		theme: themes.NewTheme(),
 		tb:    tb,
 	}

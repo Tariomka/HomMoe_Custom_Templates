@@ -1,16 +1,16 @@
 //go:build windows
 
-package dialogs
+package file_system
 
 import (
 	"os"
 	"syscall"
 )
 
-// hasHiddenAttr reports whether a Windows file carries the hidden or system
-// attribute, so such entries can be filtered out unless the user opts to show
-// hidden files.
-func hasHiddenAttr(info os.FileInfo) bool {
+// hasHiddenAttribute reports whether a Windows file carries the hidden or
+// system attribute, so such entries can be filtered out unless the caller opts
+// to show hidden entries.
+func hasHiddenAttribute(info os.FileInfo) bool {
 	data, ok := info.Sys().(*syscall.Win32FileAttributeData)
 	if !ok {
 		return false

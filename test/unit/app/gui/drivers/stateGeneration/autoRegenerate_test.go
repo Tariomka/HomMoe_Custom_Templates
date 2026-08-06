@@ -18,7 +18,7 @@ func newAutoRegenerateState() (*drivers.State, *test_helpers.TemplateHandlerMock
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	return drivers.NewUIState(handlerMock, false), handlerMock
+	return drivers.NewUIState(handlerMock, test_helpers.NewFileSystemHandler(), false), handlerMock
 }
 
 func TestWhenStateWasNeverGenerated_GeneratesImmediately(t *testing.T) {
