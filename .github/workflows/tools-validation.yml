@@ -1,0 +1,41 @@
+name: Tools Module
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'tools/**'
+      - '.github/workflows/tools-validation.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'tools/**'
+      - '.github/workflows/tools-validation.yml'
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: 1.26.5
+
+jobs:
+  check-tools-go-mod:
+    name: Check tools module is tidy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Check tools go mod
+        working-directory: tools
+        run: go mod tidy -diff

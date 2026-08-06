@@ -93,8 +93,8 @@ fixed; the ones with fresh evidence gathered this session:
 | §4.1 live preview rebuilds layout every frame | Still open; now **profiler-measured** and routed through `previewHandler` | §4.1 |
 | §6.4 `bannableItems.go` / `valueOverrideSids.go` at 0% | Still 0% | §6.4 |
 | §6.5 no executable test-layout enforcement | Fixed — see §6.5 | §6.5 |
-| §7.1 direct pushes to master skip gates | Still open | §7.1 |
-| §7.3 no top-level workflow `permissions:` | Still open | §7.2 |
+| §7.1 direct pushes to master skip gates | Rejected — see §7.1 | §7.1 |
+| §7.3 no top-level workflow `permissions:` | Fixed — see §7.2 | §7.2 |
 | §9.1 QUICKSTART programmatic example cannot compile | Still open, now with **three** distinct compile errors | §9.1 |
 | §9.2 README/QUICKSTART/AGENTS describe a deleted UI | Still open; AGENTS.md drift changed shape (versions now correct, module count and task labels wrong) | §9.2, §9.6 |
 
@@ -1833,7 +1833,25 @@ owner ever finds themselves editing it by hand more than occasionally, add a
 
 ## 7. CI/CD
 
-### 7.1 🟠 Direct pushes to `master` skip tidy, lint, vulnerability, race and coverage gates
+### 7.1 ❌ WILL NOT FIX 🟠 Direct pushes to `master` skip tidy, lint, vulnerability, race and coverage gates
+
+**Rejected 2026-08-05 — the finding's premise is wrong. Do not re-attempt.**
+The review assumed the `push: master` trigger represents *unreviewed* work
+reaching `master`. It does not:
+
+- Branch protection on `master` **forbids direct pushes**. Every change reaches
+  `master` through a pull request, where all ten jobs run.
+- The `push: master` trigger therefore only ever fires **after a pull request
+  merges**, on code that has already passed the full matrix.
+- The reduced post-merge subset exists for exactly one reason: two pull requests
+  can merge concurrently and produce a `master` state neither PR validated.
+  Build, Windows build, unit tests and integration tests are enough to detect
+  that. Re-running tidy, lint, vulnerability, race and coverage on code that
+  just passed them adds CI minutes and no signal.
+
+The workflow name "PR Tests" is accurate under this policy, so the proposed
+rename is also declined. §8.3's fix item 1 ("remove the PR gate so pushes are
+scanned") is void for the same reason — the scheduled scan alone addresses it.
 
 **Evidence.** [pr-validation.yml](../.github/workflows/pr-validation.yml#L4-L7)
 triggers on both `push: master` and `pull_request: master`, but six of ten jobs
@@ -1870,7 +1888,19 @@ intentionally permitted before changing the trigger shape.
 
 ---
 
-### 7.2 🟠 Workflows have no top-level `permissions:`
+### 7.2 ✅ FIXED 🟠 Workflows have no top-level `permissions:`
+
+**Fixed 2026-08-05.** `permissions:\n  contents: read` added immediately after
+the `on:`/`concurrency:` block in both
+[pr-validation.yml](../.github/workflows/pr-validation.yml) and
+[release.yml](../.github/workflows/release.yml), and included in the two
+workflows created this session
+([tools-validation.yml](../.github/workflows/tools-validation.yml),
+[security-scan.yml](../.github/workflows/security-scan.yml)). Existing per-job
+narrowing is untouched: `code_coverage` still adds `actions: read` +
+`pull-requests: write`, and the release publish job still raises to
+`contents: write`. `actionlint` reports no findings on any of the four
+workflows.
 
 **Evidence.** [pr-validation.yml](../.github/workflows/pr-validation.yml#L1-L16)
 declares `name`, `on` and `env` but no `permissions`. The only narrowing is
@@ -1898,7 +1928,14 @@ for coverage; `contents: write` for release publishing). Re-run the composite
 
 ---
 
-### 7.3 🟡 `actions/setup-go` version drift between the workflows and the composite action
+### 7.3 ✅ FIXED 🟡 `actions/setup-go` version drift between the workflows and the composite action
+
+**Fixed 2026-08-05.** The composite action
+[setup-steps/action.yml](../.github/workflows/setup-steps/action.yml) now uses
+`actions/setup-go@v7`, matching the direct use in `check-go-mod`. Every job in
+the repository is on `@v7`. The `go-version` input default (`1.26.5`) and
+`cache: true` are unchanged, so cache-key behaviour should be verified on the
+next CI run.
 
 **Evidence.** [pr-validation.yml](../.github/workflows/pr-validation.yml#L30)
 uses `actions/setup-go@v7`, while the composite action every other job calls —
@@ -1917,7 +1954,28 @@ next run.
 
 ---
 
-### 7.4 🟡 The `tools/` module is never built, tested, linted or tidy-checked in CI
+### 7.4 ✅ FIXED 🟡 The `tools/` module is never built, tested, linted or tidy-checked in CI
+
+**Fixed 2026-08-05, with two owner-directed deviations from the proposed fix.**
+
+1. The tidy check does **not** live in `check-go-mod`. The owner asked that
+   `tools/` verification run only when `tools/` actually changes, and GitHub's
+   `paths:` filter exists at the workflow-trigger level, not per job. It
+   therefore lives in a new path-filtered workflow,
+   [tools-validation.yml](../.github/workflows/tools-validation.yml), triggered
+   on `tools/**` (plus the workflow file itself) for both `pull_request` and
+   `push: master`. It runs `go mod tidy -diff` with `working-directory: tools`.
+   ⚠ **Because of the path filter this workflow must not be added to branch
+   protection as a required status check** — pull requests that leave `tools/`
+   untouched never report it and would block forever. A comment at the top of
+   the file says so.
+2. `tools/go.mod` now declares `go 1.26.5`, matching the root module and CI's
+   `GO_VERSION`, removing the undocumented divergence. `go mod tidy -diff`
+   exits 0 for both modules after the bump.
+
+Building/vetting the `tools/` module was considered and dropped: it declares no
+packages of its own — only `tool` directives — so `go build ./...` inside it has
+nothing to compile. The tidy check is the whole of the available signal.
 
 **Evidence.** Every CI Go command targets the root module —
 `go build ./...`, `go vet -tags=integration_test ./...`,
@@ -2053,7 +2111,25 @@ after any new import can flip to "affected" with no warning.
 
 ---
 
-### 8.3 🟡 The vulnerability gate only runs on pull requests
+### 8.3 ✅ FIXED 🟡 The vulnerability gate only runs on pull requests
+
+**Fixed 2026-08-05 — half of the proposed fix was void.**
+Fix item 1 ("remove the PR gate so pushes are scanned") depended on §7.1, which
+is ❌ WILL NOT FIX: direct pushes to `master` are impossible under branch
+protection, so a push-triggered scan would only re-scan code a pull request had
+just scanned. The PR gate on `run-vulnerability-scan` stays.
+
+Fix item 2 is implemented as a dedicated workflow,
+[security-scan.yml](../.github/workflows/security-scan.yml): `schedule` with
+`cron: '0 6 * * 1'` (Mondays 06:00 UTC), `permissions: contents: read`, and the
+same `golang/govulncheck-action@v1` invocation as the PR job. A dedicated
+workflow was chosen over adding `schedule:` to `pr-validation.yml` because the
+existing job's `if: github.event_name == 'pull_request'` would skip it on a
+scheduled run anyway. Scheduled workflows run against the default branch, which
+is what needs re-scanning.
+
+⚠ GitHub disables scheduled workflows after 60 days of repository inactivity;
+the owner declined a `workflow_dispatch` companion trigger.
 
 **Evidence.** `run-vulnerability-scan` is gated at
 [pr-validation.yml](../.github/workflows/pr-validation.yml#L66) with
@@ -2386,9 +2462,14 @@ permanently — mark them `✅ FIXED` in place as they land.
    review text — the literal version contradicts the current AGENTS.md §4.6.1
    and the rejected §6.1; see §6.5 for the three deviations.
 
-8. **CI/security-posture PR.** §7.2 (top-level `permissions`), §7.3 (setup-go
-   drift), §7.4 (tools tidy check), §8.3 (scheduled scan).
-   ⚠ §7.1 only after the owner confirms the direct-push policy.
+8. **CI/security-posture PR.** ✅ FIXED (2026-08-05)
+   §7.2 (top-level `permissions: contents: read` in all four workflows),
+   §7.3 (composite bumped to `actions/setup-go@v7`), §7.4 (new path-filtered
+   `tools-validation.yml` running `go mod tidy -diff` + `tools/go.mod` bumped to
+   `go 1.26.5`), §8.3 (new `security-scan.yml`, Mondays 06:00 UTC).
+   §7.1 ❌ **rejected** — branch protection forbids direct pushes to `master`, so
+   the `push: master` trigger only fires post-merge and the reduced job subset is
+   deliberate; see §7.1. That also voids §8.3's fix item 1.
 
 9. **Docs PR.** §9.1–§9.6 (+ optional §9.7) in one pass, then update repository
    memory. §9.5 must agree with whatever §2.7 decides.
@@ -2414,7 +2495,7 @@ permanently — mark them `✅ FIXED` in place as they land.
 §2.1 · §9.5 after §2.7 · §3.2 with §5.3.
 **Owner decisions required before implementation:** §1.1 (transactionality),
 §1.5 (ceilings), §1.8 (persistence shape), §2.2 (refactor scope), §2.7
-(finish/remove), §7.1 (push policy), §9.1 (public API).
+(finish/remove), §9.1 (public API).
 
 ---
 
