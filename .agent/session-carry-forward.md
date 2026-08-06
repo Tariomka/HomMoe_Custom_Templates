@@ -168,7 +168,9 @@ staged).
 1. Owner reviews and commits Batch 10.
 2. **Batch 11 — Coverage PR.** §6.2 (`internal/handlers` mirrored tests,
    starting with `stateHandler` and `previewHandler`), §6.4 (the two 0%
-   catalogues `bannableItems.go` / `valueOverrideSids.go`).
+   catalogues `bannableItems.go` / `valueOverrideSids.go`). Additionally,
+   if more code is found that is not directly covered by unit tests,
+   prompt ask if those tests should be added.
 3. **Batch 12 — Product decisions.** Only ⚠ §1.8 remains.
 4. **Batch 13 — Large refactors.** §2.1 (extract filesystem policy) → unblocks
    §2.5; then §2.2; §2.6 opportunistically. Needs a plan file under `plans/`
