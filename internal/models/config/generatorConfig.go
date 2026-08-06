@@ -114,6 +114,11 @@ func (this *GeneratorConfig) IsTournamentMode() bool {
 		(this.GameEndConditions != nil && this.GameEndConditions.VictoryCondition == registry.GetWinningConditionValues().Tournament)
 }
 
+func (this *GeneratorConfig) IsGladiatorArenaMode() bool {
+	return (this.GladiatorArenaRules != nil && this.GladiatorArenaRules.Enabled) ||
+		this.GetVictoryCondition() == registry.GetWinningConditionValues().FinalBattle
+}
+
 func (this *GeneratorConfig) IsCityHoldMode() bool {
 	return this.GameEndConditions != nil &&
 		(this.GameEndConditions.CityHold || this.GameEndConditions.VictoryCondition == registry.GetWinningConditionValues().CityHold)

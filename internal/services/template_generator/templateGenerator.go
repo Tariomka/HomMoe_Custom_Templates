@@ -20,6 +20,7 @@ type TemplateGenerator struct {
 	contentLimitProvider *providers.ContentLimitProvider
 	contentProvider      *providers.MandatoryContentProvider
 	gameRulesProvider    *providers.GameRulesProvider
+	gladiatorProvider    *providers.GladiatorArenaProvider
 	topologyProvider     *providers.TopologyProvider
 	zoneLayoutProvider   *providers.ZoneLayoutProvider
 }
@@ -31,6 +32,7 @@ func NewTemplateGenerator(
 	contentLimitProvider *providers.ContentLimitProvider,
 	contentProvider *providers.MandatoryContentProvider,
 	gameRulesProvider *providers.GameRulesProvider,
+	gladiatorProvider *providers.GladiatorArenaProvider,
 	topologyProvider *providers.TopologyProvider,
 	zoneLayoutProvider *providers.ZoneLayoutProvider) *TemplateGenerator {
 	return &TemplateGenerator{
@@ -40,6 +42,7 @@ func NewTemplateGenerator(
 		contentLimitProvider: contentLimitProvider,
 		contentProvider:      contentProvider,
 		gameRulesProvider:    gameRulesProvider,
+		gladiatorProvider:    gladiatorProvider,
 		topologyProvider:     topologyProvider,
 		zoneLayoutProvider:   zoneLayoutProvider,
 	}
@@ -61,6 +64,11 @@ func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
 	tuning := this.tuningFactory.Create(this.configuration, this.configuration.PlayerCount+len(neutralZones))
 	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
 
+	variant := this.topologyProvider.
+		ShufflePlayerZones(this.configuration.ShufflePlayerZones).
+		CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel)
+	this.gladiatorProvider.PlaceArena(*this.configuration, &variant)
+
 	return &entities.RmgTemplate{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
@@ -71,16 +79,12 @@ func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
 		ValueOverrides:      valueOverrides,
 		GlobalBans:          this.gameRulesProvider.CreateGlobalBans(*this.configuration),
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
-		Variants: []entities.Variant{
-			this.topologyProvider.
-				ShufflePlayerZones(this.configuration.ShufflePlayerZones).
-				CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel),
-		},
-		ZoneLayouts:        this.zoneLayoutProvider.CreateZoneLayouts(),
-		MandatoryContent:   this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
-		ContentCountLimits: this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
-		ContentPools:       []entities.ContentPool{},
-		ContentLists:       []entities.ContentList{},
+		Variants:            []entities.Variant{variant},
+		ZoneLayouts:         this.zoneLayoutProvider.CreateZoneLayouts(),
+		MandatoryContent:    this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
+		ContentCountLimits:  this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
+		ContentPools:        []entities.ContentPool{},
+		ContentLists:        []entities.ContentList{},
 	}, warnings
 }
 

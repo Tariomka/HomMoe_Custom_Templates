@@ -22,6 +22,10 @@ const (
 	segmentsSolid       = 24
 	segmentsDashed      = 96
 	dashLength, dashGap = 9.0, 13.0
+
+	// arenaMarkerScale shrinks the swords sprite relative to a zone bubble so it
+	// reads as a marker sitting on the connection rather than as another zone.
+	arenaMarkerScale = 0.75
 )
 
 var connectorLineColor = color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF}
@@ -57,7 +61,7 @@ func (this *PreviewGeneratorService) CreatePreviewImage(
 	scale := min(float64(layout.ZoneRadius)/assetRadius, 1.15)
 	fitterCallback := newAssetFitter(layout.Zones, scale)
 
-	this.drawConnections(canvas, layout.Connections, fitterCallback, assetRadius*scale)
+	this.drawConnections(canvas, layout.Connections, fitterCallback, scale)
 	for _, zone := range layout.Zones {
 		if zone.Type != preview.ZoneTypePlayer {
 			this.assetProvider.DrawNeutralZone(canvas, zone, fitterCallback(zone.Center), scale)
@@ -75,7 +79,8 @@ func (this *PreviewGeneratorService) drawConnections(
 	canvas *image.RGBA,
 	connections []preview.Connection,
 	fitterCallback assetFitter,
-	zoneRadius float64) {
+	scale float64) {
+	zoneRadius := assetRadius * scale
 	for _, conn := range connections {
 		controlPoint := fitterCallback(conn.Ctrl) // Bézier control point
 		startPoint, ok1 := helpers.CalculatePointTowards(fitterCallback(conn.Start), controlPoint, zoneRadius)
@@ -88,6 +93,11 @@ func (this *PreviewGeneratorService) drawConnections(
 			this.drawDashedLine(canvas, startPoint, controlPoint, endPoint)
 		} else {
 			this.drawSolidLine(canvas, startPoint, controlPoint, endPoint)
+		}
+
+		if conn.IsGladiatorArena() {
+			midPoint := helpers.GetPointOnQuadraticBezierCurve(startPoint, controlPoint, endPoint, 0.5)
+			this.assetProvider.DrawArenaMarker(canvas, midPoint, scale*arenaMarkerScale)
 		}
 	}
 }

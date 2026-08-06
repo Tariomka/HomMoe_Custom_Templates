@@ -273,6 +273,60 @@ func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T)
 	assert.True(t, layout.Connections[0].IsPortal())
 }
 
+func TestWhenZoneHasGladiatorArenaMainObject_MarksZoneAsArena(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zone := namedZone("Neutral-B")
+	zone.MainObjects = []entities.MainObject{{Type: "GladiatorArena"}}
+	zones := []entities.Zone{namedZone("Spawn-A"), zone}
+	connections := []entities.Connection{directConnection("Spawn-A", "Neutral-B")}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
+
+	// Assert
+	arenaFlags := map[string]bool{}
+	for _, previewZone := range layout.Zones {
+		arenaFlags[previewZone.Name] = previewZone.HasArena()
+	}
+	assert.Equal(t, map[string]bool{"Spawn-A": false, "Neutral-B": true}, arenaFlags)
+}
+
+func TestWhenConnectionTypeIsGladiatorArena_MarksPreviewConnectionAsArena(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []entities.Connection{
+		{From: "Spawn-A", To: "Neutral-B", ConnectionType: "GladiatorArena"},
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.True(t, layout.Connections[0].IsGladiatorArena())
+}
+
+func TestWhenConnectionTypeIsProximity_MarksPreviewConnectionAsProximity(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []entities.Connection{
+		{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Proximity"},
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Equal(t, preview.ConnectionTypeProximity, layout.Connections[0].Type)
+}
+
 func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
 	t.Parallel()
 	// Arrange

@@ -43,3 +43,11 @@ func renderNeutral(t *testing.T, zone preview.Zone) *image.RGBA {
 	mustNewProvider(t).DrawNeutralZone(canvas, zone, image.Pt(canvasCenter, canvasCenter), spriteScale)
 	return canvas
 }
+
+// renderArenaMarker draws the swords marker centered on a fresh canvas and returns it.
+func renderArenaMarker(t *testing.T) *image.RGBA {
+	t.Helper()
+	canvas := newCanvas()
+	mustNewProvider(t).DrawArenaMarker(canvas, image.Pt(canvasCenter, canvasCenter), spriteScale)
+	return canvas
+}

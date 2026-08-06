@@ -16,6 +16,10 @@ func (this Connection) IsPortal() bool {
 	return this.Type == ConnectionTypePortal
 }
 
+func (this Connection) IsGladiatorArena() bool {
+	return this.Type == ConnectionTypeGladiatorArena
+}
+
 type ConnectionType uint8
 
 const (

@@ -90,7 +90,7 @@ func (this *GameRulesProvider) createAdvancedWinConditions(
 	gladiatorRules := configuration.GetGladiatorArenaRules()
 	tournamentRules := configuration.GetTournamentRules()
 
-	useGladiator := gladiatorRules.Enabled || victoryCondition == winConditionValues.FinalBattle
+	useGladiator := configuration.IsGladiatorArenaMode()
 	winConditions := entities.WinConditions{
 		Classic:          true,
 		Desertion:        true,

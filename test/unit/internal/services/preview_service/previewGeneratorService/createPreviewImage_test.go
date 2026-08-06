@@ -108,6 +108,38 @@ func TestWhenConnectionIsPortal_DrawsDashedLineDifferentFromSolid(t *testing.T) 
 	assert.NotEqual(t, solidRender.Pix, canvas.Pix)
 }
 
+func TestWhenConnectionIsGladiatorArena_DrawsArenaMarkerOverTheSolidLine(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	generator := mustNewGenerator(t)
+	solidRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	arenaTemplate := ringTemplate()
+	arenaTemplate.Variants[0].Connections[0].ConnectionType = "GladiatorArena"
+
+	// Act
+	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRing)
+
+	// Assert
+	assert.NotEqual(t, solidRender.Pix, canvas.Pix)
+}
+
+func TestWhenZoneHostsTheArena_DrawsArenaBubbleInsteadOfThePlainOne(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	generator := mustNewGenerator(t)
+	plainRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	arenaTemplate := ringTemplate()
+	arenaTemplate.Variants[0].Zones[1].MainObjects = append(
+		arenaTemplate.Variants[0].Zones[1].MainObjects,
+		entities.MainObject{Type: "GladiatorArena"})
+
+	// Act
+	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRing)
+
+	// Assert
+	assert.NotEqual(t, plainRender.Pix, canvas.Pix)
+}
+
 func TestWhenSameTemplateIsRenderedTwice_ProducesIdenticalImages(t *testing.T) {
 	t.Parallel()
 	// Arrange

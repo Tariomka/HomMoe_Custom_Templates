@@ -41,6 +41,7 @@ var GenerationSet = wire.NewSet(
 	generation_tuning.NewGenerationTuningFactory,
 	providers.NewContentLimitProvider,
 	providers.NewGameRulesProvider,
+	providers.NewGladiatorArenaProvider,
 	providers.NewMandatoryContentProvider,
 	providers.NewTopologyProvider,
 	providers.NewZoneLayoutProvider,

@@ -117,8 +117,8 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 	}
 }
 
-// applyMainObjects folds the zone's Spawn/City main objects into the preview
-// zone's castle count and player-owner number.
+// applyMainObjects folds the zone's Spawn/City/GladiatorArena main objects into
+// the preview zone's castle count, player-owner number and arena marker.
 func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 	objectTypes := registry.GetMainObjectTypeValues()
 	for _, mainObject := range zone.MainObjects {
@@ -134,6 +134,8 @@ func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 			}
 		case objectTypes.City:
 			previewZone.Castles++
+		case objectTypes.GladiatorArena:
+			previewZone.Arena = true
 		}
 	}
 }
@@ -191,17 +193,36 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 			// ( x, y ) → ( y, -x ) rotates it 90°
 			Add(data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance)).
 			ToPointRounded()
-		isPortal := connection.ConnectionType == registry.GetConnectionTypeValues().Portal ||
-			len(connection.PortalPlacementRulesFrom) > 0 ||
-			len(connection.PortalPlacementRulesTo) > 0
-		connectionType := preview.ConnectionTypeDirect
-		if isPortal {
-			connectionType = preview.ConnectionTypePortal
-		}
 		result = append(
 			result,
-			preview.Connection{Start: startPoint, End: endPoint, Ctrl: ctrl, Type: connectionType},
+			preview.Connection{
+				Start: startPoint,
+				End:   endPoint,
+				Ctrl:  ctrl,
+				Type:  getPreviewConnectionType(connection),
+			},
 		)
 	}
 	return result
+}
+
+// getPreviewConnectionType maps a template connection onto the drawable preview
+// type. A connection also counts as a portal when it merely carries portal
+// placement rules, because the in-game generator treats it as one.
+func getPreviewConnectionType(connection entities.Connection) preview.ConnectionType {
+	connectionTypes := registry.GetConnectionTypeValues()
+	if connection.ConnectionType == connectionTypes.Portal ||
+		len(connection.PortalPlacementRulesFrom) > 0 ||
+		len(connection.PortalPlacementRulesTo) > 0 {
+		return preview.ConnectionTypePortal
+	}
+
+	switch connection.ConnectionType {
+	case connectionTypes.GladiatorArena:
+		return preview.ConnectionTypeGladiatorArena
+	case connectionTypes.Proximity:
+		return preview.ConnectionTypeProximity
+	default:
+		return preview.ConnectionTypeDirect
+	}
 }

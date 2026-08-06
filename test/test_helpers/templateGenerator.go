@@ -28,6 +28,7 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) *template_gener
 		providers.NewContentLimitProvider(),
 		providers.NewMandatoryContentProvider(zoneClassifier, zoneEditor),
 		providers.NewGameRulesProvider(),
+		providers.NewGladiatorArenaProvider(zoneClassifier),
 		providers.NewTopologyProvider(
 			NewTopologyServiceLookup(zoneFactory, roadFactory, zoneLabelProvider, connectionService)),
 		providers.NewZoneLayoutProvider())
