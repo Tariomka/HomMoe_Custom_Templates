@@ -28,8 +28,6 @@ const (
 	arenaMarkerScale = 0.75
 )
 
-var connectorLineColor = color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF}
-
 type PreviewGeneratorService struct {
 	assetProvider *asset_provider.AssetProvider
 	layoutService *PreviewLayoutService
@@ -139,7 +137,7 @@ func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end ima
 
 	increment := data.Vec2FromPoint[float64](delta).DivideScalar(steps)
 	half := connectorLineWidth / 2
-	brushSource := image.NewUniform(connectorLineColor)
+	brushSource := image.NewUniform(color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF})
 	for i := range int(steps) {
 		center := data.Vec2FromPoint[float64](start).
 			Add(increment.MultiplyScalar(float64(i))).

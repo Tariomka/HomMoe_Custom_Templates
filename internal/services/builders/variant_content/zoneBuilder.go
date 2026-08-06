@@ -5,8 +5,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var layoutValues = registry.GetLayoutValues()
-
 type ZoneBuilder struct {
 	item entities.Zone
 }
@@ -28,10 +26,10 @@ func (this *ZoneBuilder) WithLayout(layout string) *ZoneBuilder {
 	return this
 }
 func (this *ZoneBuilder) WithLayoutSpawns() *ZoneBuilder {
-	return this.WithLayout(layoutValues.Spawns)
+	return this.WithLayout(registry.GetLayoutValues().Spawns)
 }
 func (this *ZoneBuilder) WithLayoutCenter() *ZoneBuilder {
-	return this.WithLayout(layoutValues.Center)
+	return this.WithLayout(registry.GetLayoutValues().Center)
 }
 
 func (this *ZoneBuilder) WithGuardCutoffValue(value int) *ZoneBuilder {

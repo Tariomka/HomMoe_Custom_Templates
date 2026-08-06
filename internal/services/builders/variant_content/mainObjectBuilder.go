@@ -6,8 +6,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var castleQualities = registry.GetBuildingsConstructionSidValues()
-
 type MainObjectBuilder struct {
 	item entities.MainObject
 }
@@ -67,22 +65,22 @@ func (this *MainObjectBuilder) WithCastleQuality(sid string) *MainObjectBuilder 
 	return this
 }
 func (this *MainObjectBuilder) WithCastleQualityDefault() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Default)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Default)
 }
 func (this *MainObjectBuilder) WithCastleQualityPoor() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Poor)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Poor)
 }
 func (this *MainObjectBuilder) WithCastleQualityMedium() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Medium)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Medium)
 }
 func (this *MainObjectBuilder) WithCastleQualityRich() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Rich)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Rich)
 }
 func (this *MainObjectBuilder) WithCastleQualityExtraRich() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.ExtraRich)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().ExtraRich)
 }
 func (this *MainObjectBuilder) WithCastleQualityUltraRich() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.UltraRich)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().UltraRich)
 }
 
 func (this *MainObjectBuilder) WithFaction(factionMatchType string, arguments ...string) *MainObjectBuilder {

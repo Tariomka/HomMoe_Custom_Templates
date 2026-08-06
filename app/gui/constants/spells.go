@@ -9,6 +9,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
+const (
+	schoolNameNeutral = "High Neutral"
+	schoolNameDay     = "Daylight"
+	schoolNameNight   = "Nightshade"
+	schoolNameSpace   = "Arcane"
+	schoolNamePrimal  = "Primal"
+)
+
 // SpellEntry pairs a learnable spell SID with its display name, magic school
 // and tier (used for sorting in the spell picker).
 type SpellEntry struct {
@@ -18,19 +26,101 @@ type SpellEntry struct {
 	Tier   int
 }
 
-// SpellSchoolDisplayNames maps a school key to its display label.
-var SpellSchoolDisplayNames = map[string]string{
-	"neutral": "High Neutral",
-	"day":     "Daylight",
-	"night":   "Nightshade",
-	"space":   "Arcane",
-	"primal":  "Primal",
+func GetKnownSpellsWithExclusions(excluded []string) []SpellEntry {
+	spells := slices.DeleteFunc(
+		buildKnownSpells(),
+		func(spell SpellEntry) bool { return slices.Contains(excluded, spell.Sid) })
+	slices.SortStableFunc(spells, CompareSpellEntries)
+	return spells
 }
 
-// KnownSpells is the catalog of learnable spells. SIDs come from the
-// registry; names, schools and tiers are editor-side labels. Grouped
-// logically by school; consumers sort by tier within each school as needed.
-var KnownSpells = buildKnownSpells()
+// FindSpell returns the catalog entry for a spell SID, or ok=false when the
+// SID is not in the catalog.
+func FindSpell(sid string) (SpellEntry, bool) {
+	for _, spell := range buildKnownSpells() {
+		if spell.Sid == sid {
+			return spell, true
+		}
+	}
+
+	return SpellEntry{}, false
+}
+
+func GetSpellSchoolDisplayName(schoolType string) string {
+	spellSchoolValues := registry.GetSpellSchoolTypeValues()
+	switch schoolType {
+	case spellSchoolValues.HighNeutral:
+		return schoolNameNeutral
+	case spellSchoolValues.Daylight:
+		return schoolNameDay
+	case spellSchoolValues.Nightshade:
+		return schoolNameNight
+	case spellSchoolValues.Arcane:
+		return schoolNameSpace
+	case spellSchoolValues.Primal:
+		return schoolNamePrimal
+	default:
+		return schoolType
+	}
+}
+
+// GetSpellSchoolColorFromDisplayName maps a school display name to its accent color.
+func GetSpellSchoolColorFromDisplayName(displayName string) color.NRGBA {
+	switch displayName {
+	case schoolNameNeutral:
+		return themes.ColorsSpellSchools.HighNeutral
+	case schoolNameDay:
+		return themes.ColorsSpellSchools.Daylight
+	case schoolNameNight:
+		return themes.ColorsSpellSchools.Nightshade
+	case schoolNameSpace:
+		return themes.ColorsSpellSchools.Arcane
+	case schoolNamePrimal:
+		return themes.ColorsSpellSchools.Primal
+	default:
+		return themes.ColorsBase.Accent
+	}
+}
+
+// GetSpellSchoolColor maps a school display name to its accent color.
+func GetSpellSchoolColor(schoolName string) color.NRGBA {
+	spellSchoolValues := registry.GetSpellSchoolTypeValues()
+	switch schoolName {
+	case spellSchoolValues.HighNeutral:
+		return themes.ColorsSpellSchools.HighNeutral
+	case spellSchoolValues.Daylight:
+		return themes.ColorsSpellSchools.Daylight
+	case spellSchoolValues.Nightshade:
+		return themes.ColorsSpellSchools.Nightshade
+	case spellSchoolValues.Arcane:
+		return themes.ColorsSpellSchools.Arcane
+	case spellSchoolValues.Primal:
+		return themes.ColorsSpellSchools.Primal
+	default:
+		return themes.ColorsBase.Accent
+	}
+}
+
+func CompareSpellEntries(a, b SpellEntry) int {
+	schoolIndexA, schoolIndexB := 99, 99
+	for i, school := range registry.GetSpellSchoolTypeList() {
+		if a.School == school {
+			schoolIndexA = i
+		}
+		if b.School == school {
+			schoolIndexB = i
+		}
+	}
+	if comparison := cmp.Compare(schoolIndexA, schoolIndexB); comparison != 0 {
+		return comparison
+	}
+
+	if comparison := cmp.Compare(a.Tier, b.Tier); comparison != 0 {
+		return comparison
+	}
+
+	return cmp.Compare(a.Name, b.Name)
+}
 
 func buildKnownSpells() []SpellEntry {
 	spells := []SpellEntry{}
@@ -153,79 +243,4 @@ func buildPrimalSpells() []SpellEntry {
 		{spells.HksmillasRampage, "Hksmilla's Rampage", spellSchoolValues.Primal, 5},
 		{spells.SummonPrimalRemnant, "Summon Primal Remnant", spellSchoolValues.Primal, 5},
 	}
-}
-
-func GetKnownSpellsWithExclusions(excluded []string) []SpellEntry {
-	spells := slices.DeleteFunc(
-		buildKnownSpells(),
-		func(spell SpellEntry) bool { return slices.Contains(excluded, spell.Sid) })
-	slices.SortStableFunc(spells, CompareSpellEntries)
-	return spells
-}
-
-// FindSpell returns the catalog entry for a spell SID, or ok=false when the
-// SID is not in the catalog.
-func FindSpell(sid string) (SpellEntry, bool) {
-	for _, spell := range KnownSpells {
-		if spell.Sid == sid {
-			return spell, true
-		}
-	}
-	return SpellEntry{}, false
-}
-
-// GetSpellSchoolColorFromDisplayName maps a school display name to its accent color.
-func GetSpellSchoolColorFromDisplayName(displayName string) color.NRGBA {
-	switch displayName {
-	case "High Neutral":
-		return themes.ColorsSpellSchools.HighNeutral
-	case "Daylight":
-		return themes.ColorsSpellSchools.Daylight
-	case "Nightshade":
-		return themes.ColorsSpellSchools.Nightshade
-	case "Arcane":
-		return themes.ColorsSpellSchools.Arcane
-	case "Primal":
-		return themes.ColorsSpellSchools.Primal
-	}
-	return themes.ColorsBase.Accent
-}
-
-// GetSpellSchoolColor maps a school display name to its accent color.
-func GetSpellSchoolColor(schoolName string) color.NRGBA {
-	spellSchoolValues := registry.GetSpellSchoolTypeValues()
-	switch schoolName {
-	case spellSchoolValues.HighNeutral:
-		return themes.ColorsSpellSchools.HighNeutral
-	case spellSchoolValues.Daylight:
-		return themes.ColorsSpellSchools.Daylight
-	case spellSchoolValues.Nightshade:
-		return themes.ColorsSpellSchools.Nightshade
-	case spellSchoolValues.Arcane:
-		return themes.ColorsSpellSchools.Arcane
-	case spellSchoolValues.Primal:
-		return themes.ColorsSpellSchools.Primal
-	}
-	return themes.ColorsBase.Accent
-}
-
-func CompareSpellEntries(a, b SpellEntry) int {
-	schoolIndexA, schoolIndexB := 99, 99
-	for i, school := range registry.GetSpellSchoolTypeList() {
-		if a.School == school {
-			schoolIndexA = i
-		}
-		if b.School == school {
-			schoolIndexB = i
-		}
-	}
-	if comparison := cmp.Compare(schoolIndexA, schoolIndexB); comparison != 0 {
-		return comparison
-	}
-
-	if comparison := cmp.Compare(a.Tier, b.Tier); comparison != 0 {
-		return comparison
-	}
-
-	return cmp.Compare(a.Name, b.Name)
 }

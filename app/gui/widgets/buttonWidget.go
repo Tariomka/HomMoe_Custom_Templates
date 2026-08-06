@@ -2,6 +2,7 @@ package widgets
 
 import (
 	"image"
+	"image/color"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -30,21 +31,8 @@ func NewButtonWidget(theme *material.Theme, label string, button *widget.Clickab
 			borderColor = themes.ColorsBase.Hover
 		}
 
-		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
-			macro := op.Record(gtx.Ops)
-			buttonDimensions := newButtonInset().Layout(gtx, NewLabelWidget(theme, label, textColor))
-			call := macro.Stop()
-			radius := gtx.Dp(constants.DefaultRoundness)
-			rect := image.Rectangle{Max: buttonDimensions.Size}
-			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
-				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-				Width: float32(gtx.Dp(1)),
-			}.Op())
-			call.Add(gtx.Ops)
-			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
-			return buttonDimensions
-		})
+		return material.Clickable(gtx, button,
+			newBaseButtonWidget(label, NewLabelWidget(theme, label, textColor), backgroundColor, borderColor))
 	}
 }
 
@@ -64,21 +52,8 @@ func NewToggleButtonWidget(theme *material.Theme, label string, button *widget.C
 			borderColor = themes.ColorsBase.Accent
 		}
 
-		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
-			macro := op.Record(gtx.Ops)
-			buttonDimensions := newButtonInset().Layout(gtx, NewLabelWidget(theme, label, textColor))
-			call := macro.Stop()
-			radius := gtx.Dp(constants.DefaultRoundness)
-			rect := image.Rectangle{Max: buttonDimensions.Size}
-			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
-				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-				Width: float32(gtx.Dp(1)),
-			}.Op())
-			call.Add(gtx.Ops)
-			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
-			return buttonDimensions
-		})
+		return material.Clickable(gtx, button,
+			newBaseButtonWidget(label, NewLabelWidget(theme, label, textColor), backgroundColor, borderColor))
 	}
 }
 
@@ -175,21 +150,10 @@ func NewBrightButtonWidget(theme *material.Theme, label string, button *widget.C
 			borderColor = themes.ColorsBase.AccentBright
 		}
 
-		return material.Clickable(gtx, button, func(gtx layout.Context) layout.Dimensions {
-			macro := op.Record(gtx.Ops)
-			buttonDimensions := newButtonInset().Layout(gtx, NewStyledLabelWidget(theme, label, textColor, buttonStyle))
-			call := macro.Stop()
-			radius := gtx.Dp(constants.DefaultRoundness)
-			rect := image.Rectangle{Max: buttonDimensions.Size}
-			paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
-			paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
-				Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
-				Width: float32(gtx.Dp(1)),
-			}.Op())
-			call.Add(gtx.Ops)
-			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
-			return buttonDimensions
-		})
+		return material.Clickable(gtx, button,
+			newBaseButtonWidget(
+				label, NewStyledLabelWidget(theme, label, textColor, buttonStyle), backgroundColor, borderColor),
+		)
 	}
 }
 
@@ -232,6 +196,27 @@ func NewBrightButtonLargeWidget(
 			utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
 			return buttonDimensions
 		})
+	}
+}
+
+func newBaseButtonWidget(
+	label string,
+	labelWidget layout.Widget,
+	backgroundColor, borderColor color.NRGBA) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		macro := op.Record(gtx.Ops)
+		buttonDimensions := newButtonInset().Layout(gtx, labelWidget)
+		call := macro.Stop()
+		radius := gtx.Dp(constants.DefaultRoundness)
+		rect := image.Rectangle{Max: buttonDimensions.Size}
+		paint.FillShape(gtx.Ops, backgroundColor, clip.UniformRRect(rect, radius).Op(gtx.Ops))
+		paint.FillShape(gtx.Ops, borderColor, clip.Stroke{
+			Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
+			Width: float32(gtx.Dp(1)),
+		}.Op())
+		call.Add(gtx.Ops)
+		utils.AddButtonSemantics(gtx.Ops, label, buttonDimensions.Size)
+		return buttonDimensions
 	}
 }
 

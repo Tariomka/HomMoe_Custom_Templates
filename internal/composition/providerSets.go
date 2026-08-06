@@ -2,8 +2,7 @@
 // application. Every collaborator is declared exactly once here, so the
 // generated injector is the single place where the object graph is built.
 //
-// Provider sets are package-level vars rather than structs, so the
-// one-struct-per-file rule of AGENTS.md 4.1 does not apply to this file.
+//nolint:gochecknoglobals // Dependency injection
 package composition
 
 import (

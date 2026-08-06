@@ -94,7 +94,7 @@ func NewSpellPickerDialog(
 
 	entries := make([]pickerEntry, 0, len(visible))
 	for _, spell := range visible {
-		label := constants.SpellSchoolDisplayNames[spell.School]
+		label := constants.GetSpellSchoolDisplayName(spell.School)
 		if label == "" {
 			label = spell.School
 		}

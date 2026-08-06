@@ -28,8 +28,11 @@ var (
 
 	// loadAssetProvider memoizes buildAssetProvider. Initialized eagerly at package
 	// load so concurrent NewAssetProvider callers share one race-free once-value.
+	//
+	//nolint:gochecknoglobals // Private embedded asset provider
 	loadAssetProvider = sync.OnceValues(buildAssetProvider)
 
+	//nolint:gochecknoglobals // Private embedded asset lookup table
 	neutralAssetNames = []string{
 		"neutral_none", "neutral_none_castle", "neutral_none_arena",
 		"neutral_low", "neutral_low_castle", "neutral_low_arena",

@@ -386,7 +386,7 @@ func bannedItemLabel(sid string) (name, category string) {
 // bannedSpellLabel returns the display name and school label for a banned spell.
 func bannedSpellLabel(sid string) (name, school string) {
 	if spell, ok := constants.FindSpell(sid); ok {
-		label := constants.SpellSchoolDisplayNames[spell.School]
+		label := constants.GetSpellSchoolDisplayName(spell.School)
 		if label == "" {
 			label = spell.School
 		}

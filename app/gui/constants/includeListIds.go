@@ -39,9 +39,6 @@ type includeListIDs struct {
 	GuardedUnitBanksNoBiome         models.SidMapping
 }
 
-// IncludeListIDs enumerates the named include-list SIDs (group references
-// that resolve to many concrete content items at generation time).
-//
 //nolint:gochecknoglobals // semantic registry
 var IncludeListIDs = func() includeListIDs {
 	randomHiresBuildings := registry.GetMandatoryContentRandomHiresBuildingValues()

@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
@@ -159,7 +160,7 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 func (this *MandatoryContentProvider) createFootholdContentItem(
 	index int,
 	castleCount int) entities.MandatoryContentItem {
-	return mandatory_content.NewContentItemBuilder(nonContentObjects.RemoteFoothold).
+	return mandatory_content.NewContentItemBuilder(registry.GetMapObjectNonContentValues().RemoteFoothold).
 		WithName(fmt.Sprintf("name_remote_foothold_%d", index)).
 		WithSoloEncounter().
 		WithRulesCallback(func() []entities.PlacementRule {
@@ -194,6 +195,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 // the zone's main castle. Used when a zone has no castle so the rule
 // would never be satisfiable.
 func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
+	ruleTypes := registry.GetRuleTypeValues()
 	for i := range items {
 		if len(items[i].Rules) == 0 {
 			continue

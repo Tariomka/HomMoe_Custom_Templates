@@ -91,6 +91,8 @@ func (this *GameRulesProvider) createAdvancedWinConditions(
 	tournamentRules := configuration.GetTournamentRules()
 
 	useGladiator := configuration.IsGladiatorArenaMode()
+
+	winConditionValues := registry.GetWinningConditionValues()
 	winConditions := entities.WinConditions{
 		Classic:          true,
 		Desertion:        true,
@@ -102,46 +104,58 @@ func (this *GameRulesProvider) createAdvancedWinConditions(
 		LostStartCityDay: helpers.Clamp(gameEndConditions.LostStartCityDay, 1, 30),
 		LostStartHero: gameEndConditions.LostStartHero ||
 			useGladiator ||
-			configuration.GameMode == gameModes.SingleHero,
+			configuration.GameMode == registry.GetGameModeValues().SingleHero,
 		CityHold:     gameEndConditions.CityHold || victoryCondition == winConditionValues.CityHold,
 		CityHoldDays: helpers.Clamp(gameEndConditions.CityHoldDays, 1, 30),
 	}
 	if useGladiator {
-		winConditions.GladiatorArena = true
-		winConditions.GladiatorArenaRegistrationStartFight = true
-		winConditions.GladiatorArenaDaysDelayStart = helpers.Clamp(gladiatorRules.DaysDelayStart, 1, 60)
-		winConditions.GladiatorArenaCountDay = helpers.Clamp(gladiatorRules.CountDay, 1, 30)
-		winConditions.ChampionSelectRule = championSelectRules.StartHero
+		this.setGladiatorArenaRules(gladiatorRules, &winConditions)
 	}
 	if tournamentRules.Enabled || victoryCondition == winConditionValues.Tournament {
-		firstDay := helpers.Clamp(tournamentRules.FirstTournamentDay, 3, 60)
-		interval := helpers.Clamp(tournamentRules.Interval, 3, 30)
-		pointsToWin := helpers.Clamp(tournamentRules.PointsToWin, 1, 10)
-		roundCount := pointsToWin*2 - 1
-		winConditions.ChampionSelectRule = championSelectRules.StartHero
-		winConditions.Tournament = true
-		winConditions.TournamentSaveArmy = true
-		winConditions.TournamentPointsToWin = pointsToWin
-
-		var announceDays, battleOffsets []int
-		prevBattle := 0
-		for i := range roundCount {
-			announce := 1
-			if i > 0 {
-				announce = prevBattle + 1
-			}
-			offset := firstDay - 1
-			if i > 0 {
-				offset = interval - 1
-			}
-			announceDays = append(announceDays, announce)
-			battleOffsets = append(battleOffsets, offset)
-			prevBattle = announce + offset
-		}
-		winConditions.TournamentAnnounceDays = announceDays
-		winConditions.TournamentDays = battleOffsets
+		this.setTournamentRules(tournamentRules, &winConditions)
 	}
 	return winConditions
+}
+
+func (this *GameRulesProvider) setGladiatorArenaRules(
+	gladiatorRules config.GladiatorArenaRules,
+	winConditions *entities.WinConditions) {
+	winConditions.GladiatorArena = true
+	winConditions.GladiatorArenaRegistrationStartFight = true
+	winConditions.GladiatorArenaDaysDelayStart = helpers.Clamp(gladiatorRules.DaysDelayStart, 1, 60)
+	winConditions.GladiatorArenaCountDay = helpers.Clamp(gladiatorRules.CountDay, 1, 30)
+	winConditions.ChampionSelectRule = registry.GetChampionSelectValues().StartHero
+}
+
+func (this *GameRulesProvider) setTournamentRules(
+	tournamentRules config.TournamentRules,
+	winConditions *entities.WinConditions) {
+	firstDay := helpers.Clamp(tournamentRules.FirstTournamentDay, 3, 60)
+	interval := helpers.Clamp(tournamentRules.Interval, 3, 30)
+	pointsToWin := helpers.Clamp(tournamentRules.PointsToWin, 1, 10)
+	roundCount := pointsToWin*2 - 1
+	winConditions.ChampionSelectRule = registry.GetChampionSelectValues().StartHero
+	winConditions.Tournament = true
+	winConditions.TournamentSaveArmy = true
+	winConditions.TournamentPointsToWin = pointsToWin
+
+	var announceDays, battleOffsets []int
+	prevBattle := 0
+	for i := range roundCount {
+		announce := 1
+		if i > 0 {
+			announce = prevBattle + 1
+		}
+		offset := firstDay - 1
+		if i > 0 {
+			offset = interval - 1
+		}
+		announceDays = append(announceDays, announce)
+		battleOffsets = append(battleOffsets, offset)
+		prevBattle = announce + offset
+	}
+	winConditions.TournamentAnnounceDays = announceDays
+	winConditions.TournamentDays = battleOffsets
 }
 
 func (this *GameRulesProvider) createBonuses(bonusEntries []config.BonusEntry) entities.BonusList {

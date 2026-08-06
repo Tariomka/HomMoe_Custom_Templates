@@ -17,42 +17,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
-
-var receiversFilters = registry.GetReceiversFilterValues()
-
-// bonusTypeOption pairs a friendly dropdown label with its preset type.
-type bonusTypeOption struct {
-	label      string
-	presetType config.BonusPresetType
-}
-
-var bonusTypeOptions = []bonusTypeOption{
-	{"Free Town Portal", config.BonusTownPortalFree},
-	{"Spell", config.BonusSpell},
-	{"Unit Multiplier", config.BonusUnitMultiplier},
-	{"Movement Bonus", config.BonusMovementBonus},
-	{"Starting Item", config.BonusStartingItem},
-	{"Starting Gold", config.BonusStartingGold},
-	{"Starting Gems", config.BonusStartingGems},
-	{"Starting Crystals", config.BonusStartingCrystals},
-	{"Starting Mercury", config.BonusStartingMercury},
-	{"Starting Wood", config.BonusStartingWood},
-	{"Starting Ore", config.BonusStartingOre},
-}
-
-var bonusReceiverOptions = []string{receiversFilters.StartingHero, receiversFilters.AllHeroes}
-
-var bonusResourceDefaults = map[config.BonusPresetType]string{
-	config.BonusStartingGold:     "10000",
-	config.BonusStartingGems:     "15",
-	config.BonusStartingCrystals: "15",
-	config.BonusStartingMercury:  "15",
-	config.BonusStartingWood:     "20",
-	config.BonusStartingOre:      "20",
-}
 
 // BonusPickerDialog composes one or more game-start bonuses. For the Spell
 // type it keeps a removable list of picked spells (the spell picker appends to
@@ -105,10 +72,9 @@ func NewBonusPickerDialog(
 		}
 	}
 
-	labels := make([]string, len(bonusTypeOptions))
-	for i, option := range bonusTypeOptions {
-		labels[i] = option.label
-	}
+	labels := linq.FromSlice(constants.GetBonusTypeOptions()).
+		SelectString(func(opt constants.BonusTypeOption) string { return opt.Label }).
+		ToSlice()
 
 	dialog := &BonusPickerDialog{
 		existingKeys:     keys,
@@ -116,7 +82,7 @@ func NewBonusPickerDialog(
 		opener:           opener,
 		onApply:          onApply,
 		typeDropdown:     components.NewDropdownSelector(labels),
-		receiverDropdown: components.NewDropdownSelector(append([]string{}, bonusReceiverOptions...)),
+		receiverDropdown: components.NewDropdownSelector(append([]string{}, constants.GetBonusReceiverOptions()...)),
 	}
 	dialog.spellScroll.Axis = layout.Vertical
 	dialog.multiplierEdit.SingleLine = true
@@ -383,24 +349,26 @@ func (this *BonusPickerDialog) buildEntries() ([]config.BonusEntry, bool) {
 
 func (this *BonusPickerDialog) getSelectedType() config.BonusPresetType {
 	index := this.typeDropdown.GetSelectedIndex()
-	if index < 0 || index >= len(bonusTypeOptions) {
+	options := constants.GetBonusTypeOptions()
+	if index < 0 || index >= len(options) {
 		return config.BonusTownPortalFree
 	}
 
-	return bonusTypeOptions[index].presetType
+	return options[index].PresetType
 }
 
 func (this *BonusPickerDialog) receiver() string {
 	index := this.receiverDropdown.GetSelectedIndex()
-	if index < 0 || index >= len(bonusReceiverOptions) {
-		return bonusReceiverOptions[0]
+	options := constants.GetBonusReceiverOptions()
+	if index < 0 || index >= len(options) {
+		return options[0]
 	}
 
-	return bonusReceiverOptions[index]
+	return options[index]
 }
 
 func (this *BonusPickerDialog) applyTypeDefaults(typ config.BonusPresetType) {
-	if def, ok := bonusResourceDefaults[typ]; ok {
+	if def, ok := constants.GetBonusResourceDefaults()[typ]; ok {
 		this.resourceEdit.SetText(def)
 	}
 }
@@ -449,7 +417,7 @@ func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index in
 // label, with a sentence-case fallback for unknown SIDs.
 func spellNameAndSchool(sid string) (name, school string) {
 	if spell, ok := constants.FindSpell(sid); ok {
-		label := constants.SpellSchoolDisplayNames[spell.School]
+		label := constants.GetSpellSchoolDisplayName(spell.School)
 		if label == "" {
 			label = spell.School
 		}
