@@ -10,13 +10,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ZoneLabelProvider struct {
 	zoneLabels []string
 }
 
-func NewZoneLabelProvider() *ZoneLabelProvider {
+func NewZoneLabelProvider() zone_interfaces.IZoneLabelProvider {
 	return &ZoneLabelProvider{zoneLabels: constants.GetZoneLabels()}
 }
 

@@ -16,14 +16,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type TopologyConnectionService struct {
-	zoneLabelProvider zones.IZoneLabelProvider
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider
 }
 
-func NewTopologyConnectionService(zoneLabelProvider zones.IZoneLabelProvider) *TopologyConnectionService {
+func NewTopologyConnectionService(zoneLabelProvider zone_interfaces.IZoneLabelProvider) ITopologyConnectionService {
 	return &TopologyConnectionService{zoneLabelProvider: zoneLabelProvider}
 }
 

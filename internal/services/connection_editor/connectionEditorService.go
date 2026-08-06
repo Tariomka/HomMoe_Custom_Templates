@@ -10,14 +10,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ConnectionEditorService struct {
-	zoneClassifier *zone_services.ZoneClassifier
+	zoneClassifier zone_interfaces.IZoneClassifier
 }
 
-func NewConnectionEditorService(zoneClassifier *zone_services.ZoneClassifier) *ConnectionEditorService {
+func NewConnectionEditorService(
+	zoneClassifier zone_interfaces.IZoneClassifier) IConnectionEditorService {
 	return &ConnectionEditorService{zoneClassifier: zoneClassifier}
 }
 

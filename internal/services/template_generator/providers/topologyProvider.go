@@ -8,14 +8,16 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type TopologyProvider struct {
 	shufflePlayerZones bool
-	services           *TopologyServiceLookup
+	services           provider_interfaces.ITopologyServiceLookup
 }
 
-func NewTopologyProvider(services *TopologyServiceLookup) *TopologyProvider {
+func NewTopologyProvider(
+	services provider_interfaces.ITopologyServiceLookup) provider_interfaces.ITopologyProvider {
 	return &TopologyProvider{services: services}
 }
 
@@ -36,7 +38,7 @@ func (this *TopologyProvider) CreateTopologyVariant(
 		configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 }
 
-func (this *TopologyProvider) ShufflePlayerZones(enabled bool) *TopologyProvider {
+func (this *TopologyProvider) ShufflePlayerZones(enabled bool) provider_interfaces.ITopologyProvider {
 	this.shufflePlayerZones = enabled
 	return this
 }

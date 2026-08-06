@@ -7,7 +7,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // GladiatorArenaProvider stamps the Gladiator Arena onto a generated variant.
@@ -26,10 +27,11 @@ import (
 //     layouts), the arena falls back to a main object in the richest neutral
 //     zone so it is never silently dropped.
 type GladiatorArenaProvider struct {
-	zoneClassifier *zone_services.ZoneClassifier
+	zoneClassifier zone_interfaces.IZoneClassifier
 }
 
-func NewGladiatorArenaProvider(zoneClassifier *zone_services.ZoneClassifier) *GladiatorArenaProvider {
+func NewGladiatorArenaProvider(
+	zoneClassifier zone_interfaces.IZoneClassifier) provider_interfaces.IGladiatorArenaProvider {
 	return &GladiatorArenaProvider{zoneClassifier: zoneClassifier}
 }
 

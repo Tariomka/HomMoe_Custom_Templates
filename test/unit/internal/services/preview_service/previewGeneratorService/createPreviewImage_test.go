@@ -12,7 +12,7 @@ import (
 )
 
 // mustNewGenerator fails the test immediately when the embedded assets cannot load.
-func mustNewGenerator(t *testing.T) *preview_service.PreviewGeneratorService {
+func mustNewGenerator(t *testing.T) preview_service.IPreviewGeneratorService {
 	t.Helper()
 	generator, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
 	require.NoError(t, err)

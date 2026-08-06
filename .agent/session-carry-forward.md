@@ -1,202 +1,263 @@
-# Session Carry-Forward — Batch 10 (Duplication cleanup)
+# Session Carry-Forward
 
 ## 1. Session goal
 
-Deliver **Batch 10** of the `todo/review-opus5-08-04.md` remediation: review
-findings §3.1, §3.2, §3.3, §3.4 and §5.3 (duplicate code + positional
-constructor calls).
+Remediate **Batch 11** of the 46-finding review in
+[todo/review-opus5-08-04.md](todo/review-opus5-08-04.md) — review findings
+**§6.2** (`internal/handlers` has no mirrored unit tests) and **§6.4** (two
+`app/gui/constants` catalogues at 0% coverage). Because the five handlers held
+**concrete** struct dependencies that cannot be mocked, the owner expanded the
+scope: first convert **every constructor-injected service under `internal/`** to
+an interface (full closure), then write the handler tests against `testify`
+mocks.
+
+Work is tracked in [plans/batch-11-handler-coverage.md](plans/batch-11-handler-coverage.md),
+which is the source of truth. **Phases 0–5 are complete; Phases 6–11 remain.**
 
 ## 2. Fixes applied
 
-- **§3.1** — all fifteen hard-coded `WithGuardWeeklyIncrement(0.15)` call sites
-  across twelve files now read
-  `WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard)`.
-  The distinct `0.20` in [internal/services/zones/zoneFactory.go](internal/services/zones/zoneFactory.go)
-  was deliberately left alone.
-- **§3.3** — the two verbatim spell-label helpers (`bannedSpellLabel` in
-  [app/gui/panels/bonusesPanel.go](app/gui/panels/bonusesPanel.go) and
-  `spellNameAndSchool` in [app/gui/dialogs/bonusPickerDialog.go](app/gui/dialogs/bonusPickerDialog.go))
-  were deleted in favour of one exported
-  `constants.SpellNameAndSchool` in the new
-  [app/gui/constants/spellLabel.go](app/gui/constants/spellLabel.go).
-- **§3.4** — verified only. The owner had already extracted
-  `newBaseButtonWidget` + `newButtonInset` in
-  [app/gui/widgets/buttonWidget.go](app/gui/widgets/buttonWidget.go) in commit
-  `0311318`. The headless GUI snapshot suite passes with zero diff and the two
-  `dupl` lint findings are gone.
-- **§3.2 + §5.3** — see below.
+- Two `wastedassign` lint regressions inherited from Batch 10 fixed in
+  [app/gui/panels/bonusesPanel.go](app/gui/panels/bonusesPanel.go)
+  (`label := ""` → `var label string` in the `BonusSpell` and
+  `BonusStartingItem` branches of `bonusDisplayName`). Lint is back to **0 issues**.
+- Regenerated the stale `coverage.txt` (baseline total coverage: **65.5%**).
+- **Typed-nil hazard eliminated:** `providePreviewGenerator` used to return a nil
+  `*PreviewGeneratorService`, which would have become a non-nil interface holding
+  a nil pointer once the field was interface-typed. It now returns a null object,
+  and the `if this.previewGenerator != nil` guard is gone from
+  [internal/handlers/templateHandler.go](internal/handlers/templateHandler.go).
+- **Private-access leak removed:** `ManualReapplyService` no longer reaches into
+  `ZoneEditorService.castleFactory` / `.rebuildCastleRoads`.
 
 ## 3. Features added / changed
 
-- **`...CreationRequest` struct family** (§5.3). `ZoneFactory.CreateSpawnZone`
-  and `TopologyBase.CreateNeutralZone` no longer take 7–9 positional arguments;
-  they take a request struct. For consistency the three pre-existing creation
-  structs were renamed into the same family (files renamed per AGENTS.md §4.1):
-  `NeutralZoneCreation` → `NeutralZoneCreationRequest`, `HubZoneCreation` →
-  `HubZoneCreationRequest`, `NeutralLikeZoneCreation` →
-  `NeutralLikeZoneCreationRequest`.
-- **`TopologyBase.CreateClusterZone`** (§3.2). One exported helper on
-  [topologyBase.go](internal/services/template_generator/providers/topology/base/topologyBase.go)
-  owns the spawn/neutral choice, the `Player%d` naming and the `FirstOrDefault`
-  plan lookup. Per owner decision it was applied to **all ten** duplicated call
-  sites, not only the four tournament cluster services.
-- **Behaviour note for the owner (§3.3).** Both original spell-label copies
-  ended with `if label == "" { label = spell.School }`. That branch is provably
-  a no-op — `GetSpellSchoolDisplayName` returns one of five non-empty constants
-  or the raw `schoolType`, so `label` is empty only when `spell.School` is
-  empty, in which case the assignment changes nothing. It was **dropped**
-  rather than carried into the new file as an uncoverable branch.
+All changes are DI refactors that unblock mock-based handler testing.
+
+- **AGENTS.md §4.2.2 "Interface placement"** (authored by the owner, added
+  between §4.2.1 and §4.3): <5 implementation files needing interfaces → same
+  package; ≥5 → `{singular package name}_interfaces` subpackage; spanning
+  packages / cycle-breaking → `internal/interfaces/`. Factories return the
+  **interface**, and the **broadest** one when an implementation satisfies several.
+- **Phase 1 — 6 leaf interfaces:** `IFileService`, `IEditorStateValidator`,
+  `IGeneratorConfigMapper`, `IMandatoryContentItemMapper`,
+  `IGenerationTuningFactory`, `ITopologyConnectionService`.
+- **Phase 2 — `internal/services/zones/zone_interfaces/`** (5 interfaces):
+  `ICastleFactory`, `IRoadFactory`, `IZoneFactory`, `IZoneClassifier`,
+  `IZoneLabelProvider`. The old `zones/zoneLabelProviderInterface.go` was deleted
+  and its `wire.Bind` dropped. Owner decisions: `createPlayerSpawnCastle` /
+  `createAbandonedOutposts` promoted to public; `ZoneEditorService.CastleFactory`
+  renamed to unexported `castleFactory`.
+- **Phase 3 — `topology/topology_interfaces/ITopologyService`** plus
+  `topology/topologyServiceAssertions.go` with 12 compile-time assertions. The 12
+  concrete constructors are **unchanged** because wire keys providers by output
+  type and 12 providers returning one interface is a multiple-bindings error.
+  `IPositionedTopologyBuilder` was **dropped** — the builder is embedded *by
+  value*, which an interface cannot express.
+- **Phase 4 — `providers/provider_interfaces/`** (7 interfaces) +
+  `template_generator.ITemplateGenerator`. The `TopologyVariantCreator` func type
+  was relocated from `providers` into `provider_interfaces` to break an import
+  cycle, and the original file deleted.
+- **Phase 5 — `connection_editor` + `preview_service` interfaces and the null
+  object.** Owner decision (B+C combination) for the `ManualReapplyService`
+  blocker: it now takes its own `ICastleFactory`, and
+  `ZoneEditorService.rebuildCastleRoads` was promoted to public
+  `RebuildCastleRoads` and put on `IZoneEditorService` — so no `CastleFactory()`
+  accessor and **no `wire.Bind`** were needed. `NewManualReapplyService`'s
+  parameters are now `(zoneEditor, castleFactory, zoneClassifier, tuningFactory)`.
+  All five handler structs are now interface-typed.
+
+Net effect: exactly **one** `wire.Bind` remains in the codebase
+(`IContentRuleService` ← `*ContentRuleService`).
 
 ## 4. File modifications
 
-**Created**
+### Created (untracked)
 
 | File | Summary |
 | --- | --- |
-| [app/gui/constants/spellLabel.go](app/gui/constants/spellLabel.go) | `SpellNameAndSchool(sid) (name, school)` |
-| [internal/models/spawnZoneCreationRequest.go](internal/models/spawnZoneCreationRequest.go) | Request struct for `ZoneFactory.CreateSpawnZone` |
-| [internal/models/topologyNeutralZoneCreationRequest.go](internal/models/topologyNeutralZoneCreationRequest.go) | Request struct for `TopologyBase.CreateNeutralZone` |
-| internal/models/neutralZoneCreationRequest.go | Renamed from `neutralZoneCreation.go` |
-| internal/models/hubZoneCreationRequest.go | Renamed from `hubZoneCreation.go` |
-| internal/models/neutralLikeZoneCreationRequest.go | Renamed from `neutralLikeZoneCreation.go` |
+| [plans/batch-11-handler-coverage.md](plans/batch-11-handler-coverage.md) | The 12-phase plan; **read this first**. |
+| [internal/services/file_service/fileServiceInterface.go](internal/services/file_service/fileServiceInterface.go) | `IFileService` (3 methods). |
+| [internal/validators/editorStateValidatorInterface.go](internal/validators/editorStateValidatorInterface.go) | `IEditorStateValidator`. |
+| [internal/mappers/generatorConfigMapperInterface.go](internal/mappers/generatorConfigMapperInterface.go) | `IGeneratorConfigMapper`. |
+| [internal/mappers/mandatoryContentItemMapperInterface.go](internal/mappers/mandatoryContentItemMapperInterface.go) | `IMandatoryContentItemMapper`. |
+| [internal/services/template_generator/generation_tuning/generationTuningFactoryInterface.go](internal/services/template_generator/generation_tuning/generationTuningFactoryInterface.go) | `IGenerationTuningFactory`. |
+| [internal/services/template_generator/providers/topology/base/topologyConnectionServiceInterface.go](internal/services/template_generator/providers/topology/base/topologyConnectionServiceInterface.go) | `ITopologyConnectionService` (4 methods). |
+| `internal/services/zones/zone_interfaces/` (5 files) | `ICastleFactory`, `IRoadFactory`, `IZoneFactory`, `IZoneClassifier`, `IZoneLabelProvider`. |
+| `internal/services/template_generator/providers/topology/topology_interfaces/topologyServiceInterface.go` | `ITopologyService`. |
+| [internal/services/template_generator/providers/topology/topologyServiceAssertions.go](internal/services/template_generator/providers/topology/topologyServiceAssertions.go) | 12 compile-time `ITopologyService` assertions. |
+| `internal/services/template_generator/providers/provider_interfaces/` (8 files) | 7 provider interfaces + the relocated `TopologyVariantCreator`. |
+| [internal/services/template_generator/templateGeneratorInterface.go](internal/services/template_generator/templateGeneratorInterface.go) | `ITemplateGenerator`. |
+| [internal/services/connection_editor/connectionEditorServiceInterface.go](internal/services/connection_editor/connectionEditorServiceInterface.go) | `IConnectionEditorService` (4 methods). |
+| [internal/services/connection_editor/zoneEditorServiceInterface.go](internal/services/connection_editor/zoneEditorServiceInterface.go) | `IZoneEditorService` (10 methods). |
+| [internal/services/connection_editor/manualReapplyServiceInterface.go](internal/services/connection_editor/manualReapplyServiceInterface.go) | `IManualReapplyService` (2 methods). |
+| [internal/services/preview_service/previewLayoutServiceInterface.go](internal/services/preview_service/previewLayoutServiceInterface.go) | `IPreviewLayoutService`. |
+| [internal/services/preview_service/previewGeneratorServiceInterface.go](internal/services/preview_service/previewGeneratorServiceInterface.go) | `IPreviewGeneratorService`. |
+| [internal/services/preview_service/nullPreviewGeneratorService.go](internal/services/preview_service/nullPreviewGeneratorService.go) | Null-object generator; `CreatePreviewImage` returns `nil`. |
+| [test/unit/internal/services/connection_editor/zoneEditorService/rebuildCastleRoads_test.go](test/unit/internal/services/connection_editor/zoneEditorService/rebuildCastleRoads_test.go) | 3 tests for the newly public method. |
+| `test/unit/internal/services/preview_service/nullPreviewGeneratorService/` (2 files) | 3 tests for the null object. |
 
-**Edited (production)**
+### Deleted
 
-- [internal/services/zones/zoneFactory.go](internal/services/zones/zoneFactory.go) — `CreateSpawnZone` now takes `models.SpawnZoneCreationRequest`; §3.1.
-- [internal/services/zones/castleFactory.go](internal/services/zones/castleFactory.go), [internal/services/zones/zoneFactoryNeutralLike.go](internal/services/zones/zoneFactoryNeutralLike.go) — §3.1 / rename fallout.
-- [.../topology/base/topologyBase.go](internal/services/template_generator/providers/topology/base/topologyBase.go) — new `CreateClusterZone`; both wrappers take request structs.
-- [.../topology/base/topologyConnectionService.go](internal/services/template_generator/providers/topology/base/topologyConnectionService.go) — §3.1 (3 sites).
-- `.../topology/{chain,geometricHub,hub,ring,web}Topology.go` and `.../topology/positionedTopologyBuilder.go` — converted to `CreateClusterZone`; unused `linq` imports dropped from chain/positioned/ring.
-- `.../topology/tournament_variant/{balanced,chain,hub,ring}ClusterService.go` — converted to `CreateClusterZone`.
-- [internal/services/connection_editor/zoneEditorService.go](internal/services/connection_editor/zoneEditorService.go) — rename fallout.
-- [app/gui/panels/bonusesPanel.go](app/gui/panels/bonusesPanel.go), [app/gui/dialogs/bonusPickerDialog.go](app/gui/dialogs/bonusPickerDialog.go) — §3.3.
+- `internal/services/zones/zoneLabelProviderInterface.go` — relocated into
+  `zone_interfaces/`.
+- `internal/services/template_generator/providers/topologyVariantCreator.go` —
+  relocated into `provider_interfaces/`.
 
-**Edited (docs)**
+### Edited (highlights; see the `git status` snapshot in §6 for the full list)
 
-- [todo/review-opus5-08-04.md](todo/review-opus5-08-04.md) — §3.1, §3.2, §3.3, §3.4, §5.3 marked `✅ FIXED` in place; §12 item 10 marked done.
+- [AGENTS.md](AGENTS.md) — new §4.2.2.
+- [app/gui/panels/bonusesPanel.go](app/gui/panels/bonusesPanel.go) — lint fix.
+- [internal/composition/previewGeneratorProvider.go](internal/composition/previewGeneratorProvider.go) — null object on asset failure.
+- [internal/composition/topologyServiceProvider.go](internal/composition/topologyServiceProvider.go) — returns `ITopologyServiceLookup`.
+- [internal/composition/providerSets.go](internal/composition/providerSets.go) — `wire.Bind` for `IZoneLabelProvider` removed.
+- `internal/composition/wire_gen.go` — regenerated (never hand-edit).
+- All five handlers: [templateHandler.go](internal/handlers/templateHandler.go),
+  [zoneEditorHandler.go](internal/handlers/zoneEditorHandler.go),
+  [previewHandler.go](internal/handlers/previewHandler.go),
+  [stateHandler.go](internal/handlers/stateHandler.go), plus `guiHandler`'s graph.
+- ~45 further service/provider/topology files switched to interface parameters
+  and interface-returning factories.
+- 8 `test/test_helpers/*.go` builders and 7 `common_test.go` helpers updated for
+  the new return types and the new `NewManualReapplyService` signature.
 
 ## 5. Tests added or updated
 
-**Added**
+**Added (6 tests in 3 files):**
+- `rebuildCastleRoads_test.go` — rebuilds castle roads for the current main
+  objects; drops stale castle roads; preserves connection roads.
+- `nullPreviewGeneratorService/createPreviewImage_test.go` — returns no image for
+  a real template and for a nil template.
+- `nullPreviewGeneratorService/newNullPreviewGenerator_test.go` — constructs.
 
-- [test/unit/app/gui/constants/spellLabel/spellNameAndSchool_test.go](test/unit/app/gui/constants/spellLabel/spellNameAndSchool_test.go) — 4 tests (known SID name, known SID school, unknown SID sentence-cased name, unknown SID generic `"Spell"`).
-- [test/unit/.../topologyBase/createClusterZone_test.go](test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createClusterZone_test.go) — 4 tests (spawn player index, spawn name, neutral plan lookup by label, hold-city win condition).
+**Updated:** the `common_test.go` helpers in `guiHandler`,
+`manualReapplyService`, `fileService`, `gladiatorArenaProvider`,
+`mandatoryContentProvider`, `zoneFactory`, and
+`previewGeneratorService/createPreviewImage_test.go` — all mechanical
+return-type / signature changes, no behavioural edits.
 
-**Updated**
+**Last run status — all green:**
 
-- `.../topologyBase/common_test.go` — added `newSpawnRequest` / `newNeutralRequest` builders.
-- `.../topologyBase/createSpawnZone_test.go` (7 calls), `.../topologyBase/createNeutralZone_test.go` (8 calls), `test/unit/internal/services/zones/zoneFactory/{createSpawnZone,createNeutralZone,createHubZone}_test.go` — migrated to the request structs.
-
-**Last verification run — all green:**
-
-| Check | Result |
+| Command | Result |
 | --- | --- |
 | `go build ./...` | pass |
 | `go vet -tags=integration_test ./...` | pass |
+| `go vet -tags='integration_test,gui' ./test/...` | pass |
+| `go test -count=1 ./test/unit/...` | pass (no FAIL) |
+| `go test -tags=integration_test -count=1 ./test/integration/...` | `ok` (3.1s) |
 | `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
-| `go test -count=1 ./test/unit/...` | pass |
-| `go test -tags=integration_test -count=1 ./test/integration/...` | pass |
-| `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` | pass (zero snapshot diff — this is the §3.4 verification) |
-| Unit coverage `-coverpkg=./internal/...,./app/...` | **65.6%** (baseline 65.3% — improved) |
-| `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** (baseline 42; the 2 `dupl` findings are gone) |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+
+Not re-run this session: the GPU-gated UI suite
+(`go test -tags='integration_test,gui' ./test/integration/gui/...`) — snapshot
+verification is Phase 6's job. Coverage has not been re-measured since the
+**65.5%** baseline; no production behaviour changed, so it is expected to hold.
 
 ## 6. Git status snapshot
 
-Branch: **`AD/refactoring-07-21`**. Last commits: `0311318 "Task 10 Resolved"`
-(owner), `b6a3cd1 "Batch 9 Done"`.
+Branch: **`AD/refactoring-07-21`**. **Nothing is staged** — the working tree
+holds 68 modified, 2 deleted and ~20 untracked paths, all of them this session's
+work. Per AGENTS.md §2.5 nothing was staged or committed; the owner reviews and
+commits.
 
-**Nothing is staged.** `git status --short`:
+Untracked directories the next session inherits: `plans/`,
+`internal/services/zones/zone_interfaces/`,
+`internal/services/template_generator/providers/provider_interfaces/`,
+`internal/services/template_generator/providers/topology/topology_interfaces/`,
+`test/unit/internal/services/preview_service/nullPreviewGeneratorService/`.
 
-```
- M app/gui/dialogs/bonusPickerDialog.go
- M app/gui/panels/bonusesPanel.go
- D internal/models/hubZoneCreation.go
- D internal/models/neutralLikeZoneCreation.go
- D internal/models/neutralZoneCreation.go
- M internal/services/connection_editor/zoneEditorService.go
- M internal/services/template_generator/providers/topology/base/topologyBase.go
- M internal/services/template_generator/providers/topology/base/topologyConnectionService.go
- M internal/services/template_generator/providers/topology/chainTopology.go
- M internal/services/template_generator/providers/topology/geometricHubTopology.go
- M internal/services/template_generator/providers/topology/hubTopology.go
- M internal/services/template_generator/providers/topology/positionedTopologyBuilder.go
- M internal/services/template_generator/providers/topology/ringTopology.go
- M internal/services/template_generator/providers/topology/tournament_variant/balancedClusterService.go
- M internal/services/template_generator/providers/topology/tournament_variant/chainClusterService.go
- M internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go
- M internal/services/template_generator/providers/topology/tournament_variant/ringClusterService.go
- M internal/services/template_generator/providers/topology/webTopology.go
- M internal/services/zones/castleFactory.go
- M internal/services/zones/zoneFactory.go
- M internal/services/zones/zoneFactoryNeutralLike.go
- M test/unit/.../topologyBase/{common,createNeutralZone,createSpawnZone}_test.go
- M test/unit/internal/services/zones/zoneFactory/{createHubZone,createNeutralZone,createSpawnZone}_test.go
- M todo/review-opus5-08-04.md
-?? app/gui/constants/spellLabel.go
-?? internal/models/{hubZone,neutralLikeZone,neutralZone,spawnZone,topologyNeutralZone}CreationRequest.go
-?? test/unit/app/gui/constants/spellLabel/
-?? test/unit/.../topologyBase/createClusterZone_test.go
-```
+Re-run `git status --short` at the start of the next session for the exact list.
 
-The three ` D` + `??` pairs under `internal/models/` are the file renames (done
-with `git mv`, then `git restore --staged internal/models/` so nothing stayed
-staged).
+## 7. Rejections / things the owner declined
 
-## 7. Rejections / things not done
-
-- `WithGuardWeeklyIncrement(0.20)` in `zoneFactory.go` — out of §3.1's scope, a
-  genuinely different value.
-- `NewSegmentButtonWidget` was **not** folded into `newBaseButtonWidget`; it
-  uses `layout.UniformInset(constants.DefaultPaddingSmall)`, so sharing the
-  body would move pixels.
-- `bannedItemLabel` in `bonusesPanel.go` was left untouched (not part of §3.3).
-- The `if label == "" { label = spell.School }` no-op branch was dropped, not
-  ported (see §3 above).
+- **A separate plan file for the review itself** — declined at the outset;
+  findings are marked `✅ FIXED` / `❌ WILL NOT FIX` **in place** in
+  [todo/review-opus5-08-04.md](todo/review-opus5-08-04.md).
+- **`IPositionedTopologyBuilder`** — dropped, not deferred:
+  `PositionedTopologyBuilder` is embedded *by value* in six topology structs, so
+  an interface cannot replace it.
+- **One provider per topology service returning `ITopologyService`** — rejected;
+  wire keys providers by output type, so 12 identical bindings are a generation
+  error. The owner chose the interface + concrete factories + assertions file.
+- **Adding a `CastleFactory()` accessor to `IZoneEditorService`** (option B
+  alone) and **duplicating the road-rebuild helper inside
+  `ManualReapplyService`** (option C alone) — both rejected in favour of the B+C
+  combination described in §3.
+- **Bulk `-tags` widening** (`wireinject`, blanket `integration_test`) — never
+  attempted; forbidden by AGENTS.md §4.6.1 / §4.6.3.
 
 ## 8. Open questions
 
-- None blocking Batch 10. Still-open owner decisions for later batches:
-  §1.1 (transactionality), §1.5 (ceilings), §1.8 (output-directory persistence
-  shape), §2.2 (regeneration-policy refactor scope). Optional leftover: §5.4
-  (`.gitignore` blanket-ignores `/*.txt`).
-- FYI: the lint baseline dropped from 42 issues to **0** during this batch. The
-  40 `gochecknoglobals` findings are no longer reported — likely a `.golangci`
-  configuration change in the owner's `0311318`. Worth a glance.
+None blocking. Two decisions the next session will need to make (or confirm with
+the owner) inside Phase 7:
+
+1. **Mock breadth.** The plan says to generate **only** the mocks the handler
+   tests actually need, not one per interface. Confirm before writing 20+ mocks.
+2. **Phase 9 spot checks.** The plan explicitly forbids hard-coding the ~31 SIDs;
+   invariants plus 2–3 named spot checks only.
 
 ## 9. Next recommended actions
 
-1. Owner reviews and commits Batch 10.
-2. **Batch 11 — Coverage PR.** §6.2 (`internal/handlers` mirrored tests,
-   starting with `stateHandler` and `previewHandler`), §6.4 (the two 0%
-   catalogues `bannableItems.go` / `valueOverrideSids.go`). Additionally,
-   if more code is found that is not directly covered by unit tests,
-   prompt ask if those tests should be added.
-3. **Batch 12 — Product decisions.** Only ⚠ §1.8 remains.
-4. **Batch 13 — Large refactors.** §2.1 (extract filesystem policy) → unblocks
-   §2.5; then §2.2; §2.6 opportunistically. Needs a plan file under `plans/`
-   per AGENTS.md §4.7.
+1. **Phase 6 — wire.** Review [internal/composition/providerSets.go](internal/composition/providerSets.go)
+   against the new interface-returning factories, run
+   `wire gen ./internal/composition/...`, confirm a `wire diff` is clean, then run
+   the GPU-gated UI snapshot suite and confirm **zero** snapshot diffs.
+2. **Phase 7 — mocks.** Add `test/test_helpers/<interfaceName>Mock.go` files,
+   copying the style of
+   [test/test_helpers/contentRuleServiceMock.go](test/test_helpers/contentRuleServiceMock.go)
+   (`type XMock struct { mock.Mock }`, receiver `this`,
+   `arguments := this.Called(...)`, `value, _ := arguments.Get(0).(T)`).
+3. **Phase 8 — §6.2.** Mirrored test folders for all five handlers. Cover
+   explicitly: empty/whitespace path → `ErrNoOutputPath`; nil state →
+   `ErrNothingToSave`; `fixIssues=false` returns warnings but an unmodified
+   state; `AdvancedMode` true/false each zeroing the correct field set;
+   `BuildPreviewLayout` with nil template + nil zones + nil connections.
+4. **Phase 9 — §6.4.** `test/unit/app/gui/constants/bannableItems/` (5 files:
+   `getBannableItemsWithExclusions`, `findBannableItem`, `getBannedItemLabel`,
+   `sidToDisplayName`, `compareBannableItems`) and
+   `test/unit/app/gui/constants/valueOverrideSids/getValueOverrideSidsWithExclusions_test.go`.
+5. **Phase 10.** Regenerate the coverage profile, find the remaining 0% non-Gio
+   files, test the easy/pure ones, record the untestable ones in
+   [todo/test_observations.md](todo/test_observations.md).
+6. **Phase 11.** Full suite; mark §6.2 and §6.4 `✅ FIXED` **in place** in
+   [todo/review-opus5-08-04.md](todo/review-opus5-08-04.md) and tick §12 item 11;
+   update repository memory; rewrite this file; stop for owner review.
 
 ## 10. Carry-forward prompt
 
 > Read `AGENTS.md` first. Hard rules, one line each: never modify `data/`,
 > `internal/entities/template/` or `internal/registry/`; keep everything
-> cross-platform (Windows + Linux, `path/filepath`, PowerShell chains with `;`);
-> every change ships with tests and must not drop coverage; durable
-> multi-session work gets a plan file under `plans/`; **never stage and never
-> commit** — the owner reviews and commits.
+> cross-platform (Windows + Linux, `path/filepath`, PowerShell chains with `;`,
+> never `&&`); every change ships with tests and must not drop coverage;
+> durable multi-session work gets a plan file under `plans/`; **never stage and
+> never commit** — the owner reviews and commits.
 >
-> We are remediating the 46-finding review in `todo/review-opus5-08-04.md`,
-> which defines 13 PR-sized batches in §12. Findings are marked `✅ FIXED` /
-> `❌ WILL NOT FIX` **in place** in the review document — do not create a
-> separate plan file for this.
+> We are remediating **Batch 11** of the 46-finding review in
+> `todo/review-opus5-08-04.md` (§12 defines the 13 PR-sized batches). Findings
+> are marked `✅ FIXED` / `❌ WILL NOT FIX` **in place** in that review document —
+> do not create a separate plan file for the review itself.
+>
+> Batch 11 closes review findings §6.2 (no mirrored unit tests for
+> `internal/handlers`) and §6.4 (two `app/gui/constants` catalogues at 0%). The
+> owner expanded it: every constructor-injected service under `internal/` is
+> being converted to an interface first, so the handlers can be tested against
+> `testify` mocks.
+>
+> **Where work left off:** Phases 0–5 of `plans/batch-11-handler-coverage.md`
+> are **Complete** with full Phase Summaries written. The whole `internal/` DI
+> graph is now interface-based (only one `wire.Bind` remains,
+> `IContentRuleService`). `go build`, both `go vet` tag combinations, the unit
+> suite, the integration suite, `go run ./cmd/testlayoutcheck .` and
+> `golangci-lint-v2` are all green. **Next up is Phase 6 (wire regeneration +
+> GUI snapshot verification), then Phases 7–11.**
+>
+> Read `plans/batch-11-handler-coverage.md` — it is the source of truth — and
+> `.agent/session-carry-forward.md` for the full handoff, including the owner
+> decisions, the rejected options (do not re-propose them) and the environment
+> gotchas (`wire gen` writes its success line to STDERR; freshly created files
+> have once picked up a stray duplicate `package` clause).
 >
 > Workflow for every batch, without exception: (1) ask the owner whether the
 > batch should be done at all; (2) if declined, document in the review file why
 > it should not be attempted in future; (3) ask all clarifying questions up
 > front; (4) implement; (5) rewrite `.agent/session-carry-forward.md`; (6) stop
 > and wait for owner review.
->
-> Batches 1–10 are done. Batch 10 (duplication cleanup: §3.1, §3.2, §3.3, §3.4,
-> §5.3) is complete and awaiting owner review — nothing is staged. Next up is
-> Batch 11 (coverage: §6.2, §6.4). Full handoff detail is in
-> `./.agent/session-carry-forward.md`.

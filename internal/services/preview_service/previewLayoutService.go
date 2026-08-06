@@ -15,14 +15,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type PreviewLayoutService struct {
 	layout         *preview.Layout
-	zoneClassifier *zone_services.ZoneClassifier
+	zoneClassifier zone_interfaces.IZoneClassifier
 }
 
-func NewPreviewLayoutService() *PreviewLayoutService {
+func NewPreviewLayoutService() IPreviewLayoutService {
 	return &PreviewLayoutService{zoneClassifier: zone_services.NewZoneClassifier()}
 }
 

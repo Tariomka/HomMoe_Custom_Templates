@@ -2,6 +2,7 @@ package providers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 )
 
@@ -9,9 +10,9 @@ import (
 // Every service is supplied once and shared, so resolving allocates nothing on
 // the auto-regeneration path.
 type TopologyServiceLookup struct {
-	tournament TopologyVariantCreator
-	ring       TopologyVariantCreator
-	byTopology map[config.MapTopology]TopologyVariantCreator
+	tournament provider_interfaces.TopologyVariantCreator
+	ring       provider_interfaces.TopologyVariantCreator
+	byTopology map[config.MapTopology]provider_interfaces.TopologyVariantCreator
 }
 
 func NewTopologyServiceLookup(
@@ -26,12 +27,11 @@ func NewTopologyServiceLookup(
 	square *topology.SquareTopologyService,
 	geometric *topology.GeometricTopologyService,
 	cross *topology.CrossTopologyService,
-	fractal *topology.FractalTopologyService,
-) *TopologyServiceLookup {
+	fractal *topology.FractalTopologyService) provider_interfaces.ITopologyServiceLookup {
 	return &TopologyServiceLookup{
 		tournament: tournament.CreateTopologyVariant,
 		ring:       ring.CreateTopologyVariant,
-		byTopology: map[config.MapTopology]TopologyVariantCreator{
+		byTopology: map[config.MapTopology]provider_interfaces.TopologyVariantCreator{
 			config.TopologyHubAndSpoke:  hub.CreateTopologyVariant,
 			config.TopologyGeometricHub: geometricHub.CreateTopologyVariant,
 			config.TopologyChain:        chain.CreateTopologyVariant,
@@ -48,13 +48,14 @@ func NewTopologyServiceLookup(
 
 // Tournament returns the creator used for the two-player tournament variant,
 // which is selected by generation mode rather than by map topology.
-func (this *TopologyServiceLookup) Tournament() TopologyVariantCreator {
+func (this *TopologyServiceLookup) Tournament() provider_interfaces.TopologyVariantCreator {
 	return this.tournament
 }
 
 // Resolve falls back to the ring topology for any topology without an entry,
 // which is what config.TopologyRing ("Default") and unknown values get.
-func (this *TopologyServiceLookup) Resolve(mapTopology config.MapTopology) TopologyVariantCreator {
+func (this *TopologyServiceLookup) Resolve(
+	mapTopology config.MapTopology) provider_interfaces.TopologyVariantCreator {
 	if creator, found := this.byTopology[mapTopology]; found {
 		return creator
 	}

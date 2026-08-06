@@ -1,4 +1,4 @@
-package providers
+package provider_interfaces
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -7,9 +7,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
-// TopologyVariantCreator is the signature every topology service implements.
-// Services that derive their hold-city zone from the configuration ignore
-// holdCityNeutralLabel.
+// TopologyVariantCreator builds the variant for one map topology. It lives here
+// rather than in providers because ITopologyServiceLookup returns it, and
+// provider_interfaces must not import providers.
 type TopologyVariantCreator func(
 	configuration config.GeneratorConfig,
 	playerLabels []string,

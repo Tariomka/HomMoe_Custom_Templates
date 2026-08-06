@@ -17,22 +17,22 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ZoneEditorService struct {
-	CastleFactory *zone_services.CastleFactory
-	zoneFactory   *zone_services.ZoneFactory
-	roadFactory   *zone_services.RoadFactory
+	castleFactory zone_interfaces.ICastleFactory
+	zoneFactory   zone_interfaces.IZoneFactory
+	roadFactory   zone_interfaces.IRoadFactory
 }
 
 func NewZoneEditorService(
-	castleFactory *zone_services.CastleFactory,
-	roadFactory *zone_services.RoadFactory,
-	zoneFactory *zone_services.ZoneFactory) *ZoneEditorService {
+	castleFactory zone_interfaces.ICastleFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneFactory zone_interfaces.IZoneFactory) IZoneEditorService {
 	return &ZoneEditorService{
 		zoneFactory:   zoneFactory,
-		CastleFactory: castleFactory,
+		castleFactory: castleFactory,
 		roadFactory:   roadFactory,
 	}
 }
@@ -207,12 +207,12 @@ func (this *ZoneEditorService) ApplyNeutralZoneQuality(
 	zone.ResourcesValue = tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)
 	zone.ResourcesValuePerArea = tuning.ScaleByResourceDensity(
 		float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))
-	zone.MainObjects = this.CastleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, false)
+	zone.MainObjects = this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, false)
 
 	// Regenerate the castle<->castle roads so the rebuilt castles are
 	// road-connected. Other roads (connection and foothold roads) are left for
 	// RebuildZoneConnectionRoads to finalize once the edit is applied.
-	this.rebuildCastleRoads(zone)
+	this.RebuildCastleRoads(zone)
 }
 
 // CanDeleteZone reports whether the zone may be removed in the editor. Spawn
@@ -270,7 +270,9 @@ func (this *ZoneEditorService) FindOpenPosition(occupied [][2]float64) [2]float6
 	return best
 }
 
-func (this *ZoneEditorService) rebuildCastleRoads(zone *entities.Zone) {
+// RebuildCastleRoads regenerates the zone's castle<->castle roads for its
+// current main objects, preserving every other road.
+func (this *ZoneEditorService) RebuildCastleRoads(zone *entities.Zone) {
 	kept := make([]entities.Road, 0, len(zone.Roads))
 	for _, road := range zone.Roads {
 		if road_helpers.IsRoadTypeCastle(road) {

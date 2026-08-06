@@ -248,6 +248,44 @@ any file you *do* touch must leave the repo in conformance.
 
 - Apply this consistently across every interface file.
 
+### 4.2.2 Interface placement
+
+Where an interface file lives is decided by counting the **concrete
+implementation files in that package that require an interface** — not the
+number of interfaces:
+
+1. **Fewer than 5** → declare the interface in the **same package**, in its own
+   `*Interface.go` file.
+2. **5 or more** → create a `{singular package name}_interfaces` subpackage and
+   put the interface files there.
+3. **Spanning packages** → if one interface is implemented by concrete types in
+   **more than one package**, or the interface exists to break a circular
+   dependency, put it in a subpackage under `internal/interfaces/`.
+
+Examples of each:
+
+1. [.../tournament_variant/clusterServiceInterface.go](internal/services/template_generator/providers/topology/tournament_variant/clusterServiceInterface.go)
+   — one interface for four implementations, all in that package;
+   [internal/services/zones/zoneLabelProviderInterface.go](internal/services/zones/zoneLabelProviderInterface.go)
+   — one interface for one implementation. Likewise
+   [internal/services/connection_editor/](internal/services/connection_editor/)
+   holds three interfaces for its three implementations.
+2. [internal/handlers/](internal/handlers/) has six implementation files, so its
+   contracts live in
+   [internal/handlers/handler_interfaces/](internal/handlers/handler_interfaces/)
+   (six files, eight interfaces).
+3. [app/gui/interfaces/](app/gui/interfaces/) holds the shared `IDialog` /
+   `IPanel` contracts: `drivers` and `panels` both implement them, and declaring
+   them in either package would create a `drivers`↔`panels` and
+   `drivers`↔`dialogs` cycle.
+
+**Factory return type.** When an interface exists for an implementation, that
+implementation's factory function returns the **interface**, not a pointer to the
+struct — unless doing so breaks existing functionality. When one implementation
+satisfies several interfaces, return the **broadest** one (e.g.
+`handlers.NewGuiHandler(...)` returns `handler_interfaces.IGuiHandler`, which
+embeds the other handler interfaces).
+
 ### 4.3 Method receivers
 
 - The receiver for any method attached to a struct **must be named `this`**.

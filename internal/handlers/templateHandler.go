@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"image"
 	"slices"
 	"strings"
 
@@ -14,30 +13,30 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type templateHandler struct {
-	templateGenerator *template_generator.TemplateGenerator
-	mapper            *mappers.GeneratorConfigMapper
-	contentProvider   *providers.MandatoryContentProvider
-	connectionEditor  *connection_editor.ConnectionEditorService
-	zoneEditor        *connection_editor.ZoneEditorService
-	manualReapply     *connection_editor.ManualReapplyService
-	fileService       *file_service.FileService
-	previewGenerator  *preview_service.PreviewGeneratorService
+	templateGenerator template_generator.ITemplateGenerator
+	mapper            mappers.IGeneratorConfigMapper
+	contentProvider   provider_interfaces.IMandatoryContentProvider
+	connectionEditor  connection_editor.IConnectionEditorService
+	zoneEditor        connection_editor.IZoneEditorService
+	manualReapply     connection_editor.IManualReapplyService
+	fileService       file_service.IFileService
+	previewGenerator  preview_service.IPreviewGeneratorService
 	stateHandler      handler_interfaces.IStateHandler
 }
 
 func NewTemplateHandler(
-	templateGenerator *template_generator.TemplateGenerator,
-	mapper *mappers.GeneratorConfigMapper,
-	contentProvider *providers.MandatoryContentProvider,
-	connectionEditor *connection_editor.ConnectionEditorService,
-	zoneEditor *connection_editor.ZoneEditorService,
-	manualReapply *connection_editor.ManualReapplyService,
-	fileService *file_service.FileService,
-	previewGenerator *preview_service.PreviewGeneratorService,
+	templateGenerator template_generator.ITemplateGenerator,
+	mapper mappers.IGeneratorConfigMapper,
+	contentProvider provider_interfaces.IMandatoryContentProvider,
+	connectionEditor connection_editor.IConnectionEditorService,
+	zoneEditor connection_editor.IZoneEditorService,
+	manualReapply connection_editor.IManualReapplyService,
+	fileService file_service.IFileService,
+	previewGenerator preview_service.IPreviewGeneratorService,
 	stateHandler handler_interfaces.IStateHandler) handler_interfaces.ITemplateHandler {
 	return &templateHandler{
 		templateGenerator: templateGenerator,
@@ -118,9 +117,6 @@ func (this *templateHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (str
 		return "", common_errors.ErrNoOutputPath
 	}
 
-	var previewImage *image.RGBA
-	if this.previewGenerator != nil {
-		previewImage = this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
-	}
+	previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
 	return this.fileService.SaveTemplateWithPreview(outputPath, templateDto.Template, previewImage)
 }

@@ -12,7 +12,7 @@ import (
 
 // NewTemplateGenerator builds the generator with the same collaborators
 // internal/composition wires for production.
-func NewTemplateGenerator(configuration *config.GeneratorConfig) *template_generator.TemplateGenerator {
+func NewTemplateGenerator(configuration *config.GeneratorConfig) template_generator.ITemplateGenerator {
 	castleFactory := zones.NewCastleFactory()
 	roadFactory := zones.NewRoadFactory()
 	zoneFactory := zones.NewZoneFactory(castleFactory, roadFactory)

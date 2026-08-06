@@ -6,10 +6,10 @@ import (
 )
 
 type GeneratorConfigMapper struct {
-	contentItemMapper *MandatoryContentItemMapper
+	contentItemMapper IMandatoryContentItemMapper
 }
 
-func NewConfigMapper(contentItemMapper *MandatoryContentItemMapper) *GeneratorConfigMapper {
+func NewConfigMapper(contentItemMapper IMandatoryContentItemMapper) IGeneratorConfigMapper {
 	return &GeneratorConfigMapper{
 		contentItemMapper: contentItemMapper,
 	}

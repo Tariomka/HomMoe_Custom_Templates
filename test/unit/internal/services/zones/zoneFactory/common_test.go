@@ -3,9 +3,10 @@ package zoneFactory_test
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
-func newZoneFactory() *zones.ZoneFactory {
+func newZoneFactory() zone_interfaces.IZoneFactory {
 	return zones.NewZoneFactory(zones.NewCastleFactory(), zones.NewRoadFactory())
 }
 

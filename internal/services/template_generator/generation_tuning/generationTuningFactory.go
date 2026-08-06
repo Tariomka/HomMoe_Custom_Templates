@@ -8,7 +8,7 @@ import (
 
 type GenerationTuningFactory struct{}
 
-func NewGenerationTuningFactory() *GenerationTuningFactory {
+func NewGenerationTuningFactory() IGenerationTuningFactory {
 	return &GenerationTuningFactory{}
 }
 

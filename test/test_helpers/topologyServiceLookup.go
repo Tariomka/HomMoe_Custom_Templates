@@ -2,20 +2,21 @@ package test_helpers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // NewTopologyServiceLookup mirrors the lookup that internal/composition builds
 // for production, so tests exercise the same set of topology services.
 func NewTopologyServiceLookup(
-	zoneFactory *zones.ZoneFactory,
-	roadFactory *zones.RoadFactory,
-	zoneLabelProvider zones.IZoneLabelProvider,
-	connectionService *base.TopologyConnectionService,
-) *providers.TopologyServiceLookup {
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
+) provider_interfaces.ITopologyServiceLookup {
 	return providers.NewTopologyServiceLookup(
 		topology.NewTournamentTopologyService(
 			zoneFactory,

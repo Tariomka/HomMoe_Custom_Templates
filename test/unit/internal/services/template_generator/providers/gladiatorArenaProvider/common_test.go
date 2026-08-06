@@ -8,13 +8,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
 const arenaObjectType = "GladiatorArena"
 
-func newProvider() *providers.GladiatorArenaProvider {
+func newProvider() provider_interfaces.IGladiatorArenaProvider {
 	return providers.NewGladiatorArenaProvider(zone_services.NewZoneClassifier())
 }
 

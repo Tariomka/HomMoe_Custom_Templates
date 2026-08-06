@@ -8,33 +8,33 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type TemplateGenerator struct {
 	configuration     *config.GeneratorConfig
-	zoneLabelProvider zones.IZoneLabelProvider
-	tuningFactory     *generation_tuning.GenerationTuningFactory
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider
+	tuningFactory     generation_tuning.IGenerationTuningFactory
 
-	contentLimitProvider *providers.ContentLimitProvider
-	contentProvider      *providers.MandatoryContentProvider
-	gameRulesProvider    *providers.GameRulesProvider
-	gladiatorProvider    *providers.GladiatorArenaProvider
-	topologyProvider     *providers.TopologyProvider
-	zoneLayoutProvider   *providers.ZoneLayoutProvider
+	contentLimitProvider provider_interfaces.IContentLimitProvider
+	contentProvider      provider_interfaces.IMandatoryContentProvider
+	gameRulesProvider    provider_interfaces.IGameRulesProvider
+	gladiatorProvider    provider_interfaces.IGladiatorArenaProvider
+	topologyProvider     provider_interfaces.ITopologyProvider
+	zoneLayoutProvider   provider_interfaces.IZoneLayoutProvider
 }
 
 func NewTemplateGenerator(
 	configuration *config.GeneratorConfig,
-	zoneLabelProvider zones.IZoneLabelProvider,
-	tuningFactory *generation_tuning.GenerationTuningFactory,
-	contentLimitProvider *providers.ContentLimitProvider,
-	contentProvider *providers.MandatoryContentProvider,
-	gameRulesProvider *providers.GameRulesProvider,
-	gladiatorProvider *providers.GladiatorArenaProvider,
-	topologyProvider *providers.TopologyProvider,
-	zoneLayoutProvider *providers.ZoneLayoutProvider) *TemplateGenerator {
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	tuningFactory generation_tuning.IGenerationTuningFactory,
+	contentLimitProvider provider_interfaces.IContentLimitProvider,
+	contentProvider provider_interfaces.IMandatoryContentProvider,
+	gameRulesProvider provider_interfaces.IGameRulesProvider,
+	gladiatorProvider provider_interfaces.IGladiatorArenaProvider,
+	topologyProvider provider_interfaces.ITopologyProvider,
+	zoneLayoutProvider provider_interfaces.IZoneLayoutProvider) ITemplateGenerator {
 	return &TemplateGenerator{
 		configuration:        configuration,
 		zoneLabelProvider:    zoneLabelProvider,

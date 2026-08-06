@@ -9,11 +9,11 @@ import (
 )
 
 type previewHandler struct {
-	previewLayout *preview_service.PreviewLayoutService
+	previewLayout preview_service.IPreviewLayoutService
 }
 
 func NewPreviewHandler(
-	previewLayout *preview_service.PreviewLayoutService) handler_interfaces.IPreviewHandler {
+	previewLayout preview_service.IPreviewLayoutService) handler_interfaces.IPreviewHandler {
 	return &previewHandler{previewLayout: previewLayout}
 }
 

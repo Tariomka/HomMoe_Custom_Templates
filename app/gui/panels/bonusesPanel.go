@@ -282,7 +282,7 @@ func bonusDisplayName(entry config.BonusEntry) string {
 	case config.BonusTownPortalFree:
 		return "Town Portal (free)"
 	case config.BonusSpell:
-		label := ""
+		var label string
 		if spell, ok := constants.FindSpell(entry.Param); ok {
 			label = spell.Name
 		} else {
@@ -298,7 +298,7 @@ func bonusDisplayName(entry config.BonusEntry) string {
 	case config.BonusMovementBonus:
 		return "Movement bonus +" + entry.Param
 	case config.BonusStartingItem:
-		label := ""
+		var label string
 		if item, ok := constants.FindBannableItem(entry.Param); ok {
 			label = item.Name
 		} else {

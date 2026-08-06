@@ -11,13 +11,13 @@ import (
 )
 
 type stateHandler struct {
-	fileService     *file_service.FileService
-	editorValidator *validators.EditorStateValidator
+	fileService     file_service.IFileService
+	editorValidator validators.IEditorStateValidator
 }
 
 func NewStateHandler(
-	fileService *file_service.FileService,
-	editorValidator *validators.EditorStateValidator) handler_interfaces.IStateHandler {
+	fileService file_service.IFileService,
+	editorValidator validators.IEditorStateValidator) handler_interfaces.IStateHandler {
 	return &stateHandler{
 		fileService:     fileService,
 		editorValidator: editorValidator,

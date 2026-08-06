@@ -1,4 +1,4 @@
-package zones
+package zone_interfaces
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"

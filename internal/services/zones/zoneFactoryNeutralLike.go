@@ -48,13 +48,11 @@ func (this *ZoneFactory) createNeutralLikeMainObjects(
 		input.Profile,
 		input.Tuning,
 		input.CastleCount,
-		input.HoldCity,
-	)
-	return append(mainObjects, this.castleFactory.createAbandonedOutposts(
+		input.HoldCity)
+	return append(mainObjects, this.castleFactory.CreateAbandonedOutposts(
 		input.Profile,
 		input.Tuning,
-		input.OutpostCount,
-	)...)
+		input.OutpostCount)...)
 }
 
 func (this *ZoneFactory) createNeutralLikeZoneBuilder(

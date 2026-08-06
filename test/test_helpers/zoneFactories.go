@@ -3,6 +3,7 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // NewZoneFactories builds the collaborators that every topology service
@@ -11,10 +12,10 @@ import (
 //
 //	topology.NewRingTopologyService(test_helpers.NewZoneFactories())
 func NewZoneFactories() (
-	*zones.ZoneFactory,
-	*zones.RoadFactory,
-	zones.IZoneLabelProvider,
-	*base.TopologyConnectionService) {
+	zone_interfaces.IZoneFactory,
+	zone_interfaces.IRoadFactory,
+	zone_interfaces.IZoneLabelProvider,
+	base.ITopologyConnectionService) {
 	roadFactory := zones.NewRoadFactory()
 	zoneLabelProvider := zones.NewZoneLabelProvider()
 	return zones.NewZoneFactory(zones.NewCastleFactory(), roadFactory),

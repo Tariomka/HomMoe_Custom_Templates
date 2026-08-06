@@ -30,7 +30,6 @@ var ZoneSet = wire.NewSet(
 	zone_services.NewZoneFactory,
 	zone_services.NewZoneClassifier,
 	zone_services.NewZoneLabelProvider,
-	wire.Bind(new(zone_services.IZoneLabelProvider), new(*zone_services.ZoneLabelProvider)),
 	base.NewTopologyConnectionService,
 )
 

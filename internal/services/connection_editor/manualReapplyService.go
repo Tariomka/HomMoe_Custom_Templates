@@ -17,21 +17,24 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ManualReapplyService struct {
-	zoneEditor     *ZoneEditorService
-	zoneClassifier *zone_services.ZoneClassifier
-	tuningFactory  *generation_tuning.GenerationTuningFactory
+	zoneEditor     IZoneEditorService
+	castleFactory  zone_interfaces.ICastleFactory
+	zoneClassifier zone_interfaces.IZoneClassifier
+	tuningFactory  generation_tuning.IGenerationTuningFactory
 }
 
 func NewManualReapplyService(
-	zoneEditor *ZoneEditorService,
-	zoneClassifier *zone_services.ZoneClassifier,
-	tuningFactory *generation_tuning.GenerationTuningFactory) *ManualReapplyService {
+	zoneEditor IZoneEditorService,
+	castleFactory zone_interfaces.ICastleFactory,
+	zoneClassifier zone_interfaces.IZoneClassifier,
+	tuningFactory generation_tuning.IGenerationTuningFactory) IManualReapplyService {
 	return &ManualReapplyService{
 		zoneEditor:     zoneEditor,
+		castleFactory:  castleFactory,
 		zoneClassifier: zoneClassifier,
 		tuningFactory:  tuningFactory,
 	}
@@ -91,9 +94,9 @@ func (this *ManualReapplyService) SetNeutralZoneCastleCount(
 	profile := common_zones.GetNeutralZoneProfile(quality)
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		this.zoneEditor.CastleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
+		this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
 		preserved...)
-	this.zoneEditor.rebuildCastleRoads(zone)
+	this.zoneEditor.RebuildCastleRoads(zone)
 }
 
 // neutralCastleTarget decides whether a changed option drives the neutral
@@ -156,15 +159,15 @@ func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 	matchFactions := configuration.MatchPlayerCastleFactions
 	mainObjects := []entities.MainObject{spawnCastle}
 	mainObjects = append(mainObjects,
-		this.zoneEditor.CastleFactory.CreatePlayerOwnedCastles(
+		this.castleFactory.CreatePlayerOwnedCastles(
 			matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles)...)
 	mainObjects = append(mainObjects,
-		this.zoneEditor.CastleFactory.CreatePlayerUnclaimedCastles(
+		this.castleFactory.CreatePlayerUnclaimedCastles(
 			matchFactions,
 			tuning.ScaleByNeutralGuardStrength(5000),
 			configuration.ZoneConfiguration.PlayerZoneCastles)...)
 	zone.MainObjects = mainObjects
-	this.zoneEditor.rebuildCastleRoads(zone)
+	this.zoneEditor.RebuildCastleRoads(zone)
 }
 
 // rebuildHubZoneCastles rebuilds a hub zone's castles for the current
@@ -176,9 +179,9 @@ func (this *ManualReapplyService) rebuildHubZoneCastles(
 ) {
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		this.zoneEditor.CastleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity),
+		this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity),
 		preserved...)
-	this.zoneEditor.rebuildCastleRoads(zone)
+	this.zoneEditor.RebuildCastleRoads(zone)
 }
 
 // splitOutNonCastles returns the zone's non-City main objects and whether any

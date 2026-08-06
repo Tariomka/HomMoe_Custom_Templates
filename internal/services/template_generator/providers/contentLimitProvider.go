@@ -7,11 +7,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type ContentLimitProvider struct{}
 
-func NewContentLimitProvider() *ContentLimitProvider {
+func NewContentLimitProvider() provider_interfaces.IContentLimitProvider {
 	return &ContentLimitProvider{}
 }
 

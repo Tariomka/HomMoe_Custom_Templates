@@ -33,7 +33,7 @@ type serviceMocks struct {
 	preview     *mockFileRepository[image.RGBA]
 }
 
-func newServiceWithMocks() (*file_service.FileService, serviceMocks) {
+func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
 	mocks := serviceMocks{
 		editorState: &mockFileRepository[dtos.EditorStateDto]{},
 		template:    &mockFileRepository[entities.RmgTemplate]{},

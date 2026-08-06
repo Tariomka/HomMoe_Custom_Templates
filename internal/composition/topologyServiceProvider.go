@@ -2,21 +2,21 @@ package composition
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // provideTopologyServices builds every topology service exactly once. All of
 // them are stateless, so the lookup they are registered in is shared and the
 // auto-regeneration loop resolves instead of allocating.
 func provideTopologyServices(
-	zoneFactory *zone_services.ZoneFactory,
-	roadFactory *zone_services.RoadFactory,
-	zoneLabelProvider zone_services.IZoneLabelProvider,
-	connectionService *base.TopologyConnectionService,
-) *providers.TopologyServiceLookup {
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService) provider_interfaces.ITopologyServiceLookup {
 	return providers.NewTopologyServiceLookup(
 		topology.NewTournamentTopologyService(
 			zoneFactory,
@@ -28,11 +28,9 @@ func provideTopologyServices(
 				zoneFactory,
 				roadFactory,
 				zoneLabelProvider,
-				connectionService,
-			),
+				connectionService),
 			tournament_variant.NewRingClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-			tournament_variant.NewChainClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		),
+			tournament_variant.NewChainClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService)),
 		topology.NewRingTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		topology.NewHubTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		topology.NewGeometricHubTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),

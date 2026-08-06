@@ -11,11 +11,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ZoneClassifier struct{}
 
-func NewZoneClassifier() *ZoneClassifier {
+func NewZoneClassifier() zone_interfaces.IZoneClassifier {
 	return &ZoneClassifier{}
 }
 

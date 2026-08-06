@@ -14,9 +14,10 @@ import (
 
 // newManualReapplyService builds the service with the same collaborators the
 // application wires.
-func newManualReapplyService() *connection_editor.ManualReapplyService {
+func newManualReapplyService() connection_editor.IManualReapplyService {
 	return connection_editor.NewManualReapplyService(
 		test_helpers.NewZoneEditorService(),
+		zone_services.NewCastleFactory(),
 		zone_services.NewZoneClassifier(),
 		generation_tuning.NewGenerationTuningFactory(),
 	)

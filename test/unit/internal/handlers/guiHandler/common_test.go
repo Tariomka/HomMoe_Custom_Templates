@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/require"
@@ -35,9 +36,10 @@ func newProductionGuiHandler() handler_interfaces.IGuiHandler {
 
 // newManualReapplyService builds the castle re-apply service with the same
 // collaborators the handler graph wires.
-func newManualReapplyService() *connection_editor.ManualReapplyService {
+func newManualReapplyService() connection_editor.IManualReapplyService {
 	return connection_editor.NewManualReapplyService(
 		test_helpers.NewZoneEditorService(),
+		zone_services.NewCastleFactory(),
 		zone_services.NewZoneClassifier(),
 		generation_tuning.NewGenerationTuningFactory(),
 	)
@@ -45,7 +47,7 @@ func newManualReapplyService() *connection_editor.ManualReapplyService {
 
 // newMandatoryContentProvider builds the mandatory-content provider with the
 // same collaborators the handler graph wires.
-func newMandatoryContentProvider() *providers.MandatoryContentProvider {
+func newMandatoryContentProvider() provider_interfaces.IMandatoryContentProvider {
 	return providers.NewMandatoryContentProvider(
 		zone_services.NewZoneClassifier(),
 		test_helpers.NewZoneEditorService(),

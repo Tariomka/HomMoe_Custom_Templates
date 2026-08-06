@@ -11,14 +11,17 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ZoneFactory struct {
-	castleFactory *CastleFactory
-	roadFactory   *RoadFactory
+	castleFactory zone_interfaces.ICastleFactory
+	roadFactory   zone_interfaces.IRoadFactory
 }
 
-func NewZoneFactory(castleFactory *CastleFactory, roadFactory *RoadFactory) *ZoneFactory {
+func NewZoneFactory(
+	castleFactory zone_interfaces.ICastleFactory,
+	roadFactory zone_interfaces.IRoadFactory) zone_interfaces.IZoneFactory {
 	return &ZoneFactory{
 		castleFactory: castleFactory,
 		roadFactory:   roadFactory,
@@ -27,7 +30,7 @@ func NewZoneFactory(castleFactory *CastleFactory, roadFactory *RoadFactory) *Zon
 
 func (this *ZoneFactory) CreateSpawnZone(input models.SpawnZoneCreationRequest) entities.Zone {
 	mainObjects := []entities.MainObject{
-		this.castleFactory.createPlayerSpawnCastle(
+		this.castleFactory.CreatePlayerSpawnCastle(
 			input.PlayerName,
 			input.Tuning.ScaleByNeutralGuardStrength(5000),
 		),

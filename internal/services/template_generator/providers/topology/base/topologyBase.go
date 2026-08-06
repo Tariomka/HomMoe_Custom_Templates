@@ -11,21 +11,21 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type TopologyBase struct {
-	ZoneLabelProvider zones.IZoneLabelProvider
-	roadFactory       *zones.RoadFactory
-	zoneFactory       *zones.ZoneFactory
-	connectionService *TopologyConnectionService
+	ZoneLabelProvider zone_interfaces.IZoneLabelProvider
+	roadFactory       zone_interfaces.IRoadFactory
+	zoneFactory       zone_interfaces.IZoneFactory
+	connectionService ITopologyConnectionService
 }
 
 func NewTopologyBase(
-	zoneFactory *zones.ZoneFactory,
-	roadFactory *zones.RoadFactory,
-	zoneLabelProvider zones.IZoneLabelProvider,
-	connectionService *TopologyConnectionService) TopologyBase {
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService ITopologyConnectionService) TopologyBase {
 	return TopologyBase{
 		ZoneLabelProvider: zoneLabelProvider,
 		roadFactory:       roadFactory,

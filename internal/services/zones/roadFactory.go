@@ -7,11 +7,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type RoadFactory struct{}
 
-func NewRoadFactory() *RoadFactory {
+func NewRoadFactory() zone_interfaces.IRoadFactory {
 	return &RoadFactory{}
 }
 

@@ -3,11 +3,12 @@ package providers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type ZoneLayoutProvider struct{}
 
-func NewZoneLayoutProvider() *ZoneLayoutProvider {
+func NewZoneLayoutProvider() provider_interfaces.IZoneLayoutProvider {
 	return &ZoneLayoutProvider{}
 }
 

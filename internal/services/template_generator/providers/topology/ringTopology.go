@@ -11,7 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type RingTopologyService struct {
@@ -19,10 +19,10 @@ type RingTopologyService struct {
 }
 
 func NewRingTopologyService(
-	zoneFactory *zone_services.ZoneFactory,
-	roadFactory *zone_services.RoadFactory,
-	zoneLabelProvider zone_services.IZoneLabelProvider,
-	connectionService *base.TopologyConnectionService) *RingTopologyService {
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService) *RingTopologyService {
 	return &RingTopologyService{
 		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}

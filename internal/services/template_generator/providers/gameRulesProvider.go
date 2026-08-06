@@ -9,11 +9,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type GameRulesProvider struct{}
 
-func NewGameRulesProvider() *GameRulesProvider {
+func NewGameRulesProvider() provider_interfaces.IGameRulesProvider {
 	return &GameRulesProvider{}
 }
 

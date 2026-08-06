@@ -7,6 +7,6 @@ import (
 
 // NewConfigMapper builds the mapper with the same collaborators
 // internal/composition wires for production.
-func NewConfigMapper() *mappers.GeneratorConfigMapper {
+func NewConfigMapper() mappers.IGeneratorConfigMapper {
 	return mappers.NewConfigMapper(mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService()))
 }

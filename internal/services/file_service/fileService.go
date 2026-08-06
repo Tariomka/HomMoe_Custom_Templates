@@ -20,7 +20,7 @@ type FileService struct {
 func NewFileService(
 	editorStateRepository repositories.IFileRepository[dtos.EditorStateDto],
 	templateRepository repositories.IFileRepository[entities.RmgTemplate],
-	previewRepository repositories.IFileRepository[image.RGBA]) *FileService {
+	previewRepository repositories.IFileRepository[image.RGBA]) IFileService {
 	return &FileService{
 		editorStateRepository: editorStateRepository,
 		templateRepository:    templateRepository,

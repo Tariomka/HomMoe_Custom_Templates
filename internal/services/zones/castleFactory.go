@@ -6,11 +6,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type CastleFactory struct{}
 
-func NewCastleFactory() *CastleFactory {
+func NewCastleFactory() zone_interfaces.ICastleFactory {
 	return &CastleFactory{}
 }
 
@@ -150,7 +151,7 @@ func (this *CastleFactory) CreateHubZoneCastles(
 	return castles
 }
 
-func (this *CastleFactory) createPlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
+func (this *CastleFactory) CreatePlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
 	return variant_content.NewObjectBuilder().
 		WithTypeSpawn().
 		WithSpawn(playerName).
@@ -164,7 +165,7 @@ func (this *CastleFactory) createPlayerSpawnCastle(playerName string, guardValue
 		Build()
 }
 
-func (this *CastleFactory) createAbandonedOutposts(
+func (this *CastleFactory) CreateAbandonedOutposts(
 	profile neutral_zone.Profile,
 	tuning models.GenerationTuning,
 	count int) []entities.MainObject {

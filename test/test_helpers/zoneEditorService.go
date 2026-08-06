@@ -7,7 +7,7 @@ import (
 
 // NewZoneEditorService builds a ZoneEditorService with the same collaborators the
 // composition root wires, for tests that need a working editor rather than a mock.
-func NewZoneEditorService() *connection_editor.ZoneEditorService {
+func NewZoneEditorService() connection_editor.IZoneEditorService {
 	castleFactory := zones.NewCastleFactory()
 	roadFactory := zones.NewRoadFactory()
 

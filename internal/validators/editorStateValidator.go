@@ -49,7 +49,7 @@ const (
 
 type EditorStateValidator struct{}
 
-func NewEditorStateValidator() *EditorStateValidator {
+func NewEditorStateValidator() IEditorStateValidator {
 	return &EditorStateValidator{}
 }
 

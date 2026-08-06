@@ -3,7 +3,7 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // NewTournamentTopologyDependencies builds the collaborators
@@ -12,10 +12,10 @@ import (
 //
 //	topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 func NewTournamentTopologyDependencies() (
-	*zones.ZoneFactory,
-	*zones.RoadFactory,
-	zones.IZoneLabelProvider,
-	*base.TopologyConnectionService,
+	zone_interfaces.IZoneFactory,
+	zone_interfaces.IRoadFactory,
+	zone_interfaces.IZoneLabelProvider,
+	base.ITopologyConnectionService,
 	tournament_variant.IClusterService,
 	tournament_variant.IClusterService,
 	tournament_variant.IClusterService,

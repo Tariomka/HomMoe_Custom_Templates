@@ -8,7 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type TournamentTopologyService struct {
@@ -21,10 +21,10 @@ type TournamentTopologyService struct {
 }
 
 func NewTournamentTopologyService(
-	zoneFactory *zone_services.ZoneFactory,
-	roadFactory *zone_services.RoadFactory,
-	zoneLabelProvider zone_services.IZoneLabelProvider,
-	connectionService *base.TopologyConnectionService,
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
 	hubClusterService tournament_variant.IClusterService,
 	balancedClusterService tournament_variant.IClusterService,
 	ringClusterService tournament_variant.IClusterService,

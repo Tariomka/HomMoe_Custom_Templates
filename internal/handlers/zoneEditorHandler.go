@@ -8,23 +8,23 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type zoneEditorHandler struct {
-	mapper           *mappers.GeneratorConfigMapper
-	zoneClassifier   *zone_services.ZoneClassifier
-	connectionEditor *connection_editor.ConnectionEditorService
-	zoneEditor       *connection_editor.ZoneEditorService
-	tuningFactory    *generation_tuning.GenerationTuningFactory
+	mapper           mappers.IGeneratorConfigMapper
+	zoneClassifier   zone_interfaces.IZoneClassifier
+	connectionEditor connection_editor.IConnectionEditorService
+	zoneEditor       connection_editor.IZoneEditorService
+	tuningFactory    generation_tuning.IGenerationTuningFactory
 }
 
 func NewZoneEditorHandler(
-	mapper *mappers.GeneratorConfigMapper,
-	zoneClassifier *zone_services.ZoneClassifier,
-	connectionEditor *connection_editor.ConnectionEditorService,
-	zoneEditor *connection_editor.ZoneEditorService,
-	tuningFactory *generation_tuning.GenerationTuningFactory) handler_interfaces.IZoneEditorHandler {
+	mapper mappers.IGeneratorConfigMapper,
+	zoneClassifier zone_interfaces.IZoneClassifier,
+	connectionEditor connection_editor.IConnectionEditorService,
+	zoneEditor connection_editor.IZoneEditorService,
+	tuningFactory generation_tuning.IGenerationTuningFactory) handler_interfaces.IZoneEditorHandler {
 	return &zoneEditorHandler{
 		mapper:           mapper,
 		zoneClassifier:   zoneClassifier,

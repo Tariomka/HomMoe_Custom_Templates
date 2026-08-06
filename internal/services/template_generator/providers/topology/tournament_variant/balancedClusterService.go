@@ -19,7 +19,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
-	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type BalancedClusterService struct {
@@ -29,10 +29,10 @@ type BalancedClusterService struct {
 }
 
 func NewBalancedClusterService(
-	zoneFactory *zone_services.ZoneFactory,
-	roadFactory *zone_services.RoadFactory,
-	zoneLabelProvider zone_services.IZoneLabelProvider,
-	connectionService *base.TopologyConnectionService,
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
 ) *BalancedClusterService {
 	return &BalancedClusterService{
 		TopologyBase:          base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),

@@ -11,7 +11,7 @@ type MandatoryContentItemMapper struct {
 	contentRuleService content_rules.IContentRuleService
 }
 
-func NewMandatoryContentItemMapper(contentRuleService content_rules.IContentRuleService) *MandatoryContentItemMapper {
+func NewMandatoryContentItemMapper(contentRuleService content_rules.IContentRuleService) IMandatoryContentItemMapper {
 	return &MandatoryContentItemMapper{contentRuleService: contentRuleService}
 }
 

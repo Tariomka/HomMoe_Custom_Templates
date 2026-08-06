@@ -30,10 +30,10 @@ const (
 
 type PreviewGeneratorService struct {
 	assetProvider *asset_provider.AssetProvider
-	layoutService *PreviewLayoutService
+	layoutService IPreviewLayoutService
 }
 
-func NewPreviewGenerator(layoutService *PreviewLayoutService) (*PreviewGeneratorService, error) {
+func NewPreviewGenerator(layoutService IPreviewLayoutService) (IPreviewGeneratorService, error) {
 	assetProvider, err := asset_provider.NewAssetProvider()
 	if err != nil {
 		return nil, err
