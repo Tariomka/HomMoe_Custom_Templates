@@ -143,6 +143,13 @@ linters:
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/services
               desc: app/* must invoke domain services through handlers
 
+        test-unit-internal-no-gui:
+          files:
+            - "**/test/unit/internal/**"
+          deny:
+            - pkg: github.com/Tariomka/hommoe_custom_templates/app
+              desc: internal-layer tests must not depend on the GUI layer
+
         concrete-handlers-only-at-gui-composition-roots:
           files:
             - "**/app/**"

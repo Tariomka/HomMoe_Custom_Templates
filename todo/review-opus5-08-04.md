@@ -89,10 +89,10 @@ fixed; the ones with fresh evidence gathered this session:
 | --- | --- | --- |
 | §1.1 non-atomic persistent writes | Still open, verbatim | §1.1 |
 | §1.2 `rmgTemplateModel_test.go` missing build tag | Rejected — see §6.1 | §6.1 |
-| §3.1 internal-service tests import `app/gui/constants` | Still open; **file paths changed** (`variantMappingCatalog`, `contentRuleService`) | §6.3 |
+| §3.1 internal-service tests import `app/gui/constants` | Fixed — see §6.3 | §6.3 |
 | §4.1 live preview rebuilds layout every frame | Still open; now **profiler-measured** and routed through `previewHandler` | §4.1 |
 | §6.4 `bannableItems.go` / `valueOverrideSids.go` at 0% | Still 0% | §6.4 |
-| §6.5 no executable test-layout enforcement | Still absent | §6.5 |
+| §6.5 no executable test-layout enforcement | Fixed — see §6.5 | §6.5 |
 | §7.1 direct pushes to master skip gates | Still open | §7.1 |
 | §7.3 no top-level workflow `permissions:` | Still open | §7.2 |
 | §9.1 QUICKSTART programmatic example cannot compile | Still open, now with **three** distinct compile errors | §9.1 |
@@ -1677,7 +1677,7 @@ Cover explicitly: empty/whitespace path → `ErrNoOutputPath`; nil state →
 
 ---
 
-### 6.3 🟡 Three internal-service unit tests import the GUI layer
+### 6.3 ✅ FIXED 🟡 Three internal-service unit tests import the GUI layer
 
 **Evidence.** All three import `app/gui/constants` at line 6:
 
@@ -1699,6 +1699,16 @@ alive as a legitimate-looking pattern.
 `models.SidMapping` values directly in each test's Arrange section. Do not add
 production exports for tests, and do not touch the protected
 `internal/registry`. Then close the hole per §6.5.
+
+**Fixed 2026-08-05.** All three files now build their `models.SidMapping` values
+from package-local SID string consts (`dragon_utopia`, `pandora_box`,
+`monty_hall`, `watchtower`); the owner chose literals over importing
+`internal/registry` so the tests stay decoupled from both layers. The const
+block for `variantMappingCatalog_test` lives in
+[getVariantsForContent_test.go](../test/unit/internal/services/content_rules/variantMappingCatalog/getVariantsForContent_test.go)
+(the only file that uses all four); `contentRuleService_test` declares its own.
+No production change, no new tests — the existing assertions are unchanged and
+still pass. The hole is now closed by the depguard scope in §6.5.
 
 ---
 
@@ -1726,7 +1736,7 @@ protected registry.
 
 ---
 
-### 6.5 🟡 No executable enforcement of the repository's test-layout rules
+### 6.5 ✅ FIXED 🟡 No executable enforcement of the repository's test-layout rules
 
 **Evidence.** §6.1 and §6.3 are both *written* rules (AGENTS.md §4.6, §4.6.1)
 that were violated, compiled cleanly, and passed CI. `.golangci.yml`'s depguard
@@ -1754,6 +1764,55 @@ CI, not in Go, so it does not need a mirror folder.
 
 **Verification.** After adding the depguard scope, `golangci-lint-v2 run ./...`
 must report exactly the three §6.3 files until they are fixed, then zero.
+
+**Fixed 2026-08-05, with three owner-approved deviations.**
+
+1. **Depguard scope — landed as specified.** `test-unit-internal-no-gui` in
+   [.golangci.yml](../.golangci.yml) denies `app/*` from `**/test/unit/internal/**`.
+   Verified by temporarily reintroducing a GUI import, which the linter flagged,
+   then removing it. The owner first asked to widen the scope to
+   `test/integration` as well; that was withdrawn once it became clear that four
+   of the seven files there (`editorState`, `manualCastleReapply`, `stateExit`,
+   `stateSaveAs`) *legitimately* drive `app/gui/drivers` — depguard matches by
+   path, not by intent, so a wider rule would only have produced false
+   positives. **Do not re-attempt widening it.**
+
+2. **The tag check is inverted, not literal.** The proposed "first non-blank line
+   of every `test/integration/**` and `test/performance/*_test.go` must be the
+   constraint" rests on the same pre-2026-08-05 wording of AGENTS.md §4.6.1 that
+   §6.1 was rejected over. Implemented literally it would fail immediately on
+   [rmgTemplateModel_test.go](../test/integration/rmgTemplateModel_test.go) and
+   [template_generation_test.go](../test/performance/template_generation_test.go),
+   both of which are *correctly* untagged. The check therefore enforces the rule
+   as it actually reads today. It fails the build when:
+   - a `_test.go` file calls an accessor declared in a `*_testexports.go` file
+     without requiring `integration_test`;
+   - any file under `test/unit/**` requires `integration_test`;
+   - any file under `test/integration/gui/**` does not require `gui`;
+   - any file outside `test/` other than a `*_testexports.go` requires
+     `integration_test`.
+
+3. **It is a Go program, not a shell step.** "Keep it in CI, not in Go" was
+   overridden by the owner so the check is cross-platform and locally runnable
+   (AGENTS.md §2.2). [cmd/testlayoutcheck](../cmd/testlayoutcheck/main.go) wraps
+   `checker.TestLayoutChecker`, which parses build constraints with
+   `go/build/constraint` and resolves accessor names from the AST rather than by
+   grepping. `cmd/` is excluded from `-coverpkg`, so it does not move the
+   coverage denominator; it is covered by
+   [test/unit/cmd/testlayoutcheck/checker/testLayoutChecker/](../test/unit/cmd/testlayoutcheck/checker/testLayoutChecker/check_test.go)
+   (14 tests, one per rule plus the regression cases below).
+
+   Two false positives found while building it, both now regression-tested: a
+   naive `Eval` treats `//go:build !wireinject` and `//go:build !windows` as
+   *requiring* `integration_test`, so the tag must be checked for membership in
+   the expression first; and `test/test_helpers/integration_common/*.go` are
+   tagged helper files, not production code, so the production rule is scoped to
+   files outside `test/`.
+
+   Wired into the `check-build` job of
+   [pr-validation.yml](../.github/workflows/pr-validation.yml) as
+   `go run ./cmd/testlayoutcheck .` — it therefore runs on pushes to `master` as
+   well as on pull requests. Current tree: **passes with zero violations.**
 
 ---
 
@@ -2320,8 +2379,12 @@ permanently — mark them `✅ FIXED` in place as they land.
    `wire gen ./internal/composition/...`. Single PR because both touch
    `providerSets.go`.
 
-7. **Test-policy PR.** §6.3 (drop GUI imports from the three tests) then §6.5
-   (depguard scope + CI tag check). §6.5 must land *after* §6.3 or CI goes red.
+7. **Test-policy PR.** ✅ FIXED (2026-08-05)
+   §6.3 (the three tests now use package-local SID consts) then §6.5 (depguard
+   scope `test-unit-internal-no-gui` + `cmd/testlayoutcheck`, wired into the
+   `check-build` CI job). §6.5's tag check is **inverted** relative to the
+   review text — the literal version contradicts the current AGENTS.md §4.6.1
+   and the rejected §6.1; see §6.5 for the three deviations.
 
 8. **CI/security-posture PR.** §7.2 (top-level `permissions`), §7.3 (setup-go
    drift), §7.4 (tools tidy check), §8.3 (scheduled scan).

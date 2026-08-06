@@ -3,8 +3,8 @@ package variantMappingCatalog_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func TestWhenVariantIdExists_ReturnsItsSingleEntryMapping(t *testing.T) {
 	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	mapping, ok := catalog.GetVariantForContentByID(constants.ContentIDs.DragonUtopia, 2)
+	mapping, ok := catalog.GetVariantForContentByID(models.SidMapping{Sid: dragonUtopiaSid}, 2)
 
 	// Assert
 	require.True(t, ok)
@@ -29,7 +29,7 @@ func TestWhenVariantIdIsUnknown_ReturnsNotOk(t *testing.T) {
 	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	_, ok := catalog.GetVariantForContentByID(constants.ContentIDs.DragonUtopia, 99)
+	_, ok := catalog.GetVariantForContentByID(models.SidMapping{Sid: dragonUtopiaSid}, 99)
 
 	// Assert
 	assert.False(t, ok)
@@ -41,7 +41,7 @@ func TestWhenContentHasNoVariants_ReturnsNotOk(t *testing.T) {
 	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	_, ok := catalog.GetVariantForContentByID(constants.ContentIDs.Watchtower, 0)
+	_, ok := catalog.GetVariantForContentByID(models.SidMapping{Sid: watchtowerSid}, 0)
 
 	// Assert
 	assert.False(t, ok)

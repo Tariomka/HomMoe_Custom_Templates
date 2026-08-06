@@ -3,11 +3,18 @@ package variantMappingCatalog_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+// SIDs are duplicated here on purpose: internal-layer tests must not import the GUI catalogue.
+const (
+	dragonUtopiaSid = "dragon_utopia"
+	pandoraBoxSid   = "pandora_box"
+	montyHallSid    = "monty_hall"
+	watchtowerSid   = "watchtower"
 )
 
 func TestWhenContentHasVariants_ReturnsOneMappingPerVariant(t *testing.T) {
@@ -18,9 +25,9 @@ func TestWhenContentHasVariants_ReturnsOneMappingPerVariant(t *testing.T) {
 		content       models.SidMapping
 		expectedCount int
 	}{
-		{"WhenContentIsDragonUtopia_ReturnsFourMappings", constants.ContentIDs.DragonUtopia, 4},
-		{"WhenContentIsPandoraBox_ReturnsTwentyEightMappings", constants.ContentIDs.PandoraBox, 28},
-		{"WhenContentIsMontyHall_ReturnsFourMappings", constants.ContentIDs.MontyHall, 4},
+		{"WhenContentIsDragonUtopia_ReturnsFourMappings", models.SidMapping{Sid: dragonUtopiaSid}, 4},
+		{"WhenContentIsPandoraBox_ReturnsTwentyEightMappings", models.SidMapping{Sid: pandoraBoxSid}, 28},
+		{"WhenContentIsMontyHall_ReturnsFourMappings", models.SidMapping{Sid: montyHallSid}, 4},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -42,7 +49,7 @@ func TestWhenContentHasNoVariants_ReturnsEmptySlice(t *testing.T) {
 	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	mappings := catalog.GetVariantsForContent(constants.ContentIDs.Watchtower)
+	mappings := catalog.GetVariantsForContent(models.SidMapping{Sid: watchtowerSid})
 
 	// Assert
 	assert.Empty(t, mappings)
@@ -54,7 +61,7 @@ func TestWhenVariantsAreReturned_OrdersThemByVariantId(t *testing.T) {
 	catalog := content_rules.NewVariantMappingCatalog()
 
 	// Act
-	mappings := catalog.GetVariantsForContent(constants.ContentIDs.DragonUtopia)
+	mappings := catalog.GetVariantsForContent(models.SidMapping{Sid: dragonUtopiaSid})
 
 	// Assert
 	variantIDs := make([]int, 0, len(mappings))
@@ -71,25 +78,27 @@ func TestWhenVariantsAreReturned_BindsRequestedContent(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	catalog := content_rules.NewVariantMappingCatalog()
+	montyHall := models.SidMapping{Sid: montyHallSid, Name: "The Monty Hall"}
 
 	// Act
-	mappings := catalog.GetVariantsForContent(constants.ContentIDs.MontyHall)
+	mappings := catalog.GetVariantsForContent(montyHall)
 
 	// Assert
 	require.NotEmpty(t, mappings)
-	assert.Equal(t, constants.ContentIDs.MontyHall, mappings[0].Content)
+	assert.Equal(t, montyHall, mappings[0].Content)
 }
 
 func TestWhenReturnedVariantIsMutated_NextResultRetainsCatalogValue(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	catalog := content_rules.NewVariantMappingCatalog()
-	firstResult := catalog.GetVariantsForContent(constants.ContentIDs.DragonUtopia)
+	dragonUtopia := models.SidMapping{Sid: dragonUtopiaSid}
+	firstResult := catalog.GetVariantsForContent(dragonUtopia)
 	expected := firstResult[0].Variants[0].Value
 
 	// Act
 	firstResult[0].Variants[0].Value = "mutated"
-	secondResult := catalog.GetVariantsForContent(constants.ContentIDs.DragonUtopia)
+	secondResult := catalog.GetVariantsForContent(dragonUtopia)
 
 	// Assert
 	assert.Equal(t, expected, secondResult[0].Variants[0].Value)

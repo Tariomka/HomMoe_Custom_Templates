@@ -3,16 +3,19 @@ package contentRuleService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// The SID is duplicated here on purpose: internal-layer tests must not import the GUI catalogue.
+const dragonUtopiaSid = "dragon_utopia"
+
 func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 	t.Parallel()
 	service := content_rules.NewContentRuleService()
+	dragonUtopia := models.SidMapping{Sid: dragonUtopiaSid}
 	far := models.DistancePreset{Name: "Far", Min: 0.5, Max: 0.75}
 	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 	utopiaVariantID := 1
@@ -30,7 +33,7 @@ func TestWhenSavedRuleIsValid_RestoresRuleThatSerializesBack(t *testing.T) {
 		{"WhenRuleIsGuarded_RoundTrips", content_rules.NewRuleGuarded(true), models.SidMapping{Sid: "x"}},
 		{"WhenRuleIsUnguarded_RoundTrips", content_rules.NewRuleGuarded(false), models.SidMapping{Sid: "x"}},
 		{"WhenRuleIsSoloEncounter_RoundTrips", content_rules.NewRuleSoloEncounter(true), models.SidMapping{Sid: "x"}},
-		{"WhenRuleIsVariant_RoundTrips", utopiaVariantRule, constants.ContentIDs.DragonUtopia},
+		{"WhenRuleIsVariant_RoundTrips", utopiaVariantRule, dragonUtopia},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -95,7 +98,7 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 			// Arrange
 
 			// Act
-			restored := service.CreateRuleFromSavedRule(testCase.saved, constants.ContentIDs.DragonUtopia)
+			restored := service.CreateRuleFromSavedRule(testCase.saved, models.SidMapping{Sid: dragonUtopiaSid})
 
 			// Assert
 			assert.Nil(t, restored)

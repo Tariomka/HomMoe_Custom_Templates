@@ -103,6 +103,9 @@ jobs:
       - name: Vet (including integration_test-gated files)
         run: go vet -tags=integration_test ./...
 
+      - name: Check test build-tag layout
+        run: go run ./cmd/testlayoutcheck .
+
   check-windows:
     name: Check Windows Build & Unit Tests
     runs-on: windows-latest
