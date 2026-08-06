@@ -7,7 +7,10 @@ working on the **HomMoe Custom Templates** repository. Follow them strictly.
 
 ## 1. Project Snapshot
 
-- **Language / Toolchain:** Go 1.26.5, single module `github.com/Tariomka/hommoe_custom_templates`.
+- **Language / Toolchain:** Go 1.26.5. Two modules: the application module
+  `github.com/Tariomka/hommoe_custom_templates` at the repository root, and
+  [tools/go.mod](tools/go.mod), a tools-only module (also Go 1.26.5) that pins
+  `wire`, `golangci-lint` and `gcov2lcov` through `tool` directives.
 - **UI:** Gio (`gioui.org v0.10.0`) — immediate-mode desktop GUI.
 - **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
   and Magic: Olden Era* and persist editor state as `.gen.json` files.
@@ -390,6 +393,19 @@ include them.
   tag. Keep any shared `TestMain`/helpers in the tagged file only if the
   untagged files can run without them.
 
+**Enforcement** — the rules of this section and of §4.6.2 are checked by
+[cmd/testlayoutcheck](cmd/testlayoutcheck), a small Go program that walks the
+repository and reports every misplaced build tag or misnamed unit-test file. Run
+it (VS Code task *"Go: Check test build-tag layout"*) before handing work back:
+
+```powershell
+go run ./cmd/testlayoutcheck .
+```
+
+It exits `0` and prints `test-layout check passed` when clean, `1` with one line
+per violation otherwise. A violation is a broken build — fix the test layout, do
+not silence the checker.
+
 ### 4.6.2 The `gui` build tag (tests that need a GPU)
 
 Some tests drive a real Gio window or rasterize frames through
@@ -593,6 +609,7 @@ no prior memory must be able to resume work from it alone.
 | Run benchmarks (no GPU)    | `go test -bench=. -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` |
 | Run benchmarks (needs GPU) | `go test -tags=integration_test,gui -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` |
 | Run with race detector     | `go test -race ./test/...`                             |
+| Check test build-tag layout | `go run ./cmd/testlayoutcheck .` (VS Code task *"Go: Check test build-tag layout"*; see §4.6.1) |
 | Unit test coverage report  | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` (see §2.3; VS Code task *"Go: Generate code coverage report"*) |
 | Lint (report only)         | `golangci-lint-v2 run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
 | Lint (auto-fix)            | `golangci-lint-v2 run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |

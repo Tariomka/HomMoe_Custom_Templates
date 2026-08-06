@@ -111,6 +111,18 @@
             "problemMatcher": "$go"
         },
         {
+            "label": "Go: Check test build-tag layout",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "run",
+                "./cmd/testlayoutcheck",
+                "."
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
             "label": "Go: Generate code coverage report",
             "type": "shell",
             "command": "go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...; go tool cover '-html=coverage.txt' -o coverage.html; gcov2lcov '-infile=coverage.txt' '-outfile=lcov.info'",

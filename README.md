@@ -42,20 +42,24 @@ Generated template preview:
 ├── app/                                     # Front-ends (presentation only)
 │   ├── gui/                                 # Gio desktop GUI
 │   │   ├── program.go                       # Gio app bootstrap + event loop
-│   │   ├── editor/                          # Window, tabs, toolbar
-│   │   ├── panels/                          # General / Layout / Zone Content / Bonuses & Bans / preview / footer
-│   │   ├── dialogs/                         # Bonus, item/spell pickers, rule + zone editor dialogs
+│   │   ├── editor/                          # Window, tab strip, toolbar
+│   │   ├── panels/                          # generalPanel / layoutPanel(+Topology,+Zones) / bonusesPanel / previewPanel
+│   │   ├── dialogs/                         # Zone content, bonus, item/spell pickers, rule, browse + zone editor dialogs
 │   │   ├── components/                      # Dropdown + segment-button widgets
 │   │   ├── widgets/                         # Reusable buttons, sliders, sections, textboxes…
 │   │   ├── drivers/                         # UI state, tabs, dialog host (calls handlers)
 │   │   ├── interfaces/                      # GUI ports plus panel / dialog interfaces
+│   │   ├── models/                          # View-side caches (preview layout cache…)
 │   │   ├── themes/                          # Color palette + Gio material theme (single color source)
 │   │   ├── constants/                       # UI-only constants
 │   │   └── utils/                           # Shared drawing, math and SID lookup helpers
 │   ├── tui/                                 # Placeholder for a future terminal UI
 │   └── web/                                 # Placeholder for a future web UI
+├── cmd/
+│   └── testlayoutcheck/                     # Checker that enforces the test/unit layout rules
 ├── internal/
-│   ├── handlers/                            # Thin GUIHandler facade over focused use-case handlers
+│   ├── composition/                         # wire provider sets + generated injector
+│   ├── handlers/                            # Thin GuiHandler facade over focused use-case handlers
 │   ├── dtos/                                # Editor-state / template transfer objects
 │   ├── common/                              # Shared errors, constants and immutable catalogs
 │   ├── registry/                            # Pure game SIDs / enum pools (items, spells, factions…)
@@ -64,6 +68,7 @@ Generated template preview:
 │   ├── mappers/                             # Editor-state DTO to generator-config mapping
 │   ├── models/                              # GeneratorConfig + settings, mappings, plans, tuning
 │   │   └── config/                          # GeneratorConfig (config_inner: topology, zone, hero, rules)
+│   ├── repositories/                        # Atomic file read/write per persisted artifact
 │   ├── validators/                          # Editor-state validation rules
 │   └── services/                            # Business logic
 │       ├── asset_provider/                  # Embedded game-data and preview assets
@@ -74,23 +79,25 @@ Generated template preview:
 │       ├── preview_service/                 # Preview layout and PNG rendering
 │       ├── template_generator/              # Generator + topology/content/rule providers
 │       └── zones/                           # Shared zone, castle and road construction
+├── tools/                                   # Second module: wire, golangci-lint, gcov2lcov
 └── test/                                    # Unit, architecture, integration and performance suites
 ```
 
 ## Features
 
-- **Gio desktop GUI** (`gioui.org v0.10.0`) with four configuration tabs, a
-  live preview sidebar and a generate/save footer:
+- **Gio desktop GUI** (`gioui.org v0.10.0`) with three configuration tabs and a
+  live preview sidebar that also owns the output-directory picker and the
+  generate/save buttons:
   1. **General** — template name, players, map size, game mode, hero counts,
      faction-laws & astrology XP, victory condition and win/loss rules
      (lost city/hero, hold city, gladiator arena, tournament).
-  2. **Layout** — topology, manual zone editor, connectivity (roads, portals,
-     footholds, player isolation, faction matching, neutral spacing), zone
-     sizes, difficulty/density, and advanced per-tier neutral-zone counts.
-  3. **Zone Content** — mandatory content seeded per zone tier (Player / Low /
-     Medium / High / Hub) across mines, utilities, treasures, recruitment,
-     banks and hero-improvement groups, each with optional placement rules.
-  4. **Bonuses & Bans** (experimental) — game-start bonuses, banned items,
+  2. **Layout & Zones** — topology, connectivity (roads, portals, footholds,
+     abandoned outposts, player isolation, faction matching, neutral spacing),
+     zone sizes, difficulty/density, the manual zone editor, per-tier neutral
+     zone counts, and the per-tier zone-content dialogs (Player / Lowest / Low
+     / Medium / High / Hub) covering mines, utilities, treasures, recruitment,
+     banks and hero-improvement groups with optional placement rules.
+  3. **Bonuses & Bans** (experimental) — game-start bonuses, banned items,
      banned spells and guard-value overrides, edited through picker dialogs.
 - **Layered architecture** — the GUI talks to `internal/handlers.GUIHandler`
   through DTOs; all generation, IO and preview logic lives in
@@ -140,12 +147,12 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
 
 1. Launch the GUI (`go run .`). On startup it tries to locate the game's
    template folder via Steam and pre-fills the output directory.
-2. Configure the template across the **General**, **Layout**, **Zone Content**
-   and **Bonuses & Bans** tabs.
-3. (Optional) On the **Layout** tab open the **Manual zone editor** to tweak
-   the zones and connections of the last generated template.
-4. **Save** / **Save As…** writes a `.gen.json` settings file (your inputs).
-5. Click **Generate Template** to build the template and refresh the preview,
+2. Configure the template across the **General**, **Layout & Zones** and
+   **Bonuses & Bans** tabs.
+3. (Optional) On the **Layout & Zones** tab open the **Manual zone editor** to
+   tweak the zones and connections of the last generated template.
+4. **Save** / **Save As** writes a `.gen.json` settings file (your inputs).
+5. Click **Generate** to build the template and refresh the preview,
    then **Save Template** to write `<TemplateName>.rmg.json` (plus a preview
    `.png`) into the output folder.
 6. Drop the `.rmg.json` into the game's templates folder and pick it from
@@ -155,9 +162,9 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
 
 | Topology      | Constant                       | Shape                                                        |
 |---------------|--------------------------------|--------------------------------------------------------------|
-| Circles       | `config.TopologyCircles`       | Default. Concentric rings sorted by zone tier.               |
-| Random        | `config.TopologyRandom`        | Random placement / Delaunay-style connections.               |
-| Ring          | `config.TopologyDefault`       | Players in a circle, each connected to neighbors.            |
+| Random        | `config.TopologyRandom`        | Default. Random placement / Delaunay-style connections.      |
+| Circles       | `config.TopologyCircles`       | Concentric rings sorted by zone tier.                        |
+| Ring          | `config.TopologyRing`          | Players in a circle, each connected to neighbors.            |
 | Hub-and-Spoke | `config.TopologyHubAndSpoke`   | All players connect through a central hub neutral zone.      |
 | Chain         | `config.TopologyChain`         | Linear arrangement of zones.                                 |
 | Shared Web    | `config.TopologySharedWeb`     | Players connected through shared neutral zones.              |
@@ -180,6 +187,7 @@ Victory condition IDs (`GameEndConditions.VictoryCondition`):
 |--------------------|----------------------|
 | `win_condition_1`  | Standard             |
 | `win_condition_3`  | Lost Starting City   |
+| `win_condition_4`  | Guardian Arena       |
 | `win_condition_5`  | Hold City            |
 | `win_condition_6`  | Tournament           |
 
@@ -195,9 +203,10 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
    placeholders. The UI only renders and collects input; it delegates all
    logic to handlers.
 2. **Handlers** (`internal/handlers`) — `GUIHandler` is the UI's thin entry
-   point. It composes focused workflow, persistence, validation, preview,
-   content-rule and zone-editor handlers behind GUI-owned interfaces and
-   exchanges DTOs (`internal/dtos`) with the UI.
+   point. It composes focused template, persistence/validation, preview,
+   content-rule and zone-editor handlers behind the interfaces in
+   `internal/handlers/handler_interfaces` and exchanges DTOs
+   (`internal/dtos`) with the UI.
 3. **Services** (`internal/services`) — generation (`template_generator` with
    topology/content/rule providers), the manual `connection_editor`,
    `content_rules`, shared zone/castle/road factories, preview layout/rendering,
@@ -223,19 +232,20 @@ app/gui (panels, dialogs, drivers.State)
    │   collects widget input into dtos.EditorStateDto
    │   invokes app/gui/interfaces.IBackend
    ▼
-handlers.GUIHandler → templateWorkflowHandler.GenerateTemplate
+handlers.GUIHandler → templateHandler.GenerateTemplate
    │   validates state and maps it through mappers.GeneratorConfigMapper
    ▼
 template_generator.TemplateGenerator.Generate
    ├── zones.ZoneLabelProvider             (player + neutral labels)
    ├── providers.TopologyProvider          (variant: zones + connections)
+   ├── providers.GladiatorArenaProvider    (arena object / connection)
    ├── providers.GameRulesProvider         (win/loss, heroes, tournament…)
    ├── providers.MandatoryContentProvider / ContentLimitProvider
    └── providers.ZoneLayoutProvider
    ▼
 entities.RmgTemplate
    ├──► handlers.previewHandler → preview_service       (preview panel + PNG)
-   └──► handlers.templatePersistenceHandler
+   └──► handlers.templateHandler
            └──► file_service.FileService                ──► <Name>.rmg.json
 ```
 
@@ -244,6 +254,9 @@ entities.RmgTemplate
 ```powershell
 # Full suite
 go test ./test/... -count=1
+
+# Check that test/unit mirrors the implementation layout and build tags
+go run ./cmd/testlayoutcheck .
 
 # Just the service unit tests
 go test ./test/unit/internal/services/... -count=1

@@ -79,7 +79,7 @@ fixed; the ones with fresh evidence gathered this session:
 | Backlog: zone tier property on entities; consolidate road distances; "app should only use entities/models/handlers/commons"; common generation values; rework `EditorStateDto`; rename `template` → `template_entity` | Owner future-work. §2.2 below overlaps the "app should only use…" item; it is raised as a *current* layering finding with evidence, not as a backlog restatement. |
 | test_observations: Gio widgets/dialogs/panels at 0% | **Accepted integration territory** under AGENTS.md §4.6. §6.4 raises only the two *non-Gio* catalogs. |
 | test_observations: `drivers.State` dialog-bound branches, `topologyConnectionService` private policy, unreachable defensive branches (`connectInteriorStables` len==0, `providePreviewGenerator` err!=nil) | Accepted, already registered. |
-| Repo memory: "GUI has four tabs / Zone Content tab / footer panel" | **Stale memory.** [window.go](../app/gui/editor/window.go#L36-L40) has three tabs. Docs still repeat it — see §9.2. |
+| Repo memory: "GUI has four tabs / Zone Content tab / footer panel" | **Stale memory.** [window.go](../app/gui/editor/window.go#L36-L40) has three tabs. ✅ Docs corrected in Batch 9 (§9.2); repo memory updated in the same batch. |
 | Repo memory: "coverage 86–92%, Go 1.26.3 root, Gio v0.9.0" | **Stale.** Current: 64.7%, Go 1.26.5, Gio v0.10.0. |
 | Repo memory: "arena assets embedded but not decoded/drawn" | **Confirmed still true this session** — promoted to a real finding with evidence at §2.7 (it is a shipped-binary cost plus a documented-but-absent feature, not just a note). |
 
@@ -95,8 +95,8 @@ fixed; the ones with fresh evidence gathered this session:
 | §6.5 no executable test-layout enforcement | Fixed — see §6.5 | §6.5 |
 | §7.1 direct pushes to master skip gates | Rejected — see §7.1 | §7.1 |
 | §7.3 no top-level workflow `permissions:` | Fixed — see §7.2 | §7.2 |
-| §9.1 QUICKSTART programmatic example cannot compile | Still open, now with **three** distinct compile errors | §9.1 |
-| §9.2 README/QUICKSTART/AGENTS describe a deleted UI | Still open; AGENTS.md drift changed shape (versions now correct, module count and task labels wrong) | §9.2, §9.6 |
+| §9.1 QUICKSTART programmatic example cannot compile | ✅ Fixed in Batch 9 | §9.1 |
+| §9.2 README/QUICKSTART/AGENTS describe a deleted UI | ✅ Fixed in Batch 9 | §9.2, §9.6 |
 
 ---
 
@@ -1067,7 +1067,25 @@ widget handles. Not worth a standalone PR.
 
 ---
 
-### 2.7 🟡 The gladiator-arena preview feature is half-landed: six dead embedded assets and two dead enum values
+### 2.7 ✅ FIXED 🟡 The gladiator-arena preview feature is half-landed: six dead embedded assets and two dead enum values
+
+> **FIXED (Batch 9).** Owner chose the **finish** path, and went further: the
+> generator now actually emits an arena. `GeneratorConfig.IsGladiatorArenaMode()`
+> is the single source of truth (win-condition rule enabled, or victory
+> condition `win_condition_4`), reused by `gameRulesProvider`. The new
+> `providers.GladiatorArenaProvider` (wired into `GenerationSet` and
+> `TemplateGenerator.Generate`) places the arena: hub zone main object →
+> otherwise the richest neutral↔neutral connection gets
+> `connectionType: "GladiatorArena"` → otherwise the richest neutral zone gets
+> the main object → otherwise nothing. Preview follows: `preview.Zone.Arena` /
+> `HasArena()`, `preview.Connection.IsGladiatorArena()`, the extracted
+> `getPreviewConnectionType` now maps `GladiatorArena` and `Proximity`,
+> `neutralAssetNames` grew to fifteen entries (arena beats castle — there is no
+> combined sprite), and `AssetProvider.DrawArenaMarker` draws the master glyph
+> at the connection's Bézier midpoint at 0.75 scale. Tests added for every new
+> unit, including the asset-completeness guard in `newAssetProvider_test.go`.
+> `docs/gladiator-arena-marker.md` was rewritten to describe the shipped
+> behaviour (see §9.5).
 
 **Evidence.** Six arena sprites are compiled into every binary via
 [assetProvider.go](../internal/services/asset_provider/assetProvider.go#L25-L26):
@@ -2149,7 +2167,17 @@ is exactly this case — the code did not change, the advisory did.
 
 ## 9. Documentation & developer experience
 
-### 9.1 🟠 The QUICKSTART programmatic example cannot compile — three separate errors
+### 9.1 ✅ FIXED 🟠 The QUICKSTART programmatic example cannot compile — three separate errors
+
+> **FIXED (Batch 9).** "Programmatic Use" was replaced by "Building Another
+> Front-End": it states up front that `internal/` is unreachable from other
+> modules and exists so this repository can grow front-ends (`app/tui`,
+> `app/web`), then shows a working snippet built on
+> `composition.InitializeGuiHandler()` → `GenerateTemplate` →
+> `SaveTemplate(dtos.TemplateSaveDto{...})`, plus a table of the five
+> `IGuiHandler` sub-interfaces. Owner declined a compile-checked example (no
+> `examples/` package, no doc test); the snippet was type-checked once manually
+> with `go vet` in a scratch package.
 
 **Evidence.** [QUICKSTART.md](../QUICKSTART.md#L111-L133):
 
@@ -2196,7 +2224,22 @@ simply be marked internal-only.
 
 ---
 
-### 9.2 🟠 README and QUICKSTART describe a UI that does not exist
+### 9.2 ✅ FIXED 🟠 README and QUICKSTART describe a UI that does not exist
+
+> **FIXED (Batch 9).** Every row of the table below was corrected in place:
+> three tabs (`General`, `Layout & Zones`, `Bonuses & Bans`), the real toolbar
+> (`New`, `Load`, `Save`, `Save As`, `Exit`), the real preview-panel controls
+> (`Browse`, `Reveal`, `Generate`, `Save Template` — no `Refresh`), the removal
+> of the imaginary footer, `Reveal` documented as the in-app browse dialog, the
+> real persistence API (`FileService.SaveSettings` / `.LoadSettingsFile`), and a
+> README source tree regenerated from the actual listing (now also covering
+> `cmd/`, `internal/composition`, `internal/repositories`, `app/gui/models` and
+> `tools/`). Additionally: the zone-content dialog tiers are six not five
+> (Player, Lowest / Low / Medium / High Neutral, Hub); `config.TopologyDefault`
+> in the README topology table became `config.TopologyRing`; the default
+> topology is `Random`, not `Circles`; the victory-condition table gained
+> `win_condition_4` "Guardian Arena"; the generation-flow diagram now names
+> `templateHandler` and `GladiatorArenaProvider`.
 
 **Evidence.** Verified against source this session:
 
@@ -2228,7 +2271,10 @@ example.
 
 ---
 
-### 9.3 🟡 QUICKSTART states the wrong minimum Go version
+### 9.3 ✅ FIXED 🟡 QUICKSTART states the wrong minimum Go version
+
+> **FIXED (Batch 9).** Both the requirements line and the troubleshooting entry
+> now say Go 1.26.5+.
 
 **Evidence.** [QUICKSTART.md](../QUICKSTART.md#L10): "Requires Go **1.25.8+**."
 [go.mod](../go.mod#L3) declares `go 1.26.5`, and CI pins `GO_VERSION: 1.26.5`
@@ -2241,7 +2287,11 @@ toolchain error at `go run .`, not a clear "upgrade Go" message.
 
 ---
 
-### 9.4 🟡 QUICKSTART undercounts the topologies
+### 9.4 ✅ FIXED 🟡 QUICKSTART undercounts the topologies
+
+> **FIXED (Batch 9).** Owner chose de-duplication: QUICKSTART no longer states a
+> count or repeats the list — both the Layout & Zones section and §7 link to the
+> README topology table, which is now the single source.
 
 **Evidence.** [QUICKSTART.md](../QUICKSTART.md#L56): "pick one of ten layouts".
 [mapTopology.go](../internal/models/config/config_inner/mapTopology.go#L6-L18)
@@ -2254,7 +2304,14 @@ README table so only one place needs maintenance.
 
 ---
 
-### 9.5 🟡 `docs/gladiator-arena-marker.md` points at a package that does not exist
+### 9.5 ✅ FIXED 🟡 `docs/gladiator-arena-marker.md` points at a package that does not exist
+
+> **FIXED (Batch 9).** The asset path is now
+> `internal/services/asset_provider/assets/`, the table lists all six arena
+> sprites (`neutral_highest_arena.png` was missing), the embed directive is
+> quoted correctly, and the closing "wiring is a follow-up" paragraph was
+> replaced by a "How this project places and draws the arena" section describing
+> the §2.7 implementation.
 
 **Evidence.** [gladiator-arena-marker.md](../docs/gladiator-arena-marker.md#L111-L131)
 locates the arena sprites under `internal/services/previewassets/`.
@@ -2268,7 +2325,17 @@ resolved (finish or remove), this document must be updated to match.
 
 ---
 
-### 9.6 🟡 AGENTS.md claims a single module and names VS Code tasks that do not exist
+### 9.6 ✅ FIXED 🟡 AGENTS.md claims a single module and names VS Code tasks that do not exist
+
+> **FIXED (Batch 9).** §1 now describes both modules (root and `tools/`, both
+> Go 1.26.5 — `tools/go.mod` had already been bumped in Batch 8, so the review's
+> "1.26.3" is stale). The fictional task labels had already been removed by an
+> earlier batch; every `*"Go: ..."*` reference now in AGENTS.md matches
+> `.vscode/tasks.json`. §4.6.1 gained an **Enforcement** paragraph documenting
+> `cmd/testlayoutcheck` and the §7 Quick Reference gained a row for it; a
+> matching `Go: Check test build-tag layout` task was added to
+> `.vscode/tasks.json`. Also corrected the stale "See AGENTS.md 4.6.2" comment
+> in `internal/composition/wire.go` to 4.6.3.
 
 **Evidence.**
 
@@ -2300,7 +2367,11 @@ there.
 
 ---
 
-### 9.7 ⚪ Linux build prerequisites are undocumented
+### 9.7 ✅ FIXED ⚪ Linux build prerequisites are undocumented
+
+> **FIXED (Batch 9).** QUICKSTART §1 gained a "Building on Linux" subsection
+> with the exact sixteen packages from the composite action, and the
+> troubleshooting entry for "window doesn't open" links to it.
 
 **Evidence.** [setup-steps/action.yml](../.github/workflows/setup-steps/action.yml)
 installs sixteen system packages before any Linux build (`libgles2-mesa-dev`,
@@ -2471,9 +2542,11 @@ permanently — mark them `✅ FIXED` in place as they land.
    the `push: master` trigger only fires post-merge and the reduced job subset is
    deliberate; see §7.1. That also voids §8.3's fix item 1.
 
-9. **Docs PR.** §9.1–§9.6 (+ optional §9.7) in one pass, then update repository
-   memory. §9.5 must agree with whatever §2.7 decides.
-   ⚠ §9.1 depends on the owner's public-API decision.
+9. **Docs PR.** ✅ FIXED (2026-08-06)
+   §9.1–§9.7 in one pass, with §2.7 folded in by owner decision (the arena is
+   now actually generated — see §2.7). Owner declined a compile-checked
+   example for §9.1: "no compile check — just fix the text". Repository memory
+   updated in the same batch.
 
 10. **Duplication cleanup PR.** §3.1 (mechanical, 15 sites), §3.3 (spell helper
     + its new tests), §3.4 (button widget — verify via GUI snapshots), then
@@ -2483,8 +2556,8 @@ permanently — mark them `✅ FIXED` in place as they land.
     `stateHandler` and `previewHandler`), §6.4 (the two catalogues).
 
 12. **Product decisions, then implementation.**
-    ⚠ §2.7 (finish or remove the arena preview), ⚠ §1.8 (output-directory
-    persistence shape).
+    ✅ §2.7 decided and delivered in Batch 9 (finish, and make the generator
+    place the arena). ⚠ §1.8 (output-directory persistence shape) still open.
 
 13. **Large refactors — plan first per AGENTS.md §4.7.**
     §2.1 (extract filesystem policy) → unblocks §2.5. Then §2.2 (extract
@@ -2494,8 +2567,8 @@ permanently — mark them `✅ FIXED` in place as they land.
 **Blockers summary:** §6.5 after §6.3 · §2.5 after §2.1 · §5.1 folds into §1.1 or
 §2.1 · §9.5 after §2.7 · §3.2 with §5.3.
 **Owner decisions required before implementation:** §1.1 (transactionality),
-§1.5 (ceilings), §1.8 (persistence shape), §2.2 (refactor scope), §2.7
-(finish/remove), §9.1 (public API).
+§1.5 (ceilings), §1.8 (persistence shape), §2.2 (refactor scope). §2.7
+(finish/remove) and §9.1 (public API) were answered in Batch 9.
 
 ---
 

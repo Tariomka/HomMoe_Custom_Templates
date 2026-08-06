@@ -111,23 +111,24 @@ win-condition flag.
 The crossed-swords glyph was extracted from the official `Helltide.png`
 preview (the clean version sitting on the bare central connector, with the
 connector line masked out) and matched to the existing 96x96 sprite format
-(bubble center at `(48,48)`). Four assets were added under
-`internal/services/previewassets/`:
+(bubble center at `(48,48)`). The assets live under
+[internal/services/asset_provider/assets/](../internal/services/asset_provider/assets):
 
-| File                         | Contents                                              |
-| ---------------------------- | ----------------------------------------------------- |
-| `gladiator_arena.png`        | Crossed swords only, transparent background           |
-| `neutral_none_arena.png`     | Crossed swords over a **none** (open-ring) zone bubble |
-| `neutral_low_arena.png`      | Crossed swords over a **low** (bronze) zone bubble    |
-| `neutral_medium_arena.png`   | Crossed swords over a **medium** (silver) zone bubble |
-| `neutral_high_arena.png`     | Crossed swords over a **high** (gold) zone bubble     |
+| File                         | Contents                                                 |
+| ---------------------------- | -------------------------------------------------------- |
+| `gladiator_arena.png`        | Crossed swords only, transparent background              |
+| `neutral_none_arena.png`     | Crossed swords over a **none** (open-ring) zone bubble   |
+| `neutral_low_arena.png`      | Crossed swords over a **low** (bronze) zone bubble       |
+| `neutral_medium_arena.png`   | Crossed swords over a **medium** (silver) zone bubble    |
+| `neutral_high_arena.png`     | Crossed swords over a **high** (gold) zone bubble        |
+| `neutral_highest_arena.png`  | Crossed swords over a **highest** (platinum) zone bubble |
 
 Notes:
 
 - `gladiator_arena.png` is the master glyph (solid, fully opaque swords). It is
   composited at ~0.85 scale (so the swords are about as big as the zone's outer
-  ring, matching the Blitz preview) onto the `neutral_{none,low,medium,high}.png`
-  bubbles to produce the zone-background variants.
+  ring, matching the Blitz preview) onto the `neutral_*.png` bubbles to produce
+  the zone-background variants.
 - The neutral-zone quality bubbles are: **none** = open ring (transparent
   center), **low** = light bronze, **medium** = silver, **high** = gold. The
   bronze **low** bubble is derived from the gold **high** bubble by recolouring
@@ -135,7 +136,38 @@ Notes:
 - The **medium** variant has no official source (no official template places an
   arena in a medium zone); it is synthesised from the master glyph for
   completeness of the sprite set.
-- These files are embedded automatically by the existing
-  `//go:embed previewassets/*.png` directive. Wiring them into the renderer
-  (detecting `GladiatorArena` zones/connections in the layout and drawing the
-  marker) is a separate follow-up and is not part of this extraction.
+- These files are embedded by the `//go:embed assets/*.png` directive in
+  [internal/services/asset_provider/assetProvider.go](../internal/services/asset_provider/assetProvider.go).
+
+## How this project places and draws the arena
+
+The generator emits an arena whenever the template is in arena mode — either
+the `gladiatorArena` win-condition rule is enabled, or the victory condition is
+`win_condition_4` ("Guardian Arena") — as decided by
+`config.GeneratorConfig.IsGladiatorArenaMode()`.
+
+`providers.GladiatorArenaProvider.PlaceArena` then picks the wire form to use
+based on what the chosen topology actually produced, in this order:
+
+1. **Hub zone present** → a `GladiatorArena` main object is appended to the hub
+   zone (`"placement": "Uniform"`, `"placementArgs": ["true","0","0"]`, matching
+   Blitz).
+2. **Otherwise, a neutral↔neutral connection exists** → the richest such
+   connection (highest combined zone quality, ties broken by connection name)
+   gets `"connectionType": "GladiatorArena"`.
+3. **Otherwise** → the richest neutral zone (ties broken by zone name) receives
+   the main object.
+4. **No neutral zones at all** → nothing is placed.
+
+Most topologies alternate player and neutral zones around a ring, so
+neutral↔neutral connections often do not exist; step 3 is the common fallback.
+
+Rendering mirrors the two forms:
+
+- A zone carrying the main object renders the `neutral_<quality>_arena.png`
+  bubble. There is no combined castle+arena artwork, so a zone with both a
+  castle and an arena draws the **arena** sprite.
+- An arena connection draws the plain connector line and then composites the
+  `gladiator_arena.png` master glyph at the midpoint of the connection's
+  quadratic Bézier curve, at 0.75 of the zone-sprite scale.
+

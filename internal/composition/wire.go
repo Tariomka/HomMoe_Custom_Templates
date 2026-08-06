@@ -1,7 +1,7 @@
 //go:build wireinject
 
 // The build tag keeps this stub out of every real build; only the wire CLI
-// compiles it, and only to read the graph. See AGENTS.md 4.6.2.
+// compiles it, and only to read the graph.
 
 package composition
 
