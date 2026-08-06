@@ -110,6 +110,36 @@ You **MUST NOT** stage any changes you do and/or commit them to origin or any ot
 If you notice staged changes, **NEVER** unstage them - it is done by the author
 after he reviews and ensures the changes are correct.
 
+### 2.6 Output path is a hard requirement of the game
+
+Heroes of Might and Magic: Olden Era only reads random-map templates from **its
+own templates directory**. A `.rmg.json` written anywhere else is not merely in
+an unusual place — **the game will never find it**, and the user is left with a
+file they cannot locate or place correctly after the fact.
+
+The directory is therefore **not** a user preference. It is a property of the
+*machine*: it differs per device with the Steam library location, the OS, and
+the Proton/native layout, and it changes whenever the game is moved or
+reinstalled. Per-launch auto-detection via
+[internal/helpers/io.go](internal/helpers/io.go) (`FindOldenEraTemplatesDir`) is
+the correct design precisely because it is self-healing.
+
+You **MUST NOT**:
+
+- Change where `.rmg.json` (or its preview `.png`) is written, or add any
+  behaviour that lets a template land outside the detected templates directory
+  by default.
+- **Persist the output directory** in any form — not in `EditorStateDto` /
+  `.gen.json`, not in an `os.UserConfigDir()` preferences file, not anywhere
+  else. A stored path is invalid on any other machine and goes stale on the
+  current one. Do not re-propose it.
+- Rework `outputPath` on `drivers.State` into a "remembered setting". The
+  in-app folder picker is a deliberate **single-session escape hatch** for
+  layouts the detector does not recognise yet — nothing more.
+
+If detection turns out to be inadequate on some platform, the fix is to improve
+`FindOldenEraTemplatesDir`, **never** to store a path.
+
 ---
 
 ## 3. Workflow Rules
@@ -658,6 +688,8 @@ no prior memory must be able to resume work from it alone.
 ---
 
 **TL;DR:** Don't touch [data/](data/),
-[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/). Stay cross-platform.
+[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/). Never change
+where `.rmg.json` is written and never persist the output directory — the game
+only reads templates from its own folder. Stay cross-platform.
 Cover everything you write with tests. Cap sessions at 38–50 messages and
 hand off via `./.agent/session-carry-forward.md`.

@@ -694,7 +694,45 @@ asserting blank lines produce no warning.
 
 ---
 
-### 1.8 🟡 The chosen output directory is never saved or restored
+### 1.8 ❌ WILL NOT FIX 🟡 The chosen output directory is never saved or restored
+
+> **Decision (2026-08-06, owner).** Rejected outright — neither shape (a) nor
+> (b) is to be implemented, and this must not be re-proposed in a future batch.
+>
+> **The premise of the finding is wrong.** It treats the output directory as a
+> user preference. It is not: it is a *hard requirement of the game*. Olden Era
+> only reads random-map templates from its own templates directory. A `.rmg.json`
+> written anywhere else is not merely in an unusual place — **the game will never
+> find it**, and the user is left with a file they almost certainly cannot locate
+> or place correctly after the fact. "Deliberately points the output at a modding
+> workspace" is therefore not a workflow worth preserving; it is a mistake, and
+> making it *sticky across restarts* would turn a one-session mistake into a
+> permanently broken installation that silently produces templates the game
+> ignores.
+>
+> **Persistence cannot work in principle.** The correct directory is a property
+> of the *machine*, not of the user or the template: it differs per device with
+> the Steam library location, the OS, and the Proton/native layout. A stored path
+> is therefore invalid on any other machine, and on the same machine it goes
+> stale the moment the game is moved to another Steam library. Shape (a) is worst
+> — a `.gen.json` shared with another player carries a path that is meaningless
+> and possibly harmful on their system. Shape (b) is merely useless: a
+> machine-local cache of a value that per-machine auto-detection already computes
+> correctly and for free on every launch.
+>
+> **Current behaviour is the correct behaviour.** Re-detecting via
+> `helpers.FindOldenEraTemplatesDir` on every start is self-healing: it follows
+> the game across library moves, reinstalls and OS changes with no migration and
+> no stale-path fallback logic. The picker is deliberately an *escape hatch for
+> the current session* (a Proton layout the detector does not know yet), not a
+> preference to be remembered. The "UI state survives a save/load round-trip"
+> property in the original finding does not apply, because the output directory
+> is not UI state — it is environment discovery.
+>
+> **Consequence:** no `preferencesRepository`, no `os.UserConfigDir` machinery,
+> no `OutputDirectory` field on `EditorStateDto`. If detection is ever found to
+> be inadequate, the fix is to improve `internal/helpers/io.go`, not to persist a
+> path.
 
 **Evidence.** The output directory lives only as a Gio widget on the driver
 ([state.go](../app/gui/drivers/state.go#L34)):
@@ -2646,9 +2684,12 @@ permanently — mark them `✅ FIXED` in place as they land.
     tests) and §6.4 (the two catalogues) are both closed. Total unit-test
     coverage rose from 65.5% to 68.7%.
 
-12. **Product decisions, then implementation.**
+12. **Product decisions, then implementation.** ✅ CLOSED (2026-08-06)
     ✅ §2.7 decided and delivered in Batch 9 (finish, and make the generator
-    place the arena). ⚠ §1.8 (output-directory persistence shape) still open.
+    place the arena). §1.8 ❌ **rejected** — the output directory is a per-machine
+    requirement of the game, not a user preference; persisting it is invalid
+    across devices and would make a wrong path permanent. See §1.8 for the full
+    rationale. Nothing remains in this item.
 
 13. **Large refactors — plan first per AGENTS.md §4.7.**
     §2.1 (extract filesystem policy) → unblocks §2.5. Then §2.2 (extract
@@ -2657,9 +2698,10 @@ permanently — mark them `✅ FIXED` in place as they land.
 
 **Blockers summary:** §6.5 after §6.3 · §2.5 after §2.1 · §5.1 folds into §1.1 or
 §2.1 · §9.5 after §2.7 · §3.2 with §5.3.
-**Owner decisions required before implementation:** §1.1 (transactionality),
-§1.5 (ceilings), §1.8 (persistence shape), §2.2 (refactor scope). §2.7
-(finish/remove) and §9.1 (public API) were answered in Batch 9.
+**Owner decisions required before implementation:** §2.2 (refactor scope) is the
+only one left. §1.1 (transactionality) and §1.5 (ceilings) were answered in
+Batches 3 and 4; §2.7 (finish/remove) and §9.1 (public API) in Batch 9; §1.8
+(persistence shape) was answered in Batch 12 by rejecting the finding outright.
 
 ---
 
