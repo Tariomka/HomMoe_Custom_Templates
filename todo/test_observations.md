@@ -21,12 +21,22 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   formatter funcs it receives ARE unit-tested (test/unit/app/gui/utils/string/
   *Formatter_test.go).
 
-- app/gui/dialogs/fileExplorerDialog.go - `handleConfirm` / `confirmOverwrite` /
-  `confirmSelection` need `layout.Context` + `widget.Clickable` click routing;
-  the integration suite currently has NO file-explorer scenario (open/save/
-  overwrite flows are unexercised). Noted 2026-07-12 during review item §1.8
-  (behavior-preserving split of `handleConfirm`); synthetic-click coverage via
-  the test/performance AppRunner pattern is possible future work.
+- app/gui/dialogs/fileExplorerDialog.go and its `fileExplorerDialog*.go`
+  siblings - `handleConfirm` / `confirmOverwrite` / `confirmSelection`,
+  `confirmButtonState` and `tryCreateFolder` need `layout.Context` +
+  `widget.Clickable` click routing, so they have no unit tests. Since 2026-08-07
+  (review item §2.1/§2.5) they ARE covered end-to-end by
+  test/integration/gui/fileExplorerDialog_integration_test.go, which drives real
+  frames and queues clicks with `widget.Clickable.Click` through the
+  `integration_test`-gated accessors in `fileExplorerDialog_testexports.go`:
+  open-and-load, save target resolution, save through the real state driver,
+  the overwrite prompt (gated write, cancel, confirm), new-folder creation, the
+  existing-folder refusal and the disabled-confirm predicate. All filesystem
+  *policy* (listing, filtering, hidden entries, roots, path resolution, reserved
+  names) moved to internal/services/file_system and is unit-tested there; what
+  is left in the dialog is rendering and click wiring only.
+  Still uncovered: the hidden-file toggle and the pointer-driven row/scroll
+  interactions (owner decision - excluded from the scenario set).
 
 - app/gui/dialogs/zoneEditorDialog.go with its canvas, snap, property-panel,
   geometry, and transient-state sibling files - the Manual Zone Editor

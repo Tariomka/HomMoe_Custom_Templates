@@ -41,3 +41,33 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
 - rework EditorStateDto, the dto content should be in entities, it should be wrapped in a model and model should be embedded to the dto.
 
 - types inside entities should be moved to template, template package should be renamed to template_entity
+
+- **"Save As" is really "Save To": make the UI say so.** Writing editor state as
+  `{TemplateName}.gen.json` is *intended* behaviour (review §1.1, owner-approved:
+  `FileService.SaveSettings` passes `filepath.Dir(path)` and
+  `editorState.TemplateName` to the repository). The defect is only that the UI
+  still offers a file **name** field the user can type into and whose value is
+  then silently discarded — the dialog picks a *directory*, nothing more.
+  Found while writing the Batch 13 GUI integration tests (2026-08). To fix:
+  - [fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go#L36-L51) —
+    `getSaveRowWidget`: pass `readonly = true` to
+    [`NewTextboxWidget`](../app/gui/widgets/textboxWidget.go#L18) and relabel
+    `"Save as:"` → `"Will save as:"`, so the row reads as a preview of the
+    resolved name instead of an input.
+  - [toolbar.go](../app/gui/editor/toolbar.go#L71) — button `"Save As"` →
+    `"Save To"`, field `buttonSaveAs` → `buttonSaveTo`.
+  - [stateFiles.go](../app/gui/drivers/stateFiles.go#L35) — `State.SaveAs` →
+    `State.SaveTo` (plus its `Save` fallback call site).
+  - [fileExplorerDialogModes.go](../app/gui/dialogs/fileExplorerDialogModes.go#L29-L42) —
+    dialog title `"Save File"` → `"Save To"`. Decide whether
+    `NewSaveFileDialog` / `modeSaveFile` / `onSave` follow: they name the
+    *explorer mode*, not the toolbar action, so they may legitimately stay.
+  - Docs: [QUICKSTART.md](../QUICKSTART.md#L48) (also §L109) and
+    [README.md](../README.md#L154) both advertise `Save As`.
+  - Tests: rename `test/integration/stateSaveAs_integration_test.go` and
+    `test/unit/app/gui/drivers/stateFiles/saveAs_test.go` with their subjects.
+    In [fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go)
+    the scenarios that type a name (via the `SetFilename` testexport) must
+    become "the field shows the resolved name and cannot be edited"; the
+    disabled/enabled-confirm pair keyed on a whitespace filename needs a new
+    trigger, since the user can no longer produce that state.

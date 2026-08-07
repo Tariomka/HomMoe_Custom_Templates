@@ -2,249 +2,251 @@
 
 ## 1. Session goal
 
-Finish **Batch 11** of the 46-finding review in
-[todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) — findings **§6.2**
-(`internal/handlers` has no mirrored unit tests) and **§6.4** (two
-`app/gui/constants` catalogues at 0% coverage), after the owner-approved
-expansion of first converting **every constructor-injected service under
-`internal/`** to an interface so the handlers can be tested against `testify`
-mocks.
+Finish **Batch 13** of the 46-finding review in
+[todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) — findings **§2.1**
+(the file-explorer dialog implements filesystem policy inside the GUI layer) and
+**§2.5** (`fileExplorerDialog.go` is a god object), which the review makes
+strictly sequential: splitting before extracting would only scatter the same
+policy across more files.
 
-**Batch 11 is COMPLETE** (owner-reviewed and committed) and **Batch 12 is
-CLOSED as `❌ WILL NOT FIX`**.
-[plans/batch-11-handler-coverage.md](../plans/batch-11-handler-coverage.md) is
-the source of truth for Batch 11 and now carries per-phase summaries, a Final
-Recap and a Deployment Plan.
-
-### Batch 12 — §1.8, rejected (2026-08-06)
-
-The owner rejected the finding outright; no code was written. The rationale is
-recorded in place at §1.8 of
-[todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) and §12 item 12 is
-marked closed. Summary: the output directory is a **hard requirement of the
-game**, not a user preference — Olden Era only reads templates from its own
-templates directory, so a file written anywhere else is never found and the user
-cannot locate it afterwards. It is also a per-*machine* value (Steam library, OS,
-Proton layout), so a persisted path is invalid on any other device and goes stale
-when the game moves. Per-launch auto-detection via
-`helpers.FindOldenEraTemplatesDir` is self-healing and is the correct design; the
-picker is a single-session escape hatch. **Do not re-propose this.**
+**Batch 13 is COMPLETE.** All seven phases of
+[plans/extract-filesystem-policy.md](../plans/extract-filesystem-policy.md) are
+`Status: Complete` and that plan — not this document — is the source of truth
+for the work; it carries per-phase summaries, a Final Recap and a Deployment
+Plan. Phases 1–4 were reviewed and committed by the owner in earlier sessions
+(`02bbb67`, `c0e35b1`); Phase 5 is staged awaiting review; Phases 6 and 7 are
+unstaged.
 
 ## 2. Fixes applied
 
-- Removed the **last** `wire.Bind` from
-  [internal/composition/providerSets.go](../internal/composition/providerSets.go).
-  The codebase now has **zero** `wire.Bind` calls, because every provider already
-  returns an interface. `wire_gen.go` regenerated.
-- [internal/services/content_rules/contentRuleService.go](../internal/services/content_rules/contentRuleService.go)
-  — `NewContentRuleService` returns `IContentRuleService` instead of
-  `*ContentRuleService`.
-- Five `testifylint` `require-error` findings (`assert.NoError` →
-  `require.NoError`) and four `modernize` findings (`interface{}` → `any`) in the
-  new tests. Lint is back to **0 issues**.
-- One brand-new test file picked up a duplicated `package` clause from
-  `golangci-lint-v2 --fix` (`expected declaration, found 'package'`); caught by
-  `go run ./cmd/testlayoutcheck .` and fixed by hand.
+Five latent defects, all found *because* the extraction made previously
+unreachable logic testable. Each landed with a regression test. Full evidence in
+the plan's Phase 4 summary.
+
+- **D0** — `ListRoots` probed `A:\`…`Z:\` on every platform. `A:\` is a legal
+  relative filename on Unix, so a stray file could be shown as a volume; it also
+  cost 26 pointless `stat` calls per listing.
+- **D1** — an existing **folder** at the save target was offered as an
+  overwritable file, then handed a directory path to `onSave`. Fixed by adding
+  `DirectoryExists` and checking it *before* `PathExists`.
+- **D2** — a whitespace-only filename left *Save* enabled but doing nothing.
+  Fixed by deriving the button state from `resolveSaveTarget()` itself, so
+  enablement and success are one predicate rather than two that can disagree.
+- **D3** — Windows reserved device names (`CON`, `NUL`, `COM1`…) reported a
+  successful save and wrote nothing.
+- **D4** — `CreateDirectory` with an empty parent created the folder in the
+  process working directory.
+
+Two further candidates were examined and **rejected as deliberate** — do not
+"fix" them later: `isHidden` fails **open** so an unreadable entry stays visible
+rather than silently vanishing, and `loadDir` adopts an unreadable directory as
+`currentDir` so the path bar names the place the error refers to.
 
 ## 3. Features added / changed
 
-**No production behaviour changed.** The GPU-gated GUI snapshot suite is
-byte-identical, which was Phase 6's acceptance criterion. Everything added is
-test infrastructure:
-
-- **14 `testify` mocks** in `test/test_helpers/`, one per interface the handler
-  tests need (the plan explicitly rules out generating one mock per interface).
-- **Five mirrored handler test packages** under `test/unit/internal/handlers/`,
-  taking `internal/handlers` from 0% to **97.4%**.
-- **Invariant-based catalogue tests** for `app/gui/constants` — `bannableItems.go`
-  and `valueOverrideSids.go` are now at **100%**, and the Phase 10 sweep also
-  closed `spells.go`, `bonusOptions.go`, `gameModes.go` and
-  `internal/helpers.ScaleRound`.
+- **`internal/services/file_system`** — two stateless services behind
+  `IDirectoryBrowserService` (`ListEntries`, `ListRoots`, `CreateDirectory`) and
+  `IPathResolutionService` (`ResolveStartDirectory`, `ParentDirectory`,
+  `ResolveSaveTarget`, `PathExists`, `DirectoryExists`). All the policy the GUI
+  used to own.
+- **`handler_interfaces.IFileSystemHandler`** — the GUI-facing seam, a **flat**
+  eight-method union. Flat on purpose: embedding the service interfaces would
+  force `app/gui` to import `internal/services` and trip depguard's
+  `no-services-from-app`. Built by its own `FileSystemSet` /
+  `InitializeFileSystemHandler`, disjoint from `GuiHandlerSet`, so the file
+  dialogs do not drag in the generator, repositories or validators.
+- **`app/gui/dialogs` makes zero `os` calls** — it imports neither `os` nor
+  `syscall`, and uses `filepath` only for `Base` in display code.
+- **The dialog split 750 → 221 LOC** across five files:
+  [fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go) (struct,
+  `IDialog`, navigation),
+  [fileExplorerDialogConfirm.go](../app/gui/dialogs/fileExplorerDialogConfirm.go)
+  (footer, button state, overwrite),
+  [fileExplorerDialogEntries.go](../app/gui/dialogs/fileExplorerDialogEntries.go)
+  (load + list + rows),
+  [fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go)
+  (header, save row, new-folder row) and
+  [fileExplorerDialogModes.go](../app/gui/dialogs/fileExplorerDialogModes.go)
+  (mode enum + the four constructors). Every move was verbatim; the GUI snapshot
+  suite produced zero diffs, which is the evidence that it was a pure split.
+- **Ten GUI integration scenarios** drive the real dialog end to end, including
+  D1's and D2's branches, which no unit test can reach.
 
 ## 4. File modifications
 
-### Modified
+Committed in earlier sessions (Phases 1–4), listed for completeness:
+`internal/models/directoryEntry.go`,
+`internal/common/common_errors/fileSystemErrors.go`,
+`internal/services/file_system/*` (7 files incl.
+`hiddenAttribute_{windows,other}.go`),
+`internal/handlers/fileSystemHandler.go`,
+`internal/handlers/handler_interfaces/fileSystemHandlerInterface.go`,
+`internal/composition/{providerSets.go,wire.go,wire_gen.go}`,
+`app/gui/program.go`, `app/gui/drivers/*`, three mocks in `test/test_helpers/`,
+and 19 unit-test files.
 
-| File | Summary |
-| --- | --- |
-| [internal/composition/providerSets.go](../internal/composition/providerSets.go) | dropped the last `wire.Bind` |
-| `internal/composition/wire_gen.go` | regenerated (3 lines) — **never hand-edit** |
-| [internal/services/content_rules/contentRuleService.go](../internal/services/content_rules/contentRuleService.go) | factory returns the interface |
-| [plans/batch-11-handler-coverage.md](../plans/batch-11-handler-coverage.md) | Phases 6–11 marked Complete; Final Recap + Deployment Plan written |
-| [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) | §6.2 and §6.4 marked `✅ FIXED` in place; §12 item 11 marked done |
-| [todo/test_observations.md](../todo/test_observations.md) | 3 new unreachable-code entries |
+Uncommitted now (`git status --short` against `c0e35b1`):
 
-### Created — mocks
+| File | State | Change |
+| --- | --- | --- |
+| [app/gui/dialogs/fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go) | staged `M` | reduced to the struct, constructor, `IDialog` methods and navigation |
+| [app/gui/dialogs/fileExplorerDialogConfirm.go](../app/gui/dialogs/fileExplorerDialogConfirm.go) | staged `A` | 156 LOC, moved verbatim |
+| [app/gui/dialogs/fileExplorerDialogEntries.go](../app/gui/dialogs/fileExplorerDialogEntries.go) | staged `A` | 130 LOC, moved verbatim |
+| [app/gui/dialogs/fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go) | staged `A` | 103 LOC, moved verbatim |
+| [app/gui/dialogs/fileExplorerDialogModes.go](../app/gui/dialogs/fileExplorerDialogModes.go) | staged `A` | 65 LOC, mode enum + four constructors |
+| [app/gui/dialogs/fileExplorerDialog_testexports.go](../app/gui/dialogs/fileExplorerDialog_testexports.go) | unstaged `M` | +16 integration accessors (`//go:build integration_test`) |
+| [test/integration/gui/fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go) | unstaged `A` | new, 10 scenarios (`integration_test && gui`) |
+| [plans/extract-filesystem-policy.md](../plans/extract-filesystem-policy.md) | both | Phases 5–7 summaries, Final Recap, Deployment Plan |
+| [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) | unstaged `M` | §2.1 and §2.5 marked `✅ FIXED` in place; §12 item 13 updated |
+| [todo/backlog.md](../todo/backlog.md) | staged `M` | new "Save As is really Save To" item (see §7) |
+| [todo/test_observations.md](../todo/test_observations.md) | staged `M` | `fileExplorerDialog.go` entry rewritten to record what is now covered |
 
-All in `test/test_helpers/`, `package test_helpers`, receiver `this`, comma-ok
-assertions on `arguments.Get(n)`:
-`connectionEditorServiceMock.go`, `contentRuleMock.go`,
-`editorStateValidatorMock.go`, `fileServiceMock.go`,
-`generationTuningFactoryMock.go`, `generatorConfigMapperMock.go`,
-`mandatoryContentProviderMock.go`, `manualReapplyServiceMock.go`,
-`previewGeneratorServiceMock.go`, `previewLayoutServiceMock.go`,
-`stateHandlerMock.go`, `templateGeneratorMock.go`, `zoneClassifierMock.go`,
-`zoneEditorServiceMock.go`.
-
-### Created — tests
-
-| Folder | Files |
-| --- | --- |
-| `test/unit/internal/handlers/stateHandler/` | 5 (`common_test.go` + `newStateHandler`, `loadState` ×7, `saveState` ×6, `validateEditorState` ×9) |
-| `test/unit/internal/handlers/previewHandler/` | 2 (`newPreviewHandler`, `buildPreviewLayout` ×6) |
-| `test/unit/internal/handlers/templateHandler/` | 6 (`common_test.go` fixture + `generateTemplate` ×6, `updateTemplate` ×10, `reapplyCastleSettings` ×2, `saveTemplate` ×7) |
-| `test/unit/internal/handlers/contentRuleHandler/` | 3 (`getContentRuleEditorOptions` ×5, `describeContentRule` ×8) |
-| `test/unit/internal/handlers/zoneEditorHandler/` | 14 (`common_test.go` fixture + one file per public interface method) |
-| `test/unit/app/gui/constants/bannableItems/` | 5 |
-| `test/unit/app/gui/constants/valueOverrideSids/` | 1 |
-| `test/unit/app/gui/constants/bonusOptions/` | 3 |
-| `test/unit/app/gui/constants/gameModes/` | 1 |
-| `test/unit/app/gui/constants/spells/` | 4 new, alongside the pre-existing `getSpellNameAndSchool_test.go` |
-| `test/unit/internal/helpers/math/` | `scaleRound_test.go` (3) |
+Two further files — `internal/helpers/string_other.go` and
+`internal/services/file_system/hiddenAttribute_other.go` — show as modified in
+`git status` but produce **no diff**: only their working-tree line endings were
+normalised to LF. See §7.
 
 ## 5. Tests added or updated
 
-Roughly **130 new unit tests**, all following AGENTS.md §4.6: mirrored folder
-per implementation file, one `<publicFuncName>_test.go` per public function,
-package `<fileName>_test`, `Test{Scenario}_{ExpectedBehavior}` names, mandatory
-`// Arrange` / `// Act` / `// Assert`, `t.Parallel()` in every test and every
-`t.Run`, `testify` + `gofakeit` only.
+- 19 unit-test files under `test/unit/internal/services/file_system/` and
+  `test/unit/internal/handlers/fileSystemHandler/` (committed). Extracted
+  package coverage **92.4 %**; the 7.6 % remainder is unreachable-by-design
+  OS-failure fallbacks.
+- 10 new scenarios in
+  [fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go):
+  open→confirm installs state; save-target resolution; a save through the real
+  `drivers.State` that lands bytes on disk; the three overwrite paths
+  (refuse-to-write, cancel, confirm); folder creation; D1's folder refusal; and
+  D2's disabled/enabled confirm pair. The overwrite tests write sentinel bytes
+  (`"original"` → `"rewritten"`) so "untouched" is a real assertion rather than a
+  vacuous one.
 
-**Last full run — all green:**
+**Technique worth reusing:** these queue clicks through Gio's own public
+`widget.Clickable.Click()`. `Clickable.update` drains `requestClicks` *before* it
+consults pointer input, so the click is indistinguishable from a real one to the
+code under test while the layout still runs for real — no coordinates, no
+calibration, no prior-frame requirement. Far more robust than the pixel-based
+`AppRunner.ClickAt` used by the benchmarks; reserve that one for genuinely
+geometric behaviour (drag, scroll, hit-testing).
 
-| Command | Result |
+Last full run — all green:
+
+| Suite | Result |
 | --- | --- |
-| `go build ./...` | pass |
-| `go vet -tags=integration_test ./...` | pass |
-| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
-| `go test -count=1 ./test/unit/...` | pass (no FAIL) |
-| `go test -tags=integration_test -count=1 ./test/integration/...` | `ok` (3.5s) |
-| `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` | `ok` (1.4s), **zero snapshot diffs** |
-| coverage (`-coverpkg=./internal/...,./app/...`) | **68.7%** (Phase 0 baseline 65.5%) |
-| `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
-
-`coverage.txt`, `coverage.html` and `lcov.info` were regenerated.
+| `go test -count=1 ./test/unit/...` | 0 failures |
+| `go test ./test/... -count=1` (tag-free) | 0 failures |
+| `go test -tags=integration_test ./test/integration/...` | `ok … 0.627s` |
+| `go test -tags 'integration_test,gui' ./test/integration/gui/...` | `ok … 1.050s`, 14/14, zero snapshot diffs |
+| `go build` · both `go vet` tag sets · `testlayoutcheck` · `wire diff` | clean / passed / exit 0 |
+| `golangci-lint-v2 run ./...` | `0 issues.` |
+| Total unit coverage | **69.3 %** (baseline 68.7 %) |
 
 ## 6. Git status snapshot
 
-Branch: **`AD/refactoring-07-21`**. **Nothing staged, nothing committed** — per
-AGENTS.md §2.5 the owner reviews and commits.
+Branch **`AD/refactoring-07-21`**, HEAD `c0e35b1 "Batch 13-Part 2 Done"`
+(= `origin/AD/refactoring-07-21`, so nothing is unpushed). Nothing was staged or
+committed by the agent; the staged entries in §4 were staged by the owner as part
+of reviewing Phase 5.
 
-```
- M .agent/session-carry-forward.md
- M todo/review-opus5-08-04.md
-```
+The next session inherits: Phase 5 staged and under review, Phases 6–7 unstaged,
+and the two line-ending-only working-tree changes from §7.
 
-All of Batch 11 (the ~70-file interface refactor plus the ~130 new tests) was
-reviewed and committed by the owner, which is why it no longer appears above.
-The only uncommitted work is this handoff and the Batch 12 rejection recorded in
-the review document.
+## 7. Rejections / things the user declined
 
-## 7. Rejections / things the owner declined
-
-Carried forward from earlier phases — **do not re-propose these**:
-
-- A separate plan file for the review itself. Findings are marked
-  `✅ FIXED` / `❌ WILL NOT FIX` **in place** in
-  [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md).
-- `IPositionedTopologyBuilder` — dropped, not deferred: the builder is embedded
-  *by value* in six topology structs, which an interface cannot express.
-- One provider per topology service returning `ITopologyService` — wire keys
-  providers by output type, so 12 identical bindings are a generation error.
-- A `CastleFactory()` accessor on `IZoneEditorService` (option B alone) and
-  duplicating the road-rebuild helper inside `ManualReapplyService` (option C
-  alone) — the B+C combination was chosen instead.
-- Bulk `-tags` widening (`wireinject`, blanket `integration_test`).
-
-Decided this session:
-
-- **§1.8 / Batch 12 rejected outright** — see §1 above and §1.8 of the review
-  document. Neither persistence shape (a) nor (b) is to be built; do not
-  re-propose a `preferencesRepository`, an `os.UserConfigDir` file, or an
-  `OutputDirectory` field on `EditorStateDto`.
-- **Hard-coding the ~31 bannable-item SIDs** into assertions was rejected; the
-  catalogue tests assert structural invariants plus a few named spot checks.
-- **No test-only seams were added** to production code to reach
-  `validators.ValidationIssue.fix`, the Steam/registry install-discovery chain,
-  or `buildShiftDerangement` — AGENTS.md §4.6 forbids it. All three are recorded
-  in [todo/test_observations.md](../todo/test_observations.md).
-- **No production code was deleted**, including the two dead `zoneEditorHandler`
-  methods (see §8) — out of scope for a coverage batch.
+- **The `{TemplateName}.gen.json` save path is intended behaviour, not a bug.**
+  The agent reported that `FileService.SaveSettings` writes
+  `<dir>/{TemplateName}.gen.json` and therefore discards the filename typed into
+  the Save dialog. The owner confirmed this is deliberate (already recorded at
+  review §1.1) — **do not "fix" the service.** The real defect is that the UI
+  still offers an editable filename field. At the owner's instruction that became
+  a [backlog item](../todo/backlog.md): make the field read-only, relabel it
+  `"Will save as:"`, and rename the action `"Save As"` → `"Save To"` in both UI
+  text and code. Two open decisions are recorded inside that item — whether
+  `NewSaveFileDialog`/`modeSaveFile`/`onSave` should follow the rename (they name
+  the explorer *mode*, not the toolbar action), and what should trigger the
+  disabled-confirm test once a user can no longer type a whitespace filename.
+- **A CRLF "CI failure" that turned out not to exist.** `gofmt -l .` flagged six
+  files the Windows lint run reported clean, and a `GOOS=linux` lint reproduced
+  six `gci`/`gofmt`/`golines` issues, which looked like a live CI break. It was
+  not: [.gitattributes](../.gitattributes) declares `*.go text eol=lf`, so git
+  normalises on commit — the committed blobs contain **zero** CRLF (verified by
+  byte-scanning `git cat-file blob`) and CI has always been clean. Two files were
+  still converted to LF to stop the local noise masking real findings, which is
+  why they show as modified with an empty diff. **Lesson: `git status` modified +
+  `git diff` empty is the signature of an attribute-normalised file; check the
+  blob, not the worktree.**
+- **Four tag-gated files left formatting-dirty on purpose.** `wire.go`,
+  `dialogHost_testexports.go`, `stateSaveAs_integration_test.go` (all CRLF-only,
+  i.e. non-issues) and `manualCastleReapply_integration_test.go` (genuinely
+  over-indented assertions in the committed blob). All sit behind
+  `integration_test`/`wireinject`, so neither the local run nor CI lints them.
+  Real but latent; a drive-by fix with no failing check behind it.
 
 ## 8. Open questions
 
-1. **Dead code.** `zoneEditorHandler.ComputeHasErrors` and
-   `zoneEditorHandler.RebuildZoneConnectionRoads` are exported on the private
-   struct, absent from `handler_interfaces.IZoneEditorHandler` (which is what
-   `NewZoneEditorHandler` returns), and called by nobody — therefore untestable.
-   Delete them, or add them to the interface?
-2. **`internal/helpers/io.go`.** Should the Steam/registry install-discovery
-   chain (`getVDFContent`, `getVDFFilePath`, `getSteamPath`, `getBasePath`,
-   `getSteamPathFromRegistry`) get an injectable filesystem seam so it can be
-   covered? That is a production API change, not a test change.
+Both predate this batch and are still unanswered:
+
+1. Delete `zoneEditorHandler.ComputeHasErrors` / `RebuildZoneConnectionRoads`, or
+   add them to `handler_interfaces.IZoneEditorHandler`? They are exported on the
+   private struct, absent from the interface, and called by nobody.
+2. Should `internal/helpers/io.go`'s Steam/registry install-discovery chain get an
+   injectable filesystem seam so it can be covered? The new
+   `IPathResolutionService` is now a natural home for it.
+
+And one that blocks the next batch:
+
+3. **§2.2 scope** — extracting regeneration policy out of the GUI driver is
+   multi-session, overlaps a backlog item, and is now the **only** owner decision
+   left open in the entire review.
 
 ## 9. Next recommended actions
 
-1. Answer the two open questions in §8.
-2. **Item 13 — the large refactors — is all that remains in §12.** Plan first
-   per AGENTS.md §4.7: §2.1 (extract filesystem policy out of
-   `fileExplorerDialog.go`) → unblocks §2.5 (the same file is a god object).
-   Then §2.2 (extract regeneration policy from the GUI driver), which is
-   multi-session, overlaps a backlog item and **still needs an owner decision on
-   refactor scope**. §2.6 (`zoneEditorDialog`'s ~58 fields) opportunistically,
-   whenever the zone editor is next touched.
-3. Batches 1–12 are closed. §2.2's scope is the only outstanding owner decision
-   in the whole review.
+1. Review Phases 6–7 (the testexports accessors, the integration test, and the
+   documentation updates), then stage and commit Batch 13. The agent never
+   stages or commits.
+2. Decide §2.2's scope, then write `plans/extract-regeneration-policy.md` before
+   touching any code (AGENTS.md §4.7).
+3. Optionally schedule the "Save As → Save To" backlog item; it is small,
+   self-contained and touches only the GUI.
+4. Optionally sweep the four tag-gated formatting-dirty files from §7.
+
+Remaining in the review after Batch 13: **§2.2** (regeneration policy) and
+**§2.6** (`zoneEditorDialog`'s ~58 fields, plus the still-oversized
+`zoneEditorDialog.go` 507 / `zoneEditorCanvas.go` 479 / `bonusPickerDialog.go`
+434 / `pickerDialog.go` 371 / `ruleDialog.go` 314 / `zoneContent.go` 299 — low
+priority, opportunistic).
 
 ## 10. Carry-forward prompt
 
-> Read `AGENTS.md` first and follow it strictly.
+> Read [AGENTS.md](../AGENTS.md) first and follow it strictly. The hard rules, one
+> line each: never modify `data/`, `internal/entities/template/` or
+> `internal/registry/`; keep everything cross-platform (Windows + Linux,
+> `path/filepath`, PowerShell chains with `;` and never `&&`); every change ships
+> with tests and must not drop coverage (currently 69.3 %, baseline 68.7 %);
+> durable multi-session work gets a plan file under `plans/` before any code;
+> **never stage and never commit** — the owner reviews and commits; and never
+> change where `.rmg.json` is written nor persist the output directory.
 >
-> Hard rules, one line each: never modify `data/`, `internal/entities/template/`
-> or `internal/registry/`; keep everything cross-platform (Windows + Linux,
-> `path/filepath`, PowerShell chains with `;`, never `&&`); every change ships
-> with tests and must not drop coverage (baseline **68.7%**, lint baseline
-> **0 issues**); durable multi-session work gets a plan file under `plans/`;
-> **never stage and never commit** — the owner reviews and commits.
+> We are remediating the 46-finding review in
+> [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md); §12 defines the
+> PR-sized batches and findings are marked `✅ FIXED` / `❌ WILL NOT FIX`
+> **in place** in that document. For each batch: ask whether it should be done at
+> all; if declined, record in the review file why it should not be attempted
+> again; ask every clarifying question up front; implement; rewrite
+> `.agent/session-carry-forward.md`; then stop and wait for review.
 >
-> We are remediating the 46-finding review in `todo/review-opus5-08-04.md` (§12
-> defines the 13 PR-sized batches). Findings are marked `✅ FIXED` /
-> `❌ WILL NOT FIX` **in place** in that review document — do not create a
-> separate plan file for the review itself.
+> **Batch 13 (§2.1 + §2.5) is complete** — filesystem policy now lives in
+> `internal/services/file_system` behind `handler_interfaces.IFileSystemHandler`,
+> `fileExplorerDialog.go` is split into five files, five latent defects are fixed
+> and ten GUI integration scenarios cover the dialog. Phase 5 is staged under
+> owner review; Phases 6–7 are unstaged. See
+> [plans/extract-filesystem-policy.md](../plans/extract-filesystem-policy.md) for
+> the full record and
+> [.agent/session-carry-forward.md](session-carry-forward.md) for the handoff,
+> including three open questions and the deliberate rejections you must not
+> re-litigate (notably: writing `{TemplateName}.gen.json` and ignoring the typed
+> filename is **intended**).
 >
-> **Where work left off: Batches 1–12 are all closed.** Batch 11 (findings §6.2
-> and §6.4) is `✅ FIXED` and committed: the whole `internal/` DI graph is
-> interface-based with **zero** `wire.Bind` calls remaining, `internal/handlers`
-> is at 97.4%, and total unit coverage rose 65.5% → 68.7%. Batch 12 (§1.8) is
-> `❌ WILL NOT FIX` — the output directory is a per-machine requirement of the
-> game, not a preference; read §1.8 of the review before anyone suggests
-> persisting it again. Build, both `go vet` tag combinations, `testlayoutcheck`,
-> the unit / integration / GPU-gated GUI suites and `golangci-lint-v2` are all
-> green.
->
-> **Next up is §12 item 13 — the large refactors**, which need a plan file per
-> AGENTS.md §4.7: §2.1 (extract filesystem policy out of `fileExplorerDialog.go`,
-> unblocking §2.5), then §2.2 (extract regeneration policy from the GUI driver —
-> multi-session, and the owner has *not* yet decided its scope), and §2.6
-> opportunistically. §2.2's scope is the only outstanding owner decision in the
-> entire review.
->
-> Before starting new work, ask the owner the two open questions in §8 of
-> `.agent/session-carry-forward.md` (the two dead `zoneEditorHandler` methods,
-> and whether `internal/helpers/io.go` should get a filesystem seam).
->
-> Workflow for every batch, without exception: (1) ask the owner whether the
-> batch should be done at all; (2) if declined, document in the review file why
-> it should not be attempted in future; (3) ask all clarifying questions up
-> front; (4) implement; (5) rewrite `.agent/session-carry-forward.md`; (6) stop
-> and wait for owner review.
->
-> Environment gotchas: `wire gen` writes its success banner to STDERR so
-> PowerShell reports exit 1 even on success — use `wire diff` (exit 0 = current);
-> `golangci-lint-v2` likewise exits 1 on stderr warnings even when it reports
-> `0 issues`; `golangci-lint-v2 --fix` has duplicated the `package` clause on
-> freshly created files, so always re-run `go run ./cmd/testlayoutcheck .`
-> afterwards.
->
-> See `.agent/session-carry-forward.md` and
-> `plans/batch-11-handler-coverage.md` for the full handoff.
+> Next up is **§2.2** — extract regeneration policy out of the GUI driver. Its
+> scope is the last owner decision outstanding in the review, so ask before
+> planning anything.

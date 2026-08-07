@@ -487,21 +487,21 @@ D1's dialog branch and D2's button state are *not* unit-covered — both need a
 ---
 
 ## Phase 5: Split the dialog (§2.5)
-Status: Not started
+Status: Complete
 
 Sibling files for one struct, per AGENTS.md §4.1. Core file keeps the struct,
 `newFileExplorerDialog`, `Title`, `PreferredSize`, `Body`, `getContentWidget`
 and the small state helpers.
 
-- [ ] `fileExplorerDialogModes.go` — `fileDialogMode` enum + the four public
+- [x] `fileExplorerDialogModes.go` — `fileDialogMode` enum + the four public
       constructors.
-- [ ] `fileExplorerDialogEntries.go` — `getListWidget`, `getEntryRowWidget`,
+- [x] `fileExplorerDialogEntries.go` — `getListWidget`, `getEntryRowWidget`,
       `getErrorLineWidget`, and the now-thin `loadDir`.
-- [ ] `fileExplorerDialogToolbar.go` — `getHeaderWidget`, `getSaveRowWidget`,
+- [x] `fileExplorerDialogToolbar.go` — `getHeaderWidget`, `getSaveRowWidget`,
       `getNewFolderRowWidget`, `tryCreateFolder`.
-- [ ] `fileExplorerDialogConfirm.go` — `getFooterWidget`, `confirmButtonState`,
+- [x] `fileExplorerDialogConfirm.go` — `getFooterWidget`, `confirmButtonState`,
       `handleConfirm`, `confirmOverwrite`, `confirmSelection`.
-- [ ] Pure moves only — no logic changes in this phase, so a snapshot diff means
+- [x] Pure moves only — no logic changes in this phase, so a snapshot diff means
       a mistake.
 
 ### Verification Plan
@@ -510,23 +510,55 @@ and the small state helpers.
 - `golangci-lint-v2` issue count unchanged (watch `funcorder`, `gci`, `golines`).
 
 ### Phase Summary
-_(write when phase completes)_
+
+A pure move. Not one statement of logic changed — every function was relocated
+verbatim, which is exactly why a snapshot diff would have proved a mistake, and
+there were none.
+
+| File | LOC | Holds |
+| --- | --- | --- |
+| `fileExplorerDialog.go` | 221 | struct, `saveFileSuffix`, `newFileExplorerDialog`, `Title`, `PreferredSize`, `Body`, `getContentWidget`, `parentDir`, `requestNav`, `onEntryClicked`, `resolveSaveTarget`, `canModify`, `clickFor`, `resetScroll` |
+| `fileExplorerDialogConfirm.go` | 156 | `getFooterWidget`, `confirmButtonState`, `handleConfirm`, `confirmOverwrite`, `confirmSelection` |
+| `fileExplorerDialogEntries.go` | 130 | `loadDir`, `getListWidget`, `getEntryRowWidget`, `getErrorLineWidget` |
+| `fileExplorerDialogToolbar.go` | 103 | `getHeaderWidget`, `getSaveRowWidget`, `getNewFolderRowWidget`, `tryCreateFolder` |
+| `fileExplorerDialogModes.go` | 65 | `fileDialogMode` enum, `NewOpenFileDialog`, `NewSaveFileDialog`, `NewPickFolderDialog`, `NewBrowseDialog` |
+
+750 LOC in one file became 675 across five, none over 250. The import lists tell
+the same story the split does: the core file now needs only `layout`, `unit`,
+`widget`, `material`, `widgets`, `handler_interfaces` and `models` — the drawing
+primitives (`op`, `clip`, `paint`, `font`, `image`) and the error plumbing
+(`errors`, `common_errors`) each moved to exactly one sibling.
+
+`saveFileSuffix` stayed in the core file because both `resolveSaveTarget` (core)
+and `getSaveRowWidget` (toolbar) read it.
+
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `go build ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| Largest file-explorer file | 221 LOC (target: ≤ 250) |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test -count=1 ./test/unit/...` | 0 failures |
+| `go test -tags=integration_test ./test/integration/...` | `ok ... 3.607s` |
+| `go test -tags 'integration_test,gui' ./test/integration/gui/...` | `ok ... 3.404s`, **zero snapshot diffs** |
+| `golangci-lint-v2 run ./...` | `0 issues.` (unchanged; `funcorder` did not fire) |
 
 ---
 
 ## Phase 6: File-explorer integration scenarios
-Status: Not started
+Status: Complete
 
 `test/integration/gui/`, tags `//go:build integration_test && gui`. This closes
 the "no file-explorer scenario" gap recorded in
 [todo/test_observations.md](../todo/test_observations.md).
 
-- [ ] Open flow — pick a `.gen.json` through the dialog, assert the state loads.
-- [ ] Save flow — type a name, confirm, assert the file lands on disk.
-- [ ] Overwrite prompt — save over an existing file, assert the prompt gates the
+- [x] Open flow — pick a `.gen.json` through the dialog, assert the state loads.
+- [x] Save flow — type a name, confirm, assert the file lands on disk.
+- [x] Overwrite prompt — save over an existing file, assert the prompt gates the
       write and that cancel leaves the file untouched.
-- [ ] New-folder flow — create a folder, assert it appears in the listing.
-- [ ] Update the `fileExplorerDialog.go` entry in
+- [x] New-folder flow — create a folder, assert it appears in the listing.
+- [x] Update the `fileExplorerDialog.go` entry in
       [todo/test_observations.md](../todo/test_observations.md) to reflect what
       is now covered.
 
@@ -537,33 +569,254 @@ Use `t.TempDir()` for every fixture; never touch the real output directory.
 - `go run ./cmd/testlayoutcheck .` passes (the `gui` tag is mandatory here).
 
 ### Phase Summary
-_(write when phase completes)_
+
+Ten scenarios in
+[test/integration/gui/fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go),
+all parallel, all on `t.TempDir()`.
+
+**How they drive the dialog.** Clicking by pixel coordinate would have been
+brittle and would have re-tested Gio rather than the dialog, so the tests queue
+clicks with Gio's own `widget.Clickable.Click()` and then lay out a real frame.
+`Clickable.update` consumes `requestClicks` before it looks at pointer input, so
+the click is indistinguishable from a real one to every branch under test, while
+the layout still runs for real (material.List, the editors, the footer). One
+helper, `frameFileExplorer`, lays out a single frame exactly as `DialogHost`
+does per vsync and returns the dialog's `done` flag.
+
+The clickables and editors are unexported, so the accessors went into the
+existing
+[app/gui/dialogs/fileExplorerDialog_testexports.go](../app/gui/dialogs/fileExplorerDialog_testexports.go)
+(`//go:build integration_test`) — the mechanism AGENTS.md §4.6.1 exists for.
+Added: `ClickEntry`, `ClickUp`, `ClickConfirm`, `ClickOverwriteConfirm`,
+`ClickOverwriteCancel`, `ClickNewFolder`, `ClickCreateFolder`, `SetFilename`,
+`SetNewFolderName`, `CurrentDir`, `EntryNames`, `SelectedPath`,
+`OverwriteActive`, `SaveError`, `NewFolderError`, `ConfirmDisabled`.
+
+**The scenarios.**
+
+| Test | Proves |
+| --- | --- |
+| `...OpenDialogConfirmsAFile_TheEditorStateIsLoaded` | list → row click → confirm → the pick handler installs the state (asserted on the loaded `TemplateName`) |
+| `...SaveDialogIsConfirmed_TheTypedNameBecomesTheSaveTarget` | the dialog's own contract: directory + typed name + enforced suffix |
+| `...SaveDialogIsConfirmedThroughTheDriver_AFileLandsInTheChosenDirectory` | the same confirm through the real `drivers.State`, handler and repository — bytes on disk |
+| `...SaveTargetAlreadyExists_ConfirmDoesNotWrite` | the prompt is raised *instead of* writing, not after it |
+| `...OverwriteIsCancelled_TheExistingFileIsUntouched` | cancel leaves the original bytes |
+| `...OverwriteIsConfirmed_TheFileIsRewritten` | confirm actually writes |
+| `...ANewFolderIsCreated_ItAppearsInTheParentListing` | toggle → name → create → Up → listed |
+| `...SaveTargetIsAnExistingFolder_TheSaveIsRefused` | **D1's dialog branch** |
+| `...TheFilenameIsWhitespaceOnly_TheConfirmButtonIsDisabled` | **D2's button state** |
+| `...TheFilenameIsValid_TheConfirmButtonIsEnabled` | the same predicate the other way, so the test above cannot pass by always being disabled |
+
+D1 and D2 were the two Phase 4 fixes deliberately left unit-uncovered because
+both need a `layout.Context`; they are covered now.
+
+The overwrite tests deliberately use a save callback that writes sentinel bytes
+rather than the real driver. The subject is the dialog's *gating*, and a
+sentinel makes "untouched" a real assertion instead of a vacuous one — a
+recorder callback that never writes would pass whether or not the gate worked.
+
+**Finding, out of scope, not fixed.** The real save path ignores the typed
+filename. `FileService.SaveSettings` writes to
+`filepath.Dir(pickedPath)/<TemplateName>.gen.json`, so the Save dialog's
+filename field only ever chooses the *directory*; renaming the file there is
+silently discarded. Normally invisible because `State.SaveAs` prefills the field
+with the sanitized template name. Outside §2.1/§2.5, so it is reported to the
+owner rather than changed, and the disk-level test asserts "exactly one
+`*.gen.json` landed in the chosen directory" so it does not bake the quirk in.
+
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `go build ./...`, `go vet ./...`, `go vet -tags='integration_test,gui' ./...` | clean |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test -count=1 ./test/unit/...` | 0 failures |
+| `go test -tags=integration_test ./test/integration/...` | `ok ... 2.935s` |
+| `go test -tags 'integration_test,gui' ./test/integration/gui/...` | 14/14 PASS, snapshot goldens unchanged |
+| `golangci-lint-v2 run ./...` | `0 issues.` |
+
+Two notes for whoever follows. The new files were written with CRLF while the
+repo is LF throughout; `gofmt` reports such a file as *entirely* unformatted, so
+check line endings first when a whole-file `gofmt` diff appears. And the default
+lint run carries no build tags, so gated files are never linted by it — they
+were checked separately with
+`golangci-lint-v2 run --build-tags 'integration_test,gui'`, which is clean apart
+from `godot` objecting to the established `// X ONLY FOR INTEGRATION TEST USE`
+comment convention shared with the other `*_testexports.go` files.
 
 ---
 
 ## Phase 7: Close out
-Status: Not started
+Status: Complete
 
-- [ ] Full suite: build, both `go vet` tag combinations, testlayoutcheck, unit,
+- [x] Full suite: build, both `go vet` tag combinations, testlayoutcheck, unit,
       integration, GPU-gated GUI, coverage, lint.
-- [ ] Coverage ≥ the 68.7% baseline; lint ≤ the baseline issue count.
-- [ ] Mark §2.1 and §2.5 `✅ FIXED` **in place** in
+- [x] Coverage ≥ the 68.7% baseline; lint ≤ the baseline issue count.
+- [x] Mark §2.1 and §2.5 `✅ FIXED` **in place** in
       [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) and update §12
       item 13.
-- [ ] Update repository memory.
-- [ ] Rewrite `.agent/session-carry-forward.md`.
-- [ ] Stop for owner review. Do not stage. Do not commit.
+- [x] Update repository memory.
+- [x] Rewrite `.agent/session-carry-forward.md`.
+- [x] Stop for owner review. Do not stage. Do not commit.
 
 ### Verification Plan
 - Every command in AGENTS.md §7 Quick Reference passes.
 
 ### Phase Summary
-_(write when phase completes)_
+
+Every §7 Quick Reference command passes. Running them surfaced one thing worth
+recording — though the first diagnosis of it was **wrong**, and the correction is
+the more useful lesson.
+
+**The false alarm, and what is actually true.** `gofmt -l .` flagged six files
+that `golangci-lint-v2 run ./...` had been reporting as `0 issues.` all along.
+Two of them are gated `//go:build !windows`, so the Windows lint run never parses
+them while CI's ubuntu run would. Reproducing with
+`$env:GOOS='linux'; golangci-lint-v2 run ./...` duly reported six issues —
+`gci`/`gofmt`/`golines` against [string_other.go](../internal/helpers/string_other.go)
+and [hiddenAttribute_other.go](../internal/services/file_system/hiddenAttribute_other.go),
+all caused by CRLF line endings in an LF repository. That looked like a live CI
+breakage.
+
+It was not. [.gitattributes](../.gitattributes) declares `*.go text eol=lf`, so
+git normalises on commit: the committed blob for `string_other.go` contains
+**zero** CRLF pairs (verified with `git cat-file blob` and a byte scan), CI
+checks out LF, and CI lint has always been clean. The CRLF lived only in this
+machine's working tree, which is why `git status` shows the files as modified
+while `git diff HEAD` reports no change at all — normalisation makes the fix a
+literal no-op for the repository.
+
+The two files were still converted to LF, because a working tree that disagrees
+with the repo makes `gofmt -l` and any tag-crossing lint run produce noise that
+masks real findings — which is exactly what happened here. But it is **not** a bug
+fix and it will not appear in the commit.
+
+**The durable lessons**, corrected:
+
+1. CRLF written locally never reaches the repository; `.gitattributes` handles it.
+   Its only cost is local tooling noise. Do not escalate it.
+2. `golangci-lint-v2 run ./...` genuinely does skip build-tag-gated files, and CI
+   uses a different tag set (ubuntu, no tags) than a local Windows run. That part
+   of the diagnosis stands, and `GOOS=linux` lint is a cheap way to check it — but
+   run it against a *clean* tree, or line-ending noise will dominate the output.
+3. `git status` reporting modified while `git diff` reports nothing is the
+   signature of an attribute-normalised file. Check the blob, not the worktree.
+
+**One real, latent finding, deliberately left alone.**
+[manualCastleReapply_integration_test.go](../test/integration/manualCastleReapply_integration_test.go)
+has genuinely mis-indented assertions in the committed blob (no CRLF involved).
+It carries `//go:build integration_test`, so neither the local run nor CI lints
+it. Real, harmless today, and a drive-by fix with no failing check behind it —
+better handled by a future sweep together with the other tag-gated files.
+
+`tmp/filecov.ps1` needed no decision: `tmp/` is gitignored and the script is gone.
+
+A full Linux `go build ./...` cannot be run from this machine — Gio's
+`gioui.org/internal/vk` needs the Linux cgo/X11 toolchain — but `./internal/...`
+cross-compiles and vets cleanly, which covers both `!windows` files.
+
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `go build ./...` | clean |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 (injectors current) |
+| `go test -count=1 ./test/unit/...` | 0 failures |
+| `go test ./test/... -count=1` (tag-free) | 0 failures |
+| `go test -tags=integration_test ./test/integration/...` | `ok ... 0.627s` |
+| `go test -tags 'integration_test,gui' ./test/integration/gui/...` | `ok ... 1.050s`, zero snapshot diffs |
+| `golangci-lint-v2 run ./...` (Windows) | `0 issues.` |
+| `golangci-lint-v2 run ./...` (`GOOS=linux`) | `0 issues.` (worktree noise cleared) |
+| Total unit coverage | **69.3 %** (baseline 68.7 %) |
 
 ---
 
 ## Final Recap
-_(write when all phases complete)_
+
+Review findings **§2.1** (filesystem policy inside the GUI layer) and **§2.5**
+(`fileExplorerDialog.go` is a god object) are closed, in that order, because the
+review makes the split conditional on the extraction — splitting first would only
+have scattered the same policy across more files.
+
+**What moved.** `app/gui/dialogs` made sixteen direct `os`/`filepath` calls; it
+now makes none, imports neither `os` nor `syscall`, and uses `filepath` only for
+`Base` in display code. The policy lives in `internal/services/file_system` as
+two stateless services behind `IDirectoryBrowserService` and
+`IPathResolutionService`, reached from the GUI through
+`handler_interfaces.IFileSystemHandler` — the flat, depguard-approved seam — and
+built by its own `FileSystemSet` so the file dialogs do not drag the generator,
+the repositories or the validators into their object graph. The dialog itself
+went 750 → 221 LOC across five sibling files.
+
+**The extraction paid for itself immediately.** Five real defects (D0–D4) were
+sitting in code that no test could reach: drive-letter probing on Unix, an
+existing *folder* offered as an overwritable file, a Save button that was enabled
+for filenames that could never save, Windows reserved device names reporting
+success while writing nothing, and directory creation falling back to the process
+working directory. Each is now fixed with a test. Two further candidates were
+examined and **rejected as deliberate** — `isHidden` failing open, and `loadDir`
+adopting an unreadable directory — and are recorded so they are not "fixed" later.
+
+**Coverage** rose 68.7 % → 69.3 % overall, with the extracted package at 92.4 %
+across 19 mirrored unit-test files; the remaining 7.6 % is unreachable-by-design
+OS-failure fallbacks. The dialog branches that genuinely need a `layout.Context`
+(D1's refusal, D2's button state) are covered by ten new GPU-gated integration
+scenarios that drive the real dialog through Gio's own `widget.Clickable.Click()`
+rather than synthetic pointer coordinates.
+
+**Three things worth carrying forward.** `Clickable.Click()` makes dialog
+integration tests coordinate-free and should be the default technique for
+"does this branch run" scenarios. Files behind build tags — `!windows`,
+`integration_test`, `wireinject` — are skipped by the local lint run, and CI uses
+a different tag set, so a `GOOS=linux` pass is a cheap sanity check at close-out.
+And CRLF written into a new `.go` file is a *local* nuisance only —
+`.gitattributes` normalises it away on commit — but it makes `gofmt` report the
+entire file as unformatted and will happily send you chasing a CI failure that
+does not exist.
+
+**Deliberately not done, and why.** The typed filename in the Save dialog is
+discarded because `FileService.SaveSettings` names the file after
+`editorState.TemplateName` — confirmed by the owner as intended (review §1.1).
+The defect is only that the UI still presents an editable field; that is now a
+[backlog item](../todo/backlog.md) covering the read-only field, the
+"Will save as:" label and the "Save As" → "Save To" rename. Mis-indented
+assertions in `manualCastleReapply_integration_test.go` are real but sit behind
+`integration_test`, where no check runs — left for a future sweep.
 
 ## Deployment Plan
-_(write when all phases complete)_
+
+This is a pure refactor plus five bug fixes. No schema, no output paths, no
+persisted settings, no dependencies, no configuration. Nothing needs migrating
+and there is nothing to roll forward or back beyond the commit itself.
+
+1. **Review the working tree.** `git status --short` should show the files listed
+   in `.agent/session-carry-forward.md` §4 and nothing else. The agent has not
+   staged or committed anything (AGENTS.md §2.5).
+2. **Confirm the read-only directories are untouched:**
+   `git diff --stat -- data/ internal/entities/template/ internal/registry/`
+   must be empty.
+3. **Re-run the gate locally** (AGENTS.md §7): `go build ./...`,
+   `go test -count=1 ./test/unit/...`,
+   `go test -tags=integration_test ./test/integration/...`, and — because a GPU
+   is present on this machine but not in CI —
+   `go test -tags 'integration_test,gui' ./test/integration/gui/...`, which must
+   report **zero snapshot diffs**.
+4. **Optionally run the CI-equivalent lint before pushing:**
+   `$env:GOOS='linux'; golangci-lint-v2 run ./... --issues-exit-code=0; Remove-Item Env:\GOOS`.
+   The Windows-only run skips every `!windows` file, so this is the one gap the
+   default task cannot see. Expect `0 issues.` Ignore any `gci`/`gofmt`/`golines`
+   findings at `1:1` — those are local CRLF artefacts that `.gitattributes`
+   normalises away on commit, not things CI will ever see.
+5. **Commit and push the branch, then open the PR.** CI runs build + vet +
+   testlayoutcheck on ubuntu, the unit suite on both ubuntu and windows, the race
+   detector, golangci-lint, govulncheck, and a coverage-trend gate. Coverage is
+   **69.3 %** against a 60.0 % floor and rising, so the trend check passes.
+6. **Post-merge sanity check** (manual, one minute): launch the app, use
+   *Load*, *Save As* and the output-folder picker once each. The dialogs are the
+   only user-visible surface this batch touched, and the GUI snapshot suite
+   already covers their rendering.
+
+No rollback procedure is required: reverting the commit restores the previous
+behaviour exactly, since nothing is written to disk in a new format or location.

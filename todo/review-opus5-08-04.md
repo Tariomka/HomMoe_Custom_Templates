@@ -837,7 +837,68 @@ the owner wants a testable bootstrap.
 
 ## 2. Architecture & layering
 
-### 2.1 🟠 The file-explorer dialog implements filesystem policy inside the GUI layer
+### 2.1 ✅ FIXED 🟠 The file-explorer dialog implements filesystem policy inside the GUI layer
+
+**Fixed** (2026-08-07, Batch 13, planned in
+[extract-filesystem-policy.md](../plans/extract-filesystem-policy.md)). The
+dialog makes **zero** `os` calls today; `app/gui/dialogs` no longer imports `os`
+or `syscall`, and its only `filepath` use is `filepath.Base` for display.
+
+**The seam.** A new `internal/services/file_system/` package holds two stateless
+services — `IDirectoryBrowserService` (`ListEntries`, `ListRoots`,
+`CreateDirectory`) and `IPathResolutionService` (`ResolveStartDirectory`,
+`ParentDirectory`, `ResolveSaveTarget`, `PathExists`, `DirectoryExists`) —
+reached through `handler_interfaces.IFileSystemHandler` exactly as the finding
+proposed. The interface is a **flat** restatement of the eight methods rather
+than an embedding of the two service interfaces: embedding would force `app/gui`
+to import `internal/services` and trip depguard's `no-services-from-app`, and the
+handler package is precisely the boundary where that translation belongs. A
+separate `FileSystemSet` and `InitializeFileSystemHandler` keep the graph
+disjoint from `GuiHandlerSet`, so the file dialogs do not drag in the generator,
+the repositories or the validators.
+
+**Where the proposed API changed.** `WouldOverwrite` and `SanitizeChildName` do
+not exist. Overwrite detection became the pair `PathExists` / `DirectoryExists`
+(see D1 below — one predicate could not express "a folder is sitting on the save
+target"), and name sanitisation was folded into `CreateDirectory` and
+`ResolveSaveTarget` themselves, so "can this name escape its parent" is answered
+on one side of the seam only. `ResolveSaveTarget` takes the required suffix as a
+parameter; `.gen.json` stays GUI copy. Error *wording* also stays in the GUI:
+the service returns `common_errors` sentinels and the dialog maps them back to
+the original user-visible strings, because staticcheck ST1005 forbids
+capitalised, punctuated error strings and depguard would block the GUI importing
+sentinels declared in `file_system`.
+
+**§5.1's permission clash is gone**: the `0o750` literal went with the extracted
+code and directory creation now uses the shared constant.
+
+**Five defects fell out of the extraction**, each fixed with a test — they were
+invisible while the logic was unreachable: `ListRoots` probed `A:\`…`Z:\` on
+every platform (**D0**); an existing *folder* at the save target was offered as
+an overwritable file and handed a directory path to `onSave` (**D1**); a
+whitespace-only filename left *Save* enabled but doing nothing, because the
+button and the save used two rules that could disagree (**D2**); Windows
+reserved device names (`CON`, `NUL`, `COM1`…) reported a successful save and
+left nothing on disk (**D3**); and `CreateDirectory` with an empty parent wrote
+into the process working directory (**D4**). Two further candidates were
+rejected as deliberate and must not be "fixed": `isHidden` fails **open** so an
+unreadable entry stays visible instead of silently vanishing, and `loadDir`
+adopts an unreadable directory as `currentDir` so the path bar names the place
+the error refers to. Full evidence in the plan's Phase 4 summary.
+
+**Coverage.** The finding's headline consequence is retired: the extracted logic
+is **92.4 %** covered by 19 mirrored unit-test files, and total unit coverage rose
+68.7 % → **69.3 %**. The 7.6 % remainder is unreachable-by-design fallbacks
+(`os.Getwd()` failing, `entry.Info()` failing, `info.Sys()` not being a
+`*syscall.Win32FileAttributeData`). D1's and D2's *dialog* branches need a
+`layout.Context`, so they are covered by the new GUI integration scenarios
+instead (see §2.5).
+
+**Original finding follows.**
+
+#### 2.1 original text
+
+🟠 The file-explorer dialog implements filesystem policy inside the GUI layer
 
 **Evidence.** [fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go)
 makes **sixteen** direct `os`/`filepath` calls, including directory creation:
@@ -1065,7 +1126,44 @@ with a constructor test; the existing topology suites can then stub labelling.
 
 ---
 
-### 2.5 🟡 `fileExplorerDialog.go` is a god object
+### 2.5 ✅ FIXED 🟡 `fileExplorerDialog.go` is a god object
+
+**Fixed** (2026-08-07, Batch 13, immediately after §2.1 as the finding
+requires). The file went 750 → **221 LOC**, split into the three proposed
+siblings plus one the finding did not anticipate:
+
+| File | LOC | Holds |
+| --- | --- | --- |
+| [fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go) | 221 | the struct, `newFileExplorerDialog`, the `IDialog` methods, navigation |
+| [fileExplorerDialogConfirm.go](../app/gui/dialogs/fileExplorerDialogConfirm.go) | 156 | footer, button state, confirm / overwrite flow |
+| [fileExplorerDialogEntries.go](../app/gui/dialogs/fileExplorerDialogEntries.go) | 130 | directory load, list and row rendering |
+| [fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go) | 103 | header, save row, new-folder row |
+| [fileExplorerDialogModes.go](../app/gui/dialogs/fileExplorerDialogModes.go) | 65 | the `fileDialogMode` enum and the four public constructors |
+
+The extra file exists because the four constructors are what makes the type
+"simultaneously an open dialog, a save dialog, a folder picker and a browser";
+putting them beside the enum they switch on states that mode list in one place.
+Every move was verbatim — no signature, field or behaviour changed — and the GUI
+snapshot suite produced zero diffs, which is the evidence that it was a pure
+split.
+
+**Tests.** §2.1's service tests cover the extracted policy. The
+`test_observations.md` entry the finding points at is now closed too: ten
+scenarios in
+[fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go)
+drive the real dialog — open→confirm, save target resolution, a save through
+`drivers.State` that lands bytes on disk, the three overwrite paths, folder
+creation, and D1's and D2's dialog branches which no unit test can reach. They
+queue clicks through Gio's own `widget.Clickable.Click()` rather than synthesising
+pointer coordinates: `Clickable.update` drains `requestClicks` before it consults
+pointer input, so the click is indistinguishable from a real one to the code
+under test while the layout still runs for real.
+
+**Original finding follows.**
+
+#### 2.5 original text
+
+🟡 `fileExplorerDialog.go` is a god object
 
 **Evidence.** 653 LOC, 29 struct fields, 35 functions/methods — the largest
 non-protected file in the repository. It is simultaneously an open dialog, a
@@ -2692,11 +2790,19 @@ permanently — mark them `✅ FIXED` in place as they land.
     rationale. Nothing remains in this item.
 
 13. **Large refactors — plan first per AGENTS.md §4.7.**
-    §2.1 (extract filesystem policy) → unblocks §2.5. Then §2.2 (extract
-    regeneration policy), which is multi-session and overlaps a backlog item.
-    §2.6 opportunistically, whenever the zone editor is next touched.
+    §2.1 (extract filesystem policy) + §2.5 (split the dialog) ✅ FIXED
+    (2026-08-07, Batch 13, plan:
+    [extract-filesystem-policy.md](../plans/extract-filesystem-policy.md)) —
+    delivered together in seven phases, because §2.5 is only safe once §2.1 has
+    moved the policy out. Five latent defects (D0–D4) surfaced as the logic
+    became reachable and were fixed with tests; two candidates were rejected as
+    deliberate. Coverage 68.7% → 69.3%.
+    Still open: §2.2 (extract regeneration policy), which is multi-session,
+    overlaps a backlog item, and is the last item in this review awaiting an
+    owner scope decision. §2.6 opportunistically, whenever the zone editor is
+    next touched.
 
-**Blockers summary:** §6.5 after §6.3 · §2.5 after §2.1 · §5.1 folds into §1.1 or
+**Blockers summary:** §6.5 after §6.3 · ✅ §2.5 after §2.1 · §5.1 folds into §1.1 or
 §2.1 · §9.5 after §2.7 · §3.2 with §5.3.
 **Owner decisions required before implementation:** §2.2 (refactor scope) is the
 only one left. §1.1 (transactionality) and §1.5 (ceilings) were answered in
