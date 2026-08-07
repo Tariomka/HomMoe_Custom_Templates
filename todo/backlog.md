@@ -36,7 +36,7 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
 
 - need to use common (either from commons or models) values for template generation
 
-- either random portals or connections in general to hub have incorrect guard values
+- either random portals or connections in general to hub have incorrect guard values(hub values are not being applied, might be because they are never calculated. hub(s) probably need to be inside the neutral zone list? maybe not, because neutral zone generation will not work as expected. need to think whats the cause and how to fix this issue)
 
 - rework EditorStateDto, the dto content should be in entities, it should be wrapped in a model and model should be embedded to the dto.
 
