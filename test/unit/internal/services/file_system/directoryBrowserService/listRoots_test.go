@@ -59,6 +59,21 @@ func TestWhenRootsAreListedOnWindows_EachNameIsADriveLetterPath(t *testing.T) {
 	}
 }
 
+func TestWhenRootsAreListedOutsideWindows_ResultIsEmpty(t *testing.T) {
+	t.Parallel()
+	if runtime.GOOS == "windows" {
+		t.Skip("drive letters are volume roots on Windows")
+	}
+	// Arrange
+	service := file_system.NewDirectoryBrowserService()
+
+	// Act
+	roots := service.ListRoots()
+
+	// Assert
+	assert.Empty(t, roots)
+}
+
 func TestWhenRootsAreListedOnNonWindows_ReturnsNothing(t *testing.T) {
 	t.Parallel()
 	if runtime.GOOS == "windows" {

@@ -12,6 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestWhenParentIsBlank_ReturnsEmptyParentError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := file_system.NewDirectoryBrowserService()
+
+	// Act
+	_, err := service.CreateDirectory("", gofakeit.Word())
+
+	// Assert
+	assert.ErrorIs(t, err, common_errors.ErrDirectoryParentEmpty)
+}
+
 func TestWhenFolderNameIsBlank_ReturnsEmptyNameError(t *testing.T) {
 	t.Parallel()
 	// Arrange

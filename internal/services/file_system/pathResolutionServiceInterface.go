@@ -6,6 +6,7 @@ package file_system
 type IPathResolutionService interface {
 	ResolveStartDirectory(preferred string) string
 	ParentDirectory(current string) string
-	ResolveSaveTarget(directory, name, requiredSuffix string) (string, bool)
+	ResolveSaveTarget(directory, filename, requiredSuffix string) (string, bool)
 	PathExists(path string) bool
+	DirectoryExists(path string) bool
 }

@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
 // PathResolutionService normalizes requested locations and typed-in file names.
@@ -66,7 +68,7 @@ func (this *PathResolutionService) ParentDirectory(current string) string {
 
 	parent := filepath.Dir(current)
 	if parent == current {
-		if runtime.GOOS == "windows" {
+		if runtime.GOOS == windowsOS {
 			return ""
 		}
 
@@ -79,23 +81,28 @@ func (this *PathResolutionService) ParentDirectory(current string) string {
 // ResolveSaveTarget builds an absolute save path inside directory from a
 // user-typed name. Any directory component is stripped so the target can never
 // escape directory, and requiredSuffix is appended when missing. ok is false
-// when the name is empty or resolves to nothing usable.
-func (this *PathResolutionService) ResolveSaveTarget(directory, name, requiredSuffix string) (string, bool) {
-	name = strings.TrimSpace(name)
-	if name == "" {
+// when the name is empty, resolves to nothing usable, or names a Windows
+// device.
+func (this *PathResolutionService) ResolveSaveTarget(directory, filename, requiredSuffix string) (string, bool) {
+	filename = strings.TrimSpace(filename)
+	if filename == "" {
 		return "", false
 	}
 
-	name = filepath.Base(name)
-	if name == "." || name == ".." || name == string(os.PathSeparator) {
+	filename = filepath.Base(filename)
+	if filename == "." || filename == ".." || filename == string(os.PathSeparator) {
 		return "", false
 	}
 
-	if requiredSuffix != "" && !strings.HasSuffix(strings.ToLower(name), strings.ToLower(requiredSuffix)) {
-		name += requiredSuffix
+	if helpers.IsReservedFilename(filename) {
+		return "", false
 	}
 
-	return filepath.Join(directory, name), true
+	if requiredSuffix != "" && !strings.HasSuffix(strings.ToLower(filename), strings.ToLower(requiredSuffix)) {
+		filename += requiredSuffix
+	}
+
+	return filepath.Join(directory, filename), true
 }
 
 // PathExists reports whether anything - file or directory - is currently
@@ -103,4 +110,11 @@ func (this *PathResolutionService) ResolveSaveTarget(directory, name, requiredSu
 func (this *PathResolutionService) PathExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// DirectoryExists reports whether path is currently a directory, so callers can
+// tell a file they may overwrite from a folder they may not.
+func (this *PathResolutionService) DirectoryExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }

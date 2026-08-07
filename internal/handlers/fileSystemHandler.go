@@ -53,3 +53,7 @@ func (this *fileSystemHandler) ResolveSaveTarget(directory, name, requiredSuffix
 func (this *fileSystemHandler) PathExists(path string) bool {
 	return this.pathResolution.PathExists(path)
 }
+
+func (this *fileSystemHandler) DirectoryExists(path string) bool {
+	return this.pathResolution.DirectoryExists(path)
+}

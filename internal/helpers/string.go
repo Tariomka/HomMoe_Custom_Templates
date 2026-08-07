@@ -18,6 +18,13 @@ func SanitizeFilename(name string) string {
 	return removeReservedNames(out)
 }
 
+// IsReservedFilename reports whether name would address a DOS device instead
+// of a file. Writing to one appears to succeed yet leaves nothing on disk, so
+// the name is refused instead of silently swallowing the user's template.
+func IsReservedFilename(name string) bool {
+	return isReservedFilename(name)
+}
+
 // GetZoneLabel returns the trailing label portion of a zone name like
 // "Spawn-A" → "A" or "Neutral-C" → "C". Plain names (e.g. "Hub") pass through.
 func GetZoneLabel(zoneName string) string {

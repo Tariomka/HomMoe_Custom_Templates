@@ -3,6 +3,7 @@ package file_system
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 
@@ -63,10 +64,15 @@ func (this *DirectoryBrowserService) ListEntries(
 }
 
 // ListRoots enumerates the existing volume roots. On Windows that is every
-// drive letter that answers a stat; on other systems the filesystem has a
-// single root and the result is empty, which matches the caller's "there is
-// nothing above / to ascend to" expectation.
+// drive letter that answers a stat; other systems have a single root and get an
+// empty result, which matches the caller's "there is nothing above / to ascend
+// to" expectation. The platform is checked explicitly because `A:\` is a legal
+// relative file name on Unix and would otherwise be mistaken for a volume.
 func (this *DirectoryBrowserService) ListRoots() []models.DirectoryEntry {
+	if runtime.GOOS != windowsOS {
+		return nil
+	}
+
 	roots := make([]models.DirectoryEntry, 0, 26)
 	for letter := 'A'; letter <= 'Z'; letter++ {
 		root := string(letter) + `:\`
@@ -81,9 +87,15 @@ func (this *DirectoryBrowserService) ListRoots() []models.DirectoryEntry {
 // CreateDirectory creates name inside parent and returns the created path. The
 // name is trimmed and rejected when empty, when it is a relative-path token or
 // when it contains a separator or a volume colon, so a "new folder" prompt can
-// never write outside parent. Errors are sentinels from common_errors or the
-// raw os error, leaving the wording of any message to the presentation layer.
+// never write outside parent. An empty parent is refused outright, because
+// joining onto it would silently target the process working directory. Errors
+// are sentinels from common_errors or the raw os error, leaving the wording of
+// any message to the presentation layer.
 func (this *DirectoryBrowserService) CreateDirectory(parent, name string) (string, error) {
+	if parent == "" {
+		return "", common_errors.ErrDirectoryParentEmpty
+	}
+
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return "", common_errors.ErrDirectoryNameEmpty

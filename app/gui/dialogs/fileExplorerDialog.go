@@ -72,6 +72,7 @@ type FileExplorerDialog struct {
 
 	// modeSaveFile overwrite-confirmation sub-state.
 	overwriteActive bool
+	saveErr         string // inline rejection of the typed filename
 
 	// New-folder sub-state.
 	newFolderActive bool
@@ -317,14 +318,19 @@ func (this *FileExplorerDialog) getEntryRowWidget(
 }
 
 func (this *FileExplorerDialog) getErrorLineWidget(theme *material.Theme) layout.Widget {
-	if this.listErr == "" {
+	message := this.listErr
+	if message == "" {
+		message = this.saveErr
+	}
+
+	if message == "" {
 		return widgets.NewEmptyWidget()
 	}
 
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: constants.DefaultPaddingSmall}.
 			Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
-				WithText(this.listErr).WithColor(themes.ColorsBase.Error).WithMaxLines(2).Build)
+				WithText(message).WithColor(themes.ColorsBase.Error).WithMaxLines(2).Build)
 	}
 }
 
@@ -427,7 +433,8 @@ func (this *FileExplorerDialog) confirmButtonState() (label string, show bool, d
 	case modeOpenFile:
 		return "Open", true, this.selectedPath == ""
 	case modeSaveFile:
-		return "Save", true, len(this.filenameEd.Text()) == 0
+		_, ok := this.resolveSaveTarget()
+		return "Save", true, !ok
 	case modePickFolder:
 		return "Select This Folder", true, this.currentDir == ""
 	case modeBrowse:
@@ -492,15 +499,23 @@ func (this *FileExplorerDialog) confirmOverwrite(gtx layout.Context) bool {
 	return false
 }
 
-// confirmSelection handles the save button: an existing target opens the
-// overwrite prompt, otherwise the file is saved immediately.
+// confirmSelection handles the save button: an existing file opens the
+// overwrite prompt, an existing folder is refused, otherwise the file is saved
+// immediately.
 func (this *FileExplorerDialog) confirmSelection(gtx layout.Context) bool {
 	if !this.confirmBtn.Clicked(gtx) {
 		return false
 	}
 
+	this.saveErr = ""
+
 	path, ok := this.resolveSaveTarget()
 	if !ok {
+		return false
+	}
+
+	if this.fileSystem.DirectoryExists(path) {
+		this.saveErr = "A folder with that name already exists."
 		return false
 	}
 
@@ -525,6 +540,7 @@ func (this *FileExplorerDialog) loadDir(dir string) {
 	this.newFolderErr = ""
 	this.overwriteActive = false
 	this.listErr = ""
+	this.saveErr = ""
 	this.selectedPath = ""
 
 	if dir == "" {
@@ -576,6 +592,7 @@ func (this *FileExplorerDialog) onEntryClicked(entry models.DirectoryEntry) {
 	case modeSaveFile:
 		this.filenameEd.SetText(entry.Name)
 		this.overwriteActive = false
+		this.saveErr = ""
 	case modePickFolder, modeBrowse: // noop
 	}
 }

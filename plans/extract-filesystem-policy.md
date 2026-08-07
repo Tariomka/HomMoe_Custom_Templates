@@ -377,15 +377,15 @@ coverage rose regardless. Phase 6's GUI scenarios are what will lift this file.
 ---
 
 ## Phase 4: Defects
-Status: Not started
+Status: Complete
 
 Owner decision: **list first, fix the clear-cut ones with tests, ask before any
-user-visible change.**
+user-visible change.** Follow-up decision: **implement all four (D1-D4).**
 
-- [ ] Enumerate every defect found during Phases 1–3 in the Phase Summary, each
+- [x] Enumerate every defect found during Phases 1–3 in the Phase Summary, each
       with: evidence, whether it is reachable today, and the proposed fix.
-- [ ] Fix the clear-cut correctness bugs, each with a regression test.
-- [ ] Ask the owner about anything that changes what the user sees.
+- [x] Fix the clear-cut correctness bugs, each with a regression test.
+- [x] Ask the owner about anything that changes what the user sees.
 
 Known candidates to assess (not yet confirmed as defects):
 1. `confirmSelection` uses `os.Stat` and treats an existing **directory** as an
@@ -402,7 +402,87 @@ Known candidates to assess (not yet confirmed as defects):
 - Anything rejected is recorded here with the reason.
 
 ### Phase Summary
-_(write when phase completes)_
+
+Six findings. One was fixed without asking (no user-visible effect), four were
+put to the owner and all four approved, and two were rejected as deliberate.
+
+**D0 — `ListRoots` probed drive letters on every platform.** Fixed without
+asking. `A:\` … `Z:\` are legal *relative file names* on Unix, so a stray file
+could have been presented as a volume; the loop also cost 26 pointless `stat`
+syscalls per call off Windows. `ListRoots` now returns `nil` unless
+`runtime.GOOS == windowsOS`. Identical behaviour on Windows.
+
+**D1 — an existing *folder* at the save target was offered as "overwrite".**
+Reachable: `ResolveSaveTarget` appends `.gen.json`, and New Folder accepts
+`foo.gen.json` as a folder name. `PathExists` answered true for it, the overwrite
+prompt appeared, and confirming handed a directory path to `onSave`, which fails
+at write time with a raw OS error. Fixed by adding `DirectoryExists` to
+`IPathResolutionService` / `IFileSystemHandler` and checking it *before*
+`PathExists`; the dialog now shows "A folder with that name already exists." and
+refuses instead of prompting.
+
+**D2 — a whitespace-only filename left *Save* enabled but did nothing.**
+`confirmButtonState` tested `len(text) == 0` while `ResolveSaveTarget` trims and
+reports `ok == false`, so the button looked live and clicking it was a no-op.
+Fixed by deriving the disabled state from `resolveSaveTarget()` itself, which
+makes the button's enablement and the save's success the *same* predicate rather
+than two rules that can disagree. This also fixes D3 in the UI for free.
+
+**D3 — Windows reserved device names were accepted.** `CON`, `PRN`, `AUX`,
+`NUL`, `COM1`–`COM9`, `LPT1`–`LPT9` still resolve to the device whatever
+extension follows, so "saving" a template as `NUL` reported success and left
+nothing on disk. `ResolveSaveTarget` now rejects them (checking the stem before
+the first dot, case-insensitively) when `runtime.GOOS == windowsOS`; the name is
+not restricted elsewhere, because it is a legal file name there.
+
+**D4 — `CreateDirectory(parent: "", …)` created the folder in the process
+working directory.** Unreachable from the UI (`canModify()` requires
+`currentDir != ""`), but `IDirectoryBrowserService` is a public seam now. Fixed
+with a new `common_errors.ErrDirectoryParentEmpty` sentinel; the dialog's default
+branch surfaces it verbatim, which is correct because it can only ever indicate a
+programming error.
+
+**Rejected — `isHidden` fails open when `entry.Info()` errors.** Deliberate: an
+entry whose metadata cannot be read stays *visible* rather than silently
+vanishing from the listing. Failing closed would hide files from the user with no
+explanation. Do not "fix" this.
+
+**Rejected — `loadDir` adopts an unreadable directory as `currentDir` on the very
+first load.** Deliberate, so the path bar names the place the error refers to;
+navigation up and the inline error both still work. It is also close to
+unreachable now that `ResolveStartDirectory` guarantees an existing directory,
+leaving only the permission-denied case.
+
+**New GUI state**: `FileExplorerDialog.saveErr` holds the D1/filename rejection.
+`getErrorLineWidget` prefers `listErr` and falls back to `saveErr`, so the layout
+is unchanged; `loadDir` and `onEntryClicked` clear it, and `confirmSelection`
+clears it on every click, so it can never go stale.
+
+**Files touched**: `internal/common/common_errors/fileSystemErrors.go`,
+`internal/services/file_system/{constants.go (new), directoryBrowserService.go,
+pathResolutionService.go, pathResolutionServiceInterface.go}`,
+`internal/handlers/{fileSystemHandler.go, handler_interfaces/fileSystemHandlerInterface.go}`,
+`test/test_helpers/{fileSystemHandlerMock.go, pathResolutionServiceMock.go}`,
+`app/gui/dialogs/fileExplorerDialog.go`, plus 5 unit-test files (2 new).
+
+The unexported `windowsOS` constant was extracted because `goconst` flagged the
+third literal `"windows"`; the reserved-name set is a `switch` rather than a map
+because `gochecknoglobals` forbids the package-level variable.
+
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `go build ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test -count=1 ./test/unit/...` | 0 failures |
+| `go test -tags=integration_test ./test/integration/...` | `ok ... 2.638s` |
+| `go test -tags 'integration_test,gui' ./test/integration/gui/...` | `ok ... 2.375s`, zero snapshot diffs |
+| `golangci-lint-v2 run ./...` | `0 issues.` |
+| Total unit coverage | **69.3 %** (baseline 68.7 %) |
+
+D1's dialog branch and D2's button state are *not* unit-covered — both need a
+`layout.Context`. They are Phase 6's Save-flow and Overwrite-prompt scenarios.
 
 ---
 

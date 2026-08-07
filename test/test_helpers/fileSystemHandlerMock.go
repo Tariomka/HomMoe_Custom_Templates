@@ -51,3 +51,8 @@ func (this *FileSystemHandlerMock) PathExists(path string) bool {
 	arguments := this.Called(path)
 	return arguments.Bool(0)
 }
+
+func (this *FileSystemHandlerMock) DirectoryExists(path string) bool {
+	arguments := this.Called(path)
+	return arguments.Bool(0)
+}

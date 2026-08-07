@@ -30,3 +30,8 @@ func (this *PathResolutionServiceMock) PathExists(path string) bool {
 	arguments := this.Called(path)
 	return arguments.Bool(0)
 }
+
+func (this *PathResolutionServiceMock) DirectoryExists(path string) bool {
+	arguments := this.Called(path)
+	return arguments.Bool(0)
+}
