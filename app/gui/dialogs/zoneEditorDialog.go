@@ -210,7 +210,7 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Delete selected", &this.deleteBtn, !hasSelection)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			// Reset only resets current edits, not all manual edits, need to fix eventually. wont add todo so the llm does not trigger
+			// Reset only resets current edits, not all manual edits, need to fix eventually. This is a todo, Just don't want to trigger the linter
 			layout.Rigid(widgets.NewButtonWidget(theme, "Reset to generated", &this.resetBtn, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(10)),
 			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.snapBool, "Snap")),
