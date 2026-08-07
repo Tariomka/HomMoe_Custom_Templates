@@ -56,8 +56,10 @@ that review requiring an owner scope decision — and close the overlapping
 - `test/unit/internal/services/editor/regenerationDecisionService/{decideRegeneration,decideManualEditReapplication}_test.go`.
 - `test/unit/app/gui/models/editorState/{getPreviousState,getNextState}_test.go`.
 - `test/unit/internal/composition/wire/initializeRegenerationHandler_test.go`.
-- `plans/extract-regeneration-policy.md` — the authoritative plan, with full
-  per-phase summaries.
+- `plans/extract-regeneration-policy.md` — the working plan. **Deleted by the
+  owner in `51e5858` once the batch landed**, so this document and repository
+  memory are now the only record; everything load-bearing from it is inlined in
+  §7 below.
 
 **Modified (key)**
 - `app/gui/drivers/state.go` (new `regeneration` field, `autoRegenDebounce` const
@@ -91,11 +93,11 @@ smoke test. All suites green at hand-off:
 
 ## 6. Git status snapshot
 
-Branch **`AD/refactoring-07-21`**. Nothing was staged or committed by the agent.
-The owner had already staged most of the batch (`M ` entries); the agent's Phase 4
-edits are unstaged (` M .golangci.yml`, ` M todo/backlog.md`,
-` M test/integration/manualCastleReapply_integration_test.go`, plus `MM` on
-`todo/review-opus5-08-04.md` and `test/integration/stateSaveAs_integration_test.go`).
+Branch **`AD/refactoring-07-21`**, working tree **clean** and in sync with
+`origin`. Nothing was staged or committed by the agent; the owner reviewed and
+landed the batch as `8bf9c95` "Batch 14 Done", then `51e5858` "Cleaned up backlog
+and plans" (which deleted `plans/extract-regeneration-policy.md` and trimmed the
+two `todo/` files).
 
 Permanent `gofmt -l .` noise remains on `app/gui/drivers/dialogHost_testexports.go`
 and `internal/composition/wire.go` — both **CRLF-only**, invisible in the committed
@@ -115,6 +117,26 @@ blob. Do not "fix" them; it only creates empty `git diff HEAD` churn.
 - **Moving `WasStateChanged()`** off `EditorState` — reverted. It drives the
   unsaved marker, not generation.
 
+### Proven non-defects — do NOT "fix" these
+
+Each was investigated during Phase 3 triage and shown to be correct as written.
+They look like bugs on a quick read, so they will attract a future agent:
+
+1. **The superseded `op.InvalidateCmd` wakeup.** Gio exposes no cancellation for
+   a pending invalidate, so a re-armed debounce leaves the old wakeup queued.
+   The entire cost is one wasted frame.
+2. **A stale `applyNextStateAt`.** Unreachable: the only branch that reads
+   `DebounceDueAt` requires `Next != nil`, and the sole branch that sets `Next`
+   refreshes the deadline in the same call.
+3. **`NextStateLeave` vs `NextStateClear` on first generation.** Equivalent —
+   every path through `handleGenerateTemplate` reaches `SnapshotCurrentState()`,
+   which nils `next`.
+4. **`zoneEditorHandler`'s apparently-live dead methods.** Already deleted, but
+   note the trap: `ComputeHasErrors` / `RebuildZoneConnectionRoads` looked used
+   under text search only because identically-named **service** methods are the
+   live ones (`templateHandler` calls `IConnectionEditorService` /
+   `IZoneEditorService` directly).
+
 ## 8. Open questions
 
 None blocking. The two long-standing questions from the previous hand-off are now
@@ -126,18 +148,40 @@ caller asking for it.
 
 ## 9. Next recommended actions
 
-1. Review and commit this batch.
-2. **§2.6** is the only review item left: `zoneEditorDialog`'s ~58 fields and the
-   oversized files (`zoneEditorDialog.go` 507 LOC, `zoneEditorCanvas.go` 479,
-   `bonusPickerDialog.go` 434, `pickerDialog.go` 371, `ruleDialog.go` 314,
-   `zoneContent.go` 299). Explicitly low priority — do it opportunistically the
-   next time the zone editor is touched.
-3. Backlog candidates surfaced this session:
+1. **Start Batch 15 in a fresh session**, driven by
+   [plans/zone-editor-state-extraction.md](../plans/zone-editor-state-extraction.md).
+   Scope was agreed at the end of this session and the plan is written; Phase 0
+   (characterization tests) is the entry point.
+2. Backlog candidates surfaced this session:
    - `handleGenerateTemplate` sits at 81.0 % coverage (pre-existing; the gap is
      the generation-failure and warning-status branches).
    - The road-distance consolidation item, now that its false "UI uses services
      directly" half has been struck.
    - The "Save As → Save To" UI honesty item.
+
+### Batch 15 scope, as agreed
+
+Review §2.6 — nine files, ~2 800 LOC. Owner decisions, all recorded in the plan:
+
+- **All nine files** in scope: the five `zoneEditor*` files plus
+  `bonusPickerDialog.go`, `pickerDialog.go`, `ruleDialog.go`, `zoneContent.go`.
+- **Geometry to a full service** (interface + `wire` DI, as implementation #4 in
+  `internal/services/connection_editor/`); **selection/drag state stays in the
+  GUI**, consolidated. The review's literal wording said to move selection too;
+  that half was deliberately declined — `dragPos`/`pressPos`/`addMode` are
+  pointer-event view state, and a service holding them inverts the layering.
+- **Extract everything identified** in the four extra dialogs (~270 LOC).
+- **Characterization tests first** — two of the nine files have no test at all.
+- **§0.2 is fixed by relabelling** "Reset to generated", not by retaining a
+  pristine generated template (owner declined the second copy).
+- **After a revert, the following Apply clears the manual-edit snapshot
+  outright**, with the consequence accepted: the live template keeps showing the
+  reverted-to edits until the next regeneration, then they vanish.
+
+Two facts found while scoping that contradict existing documents: the dialog has
+**67** fields, not the ~58 the review states (26 of them Gio widget handles that
+cannot move), and `zoneContent.go` lives in `app/gui/dialogs/`, not
+`app/gui/panels/` as both the review and the old backlog claimed.
 
 ## 10. Carry-forward prompt
 
@@ -149,12 +193,18 @@ caller asking for it.
 > stage and never commit — the owner reviews and commits; never change where
 > `.rmg.json` is written and never persist the output directory (§2.6).
 >
-> Batch 14 is **complete and verified** — review §2.2 is marked `✅ FIXED` in
+> Batch 14 is **complete, verified, committed and pushed** (`8bf9c95` +
+> `51e5858` on `AD/refactoring-07-21`) — review §2.2 is marked `✅ FIXED` in
 > place in `todo/review-opus5-08-04.md`, and the `app/`-layering backlog item is
 > closed and enforced by depguard. All 46 review findings are now resolved except
-> §2.6 (zone-editor size/field count), which is deliberately opportunistic.
+> **§2.6**, which is the next batch.
 >
-> Full detail of what was done and why — including four proven non-defects that
-> must NOT be "fixed" by a later agent — is in
-> `plans/extract-regeneration-policy.md`. The complete hand-off is
-> `./.agent/session-carry-forward.md`.
+> **Start Batch 15 from `plans/zone-editor-state-extraction.md`.** Scope and all
+> seven owner decisions are already settled and recorded there — do not
+> re-litigate them; begin at Phase 0 (characterization tests), because two of the
+> nine files in scope have no test of any kind and the whole refactor depends on
+> that safety net.
+>
+> Batch 14's working plan was deleted once it landed. `§7` of
+> `./.agent/session-carry-forward.md` is now the record of what must **not** be
+> "fixed" by a later agent; the architectural facts are in repository memory.

@@ -97,7 +97,7 @@ func (this *baseHandler) setRandomTopology() *baseHandler {
 //		ClickSave() // clicks save button, and either clicks save on the save widget dialog if no file was saved to complete the save action and returns self, or just returns self if no dialog appears
 //
 // This looks like an entire framework, so I don't know if it's better to calculate positions in place or hardcode them, or a combination of both.
-// There will also be an issue with scrolling, if a button is not visible.
+// There will also be an issue with scrolling, if a button is not visible. Ideally, this should not use any code or minimal amount of code from *_testexports.go, mostly being driven by runner ClickAt, MoveTo, DragTo, etc.
 //
 // Also for some reason there is a difference of some of the rendered text between local (both this pc and steam produce identical results)
 // and CI (looks like some of the text is grayed out like not finishing a rerender), so need to figure out how to fix that as well.
