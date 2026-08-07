@@ -44,38 +44,27 @@ func (this *EditorState) SnapshotCurrentState() {
 	this.next = nil
 }
 
-func (this *EditorState) ResetPreviousState() { this.previous = nil }
-
 func (this *EditorState) HasPreviousState() bool { return this.previous != nil }
 
+func (this *EditorState) GetPreviousState() *dtos.EditorStateDto {
+	if this.previous == nil {
+		return nil
+	}
+
+	previousState := *this.previous
+	return &previousState
+}
+
+func (this *EditorState) GetNextState() *dtos.EditorStateDto {
+	if this.next == nil {
+		return nil
+	}
+
+	nextState := *this.next
+	return &nextState
+}
+
 func (this *EditorState) ResetNextState() { this.next = nil }
-
-func (this *EditorState) ResetNextStateIfLayoutChanged() bool {
-	if this.WasLayoutChanged() {
-		this.ResetNextState()
-		return true
-	}
-
-	return false
-}
-
-func (this *EditorState) ResetNextStateIfStateWasNotChanged() bool {
-	if this.WasStateUnchanged() {
-		this.ResetNextState()
-		return true
-	}
-
-	return false
-}
-
-func (this *EditorState) SetNextFromCurrentIfStateIsBeingUpdated() bool {
-	if !this.HasNextState() || this.HasPendingChanges() {
-		this.SetNextState(*this.current)
-		return true
-	}
-
-	return false
-}
 
 func (this *EditorState) SetNextState(state dtos.EditorStateDto) { this.next = &state }
 
@@ -83,22 +72,6 @@ func (this *EditorState) HasNextState() bool { return this.next != nil }
 
 func (this *EditorState) WasStateChanged() bool {
 	return this.HasPreviousState() && !this.previous.EqualsIgnoringManualEdits(this.current)
-}
-
-func (this *EditorState) WasStateUnchanged() bool {
-	return this.HasPreviousState() && this.previous.EqualsIgnoringManualEdits(this.current)
-}
-
-func (this *EditorState) WasLayoutChanged() bool {
-	return this.HasPreviousState() && this.previous.LayoutDefiningOptionsChanged(this.current)
-}
-
-func (this *EditorState) WasLayoutUnchanged() bool {
-	return this.HasPreviousState() && !this.previous.LayoutDefiningOptionsChanged(this.current)
-}
-
-func (this *EditorState) HasPendingChanges() bool {
-	return this.HasNextState() && !this.next.EqualsIgnoringManualEdits(this.current)
 }
 
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
@@ -123,20 +96,4 @@ func (this *EditorState) GetManualZones() []entities.Zone {
 
 func (this *EditorState) GetManualConnections() []entities.Connection {
 	return editor_state_dto.FromManualConnectionSaves(this.current.ManualConnections)
-}
-
-func (this *EditorState) ShouldReapplyManualEdits() bool {
-	if !this.HasManualEdits() {
-		return false
-	}
-
-	return !this.WasLayoutChanged()
-}
-
-func (this *EditorState) CastleSettingsChangedSinceGeneration() editor_state_dto.CastleSettingChanges {
-	if !this.HasPreviousState() {
-		return editor_state_dto.CastleSettingChanges{}
-	}
-
-	return this.previous.DiffCastleSettings(this.current)
 }

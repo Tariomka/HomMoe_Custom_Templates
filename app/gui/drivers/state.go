@@ -18,13 +18,13 @@ import (
 )
 
 const (
-	autoRegenDebounce   = 300 * time.Millisecond
 	configFileExtension = ".gen.json"
 )
 
 type State struct {
-	handler    handler_interfaces.IGuiHandler
-	fileSystem handler_interfaces.IFileSystemHandler
+	handler      handler_interfaces.IGuiHandler
+	fileSystem   handler_interfaces.IFileSystemHandler
+	regeneration handler_interfaces.IRegenerationHandler
 
 	innerState *models.EditorState
 
@@ -44,6 +44,7 @@ type State struct {
 	// flows through the normal Gio app.DestroyEvent path.
 	onExit func()
 
+	// applyNextStateAt is when the armed debounce window elapses.
 	applyNextStateAt time.Time
 
 	// dialogs renders modal dialogs (rule editors, pickers, the connection
@@ -54,11 +55,13 @@ type State struct {
 func NewUIState(
 	handler handler_interfaces.IGuiHandler,
 	fileSystem handler_interfaces.IFileSystemHandler,
+	regeneration handler_interfaces.IRegenerationHandler,
 	findTemplateDir bool) *State {
 	state := &State{
-		handler:    handler,
-		fileSystem: fileSystem,
-		innerState: models.NewEditorState(handler),
+		handler:      handler,
+		fileSystem:   fileSystem,
+		regeneration: regeneration,
+		innerState:   models.NewEditorState(handler),
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}

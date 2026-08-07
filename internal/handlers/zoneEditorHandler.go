@@ -84,12 +84,6 @@ func (this *zoneEditorHandler) DescribeZoneEditorGraph(
 	}
 }
 
-func (this *zoneEditorHandler) ComputeHasErrors(
-	zones []entities.Zone,
-	connections []entities.Connection) bool {
-	return this.connectionEditor.ComputeHasErrors(zones, connections)
-}
-
 func (this *zoneEditorHandler) CreateZoneEditorConnection(
 	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
 	return this.connectionEditor.NewDefaultConnection(
@@ -130,10 +124,4 @@ func (this *zoneEditorHandler) RemoveZoneEditorZone(
 		request.ZoneName,
 	)
 	return dtos.ZoneEditorMutationDto{Zones: zones, Connections: connections}
-}
-
-func (this *zoneEditorHandler) RebuildZoneConnectionRoads(
-	zones []entities.Zone,
-	connections []entities.Connection) {
-	this.zoneEditor.RebuildZoneConnectionRoads(zones, connections)
 }

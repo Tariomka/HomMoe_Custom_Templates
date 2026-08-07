@@ -93,7 +93,8 @@ func NewAppRunner(tb testing.TB) *AppRunner {
 	runner := &AppRunner{
 		App: editor.NewWindow(
 			composition.InitializeGuiHandler(),
-			composition.InitializeFileSystemHandler()),
+			composition.InitializeFileSystemHandler(),
+			composition.InitializeRegenerationHandler()),
 		theme: themes.NewTheme(),
 		tb:    tb,
 	}

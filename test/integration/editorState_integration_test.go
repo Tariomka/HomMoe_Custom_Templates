@@ -26,6 +26,7 @@ func newUIState() *drivers.State {
 	return drivers.NewUIState(
 		composition.InitializeGuiHandler(),
 		composition.InitializeFileSystemHandler(),
+		composition.InitializeRegenerationHandler(),
 		true)
 }
 
@@ -36,7 +37,11 @@ func newUIState() *drivers.State {
 // display.
 func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func()) {
 	backend := composition.InitializeGuiHandler()
-	state = drivers.NewUIState(backend, composition.InitializeFileSystemHandler(), true)
+	state = drivers.NewUIState(
+		backend,
+		composition.InitializeFileSystemHandler(),
+		composition.InitializeRegenerationHandler(),
+		true)
 	editorPanels := []interfaces.IPanel{
 		panels.NewGeneralPanel(state),
 		panels.NewLayoutPanel(state, backend, backend, backend),

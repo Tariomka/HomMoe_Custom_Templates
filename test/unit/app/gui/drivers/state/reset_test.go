@@ -17,7 +17,8 @@ func newDirtyGeneratedState() *drivers.State {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state := drivers.NewUIState(handlerMock, test_helpers.NewFileSystemHandler(), false)
+	state := drivers.NewUIState(
+		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
 	state.Generate()
 	state.UpdateState(func(dto *dtos.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
 	return state

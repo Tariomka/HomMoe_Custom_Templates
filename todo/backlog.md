@@ -30,9 +30,35 @@ Small future-work items moved out of code comments (godox purge, review §5.5).
   As currently there is no reading of rmg.json files, deserialization doesn't matter so the entity can assume the tier from the content currently inside the zone.
   Or maybe Zone doesn't actually need a property, neutralZone.Quality can be used to track and infer this information as well as neutralZone.Profile can have this property.
 
-- need to consolidate road distances - there are multiple implementations and UI uses services directly
+- ~~need to consolidate road distances - there are multiple implementations and UI
+  uses services directly~~ **PARTLY CORRECTED (Batch 14).** The "UI uses services
+  directly" half is **false** and should not drive any refactor: no non-test file
+  under `app/` imports `internal/services` at all, and depguard's
+  `no-services-from-app` rule now fails the build if one ever does. The only
+  road-distance reference in the GUI is
+  [app/gui/dialogs/ruleDialog.go](../app/gui/dialogs/ruleDialog.go) matching on
+  `dtos.ContentRuleKeyDistanceToRoad`, which is a DTO key, not a service call.
+  The remaining, still-open half is whether the several road-distance
+  representations (`RuleDistanceToRoad`, the `DistancePreset` model and the
+  road-building code) should be consolidated behind one type.
 
-- need to add that anything inside app should only use entities, models, handlers and commons, not services
+- ~~need to add that anything inside app should only use entities, models,
+  handlers and commons, not services~~ **DONE (Batch 14).** The rule is: `app/`
+  may import `internal/entities`, `internal/models`, `internal/dtos`,
+  `internal/handlers/handler_interfaces`, `internal/common`, **`internal/registry`
+  and `internal/helpers`**, plus `internal/composition` at the composition root
+  ([app/gui/program.go](../app/gui/program.go)) only. It must never import
+  `internal/services`, `internal/repositories`, `internal/mappers` or
+  `internal/validators`.
+
+  Registry and helpers are deliberately **allowed**: `app/gui/constants` owns
+  display names while referencing registry SIDs (AGENTS.md §4.4), and
+  `internal/helpers` is the documented home for cross-cutting utilities.
+
+  No violation existed when this was audited — `app/` already imported zero
+  services. depguard's `no-services-from-app` enforces all four denials, and
+  `concrete-handlers-only-at-gui-composition-roots` keeps concrete handlers out
+  of `app/` outside the composition root, so this needs no further code change.
 
 - need to use common (either from commons or models) values for template generation
 

@@ -20,3 +20,8 @@ func InitializeFileSystemHandler() handler_interfaces.IFileSystemHandler {
 	wire.Build(FileSystemSet)
 	return nil
 }
+
+func InitializeRegenerationHandler() handler_interfaces.IRegenerationHandler {
+	wire.Build(RegenerationSet)
+	return nil
+}

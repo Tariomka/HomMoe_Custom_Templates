@@ -94,7 +94,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 		if !zone_helpers.IsZoneNameNeutral(zone.Name) {
 			continue
 		}
-				assert.Equalf(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
+		assert.Equalf(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
 			"zone %s must follow the new simple-mode castle count", zone.Name)
 		if zone.Name == retieredName {
 			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone),
@@ -111,7 +111,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	// later regenerations carry them.
 	for _, save := range state.GetStateData().ManualZones {
 		if zone_helpers.IsZoneNameNeutral(save.Zone.Name) {
-						assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(save.Zone))
+			assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(save.Zone))
 		}
 	}
 }
@@ -154,7 +154,7 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 		if zone_services.NewZoneClassifier().GetQuality(zone) == neutral_zone.QualityHigh {
 			expected = 3
 		}
-				assert.Equalf(t, expected, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
+		assert.Equalf(t, expected, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
 			"zone %s (quality %v)", zone.Name, zone_services.NewZoneClassifier().GetQuality(zone))
 		if zone.Name == promotedName {
 			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
@@ -195,7 +195,7 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 			continue
 		}
 		found = true
-				assert.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
+		assert.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
 			"a non-castle option change must not touch the manual castle count")
 		assert.Equal(t, 7.5, zone.GuardMultiplier,
 			"a non-castle option change must not touch manual guard values")

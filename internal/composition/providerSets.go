@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
+	editor_services "github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -95,4 +96,12 @@ var FileSystemSet = wire.NewSet(
 	file_system.NewDirectoryBrowserService,
 	file_system.NewPathResolutionService,
 	handlers.NewFileSystemHandler,
+)
+
+// RegenerationSet is the complete graph behind InitializeRegenerationHandler.
+// Like FileSystemSet it is disjoint from GuiHandlerSet: deciding *when* to
+// regenerate shares no collaborator with actually generating.
+var RegenerationSet = wire.NewSet(
+	editor_services.NewRegenerationDecisionService,
+	handlers.NewRegenerationHandler,
 )

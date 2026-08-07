@@ -33,7 +33,11 @@ func newSaveAsProbe(t *testing.T, saveResult error) (state *drivers.State, writt
 
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	handlerMock.On("SaveState", mock.Anything).Return(writtenPath, saveResult)
-	state = drivers.NewUIState(handlerMock, composition.InitializeFileSystemHandler(), false)
+	state = drivers.NewUIState(
+		handlerMock,
+		composition.InitializeFileSystemHandler(),
+		composition.InitializeRegenerationHandler(),
+		false)
 
 	state.SaveAs(gofakeit.ProductName())
 	saveDialog, isFileExplorer := state.GetDialogHost().GetTopDialog().(*dialogs.FileExplorerDialog)

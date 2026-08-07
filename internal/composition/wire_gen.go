@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -71,4 +72,10 @@ func InitializeFileSystemHandler() handler_interfaces.IFileSystemHandler {
 	iPathResolutionService := file_system.NewPathResolutionService()
 	iFileSystemHandler := handlers.NewFileSystemHandler(iDirectoryBrowserService, iPathResolutionService)
 	return iFileSystemHandler
+}
+
+func InitializeRegenerationHandler() handler_interfaces.IRegenerationHandler {
+	iRegenerationDecisionService := editor.NewRegenerationDecisionService()
+	iRegenerationHandler := handlers.NewRegenerationHandler(iRegenerationDecisionService)
+	return iRegenerationHandler
 }

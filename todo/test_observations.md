@@ -132,15 +132,14 @@ Still unit-untestable (dialog-callback or Gio territory):
   half of that item is covered by
   `TestWhenEncodingFailsOverAnExistingPreview_LeavesTheDestinationUntouched`.
 
-- internal/handlers/zoneEditorHandler.go - `ComputeHasErrors` and
-  `RebuildZoneConnectionRoads` are exported methods on the private
-  `zoneEditorHandler` struct but are absent from
-  `handler_interfaces.IZoneEditorHandler`, which is what `NewZoneEditorHandler`
-  returns. No production caller reaches them (both callers go straight to
-  `IConnectionEditorService` / `IZoneEditorService`), so they cannot be invoked
-  through the public API and stay at 0%. They look like leftovers from before
-  the handler was put behind an interface - either delete them or add them to
-  the interface; until then, no unit test is possible without a test-only seam.
+- ~~internal/handlers/zoneEditorHandler.go - `ComputeHasErrors` and
+  `RebuildZoneConnectionRoads`~~ **RESOLVED (Batch 14): both methods deleted.**
+  They were exported methods on the private `zoneEditorHandler` struct, absent
+  from `handler_interfaces.IZoneEditorHandler` (what `NewZoneEditorHandler`
+  returns), so no caller outside the package could reach them; the two real
+  callers go straight to `IConnectionEditorService` / `IZoneEditorService`. They
+  were leftovers from before the handler was put behind an interface. Removing
+  them closes the 0% gap rather than papering over it with a test-only seam.
 
 - internal/helpers/io.go - `getVDFContent`, `getVDFFilePath`, `getSteamPath`,
   `getBasePath`, and internal/helpers/io_windows.go -

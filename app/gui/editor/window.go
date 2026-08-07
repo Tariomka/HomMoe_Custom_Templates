@@ -33,8 +33,9 @@ type Window struct {
 
 func NewWindow(
 	handler handler_interfaces.IGuiHandler,
-	fileSystem handler_interfaces.IFileSystemHandler) *Window {
-	window := Window{state: drivers.NewUIState(handler, fileSystem, true)}
+	fileSystem handler_interfaces.IFileSystemHandler,
+	regeneration handler_interfaces.IRegenerationHandler) *Window {
+	window := Window{state: drivers.NewUIState(handler, fileSystem, regeneration, true)}
 	window.toolbar = NewToolbar(window.state, window.load)
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),

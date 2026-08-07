@@ -45,13 +45,15 @@ func TestWhenOpenDialogConfirmsAFile_TheEditorStateIsLoaded(t *testing.T) {
 	fileSystem := composition.InitializeFileSystemHandler()
 	templateName := gofakeit.LetterN(8)
 
-	source := drivers.NewUIState(composition.InitializeGuiHandler(), fileSystem, false)
+	source := drivers.NewUIState(
+		composition.InitializeGuiHandler(), fileSystem, composition.InitializeRegenerationHandler(), false)
 	source.UpdateState(func(state *dtos.EditorStateDto) { state.TemplateName = templateName })
 	source.SaveStateToFile(filepath.Join(directory, gofakeit.LetterN(6)+saveSuffix))
 	fixturePath := source.GetCurrentPath()
 	require.FileExists(t, fixturePath)
 
-	target := drivers.NewUIState(composition.InitializeGuiHandler(), fileSystem, false)
+	target := drivers.NewUIState(
+		composition.InitializeGuiHandler(), fileSystem, composition.InitializeRegenerationHandler(), false)
 	dialog := dialogs.NewOpenFileDialog(fileSystem, directory, []string{saveSuffix}, target.LoadStateFromFile)
 	require.True(t, dialog.ClickEntry(filepath.Base(fixturePath)), "the saved fixture must be listed")
 	require.False(t, frameFileExplorer(t, dialog, theme))
@@ -99,7 +101,8 @@ func TestWhenSaveDialogIsConfirmedThroughTheDriver_AFileLandsInTheChosenDirector
 	directory := t.TempDir()
 	theme := themes.NewTheme()
 	fileSystem := composition.InitializeFileSystemHandler()
-	state := drivers.NewUIState(composition.InitializeGuiHandler(), fileSystem, false)
+	state := drivers.NewUIState(
+		composition.InitializeGuiHandler(), fileSystem, composition.InitializeRegenerationHandler(), false)
 	dialog := dialogs.NewSaveFileDialog(fileSystem, directory, "", state.SaveStateToFile)
 	dialog.SetFilename(gofakeit.LetterN(8))
 

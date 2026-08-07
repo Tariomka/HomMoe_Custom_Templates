@@ -76,7 +76,7 @@ fixed; the ones with fresh evidence gathered this session:
 | Backlog: preview sub-pixel `Vec2` | Deliberate future work — [backlog.md](backlog.md). |
 | Backlog: remove `[2]float64` from template entities | Protected directory (§2.1 AGENTS.md) — owner-only. |
 | Backlog: `createTopologyAdjacency` dead Chain/Ring branches | **Explicit owner retention** — removal was implemented and then rolled back. Do not re-report or remove. |
-| Backlog: zone tier property on entities; consolidate road distances; "app should only use entities/models/handlers/commons"; common generation values; rework `EditorStateDto`; rename `template` → `template_entity` | Owner future-work. §2.2 below overlaps the "app should only use…" item; it is raised as a *current* layering finding with evidence, not as a backlog restatement. |
+| Backlog: zone tier property on entities; consolidate road distances; "app should only use entities/models/handlers/commons"; common generation values; rework `EditorStateDto`; rename `template` → `template_entity` | Owner future-work. §2.2 below overlapped the "app should only use…" item; it was raised as a *current* layering finding with evidence, not as a backlog restatement. ✅ Both are now closed by Batch 14 — see §2.2 and [backlog.md](backlog.md); the "UI uses services directly" claim in the road-distances item was found to be false and corrected there. |
 | test_observations: Gio widgets/dialogs/panels at 0% | **Accepted integration territory** under AGENTS.md §4.6. §6.4 raises only the two *non-Gio* catalogs. |
 | test_observations: `drivers.State` dialog-bound branches, `topologyConnectionService` private policy, unreachable defensive branches (`connectInteriorStables` len==0, `providePreviewGenerator` err!=nil) | Accepted, already registered. |
 | Repo memory: "GUI has four tabs / Zone Content tab / footer panel" | **Stale memory.** [window.go](../app/gui/editor/window.go#L36-L40) has three tabs. ✅ Docs corrected in Batch 9 (§9.2); repo memory updated in the same batch. |
@@ -949,7 +949,57 @@ logic and directly retires part of the deferred item in
 
 ---
 
-### 2.2 🟠 Generation and manual-edit policy lives in the GUI driver
+### 2.2 ✅ FIXED Generation and manual-edit policy lives in the GUI driver
+
+**Resolution (2026-08-07, Batch 14, plan:
+[extract-regeneration-policy.md](../plans/extract-regeneration-policy.md)).**
+Delivered in four phases. `internal/services/editor/RegenerationDecisionService`
+now owns both decisions and is pure — `now` arrives as a parameter, so the 300 ms
+debounce is deterministic and needs no clock seam. It is reached from `app/` via a
+new flat `handler_interfaces.IRegenerationHandler` (flat so the GUI never imports
+`internal/services`), wired by its own `RegenerationSet` /
+`InitializeRegenerationHandler`.
+
+`AutoRegenerate` is now a dispatcher: build request → call handler → apply
+`NextStateAction` → regenerate if asked. Nine decision methods were deleted from
+`EditorState`, which is back to being a snapshot store; it gained
+`GetPreviousState()` / `GetNextState()`, both returning pointers to **copies** so
+callers cannot mutate the snapshots (the §1.3 aliasing class).
+
+`WasStateChanged()` deliberately **stayed** on `EditorState`: it drives the
+unsaved marker, not generation, so it is a query over snapshots the model owns
+rather than regeneration policy.
+
+The ordering invariant the fix below worried about is now carried by data —
+`DecideManualEditReapplication` is called before `applyGeneratedTemplate` and its
+answer travels in a DTO. That DTO ended up as a single nullable pointer,
+`ManualEditDecisionDto{ReapplyWithCastleChanges *CastleSettingChanges}`, so the
+"castle changes only mean something when the flag is true" pairing is no longer
+representable rather than merely documented.
+
+Defect triage found **no live bugs**: all four suspected defects (comment-only
+ordering, uncancellable `InvalidateCmd`, stale `applyNextStateAt`, and the
+`NextStateLeave`/`NextStateClear` asymmetry on first generation) were proven safe
+and the reasoning recorded in the plan so they are not "fixed" again later. Three
+genuinely dead methods were pruned instead (`EditorState.ResetPreviousState`,
+`zoneEditorHandler.ComputeHasErrors`, `zoneEditorHandler.RebuildZoneConnectionRoads`),
+closing the residual `internal/handlers` coverage gap recorded in
+[test_observations.md](test_observations.md).
+
+The backlog item this finding said it blocked is closed in
+[backlog.md](backlog.md): `app/` imported zero services even before the refactor,
+and depguard now denies services, repositories, mappers and validators from
+`app/**`. Coverage held at 69.3%; lint stayed at `0 issues.`
+
+**Note on the coverage figures quoted below:** they were measured before Batch 13
+added file-explorer plumbing that only the GUI integration suite exercises. The
+unit-only denominators are now larger, so those percentages read low; see Phase 0
+of the plan for the corrected baseline.
+
+---
+
+<details>
+<summary>Original finding (for reference)</summary>
 
 **Evidence.** [stateGeneration.go](../app/gui/drivers/stateGeneration.go#L30-L65)
 implements the regeneration state machine (immediate vs. debounced vs. waiting),
@@ -998,6 +1048,8 @@ least two phases (predicates first, then the state machine).
 **Tests to add.** `test/unit/internal/services/editor/regenerationDecisionService/`
 with one file per public method; the debounce timing becomes deterministic
 because `now` is a parameter. Existing driver tests shrink to dispatch checks.
+
+</details>
 
 **Owner-decision flag:** ⚠ large refactor, overlaps a backlog item — confirm
 scope and sequencing before starting.
@@ -1863,10 +1915,10 @@ Phases 1–6), 14 `testify` mocks were added under `test/test_helpers/`, and fiv
 mirrored test packages now exist alongside the pre-existing `guiHandler/`:
 `stateHandler/`, `previewHandler/`, `templateHandler/`, `contentRuleHandler/`
 and `zoneEditorHandler/`. `internal/handlers` coverage is **97.4%**; the only
-residual gaps are `zoneEditorHandler.ComputeHasErrors` /
-`RebuildZoneConnectionRoads`, which are absent from
+residual gaps were `zoneEditorHandler.ComputeHasErrors` /
+`RebuildZoneConnectionRoads`, which were absent from
 `handler_interfaces.IZoneEditorHandler` and therefore unreachable through the
-public API — recorded in [test_observations.md](test_observations.md).
+public API. **Batch 14 deleted both as dead code**, closing the gap.
 
 **Evidence.** `internal/handlers/` contains `zoneEditorHandler.go` (144 LOC),
 `contentRuleHandler.go` (124), `templateHandler.go` (123),
@@ -2797,17 +2849,21 @@ permanently — mark them `✅ FIXED` in place as they land.
     moved the policy out. Five latent defects (D0–D4) surfaced as the logic
     became reachable and were fixed with tests; two candidates were rejected as
     deliberate. Coverage 68.7% → 69.3%.
-    Still open: §2.2 (extract regeneration policy), which is multi-session,
-    overlaps a backlog item, and is the last item in this review awaiting an
-    owner scope decision. §2.6 opportunistically, whenever the zone editor is
-    next touched.
+    ✅ §2.2 (extract regeneration policy) FIXED (2026-08-07, Batch 14, plan:
+    [extract-regeneration-policy.md](../plans/extract-regeneration-policy.md)) —
+    four phases; decision logic moved to a pure `RegenerationDecisionService`,
+    defect triage found no live bugs but pruned three dead methods, and the
+    `app/`-layering backlog item was closed and enforced with depguard.
+    Coverage held at 69.3%.
+    Still open: §2.6 opportunistically, whenever the zone editor is next touched.
 
 **Blockers summary:** §6.5 after §6.3 · ✅ §2.5 after §2.1 · §5.1 folds into §1.1 or
 §2.1 · §9.5 after §2.7 · §3.2 with §5.3.
-**Owner decisions required before implementation:** §2.2 (refactor scope) is the
-only one left. §1.1 (transactionality) and §1.5 (ceilings) were answered in
-Batches 3 and 4; §2.7 (finish/remove) and §9.1 (public API) in Batch 9; §1.8
-(persistence shape) was answered in Batch 12 by rejecting the finding outright.
+**Owner decisions required before implementation:** none left. §2.2 (refactor
+scope) was answered in Batch 14 and the work is delivered. §1.1
+(transactionality) and §1.5 (ceilings) were answered in Batches 3 and 4; §2.7
+(finish/remove) and §9.1 (public API) in Batch 9; §1.8 (persistence shape) was
+answered in Batch 12 by rejecting the finding outright.
 
 ---
 

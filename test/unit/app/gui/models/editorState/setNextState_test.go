@@ -19,7 +19,7 @@ func TestWhenNextStateIsAssigned_NextStateExists(t *testing.T) {
 	assert.True(t, state.HasNextState())
 }
 
-func TestWhenAssignedNextStateDiffersFromCurrent_PendingChangesAreReported(t *testing.T) {
+func TestWhenAssignedNextStateDiffersFromCurrent_AssignedStateIsStored(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
@@ -30,5 +30,5 @@ func TestWhenAssignedNextStateDiffersFromCurrent_PendingChangesAreReported(t *te
 	state.SetNextState(divergent)
 
 	// Assert
-	assert.True(t, state.HasPendingChanges())
+	assert.Equal(t, &divergent, state.GetNextState())
 }
