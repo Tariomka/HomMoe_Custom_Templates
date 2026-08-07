@@ -132,15 +132,6 @@ Still unit-untestable (dialog-callback or Gio territory):
   half of that item is covered by
   `TestWhenEncodingFailsOverAnExistingPreview_LeavesTheDestinationUntouched`.
 
-- ~~internal/handlers/zoneEditorHandler.go - `ComputeHasErrors` and
-  `RebuildZoneConnectionRoads`~~ **RESOLVED (Batch 14): both methods deleted.**
-  They were exported methods on the private `zoneEditorHandler` struct, absent
-  from `handler_interfaces.IZoneEditorHandler` (what `NewZoneEditorHandler`
-  returns), so no caller outside the package could reach them; the two real
-  callers go straight to `IConnectionEditorService` / `IZoneEditorService`. They
-  were leftovers from before the handler was put behind an interface. Removing
-  them closes the 0% gap rather than papering over it with a test-only seam.
-
 - internal/helpers/io.go - `getVDFContent`, `getVDFFilePath`, `getSteamPath`,
   `getBasePath`, and internal/helpers/io_windows.go -
   `getSteamPathFromRegistry`: this is the Steam/Olden-Era install discovery
