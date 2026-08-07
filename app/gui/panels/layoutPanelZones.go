@@ -118,7 +118,6 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 		options.Topology,
 		options.Tuning,
 		options.GenerateRoads,
-		this.previewHandler,
 		this.zoneEditorHandler,
 		this.state.ApplyEditedZones))
 }

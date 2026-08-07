@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"image"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
@@ -95,6 +97,28 @@ func (this *GUIHandler) CanDeleteZone(zoneName string, playerZoneNames map[strin
 
 func (this *GUIHandler) RemoveZoneEditorZone(request dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto {
 	return this.zoneEditorHandler.RemoveZoneEditorZone(request)
+}
+
+func (this *GUIHandler) BuildZoneEditorGeometry(
+	request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
+	return this.zoneEditorHandler.BuildZoneEditorGeometry(request)
+}
+
+func (this *GUIHandler) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string {
+	return this.zoneEditorHandler.HitTestZoneEditorNode(request)
+}
+
+func (this *GUIHandler) HitTestZoneEditorEdge(position image.Point, edges []models.ZoneEditorEdge) int {
+	return this.zoneEditorHandler.HitTestZoneEditorEdge(position, edges)
+}
+
+func (this *GUIHandler) GetZoneEditorGridStep(zoneRadius int) float64 {
+	return this.zoneEditorHandler.GetZoneEditorGridStep(zoneRadius)
+}
+
+func (this *GUIHandler) SnapZoneEditorPosition(
+	request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
+	return this.zoneEditorHandler.SnapZoneEditorPosition(request)
 }
 
 func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {

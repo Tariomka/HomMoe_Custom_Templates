@@ -54,6 +54,7 @@ var EditorSet = wire.NewSet(
 	connection_editor.NewConnectionEditorService,
 	connection_editor.NewManualReapplyService,
 	connection_editor.NewZoneEditorService,
+	connection_editor.NewZoneEditorGeometryService,
 	content_rules.NewContentRuleService,
 	preview_service.NewPreviewLayoutService,
 	providePreviewGenerator,

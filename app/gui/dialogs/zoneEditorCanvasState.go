@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
@@ -12,7 +13,7 @@ type zoneEditorCanvasState struct {
 	previewZones  []preview.Zone
 	radius        int
 	side          int
-	edges         []connectionEdgeGeometry
+	edges         []models.ZoneEditorEdge
 	geometryDirty bool
 	geometrySide  int
 

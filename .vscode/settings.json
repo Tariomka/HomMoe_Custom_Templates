@@ -115,4 +115,10 @@
         "*.golden": "imagePreview.previewEditor",
 		"*.failure": "imagePreview.previewEditor",
     },
+    "chat.tools.terminal.autoApprove": {
+        "golangci-lint-v2": true,
+        "gofmt": true,
+        "git rev-parse": true,
+        "wire": true
+    },
 }

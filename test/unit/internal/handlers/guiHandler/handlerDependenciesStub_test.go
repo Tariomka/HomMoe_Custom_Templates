@@ -1,6 +1,8 @@
 package guiHandler_test
 
 import (
+	"image"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -161,6 +163,30 @@ func (this *handlerDependenciesStub) RemoveZoneEditorZone(
 	dtos.ZoneEditorRemoveRequestDto,
 ) dtos.ZoneEditorMutationDto {
 	return dtos.ZoneEditorMutationDto{}
+}
+
+func (this *handlerDependenciesStub) BuildZoneEditorGeometry(
+	dtos.ZoneEditorGeometryRequestDto,
+) models.ZoneEditorGeometry {
+	return models.ZoneEditorGeometry{}
+}
+
+func (this *handlerDependenciesStub) HitTestZoneEditorNode(dtos.ZoneEditorHitTestRequestDto) string {
+	return ""
+}
+
+func (this *handlerDependenciesStub) HitTestZoneEditorEdge(image.Point, []models.ZoneEditorEdge) int {
+	return -1
+}
+
+func (this *handlerDependenciesStub) GetZoneEditorGridStep(int) float64 {
+	return 0
+}
+
+func (this *handlerDependenciesStub) SnapZoneEditorPosition(
+	request dtos.ZoneEditorSnapRequestDto,
+) models.ZoneEditorSnapResult {
+	return models.ZoneEditorSnapResult{Position: request.Position}
 }
 
 func (this *handlerDependenciesStub) newHandler() handler_interfaces.IGuiHandler {

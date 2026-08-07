@@ -1,6 +1,8 @@
 package test_helpers
 
 import (
+	"image"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -30,6 +32,11 @@ type TemplateHandlerMock struct {
 	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone
 	CanDeleteZoneFunc               func(string, map[string]bool) bool
 	RemoveZoneEditorZoneFunc        func(dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto
+	BuildZoneEditorGeometryFunc     func(dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry
+	HitTestZoneEditorNodeFunc       func(dtos.ZoneEditorHitTestRequestDto) string
+	HitTestZoneEditorEdgeFunc       func(image.Point, []models.ZoneEditorEdge) int
+	GetZoneEditorGridStepFunc       func(int) float64
+	SnapZoneEditorPositionFunc      func(dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult
 }
 
 func (this *TemplateHandlerMock) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
@@ -153,6 +160,48 @@ func (this *TemplateHandlerMock) RemoveZoneEditorZone(
 		return this.RemoveZoneEditorZoneFunc(request)
 	}
 	return dtos.ZoneEditorMutationDto{Zones: request.Zones, Connections: request.Connections}
+}
+
+func (this *TemplateHandlerMock) BuildZoneEditorGeometry(
+	request dtos.ZoneEditorGeometryRequestDto,
+) models.ZoneEditorGeometry {
+	if this.BuildZoneEditorGeometryFunc != nil {
+		return this.BuildZoneEditorGeometryFunc(request)
+	}
+	return models.ZoneEditorGeometry{Positions: map[string]image.Point{}}
+}
+
+func (this *TemplateHandlerMock) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string {
+	if this.HitTestZoneEditorNodeFunc != nil {
+		return this.HitTestZoneEditorNodeFunc(request)
+	}
+	return ""
+}
+
+func (this *TemplateHandlerMock) HitTestZoneEditorEdge(
+	position image.Point,
+	edges []models.ZoneEditorEdge,
+) int {
+	if this.HitTestZoneEditorEdgeFunc != nil {
+		return this.HitTestZoneEditorEdgeFunc(position, edges)
+	}
+	return -1
+}
+
+func (this *TemplateHandlerMock) GetZoneEditorGridStep(zoneRadius int) float64 {
+	if this.GetZoneEditorGridStepFunc != nil {
+		return this.GetZoneEditorGridStepFunc(zoneRadius)
+	}
+	return 0
+}
+
+func (this *TemplateHandlerMock) SnapZoneEditorPosition(
+	request dtos.ZoneEditorSnapRequestDto,
+) models.ZoneEditorSnapResult {
+	if this.SnapZoneEditorPositionFunc != nil {
+		return this.SnapZoneEditorPositionFunc(request)
+	}
+	return models.ZoneEditorSnapResult{Position: request.Position}
 }
 
 func (this *TemplateHandlerMock) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {

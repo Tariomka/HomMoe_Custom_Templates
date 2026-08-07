@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"image"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -16,6 +19,7 @@ type zoneEditorHandler struct {
 	zoneClassifier   zone_interfaces.IZoneClassifier
 	connectionEditor connection_editor.IConnectionEditorService
 	zoneEditor       connection_editor.IZoneEditorService
+	geometry         connection_editor.IZoneEditorGeometryService
 	tuningFactory    generation_tuning.IGenerationTuningFactory
 }
 
@@ -24,12 +28,14 @@ func NewZoneEditorHandler(
 	zoneClassifier zone_interfaces.IZoneClassifier,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
+	geometry connection_editor.IZoneEditorGeometryService,
 	tuningFactory generation_tuning.IGenerationTuningFactory) handler_interfaces.IZoneEditorHandler {
 	return &zoneEditorHandler{
 		mapper:           mapper,
 		zoneClassifier:   zoneClassifier,
 		connectionEditor: connectionEditor,
 		zoneEditor:       zoneEditor,
+		geometry:         geometry,
 		tuningFactory:    tuningFactory,
 	}
 }
@@ -124,4 +130,36 @@ func (this *zoneEditorHandler) RemoveZoneEditorZone(
 		request.ZoneName,
 	)
 	return dtos.ZoneEditorMutationDto{Zones: zones, Connections: connections}
+}
+
+func (this *zoneEditorHandler) BuildZoneEditorGeometry(
+	request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
+	return this.geometry.BuildGeometry(
+		request.Zones,
+		request.Connections,
+		request.Topology,
+		request.CanvasSide,
+	)
+}
+
+func (this *zoneEditorHandler) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string {
+	return this.geometry.HitTestNode(request.Position, request.Positions, request.ZoneRadius)
+}
+
+func (this *zoneEditorHandler) HitTestZoneEditorEdge(position image.Point, edges []models.ZoneEditorEdge) int {
+	return this.geometry.HitTestEdge(position, edges)
+}
+
+func (this *zoneEditorHandler) GetZoneEditorGridStep(zoneRadius int) float64 {
+	return this.geometry.GridStep(zoneRadius)
+}
+
+func (this *zoneEditorHandler) SnapZoneEditorPosition(
+	request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
+	return this.geometry.SnapPosition(
+		request.Position,
+		request.Positions,
+		request.ZoneRadius,
+		request.DraggedZone,
+	)
 }

@@ -164,27 +164,100 @@ deleting it should keep that property.
 ---
 
 ## Phase 0: Characterization safety net
-Status: Not started
+Status: Complete
 
 Pin current behaviour *before* changing anything. Every test here must pass
 against unmodified code; if one does not, you have found a real bug — stop and
 report it rather than encoding it.
 
-- [ ] Record baselines: unit coverage %, `golangci-lint-v2 run ./...` issue count,
+- [x] Record baselines: unit coverage %, `golangci-lint-v2 run ./...` issue count,
       and the full green run of every suite in AGENTS.md §7.
-- [ ] Add GUI snapshot tests under `test/integration/gui/` for
+- [x] Add GUI snapshot tests under `test/integration/gui/` for
       `bonusPickerDialog` and `pickerDialog` (currently untested): initial render
       of each, plus one render with a non-empty selection.
-- [ ] Extend the zone-editor snapshot coverage beyond initial render: one
+- [x] Extend the zone-editor snapshot coverage beyond initial render: one
       snapshot with a connection selected, one with a zone selected, one with
       snap enabled and a drag guide active.
-- [ ] Add unit tests for the geometry methods **in place**, before they move, by
+- [x] Add unit tests for the geometry methods **in place**, before they move, by
       exercising them through the dialog's public surface where reachable. Where
       they are not reachable, note it and rely on the snapshots — do **not** add
       test-only seams to production code (AGENTS.md §4.6).
-- [ ] Capture a manual-behaviour note in this file for the four interactions that
+- [x] Capture a manual-behaviour note in this file for the four interactions that
       snapshots cannot assert: add-connection drag, add-zone placement, delete
       selected, revert.
+
+### Deviation: numeric geometry pins instead of pixel goldens
+
+The golden-image machinery in
+[test/test_helpers/integration_common/appRunnerSnapshots.go](test/test_helpers/integration_common/appRunnerSnapshots.go)
+renders through `AppRunner.captureScreenshot`, which lays out **the whole editor
+window** (`this.App.Layout`). There is no per-dialog capture path, and reaching
+the zone editor through a real window means going through
+`GenerateTemplate`, whose zone list is not deterministic — the resulting goldens
+would be flaky for reasons that have nothing to do with geometry.
+
+The safety net is therefore built on **exact numeric geometry assertions** over a
+deterministic fixture instead. Every zone in the fixture carries a
+`ManualPosition`, which makes `dispatchClusterLayout` take the
+`layoutManualPositions` branch: canvas position is `round(p × side)` verbatim.
+At `side = 700` the preview metrics scale is exactly `1.0`, so the zone radius
+settles at the unscaled maximum of `38` and every expected coordinate is an
+integer that can be written down by hand.
+
+This is *stronger* than a pixel diff for the Phase 1 criterion "must not move a
+single pixel": the control points, label midpoints, hit-test results and snap
+results are asserted to the unit, and a mismatch names the exact quantity that
+changed instead of a percentage of differing pixels.
+
+**Phase 1 must therefore read its verification bullet as: the Phase 0 geometry
+assertions in
+[test/integration/gui/zoneEditorGeometry_integration_test.go](test/integration/gui/zoneEditorGeometry_integration_test.go)
+still pass unchanged.** Do not weaken or re-baseline them; if one fails, the
+extraction changed behaviour.
+
+### Manual-behaviour note: interactions the harness cannot drive
+
+`layoutCanvas` registers its pointer area *inside* an `op.Offset` push, and every
+mutation is driven by `pointer.Press` / `Drag` / `Release` events routed to
+`&this.canvasTag`. The dialog tests lay out a bare `layout.Context` and cannot
+inject coordinate-addressed pointer events into that transform, so two of the
+four interactions stay manual. The other two turned out to be reachable through
+the toolbar `Clickable`s and are now automated:
+
+| Interaction | Status |
+| --- | --- |
+| Delete selected (connection **and** zone) | **Automated** — `TestWhenTheSelectedConnectionIsDeleted_ItLeavesTheWorkingSet`, `TestWhenTheSelectedZoneIsDeleted_ItsConnectionsGoWithIt` |
+| Revert ("Reset to generated") | **Automated** — `TestWhenTheEditorIsResetToGenerated_TheDeletedConnectionComesBack`, `..._TheSelectionIsCleared` |
+| Add-connection drag | **Manual** — see checklist below |
+| Add-zone placement | **Manual** — see checklist below |
+
+Run this by hand (`go run .` → Zones tab → *Edit zones manually*) after any change
+to `zoneEditorCanvas.go`, `zoneEditorSnap.go` or `zoneEditorDialog.go`:
+
+1. **Add-connection drag.** Click *Add connection*; the button highlights and the
+   status line reads "Add mode: press a zone and drag to another to connect."
+   Press a zone and drag: a straight rubber band follows the cursor and the
+   source zone gets a highlight ring. Release on a different zone: a new curve
+   appears with a dot at its midpoint (the user-added marker), the side panel
+   switches to that connection's properties, and add mode **stays on** so the
+   next drag works without re-clicking. Release on empty canvas or on the source
+   zone: nothing is created. Click empty canvas: add mode turns off.
+2. **Add-zone placement.** Click *Add zone*; the status line reads "Add zone
+   mode: click an empty spot to place a zone." Click empty canvas: a new neutral
+   zone appears exactly where clicked (clamped to 4 %–96 % of the canvas), it
+   becomes the selection, the status line reads "Added *N* — connect it with
+   'Add connection'.", and every other zone stays put (`ensureManualPositions`
+   froze them). Repeat clicks keep placing zones. Click an existing zone: add
+   zone mode turns off. Exhaust the label pool: the status line reads "Zone label
+   pool exhausted - cannot add more zones." and nothing is placed.
+3. **Drag to move + snap.** Drag a zone a few pixels: nothing happens until the
+   pointer passes the 6 px dead zone, then the zone follows. With *Snap* on, a
+   faint dot grid appears behind the graph, the zone's edges/centre stick to
+   nearby grid intersections and to other zones' edge/centre extensions, and a
+   thin green guide line is drawn across the canvas for each held axis. With
+   *Snap* off, no grid, no guides, free movement.
+4. **Right-click delete.** Right-click directly on a connection curve: it is
+   removed immediately, without selecting it first.
 
 ### Verification Plan
 - `go test -tags 'integration_test,gui' ./test/integration/gui/... -count=1` passes
@@ -193,38 +266,148 @@ report it rather than encoding it.
 - Coverage recorded in the Phase Summary as the number Phase 4 must not drop below.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Baselines recorded at HEAD `c0499e2`, all re-confirmed after the new tests:**
+
+| Check | Result |
+| --- | --- |
+| `go build ./...` | clean |
+| `go test ./test/unit/... -count=1` | pass |
+| **Unit coverage total** | **69.3 %** ← the number Phase 4 must not drop below |
+| Per-tree statement coverage | `internal` 96.1 %, `app` 19.5 %, `app/gui/dialogs` **2.0 %** |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test -tags=integration_test ./test/integration/...` | pass |
+| `go test -tags 'integration_test,gui' ./test/integration/gui/...` | pass |
+| `go test '-bench=.' -run=xxx ./test/performance/...` | pass |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | **`0 issues.`** |
+| GUI integration test count | **19 → 61** |
+
+**What was added:**
+
+- [app/gui/dialogs/bonusPickerDialog_testexports.go](app/gui/dialogs/bonusPickerDialog_testexports.go)
+  and [app/gui/dialogs/pickerDialog_testexports.go](app/gui/dialogs/pickerDialog_testexports.go)
+  — accessors for the two dialogs that had no test of any kind.
+- [test/integration/gui/bonusPickerDialog_integration_test.go](test/integration/gui/bonusPickerDialog_integration_test.go)
+  (17 tests) and
+  [test/integration/gui/pickerDialog_integration_test.go](test/integration/gui/pickerDialog_integration_test.go)
+  (10 tests) — every bonus kind, every validation message, duplicate detection,
+  spell sub-picker round-trip, search filtering, flat vs grouped row counts, and
+  the `sid=…` value-override formatting.
+- [app/gui/dialogs/zoneEditorDialog_testexports.go](app/gui/dialogs/zoneEditorDialog_testexports.go)
+  — geometry, hit-test, snap and selection accessors plus toolbar click helpers.
+- [test/integration/gui/zoneEditorGeometry_integration_test.go](test/integration/gui/zoneEditorGeometry_integration_test.go)
+  (13 tests) — the Phase 1 safety net, described under *Deviation* above.
+- Six tests appended to
+  [test/integration/gui/zoneEditorDialog_integration_test.go](test/integration/gui/zoneEditorDialog_integration_test.go)
+  — connection-selected render, zone-selected render, snap-guide-overlay render,
+  delete-connection, delete-zone, and the two revert cases.
+
+**Exact values now pinned** (fixture: zones at `(140,350)`, `(560,350)`,
+`(350,140)`; `side = 700`; radius `38`):
+
+- Manual positions land verbatim on the canvas.
+- Parallel edges spread symmetrically: control points `(350,368)` and `(350,332)`
+  (± the 18 px `bulgeGap`, halved around the pair's midline).
+- Grouping is first-seen order: `ab`, `ba`, `ac` — the reversed `B→A` connection
+  is canonicalised into the `A–B` bucket.
+- Label midpoint of the first edge: `(350,359)`.
+- A zone 14 px off the chord pushes the curve to control point `(350,274)`.
+- `hitTestNode` hits at the centre, misses at `radius + 1`.
+- `hitTestEdge` hits on the curve, misses 38 px off it.
+- `gridStep` = `2 × radius / 7`.
+- Snap off: `(200,355)` unchanged. Snap on: `(200,355) → (201,350)` — the Y axis
+  holds a zone guide, the X axis falls through to the grid.
+
+**Naming trap discovered:** [cmd/testlayoutcheck](cmd/testlayoutcheck) matches
+test-only exports **by identifier name across the whole tree**, not by receiver
+type. Declaring `func (this *ZoneEditorDialog) Zones()`, `Connections()` or
+`ZoneRadius()` made the checker flag 46 unrelated unit tests that merely
+reference `variant.Zones` or `layout.ZoneRadius`. The accessors were renamed to
+`EditedZones`, `EditedConnectionNames` and `CanvasZoneRadius`. **Any new
+`*_testexports.go` accessor must use a name that does not collide with a common
+field name.**
+
 
 ---
 
 ## Phase 1: The geometry service
-Status: Not started
+Status: Complete
 
-- [ ] Create `internal/services/connection_editor/zoneEditorGeometryService.go`
+- [x] Create `internal/services/connection_editor/zoneEditorGeometryService.go`
       plus `zoneEditorGeometryServiceInterface.go` (interface in-package — this is
       implementation #4, under the §4.2.2 threshold of 5).
-- [ ] Move the seven pure methods listed above. Keep them pure: inputs are zones,
+- [x] Move the seven pure methods listed above. Keep them pure: inputs are zones,
       connections, positions and sizes; outputs are geometry values. No
       `layout.Context`, no Gio types. `image.Point` is stdlib and fine.
-- [ ] `recomputeGeometry` depends on the preview layout — inject that dependency
+- [x] `recomputeGeometry` depends on the preview layout — inject that dependency
       through the constructor rather than reaching for a handler.
-- [ ] Register the provider in `EditorSet`; run the *"Go: Generate wire injectors"*
+- [x] Register the provider in `EditorSet`; run the *"Go: Generate wire injectors"*
       task and verify with `wire diff` (exit 0).
-- [ ] Extend `IZoneEditorHandler` + `zoneEditorHandler` with delegating methods so
+- [x] Extend `IZoneEditorHandler` + `zoneEditorHandler` with delegating methods so
       the dialog reaches the service without importing `internal/services`.
-- [ ] Update the canvas and snap files to call through the handler.
-- [ ] Full unit tests for every moved method — this is the coverage win that
+- [x] Update the canvas and snap files to call through the handler.
+- [x] Full unit tests for every moved method — this is the coverage win that
       justifies the batch (~160 LOC moving from 0 % to covered).
 
 ### Verification Plan
 - `go build ./...`; `go vet ./...` and `go vet -tags='integration_test,gui' ./...`.
 - `wire diff ./internal/composition/...` exits 0.
 - `go test ./test/unit/... -count=1` passes; the new service's coverage is ≥ 90 %.
-- **The Phase 0 snapshots still match byte-for-byte.** Geometry extraction must not
-  move a single pixel. If a snapshot changes, the extraction changed behaviour.
+- **The Phase 0 geometry assertions still pass unchanged** (see the Phase 0
+  *Deviation* section — numeric pins replace pixel goldens). Geometry extraction
+  must not move a single pixel. If an assertion changes, the extraction changed
+  behaviour.
 
 ### Phase Summary
-_(write when phase completes)_
+
+The canvas geometry now lives in `internal/services/connection_editor` behind
+`IZoneEditorGeometryService` (`BuildGeometry`, `HitTestNode`, `HitTestEdge`,
+`GridStep`, `SnapPosition`), constructed with `IPreviewLayoutService` injected.
+Supporting value types went to `internal/models` (`ZoneEditorEdge`,
+`ZoneEditorGeometry`, `ZoneEditorSnapResult`) and `internal/dtos`
+(`ZoneEditorGeometryRequestDto`, `ZoneEditorHitTestRequestDto`,
+`ZoneEditorSnapRequestDto`). `app/gui/dialogs/connectionEdgeGeometry.go` and
+`connectionPairKey.go` were deleted; `zoneEditorCanvas.go` and
+`zoneEditorSnap.go` are now thin call-throughs on `IZoneEditorHandler`, which
+gained five delegating methods (mirrored on `GUIHandler`). The provider is in
+`EditorSet` and `wire diff` exits 0.
+
+Key decisions worth carrying forward:
+
+- **Pointer identity is preserved by index, not by pointer.** The service works
+  on connection *values*, so `ZoneEditorEdge` carries a `ConnectionIndex` into
+  the slice handed to `BuildGeometry`; the dialog resolves it back to
+  `this.working[i]` through the nil-guarded `edgeConnection` helper. Selection
+  comparison and `deleteConnection` therefore behave exactly as before.
+- **`float32` stayed at the GUI boundary.** The service speaks
+  `data.Vec2[float64]`; `zoneEditorDialog_testexports.go` converts with
+  `toCanvasPoint`, so the Phase 0 `EdgeGeometry` shape and every numeric pin
+  were untouched — which is what makes them a genuine regression gate.
+- **The dead `err != nil` branch in `recomputeGeometry` was dropped** (the
+  preview handler never returned a non-nil error).
+- **`ZoneEditorDialog` lost its `previewHandler` field and constructor
+  parameter**; `layoutPanelZones.go` and two integration tests were updated.
+- **`snapBool` stayed in the GUI.** `SnapPosition` only guards on
+  `zoneRadius <= 0`; the "is snapping switched on" check is view state.
+- **Three test-only exports were renamed** to dodge the `testlayoutcheck`
+  name-collision trap: `HitTestNode`/`HitTestEdge`/`GridStep` on
+  `ZoneEditorDialog` became `HitTestCanvasNode`/`HitTestCanvasEdge`/
+  `CanvasGridStep`, because the checker matches identifiers by name across the
+  whole tree and the new service methods share those names.
+
+Verification: `go build ./...`, `go vet ./...` and
+`go vet -tags='integration_test,gui' ./...` clean; `wire diff` exit 0;
+`go run ./cmd/testlayoutcheck .` → `test-layout check passed`;
+`go test ./test/unit/... -count=1` all `ok`;
+`go test -tags=integration_test ./test/integration/... -count=1` `ok`;
+`go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` `ok`
+— **the Phase 0 geometry pins pass unchanged, so the extraction moved no
+pixels**; `gofmt -l` clean apart from the two known permanent entries;
+`golangci-lint-v2 run ./...` → `0 issues.`
+
+Coverage: every function of the new service is ≥ 92.9 % (most 100 %), the five
+new handler methods are 100 %, and total unit coverage rose from **69.3 % to
+71.0 %**.
 
 ---
 

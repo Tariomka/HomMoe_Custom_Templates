@@ -38,17 +38,16 @@ type ZoneEditorDialog struct {
 	zoneEditorConnectionPropertiesState
 	zoneEditorZonePropertiesState
 
-	zones          []entities.Zone
-	originalZones  []entities.Zone
-	playerZones    map[string]bool
-	topology       config.MapTopology
-	tuning         models.GenerationTuning
-	generateRoads  bool
-	working        []*entities.Connection
-	original       []entities.Connection
-	onApply        func([]entities.Zone, []entities.Connection)
-	previewHandler handler_interfaces.IPreviewHandler
-	zoneHandler    handler_interfaces.IZoneEditorHandler
+	zones         []entities.Zone
+	originalZones []entities.Zone
+	playerZones   map[string]bool
+	topology      config.MapTopology
+	tuning        models.GenerationTuning
+	generateRoads bool
+	working       []*entities.Connection
+	original      []entities.Connection
+	onApply       func([]entities.Zone, []entities.Connection)
+	zoneHandler   handler_interfaces.IZoneEditorHandler
 
 	// Toolbar / footer.
 	addBtn     widget.Clickable
@@ -68,7 +67,6 @@ func NewZoneEditorDialog(
 	topology config.MapTopology,
 	tuning models.GenerationTuning,
 	generateRoads bool,
-	previewHandler handler_interfaces.IPreviewHandler,
 	zoneHandler handler_interfaces.IZoneEditorHandler,
 	onApply func([]entities.Zone, []entities.Connection)) *ZoneEditorDialog {
 	players := make(map[string]bool)
@@ -79,15 +77,14 @@ func NewZoneEditorDialog(
 	}
 
 	dialog := &ZoneEditorDialog{
-		zones:          append([]entities.Zone(nil), zones...),
-		originalZones:  append([]entities.Zone(nil), zones...),
-		playerZones:    players,
-		topology:       topology,
-		tuning:         tuning,
-		generateRoads:  generateRoads,
-		onApply:        onApply,
-		previewHandler: previewHandler,
-		zoneHandler:    zoneHandler,
+		zones:         append([]entities.Zone(nil), zones...),
+		originalZones: append([]entities.Zone(nil), zones...),
+		playerZones:   players,
+		topology:      topology,
+		tuning:        tuning,
+		generateRoads: generateRoads,
+		onApply:       onApply,
+		zoneHandler:   zoneHandler,
 		zoneEditorCanvasState: zoneEditorCanvasState{
 			geometryDirty: true,
 		},

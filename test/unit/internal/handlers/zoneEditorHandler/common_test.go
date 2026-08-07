@@ -14,6 +14,7 @@ type zoneEditorHandlerFixture struct {
 	zoneClassifier   *test_helpers.ZoneClassifierMock
 	connectionEditor *test_helpers.ConnectionEditorServiceMock
 	zoneEditor       *test_helpers.ZoneEditorServiceMock
+	geometry         *test_helpers.ZoneEditorGeometryServiceMock
 	tuningFactory    *test_helpers.GenerationTuningFactoryMock
 }
 
@@ -23,6 +24,7 @@ func newZoneEditorHandlerFixture() *zoneEditorHandlerFixture {
 		zoneClassifier:   &test_helpers.ZoneClassifierMock{},
 		connectionEditor: &test_helpers.ConnectionEditorServiceMock{},
 		zoneEditor:       &test_helpers.ZoneEditorServiceMock{},
+		geometry:         &test_helpers.ZoneEditorGeometryServiceMock{},
 		tuningFactory:    &test_helpers.GenerationTuningFactoryMock{},
 	}
 
@@ -31,6 +33,7 @@ func newZoneEditorHandlerFixture() *zoneEditorHandlerFixture {
 		fixture.zoneClassifier,
 		fixture.connectionEditor,
 		fixture.zoneEditor,
+		fixture.geometry,
 		fixture.tuningFactory,
 	)
 
