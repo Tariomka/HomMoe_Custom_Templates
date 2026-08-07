@@ -156,3 +156,76 @@ func TestWhenTheEditorIsResetToGenerated_TheSelectionIsCleared(t *testing.T) {
 	// Assert
 	assert.Empty(t, dialog.SelectedZone())
 }
+
+func TestWhenAddConnectionIsClicked_TheEditorEntersAddConnectionMode(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	dialog := newTriangleFixture(t)
+	dialog.ClickAddConnection()
+
+	// Act
+	frameZoneEditor(t, dialog)
+
+	// Assert
+	assert.True(t, dialog.AddConnectionModeActive())
+}
+
+func TestWhenAddConnectionIsClickedTwice_TheEditorLeavesAddConnectionMode(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	dialog := newTriangleFixture(t)
+	dialog.ClickAddConnection()
+	frameZoneEditor(t, dialog)
+	dialog.ClickAddConnection()
+
+	// Act
+	frameZoneEditor(t, dialog)
+
+	// Assert
+	assert.False(t, dialog.AddConnectionModeActive())
+}
+
+func TestWhenAddZoneIsClickedWhileAddingAConnection_TheAddConnectionModeTurnsOff(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	dialog := newTriangleFixture(t)
+	dialog.ClickAddConnection()
+	frameZoneEditor(t, dialog)
+	dialog.ClickAddZone()
+
+	// Act
+	frameZoneEditor(t, dialog)
+
+	// Assert
+	assert.False(t, dialog.AddConnectionModeActive())
+}
+
+func TestWhenAddZoneIsClickedWhileAddingAConnection_TheAddZoneModeTurnsOn(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	dialog := newTriangleFixture(t)
+	dialog.ClickAddConnection()
+	frameZoneEditor(t, dialog)
+	dialog.ClickAddZone()
+
+	// Act
+	frameZoneEditor(t, dialog)
+
+	// Assert
+	assert.True(t, dialog.AddZoneModeActive())
+}
+
+func TestWhenTheEditorIsResetToGenerated_TheAddModeTurnsOff(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	dialog := newTriangleFixture(t)
+	dialog.ClickAddConnection()
+	frameZoneEditor(t, dialog)
+	dialog.ClickReset()
+
+	// Act
+	frameZoneEditor(t, dialog)
+
+	// Assert
+	assert.False(t, dialog.AddConnectionModeActive())
+}

@@ -32,7 +32,8 @@ import (
 // on private copies of the zone and connection lists; Apply commits, Cancel/✕
 // discards.
 type ZoneEditorDialog struct {
-	zoneEditorCanvasState
+	zoneEditorGeometryState
+	zoneEditorInteractionState
 	zoneEditorSnapState
 	zoneEditorSidePanelState
 	zoneEditorConnectionPropertiesState
@@ -85,7 +86,7 @@ func NewZoneEditorDialog(
 		generateRoads: generateRoads,
 		onApply:       onApply,
 		zoneHandler:   zoneHandler,
-		zoneEditorCanvasState: zoneEditorCanvasState{
+		zoneEditorGeometryState: zoneEditorGeometryState{
 			geometryDirty: true,
 		},
 		zoneEditorConnectionPropertiesState: zoneEditorConnectionPropertiesState{
@@ -134,18 +135,10 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 		return layout.Dimensions{Size: gtx.Constraints.Max}, true
 	}
 	if this.addBtn.Clicked(gtx) {
-		this.addMode = !this.addMode
-		this.addZoneMode = false
-		this.pendingFrom = ""
-		this.dragging = false
-		this.hint = ""
+		this.toggleAddConnectionMode()
 	}
 	if this.addZoneBtn.Clicked(gtx) {
-		this.addZoneMode = !this.addZoneMode
-		this.addMode = false
-		this.pendingFrom = ""
-		this.dragging = false
-		this.hint = ""
+		this.toggleAddZoneMode()
 	}
 	if this.deleteBtn.Clicked(gtx) {
 		if this.selected != nil {
@@ -199,7 +192,7 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 		if this.addZoneMode {
 			addZoneLabel = "Placing... (click a zone to stop)"
 		}
-		hasSelection := this.selected != nil || this.selectedZone != ""
+		hasSelection := this.hasSelection()
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(widgets.NewToggleButtonWidget(theme, addLabel, &this.addBtn, this.addMode)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
@@ -340,7 +333,7 @@ func (this *ZoneEditorDialog) addConnection(from, to string) {
 		PlayerZoneNames: this.playerZones,
 	})
 	this.working = append(this.working, &connection)
-	this.selected = &connection
+	this.selectConnection(&connection)
 	this.syncedFor = nil
 	this.geometryDirty = true
 }
@@ -353,7 +346,7 @@ func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) 
 		}
 	}
 	if this.selected == connection {
-		this.selected = nil
+		this.clearSelection()
 		this.syncedFor = nil
 	}
 	this.geometryDirty = true
@@ -367,25 +360,16 @@ func (this *ZoneEditorDialog) resetToOriginal() {
 		clone.IsUserAdded = false
 		this.working = append(this.working, &clone)
 	}
-	this.selected = nil
+	this.reset()
 	this.syncedFor = nil
-	this.selectedZone = ""
 	this.syncedZoneFor = ""
-	this.addMode = false
-	this.addZoneMode = false
-	this.pendingFrom = ""
-	this.dragging = false
-	this.zoneDragName = ""
-	this.hint = ""
 	this.geometryDirty = true
 }
 
 // selectZone makes the named zone the active selection in the side panel.
 func (this *ZoneEditorDialog) selectZone(name string) {
-	this.selectedZone = name
-	this.selected = nil
+	this.selectZoneNamed(name)
 	this.syncedFor = nil
-	this.hint = ""
 }
 
 func (this *ZoneEditorDialog) selectedZoneRef() *entities.Zone {
@@ -416,7 +400,7 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 		if this.zones[i].ManualPosition != nil {
 			continue
 		}
-		if pos, ok := this.positions[this.zones[i].Name]; ok {
+		if pos, ok := this.geometry.Positions[this.zones[i].Name]; ok {
 			this.zones[i].ManualPosition = &[2]float64{
 				float64(pos.X) / float64(this.side),
 				float64(pos.Y) / float64(this.side),

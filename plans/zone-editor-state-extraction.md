@@ -412,16 +412,16 @@ new handler methods are 100 %, and total unit coverage rose from **69.3 % to
 ---
 
 ## Phase 2: Consolidate the interaction state
-Status: Not started
+Status: Complete
 
-- [ ] Group the 15 selection/drag/interaction fields into one named struct that
+- [x] Group the 15 selection/drag/interaction fields into one named struct that
       stays in `app/gui/dialogs/` — it is view state, by owner decision 2.
-- [ ] Give that struct the small number of methods that operate on it alone
+- [x] Give that struct the small number of methods that operate on it alone
       (select/clear/begin-drag/end-drag), so the reset path has one obvious place
       to call instead of assigning eleven fields inline as
       [resetToOriginal](../app/gui/dialogs/zoneEditorDialog.go#L365-L383) does now.
-- [ ] Do **not** move it to `internal/services`.
-- [ ] Re-home the geometry fields (bucket b) that Phase 1 made redundant; delete
+- [x] Do **not** move it to `internal/services`.
+- [x] Re-home the geometry fields (bucket b) that Phase 1 made redundant; delete
       any that the service now owns.
 
 ### Verification Plan
@@ -430,7 +430,64 @@ Status: Not started
   new number in the Phase Summary.
 
 ### Phase Summary
-_(write when phase completes)_
+
+`app/gui/dialogs/zoneEditorCanvasState.go` — the struct that mixed geometry with
+interaction — is **deleted** and replaced by two focused ones:
+
+- [zoneEditorInteractionState.go](../app/gui/dialogs/zoneEditorInteractionState.go)
+  holds the 12 selection/drag/mode fields plus the 13 methods that operate on
+  them alone: `selectConnection`, `selectZoneNamed`, `clearSelection`,
+  `hasSelection`, `toggleAddConnectionMode`, `toggleAddZoneMode`,
+  `exitAddModes`, `beginConnectionDrag`, `finishConnectionDrag`,
+  `beginZoneDrag`, `endZoneDrag`, `zoneDragLeftDeadZone` and `reset`. The magic
+  `6` px drag threshold is now the named `zoneDragDeadZonePx`. It stays in
+  `app/gui/dialogs/` — nothing moved to `internal/services` (owner decision 2).
+- [zoneEditorGeometryState.go](../app/gui/dialogs/zoneEditorGeometryState.go)
+  collapses `positions`, `previewZones`, `radius` and `edges` into the single
+  `models.ZoneEditorGeometry` the Phase 1 service already returns, leaving
+  `geometry`, `side` and `geometryDirty`. `recomputeGeometry` is now one
+  assignment instead of four.
+
+`geometrySide` is **gone**: `layoutCanvas` computes `sideChanged := this.side != side`
+before overwriting `this.side`, which is the same test with one field fewer.
+
+The eleven-assignment tail of `resetToOriginal` is now
+`this.reset()` + the two property-panel sync caches, and the twelve other inline
+mutation sites (both toolbar toggles, `onPress`, `onRelease`, `addConnection`,
+`deleteConnection`, the toolbar's `hasSelection`) call the named methods.
+
+**Field count: 67 → 63.** The reduction is entirely bucket (b): six geometry
+fields became two. Bucket (c) was *consolidated*, not removed — that is what
+owner decision 2 asked for; those 15 fields now live behind an intention-revealing
+API instead of being assigned ad hoc from nine different call sites. 26 of the
+remaining 63 are Gio widget handles that cannot move.
+
+Behaviour was preserved deliberately rather than assumed: `exitAddModes` clears
+`pendingFrom`/`dragging` at the add-zone call site where they are provably
+already zero, and leaves `hint` alone (only the two toolbar toggles clear it, as
+before); `deleteZone` still nils `selected` without touching `selectedZone`
+unless the names match.
+
+Verification: `go build ./...`, `go vet ./...` and `go vet -tags='integration_test,gui' ./...`
+clean; `go run ./cmd/testlayoutcheck .` → `test-layout check passed`; unit suite
+green; `go test -tags=integration_test ./test/integration/...` ok 2.169s;
+`go test -tags 'integration_test,gui' ./test/integration/gui/...` ok 2.952s with
+**every Phase 0 geometry pin and every snapshot unchanged**;
+`gofmt -l` clean apart from the two permanently-CRLF files;
+`golangci-lint-v2 run ./...` → `0 issues.`
+
+Five new GUI integration tests cover the add-mode toggles, which had no test at
+all: entering add-connection mode, leaving it on a second click, add-zone
+cancelling add-connection (both directions asserted separately), and reset
+clearing the armed mode. They use two new test-only accessors,
+`AddConnectionModeActive` / `AddZoneModeActive` (name-collision-checked against
+the whole tree first).
+
+Unit coverage reads **70.9 %** against Phase 1's 71.0 %. Nothing became less
+tested: the 0.1 pp is denominator dilution from adding ~30 statements to
+`app/gui/dialogs`, a package the unit suite deliberately does not cover (Gio view
+code is covered by the GUI integration suite). It remains well above the 69.3 %
+Phase 0 floor.
 
 ---
 

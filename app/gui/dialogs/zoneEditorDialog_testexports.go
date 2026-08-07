@@ -26,16 +26,18 @@ type EdgeGeometry struct {
 func (this *ZoneEditorDialog) RecomputeGeometry(side int) { this.recomputeGeometry(side) }
 
 // ZonePositions ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) ZonePositions() map[string]image.Point { return this.positions }
+func (this *ZoneEditorDialog) ZonePositions() map[string]image.Point {
+	return this.geometry.Positions
+}
 
 // CanvasZoneRadius ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) CanvasZoneRadius() int { return this.radius }
+func (this *ZoneEditorDialog) CanvasZoneRadius() int { return this.geometry.ZoneRadius }
 
 // EdgeGeometries returns the laid-out connection curves in draw order.
 // ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) EdgeGeometries() []EdgeGeometry {
-	edges := make([]EdgeGeometry, 0, len(this.edges))
-	for _, edge := range this.edges {
+	edges := make([]EdgeGeometry, 0, len(this.geometry.Edges))
+	for _, edge := range this.geometry.Edges {
 		connection := this.edgeConnection(edge)
 		if connection == nil {
 			continue
@@ -107,8 +109,7 @@ func (this *ZoneEditorDialog) SelectedZone() string { return this.selectedZone }
 func (this *ZoneEditorDialog) SelectConnection(name string) bool {
 	for _, connection := range this.working {
 		if connection.Name == name {
-			this.selected = connection
-			this.selectedZone = ""
+			this.selectConnection(connection)
 			this.syncedFor = nil
 			return true
 		}
@@ -140,6 +141,12 @@ func (this *ZoneEditorDialog) ClickAddZone() { this.addZoneBtn.Click() }
 
 // ClickDeleteSelected ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) ClickDeleteSelected() { this.deleteBtn.Click() }
+
+// AddConnectionModeActive ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) AddConnectionModeActive() bool { return this.addMode }
+
+// AddZoneModeActive ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) AddZoneModeActive() bool { return this.addZoneMode }
 
 // EditedZones ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) EditedZones() []entities.Zone { return this.zones }

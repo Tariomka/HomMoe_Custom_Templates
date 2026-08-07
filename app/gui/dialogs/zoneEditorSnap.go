@@ -15,7 +15,7 @@ import (
 
 // gridStep returns the snapping-grid cell size in canvas pixels.
 func (this *ZoneEditorDialog) gridStep() float64 {
-	return this.zoneHandler.GetZoneEditorGridStep(this.radius)
+	return this.zoneHandler.GetZoneEditorGridStep(this.geometry.ZoneRadius)
 }
 
 // drawSnapGrid paints faint dots at the snapping-grid intersections behind
@@ -75,8 +75,8 @@ func (this *ZoneEditorDialog) snapDraggedPosition(pos image.Point) image.Point {
 	}
 	result := this.zoneHandler.SnapZoneEditorPosition(dtos.ZoneEditorSnapRequestDto{
 		Position:    pos,
-		Positions:   this.positions,
-		ZoneRadius:  this.radius,
+		Positions:   this.geometry.Positions,
+		ZoneRadius:  this.geometry.ZoneRadius,
 		DraggedZone: this.zoneDragName,
 	})
 	if result.HasGuideX {

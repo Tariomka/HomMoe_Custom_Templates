@@ -59,18 +59,18 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	// Handle pointer input BEFORE recomputing geometry so edits (new
 	// connections/zones, drags) are reflected in this very frame. Hit testing
 	// uses the previous frame's geometry, which is exactly what is on screen.
+	sideChanged := this.side != side
 	this.side = side
 	this.handlePointer(gtx)
 
 	// Every mutator raises geometryDirty, so an idle dialog skips the full
 	// BuildPreviewLayout + edge-grouping pass and redraws cached geometry.
-	if this.geometryDirty || this.geometrySide != side {
+	if this.geometryDirty || sideChanged {
 		this.recomputeGeometry(side)
 		this.geometryDirty = false
-		this.geometrySide = side
 	}
 
-	if len(this.positions) == 0 {
+	if len(this.geometry.Positions) == 0 {
 		return layout.Dimensions{Size: outer}
 	}
 
@@ -119,13 +119,9 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 	}
 	if this.addMode {
 		if node != "" {
-			this.pendingFrom = node
-			this.dragging = true
-			this.dragPos = pos
+			this.beginConnectionDrag(node, pos)
 		} else {
-			this.addMode = false
-			this.pendingFrom = ""
-			this.dragging = false
+			this.exitAddModes()
 		}
 		return
 	}
@@ -133,41 +129,31 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 		if node == "" {
 			this.addZoneAt(pos)
 		} else {
-			this.addZoneMode = false
+			this.exitAddModes()
 		}
 		return
 	}
 	if node != "" {
 		this.selectZone(node)
-		this.zoneDragName = node
-		this.zoneDragMoved = false
-		this.pressPos = pos
+		this.beginZoneDrag(node, pos)
 		return
 	}
 	if edge := this.hitTestEdge(pos); edge != nil {
-		this.selected = edge
-		this.selectedZone = ""
+		this.selectConnection(edge)
 		this.syncedFor = nil
 	} else {
-		this.selected = nil
-		this.selectedZone = ""
+		this.clearSelection()
 	}
 }
 
 func (this *ZoneEditorDialog) onRelease(pos image.Point) {
-	this.zoneDragName = ""
-	this.zoneDragMoved = false
-	if !this.dragging {
-		return
-	}
-	this.dragging = false
-	from := this.pendingFrom
-	this.pendingFrom = ""
-	if !this.addMode {
+	this.endZoneDrag()
+	from := this.finishConnectionDrag()
+	if !this.addMode || from == "" {
 		return
 	}
 	target := this.hitTestNode(pos)
-	if target != "" && from != "" && target != from {
+	if target != "" && target != from {
 		// Stay in add mode so several connections can be chained without
 		// re-clicking the toolbar button.
 		this.addConnection(from, target)
@@ -177,18 +163,18 @@ func (this *ZoneEditorDialog) onRelease(pos image.Point) {
 func (this *ZoneEditorDialog) hitTestNode(pos image.Point) string {
 	return this.zoneHandler.HitTestZoneEditorNode(dtos.ZoneEditorHitTestRequestDto{
 		Position:   pos,
-		Positions:  this.positions,
-		ZoneRadius: this.radius,
+		Positions:  this.geometry.Positions,
+		ZoneRadius: this.geometry.ZoneRadius,
 	})
 }
 
 func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection {
-	edgeIndex := this.zoneHandler.HitTestZoneEditorEdge(pos, this.edges)
+	edgeIndex := this.zoneHandler.HitTestZoneEditorEdge(pos, this.geometry.Edges)
 	if edgeIndex < 0 {
 		return nil
 	}
 
-	return this.edgeConnection(this.edges[edgeIndex])
+	return this.edgeConnection(this.geometry.Edges[edgeIndex])
 }
 
 // edgeConnection resolves the working connection an edge was laid out for, or
@@ -205,16 +191,12 @@ func (this *ZoneEditorDialog) edgeConnection(edge models.ZoneEditorEdge) *entiti
 // the geometry service, which places nodes exactly as the preview tab does.
 func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 	this.side = side
-	geometry := this.zoneHandler.BuildZoneEditorGeometry(dtos.ZoneEditorGeometryRequestDto{
+	this.geometry = this.zoneHandler.BuildZoneEditorGeometry(dtos.ZoneEditorGeometryRequestDto{
 		Zones:       this.zones,
 		Connections: derefConnections(this.working),
 		Topology:    this.topology,
 		CanvasSide:  side,
 	})
-	this.positions = geometry.Positions
-	this.previewZones = geometry.Zones
-	this.radius = geometry.ZoneRadius
-	this.edges = geometry.Edges
 }
 
 // toCanvasPoint converts a geometry coordinate into the float32 point Gio's
@@ -224,8 +206,8 @@ func toCanvasPoint(vector data.Vec2[float64]) f32.Point {
 }
 
 func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Theme) {
-	for i := range this.edges {
-		edge := this.edges[i]
+	for i := range this.geometry.Edges {
+		edge := this.geometry.Edges[i]
 		connection := this.edgeConnection(edge)
 		if connection == nil {
 			continue
@@ -271,7 +253,7 @@ func (this *ZoneEditorDialog) drawRubberBand(gtx layout.Context) {
 	if !this.addMode || !this.dragging || this.pendingFrom == "" {
 		return
 	}
-	center, ok := this.positions[this.pendingFrom]
+	center, ok := this.geometry.Positions[this.pendingFrom]
 	if !ok {
 		return
 	}
@@ -287,21 +269,21 @@ func (this *ZoneEditorDialog) drawRubberBand(gtx layout.Context) {
 }
 
 func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Theme) {
-	for _, zone := range this.previewZones {
+	for _, zone := range this.geometry.Zones {
 		if zone.Type == preview.ZoneTypePlayer {
 			continue
 		}
-		utils.DrawPreviewZone(gtx, theme, zone, this.radius)
+		utils.DrawPreviewZone(gtx, theme, zone, this.geometry.ZoneRadius)
 	}
-	for _, zone := range this.previewZones {
+	for _, zone := range this.geometry.Zones {
 		if zone.Type != preview.ZoneTypePlayer {
 			continue
 		}
-		utils.DrawPreviewZone(gtx, theme, zone, this.radius)
+		utils.DrawPreviewZone(gtx, theme, zone, this.geometry.ZoneRadius)
 	}
 	if this.addMode && this.pendingFrom != "" {
-		if center, ok := this.positions[this.pendingFrom]; ok {
-			reach := this.radius + 4
+		if center, ok := this.geometry.Positions[this.pendingFrom]; ok {
+			reach := this.geometry.ZoneRadius + 4
 			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
 				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
@@ -310,8 +292,8 @@ func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Them
 		}
 	}
 	if !this.addMode && this.selectedZone != "" {
-		if center, ok := this.positions[this.selectedZone]; ok {
-			reach := this.radius + 4
+		if center, ok := this.geometry.Positions[this.selectedZone]; ok {
+			reach := this.geometry.ZoneRadius + 4
 			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
 				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
@@ -329,9 +311,7 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos image.Point) {
 		return
 	}
 	if !this.zoneDragMoved {
-		dx := float64(pos.X - this.pressPos.X)
-		dy := float64(pos.Y - this.pressPos.Y)
-		if math.Hypot(dx, dy) < 6 {
+		if !this.zoneDragLeftDeadZone(pos) {
 			return
 		}
 		this.ensureManualPositions()
