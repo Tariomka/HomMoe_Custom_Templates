@@ -572,30 +572,30 @@ use `gofmt -w` on an explicit file list instead.
 ---
 
 ## Phase 4: §0.2 — make the reset button honest
-Status: Not started
+Status: Complete
 
 Owner decisions 6 and 7 govern this phase. Re-read them before starting.
 
-- [ ] Relabel `"Reset to generated"` to wording that matches what it does —
+- [x] Relabel `"Reset to generated"` to wording that matches what it does —
       restore the state the dialog was opened with. `"Revert changes"` or
       `"Discard edits"`.
-- [ ] Delete the in-code marker comment at
+- [x] Delete the in-code marker comment at
       [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go#L213). Verify
       afterwards that the non-test Go tree still contains zero TODO/FIXME/HACK
       comments.
-- [ ] Track that the revert button was used during this dialog session.
-- [ ] On Apply **after a revert**, clear the persisted manual-edit snapshot
+- [x] Track that the revert button was used during this dialog session.
+- [x] On Apply **after a revert**, clear the persisted manual-edit snapshot
       (`ManualZones` / `ManualConnections`) outright. This needs a signal from the
       dialog to `ApplyEditedZones`, whose callback is currently
       `func([]entities.Zone, []entities.Connection)` — extend it, or add a
       sibling method on the driver. Prefer whichever keeps the GUI free of policy.
-- [ ] Put the *decision* ("was this apply a post-revert apply, and should the
+- [x] Put the *decision* ("was this apply a post-revert apply, and should the
       snapshot be cleared?") in a service or the driver, not in the dialog —
       consistent with Batch 14's split.
-- [ ] Test the accepted consequence explicitly: after revert → Apply, the live
+- [x] Test the accepted consequence explicitly: after revert → Apply, the live
       template still shows the reverted-to edits, and after the next regeneration
       they are gone. That is intended behaviour, and the test should say so.
-- [ ] Update `todo/review-opus5-08-04.md` §0.2's disposition row: it currently
+- [x] Update `todo/review-opus5-08-04.md` §0.2's disposition row: it currently
       says "Owner-deferred… Agents must not action it."
 
 ### Verification Plan
@@ -604,7 +604,245 @@ Owner decisions 6 and 7 govern this phase. Re-read them before starting.
 - Full suite green.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**What was done.** The button now reads **"Revert changes"**; the marker comment
+is gone (a repo-wide grep confirms the non-test Go tree still has zero
+TODO/FIXME/HACK-class comments); the dialog tracks `revertUsed`, set in
+`resetToOriginal`; and a post-revert Apply clears the persisted manual snapshot.
+
+**The seam.** `onApply` was widened from
+`func([]entities.Zone, []entities.Connection)` to
+`func(dtos.ZoneEditorApplyDto)` — a new DTO in
+[zoneEditorApplyDto.go](../internal/dtos/zoneEditorApplyDto.go) carrying
+`Zones`, `Connections` and `RevertUsed`. The alternative the plan offered (a
+sibling driver method) was rejected: it would force the dialog to *choose* which
+method to call, which is exactly the policy decision Batch 14 pushed out of the
+GUI. With a DTO the dialog only reports a fact.
+
+**Where the decision lives.** In the driver —
+[`State.ApplyEditedZones`](../app/gui/drivers/stateManualEdits.go) — not in a new
+service. The policy is one branch (`if request.RevertUsed { ClearManualEdits() }`),
+and a service for one branch is over-engineering; the plan explicitly allowed
+either. Owner decision 7 was implemented literally: once revert is pressed in a
+session, the following Apply clears the snapshot outright, even if the user then
+edited further before applying.
+
+**Safety check.** Clearing the snapshot cannot make a later regeneration wipe the
+template: `regenerationDecisionService.DecideManualEditReapplication` early-returns
+an empty decision when `!current.HasManualEdits()`, so the `ClearManualEdits`
+branch is taken and `reapplyManualEdits(nil, nil)` is never called.
+
+**Deviation from the Verification Plan.** "A GUI snapshot confirms the new button
+label" was not achievable as written — per the Phase 0 Deviation there is no
+per-dialog golden-image path. The label is instead asserted through Gio
+**semantics**: one laid-out frame, then `input.Router.AppendSemantics(nil)`
+filtered to `semantic.Button` nodes. Two tests: one asserts `"Revert changes"` is
+present, one asserts `"Reset to generated"` is absent. The helper guards with
+`require.NotEmpty` on the label list so neither can pass vacuously.
+
+**Tests.** 13 `ApplyEditedZones` call sites migrated to the DTO. Added: 2 unit
+tests in
+[applyEditedZones_test.go](../test/unit/app/gui/drivers/stateManualEdits/applyEditedZones_test.go)
+(snapshot dropped / live template keeps the reverted-to zones); 3 untagged
+integration tests in
+[zoneEditorRevert_integration_test.go](../test/integration/zoneEditorRevert_integration_test.go)
+covering the accepted consequence end-to-end, including a comment stating the
+disappearing act is intended; 4 GUI tests (2 label, 2 `RevertUsed` round-trip).
+Three existing tests were renamed `…_TheEditorIsResetToGenerated_…` →
+`…_TheEditorIsReverted_…`.
+
+**Trap worth remembering.** The `ClickReset()` testexport was deliberately *not*
+renamed to `ClickRevert()`: `cmd/testlayoutcheck` matches test-only export
+accessors **by identifier name across the whole tree**, in both directions, so
+colliding names silently mis-gate files.
+
+**Verification results.** `go build ./...`, both `go vet` tag combinations,
+`go run ./cmd/testlayoutcheck .` (`test-layout check passed`), unit, integration
+(`ok 2.292s`) and GPU-gated GUI (`ok 2.849s`) suites all green.
+`gofmt -l ./app ./internal ./test ./cmd` is empty (both new files needed an
+explicit `gofmt -w` — they were written with CRLF).
+`golangci-lint-v2 run ./...` reports `0 issues.` Coverage held at **72.7%**
+(floor 69.3%); the phase's new code is GUI-layer and driver-layer, so it moves
+the needle very little either way.
+
+**Superseded — see Phase 4b.** The owner tested this build and the behaviour was
+wrong in practice. Everything above about `RevertUsed` and the "Revert changes"
+button is history, not current state.
+
+---
+
+## Phase 4b: Split the revert into Undo and Revert to Base
+Status: Complete
+
+Phase 4 shipped, the owner ran it, and found it half-working: pressing "Revert
+changes" cleared the manual snapshot but nothing on screen changed, because no
+regeneration was triggered — the edits only disappeared after a *separate*
+Generate click. The owner asked for two distinct actions instead of one.
+
+- [x] Rename "Revert changes" to **"Undo"** — one-shot restore of the current
+  editing session, purely in-session.
+- [x] Add **"Revert to Base"** — drop every stored manual edit, regenerate
+  immediately, and re-seed the open editor with the fresh layout.
+- [x] Remove `RevertUsed` and `ZoneEditorApplyDto` entirely.
+- [x] Migrate every test and call site.
+
+### Owner decisions (settled — do not re-litigate)
+1. **Revert to Base rerolls.** It clears manual edits and regenerates. It does
+   **not** restore the pristine layout the edits were originally made on — that
+   layout is retained nowhere, and no new state is introduced to retain it.
+2. **Undo is one-shot**, not a step-by-step undo stack. It resets the whole
+   editing session at once (the Phase 4 behaviour, relabelled).
+3. **Revert to Base keeps the dialog open**, showing the newly generated base.
+4. **Undo is purely in-session.** Apply after an Undo re-commits the
+   previously-applied edits unchanged; only Revert to Base clears the stored
+   snapshot.
+
+**On the record:** with reroll + stay-open, Revert to Base fires immediately and
+**Cancel cannot take it back**. That is inherent to decision 3, and accepted.
+
+### Verification Plan
+- Unit tests prove `RevertZonesToBase` drops the snapshot, regenerates, returns
+  the new zones, and reports failure without leaking stale zones.
+- An untagged integration test reproduces the reported defect end-to-end: after
+  `RevertZonesToBase` the live template must already carry no `ManualPosition`,
+  with **no** separate `Generate()` call.
+- GUI tests assert both button labels and both behaviours.
+- Full suite, lint, format and coverage green.
+
+### Phase Summary
+
+**The seam.** `dtos.ZoneEditorApplyDto` was deleted and replaced by
+[zoneEditorZonesDto.go](../internal/dtos/zoneEditorZonesDto.go), a plain
+`{Zones, Connections}` pair used **bidirectionally** — out of the editor on
+Apply, back into the open editor on Revert to Base. With `RevertUsed` gone the
+two payloads are structurally identical, so two near-duplicate DTOs would have
+been worse. The dialog gained a second callback,
+`onRevertToBase func() (dtos.ZoneEditorZonesDto, bool)`, making
+`NewZoneEditorDialog` an 8-parameter constructor.
+
+**Driver side.** `State.handleGenerateTemplate` now returns `bool`. Without it a
+failed reroll would leave `lastTemplate` holding the *edited* template with
+`hasTemplateVariants()` still true, and `RevertZonesToBase` would have handed the
+edited zones back labelled as "base". `RevertZonesToBase` calls
+`ClearManualEdits()` **before** generating — the other order lets
+`DecideManualEditReapplication` stamp the edits straight back onto the fresh
+template.
+
+**Dialog side.** `resetToOriginal` split into `undoSessionEdits()` (the old body
+minus the `revertUsed` flag) and `revertToBase()`. A new `setEditingSet` helper
+installs a zone/connection list as *both* the working copy and the Undo
+baseline, so a revert to base also moves the point Undo returns to; it is used by
+the constructor and by `revertToBase`. `funcorder` required it to sit after the
+exported methods.
+
+**Tests.** `applyEditedZones_test.go` rewritten (8 tests, the two `RevertUsed`
+ones deleted); new
+[revertZonesToBase_test.go](../test/unit/app/gui/drivers/stateManualEdits/revertZonesToBase_test.go)
+(7 tests);
+[zoneEditorRevert_integration_test.go](../test/integration/zoneEditorRevert_integration_test.go)
+replaced by
+[zoneEditorRevertToBase_integration_test.go](../test/integration/zoneEditorRevertToBase_integration_test.go)
+(4 untagged tests, one of which is the reported defect); GUI file reworked —
+`ClickReset` → `ClickUndo` at 4 sites, new `ClickRevertToBase`, label tests now
+assert `"Undo"` and `"Revert to Base"`, plus 4 new behaviour tests driven by a
+stub `onRevertToBase`.
+
+**Name-collision check.** `ClickUndo`, `ClickRevertToBase`, `RevertZonesToBase`
+and `ZoneEditorZonesDto` were all grepped tree-wide before use — see the Phase 4
+trap note.
+
+**Verification results.** `go build ./...`, both `go vet` tag combinations,
+`go run ./cmd/testlayoutcheck .` (`test-layout check passed`), unit, integration
+(`ok 3.727s`) and GPU-gated GUI (`ok 4.109s`) suites all green.
+`gofmt -l ./app ./internal ./test ./cmd` empty (the two new files needed an
+explicit `gofmt -w` — CRLF again). `golangci-lint-v2 run ./...` reports
+`0 issues.` Coverage **72.5%** (floor 69.3%).
+
+**Superseded by Phase 4c.** The owner tested this and rejected the immediacy:
+the reroll must not touch the live template until Apply.
+
+
+---
+
+## Phase 4c: Defer the revert until Apply
+
+Status: Complete
+
+Owner report after testing Phase 4b, verbatim: *"when Revert to Base is clicked,
+the template is regenerated even before clicking Apply, so not just the preview
+shows the base generated template, but also when cancel is clicked, base is
+still shown in preview panel"*. This overturns the consequence the owner had
+accepted in Phase 4b decision 3 — keeping the dialog open was right, committing
+on the spot was not.
+
+- [x] `State.RevertZonesToBase` replaced by `State.PreviewBaseZones`, which
+  generates through `handler.GenerateTemplate` directly and **commits nothing**
+- [x] `dtos.ZoneEditorZonesDto` gained `RevertToBase bool` so the apply
+  direction can report that the session reverted
+- [x] `State.ApplyEditedZones` decides: an untouched base clears the manual
+  snapshot, a base the user edited afterwards is stored as a normal snapshot
+- [x] `handleGenerateTemplate`'s Phase 4b `bool` return reverted to void (dead
+  code once the reroll stopped going through it)
+- [x] Dialog tracks `revertedToBase` and reports it on Apply; hint text no
+  longer claims immediacy
+- [x] Unit, integration and GUI tests reworked for the deferred semantics
+
+### Verification Plan
+
+- `go build ./...` and `go vet -tags="integration_test,gui" ./...` — silent
+- `go run ./cmd/testlayoutcheck .` — `test-layout check passed`
+- `go test ./test/unit/... -count=1`,
+  `go test -tags=integration_test ./test/integration/... -count=1`,
+  `go test -tags "integration_test,gui" ./test/integration/gui/... -count=1` — all ok
+- `golangci-lint-v2 run ./... --issues-exit-code=0` — `0 issues.`
+- Coverage ≥ 69.3%
+
+### Phase Summary
+
+**Why the DTO carries a flag.** The driver has to tell two applies apart that
+look identical from outside: applying an untouched fresh base (→
+`ClearManualEdits`, so later regenerations stay clean) and applying edits made
+*on top of* that base (→ `SetManualEdits`, so they persist and are saved).
+Always storing a snapshot would pin the base layout forever, which is the very
+§0.2 bug the phase set out to fix; never storing one would silently discard
+post-revert edits. The dialog reports only the bare fact that a revert happened;
+the *policy* — comparing the applied zones against `State.pendingBaseZones` with
+`reflect.DeepEqual` — lives in the driver, keeping the GUI free of business
+logic (the constraint that made Batch 14 reject a sibling-method design).
+
+**Why `PreviewBaseZones` bypasses `handleGenerateTemplate`.** The latter commits
+(`applyGeneratedTemplate` → `setLastTemplate` + `SnapshotCurrentState`) and
+reapplies manual edits. Generation itself never consults `ManualZones` /
+`ManualConnections` — reapplication happens afterwards — so calling the handler
+directly yields a genuine base without touching anything the user can see.
+
+**Why no template is stashed.** Applying the base runs the normal
+`handleUpdateTemplate(baseZones, baseConnections)` path, which rebuilds the
+layout from `lastTemplate`; zones carry their own content and the non-variant
+fields are state-derived and identical, so a second stored template would be
+redundant.
+
+**Why a stale `pendingBaseZones` is harmless.** It is only read when
+`request.RevertToBase` is true, which only a dialog that actually reverted can
+set; it is cleared at the top of every `ApplyEditedZones` and overwritten by
+every `PreviewBaseZones`. A failed reroll leaves `revertedToBase` false, so a
+failed revert cannot make the next Apply drop the user's edits — covered by
+`TestWhenRevertToBaseFailed_TheApplyReportsNoRevert`.
+
+**Tests.** `revertZonesToBase_test.go` → `previewBaseZones_test.go` (7 tests,
+semantics inverted: the live template and the stored snapshot must be
+*untouched*); `applyEditedZones_test.go` gained 3 tests for the `RevertToBase`
+branch; `zoneEditorRevertToBase_integration_test.go` rewritten (6 untagged
+tests, two of which reproduce the owner's exact complaint — nothing changes on
+preview, everything changes on apply, with no separate `Generate()`); the GUI
+file gained 3 tests asserting the flag round-trip.
+
+**Verification results.** `go build ./...`, both `go vet` tag combinations and
+`go run ./cmd/testlayoutcheck .` clean; unit suite ok, integration `ok 3.593s`,
+GPU-gated GUI `ok 4.161s`; `gofmt -l ./app ./internal ./test ./cmd` empty (the
+new files needed an explicit `gofmt -w` — CRLF again); `golangci-lint-v2` reports
+`0 issues.`; coverage **72.5%** (floor 69.3%).
+
 
 ---
 

@@ -127,8 +127,11 @@ func (this *ZoneEditorDialog) SelectedConnection() string {
 	return this.selected.Name
 }
 
-// ClickReset ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) ClickReset() { this.resetBtn.Click() }
+// ClickUndo ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) ClickUndo() { this.undoBtn.Click() }
+
+// ClickRevertToBase ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) ClickRevertToBase() { this.revertBaseBtn.Click() }
 
 // ClickApply ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) ClickApply() { this.applyBtn.Click() }

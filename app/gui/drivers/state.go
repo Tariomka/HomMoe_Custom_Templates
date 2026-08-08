@@ -47,6 +47,10 @@ type State struct {
 	// applyNextStateAt is when the armed debounce window elapses.
 	applyNextStateAt time.Time
 
+	// pendingBaseZones is the uncommitted layout produced by PreviewBaseZones,
+	// kept so an apply can tell an untouched revert from one the user edited.
+	pendingBaseZones dtos.ZoneEditorZonesDto
+
 	// dialogs renders modal dialogs (rule editors, pickers, the connection
 	// editor) over the main UI.
 	dialogs *DialogHost

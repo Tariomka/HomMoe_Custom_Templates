@@ -80,7 +80,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	connections = append(connections, entities.Connection{
 		From: zones[0].Name, To: zones[1].Name, ConnectionType: "Portal", IsUserAdded: true,
 	})
-	state.ApplyEditedZones(zones, connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
 	expectedConnections := connectionKeys(connections)
 
 	// The "last change after manual editing" is a castle count.
@@ -138,7 +138,10 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 	promoted := findNeutralOfQuality(t, zones, neutral_zone.QualityLow)
 	retierZone(state, zones, promoted, neutral_zone.QualityHigh, 1)
 	promotedName := zones[promoted].Name
-	state.ApplyEditedZones(zones, template.Variants[0].Connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:       zones,
+		Connections: template.Variants[0].Connections,
+	})
 
 	state.UpdateState(func(s *dtos.EditorStateDto) { s.NeutralHighCastlesPerZone = 3 })
 	regenerateAfterDebounce(state, now)
@@ -180,7 +183,10 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 	retierZone(state, zones, edited, neutral_zone.QualityHigh, 2)
 	zones[edited].GuardMultiplier = 7.5 // explicit manual guard edit
 	editedName := zones[edited].Name
-	state.ApplyEditedZones(zones, template.Variants[0].Connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:       zones,
+		Connections: template.Variants[0].Connections,
+	})
 
 	// Non-castle, non-layout change.
 	state.UpdateState(func(s *dtos.EditorStateDto) { s.NeutralStackStrengthPercent = 150 })

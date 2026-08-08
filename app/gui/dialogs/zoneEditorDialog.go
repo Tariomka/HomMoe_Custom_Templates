@@ -39,29 +39,34 @@ type ZoneEditorDialog struct {
 	zoneEditorConnectionPropertiesState
 	zoneEditorZonePropertiesState
 
-	zones         []entities.Zone
-	originalZones []entities.Zone
-	playerZones   map[string]bool
-	topology      config.MapTopology
-	tuning        models.GenerationTuning
-	generateRoads bool
-	working       []*entities.Connection
-	original      []entities.Connection
-	onApply       func([]entities.Zone, []entities.Connection)
-	zoneHandler   handler_interfaces.IZoneEditorHandler
+	zones          []entities.Zone
+	originalZones  []entities.Zone
+	playerZones    map[string]bool
+	topology       config.MapTopology
+	tuning         models.GenerationTuning
+	generateRoads  bool
+	working        []*entities.Connection
+	original       []entities.Connection
+	onApply        func(dtos.ZoneEditorZonesDto)
+	onRevertToBase func() (dtos.ZoneEditorZonesDto, bool)
+	revertedToBase bool
+	zoneHandler    handler_interfaces.IZoneEditorHandler
 
 	// Toolbar / footer.
-	addBtn     widget.Clickable
-	addZoneBtn widget.Clickable
-	deleteBtn  widget.Clickable
-	resetBtn   widget.Clickable
-	applyBtn   widget.Clickable
-	cancelBtn  widget.Clickable
+	addBtn        widget.Clickable
+	addZoneBtn    widget.Clickable
+	deleteBtn     widget.Clickable
+	undoBtn       widget.Clickable
+	revertBaseBtn widget.Clickable
+	applyBtn      widget.Clickable
+	cancelBtn     widget.Clickable
 }
 
 // NewZoneEditorDialog builds an editor over copies of the given zones and
 // connections. onApply receives the edited zone and connection lists when the
-// user applies.
+// user applies. onRevertToBase returns a freshly generated, manual-edit-free
+// layout for the editor to show; nothing is committed until the user applies,
+// so it may be nil.
 func NewZoneEditorDialog(
 	zones []entities.Zone,
 	connections []entities.Connection,
@@ -69,23 +74,15 @@ func NewZoneEditorDialog(
 	tuning models.GenerationTuning,
 	generateRoads bool,
 	zoneHandler handler_interfaces.IZoneEditorHandler,
-	onApply func([]entities.Zone, []entities.Connection)) *ZoneEditorDialog {
-	players := make(map[string]bool)
-	for _, zone := range zones {
-		if zone_helpers.IsZoneNamePlayer(zone.Name) {
-			players[zone.Name] = true
-		}
-	}
-
+	onApply func(dtos.ZoneEditorZonesDto),
+	onRevertToBase func() (dtos.ZoneEditorZonesDto, bool)) *ZoneEditorDialog {
 	dialog := &ZoneEditorDialog{
-		zones:         append([]entities.Zone(nil), zones...),
-		originalZones: append([]entities.Zone(nil), zones...),
-		playerZones:   players,
-		topology:      topology,
-		tuning:        tuning,
-		generateRoads: generateRoads,
-		onApply:       onApply,
-		zoneHandler:   zoneHandler,
+		topology:       topology,
+		tuning:         tuning,
+		generateRoads:  generateRoads,
+		onApply:        onApply,
+		onRevertToBase: onRevertToBase,
+		zoneHandler:    zoneHandler,
 		zoneEditorGeometryState: zoneEditorGeometryState{
 			geometryDirty: true,
 		},
@@ -101,13 +98,7 @@ func NewZoneEditorDialog(
 			castleDropdown:  components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
 		},
 	}
-	for i := range connections {
-		working := connections[i]
-		dialog.working = append(dialog.working, &working)
-		clone := connections[i]
-		clone.IsUserAdded = false
-		dialog.original = append(dialog.original, clone)
-	}
+	dialog.setEditingSet(zones, connections)
 	dialog.scroll.Axis = layout.Vertical
 	dialog.guardValueEdit.SingleLine = true
 	dialog.weeklyEdit.SingleLine = true
@@ -127,7 +118,11 @@ func (this *ZoneEditorDialog) PreferredSize() (unit.Dp, unit.Dp) {
 func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
 	if this.applyBtn.Clicked(gtx) {
 		if this.onApply != nil {
-			this.onApply(this.zones, derefConnections(this.working))
+			this.onApply(dtos.ZoneEditorZonesDto{
+				Zones:        this.zones,
+				Connections:  derefConnections(this.working),
+				RevertToBase: this.revertedToBase,
+			})
 		}
 		return layout.Dimensions{Size: gtx.Constraints.Max}, true
 	}
@@ -158,8 +153,11 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 			this.deleteZone(zone.Name)
 		}
 	}
-	if this.resetBtn.Clicked(gtx) {
-		this.resetToOriginal()
+	if this.undoBtn.Clicked(gtx) {
+		this.undoSessionEdits()
+	}
+	if this.revertBaseBtn.Clicked(gtx) {
+		this.revertToBase()
 	}
 
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -182,6 +180,31 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 	return dims, false
 }
 
+// setEditingSet installs a zone and connection list as both the working copy
+// and the baseline Undo restores, so a revert to base also moves the point
+// Undo returns to.
+func (this *ZoneEditorDialog) setEditingSet(zones []entities.Zone, connections []entities.Connection) {
+	this.zones = append([]entities.Zone(nil), zones...)
+	this.originalZones = append([]entities.Zone(nil), zones...)
+	this.playerZones = make(map[string]bool)
+	for _, zone := range zones {
+		if zone_helpers.IsZoneNamePlayer(zone.Name) {
+			this.playerZones[zone.Name] = true
+		}
+	}
+
+	this.working = nil
+	this.original = nil
+	for i := range connections {
+		working := connections[i]
+		this.working = append(this.working, &working)
+		clone := connections[i]
+		clone.IsUserAdded = false
+		this.original = append(this.original, clone)
+	}
+	this.geometryDirty = true
+}
+
 func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		addLabel := "Add connection"
@@ -200,8 +223,9 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Delete selected", &this.deleteBtn, !hasSelection)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			// Reset only resets current edits, not all manual edits, need to fix eventually. This is a todo, Just don't want to trigger the linter
-			layout.Rigid(widgets.NewButtonWidget(theme, "Reset to generated", &this.resetBtn, false)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "Undo", &this.undoBtn, false)),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "Revert to Base", &this.revertBaseBtn, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(10)),
 			layout.Rigid(widgets.NewLabeledCheckboxRowWidget(theme, &this.snapBool, "Snap")),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(12)),
@@ -352,7 +376,10 @@ func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) 
 	this.geometryDirty = true
 }
 
-func (this *ZoneEditorDialog) resetToOriginal() {
+// undoSessionEdits restores the zones and connections the editor started from,
+// discarding this session's edits only. Manual edits applied in earlier
+// sessions are untouched, and after a revert to base it returns to that base.
+func (this *ZoneEditorDialog) undoSessionEdits() {
 	this.zones = append([]entities.Zone(nil), this.originalZones...)
 	this.working = this.working[:0]
 	for i := range this.original {
@@ -364,6 +391,28 @@ func (this *ZoneEditorDialog) resetToOriginal() {
 	this.syncedFor = nil
 	this.syncedZoneFor = ""
 	this.geometryDirty = true
+}
+
+// revertToBase shows a freshly generated, manual-edit-free layout. Nothing is
+// committed here: applying drops every stored manual edit and keeps this
+// layout, cancelling leaves the previously applied edits in place.
+func (this *ZoneEditorDialog) revertToBase() {
+	if this.onRevertToBase == nil {
+		return
+	}
+
+	base, ok := this.onRevertToBase()
+	if !ok {
+		this.hint = "Could not regenerate - the zones are unchanged."
+		return
+	}
+
+	this.setEditingSet(base.Zones, base.Connections)
+	this.reset()
+	this.syncedFor = nil
+	this.syncedZoneFor = ""
+	this.revertedToBase = true
+	this.hint = "Showing a freshly generated layout - apply to drop every manual edit, cancel to keep them."
 }
 
 // selectZone makes the named zone the active selection in the side panel.

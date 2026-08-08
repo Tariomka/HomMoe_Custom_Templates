@@ -119,7 +119,8 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 		options.Tuning,
 		options.GenerateRoads,
 		this.zoneEditorHandler,
-		this.state.ApplyEditedZones))
+		this.state.ApplyEditedZones,
+		this.state.PreviewBaseZones))
 }
 
 // handleZoneContentDialogClicks opens the single-tier zone-content editor for

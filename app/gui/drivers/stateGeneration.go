@@ -76,6 +76,8 @@ func (this *State) handleSaveTemplate() {
 		true)
 }
 
+// handleGenerateTemplate regenerates the template; on failure the previous
+// template is left in place.
 func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 	currentState := this.innerState.GetCurrentState()
 	dto, err := this.handler.GenerateTemplate(currentState)

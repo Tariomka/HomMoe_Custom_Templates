@@ -56,6 +56,7 @@ func newGeometryDialog(
 		options.GenerateRoads,
 		handler,
 		nil,
+		nil,
 	)
 	dialog.RecomputeGeometry(geometryCanvasSide)
 	require.Equal(t, geometryZoneRadius, dialog.CanvasZoneRadius(),

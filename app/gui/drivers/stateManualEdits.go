@@ -3,6 +3,7 @@ package drivers
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
@@ -14,13 +15,57 @@ import (
 // editor back into the live template and stores them in the editor state as
 // the authoritative manual snapshot, reapplied on later regenerations and
 // saved with the rest of the .gen.json state.
-func (this *State) ApplyEditedZones(zones []entities.Zone, connections []entities.Connection) {
+//
+// An apply that follows an untouched revert to base stores no snapshot: the
+// base zones would otherwise be pinned and reapplied over every later
+// regeneration, which is the very thing the revert undoes.
+func (this *State) ApplyEditedZones(request dtos.ZoneEditorZonesDto) {
+	pendingBase := this.pendingBaseZones
+	this.pendingBaseZones = dtos.ZoneEditorZonesDto{}
 	if !this.hasTemplateVariants() {
 		return
 	}
 
-	this.handleUpdateTemplate(zones, connections)
-	this.innerState.SetManualEdits(zones, connections)
+	this.handleUpdateTemplate(request.Zones, request.Connections)
+	if request.RevertToBase && matchesZoneSet(request, pendingBase) {
+		this.innerState.ClearManualEdits()
+		return
+	}
+
+	this.innerState.SetManualEdits(request.Zones, request.Connections)
+}
+
+// PreviewBaseZones generates a manual-edit-free layout and returns it for an
+// open zone editor to display. It commits NOTHING - neither the live template
+// nor the stored manual edits change until the user applies - so cancelling
+// the editor leaves the edited template exactly as it was.
+//
+// It reports false when generation produced nothing, with the reason in the
+// status line. Regeneration is random, so this is a NEW base layout rather
+// than the one the manual edits were originally made on; that layout is not
+// retained anywhere.
+func (this *State) PreviewBaseZones() (dtos.ZoneEditorZonesDto, bool) {
+	dto, err := this.handler.GenerateTemplate(this.innerState.GetCurrentState())
+	if err != nil {
+		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
+		return dtos.ZoneEditorZonesDto{}, false
+	}
+	if dto.Template == nil || len(dto.Template.Variants) == 0 {
+		return dtos.ZoneEditorZonesDto{}, false
+	}
+
+	variant := dto.Template.Variants[0]
+	this.pendingBaseZones = dtos.ZoneEditorZonesDto{
+		Zones:       variant.Zones,
+		Connections: variant.Connections,
+	}
+
+	return this.pendingBaseZones, true
+}
+
+func matchesZoneSet(left, right dtos.ZoneEditorZonesDto) bool {
+	return reflect.DeepEqual(left.Zones, right.Zones) &&
+		reflect.DeepEqual(left.Connections, right.Connections)
 }
 
 func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []entities.Connection) {

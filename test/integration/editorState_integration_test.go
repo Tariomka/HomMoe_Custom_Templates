@@ -145,7 +145,7 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 		IsUserAdded:    true,
 	}
 	connections = append(connections, added)
-	state.ApplyEditedZones(zones, connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
 
 	// Save and confirm the file on disk actually carries the manual edits.
 	state.SaveStateToFile(savedPath)
@@ -239,7 +239,10 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.3, 0.4}
 	}
-	state.ApplyEditedZones(zones, template.Variants[0].Connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:       zones,
+		Connections: template.Variants[0].Connections,
+	})
 
 	// A structural change (player count) must regenerate from scratch.
 	state.UpdateState(func(s *dtos.EditorStateDto) { s.PlayerCount = 4 })

@@ -73,7 +73,10 @@ func TestWhenManualEditsAreApplied_TemplateRevisionAdvances(t *testing.T) {
 	before := state.GetTemplateRevision()
 
 	// Act
-	state.ApplyEditedZones(template.Variants[0].Zones, template.Variants[0].Connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:       template.Variants[0].Zones,
+		Connections: template.Variants[0].Connections,
+	})
 
 	// Assert
 	assert.Greater(t, state.GetTemplateRevision(), before)
