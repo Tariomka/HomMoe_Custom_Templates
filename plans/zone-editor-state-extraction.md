@@ -847,29 +847,116 @@ new files needed an explicit `gofmt -w` — CRLF again); `golangci-lint-v2` repo
 ---
 
 ## Phase 5: Close out
-Status: Not started
+Status: Complete
 
-- [ ] Full suite: build, both `go vet` tag combinations, testlayoutcheck,
+- [x] Full suite: build, both `go vet` tag combinations, testlayoutcheck,
       `wire diff`, unit, integration, GPU-gated GUI, performance, coverage, lint.
       Also `gofmt -l .` and a `GOOS=linux` lint pass.
-- [ ] Coverage ≥ the Phase 0 baseline. This batch should *raise* it noticeably —
+- [x] Coverage ≥ the Phase 0 baseline. This batch should *raise* it noticeably —
       ~430 LOC of currently-uncovered logic becomes unit-testable.
-- [ ] Mark §2.6 `✅ FIXED` **in place** in
+- [x] Mark §2.6 `✅ FIXED` **in place** in
       [todo/review-opus5-08-04.md](../todo/review-opus5-08-04.md) and update §12.
       With §2.6 closed, **all 46 review findings are resolved** — say so.
-- [ ] Update `todo/test_observations.md`: it currently lists `zoneEditorDialog.go`
+- [x] Update `todo/test_observations.md`: it currently lists `zoneEditorDialog.go`
       and its canvas/snap/property files as untestable Gio territory. Much of that
       is no longer true.
-- [ ] Update repository memory.
-- [ ] Rewrite `.agent/session-carry-forward.md`.
-- [ ] Stop for owner review. Do not stage. Do not commit.
+- [x] Update repository memory.
+- [x] Rewrite `.agent/session-carry-forward.md`.
+- [x] Stop for owner review. Do not stage. Do not commit.
 
 ### Verification Plan
 - Every command in AGENTS.md §7 Quick Reference passes.
 - `golangci-lint-v2 run ./...` reports `0 issues.`
 
 ### Phase Summary
-_(write when phase completes)_
+
+| Check | Result |
+| --- | --- |
+| `go build ./...` | clean |
+| `go vet ./...` / `go vet -tags="integration_test,gui" ./...` | clean |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 — generated code current |
+| `go test ./test/unit/... -count=1` | ok |
+| `go test -tags=integration_test ./test/integration/... -count=1` | `ok 3.593s` |
+| `go test -tags "integration_test,gui" ./test/integration/gui/... -count=1` | `ok 4.161s` |
+| `go test "-bench=." -run=xxx ./test/performance/... -benchtime=20x` | PASS, 10 benchmarks |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+| `golangci-lint-v2 run ./...` | `0 issues.` |
+| `GOOS=linux CGO_ENABLED=0` lint of `./internal/... ./cmd/...` | `0 issues.` |
+| Coverage | **72.5%** (Phase 0 floor 69.3%) |
+
+**Benchmarks** (Intel Core Ultra 7 165H, 20 iterations): preview layout
+3.5 µs (default) to 4.36 ms (random large); generation 20.6 µs (tournament) to
+83.8 µs (hub-and-spoke). No regression signal — the Phase 1 extraction moved
+geometry behind an interface without a measurable cost.
+
+**On the `GOOS=linux` pass.** A whole-tree `GOOS=linux` lint cannot typecheck
+`app/gui` from Windows: Gio's X11/EGL backend needs cgo, so
+`gioui.org/internal/gl` fails to import. That is a cross-compilation limitation,
+not a finding. The portable half of the tree (`./internal/...`, `./cmd/...`) was
+linted under `GOOS=linux CGO_ENABLED=0` and reports `0 issues.`; CI lints the
+whole tree on Ubuntu.
+
+**Documentation closed out.** [review-opus5-08-04.md](../todo/review-opus5-08-04.md)
+§2.6 marked `✅ FIXED` in place with the evidence retained beneath it, §0.2
+rewritten for the final Undo / Revert-to-Base design, and §12 item 13 records the
+batch and states that **all 46 review findings are now resolved**.
+[test_observations.md](../todo/test_observations.md) no longer claims the zone
+editor is untestable Gio territory — the geometry is unit-tested in
+`connection_editor`, the revert semantics in `drivers`, and the dialog itself is
+driven by the GPU-gated GUI suite; only the property-panel editors and pointer
+flows remain uncovered.
+
+## Final Recap
+
+Seven phases (0, 1, 2, 3, 4, 4b, 4c, 5) closed review §2.6 and §0.2 together.
+
+- **Phase 0** pinned the zone editor's geometry numerically and by snapshot, so
+  every later phase could prove it moved no pixels. Those pins passed unchanged
+  through all of it.
+- **Phase 1** extracted the geometry into
+  `internal/services/connection_editor` behind the `IZoneEditorHandler` the
+  dialog already held — ~160 LOC that was at 0 % coverage is now ≥ 92.9 %.
+  Pointer identity survives by carrying a `ConnectionIndex` rather than a
+  pointer; `float32` stayed at the GUI boundary.
+- **Phase 2** replaced the `zoneEditorCanvasState` blob with a geometry struct
+  and an interaction struct, the latter exposing 13 intention-revealing methods
+  over its 12 fields. 67 → 63 fields.
+- **Phase 3** emptied the four sibling dialogs into `internal/services/bonuses`,
+  `internal/services/pickers` and `internal/services/zone_content`, adding three
+  handler facets. Coverage reached 72.7 %.
+- **Phases 4 → 4b → 4c** fixed §0.2 across three rounds of owner testing: a
+  relabelled button, then a real reroll, then — because the reroll committed
+  before Apply and survived Cancel — a preview that only commits on Apply.
+  Final shape: **Undo** (session-scoped, one-shot) and **Revert to Base**
+  (`State.PreviewBaseZones` shows a fresh manual-edit-free layout, commits
+  nothing; `State.ApplyEditedZones` clears the manual snapshot only if the
+  applied zones still match the previewed base). All policy in the driver, none
+  in the dialog.
+- **Phase 5** verified everything and closed the review.
+
+Final field count: **60, of which 26 are Gio widget handles that cannot move.**
+Coverage **69.3 % → 72.5 %**. `golangci-lint-v2`: `0 issues.`
+
+The two things a future agent should not undo: `dtos.ZoneEditorApplyDto` /
+`RevertUsed` / `State.RevertZonesToBase` are deleted deliberately, and the
+`handleGenerateTemplate` `bool` return added in Phase 4b was removed again in
+Phase 4c because the preview path no longer goes through it.
+
+## Deployment Plan
+
+Nothing to deploy — this is a refactor with no schema, no output-path and no
+persisted-state change. `.gen.json` and `.rmg.json` formats are untouched, and
+the game's templates directory is still resolved per launch by
+`FindOldenEraTemplatesDir`.
+
+1. Owner reviews the working tree and runs `go run .` to confirm the zone
+   editor's Undo / Revert-to-Base behaviour by hand.
+2. Owner stages and commits on `AD/refactoring-07-21` (the agent staged and
+   committed nothing, per AGENTS.md §2.5).
+3. Push and let CI run the Ubuntu lint and the untagged suites; the GPU-gated
+   `gui` tests do not run there by design.
+4. No migration, no user action, no rollback step beyond reverting the commit.
 
 ---
 

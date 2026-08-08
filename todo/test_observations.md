@@ -42,15 +42,25 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   geometry, and transient-state sibling files - the Manual Zone Editor
   (one primary dialog struct with rendering methods and UI state split by
   responsibility).
-  Everything runs off `layout.Context` frames: canvas drawing/hit-testing uses
-  the previous frame's geometry, property panels are `widget.Editor`/dropdown
-  driven, and pointer flows (drag-to-connect, zone drag + snapping) need
-  synthetic pointer events. The extracted `groupConnectionsByPair` and the snap
-  helpers are private and only reachable through `Body`. Zone/connection
-  *business* logic is unit-tested in internal/services/connection_editor. The
-  integration suite renders the real dialog and verifies handler-provided
-  options; pointer interactions still need the test/performance AppRunner
-  synthetic-click pattern as future work.
+  Much less of this is untestable than it was. Since 2026-08-08 (review item
+  §2.6, Batch 15) ALL the geometry moved to
+  internal/services/connection_editor - `BuildGeometry`, the obstacle bulge,
+  edge/node hit-testing, `groupConnectionsByPair`, the other-zone guides and the
+  grid step are unit-tested there at >=92.9% (most 100%), and the dialog's
+  canvas/snap files are thin call-throughs on `IZoneEditorHandler`. The revert
+  semantics live in `drivers.State` (`PreviewBaseZones`, `ApplyEditedZones`) and
+  are unit-tested under test/unit/app/gui/drivers/stateManualEdits.
+  What is left in the dialog really is rendering and click wiring, and the
+  `integration_test,gui` suite drives it through real frames with
+  `widget.Clickable.Click` and the `zoneEditorDialog_testexports.go` accessors:
+  Undo, Revert to Base (success, failure, flag round-trip on Apply), Apply,
+  delete-selected, the add-connection/add-zone mode toggles, button labels read
+  back off the semantics tree, plus the Phase 0 numeric geometry pins that guard
+  the extraction.
+  Still uncovered: the property panels' `widget.Editor`/dropdown paths and the
+  pointer flows (drag-to-connect, zone drag + snapping), which need synthetic
+  pointer events - the test/performance AppRunner pattern is the way in, and it
+  is still future work.
 
 - app/gui/panels/layoutPanel.go + layoutPanelTopology.go + layoutPanelZones.go
   and previewPanel.go - Layout/Preview panels (layoutPanel method-split by

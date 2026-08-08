@@ -1233,7 +1233,45 @@ integration scenario in [test_observations.md](test_observations.md).
 
 ---
 
-### 2.6 🟡 `zoneEditorDialog` spreads ~58 fields across five state structs
+### 2.6 ✅ FIXED 🟡 `zoneEditorDialog` spreads ~58 fields across five state structs
+
+> **FIXED (Batch 15, 2026-08-08).** The finding was never really about the field
+> *count* — it was that geometry cache, selection, drag state, dirty flags and
+> widget handles all lived in one undifferentiated blob, which is how the §0.2
+> reset-semantics bug survived undetected. Both halves are now addressed.
+>
+> **The geometry left the GUI.** `internal/services/connection_editor/` gained a
+> zone-editor geometry service reached through the `IZoneEditorHandler` the
+> dialog already held; `zoneEditorCanvas.go` and `zoneEditorSnap.go` are thin
+> call-throughs, and `connectionPairKey.go` is gone. `recomputeGeometry`,
+> `obstacleBulge`, `hitTestEdge`, `hitTestNode`, `groupConnectionsByPair`,
+> `otherZoneGuides` and `gridStep` — the ~160 LOC of pure geometry the finding
+> singled out at 0 % coverage — are now unit-tested at ≥ 92.9 % (most 100 %).
+> Every Phase 0 numeric geometry pin passed unchanged, so the extraction moved
+> no pixels.
+>
+> **The remaining state is differentiated.** `zoneEditorCanvasState.go` (which
+> mixed geometry with interaction) is deleted; the dialog now embeds six named
+> structs — geometry (3 fields), interaction (12), snap (5), side panel (1),
+> connection properties (13) and zone properties (7) — plus 19 direct fields.
+> **60 fields, 26 of them Gio widget handles that cannot move**, down from 67
+> with 26. The interaction struct is the substantive change: its 12 fields sit
+> behind 13 intention-revealing methods (`selectConnection`, `clearSelection`,
+> `beginZoneDrag`, `zoneDragLeftDeadZone`, `reset`, …) instead of being assigned
+> ad hoc from nine call sites, and the magic `6` px drag threshold is the named
+> `zoneDragDeadZonePx`. The eleven-assignment tail of the old `resetToOriginal`
+> is one `this.reset()` call.
+>
+> The same batch closed §0.2 for real (see §0.2): the dialog's revert path is
+> now **Undo** (session-scoped) plus **Revert to Base** (preview-only, committed
+> on Apply), with the decision of what a revert *means* living in
+> `drivers.State`, not in the dialog.
+>
+> The sibling dialogs named in the "Fix" note were emptied too:
+> `bonusPickerDialog.go`, `pickerDialog.go`, `ruleDialog.go` and `zoneContent.go`
+> are now pure rendering code behind `internal/services/bonuses`,
+> `internal/services/pickers` and `internal/services/zone_content`.
+> Total unit coverage rose **69.3 % → 72.5 %**.
 
 **Evidence.** [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go#L31-L61)
 embeds five state structs (canvas, connection properties, zone properties, snap,
@@ -2855,7 +2893,20 @@ permanently — mark them `✅ FIXED` in place as they land.
     defect triage found no live bugs but pruned three dead methods, and the
     `app/`-layering backlog item was closed and enforced with depguard.
     Coverage held at 69.3%.
-    Still open: §2.6 opportunistically, whenever the zone editor is next touched.
+    ✅ §2.6 (zone-editor state) FIXED (2026-08-08, Batch 15, plan:
+    [zone-editor-state-extraction.md](../plans/zone-editor-state-extraction.md)) —
+    seven phases. Geometry moved to `internal/services/connection_editor` behind
+    the existing `IZoneEditorHandler`; the canvas-state blob split into six named
+    structs (67 → 60 fields, 26 of them immovable widget handles) with the
+    interaction state behind 13 intention-revealing methods; the four sibling
+    dialogs emptied into `bonuses` / `pickers` / `zone_content` services. §0.2 was
+    closed for real along the way, over three rounds of owner testing: **Undo**
+    (session-scoped) plus **Revert to Base** (preview-only, committed on Apply,
+    policy in `drivers.State`). Coverage 69.3% → 72.5%.
+
+    **With §2.6 closed, all 46 review findings are resolved.** Nothing in this
+    document remains open: every item is either `✅ FIXED`, explicitly rejected
+    with a recorded rationale, or listed in §0.2 as owner-controlled.
 
 **Blockers summary:** §6.5 after §6.3 · ✅ §2.5 after §2.1 · §5.1 folds into §1.1 or
 §2.1 · §9.5 after §2.7 · §3.2 with §5.3.
