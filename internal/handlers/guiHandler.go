@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
@@ -14,23 +15,58 @@ type GUIHandler struct {
 	templateHandler    handler_interfaces.ITemplateHandler
 	previewHandler     handler_interfaces.IPreviewHandler
 	stateHandler       handler_interfaces.IStateHandler
-	contentRuleHandler handler_interfaces.IContentRuleHandler
+	contentRuleHandler handler_interfaces.IZoneContentHandler
 	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
+	bonusHandler       handler_interfaces.IBonusHandler
+	pickerHandler      handler_interfaces.IPickerHandler
 }
 
 func NewGuiHandler(
 	templateHandler handler_interfaces.ITemplateHandler,
 	stateHandler handler_interfaces.IStateHandler,
 	previewHandler handler_interfaces.IPreviewHandler,
-	contentRuleHandler handler_interfaces.IContentRuleHandler,
-	zoneEditorHandler handler_interfaces.IZoneEditorHandler) handler_interfaces.IGuiHandler {
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
+	zoneEditorHandler handler_interfaces.IZoneEditorHandler,
+	bonusHandler handler_interfaces.IBonusHandler,
+	pickerHandler handler_interfaces.IPickerHandler) handler_interfaces.IGuiHandler {
 	return &GUIHandler{
 		templateHandler:    templateHandler,
 		stateHandler:       stateHandler,
 		previewHandler:     previewHandler,
 		contentRuleHandler: contentRuleHandler,
 		zoneEditorHandler:  zoneEditorHandler,
+		bonusHandler:       bonusHandler,
+		pickerHandler:      pickerHandler,
 	}
+}
+
+func (this *GUIHandler) BuildItemPickerEntries(items []dtos.PickerItemDto) []dtos.PickerEntryDto {
+	return this.pickerHandler.BuildItemPickerEntries(items)
+}
+
+func (this *GUIHandler) BuildSpellPickerEntries(spells []dtos.PickerSpellDto) []dtos.PickerEntryDto {
+	return this.pickerHandler.BuildSpellPickerEntries(spells)
+}
+
+func (this *GUIHandler) BuildValueOverridePickerEntries(sids []string) []dtos.PickerEntryDto {
+	return this.pickerHandler.BuildValueOverridePickerEntries(sids)
+}
+
+func (this *GUIHandler) NormalizePickerFilter(text string) string {
+	return this.pickerHandler.NormalizePickerFilter(text)
+}
+
+func (this *GUIHandler) GetVisiblePickerRows(
+	entries []dtos.PickerEntryDto,
+	filter string,
+	grouped bool) []dtos.PickerRowDto {
+	return this.pickerHandler.GetVisiblePickerRows(entries, filter, grouped)
+}
+
+func (this *GUIHandler) GetSelectedPickerIDs(
+	entries []dtos.PickerEntryDto,
+	selected map[string]bool) []string {
+	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
 }
 
 func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
@@ -121,6 +157,25 @@ func (this *GUIHandler) SnapZoneEditorPosition(
 	return this.zoneEditorHandler.SnapZoneEditorPosition(request)
 }
 
+func (this *GUIHandler) DescribeExistingBonuses(existing []config.BonusEntry) dtos.ExistingBonusesDto {
+	return this.bonusHandler.DescribeExistingBonuses(existing)
+}
+
+func (this *GUIHandler) BuildBonusEntries(
+	request dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto {
+	return this.bonusHandler.BuildBonusEntries(request)
+}
+
+func (this *GUIHandler) FilterNewBonusEntries(
+	entries []config.BonusEntry,
+	existingKeys map[string]bool) []config.BonusEntry {
+	return this.bonusHandler.FilterNewBonusEntries(entries, existingKeys)
+}
+
+func (this *GUIHandler) GetSpellCountLabel(count int) string {
+	return this.bonusHandler.GetSpellCountLabel(count)
+}
+
 func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {
 	return this.templateHandler.SaveTemplate(templateDto)
 }
@@ -137,6 +192,41 @@ func (this *GUIHandler) DescribeContentRule(
 	content models.SidMapping,
 	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
 	return this.contentRuleHandler.DescribeContentRule(content, savedRule)
+}
+
+func (this *GUIHandler) ComposeContentRule(
+	request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto {
+	return this.contentRuleHandler.ComposeContentRule(request)
+}
+
+func (this *GUIHandler) UpsertContentRule(
+	rules []models.ContentRuleRowSave,
+	rule models.ContentRuleRowSave) []models.ContentRuleRowSave {
+	return this.contentRuleHandler.UpsertContentRule(rules, rule)
+}
+
+func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []models.ContentRuleRowSave {
+	return this.contentRuleHandler.GetDefaultContentRules(content)
+}
+
+func (this *GUIHandler) GetContentRuleMarkers(
+	content models.SidMapping,
+	rules []models.ContentRuleRowSave) string {
+	return this.contentRuleHandler.GetContentRuleMarkers(content, rules)
+}
+
+func (this *GUIHandler) GetContentRowDisplayName(
+	content models.SidMapping,
+	rules []models.ContentRuleRowSave) string {
+	return this.contentRuleHandler.GetContentRowDisplayName(content, rules)
+}
+
+func (this *GUIHandler) SortContentItemsByName(items []models.SidMapping) []models.SidMapping {
+	return this.contentRuleHandler.SortContentItemsByName(items)
+}
+
+func (this *GUIHandler) ClampContentCount(count int, maxCount int) int {
+	return this.contentRuleHandler.ClampContentCount(count, maxCount)
 }
 
 func (this *GUIHandler) ValidateEditorState(

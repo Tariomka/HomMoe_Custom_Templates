@@ -2,9 +2,7 @@ package dialogs
 
 import (
 	"iter"
-	"sort"
 	"strconv"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -15,7 +13,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -62,7 +59,7 @@ type ZoneContentSection struct {
 	addPreset          *components.DropdownSelector
 	addBtn             widget.Clickable
 	openDialog         interfaces.DialogOpener
-	contentRuleHandler handler_interfaces.IContentRuleHandler
+	contentRuleHandler handler_interfaces.IZoneContentHandler
 }
 
 func NewZoneContentSection(
@@ -70,14 +67,8 @@ func NewZoneContentSection(
 	items []models.SidMapping,
 	maxCount int,
 	showNear bool,
-	contentRuleHandler handler_interfaces.IContentRuleHandler) *ZoneContentSection {
-	// Present the "add content" dropdown alphabetically by display name. Sort a
-	// copy so the shared ContentItemGroup global keeps its authored order.
-	sorted := make([]models.SidMapping, len(items))
-	copy(sorted, items)
-	sort.SliceStable(sorted, func(i, j int) bool {
-		return strings.ToLower(sorted[i].Name) < strings.ToLower(sorted[j].Name)
-	})
+	contentRuleHandler handler_interfaces.IZoneContentHandler) *ZoneContentSection {
+	sorted := contentRuleHandler.SortContentItemsByName(items)
 	labels := make([]string, len(sorted))
 	for i, item := range sorted {
 		labels[i] = item.Name
@@ -104,13 +95,9 @@ func (this *ZoneContentSection) Add(
 	count int,
 	rules []models.ContentRuleRowSave,
 	group bool) {
-	if count < 1 {
-		count = 1
-	}
-	if count > this.MaxCount {
-		count = this.MaxCount
-	}
-	this.rows = append(this.rows, newZoneContentRow(mapping, count, rules, group))
+	this.rows = append(
+		this.rows,
+		newZoneContentRow(mapping, this.contentRuleHandler.ClampContentCount(count, this.MaxCount), rules, group))
 }
 
 func (this *ZoneContentSection) ClearRows() {
@@ -258,25 +245,13 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 // rowDisplayName mirrors the C# ZoneContentItemUI.DisplayName: the item name,
 // with the chosen variant's description appended when a Variant rule applies.
 func (this *ZoneContentSection) rowDisplayName(row *zoneContentRow) string {
-	for _, saved := range row.rules {
-		description := this.contentRuleHandler.DescribeContentRule(row.Mapping, saved)
-		if description.Key == dtos.ContentRuleKeyVariant && description.Valid {
-			return row.Mapping.Name + " (" + description.VariantLabel + ")"
-		}
-	}
-	return row.Mapping.Name
+	return this.contentRuleHandler.GetContentRowDisplayName(row.Mapping, row.rules)
 }
 
 // defaultContentRules is the rule list applied to a freshly-added row: a single
 // Guarded rule, matching the historical default of the Guarded checkbox.
 func (this *ZoneContentSection) defaultContentRules(content models.SidMapping) []models.ContentRuleRowSave {
-	for _, option := range this.contentRuleHandler.GetContentRuleEditorOptions(content).Rules {
-		if option.Key == dtos.ContentRuleKeyGuarded {
-			guarded := true
-			return []models.ContentRuleRowSave{{Name: option.Name, IsGuarded: &guarded}}
-		}
-	}
-	return nil
+	return this.contentRuleHandler.GetDefaultContentRules(content)
 }
 
 // ruleMarkers returns the concatenated marker badges for a rule list (e.g.
@@ -285,15 +260,5 @@ func (this *ZoneContentSection) ruleMarkers(
 	mapping models.SidMapping,
 	rules []models.ContentRuleRowSave,
 ) string {
-	parts := make([]string, 0, len(rules))
-	for _, saved := range rules {
-		description := this.contentRuleHandler.DescribeContentRule(mapping, saved)
-		if !description.Valid {
-			continue
-		}
-		if description.Marker != "" {
-			parts = append(parts, description.Marker)
-		}
-	}
-	return strings.Join(parts, " · ")
+	return this.contentRuleHandler.GetContentRuleMarkers(mapping, rules)
 }

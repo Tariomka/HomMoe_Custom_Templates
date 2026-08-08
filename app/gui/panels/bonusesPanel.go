@@ -17,6 +17,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
@@ -38,11 +39,12 @@ type BonusesPanel struct {
 
 	scroll widget.List
 
-	state *drivers.State
+	state   *drivers.State
+	handler handler_interfaces.IGuiHandler
 }
 
-func NewBonusesPanel(state *drivers.State) *BonusesPanel {
-	panel := &BonusesPanel{state: state}
+func NewBonusesPanel(state *drivers.State, handler handler_interfaces.IGuiHandler) *BonusesPanel {
+	panel := &BonusesPanel{state: state, handler: handler}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
 	return panel
@@ -215,21 +217,21 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	opener := this.state.GetDialogHost().Open
 
 	if this.addBonusBtn.Clicked(gtx) {
-		opener(dialogs.NewBonusPickerDialog(this.bonuses, opener, func(entries []config.BonusEntry) {
+		opener(dialogs.NewBonusPickerDialog(this.bonuses, opener, this.handler, func(entries []config.BonusEntry) {
 			this.bonuses = append(this.bonuses, entries...)
 			this.syncRemoveButtons()
 			this.SaveToState()
 		}))
 	}
 	if this.pickItemsBtn.Clicked(gtx) {
-		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, func(ids []string) {
+		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, this.handler, func(ids []string) {
 			this.bannedItems = appendUnique(this.bannedItems, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
 		}))
 	}
 	if this.pickSpellsBtn.Clicked(gtx) {
-		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, func(ids []string, _ bool) {
+		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, this.handler, func(ids []string, _ bool) {
 			this.bannedMagics = appendUnique(this.bannedMagics, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
@@ -237,7 +239,7 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	}
 	if this.pickOverridesBtn.Clicked(gtx) {
 		excluded := overrideSids(this.valueOverrides)
-		opener(dialogs.NewValueOverridePickerDialog(excluded, func(lines []string) {
+		opener(dialogs.NewValueOverridePickerDialog(excluded, this.handler, func(lines []string) {
 			this.valueOverrides = appendUnique(this.valueOverrides, lines)
 			this.syncRemoveButtons()
 			this.SaveToState()

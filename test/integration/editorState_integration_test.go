@@ -45,7 +45,7 @@ func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func
 	editorPanels := []interfaces.IPanel{
 		panels.NewGeneralPanel(state),
 		panels.NewLayoutPanel(state, backend, backend, backend),
-		panels.NewBonusesPanel(state),
+		panels.NewBonusesPanel(state, backend),
 	}
 	saveFrame = func() {
 		for _, panel := range editorPanels {

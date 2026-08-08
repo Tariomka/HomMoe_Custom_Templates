@@ -116,3 +116,17 @@ func TestWhenCastleCountRequested_DelegatesToZoneEditorHandler(t *testing.T) {
 	// Assert
 	assert.True(t, stub.zoneEditorCalled)
 }
+
+func TestWhenSpellCountLabelRequested_DelegatesToBonusHandler(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	stub := &handlerDependenciesStub{}
+	handler := stub.newHandler()
+	require.NotNil(t, handler)
+
+	// Act
+	handler.GetSpellCountLabel(0)
+
+	// Assert
+	assert.True(t, stub.bonusCalled)
+}

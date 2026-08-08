@@ -2,7 +2,6 @@ package dialogs
 
 import (
 	"image"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -26,7 +25,7 @@ type ManageRulesDialog struct {
 	rules   []models.ContentRuleRowSave
 	onApply func([]models.ContentRuleRowSave)
 
-	contentRuleHandler handler_interfaces.IContentRuleHandler
+	contentRuleHandler handler_interfaces.IZoneContentHandler
 	types              []dtos.ContentRuleOptionDto
 	distanceNames      []string
 	variantIDs         []int
@@ -50,7 +49,7 @@ type ManageRulesDialog struct {
 func NewManageRulesDialog(
 	mapping models.SidMapping,
 	rules []models.ContentRuleRowSave,
-	contentRuleHandler handler_interfaces.IContentRuleHandler,
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	onApply func([]models.ContentRuleRowSave)) *ManageRulesDialog {
 	options := contentRuleHandler.GetContentRuleEditorOptions(mapping)
 	dialog := &ManageRulesDialog{
@@ -261,13 +260,7 @@ func (this *ManageRulesDialog) upsertFromEditor() {
 	if !ok {
 		return
 	}
-	for i := range this.rules {
-		if strings.EqualFold(this.rules[i].Name, saved.Name) {
-			this.rules[i] = saved
-			return
-		}
-	}
-	this.rules = append(this.rules, saved)
+	this.rules = this.contentRuleHandler.UpsertContentRule(this.rules, saved)
 }
 
 func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRowSave, bool) {
@@ -275,28 +268,17 @@ func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRowSave,
 	if !ok {
 		return models.ContentRuleRowSave{}, false
 	}
-	switch option.Key {
-	case dtos.ContentRuleKeyDistanceToRoad, dtos.ContentRuleKeyDistanceToTown:
-		distIdx := this.distanceDropdown.GetSelectedIndex()
-		if distIdx < 0 || distIdx >= len(this.distanceNames) {
-			return models.ContentRuleRowSave{}, false
-		}
-		return models.ContentRuleRowSave{Name: option.Name, DistanceName: this.distanceNames[distIdx]}, true
-	case dtos.ContentRuleKeyGuarded:
-		value := this.guardedBool.Value
-		return models.ContentRuleRowSave{Name: option.Name, IsGuarded: &value}, true
-	case dtos.ContentRuleKeySoloEncounter:
-		value := this.soloBool.Value
-		return models.ContentRuleRowSave{Name: option.Name, IsSoloEncounter: &value}, true
-	case dtos.ContentRuleKeyVariant:
-		variantIdx := this.variantDropdown.GetSelectedIndex()
-		if variantIdx < 0 || variantIdx >= len(this.variantIDs) {
-			return models.ContentRuleRowSave{}, false
-		}
-		id := this.variantIDs[variantIdx]
-		return models.ContentRuleRowSave{Name: option.Name, VariantID: &id}, true
-	}
-	return models.ContentRuleRowSave{}, false
+	result := this.contentRuleHandler.ComposeContentRule(dtos.ContentRuleCompositionRequestDto{
+		Option:          option,
+		DistanceNames:   this.distanceNames,
+		DistanceIndex:   this.distanceDropdown.GetSelectedIndex(),
+		IsGuarded:       this.guardedBool.Value,
+		IsSoloEncounter: this.soloBool.Value,
+		VariantIDs:      this.variantIDs,
+		VariantIndex:    this.variantDropdown.GetSelectedIndex(),
+	})
+
+	return result.Rule, result.Valid
 }
 
 func (this *ManageRulesDialog) selectedRuleType() (dtos.ContentRuleOptionDto, bool) {

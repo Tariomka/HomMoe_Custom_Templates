@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
@@ -18,6 +19,8 @@ type handlerDependenciesStub struct {
 	previewCalled             bool
 	contentRuleCalled         bool
 	zoneEditorCalled          bool
+	bonusCalled               bool
+	pickerCalled              bool
 }
 
 func (this *handlerDependenciesStub) GenerateTemplate(
@@ -189,6 +192,115 @@ func (this *handlerDependenciesStub) SnapZoneEditorPosition(
 	return models.ZoneEditorSnapResult{Position: request.Position}
 }
 
+func (this *handlerDependenciesStub) DescribeExistingBonuses([]config.BonusEntry) dtos.ExistingBonusesDto {
+	return dtos.ExistingBonusesDto{}
+}
+
+func (this *handlerDependenciesStub) BuildBonusEntries(
+	dtos.BonusCompositionRequestDto,
+) dtos.BonusCompositionResultDto {
+	return dtos.BonusCompositionResultDto{}
+}
+
+func (this *handlerDependenciesStub) FilterNewBonusEntries(
+	entries []config.BonusEntry,
+	_ map[string]bool,
+) []config.BonusEntry {
+	return entries
+}
+
+func (this *handlerDependenciesStub) GetSpellCountLabel(int) string {
+	this.bonusCalled = true
+	return ""
+}
+
+func (this *handlerDependenciesStub) ComposeContentRule(
+	dtos.ContentRuleCompositionRequestDto,
+) dtos.ContentRuleCompositionResultDto {
+	this.contentRuleCalled = true
+	return dtos.ContentRuleCompositionResultDto{}
+}
+
+func (this *handlerDependenciesStub) UpsertContentRule(
+	rules []models.ContentRuleRowSave,
+	rule models.ContentRuleRowSave,
+) []models.ContentRuleRowSave {
+	this.contentRuleCalled = true
+	return append(rules, rule)
+}
+
+func (this *handlerDependenciesStub) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRowSave {
+	this.contentRuleCalled = true
+	return nil
+}
+
+func (this *handlerDependenciesStub) GetContentRuleMarkers(
+	models.SidMapping,
+	[]models.ContentRuleRowSave,
+) string {
+	this.contentRuleCalled = true
+	return ""
+}
+
+func (this *handlerDependenciesStub) GetContentRowDisplayName(
+	content models.SidMapping,
+	_ []models.ContentRuleRowSave,
+) string {
+	this.contentRuleCalled = true
+	return content.Name
+}
+
+func (this *handlerDependenciesStub) SortContentItemsByName(items []models.SidMapping) []models.SidMapping {
+	this.contentRuleCalled = true
+	return items
+}
+
+func (this *handlerDependenciesStub) ClampContentCount(count int, _ int) int {
+	this.contentRuleCalled = true
+	return count
+}
+
+func (this *handlerDependenciesStub) BuildItemPickerEntries(
+	[]dtos.PickerItemDto,
+) []dtos.PickerEntryDto {
+	this.pickerCalled = true
+	return nil
+}
+
+func (this *handlerDependenciesStub) BuildSpellPickerEntries(
+	[]dtos.PickerSpellDto,
+) []dtos.PickerEntryDto {
+	this.pickerCalled = true
+	return nil
+}
+
+func (this *handlerDependenciesStub) BuildValueOverridePickerEntries([]string) []dtos.PickerEntryDto {
+	this.pickerCalled = true
+	return nil
+}
+
+func (this *handlerDependenciesStub) NormalizePickerFilter(text string) string {
+	this.pickerCalled = true
+	return text
+}
+
+func (this *handlerDependenciesStub) GetVisiblePickerRows(
+	[]dtos.PickerEntryDto,
+	string,
+	bool,
+) []dtos.PickerRowDto {
+	this.pickerCalled = true
+	return nil
+}
+
+func (this *handlerDependenciesStub) GetSelectedPickerIDs(
+	[]dtos.PickerEntryDto,
+	map[string]bool,
+) []string {
+	this.pickerCalled = true
+	return nil
+}
+
 func (this *handlerDependenciesStub) newHandler() handler_interfaces.IGuiHandler {
-	return handlers.NewGuiHandler(this, this, this, this, this)
+	return handlers.NewGuiHandler(this, this, this, this, this, this, this)
 }

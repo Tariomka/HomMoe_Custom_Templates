@@ -110,7 +110,13 @@ You **MUST NOT** stage any changes you do and/or commit them to origin or any ot
 If you notice staged changes, **NEVER** unstage them - it is done by the author
 after he reviews and ensures the changes are correct.
 
-### 2.6 Output path is a hard requirement of the game
+### 2.6 Bulk rewrites
+
+- Never run a bulk in-place rewrite across the repository.
+- To normalize formatting or line endings, run `gofmt -w` on an **explicit** list
+  from `gofmt -l` - gofmt converts CRLF to LF and cannot mangle content.
+
+### 2.7 Output path is a hard requirement of the game
 
 Heroes of Might and Magic: Olden Era only reads random-map templates from **its
 own templates directory**. A `.rmg.json` written anywhere else is not merely in

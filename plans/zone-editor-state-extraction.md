@@ -492,22 +492,22 @@ Phase 0 floor.
 ---
 
 ## Phase 3: The four extra dialogs
-Status: Not started
+Status: Complete
 
 Extract **everything identified** in the candidates table (owner decision 4). Work
 one file at a time and keep each file's snapshot green before moving on.
 
-- [ ] `bonusPickerDialog.go` — validation, `BonusEntry` mapping, duplicate/spell-ID
+- [x] `bonusPickerDialog.go` — validation, `BonusEntry` mapping, duplicate/spell-ID
       extraction, `spellCountLabel`, `isNumeric`.
-- [ ] `pickerDialog.go` — source→entry mapping, filtering/grouping row model,
+- [x] `pickerDialog.go` — source→entry mapping, filtering/grouping row model,
       `selectedIDs`.
-- [ ] `ruleDialog.go` — `upsertFromEditor`, `buildRuleFromEditor`.
-- [ ] `zoneContent.go` — `rowDisplayName`, `defaultContentRules`, `ruleMarkers`,
+- [x] `ruleDialog.go` — `upsertFromEditor`, `buildRuleFromEditor`.
+- [x] `zoneContent.go` — `rowDisplayName`, `defaultContentRules`, `ruleMarkers`,
       the constructor's alphabetical sort, `Add`'s clamping.
-- [ ] Decide placement per AGENTS.md §4.4 as you go: content-rule logic belongs
+- [x] Decide placement per AGENTS.md §4.4 as you go: content-rule logic belongs
       near `internal/services/content_rules/`; picker/bonus mapping may warrant its
       own package. Note the choice and its reason in the Phase Summary.
-- [ ] Unit tests for every extracted unit.
+- [x] Unit tests for every extracted unit.
 
 ### Verification Plan
 - Snapshots for all four dialogs unchanged.
@@ -515,7 +515,59 @@ one file at a time and keep each file's snapshot green before moving on.
 - `golangci-lint-v2 run ./...` still reports `0 issues.`
 
 ### Phase Summary
-_(write when phase completes)_
+
+All four dialogs are now pure rendering code; every decision they used to make
+lives in a service behind a handler seam.
+
+**Placement decisions and their reasons**
+
+- **`bonusPickerDialog.go` → `internal/services/bonuses` (`IBonusEntryService`),
+  exposed through a new `IBonusHandler` folded into `IGuiHandler`.** The dialog
+  had no handler at all and `app/**` may not import `internal/services`
+  (depguard), so a handler facet had to be introduced rather than reused. The
+  service owns validation, `config.BonusEntry` construction, duplicate
+  filtering and the spell-count label; the three request/result/existing shapes
+  travel as DTOs (`BonusCompositionRequestDto`, `BonusCompositionResultDto`,
+  `ExistingBonusesDto`).
+- **`ruleDialog.go` + `zoneContent.go` → `internal/services/zone_content`
+  (`IZoneContentEditorService`), exposed through a new `IZoneContentHandler`
+  that *embeds* `IContentRuleHandler`.** Widening `IContentRuleHandler` itself
+  was tried and reverted: it forced edits at 14 existing test call sites and
+  changed `NewContentRuleHandler`'s signature for no behavioural gain. Embedding
+  keeps that constructor and its tests untouched, and because both GUI views
+  already sat on a single content-rule seam only the field's *annotation* had to
+  widen (`ruleDialog.go`, `zoneContent.go`, `zoneContentDialog.go`,
+  `layoutPanel.go`). The service owns rule composition, upsert, defaults, marker
+  joining, display naming, alphabetical sorting and count clamping.
+- **`pickerDialog.go` → `internal/services/pickers` (`IPickerEntryService`)
+  behind `IPickerHandler`.** The GUI's `pickerEntry` struct was deleted in favour
+  of `dtos.PickerEntryDto`, and the visible-row model moved wholesale into
+  `dtos.PickerRowDto`. The catalogs stay in `app/gui/constants` (which imports
+  `internal/registry`) because `internal/` must not import `app/`; the service
+  therefore accepts catalog rows as DTOs (`PickerItemDto`, `PickerSpellDto`,
+  plain SID strings) instead of reaching for them itself.
+- **`BonusPickerDialog` and `BonusesPanel` are typed on `IGuiHandler`, not on a
+  single facet**, because they legitimately need both the bonus and the picker
+  facets; splitting them would have meant two constructor parameters for one
+  collaborator.
+
+Wiring: three services added to `EditorSet` and three handlers to `HandlerSet`
+in `providerSets.go`, with `NewGuiHandler` growing to seven dependencies. Still
+zero `wire.Bind` calls.
+
+**Verification** — `go build ./...`; `go vet -tags="integration_test,gui" ./...`;
+`go run ./cmd/testlayoutcheck .` → `test-layout check passed`;
+`go test ./test/unit/... -count=1` clean; `go test -tags=integration_test
+./test/integration/...` ok; `go test -tags "integration_test,gui"
+./test/integration/gui/...` ok with **all snapshots unchanged**;
+`golangci-lint-v2 run ./...` → `0 issues.`; coverage **72.7 %**
+(Phase 0 floor 69.3 %, Phase 2 left it at 70.9 %).
+
+**Incident note** — a repo-wide PowerShell CRLF→LF rewrite run at the end of this
+phase corrupted every `.go` file in the working tree. The branch was reset by the
+owner and the phase was recovered from VS Code Local History (102 files), then
+re-verified end to end. Do not run bulk in-place rewrites across the repository;
+use `gofmt -w` on an explicit file list instead.
 
 ---
 

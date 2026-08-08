@@ -13,7 +13,7 @@ import (
 func (this *MultiSelectPicker) EntryIDs() []string {
 	ids := make([]string, 0, len(this.entries))
 	for _, entry := range this.entries {
-		ids = append(ids, entry.id)
+		ids = append(ids, entry.ID)
 	}
 
 	return ids
@@ -25,8 +25,8 @@ func (this *MultiSelectPicker) MatchingEntryIDs() []string {
 	filter := strings.ToLower(strings.TrimSpace(this.search.Text()))
 	ids := make([]string, 0, len(this.entries))
 	for _, entry := range this.entries {
-		if strings.Contains(entry.haystack, filter) {
-			ids = append(ids, entry.id)
+		if strings.Contains(entry.Haystack, filter) {
+			ids = append(ids, entry.ID)
 		}
 	}
 
@@ -45,7 +45,7 @@ func (this *MultiSelectPicker) RowCount(theme *material.Theme) int {
 // to land, so narrow the list with SetSearch first. ONLY FOR INTEGRATION TEST USE
 func (this *MultiSelectPicker) ClickEntry(id string) bool {
 	for _, entry := range this.entries {
-		if entry.id == id {
+		if entry.ID == id {
 			this.clickFor(id).Click()
 			return true
 		}

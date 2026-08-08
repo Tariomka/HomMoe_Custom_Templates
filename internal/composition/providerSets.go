@@ -10,16 +10,19 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/bonuses"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	editor_services "github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/goforj/wire"
@@ -51,6 +54,8 @@ var GenerationSet = wire.NewSet(
 
 // EditorSet builds the services backing the manual zone editor and the previews.
 var EditorSet = wire.NewSet(
+	bonuses.NewBonusEntryService,
+	pickers.NewPickerEntryService,
 	connection_editor.NewConnectionEditorService,
 	connection_editor.NewManualReapplyService,
 	connection_editor.NewZoneEditorService,
@@ -58,6 +63,7 @@ var EditorSet = wire.NewSet(
 	content_rules.NewContentRuleService,
 	preview_service.NewPreviewLayoutService,
 	providePreviewGenerator,
+	zone_content.NewZoneContentEditorService,
 )
 
 // InfrastructureSet builds the persistence and mapping collaborators.
@@ -71,13 +77,16 @@ var InfrastructureSet = wire.NewSet(
 	validators.NewEditorStateValidator,
 )
 
-// HandlerSet builds the five handlers the GUI facade delegates to.
+// HandlerSet builds the handlers the GUI facade delegates to.
 var HandlerSet = wire.NewSet(
+	handlers.NewBonusHandler,
+	handlers.NewPickerHandler,
 	handlers.NewContentRuleHandler,
 	handlers.NewPreviewHandler,
 	handlers.NewStateHandler,
 	handlers.NewTemplateHandler,
 	handlers.NewZoneEditorHandler,
+	handlers.NewZoneContentHandler,
 )
 
 // GuiHandlerSet is the complete graph behind InitializeGuiHandler.

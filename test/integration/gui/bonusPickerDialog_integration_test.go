@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,6 +30,15 @@ func frameBonusPicker(t *testing.T, dialog *dialogs.BonusPickerDialog, theme *ma
 // defaultReceiver mirrors the receiver the dialog uses before the user touches
 // the receiver dropdown.
 func defaultReceiver() string { return constants.GetBonusReceiverOptions()[0] }
+
+// newBonusPicker builds the composer against the real handler graph, the same
+// way the bonuses panel does at runtime.
+func newBonusPicker(
+	existing []config.BonusEntry,
+	opener interfaces.DialogOpener,
+	onApply func([]config.BonusEntry)) *dialogs.BonusPickerDialog {
+	return dialogs.NewBonusPickerDialog(existing, opener, composition.InitializeGuiHandler(), onApply)
+}
 
 // pickerCapture records the sub-picker the bonus dialog pushes onto the dialog
 // stack, standing in for the real DialogHost.
@@ -69,7 +79,7 @@ func pickSpellsThroughSubPicker(
 func TestWhenBonusPickerRenders_FillsTheAvailableSpace(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, nil)
+	dialog := newBonusPicker(nil, nil, nil)
 	gtx, frameRouter := newDialogContext(image.Pt(460, 420))
 
 	// Act
@@ -86,7 +96,7 @@ func TestWhenTheDefaultBonusIsAdded_EmitsAFreeTownPortalEntry(t *testing.T) {
 	// Arrange
 	theme := themes.NewTheme()
 	var applied []config.BonusEntry
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, func(entries []config.BonusEntry) { applied = entries })
+	dialog := newBonusPicker(nil, nil, func(entries []config.BonusEntry) { applied = entries })
 
 	// Act
 	dialog.ClickAdd()
@@ -109,7 +119,7 @@ func TestWhenTheComposedBonusAlreadyExists_ReportsADuplicate(t *testing.T) {
 		ReceiverFilter: defaultReceiver(),
 	}}
 	applied := false
-	dialog := dialogs.NewBonusPickerDialog(existing, nil, func([]config.BonusEntry) { applied = true })
+	dialog := newBonusPicker(existing, nil, func([]config.BonusEntry) { applied = true })
 
 	// Act
 	dialog.ClickAdd()
@@ -125,7 +135,7 @@ func TestWhenTheMultiplierIsNotNumeric_ReportsAValidationError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, nil)
+	dialog := newBonusPicker(nil, nil, nil)
 	require.True(t, dialog.SelectType("Unit Multiplier"))
 	dialog.SetMultiplier("not a number")
 
@@ -142,7 +152,7 @@ func TestWhenTheMultiplierIsNumeric_EmitsAUnitMultiplierEntry(t *testing.T) {
 	// Arrange
 	theme := themes.NewTheme()
 	var applied []config.BonusEntry
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, func(entries []config.BonusEntry) { applied = entries })
+	dialog := newBonusPicker(nil, nil, func(entries []config.BonusEntry) { applied = entries })
 	require.True(t, dialog.SelectType("Unit Multiplier"))
 	dialog.SetMultiplier(" 3.5 ")
 
@@ -162,7 +172,7 @@ func TestWhenTheMovementValueIsNotNumeric_ReportsAValidationError(t *testing.T) 
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, nil)
+	dialog := newBonusPicker(nil, nil, nil)
 	require.True(t, dialog.SelectType("Movement Bonus"))
 	dialog.SetMovement("")
 
@@ -178,7 +188,7 @@ func TestWhenNoStartingItemWasPicked_ReportsAValidationError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, nil)
+	dialog := newBonusPicker(nil, nil, nil)
 	require.True(t, dialog.SelectType("Starting Item"))
 
 	// Act
@@ -195,7 +205,7 @@ func TestWhenAStartingItemWasPicked_EmitsAStartingItemEntry(t *testing.T) {
 	theme := themes.NewTheme()
 	item := constants.GetBannableItemsWithExclusions(nil)[0].Sid
 	var applied []config.BonusEntry
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, func(entries []config.BonusEntry) { applied = entries })
+	dialog := newBonusPicker(nil, nil, func(entries []config.BonusEntry) { applied = entries })
 	require.True(t, dialog.SelectType("Starting Item"))
 	dialog.SetItem(item)
 
@@ -215,7 +225,7 @@ func TestWhenTheResourceAmountIsNotNumeric_ReportsAValidationError(t *testing.T)
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, nil)
+	dialog := newBonusPicker(nil, nil, nil)
 	require.True(t, dialog.SelectType("Starting Gold"))
 	dialog.SetResourceAmount("plenty")
 
@@ -232,7 +242,7 @@ func TestWhenTheResourceAmountIsNumeric_EmitsAResourceEntry(t *testing.T) {
 	// Arrange
 	theme := themes.NewTheme()
 	var applied []config.BonusEntry
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, func(entries []config.BonusEntry) { applied = entries })
+	dialog := newBonusPicker(nil, nil, func(entries []config.BonusEntry) { applied = entries })
 	require.True(t, dialog.SelectType("Starting Gold"))
 	dialog.SetResourceAmount("10000")
 
@@ -252,7 +262,7 @@ func TestWhenNoSpellWasPicked_ReportsAValidationError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, nil)
+	dialog := newBonusPicker(nil, nil, nil)
 	require.True(t, dialog.SelectType("Spell"))
 
 	// Act
@@ -273,7 +283,7 @@ func TestWhenSpellsArePickedAndMadeFree_EmitsOneFreeEntryPerSpell(t *testing.T) 
 
 	capture := &pickerCapture{}
 	var applied []config.BonusEntry
-	dialog := dialogs.NewBonusPickerDialog(
+	dialog := newBonusPicker(
 		nil, capture.opener(t), func(entries []config.BonusEntry) { applied = entries })
 	require.True(t, dialog.SelectType("Spell"))
 	pickSpellsThroughSubPicker(t, dialog, capture, wanted, theme)
@@ -299,7 +309,7 @@ func TestWhenAPickedSpellIsRemoved_ItIsAbsentFromTheSelection(t *testing.T) {
 	wanted := []string{spells[0].Sid, spells[1].Sid}
 
 	capture := &pickerCapture{}
-	dialog := dialogs.NewBonusPickerDialog(nil, capture.opener(t), nil)
+	dialog := newBonusPicker(nil, capture.opener(t), nil)
 	require.True(t, dialog.SelectType("Spell"))
 	pickSpellsThroughSubPicker(t, dialog, capture, wanted, theme)
 	require.Equal(t, wanted, dialog.SelectedSpells())
@@ -320,7 +330,7 @@ func TestWhenSpellsArePicked_TheCaptionCountsThem(t *testing.T) {
 	require.GreaterOrEqual(t, len(spells), 2)
 
 	capture := &pickerCapture{}
-	dialog := dialogs.NewBonusPickerDialog(nil, capture.opener(t), nil)
+	dialog := newBonusPicker(nil, capture.opener(t), nil)
 	require.True(t, dialog.SelectType("Spell"))
 	require.Equal(t, "Spells", dialog.SpellCountLabel())
 
@@ -342,7 +352,7 @@ func TestWhenAnExistingSpellBonusIsPresent_TheSpellPickerExcludesIt(t *testing.T
 		Param:          spell,
 	}}
 	capture := &pickerCapture{}
-	dialog := dialogs.NewBonusPickerDialog(existing, capture.opener(t), nil)
+	dialog := newBonusPicker(existing, capture.opener(t), nil)
 	require.True(t, dialog.SelectType("Spell"))
 
 	// Act
@@ -359,7 +369,7 @@ func TestWhenTheBonusPickerIsCancelled_NothingIsApplied(t *testing.T) {
 	// Arrange
 	theme := themes.NewTheme()
 	applied := false
-	dialog := dialogs.NewBonusPickerDialog(nil, nil, func([]config.BonusEntry) { applied = true })
+	dialog := newBonusPicker(nil, nil, func([]config.BonusEntry) { applied = true })
 
 	// Act
 	dialog.ClickCancel()
@@ -379,7 +389,7 @@ func TestWhenSeveralStartingItemsArePicked_EachBecomesItsOwnEntry(t *testing.T) 
 
 	capture := &pickerCapture{}
 	var applied []config.BonusEntry
-	dialog := dialogs.NewBonusPickerDialog(
+	dialog := newBonusPicker(
 		nil, capture.opener(t), func(entries []config.BonusEntry) { applied = entries })
 	require.True(t, dialog.SelectType("Starting Item"))
 	dialog.ClickPickItem()

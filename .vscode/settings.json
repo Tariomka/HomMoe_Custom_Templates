@@ -119,6 +119,10 @@
         "golangci-lint-v2": true,
         "gofmt": true,
         "git rev-parse": true,
-        "wire": true
+        "wire": true,
+        "go build": true,
+        "go test": true,
+        "go tool": true,
+        "go vet": true,
     },
 }

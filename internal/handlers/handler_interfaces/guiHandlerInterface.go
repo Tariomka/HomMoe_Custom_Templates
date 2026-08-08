@@ -4,6 +4,8 @@ type IGuiHandler interface {
 	ITemplateHandler
 	IStateHandler
 	IPreviewHandler
-	IContentRuleHandler
+	IZoneContentHandler
 	IZoneEditorHandler
+	IBonusHandler
+	IPickerHandler
 }

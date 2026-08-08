@@ -12,16 +12,19 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/bonuses"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
@@ -62,9 +65,15 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iTemplateHandler := handlers.NewTemplateHandler(iTemplateGenerator, iGeneratorConfigMapper, iMandatoryContentProvider, iConnectionEditorService, iZoneEditorService, iManualReapplyService, iFileService, iPreviewGeneratorService, iStateHandler)
 	iPreviewHandler := handlers.NewPreviewHandler(iPreviewLayoutService)
 	iContentRuleHandler := handlers.NewContentRuleHandler(iContentRuleService)
+	iZoneContentEditorService := zone_content.NewZoneContentEditorService()
+	iZoneContentHandler := handlers.NewZoneContentHandler(iContentRuleHandler, iZoneContentEditorService)
 	iZoneEditorGeometryService := connection_editor.NewZoneEditorGeometryService(iPreviewLayoutService)
 	iZoneEditorHandler := handlers.NewZoneEditorHandler(iGeneratorConfigMapper, iZoneClassifier, iConnectionEditorService, iZoneEditorService, iZoneEditorGeometryService, iGenerationTuningFactory)
-	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iContentRuleHandler, iZoneEditorHandler)
+	iBonusEntryService := bonuses.NewBonusEntryService()
+	iBonusHandler := handlers.NewBonusHandler(iBonusEntryService)
+	iPickerEntryService := pickers.NewPickerEntryService()
+	iPickerHandler := handlers.NewPickerHandler(iPickerEntryService)
+	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iZoneContentHandler, iZoneEditorHandler, iBonusHandler, iPickerHandler)
 	return iGuiHandler
 }
 

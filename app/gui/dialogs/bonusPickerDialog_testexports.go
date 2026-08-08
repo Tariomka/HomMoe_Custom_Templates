@@ -60,5 +60,5 @@ func (this *BonusPickerDialog) SetResourceAmount(text string) { this.resourceEdi
 // SpellCountLabel exposes the picked-spell caption for the current selection.
 // ONLY FOR INTEGRATION TEST USE
 func (this *BonusPickerDialog) SpellCountLabel() string {
-	return spellCountLabel(len(this.selectedSpells))
+	return this.handler.GetSpellCountLabel(len(this.selectedSpells))
 }

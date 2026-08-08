@@ -40,7 +40,7 @@ func NewWindow(
 	window.tabs = []*drivers.Tab{
 		drivers.NewTab("General", panels.NewGeneralPanel(window.state)),
 		drivers.NewTab("Layout & Zones", panels.NewLayoutPanel(window.state, handler, handler, handler)),
-		drivers.NewTab("Bonuses & Bans", panels.NewBonusesPanel(window.state)),
+		drivers.NewTab("Bonuses & Bans", panels.NewBonusesPanel(window.state, handler)),
 	}
 	window.previewPanel = panels.NewPreviewPanel(window.state, handler)
 	window.tabs[0].SetSelected(true)

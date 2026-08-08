@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,7 +42,7 @@ func TestWhenItemPickerRenders_ListsEveryBannableItem(t *testing.T) {
 	for _, item := range constants.GetBannableItemsWithExclusions(nil) {
 		expected = append(expected, item.Sid)
 	}
-	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, nil)
+	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, composition.InitializeGuiHandler(), nil)
 
 	// Act
 	require.False(t, framePicker(t, picker, themes.NewTheme()))
@@ -56,7 +57,7 @@ func TestWhenItemPickerExcludesAnItem_ItIsAbsentFromTheEntries(t *testing.T) {
 	excluded := constants.GetBannableItemsWithExclusions(nil)[0].Sid
 
 	// Act
-	picker := dialogs.NewItemPickerDialog("Pick Starting Item", []string{excluded}, nil)
+	picker := dialogs.NewItemPickerDialog("Pick Starting Item", []string{excluded}, composition.InitializeGuiHandler(), nil)
 
 	// Assert
 	assert.NotContains(t, picker.EntryIDs(), excluded)
@@ -68,7 +69,7 @@ func TestWhenItemPickerSelectionIsApplied_EmitsTheSelectedIds(t *testing.T) {
 	theme := themes.NewTheme()
 	wanted := constants.GetBannableItemsWithExclusions(nil)[0].Sid
 	var applied []string
-	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, func(ids []string) { applied = ids })
+	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, composition.InitializeGuiHandler(), func(ids []string) { applied = ids })
 	selectPickerEntry(t, picker, wanted, theme)
 
 	// Act
@@ -85,7 +86,7 @@ func TestWhenPickerIsCancelled_NothingIsApplied(t *testing.T) {
 	// Arrange
 	theme := themes.NewTheme()
 	applied := false
-	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, func([]string) { applied = true })
+	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, composition.InitializeGuiHandler(), func([]string) { applied = true })
 	selectPickerEntry(t, picker, constants.GetBannableItemsWithExclusions(nil)[0].Sid, theme)
 
 	// Act
@@ -100,7 +101,7 @@ func TestWhenSearchFilterMatchesNothing_NoRowsAreProduced(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
-	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, nil)
+	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, composition.InitializeGuiHandler(), nil)
 	picker.SetSearch("no such item exists anywhere")
 
 	// Act
@@ -114,7 +115,7 @@ func TestWhenSearchFilterMatchesAnEntry_TheNonMatchingEntriesAreDropped(t *testi
 	t.Parallel()
 	// Arrange
 	wanted := constants.GetBannableItemsWithExclusions(nil)[0].Sid
-	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, nil)
+	picker := dialogs.NewItemPickerDialog("Pick Starting Item", nil, composition.InitializeGuiHandler(), nil)
 	require.Greater(t, len(picker.EntryIDs()), 1)
 
 	// Act
@@ -128,7 +129,7 @@ func TestWhenPickerIsFlat_EveryRowIsALeafRow(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
-	picker := dialogs.NewValueOverridePickerDialog(nil, nil)
+	picker := dialogs.NewValueOverridePickerDialog(nil, composition.InitializeGuiHandler(), nil)
 	picker.SetSearch(constants.GetValueOverrideSidsWithExclusions(nil)[0])
 	require.NotEmpty(t, picker.MatchingEntryIDs())
 
@@ -144,7 +145,7 @@ func TestWhenPickerIsGrouped_MatchingGroupsAddHeaderRows(t *testing.T) {
 	// Arrange
 	theme := themes.NewTheme()
 	spell := constants.GetKnownSpellsWithExclusions(nil)[0]
-	picker := dialogs.NewSpellPickerDialog(nil, false, nil)
+	picker := dialogs.NewSpellPickerDialog(nil, false, composition.InitializeGuiHandler(), nil)
 	picker.SetSearch(spell.Sid)
 	require.NotEmpty(t, picker.MatchingEntryIDs())
 
@@ -162,7 +163,7 @@ func TestWhenSpellPickerSelectionIsApplied_ReportsTheMakeFreeFlag(t *testing.T) 
 	spell := constants.GetKnownSpellsWithExclusions(nil)[0]
 	var free bool
 	applied := false
-	picker := dialogs.NewSpellPickerDialog(nil, true, func(_ []string, makeFree bool) {
+	picker := dialogs.NewSpellPickerDialog(nil, true, composition.InitializeGuiHandler(), func(_ []string, makeFree bool) {
 		applied = true
 		free = makeFree
 	})
@@ -183,7 +184,7 @@ func TestWhenValueOverrideSelectionIsApplied_EmitsSidEqualsDefaultGuardLines(t *
 	theme := themes.NewTheme()
 	sid := constants.GetValueOverrideSidsWithExclusions(nil)[0]
 	var lines []string
-	picker := dialogs.NewValueOverridePickerDialog(nil, func(applied []string) { lines = applied })
+	picker := dialogs.NewValueOverridePickerDialog(nil, composition.InitializeGuiHandler(), func(applied []string) { lines = applied })
 	selectPickerEntry(t, picker, sid, theme)
 
 	// Act

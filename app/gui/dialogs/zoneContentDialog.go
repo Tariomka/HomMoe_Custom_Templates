@@ -41,7 +41,7 @@ func NewZoneContentDialog(
 	title string,
 	isPlayerTier bool,
 	rows []models.ZoneContentRowSave,
-	contentRuleHandler handler_interfaces.IContentRuleHandler,
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	opener interfaces.DialogOpener,
 	onApply func([]models.ZoneContentRowSave),
 ) *ZoneContentDialog {

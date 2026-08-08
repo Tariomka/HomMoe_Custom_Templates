@@ -68,14 +68,14 @@ type LayoutPanel struct {
 
 	state              *drivers.State
 	previewHandler     handler_interfaces.IPreviewHandler
-	contentRuleHandler handler_interfaces.IContentRuleHandler
+	contentRuleHandler handler_interfaces.IZoneContentHandler
 	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
 }
 
 func NewLayoutPanel(
 	state *drivers.State,
 	previewHandler handler_interfaces.IPreviewHandler,
-	contentRuleHandler handler_interfaces.IContentRuleHandler,
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	zoneEditorHandler handler_interfaces.IZoneEditorHandler,
 ) *LayoutPanel {
 	panel := &LayoutPanel{

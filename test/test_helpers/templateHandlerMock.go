@@ -6,7 +6,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -37,6 +40,10 @@ type TemplateHandlerMock struct {
 	HitTestZoneEditorEdgeFunc       func(image.Point, []models.ZoneEditorEdge) int
 	GetZoneEditorGridStepFunc       func(int) float64
 	SnapZoneEditorPositionFunc      func(dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult
+	DescribeExistingBonusesFunc     func([]config.BonusEntry) dtos.ExistingBonusesDto
+	BuildBonusEntriesFunc           func(dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto
+	FilterNewBonusEntriesFunc       func([]config.BonusEntry, map[string]bool) []config.BonusEntry
+	GetSpellCountLabelFunc          func(int) string
 }
 
 func (this *TemplateHandlerMock) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
@@ -257,4 +264,104 @@ func (this *TemplateHandlerMock) DescribeContentRule(
 		return this.DescribeContentRuleFunc(content, savedRule)
 	}
 	return dtos.ContentRuleDescriptionDto{DisplayText: savedRule.Name, SavedRule: savedRule}
+}
+
+func (this *TemplateHandlerMock) DescribeExistingBonuses(
+	existing []config.BonusEntry,
+) dtos.ExistingBonusesDto {
+	if this.DescribeExistingBonusesFunc != nil {
+		return this.DescribeExistingBonusesFunc(existing)
+	}
+	return dtos.ExistingBonusesDto{Keys: map[string]bool{}}
+}
+
+func (this *TemplateHandlerMock) BuildBonusEntries(
+	request dtos.BonusCompositionRequestDto,
+) dtos.BonusCompositionResultDto {
+	if this.BuildBonusEntriesFunc != nil {
+		return this.BuildBonusEntriesFunc(request)
+	}
+	return dtos.BonusCompositionResultDto{}
+}
+
+func (this *TemplateHandlerMock) FilterNewBonusEntries(
+	entries []config.BonusEntry,
+	existingKeys map[string]bool,
+) []config.BonusEntry {
+	if this.FilterNewBonusEntriesFunc != nil {
+		return this.FilterNewBonusEntriesFunc(entries, existingKeys)
+	}
+	return entries
+}
+
+func (this *TemplateHandlerMock) GetSpellCountLabel(count int) string {
+	if this.GetSpellCountLabelFunc != nil {
+		return this.GetSpellCountLabelFunc(count)
+	}
+	return ""
+}
+
+func (this *TemplateHandlerMock) ComposeContentRule(
+	request dtos.ContentRuleCompositionRequestDto,
+) dtos.ContentRuleCompositionResultDto {
+	return zone_content.NewZoneContentEditorService().ComposeContentRule(request)
+}
+
+func (this *TemplateHandlerMock) UpsertContentRule(
+	rules []models.ContentRuleRowSave,
+	rule models.ContentRuleRowSave,
+) []models.ContentRuleRowSave {
+	return zone_content.NewZoneContentEditorService().UpsertContentRule(rules, rule)
+}
+
+func (this *TemplateHandlerMock) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRowSave {
+	return nil
+}
+
+func (this *TemplateHandlerMock) GetContentRuleMarkers(models.SidMapping, []models.ContentRuleRowSave) string {
+	return ""
+}
+
+func (this *TemplateHandlerMock) GetContentRowDisplayName(
+	content models.SidMapping,
+	_ []models.ContentRuleRowSave,
+) string {
+	return content.Name
+}
+
+func (this *TemplateHandlerMock) SortContentItemsByName(items []models.SidMapping) []models.SidMapping {
+	return zone_content.NewZoneContentEditorService().SortContentItemsByName(items)
+}
+
+func (this *TemplateHandlerMock) ClampContentCount(count int, maxCount int) int {
+	return zone_content.NewZoneContentEditorService().ClampContentCount(count, maxCount)
+}
+
+func (this *TemplateHandlerMock) BuildItemPickerEntries(items []dtos.PickerItemDto) []dtos.PickerEntryDto {
+	return pickers.NewPickerEntryService().BuildItemPickerEntries(items)
+}
+
+func (this *TemplateHandlerMock) BuildSpellPickerEntries(spells []dtos.PickerSpellDto) []dtos.PickerEntryDto {
+	return pickers.NewPickerEntryService().BuildSpellPickerEntries(spells)
+}
+
+func (this *TemplateHandlerMock) BuildValueOverridePickerEntries(sids []string) []dtos.PickerEntryDto {
+	return pickers.NewPickerEntryService().BuildValueOverridePickerEntries(sids)
+}
+
+func (this *TemplateHandlerMock) NormalizePickerFilter(text string) string {
+	return pickers.NewPickerEntryService().NormalizePickerFilter(text)
+}
+
+func (this *TemplateHandlerMock) GetVisiblePickerRows(
+	entries []dtos.PickerEntryDto,
+	filter string,
+	grouped bool) []dtos.PickerRowDto {
+	return pickers.NewPickerEntryService().GetVisiblePickerRows(entries, filter, grouped)
+}
+
+func (this *TemplateHandlerMock) GetSelectedPickerIDs(
+	entries []dtos.PickerEntryDto,
+	selected map[string]bool) []string {
+	return pickers.NewPickerEntryService().GetSelectedPickerIDs(entries, selected)
 }
