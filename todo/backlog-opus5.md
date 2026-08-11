@@ -11,12 +11,14 @@ and §1.9, working tree clean apart from the owner's own staged files).
 | Source | Items taken |
 | --- | --- |
 | [review-opus5-08-04.md](review-opus5-08-04.md) | §1.4, §1.9 (the only two left open) |
-| [backlog.md](backlog.md) | all 9 items |
+| `backlog.md` (deleted in `cd7ad10`) | all 9 items |
 | [test_observations.md](test_observations.md) | the 3 gaps that became writable once `AppRunner` gained `DragTo`/`MoveTo`/`InputText` |
+| [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106) | the owner's 46-line design comment, split into §5.4 and §5.5 |
 
-**Supersession.** This document **supersedes [backlog.md](backlog.md) in full**
+**Supersession.** This document **superseded `todo/backlog.md` in full**
 — every one of its items is dispositioned in §0 and restated below with fresh
-evidence. The owner deletes `backlog.md` when this document is accepted.
+evidence. The owner deleted `backlog.md` in `cd7ad10` once this document was
+accepted; §0.2 is now its only record.
 It does **not** supersede [test_observations.md](test_observations.md), which
 stays authoritative for intentional test gaps; only the three gaps promoted to
 §5 leave it (and only once those items are done).
@@ -33,7 +35,7 @@ and §1.9 there stay numbered as they are and are restated here as §1.1 and §1
 go-ahead**, because it edits a protected directory (AGENTS.md §2.1) or reverses
 a decision the owner already made.
 
-**Item count: 0 🔴 · 6 🟠 · 8 🟡 · 3 ⚪ (17 total).**
+**Item count: 0 🔴 · 6 🟠 · 10 🟡 · 3 ⚪ (19 total).**
 
 **Baselines to hold (AGENTS.md §2.3):** unit coverage **72.5 %**, floor
 **69.3 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
@@ -54,7 +56,7 @@ a decision the owner already made.
 All other review items are `✅ FIXED`, `❌ WILL NOT FIX`, or owner-excluded and
 are **not** re-reported here.
 
-### 0.2 Disposition of every [backlog.md](backlog.md) item
+### 0.2 Disposition of every `backlog.md` item
 
 | Backlog item | Disposition | New section |
 | --- | --- | --- |
@@ -87,6 +89,26 @@ Gio-widget/panel entries (`buttonWidget`, `sliderRowWidget`, `layoutPanel*`,
 *Unreachable defensive branches* (`connectInteriorStables` `len == 0`,
 `providePreviewGenerator` `err != nil`, `atomicFileWriter` `Close`/`Sync`,
 `helpers/io.go` Steam discovery, `buildShiftDerangement`).
+
+### 0.4 Disposition of the [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106) design comment
+
+The comment is a design note, not a to-do list, and it mixes two unrelated
+problems. It is split as follows and **the comment itself should shrink to a
+short pointer at this document** once §5.4 lands:
+
+| Thought in the comment | Where it went |
+| --- | --- |
+| Per-tab / per-dialog handlers, fluent transitions, what embeds `baseHandler` | §5.4 (d) |
+| "This mask should be updated so that only unstable parts are covered" | §5.4 (c) |
+| Handlers must track layout-shifting state (checkboxes, inline dropdowns, sliders) | §5.4 (e) |
+| "Calculate positions in place or hardcode them, or a combination" | §5.4 (b) |
+| "There will also be an issue with scrolling, if a button is not visible" | §5.4 (f) |
+| "Ideally, this should not use any code…from `*_testexports.go`" | §5.4 (g) |
+| "For some reason there is a difference of some of the rendered text between local and CI" | §5.5 (separate item — a rendering/tolerance defect, not framework design) |
+
+Two things the comment does not mention were found while reading it and are
+folded into §5.4 (a): the file name violates AGENTS.md §4.1, and `NewHandler`
+returns an unexported type.
 
 ---
 
@@ -1075,6 +1097,140 @@ reason.
 **Coordinate with §4.1** — it rewrites the save-filename scenarios in the same
 file. Do §4.1 first or expect a merge conflict.
 
+### 5.4 🟡 The GUI handler framework is a design comment, not a design
+
+**Evidence.** [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106)
+carries a 46-line first-person design note above a struct that currently
+implements three tab clicks and one mask. The whole framework today is:
+
+```go
+func (this *baseHandler) ClickGeneralTab() *baseHandler {
+	this.runner.ClickAt(f32.Pt(672, 60))
+	this.runner.VerifySnapshot()
+	return this
+}
+```
+
+Consumers: [window_snapshot_integration_test.go](../test/integration/gui/window_snapshot_integration_test.go#L20-L25)
+and [window_tab_cycling_test.go](../test/performance/window_tab_cycling_test.go#L25).
+
+**Why it matters.** Gio has no Playwright/Selenium, so this handler *is* the
+GUI test API. §5.1, §5.2 and §5.3 will each be written against it; if they land
+first, three more test files acquire their own ad-hoc `f32.Pt` literals and the
+framework never happens. The comment is also the only place this design lives —
+a doc comment is not a backlog and will rot.
+
+**Fix — seven separable pieces, in this order.**
+
+**(a) Hygiene (mechanical, do first).** The file is `runnerHandler.go` but the
+struct is `baseHandler`; AGENTS.md §4.1 requires `baseHandler.go`. `NewHandler`
+also returns the unexported `*baseHandler` from an exported function — either
+export the type or (once (d) exists) return the handler contract. Interfaces
+follow AGENTS.md §4.2.1/§4.2.2: with fewer than five implementations they stay
+in this package as `*Interface.go` files.
+
+**(b) Settle the coordinate strategy.** Recommendation: **keep the coordinates
+literal but stop scattering them.** Gio exposes no widget-rect lookup without a
+new `*_testexports.go` seam, and computing positions from the layout code would
+re-implement the thing under test. Put them in one `handlerCoordinates.go` as
+named constants derived where possible from
+[app/gui/constants/ui.go](../app/gui/constants/ui.go) (`DefaultPadding`,
+`DefaultLabelWidth`, `DefaultPreviewWidthMaximum`), so a padding change is one
+edit rather than a hunt. Only compute at runtime where a value genuinely varies
+(slider value → x, list row index → y).
+
+**(c) Narrow the mask.** `setRandomTopology` blanks
+`image.Rect(WindowWidth-470, 0, WindowWidth, WindowHeight)` — a 470 px column
+over the **full window height**, i.e. roughly a third of every snapshot,
+including stable chrome. Replace the single catch-all with named helpers that
+mask only what is genuinely nondeterministic: the preview canvas (random
+topology), the output-directory field (differs per machine/OS/Steam layout —
+see AGENTS.md §2.7), and the timestamp/path inside the status message. Derive
+the preview rect from `DefaultPreviewWidthMaximum` (440) rather than the
+unexplained 470.
+
+**(d) Per-tab and per-dialog handlers.** `baseHandler` gains
+`ClickGeneralTab() *generalTabHandler` etc.; tab handlers embed `baseHandler`
+(tab bar and toolbar stay live), dialog handlers **do not** (a dialog disables
+the background, so inheriting its clicks would be a lie). One struct per file
+(AGENTS.md §4.1).
+
+**(e) Layout-shifting state.** A handler must remember what it toggled, because
+some widgets move the ones below them: *Allow non-official larger map sizes*
+expands the Map Size dropdown, and dropdowns render inline on the canvas rather
+than floating. Store those flags on the handler and offset subsequent
+coordinates from them; a handler that clicks blind will click the wrong widget.
+
+**(f) Scrolling.** `AppRunner` has `ClickAt`, `MoveTo`, `DragTo` and
+`InputText` — but no scroll. Anything below the fold is unreachable, which is a
+hard blocker for §5.2. Add `Scroll(point f32.Point, delta f32.Point)` injecting
+a `pointer.Scroll` event through the same router, mirroring `ClickAt`.
+
+**(g) Keep `*_testexports.go` out of the handler.** `SelectedTabIndex`,
+`TabCount`, `DialogsOpen`, `CurrentState` and `Status` are test-only exports.
+Handlers should drive pixels and assert through snapshots; reach for an
+accessor only where a pixel genuinely cannot express the assertion, and say why
+in a one-line comment.
+
+**Scope guard.** Do **not** build (d)–(g) speculatively. (a)–(c) are worth
+doing on their own; the rest grows one method at a time as §5.1–§5.3 need it.
+The comment's own worry — *"this looks like an entire framework"* — is the
+correct instinct: an unused handler method is untested test code.
+
+**When it lands,** replace the design comment with a two-line pointer to this
+section so the design lives in one place.
+
+### 5.5 🟡 GUI snapshots differ between local and CI, and the tolerance hiding it also hides regressions
+
+**Evidence.** The last paragraph of the same comment: *"for some reason there
+is a difference of some of the rendered text between local … and CI (looks like
+some of the text is grayed out like not finishing a rerender)"*. The tolerance
+that absorbs it is [comparer.go](../test/test_helpers/integration_common/snapshot/comparer.go#L8-L11):
+
+```go
+// DefaultSnapshotThreshold is the maximum allowed normalized mean color
+// distance between a golden snapshot and an actual screenshot (2%).
+// Pipeline has discrepancies, I don't want to investigate them right now.
+const DefaultSnapshotThreshold = 0.02
+```
+
+The two environments are genuinely different: goldens are generated locally on
+Windows against a real GPU, while
+[pr-validation.yml](../.github/workflows/pr-validation.yml#L244-L257) runs the
+suite under `xvfb-run` with `LIBGL_ALWAYS_SOFTWARE=1` (Mesa llvmpipe).
+
+**Why it matters.** `Compare` returns a **mean** distance over the whole
+1600×900 frame, and `Matches` passes anything under 2 %. A 40×40 button that
+turns entirely black moves that mean by ~0.1 % — it passes. The threshold was
+raised to swallow a font-rasterization difference and now swallows real
+regressions with it, which quietly weakens every test §5.1–§5.4 will add.
+
+**Fix — diagnose before tuning.**
+
+1. **Rule out a half-rendered frame first.** "Grayed out like not finishing a
+   rerender" describes a capture-timing bug, not a rasterizer difference.
+   Capture two consecutive frames for the same action and compare them: if
+   frame 2 differs from frame 1, `captureScreenshot` is racing the frame and
+   the fix belongs in
+   [appRunnerSnapshots.go](../test/test_helpers/integration_common/appRunnerSnapshots.go#L120),
+   not in the threshold. Download the `gui-snapshot-failures` artifact the
+   workflow already uploads to see the actual CI pixels.
+2. **If it is genuinely llvmpipe text anti-aliasing**, make CI the reference:
+   regenerate goldens in the CI environment (run the update job, download the
+   artifact, commit the images) so the *comparison* is exact and only local
+   runs are lenient.
+3. **Then replace the metric.** A mean is the wrong measure for UI diffs. Fail
+   on the fraction of pixels whose per-pixel distance exceeds a small
+   per-pixel tolerance (e.g. "> 0.5 % of pixels differ by > 10 %") so wide
+   faint AA noise passes while a small solid change fails. Keep
+   `Comparer.Threshold` configurable and update
+   [test/unit/test/test_helpers/integration_common/snapshot/comparer/](../test/unit/test/test_helpers/integration_common/snapshot/comparer/)
+   alongside.
+
+**If investigation shows** the difference is unavoidable and CI-generated
+goldens are impractical, say so in the constant's comment with the measured
+worst-case difference — a documented 2 % is fine, an unexplained one is not.
+
 ---
 
 ## 6. Deferred decisions
@@ -1148,6 +1304,12 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |
 | **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |
+| **L** | §5.4 (a–c), §5.5 | GUI test-harness groundwork: handler hygiene, named mask helpers, coordinate constants, snapshot-comparison fix. Slot **before F**, so F/H write against the settled shape and a comparison that can actually fail. |
+| **M** | §5.4 (d–g) | Grows with F and H — the scroll seam (f) is a hard prerequisite for §5.2. Never build ahead of the test that needs it. |
+
+**Note on L/M.** They are listed last only because the table is otherwise
+ordered by dependency; L should actually run before batch F. §5.5 step 1 can be
+done at any time — it needs a CI artifact, not a code freeze.
 
 **Coverage note.** Batches C, D, F, H and J add tests; B, E and G mostly move
 existing behaviour. Run the coverage task before and after **every** batch
