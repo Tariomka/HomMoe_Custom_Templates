@@ -1,11 +1,5 @@
 # Prompt: In-Depth Repository Review
 
-Paste everything below the line into a fresh agent session to produce a full,
-principal-level review of this repository. Use a high-taste, high-intelligence
-model (per AGENTS.md §3.4: fable-class or opus-class; never Haiku).
-
----
-
 Read `AGENTS.md` first and follow it strictly for the entire session. You are
 acting as a **senior/principal engineer performing an exhaustive review of the
 whole repository**. Your ONLY deliverable is a review document — do **not** fix
