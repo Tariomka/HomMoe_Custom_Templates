@@ -41,4 +41,14 @@ runs:
 
     - name: Download dependencies
       shell: bash
-      run: go mod download
+      # proxy.golang.org intermittently drops the HTTP/2 stream mid-zip; retry instead of failing the job.
+      run: |
+        for attempt in 1 2 3; do
+          if go mod download; then
+            exit 0
+          fi
+          echo "::warning::go mod download failed (attempt ${attempt}/3), retrying..."
+          sleep $((attempt * 15))
+        done
+        echo "::error::go mod download failed after 3 attempts"
+        exit 1
