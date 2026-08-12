@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ func TestWhenFewerThanTwoLabelsExist_NoPortalsAreCreated(t *testing.T) {
 
 	// Act
 	connections := topologyBase.CreateRandomPortalConnections(
-		[]string{"A"}, []string{"A"}, newUnitTuning(), 10)
+		[]string{"A"}, []string{"A"}, newUnitTuning(), 10, nil)
 
 	// Assert
 	assert.Empty(t, connections)
@@ -30,7 +31,7 @@ func TestWhenMaxCountIsBelowLabelCount_PortalCountEqualsMaxCount(t *testing.T) {
 
 	// Act
 	connections := topologyBase.CreateRandomPortalConnections(
-		[]string{"A", "B"}, orderedLabels, newUnitTuning(), 2)
+		[]string{"A", "B"}, orderedLabels, newUnitTuning(), 2, nil)
 
 	// Assert
 	assert.Len(t, connections, 2)
@@ -44,7 +45,7 @@ func TestWhenMaxCountExceedsLabelCount_EveryLabelGetsOnePortal(t *testing.T) {
 
 	// Act
 	connections := topologyBase.CreateRandomPortalConnections(
-		[]string{"A", "B"}, orderedLabels, newUnitTuning(), 10)
+		[]string{"A", "B"}, orderedLabels, newUnitTuning(), 10, nil)
 
 	// Assert
 	assert.Len(t, connections, 4)
@@ -60,14 +61,14 @@ func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
 		{
 			Name: "Portal-A-B", From: "Spawn-A", To: "Spawn-B",
 			ConnectionType: "Portal", Road: &portalRoad,
-			GuardValue: 25000, GuardWeeklyIncrement: 0.15,
+			GuardValue: 30000, GuardWeeklyIncrement: 0.15,
 			PortalPlacementRulesFrom: []entities.PlacementRule{crossroadsRule},
 			PortalPlacementRulesTo:   []entities.PlacementRule{crossroadsRule},
 		},
 		{
 			Name: "Portal-B-A", From: "Spawn-B", To: "Spawn-A",
 			ConnectionType: "Portal", Road: &portalRoad,
-			GuardValue: 25000, GuardWeeklyIncrement: 0.15,
+			GuardValue: 30000, GuardWeeklyIncrement: 0.15,
 			PortalPlacementRulesFrom: []entities.PlacementRule{crossroadsRule},
 			PortalPlacementRulesTo:   []entities.PlacementRule{crossroadsRule},
 		},
@@ -75,10 +76,48 @@ func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
 
 	// Act
 	connections := topologyBase.CreateRandomPortalConnections(
-		[]string{"A", "B"}, []string{"A", "B"}, newUnitTuning(), 10)
+		[]string{"A", "B"}, []string{"A", "B"}, newUnitTuning(), 10, nil)
 
 	// Assert
 	assert.ElementsMatch(t, expectedConnections, connections)
+}
+
+func TestWhenPortalJoinsTwoPlayerZones_UsesThePlayerBorderGuardValue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+	var guardValues []int
+
+	// Act
+	connections := topologyBase.CreateRandomPortalConnections(
+		[]string{"A", "B"}, []string{"A", "B"}, newUnitTuning(), 10, nil)
+
+	// Assert
+	for _, connection := range connections {
+		guardValues = append(guardValues, connection.GuardValue)
+	}
+	assert.Equal(t, []int{30000, 30000}, guardValues)
+}
+
+func TestWhenPortalJoinsTwoNeutralZones_UsesTheHigherTierGuardValue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+	neutralPlans := neutral_zone.Plans{
+		{Label: "C", Quality: neutral_zone.QualityLowest},
+		{Label: "D", Quality: neutral_zone.QualityHigh},
+	}
+	var guardValues []int
+
+	// Act
+	connections := topologyBase.CreateRandomPortalConnections(
+		[]string{"A", "B"}, []string{"C", "D"}, newUnitTuning(), 10, neutralPlans)
+
+	// Assert
+	for _, connection := range connections {
+		guardValues = append(guardValues, connection.GuardValue)
+	}
+	assert.Equal(t, []int{25000, 25000}, guardValues)
 }
 
 func TestWhenManyLabelsArePortalLinked_NoPortalLinksZoneToItself(t *testing.T) {
@@ -90,7 +129,7 @@ func TestWhenManyLabelsArePortalLinked_NoPortalLinksZoneToItself(t *testing.T) {
 
 	// Act
 	connections := topologyBase.CreateRandomPortalConnections(
-		[]string{"A", "B"}, orderedLabels, newUnitTuning(), 6)
+		[]string{"A", "B"}, orderedLabels, newUnitTuning(), 6, nil)
 
 	// Assert
 	for _, connection := range connections {
@@ -110,7 +149,7 @@ func TestWhenLabelsMixPlayersAndNeutrals_PortalEndpointsUseMatchingZonePrefixes(
 
 	// Act
 	connections := topologyBase.CreateRandomPortalConnections(
-		[]string{"A", "B"}, []string{"A", "B", "C", "D"}, newUnitTuning(), 4)
+		[]string{"A", "B"}, []string{"A", "B", "C", "D"}, newUnitTuning(), 4, nil)
 
 	// Assert
 	for _, connection := range connections {

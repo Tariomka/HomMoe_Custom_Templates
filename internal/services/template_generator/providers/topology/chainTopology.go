@@ -45,7 +45,7 @@ func (this *ChainTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		conns = append(conns,
 			this.CreateRandomPortalConnections(
-				playerLetters, orderedLabels, tuning, configuration.MaxPortalConnections)...)
+				playerLetters, orderedLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLetters, zones, conns, tuning)...)

@@ -91,7 +91,7 @@ func (this *HubClusterService) createConnections(
 			WithConnectionTypeDirect().
 			WithGuardZone(hubName).
 			WithSimTurnSquad().
-			WithGuardValue(this.GetBorderGuardValue(playerLabel, spokeLabel, []string{playerLabel}, allNeutralZonePlans, tuning)).
+			WithGuardValue(this.GetBorderGuardValue(hubName, spokeLabel, []string{playerLabel}, allNeutralZonePlans, tuning)).
 			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("tourney_hub_guard_%s_%s", playerLabel, spokeLabel))
 

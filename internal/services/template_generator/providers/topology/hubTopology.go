@@ -44,7 +44,7 @@ func (this *HubTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		conns = append(conns,
 			this.CreateRandomPortalConnections(
-				playerLabels, outerLabels, tuning, configuration.MaxPortalConnections)...)
+				playerLabels, outerLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	return this.CreateVariant(playerLabels, outerLabels[0], len(outerLabels)+1, zones, conns)
 }
@@ -100,11 +100,8 @@ func (this *HubTopologyService) createConnections(
 	neutralZones neutral_zone.Plans) []entities.Connection {
 	var connections []entities.Connection
 	for index, label := range outerLabels {
-		hubAnchor := label
-		if len(playerLabels) > 0 {
-			hubAnchor = playerLabels[0]
-		}
-		hubGuard := this.GetBorderGuardValue(hubAnchor, label, playerLabels, neutralZones, tuning)
+		hubGuard := this.GetBorderGuardValue(
+			constants.HubZoneName, label, playerLabels, neutralZones, tuning)
 		outerZone := this.ZoneLabelProvider.CreateZoneName(label, playerLabels)
 		connections = append(connections,
 			variant_content.NewConnectionBuilder().

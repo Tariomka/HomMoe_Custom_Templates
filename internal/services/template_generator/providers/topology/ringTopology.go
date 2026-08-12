@@ -43,7 +43,7 @@ func (this *RingTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		conns = append(conns,
 			this.CreateRandomPortalConnections(
-				playerLabels, orderedLabels, tuning, configuration.MaxPortalConnections)...)
+				playerLabels, orderedLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	if isIsolated {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)

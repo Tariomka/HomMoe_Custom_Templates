@@ -2,7 +2,6 @@ package topology
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
@@ -55,7 +54,7 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		conns = append(conns,
 			this.CreateRandomPortalConnections(
-				playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+				playerLabels, allLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(allLabels)+1, zones, conns)
 }
@@ -141,12 +140,7 @@ func (this *GeometricHubTopologyService) createConnections(
 
 	// Rule 11: every connection that touches the Hub is a portal.
 	portalRule := placement_rule.NewPlacementRuleBuilder().BuildNearCrossroadsRule(2)
-	guardAnchor := playerLabels[0]
 	for _, label := range layout.hubPortalLabels {
-		guardLabel := label
-		if slices.Contains(playerLabels, label) {
-			guardLabel = guardAnchor
-		}
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName("Portal-Hub-"+label).
 			WithFrom(constants.HubZoneName).
@@ -155,7 +149,8 @@ func (this *GeometricHubTopologyService) createConnections(
 			WithPortalPlacementRulesFrom(portalRule).
 			WithPortalPlacementRulesTo(portalRule).
 			WithRoad(true).
-			WithGuardValue(this.GetBorderGuardValue(guardAnchor, guardLabel, playerLabels, neutralZones, tuning)).
+			WithGuardValue(this.GetBorderGuardValue(
+				constants.HubZoneName, label, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			Build())
 	}

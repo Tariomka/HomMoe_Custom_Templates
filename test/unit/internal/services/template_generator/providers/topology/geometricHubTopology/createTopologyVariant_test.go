@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenRandomPortalsEnabled_AddsExtraPortalConnections(t *testing.T) {
@@ -66,6 +67,32 @@ func TestWhenNoNeutralZonesSelected_EveryPlayerConnectsToHub(t *testing.T) {
 	assert.ElementsMatch(t,
 		[]string{"Spawn-A", "Spawn-B", "Spawn-C", "Spawn-D"},
 		hubPortalTargets(variant))
+}
+
+func TestWhenAPortalTouchesTheHub_ItIsGuardedAtTheHighestTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	playerLabels := []string{"A", "B"}
+	plans := mixedPlans([]string{"E", "F"}, []string{"G"}, nil)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyGeometricHub
+	configuration.PlayerCount = len(playerLabels)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	tuning.BorderGuardStrengthMultiplier = 1.0
+	var hubGuardValues []int
+
+	// Act
+	variant := topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
+		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, "")
+
+	// Assert
+	for _, connection := range hubConnections(variant) {
+		hubGuardValues = append(hubGuardValues, connection.GuardValue)
+	}
+	require.NotEmpty(t, hubGuardValues)
+	for _, guardValue := range hubGuardValues {
+		assert.Equal(t, 35000, guardValue)
+	}
 }
 
 func TestWhenNoNeutralZonesSelected_NoPlayerToPlayerConnectionsExist(t *testing.T) {

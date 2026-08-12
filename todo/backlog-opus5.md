@@ -37,6 +37,9 @@ a decision the owner already made.
 
 **Item count: 0 🔴 · 6 🟠 · 10 🟡 · 3 ⚪ (19 total).**
 
+**✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) —
+**4 done, 15 open.**
+
 **Baselines to hold (AGENTS.md §2.3):** unit coverage **72.5 %**, floor
 **69.3 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
@@ -51,7 +54,7 @@ a decision the owner already made.
 | Prior item | Status re-verified 2026-08-11 | New section |
 | --- | --- | --- |
 | §1.4 Editor-state copies are shallow | Still open, verbatim — no `Clone` exists on `EditorStateDto` | §1.1 |
-| §1.9 Fatal window error logged to a discard handler | Still open, verbatim | §1.4 |
+| §1.9 Fatal window error logged to a discard handler | ✅ Fixed 2026-08-12 | §1.4 |
 
 All other review items are `✅ FIXED`, `❌ WILL NOT FIX`, or owner-excluded and
 are **not** re-reported here.
@@ -233,7 +236,16 @@ explicitly read-only view — but take that decision to the owner first.
 
 ---
 
-### 1.2 🟠 Hub-touching connections are guarded as *player borders*, not as hub borders
+### 1.2 ✅ DONE 🟠 Hub-touching connections are guarded as *player borders*, not as hub borders
+
+**Resolved 2026-08-12 (batch B).** `constants.IsHubLabel`
+([hubLabel.go](../internal/common/constants/hubLabel.go)) plus a private
+`labelQuality` helper collapsed `GetBorderGuardValue` to
+`max(labelQuality(a), labelQuality(b)).GetGuardValue()`; `hubTopology`,
+`geometricHubTopology` and `hubClusterService` now pass the hub label instead of
+a player anchor, so every hub-touching connection is `35 000`. The hub was not
+added to `neutral_zone.Plans`. Player/plan pairs are bit-identical to before.
+The golden generator tests needed **no** expectation change.
 
 **Evidence.** The hub zone is built with the top tier —
 [zoneFactory.go](../internal/services/zones/zoneFactory.go#L120-L141):
@@ -363,7 +375,13 @@ expectations deliberately, do not loosen the assertions.
 
 ---
 
-### 1.3 🟠 Random portal guards ignore endpoint tiers (flat 25 000)
+### 1.3 ✅ DONE 🟠 Random portal guards ignore endpoint tiers (flat 25 000)
+
+**Resolved 2026-08-12 (batch B).** `CreateRandomPortalConnections` gained a
+trailing `neutralZones neutral_zone.Plans` parameter (interface, `TopologyBase`
+pass-through and all seven call sites) and now calls `GetBorderGuardValue`, so
+portals are guarded by the higher endpoint tier and scaled exactly once. The
+`25 000` literal is gone, which closes §3.3 as well.
 
 **Evidence.**
 [topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L30-L68):
@@ -434,9 +452,15 @@ Hub portals in the geometric layout are created separately and are covered by
 
 ---
 
-### 1.4 🟡 A fatal window error is logged to a discard handler, then the process exits silently
+### 1.4 ✅ DONE 🟡 A fatal window error is logged to a discard handler, then the process exits silently
 
 *(= review-opus5-08-04 §1.9, restated with re-verified line numbers.)*
+
+**Resolved 2026-08-12 (batch A).** The `app.DestroyEvent` error branch in
+[program.go](../app/gui/program.go) now writes to `os.Stderr` before the
+discarded `slog.Error`; the optional `os.Exit`/`main.go` refactor was **not**
+done. `app/gui/program.go` was added to the Gio-UI section of
+[test_observations.md](test_observations.md).
 
 **Evidence.** [program.go](../app/gui/program.go#L34-L41):
 
@@ -861,7 +885,7 @@ Side prefix:
 `SideMandatoryContentName(label string) string`) so the concatenation itself is
 written once; if so, they get a mirrored unit-test folder per AGENTS.md §4.6.
 
-### 3.3 🟡 Portal guard `25000` magic literal
+### 3.3 ✅ DONE 🟡 Portal guard `25000` magic literal
 
 **Evidence.**
 [topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L64):
@@ -872,6 +896,8 @@ Only if §1.3 is deferred should this be done on its own, as a named constant in
 [common_connections](../internal/common/common_connections/) — note the value is
 numerically identical to `neutral_zone.QualityHigh.GetGuardValue()`, so name it
 for its meaning, not its number.
+
+**Resolved 2026-08-12 (batch B)** by §1.3; no constant was needed.
 
 ### 3.4 🟡 Foothold placement distances are inline literals
 
@@ -1282,7 +1308,7 @@ deliberately. **Do not act without an explicit instruction.**
 | §2.5 `template` → `template_entity` | Renames/moves inside protected tree | Yes |
 | §6.1 dead adjacency branches | Reverses an owner rollback | Yes |
 | §2.3 snapshot regeneration | Regenerated GPU snapshots need a human eyeball | Review, not approval |
-| §1.2 / §1.3 guard values | Changes generated `.rmg.json` guard numbers for every hub topology and every portal | Approved 2026-08-11 |
+| §1.2 / §1.3 guard values | Changes generated `.rmg.json` guard numbers for every hub topology and every portal | Approved 2026-08-11, landed 2026-08-12 |
 
 ---
 
@@ -1293,9 +1319,9 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 
 | Batch | Items | Notes |
 | --- | --- | --- |
-| **A** | §1.4 | Two-line stderr fix + a `test_observations.md` entry. Smallest possible warm-up, no dependencies. |
-| **B** | §1.2 → §1.3 | Strictly ordered: §1.3 depends on the collapsed `GetBorderGuardValue`. Expect golden-template churn; regenerate expectations deliberately. |
-| **C** | §3.1, §3.2, §3.4 | Constant extraction, mechanical, no behaviour change. §3.3 is already gone if B landed. |
+| ✅ **A** | §1.4 | **Done 2026-08-12.** Two-line stderr fix + a `test_observations.md` entry. |
+| ✅ **B** | §1.2 → §1.3 | **Done 2026-08-12.** No golden-template churn was required — the generator tests do not pin hub or portal guard values. |
+| **C** | §3.1, §3.2, §3.4 | Constant extraction, mechanical, no behaviour change. §3.3 is gone — B landed. |
 | **D** | §1.1 | Deep copy + regression tests. Benchmark before/after. |
 | **E** | §4.1 | Save To rename. Touches the file-explorer integration tests — do **before** §5.3. |
 | **F** | §5.3 | File-explorer pointer/hidden-file tests, in the file §4.1 just rewrote. |

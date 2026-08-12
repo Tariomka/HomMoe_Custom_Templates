@@ -53,6 +53,28 @@ func TestWhenClusterIsBuilt_HubZoneIsNamedAfterPlayerLabel(t *testing.T) {
 	assert.Equal(t, "Hub-B", zones[0].Name)
 }
 
+func TestWhenASpokeConnectionTouchesTheHub_ItIsGuardedAtTheHighestTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	neutralZones := newTwoNeutralPlans()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	tuning.BorderGuardStrengthMultiplier = 1.0
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
+	var hubGuardValues []int
+
+	// Act
+	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
+
+	// Assert
+	for _, connection := range connections {
+		if connection.From == "Hub-A" || connection.To == "Hub-A" {
+			hubGuardValues = append(hubGuardValues, connection.GuardValue)
+		}
+	}
+	assert.Equal(t, []int{35000, 35000, 35000}, hubGuardValues)
+}
+
 func TestWhenSpokesAreBuilt_CreatesSpokeConnectionPerSpokeZone(t *testing.T) {
 	t.Parallel()
 	// Arrange

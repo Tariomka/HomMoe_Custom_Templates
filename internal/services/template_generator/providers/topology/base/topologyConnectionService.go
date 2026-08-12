@@ -31,6 +31,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	maxCount int,
+	neutralZones neutral_zone.Plans,
 ) []entities.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
@@ -61,7 +62,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 			WithPortalPlacementRulesFrom(rule).
 			WithPortalPlacementRulesTo(rule).
 			WithRoad(true).
-			WithGuardValue(tuning.ScaleByBorderGuardStrength(25000)).
+			WithGuardValue(this.GetBorderGuardValue(fromLabel, toLabel, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			Build())
 	}
@@ -183,22 +184,27 @@ func (this *TopologyConnectionService) GetBorderGuardValue(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 ) int {
-	firstIsPlayer := slices.Contains(playerLabels, labelA)
-	secondIsPlayer := slices.Contains(playerLabels, labelB)
-	if firstIsPlayer && secondIsPlayer {
-		return tuning.ScaleByBorderGuardStrength(neutral_zone.QualityUnknown.GetGuardValue())
-	}
-
-	if firstIsPlayer || secondIsPlayer {
-		neutralLabel := labelB
-		if !firstIsPlayer {
-			neutralLabel = labelA
-		}
-		return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
-	}
-
-	higherQuality := max(neutralZones.GetQuality(labelA), neutralZones.GetQuality(labelB))
+	higherQuality := max(
+		labelQuality(labelA, playerLabels, neutralZones),
+		labelQuality(labelB, playerLabels, neutralZones))
 	return tuning.ScaleByBorderGuardStrength(higherQuality.GetGuardValue())
+}
+
+// labelQuality ranks a label for guarding purposes. QualityUnknown is -1, so a
+// player label always loses the max against a real tier while still supplying
+// the player-border guard value when both endpoints are players.
+func labelQuality(
+	label string,
+	playerLabels []string,
+	neutralZones neutral_zone.Plans,
+) neutral_zone.Quality {
+	if constants.IsHubLabel(label) {
+		return neutral_zone.QualityHighest
+	}
+	if slices.Contains(playerLabels, label) {
+		return neutral_zone.QualityUnknown
+	}
+	return neutralZones.GetQuality(label)
 }
 
 func (this *TopologyConnectionService) createBridgeConnection(

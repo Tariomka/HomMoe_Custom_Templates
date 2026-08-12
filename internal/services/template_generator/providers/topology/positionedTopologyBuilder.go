@@ -54,7 +54,8 @@ func (this *PositionedTopologyBuilder) BuildVariant(
 		playerLabels, allLabels, tuning, isIsolated, neutralZones, connectionNames, pairs)
 	if configuration.RandomPortals {
 		connections = append(connections,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+			this.CreateRandomPortalConnections(
+				playerLabels, allLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	if isIsolated {
 		connections = append(connections,

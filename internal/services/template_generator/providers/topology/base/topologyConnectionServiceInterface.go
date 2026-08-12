@@ -10,7 +10,8 @@ type ITopologyConnectionService interface {
 	CreateRandomPortalConnections(
 		playerLabels, orderedLabels []string,
 		tuning models.GenerationTuning,
-		maxCount int) []entities.Connection
+		maxCount int,
+		neutralZones neutral_zone.Plans) []entities.Connection
 
 	CreateMissingPlayerConnections(
 		playerLabels []string,

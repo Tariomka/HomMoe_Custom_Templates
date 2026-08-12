@@ -153,12 +153,14 @@ func (this *TopologyBase) CreateHubZone(
 func (this *TopologyBase) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
-	maxCount int) []entities.Connection {
+	maxCount int,
+	neutralZones neutral_zone.Plans) []entities.Connection {
 	return this.connectionService.CreateRandomPortalConnections(
 		playerLabels,
 		orderedLabels,
 		tuning,
 		maxCount,
+		neutralZones,
 	)
 }
 

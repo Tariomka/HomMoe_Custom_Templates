@@ -48,7 +48,8 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		allLabels := append(append([]string{}, playerLabels...), neutralLabels...)
 		conns = append(conns,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+			this.CreateRandomPortalConnections(
+				playerLabels, allLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	if configuration.NoDirectPlayerConnections && len(playerLabels) > 1 {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)

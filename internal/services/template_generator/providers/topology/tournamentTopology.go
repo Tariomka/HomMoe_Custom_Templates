@@ -69,7 +69,7 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 				ToSlice()
 			conns = append(conns,
 				this.CreateRandomPortalConnections(
-					playerLabels, clusterLabels, tuning, configuration.MaxPortalConnections)...)
+					playerLabels, clusterLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 		}
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(zones), zones, conns)
