@@ -3,18 +3,11 @@ package common_connections
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-type GuardWeeklyIncrement struct {
-	Slow     float64
-	Normal   float64
-	Standard float64
-	Fast     float64
-	VeryFast float64
-}
-
-func GetGuardWeeklyIncrements() GuardWeeklyIncrement {
-	return GuardWeeklyIncrement{
+func GetGuardWeeklyIncrements() models.GuardWeeklyIncrement {
+	return models.GuardWeeklyIncrement{
 		Slow:     0.05,
 		Normal:   0.10,
 		Standard: 0.15,

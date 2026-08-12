@@ -6,6 +6,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // SquareTopologyService lays the player zones out along the edges of a square.
@@ -13,12 +15,17 @@ import (
 // square outline, while a share of the neutral zones is pulled into the middle
 // of the square and tied back to the nearest edge.
 type SquareTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 }
 
-func NewSquareTopologyService() *SquareTopologyService {
+func NewSquareTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService) *SquareTopologyService {
 	return &SquareTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -28,8 +35,8 @@ func (this *SquareTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	return this.createVariantFromLayout(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createSquareLayout)
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createSquareLayout, nil)
 }
 
 // createSquareLayout builds the parallel label, position and connection-pair

@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/brianvoe/gofakeit/v7"
@@ -13,7 +12,7 @@ import (
 func TestWhenZonesAreApplied_ManualZoneSavesAreStoredInCurrentState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	position := &[2]float64{gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1)}
 	zone := entities.Zone{Name: "Zone A", Size: gofakeit.Float64Range(0.5, 2), ManualPosition: position}
 
@@ -29,7 +28,7 @@ func TestWhenZonesAreApplied_ManualZoneSavesAreStoredInCurrentState(t *testing.T
 func TestWhenConnectionsAreApplied_ManualConnectionSavesAreStoredInCurrentState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	connection := entities.Connection{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true}
 
 	// Act

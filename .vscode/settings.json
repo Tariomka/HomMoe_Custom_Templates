@@ -22,7 +22,9 @@
         "Eridore",
         "Gemwood",
         "gioui",
+        "gochecknoglobals",
         "gofakeit",
+        "goforj",
         "gofmt",
         "gofont",
         "golines",
@@ -32,6 +34,7 @@
         "hommoe",
         "Huntsmans",
         "ineffassign",
+        "injector",
         "Insara",
         "Insaras",
         "Interactable",
@@ -68,7 +71,8 @@
         "Ukhtabar",
         "uncommons",
         "Uurdt",
-        "Voodoosh"
+        "Voodoosh",
+        "wireinject"
     ],
     "gopls": {
         "build.buildFlags": ["-tags=integration_test,gui"],
@@ -110,5 +114,15 @@
     "workbench.editorAssociations": {
         "*.golden": "imagePreview.previewEditor",
 		"*.failure": "imagePreview.previewEditor",
+    },
+    "chat.tools.terminal.autoApprove": {
+        "golangci-lint-v2": true,
+        "gofmt": true,
+        "git rev-parse": true,
+        "wire": true,
+        "go build": true,
+        "go test": true,
+        "go tool": true,
+        "go vet": true,
     },
 }

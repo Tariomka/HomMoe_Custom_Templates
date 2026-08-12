@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +10,7 @@ import (
 func TestWhenNextStateIsAssigned_NextStateExists(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	state.SetNextState(state.GetCurrentState())
@@ -20,10 +19,10 @@ func TestWhenNextStateIsAssigned_NextStateExists(t *testing.T) {
 	assert.True(t, state.HasNextState())
 }
 
-func TestWhenAssignedNextStateDiffersFromCurrent_PendingChangesAreReported(t *testing.T) {
+func TestWhenAssignedNextStateDiffersFromCurrent_AssignedStateIsStored(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	divergent := dtos.NewDefaultEditorStateDto()
 	divergent.PlayerCount++
 
@@ -31,5 +30,5 @@ func TestWhenAssignedNextStateDiffersFromCurrent_PendingChangesAreReported(t *te
 	state.SetNextState(divergent)
 
 	// Assert
-	assert.True(t, state.HasPendingChanges())
+	assert.Equal(t, &divergent, state.GetNextState())
 }

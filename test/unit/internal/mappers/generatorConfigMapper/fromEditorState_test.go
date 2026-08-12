@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -143,7 +143,7 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 			testCase.mutate(&state)
 
 			// Act
-			configuration := mappers.NewConfigMapper().FromEditorState(state)
+			configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 			// Assert
 			assert.Equal(t, testCase.expected, testCase.actual(configuration))
@@ -217,7 +217,7 @@ func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 	}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	assert.Equal(t, expected, configuration.ZoneConfiguration)
@@ -233,7 +233,7 @@ func TestWhenHeroOptionsProvided_PopulatesHeroSettings(t *testing.T) {
 	expected := config.HeroSettings{HeroCountMin: 2, HeroCountMax: 9, HeroCountIncrement: 3}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	assert.Equal(t, expected, configuration.HeroSettings)
@@ -259,13 +259,13 @@ func TestWhenManualCityHoldOptionsProvided_PopulatesGameEndConditions(t *testing
 	}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	assert.Equal(t, expected, configuration.GameEndConditions)
 }
 
-func TestWhenVictoryConditionIsCityHoldCondition_ForcesCityHoldEnabled(t *testing.T) {
+func TestWhenVictoryConditionIsCityHoldAndFlagIsFalse_PreservesFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := dtos.NewDefaultEditorStateDto()
@@ -273,10 +273,10 @@ func TestWhenVictoryConditionIsCityHoldCondition_ForcesCityHoldEnabled(t *testin
 	state.CityHold = false
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
-	assert.True(t, configuration.GameEndConditions.CityHold)
+	assert.False(t, configuration.GameEndConditions.CityHold)
 }
 
 func TestWhenGladiatorArenaOptionsProvided_PopulatesGladiatorArenaRules(t *testing.T) {
@@ -289,7 +289,7 @@ func TestWhenGladiatorArenaOptionsProvided_PopulatesGladiatorArenaRules(t *testi
 	expected := &config.GladiatorArenaRules{Enabled: true, DaysDelayStart: 12, CountDay: 4}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	assert.Equal(t, expected, configuration.GladiatorArenaRules)
@@ -313,7 +313,7 @@ func TestWhenTournamentOptionsProvided_PopulatesTournamentRules(t *testing.T) {
 	}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	assert.Equal(t, expected, configuration.TournamentRules)
@@ -330,7 +330,7 @@ func TestWhenContentRowsProvidedForEveryZoneKind_PopulatesEveryMandatoryCollecti
 	state.HubZoneContentRows = []models.ZoneContentRowSave{{Sid: "e", Count: 1}}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	collectionLengths := []int{
@@ -350,7 +350,7 @@ func TestWhenPlayerRowHasCountTwo_ExpandsIntoTwoMandatoryItems(t *testing.T) {
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 2, IsMine: true}}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	assert.Len(t, configuration.PlayerZoneMandatoryContent, 2)
@@ -363,7 +363,7 @@ func TestWhenPlayerRowIsMine_PropagatesIsMineFlag(t *testing.T) {
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 1, IsMine: true}}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	require.Len(t, configuration.PlayerZoneMandatoryContent, 1)
@@ -377,7 +377,7 @@ func TestWhenHighNeutralRowProvided_CopiesSidToMandatoryItem(t *testing.T) {
 	state.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "pandora_box", Count: 1}}
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	require.Len(t, configuration.HighNeutralMandatoryContent, 1)
@@ -394,7 +394,7 @@ func TestWhenBonusEntriesProvided_CopiesBonuses(t *testing.T) {
 	state.Bonuses = bonuses
 
 	// Act
-	configuration := mappers.NewConfigMapper().FromEditorState(state)
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
 
 	// Assert
 	assert.Equal(t, bonuses, configuration.Bonuses)

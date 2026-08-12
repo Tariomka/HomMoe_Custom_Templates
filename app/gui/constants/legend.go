@@ -12,6 +12,7 @@ type LegendItem struct {
 	Line  bool
 }
 
+//nolint:gochecknoglobals // Allocated once and reused on each render
 var LegendRows = [][]LegendItem{
 	{
 		{Label: "Player", Color: themes.ColorsPreview.SpawnEdge},

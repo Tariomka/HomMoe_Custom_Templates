@@ -145,6 +145,40 @@ func TestWhenGeometricHubTopologyIsLaidOut_FigureKeepsExtraBorderClearance(t *te
 	assert.Less(t, hubWidth, squareWidth)
 }
 
+func TestWhenGeometricHubHasSixPlayers_FigureSitsCloserToBorder(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	crowdedZones := []entities.Zone{
+		positionedZone("Spawn-A", 0.1, 0.5),
+		positionedZone("Spawn-B", 0.3, 0.2),
+		positionedZone("Spawn-C", 0.5, 0.8),
+		positionedZone("Spawn-D", 0.7, 0.2),
+		positionedZone("Spawn-E", 0.9, 0.5),
+		positionedZone("Spawn-F", 0.5, 0.5),
+	}
+	sparseZones := []entities.Zone{
+		positionedZone("Spawn-A", 0.1, 0.5),
+		positionedZone("Neutral-B", 0.3, 0.2),
+		positionedZone("Neutral-C", 0.5, 0.8),
+		positionedZone("Neutral-D", 0.7, 0.2),
+		positionedZone("Spawn-E", 0.9, 0.5),
+		positionedZone("Neutral-F", 0.5, 0.5),
+	}
+
+	// Act
+	crowdedLayout := service.BuildPreviewLayout(
+		templateWith(crowdedZones, nil), config.TopologyGeometricHub, layoutSide)
+	sparseLayout := service.BuildPreviewLayout(
+		templateWith(sparseZones, nil), config.TopologyGeometricHub, layoutSide)
+
+	// Assert - six or more players shrink the edge inset, letting the same
+	// figure scale further toward the border (players further from the hub).
+	crowdedWidth := crowdedLayout.Positions["Spawn-E"].X - crowdedLayout.Positions["Spawn-A"].X
+	sparseWidth := sparseLayout.Positions["Spawn-E"].X - sparseLayout.Positions["Spawn-A"].X
+	assert.Greater(t, crowdedWidth, sparseWidth)
+}
+
 func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -239,6 +273,60 @@ func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T)
 	assert.True(t, layout.Connections[0].IsPortal())
 }
 
+func TestWhenZoneHasGladiatorArenaMainObject_MarksZoneAsArena(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zone := namedZone("Neutral-B")
+	zone.MainObjects = []entities.MainObject{{Type: "GladiatorArena"}}
+	zones := []entities.Zone{namedZone("Spawn-A"), zone}
+	connections := []entities.Connection{directConnection("Spawn-A", "Neutral-B")}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
+
+	// Assert
+	arenaFlags := map[string]bool{}
+	for _, previewZone := range layout.Zones {
+		arenaFlags[previewZone.Name] = previewZone.HasArena()
+	}
+	assert.Equal(t, map[string]bool{"Spawn-A": false, "Neutral-B": true}, arenaFlags)
+}
+
+func TestWhenConnectionTypeIsGladiatorArena_MarksPreviewConnectionAsArena(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []entities.Connection{
+		{From: "Spawn-A", To: "Neutral-B", ConnectionType: "GladiatorArena"},
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.True(t, layout.Connections[0].IsGladiatorArena())
+}
+
+func TestWhenConnectionTypeIsProximity_MarksPreviewConnectionAsProximity(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []entities.Connection{
+		{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Proximity"},
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Equal(t, preview.ConnectionTypeProximity, layout.Connections[0].Type)
+}
+
 func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -317,6 +405,25 @@ func TestWhenRingTopologyProvided_PositionsEveryZone(t *testing.T) {
 
 	// Assert
 	assert.Len(t, layout.Positions, 3)
+}
+
+func TestWhenTopologyIsUnknown_UsesRingLayout(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B"), namedZone("Neutral-C")}
+	connections := []entities.Connection{
+		directConnection("Spawn-A", "Neutral-B"),
+		directConnection("Neutral-B", "Neutral-C"),
+	}
+	template := templateWith(zones, connections)
+	expected := service.BuildPreviewLayout(template, config.TopologyRing, layoutSide)
+
+	// Act
+	actual := service.BuildPreviewLayout(template, config.MapTopology("Unknown"), layoutSide)
+
+	// Assert
+	assert.Equal(t, expected.Positions, actual.Positions)
 }
 
 func TestWhenRingTopologyProvided_ComputesPositiveZoneRadius(t *testing.T) {

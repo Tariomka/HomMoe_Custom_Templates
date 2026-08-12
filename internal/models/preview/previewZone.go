@@ -15,10 +15,15 @@ type Zone struct {
 	Quality neutral_zone.Quality
 	Owner   int
 	Castles int
+	Arena   bool
 }
 
 func (this Zone) HasCastles() bool {
 	return this.Castles > 0
+}
+
+func (this Zone) HasArena() bool {
+	return this.Arena
 }
 
 type ZoneType uint8

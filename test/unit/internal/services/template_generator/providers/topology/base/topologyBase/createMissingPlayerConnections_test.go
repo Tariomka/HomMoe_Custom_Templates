@@ -5,13 +5,14 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenFewerThanTwoPlayerLabelsExist_NoFallbackConnectionsAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	zones := []entities.Zone{{Name: "Spawn-A"}}
 
 	// Act
@@ -25,7 +26,7 @@ func TestWhenFewerThanTwoPlayerLabelsExist_NoFallbackConnectionsAreCreated(t *te
 func TestWhenBothSpawnZonesLackConnections_SingleSharedFallbackLinksThem(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	expectedConnections := []entities.Connection{
 		{
@@ -47,7 +48,7 @@ func TestWhenBothSpawnZonesLackConnections_SingleSharedFallbackLinksThem(t *test
 func TestWhenSpawnZonesAlreadyRoadLinkedToKnownConnections_NoFallbackIsCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	zones := []entities.Zone{
 		{Name: "Spawn-A", Roads: []entities.Road{
 			{To: entities.TypedRef{Type: "Connection", Args: []string{"Ring-A-B"}}},
@@ -69,7 +70,7 @@ func TestWhenSpawnZonesAlreadyRoadLinkedToKnownConnections_NoFallbackIsCreated(t
 func TestWhenZoneRoadReferencesUnknownConnection_FallbackIsStillCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	zones := []entities.Zone{
 		{Name: "Spawn-A", Roads: []entities.Road{
 			{To: entities.TypedRef{Type: "Connection", Args: []string{"Ghost-Conn"}}},
@@ -88,7 +89,7 @@ func TestWhenZoneRoadReferencesUnknownConnection_FallbackIsStillCreated(t *testi
 func TestWhenSpawnZonesAreMissingFromZoneList_NoFallbacksAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	connections := topologyBase.CreateMissingPlayerConnections(
@@ -101,7 +102,7 @@ func TestWhenSpawnZonesAreMissingFromZoneList_NoFallbacksAreCreated(t *testing.T
 func TestWhenPlayerLabelsAreReversed_FallbackNameStillSortsLabelsAlphabetically(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	zones := []entities.Zone{{Name: "Spawn-B"}, {Name: "Spawn-A"}}
 	expectedConnections := []entities.Connection{
 		{
@@ -123,7 +124,7 @@ func TestWhenPlayerLabelsAreReversed_FallbackNameStillSortsLabelsAlphabetically(
 func TestWhenBorderGuardMultiplierIsDoubled_FallbackGuardValueIsScaled(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	tuning := newUnitTuning()
 	tuning.BorderGuardStrengthMultiplier = 2.0
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
@@ -139,7 +140,7 @@ func TestWhenBorderGuardMultiplierIsDoubled_FallbackGuardValueIsScaled(t *testin
 func TestWhenFallbackConnectionIsCreated_BothSpawnZonesInSliceGainFallbackRoad(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	expectedRoad := entities.Road{
 		From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},

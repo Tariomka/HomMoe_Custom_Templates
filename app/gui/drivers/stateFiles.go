@@ -2,8 +2,6 @@ package drivers
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
@@ -16,11 +14,9 @@ import (
 // call time - onLoaded runs inside the pick handler, after the loaded state
 // has been installed and only when loading succeeded.
 func (this *State) Load(onLoaded func()) {
-	dir, err := os.Getwd() // Editor state by default is loaded from the same directory as the executable
-	if err != nil {
-		dir = this.suggestDirectory()
-	}
-	this.dialogs.Open(dialogs.NewOpenFileDialog(dir, []string{configFileExtension}, func(path string) {
+	// Editor state by default is loaded from the same directory as the executable.
+	dir := this.workingDirectory()
+	this.dialogs.Open(dialogs.NewOpenFileDialog(this.fileSystem, dir, []string{configFileExtension}, func(path string) {
 		if this.handleLoadState(path) && onLoaded != nil {
 			onLoaded()
 		}
@@ -37,14 +33,11 @@ func (this *State) Save() {
 }
 
 func (this *State) SaveAs(templateName string) {
-	dir, err := os.Getwd() // Editor state by default is saved in the same directory as the executable
-	if err != nil {
-		dir = this.suggestDirectory()
-	}
+	// Editor state by default is saved in the same directory as the executable.
+	dir := this.workingDirectory()
 	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + configFileExtension
-	this.dialogs.Open(dialogs.NewSaveFileDialog(dir, defaultName, func(path string) {
+	this.dialogs.Open(dialogs.NewSaveFileDialog(this.fileSystem, dir, defaultName, func(path string) {
 		this.handleSaveState(path)
-		this.currentPath = path
 	}))
 }
 
@@ -65,7 +58,7 @@ func (this *State) Exit() {
 
 // PickOutputDir presents a folder picker for the template output directory.
 func (this *State) PickOutputDir() {
-	this.dialogs.Open(dialogs.NewPickFolderDialog(this.outputPath.Text(), func(path string) {
+	this.dialogs.Open(dialogs.NewPickFolderDialog(this.fileSystem, this.outputPath.Text(), func(path string) {
 		if path == "" {
 			this.SetStatus("No output directory selected.", true)
 			return
@@ -79,21 +72,23 @@ func (this *State) PickOutputDir() {
 // RevealOutputDir opens the in-app explorer in read-only Browse mode at the
 // configured output directory.
 func (this *State) RevealOutputDir() {
-	this.dialogs.Open(dialogs.NewBrowseDialog(strings.TrimSpace(this.outputPath.Text())))
+	this.dialogs.Open(dialogs.NewBrowseDialog(this.fileSystem, strings.TrimSpace(this.outputPath.Text())))
 }
 
 func (this *State) handleSaveState(path string) {
-	if _, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+	savedPath, err := this.handler.SaveState(dtos.EditorStateSaveDto{
 		State:      new(this.innerState.GetCurrentState()),
 		OutputPath: path,
-	}); err != nil {
+	})
+	if err != nil {
 		this.SetStatus(fmt.Sprintf("Save failed: %v.", err), true)
 		return
 	}
 
+	this.currentPath = savedPath
 	this.unsaved = false
 	this.confirmExit = false
-	this.SetStatus("Saved "+path, false)
+	this.SetStatus("Saved "+savedPath, false)
 }
 
 func (this *State) handleLoadState(path string) bool {
@@ -111,19 +106,15 @@ func (this *State) handleLoadState(path string) bool {
 		this.SetStatus(fmt.Sprintf("Loaded %s (adjusted: %s)", path, strings.Join(warnings, "; ")), false)
 		return true
 	}
+
 	this.SetStatus("Loaded "+path, false)
 	return true
 }
 
-func (this *State) suggestDirectory() string {
-	if this.currentPath != "" {
-		return filepath.Dir(this.currentPath)
-	}
-
-	if outputDir := strings.TrimSpace(this.outputPath.Text()); outputDir != "" {
-		return outputDir
-	}
-
-	workingDir, _ := os.Getwd()
-	return workingDir
+// workingDirectory returns the process working directory, resolved through the
+// filesystem handler so the driver performs no path arithmetic of its own.
+// ResolveStartDirectory always yields an existing directory, so unlike the
+// raw [os.Getwd] it never needs a caller-side fallback.
+func (this *State) workingDirectory() string {
+	return this.fileSystem.ResolveStartDirectory(".")
 }

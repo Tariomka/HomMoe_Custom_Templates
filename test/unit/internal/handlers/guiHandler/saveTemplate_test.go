@@ -8,7 +8,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +16,7 @@ import (
 func TestWhenTemplateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateSaveDto{Template: nil, OutputPath: t.TempDir()}
 
 	// Act
@@ -30,7 +29,7 @@ func TestWhenTemplateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 func TestWhenTemplateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateSaveDto{
 		Template:   &entities.RmgTemplate{Name: "Empty Path Template"},
 		OutputPath: "",
@@ -46,7 +45,7 @@ func TestWhenTemplateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 func TestWhenTemplateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateSaveDto{
 		Template:   &entities.RmgTemplate{Name: "Whitespace Path Template"},
 		OutputPath: "   \t ",
@@ -62,7 +61,7 @@ func TestWhenTemplateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *test
 func TestWhenTemplateAndOutputPathAreValid_ReturnsTemplateFilePath(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputDirectory := t.TempDir()
 	template := generateDefaultTemplate(t, handler)
 	template.Name = "Valid Save Template"
@@ -83,7 +82,7 @@ func TestWhenTemplateAndOutputPathAreValid_ReturnsTemplateFilePath(t *testing.T)
 func TestWhenTemplateAndOutputPathAreValid_WritesTemplateFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputDirectory := t.TempDir()
 	template := generateDefaultTemplate(t, handler)
 	template.Name = "Written Save Template"
@@ -104,7 +103,7 @@ func TestWhenTemplateAndOutputPathAreValid_WritesTemplateFile(t *testing.T) {
 func TestWhenTemplateAndOutputPathAreValid_WritesPreviewImage(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputDirectory := t.TempDir()
 	template := generateDefaultTemplate(t, handler)
 	template.Name = "Preview Save Template"
@@ -125,7 +124,7 @@ func TestWhenTemplateAndOutputPathAreValid_WritesPreviewImage(t *testing.T) {
 func TestWhenTemplateOutputPathPointsToExistingFile_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	blockingFile := filepath.Join(t.TempDir(), "not-a-directory.txt")
 	require.NoError(t, os.WriteFile(blockingFile, []byte("occupied"), 0o644))
 	template := generateDefaultTemplate(t, handler)
@@ -145,7 +144,7 @@ func TestWhenTemplateOutputPathPointsToExistingFile_ReturnsError(t *testing.T) {
 func TestWhenPreviewImageCannotBeWritten_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputDirectory := t.TempDir()
 	template := generateDefaultTemplate(t, handler)
 	template.Name = "Blocked Preview Template"
@@ -166,7 +165,7 @@ func TestWhenPreviewImageCannotBeWritten_ReturnsError(t *testing.T) {
 func TestWhenPreviewImageCannotBeWritten_StillReturnsTemplateFilePath(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputDirectory := t.TempDir()
 	template := generateDefaultTemplate(t, handler)
 	template.Name = "Blocked Preview Path Template"

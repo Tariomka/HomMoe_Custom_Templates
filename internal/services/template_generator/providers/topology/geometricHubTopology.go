@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // GeometricHubTopologyService builds the "Geometric Hub" topology: every
@@ -23,9 +26,14 @@ type GeometricHubTopologyService struct {
 	base.TopologyBase
 }
 
-func NewGeometricHubTopologyService() *GeometricHubTopologyService {
+func NewGeometricHubTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
+) *GeometricHubTopologyService {
 	return &GeometricHubTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -34,14 +42,15 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	hubIsHoldCity bool) entities.Variant {
+	_ string) entities.Variant {
 	layout := newGeometricHubLayout(playerLabels, neutralZones)
 	allLabels := append(append([]string{}, playerLabels...),
-		neutralLabelsOf(neutralZones)...)
+		linq.FromSlice(neutralZones).
+			SelectString(func(plan neutral_zone.Plan) string { return plan.Label }).
+			ToSlice()...)
 
 	connectionNames := this.createConnectionNameIndex(layout)
-	zones := this.createZones(
-		configuration, playerLabels, neutralZones, layout, connectionNames, tuning, hubIsHoldCity)
+	zones := this.createZones(configuration, playerLabels, neutralZones, layout, connectionNames, tuning)
 	conns := this.createConnections(playerLabels, neutralZones, layout, tuning)
 	if configuration.RandomPortals {
 		conns = append(conns,
@@ -49,14 +58,6 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 				playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(allLabels)+1, zones, conns)
-}
-
-func neutralLabelsOf(neutralZones neutral_zone.Plans) []string {
-	labels := make([]string, len(neutralZones))
-	for index, plan := range neutralZones {
-		labels[index] = plan.Label
-	}
-	return labels
 }
 
 // createConnectionNameIndex maps every label (and "Hub") to the names of its
@@ -87,31 +88,29 @@ func (this *GeometricHubTopologyService) createZones(
 	neutralZones neutral_zone.Plans,
 	layout *geometricHubLayout,
 	connectionNames map[string][]string,
-	tuning models.GenerationTuning,
-	hubIsHoldCity bool) []entities.Zone {
+	tuning models.GenerationTuning) []entities.Zone {
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
 		hubContentName = "mandatory_content_hub"
 	}
-	zones := []entities.Zone{this.CreateHubZone(
-		connectionNames[constants.HubZoneName], tuning, hubIsHoldCity, configuration.ZoneConfiguration.HubZoneSize,
-		configuration.ZoneConfiguration.Advanced.HubZoneCastles, configuration.GenerateRoads, hubContentName)}
+	zones := []entities.Zone{
+		this.CreateHubZone(
+			constants.HubZoneName, connectionNames[constants.HubZoneName], tuning, configuration.IsHubCityToHold(),
+			configuration.ZoneConfiguration.HubZoneSize, configuration.ZoneConfiguration.Advanced.HubZoneCastles,
+			configuration.GenerateRoads, hubContentName),
+	}
 	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
 
 	for index, label := range playerLabels {
-		zone := this.CreateSpawnZone(
-			label, fmt.Sprintf("Player%d", index+1), connectionNames[label],
-			configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-			configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-			configuration.GenerateRoads, tuning)
+		zone := this.CreateClusterZone(
+			configuration, label, connectionNames[label], index, true, false, tuning, neutralZones)
 		position := layout.positions[label]
 		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
 		zones = append(zones, zone)
 	}
 	for _, plan := range neutralZones {
-		zone := this.CreateNeutralZone(
-			plan, connectionNames[plan.Label], configuration.ZoneConfiguration.NeutralZoneSize,
-			tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning, false)
+		zone := this.CreateClusterZone(
+			configuration, plan.Label, connectionNames[plan.Label], 0, false, false, tuning, neutralZones)
 		position := layout.positions[plan.Label]
 		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
 		zones = append(zones, zone)
@@ -135,13 +134,13 @@ func (this *GeometricHubTopologyService) createConnections(
 			WithGuardZone(zoneFrom).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(edge[0], edge[1], playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("geohub_guard_%s_%s", edge[0], edge[1])).
 			Build())
 	}
 
 	// Rule 11: every connection that touches the Hub is a portal.
-	portalRule := placement_rule.NewPlacementRuleBuilder().BuildCrossroadsRule(placement_rule.DistanceNear, 2)
+	portalRule := placement_rule.NewPlacementRuleBuilder().BuildNearCrossroadsRule(2)
 	guardAnchor := playerLabels[0]
 	for _, label := range layout.hubPortalLabels {
 		guardLabel := label
@@ -157,7 +156,7 @@ func (this *GeometricHubTopologyService) createConnections(
 			WithPortalPlacementRulesTo(portalRule).
 			WithRoad(true).
 			WithGuardValue(this.GetBorderGuardValue(guardAnchor, guardLabel, playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			Build())
 	}
 	return connections

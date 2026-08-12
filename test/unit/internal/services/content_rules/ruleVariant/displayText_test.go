@@ -12,7 +12,8 @@ func TestWhenVariantIdIsKnown_ShowsVariantDescription(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	variantID := 2
-	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
+	defaultMapping := content_rules.NewVariantMappingCatalog().GetDefaultMapping()
+	rule, err := content_rules.NewRuleVariant(&defaultMapping, &variantID)
 	require.NoError(t, err)
 
 	// Act
@@ -27,7 +28,8 @@ func TestWhenVariantIdIsKnown_ShowsVariantDescription(t *testing.T) {
 func TestWhenVariantIdIsUnknown_ShowsUnforeseenError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := content_rules.RuleVariant{Mapping: content_rules.UtopiaVariants, VariantID: 99}
+	defaultMapping := content_rules.NewVariantMappingCatalog().GetDefaultMapping()
+	rule := content_rules.RuleVariant{Mapping: defaultMapping, VariantID: 99}
 
 	// Act
 	displayText := rule.DisplayText()

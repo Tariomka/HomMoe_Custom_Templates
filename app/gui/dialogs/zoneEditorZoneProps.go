@@ -10,10 +10,10 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 )
 
 func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *entities.Zone) []layout.Widget {
@@ -58,9 +58,9 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 // syncZoneProps loads the zone property widgets from the selected zone.
 // Called once whenever the zone selection changes.
 func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
-	quality := neutral_zone.GetQualityFrom(*zone)
+	quality := this.zoneHandler.GetZoneQuality(*zone)
 	this.qualityDropdown.SelectByName(quality.GetName())
-	castles := min(connection_editor.CountZoneCastles(*zone), 4)
+	castles := min(this.zoneHandler.CountZoneCastles(*zone), 4)
 	this.castleDropdown.SelectByName(strconv.Itoa(castles))
 	this.zoneSizeEdit.SetText(strconv.FormatFloat(zone.Size, 'f', -1, 64))
 	this.zoneGuardEdit.SetText(strconv.FormatFloat(zone.GuardMultiplier, 'f', -1, 64))
@@ -83,7 +83,12 @@ func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
 		(this.qualityDropdown.WasUpdated || this.castleDropdown.WasUpdated) {
 		quality := neutral_zone.GetQualityFromIndex(this.qualityDropdown.GetSelectedIndex())
 		castles := this.castleDropdown.GetSelectedIndex()
-		connection_editor.ApplyNeutralZoneQuality(zone, quality, castles, this.tuning)
+		*zone = this.zoneHandler.ApplyZoneEditorQuality(dtos.ZoneEditorQualityRequestDto{
+			Zone:        *zone,
+			Quality:     quality,
+			CastleCount: castles,
+			Tuning:      this.tuning,
+		})
 		this.geometryDirty = true // tier color / castle glyph live in previewZones
 		this.syncedZoneFor = ""   // re-sync dependent fields next frame
 	}

@@ -5,18 +5,19 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/utils"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ZoneLabelProvider struct {
 	zoneLabels []string
 }
 
-func NewZoneLabelProvider() *ZoneLabelProvider {
+func NewZoneLabelProvider() zone_interfaces.IZoneLabelProvider {
 	return &ZoneLabelProvider{zoneLabels: constants.GetZoneLabels()}
 }
 
@@ -81,7 +82,7 @@ func (this *ZoneLabelProvider) GetHoldCityLabel(
 	adjacency := this.createTopologyAdjacency(configuration, playerLabels, neutralZones)
 	var distancesByPlayer []map[string]int
 	for _, label := range playerLabels {
-		distancesByPlayer = append(distancesByPlayer, adjacency.GetDistancesFrom(label))
+		distancesByPlayer = append(distancesByPlayer, adjacency.DistancesFrom(label))
 	}
 
 	return utils.CreateHubZoneCandidates(neutralZones, distancesByPlayer).
@@ -211,11 +212,11 @@ func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
 func (this *ZoneLabelProvider) createTopologyAdjacency(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutral_zone.Plans) models.ZoneAdjacency {
-	adjacency := models.ZoneAdjacency{}
+	neutralZones neutral_zone.Plans) data.Adjacency[string] {
+	adjacency := data.NewAdjacency[string](nil)
 
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
-	// currently this is only reached from Hub & Spoke (GetHoldCityLabel gates on IsHubCityToHold)
+	// This is reached only for hub-capable topologies (GetHoldCityLabel gates on IsHubCityToHold).
 	// and only default branch is used, but the logic is correct and probably will be used in the future
 	// so for now we keep all of the branches
 	switch configuration.Topology {

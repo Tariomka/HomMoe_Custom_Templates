@@ -6,35 +6,45 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type TemplateGenerator struct {
 	configuration     *config.GeneratorConfig
-	zoneLabelProvider *zones.ZoneLabelProvider
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider
+	tuningFactory     generation_tuning.IGenerationTuningFactory
 
-	contentLimitProvider *providers.ContentLimitProvider
-	contentProvider      *providers.MandatoryContentProvider
-	gameRulesProvider    *providers.GameRulesProvider
-	topologyProvider     *providers.TopologyProvider
-	zoneLayoutProvider   *providers.ZoneLayoutProvider
+	contentLimitProvider provider_interfaces.IContentLimitProvider
+	contentProvider      provider_interfaces.IMandatoryContentProvider
+	gameRulesProvider    provider_interfaces.IGameRulesProvider
+	gladiatorProvider    provider_interfaces.IGladiatorArenaProvider
+	topologyProvider     provider_interfaces.ITopologyProvider
+	zoneLayoutProvider   provider_interfaces.IZoneLayoutProvider
 }
 
-func NewTemplateGenerator(configuration *config.GeneratorConfig) *TemplateGenerator {
-	if configuration == nil {
-		configuration = config.NewGeneratorConfig()
-	}
+func NewTemplateGenerator(
+	configuration *config.GeneratorConfig,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	tuningFactory generation_tuning.IGenerationTuningFactory,
+	contentLimitProvider provider_interfaces.IContentLimitProvider,
+	contentProvider provider_interfaces.IMandatoryContentProvider,
+	gameRulesProvider provider_interfaces.IGameRulesProvider,
+	gladiatorProvider provider_interfaces.IGladiatorArenaProvider,
+	topologyProvider provider_interfaces.ITopologyProvider,
+	zoneLayoutProvider provider_interfaces.IZoneLayoutProvider) ITemplateGenerator {
 	return &TemplateGenerator{
 		configuration:        configuration,
-		zoneLabelProvider:    zones.NewZoneLabelProvider(),
-		contentLimitProvider: providers.NewContentLimitProvider(),
-		contentProvider:      providers.NewMandatoryContentProvider(),
-		gameRulesProvider:    providers.NewGameRulesProvider(),
-		topologyProvider:     providers.NewTopologyProvider(),
-		zoneLayoutProvider:   providers.NewZoneLayoutProvider(),
+		zoneLabelProvider:    zoneLabelProvider,
+		tuningFactory:        tuningFactory,
+		contentLimitProvider: contentLimitProvider,
+		contentProvider:      contentProvider,
+		gameRulesProvider:    gameRulesProvider,
+		gladiatorProvider:    gladiatorProvider,
+		topologyProvider:     topologyProvider,
+		zoneLayoutProvider:   zoneLayoutProvider,
 	}
 }
 
@@ -44,12 +54,20 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 	}
 }
 
-func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
+// Generate builds the template for the current configuration and returns the
+// warnings raised while parsing its free-text fields.
+func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
 	this.configuration.EnsureNameExists()
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
-	tuning := this.createGenerationTuning(this.configuration.PlayerCount + len(neutralZones))
+	tuning := this.tuningFactory.Create(this.configuration, this.configuration.PlayerCount+len(neutralZones))
+	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
+
+	variant := this.topologyProvider.
+		ShufflePlayerZones(this.configuration.ShufflePlayerZones).
+		CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel)
+	this.gladiatorProvider.PlaceArena(*this.configuration, &variant)
 
 	return &entities.RmgTemplate{
 		Name:                this.configuration.TemplateName,
@@ -58,24 +76,16 @@ func (this *TemplateGenerator) Generate() *entities.RmgTemplate {
 		DisplayWinCondition: this.configuration.GetVictoryCondition(),
 		SizeX:               this.configuration.MapSize,
 		SizeZ:               this.configuration.MapSize,
-		ValueOverrides:      this.gameRulesProvider.CreateValueOverrides(*this.configuration),
+		ValueOverrides:      valueOverrides,
 		GlobalBans:          this.gameRulesProvider.CreateGlobalBans(*this.configuration),
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
-		Variants: []entities.Variant{
-			this.topologyProvider.
-				ShufflePlayerZones(this.configuration.ShufflePlayerZones).
-				CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel),
-		},
-		ZoneLayouts:        this.zoneLayoutProvider.CreateZoneLayouts(),
-		MandatoryContent:   this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
-		ContentCountLimits: this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
-		ContentPools:       []entities.ContentPool{},
-		ContentLists:       []entities.ContentList{},
-	}
-}
-
-func (this *TemplateGenerator) createGenerationTuning(totalZoneCount int) models.GenerationTuning {
-	return models.NewGenerationTuning(this.configuration, totalZoneCount)
+		Variants:            []entities.Variant{variant},
+		ZoneLayouts:         this.zoneLayoutProvider.CreateZoneLayouts(),
+		MandatoryContent:    this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
+		ContentCountLimits:  this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
+		ContentPools:        []entities.ContentPool{},
+		ContentLists:        []entities.ContentList{},
+	}, warnings
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {

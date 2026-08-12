@@ -135,6 +135,35 @@ linters:
             - pkg: github.com/Tariomka/hommoe_custom_templates/app
               desc: internal/* must not import app/*
 
+        no-services-from-app:
+          files:
+            - "**/app/**"
+            - "!$test"
+          deny:
+            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/services
+              desc: app/* must invoke domain services through handlers
+            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/repositories
+              desc: app/* must reach persistence through handlers
+            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/mappers
+              desc: app/* must reach mapping through handlers
+            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/validators
+              desc: app/* must reach validation through handlers
+
+        test-unit-internal-no-gui:
+          files:
+            - "**/test/unit/internal/**"
+          deny:
+            - pkg: github.com/Tariomka/hommoe_custom_templates/app
+              desc: internal-layer tests must not depend on the GUI layer
+
+        concrete-handlers-only-at-gui-composition-roots:
+          files:
+            - "**/app/**"
+            - "!$test"
+          deny:
+            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/handlers$
+              desc: app/* builds its handler through internal/composition
+
         config-inner-private:
           files:
             - "!**/internal/models/config/**"

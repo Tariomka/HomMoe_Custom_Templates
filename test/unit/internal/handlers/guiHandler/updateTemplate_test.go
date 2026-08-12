@@ -7,8 +7,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,7 @@ import (
 func TestWhenTemplateIsNil_ReturnsProvidedTemplateInvalidError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateUpdateDto{Template: nil}
 
 	// Act
@@ -30,7 +31,7 @@ func TestWhenTemplateIsNil_ReturnsProvidedTemplateInvalidError(t *testing.T) {
 func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateUpdateDto{
 		Template: &entities.RmgTemplate{Name: gofakeit.ProductName()},
 	}
@@ -45,7 +46,7 @@ func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testin
 func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
@@ -63,7 +64,7 @@ func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.
 func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	brokenConnections := slices.Clone(template.Variants[0].Connections)
 	brokenConnections = append(brokenConnections, entities.Connection{
@@ -87,7 +88,7 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
@@ -106,7 +107,7 @@ func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testin
 func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	require.NotEmpty(t, template.Variants[0].Zones)
 	templateDto := dtos.TemplateUpdateDto{
@@ -123,18 +124,23 @@ func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
 	assert.Len(t, loadDto.Template.Variants[0].Zones, 1)
 }
 
-func TestWhenConfigIsProvided_MandatoryContentIsRebuiltFromZones(t *testing.T) {
+func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	template.MandatoryContent = nil
-	configuration := mappers.NewConfigMapper().FromEditorState(dtos.NewDefaultEditorStateDto())
+	editorState := dtos.NewDefaultEditorStateDto()
+	configuration := test_helpers.NewConfigMapper().FromEditorState(editorState)
+	expectedContent := newMandatoryContentProvider().CreateContentsForZones(
+		*configuration,
+		template.Variants[0].Zones,
+	)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       template.Variants[0].Zones,
 		Connections: template.Variants[0].Connections,
-		Config:      configuration,
+		EditorState: &editorState,
 	}
 
 	// Act
@@ -142,13 +148,45 @@ func TestWhenConfigIsProvided_MandatoryContentIsRebuiltFromZones(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.NotEmpty(t, loadDto.Template.MandatoryContent)
+	assert.Equal(t, expectedContent, loadDto.Template.MandatoryContent)
 }
 
-func TestWhenConfigIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
+func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
+	zones := []entities.Zone{{
+		Name:               "Neutral-G",
+		Layout:             registry.GetLayoutValues().TreasureZone,
+		GuardedContentPool: []string{"classic_template_pool_random_t4_item"},
+		MainObjects:        []entities.MainObject{{Type: "City"}},
+	}}
+	template := &entities.RmgTemplate{Variants: []entities.Variant{{Zones: zones}}}
+	editorState := dtos.NewDefaultEditorStateDto()
+	editorState.SpawnRemoteFootholds = false
+	editorState.MediumNeutralContentRows = []models.ZoneContentRowSave{{Sid: "medium_only", Count: 1}}
+	editorState.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "high_only", Count: 1}}
+	templateDto := dtos.TemplateUpdateDto{
+		Template:    template,
+		Zones:       zones,
+		Connections: nil,
+		EditorState: &editorState,
+	}
+
+	// Act
+	loadDto, err := handler.UpdateTemplate(templateDto)
+
+	// Assert
+	require.NoError(t, err)
+	require.Len(t, loadDto.Template.MandatoryContent, 1)
+	require.Len(t, loadDto.Template.MandatoryContent[0].Content, 1)
+	assert.Equal(t, "high_only", loadDto.Template.MandatoryContent[0].Content[0].SID)
+}
+
+func TestWhenEditorStateIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	template.MandatoryContent = nil
 	templateDto := dtos.TemplateUpdateDto{
@@ -168,7 +206,7 @@ func TestWhenConfigIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
 func TestWhenUpdateReplacesZones_CallersTemplateZonesAreNotMutated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	originalZones := template.Variants[0].Zones
 	require.NotEmpty(t, originalZones)
@@ -189,7 +227,7 @@ func TestWhenUpdateReplacesZones_CallersTemplateZonesAreNotMutated(t *testing.T)
 func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	originalConnections := template.Variants[0].Connections
 	require.NotEmpty(t, originalConnections)
@@ -205,17 +243,4 @@ func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t
 	// Assert
 	require.NoError(t, err)
 	assert.Len(t, template.Variants[0].Connections, len(originalConnections))
-}
-
-// generateDefaultTemplate produces a real generated template from the default
-// editor state so update tests operate on realistic zones and connections.
-func generateDefaultTemplate(t *testing.T, handler *handlers.GUIHandler) *entities.RmgTemplate {
-	t.Helper()
-
-	loadDto, err := handler.GenerateTemplate(dtos.NewDefaultEditorStateDto())
-	require.NoError(t, err)
-	require.NotNil(t, loadDto.Template)
-	require.NotEmpty(t, loadDto.Template.Variants)
-
-	return loadDto.Template
 }

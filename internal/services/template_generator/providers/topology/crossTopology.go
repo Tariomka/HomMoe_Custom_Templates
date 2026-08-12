@@ -8,6 +8,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // CrossTopologyService radiates one arm per player out of a central zone. Each
@@ -15,12 +17,18 @@ import (
 // its tip, so the zones and connections form a cross / star whose number of
 // arms follows the player count.
 type CrossTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 }
 
-func NewCrossTopologyService() *CrossTopologyService {
+func NewCrossTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
+) *CrossTopologyService {
 	return &CrossTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -30,8 +38,8 @@ func (this *CrossTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	return this.createVariantFromLayout(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createCrossLayout)
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createCrossLayout, nil)
 }
 
 // createCrossLayout places the central zone first, then walks each arm from the

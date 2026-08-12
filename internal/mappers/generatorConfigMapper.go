@@ -3,17 +3,15 @@ package mappers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 )
 
 type GeneratorConfigMapper struct {
-	contentProvider *providers.MandatoryContentProvider
+	contentItemMapper IMandatoryContentItemMapper
 }
 
-func NewConfigMapper() *GeneratorConfigMapper {
+func NewConfigMapper(contentItemMapper IMandatoryContentItemMapper) IGeneratorConfigMapper {
 	return &GeneratorConfigMapper{
-		contentProvider: providers.NewMandatoryContentProvider(),
+		contentItemMapper: contentItemMapper,
 	}
 }
 
@@ -37,17 +35,17 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.BannedMagics = editorState.BannedMagics
 	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
 	generatorSettings.Bonuses = editorState.Bonuses
-	generatorSettings.PlayerZoneMandatoryContent = this.contentProvider.CreateContentItemsFrom(
+	generatorSettings.PlayerZoneMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.PlayerZoneContentRows)
-	generatorSettings.LowestNeutralMandatoryContent = this.contentProvider.CreateContentItemsFrom(
+	generatorSettings.LowestNeutralMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.LowestNeutralContentRows)
-	generatorSettings.LowNeutralMandatoryContent = this.contentProvider.CreateContentItemsFrom(
+	generatorSettings.LowNeutralMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.LowNeutralContentRows)
-	generatorSettings.MediumNeutralMandatoryContent = this.contentProvider.CreateContentItemsFrom(
+	generatorSettings.MediumNeutralMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.MediumNeutralContentRows)
-	generatorSettings.HighNeutralMandatoryContent = this.contentProvider.CreateContentItemsFrom(
+	generatorSettings.HighNeutralMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.HighNeutralContentRows)
-	generatorSettings.HubZoneMandatoryContent = this.contentProvider.CreateContentItemsFrom(
+	generatorSettings.HubZoneMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.HubZoneContentRows)
 	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
 	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent
@@ -107,8 +105,7 @@ func (this *GeneratorConfigMapper) mapHeroSettings(editorState dtos.EditorStateD
 func (this *GeneratorConfigMapper) mapGameEndConditions(editorState dtos.EditorStateDto) *config.GameEndConditions {
 	return &config.GameEndConditions{
 		VictoryCondition: editorState.VictoryCondition,
-		CityHold: editorState.CityHold ||
-			editorState.VictoryCondition == registry.GetWinningConditionValues().CityHold,
+		CityHold:         editorState.CityHold,
 		CityHoldDays:     editorState.CityHoldDays,
 		LostStartCity:    editorState.LostStartCity,
 		LostStartCityDay: editorState.LostStartCityDay,

@@ -77,13 +77,7 @@ func NewGeneralPanel(state *drivers.State) *GeneralPanel {
 			return labels
 		}()),
 		mapSizeSelector: components.NewDropdownSelector(func() []string {
-			if state.GetStateData().ExperimentalMapSizes {
-				return linq.FromSlice(constants.AllMapSizes).
-					SelectString(func(ms constants.MapSize) string { return ms.Label }).
-					ToSlice()
-			}
-
-			return linq.FromSlice(constants.BaseMapSizes).
+			return linq.FromSlice(constants.GetMapSizes(state.GetStateData().ExperimentalMapSizes)).
 				SelectString(func(ms constants.MapSize) string { return ms.Label }).
 				ToSlice()
 		}()),
@@ -116,7 +110,7 @@ func (this *GeneralPanel) LoadFromState() {
 	this.updateMapSizeSelectorItems()
 	this.mapSizeSelector.SelectByName(constants.GetMapSize(settings.MapSize).Label)
 
-	gameModeIndex := max(slices.Index(constants.GameModes, settings.GameMode), 0)
+	gameModeIndex := max(slices.Index(constants.GetGameModes(), settings.GameMode), 0)
 	this.gameMode.SetSelectedIndex(gameModeIndex)
 	this.heroMinimumCount.Value = utils.Normalize(float32(settings.HeroCountMin), 1, 12)
 	this.heroMaximumCount.Value = utils.Normalize(float32(settings.HeroCountMax), 1, 12)
@@ -160,7 +154,7 @@ func (this *GeneralPanel) SaveToState() {
 		settings.MapSize = this.getCurrentMapSize().Size
 		settings.ExperimentalMapSizes = this.checkMoreMapSizes.Value
 
-		settings.GameMode = constants.GameModes[this.gameMode.GetSelectedIndex()]
+		settings.GameMode = constants.GetGameModes()[this.gameMode.GetSelectedIndex()]
 		settings.HeroCountMin = utils.RoundedRange(this.heroMinimumCount.Value, 1, 12)
 		settings.HeroCountMax = max(utils.RoundedRange(this.heroMaximumCount.Value, 1, 12), settings.HeroCountMin)
 		settings.HeroCountIncrement = utils.RoundedRange(this.heroIncrementPerCastle.Value, 1, 10)
@@ -354,7 +348,7 @@ func (this *GeneralPanel) updateConditionOptions() {
 }
 
 func (this *GeneralPanel) getCurrentMapSize() constants.MapSize {
-	return constants.AllMapSizes[this.mapSizeSelector.GetSelectedIndex()]
+	return constants.GetMapSizes(true)[this.mapSizeSelector.GetSelectedIndex()]
 }
 
 func (this *GeneralPanel) getCurrentVictoryCondition() constants.Victory {

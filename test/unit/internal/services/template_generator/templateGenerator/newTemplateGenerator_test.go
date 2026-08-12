@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,20 +15,10 @@ func TestWhenConfigurationProvided_ReturnsNonNilGenerator(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 
 	// Act
-	generator := template_generator.NewTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Assert
 	assert.NotNil(t, generator)
-}
-
-func TestWhenConfigurationIsNil_FallsBackToDefaultConfiguration(t *testing.T) {
-	t.Parallel()
-	// Arrange & Act
-	generator := template_generator.NewTemplateGenerator(nil)
-
-	// Assert
-	generated := generator.Generate()
-	assert.Equal(t, "Custom Template", generated.Name)
 }
 
 func TestWhenConfigurationProvided_GeneratesFromProvidedConfiguration(t *testing.T) {
@@ -39,8 +29,9 @@ func TestWhenConfigurationProvided_GeneratesFromProvidedConfiguration(t *testing
 	configuration.TemplateName = expectedName
 
 	// Act
-	generator := template_generator.NewTemplateGenerator(configuration)
+	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Assert
-	assert.Equal(t, expectedName, generator.Generate().Name)
+	template, _ := generator.Generate()
+	assert.Equal(t, expectedName, template.Name)
 }

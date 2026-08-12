@@ -3,6 +3,7 @@ package ruleDistanceToRoad_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 )
@@ -10,7 +11,7 @@ import (
 func TestWhenDistanceIsFar_ShowsRuleNameWithDistanceName(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	distance := content_rules.DistanceFar
+	distance := models.DistancePreset{Name: "Far", Min: 0.5, Max: 0.75}
 	rule := content_rules.NewRuleDistanceToRoad(&distance)
 
 	// Act

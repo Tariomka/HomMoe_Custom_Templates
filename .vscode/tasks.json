@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Go: Run Integration tests w/out UI",
+            "label": "Go: Run Integration tests",
             "type": "shell",
             "command": "go",
             "args": [
@@ -15,7 +15,7 @@
             "problemMatcher": "$go"
         },
         {
-            "label": "Go: Run UI Integration tests",
+            "label": "Go: Run UI Integration tests headlessly",
             "type": "shell",
             "command": "go",
             "args": [
@@ -28,7 +28,7 @@
             "problemMatcher": "$go"
         },
         {
-            "label": "Go: Run UI Integration tests w/ headed mode",
+            "label": "Go: Run UI Integration tests in headed mode",
             "type": "shell",
             "command": "go",
             "args": [
@@ -65,11 +65,30 @@
                 "-bench=BenchmarkEditorWindow_TabCycling",
                 "-run=xxx",
                 "./test/performance/...",
-                "-tags=integration_test",
+                "-tags=integration_test,gui",
                 "-benchmem",
-                // "-cpuprofile='cpu.prof'",
-                // "-memprofile='memory.prof'",
                 "-benchtime=20x",
+                "-timeout=120s",
+                "-args", "headed"
+            ],
+            "group": "test",
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Run Performance tests with profiling",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test",
+                "-v",
+                "-bench=BenchmarkEditorWindow_TabCycling",
+                "-run=xxx",
+                "./test/performance/...",
+                "-tags=integration_test,gui",
+                "-benchmem",
+                "-cpuprofile='cpu.prof'",
+                "-memprofile='memory.prof'",
+                "-benchtime=1x",
                 "-timeout=120s",
                 "-args", "headed"
             ],
@@ -89,6 +108,18 @@
                 "kind": "test",
                 "isDefault": true
             },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Go: Check test build-tag layout",
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "run",
+                "./cmd/testlayoutcheck",
+                "."
+            ],
+            "group": "test",
             "problemMatcher": "$go"
         },
         {
@@ -152,6 +183,39 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            // Regenerates internal/composition/wire_gen.go from the `wireinject`-tagged
+            // stub. Run after changing any provider set or constructor signature.
+            "label": "Go: Generate wire injectors",
+            "type": "shell",
+            "command": "wire",
+            "args": [
+                "gen",
+                "./internal/composition/..."
+            ],
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": {
+                "owner": "go",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^([^\\s].*):(\\d+):(\\d+):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                }
             },
             "presentation": {
                 "echo": true,

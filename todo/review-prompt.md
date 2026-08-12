@@ -1,11 +1,5 @@
 # Prompt: In-Depth Repository Review
 
-Paste everything below the line into a fresh agent session to produce a full,
-principal-level review of this repository. Use a high-taste, high-intelligence
-model (per AGENTS.md §3.4: fable-class or opus-class; never Haiku).
-
----
-
 Read `AGENTS.md` first and follow it strictly for the entire session. You are
 acting as a **senior/principal engineer performing an exhaustive review of the
 whole repository**. Your ONLY deliverable is a review document — do **not** fix
@@ -16,7 +10,7 @@ protocol (ask → plan → approve → implement + verify → owner commits → 
 ## Ground rules
 
 1. **Read-only review.** The only file you create or modify is the review
-   document: `todo/review-<model>-<MM-DD>.md` (e.g. `todo/review-fable-07-12.md`).
+   document: `todo/review-<model>-<MM-DD>.md`.
    Scratch verification programs are allowed only if deleted before you finish.
 2. **Respect AGENTS.md hard rules** when judging code: `data/`,
    `internal/entities/template/`, and `internal/registry/` are read-only game
@@ -37,8 +31,8 @@ protocol (ask → plan → approve → implement + verify → owner commits → 
    evidence), Invalidated/accepted-as-convention (with reason), or Carried
    forward (re-verified, with a pointer to the new section). Nothing may be
    silently dropped. State explicitly which documents yours supersedes.
-5. **Check the session-history notes** (`/memories/repo/`, `.agent/*.md`) for
-   known-stale findings, deliberate owner decisions (e.g. dead code kept on
+5. **Check the session-history notes** (`/memories/repo/`, `todo/*.md`, `.agent/*.md`)
+   for known-stale findings, deliberate owner decisions (e.g. dead code kept on
    purpose), and items already marked "owner's responsibility" — do not
    re-report those as new findings; list them in the disposition section.
 

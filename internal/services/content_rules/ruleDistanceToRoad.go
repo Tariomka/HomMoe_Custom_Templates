@@ -17,13 +17,13 @@ const (
 
 // RuleDistanceToRoad constrains how far the content spawns from the nearest road.
 type RuleDistanceToRoad struct {
-	Distance DistanceVariation
+	Distance models.DistancePreset
 }
 
 // NewRuleDistanceToRoad creates a road-distance rule, defaulting to Medium when
 // no distance is supplied.
-func NewRuleDistanceToRoad(distance *DistanceVariation) *RuleDistanceToRoad {
-	resolved := DistanceMedium
+func NewRuleDistanceToRoad(distance *models.DistancePreset) *RuleDistanceToRoad {
+	resolved := defaultDistancePreset()
 	if distance != nil {
 		resolved = *distance
 	}
@@ -40,7 +40,7 @@ func (this *RuleDistanceToRoad) DisplayText() string {
 
 func (this *RuleDistanceToRoad) Apply(item *entities.MandatoryContentItem) {
 	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().
-		BuildRoadRule(placement_rule.Distance{Min: this.Distance.Min, Max: this.Distance.Max}, 1))
+		BuildRoadRule(this.Distance, 1))
 }
 
 func (this *RuleDistanceToRoad) SerializeToRowSave() models.ContentRuleRowSave {

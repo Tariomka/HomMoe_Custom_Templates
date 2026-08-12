@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +11,7 @@ import (
 func TestWhenManualZonesWereStored_ZonesRoundTripWithManualPositions(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	zones := []entities.Zone{
 		{
 			Name:           "Zone A",
@@ -33,7 +32,7 @@ func TestWhenManualZonesWereStored_ZonesRoundTripWithManualPositions(t *testing.
 func TestWhenNoManualZonesWereStored_NilZonesAreReturned(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	restored := state.GetManualZones()

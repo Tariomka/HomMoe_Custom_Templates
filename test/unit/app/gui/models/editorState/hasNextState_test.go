@@ -3,14 +3,13 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenNextStateWasNeverSet_ReportsNoNextState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	hasNext := state.HasNextState()
@@ -22,7 +21,7 @@ func TestWhenNextStateWasNeverSet_ReportsNoNextState(t *testing.T) {
 func TestWhenNextStateWasSet_ReportsNextState(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetNextState(state.GetCurrentState())
 
 	// Act

@@ -129,6 +129,8 @@ type contentIDs struct {
 }
 
 // ContentIDs enumerates every world-object SID known to the editor.
+//
+//nolint:gochecknoglobals // semantic registry
 var ContentIDs = func() contentIDs {
 	interactableObjects := registry.GetMapObjectAllInteractableValues()
 	randomItemObjects := registry.GetMapObjectRandomItemValues()

@@ -5,8 +5,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var layoutValues = registry.GetLayoutValues()
-
 type ZoneBuilder struct {
 	item entities.Zone
 }
@@ -17,88 +15,108 @@ func (this *ZoneBuilder) WithName(name string) *ZoneBuilder {
 	this.item.Name = name
 	return this
 }
+
 func (this *ZoneBuilder) WithSize(size float64) *ZoneBuilder {
 	this.item.Size = size
 	return this
 }
+
 func (this *ZoneBuilder) WithLayout(layout string) *ZoneBuilder {
 	this.item.Layout = layout
 	return this
 }
 func (this *ZoneBuilder) WithLayoutSpawns() *ZoneBuilder {
-	return this.WithLayout(layoutValues.Spawns)
+	return this.WithLayout(registry.GetLayoutValues().Spawns)
 }
 func (this *ZoneBuilder) WithLayoutCenter() *ZoneBuilder {
-	return this.WithLayout(layoutValues.Center)
+	return this.WithLayout(registry.GetLayoutValues().Center)
 }
+
 func (this *ZoneBuilder) WithGuardCutoffValue(value int) *ZoneBuilder {
 	this.item.GuardCutoffValue = value
 	return this
 }
+
 func (this *ZoneBuilder) WithGuardRandomization(randomization float64) *ZoneBuilder {
 	this.item.GuardRandomization = randomization
 	return this
 }
+
 func (this *ZoneBuilder) WithGuardMultiplier(multiplier float64) *ZoneBuilder {
 	this.item.GuardMultiplier = multiplier
 	return this
 }
+
 func (this *ZoneBuilder) WithGuardWeeklyIncrement(increment float64) *ZoneBuilder {
 	this.item.GuardWeeklyIncrement = increment
 	return this
 }
+
 func (this *ZoneBuilder) WithGuardReactionDistribution(distribution []int) *ZoneBuilder {
 	this.item.GuardReactionDistribution = distribution
 	return this
 }
+
 func (this *ZoneBuilder) WithDiplomacyModifier(modifier float64) *ZoneBuilder {
 	this.item.DiplomacyModifier = modifier
 	return this
 }
+
 func (this *ZoneBuilder) WithGuardedContentPool(pool []string) *ZoneBuilder {
 	this.item.GuardedContentPool = pool
 	return this
 }
+
 func (this *ZoneBuilder) WithUnguardedContentPool(pool []string) *ZoneBuilder {
 	this.item.UnguardedContentPool = pool
 	return this
 }
+
 func (this *ZoneBuilder) WithResourcesContentPool(pool []string) *ZoneBuilder {
 	this.item.ResourcesContentPool = pool
 	return this
 }
+
 func (this *ZoneBuilder) WithMandatoryContent(content ...string) *ZoneBuilder {
 	this.item.MandatoryContent = content
 	return this
 }
+
 func (this *ZoneBuilder) WithContentCountLimits(limits []string) *ZoneBuilder {
 	this.item.ContentCountLimits = limits
 	return this
 }
+
 func (this *ZoneBuilder) WithGuardedContentValue(value int) *ZoneBuilder {
 	this.item.GuardedContentValue = value
 	return this
 }
+
 func (this *ZoneBuilder) WithGuardedContentValuePerArea(value int) *ZoneBuilder {
 	this.item.GuardedContentValuePerArea = value
 	return this
 }
+
 func (this *ZoneBuilder) WithUnguardedContentValue(value int) *ZoneBuilder {
 	this.item.UnguardedContentValue = value
 	return this
 }
+
 func (this *ZoneBuilder) WithUnguardedContentValuePerArea(value int) *ZoneBuilder {
 	this.item.UnguardedContentValuePerArea = value
 	return this
 }
+
 func (this *ZoneBuilder) WithResourcesValue(value int) *ZoneBuilder {
 	this.item.ResourcesValue = value
 	return this
 }
+
 func (this *ZoneBuilder) WithResourcesValuePerArea(value int) *ZoneBuilder {
 	this.item.ResourcesValuePerArea = value
 	return this
 }
+
 func (this *ZoneBuilder) WithMainObjects(objects []entities.MainObject) *ZoneBuilder {
 	this.item.MainObjects = objects
 	return this

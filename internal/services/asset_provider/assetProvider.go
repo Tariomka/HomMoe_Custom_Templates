@@ -18,6 +18,7 @@ const (
 	assetCenter     = 48        // all assets are 96x96
 	assetFolder     = "assets/" // all asserts are stored inside ./assets folder
 	backgroundAsset = "background.png"
+	arenaAsset      = "gladiator_arena.png"
 	playerCount     = 8
 )
 
@@ -27,19 +28,23 @@ var (
 
 	// loadAssetProvider memoizes buildAssetProvider. Initialized eagerly at package
 	// load so concurrent NewAssetProvider callers share one race-free once-value.
+	//
+	//nolint:gochecknoglobals // Private embedded asset provider
 	loadAssetProvider = sync.OnceValues(buildAssetProvider)
 
+	//nolint:gochecknoglobals // Private embedded asset lookup table
 	neutralAssetNames = []string{
-		"neutral_none", "neutral_none_castle",
-		"neutral_low", "neutral_low_castle",
-		"neutral_medium", "neutral_medium_castle",
-		"neutral_high", "neutral_high_castle",
-		"neutral_highest", "neutral_highest_castle",
+		"neutral_none", "neutral_none_castle", "neutral_none_arena",
+		"neutral_low", "neutral_low_castle", "neutral_low_arena",
+		"neutral_medium", "neutral_medium_castle", "neutral_medium_arena",
+		"neutral_high", "neutral_high_castle", "neutral_high_arena",
+		"neutral_highest", "neutral_highest_castle", "neutral_highest_arena",
 	}
 )
 
 type AssetProvider struct {
 	background   image.Image
+	arena        image.Image
 	players      [8]image.Image
 	neutralZones map[string]image.Image
 }
@@ -76,6 +81,13 @@ func (this *AssetProvider) DrawPlayerZone(
 func (this *AssetProvider) DrawNeutralZone(
 	canvas *image.RGBA, zone preview.Zone, center image.Point, scale float64) {
 	this.drawAsset(canvas, this.getNeutralZoneAsset(zone), center, scale)
+}
+
+// DrawArenaMarker stamps the transparent swords sprite onto the canvas. It marks
+// a Gladiator Arena connection, which - unlike an arena zone - has no bubble of
+// its own to composite the swords into.
+func (this *AssetProvider) DrawArenaMarker(canvas *image.RGBA, center image.Point, scale float64) {
+	this.drawAsset(canvas, this.arena, center, scale)
 }
 
 // drawAsset draws an asset onto canvas so that the asset lands on canvas point (center), scaled by the given factor.
@@ -174,7 +186,10 @@ func (this *AssetProvider) getNeutralZoneAsset(zone preview.Zone) image.Image {
 	}
 
 	name := "neutral_" + quality
-	if zone.HasCastles() {
+	switch {
+	case zone.HasArena():
+		name += "_arena"
+	case zone.HasCastles():
 		name += "_castle"
 	}
 	return this.neutralZones[name]
@@ -207,6 +222,10 @@ func buildAssetProvider() (*AssetProvider, error) {
 
 	if assetProvider.background, err = decode(backgroundAsset); err != nil {
 		return nil, fmt.Errorf("failed to load background: %w", err)
+	}
+
+	if assetProvider.arena, err = decode(arenaAsset); err != nil {
+		return nil, fmt.Errorf("failed to load gladiator arena: %w", err)
 	}
 
 	for index := range playerCount {

@@ -37,6 +37,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
@@ -59,6 +60,7 @@ const (
 type AppRunner struct {
 	App   *editor.Window
 	theme *material.Theme
+	tb    testing.TB
 
 	// aux router: the single source of truth for synthetic input in both modes.
 	router input.Router
@@ -77,7 +79,6 @@ type AppRunner struct {
 
 	// snapshot verification (see appRunnerSnapshots.go); nil snapshotTest means
 	// snapshotting is disabled (the default, e.g. for benchmarks).
-	snapshotTest *testing.T
 	snapshotFile string
 	actionCount  int
 	headlessWin  *headless.Window
@@ -88,23 +89,32 @@ type AppRunner struct {
 
 // NewAppRunner builds a runner. The window is created only in windowed mode; a
 // nil window marks the runner headless.
-func NewAppRunner() *AppRunner {
+func NewAppRunner(tb testing.TB) *AppRunner {
 	runner := &AppRunner{
-		App:   editor.NewWindow(),
+		App: editor.NewWindow(
+			composition.InitializeGuiHandler(),
+			composition.InitializeFileSystemHandler(),
+			composition.InitializeRegenerationHandler()),
 		theme: themes.NewTheme(),
+		tb:    tb,
 	}
 	if !IsHeadless() {
 		runner.window = new(app.Window)
 	}
+
+	runner.Start()
+	runner.tb.Cleanup(runner.Stop)
 	return runner
 }
 
 func (this *AppRunner) SetRenderDelay(delay time.Duration) {
+	this.tb.Helper()
 	this.renderDelay = delay
 }
 
 // Start launches the on-screen render loop. It is a no-op in headless mode.
 func (this *AppRunner) Start() {
+	this.tb.Helper()
 	if this.window == nil {
 		return
 	}
@@ -118,6 +128,7 @@ func (this *AppRunner) Start() {
 
 // Stop closes the window and waits for the render loop to exit. No-op headless.
 func (this *AppRunner) Stop() {
+	this.tb.Helper()
 	if this.window == nil {
 		return
 	}
@@ -130,6 +141,7 @@ func (this *AppRunner) Stop() {
 // NextFrame lays out and commits a single frame (and mirrors it on screen). Useful
 // for warm-up and for letting a freshly selected panel lay out fully.
 func (this *AppRunner) NextFrame() {
+	this.tb.Helper()
 	this.mu.Lock()
 	this.frameLocked()
 	this.mu.Unlock()
@@ -140,6 +152,7 @@ func (this *AppRunner) NextFrame() {
 // leading frame registers the input areas, the trailing frame processes the tap.
 // Both run under one lock so a render cannot observe a half-applied click.
 func (this *AppRunner) ClickAt(point f32.Point) {
+	this.tb.Helper()
 	this.mu.Lock()
 	this.frameLocked()
 	this.router.Queue(
@@ -149,13 +162,13 @@ func (this *AppRunner) ClickAt(point f32.Point) {
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
-	this.verifySnapshot()
 }
 
 // MoveTo injects a synthetic touch move at point. The leading frame registers
 // the input areas, the trailing frame processes the move. Both run under one
 // lock so a render cannot observe a half-applied move.
 func (this *AppRunner) MoveTo(point f32.Point) {
+	this.tb.Helper()
 	this.mu.Lock()
 	this.frameLocked()
 	this.router.Queue(pointer.Event{Kind: pointer.Move, Source: pointer.Touch, Position: point})
@@ -167,6 +180,7 @@ func (this *AppRunner) MoveTo(point f32.Point) {
 // DragTo injects a synthetic drag from one point to another (press, a series of
 // interpolated moves, release), driving gesture.Drag widgets such as sliders.
 func (this *AppRunner) DragTo(from, to image.Point) {
+	this.tb.Helper()
 	const steps = 8
 	this.mu.Lock()
 	this.frameLocked()
@@ -191,24 +205,24 @@ func (this *AppRunner) DragTo(from, to image.Point) {
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
-	this.verifySnapshot()
 }
 
 // InputText injects text into the currently focused widget (focus a field first,
 // e.g. with ClickAt). The text replaces the focused editor's current selection.
 func (this *AppRunner) InputText(text string) {
+	this.tb.Helper()
 	this.mu.Lock()
 	this.frameLocked()
 	this.router.Queue(key.EditEvent{Text: text})
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
-	this.verifySnapshot()
 }
 
 // SelectedTabIndex returns the editor's selected tab, taken under the lock so it
 // is safe to read while the render goroutine is active.
 func (this *AppRunner) SelectedTabIndex() int {
+	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.SelectedTabIndex()
@@ -216,6 +230,7 @@ func (this *AppRunner) SelectedTabIndex() int {
 
 // TabCount returns the number of editor tabs (lock-guarded).
 func (this *AppRunner) TabCount() int {
+	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.TabCount()
@@ -223,6 +238,7 @@ func (this *AppRunner) TabCount() int {
 
 // DialogsOpen reports whether a modal dialog is open (lock-guarded).
 func (this *AppRunner) DialogsOpen() bool {
+	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.DialogsOpen()
@@ -230,6 +246,7 @@ func (this *AppRunner) DialogsOpen() bool {
 
 // CloseTopDialog dismisses the top-most modal dialog (lock-guarded).
 func (this *AppRunner) CloseTopDialog() {
+	this.tb.Helper()
 	this.mu.Lock()
 	this.App.CloseTopDialog()
 	this.mu.Unlock()
@@ -237,6 +254,7 @@ func (this *AppRunner) CloseTopDialog() {
 
 // CurrentState returns the editor's current state snapshot (lock-guarded).
 func (this *AppRunner) CurrentState() dtos.EditorStateDto {
+	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.CurrentState()
@@ -245,6 +263,7 @@ func (this *AppRunner) CurrentState() dtos.EditorStateDto {
 // LoadStateFromFile loads an editor state file programmatically, mirroring the
 // Load dialog picking a file (lock-guarded).
 func (this *AppRunner) LoadStateFromFile(path string) {
+	this.tb.Helper()
 	this.mu.Lock()
 	this.App.LoadStateFromFile(path)
 	this.mu.Unlock()
@@ -253,6 +272,7 @@ func (this *AppRunner) LoadStateFromFile(path string) {
 // SaveStateToFile saves the current editor state to a file programmatically,
 // mirroring the Save dialog (lock-guarded).
 func (this *AppRunner) SaveStateToFile(path string) {
+	this.tb.Helper()
 	this.mu.Lock()
 	this.App.SaveStateToFile(path)
 	this.mu.Unlock()
@@ -260,6 +280,7 @@ func (this *AppRunner) SaveStateToFile(path string) {
 
 // Status returns the state driver's status message and error flag (lock-guarded).
 func (this *AppRunner) Status() (string, bool) {
+	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.GetStateDriver().GetStatus()
@@ -269,6 +290,7 @@ func (this *AppRunner) Status() (string, bool) {
 // renders; all UI logic is driven through the aux router on the test goroutine.
 // It performs a graceful close once Stop requests it.
 func (this *AppRunner) runWindow() {
+	this.tb.Helper()
 	defer close(this.done)
 	var ops op.Ops
 	for {
@@ -292,6 +314,7 @@ func (this *AppRunner) runWindow() {
 // invalidate asks the on-screen window to redraw the current editor state. It is
 // a no-op headless. window.Invalidate is safe to call from another goroutine.
 func (this *AppRunner) invalidate() {
+	this.tb.Helper()
 	if this.window == nil {
 		return
 	}
@@ -306,6 +329,7 @@ func (this *AppRunner) invalidate() {
 // must hold mu. This is the headless equivalent of an app.FrameEvent and, in
 // windowed mode, the pass that actually processes injected input.
 func (this *AppRunner) frameLocked() {
+	this.tb.Helper()
 	this.ops.Reset()
 	gtx := layout.Context{
 		Ops:         &this.ops,

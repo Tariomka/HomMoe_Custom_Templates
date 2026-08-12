@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
@@ -24,7 +23,7 @@ func renderFrames(runner *integration_common.AppRunner, frameCount int) {
 // TestWindow_RendersFramesWithoutPanic ensures the entire editor UI (toolbar,
 // tabs, every panel and the live preview) lays out cleanly across many frames.
 func TestWindow_RendersFramesWithoutPanic(t *testing.T) {
-	runner := integration_common.NewAppRunner()
+	runner := integration_common.NewAppRunner(t)
 	require.NotPanics(t, func() { renderFrames(runner, 10) })
 
 	// The first frames auto-generate a preview from the default state.
@@ -39,9 +38,11 @@ func TestWindow_RendersFramesWithoutPanic(t *testing.T) {
 func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "windowload.gen.json")
+	// The state is written under the template name, not the requested one.
+	writtenPath := filepath.Join(dir, "Window Loaded.gen.json")
 
 	// Author a distinctive saved state through the real save path.
-	author := drivers.NewUIState()
+	author := newUIState()
 	author.UpdateState(func(s *dtos.EditorStateDto) {
 		s.TemplateName = "Window Loaded"
 		s.PlayerCount = 5
@@ -50,19 +51,19 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
-	runner := integration_common.NewAppRunner()
+	runner := integration_common.NewAppRunner(t)
 
 	// Render baseline frames at the defaults.
 	renderFrames(runner, 3)
 	require.Equal(t, 2, runner.CurrentState().PlayerCount)
 
 	// Load the saved state, mirroring the Load dialog picking a file.
-	runner.LoadStateFromFile(savedPath)
+	runner.LoadStateFromFile(writtenPath)
 	message, irError = runner.Status()
 	require.False(t, irError)
-	assert.Equal(t, "Loaded "+savedPath, message)
+	assert.Equal(t, "Loaded "+writtenPath, message)
 
 	// Render several more frames. Each frame runs the window's save() (panels →
 	// state); the loaded values must survive instead of being overwritten.

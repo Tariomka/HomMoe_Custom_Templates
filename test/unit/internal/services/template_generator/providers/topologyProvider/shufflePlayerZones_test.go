@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenCalled_ReturnsSameProviderForChaining(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewTopologyProvider()
+	provider := test_helpers.NewTopologyProvider()
 
 	// Act
 	returned := provider.ShufflePlayerZones(true)
@@ -29,7 +29,7 @@ func TestWhenShuffleEnabled_DoesNotMutateInputLabels(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	tuning := buildVariantInputs(configuration, playerLabels, nil)
-	provider := providers.NewTopologyProvider().ShufflePlayerZones(true)
+	provider := test_helpers.NewTopologyProvider().ShufflePlayerZones(true)
 
 	// Act
 	provider.CreateTopologyVariant(*configuration, playerLabels, nil, tuning, "")
@@ -45,7 +45,7 @@ func TestWhenShuffleEnabled_PreservesSpawnZoneNameSet(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	tuning := buildVariantInputs(configuration, playerLabels, nil)
-	provider := providers.NewTopologyProvider().ShufflePlayerZones(true)
+	provider := test_helpers.NewTopologyProvider().ShufflePlayerZones(true)
 
 	// Act
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, nil, tuning, "")

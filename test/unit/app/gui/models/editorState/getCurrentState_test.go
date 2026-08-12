@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +11,7 @@ import (
 func TestWhenNothingWasModified_DefaultStateIsReturned(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	current := state.GetCurrentState()
@@ -24,7 +23,7 @@ func TestWhenNothingWasModified_DefaultStateIsReturned(t *testing.T) {
 func TestWhenReturnedStateIsMutated_StoredStateStaysUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	copyOfState := state.GetCurrentState()
 
 	// Act

@@ -8,15 +8,17 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type TopologyProvider struct {
 	shufflePlayerZones bool
+	services           provider_interfaces.ITopologyServiceLookup
 }
 
-func NewTopologyProvider() *TopologyProvider {
-	return &TopologyProvider{}
+func NewTopologyProvider(
+	services provider_interfaces.ITopologyServiceLookup) provider_interfaces.ITopologyProvider {
+	return &TopologyProvider{services: services}
 }
 
 func (this *TopologyProvider) CreateTopologyVariant(
@@ -28,48 +30,15 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabelsCopy := this.copyLabels(playerLabels)
 
 	if configuration.IsTournamentMode() && len(playerLabelsCopy) == 2 {
-		return topology.NewTournamentTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning)
+		return this.services.Tournament()(
+			configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 	}
 
-	switch configuration.Topology {
-	case config.TopologyHubAndSpoke:
-		return topology.NewHubTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
-	case config.TopologyGeometricHub:
-		return topology.NewGeometricHubTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, configuration.IsHubCityToHold())
-	case config.TopologyChain:
-		return topology.NewChainTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologySharedWeb:
-		return topology.NewSharedWebTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyRandom:
-		return topology.NewRandomTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyCircles:
-		return topology.NewCirclesTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologySquare:
-		return topology.NewSquareTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyGeometric:
-		return topology.NewGeometricTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyCross:
-		return topology.NewCrossTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	case config.TopologyFractal:
-		return topology.NewFractalTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	default: // config.TopologyDefault
-		return topology.NewRingTopologyService().
-			CreateTopologyVariant(configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
-	}
+	return this.services.Resolve(configuration.Topology)(
+		configuration, playerLabelsCopy, neutralZones, tuning, holdCityNeutralLabel)
 }
 
-func (this *TopologyProvider) ShufflePlayerZones(enabled bool) *TopologyProvider {
+func (this *TopologyProvider) ShufflePlayerZones(enabled bool) provider_interfaces.ITopologyProvider {
 	this.shufflePlayerZones = enabled
 	return this
 }

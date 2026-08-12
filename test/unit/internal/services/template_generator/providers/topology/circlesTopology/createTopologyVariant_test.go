@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,8 +22,8 @@ func TestWhenTwoPlayersAndFourTieredNeutralPlansProvided_CreatesZonePerLabel(t *
 	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
-	service := topology.NewCirclesTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
+	service := topology.NewCirclesTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -42,8 +42,8 @@ func TestWhenRingsAreStamped_EveryZoneGetsGeneratorRing(t *testing.T) {
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewCirclesTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewCirclesTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -68,8 +68,8 @@ func TestWhenPlayerZonesSitOnTheOuterRing_TheirRingIndexIsZero(t *testing.T) {
 	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewCirclesTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewCirclesTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -87,6 +87,32 @@ func TestWhenPlayerZonesSitOnTheOuterRing_TheirRingIndexIsZero(t *testing.T) {
 	assert.Empty(t, spawnZonesOffOuterRing)
 }
 
+func TestWhenNeutralZonesAreStamped_TheirRingIndexMatchesPlanTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyCircles
+	playerLabels := []string{"A", "B"}
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N3", neutral_zone.QualityHigh, 2)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewCirclesTopologyService(test_helpers.NewZoneFactories())
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	actual := map[string]int{}
+	for _, zone := range variant.Zones {
+		if strings.HasPrefix(zone.Name, "Neutral-") && zone.GeneratorRing != nil {
+			actual[zone.Name] = *zone.GeneratorRing
+		}
+	}
+	assert.Equal(t, map[string]int{"Neutral-N1": 1, "Neutral-N2": 2, "Neutral-N3": 3}, actual)
+}
+
 func TestWhenCirclesAreBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -98,8 +124,8 @@ func TestWhenCirclesAreBuilt_EveryConnectionReferencesExistingZones(t *testing.T
 	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
-	service := topology.NewCirclesTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
+	service := topology.NewCirclesTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -118,8 +144,8 @@ func TestWhenPlayerConnectionsAreForbidden_NoRandomConnectionJoinsTwoSpawnZones(
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := topology.NewCirclesTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := topology.NewCirclesTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -140,8 +166,8 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityHigh, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
-	service := topology.NewCirclesTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
+	service := topology.NewCirclesTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")

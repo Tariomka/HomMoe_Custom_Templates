@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,10 +42,10 @@ func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlan
 					configuration.Topology = topology
 					configuration.PlayerCount = playerCount
 					configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
-					generator := template_generator.NewTemplateGenerator(configuration)
+					generator := test_helpers.NewTemplateGenerator(configuration)
 
 					// Act
-					actual := generator.Generate()
+					actual, _ := generator.Generate()
 
 					// Assert
 					assert.GreaterOrEqual(t, len(actual.Variants[0].Zones), playerCount+neutralZoneCount)
@@ -67,10 +67,10 @@ func TestWhenAnyTopologySelected_EveryZoneHasAllRequiredFields(t *testing.T) {
 			configuration.Topology = topology
 			configuration.PlayerCount = 3
 			configuration.ZoneConfiguration.NeutralZoneCount = 3
-			generator := template_generator.NewTemplateGenerator(configuration)
+			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual := generator.Generate()
+			actual, _ := generator.Generate()
 
 			// Assert
 			var violations []string
@@ -113,10 +113,10 @@ func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testi
 			configuration.Topology = topology
 			configuration.PlayerCount = 3
 			configuration.ZoneConfiguration.NeutralZoneCount = 2
-			generator := template_generator.NewTemplateGenerator(configuration)
+			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual := generator.Generate()
+			actual, _ := generator.Generate()
 
 			// Assert
 			zoneNames := map[string]bool{}

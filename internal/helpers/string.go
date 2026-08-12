@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"runtime"
 	"slices"
 	"strings"
 	"unicode"
@@ -16,21 +15,14 @@ func SanitizeFilename(name string) string {
 		}
 	}
 
-	sanitized := string(out)
-	if runtime.GOOS == windowsOS {
-		reserved := []string{
-			"CON", "PRN", "AUX", "NUL",
-			"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-			"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
-		}
-		parts := strings.Split(sanitized, ".")
-		if slices.Contains(reserved, strings.ToUpper(strings.TrimSpace(parts[0]))) {
-			parts[0] = "_"
-		}
-		sanitized = strings.Join(parts, ".")
-	}
+	return removeReservedNames(out)
+}
 
-	return sanitized
+// IsReservedFilename reports whether name would address a DOS device instead
+// of a file. Writing to one appears to succeed yet leaves nothing on disk, so
+// the name is refused instead of silently swallowing the user's template.
+func IsReservedFilename(name string) bool {
+	return isReservedFilename(name)
 }
 
 // GetZoneLabel returns the trailing label portion of a zone name like

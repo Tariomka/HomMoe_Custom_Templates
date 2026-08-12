@@ -4,22 +4,27 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type RingTopologyService struct {
 	base.TopologyBase
 }
 
-func NewRingTopologyService() *RingTopologyService {
+func NewRingTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService) *RingTopologyService {
 	return &RingTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -78,20 +83,10 @@ func (this *RingTopologyService) createZones(
 		if ringConnRight[i] != "" && ringConnRight[i] != ringConnLeft[i] {
 			connNames = append(connNames, ringConnRight[i])
 		}
-		if pi := slices.Index(playerLabels, label); pi >= 0 {
-			zones = append(zones,
-				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", pi+1), connNames, configuration.ZoneConfiguration.PlayerZoneCastles,
-					configuration.MatchPlayerCastleFactions, configuration.ZoneConfiguration.PlayerZoneSize,
-					tuning.RemoteFootholdCount, configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones,
-				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
-					connNames, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
-		}
+		playerIndex := slices.Index(playerLabels, label)
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, connNames, playerIndex, playerIndex >= 0,
+			label == holdCityNeutralLabel, tuning, neutralZones))
 	}
 	return zones
 }
@@ -124,7 +119,7 @@ func (this *RingTopologyService) createConnections(
 			WithGuardZone(zoneFrom).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("ring_guard_%s_%s", labelFrom, labelTo)).
 			Build())
 	}

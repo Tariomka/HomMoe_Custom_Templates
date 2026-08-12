@@ -13,7 +13,7 @@ func RoundWithPrecision(value float64, decimalPrecision int) float64 {
 }
 
 // Clamp returns value clamped to [lowest, highest].
-func Clamp[T data.Numeric](value, lowest, highest T) T {
+func Clamp[T data.INumeric](value, lowest, highest T) T {
 	if value < lowest {
 		return lowest
 	}
@@ -26,14 +26,10 @@ func Clamp[T data.Numeric](value, lowest, highest T) T {
 }
 
 // Scale returns value scaled by multiplier, clamped to a minimum of 0, disregarding fractional parts.
-func Scale(value, multiplier float64) int {
-	return max(0, int(value*multiplier))
-}
+func Scale(value, multiplier float64) int { return max(0, int(value*multiplier)) }
 
 // ScaleRound returns value scaled by multiplier, clamped to a minimum of 0, rounding to the nearest integer.
-func ScaleRound(value, multiplier float64) int {
-	return max(0, int(math.Round(value*multiplier)))
-}
+func ScaleRound(value, multiplier float64) int { return max(0, int(math.Round(value*multiplier))) }
 
 // BoolToInt returns 1 if boolean is true, otherwise 0. This is a compiler optimized function.
 func BoolToInt(boolean bool) int {

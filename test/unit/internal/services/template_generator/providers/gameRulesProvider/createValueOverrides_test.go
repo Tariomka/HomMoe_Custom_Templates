@@ -18,7 +18,7 @@ func TestWhenTextMixesValidAndJunkLines_ParsesOnlyValidLines(t *testing.T) {
 	configuration.ValueOverridesText = "watchtower=25000\n\n  =5 \nbad_line\ngold_mine = 12000 \nnonnum=abc"
 
 	// Act
-	actual := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
+	actual, _ := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
 
 	// Assert
 	assert.Equal(t, []entities.ValueOverride{
@@ -33,10 +33,69 @@ func TestWhenTextIsEmpty_ReturnsNil(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 
 	// Act
-	actual := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
+	actual, _ := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
 
 	// Assert
 	assert.Nil(t, actual)
+}
+
+func TestWhenTextIsEmpty_ReturnsNoWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+
+	// Act
+	_, warnings := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
+
+	// Assert
+	assert.Empty(t, warnings)
+}
+
+func TestWhenTextIsOnlyBlankLines_ReturnsNoWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.ValueOverridesText = "\n   \n\t\n"
+
+	// Act
+	_, warnings := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
+
+	// Assert
+	assert.Empty(t, warnings)
+}
+
+func TestWhenLineIsRejected_ReturnsWarningNamingTheLine(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name            string
+		overridesText   string
+		expectedWarning string
+	}{
+		{"LineHasNoSeparator_ReturnsWarning", "bad_line", "line 1: 'bad_line' is not sid=value"},
+		{"LineStartsWithSeparator_ReturnsWarning", "=5", "line 1: '=5' is not sid=value"},
+		{"SeparatorFollowsOnlyWhitespace_ReturnsWarningForTheTrimmedLine", "  = 5",
+			"line 1: '= 5' is not sid=value"},
+		{"ValueIsNotANumber_ReturnsWarning", "nonnum=abc", "line 1: 'nonnum=abc' has a non-numeric value"},
+		{
+			"RejectedLineFollowsBlankLines_ReturnsWarningWithTheSourceLineNumber",
+			"watchtower=25000\n\nbad_line",
+			"line 3: 'bad_line' is not sid=value",
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			configuration := config.NewGeneratorConfig()
+			configuration.ValueOverridesText = testCase.overridesText
+
+			// Act
+			_, warnings := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
+
+			// Assert
+			assert.Equal(t, []string{testCase.expectedWarning}, warnings)
+		})
+	}
 }
 
 // Functional-equivalence check: re-serialising the first override of the real
@@ -52,7 +111,7 @@ func TestWhenBlitzOverrideLineParsed_ReproducesBlitzSidAndGuardValue(t *testing.
 	configuration.ValueOverridesText = fmt.Sprintf("%s=%d", blitzOverride.SID, blitzOverride.GuardValue)
 
 	// Act
-	actual := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
+	actual, _ := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
 
 	// Assert
 	assert.Equal(t, []entities.ValueOverride{

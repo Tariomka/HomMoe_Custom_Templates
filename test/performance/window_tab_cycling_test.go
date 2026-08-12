@@ -1,8 +1,5 @@
-//go:build integration_test
+//go:build integration_test && gui
 
-// Package performance_test benchmarks the editor.Window UI through the shared
-// integration_common.AppRunner. The SAME benchmark runs headless by default
-// (CI-safe) or on screen with `go test ... -args headed`.
 package performance_test
 
 import (
@@ -23,9 +20,7 @@ func TestMain(m *testing.M) {
 // a real on-screen window (the latter additionally renders the UI); select the
 // mode with `go test ... -args headed`.
 func BenchmarkEditorWindow_TabCycling(b *testing.B) {
-	runner := integration_common.NewAppRunner()
-	runner.Start()
-	defer runner.Stop()
+	runner := integration_common.NewAppRunner(b)
 
 	handler := integration_common.NewHandler(runner)
 

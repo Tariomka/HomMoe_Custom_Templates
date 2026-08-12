@@ -2,6 +2,7 @@ package preview_service
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
@@ -29,10 +30,26 @@ func (this *PreviewLayoutService) layoutFixedPositions(
 }
 
 // fixedGeometryEdgeInset returns the extra border padding for a
-// fixed-geometry topology's preview figure.
-func fixedGeometryEdgeInset(topology config.MapTopology) float64 {
-	if topology == config.TopologyGeometricHub {
-		return csGeoHubEdgeInset
+// fixed-geometry topology's preview figure. Crowded Geometric Hub figures
+// (csGeoHubCrowdedMinPlayers+ players) keep a smaller inset so the players
+// sit closer to the border and further from the central hub.
+func fixedGeometryEdgeInset(topology config.MapTopology, zones []entities.Zone) float64 {
+	if topology != config.TopologyGeometricHub {
+		return 0
 	}
-	return 0
+	if countPlayerZones(zones) >= csGeoHubCrowdedMinPlayers {
+		return csGeoHubEdgeInsetCrowded
+	}
+	return csGeoHubEdgeInset
+}
+
+// countPlayerZones counts the player (spawn) zones in the cluster.
+func countPlayerZones(zones []entities.Zone) int {
+	playerCount := 0
+	for _, zone := range zones {
+		if zone_helpers.IsZoneNamePlayer(zone.Name) {
+			playerCount++
+		}
+	}
+	return playerCount
 }

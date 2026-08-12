@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,10 +14,10 @@ func TestWhenSpawnZoneIsCreated_NameCombinesSpawnPrefixWithLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	label := gofakeit.LetterN(3)
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
-	zone := topologyBase.CreateSpawnZone(label, "Player1", nil, 1, false, 1.0, 0, true, newUnitTuning())
+	zone := topologyBase.CreateSpawnZone(newSpawnRequest(label, nil, 1, 0, true, newUnitTuning()))
 
 	// Assert
 	assert.Equal(t, "Spawn-"+label, zone.Name)
@@ -25,7 +26,7 @@ func TestWhenSpawnZoneIsCreated_NameCombinesSpawnPrefixWithLabel(t *testing.T) {
 func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expected := entities.MainObject{
 		Type:                     "Spawn",
 		Spawn:                    "Player1",
@@ -39,7 +40,7 @@ func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing
 	}
 
 	// Act
-	zone := topologyBase.CreateSpawnZone("A", "Player1", nil, 0, false, 1.0, 0, true, newUnitTuning())
+	zone := topologyBase.CreateSpawnZone(newSpawnRequest("A", nil, 0, 0, true, newUnitTuning()))
 
 	// Assert
 	assert.Equal(t, expected, zone.MainObjects[0])
@@ -48,12 +49,12 @@ func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing
 func TestWhenOwnedAndUnclaimedCastlesRequested_MainObjectCountIsSpawnPlusOwnedPlusUnclaimed(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	tuning := newUnitTuning()
 	tuning.PlayerOwnedCastles = 1
 
 	// Act
-	zone := topologyBase.CreateSpawnZone("A", "Player1", nil, 2, false, 1.0, 0, true, tuning)
+	zone := topologyBase.CreateSpawnZone(newSpawnRequest("A", nil, 2, 0, true, tuning))
 
 	// Assert
 	assert.Len(t, zone.MainObjects, 4)
@@ -62,7 +63,7 @@ func TestWhenOwnedAndUnclaimedCastlesRequested_MainObjectCountIsSpawnPlusOwnedPl
 func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
@@ -72,7 +73,7 @@ func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *test
 
 	// Act
 	zone := topologyBase.CreateSpawnZone(
-		"A", "Player1", []string{"Gate-1", "Gate-2"}, 0, false, 1.0, 0, true, newUnitTuning())
+		newSpawnRequest("A", []string{"Gate-1", "Gate-2"}, 0, 0, true, newUnitTuning()))
 
 	// Assert
 	assert.Equal(t, expectedRoads, zone.Roads)
@@ -81,7 +82,7 @@ func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *test
 func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			Type: "Stone",
@@ -96,7 +97,7 @@ func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle
 	}
 
 	// Act
-	zone := topologyBase.CreateSpawnZone("A", "Player1", nil, 2, false, 1.0, 0, true, newUnitTuning())
+	zone := topologyBase.CreateSpawnZone(newSpawnRequest("A", nil, 2, 0, true, newUnitTuning()))
 
 	// Assert
 	assert.Equal(t, expectedRoads, zone.Roads)
@@ -105,7 +106,7 @@ func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle
 func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			Type: "Stone",
@@ -123,7 +124,7 @@ func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T)
 	}
 
 	// Act
-	zone := topologyBase.CreateSpawnZone("A", "Player1", nil, 1, false, 1.0, 2, true, newUnitTuning())
+	zone := topologyBase.CreateSpawnZone(newSpawnRequest("A", nil, 1, 2, true, newUnitTuning()))
 
 	// Assert
 	assert.Equal(t, expectedRoads, zone.Roads)
@@ -132,11 +133,11 @@ func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T)
 func TestWhenRoadGenerationIsDisabled_ZoneHasNoRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	zone := topologyBase.CreateSpawnZone(
-		"A", "Player1", []string{"Gate-1"}, 2, false, 1.0, 1, false, newUnitTuning())
+		newSpawnRequest("A", []string{"Gate-1"}, 2, 1, false, newUnitTuning()))
 
 	// Assert
 	assert.Nil(t, zone.Roads)

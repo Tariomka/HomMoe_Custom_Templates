@@ -24,6 +24,10 @@ func (this *MandatoryContentItemBuilder) WithMine() *MandatoryContentItemBuilder
 	this.item.IsMine = true
 	return this
 }
+func (this *MandatoryContentItemBuilder) WithIncludeList(includeList string) *MandatoryContentItemBuilder {
+	this.item.IncludeLists = append(this.item.IncludeLists, includeList)
+	return this
+}
 func (this *MandatoryContentItemBuilder) WithSoloEncounter() *MandatoryContentItemBuilder {
 	this.item.SoloEncounter = true
 	return this

@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,8 +24,8 @@ func TestWhenPlayerHasTwoNeutralPlans_CreatesHubSpawnAndNeutralZones(t *testing.
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -43,8 +43,8 @@ func TestWhenClusterIsBuilt_HubZoneIsNamedAfterPlayerLabel(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 1, "B")
@@ -58,8 +58,8 @@ func TestWhenSpokesAreBuilt_CreatesSpokeConnectionPerSpokeZone(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -79,8 +79,8 @@ func TestWhenSpokeConnectionsAreBuilt_EverySpokeStartsAtHubZone(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -104,8 +104,8 @@ func TestWhenProximityRingIsBuilt_CreatesProximityConnectionPerSpokePair(t *test
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -126,8 +126,8 @@ func TestWhenHubMandatoryContentIsConfigured_HubZoneReferencesHubContentGroup(t 
 	configuration := config.NewGeneratorConfig()
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{}}
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -142,8 +142,8 @@ func TestWhenHubMandatoryContentIsEmpty_HubZoneHasNoMandatoryContent(t *testing.
 	configuration := config.NewGeneratorConfig()
 	configuration.HubZoneMandatoryContent = nil
 	neutralZones := newTwoNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewHubClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")

@@ -79,3 +79,30 @@ func TestWhenZoneHasCastle_DrawsDifferentSpriteThanWithoutCastle(t *testing.T) {
 	// Assert
 	assert.NotEqual(t, castleLessCanvas.Pix, canvas.Pix)
 }
+
+func TestWhenZoneHostsTheArena_DrawsDifferentSpriteThanWithoutArena(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	arenaLessCanvas := renderNeutral(t, preview.Zone{Quality: neutral_zone.QualityMedium})
+
+	// Act
+	canvas := renderNeutral(t, preview.Zone{Quality: neutral_zone.QualityMedium, Arena: true})
+
+	// Assert
+	assert.NotEqual(t, arenaLessCanvas.Pix, canvas.Pix)
+}
+
+// The artwork has no combined castle+arena bubble, so a zone holding both must
+// fall back to the arena sprite rather than looking up a sprite that does not
+// exist.
+func TestWhenZoneHasBothCastleAndArena_DrawsTheArenaSprite(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	arenaCanvas := renderNeutral(t, preview.Zone{Quality: neutral_zone.QualityMedium, Arena: true})
+
+	// Act
+	canvas := renderNeutral(t, preview.Zone{Quality: neutral_zone.QualityMedium, Castles: 1, Arena: true})
+
+	// Assert
+	assert.Equal(t, arenaCanvas.Pix, canvas.Pix)
+}

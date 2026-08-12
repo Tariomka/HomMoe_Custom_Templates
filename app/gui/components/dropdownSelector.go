@@ -15,15 +15,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 )
 
-type dropdownItem struct {
-	label string
-	row   widget.Clickable
-}
-
-func newDropdownItem(label string) *dropdownItem {
-	return &dropdownItem{label: label}
-}
-
 type DropdownSelector struct {
 	items         []*dropdownItem
 	selectedIndex int

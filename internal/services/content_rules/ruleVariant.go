@@ -3,6 +3,7 @@ package content_rules
 import (
 	"fmt"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -25,7 +26,7 @@ type RuleVariant struct {
 // variant id is supplied it uses the lowest defined variant id for determinism.
 // It returns an error when the resolved id is not present in the mapping.
 func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVariant, error) {
-	resolved := UtopiaVariants
+	resolved := NewVariantMappingCatalog().GetDefaultMapping()
 	if mapping != nil {
 		resolved = *mapping
 	}
@@ -34,7 +35,11 @@ func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVarian
 	if variantID != nil {
 		id = *variantID
 	} else {
-		id = resolved.GetVariantIDsInOrder()[0]
+		variantIDs := resolved.GetVariantIDsInOrder()
+		if len(variantIDs) == 0 {
+			return nil, common_errors.ErrNoVariantProvided
+		}
+		id = variantIDs[0]
 	}
 
 	if _, ok := resolved.GetVariantByID(id); !ok {

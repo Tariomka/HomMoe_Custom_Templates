@@ -13,7 +13,7 @@ func TestWhenEmbeddedAssetsAreValid_ReturnsNoError(t *testing.T) {
 	// Arrange
 
 	// Act
-	_, err := preview_service.NewPreviewGenerator()
+	_, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
 
 	// Assert
 	assert.NoError(t, err)
@@ -24,7 +24,7 @@ func TestWhenEmbeddedAssetsAreValid_ReturnsGenerator(t *testing.T) {
 	// Arrange
 
 	// Act
-	generator, err := preview_service.NewPreviewGenerator()
+	generator, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
 
 	// Assert
 	require.NoError(t, err)

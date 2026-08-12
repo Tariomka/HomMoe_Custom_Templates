@@ -6,12 +6,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-var (
-	castleQualities = registry.GetBuildingsConstructionSidValues()
-	objectTypes     = registry.GetMainObjectTypeValues()
-	placements      = registry.GetPlacementValues()
-)
-
 type MainObjectBuilder struct {
 	item entities.MainObject
 }
@@ -19,13 +13,16 @@ type MainObjectBuilder struct {
 func NewObjectBuilder() *MainObjectBuilder { return &MainObjectBuilder{item: entities.MainObject{}} }
 
 func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder {
-	return this.withType(objectTypes.Spawn)
+	return this.withType(registry.GetMainObjectTypeValues().Spawn)
 }
 func (this *MainObjectBuilder) WithTypeCity() *MainObjectBuilder {
-	return this.withType(objectTypes.City)
+	return this.withType(registry.GetMainObjectTypeValues().City)
 }
 func (this *MainObjectBuilder) WithTypeAbandonedOutpost() *MainObjectBuilder {
-	return this.withType(objectTypes.AbandonedOutpost)
+	return this.withType(registry.GetMainObjectTypeValues().AbandonedOutpost)
+}
+func (this *MainObjectBuilder) WithTypeGladiatorArena() *MainObjectBuilder {
+	return this.withType(registry.GetMainObjectTypeValues().GladiatorArena)
 }
 
 func (this *MainObjectBuilder) WithSpawn(spawn string) *MainObjectBuilder {
@@ -68,22 +65,22 @@ func (this *MainObjectBuilder) WithCastleQuality(sid string) *MainObjectBuilder 
 	return this
 }
 func (this *MainObjectBuilder) WithCastleQualityDefault() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Default)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Default)
 }
 func (this *MainObjectBuilder) WithCastleQualityPoor() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Poor)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Poor)
 }
 func (this *MainObjectBuilder) WithCastleQualityMedium() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Medium)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Medium)
 }
 func (this *MainObjectBuilder) WithCastleQualityRich() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.Rich)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().Rich)
 }
 func (this *MainObjectBuilder) WithCastleQualityExtraRich() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.ExtraRich)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().ExtraRich)
 }
 func (this *MainObjectBuilder) WithCastleQualityUltraRich() *MainObjectBuilder {
-	return this.WithCastleQuality(castleQualities.UltraRich)
+	return this.WithCastleQuality(registry.GetBuildingsConstructionSidValues().UltraRich)
 }
 
 func (this *MainObjectBuilder) WithFaction(factionMatchType string, arguments ...string) *MainObjectBuilder {
@@ -103,16 +100,16 @@ func (this *MainObjectBuilder) WithFactions(factions ...string) *MainObjectBuild
 }
 
 func (this *MainObjectBuilder) WithPlacementCenter() *MainObjectBuilder {
-	return this.withPlacement(placements.Center)
+	return this.withPlacement(registry.GetPlacementValues().Center)
 }
 func (this *MainObjectBuilder) WithPlacementConnection() *MainObjectBuilder {
-	return this.withPlacement(placements.Connection)
+	return this.withPlacement(registry.GetPlacementValues().Connection)
 }
 func (this *MainObjectBuilder) WithPlacementNearZone() *MainObjectBuilder {
-	return this.withPlacement(placements.NearZone)
+	return this.withPlacement(registry.GetPlacementValues().NearZone)
 }
 func (this *MainObjectBuilder) WithPlacementUniform() *MainObjectBuilder {
-	return this.withPlacement(placements.Uniform)
+	return this.withPlacement(registry.GetPlacementValues().Uniform)
 }
 
 func (this *MainObjectBuilder) WithPlacementArgs(arguments ...string) *MainObjectBuilder {

@@ -11,8 +11,7 @@ import (
 
 const guardedRuleName = "Guarded"
 
-// EditorStateDto is the serialized .gen.json file produced and consumed by the
-// editor.
+// EditorStateDto is the serialized .gen.json file produced and consumed by the editor.
 type EditorStateDto struct {
 	TemplateName                string `json:"templateName"`
 	GameMode                    string `json:"gameMode"`

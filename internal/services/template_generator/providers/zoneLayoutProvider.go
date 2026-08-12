@@ -1,14 +1,19 @@
 package providers
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/entities"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
+)
 
 type ZoneLayoutProvider struct{}
 
-func NewZoneLayoutProvider() *ZoneLayoutProvider {
+func NewZoneLayoutProvider() provider_interfaces.IZoneLayoutProvider {
 	return &ZoneLayoutProvider{}
 }
 
 func (this *ZoneLayoutProvider) CreateZoneLayouts() []entities.ZoneLayoutDef {
+	zoneLayouts := registry.GetLayoutValues()
 	return []entities.ZoneLayoutDef{
 		this.createZoneLayout(zoneLayouts.Spawns, 0.24, 0.48, 0.30, 16, 0.16, 160, -0.30, 0.4, []int{20, 2, 1}),
 		this.createZoneLayout(zoneLayouts.Sides, 0.36, 0.50, 0.25, 16, 0.128, 128, -0.30, 0.3, []int{20, 2, 1}),

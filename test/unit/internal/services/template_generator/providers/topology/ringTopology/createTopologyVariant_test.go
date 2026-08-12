@@ -3,10 +3,10 @@ package ringTopology_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,8 +19,8 @@ func TestWhenTwoPlayersAndTwoNeutralPlansProvided_CreatesZonePerLabel(t *testing
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := topology.NewRingTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := topology.NewRingTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -38,8 +38,8 @@ func TestWhenRingIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := topology.NewRingTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := topology.NewRingTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -57,8 +57,8 @@ func TestWhenFourLabelsFormTheRing_CreatesRingConnectionPerAdjacentPair(t *testi
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := topology.NewRingTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := topology.NewRingTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -75,8 +75,8 @@ func TestWhenSinglePlayerHasNoNeutralZones_CreatesNoConnections(t *testing.T) {
 	configuration.PlayerCount = 1
 	playerLabels := []string{"A"}
 	neutralZones := neutral_zone.Plans{}
-	tuning := models.NewGenerationTuning(configuration, 1)
-	service := topology.NewRingTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 1)
+	service := topology.NewRingTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -94,8 +94,8 @@ func TestWhenPlayerConnectionsAreForbidden_NoRingConnectionJoinsTwoSpawnZones(t 
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 3)
-	service := topology.NewRingTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
+	service := topology.NewRingTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -116,8 +116,8 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
-	service := topology.NewRingTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
+	service := topology.NewRingTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")

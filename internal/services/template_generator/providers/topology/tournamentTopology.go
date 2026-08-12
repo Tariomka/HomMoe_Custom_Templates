@@ -8,17 +8,34 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type TournamentTopologyService struct {
 	base.TopologyBase
 
-	clusterService tournament_variant.IClusterService
+	hubClusterService      tournament_variant.IClusterService
+	balancedClusterService tournament_variant.IClusterService
+	ringClusterService     tournament_variant.IClusterService
+	chainClusterService    tournament_variant.IClusterService
 }
 
-func NewTournamentTopologyService() *TournamentTopologyService {
+func NewTournamentTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
+	hubClusterService tournament_variant.IClusterService,
+	balancedClusterService tournament_variant.IClusterService,
+	ringClusterService tournament_variant.IClusterService,
+	chainClusterService tournament_variant.IClusterService,
+) *TournamentTopologyService {
 	return &TournamentTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase:           base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
+		hubClusterService:      hubClusterService,
+		balancedClusterService: balancedClusterService,
+		ringClusterService:     ringClusterService,
+		chainClusterService:    chainClusterService,
 	}
 }
 
@@ -26,25 +43,15 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
-	tuning models.GenerationTuning) entities.Variant {
+	tuning models.GenerationTuning,
+	_ string) entities.Variant {
 	perPlayerNeutralZones := this.createPerPlayerNeutralZonePlans(neutralZones)
-
-	switch configuration.Topology {
-	case config.TopologyHubAndSpoke:
-		this.clusterService = tournament_variant.NewHubClusterService()
-	case config.TopologyCircles:
-		this.clusterService = tournament_variant.NewBalancedClusterService()
-	case config.TopologyRing:
-		this.clusterService = tournament_variant.NewRingClusterService()
-	default:
-		// Chain, SharedWeb, Random → chain-per-cluster fallback.
-		this.clusterService = tournament_variant.NewChainClusterService()
-	}
+	clusterService := this.selectClusterService(configuration.Topology)
 
 	var zones []entities.Zone
 	var conns []entities.Connection
 	for playerIndex := range 2 {
-		perPlayerZones, perPlayerConns := this.clusterService.CreateClusterVariant(
+		perPlayerZones, perPlayerConns := clusterService.CreateClusterVariant(
 			configuration,
 			tuning,
 			neutralZones,
@@ -66,6 +73,21 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 		}
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(zones), zones, conns)
+}
+
+func (this *TournamentTopologyService) selectClusterService(
+	mapTopology config.MapTopology) tournament_variant.IClusterService {
+	switch mapTopology {
+	case config.TopologyHubAndSpoke:
+		return this.hubClusterService
+	case config.TopologyCircles:
+		return this.balancedClusterService
+	case config.TopologyRing:
+		return this.ringClusterService
+	default:
+		// Chain, SharedWeb, Random → chain-per-cluster fallback.
+		return this.chainClusterService
+	}
 }
 
 // createPerPlayerNeutralZonePlans splits neutral zone plans into two per-player lists

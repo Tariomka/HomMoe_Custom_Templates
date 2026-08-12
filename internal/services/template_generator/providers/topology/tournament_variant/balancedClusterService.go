@@ -6,24 +6,37 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant/misc"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type BalancedClusterService struct {
 	base.TopologyBase
+
+	positionLayoutService *position_layout.PositionLayoutService
 }
 
-func NewBalancedClusterService() *BalancedClusterService {
+func NewBalancedClusterService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
+) *BalancedClusterService {
 	return &BalancedClusterService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase:          base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
+		positionLayoutService: position_layout.NewPositionLayoutService(),
 	}
 }
 
@@ -35,7 +48,11 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	singlePlayerList := []string{playerLabel}
 	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans)
-	rawPositions := models.CreatePositionsFromPlans(orderedLabels, singlePlayerList, allNeutralZonePlans)
+	rawPositions := this.positionLayoutService.CreatePositionsFromPlans(
+		orderedLabels,
+		singlePlayerList,
+		allNeutralZonePlans,
+	)
 	positions := this.createPositions(rawPositions, playerIndex)
 
 	sortedPairs := this.createSortedPairs(orderedLabels, rawPositions, allNeutralZonePlans)
@@ -81,7 +98,7 @@ func (this *BalancedClusterService) createPositions(rawPositions models.Position
 		return models.Positions{}
 	}
 
-	minimumPosition, maximumPosition := rawPositions.GetMinAndMaxPositions()
+	minimumPosition, maximumPosition := geometry_helpers.GetPositionBounds(rawPositions)
 	spanX := math.Max(maximumPosition.X-minimumPosition.X, 0.001)
 	spanY := math.Max(maximumPosition.Y-minimumPosition.Y, 0.001)
 
@@ -260,21 +277,8 @@ func (this *BalancedClusterService) createZones(
 	var zones []entities.Zone
 	for index, label := range orderedLabels {
 		myConns := connectionNames[index]
-		if label == playerLabel {
-			zones = append(zones,
-				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), myConns,
-					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones,
-				this.CreateNeutralZone(
-					linq.FromSlice(allNeutralZonePlans).
-						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
-					myConns, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning, false))
-		}
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, myConns, playerIndex, label == playerLabel, false, tuning, allNeutralZonePlans))
 	}
 	return zones
 }
@@ -306,18 +310,18 @@ func (this *BalancedClusterService) createConnections(
 		if labelTo != playerLabel {
 			toZone = constants.NeutralZonePrefix + labelTo
 		}
-		connections = append(connections, entities.Connection{
-			Name:           connName,
-			From:           fromZone,
-			To:             toZone,
-			ConnectionType: "Direct",
-			GuardZone:      fromZone,
-			SimTurnSquad:   true,
-			GuardValue: this.GetBorderGuardValue(
-				labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning),
-			GuardWeeklyIncrement: 0.15,
-			GuardMatchGroup:      fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo),
-		})
+		connections = append(connections, variant_content.NewConnectionBuilder().
+			WithName(connName).
+			WithFrom(fromZone).
+			WithTo(toZone).
+			WithConnectionTypeDirect().
+			WithGuardZone(fromZone).
+			WithSimTurnSquad().
+			WithGuardValue(this.GetBorderGuardValue(
+				labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
+			WithGuardMatchGroup(fmt.Sprintf("tourney_bal_guard_%s_%s", labelFrom, labelTo)).
+			Build())
 	}
 	return connections
 }

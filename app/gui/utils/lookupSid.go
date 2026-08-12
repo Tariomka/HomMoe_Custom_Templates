@@ -27,6 +27,7 @@ func GetSidMappingBySid(sid string) (models.SidMapping, bool) {
 	return models.SidMapping{}, false
 }
 
+//nolint:gochecknoglobals // semantic registry
 var allSidMappings = []models.SidMapping{
 	constants.ContentIDs.AlchemyLab,
 	constants.ContentIDs.Arena,

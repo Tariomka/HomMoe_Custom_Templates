@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +13,7 @@ func TestWhenServiceIsConstructed_ReturnsNonNilService(t *testing.T) {
 	// Arrange
 
 	// Act
-	service := topology.NewGeometricHubTopologyService()
+	service := topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories())
 
 	// Assert
 	assert.NotNil(t, service)

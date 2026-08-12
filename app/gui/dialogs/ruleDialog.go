@@ -2,7 +2,6 @@ package dialogs
 
 import (
 	"image"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -12,25 +11,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
-
-// ruleEditorKind selects which parameter editor the Add/Update area shows.
-type ruleEditorKind int
-
-const (
-	editorDistance ruleEditorKind = iota
-	editorGuarded
-	editorSolo
-	editorVariant
-)
-
-// ruleTypeOption is one selectable rule type in the Add/Update editor.
-type ruleTypeOption struct {
-	name   string
-	editor ruleEditorKind
-}
 
 // ManageRulesDialog edits the polymorphic content-rule list for a single
 // zone-content row. It mirrors the C# Manage/Add zone-content-rule windows,
@@ -41,9 +25,11 @@ type ManageRulesDialog struct {
 	rules   []models.ContentRuleRowSave
 	onApply func([]models.ContentRuleRowSave)
 
-	types         []ruleTypeOption
-	variantIDs    []int
-	variantLabels []string
+	contentRuleHandler handler_interfaces.IZoneContentHandler
+	types              []dtos.ContentRuleOptionDto
+	distanceNames      []string
+	variantIDs         []int
+	variantLabels      []string
 
 	scroll           widget.List
 	typeDropdown     *components.DropdownSelector
@@ -63,37 +49,30 @@ type ManageRulesDialog struct {
 func NewManageRulesDialog(
 	mapping models.SidMapping,
 	rules []models.ContentRuleRowSave,
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	onApply func([]models.ContentRuleRowSave)) *ManageRulesDialog {
+	options := contentRuleHandler.GetContentRuleEditorOptions(mapping)
 	dialog := &ManageRulesDialog{
-		mapping: mapping,
-		rules:   utils.CloneRuleRows(rules),
-		onApply: onApply,
+		mapping:            mapping,
+		rules:              utils.CloneRuleRows(rules),
+		onApply:            onApply,
+		contentRuleHandler: contentRuleHandler,
+		types:              options.Rules,
+		distanceNames:      options.Distances,
 	}
 	dialog.scroll.Axis = layout.Vertical
 
-	dialog.types = []ruleTypeOption{
-		{content_rules.RuleDistanceToRoadName, editorDistance},
-		{content_rules.RuleDistanceToTownName, editorDistance},
-		{content_rules.RuleGuardedName, editorGuarded},
-		{content_rules.RuleSoloEncounterName, editorSolo},
-	}
-
-	for _, variant := range content_rules.GetVariantsForContent(mapping) {
-		for _, tuple := range variant.Variants {
-			dialog.variantIDs = append(dialog.variantIDs, tuple.Key)
-			dialog.variantLabels = append(dialog.variantLabels, tuple.Value)
-		}
-	}
-	if len(dialog.variantIDs) > 0 {
-		dialog.types = append(dialog.types, ruleTypeOption{content_rules.RuleVariantName, editorVariant})
+	for _, variant := range options.Variants {
+		dialog.variantIDs = append(dialog.variantIDs, variant.ID)
+		dialog.variantLabels = append(dialog.variantLabels, variant.Label)
 	}
 
 	typeLabels := make([]string, len(dialog.types))
 	for i, option := range dialog.types {
-		typeLabels[i] = option.name
+		typeLabels[i] = option.Name
 	}
 	dialog.typeDropdown = components.NewDropdownSelector(typeLabels)
-	dialog.distanceDropdown = components.NewDropdownSelector(content_rules.GetDistanceDisplayNames())
+	dialog.distanceDropdown = components.NewDropdownSelector(dialog.distanceNames)
 	dialog.variantDropdown = components.NewDropdownSelector(dialog.variantLabels)
 	dialog.guardedBool.Value = true
 	return dialog
@@ -186,7 +165,7 @@ func (this *ManageRulesDialog) layoutRuleRow(theme *material.Theme, index int) l
 		return widgets.NewPanelWidget(unit.Dp(6), func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					label := material.Body1(theme, ruleDisplayText(this.mapping, saved))
+					label := material.Body1(theme, this.ruleDisplayText(saved))
 					label.Color = themes.ColorsBase.Text
 					label.TextSize = unit.Sp(13)
 					return label.Layout(gtx)
@@ -216,20 +195,21 @@ func (this *ManageRulesDialog) layoutTypeRow(theme *material.Theme) layout.Widge
 
 func (this *ManageRulesDialog) layoutEditor(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		kind := editorGuarded
-		if idx := this.typeDropdown.GetSelectedIndex(); idx >= 0 && idx < len(this.types) {
-			kind = this.types[idx].editor
+		option, ok := this.selectedRuleType()
+		if !ok {
+			return layout.Dimensions{}
 		}
 		return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			switch kind {
-			case editorDistance:
-				return this.labeledControl(theme, "Distance", this.distanceDropdown.GetWidget(theme))(gtx)
-			case editorGuarded:
-				return widgets.NewLabeledCheckboxRowWidget(theme, &this.guardedBool, "Guarded")(gtx)
-			case editorSolo:
-				return widgets.NewLabeledCheckboxRowWidget(theme, &this.soloBool, "Solo encounter")(gtx)
-			case editorVariant:
-				return this.labeledControl(theme, "Variant", this.variantDropdown.GetWidget(theme))(gtx)
+			switch option.EditorKind {
+			case dtos.ContentRuleEditorKindDistance:
+				return this.labeledControl(theme, option.EditorLabel, this.distanceDropdown.GetWidget(theme))(gtx)
+			case dtos.ContentRuleEditorKindBoolean:
+				if option.Key == dtos.ContentRuleKeyGuarded {
+					return widgets.NewLabeledCheckboxRowWidget(theme, &this.guardedBool, option.EditorLabel)(gtx)
+				}
+				return widgets.NewLabeledCheckboxRowWidget(theme, &this.soloBool, option.EditorLabel)(gtx)
+			case dtos.ContentRuleEditorKindVariant:
+				return this.labeledControl(theme, option.EditorLabel, this.variantDropdown.GetWidget(theme))(gtx)
 			default:
 				return layout.Dimensions{}
 			}
@@ -280,51 +260,37 @@ func (this *ManageRulesDialog) upsertFromEditor() {
 	if !ok {
 		return
 	}
-	for i := range this.rules {
-		if strings.EqualFold(this.rules[i].Name, saved.Name) {
-			this.rules[i] = saved
-			return
-		}
-	}
-	this.rules = append(this.rules, saved)
+	this.rules = this.contentRuleHandler.UpsertContentRule(this.rules, saved)
 }
 
 func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRowSave, bool) {
-	idx := this.typeDropdown.GetSelectedIndex()
-	if idx < 0 || idx >= len(this.types) {
+	option, ok := this.selectedRuleType()
+	if !ok {
 		return models.ContentRuleRowSave{}, false
 	}
-	option := this.types[idx]
-	switch option.editor {
-	case editorDistance:
-		names := content_rules.GetDistanceDisplayNames()
-		distIdx := this.distanceDropdown.GetSelectedIndex()
-		if distIdx < 0 || distIdx >= len(names) {
-			return models.ContentRuleRowSave{}, false
-		}
-		return models.ContentRuleRowSave{Name: option.name, DistanceName: names[distIdx]}, true
-	case editorGuarded:
-		value := this.guardedBool.Value
-		return models.ContentRuleRowSave{Name: content_rules.RuleGuardedName, IsGuarded: &value}, true
-	case editorSolo:
-		value := this.soloBool.Value
-		return models.ContentRuleRowSave{Name: content_rules.RuleSoloEncounterName, IsSoloEncounter: &value}, true
-	case editorVariant:
-		variantIdx := this.variantDropdown.GetSelectedIndex()
-		if variantIdx < 0 || variantIdx >= len(this.variantIDs) {
-			return models.ContentRuleRowSave{}, false
-		}
-		id := this.variantIDs[variantIdx]
-		return models.ContentRuleRowSave{Name: content_rules.RuleVariantName, VariantID: &id}, true
+	result := this.contentRuleHandler.ComposeContentRule(dtos.ContentRuleCompositionRequestDto{
+		Option:          option,
+		DistanceNames:   this.distanceNames,
+		DistanceIndex:   this.distanceDropdown.GetSelectedIndex(),
+		IsGuarded:       this.guardedBool.Value,
+		IsSoloEncounter: this.soloBool.Value,
+		VariantIDs:      this.variantIDs,
+		VariantIndex:    this.variantDropdown.GetSelectedIndex(),
+	})
+
+	return result.Rule, result.Valid
+}
+
+func (this *ManageRulesDialog) selectedRuleType() (dtos.ContentRuleOptionDto, bool) {
+	index := this.typeDropdown.GetSelectedIndex()
+	if index < 0 || index >= len(this.types) {
+		return dtos.ContentRuleOptionDto{}, false
 	}
-	return models.ContentRuleRowSave{}, false
+	return this.types[index], true
 }
 
 // ruleDisplayText reconstructs a rule's user-facing description, falling back to
 // the raw name when the saved data cannot be resolved to a known rule.
-func ruleDisplayText(mapping models.SidMapping, saved models.ContentRuleRowSave) string {
-	if rule := content_rules.CreateRuleFromSavedRule(saved, mapping); rule != nil {
-		return rule.DisplayText()
-	}
-	return saved.Name
+func (this *ManageRulesDialog) ruleDisplayText(saved models.ContentRuleRowSave) string {
+	return this.contentRuleHandler.DescribeContentRule(this.mapping, saved).DisplayText
 }

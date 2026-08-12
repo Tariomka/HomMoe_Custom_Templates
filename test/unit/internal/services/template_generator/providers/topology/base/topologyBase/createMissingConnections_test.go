@@ -7,13 +7,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenFewerThanTwoLabelsExist_NoBridgesAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
@@ -26,7 +27,7 @@ func TestWhenFewerThanTwoLabelsExist_NoBridgesAreCreated(t *testing.T) {
 func TestWhenAllZonesAreAlreadyConnected_NoBridgesAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	existingConnections := []entities.Connection{
 		{Name: "Ring-A-B", From: "Spawn-A", To: "Spawn-B", ConnectionType: "Direct"},
@@ -43,7 +44,7 @@ func TestWhenAllZonesAreAlreadyConnected_NoBridgesAreCreated(t *testing.T) {
 func TestWhenTwoPlayerZonesAreDisconnected_BridgeLinksThemWithPlayerBorderGuard(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	expectedConnections := []entities.Connection{
 		{
@@ -65,7 +66,7 @@ func TestWhenTwoPlayerZonesAreDisconnected_BridgeLinksThemWithPlayerBorderGuard(
 func TestWhenThreeZonesAreAllDisconnected_BridgesAreAddedUntilFullyConnected(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.5, Y: 0.5}, {X: 0.9, Y: 0.9}}
 
 	// Act
@@ -79,7 +80,7 @@ func TestWhenThreeZonesAreAllDisconnected_BridgesAreAddedUntilFullyConnected(t *
 func TestWhenIsolatedZoneSitsClosestToSecondZone_BridgeAttachesToClosestPair(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.5, Y: 0.5}, {X: 0.55, Y: 0.5}}
 	existingConnections := []entities.Connection{
 		{Name: "Ring-A-B", From: "Spawn-A", To: "Spawn-B", ConnectionType: "Direct"},
@@ -105,7 +106,7 @@ func TestWhenIsolatedZoneSitsClosestToSecondZone_BridgeAttachesToClosestPair(t *
 func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	neutralPlans := neutral_zone.Plans{
 		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
@@ -131,7 +132,7 @@ func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *
 func TestWhenLabelOrderIsReversed_BridgeNameStillSortsLabelsAlphabetically(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	expectedConnections := []entities.Connection{
 		{
@@ -195,7 +196,7 @@ func TestWhenBridgedZonesHaveVariousRoadShapes_BridgeIsStillReturned(t *testing.
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			topologyBase := base.NewTopologyBase()
+			topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 			zones := []entities.Zone{testCase.firstZone, {Name: "Spawn-B"}}
 
 			// Act
@@ -277,7 +278,7 @@ func TestWhenBridgeIsCreated_FirstZoneInSliceGainsBridgeRoad(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			topologyBase := base.NewTopologyBase()
+			topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 			zones := []entities.Zone{testCase.firstZone, {Name: "Spawn-B"}}
 
 			// Act
@@ -293,7 +294,7 @@ func TestWhenBridgeIsCreated_FirstZoneInSliceGainsBridgeRoad(t *testing.T) {
 func TestWhenBridgeIsCreated_SecondZoneInSliceAlsoGainsBridgeRoad(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	expectedRoads := []entities.Road{
@@ -314,7 +315,7 @@ func TestWhenBridgeIsCreated_SecondZoneInSliceAlsoGainsBridgeRoad(t *testing.T) 
 func TestWhenBridgeNameAlreadyExistsOnUnmappedConnection_LoopTerminatesWithoutDuplicateBridge(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	existingConnections := []entities.Connection{
 		{Name: "Bridge-A-B", From: "Unknown-X", To: "Unknown-Y", ConnectionType: "Direct"},

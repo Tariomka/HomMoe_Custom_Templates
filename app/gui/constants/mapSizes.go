@@ -2,18 +2,10 @@ package constants
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-// MapSize and the map-size lists moved to internal/constants so that
-// non-GUI code (e.g. internal/validators) can use them; these forwarders
-// keep the GUI-facing API unchanged.
-type MapSize = common.MapSize
-
-var (
-	BaseMapSizes     = common.BaseMapSizes
-	ExpandedMapSizes = common.ExpandedMapSizes
-	AllMapSizes      = common.AllMapSizes
-)
+type MapSize = models.MapSize
 
 func GetMapSize(size int) MapSize {
 	return common.GetMapSize(size)

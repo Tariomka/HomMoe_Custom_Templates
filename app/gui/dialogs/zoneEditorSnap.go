@@ -10,25 +10,12 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
-)
-
-// Snapping tunables - adjust the feel of the snap toggle here.
-const (
-	// gridCellsPerZoneDiameter sets the snap-grid density: the distance
-	// between adjacent grid lines is (zone diameter) / gridCellsPerZoneDiameter.
-	gridCellsPerZoneDiameter = 7.0
-	// gridSnapThresholdPx is the "light" hold distance (canvas px) within
-	// which a dragged zone's edges/center stick to a grid line.
-	gridSnapThresholdPx = 4.0
-	// zoneSnapThresholdPx is the "heavier" hold distance (canvas px) within
-	// which a dragged zone's edges/center stick to the horizontal or vertical
-	// extension of another zone's edge or center.
-	zoneSnapThresholdPx = 9.0
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 )
 
 // gridStep returns the snapping-grid cell size in canvas pixels.
 func (this *ZoneEditorDialog) gridStep() float64 {
-	return float64(this.radius) * 2.0 / gridCellsPerZoneDiameter
+	return this.zoneHandler.GetZoneEditorGridStep(this.geometry.ZoneRadius)
 }
 
 // drawSnapGrid paints faint dots at the snapping-grid intersections behind
@@ -78,79 +65,25 @@ func (this *ZoneEditorDialog) drawSnapGuides(gtx layout.Context) {
 }
 
 // snapDraggedPosition nudges the dragged zone's center so that its edges or
-// center "hold on" to nearby guides: heavier onto other zones' edge/center
-// extension lines, lighter onto the background grid. It never pulls from afar -
-// only positions already within the threshold stick.
+// center "hold on" to nearby guides, and records the alignment lines it caught
+// so the overlay can draw them.
 func (this *ZoneEditorDialog) snapDraggedPosition(pos image.Point) image.Point {
 	this.snapGuideXActive = false
 	this.snapGuideYActive = false
-	if !this.snapBool.Value || this.radius <= 0 {
+	if !this.snapBool.Value {
 		return pos
 	}
-	radius := float64(this.radius)
-	// The dragged zone's own snap points on each axis: leading edge, center,
-	// trailing edge.
-	offsets := [3]float64{-radius, 0, radius}
-	guidesX, guidesY := this.otherZoneGuides(radius)
-	x, guideX, hitX := snapAxis(float64(pos.X), offsets, guidesX, this.gridStep())
-	y, guideY, hitY := snapAxis(float64(pos.Y), offsets, guidesY, this.gridStep())
-	if hitX {
-		this.snapGuideX, this.snapGuideXActive = guideX, true
+	result := this.zoneHandler.SnapZoneEditorPosition(dtos.ZoneEditorSnapRequestDto{
+		Position:    pos,
+		Positions:   this.geometry.Positions,
+		ZoneRadius:  this.geometry.ZoneRadius,
+		DraggedZone: this.zoneDragName,
+	})
+	if result.HasGuideX {
+		this.snapGuideX, this.snapGuideXActive = result.GuideX, true
 	}
-	if hitY {
-		this.snapGuideY, this.snapGuideYActive = guideY, true
+	if result.HasGuideY {
+		this.snapGuideY, this.snapGuideYActive = result.GuideY, true
 	}
-	return image.Pt(int(math.Round(x)), int(math.Round(y)))
-}
-
-// otherZoneGuides collects the horizontal and vertical guide coordinates
-// (edge / center / edge) of every zone except the dragged one.
-func (this *ZoneEditorDialog) otherZoneGuides(radius float64) (guidesX, guidesY []float64) {
-	for name, center := range this.positions {
-		if name == this.zoneDragName {
-			continue
-		}
-		cx, cy := float64(center.X), float64(center.Y)
-		guidesX = append(guidesX, cx-radius, cx, cx+radius)
-		guidesY = append(guidesY, cy-radius, cy, cy+radius)
-	}
-	return guidesX, guidesY
-}
-
-// snapAxis snaps a single axis value. Zone-alignment guides win over the grid;
-// within each class the smallest correction wins. When a zone guide is hit its
-// coordinate is returned so the caller can draw an alignment indicator.
-func snapAxis(
-	value float64,
-	offsets [3]float64,
-	guides []float64,
-	gridStep float64,
-) (snapped float64, guide float64, zoneGuideHit bool) {
-	best := math.MaxFloat64
-	bestGuide := 0.0
-	for _, offset := range offsets {
-		point := value + offset
-		for _, g := range guides {
-			if delta := g - point; math.Abs(delta) < math.Abs(best) {
-				best = delta
-				bestGuide = g
-			}
-		}
-	}
-	if math.Abs(best) <= zoneSnapThresholdPx {
-		return value + best, bestGuide, true
-	}
-	if gridStep > 0 {
-		best = math.MaxFloat64
-		for _, offset := range offsets {
-			point := value + offset
-			if delta := math.Round(point/gridStep)*gridStep - point; math.Abs(delta) < math.Abs(best) {
-				best = delta
-			}
-		}
-		if math.Abs(best) <= gridSnapThresholdPx {
-			return value + best, 0, false
-		}
-	}
-	return value, 0, false
+	return result.Position
 }

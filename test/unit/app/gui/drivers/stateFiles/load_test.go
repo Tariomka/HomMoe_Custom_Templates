@@ -11,7 +11,11 @@ import (
 func TestWhenLoadIsCalled_DialogIsOpened(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := drivers.NewUIStateWithHandler(&test_helpers.TemplateHandlerMock{})
+	state := drivers.NewUIState(
+		&test_helpers.TemplateHandlerMock{},
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		false)
 
 	// Act
 	state.Load(nil)

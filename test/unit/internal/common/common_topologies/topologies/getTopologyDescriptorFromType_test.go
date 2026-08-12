@@ -20,10 +20,10 @@ func TestWhenTypeIsKnown_ReturnsMatchingDescriptor(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestWhenTypeIsUnknown_ReturnsFirstTopology(t *testing.T) {
+func TestWhenTypeIsUnknown_ReturnsRingFallback(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := common_topologies.GetTopologyDescriptors().Random
+	expected := common_topologies.GetTopologyDescriptors().Default
 
 	// Act
 	actual := common_topologies.GetTopologyDescriptorFromType(config.MapTopology("NoSuchTopology"))

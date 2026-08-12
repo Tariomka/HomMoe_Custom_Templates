@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
@@ -11,16 +12,26 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
-type MandatoryContentProvider struct{}
+type MandatoryContentProvider struct {
+	zoneClassifier zone_interfaces.IZoneClassifier
+	zoneEditor     connection_editor.IZoneEditorService
+}
 
-func NewMandatoryContentProvider() *MandatoryContentProvider {
-	return &MandatoryContentProvider{}
+func NewMandatoryContentProvider(
+	zoneClassifier zone_interfaces.IZoneClassifier,
+	zoneEditor connection_editor.IZoneEditorService) provider_interfaces.IMandatoryContentProvider {
+	return &MandatoryContentProvider{
+		zoneClassifier: zoneClassifier,
+		zoneEditor:     zoneEditor,
+	}
 }
 
 func (this *MandatoryContentProvider) CreateContents(
@@ -86,8 +97,8 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			})
 
 		case preview.ZoneTypeNeutral:
-			castleCount := connection_editor.CountZoneCastles(zone)
-			content := cloneContentItems(neutralRowsForQuality(configuration, neutral_zone.GetQualityFrom(zone)))
+			castleCount := this.zoneEditor.CountZoneCastles(zone)
+			content := cloneContentItems(neutralRowsForQuality(configuration, this.zoneClassifier.GetQuality(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}
@@ -103,7 +114,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			}
 
 			content := cloneContentItems(configuration.HubZoneMandatoryContent)
-			if connection_editor.CountZoneCastles(zone) == 0 {
+			if this.zoneEditor.CountZoneCastles(zone) == 0 {
 				content = stripNearCastleRules(content)
 			}
 			groups = append(groups, entities.MandatoryContent{Name: "mandatory_content_hub", Content: content})
@@ -115,24 +126,6 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 	return groups
 }
 
-func (this *MandatoryContentProvider) CreateContentItemsFrom(
-	rows []models.ZoneContentRowSave) []entities.MandatoryContentItem {
-	if len(rows) == 0 {
-		return nil
-	}
-	var out []entities.MandatoryContentItem
-	for _, raw := range rows {
-		row := raw.Normalized()
-		if row.Sid == "" {
-			continue
-		}
-		for range row.Count {
-			out = append(out, this.createContentItemFrom(row))
-		}
-	}
-	return out
-}
-
 // hubContentGroup builds the hub zone's mandatory-content group from the
 // configured hub rows. It only exists for the topologies that create a Hub
 // zone and only when the user actually configured hub content, matching the
@@ -141,7 +134,8 @@ func (this *MandatoryContentProvider) CreateContentItemsFrom(
 // item is added.
 func (this *MandatoryContentProvider) hubContentGroup(
 	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
-	if !configuration.Topology.IsHubBased() || len(configuration.HubZoneMandatoryContent) == 0 {
+	if !common_topologies.GetTopologyCapabilities(configuration.Topology).UsesHub ||
+		len(configuration.HubZoneMandatoryContent) == 0 {
 		return entities.MandatoryContent{}, false
 	}
 
@@ -150,21 +144,6 @@ func (this *MandatoryContentProvider) hubContentGroup(
 		content = stripNearCastleRules(content)
 	}
 	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
-}
-
-func (this *MandatoryContentProvider) createContentItemFrom(
-	row models.ZoneContentRowSave) entities.MandatoryContentItem {
-	item := entities.MandatoryContentItem{
-		IsMine: row.IsMine,
-	}
-	if row.IsGroup {
-		item.IncludeLists = []string{row.Sid}
-	} else {
-		item.SID = row.Sid
-	}
-	rules := content_rules.RestoreRulesFromRow(row, models.SidMapping{Sid: row.Sid})
-	content_rules.ApplyRulesToItem(&item, rules)
-	return item
 }
 
 func (this *MandatoryContentProvider) createContentItemsWithFoothold(
@@ -182,20 +161,20 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 func (this *MandatoryContentProvider) createFootholdContentItem(
 	index int,
 	castleCount int) entities.MandatoryContentItem {
-	return mandatory_content.NewContentItemBuilder(nonContentObjects.RemoteFoothold).
+	return mandatory_content.NewContentItemBuilder(registry.GetMapObjectNonContentValues().RemoteFoothold).
 		WithName(fmt.Sprintf("name_remote_foothold_%d", index)).
 		WithSoloEncounter().
 		WithRulesCallback(func() []entities.PlacementRule {
 			rules := []entities.PlacementRule{
 				placement_rule.NewPlacementRuleBuilder().
-					BuildCrossroadsRule(placement_rule.Distance{Min: 0.2, Max: 0.3}, 0),
+					BuildCrossroadsRule(models.DistancePreset{Min: 0.2, Max: 0.3}, 0),
 			}
 			if castleCount > 0 {
 				rules = append(rules,
 					placement_rule.NewPlacementRuleBuilder().
 						WithTypeMainObject().
 						WithArgs("0").
-						WithDistance(placement_rule.Distance{Min: 0.2, Max: 0.4}).
+						WithDistance(models.DistancePreset{Min: 0.2, Max: 0.4}).
 						WithWeight(0).
 						Build())
 			}
@@ -204,7 +183,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 					placement_rule.NewPlacementRuleBuilder().
 						WithTypeMainObject().
 						WithArgs("1").
-						WithDistance(placement_rule.Distance{Min: 0.5, Max: 0.5}).
+						WithDistance(models.DistancePreset{Min: 0.5, Max: 0.5}).
 						WithWeight(2).
 						Build())
 			}
@@ -217,6 +196,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 // the zone's main castle. Used when a zone has no castle so the rule
 // would never be satisfiable.
 func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
+	ruleTypes := registry.GetRuleTypeValues()
 	for i := range items {
 		if len(items[i].Rules) == 0 {
 			continue

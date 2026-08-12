@@ -13,7 +13,8 @@ func TestWhenRuleIsApplied_SetsItemVariantId(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	variantID := 3
-	rule, err := content_rules.NewRuleVariant(&content_rules.UtopiaVariants, &variantID)
+	defaultMapping := content_rules.NewVariantMappingCatalog().GetDefaultMapping()
+	rule, err := content_rules.NewRuleVariant(&defaultMapping, &variantID)
 	require.NoError(t, err)
 	item := entities.MandatoryContentItem{SID: "dragon_utopia"}
 

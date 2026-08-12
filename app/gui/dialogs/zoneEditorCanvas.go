@@ -20,26 +20,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
-
-// connEdgeGeom is the per-frame drawn geometry of one connection: a quadratic
-// Bézier from p0 to p1 bulged through ctrl, with mid the curve's midpoint used
-// for the guard-value label and the user-added marker.
-type connEdgeGeom struct {
-	conn *entities.Connection
-	p0   f32.Point
-	p1   f32.Point
-	ctrl f32.Point
-	mid  image.Point
-}
-
-// connPairKey identifies an unordered zone pair whose connections are drawn
-// as one spread group of parallel curves.
-type connPairKey struct{ a, b string }
 
 // layoutCanvas draws the node/edge canvas and processes pointer interaction. All
 // coordinates are square-local because the centring offset is pushed first and
@@ -73,18 +59,18 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	// Handle pointer input BEFORE recomputing geometry so edits (new
 	// connections/zones, drags) are reflected in this very frame. Hit testing
 	// uses the previous frame's geometry, which is exactly what is on screen.
+	sideChanged := this.side != side
 	this.side = side
 	this.handlePointer(gtx)
 
 	// Every mutator raises geometryDirty, so an idle dialog skips the full
 	// BuildPreviewLayout + edge-grouping pass and redraws cached geometry.
-	if this.geometryDirty || this.geometrySide != side {
+	if this.geometryDirty || sideChanged {
 		this.recomputeGeometry(side)
 		this.geometryDirty = false
-		this.geometrySide = side
 	}
 
-	if len(this.positions) == 0 {
+	if len(this.geometry.Positions) == 0 {
 		return layout.Dimensions{Size: outer}
 	}
 
@@ -133,13 +119,9 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 	}
 	if this.addMode {
 		if node != "" {
-			this.pendingFrom = node
-			this.dragging = true
-			this.dragPos = pos
+			this.beginConnectionDrag(node, pos)
 		} else {
-			this.addMode = false
-			this.pendingFrom = ""
-			this.dragging = false
+			this.exitAddModes()
 		}
 		return
 	}
@@ -147,41 +129,31 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 		if node == "" {
 			this.addZoneAt(pos)
 		} else {
-			this.addZoneMode = false
+			this.exitAddModes()
 		}
 		return
 	}
 	if node != "" {
 		this.selectZone(node)
-		this.zoneDragName = node
-		this.zoneDragMoved = false
-		this.pressPos = pos
+		this.beginZoneDrag(node, pos)
 		return
 	}
 	if edge := this.hitTestEdge(pos); edge != nil {
-		this.selected = edge
-		this.selectedZone = ""
+		this.selectConnection(edge)
 		this.syncedFor = nil
 	} else {
-		this.selected = nil
-		this.selectedZone = ""
+		this.clearSelection()
 	}
 }
 
 func (this *ZoneEditorDialog) onRelease(pos image.Point) {
-	this.zoneDragName = ""
-	this.zoneDragMoved = false
-	if !this.dragging {
-		return
-	}
-	this.dragging = false
-	from := this.pendingFrom
-	this.pendingFrom = ""
-	if !this.addMode {
+	this.endZoneDrag()
+	from := this.finishConnectionDrag()
+	if !this.addMode || from == "" {
 		return
 	}
 	target := this.hitTestNode(pos)
-	if target != "" && from != "" && target != from {
+	if target != "" && target != from {
 		// Stay in add mode so several connections can be chained without
 		// re-clicking the toolbar button.
 		this.addConnection(from, target)
@@ -189,189 +161,88 @@ func (this *ZoneEditorDialog) onRelease(pos image.Point) {
 }
 
 func (this *ZoneEditorDialog) hitTestNode(pos image.Point) string {
-	best := ""
-	bestDistance := math.MaxFloat64
-	reach := float64(this.radius)
-	for name, center := range this.positions {
-		distance := math.Hypot(float64(pos.X-center.X), float64(pos.Y-center.Y))
-		if distance <= reach && distance < bestDistance {
-			bestDistance = distance
-			best = name
-		}
-	}
-	return best
+	return this.zoneHandler.HitTestZoneEditorNode(dtos.ZoneEditorHitTestRequestDto{
+		Position:   pos,
+		Positions:  this.geometry.Positions,
+		ZoneRadius: this.geometry.ZoneRadius,
+	})
 }
 
 func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection {
-	var best *entities.Connection
-	bestDistance := 9.0
-	for i := range this.edges {
-		edge := this.edges[i]
-		for step := range 21 {
-			t := float64(step) / 20.0
-			bezierPoint := helpers.GetVectorOnQuadraticBezierCurve(
-				data.NewVec2(float64(edge.p0.X), float64(edge.p0.Y)),
-				data.NewVec2(float64(edge.ctrl.X), float64(edge.ctrl.Y)),
-				data.NewVec2(float64(edge.p1.X), float64(edge.p1.Y)),
-				t)
-			distance := math.Hypot(float64(pos.X)-bezierPoint.X, float64(pos.Y)-bezierPoint.Y)
-			if distance < bestDistance {
-				bestDistance = distance
-				best = edge.conn
-			}
-		}
+	edgeIndex := this.zoneHandler.HitTestZoneEditorEdge(pos, this.geometry.Edges)
+	if edgeIndex < 0 {
+		return nil
 	}
-	return best
+
+	return this.edgeConnection(this.geometry.Edges[edgeIndex])
 }
 
-// recomputeGeometry rebuilds node positions (via BuildPreviewLayout, identical to
-// the preview tab) and curved-edge control points, spreading parallel edges and
-// bulging around intermediate nodes.
+// edgeConnection resolves the working connection an edge was laid out for, or
+// nil when the cached geometry no longer lines up with the connection list.
+func (this *ZoneEditorDialog) edgeConnection(edge models.ZoneEditorEdge) *entities.Connection {
+	if edge.ConnectionIndex < 0 || edge.ConnectionIndex >= len(this.working) {
+		return nil
+	}
+
+	return this.working[edge.ConnectionIndex]
+}
+
+// recomputeGeometry rebuilds node positions and curved-edge control points via
+// the geometry service, which places nodes exactly as the preview tab does.
 func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 	this.side = side
-	mini := &entities.RmgTemplate{
-		Variants: []entities.Variant{{
-			Zones:       this.zones,
-			Connections: derefConnections(this.working),
-		}},
-	}
-	layoutData := this.layoutService.BuildPreviewLayout(mini, this.topology, float64(side))
-	this.positions = layoutData.Positions
-	this.previewZones = layoutData.Zones
-	this.radius = layoutData.ZoneRadius
-
-	order, groups := this.groupConnectionsByPair()
-
-	this.edges = this.edges[:0]
-	const bulgeGap = 18.0
-	for _, key := range order {
-		connections := groups[key]
-		count := len(connections)
-		for index, connection := range connections {
-			p0, ok0 := this.positions[connection.From]
-			p1, ok1 := this.positions[connection.To]
-			if !ok0 || !ok1 {
-				continue
-			}
-			canonicalA, canonicalB := p0, p1
-			if connection.From > connection.To {
-				canonicalA, canonicalB = canonicalB, canonicalA
-			}
-			dx := float64(canonicalB.X - canonicalA.X)
-			dy := float64(canonicalB.Y - canonicalA.Y)
-			distance := math.Hypot(dx, dy)
-			if distance < 1 {
-				distance = 1
-			}
-			normalX := dy / distance
-			normalY := -dx / distance
-			spread := (float64(index) - float64(count-1)/2.0) * bulgeGap
-			bulge := spread + this.obstacleBulge(canonicalA, canonicalB, normalX, normalY)
-			midX := float64(p0.X+p1.X) / 2.0
-			midY := float64(p0.Y+p1.Y) / 2.0
-			ctrlX := midX + 2.0*bulge*normalX
-			ctrlY := midY + 2.0*bulge*normalY
-			labelX := 0.25*float64(p0.X) + 0.5*ctrlX + 0.25*float64(p1.X)
-			labelY := 0.25*float64(p0.Y) + 0.5*ctrlY + 0.25*float64(p1.Y)
-			this.edges = append(this.edges, connEdgeGeom{
-				conn: connection,
-				p0:   f32.Pt(float32(p0.X), float32(p0.Y)),
-				p1:   f32.Pt(float32(p1.X), float32(p1.Y)),
-				ctrl: f32.Pt(float32(ctrlX), float32(ctrlY)),
-				mid:  image.Pt(int(labelX), int(labelY)),
-			})
-		}
-	}
+	this.geometry = this.zoneHandler.BuildZoneEditorGeometry(dtos.ZoneEditorGeometryRequestDto{
+		Zones:       this.zones,
+		Connections: derefConnections(this.working),
+		Topology:    this.topology,
+		CanvasSide:  side,
+	})
 }
 
-// groupConnectionsByPair buckets the working connections by unordered endpoint
-// pair, preserving first-seen order so parallel edges spread deterministically
-// from frame to frame.
-func (this *ZoneEditorDialog) groupConnectionsByPair() ([]connPairKey, map[connPairKey][]*entities.Connection) {
-	groups := make(map[connPairKey][]*entities.Connection)
-	order := make([]connPairKey, 0)
-	for _, connection := range this.working {
-		a, b := connection.From, connection.To
-		if a > b {
-			a, b = b, a
-		}
-		key := connPairKey{a, b}
-		if _, seen := groups[key]; !seen {
-			order = append(order, key)
-		}
-		groups[key] = append(groups[key], connection)
-	}
-	return order, groups
-}
-
-// obstacleBulge returns a perpendicular push so the curve bends clear of any zone
-// node that lies close to the straight chord between its two endpoints.
-func (this *ZoneEditorDialog) obstacleBulge(a, b image.Point, normalX, normalY float64) float64 {
-	clearance := float64(this.radius) + 8.0
-	ax, ay := float64(a.X), float64(a.Y)
-	segX := float64(b.X - a.X)
-	segY := float64(b.Y - a.Y)
-	segLength2 := segX*segX + segY*segY
-	if segLength2 < 1 {
-		return 0
-	}
-	best := 0.0
-	bestMagnitude := 0.0
-	for _, center := range this.positions {
-		px, py := float64(center.X), float64(center.Y)
-		t := ((px-ax)*segX + (py-ay)*segY) / segLength2
-		if t <= 0.08 || t >= 0.92 {
-			continue
-		}
-		closestX := ax + t*segX
-		closestY := ay + t*segY
-		perpendicular := math.Hypot(px-closestX, py-closestY)
-		if perpendicular >= clearance {
-			continue
-		}
-		side := (px-closestX)*normalX + (py-closestY)*normalY
-		need := (clearance - perpendicular) + 6.0
-		signed := need
-		if side >= 0 {
-			signed = -need
-		}
-		if math.Abs(signed) > bestMagnitude {
-			bestMagnitude = math.Abs(signed)
-			best = signed
-		}
-	}
-	return best
+// toCanvasPoint converts a geometry coordinate into the float32 point Gio's
+// path builder expects.
+func toCanvasPoint(vector data.Vec2[float64]) f32.Point {
+	return f32.Pt(float32(vector.X), float32(vector.Y))
 }
 
 func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Theme) {
-	for i := range this.edges {
-		edge := this.edges[i]
+	for i := range this.geometry.Edges {
+		edge := this.geometry.Edges[i]
+		connection := this.edgeConnection(edge)
+		if connection == nil {
+			continue
+		}
 		lineColor := themes.ColorsPreview.DirectLine
 		width := float32(gtx.Dp(unit.Dp(2)))
-		if strings.EqualFold(edge.conn.ConnectionType, "Portal") {
+		if strings.EqualFold(connection.ConnectionType, "Portal") {
 			lineColor = themes.ColorsPreview.PortalLine
 			width = float32(gtx.Dp(unit.Dp(1.6)))
 		}
-		if edge.conn == this.selected {
+		if connection == this.selected {
 			lineColor = themes.ColorsZoneEditor.EdgeSelected
 			width = float32(gtx.Dp(unit.Dp(3)))
 		}
 		var path clip.Path
 		path.Begin(gtx.Ops)
-		path.MoveTo(edge.p0)
-		path.QuadTo(edge.ctrl, edge.p1)
+		path.MoveTo(toCanvasPoint(edge.StartPoint))
+		path.QuadTo(toCanvasPoint(edge.ControlPoint), toCanvasPoint(edge.EndPoint))
 		paint.FillShape(gtx.Ops, lineColor, clip.Stroke{Path: path.End(), Width: width}.Op())
 
-		if edge.conn.IsUserAdded {
+		if connection.IsUserAdded {
 			marker := gtx.Dp(unit.Dp(3))
-			dot := image.Rect(edge.mid.X-marker, edge.mid.Y-marker, edge.mid.X+marker, edge.mid.Y+marker)
+			dot := image.Rect(
+				edge.MidPoint.X-marker,
+				edge.MidPoint.Y-marker,
+				edge.MidPoint.X+marker,
+				edge.MidPoint.Y+marker,
+			)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.UserAddedDot, clip.UniformRRect(dot, marker).Op(gtx.Ops))
 		}
 		drawCanvasText(
 			gtx,
 			theme,
-			image.Pt(edge.mid.X, edge.mid.Y-gtx.Dp(unit.Dp(9))),
-			strconv.Itoa(edge.conn.GuardValue),
+			image.Pt(edge.MidPoint.X, edge.MidPoint.Y-gtx.Dp(unit.Dp(9))),
+			strconv.Itoa(connection.GuardValue),
 			9,
 			themes.ColorsZoneEditor.GuardLabel,
 		)
@@ -382,7 +253,7 @@ func (this *ZoneEditorDialog) drawRubberBand(gtx layout.Context) {
 	if !this.addMode || !this.dragging || this.pendingFrom == "" {
 		return
 	}
-	center, ok := this.positions[this.pendingFrom]
+	center, ok := this.geometry.Positions[this.pendingFrom]
 	if !ok {
 		return
 	}
@@ -398,21 +269,21 @@ func (this *ZoneEditorDialog) drawRubberBand(gtx layout.Context) {
 }
 
 func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Theme) {
-	for _, zone := range this.previewZones {
+	for _, zone := range this.geometry.Zones {
 		if zone.Type == preview.ZoneTypePlayer {
 			continue
 		}
-		utils.DrawPreviewZone(gtx, theme, zone, this.radius)
+		utils.DrawPreviewZone(gtx, theme, zone, this.geometry.ZoneRadius)
 	}
-	for _, zone := range this.previewZones {
+	for _, zone := range this.geometry.Zones {
 		if zone.Type != preview.ZoneTypePlayer {
 			continue
 		}
-		utils.DrawPreviewZone(gtx, theme, zone, this.radius)
+		utils.DrawPreviewZone(gtx, theme, zone, this.geometry.ZoneRadius)
 	}
 	if this.addMode && this.pendingFrom != "" {
-		if center, ok := this.positions[this.pendingFrom]; ok {
-			reach := this.radius + 4
+		if center, ok := this.geometry.Positions[this.pendingFrom]; ok {
+			reach := this.geometry.ZoneRadius + 4
 			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
 				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
@@ -421,8 +292,8 @@ func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Them
 		}
 	}
 	if !this.addMode && this.selectedZone != "" {
-		if center, ok := this.positions[this.selectedZone]; ok {
-			reach := this.radius + 4
+		if center, ok := this.geometry.Positions[this.selectedZone]; ok {
+			reach := this.geometry.ZoneRadius + 4
 			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
 				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
@@ -440,9 +311,7 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos image.Point) {
 		return
 	}
 	if !this.zoneDragMoved {
-		dx := float64(pos.X - this.pressPos.X)
-		dy := float64(pos.Y - this.pressPos.Y)
-		if math.Hypot(dx, dy) < 6 {
+		if !this.zoneDragLeftDeadZone(pos) {
 			return
 		}
 		this.ensureManualPositions()

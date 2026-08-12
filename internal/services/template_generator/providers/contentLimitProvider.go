@@ -6,11 +6,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type ContentLimitProvider struct{}
 
-func NewContentLimitProvider() *ContentLimitProvider {
+func NewContentLimitProvider() provider_interfaces.IContentLimitProvider {
 	return &ContentLimitProvider{}
 }
 
@@ -57,6 +59,17 @@ func (this *ContentLimitProvider) CreateContentCountLimits(
 }
 
 func (this *ContentLimitProvider) createDefaultContentLimits() []entities.ContentLimit {
+	buildingObjects := registry.GetMapObjectBuildingValues()
+	heroBuffBuildings := registry.GetMapObjectHeroBuffBuildingValues()
+	magicBuildings := registry.GetMapObjectMagicBuildingValues()
+	nonContentObjects := registry.GetMapObjectNonContentValues()
+	randomUnitBanks := registry.GetMapObjectRandomUnitBankValues()
+	resourceObjects := registry.GetMapObjectResourceValues()
+	t1GuardedResourceBanks := registry.GetMapObjectT1GuardedResourceBankValues()
+	t1StatsAndSkillsBuildings := registry.GetMapObjectT1StatsAndSkillsBuildingValues()
+	t2StatsAndSkillsBuildings := registry.GetMapObjectT2StatsAndSkillsBuildingValues()
+	unitBanks := registry.GetMapObjectNamedUnitBankValues()
+	visionBuildings := registry.GetMapObjectVisionBuildingValues()
 	return []entities.ContentLimit{
 		{SID: t1GuardedResourceBanks.BlackTower, MaxCount: 0},
 		{SID: heroBuffBuildings.Fountain, MaxCount: 2},

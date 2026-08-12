@@ -17,6 +17,7 @@ func ToManualZoneSaves(zones []entities.Zone) []ManualZoneSave {
 	if len(zones) == 0 {
 		return nil
 	}
+
 	saves := make([]ManualZoneSave, 0, len(zones))
 	for _, zone := range zones {
 		saves = append(saves, ManualZoneSave{Zone: zone, ManualPosition: zone.ManualPosition})
@@ -30,6 +31,7 @@ func FromManualZoneSaves(saves []ManualZoneSave) []entities.Zone {
 	if len(saves) == 0 {
 		return nil
 	}
+
 	zones := make([]entities.Zone, 0, len(saves))
 	for _, save := range saves {
 		zone := save.Zone

@@ -4,22 +4,28 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ChainTopologyService struct {
 	base.TopologyBase
 }
 
-func NewChainTopologyService() *ChainTopologyService {
+func NewChainTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
+) *ChainTopologyService {
 	return &ChainTopologyService{
-		TopologyBase: base.NewTopologyBase(),
+		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -83,21 +89,10 @@ func (this *ChainTopologyService) createZones(
 		if index < labelCount-1 && connectionNames[index] != "" {
 			tempConnectionNames = append(tempConnectionNames, connectionNames[index])
 		}
-		if playerIndex := slices.Index(playerLabels, label); playerIndex >= 0 {
-			zones = append(zones,
-				this.CreateSpawnZone(
-					label, fmt.Sprintf("Player%d", playerIndex+1), tempConnectionNames,
-					configuration.ZoneConfiguration.PlayerZoneCastles, configuration.MatchPlayerCastleFactions,
-					configuration.ZoneConfiguration.PlayerZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning))
-		} else {
-			zones = append(zones,
-				this.CreateNeutralZone(
-					linq.FromSlice(neutralZones).
-						FirstOrDefault(func(x neutral_zone.Plan) bool { return x.Label == label }),
-					tempConnectionNames, configuration.ZoneConfiguration.NeutralZoneSize, tuning.RemoteFootholdCount,
-					configuration.GenerateRoads, tuning, label == holdCityNeutralLabel))
-		}
+		playerIndex := slices.Index(playerLabels, label)
+		zones = append(zones, this.CreateClusterZone(
+			configuration, label, tempConnectionNames, playerIndex, playerIndex >= 0,
+			label == holdCityNeutralLabel, tuning, neutralZones))
 	}
 	return zones
 }
@@ -127,7 +122,7 @@ func (this *ChainTopologyService) createConnections(
 			WithGuardZone(zoneFrom).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, playerLabels, neutralZones, tuning)).
-			WithGuardWeeklyIncrement(0.15).
+			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("chain_guard_%s_%s", labelFrom, labelTo)).
 			Build())
 	}

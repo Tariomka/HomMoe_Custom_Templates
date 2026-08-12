@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +12,7 @@ import (
 func TestWhenModifiedStateIsReset_DefaultValuesAreRestored(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) {
 		dto.TemplateName = gofakeit.Name()
 		dto.PlayerCount = gofakeit.Number(3, 8)
@@ -29,7 +28,7 @@ func TestWhenModifiedStateIsReset_DefaultValuesAreRestored(t *testing.T) {
 func TestWhenStateWithSnapshotIsReset_PreviousStateIsDropped(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SnapshotCurrentState()
 	require.True(t, state.HasPreviousState())
 
@@ -43,7 +42,7 @@ func TestWhenStateWithSnapshotIsReset_PreviousStateIsDropped(t *testing.T) {
 func TestWhenStateWithNextStateIsReset_NextStateIsDropped(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	state.SetNextState(state.GetCurrentState())
 	require.True(t, state.HasNextState())
 

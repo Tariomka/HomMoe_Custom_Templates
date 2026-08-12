@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +11,7 @@ import (
 func TestWhenManualConnectionsWereStored_ConnectionsRoundTripWithUserAddedFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 	connections := []entities.Connection{
 		{Name: "A-B", From: "Zone A", To: "Zone B", GuardValue: gofakeit.Number(0, 30000), IsUserAdded: true},
 		{Name: "B-C", From: "Zone B", To: "Zone C"},
@@ -29,7 +28,7 @@ func TestWhenManualConnectionsWereStored_ConnectionsRoundTripWithUserAddedFlag(t
 func TestWhenNoManualConnectionsWereStored_NilConnectionsAreReturned(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := models.NewEditorState()
+	state := newEditorState()
 
 	// Act
 	restored := state.GetManualConnections()

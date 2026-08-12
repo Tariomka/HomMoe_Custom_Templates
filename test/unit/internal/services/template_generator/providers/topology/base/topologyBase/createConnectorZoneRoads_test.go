@@ -5,13 +5,14 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenRoadGenerationIsDisabled_NoConnectorRoadsAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	roads := topologyBase.CreateConnectorZoneRoads([]string{"Gate-1", "Gate-2"}, false)
@@ -23,7 +24,7 @@ func TestWhenRoadGenerationIsDisabled_NoConnectorRoadsAreCreated(t *testing.T) {
 func TestWhenNoConnectionNamesAreProvided_NoConnectorRoadsAreCreated(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	roads := topologyBase.CreateConnectorZoneRoads(nil, true)
@@ -35,7 +36,7 @@ func TestWhenNoConnectionNamesAreProvided_NoConnectorRoadsAreCreated(t *testing.
 func TestWhenSingleConnectionNameIsProvided_RoadLoopsBackToItself(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
@@ -53,7 +54,7 @@ func TestWhenSingleConnectionNameIsProvided_RoadLoopsBackToItself(t *testing.T) 
 func TestWhenMultipleConnectionNamesAreProvided_RoadsFanOutFromFirstConnection(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
@@ -75,7 +76,7 @@ func TestWhenMultipleConnectionNamesAreProvided_RoadsFanOutFromFirstConnection(t
 func TestWhenDuplicateConnectionNamesAreProvided_DuplicatesAreIgnored(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	expectedRoads := []entities.Road{
 		{
 			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},

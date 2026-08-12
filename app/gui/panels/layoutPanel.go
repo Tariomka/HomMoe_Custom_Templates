@@ -10,6 +10,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
 type LayoutPanel struct {
@@ -64,10 +66,18 @@ type LayoutPanel struct {
 
 	scroll widget.List
 
-	state *drivers.State
+	state              *drivers.State
+	previewHandler     handler_interfaces.IPreviewHandler
+	contentRuleHandler handler_interfaces.IZoneContentHandler
+	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
 }
 
-func NewLayoutPanel(state *drivers.State) *LayoutPanel {
+func NewLayoutPanel(
+	state *drivers.State,
+	previewHandler handler_interfaces.IPreviewHandler,
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
+	zoneEditorHandler handler_interfaces.IZoneEditorHandler,
+) *LayoutPanel {
 	panel := &LayoutPanel{
 		topology: components.NewDropdownSelector(func() []string {
 			labels := make([]string, 0)
@@ -76,7 +86,10 @@ func NewLayoutPanel(state *drivers.State) *LayoutPanel {
 			}
 			return labels
 		}()),
-		state: state,
+		state:              state,
+		previewHandler:     previewHandler,
+		contentRuleHandler: contentRuleHandler,
+		zoneEditorHandler:  zoneEditorHandler,
 	}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
@@ -200,6 +213,6 @@ func (this *LayoutPanel) SaveToState() {
 	})
 }
 
-func (this *LayoutPanel) getCurrentTopology() common_topologies.TopologyDescriptor {
+func (this *LayoutPanel) getCurrentTopology() models.TopologyDescriptor {
 	return common_topologies.GetTopologyDescriptorFromIndex(this.topology.GetSelectedIndex())
 }

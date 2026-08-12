@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"testing"
 	"time"
 
 	"gioui.org/gpu/headless"
@@ -25,14 +24,13 @@ import (
 //
 // The golden path is
 // __snapshots__/{caller test file name}/{test name}_{action number}.golden.
-func (this *AppRunner) EnableSnapshots(t *testing.T) {
-	t.Helper()
-	_, callerFile, _, ok := runtime.Caller(1)
+func (this *AppRunner) EnableSnapshots() {
+	this.tb.Helper()
+	_, callerFile, _, ok := runtime.Caller(2)
 	if !ok {
-		t.Fatal("EnableSnapshots: cannot resolve the calling test file")
+		this.tb.Fatal("EnableSnapshots: cannot resolve the calling test file")
 	}
 
-	this.snapshotTest = t
 	this.snapshotFile = strings.TrimSuffix(filepath.Base(callerFile), ".go")
 	this.comparer = snapshot.NewComparer()
 	this.store = snapshot.NewStore()
@@ -43,24 +41,26 @@ func (this *AppRunner) EnableSnapshots(t *testing.T) {
 
 	headlessWindow, err := headless.NewWindow(WindowWidth, WindowHeight)
 	if err != nil {
-		t.Fatalf("EnableSnapshots: cannot create headless GPU window: %v", err)
+		this.tb.Fatalf("EnableSnapshots: cannot create headless GPU window: %v", err)
 	}
 	this.headlessWin = headlessWindow
-	t.Cleanup(headlessWindow.Release)
+	this.tb.Cleanup(headlessWindow.Release)
 }
 
 // MaskRect registers a window-pixel rectangle to be blanked out of every
 // snapshot before saving or comparing. Use it to hide nondeterministic regions
 // such as the randomly generated map preview.
 func (this *AppRunner) MaskRect(rect image.Rectangle) {
+	this.tb.Helper()
 	this.masker.AddRect(rect)
 }
 
-// verifySnapshot renders, masks and then saves (-update) or validates the
+// VerifySnapshot renders, masks and then saves (-update) or validates the
 // screenshot for the action that just completed. No-op unless EnableSnapshots
 // armed this runner with a headless window.
-func (this *AppRunner) verifySnapshot() {
-	if this.snapshotTest == nil || this.headlessWin == nil {
+func (this *AppRunner) VerifySnapshot() {
+	this.tb.Helper()
+	if this.headlessWin == nil {
 		return
 	}
 
@@ -68,10 +68,10 @@ func (this *AppRunner) verifySnapshot() {
 	screenshot := this.captureScreenshot()
 	this.masker.Apply(screenshot)
 
-	goldenPath := this.store.GoldenPath(this.snapshotFile, this.snapshotTest.Name(), this.actionCount)
+	goldenPath := this.store.GoldenPath(this.snapshotFile, this.tb.Name(), this.actionCount)
 	if IsUpdate() {
 		if err := this.store.SaveGolden(goldenPath, screenshot); err != nil {
-			this.snapshotTest.Fatalf("snapshot %d: cannot save golden %s: %v", this.actionCount, goldenPath, err)
+			this.tb.Fatalf("snapshot %d: cannot save golden %s: %v", this.actionCount, goldenPath, err)
 		}
 		return
 	}
@@ -83,12 +83,13 @@ func (this *AppRunner) verifySnapshot() {
 // a mismatch (or missing/mis-sized golden) fails the test and leaves the actual
 // image beside the golden with the .failure extension.
 func (this *AppRunner) validateScreenshot(goldenPath string, screenshot *image.RGBA) {
-	failurePath := this.store.FailurePath(this.snapshotFile, this.snapshotTest.Name(), this.actionCount)
+	this.tb.Helper()
+	failurePath := this.store.FailurePath(this.snapshotFile, this.tb.Name(), this.actionCount)
 
 	golden, err := this.store.LoadGolden(goldenPath)
 	if err != nil {
 		this.saveFailure(failurePath, screenshot)
-		this.snapshotTest.Fatalf(
+		this.tb.Fatalf(
 			"snapshot %d: cannot load golden %s (regenerate with `-args -update`): %v",
 			this.actionCount, goldenPath, err)
 		return
@@ -97,19 +98,19 @@ func (this *AppRunner) validateScreenshot(goldenPath string, screenshot *image.R
 	difference, err := this.comparer.Compare(golden, screenshot)
 	if err != nil {
 		this.saveFailure(failurePath, screenshot)
-		this.snapshotTest.Fatalf("snapshot %d: %v (actual saved to %s)", this.actionCount, err, failurePath)
+		this.tb.Fatalf("snapshot %d: %v (actual saved to %s)", this.actionCount, err, failurePath)
 		return
 	}
 	if !this.comparer.Matches(difference) {
 		this.saveFailure(failurePath, screenshot)
-		this.snapshotTest.Errorf(
+		this.tb.Errorf(
 			"snapshot %d differs from %s by %.3f%% (allowed < %.3f%%); actual saved to %s",
 			this.actionCount, goldenPath, difference*100, this.comparer.Threshold*100, failurePath)
 		return
 	}
 
 	if err := this.store.DeleteFailure(failurePath); err != nil {
-		this.snapshotTest.Errorf("snapshot %d: cannot remove stale failure %s: %v", this.actionCount, failurePath, err)
+		this.tb.Errorf("snapshot %d: cannot remove stale failure %s: %v", this.actionCount, failurePath, err)
 	}
 }
 
@@ -117,6 +118,7 @@ func (this *AppRunner) validateScreenshot(goldenPath string, screenshot *image.R
 // window and reads back the rendered pixels. It holds mu so the render
 // goroutine (headed + -update) cannot interleave a layout.
 func (this *AppRunner) captureScreenshot() *image.RGBA {
+	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
@@ -131,18 +133,19 @@ func (this *AppRunner) captureScreenshot() *image.RGBA {
 	this.App.Layout(gtx, this.theme)
 
 	if err := this.headlessWin.Frame(&frameOps); err != nil {
-		this.snapshotTest.Fatalf("snapshot %d: headless frame failed: %v", this.actionCount, err)
+		this.tb.Fatalf("snapshot %d: headless frame failed: %v", this.actionCount, err)
 	}
 	screenshot := image.NewRGBA(image.Rectangle{Max: this.headlessWin.Size()})
 	if err := this.headlessWin.Screenshot(screenshot); err != nil {
-		this.snapshotTest.Fatalf("snapshot %d: screenshot failed: %v", this.actionCount, err)
+		this.tb.Fatalf("snapshot %d: screenshot failed: %v", this.actionCount, err)
 	}
 	return screenshot
 }
 
 // saveFailure best-effort persists the failing screenshot for inspection.
 func (this *AppRunner) saveFailure(failurePath string, screenshot *image.RGBA) {
+	this.tb.Helper()
 	if err := this.store.SaveFailure(failurePath, screenshot); err != nil {
-		this.snapshotTest.Logf("snapshot %d: cannot save failure image %s: %v", this.actionCount, failurePath, err)
+		this.tb.Logf("snapshot %d: cannot save failure image %s: %v", this.actionCount, failurePath, err)
 	}
 }

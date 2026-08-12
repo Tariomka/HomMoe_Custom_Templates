@@ -9,6 +9,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // GeometricTopologyService arranges zones into a centrally symmetric flower: a
@@ -18,12 +20,17 @@ import (
 // rounded petals of the example templates (Shamrock, One for All, Nuclear,
 // Kerberos, Infinity).
 type GeometricTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 }
 
-func NewGeometricTopologyService() *GeometricTopologyService {
+func NewGeometricTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService) *GeometricTopologyService {
 	return &GeometricTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -33,8 +40,8 @@ func (this *GeometricTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	return this.createVariantFromLayout(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createGeometricLayout)
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createGeometricLayout, nil)
 }
 
 // petal holds the zone indices that make up one flower petal in ring order:

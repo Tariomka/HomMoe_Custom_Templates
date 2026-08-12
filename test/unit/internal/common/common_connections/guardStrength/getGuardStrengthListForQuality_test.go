@@ -5,11 +5,12 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/stretchr/testify/assert"
 )
 
-func newExpectedStrengthList(strength common_connections.GuardStrength) []data.Tuple[string, int] {
+func newExpectedStrengthList(strength models.GuardStrength) []data.Tuple[string, int] {
 	return []data.Tuple[string, int]{
 		data.NewTuple("Default", strength.Default),
 		data.NewTuple("Weakest", strength.Weakest),

@@ -8,6 +8,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 env:
   GO_VERSION: 1.26.5
   coverage_file: coverage.txt
@@ -30,6 +33,19 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - name: Download dependencies
+        # proxy.golang.org intermittently drops the HTTP/2 stream mid-zip; retry instead of failing the job.
+        run: |
+          for attempt in 1 2 3; do
+            if go mod download; then
+              exit 0
+            fi
+            echo "::warning::go mod download failed (attempt ${attempt}/3), retrying..."
+            sleep $((attempt * 15))
+          done
+          echo "::error::go mod download failed after 3 attempts"
+          exit 1
 
       - name: Check go mod
         run: |
@@ -102,6 +118,9 @@ jobs:
 
       - name: Vet (including integration_test-gated files)
         run: go vet -tags=integration_test ./...
+
+      - name: Check test build-tag layout
+        run: go run ./cmd/testlayoutcheck .
 
   check-windows:
     name: Check Windows Build & Unit Tests

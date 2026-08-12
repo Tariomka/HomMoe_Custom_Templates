@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
+	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -20,17 +21,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// newUIState builds a driver state on the application's own object graph.
+func newUIState() *drivers.State {
+	return drivers.NewUIState(
+		composition.InitializeGuiHandler(),
+		composition.InitializeFileSystemHandler(),
+		composition.InitializeRegenerationHandler(),
+		true)
+}
+
 // newEditorSession builds a State plus the three editor panels bound to it,
 // mirroring how editor.Window wires them together. The returned saveFrame and
 // loadPanels closures reproduce the per-frame window.save() and window.load()
 // behaviour so the integration tests can drive the real frame loop without a
 // display.
 func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func()) {
-	state = drivers.NewUIState()
+	backend := composition.InitializeGuiHandler()
+	state = drivers.NewUIState(
+		backend,
+		composition.InitializeFileSystemHandler(),
+		composition.InitializeRegenerationHandler(),
+		true)
 	editorPanels := []interfaces.IPanel{
 		panels.NewGeneralPanel(state),
-		panels.NewLayoutPanel(state),
-		panels.NewBonusesPanel(state),
+		panels.NewLayoutPanel(state, backend, backend, backend),
+		panels.NewBonusesPanel(state, backend),
 	}
 	saveFrame = func() {
 		for _, panel := range editorPanels {
@@ -51,9 +66,12 @@ func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func
 func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "saved.gen.json")
+	// The state is written under the template name, not under the requested
+	// file name, so the reload has to target the derived path.
+	writtenPath := filepath.Join(dir, "Loaded Template.gen.json")
 
 	// Author a distinctive state and persist it through the real save path.
-	author := drivers.NewUIState()
+	author := newUIState()
 	author.UpdateState(func(s *dtos.EditorStateDto) {
 		s.TemplateName = "Loaded Template"
 		s.PlayerCount = 6
@@ -63,7 +81,7 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
 	// Fresh editor session sitting at the defaults.
 	state, _, _ := newEditorSession()
@@ -74,10 +92,10 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 
 	// Load the saved file. The panel resync is supplied as the onLoaded
 	// callback, exactly as editor.Window wires window.load().
-	state.LoadStateFromFile(savedPath)
+	state.LoadStateFromFile(writtenPath)
 	message, irError = state.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Loaded "+savedPath, message)
+	assert.Equal(t, "Loaded "+writtenPath, message)
 
 	loaded := state.GetStateData()
 	assert.Equal(t, "Loaded Template", loaded.TemplateName)
@@ -102,10 +120,11 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "manual.gen.json")
+	writtenPath := filepath.Join(dir, "Custom Template.gen.json")
 	now := time.Now()
 
 	// Generate a baseline template (the first AutoRegenerate call generates).
-	state := drivers.NewUIState()
+	state := newUIState()
 	state.AutoRegenerate(now)
 	template := state.GetLastTemplate()
 	require.NotNil(t, template, "expected a generated template")
@@ -126,15 +145,15 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 		IsUserAdded:    true,
 	}
 	connections = append(connections, added)
-	state.ApplyEditedZones(zones, connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
 
 	// Save and confirm the file on disk actually carries the manual edits.
 	state.SaveStateToFile(savedPath)
 	message, irError := state.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
-	raw, err := os.ReadFile(savedPath)
+	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 	var onDisk dtos.EditorStateDto
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
@@ -154,11 +173,11 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 
 	// Load into a fresh session and regenerate; the manual layout must come
 	// back and be reapplied to the regenerated template.
-	reloaded := drivers.NewUIState()
-	reloaded.LoadStateFromFile(savedPath)
+	reloaded := newUIState()
+	reloaded.LoadStateFromFile(writtenPath)
 	message, irError = reloaded.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Loaded "+savedPath, message)
+	assert.Equal(t, "Loaded "+writtenPath, message)
 	reloaded.AutoRegenerate(now)
 
 	got := reloaded.GetLastTemplate()
@@ -187,14 +206,15 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "plain.gen.json")
+	writtenPath := filepath.Join(dir, "Custom Template.gen.json")
 
-	state := drivers.NewUIState()
+	state := newUIState()
 	state.SaveStateToFile(savedPath)
 	message, irError := state.GetStatus()
 	require.False(t, irError)
-	assert.Equal(t, "Saved "+savedPath, message)
+	assert.Equal(t, "Saved "+writtenPath, message)
 
-	raw, err := os.ReadFile(savedPath)
+	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 
 	var onDisk dtos.EditorStateDto
@@ -208,7 +228,7 @@ func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 // manual edits rather than reapplying them onto an incompatible layout.
 func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	now := time.Now()
-	state := drivers.NewUIState()
+	state := newUIState()
 	state.AutoRegenerate(now)
 
 	template := state.GetLastTemplate()
@@ -219,7 +239,10 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.3, 0.4}
 	}
-	state.ApplyEditedZones(zones, template.Variants[0].Connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:       zones,
+		Connections: template.Variants[0].Connections,
+	})
 
 	// A structural change (player count) must regenerate from scratch.
 	state.UpdateState(func(s *dtos.EditorStateDto) { s.PlayerCount = 4 })
@@ -240,20 +263,21 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 func TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave(t *testing.T) {
 	dir := t.TempDir()
 	savedPath := filepath.Join(dir, "gamemode.gen.json")
+	writtenPath := filepath.Join(dir, "Custom Template.gen.json")
 	singleHero := registry.GetGameModeValues().SingleHero
 
 	// Author a state with the non-default game mode and persist it.
-	author := drivers.NewUIState()
+	author := newUIState()
 	author.UpdateState(func(s *dtos.EditorStateDto) { s.GameMode = singleHero })
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)
-	require.Equal(t, "Saved "+savedPath, message)
+	require.Equal(t, "Saved "+writtenPath, message)
 
 	// Fresh editor session at defaults; load, resync panels (window.load()),
 	// then run the next frame's SaveToState (window.save()).
 	state, saveFrame, loadPanels := newEditorSession()
-	state.LoadStateFromFile(savedPath)
+	state.LoadStateFromFile(writtenPath)
 	loadPanels()
 	saveFrame()
 

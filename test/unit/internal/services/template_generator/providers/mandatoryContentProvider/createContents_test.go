@@ -7,14 +7,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenPlayerLabelsProvided_CreatesGroupPerPlayerLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 
@@ -33,7 +32,7 @@ func TestWhenRemoteFootholdsEnabled_PrependsFootholdItemPerCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	footholdSid := registry.GetMapObjectNonContentValues().RemoteFoothold
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = true
 	configuration.RemoteFootholdCount = 3
@@ -50,7 +49,7 @@ func TestWhenRemoteFootholdsEnabled_PrependsFootholdItemPerCount(t *testing.T) {
 func TestWhenRemoteFootholdsDisabled_AddsNoFootholdItems(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "sawmill"}}
@@ -65,7 +64,7 @@ func TestWhenRemoteFootholdsDisabled_AddsNoFootholdItems(t *testing.T) {
 func TestWhenLowTierRowsConfigured_CopiesRowsIntoLowNeutralZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
@@ -82,7 +81,7 @@ func TestWhenLowTierRowsConfigured_CopiesRowsIntoLowNeutralZone(t *testing.T) {
 func TestWhenMediumTierRowsConfigured_CopiesRowsIntoMediumNeutralZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
@@ -102,7 +101,7 @@ func TestWhenMediumTierRowsConfigured_CopiesRowsIntoMediumNeutralZone(t *testing
 func TestWhenHighTierRowsConfigured_CopiesRowsIntoHighNeutralZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.HighNeutralMandatoryContent = []entities.MandatoryContentItem{
@@ -124,7 +123,7 @@ func TestWhenHighTierRowsConfigured_CopiesRowsIntoHighNeutralZone(t *testing.T) 
 func TestWhenHighestTierPlanExists_CopiesHubZoneRowsIntoThatNeutralZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.HighNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "high_only"}}
@@ -145,7 +144,7 @@ func TestWhenNeutralZoneHasNoCastles_StripsNearCastlePlacementRules(t *testing.T
 	t.Parallel()
 	// Arrange
 	ruleTypeMainObject := registry.GetRuleTypeValues().MainObject
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{
@@ -171,7 +170,7 @@ func TestWhenNeutralZoneHasCastles_KeepsNearCastlePlacementRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	ruleTypeMainObject := registry.GetRuleTypeValues().MainObject
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{
@@ -195,7 +194,7 @@ func TestWhenZeroCastleZoneStripsRules_DoesNotMutateConfiguredRows(t *testing.T)
 	t.Parallel()
 	// Arrange
 	ruleTypeMainObject := registry.GetRuleTypeValues().MainObject
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{
@@ -221,7 +220,7 @@ func TestWhenZeroCastleZoneStripsRules_DoesNotMutateConfiguredRows(t *testing.T)
 func TestWhenHubTopologyWithHubRows_EmitsHubGroupWithConfiguredRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.SpawnRemoteFootholds = false
@@ -237,7 +236,7 @@ func TestWhenHubTopologyWithHubRows_EmitsHubGroupWithConfiguredRows(t *testing.T
 func TestWhenHubTopologyWithoutHubRows_OmitsHubGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 
@@ -251,7 +250,7 @@ func TestWhenHubTopologyWithoutHubRows_OmitsHubGroup(t *testing.T) {
 func TestWhenNonHubTopologyWithHubRows_OmitsHubGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}

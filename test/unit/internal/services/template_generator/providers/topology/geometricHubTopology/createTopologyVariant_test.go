@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,12 +24,12 @@ func TestWhenRandomPortalsEnabled_AddsExtraPortalConnections(t *testing.T) {
 	configuration.PlayerCount = len(playerLabels)
 	configuration.RandomPortals = true
 	configuration.MaxPortalConnections = 4
-	tuning := models.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
 	baseline := buildGeoHubVariant(playerLabels, plans)
 
 	// Act
-	variant := topology.NewGeometricHubTopologyService().
-		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, false)
+	variant := topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
+		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, "")
 
 	// Assert
 	assert.Greater(t, len(variant.Connections), len(baseline.Connections))
@@ -44,11 +44,11 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentGroup(t *t
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_item"}}
-	tuning := models.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
 
 	// Act
-	variant := topology.NewGeometricHubTopologyService().
-		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, false)
+	variant := topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
+		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, "")
 
 	// Assert
 	assert.Contains(t, variant.Zones[0].MandatoryContent, "mandatory_content_hub")

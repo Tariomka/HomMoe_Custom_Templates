@@ -5,13 +5,14 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenBothLabelsArePlayers_GuardValueIsPlayerBorderStrength(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	guardValue := topologyBase.GetBorderGuardValue(
@@ -41,7 +42,7 @@ func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			topologyBase := base.NewTopologyBase()
+			topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 			// Act
 			guardValue := topologyBase.GetBorderGuardValue(
@@ -56,7 +57,7 @@ func TestWhenBothLabelsAreNeutral_HigherQualityGuardWins(t *testing.T) {
 func TestWhenOnlyFirstLabelIsPlayer_NeutralSecondLabelQualityDrivesGuard(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	neutralPlans := neutral_zone.Plans{
 		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
 	}
@@ -72,7 +73,7 @@ func TestWhenOnlyFirstLabelIsPlayer_NeutralSecondLabelQualityDrivesGuard(t *test
 func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	neutralPlans := neutral_zone.Plans{
 		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
 	}
@@ -88,7 +89,7 @@ func TestWhenOnlySecondLabelIsPlayer_NeutralFirstLabelQualityDrivesGuard(t *test
 func TestWhenNeutralLabelHasNoPlan_UsesUnknownQualityGuard(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 
 	// Act
 	guardValue := topologyBase.GetBorderGuardValue(
@@ -101,7 +102,7 @@ func TestWhenNeutralLabelHasNoPlan_UsesUnknownQualityGuard(t *testing.T) {
 func TestWhenBorderGuardMultiplierIsDoubled_PlayerBorderGuardIsScaled(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	topologyBase := base.NewTopologyBase()
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	tuning := newUnitTuning()
 	tuning.BorderGuardStrengthMultiplier = 2.0
 

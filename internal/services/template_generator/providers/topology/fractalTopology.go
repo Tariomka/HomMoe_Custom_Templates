@@ -7,6 +7,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 // FractalTopologyService grows one self-similar fractal per player. Every player
@@ -19,12 +21,18 @@ import (
 // no two players ever border each other - the design itself keeps them apart,
 // without relying on the NoDirectPlayerConnections flag.
 type FractalTopologyService struct {
-	RandomTopologyService
+	PositionedTopologyBuilder
 }
 
-func NewFractalTopologyService() *FractalTopologyService {
+func NewFractalTopologyService(
+	zoneFactory zone_interfaces.IZoneFactory,
+	roadFactory zone_interfaces.IRoadFactory,
+	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	connectionService base.ITopologyConnectionService,
+) *FractalTopologyService {
 	return &FractalTopologyService{
-		RandomTopologyService: *NewRandomTopologyService(),
+		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
 }
 
@@ -34,8 +42,8 @@ func (this *FractalTopologyService) CreateTopologyVariant(
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string) entities.Variant {
-	return this.createVariantFromLayout(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createFractalLayout)
+	return this.BuildVariant(
+		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createFractalLayout, nil)
 }
 
 // fractalTree holds the zone indices of one player's fractal. levels[0] are the

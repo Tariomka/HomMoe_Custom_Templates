@@ -1,6 +1,10 @@
 package assetProvider_test
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
 	"sync"
 	"testing"
 
@@ -69,4 +73,47 @@ func TestWhenCalledConcurrently_ReturnsSameSingletonInstance(t *testing.T) {
 	for index := 1; index < goroutineCount; index++ {
 		assert.Same(t, providers[0], providers[index])
 	}
+}
+
+// TestWhenAssetsFolderIsScanned_EveryEmbeddedSpriteIsDecoded guards against
+// artwork rotting unused in the embed folder: the arena sprites sat there
+// unreferenced while the feature was only half implemented.
+func TestWhenAssetsFolderIsScanned_EveryEmbeddedSpriteIsDecoded(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	assetsDirectory, err := filepath.Abs(filepath.Join(
+		"..", "..", "..", "..", "..", "..", "internal", "services", "asset_provider", "assets"))
+	require.NoError(t, err)
+	entries, err := os.ReadDir(assetsDirectory)
+	require.NoError(t, err)
+
+	spriteNames := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".png" {
+			spriteNames = append(spriteNames, entry.Name())
+		}
+	}
+	sort.Strings(spriteNames)
+
+	// Act
+	decodedNames := expectedDecodedSpriteNames()
+
+	// Assert
+	assert.Equal(t, decodedNames, spriteNames)
+}
+
+// expectedDecodedSpriteNames mirrors every sprite buildAssetProvider decodes.
+func expectedDecodedSpriteNames() []string {
+	names := []string{"background.png", "gladiator_arena.png"}
+	for index := 1; index <= 8; index++ {
+		names = append(names, fmt.Sprintf("player_%d.png", index))
+	}
+	for _, quality := range []string{"none", "low", "medium", "high", "highest"} {
+		names = append(names,
+			"neutral_"+quality+".png",
+			"neutral_"+quality+"_castle.png",
+			"neutral_"+quality+"_arena.png")
+	}
+	sort.Strings(names)
+	return names
 }

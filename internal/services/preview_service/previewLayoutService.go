@@ -5,22 +5,26 @@ import (
 	"math"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type PreviewLayoutService struct {
-	layout *preview.Layout
+	layout         *preview.Layout
+	zoneClassifier zone_interfaces.IZoneClassifier
 }
 
-func NewPreviewLayoutService() *PreviewLayoutService {
-	return &PreviewLayoutService{}
+func NewPreviewLayoutService() IPreviewLayoutService {
+	return &PreviewLayoutService{zoneClassifier: zone_services.NewZoneClassifier()}
 }
 
 // BuildPreviewLayout computes zone positions, radius and connections for a
@@ -72,14 +76,15 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 	connections []entities.Connection,
 	topology config.MapTopology,
 	side float64) {
+	capabilities := common_topologies.GetTopologyCapabilities(topology)
 	switch {
 	case allHaveManualPosition(zones):
 		this.layoutManualPositions(zones, side)
-	case (topology == config.TopologyCircles) && allHaveRing(zones):
+	case capabilities.UsesGeneratorRing && allHaveRing(zones):
 		this.layoutBalancedRings(zones, side)
-	case isFixedGeometryTopology(topology) && allHavePosition(zones):
-		this.layoutFixedPositions(zones, side, fixedGeometryEdgeInset(topology))
-	case isScatterTopology(topology) && allHavePosition(zones):
+	case capabilities.LayoutKind == models.TopologyLayoutFixedGeometry && allHavePosition(zones):
+		this.layoutFixedPositions(zones, side, fixedGeometryEdgeInset(topology, zones))
+	case capabilities.LayoutKind == models.TopologyLayoutScatter && allHavePosition(zones):
 		this.layoutScatter(zones, connections, side)
 	default:
 		this.layoutRingOrHub(zones, connections, side)
@@ -105,7 +110,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 			Name:    zone.Name,
 			Label:   helpers.GetZoneLabel(zone.Name),
 			Center:  pos,
-			Quality: neutral_zone.GetQualityFrom(zone),
+			Quality: this.zoneClassifier.GetQuality(zone),
 			Type:    zone_helpers.GetZoneTypeFromName(zone.Name),
 		}
 		applyMainObjects(zone, &previewZone)
@@ -113,8 +118,8 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 	}
 }
 
-// applyMainObjects folds the zone's Spawn/City main objects into the preview
-// zone's castle count and player-owner number.
+// applyMainObjects folds the zone's Spawn/City/GladiatorArena main objects into
+// the preview zone's castle count, player-owner number and arena marker.
 func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 	objectTypes := registry.GetMainObjectTypeValues()
 	for _, mainObject := range zone.MainObjects {
@@ -130,6 +135,8 @@ func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 			}
 		case objectTypes.City:
 			previewZone.Castles++
+		case objectTypes.GladiatorArena:
+			previewZone.Arena = true
 		}
 	}
 }
@@ -187,17 +194,36 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 			// ( x, y ) → ( y, -x ) rotates it 90°
 			Add(data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance)).
 			ToPointRounded()
-		isPortal := connection.ConnectionType == registry.GetConnectionTypeValues().Portal ||
-			len(connection.PortalPlacementRulesFrom) > 0 ||
-			len(connection.PortalPlacementRulesTo) > 0
-		connectionType := preview.ConnectionTypeDirect
-		if isPortal {
-			connectionType = preview.ConnectionTypePortal
-		}
 		result = append(
 			result,
-			preview.Connection{Start: startPoint, End: endPoint, Ctrl: ctrl, Type: connectionType},
+			preview.Connection{
+				Start: startPoint,
+				End:   endPoint,
+				Ctrl:  ctrl,
+				Type:  getPreviewConnectionType(connection),
+			},
 		)
 	}
 	return result
+}
+
+// getPreviewConnectionType maps a template connection onto the drawable preview
+// type. A connection also counts as a portal when it merely carries portal
+// placement rules, because the in-game generator treats it as one.
+func getPreviewConnectionType(connection entities.Connection) preview.ConnectionType {
+	connectionTypes := registry.GetConnectionTypeValues()
+	if connection.ConnectionType == connectionTypes.Portal ||
+		len(connection.PortalPlacementRulesFrom) > 0 ||
+		len(connection.PortalPlacementRulesTo) > 0 {
+		return preview.ConnectionTypePortal
+	}
+
+	switch connection.ConnectionType {
+	case connectionTypes.GladiatorArena:
+		return preview.ConnectionTypeGladiatorArena
+	case connectionTypes.Proximity:
+		return preview.ConnectionTypeProximity
+	default:
+		return preview.ConnectionTypeDirect
+	}
 }

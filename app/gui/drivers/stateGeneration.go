@@ -17,51 +17,41 @@ func (this *State) SaveTemplate() { this.handleSaveTemplate() }
 // AutoRegenerate regenerates the template when the live editor state has
 // changed since the last generation.
 //
-// Preview-affecting changes (player/zone counts, topology and connection
-// settings) regenerate immediately so the live preview tracks the control.
-// All other changes (non-structural sliders and the template name) are
-// debounced and only regenerate once editing has paused for autoRegenDebounce,
-// avoiding a regeneration on every frame while a slider is dragged.
+// The decision itself belongs to the regeneration handler; this method only
+// feeds it the current snapshots and frame time, applies the pending-snapshot
+// mutation it asks for, and performs the regeneration.
 //
 // now is the current frame time. It returns the time at which the caller
 // should request another frame and whether such a redraw must be scheduled,
 // used to wake the UI back up once the debounce window elapses without further
 // input.
 func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
-	// Nothing changed since the last generation → cancel any pending debounce.
-	if this.innerState.ResetNextStateIfStateWasNotChanged() {
-		return time.Time{}, false
+	currentState := this.innerState.GetCurrentState()
+	decision := this.regeneration.DecideRegeneration(dtos.RegenerationDecisionRequestDto{
+		Previous:      this.innerState.GetPreviousState(),
+		Current:       &currentState,
+		Next:          this.innerState.GetNextState(),
+		Now:           now,
+		DebounceDueAt: this.applyNextStateAt,
+	})
+
+	switch decision.NextStateAction {
+	case dtos.NextStateClear:
+		this.innerState.ResetNextState()
+	case dtos.NextStateSetFromCurrent:
+		this.innerState.SetNextState(currentState)
+	case dtos.NextStateLeave:
 	}
 
-	// First generation: populate the preview immediately on startup.
-	if !this.innerState.HasPreviousState() {
+	if decision.ScheduleRedraw {
+		this.applyNextStateAt = decision.RedrawAt
+	}
+
+	if decision.Regenerate {
 		this.handleGenerateTemplate(true)
-		return time.Time{}, false
 	}
 
-	// Preview-affecting changes regenerate immediately so the preview follows
-	// the control live.
-	if this.innerState.ResetNextStateIfLayoutChanged() {
-		this.handleGenerateTemplate(true)
-		return time.Time{}, false
-	}
-
-	// Non-preview change: (re)arm the debounce timer whenever the state is
-	// still moving, and ask to be woken up when the timer is due.
-	if this.innerState.SetNextFromCurrentIfStateIsBeingUpdated() {
-		this.applyNextStateAt = now.Add(autoRegenDebounce)
-		return this.applyNextStateAt, true
-	}
-
-	// State has been stable since the last frame; keep waiting until due.
-	if now.Before(this.applyNextStateAt) {
-		return this.applyNextStateAt, true
-	}
-
-	// Editing paused long enough -> regenerate now.
-	this.innerState.ResetNextState()
-	this.handleGenerateTemplate(true)
-	return time.Time{}, false
+	return decision.RedrawAt, decision.ScheduleRedraw
 }
 
 func (this *State) handleSaveTemplate() {
@@ -86,8 +76,11 @@ func (this *State) handleSaveTemplate() {
 		true)
 }
 
+// handleGenerateTemplate regenerates the template; on failure the previous
+// template is left in place.
 func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
-	dto, err := this.handler.GenerateTemplate(this.innerState.GetCurrentState())
+	currentState := this.innerState.GetCurrentState()
+	dto, err := this.handler.GenerateTemplate(currentState)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
 		if createStateSnapshotOnFailure {
@@ -96,15 +89,14 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 		return
 	}
 
-	// The reapply decision and the castle-option diff both compare against the
-	// state of the LAST generation, so they must be taken before
-	// applyGeneratedTemplate snapshots the current state.
-	reapplyManual := this.innerState.ShouldReapplyManualEdits()
-	castleChanges := this.innerState.CastleSettingsChangedSinceGeneration()
+	// The decision compares against the state of the LAST generation, so it
+	// must be taken before applyGeneratedTemplate snapshots the current state.
+	manualEdits := this.regeneration.DecideManualEditReapplication(
+		this.innerState.GetPreviousState(), &currentState)
 	this.applyGeneratedTemplate(dto.Template)
-	if reapplyManual && this.hasTemplateVariants() {
-		this.reapplyManualEdits(castleChanges)
-	} else if !reapplyManual {
+	if manualEdits.ReapplyWithCastleChanges != nil && this.hasTemplateVariants() {
+		this.reapplyManualEdits(*manualEdits.ReapplyWithCastleChanges)
+	} else if manualEdits.ReapplyWithCastleChanges == nil {
 		this.innerState.ClearManualEdits()
 	}
 
@@ -115,7 +107,7 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 	if len(dto.Warnings) > 0 {
 		status += fmt.Sprintf(" Note that %d warning(s) were found and fixed.", len(dto.Warnings))
 	}
-	if reapplyManual {
+	if manualEdits.ReapplyWithCastleChanges != nil {
 		status += " (Manual zone edits reapplied.)"
 	}
 	status += fmt.Sprintf("\n%s", time.Now().Format("15:04:05"))
@@ -125,7 +117,7 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 // applyGeneratedTemplate stores a freshly generated template as the live one
 // and records the editor state that produced it.
 func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
-	this.lastTemplate = template
+	this.setLastTemplate(template)
 	this.innerState.SnapshotCurrentState()
 }
 
@@ -134,7 +126,7 @@ func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
 // need no separate handling: they live inside the editor state itself, which
 // the caller is replacing.
 func (this *State) clearGeneratedState() {
-	this.lastTemplate = nil
+	this.setLastTemplate(nil)
 }
 
 func (this *State) lastTemplateZoneAndConnectionCount() (zoneCount, connectionCount int) {

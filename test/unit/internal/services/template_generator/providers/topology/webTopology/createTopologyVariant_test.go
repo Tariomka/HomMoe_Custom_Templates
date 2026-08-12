@@ -3,10 +3,10 @@ package webTopology_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,8 +20,8 @@ func TestWhenTwoPlayersAndThreeNeutralPlansProvided_CreatesZonePerLabel(t *testi
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -40,8 +40,8 @@ func TestWhenThreeNeutralZonesFormTheRing_CreatesNeutralRingConnectionPerPair(t 
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -60,8 +60,8 @@ func TestWhenPlayersAttachToTheNeutralRing_CreatesTwoWebSpokesPerPlayer(t *testi
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -78,8 +78,8 @@ func TestWhenOnlyOneNeutralZoneExists_CreatesNoNeutralRingConnections(t *testing
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 3)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -98,8 +98,8 @@ func TestWhenWebIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -118,8 +118,8 @@ func TestWhenCirclesTopologySelected_BalancesNeutralLabelsAcrossPlayers(t *testi
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 5)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -138,8 +138,8 @@ func TestWhenPlayerConnectionsAreForbidden_NoDirectConnectionJoinsTwoSpawnZones(
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
@@ -160,8 +160,8 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
 	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
-	tuning := models.NewGenerationTuning(configuration, 6)
-	service := topology.NewSharedWebTopologyService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 6)
+	service := topology.NewSharedWebTopologyService(test_helpers.NewZoneFactories())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")

@@ -7,8 +7,11 @@ working on the **HomMoe Custom Templates** repository. Follow them strictly.
 
 ## 1. Project Snapshot
 
-- **Language / Toolchain:** Go 1.26.3, single module `github.com/Tariomka/hommoe_custom_templates`.
-- **UI:** Gio (`gioui.org v0.9.0`) — immediate-mode desktop GUI.
+- **Language / Toolchain:** Go 1.26.5. Two modules: the application module
+  `github.com/Tariomka/hommoe_custom_templates` at the repository root, and
+  [tools/go.mod](tools/go.mod), a tools-only module (also Go 1.26.5) that pins
+  `wire`, `golangci-lint` and `gcov2lcov` through `tool` directives.
+- **UI:** Gio (`gioui.org v0.10.0`) — immediate-mode desktop GUI.
 - **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
   and Magic: Olden Era* and persist editor state as `.gen.json` files.
 - **Entry point:** [main.go](main.go) → [app/gui/program.go](app/gui/program.go) (`StartApplication`).
@@ -78,11 +81,17 @@ The project must build and run on **both Windows and Linux**. Therefore:
   go tool cover '-func=coverage.txt'
   ```
 
-- Run `go test ./test/... -count=1` before declaring a task complete.
-- The integration and performance suites are gated behind the `integration_test`
-  build tag and are skipped by a plain `go test ./...`; run them explicitly
-  with `go test -tags=integration_test ./test/integration/... ./test/performance/...`
-  (see §4.6.1). Never make `integration_test` a global/default test tag.
+- Run `go test ./test/unit/... -count=1` before declaring a task complete.
+- The integration and ui test suites are gated behind the `integration_test`
+  and `integration_test,gui` build tags respectfully and are skipped by a
+  plain `go test ./...`; run them explicitly with
+  `go test -tags=integration_test ./test/integration/...` and
+  `go test -tags='integration_test,gui' ./test/integration/gui/...` respectfully.
+  (see §4.6.1 and §4.6.2). Never make `integration_test` or `gui` a
+  global/default test tag.
+- **Build tags are applied per file, never per directory.** Tag only the files
+  that genuinely need the tag; a test that compiles and passes without a tag
+  must not carry one just because a sibling file in the same directory does.
 - Tests must also be cross-platform (no hard-coded paths, no `\` separators,
   no shell-outs that exist only on one OS).
 
@@ -94,6 +103,48 @@ and how to deploy. Any future agent can resume from it with zero prior context.
 
 Use when planning multi-step / multi-session work that may outlive the
 current session. Skip for trivial single-session tasks.
+
+### 2.5 Staging and Committing
+
+You **MUST NOT** stage any changes you do and/or commit them to origin or any other brach.
+If you notice staged changes, **NEVER** unstage them - it is done by the author
+after he reviews and ensures the changes are correct.
+
+### 2.6 Bulk rewrites
+
+- Never run a bulk in-place rewrite across the repository.
+- To normalize formatting or line endings, run `gofmt -w` on an **explicit** list
+  from `gofmt -l` - gofmt converts CRLF to LF and cannot mangle content.
+
+### 2.7 Output path is a hard requirement of the game
+
+Heroes of Might and Magic: Olden Era only reads random-map templates from **its
+own templates directory**. A `.rmg.json` written anywhere else is not merely in
+an unusual place — **the game will never find it**, and the user is left with a
+file they cannot locate or place correctly after the fact.
+
+The directory is therefore **not** a user preference. It is a property of the
+*machine*: it differs per device with the Steam library location, the OS, and
+the Proton/native layout, and it changes whenever the game is moved or
+reinstalled. Per-launch auto-detection via
+[internal/helpers/io.go](internal/helpers/io.go) (`FindOldenEraTemplatesDir`) is
+the correct design precisely because it is self-healing.
+
+You **MUST NOT**:
+
+- Change where `.rmg.json` (or its preview `.png`) is written, or add any
+  behaviour that lets a template land outside the detected templates directory
+  by default.
+- **Persist the output directory** in any form — not in `EditorStateDto` /
+  `.gen.json`, not in an `os.UserConfigDir()` preferences file, not anywhere
+  else. A stored path is invalid on any other machine and goes stale on the
+  current one. Do not re-propose it.
+- Rework `outputPath` on `drivers.State` into a "remembered setting". The
+  in-app folder picker is a deliberate **single-session escape hatch** for
+  layouts the detector does not recognise yet — nothing more.
+
+If detection turns out to be inadequate on some platform, the fix is to improve
+`FindOldenEraTemplatesDir`, **never** to store a path.
 
 ---
 
@@ -129,10 +180,9 @@ current session. Skip for trivial single-session tasks.
 
 ### 3.3 After editing
 
-1. Run `go build ./...` and `go test ./test/...`.
+1. Run `go build ./...` and `go test ./test/unit/...`.
 2. If you touched editor internals or the gated suites, also run
-   `go test -tags=integration_test ./test/integration/... ./test/performance/...`
-   (see §4.6.1).
+   `go test -tags='integration_test,gui' ./test/integration/...` (see §4.6.1).
 3. Report any new errors and fix them before handing back.
 4. Briefly summarize: files touched, behaviour changed, tests added.
 
@@ -147,12 +197,13 @@ When orchestrating subagents, pick the model per task using these ratings
 
 | model           | cost | intelligence | taste |
 |-----------------|------|--------------|-------|
+| claude-opus-5   | 5    | 8            | 9     |
 | claude-fable-5  | 2    | 9            | 9     |
 | gpt-5.6-sol     | 6    | 7            | 6     |
 | gpt-5.6-terra   | 7    | 7            | 5     |
-| gpt-5.5         | 5    | 6            | 5     |
-| claude-opus-4.8 | 4    | 7            | 8     |
-| sonnet-5        | 5    | 5            | 7     |
+| gpt-5.5         | 4    | 6            | 5     |
+| claude-opus-4.8 | 4    | 7            | 7     |
+| sonnet-5        | 4    | 4            | 6     |
 
 Application directives:
 
@@ -164,15 +215,17 @@ Application directives:
   things before moving the work to a more expensive option.
 - Anything user-facing (UI, API design, copy) or project-maintainability
   related requires taste > 7.
-- Review of plans/implementations must be done by fable-5 or opus-4.8;
-  optionally add gpt-5.5 as an extra independent perspective.
+- Review of plans/implementations must be done by opus-5 preferably
+  (use fable-5 sparingly as it is much more costly);
+  optionally add gpt-5.6-terra as an extra independent perspective.
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (gpt-5.5,
-  sonnet-5) for read-only exploration, searching, summarizing, and
-  mechanical/repetitive edits; reserve fable-5/opus-4.8 for design
+- Match model to task shape: use cheap, high-cost-rating models (gpt-5.6-terra,
+  gpt-5.5, sonnet-5) for read-only exploration, searching, summarizing, and
+  mechanical/repetitive edits; reserve opus-5/fable-5 for design
   decisions, tricky debugging, and final review.
-- Parallelize independent exploration across cheap subagents rather than
-  serializing everything through one expensive model.
+- Parallelize independent exploration and/or action execution
+  (like running tests) across cheap subagents rather than serializing
+  everything through one expensive model.
 - Give each subagent a self-contained brief (goal, constraints, expected
   output format) — subagents are stateless, and a weaker model with a
   precise brief beats a stronger model with a vague one.
@@ -208,6 +261,66 @@ any file you *do* touch must leave the repo in conformance.
   - `ok` for the comma-ok idiom
   - `ctx` for `context.Context`
   - Standard short receiver names are **not** allowed — see §4.3.
+
+### 4.2.1 Interfaces
+
+- Interface types **must use `I` prefix** (`IDialog`, `IPanel`, `IBackend`).
+
+  ```go
+  type IBackend interface {
+    ITemplateWorkflowHandler
+    IStatePersistenceHandler
+    IStateValidationHandler
+    IPreviewHandler
+    IContentRuleHandler
+    IZoneEditorHandler
+  }
+  ```
+
+- Interface file names **must use `Interface` suffix** (`dialogInterface.go`,
+  `panelInterface.go`, `backendInterface.go`).
+
+- Interfaces must be separated from the implementation files.
+
+- Apply this consistently across every interface file.
+
+### 4.2.2 Interface placement
+
+Where an interface file lives is decided by counting the **concrete
+implementation files in that package that require an interface** — not the
+number of interfaces:
+
+1. **Fewer than 5** → declare the interface in the **same package**, in its own
+   `*Interface.go` file.
+2. **5 or more** → create a `{singular package name}_interfaces` subpackage and
+   put the interface files there.
+3. **Spanning packages** → if one interface is implemented by concrete types in
+   **more than one package**, or the interface exists to break a circular
+   dependency, put it in a subpackage under `internal/interfaces/`.
+
+Examples of each:
+
+1. [.../tournament_variant/clusterServiceInterface.go](internal/services/template_generator/providers/topology/tournament_variant/clusterServiceInterface.go)
+   — one interface for four implementations, all in that package;
+   [internal/services/zones/zoneLabelProviderInterface.go](internal/services/zones/zoneLabelProviderInterface.go)
+   — one interface for one implementation. Likewise
+   [internal/services/connection_editor/](internal/services/connection_editor/)
+   holds three interfaces for its three implementations.
+2. [internal/handlers/](internal/handlers/) has six implementation files, so its
+   contracts live in
+   [internal/handlers/handler_interfaces/](internal/handlers/handler_interfaces/)
+   (six files, eight interfaces).
+3. [app/gui/interfaces/](app/gui/interfaces/) holds the shared `IDialog` /
+   `IPanel` contracts: `drivers` and `panels` both implement them, and declaring
+   them in either package would create a `drivers`↔`panels` and
+   `drivers`↔`dialogs` cycle.
+
+**Factory return type.** When an interface exists for an implementation, that
+implementation's factory function returns the **interface**, not a pointer to the
+struct — unless doing so breaks existing functionality. When one implementation
+satisfies several interfaces, return the **broadest** one (e.g.
+`handlers.NewGuiHandler(...)` returns `handler_interfaces.IGuiHandler`, which
+embeds the other handler interfaces).
 
 ### 4.3 Method receivers
 
@@ -302,7 +415,8 @@ mocking; use `gofakeit` for fuzzed input data wherever possible.
 - Code that is exercised indirectly by other tests still requires its **own**
   test folder with dedicated tests, so coverage can be assessed per file.
 - `*_testexports.go` files (`//go:build integration_test`) must never be used
-  by or tested in unit tests (see §4.6.1).
+  by or tested in unit tests — unit tests assert real production code, so a
+  unit test must never carry the `integration_test` tag (see §4.6.1).
 - Gio-UI-heavy code (widgets, dialogs, panels, window/event-loop code) that
   requires a `layout.Context`/window is covered by the integration suite, not
   unit tests; list such files in [todo/test_observations.md](todo/test_observations.md).
@@ -323,34 +437,122 @@ guarded by `//go:build integration_test`. They compile **only** when the
 `integration_test` tag is passed, so production builds (`go build ./...`) never
 include them.
 
-**Scope — this tag is for integration and performance tests ONLY:**
+**Scope — the ONLY reason to add this tag is `*_testexports.go` consumption:**
 
-- The tag is used exclusively by the suites under [test/integration/](test/integration/)
-  and [test/performance/](test/performance/). Every test file in those two
-  directories carries `//go:build integration_test` at the top.
+- A file gets `//go:build integration_test` **if and only if** it (or another
+  file it shares a package with) references an accessor declared in a
+  `*_testexports.go` implementation file. That is the whole rule. Today those
+  accessors live in
+  [app/gui/editor/window_testexports.go](app/gui/editor/window_testexports.go)
+  and [app/gui/drivers/state_testexports.go](app/gui/drivers/state_testexports.go).
+- **The tag is NOT a label for "this is an integration/performance test."** An
+  integration or performance test that only touches production APIs must be
+  written **without** any tag so it runs in a plain `go test ./test/...`. Do not
+  blanket-apply the tag to every file in [test/integration/](test/integration/)
+  or [test/performance/](test/performance/) — apply it file by file.
+  (Example: [test/performance/template_generation_test.go](test/performance/template_generation_test.go)
+  benchmarks the generator through production APIs only, so it carries no tag.)
+- **Never tag a unit test with `integration_test`.** Unit tests assert real
+  implementation code and must never see test-only exports; if a unit test
+  appears to need one, the test is wrong, not the API.
 - **Do NOT** run the whole suite with the tag, and **do NOT** set it as a global
   `go.testTags`/`go.buildTags`. A normal `go test ./...` must stay tag-free; the
-  two gated directories then compile to "[no test files]" and are skipped rather
-  than failing.
-- Only files under those two directories may reference the `integration_test`
+  gated files then drop out of the build and are skipped rather than failing.
+- Only files under [test/integration/](test/integration/) and
+  [test/performance/](test/performance/) may reference the `integration_test`
   accessors. If another package needs an internal, do not widen this tag — add a
   test beside the code (`package X_test` in the same directory) instead.
+- Because build constraints apply per file, a package can be **partly** gated:
+  the untagged files compile in every run and the tagged ones only under the
+  tag. Keep any shared `TestMain`/helpers in the tagged file only if the
+  untagged files can run without them.
+
+**Enforcement** — the rules of this section and of §4.6.2 are checked by
+[cmd/testlayoutcheck](cmd/testlayoutcheck), a small Go program that walks the
+repository and reports every misplaced build tag or misnamed unit-test file. Run
+it (VS Code task *"Go: Check test build-tag layout"*) before handing work back:
+
+```powershell
+go run ./cmd/testlayoutcheck .
+```
+
+It exits `0` and prints `test-layout check passed` when clean, `1` with one line
+per violation otherwise. A violation is a broken build — fix the test layout, do
+not silence the checker.
+
+### 4.6.2 The `gui` build tag (tests that need a GPU)
+
+Some tests drive a real Gio window or rasterize frames through
+`gioui.org/gpu/headless`, which requires a GPU/GL context. The CI pipeline has no
+GPU, so those tests must never be picked up by a catch-all run.
+
+**Scope — this tag marks GPU-dependent tests:**
+
+- Add `gui` to any test that opens an `app.Window`, renders through
+  `headless.Window` (snapshot tests), or otherwise cannot run without a GPU.
+  In practice: everything under [test/integration/gui/](test/integration/gui/)
+  and the window-driving benchmarks in [test/performance/](test/performance/)
+  (e.g. [test/performance/window_tab_cycling_test.go](test/performance/window_tab_cycling_test.go)).
+- The tag exists **to exclude** these tests from catch-all runs such as
+  `go test ./test/...` or `go test -tags=integration_test ./test/...`. They are
+  opt-in only.
+- `gui` is orthogonal to `integration_test`: combine them
+  (`//go:build integration_test && gui`) when a GPU test also needs test-only
+  exports, and use `gui` alone when it does not.
+- **Do NOT** set `gui` as a global/default test tag.
 
 **Running them:**
 
 ```powershell
-# Default run — everything EXCEPT the gated dirs (no tag):
+# Default run — everything EXCEPT the gated files (no tag):
 go test ./test/... -count=1
 
-# Integration + performance only (tag scoped to these two dirs):
-go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1
+# Integration:
+go test -tags=integration_test ./test/integration/... -count=1
+
+# UI Integration only (needs a GPU):
+go test -tags='integration_test,gui' ./test/integration/gui/... -count=1
+
+# Performance, GPU-free benchmarks:
+go test -bench=. -run=xxx ./test/performance/... -benchtime=20x -timeout=120s
+
+# Performance, window-driving benchmarks (needs a GPU):
+go test -v -tags='integration_test,gui' -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s
 ```
 
-In VS Code use the tasks in [.vscode/tasks.json](.vscode/tasks.json): *"go: test
-(default, no integration_test)"* and *"go: test integration+performance
-(integration_test)"*. gopls is configured with `-tags=integration_test` for
-**analysis only** so the gated files still get IntelliSense — that does not cause
-them to run.
+In VS Code use the tasks in [.vscode/tasks.json](.vscode/tasks.json). gopls is
+configured with `-tags=integration_test` for **analysis only** so the gated files
+still get IntelliSense — that does not cause them to run.
+
+### 4.6.3 The `wireinject` build tag (code generation only)
+
+Dependency wiring is generated by [goforj/wire](https://github.com/goforj/wire), a
+maintained fork of the archived `google/wire`. The injector **declaration** lives in
+`internal/composition/wire.go` behind `//go:build wireinject`; the generated
+**implementation** lives beside it in `wire_gen.go`, which carries the inverse
+`//go:build !wireinject` constraint and **is committed to the repository**.
+
+**Scope — this tag is for the `wire` generator ONLY:**
+
+- Exactly one file in the repository carries it, and no test ever uses it.
+- **Do NOT** pass `-tags=wireinject` to `go build` or `go test`, and **do NOT** add it
+  to `go.testTags` / `go.buildTags` / `gopls.build.buildFlags` / `GOFLAGS`. The stub and
+  the generated file declare the same function, so compiling both together is a
+  duplicate-symbol error. `wire.go` showing as excluded in the editor is expected.
+- `wire_gen.go` is generated: never hand-edit it, and never `gofmt`/lint-fix it in
+  isolation. Regenerate instead.
+
+**Regenerating** — after changing any provider set, constructor signature, or the
+injector's return type, run the *"Go: Generate wire injectors"* task, or:
+
+```powershell
+wire gen ./internal/composition/...
+```
+
+The `wire` CLI is recorded in the `tool` directive of [tools/go.mod](tools/go.mod)
+alongside `golangci-lint` and `gcov2lcov`; install it with
+`go install github.com/goforj/wire/cmd/wire@latest`. A missing or ambiguous provider is
+a **generation-time** failure — treat a broken `wire gen` as a broken build.
 
 ### 4.7 Writing the Plan
 
@@ -405,10 +607,10 @@ as having a soft budget.
 
 ### 5.1 Session budget
 
-- **Recommended length: <20 messages per session.**
-- Around message **18**, warn the user that the session is approaching the
+- **Recommended length: <50 messages per session.**
+- Around message **38**, warn the user that the session is approaching the
   recommended limit.
-- At message **20** (or sooner if context feels saturated, tools start
+- At message **50** (or sooner if context feels saturated, tools start
   failing, or summaries become lossy), **stop taking new work** and produce a
   carry-forward document instead.
 
@@ -475,18 +677,25 @@ no prior memory must be able to resume work from it alone.
 | -------------------------- | ------------------------------------------------------ |
 | Build                      | `go build ./...`                                       |
 | Run GUI                    | `go run .`                                             |
-| Run all tests              | `go test ./test/... -count=1`                          |
-| Run integration/perf tests | `go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1` |
+| Run unit tests             | `go test ./test/unit... -count=1`                      |
+| Run integration tests      | `go test -tags=integration_test ./test/integration/... -count=1` |
+| Run ui integration tests   | `go test -tags=integration_test,gui ./test/integration/gui/... -count=1` |
+| Run benchmarks (no GPU)    | `go test -bench=. -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` |
+| Run benchmarks (needs GPU) | `go test -tags=integration_test,gui -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` |
 | Run with race detector     | `go test -race ./test/...`                             |
+| Check test build-tag layout | `go run ./cmd/testlayoutcheck .` (VS Code task *"Go: Check test build-tag layout"*; see §4.6.1) |
 | Unit test coverage report  | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` (see §2.3; VS Code task *"Go: Generate code coverage report"*) |
 | Lint (report only)         | `golangci-lint-v2 run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
 | Lint (auto-fix)            | `golangci-lint-v2 run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |
 | Format Go code             | `gofmt -w .` (never run on `data/`)                    |
+| Regenerate DI injectors    | `wire gen ./internal/composition/...` (VS Code task *"Go: Generate wire injectors"*; see §4.6.3) |
 | Tidy modules               | `go mod tidy`                                          |
 
 ---
 
-**TL;DR:** Don't touch [data/](data/) or
-[internal/entities/template/](internal/entities/template/). Stay cross-platform.
-Cover everything you write with tests. Cap sessions at 17–20 messages and
+**TL;DR:** Don't touch [data/](data/),
+[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/). Never change
+where `.rmg.json` is written and never persist the output directory — the game
+only reads templates from its own folder. Stay cross-platform.
+Cover everything you write with tests. Cap sessions at 38–50 messages and
 hand off via `./.agent/session-carry-forward.md`.

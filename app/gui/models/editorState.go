@@ -4,17 +4,18 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 )
 
 type EditorState struct {
-	current  *dtos.EditorStateDto
-	previous *dtos.EditorStateDto
-	next     *dtos.EditorStateDto
+	validationHandler handler_interfaces.IStateValidationHandler
+	current           *dtos.EditorStateDto
+	previous          *dtos.EditorStateDto
+	next              *dtos.EditorStateDto
 }
 
-func NewEditorState() *EditorState {
-	state := new(EditorState)
+func NewEditorState(validationHandler handler_interfaces.IStateValidationHandler) *EditorState {
+	state := &EditorState{validationHandler: validationHandler}
 	state.ResetState()
 	return state
 }
@@ -33,61 +34,37 @@ func (this *EditorState) GetCurrentState() dtos.EditorStateDto {
 
 func (this *EditorState) UpdateCurrentState(updateFunc func(state *dtos.EditorStateDto)) {
 	updateFunc(this.current)
-	for _, issue := range validators.ValidateEditorState(this.current) {
-		issue.Fix(this.current)
-	}
-	if this.current.AdvancedMode {
-		this.current.NeutralZoneCount = 0
-	} else {
-		this.current.NeutralLowestNoCastleCount = 0
-		this.current.NeutralLowestCastleCount = 0
-		this.current.NeutralLowNoCastleCount = 0
-		this.current.NeutralLowCastleCount = 0
-		this.current.NeutralMediumNoCastleCount = 0
-		this.current.NeutralMediumCastleCount = 0
-		this.current.NeutralHighNoCastleCount = 0
-		this.current.NeutralHighCastleCount = 0
-	}
+	validation := this.validationHandler.ValidateEditorState(*this.current, true)
+	*this.current = validation.State
 }
 
 func (this *EditorState) SnapshotCurrentState() {
 	previousState := *this.current
 	this.previous = &previousState
-	// this.next = nil
+	this.next = nil
 }
-
-func (this *EditorState) ResetPreviousState() { this.previous = nil }
 
 func (this *EditorState) HasPreviousState() bool { return this.previous != nil }
 
+func (this *EditorState) GetPreviousState() *dtos.EditorStateDto {
+	if this.previous == nil {
+		return nil
+	}
+
+	previousState := *this.previous
+	return &previousState
+}
+
+func (this *EditorState) GetNextState() *dtos.EditorStateDto {
+	if this.next == nil {
+		return nil
+	}
+
+	nextState := *this.next
+	return &nextState
+}
+
 func (this *EditorState) ResetNextState() { this.next = nil }
-
-func (this *EditorState) ResetNextStateIfLayoutChanged() bool {
-	if this.WasLayoutChanged() {
-		this.ResetNextState()
-		return true
-	}
-
-	return false
-}
-
-func (this *EditorState) ResetNextStateIfStateWasNotChanged() bool {
-	if this.WasStateUnchanged() {
-		this.ResetNextState()
-		return true
-	}
-
-	return false
-}
-
-func (this *EditorState) SetNextFromCurrentIfStateIsBeingUpdated() bool {
-	if !this.HasNextState() || this.HasPendingChanges() {
-		this.SetNextState(*this.current)
-		return true
-	}
-
-	return false
-}
 
 func (this *EditorState) SetNextState(state dtos.EditorStateDto) { this.next = &state }
 
@@ -97,32 +74,8 @@ func (this *EditorState) WasStateChanged() bool {
 	return this.HasPreviousState() && !this.previous.EqualsIgnoringManualEdits(this.current)
 }
 
-func (this *EditorState) WasStateUnchanged() bool {
-	return this.HasPreviousState() && this.previous.EqualsIgnoringManualEdits(this.current)
-}
-
-func (this *EditorState) WasLayoutChanged() bool {
-	return this.previous.LayoutDefiningOptionsChanged(this.current)
-}
-
-func (this *EditorState) WasLayoutUnchanged() bool {
-	return this.HasPreviousState() && !this.previous.LayoutDefiningOptionsChanged(this.current)
-}
-
-func (this *EditorState) HasPendingChanges() bool {
-	return this.HasNextState() && !this.next.EqualsIgnoringManualEdits(this.current)
-}
-
-// ── Manual zone editor edits ───────────────────────────────────────────
-// The manual zones/connections snapshot lives inside the current
-// EditorStateDto, so it is saved to and loaded from the .gen.json file with
-// the rest of the editor state and needs no separate bookkeeping.
-
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
 
-// SetManualEdits stores the manual zone editor's result as the authoritative
-// snapshot. Manual fields are ignored by the state-equality checks, so this
-// never triggers an automatic regeneration by itself.
 func (this *EditorState) SetManualEdits(zones []entities.Zone, connections []entities.Connection) {
 	this.current.ManualZones = editor_state_dto.ToManualZoneSaves(zones)
 	this.current.ManualConnections = editor_state_dto.ToManualConnectionSaves(connections)
@@ -130,6 +83,8 @@ func (this *EditorState) SetManualEdits(zones []entities.Zone, connections []ent
 
 // ClearManualEdits drops the manual snapshot, used when a layout-defining
 // option change invalidates the hand-made layout.
+// This does not clear manual edits applied to the template,
+// effectively making it useless if you want to reset the entire layout.
 func (this *EditorState) ClearManualEdits() {
 	this.current.ManualZones = nil
 	this.current.ManualConnections = nil
@@ -141,26 +96,4 @@ func (this *EditorState) GetManualZones() []entities.Zone {
 
 func (this *EditorState) GetManualConnections() []entities.Connection {
 	return editor_state_dto.FromManualConnectionSaves(this.current.ManualConnections)
-}
-
-// ShouldReapplyManualEdits reports whether the stored manual edits are still
-// valid for the current state: they exist and no layout-defining option
-// changed since the last generation. Right after a load there is no previous
-// state; the stored edits are then trusted because they were saved against
-// exactly this state.
-func (this *EditorState) ShouldReapplyManualEdits() bool {
-	if !this.HasManualEdits() {
-		return false
-	}
-	return !this.HasPreviousState() || !this.WasLayoutChanged()
-}
-
-// CastleSettingsChangedSinceGeneration reports which castle-count options
-// changed since the last generated state - the only option changes that are
-// pushed into the manual snapshot. Zero-value when nothing was generated yet.
-func (this *EditorState) CastleSettingsChangedSinceGeneration() editor_state_dto.CastleSettingChanges {
-	if !this.HasPreviousState() {
-		return editor_state_dto.CastleSettingChanges{}
-	}
-	return this.previous.DiffCastleSettings(this.current)
 }

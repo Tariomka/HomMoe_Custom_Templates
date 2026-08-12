@@ -2,9 +2,7 @@ package dialogs
 
 import (
 	"iter"
-	"sort"
 	"strconv"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -15,8 +13,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
 // zoneContentRow is one editable item inside a zone-content section.
@@ -53,34 +51,35 @@ func (this *zoneContentRow) Rules() []models.ContentRuleRowSave {
 
 // ZoneContentSection is one of the mandatory-content groups.
 type ZoneContentSection struct {
-	Title      string
-	Items      []models.SidMapping
-	MaxCount   int
-	ShowNear   bool
-	rows       []*zoneContentRow
-	addPreset  *components.DropdownSelector
-	addBtn     widget.Clickable
-	openDialog interfaces.DialogOpener
+	Title              string
+	Items              []models.SidMapping
+	MaxCount           int
+	ShowNear           bool
+	rows               []*zoneContentRow
+	addPreset          *components.DropdownSelector
+	addBtn             widget.Clickable
+	openDialog         interfaces.DialogOpener
+	contentRuleHandler handler_interfaces.IZoneContentHandler
 }
 
-func NewZoneContentSection(title string, items []models.SidMapping, maxCount int, showNear bool) *ZoneContentSection {
-	// Present the "add content" dropdown alphabetically by display name. Sort a
-	// copy so the shared ContentItemGroup global keeps its authored order.
-	sorted := make([]models.SidMapping, len(items))
-	copy(sorted, items)
-	sort.SliceStable(sorted, func(i, j int) bool {
-		return strings.ToLower(sorted[i].Name) < strings.ToLower(sorted[j].Name)
-	})
+func NewZoneContentSection(
+	title string,
+	items []models.SidMapping,
+	maxCount int,
+	showNear bool,
+	contentRuleHandler handler_interfaces.IZoneContentHandler) *ZoneContentSection {
+	sorted := contentRuleHandler.SortContentItemsByName(items)
 	labels := make([]string, len(sorted))
 	for i, item := range sorted {
 		labels[i] = item.Name
 	}
 	return &ZoneContentSection{
-		Title:     title,
-		Items:     sorted,
-		MaxCount:  maxCount,
-		ShowNear:  showNear,
-		addPreset: components.NewDropdownSelector(labels),
+		Title:              title,
+		Items:              sorted,
+		MaxCount:           maxCount,
+		ShowNear:           showNear,
+		addPreset:          components.NewDropdownSelector(labels),
+		contentRuleHandler: contentRuleHandler,
 	}
 }
 
@@ -96,13 +95,9 @@ func (this *ZoneContentSection) Add(
 	count int,
 	rules []models.ContentRuleRowSave,
 	group bool) {
-	if count < 1 {
-		count = 1
-	}
-	if count > this.MaxCount {
-		count = this.MaxCount
-	}
-	this.rows = append(this.rows, newZoneContentRow(mapping, count, rules, group))
+	this.rows = append(
+		this.rows,
+		newZoneContentRow(mapping, this.contentRuleHandler.ClampContentCount(count, this.MaxCount), rules, group))
 }
 
 func (this *ZoneContentSection) ClearRows() {
@@ -127,7 +122,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			if idx < 0 || idx >= len(this.Items) {
 				idx = 0
 			}
-			this.Add(this.Items[idx], 1, defaultContentRules(), false)
+			this.Add(this.Items[idx], 1, this.defaultContentRules(this.Items[idx]), false)
 		}
 		// Process per-row clicks (collect indices to remove).
 		keep := this.rows[:0]
@@ -192,7 +187,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 		// callback bound to this exact row across frames/reorders.
 		if row.manageBtn.Clicked(gtx) && this.openDialog != nil {
 			captured := row
-			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules,
+			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules, this.contentRuleHandler,
 				func(updated []models.ContentRuleRowSave) { captured.rules = updated }))
 		}
 
@@ -201,7 +196,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-							label := material.Body1(theme, rowDisplayName(row))
+							label := material.Body1(theme, this.rowDisplayName(row))
 							label.Color = themes.ColorsBase.Accent
 							label.TextSize = unit.Sp(13)
 							return label.Layout(gtx)
@@ -233,7 +228,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 // placeholder when the row has no rules.
 func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneContentRow) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		markers := ruleMarkers(row.Mapping, row.rules)
+		markers := this.ruleMarkers(row.Mapping, row.rules)
 		if markers == "" {
 			label := material.Body2(theme, "(none)")
 			label.Color = themes.ColorsBase.TextDim
@@ -249,39 +244,21 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 
 // rowDisplayName mirrors the C# ZoneContentItemUI.DisplayName: the item name,
 // with the chosen variant's description appended when a Variant rule applies.
-func rowDisplayName(row *zoneContentRow) string {
-	for _, saved := range row.rules {
-		if saved.VariantID == nil || !strings.EqualFold(saved.Name, content_rules.RuleVariantName) {
-			continue
-		}
-		for _, variant := range content_rules.GetVariantsForContent(row.Mapping) {
-			if description, ok := variant.GetVariantByID(*saved.VariantID); ok {
-				return row.Mapping.Name + " (" + description + ")"
-			}
-		}
-	}
-	return row.Mapping.Name
+func (this *ZoneContentSection) rowDisplayName(row *zoneContentRow) string {
+	return this.contentRuleHandler.GetContentRowDisplayName(row.Mapping, row.rules)
 }
 
 // defaultContentRules is the rule list applied to a freshly-added row: a single
 // Guarded rule, matching the historical default of the Guarded checkbox.
-func defaultContentRules() []models.ContentRuleRowSave {
-	guarded := true
-	return []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &guarded}}
+func (this *ZoneContentSection) defaultContentRules(content models.SidMapping) []models.ContentRuleRowSave {
+	return this.contentRuleHandler.GetDefaultContentRules(content)
 }
 
 // ruleMarkers returns the concatenated marker badges for a rule list (e.g.
 // "G · R · S"), skipping rules that have no marker (Variant) or are invalid.
-func ruleMarkers(mapping models.SidMapping, rules []models.ContentRuleRowSave) string {
-	parts := make([]string, 0, len(rules))
-	for _, saved := range rules {
-		rule := content_rules.CreateRuleFromSavedRule(saved, mapping)
-		if rule == nil {
-			continue
-		}
-		if marker := rule.Marker(); marker != "" {
-			parts = append(parts, marker)
-		}
-	}
-	return strings.Join(parts, " · ")
+func (this *ZoneContentSection) ruleMarkers(
+	mapping models.SidMapping,
+	rules []models.ContentRuleRowSave,
+) string {
+	return this.contentRuleHandler.GetContentRuleMarkers(mapping, rules)
 }

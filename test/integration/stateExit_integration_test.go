@@ -19,7 +19,7 @@ import (
 // establishes the snapshot change detection (and thus the unsaved flag)
 // compares against.
 func newExitProbe() (state *drivers.State, exitCalled *bool) {
-	state = drivers.NewUIState()
+	state = newUIState()
 	state.AutoRegenerate(time.Now())
 	exitCalled = new(bool)
 	state.SetOnExit(func() { *exitCalled = true })
@@ -100,7 +100,7 @@ func TestExit_AfterSaving_ClosesWithoutWarning(t *testing.T) {
 // TestExit_WithoutOnExitCallback_DoesNotPanic: an unwired state (tests,
 // headless drivers) must treat Exit as a safe no-op.
 func TestExit_WithoutOnExitCallback_DoesNotPanic(t *testing.T) {
-	state := drivers.NewUIState()
+	state := newUIState()
 
 	assert.NotPanics(t, func() { state.Exit() })
 }

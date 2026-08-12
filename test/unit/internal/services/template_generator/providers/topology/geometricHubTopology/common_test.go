@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
 // buildGeoHubVariant runs the Geometric Hub topology service with the given
@@ -17,9 +17,9 @@ func buildGeoHubVariant(playerLabels []string, plans neutral_zone.Plans) entitie
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
-	tuning := models.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
-	return topology.NewGeometricHubTopologyService().
-		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, false)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	return topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
+		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, "")
 }
 
 // neighborsOf collects the names of every zone connected to zoneName.

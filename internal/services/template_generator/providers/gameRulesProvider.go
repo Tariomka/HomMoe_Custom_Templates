@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -8,11 +9,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
 type GameRulesProvider struct{}
 
-func NewGameRulesProvider() *GameRulesProvider {
+func NewGameRulesProvider() provider_interfaces.IGameRulesProvider {
 	return &GameRulesProvider{}
 }
 
@@ -33,34 +35,27 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 }
 
 // CreateValueOverrides parses the newline-separated "sid=guardValue" overrides
-// edited in the UI into ValueOverride entries (one per valid line). Blank or
-// unparseable lines are skipped. Variant -1 applies the override to all variants.
-func (this *GameRulesProvider) CreateValueOverrides(configuration config.GeneratorConfig) []entities.ValueOverride {
+// edited in the UI into ValueOverride entries (one per valid line). Blank lines
+// are skipped silently; every other rejected line produces a warning so the
+// edit is not discarded without telling the user. Variant -1 applies the
+// override to all variants.
+func (this *GameRulesProvider) CreateValueOverrides(
+	configuration config.GeneratorConfig) ([]entities.ValueOverride, []string) {
 	var overrides []entities.ValueOverride
-	for line := range strings.SplitSeq(configuration.ValueOverridesText, "\n") {
-		line = strings.TrimSpace(line)
+	var warnings []string
+	for index, rawLine := range strings.Split(configuration.ValueOverridesText, "\n") {
+		line := strings.TrimSpace(rawLine)
 		if line == "" {
 			continue
 		}
-		equals := strings.Index(line, "=")
-		if equals <= 0 {
-			continue
-		}
-		sid := strings.TrimSpace(line[:equals])
-		if sid == "" {
-			continue
-		}
-		guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
+		override, err := this.parseValueOverride(line, index+1)
 		if err != nil {
+			warnings = append(warnings, err.Error())
 			continue
 		}
-		overrides = append(overrides, entities.ValueOverride{
-			SID:        sid,
-			Variant:    -1,
-			GuardValue: guardValue,
-		})
+		overrides = append(overrides, override)
 	}
-	return overrides
+	return overrides, warnings
 }
 
 // CreateGlobalBans turns the newline-separated banned item / magic SIDs edited
@@ -74,6 +69,21 @@ func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorCo
 	return &entities.GlobalBans{Items: items, Magics: magics}
 }
 
+func (this *GameRulesProvider) parseValueOverride(line string, lineNumber int) (entities.ValueOverride, error) {
+	equals := strings.Index(line, "=")
+	if equals <= 0 {
+		return entities.ValueOverride{}, fmt.Errorf("line %d: '%s' is not sid=value", lineNumber, line)
+	}
+
+	guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
+	if err != nil {
+		return entities.ValueOverride{}, fmt.Errorf("line %d: '%s' has a non-numeric value", lineNumber, line)
+	}
+
+	sid := strings.TrimSpace(line[:equals])
+	return entities.ValueOverride{SID: sid, Variant: -1, GuardValue: guardValue}, nil
+}
+
 func (this *GameRulesProvider) createAdvancedWinConditions(
 	configuration config.GeneratorConfig) entities.WinConditions {
 	victoryCondition := configuration.GetVictoryCondition()
@@ -81,7 +91,9 @@ func (this *GameRulesProvider) createAdvancedWinConditions(
 	gladiatorRules := configuration.GetGladiatorArenaRules()
 	tournamentRules := configuration.GetTournamentRules()
 
-	useGladiator := gladiatorRules.Enabled || victoryCondition == winConditionValues.FinalBattle
+	useGladiator := configuration.IsGladiatorArenaMode()
+
+	winConditionValues := registry.GetWinningConditionValues()
 	winConditions := entities.WinConditions{
 		Classic:          true,
 		Desertion:        true,
@@ -93,46 +105,58 @@ func (this *GameRulesProvider) createAdvancedWinConditions(
 		LostStartCityDay: helpers.Clamp(gameEndConditions.LostStartCityDay, 1, 30),
 		LostStartHero: gameEndConditions.LostStartHero ||
 			useGladiator ||
-			configuration.GameMode == gameModes.SingleHero,
+			configuration.GameMode == registry.GetGameModeValues().SingleHero,
 		CityHold:     gameEndConditions.CityHold || victoryCondition == winConditionValues.CityHold,
 		CityHoldDays: helpers.Clamp(gameEndConditions.CityHoldDays, 1, 30),
 	}
 	if useGladiator {
-		winConditions.GladiatorArena = true
-		winConditions.GladiatorArenaRegistrationStartFight = true
-		winConditions.GladiatorArenaDaysDelayStart = helpers.Clamp(gladiatorRules.DaysDelayStart, 1, 60)
-		winConditions.GladiatorArenaCountDay = helpers.Clamp(gladiatorRules.CountDay, 1, 30)
-		winConditions.ChampionSelectRule = championSelectRules.StartHero
+		this.setGladiatorArenaRules(gladiatorRules, &winConditions)
 	}
 	if tournamentRules.Enabled || victoryCondition == winConditionValues.Tournament {
-		firstDay := helpers.Clamp(tournamentRules.FirstTournamentDay, 3, 60)
-		interval := helpers.Clamp(tournamentRules.Interval, 3, 30)
-		pointsToWin := helpers.Clamp(tournamentRules.PointsToWin, 1, 10)
-		roundCount := pointsToWin*2 - 1
-		winConditions.ChampionSelectRule = championSelectRules.StartHero
-		winConditions.Tournament = true
-		winConditions.TournamentSaveArmy = true
-		winConditions.TournamentPointsToWin = pointsToWin
-
-		var announceDays, battleOffsets []int
-		prevBattle := 0
-		for i := range roundCount {
-			announce := 1
-			if i > 0 {
-				announce = prevBattle + 1
-			}
-			offset := firstDay - 1
-			if i > 0 {
-				offset = interval - 1
-			}
-			announceDays = append(announceDays, announce)
-			battleOffsets = append(battleOffsets, offset)
-			prevBattle = announce + offset
-		}
-		winConditions.TournamentAnnounceDays = announceDays
-		winConditions.TournamentDays = battleOffsets
+		this.setTournamentRules(tournamentRules, &winConditions)
 	}
 	return winConditions
+}
+
+func (this *GameRulesProvider) setGladiatorArenaRules(
+	gladiatorRules config.GladiatorArenaRules,
+	winConditions *entities.WinConditions) {
+	winConditions.GladiatorArena = true
+	winConditions.GladiatorArenaRegistrationStartFight = true
+	winConditions.GladiatorArenaDaysDelayStart = helpers.Clamp(gladiatorRules.DaysDelayStart, 1, 60)
+	winConditions.GladiatorArenaCountDay = helpers.Clamp(gladiatorRules.CountDay, 1, 30)
+	winConditions.ChampionSelectRule = registry.GetChampionSelectValues().StartHero
+}
+
+func (this *GameRulesProvider) setTournamentRules(
+	tournamentRules config.TournamentRules,
+	winConditions *entities.WinConditions) {
+	firstDay := helpers.Clamp(tournamentRules.FirstTournamentDay, 3, 60)
+	interval := helpers.Clamp(tournamentRules.Interval, 3, 30)
+	pointsToWin := helpers.Clamp(tournamentRules.PointsToWin, 1, 10)
+	roundCount := pointsToWin*2 - 1
+	winConditions.ChampionSelectRule = registry.GetChampionSelectValues().StartHero
+	winConditions.Tournament = true
+	winConditions.TournamentSaveArmy = true
+	winConditions.TournamentPointsToWin = pointsToWin
+
+	var announceDays, battleOffsets []int
+	prevBattle := 0
+	for i := range roundCount {
+		announce := 1
+		if i > 0 {
+			announce = prevBattle + 1
+		}
+		offset := firstDay - 1
+		if i > 0 {
+			offset = interval - 1
+		}
+		announceDays = append(announceDays, announce)
+		battleOffsets = append(battleOffsets, offset)
+		prevBattle = announce + offset
+	}
+	winConditions.TournamentAnnounceDays = announceDays
+	winConditions.TournamentDays = battleOffsets
 }
 
 func (this *GameRulesProvider) createBonuses(bonusEntries []config.BonusEntry) entities.BonusList {

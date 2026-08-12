@@ -4,13 +4,14 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenCalled_ReturnsGoldGuardStrengthValues(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := common_connections.GuardStrength{
+	expected := models.GuardStrength{
 		Default:  25_000,
 		Weakest:  36_000,
 		Low:      42_000,

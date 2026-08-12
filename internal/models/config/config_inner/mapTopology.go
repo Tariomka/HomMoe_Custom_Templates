@@ -16,7 +16,3 @@ const (
 	TopologyFractal      MapTopology = "Fractal"
 	TopologyGeometricHub MapTopology = "GeometricHub"
 )
-
-func (this MapTopology) IsHubBased() bool {
-	return this == TopologyHubAndSpoke || this == TopologyGeometricHub
-}

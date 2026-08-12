@@ -2,20 +2,12 @@ package common_connections
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
-type GuardStrength struct {
-	Default  int
-	Weakest  int
-	Low      int
-	Medium   int
-	High     int
-	VeryHigh int
-}
-
-func GetPlayerToPlayerGuardStrength() GuardStrength {
-	return GuardStrength{
+func GetPlayerToPlayerGuardStrength() models.GuardStrength {
+	return models.GuardStrength{
 		Default:  neutral_zone.QualityUnknown.GetGuardValue(),
 		Weakest:  10000,
 		Low:      22000,
@@ -25,8 +17,8 @@ func GetPlayerToPlayerGuardStrength() GuardStrength {
 	}
 }
 
-func GetBronzeGuardStrength() GuardStrength {
-	return GuardStrength{
+func GetBronzeGuardStrength() models.GuardStrength {
+	return models.GuardStrength{
 		Default:  neutral_zone.QualityLow.GetGuardValue(),
 		Weakest:  3000,
 		Low:      6000,
@@ -36,8 +28,8 @@ func GetBronzeGuardStrength() GuardStrength {
 	}
 }
 
-func GetSilverGuardStrength() GuardStrength {
-	return GuardStrength{
+func GetSilverGuardStrength() models.GuardStrength {
+	return models.GuardStrength{
 		Default:  neutral_zone.QualityMedium.GetGuardValue(),
 		Weakest:  18000,
 		Low:      21000,
@@ -47,8 +39,8 @@ func GetSilverGuardStrength() GuardStrength {
 	}
 }
 
-func GetGoldGuardStrength() GuardStrength {
-	return GuardStrength{
+func GetGoldGuardStrength() models.GuardStrength {
+	return models.GuardStrength{
 		Default:  neutral_zone.QualityHigh.GetGuardValue(),
 		Weakest:  36000,
 		Low:      42000,
@@ -58,8 +50,8 @@ func GetGoldGuardStrength() GuardStrength {
 	}
 }
 
-func GetHubGuardStrength() GuardStrength {
-	return GuardStrength{
+func GetHubGuardStrength() models.GuardStrength {
+	return models.GuardStrength{
 		Default:  neutral_zone.QualityHighest.GetGuardValue(),
 		Weakest:  45000,
 		Low:      52000,
@@ -70,7 +62,7 @@ func GetHubGuardStrength() GuardStrength {
 }
 
 func GetGuardStrengthListForQuality(zoneQuality neutral_zone.Quality) []data.Tuple[string, int] {
-	strength := GuardStrength{}
+	strength := models.GuardStrength{}
 	switch zoneQuality {
 	case neutral_zone.QualityLowest, neutral_zone.QualityLow:
 		strength = GetBronzeGuardStrength()
@@ -81,7 +73,7 @@ func GetGuardStrengthListForQuality(zoneQuality neutral_zone.Quality) []data.Tup
 	case neutral_zone.QualityHighest:
 		strength = GetHubGuardStrength()
 	case neutral_zone.QualityUnknown:
-		fallthrough // Assume without checking that no problems arose and this is a player-to-player connection.
+		fallthrough // Assume this is a player-to-player connection.
 	default:
 		strength = GetPlayerToPlayerGuardStrength()
 	}
@@ -96,7 +88,7 @@ func GetGuardStrengthListForQuality(zoneQuality neutral_zone.Quality) []data.Tup
 	}
 }
 
-func GetGuardStrengthForQuality(zoneQuality neutral_zone.Quality) GuardStrength {
+func GetGuardStrengthForQuality(zoneQuality neutral_zone.Quality) models.GuardStrength {
 	switch zoneQuality {
 	case neutral_zone.QualityLowest, neutral_zone.QualityLow:
 		return GetBronzeGuardStrength()
@@ -107,7 +99,7 @@ func GetGuardStrengthForQuality(zoneQuality neutral_zone.Quality) GuardStrength 
 	case neutral_zone.QualityHighest:
 		return GetHubGuardStrength()
 	case neutral_zone.QualityUnknown:
-		fallthrough // Assume without checking that no problems arose and this is a player-to-player connection.
+		fallthrough // Assume this is a player-to-player connection.
 	default:
 		return GetPlayerToPlayerGuardStrength()
 	}

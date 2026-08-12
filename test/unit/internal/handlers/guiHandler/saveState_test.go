@@ -6,7 +6,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +13,7 @@ import (
 func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	stateSaveDto := dtos.EditorStateSaveDto{
 		State:      nil,
 		OutputPath: filepath.Join(t.TempDir(), "state.gen.json"),
@@ -30,7 +29,7 @@ func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: ""}
 
@@ -44,7 +43,7 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: " \t  "}
 
@@ -55,26 +54,30 @@ func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
 }
 
-func TestWhenStateAndOutputPathAreValid_ReturnsOutputPath(t *testing.T) {
+func TestWhenStateAndOutputPathAreValid_ReturnsPathNamedAfterTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
-	outputPath := filepath.Join(t.TempDir(), "valid-state.gen.json")
+	handler := newProductionGuiHandler()
+	outputDirectory := t.TempDir()
 	state := dtos.NewDefaultEditorStateDto()
-	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
+	state.TemplateName = "My Template"
+	stateSaveDto := dtos.EditorStateSaveDto{
+		State:      &state,
+		OutputPath: filepath.Join(outputDirectory, "ignored-name.gen.json"),
+	}
 
 	// Act
 	savedPath, err := handler.SaveState(stateSaveDto)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, outputPath, savedPath)
+	assert.Equal(t, filepath.Join(outputDirectory, "My Template.gen.json"), savedPath)
 }
 
 func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "written-state.gen.json")
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
@@ -87,17 +90,18 @@ func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 	assert.FileExists(t, savedPath)
 }
 
-func TestWhenStateOutputDirectoryDoesNotExist_ReturnsError(t *testing.T) {
+func TestWhenStateOutputDirectoryDoesNotExist_CreatesItAndWritesTheFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewGuiHandler()
+	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "no-such-directory", "state.gen.json")
 	state := dtos.NewDefaultEditorStateDto()
 	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
 
 	// Act
-	_, err := handler.SaveState(stateSaveDto)
+	savedPath, err := handler.SaveState(stateSaveDto)
 
 	// Assert
-	assert.Error(t, err)
+	require.NoError(t, err)
+	assert.FileExists(t, savedPath)
 }

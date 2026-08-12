@@ -1,164 +1,244 @@
 package handlers
 
 import (
-	"log/slog"
-	"slices"
-	"strings"
+	"image"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 type GUIHandler struct {
-	templateGenerator *template_generator.TemplateGenerator
-	mapper            *mappers.GeneratorConfigMapper
-	contentProvider   *providers.MandatoryContentProvider
-	fileService       *file_service.FileService
-	previewGenerator  *preview_service.PreviewGeneratorService
+	templateHandler    handler_interfaces.ITemplateHandler
+	previewHandler     handler_interfaces.IPreviewHandler
+	stateHandler       handler_interfaces.IStateHandler
+	contentRuleHandler handler_interfaces.IZoneContentHandler
+	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
+	bonusHandler       handler_interfaces.IBonusHandler
+	pickerHandler      handler_interfaces.IPickerHandler
 }
 
-func NewGuiHandler() *GUIHandler {
-	previewGenerator, err := preview_service.NewPreviewGenerator()
-	if err != nil {
-		slog.Error(
-			"Preview Generator failed to initialize, preview images will not be generated",
-			slog.String("error", err.Error()))
-	}
-
+func NewGuiHandler(
+	templateHandler handler_interfaces.ITemplateHandler,
+	stateHandler handler_interfaces.IStateHandler,
+	previewHandler handler_interfaces.IPreviewHandler,
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
+	zoneEditorHandler handler_interfaces.IZoneEditorHandler,
+	bonusHandler handler_interfaces.IBonusHandler,
+	pickerHandler handler_interfaces.IPickerHandler) handler_interfaces.IGuiHandler {
 	return &GUIHandler{
-		templateGenerator: template_generator.NewTemplateGenerator(nil),
-		mapper:            mappers.NewConfigMapper(),
-		contentProvider:   providers.NewMandatoryContentProvider(),
-		fileService:       file_service.NewFileService(),
-		previewGenerator:  previewGenerator,
+		templateHandler:    templateHandler,
+		stateHandler:       stateHandler,
+		previewHandler:     previewHandler,
+		contentRuleHandler: contentRuleHandler,
+		zoneEditorHandler:  zoneEditorHandler,
+		bonusHandler:       bonusHandler,
+		pickerHandler:      pickerHandler,
 	}
+}
+
+func (this *GUIHandler) BuildItemPickerEntries(items []dtos.PickerItemDto) []dtos.PickerEntryDto {
+	return this.pickerHandler.BuildItemPickerEntries(items)
+}
+
+func (this *GUIHandler) BuildSpellPickerEntries(spells []dtos.PickerSpellDto) []dtos.PickerEntryDto {
+	return this.pickerHandler.BuildSpellPickerEntries(spells)
+}
+
+func (this *GUIHandler) BuildValueOverridePickerEntries(sids []string) []dtos.PickerEntryDto {
+	return this.pickerHandler.BuildValueOverridePickerEntries(sids)
+}
+
+func (this *GUIHandler) NormalizePickerFilter(text string) string {
+	return this.pickerHandler.NormalizePickerFilter(text)
+}
+
+func (this *GUIHandler) GetVisiblePickerRows(
+	entries []dtos.PickerEntryDto,
+	filter string,
+	grouped bool) []dtos.PickerRowDto {
+	return this.pickerHandler.GetVisiblePickerRows(entries, filter, grouped)
+}
+
+func (this *GUIHandler) GetSelectedPickerIDs(
+	entries []dtos.PickerEntryDto,
+	selected map[string]bool) []string {
+	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
 }
 
 func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	warnings := []string{}
-	for _, issue := range validators.ValidateEditorState(&stateDto) {
-		issue.Fix(&stateDto)
-		warnings = append(warnings, issue.Message)
-	}
-
-	configuration := this.mapper.FromEditorState(stateDto)
-	if configuration.TemplateName == "" {
-		return dtos.TemplateLoadDto{}, common_errors.ErrNoTemplateName
-	}
-
-	this.templateGenerator.SetConfiguration(configuration)
-	template := this.templateGenerator.Generate()
-	if template == nil {
-		return dtos.TemplateLoadDto{}, common_errors.ErrGeneratedTemplateInvalid
-	}
-
-	return dtos.TemplateLoadDto{Template: template, Warnings: warnings}, nil
+	return this.templateHandler.GenerateTemplate(stateDto)
 }
 
 func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {
-	if templateDto.Template == nil || len(templateDto.Template.Variants) == 0 {
-		return dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid
-	}
+	return this.templateHandler.UpdateTemplate(templateDto)
+}
 
-	newTemplate := *templateDto.Template
-	newTemplate.Variants = slices.Clone(templateDto.Template.Variants)
-	newTemplate.Variants[0].Zones = templateDto.Zones
-	newTemplate.Variants[0].Connections = templateDto.Connections
+func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
+	return this.templateHandler.ReapplyCastleSettings(request)
+}
 
-	connection_editor.RebuildZoneConnectionRoads(
-		newTemplate.Variants[0].Zones,
-		newTemplate.Variants[0].Connections)
+func (this *GUIHandler) GetZoneEditorOptions(state dtos.EditorStateDto, totalZoneCount int) dtos.ZoneEditorOptionsDto {
+	return this.zoneEditorHandler.GetZoneEditorOptions(state, totalZoneCount)
+}
 
-	// Rebuild mandatory content from the final zones so a zone re-tiered in the
-	// manual editor (e.g. Medium -> High) gets the content of its new quality
-	// instead of keeping the content keyed to its original generation tier.
-	if templateDto.Config != nil {
-		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(
-			*templateDto.Config, newTemplate.Variants[0].Zones)
-	}
+func (this *GUIHandler) CountZoneCastles(zone entities.Zone) int {
+	return this.zoneEditorHandler.CountZoneCastles(zone)
+}
 
-	var err error
-	if connection_editor.ComputeHasErrors(newTemplate.Variants[0].Zones, newTemplate.Variants[0].Connections) {
-		err = common_errors.ErrZonesMissing
-	}
+func (this *GUIHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
+	return this.zoneEditorHandler.GetZoneQuality(zone)
+}
 
-	return dtos.TemplateLoadDto{Template: &newTemplate}, err
+func (this *GUIHandler) GetZoneConnectionGuardQuality(
+	from, to string,
+	zones []entities.Zone,
+	playerZoneNames map[string]bool) neutral_zone.Quality {
+	return this.zoneEditorHandler.GetZoneConnectionGuardQuality(from, to, zones, playerZoneNames)
+}
+
+func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {
+	return this.zoneEditorHandler.ApplyZoneEditorQuality(request)
+}
+
+func (this *GUIHandler) DescribeZoneEditorGraph(
+	zones []entities.Zone,
+	connections []entities.Connection) dtos.ZoneEditorGraphDto {
+	return this.zoneEditorHandler.DescribeZoneEditorGraph(zones, connections)
+}
+
+func (this *GUIHandler) CreateZoneEditorConnection(
+	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
+	return this.zoneEditorHandler.CreateZoneEditorConnection(request)
+}
+
+func (this *GUIHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
+	return this.zoneEditorHandler.FindOpenZonePosition(occupied)
+}
+
+func (this *GUIHandler) GetNextZoneLabel(zones []entities.Zone) string {
+	return this.zoneEditorHandler.GetNextZoneLabel(zones)
+}
+
+func (this *GUIHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone {
+	return this.zoneEditorHandler.CreateZoneEditorNeutralZone(request)
+}
+
+func (this *GUIHandler) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
+	return this.zoneEditorHandler.CanDeleteZone(zoneName, playerZoneNames)
+}
+
+func (this *GUIHandler) RemoveZoneEditorZone(request dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto {
+	return this.zoneEditorHandler.RemoveZoneEditorZone(request)
+}
+
+func (this *GUIHandler) BuildZoneEditorGeometry(
+	request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
+	return this.zoneEditorHandler.BuildZoneEditorGeometry(request)
+}
+
+func (this *GUIHandler) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string {
+	return this.zoneEditorHandler.HitTestZoneEditorNode(request)
+}
+
+func (this *GUIHandler) HitTestZoneEditorEdge(position image.Point, edges []models.ZoneEditorEdge) int {
+	return this.zoneEditorHandler.HitTestZoneEditorEdge(position, edges)
+}
+
+func (this *GUIHandler) GetZoneEditorGridStep(zoneRadius int) float64 {
+	return this.zoneEditorHandler.GetZoneEditorGridStep(zoneRadius)
+}
+
+func (this *GUIHandler) SnapZoneEditorPosition(
+	request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
+	return this.zoneEditorHandler.SnapZoneEditorPosition(request)
+}
+
+func (this *GUIHandler) DescribeExistingBonuses(existing []config.BonusEntry) dtos.ExistingBonusesDto {
+	return this.bonusHandler.DescribeExistingBonuses(existing)
+}
+
+func (this *GUIHandler) BuildBonusEntries(
+	request dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto {
+	return this.bonusHandler.BuildBonusEntries(request)
+}
+
+func (this *GUIHandler) FilterNewBonusEntries(
+	entries []config.BonusEntry,
+	existingKeys map[string]bool) []config.BonusEntry {
+	return this.bonusHandler.FilterNewBonusEntries(entries, existingKeys)
+}
+
+func (this *GUIHandler) GetSpellCountLabel(count int) string {
+	return this.bonusHandler.GetSpellCountLabel(count)
 }
 
 func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, error) {
-	if templateDto.Template == nil {
-		return "", common_errors.ErrNothingToSave
-	}
-
-	outputPath := strings.TrimSpace(templateDto.OutputPath)
-	if outputPath == "" {
-		return "", common_errors.ErrNoOutputPath
-	}
-
-	out, err := this.fileService.SaveTemplate(outputPath, templateDto.Template)
-	if err != nil {
-		return "", err
-	}
-
-	if this.previewGenerator != nil {
-		previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
-		_, err = this.fileService.SavePreviewImage(outputPath, previewImage, templateDto.Template.Name)
-		if err != nil {
-			return out, err
-		}
-	}
-
-	return out, nil
+	return this.templateHandler.SaveTemplate(templateDto)
 }
 
-// LoadState reads an editor state from the given .gen.json path and
-// validates it against the editor's allowed values. When fixIssues is true,
-// every detected issue is corrected in the returned state; the returned
-// warnings describe the issues found either way.
+func (this *GUIHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error) {
+	return this.previewHandler.BuildPreviewLayout(request)
+}
+
+func (this *GUIHandler) GetContentRuleEditorOptions(content models.SidMapping) dtos.ContentRuleEditorOptionsDto {
+	return this.contentRuleHandler.GetContentRuleEditorOptions(content)
+}
+
+func (this *GUIHandler) DescribeContentRule(
+	content models.SidMapping,
+	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
+	return this.contentRuleHandler.DescribeContentRule(content, savedRule)
+}
+
+func (this *GUIHandler) ComposeContentRule(
+	request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto {
+	return this.contentRuleHandler.ComposeContentRule(request)
+}
+
+func (this *GUIHandler) UpsertContentRule(
+	rules []models.ContentRuleRowSave,
+	rule models.ContentRuleRowSave) []models.ContentRuleRowSave {
+	return this.contentRuleHandler.UpsertContentRule(rules, rule)
+}
+
+func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []models.ContentRuleRowSave {
+	return this.contentRuleHandler.GetDefaultContentRules(content)
+}
+
+func (this *GUIHandler) GetContentRuleMarkers(
+	content models.SidMapping,
+	rules []models.ContentRuleRowSave) string {
+	return this.contentRuleHandler.GetContentRuleMarkers(content, rules)
+}
+
+func (this *GUIHandler) GetContentRowDisplayName(
+	content models.SidMapping,
+	rules []models.ContentRuleRowSave) string {
+	return this.contentRuleHandler.GetContentRowDisplayName(content, rules)
+}
+
+func (this *GUIHandler) SortContentItemsByName(items []models.SidMapping) []models.SidMapping {
+	return this.contentRuleHandler.SortContentItemsByName(items)
+}
+
+func (this *GUIHandler) ClampContentCount(count int, maxCount int) int {
+	return this.contentRuleHandler.ClampContentCount(count, maxCount)
+}
+
+func (this *GUIHandler) ValidateEditorState(
+	stateDto dtos.EditorStateDto,
+	fixIssues bool) dtos.EditorStateValidationDto {
+	return this.stateHandler.ValidateEditorState(stateDto, fixIssues)
+}
+
 func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
-	path = strings.TrimSpace(path)
-	if path == "" {
-		return nil, nil, common_errors.ErrNoOutputPath
-	}
-
-	loaded, err := this.fileService.LoadSettingsFile(path)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	issues := validators.ValidateEditorState(loaded)
-	warnings := make([]string, 0, len(issues))
-	for _, issue := range issues {
-		if fixIssues {
-			issue.Fix(loaded)
-		}
-		warnings = append(warnings, issue.Message)
-	}
-
-	return loaded, warnings, nil
+	return this.stateHandler.LoadState(path, fixIssues)
 }
 
 func (this *GUIHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
-	if stateDto.State == nil {
-		return "", common_errors.ErrNothingToSave
-	}
-
-	outputPath := strings.TrimSpace(stateDto.OutputPath)
-	if outputPath == "" {
-		return "", common_errors.ErrNoOutputPath
-	}
-
-	err := this.fileService.SaveSettings(outputPath, stateDto.State)
-	if err != nil {
-		return "", err
-	}
-
-	return outputPath, nil
+	return this.stateHandler.SaveState(stateDto)
 }

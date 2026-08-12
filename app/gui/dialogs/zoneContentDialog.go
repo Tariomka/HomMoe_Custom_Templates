@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -40,19 +41,23 @@ func NewZoneContentDialog(
 	title string,
 	isPlayerTier bool,
 	rows []models.ZoneContentRowSave,
+	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	opener interfaces.DialogOpener,
 	onApply func([]models.ZoneContentRowSave),
 ) *ZoneContentDialog {
 	dialog := &ZoneContentDialog{
-		zcMines: NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true),
+		zcMines: NewZoneContentSection(
+			"Mines", constants.ContentItemGroup.Mines, 3, true, contentRuleHandler),
 		zcUtilities: NewZoneContentSection("Utility Structures",
-			constants.ContentItemGroup.UtilityStructures, 10, false),
-		zcTreasures: NewZoneContentSection("Treasures", constants.ContentItemGroup.Treasures, 10, false),
+			constants.ContentItemGroup.UtilityStructures, 10, false, contentRuleHandler),
+		zcTreasures: NewZoneContentSection(
+			"Treasures", constants.ContentItemGroup.Treasures, 10, false, contentRuleHandler),
 		zcHires: NewZoneContentSection("Unit Recruitment",
-			constants.ContentItemGroup.UnitRecruitment, 10, false),
-		zcBanks: NewZoneContentSection("Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false),
+			constants.ContentItemGroup.UnitRecruitment, 10, false, contentRuleHandler),
+		zcBanks: NewZoneContentSection(
+			"Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false, contentRuleHandler),
 		zcHeroImprovement: NewZoneContentSection("Hero Improvement",
-			constants.ContentItemGroup.HeroImprovementStructures, 10, false),
+			constants.ContentItemGroup.HeroImprovementStructures, 10, false, contentRuleHandler),
 		title:        title,
 		isPlayerTier: isPlayerTier,
 		onApply:      onApply,

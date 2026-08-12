@@ -12,9 +12,9 @@ import (
 )
 
 // mustNewGenerator fails the test immediately when the embedded assets cannot load.
-func mustNewGenerator(t *testing.T) *preview_service.PreviewGeneratorService {
+func mustNewGenerator(t *testing.T) preview_service.IPreviewGeneratorService {
 	t.Helper()
-	generator, err := preview_service.NewPreviewGenerator()
+	generator, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
 	require.NoError(t, err)
 	return generator
 }
@@ -106,6 +106,38 @@ func TestWhenConnectionIsPortal_DrawsDashedLineDifferentFromSolid(t *testing.T) 
 
 	// Assert
 	assert.NotEqual(t, solidRender.Pix, canvas.Pix)
+}
+
+func TestWhenConnectionIsGladiatorArena_DrawsArenaMarkerOverTheSolidLine(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	generator := mustNewGenerator(t)
+	solidRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	arenaTemplate := ringTemplate()
+	arenaTemplate.Variants[0].Connections[0].ConnectionType = "GladiatorArena"
+
+	// Act
+	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRing)
+
+	// Assert
+	assert.NotEqual(t, solidRender.Pix, canvas.Pix)
+}
+
+func TestWhenZoneHostsTheArena_DrawsArenaBubbleInsteadOfThePlainOne(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	generator := mustNewGenerator(t)
+	plainRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	arenaTemplate := ringTemplate()
+	arenaTemplate.Variants[0].Zones[1].MainObjects = append(
+		arenaTemplate.Variants[0].Zones[1].MainObjects,
+		entities.MainObject{Type: "GladiatorArena"})
+
+	// Act
+	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRing)
+
+	// Assert
+	assert.NotEqual(t, plainRender.Pix, canvas.Pix)
 }
 
 func TestWhenSameTemplateIsRenderedTwice_ProducesIdenticalImages(t *testing.T) {

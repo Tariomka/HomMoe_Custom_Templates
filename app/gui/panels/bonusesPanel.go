@@ -17,6 +17,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
@@ -38,11 +39,12 @@ type BonusesPanel struct {
 
 	scroll widget.List
 
-	state *drivers.State
+	state   *drivers.State
+	handler handler_interfaces.IGuiHandler
 }
 
-func NewBonusesPanel(state *drivers.State) *BonusesPanel {
-	panel := &BonusesPanel{state: state}
+func NewBonusesPanel(state *drivers.State, handler handler_interfaces.IGuiHandler) *BonusesPanel {
+	panel := &BonusesPanel{state: state, handler: handler}
 	panel.scroll.Axis = layout.Vertical
 	panel.LoadFromState()
 	return panel
@@ -129,7 +131,7 @@ func (this *BonusesPanel) getBannedItemsWidgets(theme *material.Theme) []layout.
 	}
 
 	for i, sid := range this.bannedItems {
-		name, category := bannedItemLabel(sid)
+		name, category := constants.GetBannedItemLabel(sid)
 		itemRows = append(itemRows,
 			this.getEntryRowWidget(theme, banCategoryColor(category), name, category, &this.itemRemoveBtns[i]))
 	}
@@ -145,7 +147,7 @@ func (this *BonusesPanel) getBannedSpellsWidgets(theme *material.Theme) []layout
 	}
 
 	for i, sid := range this.bannedMagics {
-		name, school := bannedSpellLabel(sid)
+		name, school := constants.GetSpellNameAndSchool(sid)
 		spellRows = append(spellRows, this.getEntryRowWidget(theme,
 			constants.GetSpellSchoolColorFromDisplayName(school), name, school, &this.magicRemoveBtns[i]),
 		)
@@ -215,21 +217,21 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	opener := this.state.GetDialogHost().Open
 
 	if this.addBonusBtn.Clicked(gtx) {
-		opener(dialogs.NewBonusPickerDialog(this.bonuses, opener, func(entries []config.BonusEntry) {
+		opener(dialogs.NewBonusPickerDialog(this.bonuses, opener, this.handler, func(entries []config.BonusEntry) {
 			this.bonuses = append(this.bonuses, entries...)
 			this.syncRemoveButtons()
 			this.SaveToState()
 		}))
 	}
 	if this.pickItemsBtn.Clicked(gtx) {
-		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, func(ids []string) {
+		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, this.handler, func(ids []string) {
 			this.bannedItems = appendUnique(this.bannedItems, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
 		}))
 	}
 	if this.pickSpellsBtn.Clicked(gtx) {
-		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, func(ids []string, _ bool) {
+		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, this.handler, func(ids []string, _ bool) {
 			this.bannedMagics = appendUnique(this.bannedMagics, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
@@ -237,7 +239,7 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	}
 	if this.pickOverridesBtn.Clicked(gtx) {
 		excluded := overrideSids(this.valueOverrides)
-		opener(dialogs.NewValueOverridePickerDialog(excluded, func(lines []string) {
+		opener(dialogs.NewValueOverridePickerDialog(excluded, this.handler, func(lines []string) {
 			this.valueOverrides = appendUnique(this.valueOverrides, lines)
 			this.syncRemoveButtons()
 			this.SaveToState()
@@ -282,16 +284,29 @@ func bonusDisplayName(entry config.BonusEntry) string {
 	case config.BonusTownPortalFree:
 		return "Town Portal (free)"
 	case config.BonusSpell:
-		if entry.Param2 == "1" {
-			return "Spell (free): " + spellLabel(entry.Param)
+		var label string
+		if spell, ok := constants.FindSpell(entry.Param); ok {
+			label = spell.Name
+		} else {
+			label = constants.SidToDisplayName(entry.Param)
 		}
-		return "Spell: " + spellLabel(entry.Param)
+		if entry.Param2 == "1" {
+			return "Spell (free): " + label
+		}
+
+		return "Spell: " + label
 	case config.BonusUnitMultiplier:
 		return "Unit multiplier x" + entry.Param
 	case config.BonusMovementBonus:
 		return "Movement bonus +" + entry.Param
 	case config.BonusStartingItem:
-		return "Starting item: " + itemLabel(entry.Param)
+		var label string
+		if item, ok := constants.FindBannableItem(entry.Param); ok {
+			label = item.Name
+		} else {
+			label = constants.SidToDisplayName(entry.Param)
+		}
+		return "Starting item: " + label
 	case config.BonusStartingGold:
 		return "Starting gold: " + entry.Param
 	case config.BonusStartingGems:
@@ -304,8 +319,9 @@ func bonusDisplayName(entry config.BonusEntry) string {
 		return "Starting wood: " + entry.Param
 	case config.BonusStartingOre:
 		return "Starting ore: " + entry.Param
+	default:
+		return ""
 	}
-	return ""
 }
 
 // bonusReceiverLabel is the dim trailing text; hidden for resource bonuses.
@@ -352,48 +368,6 @@ func banCategoryColor(category string) color.NRGBA {
 		return themes.ColorsDotCategories.Set
 	}
 	return themes.ColorsDotCategories.Default
-}
-
-// spellLabel resolves a spell SID to its display name, with a generic
-// sentence-case fallback for unknown SIDs.
-func spellLabel(sid string) string {
-	if spell, ok := constants.FindSpell(sid); ok {
-		return spell.Name
-	}
-
-	return constants.SidToDisplayName(sid)
-}
-
-// itemLabel resolves an artifact SID to its display name, with a generic
-// sentence-case fallback for unknown SIDs.
-func itemLabel(sid string) string {
-	if item, ok := constants.FindBannableItem(sid); ok {
-		return item.Name
-	}
-
-	return constants.SidToDisplayName(sid)
-}
-
-// bannedItemLabel returns the display name and category for a banned artifact.
-func bannedItemLabel(sid string) (name, category string) {
-	if item, ok := constants.FindBannableItem(sid); ok {
-		return item.Name, item.Category
-	}
-
-	return constants.SidToDisplayName(sid), "Misc"
-}
-
-// bannedSpellLabel returns the display name and school label for a banned spell.
-func bannedSpellLabel(sid string) (name, school string) {
-	if spell, ok := constants.FindSpell(sid); ok {
-		label := constants.SpellSchoolDisplayNames[spell.School]
-		if label == "" {
-			label = spell.School
-		}
-		return spell.Name, label
-	}
-
-	return constants.SidToDisplayName(sid), "Spell"
 }
 
 // ── small helpers ───────────────────────────────────────────────────────────

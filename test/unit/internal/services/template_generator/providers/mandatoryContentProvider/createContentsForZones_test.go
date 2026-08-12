@@ -6,7 +6,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +15,7 @@ import (
 func TestWhenZoneManuallyPromotedToHighTier_UsesHighTierRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
@@ -44,7 +43,7 @@ func TestWhenZoneManuallyPromotedToHighTier_UsesHighTierRows(t *testing.T) {
 func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
@@ -66,7 +65,7 @@ func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 func TestWhenZonePoolIsLowestTier_UsesLowestTierRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.LowestNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "lowest_only"}}
@@ -88,7 +87,7 @@ func TestWhenZonePoolIsLowestTier_UsesLowestTierRows(t *testing.T) {
 func TestWhenZoneHasNoRecognizableQuality_CreatesAnEmptyGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
@@ -109,7 +108,7 @@ func TestWhenZoneHasNoRecognizableQuality_CreatesAnEmptyGroup(t *testing.T) {
 func TestWhenZoneHasNoCastles_KeepsConfiguredRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "treasure"}}
@@ -129,7 +128,7 @@ func TestWhenZoneHasNoCastles_KeepsConfiguredRows(t *testing.T) {
 func TestWhenSpawnZoneProvided_CreatesPlayerGroupNamedAfterZoneSuffix(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "sawmill"}}
@@ -145,7 +144,7 @@ func TestWhenSpawnZoneProvided_CreatesPlayerGroupNamedAfterZoneSuffix(t *testing
 func TestWhenZoneNameIsUnrecognized_SkipsZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "treasure"}}
 	zones := []entities.Zone{{Name: "SomethingElse"}}
@@ -162,7 +161,7 @@ func TestWhenZoneNameIsUnrecognized_SkipsZone(t *testing.T) {
 func TestWhenMultipleHubZonesProvided_EmitsSingleHubGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
@@ -182,7 +181,7 @@ func TestWhenMultipleHubZonesProvided_EmitsSingleHubGroup(t *testing.T) {
 func TestWhenMultipleHubZonesProvided_SharedHubGroupContainsConfiguredRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
 	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
@@ -201,7 +200,7 @@ func TestWhenMultipleHubZonesProvided_SharedHubGroupContainsConfiguredRows(t *te
 func TestWhenHubZoneProvidedWithoutHubRows_OmitsHubGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	provider := providers.NewMandatoryContentProvider()
+	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	zones := []entities.Zone{{Name: "Hub", MainObjects: []entities.MainObject{{Type: "City"}}}}
 

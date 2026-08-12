@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +13,7 @@ func TestWhenMapperIsCreated_ReturnsNonNilInstance(t *testing.T) {
 	// Arrange
 
 	// Act
-	mapper := mappers.NewConfigMapper()
+	mapper := mappers.NewConfigMapper(mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService()))
 
 	// Assert
 	assert.NotNil(t, mapper)

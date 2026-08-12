@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,8 +24,8 @@ func TestWhenPlayerHasThreeNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -39,8 +39,8 @@ func TestWhenRingIsBuilt_FirstZoneIsPlayerSpawn(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -54,8 +54,8 @@ func TestWhenRingIsBuilt_CreatesConnectionPerRingSegment(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -69,8 +69,8 @@ func TestWhenRingIsBuilt_EveryConnectionNameCarriesRingPrefix(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -90,8 +90,8 @@ func TestWhenRingIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
@@ -115,8 +115,8 @@ func TestWhenPlayerHasNoNeutralPlans_CreatesLoneSpawnZoneWithoutConnections(t *t
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	emptyPlans := neutral_zone.Plans{}
-	tuning := models.NewGenerationTuning(configuration, 1)
-	service := tournament_variant.NewRingClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 1)
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, connections := service.CreateClusterVariant(*configuration, tuning, emptyPlans, emptyPlans, 0, "A")
@@ -131,8 +131,8 @@ func TestWhenSecondPlayerClusterIsBuilt_SpawnCastleBelongsToPlayerTwo(t *testing
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	neutralZones := newThreeNeutralPlans()
-	tuning := models.NewGenerationTuning(configuration, 4)
-	service := tournament_variant.NewRingClusterService()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	service := tournament_variant.NewRingClusterService(test_helpers.NewZoneFactories())
 
 	// Act
 	zones, _ := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 1, "B")
