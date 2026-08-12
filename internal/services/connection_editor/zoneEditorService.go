@@ -53,7 +53,7 @@ func (this *ZoneEditorService) EnsureConnectionNames(connections []entities.Conn
 			continue
 		}
 
-		prefix := fmt.Sprintf("Manual-%s-%s",
+		prefix := constants.GetManualConnectionNameFor(
 			helpers.GetZoneLabel(connections[i].From),
 			helpers.GetZoneLabel(connections[i].To))
 		name := prefix
@@ -158,7 +158,7 @@ func (this *ZoneEditorService) NewDefaultNeutralZone(
 	generateRoads bool,
 	tuning models.GenerationTuning) entities.Zone {
 	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreationRequest{
-		Name:               constants.NeutralZonePrefix + label,
+		Name:               constants.GetNeutralZoneNameFor(label),
 		Quality:            quality,
 		Size:               1.0,
 		CastleCount:        castleCount,

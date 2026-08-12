@@ -4,7 +4,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
@@ -21,7 +20,7 @@ func NewZoneClassifier() zone_interfaces.IZoneClassifier {
 }
 
 func (this *ZoneClassifier) GetQuality(zone entities.Zone) neutral_zone.Quality {
-	if strings.HasPrefix(zone.Name, constants.PlayerZonePrefix) {
+	if zone_helpers.IsZoneNamePlayer(zone.Name) {
 		return neutral_zone.QualityUnknown
 	}
 
@@ -40,8 +39,7 @@ func (this *ZoneClassifier) GetQuality(zone entities.Zone) neutral_zone.Quality 
 func (this *ZoneClassifier) GetGuardQuality(
 	zoneName string,
 	zones []entities.Zone,
-	playerNames []string,
-) neutral_zone.Quality {
+	playerNames []string) neutral_zone.Quality {
 	if zoneName == "" {
 		return neutral_zone.QualityLow
 	}
@@ -72,8 +70,7 @@ func (this *ZoneClassifier) GetGuardQuality(
 func (this *ZoneClassifier) GetConnectionGuardQuality(
 	zoneA, zoneB string,
 	zones []entities.Zone,
-	playerNames []string,
-) neutral_zone.Quality {
+	playerNames []string) neutral_zone.Quality {
 	if zoneA != "" && zoneB != "" &&
 		slices.Contains(playerNames, zoneA) && slices.Contains(playerNames, zoneB) {
 		return neutral_zone.QualityUnknown

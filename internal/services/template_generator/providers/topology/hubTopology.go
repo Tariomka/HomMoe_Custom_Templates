@@ -74,7 +74,7 @@ func (this *HubTopologyService) createZones(
 	}
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
-		hubContentName = "mandatory_content_hub"
+		hubContentName = constants.HubContentName
 	}
 	zones := []entities.Zone{
 		this.CreateHubZone(
@@ -131,7 +131,7 @@ func (this *HubTopologyService) createConnections(
 			continue
 		}
 		connections = append(connections, variant_content.NewConnectionBuilder().
-			WithName(fmt.Sprintf("Pseudo-%s-%s", label, labelTo)).
+			WithName(constants.GetPseudoConnectionNameFor(label, labelTo)).
 			WithFrom(this.ZoneLabelProvider.CreateZoneName(label, playerLabels)).
 			WithTo(this.ZoneLabelProvider.CreateZoneName(labelTo, playerLabels)).
 			WithConnectionTypeProximity().

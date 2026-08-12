@@ -78,7 +78,7 @@ func (this *SharedWebTopologyService) createSpokes(
 	neutralCount := len(neutralLabels)
 
 	addSpoke := func(playerLabel, neutralLabel string) {
-		connectionName := fmt.Sprintf("Web-%s-%s", playerLabel, neutralLabel)
+		connectionName := constants.GetWebConnectionNameFor(playerLabel, neutralLabel)
 		playerSpokes[playerLabel] = append(playerSpokes[playerLabel], connectionName)
 		neutralSpokes[neutralLabel] = append(neutralSpokes[neutralLabel], connectionName)
 	}
@@ -108,7 +108,7 @@ func (this *SharedWebTopologyService) createRingConnectionNames(neutralLabels []
 	neutralCount := len(neutralLabels)
 	neutralRingConnNames := make([]string, neutralCount)
 	for i, label := range neutralLabels {
-		neutralRingConnNames[i] = fmt.Sprintf("NRing-%s-%s", label, neutralLabels[(i+1)%neutralCount])
+		neutralRingConnNames[i] = constants.GetNeutralRingConnectionNameFor(label, neutralLabels[(i+1)%neutralCount])
 	}
 	return neutralRingConnNames
 }
@@ -164,10 +164,10 @@ func (this *SharedWebTopologyService) createConnections(
 			nextLabel := strings.Split(connectionName, "-")[2]
 			connections = append(connections, variant_content.NewConnectionBuilder().
 				WithName(connectionName).
-				WithFrom(constants.PlayerZonePrefix+label).
-				WithTo(constants.NeutralZonePrefix+nextLabel).
+				WithFrom(constants.GetPlayerZoneNameFor(label)).
+				WithTo(constants.GetNeutralZoneNameFor(nextLabel)).
 				WithConnectionTypeDirect().
-				WithGuardZone(constants.NeutralZonePrefix+nextLabel).
+				WithGuardZone(constants.GetNeutralZoneNameFor(nextLabel)).
 				WithSimTurnSquad().
 				WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
 				WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
@@ -185,10 +185,10 @@ func (this *SharedWebTopologyService) createConnections(
 		nextLabel := neutralLabels[next]
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(connectionNames[i]).
-			WithFrom(constants.NeutralZonePrefix+label).
-			WithTo(constants.NeutralZonePrefix+nextLabel).
+			WithFrom(constants.GetNeutralZoneNameFor(label)).
+			WithTo(constants.GetNeutralZoneNameFor(nextLabel)).
 			WithConnectionTypeDirect().
-			WithGuardZone(constants.NeutralZonePrefix+label).
+			WithGuardZone(constants.GetNeutralZoneNameFor(label)).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).

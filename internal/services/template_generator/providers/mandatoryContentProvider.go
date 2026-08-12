@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_distances"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
@@ -45,7 +46,7 @@ func (this *MandatoryContentProvider) CreateContents(
 	}
 	for _, letter := range playerLabels {
 		groups = append(groups, entities.MandatoryContent{
-			Name: "mandatory_content_side_" + letter,
+			Name: constants.GetSideContentNameFor(letter),
 			Content: this.createContentItemsWithFoothold(
 				configuration.PlayerZoneMandatoryContent,
 				footholdCount,
@@ -58,7 +59,7 @@ func (this *MandatoryContentProvider) CreateContents(
 			content = stripNearCastleRules(content)
 		}
 		groups = append(groups, entities.MandatoryContent{
-			Name:    "mandatory_content_neutral_" + zone.Label,
+			Name:    constants.GetNeutralContentNameFor(zone.Label),
 			Content: this.createContentItemsWithFoothold(content, footholdCount, zone.CastleCount),
 		})
 	}
@@ -89,7 +90,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 		switch zone_helpers.GetZoneTypeFromName(zone.Name) {
 		case preview.ZoneTypePlayer:
 			groups = append(groups, entities.MandatoryContent{
-				Name: "mandatory_content_side_" + helpers.GetZoneLabel(zone.Name),
+				Name: constants.GetSideContentNameFor(helpers.GetZoneLabel(zone.Name)),
 				Content: this.createContentItemsWithFoothold(
 					cloneContentItems(configuration.PlayerZoneMandatoryContent),
 					footholdCount,
@@ -103,7 +104,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 				content = stripNearCastleRules(content)
 			}
 			groups = append(groups, entities.MandatoryContent{
-				Name:    "mandatory_content_neutral_" + helpers.GetZoneLabel(zone.Name),
+				Name:    constants.GetNeutralContentNameFor(helpers.GetZoneLabel(zone.Name)),
 				Content: this.createContentItemsWithFoothold(content, footholdCount, castleCount),
 			})
 
@@ -117,7 +118,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			if this.zoneEditor.CountZoneCastles(zone) == 0 {
 				content = stripNearCastleRules(content)
 			}
-			groups = append(groups, entities.MandatoryContent{Name: "mandatory_content_hub", Content: content})
+			groups = append(groups, entities.MandatoryContent{Name: constants.HubContentName, Content: content})
 			hubGroupAdded = true
 
 		case preview.ZoneTypeUnknown:
@@ -143,7 +144,7 @@ func (this *MandatoryContentProvider) hubContentGroup(
 	if configuration.ZoneConfiguration.Advanced.HubZoneCastles == 0 {
 		content = stripNearCastleRules(content)
 	}
-	return entities.MandatoryContent{Name: "mandatory_content_hub", Content: content}, true
+	return entities.MandatoryContent{Name: constants.HubContentName, Content: content}, true
 }
 
 func (this *MandatoryContentProvider) createContentItemsWithFoothold(
@@ -165,16 +166,17 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 		WithName(fmt.Sprintf("name_remote_foothold_%d", index)).
 		WithSoloEncounter().
 		WithRulesCallback(func() []entities.PlacementRule {
+			footholdDistances := common_distances.GetFootholdDistancePresets()
 			rules := []entities.PlacementRule{
 				placement_rule.NewPlacementRuleBuilder().
-					BuildCrossroadsRule(models.DistancePreset{Min: 0.2, Max: 0.3}, 0),
+					BuildCrossroadsRule(footholdDistances.Crossroads, 0),
 			}
 			if castleCount > 0 {
 				rules = append(rules,
 					placement_rule.NewPlacementRuleBuilder().
 						WithTypeMainObject().
 						WithArgs("0").
-						WithDistance(models.DistancePreset{Min: 0.2, Max: 0.4}).
+						WithDistance(footholdDistances.NearMainCastle).
 						WithWeight(0).
 						Build())
 			}
@@ -183,7 +185,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 					placement_rule.NewPlacementRuleBuilder().
 						WithTypeMainObject().
 						WithArgs("1").
-						WithDistance(models.DistancePreset{Min: 0.5, Max: 0.5}).
+						WithDistance(footholdDistances.NearSecondCastle).
 						WithWeight(2).
 						Build())
 			}

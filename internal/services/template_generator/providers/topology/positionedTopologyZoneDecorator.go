@@ -9,5 +9,4 @@ type PositionedTopologyZoneDecorator func(
 	zones []entities.Zone,
 	allLabels []string,
 	playerLabels []string,
-	neutralZones neutral_zone.Plans,
-)
+	neutralZones neutral_zone.Plans)

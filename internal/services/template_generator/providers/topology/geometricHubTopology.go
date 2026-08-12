@@ -65,20 +65,16 @@ func (this *GeometricHubTopologyService) createConnectionNameIndex(
 	layout *geometricHubLayout) map[string][]string {
 	names := map[string][]string{}
 	for _, edge := range layout.directEdges {
-		name := geometricHubEdgeName(edge)
+		name := constants.GetGeometricHubConnectionNameFor(edge[0], edge[1])
 		names[edge[0]] = append(names[edge[0]], name)
 		names[edge[1]] = append(names[edge[1]], name)
 	}
 	for _, label := range layout.hubPortalLabels {
-		name := "Portal-Hub-" + label
+		name := constants.GetPortalHubConnectionNameFor(label)
 		names[label] = append(names[label], name)
 		names[constants.HubZoneName] = append(names[constants.HubZoneName], name)
 	}
 	return names
-}
-
-func geometricHubEdgeName(edge [2]string) string {
-	return fmt.Sprintf("GeoHub-%s-%s", edge[0], edge[1])
 }
 
 func (this *GeometricHubTopologyService) createZones(
@@ -90,7 +86,7 @@ func (this *GeometricHubTopologyService) createZones(
 	tuning models.GenerationTuning) []entities.Zone {
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
-		hubContentName = "mandatory_content_hub"
+		hubContentName = constants.HubContentName
 	}
 	zones := []entities.Zone{
 		this.CreateHubZone(
@@ -126,7 +122,7 @@ func (this *GeometricHubTopologyService) createConnections(
 	for _, edge := range layout.directEdges {
 		zoneFrom := this.ZoneLabelProvider.CreateZoneName(edge[0], playerLabels)
 		connections = append(connections, variant_content.NewConnectionBuilder().
-			WithName(geometricHubEdgeName(edge)).
+			WithName(constants.GetGeometricHubConnectionNameFor(edge[0], edge[1])).
 			WithFrom(zoneFrom).
 			WithTo(this.ZoneLabelProvider.CreateZoneName(edge[1], playerLabels)).
 			WithConnectionTypeDirect().
@@ -142,7 +138,7 @@ func (this *GeometricHubTopologyService) createConnections(
 	portalRule := placement_rule.NewPlacementRuleBuilder().BuildNearCrossroadsRule(2)
 	for _, label := range layout.hubPortalLabels {
 		connections = append(connections, variant_content.NewConnectionBuilder().
-			WithName("Portal-Hub-"+label).
+			WithName(constants.GetPortalHubConnectionNameFor(label)).
 			WithFrom(constants.HubZoneName).
 			WithTo(this.ZoneLabelProvider.CreateZoneName(label, playerLabels)).
 			WithConnectionTypePortal().

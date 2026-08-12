@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -66,7 +67,7 @@ func (this *ChainTopologyService) createConnectionNames(
 			continue
 		}
 
-		connNames[i] = fmt.Sprintf("Chain-%s-%s", orderedLabels[i], orderedLabels[i+1])
+		connNames[i] = constants.GetChainConnectionNameFor(orderedLabels[i], orderedLabels[i+1])
 	}
 	return connNames
 }

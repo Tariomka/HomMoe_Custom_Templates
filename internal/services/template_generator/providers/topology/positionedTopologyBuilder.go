@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -80,7 +81,7 @@ func (this *PositionedTopologyBuilder) createConnectionNames(
 			continue
 		}
 
-		connectionName := fmt.Sprintf("Rnd-%s-%s", labelFrom, labelTo)
+		connectionName := constants.GetRandomConnectionNameFor(labelFrom, labelTo)
 		connectionNamesByZone[indexA] = append(connectionNamesByZone[indexA], connectionName)
 		connectionNamesByZone[indexB] = append(connectionNamesByZone[indexB], connectionName)
 	}

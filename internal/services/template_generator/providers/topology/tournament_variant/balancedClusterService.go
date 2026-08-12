@@ -259,7 +259,7 @@ func (this *BalancedClusterService) createConnectionNames(orderedLabels []string
 	for _, pair := range sortedPairs {
 		labelFrom := orderedLabels[pair[0]]
 		labelTo := orderedLabels[pair[1]]
-		connectionName := fmt.Sprintf("TBal-%s-%s", labelFrom, labelTo)
+		connectionName := constants.GetTournamentBalancedConnectionNameFor(labelFrom, labelTo)
 		connectionNamesByZone[pair[0]] = append(connectionNamesByZone[pair[0]], connectionName)
 		connectionNamesByZone[pair[1]] = append(connectionNamesByZone[pair[1]], connectionName)
 	}
@@ -302,13 +302,13 @@ func (this *BalancedClusterService) createConnections(
 		nameLookup[indexA]++
 		nameLookup[indexB]++
 
-		fromZone := constants.PlayerZonePrefix + labelFrom
+		fromZone := constants.GetPlayerZoneNameFor(labelFrom)
 		if labelFrom != playerLabel {
-			fromZone = constants.NeutralZonePrefix + labelFrom
+			fromZone = constants.GetNeutralZoneNameFor(labelFrom)
 		}
-		toZone := constants.PlayerZonePrefix + labelTo
+		toZone := constants.GetPlayerZoneNameFor(labelTo)
 		if labelTo != playerLabel {
-			toZone = constants.NeutralZonePrefix + labelTo
+			toZone = constants.GetNeutralZoneNameFor(labelTo)
 		}
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(connName).

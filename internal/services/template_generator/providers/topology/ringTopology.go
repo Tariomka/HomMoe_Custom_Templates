@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -69,7 +70,7 @@ func (this *RingTopologyService) createZones(
 			slices.Contains(playerLabels, orderedLabels[next]) {
 			continue
 		}
-		name := fmt.Sprintf("Ring-%s-%s", orderedLabels[i], orderedLabels[next])
+		name := constants.GetRingConnectionNameFor(orderedLabels[i], orderedLabels[next])
 		ringConnRight[i] = name
 		ringConnLeft[next] = name
 	}
@@ -112,7 +113,7 @@ func (this *RingTopologyService) createConnections(
 		zoneFrom := this.ZoneLabelProvider.CreateZoneName(labelFrom, playerLabels)
 		zoneTo := this.ZoneLabelProvider.CreateZoneName(labelTo, playerLabels)
 		connections = append(connections, variant_content.NewConnectionBuilder().
-			WithName(fmt.Sprintf("Ring-%s-%s", labelFrom, labelTo)).
+			WithName(constants.GetRingConnectionNameFor(labelFrom, labelTo)).
 			WithFrom(zoneFrom).
 			WithTo(zoneTo).
 			WithConnectionTypeDirect().

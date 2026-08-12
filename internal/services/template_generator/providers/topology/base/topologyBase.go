@@ -50,9 +50,9 @@ func (this *TopologyBase) CreateVariant(
 	}
 
 	if slices.Contains(playerLabels, firstLabel) {
-		orientationBuilder.WithZeroAngleZone(constants.PlayerZonePrefix + firstLabel)
+		orientationBuilder.WithZeroAngleZone(constants.GetPlayerZoneNameFor(firstLabel))
 	} else {
-		orientationBuilder.WithZeroAngleZone(constants.NeutralZonePrefix + firstLabel)
+		orientationBuilder.WithZeroAngleZone(constants.GetNeutralZoneNameFor(firstLabel))
 	}
 
 	return variant_content.NewVariantBuilder().
@@ -113,11 +113,11 @@ func (this *TopologyBase) CreateSpawnZone(input models.SpawnZoneCreationRequest)
 
 func (this *TopologyBase) CreateNeutralZone(input models.TopologyNeutralZoneCreationRequest) entities.Zone {
 	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreationRequest{
-		Name:                 constants.NeutralZonePrefix + input.Plan.Label,
+		Name:                 constants.GetNeutralZoneNameFor(input.Plan.Label),
 		Quality:              input.Plan.Quality,
 		Size:                 input.Size,
 		ConnectionNames:      input.ConnectionNames,
-		MandatoryContentName: "mandatory_content_neutral_" + input.Plan.Label,
+		MandatoryContentName: constants.GetNeutralContentNameFor(input.Plan.Label),
 		CastleCount:          input.Plan.CastleCount,
 		HoldCity:             input.HoldCity,
 		OutpostCount:         input.Tuning.AbandonedOutpostCount,

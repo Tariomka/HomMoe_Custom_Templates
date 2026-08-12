@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -31,8 +32,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	maxCount int,
-	neutralZones neutral_zone.Plans,
-) []entities.Connection {
+	neutralZones neutral_zone.Plans) []entities.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
 		return nil
@@ -55,7 +55,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 		fromName := this.zoneLabelProvider.CreateZoneName(fromLabel, playerLabels)
 		toName := this.zoneLabelProvider.CreateZoneName(toLabel, playerLabels)
 		connections = append(connections, variant_content.NewConnectionBuilder().
-			WithName(fmt.Sprintf("Portal-%s-%s", fromLabel, toLabel)).
+			WithName(constants.GetPortalConnectionNameFor(fromLabel, toLabel)).
 			WithFrom(fromName).
 			WithTo(toName).
 			WithConnectionTypePortal().
@@ -73,8 +73,7 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 	playerLabels []string,
 	zones []entities.Zone,
 	connections []entities.Connection,
-	tuning models.GenerationTuning,
-) []entities.Connection {
+	tuning models.GenerationTuning) []entities.Connection {
 	if len(playerLabels) < 2 {
 		return nil
 	}
@@ -87,7 +86,7 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 	}
 	var additionalConnections []entities.Connection
 	for _, label := range playerLabels {
-		zoneName := constants.PlayerZonePrefix + label
+		zoneName := constants.GetPlayerZoneNameFor(label)
 		zone, ok := linq.FromSlice(zones).First(func(candidate entities.Zone) bool {
 			return candidate.Name == zoneName
 		})
@@ -102,7 +101,11 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 			continue
 		}
 
-		fallbackName := createFallbackConnectionName(label, partner)
+		labelFrom, labelTo := label, partner
+		if label > partner {
+			labelFrom, labelTo = partner, label
+		}
+		fallbackName := constants.GetFallbackConnectionNameFor(labelFrom, labelTo)
 		if connectionNames[fallbackName] {
 			continue
 		}
@@ -110,7 +113,7 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 		additionalConnections = append(additionalConnections, variant_content.NewConnectionBuilder().
 			WithName(fallbackName).
 			WithFrom(zoneName).
-			WithTo(constants.PlayerZonePrefix+partner).
+			WithTo(constants.GetPlayerZoneNameFor(partner)).
 			WithConnectionTypeDirect().
 			WithGuardZone(zoneName).
 			WithSimTurnSquad().
@@ -160,7 +163,7 @@ func (this *TopologyConnectionService) CreateMissingConnections(
 		if labelA > labelB {
 			labelA, labelB = labelB, labelA
 		}
-		bridgeName := fmt.Sprintf("Bridge-%s-%s", labelA, labelB)
+		bridgeName := constants.GetBridgeConnectionNameFor(labelA, labelB)
 		if connectionNames[bridgeName] {
 			adjacency.Link(bestIndexes.X, bestIndexes.Y)
 			continue
@@ -198,7 +201,7 @@ func labelQuality(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 ) neutral_zone.Quality {
-	if constants.IsHubLabel(label) {
+	if zone_helpers.IsZoneNameHub(label) {
 		return neutral_zone.QualityHighest
 	}
 	if slices.Contains(playerLabels, label) {
@@ -255,13 +258,6 @@ func (this *TopologyConnectionService) buildZoneAdjacency(
 	return adjacency
 }
 
-func createFallbackConnectionName(label, partner string) string {
-	if label > partner {
-		label, partner = partner, label
-	}
-	return fmt.Sprintf("Fallback-%s-%s", label, partner)
-}
-
 func spawnZoneHasConnection(zone entities.Zone, connectionNames map[string]bool) bool {
 	connectionType := registry.GetRoadConnectionTypeValues().Connection
 	for _, road := range zone.Roads {
@@ -269,12 +265,13 @@ func spawnZoneHasConnection(zone entities.Zone, connectionNames map[string]bool)
 			return true
 		}
 	}
+
 	return false
 }
 
 func appendSpawnFallbackRoads(zones []entities.Zone, label, partner, fallbackName string) {
 	for _, playerLabel := range []string{label, partner} {
-		spawnZoneName := constants.PlayerZonePrefix + playerLabel
+		spawnZoneName := constants.GetPlayerZoneNameFor(playerLabel)
 		zoneIndex := slices.IndexFunc(zones, func(candidate entities.Zone) bool {
 			return candidate.Name == spawnZoneName
 		})
@@ -293,10 +290,12 @@ func findExistingConnectionName(zone entities.Zone) string {
 		if road.From.Type == connectionType && len(road.From.Args) > 0 {
 			return road.From.Args[0]
 		}
+
 		if road.To.Type == connectionType && len(road.To.Args) > 0 {
 			return road.To.Args[0]
 		}
 	}
+
 	return ""
 }
 

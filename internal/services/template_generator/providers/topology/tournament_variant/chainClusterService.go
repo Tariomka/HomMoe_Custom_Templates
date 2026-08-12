@@ -42,7 +42,7 @@ func (this *ChainClusterService) CreateClusterVariant(
 			ToSlice()...)
 	connectionNames := make([]string, len(chainLabels)-1)
 	for index := range connectionNames {
-		connectionNames[index] = fmt.Sprintf("Tourney-%s-%s", chainLabels[index], chainLabels[index+1])
+		connectionNames[index] = constants.GetTournamentChainConnectionNameFor(chainLabels[index], chainLabels[index+1])
 	}
 
 	zones := this.createZones(configuration, chainLabels, connectionNames, tuning, allNeutralZonePlans, playerIndex)
@@ -82,16 +82,16 @@ func (this *ChainClusterService) createConnections(
 		labelTo := chainLabels[index+1]
 		connectionBuilder := variant_content.NewConnectionBuilder().
 			WithName(name).
-			WithTo(constants.NeutralZonePrefix + labelTo).
+			WithTo(constants.GetNeutralZoneNameFor(labelTo)).
 			WithConnectionTypeDirect().
 			WithGuardValue(this.GetBorderGuardValue(labelFrom, labelTo, []string{playerLabel}, allNeutralZonePlans, tuning)).
 			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			WithGuardMatchGroup(fmt.Sprintf("tourney_guard_%s_%s", labelFrom, labelTo))
 
 		if index > 0 {
-			connectionBuilder = connectionBuilder.WithFrom(constants.NeutralZonePrefix + labelFrom)
+			connectionBuilder = connectionBuilder.WithFrom(constants.GetNeutralZoneNameFor(labelFrom))
 		} else {
-			connectionBuilder = connectionBuilder.WithFrom(constants.PlayerZonePrefix + labelFrom)
+			connectionBuilder = connectionBuilder.WithFrom(constants.GetPlayerZoneNameFor(labelFrom))
 		}
 
 		connections = append(connections, connectionBuilder.Build())

@@ -45,7 +45,7 @@ func (this *RingClusterService) CreateClusterVariant(
 	connNames := make([]string, ringCount)
 	for index, label := range ringLabels {
 		nextIndex := (index + 1) % ringCount
-		connNames[index] = fmt.Sprintf("TRing-%s-%s", label, ringLabels[nextIndex])
+		connNames[index] = constants.GetTournamentRingConnectionNameFor(label, ringLabels[nextIndex])
 	}
 
 	zones := this.createZones(configuration, ringLabels, connNames, tuning, allNeutralZonePlans, playerIndex)
@@ -135,18 +135,18 @@ func (this *RingClusterService) createConnections(
 			WithGuardMatchGroup(fmt.Sprintf("tourney_ring_guard_%s_%s", labelFrom, labelTo))
 
 		if currentIndex != 0 {
-			zoneFrom := constants.NeutralZonePrefix + labelFrom
+			zoneFrom := constants.GetNeutralZoneNameFor(labelFrom)
 			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
 		} else {
-			zoneFrom := constants.PlayerZonePrefix + labelFrom
+			zoneFrom := constants.GetPlayerZoneNameFor(labelFrom)
 			connectionBuilder.WithFrom(zoneFrom).WithGuardZone(zoneFrom)
 		}
 
 		if nextIndex != 0 {
-			zoneTo := constants.NeutralZonePrefix + labelTo
+			zoneTo := constants.GetNeutralZoneNameFor(labelTo)
 			connectionBuilder.WithTo(zoneTo)
 		} else {
-			zoneTo := constants.PlayerZonePrefix + labelTo
+			zoneTo := constants.GetPlayerZoneNameFor(labelTo)
 			connectionBuilder.WithTo(zoneTo)
 		}
 

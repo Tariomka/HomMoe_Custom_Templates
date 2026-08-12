@@ -53,7 +53,7 @@ func (this *ZoneFactory) CreateSpawnZone(input models.SpawnZoneCreationRequest) 
 	tuning := input.Tuning
 
 	return variant_content.NewZoneBuilder().
-		WithName(constants.PlayerZonePrefix + input.Label).
+		WithName(constants.GetPlayerZoneNameFor(input.Label)).
 		WithSize(normalizeZoneSize(input.Size)).
 		WithLayoutSpawns().
 		WithGuardCutoffValue(2000).
@@ -65,7 +65,7 @@ func (this *ZoneFactory) CreateSpawnZone(input models.SpawnZoneCreationRequest) 
 		WithGuardedContentPool(registry.GetGuardedContentPoolT2List()).
 		WithUnguardedContentPool(registry.GetUnguardedContentPoolT2List()).
 		WithResourcesContentPool([]string{registry.GetResourcesContentPoolValues().StartZonePoor}).
-		WithMandatoryContent("mandatory_content_side_" + input.Label).
+		WithMandatoryContent(constants.GetSideContentNameFor(input.Label)).
 		WithContentCountLimits(buildSideContentLimits()).
 		WithGuardedContentValue(tuning.ScaleByStructureDensity(200000 * tuning.ContentScale)).
 		WithGuardedContentValuePerArea(tuning.ScaleByStructureDensity(2000 * math.Sqrt(tuning.ContentScale))).
@@ -131,5 +131,6 @@ func normalizeZoneSize(zoneSize float64) float64 {
 	if math.IsNaN(zoneSize) || math.IsInf(zoneSize, 0) {
 		return 1.0
 	}
+
 	return helpers.RoundWithPrecision(math.Max(0.1, math.Min(zoneSize, 2.0)), 2)
 }

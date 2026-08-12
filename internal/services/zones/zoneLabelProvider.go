@@ -92,10 +92,10 @@ func (this *ZoneLabelProvider) GetHoldCityLabel(
 
 func (this *ZoneLabelProvider) CreateZoneName(label string, playerLabels []string) string {
 	if slices.Contains(playerLabels, label) {
-		return constants.PlayerZonePrefix + label
+		return constants.GetPlayerZoneNameFor(label)
 	}
 
-	return constants.NeutralZonePrefix + label
+	return constants.GetNeutralZoneNameFor(label)
 }
 
 func (this *ZoneLabelProvider) CreateOrderedZoneLabels(

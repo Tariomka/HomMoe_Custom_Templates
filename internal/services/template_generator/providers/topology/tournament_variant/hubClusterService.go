@@ -23,8 +23,7 @@ func NewHubClusterService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *HubClusterService {
+	connectionService base.ITopologyConnectionService) *HubClusterService {
 	return &HubClusterService{
 		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
@@ -36,14 +35,14 @@ func (this *HubClusterService) CreateClusterVariant(
 	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
-	hubName := constants.HubZonePrefix + playerLabel
+	hubName := constants.GetHubZoneNameFor(playerLabel)
 	spokeLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).
 			SelectString(func(x neutral_zone.Plan) string { return x.Label }).
 			ToSlice()...)
 	spokeConnNames := make([]string, len(spokeLabels))
 	for index, label := range spokeLabels {
-		spokeConnNames[index] = fmt.Sprintf("THubSpoke-%s-%s", playerLabel, label)
+		spokeConnNames[index] = constants.GetTournamentHubAndSpokeConnectionNameFor(playerLabel, label)
 	}
 
 	zones := this.createZones(
@@ -63,7 +62,7 @@ func (this *HubClusterService) createZones(
 	var zones []entities.Zone
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
-		hubContentName = "mandatory_content_hub"
+		hubContentName = constants.HubContentName
 	}
 	hubZone := this.CreateHubZone(
 		hubName, spokeConnNames, tuning, false, configuration.ZoneConfiguration.HubZoneSize,
@@ -96,10 +95,10 @@ func (this *HubClusterService) createConnections(
 			WithGuardMatchGroup(fmt.Sprintf("tourney_hub_guard_%s_%s", playerLabel, spokeLabel))
 
 		if index != 0 {
-			spokeZone := constants.NeutralZonePrefix + spokeLabel
+			spokeZone := constants.GetNeutralZoneNameFor(spokeLabel)
 			connectionBuilder = connectionBuilder.WithTo(spokeZone).WithGuardZone(spokeZone)
 		} else {
-			spokeZone := constants.PlayerZonePrefix + spokeLabel
+			spokeZone := constants.GetPlayerZoneNameFor(spokeLabel)
 			connectionBuilder = connectionBuilder.WithTo(spokeZone).WithGuardZone(hubName)
 		}
 
@@ -111,19 +110,19 @@ func (this *HubClusterService) createConnections(
 		nextIndex := (currentIndex + 1) % len(spokeLabels)
 		labelTo := spokeLabels[nextIndex]
 		connectionBuilder := variant_content.NewConnectionBuilder().
-			WithName(fmt.Sprintf("THubRing-%s-%s-%s", playerLabel, label, labelTo)).
+			WithName(constants.GetTournamentHubRingConnectionNameFor(playerLabel, label, labelTo)).
 			WithConnectionTypeProximity()
 
 		if currentIndex != 0 {
-			connectionBuilder = connectionBuilder.WithFrom(constants.NeutralZonePrefix + label)
+			connectionBuilder = connectionBuilder.WithFrom(constants.GetNeutralZoneNameFor(label))
 		} else {
-			connectionBuilder = connectionBuilder.WithFrom(constants.PlayerZonePrefix + label)
+			connectionBuilder = connectionBuilder.WithFrom(constants.GetPlayerZoneNameFor(label))
 		}
 
 		if nextIndex != 0 {
-			connectionBuilder = connectionBuilder.WithTo(constants.NeutralZonePrefix + labelTo)
+			connectionBuilder = connectionBuilder.WithTo(constants.GetNeutralZoneNameFor(labelTo))
 		} else {
-			connectionBuilder = connectionBuilder.WithTo(constants.PlayerZonePrefix + labelTo)
+			connectionBuilder = connectionBuilder.WithTo(constants.GetPlayerZoneNameFor(labelTo))
 		}
 
 		connections = append(connections, connectionBuilder.Build())

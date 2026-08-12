@@ -37,11 +37,11 @@ a decision the owner already made.
 
 **Item count: 0 🔴 · 6 🟠 · 10 🟡 · 3 ⚪ (19 total).**
 
-**✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) —
-**4 done, 15 open.**
+**✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
+§3.1, §3.2 and §3.4 (batch C) — **7 done, 12 open.**
 
-**Baselines to hold (AGENTS.md §2.3):** unit coverage **72.5 %**, floor
-**69.3 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
+**Baselines to hold (AGENTS.md §2.3):** unit coverage **72.6 %**, floor
+**72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
 `integration_test` and `integration_test,gui`.
 
@@ -831,7 +831,10 @@ zone names/prefixes and labels
 ([mapSizes.go](../internal/common/mapSizes.go)), permissions
 ([permissions.go](../internal/common/constants/permissions.go)).
 
-### 3.1 🟡 `"mandatory_content_hub"` is repeated in four production files
+### 3.1 ✅ DONE 🟡 `"mandatory_content_hub"` is repeated in four production files
+
+**Resolved 2026-08-12 (batch C)** together with §3.2 — see the note at the end
+of §3.2.
 
 **Evidence.**
 [mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L120)
@@ -869,7 +872,7 @@ change to the constant's value. Add
 `test/unit/internal/common/constants/mandatoryContentNames/` only if a helper
 function (not a bare constant) ends up being introduced.
 
-### 3.2 🟡 `"mandatory_content_neutral_"` / `"mandatory_content_side_"` prefixes repeated
+### 3.2 ✅ DONE 🟡 `"mandatory_content_neutral_"` / `"mandatory_content_side_"` prefixes repeated
 
 **Evidence.** Neutral prefix:
 [mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L61),
@@ -885,6 +888,33 @@ Side prefix:
 `SideMandatoryContentName(label string) string`) so the concatenation itself is
 written once; if so, they get a mirrored unit-test folder per AGENTS.md §4.6.
 
+**Resolved 2026-08-12 (batch C)**, §3.1 and §3.2 together, with the helper
+option taken and a naming convention the owner set: a name **builder** is
+`Get<X>For(label)` — `Get` separates it from the constant, `For` says it derives
+a new name rather than returning one.
+
+- [contentNames.go](../internal/common/constants/contentNames.go) —
+  `HubContentName`, `NeutralContentPrefix`, `SideContentPrefix`,
+  `GetNeutralContentNameFor`, `GetSideContentNameFor`. No
+  `"mandatory_content_*"` literal remains outside this file; test-side literals
+  were deliberately left in place.
+- [zoneNames.go](../internal/common/constants/zoneNames.go) gained the matching
+  `GetHubZoneNameFor` / `GetPlayerZoneNameFor` / `GetNeutralZoneNameFor`, and
+  every production `XZonePrefix + label` now goes through them.
+- The prefix **checks** were routed to the pre-existing
+  `zone_helpers.IsZoneName*` predicates, which also let
+  `internal/common/constants/hubLabel.go` (`IsHubLabel`, added in batch B) be
+  deleted in favour of `zone_helpers.IsZoneNameHub`.
+- Scope the owner added on review: connection names got the same treatment in
+  [connectionNames.go](../internal/common/constants/connectionNames.go) — 19
+  unexported prefixes plus `Get*ConnectionNameFor` builders, wired through the
+  chain/ring/web/geometric/tournament topologies.
+
+Not converted, deliberately: the exact-`"Hub"`-vs-`"Hub-"` distinction in
+[layoutRingHub.go](../internal/services/preview_service/layoutRingHub.go#L32-L43),
+where `IsZoneNameHub` would conflate the shared hub with a per-player hub and
+change the preview layout.
+
 ### 3.3 ✅ DONE 🟡 Portal guard `25000` magic literal
 
 **Evidence.**
@@ -899,7 +929,7 @@ for its meaning, not its number.
 
 **Resolved 2026-08-12 (batch B)** by §1.3; no constant was needed.
 
-### 3.4 🟡 Foothold placement distances are inline literals
+### 3.4 ✅ DONE 🟡 Foothold placement distances are inline literals
 
 **Evidence.**
 [mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L161-L189):
@@ -932,6 +962,14 @@ test per new accessor; the existing
 `test/unit/internal/services/template_generator/providers/mandatoryContentProvider/`
 tests must keep asserting the *numeric* values so a constant rename cannot
 silently retune placement.
+
+**Resolved 2026-08-12 (batch C).**
+[footholdDistancePresets.go](../internal/common/common_distances/footholdDistancePresets.go)
+exposes `GetFootholdDistancePresets()` returning a named struct
+(`Crossroads`, `NearMainCastle`, `NearSecondCastle`); the bounds are unchanged
+and the presets are deliberately **not** in the user-facing
+`GetContentDistancePresets` catalogue. The new `Name` fields cannot reach the
+output because `WithDistance` copies only `Min`/`Max`.
 
 ---
 
@@ -1321,7 +1359,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | --- | --- | --- |
 | ✅ **A** | §1.4 | **Done 2026-08-12.** Two-line stderr fix + a `test_observations.md` entry. |
 | ✅ **B** | §1.2 → §1.3 | **Done 2026-08-12.** No golden-template churn was required — the generator tests do not pin hub or portal guard values. |
-| **C** | §3.1, §3.2, §3.4 | Constant extraction, mechanical, no behaviour change. §3.3 is gone — B landed. |
+| ✅ **C** | §3.1, §3.2, §3.4 | **Done 2026-08-12.** Extended on review with `constants/connectionNames.go` (connection-name builders). No behaviour change. |
 | **D** | §1.1 | Deep copy + regression tests. Benchmark before/after. |
 | **E** | §4.1 | Save To rename. Touches the file-explorer integration tests — do **before** §5.3. |
 | **F** | §5.3 | File-explorer pointer/hidden-file tests, in the file §4.1 just rewrote. |
@@ -1339,7 +1377,8 @@ done at any time — it needs a CI artifact, not a code freeze.
 
 **Coverage note.** Batches C, D, F, H and J add tests; B, E and G mostly move
 existing behaviour. Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **69.3 %** and the current figure is **72.5 %**.
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **72.6 %**
+(72.5 % through batch B; batch C added the helper tests).
 
 ---
 
@@ -1354,7 +1393,7 @@ existing behaviour. Run the coverage task before and after **every** batch
 | Unit | `go test ./test/unit/... -count=1` | pass |
 | Integration | `go test -tags=integration_test ./test/integration/... -count=1` | pass |
 | GUI integration | `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (needs GPU) |
-| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 69.3 %**, currently **72.5 %** |
+| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **72.6 %** |
 | Lint | `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
 | Format | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | Wire | `wire diff ./internal/composition/...` | no diff |
