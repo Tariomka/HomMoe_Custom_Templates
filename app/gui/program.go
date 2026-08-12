@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -37,6 +38,8 @@ func eventLoop(version string) {
 		switch event := window.Event().(type) {
 		case app.DestroyEvent:
 			if event.Err != nil {
+				// stderr directly: the default slog handler discards unless -with-logging is set.
+				fmt.Fprintln(os.Stderr, "Window destroyed with error:", event.Err)
 				slog.Error("Window destroyed with error", slog.String("error", event.Err.Error()))
 				os.Exit(1)
 			}

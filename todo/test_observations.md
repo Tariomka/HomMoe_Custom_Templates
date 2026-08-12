@@ -5,6 +5,17 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
 
 ## Gio-UI-heavy code (integration-suite territory, no unit tests)
 
+- app/gui/program.go - `StartApplication`, `eventLoop` and
+  `getAndConfigureWindow` are the Gio bootstrap: they create a real
+  `app.Window`, block in `app.Main`, read `os.Args` process-wide and call
+  `os.Exit` from the event loop, so none of them can be driven from a unit test.
+  The `app.DestroyEvent` error branch (which since backlog item §1.4 also writes
+  the failure to stderr, because the default `slog` handler discards unless
+  `-with-logging` is passed) is reachable only when Gio itself fails to create
+  or maintain the window - no GPU, or missing X/Wayland libraries - which cannot
+  be provoked in-process. Making it testable would mean returning the error to
+  main.go instead of exiting; the owner deferred that (see §1.4).
+
 - app/gui/widgets/buttonWidget.go - all button constructors (and the private
   `addButtonSemantics` helper added 2026-07-12 for button-position debug
   logging) need a `layout.Context` + `material.Theme` text shaper to lay out;
