@@ -3,12 +3,12 @@ module github.com/Tariomka/hommoe_custom_templates
 go 1.26.5
 
 require (
-	gioui.org v0.10.0
+	gioui.org v0.10.1
 	github.com/andygrunwald/vdf v1.1.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/goforj/wire v1.2.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/sys v0.46.0
+	golang.org/x/sys v0.47.0
 )
 
 require (
