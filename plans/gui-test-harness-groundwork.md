@@ -215,12 +215,12 @@ the regenerated goldens - which is the real proof the masks cover every unstable
 
 ## Phase 4: Regenerate goldens and confirm against CI
 
-Status: In progress
+Status: Complete
 
 - [x] Regenerate the four goldens **locally on a real GPU** with the *"Go: Update UI Integration tests snapshots"* task. Never in CI.
-- [ ] Hand the four regenerated goldens to the owner for review.
-- [ ] Ask the owner to run CI once; do not run it.
-- [ ] If the CI residual exceeds 0.05 %, pin the fraction threshold to the measured floor and record the measurement in the constant's comment.
+- [x] Hand the four regenerated goldens to the owner for review.
+- [x] Ask the owner to run CI once; do not run it.
+- [x] If the CI residual exceeds 0.05 %, pin the fraction threshold to the measured floor and record the measurement in the constant's comment. Not needed - see below.
 
 ### Verification Plan
 
@@ -229,7 +229,20 @@ Status: In progress
 
 ### Phase Summary
 
-_(write when phase completes)_
+The owner reviewed the four regenerated goldens and ran the pipeline: **CI is green on
+ubuntu + Xvfb + Mesa llvmpipe against goldens generated locally on a real GPU**, with no
+`gui-snapshot-failures` artifact produced.
+
+That closes the loop on both root causes at once. `text.NoSystemFonts()` plus the four glyph
+substitutions removed the accumulating layout drift entirely, and the llvmpipe anti-aliasing
+difference that remains - the 0.75x coverage documented in Phase 2 - stays under both gates:
+its per-pixel deltas peak near 40-45, below the 64 tolerance, so it contributes almost nothing
+to the changed-pixel fraction and its mean sits under 0.25 %.
+
+No threshold pinning was required. `DefaultMeanThreshold = 0.0025` and
+`DefaultChangedPixelThreshold = 0.0005` are the values the suite runs on, and both were
+measured rather than guessed - so a future CI failure means a real rendering change, not a
+tolerance that was widened until the red went away.
 
 ## Phase 5: Adjacent cleanups requested with this batch
 
@@ -367,11 +380,10 @@ dimmer" from "a third of the frame moved". The new second gate scores those same
   intent-revealing `GetHubSpokeConnectionNameFor`, and the `IsClusterHubZoneName` /
   `IsSharedHubZoneName` pair that stops one predicate standing in for two.
 
-**What is left for the owner.** The four goldens were regenerated locally on a real GPU
-(never in CI, per instruction) and need review; then one CI run to confirm the residual sits
-under the new gate. If it does not, the fix is to pin `DefaultChangedPixelThreshold` to the
-measured floor and record that measurement in the constant's comment - not to widen the mean
-gate again.
+**Outcome.** The four goldens were regenerated locally on a real GPU (never in CI, per
+instruction), reviewed by the owner, and **the pipeline is green** - the software renderer
+now agrees with a real-GPU reference on every unmasked pixel, within tolerances that were
+measured rather than tuned until the red went away. No threshold pinning was needed.
 
 ## Deployment Plan
 
@@ -391,14 +403,13 @@ the next build. Nothing here is staged or committed - that is the owner's step (
    (`app/gui/**` plus its guard test) as one commit, the harness changes
    (`test/test_helpers/**`, goldens, comparer tests) as a second, the naming cleanups
    (`internal/**` plus their tests) as a third.
-4. **Run CI once** on the branch. Watch `run-gui-integration-tests`.
-   - Green: nothing further to do.
-   - Red: download the `gui-snapshot-failures` artifact. The failure message now names both
-     measurements and both limits, so read the `changed pixels` figure, set
-     `DefaultChangedPixelThreshold` in
-     [comparer.go](../test/test_helpers/integration_common/snapshot/comparer.go) just above
-     it, and record the measured value in the constant's comment. Do **not** raise
-     `DefaultMeanThreshold` - that is the gate that hid this bug.
+4. **Run CI once** on the branch, watching `run-gui-integration-tests`. **Done - green.**
+   Should it ever go red later, download the `gui-snapshot-failures` artifact: the failure
+   message names both measurements and both limits, so read the `changed pixels` figure, set
+   `DefaultChangedPixelThreshold` in
+   [comparer.go](../test/test_helpers/integration_common/snapshot/comparer.go) just above it,
+   and record the measured value in the constant's comment. Do **not** raise
+   `DefaultMeanThreshold` - that is the gate that hid this bug.
 5. **Do not regenerate goldens in CI** under any circumstance. CI is a software renderer; it
    must never become the reference.
 6. **Next batch** is backlog §5.4 items d-f (per-tab and per-dialog handlers, scrolling
