@@ -22,7 +22,7 @@ permissions:
 env:
   windows_binary: HeroesOldenEra_CustomTemplates_win_x64.exe
   linux_binary: HeroesOldenEra_CustomTemplates_linux_x64
-  GO_VERSION: 1.26.5
+  GO_VERSION: 1.26.6
 
 jobs:
   build:
