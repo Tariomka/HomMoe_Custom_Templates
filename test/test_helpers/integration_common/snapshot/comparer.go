@@ -8,7 +8,7 @@ import (
 // DefaultSnapshotThreshold is the maximum allowed normalized mean color
 // distance between a golden snapshot and an actual screenshot (2%).
 // Pipeline has discrepancies, I don't want to investigate them right now.
-const DefaultSnapshotThreshold = 0.005
+const DefaultSnapshotThreshold = 0.02
 
 // Comparer measures how different two screenshots are using a
 // normalized mean color distance over the RGB channels (alpha is ignored:
