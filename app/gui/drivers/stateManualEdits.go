@@ -79,7 +79,7 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 
 	if err != nil && errors.Is(err, common_errors.ErrProvidedTemplateInvalid) {
 		this.SetStatus(
-			fmt.Sprintf("Unable to update template, possibly because template was not generated. ⚠ Error: %v", err),
+			fmt.Sprintf("Unable to update template, possibly because template was not generated. ‼ Error: %v", err),
 			true)
 		return
 	}
@@ -88,7 +88,7 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 	if err != nil {
 		this.SetStatus(
 			fmt.Sprintf(
-				"Applied %d zones and %d connections. ⚠ Error: %v; fix before export.",
+				"Applied %d zones and %d connections. ‼ Error: %v; fix before export.",
 				len(zones), len(connections), err),
 			true)
 		return

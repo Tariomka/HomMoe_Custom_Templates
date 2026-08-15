@@ -70,7 +70,7 @@ func (this *HubTopologyService) createZones(
 	neutralZones neutral_zone.Plans) []entities.Zone {
 	hubConns := make([]string, len(outerLabels))
 	for index, label := range outerLabels {
-		hubConns[index] = constants.HubZonePrefix + label
+		hubConns[index] = constants.GetHubSpokeConnectionNameFor(label)
 	}
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
@@ -85,7 +85,7 @@ func (this *HubTopologyService) createZones(
 	}
 
 	for _, label := range outerLabels {
-		spokeConnectionNames := []string{constants.HubZonePrefix + label}
+		spokeConnectionNames := []string{constants.GetHubSpokeConnectionNameFor(label)}
 		playerIndex := slices.Index(playerLabels, label)
 		zones = append(zones, this.CreateClusterZone(
 			configuration, label, spokeConnectionNames, playerIndex, playerIndex >= 0, false, tuning, neutralZones))
@@ -105,7 +105,7 @@ func (this *HubTopologyService) createConnections(
 		outerZone := this.ZoneLabelProvider.CreateZoneName(label, playerLabels)
 		connections = append(connections,
 			variant_content.NewConnectionBuilder().
-				WithName(constants.HubZonePrefix+label).
+				WithName(constants.GetHubSpokeConnectionNameFor(label)).
 				WithFrom(constants.HubZoneName).
 				WithTo(outerZone).
 				WithConnectionTypeDirect().

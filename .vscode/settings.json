@@ -115,6 +115,10 @@
         "*.golden": "imagePreview.previewEditor",
 		"*.failure": "imagePreview.previewEditor",
     },
+    "workbench.diffEditorAssociations": {
+        "*.golden": "imagePreview.previewEditor",
+		"*.failure": "imagePreview.previewEditor",
+    },
     "chat.tools.terminal.autoApprove": {
         "golangci-lint-v2": true,
         "gofmt": true,
@@ -124,5 +128,6 @@
         "go test": true,
         "go tool": true,
         "go vet": true,
+        "go run ./cmd/testlayoutcheck": true,
     },
 }

@@ -24,7 +24,7 @@ func (this *FileExplorerDialog) getHeaderWidget(theme *material.Theme) layout.Wi
 
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(widgets.NewButtonWidget(theme, "Up", &this.upBtn, upDisabled)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "← Back", &this.upBtn, upDisabled)),
 			widgets.NewDefaultComponentSpacer(),
 			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.pathEd, "Current directory", true)),
 			widgets.NewDefaultComponentSpacer(),

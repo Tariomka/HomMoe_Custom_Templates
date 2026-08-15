@@ -104,8 +104,8 @@ func (this *AppRunner) validateScreenshot(goldenPath string, screenshot *image.R
 	if !this.comparer.Matches(difference) {
 		this.saveFailure(failurePath, screenshot)
 		this.tb.Errorf(
-			"snapshot %d differs from %s by %.3f%% (allowed < %.3f%%); actual saved to %s",
-			this.actionCount, goldenPath, difference*100, this.comparer.Threshold*100, failurePath)
+			"snapshot %d differs from %s: %s; actual saved to %s",
+			this.actionCount, goldenPath, this.comparer.Describe(difference), failurePath)
 		return
 	}
 

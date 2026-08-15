@@ -205,7 +205,7 @@ func (this *BonusesPanel) getEntryRowWidget(
 
 						return widgets.NewDimmedLabelWidget(theme, trailing)(gtx)
 					}),
-					layout.Rigid(widgets.NewButtonWidget(theme, "✕", removeBtn, false)),
+					layout.Rigid(widgets.NewButtonWidget(theme, "X", removeBtn, false)),
 				)
 			},
 		)

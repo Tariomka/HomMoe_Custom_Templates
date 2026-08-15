@@ -91,7 +91,7 @@ func (this *ZoneContentDialog) Body(gtx layout.Context, theme *material.Theme) (
 	widgetsList := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-				layout.Rigid(widgets.NewButtonWidget(theme, "↺  Reset to default", &this.btnReset, false)),
+				layout.Rigid(widgets.NewButtonWidget(theme, "Reset to default", &this.btnReset, false)),
 			)
 		},
 		this.zcMines.Layout(theme),

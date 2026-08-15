@@ -352,7 +352,7 @@ func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index in
 					layout.Rigid(widgets.NewLabelBuilder(theme).WithSizeBig().WithText(name).WithColorDefault().Build),
 					widgets.NewDefaultComponentSpacer(),
 					layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, school)),
-					layout.Rigid(widgets.NewButtonWidget(theme, "✕", &this.spellRemoveBtns[index], false)),
+					layout.Rigid(widgets.NewButtonWidget(theme, "X", &this.spellRemoveBtns[index], false)),
 				)
 			})
 	}

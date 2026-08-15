@@ -3,10 +3,9 @@ package preview_service
 import (
 	"image"
 	"math"
-	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 )
 
 // layoutRingOrHub renders the structured topologies (Default, HubAndSpoke,
@@ -29,7 +28,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 	// Multi-hub tournament layout: clusters fan out around the canvas.
 	var hubIndices []int
 	for i, zone := range zones {
-		if strings.HasPrefix(zone.Name, constants.HubZonePrefix) {
+		if zone_helpers.IsClusterHubZoneName(zone.Name) {
 			hubIndices = append(hubIndices, i)
 		}
 	}
@@ -40,7 +39,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 
 	hubIdx := -1
 	for i, zone := range zones {
-		if zone.Name == constants.HubZoneName {
+		if zone_helpers.IsSharedHubZoneName(zone.Name) {
 			hubIdx = i
 			break
 		}

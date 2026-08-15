@@ -141,7 +141,7 @@ func (this *DialogHost) getHeaderWidget(theme *material.Theme) layout.Widget {
 				return material.Clickable(gtx, &this.closeBtn, func(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(constants.DefaultPaddingSmall-2).
 						Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-							label := material.Body1(theme, "✕")
+							label := material.Body1(theme, "X")
 							label.Color = themes.ColorsBase.TextDim
 							if this.closeBtn.Hovered() {
 								label.Color = themes.ColorsBase.AccentBright

@@ -29,7 +29,7 @@ import (
 // tier-coloured nodes and connections as curved lines, supports drag-to-create
 // and right-click-delete for connections, lets the user add, move and delete
 // zones, and exposes a property panel for the selected edge or zone. It works
-// on private copies of the zone and connection lists; Apply commits, Cancel/✕
+// on private copies of the zone and connection lists; Apply commits, Cancel/X
 // discards.
 type ZoneEditorDialog struct {
 	zoneEditorGeometryState
@@ -239,7 +239,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 		connections := derefConnections(this.working)
 		graph := this.zoneHandler.DescribeZoneEditorGraph(this.zones, connections)
 		if graph.HasErrors {
-			label := material.Body2(theme, "⚠ A connection references a missing zone - fix before export.")
+			label := material.Body2(theme, "‼ A connection references a missing zone - fix before export.")
 			label.Color = themes.ColorsBase.Error
 			label.TextSize = unit.Sp(12)
 			label.MaxLines = 2

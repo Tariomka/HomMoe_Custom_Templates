@@ -87,3 +87,12 @@ func GetRandomConnectionNameFor(labelFrom, labelTo string) string {
 func GetRingConnectionNameFor(labelFrom, labelTo string) string {
 	return ringConnectionPrefix + labelFrom + "-" + labelTo
 }
+
+// GetHubSpokeConnectionNameFor names the connection between the hub zone and
+// the cluster zone with the given label. It deliberately reuses HubZonePrefix:
+// the emitted string is identical to GetHubZoneNameFor's, and changing it would
+// change generated templates. Only the intent differs, which is why the builder
+// lives here with the other connection names.
+func GetHubSpokeConnectionNameFor(label string) string {
+	return HubZonePrefix + label
+}
