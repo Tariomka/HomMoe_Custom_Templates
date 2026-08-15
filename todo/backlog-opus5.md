@@ -1248,12 +1248,41 @@ file. Do §4.1 first or expect a merge conflict.
 
 ### 5.4 ✅ DONE 🟡 The GUI handler framework is a design comment, not a design
 
-> **Landed in batches L ((a)–(c)) and M ((d)–(f)).** The as-built design is in
-> [plans/gui-handler-framework.md](../plans/gui-handler-framework.md), including
-> the measured coordinate table, the empirical notes below, and the corrections
-> this section needed. (g) was kept as a standing guideline rather than a task.
-> Read the plan before extending the handlers; the paragraphs below are the
-> original diagnosis, annotated.
+> **Landed in batches L ((a)–(c)) and M ((d)–(f)).** Everything below is the
+> original diagnosis, annotated with what was actually built. The plan files that
+> tracked the work have been deleted, so **this section is now the only record** —
+> keep it self-contained. (g) was kept as a standing guideline rather than a task.
+>
+> **Re-measuring the coordinates** — the one procedure that is unrecoverable
+> otherwise. Do this whenever a UI change moves a widget; never nudge a constant
+> by trial and error:
+>
+> 1. Add a temporary accessor on `AppRunner` returning the last frame's `*op.Ops`,
+>    and a temporary `//go:build integration_test` test that drives the UI to the
+>    state you want to measure.
+> 2. In that test build a **fresh** `input.Router`, then
+>    `replay.Frame(ops); nodes := replay.AppendSemantics(nil)`. The flat slice
+>    holds every node once, with `Desc.Bounds` in absolute window coordinates at
+>    the harness geometry (1600×900, `PxPerDp = 1`).
+> 3. **Only `Desc.Class == semantic.Button` nodes have trustworthy bounds.**
+>    `material.CheckBox` and `dropdownSelector.getTriggerWidget` never call
+>    `utils.AddButtonSemantics`, so they emit no button node at all. For those,
+>    read the **neighbouring label** node's `bounds.Min`, which is correct — its
+>    `Max` and `center` are garbage (values like `1000072`) because the replay
+>    router never pops the clip stack.
+> 4. **Confirm every non-button coordinate by driving it** and asserting the state
+>    change it causes. A position read from a label is a guess until it clicks the
+>    thing you meant.
+> 5. Delete the probe accessor and the probe test.
+>
+> Constants are points **inside** a widget, not exact centres: a tab button's
+> bounds shift 1–3 px depending on which tab is selected (`General` starts at
+> x = 612 when selected, x = 610 otherwise).
+>
+> **Regenerating goldens.** Locally, on a real GPU, **never in CI** (§5.5), with
+> `go test -tags='integration_test,gui' -run '<TestName>' ./test/integration/gui/...
+> -count=1 -update`. Always name the tests — a bare `-update` rewrites goldens you
+> did not intend to touch. `.golden` files are PNGs; copy to `.png` to view.
 
 **Evidence.** [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106)
 carries a 46-line first-person design note above a struct that currently
@@ -1300,13 +1329,9 @@ edit rather than a hunt. Only compute at runtime where a value genuinely varies
 (slider value → x, list row index → y).
 
 > *Done.* The literal-but-centralised approach held, with one revision: rather
-> than deriving from `ui.go`, every coordinate was **measured** by replaying the
-> frame's ops through a fresh `input.Router` and reading `AppendSemantics`, then
-> confirmed by driving the widget and asserting the state change. Only
-> `semantic.Button` nodes have trustworthy bounds; checkboxes and dropdown
-> triggers emit none, so their positions came from the neighbouring label node's
-> `bounds.Min` (its `Max` is corrupted by clip areas the replay router never
-> pops). The dropdown row pitch is the one runtime-computed value.
+> than deriving from `ui.go`, every coordinate was **measured** and then confirmed
+> by driving the widget — see the procedure at the top of this section. The
+> dropdown row pitch is the one runtime-computed value.
 
 **(c) ✅ Narrow the mask.** `setRandomTopology` blanks
 `image.Rect(WindowWidth-470, 0, WindowWidth, WindowHeight)` — a 470 px column
@@ -1317,6 +1342,17 @@ topology), the output-directory field (differs per machine/OS/Steam layout —
 see AGENTS.md §2.7), and the timestamp/path inside the status message. Derive
 the preview rect from `DefaultPreviewWidthMaximum` (440) rather than the
 unexplained 470.
+
+> *Done.* **Masked area 423 000 → 208 000 px**, putting the canvas border, the
+> legend, the template name, Browse/Reveal and the Generate and Save Template
+> buttons back under test. Exactly three regions are nondeterministic:
+> preview canvas `(1163,203)-(1577,627)`, status block `(1157,726)-(1583,775)`,
+> output directory `(1157,809)-(1583,838)`.
+>
+> **How to re-measure a mask** (reusable): capture two *unmasked* runs of the
+> same action and diff them — the differing pixels **are** the nondeterministic
+> regions. Everything outside those three rectangles differed only by
+> anti-aliasing noise of delta 1–8.
 
 **(d) ✅ Per-tab and per-dialog handlers.** `baseHandler` gains
 `ClickGeneralTab() *generalTabHandler` etc.; tab handlers embed `baseHandler`
@@ -1402,8 +1438,31 @@ section so the design lives in one place.
 ### 5.5 ✅ DONE 🟡 GUI snapshots differ between local and CI, and the tolerance hiding it also hides regressions
 
 > **Landed in batch L.** Steps 1 and 3 are done; step 2 was **rejected by the
-> owner**. Details are in
-> [plans/gui-test-harness-groundwork.md](../plans/gui-test-harness-groundwork.md).
+> owner**. The plan file that tracked the work has been deleted, so this section
+> is the only record — keep it self-contained.
+>
+> **Root cause was a real production bug, not a rasterizer difference.**
+> `themes.NewTheme` built its shaper without `text.NoSystemFonts()`, so any glyph
+> missing from `gofont.Collection()` was resolved through whatever face the OS
+> happened to offer. `◆` (U+25C6), used in **every** section header, is one such
+> glyph; CI's substitute face is 1 px shorter and 4 px narrower, and the shortfall
+> **accumulates** down the panel. Evidence, from a per-band best-offset search:
+> the checkbox rows at y 430–580 scored **1.2957 %** at zero offset and
+> **0.0029 % at dy = −3**. Fixed by adding `text.NoSystemFonts()` and substituting
+> seven glyphs.
+>
+> **Glyph inventory** (verify before using a new symbol in `app/`):
+> missing from `gofont.Collection()` — `◆ ✕ ↺ ⚠ ✘ ✗ ↻ ⟲ ↩ ⚡ △ ◇ ✦ ⚔`;
+> present — `♦ ◊ × ← ‼ ▼ ▲ → · “ ” ⌂ ± … –`. Substitutions applied:
+> `◆`→`♦`, `✕`→`×`, `↺`→`←`, `⚠`→`‼`. This is enforced, not remembered:
+> `newTheme_test.go` AST-scans every string and char literal under `app/` and
+> fails on any rune the bundled fonts cannot render.
+>
+> **CI is verified green** against goldens generated locally on a real GPU, with
+> no pinning. llvmpipe's residual difference — exactly 0.75× the AA coverage of a
+> real GPU inside rounded-rect clips, backgrounds bit-identical — peaks at a
+> per-pixel delta of ~40–45, below the 64 tolerance, so it barely registers.
+> **Treat a future GUI-suite failure as a real rendering change, not as noise.**
 
 **Evidence.** The last paragraph of the same comment: *"for some reason there
 is a difference of some of the rendered text between local … and CI (looks like
@@ -1441,8 +1500,8 @@ regressions with it, which quietly weakens every test §5.1–§5.4 will add.
 
    > *Done, and the hypothesis was **disproved**.* Consecutive frames for the
    > same action are identical; `captureScreenshot` is not racing the frame. The
-   > difference is genuine llvmpipe text anti-aliasing, so no capture-timing fix
-   > was made.
+   > cause was the font fallback described above, so no capture-timing fix was
+   > made. Do not resurrect this theory.
 
 2. ~~**If it is genuinely llvmpipe text anti-aliasing**, make CI the reference:
    regenerate goldens in the CI environment (run the update job, download the
@@ -1461,9 +1520,17 @@ regressions with it, which quietly weakens every test §5.1–§5.4 will add.
    [test/unit/test/test_helpers/integration_common/snapshot/comparer/](../test/unit/test/test_helpers/integration_common/snapshot/comparer/)
    alongside.
 
-   > *Done.* The comparer is now two-gate: `DefaultMeanThreshold` 0.0025 (down
-   > from 0.02) **and** `DefaultChangedPixelThreshold` 0.0005 of pixels exceeding
-   > `DefaultPixelTolerance` 64. Both are configurable and unit-tested.
+   > *Done.* The comparer is now two-gate: `Compare` returns
+   > `Difference{MeanDistance, ChangedPixelFraction}` judged against
+   > `DefaultMeanThreshold` 0.0025 (down from 0.02), `DefaultPixelTolerance` 64
+   > and `DefaultChangedPixelThreshold` 0.0005. A pixel counts as changed when the
+   > **largest** of its three channel deltas exceeds the tolerance. The broken CI
+   > frames scored mean 0.66 / 1.22 / 0.66 % — all three passed the old 2 % gate —
+   > against fraction **1.38 / 2.83 / 1.38 %**, tripping the new one by 27–57×.
+   > Both measurements and both limits are named in the failure message.
+   >
+   > **If CI ever needs loosening, raise the fraction floor, never the mean**, and
+   > only to a measured value.
 
 **If investigation shows** the difference is unavoidable and CI-generated
 goldens are impractical, say so in the constant's comment with the measured
@@ -1542,8 +1609,8 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |
 | **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |
-| ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer. §5.5 step 2 rejected — CI never becomes the golden reference. See [gui-test-harness-groundwork.md](../plans/gui-test-harness-groundwork.md). |
-| ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. See [gui-handler-framework.md](../plans/gui-handler-framework.md). |
+| ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer, and a real font-fallback bug in `themes.NewTheme`. §5.5 step 2 rejected — CI never becomes the golden reference. Full record in §5.4/§5.5 above. |
+| ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. Full record in §5.4 above. |
 | **N** | §1.5 | Whole-state per-frame clones left over from batch D. Independent of every other batch; schedule when the frame cost matters. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is

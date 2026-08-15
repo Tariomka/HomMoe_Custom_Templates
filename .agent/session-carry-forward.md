@@ -1,7 +1,9 @@
 # Session carry-forward — GUI handler framework (backlog batch M)
 
-> The previous session's handoff (batch L) is archived beside this file as
-> [session-carry-forward-batch-L.md](session-carry-forward-batch-L.md).
+> The durable record of this work is [backlog-opus5.md](../todo/backlog-opus5.md)
+> §5.4 and §5.5, which are self-contained. The plan file that tracked it has been
+> deleted, as has the previous session's handoff. This file is a working handoff
+> and is safe to delete once the batch is reviewed.
 
 ## 1. Session goal
 
@@ -57,7 +59,6 @@ layout-shift tracking — standalone and ahead of batch F.
 
 | File | Summary |
 | --- | --- |
-| [plans/gui-handler-framework.md](../plans/gui-handler-framework.md) | The as-built design; 5 phases, all Complete, with Final Recap and Deployment Plan. |
 | [generalTabHandler.go](../test/test_helpers/integration_common/generalTabHandler.go) | `ToggleExperimentalMapSizes`, `OpenMapSizeSelector`, `SelectMapSize`, `SelectGameMode`. |
 | [layoutAndZonesTabHandler.go](../test/test_helpers/integration_common/layoutAndZonesTabHandler.go) | `OpenZoneEditor`, `ToggleAdvancedZoneControl`. |
 | [bonusesAndBansTabHandler.go](../test/test_helpers/integration_common/bonusesAndBansTabHandler.go) | Type only — the tab has no interactions in scope. |
@@ -102,35 +103,17 @@ All backlog §9 gates pass: build, both vets, `testlayoutcheck`, `gofmt -l` empt
 ## 6. Git status snapshot
 
 Branch **`AD/fixing_some_stuff_08-12`**. Nothing was staged or committed by the
-agent.
+agent. Batch M was committed by the owner as `af78eca "Batch L and M done"`,
+which also deleted the `plans/` folder — by design, once a batch lands.
 
 ```
- M app/gui/editor/window_testexports.go
-AM plans/gui-handler-framework.md
- M test/integration/gui/window_snapshot_integration_test.go
-MM test/test_helpers/integration_common/appRunner.go
- M test/test_helpers/integration_common/baseHandler.go
-M  test/test_helpers/integration_common/handlerCoordinates.go
+ M .agent/session-carry-forward.md
  M todo/backlog-opus5.md
-?? app/gui/drivers/tab_testexports.go
-?? app/gui/panels/generalPanel_testexports.go
-?? app/gui/panels/layoutPanel_testexports.go
-?? test/integration/handlerDialogReachability_integration_test.go
-?? test/integration/handlerGeneralTab_integration_test.go
-?? test/integration/handlerScroll_integration_test.go
-?? test/test_helpers/integration_common/bonusesAndBansTabHandler.go
-?? test/test_helpers/integration_common/fileExplorerHandler.go
-?? test/test_helpers/integration_common/generalTabHandler.go
-?? test/test_helpers/integration_common/layoutAndZonesTabHandler.go
-?? test/test_helpers/integration_common/zoneEditorHandler.go
-?? .../__snapshots__/window_snapshot_integration_test/TestWindowSnapshots_MapSizeShiftMatchesGoldens_{1,2,3}.golden
-?? .../__snapshots__/window_snapshot_integration_test/TestWindowSnapshots_ScrollMatchesGoldens_{1,2,3}.golden
 ```
 
-**Inherited, not created by this session:** `plans/gui-handler-framework.md`,
-`handlerCoordinates.go` and part of `appRunner.go` are already **staged** (`A`/`M`
-in the index column). The agent did not stage them and, per AGENTS.md §2.5, did
-not unstage them either.
+Everything else listed in §4 is committed in `af78eca` and pushed. The two
+remaining modifications are this handoff and the §5.4/§5.5 backlog annotations
+written after the commit, once the plan files were removed.
 
 ## 7. Rejections / things the user declined
 
@@ -146,14 +129,18 @@ not unstage them either.
 
 ## 8. Open questions
 
-1. **The staged files listed above** — was that intentional? Nothing further will
-   be staged or unstaged without an instruction.
-2. **`ToggleAdvancedZoneControl` is one method beyond the agreed handler set.**
-   Keep it (it is the only way to get a meaningful scroll range) or drop it and
-   accept an 18 px scroll test?
-3. **Empty leftover directory**
-   `test/test_helpers/integration_common/snapshot/__snapshots__/runnerHandler/`
-   from batch L's rename. Untracked and harmless; delete it or leave it?
+**None — all three were answered before the session closed.**
+
+1. ~~Were the staged files intentional?~~ **Yes** — the owner staged the previous
+   batch deliberately, to hold it back from a push. Nothing to do.
+2. ~~Keep `ToggleAdvancedZoneControl`, the one method beyond the agreed handler
+   set?~~ **Keep it.** Confirmed by the owner; it is the only way to get a scroll
+   range worth testing.
+3. ~~Delete the empty `__snapshots__/runnerHandler/` leftover?~~ **The owner
+   removed it.**
+
+**CI is green** on this batch — the owner ran it, including the gated GUI suite
+against the locally generated goldens.
 
 ## 9. Next recommended actions
 
@@ -161,9 +148,7 @@ not unstage them either.
 2. Eyeball the six new goldens — `MapSizeShiftMatchesGoldens_3` is the one that
    proves the layout shift (28 dropdown rows rendered inline). They are PNGs
    despite the `.golden` extension.
-3. Answer the three open questions above.
-4. Run CI.
-5. Start batch **E** (§4.1, "Save As" → "Save To"), then batch **F** (§5.3,
+3. Start batch **E** (§4.1, "Save As" → "Save To"), then batch **F** (§5.3,
    file-explorer pointer and hidden-file tests) — both written against the
    handler API this batch settled.
 
@@ -182,15 +167,14 @@ not unstage them either.
 > and **never generate snapshot goldens in CI**, which is a software renderer and
 > must not become the reference.
 >
-> Backlog batch **M** (`todo/backlog-opus5.md` §5.4 (d)–(g)) is **complete** and
-> awaiting my review on branch `AD/fixing_some_stuff_08-12`; the as-built design,
-> including everything you must not rediscover, is in
-> `plans/gui-handler-framework.md`. Batch **L** (§5.4 (a)–(c), §5.5) is also done
-> — see `plans/gui-test-harness-groundwork.md`. Do not redo either.
+> Backlog batch **M** (`todo/backlog-opus5.md` §5.4 (d)–(g)) is **complete**,
+> **CI-green** and committed on branch `AD/fixing_some_stuff_08-12`. Batch **L**
+> (§5.4 (a)–(c), §5.5) is also done. The as-built design and everything you must
+> not rediscover now live **inside §5.4 and §5.5 of the backlog itself** — the
+> plan files were deleted once the work landed, which is the normal lifecycle
+> here. Do not redo either batch.
 >
-> The full handoff, including three unanswered questions and the working-tree
-> state, is in `./.agent/session-carry-forward.md` — read it before you touch
-> anything.
+> The working handoff is in `./.agent/session-carry-forward.md`.
 >
 > Next up is batch **E** (§4.1, "Save As" → "Save To"), then batch **F** (§5.3).
 > Before starting, prompt me to confirm the item and surface every open question

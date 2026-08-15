@@ -839,8 +839,7 @@ the owner wants a testable bootstrap.
 
 ### 2.1 ✅ FIXED 🟠 The file-explorer dialog implements filesystem policy inside the GUI layer
 
-**Fixed** (2026-08-07, Batch 13, planned in
-[extract-filesystem-policy.md](../plans/extract-filesystem-policy.md)). The
+**Fixed** (2026-08-07, Batch 13, over seven phases). The
 dialog makes **zero** `os` calls today; `app/gui/dialogs` no longer imports `os`
 or `syscall`, and its only `filepath` use is `filepath.Base` for display.
 
@@ -884,7 +883,9 @@ into the process working directory (**D4**). Two further candidates were
 rejected as deliberate and must not be "fixed": `isHidden` fails **open** so an
 unreadable entry stays visible instead of silently vanishing, and `loadDir`
 adopts an unreadable directory as `currentDir` so the path bar names the place
-the error refers to. Full evidence in the plan's Phase 4 summary.
+the error refers to. The regression tests under
+`test/unit/internal/services/file_system/` are the surviving evidence for all
+seven.
 
 **Coverage.** The finding's headline consequence is retired: the extracted logic
 is **92.4 %** covered by 19 mirrored unit-test files, and total unit coverage rose
@@ -951,8 +952,7 @@ logic and directly retires part of the deferred item in
 
 ### 2.2 ✅ FIXED Generation and manual-edit policy lives in the GUI driver
 
-**Resolution (2026-08-07, Batch 14, plan:
-[extract-regeneration-policy.md](../plans/extract-regeneration-policy.md)).**
+**Resolution (2026-08-07, Batch 14).**
 Delivered in four phases. `internal/services/editor/RegenerationDecisionService`
 now owns both decisions and is pure — `now` arrives as a parameter, so the 300 ms
 debounce is deterministic and needs no clock seam. It is reached from `app/` via a
@@ -980,7 +980,7 @@ representable rather than merely documented.
 Defect triage found **no live bugs**: all four suspected defects (comment-only
 ordering, uncancellable `InvalidateCmd`, stale `applyNextStateAt`, and the
 `NextStateLeave`/`NextStateClear` asymmetry on first generation) were proven safe
-and the reasoning recorded in the plan so they are not "fixed" again later. Three
+— treat that list as settled and do not re-open it without new evidence. Three
 genuinely dead methods were pruned instead (`EditorState.ResetPreviousState`,
 `zoneEditorHandler.ComputeHasErrors`, `zoneEditorHandler.RebuildZoneConnectionRoads`),
 closing the residual `internal/handlers` coverage gap recorded in
@@ -993,8 +993,9 @@ and depguard now denies services, repositories, mappers and validators from
 
 **Note on the coverage figures quoted below:** they were measured before Batch 13
 added file-explorer plumbing that only the GUI integration suite exercises. The
-unit-only denominators are now larger, so those percentages read low; see Phase 0
-of the plan for the corrected baseline.
+unit-only denominators are now larger, so those percentages read low. The
+authoritative baseline is the current one recorded in
+[backlog-opus5.md](backlog-opus5.md) §9, not any figure quoted in this section.
 
 ---
 
@@ -1947,9 +1948,8 @@ after.
 ### 6.2 ✅ FIXED — The entire `internal/handlers` package has no unit tests
 
 **Resolution (Batch 11).** Every constructor-injected service under `internal/`
-was first converted to an `I`-prefixed interface (see
-[plans/batch-11-handler-coverage.md](../plans/batch-11-handler-coverage.md),
-Phases 1–6), 14 `testify` mocks were added under `test/test_helpers/`, and five
+was first converted to an `I`-prefixed interface, 14 `testify` mocks were added
+under `test/test_helpers/`, and five
 mirrored test packages now exist alongside the pre-existing `guiHandler/`:
 `stateHandler/`, `previewHandler/`, `templateHandler/`, `contentRuleHandler/`
 and `zoneEditorHandler/`. `internal/handlers` coverage is **97.4%**; the only
@@ -2881,20 +2881,17 @@ permanently — mark them `✅ FIXED` in place as they land.
 
 13. **Large refactors — plan first per AGENTS.md §4.7.**
     §2.1 (extract filesystem policy) + §2.5 (split the dialog) ✅ FIXED
-    (2026-08-07, Batch 13, plan:
-    [extract-filesystem-policy.md](../plans/extract-filesystem-policy.md)) —
+    (2026-08-07, Batch 13) —
     delivered together in seven phases, because §2.5 is only safe once §2.1 has
     moved the policy out. Five latent defects (D0–D4) surfaced as the logic
     became reachable and were fixed with tests; two candidates were rejected as
     deliberate. Coverage 68.7% → 69.3%.
-    ✅ §2.2 (extract regeneration policy) FIXED (2026-08-07, Batch 14, plan:
-    [extract-regeneration-policy.md](../plans/extract-regeneration-policy.md)) —
+    ✅ §2.2 (extract regeneration policy) FIXED (2026-08-07, Batch 14) —
     four phases; decision logic moved to a pure `RegenerationDecisionService`,
     defect triage found no live bugs but pruned three dead methods, and the
     `app/`-layering backlog item was closed and enforced with depguard.
     Coverage held at 69.3%.
-    ✅ §2.6 (zone-editor state) FIXED (2026-08-08, Batch 15, plan:
-    [zone-editor-state-extraction.md](../plans/zone-editor-state-extraction.md)) —
+    ✅ §2.6 (zone-editor state) FIXED (2026-08-08, Batch 15) —
     seven phases. Geometry moved to `internal/services/connection_editor` behind
     the existing `IZoneEditorHandler`; the canvas-state blob split into six named
     structs (67 → 60 fields, 26 of them immovable widget handles) with the
