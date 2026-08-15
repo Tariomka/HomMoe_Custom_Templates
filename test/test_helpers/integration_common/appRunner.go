@@ -177,6 +177,27 @@ func (this *AppRunner) MoveTo(point f32.Point) {
 	this.invalidate()
 }
 
+// Scroll injects a synthetic mouse wheel event at point with the given pixel
+// delta (positive Y scrolls the content up, i.e. moves the viewport down). The
+// leading frame registers the scrollable areas, the trailing frame processes the
+// wheel. Both run under one lock so a render cannot observe a half-applied
+// scroll. Gio clamps the delta to the scrollable range declared by the widget
+// under point, so an oversized delta simply scrolls to the end.
+func (this *AppRunner) Scroll(point f32.Point, delta f32.Point) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	this.router.Queue(pointer.Event{
+		Kind:     pointer.Scroll,
+		Source:   pointer.Mouse,
+		Position: point,
+		Scroll:   delta,
+	})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
+}
+
 // DragTo injects a synthetic drag from one point to another (press, a series of
 // interpolated moves, release), driving gesture.Drag widgets such as sliders.
 func (this *AppRunner) DragTo(from, to image.Point) {
@@ -284,6 +305,15 @@ func (this *AppRunner) Status() (string, bool) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.GetStateDriver().GetStatus()
+}
+
+// SelectedPanelScrollPosition returns the selected panel's first visible child
+// and its pixel offset (lock-guarded), plus whether that panel exposes one.
+func (this *AppRunner) SelectedPanelScrollPosition() (int, int, bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.SelectedPanelScrollPosition()
 }
 
 // runWindow is the real app.Window event loop, mirroring gui.eventLoop. It only

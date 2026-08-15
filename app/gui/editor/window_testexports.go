@@ -48,3 +48,21 @@ func (this *Window) CloseTopDialog() {
 func (this *Window) GetStateDriver() *drivers.State {
 	return this.state
 }
+
+// scrollablePanel is satisfied by the panels that expose their list position
+// through a *_testexports.go file.
+type scrollablePanel interface {
+	ScrollPosition() (int, int)
+}
+
+// SelectedPanelScrollPosition ONLY FOR INTEGRATION TEST USE
+// Returns the selected panel's first visible child and its pixel offset, plus
+// whether that panel exposes a position at all.
+func (this *Window) SelectedPanelScrollPosition() (int, int, bool) {
+	panel, ok := this.tabs[this.selectedTab].GetPanel().(scrollablePanel)
+	if !ok {
+		return 0, 0, false
+	}
+	first, offset := panel.ScrollPosition()
+	return first, offset, true
+}

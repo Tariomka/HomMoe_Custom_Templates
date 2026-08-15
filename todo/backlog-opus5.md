@@ -1246,7 +1246,14 @@ reason.
 **Coordinate with §4.1** — it rewrites the save-filename scenarios in the same
 file. Do §4.1 first or expect a merge conflict.
 
-### 5.4 🟡 The GUI handler framework is a design comment, not a design
+### 5.4 ✅ DONE 🟡 The GUI handler framework is a design comment, not a design
+
+> **Landed in batches L ((a)–(c)) and M ((d)–(f)).** The as-built design is in
+> [plans/gui-handler-framework.md](../plans/gui-handler-framework.md), including
+> the measured coordinate table, the empirical notes below, and the corrections
+> this section needed. (g) was kept as a standing guideline rather than a task.
+> Read the plan before extending the handlers; the paragraphs below are the
+> original diagnosis, annotated.
 
 **Evidence.** [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106)
 carries a 46-line first-person design note above a struct that currently
@@ -1271,14 +1278,18 @@ a doc comment is not a backlog and will rot.
 
 **Fix — seven separable pieces, in this order.**
 
-**(a) Hygiene (mechanical, do first).** The file is `runnerHandler.go` but the
+**(a) ✅ Hygiene (mechanical, do first).** The file is `runnerHandler.go` but the
 struct is `baseHandler`; AGENTS.md §4.1 requires `baseHandler.go`. `NewHandler`
 also returns the unexported `*baseHandler` from an exported function — either
 export the type or (once (d) exists) return the handler contract. Interfaces
 follow AGENTS.md §4.2.1/§4.2.2: with fewer than five implementations they stay
 in this package as `*Interface.go` files.
 
-**(b) Settle the coordinate strategy.** Recommendation: **keep the coordinates
+> *Done.* Renamed in L; the type was **exported** to `*BaseHandler` in M by owner
+> decision — no `IBaseHandler`, because there is one implementation and an
+> interface would only obstruct the embedding in (d).
+
+**(b) ✅ Settle the coordinate strategy.** Recommendation: **keep the coordinates
 literal but stop scattering them.** Gio exposes no widget-rect lookup without a
 new `*_testexports.go` seam, and computing positions from the layout code would
 re-implement the thing under test. Put them in one `handlerCoordinates.go` as
@@ -1288,7 +1299,16 @@ named constants derived where possible from
 edit rather than a hunt. Only compute at runtime where a value genuinely varies
 (slider value → x, list row index → y).
 
-**(c) Narrow the mask.** `setRandomTopology` blanks
+> *Done.* The literal-but-centralised approach held, with one revision: rather
+> than deriving from `ui.go`, every coordinate was **measured** by replaying the
+> frame's ops through a fresh `input.Router` and reading `AppendSemantics`, then
+> confirmed by driving the widget and asserting the state change. Only
+> `semantic.Button` nodes have trustworthy bounds; checkboxes and dropdown
+> triggers emit none, so their positions came from the neighbouring label node's
+> `bounds.Min` (its `Max` is corrupted by clip areas the replay router never
+> pops). The dropdown row pitch is the one runtime-computed value.
+
+**(c) ✅ Narrow the mask.** `setRandomTopology` blanks
 `image.Rect(WindowWidth-470, 0, WindowWidth, WindowHeight)` — a 470 px column
 over the **full window height**, i.e. roughly a third of every snapshot,
 including stable chrome. Replace the single catch-all with named helpers that
@@ -1298,38 +1318,92 @@ see AGENTS.md §2.7), and the timestamp/path inside the status message. Derive
 the preview rect from `DefaultPreviewWidthMaximum` (440) rather than the
 unexplained 470.
 
-**(d) Per-tab and per-dialog handlers.** `baseHandler` gains
+**(d) ✅ Per-tab and per-dialog handlers.** `baseHandler` gains
 `ClickGeneralTab() *generalTabHandler` etc.; tab handlers embed `baseHandler`
 (tab bar and toolbar stay live), dialog handlers **do not** (a dialog disables
 the background, so inheriting its clicks would be a lie). One struct per file
 (AGENTS.md §4.1).
 
-**(e) Layout-shifting state.** A handler must remember what it toggled, because
+> *Done.* Three tab handlers embed `*BaseHandler` (a pointer, so the shift state
+> of (e) is shared rather than copied). Two dialog handlers — `FileExplorer` and
+> `ZoneEditor` — hold `base *BaseHandler` without embedding and expose only
+> `IsOpen()` / `Close()`. They are **reachability-only**: they own no canvas
+> coordinates and take no snapshot, because driving a dialog through the window
+> is nondeterministic by construction (the explorer lists the machine-detected
+> templates directory, AGENTS.md §2.7; the zone editor draws a freshly randomised
+> layout). The dialog *behaviour* tests of §5.1–§5.3 construct the dialog directly
+> through the package-local `newDialogContext` and do not use these handlers.
+> Toolbar methods are `ClickNew` / `ClickLoad` / `ClickSaveAs`; **`Exit` is never
+> reachable** (`State.Exit()` calls `os.Exit(0)` and would kill the test process)
+> and `Save` is excluded because it writes into the real output directory.
+
+**(e) ✅ Layout-shifting state.** A handler must remember what it toggled, because
 some widgets move the ones below them: *Allow non-official larger map sizes*
 expands the Map Size dropdown, and dropdowns render inline on the canvas rather
 than floating. Store those flags on the handler and offset subsequent
 coordinates from them; a handler that clicks blind will click the wrong widget.
 
-**(f) Scrolling.** `AppRunner` has `ClickAt`, `MoveTo`, `DragTo` and
+> *Done, with two corrections to the framing above.* Only **one** flag is stored,
+> `isExperimentalMapSizes`, because it decides whether the dropdown has 11 rows
+> or 28 and a row index is meaningless without that count. The `isSingleHero`
+> shift, which this section elsewhere calls the larger one, needs **no**
+> bookkeeping: it adds or removes three slider rows in the *right* column only,
+> and no handler coordinate sits below them.
+>
+> A third shifter was added that this section did not anticipate: the panel's own
+> **scroll offset**, tracked by reading the real `widget.List` position through a
+> `*_testexports.go` accessor rather than by accumulating injected deltas —
+> `layout.List` clamps at both ends, so an accumulator diverges from the truth at
+> the first clamp.
+>
+> Separately: a click is processed on the frame it is queued against, but a panel
+> only writes its widget values back to the editor state in `SaveToState` on the
+> **following** layout. Every state-mutating handler method therefore ends with a
+> `commit()` frame, before any snapshot.
+
+**(f) ✅ Scrolling.** `AppRunner` has `ClickAt`, `MoveTo`, `DragTo` and
 `InputText` — but no scroll. Anything below the fold is unreachable, which is a
 hard blocker for §5.2. Add `Scroll(point f32.Point, delta f32.Point)` injecting
 a `pointer.Scroll` event through the same router, mirroring `ClickAt`.
 
-**(g) Keep `*_testexports.go` out of the handler.** `SelectedTabIndex`,
+> *Done*, plus `BaseHandler.ScrollPanel(delta)`. Note that a golden alone cannot
+> prove a scroll happened — a `Scroll` that silently did nothing would still match
+> a golden captured from an equally unscrolled frame — so the snapshot is backed by
+> headless assertions on the real list position. Note also that no panel has a
+> useful scroll range out of the box: Bonuses & Bans never overflows and Layout &
+> Zones overflows by ~18 px, which is why the handler set gained one method beyond
+> the agreed scope, `ToggleAdvancedZoneControl()`, taking the range to ~386 px.
+
+**(g) ⬜ Keep `*_testexports.go` out of the handler.** `SelectedTabIndex`,
 `TabCount`, `DialogsOpen`, `CurrentState` and `Status` are test-only exports.
 Handlers should drive pixels and assert through snapshots; reach for an
 accessor only where a pixel genuinely cannot express the assertion, and say why
 in a one-line comment.
+
+> *Kept as a standing guideline, not built as a task.* It was applied while
+> writing (d)–(f); each of the three new accessors carries the required one-line
+> justification.
 
 **Scope guard.** Do **not** build (d)–(g) speculatively. (a)–(c) are worth
 doing on their own; the rest grows one method at a time as §5.1–§5.3 need it.
 The comment's own worry — *"this looks like an entire framework"* — is the
 correct instinct: an unused handler method is untested test code.
 
+> *Superseded by owner decision:* (d)–(f) were built standalone and ahead of
+> §5.3, so that §5.1–§5.3 are written against a finished API instead of growing
+> one. The guard's intent was still honoured — every method added has at least one
+> test that exercises it.
+
 **When it lands,** replace the design comment with a two-line pointer to this
 section so the design lives in one place.
 
-### 5.5 🟡 GUI snapshots differ between local and CI, and the tolerance hiding it also hides regressions
+> *Done in batch L.*
+
+### 5.5 ✅ DONE 🟡 GUI snapshots differ between local and CI, and the tolerance hiding it also hides regressions
+
+> **Landed in batch L.** Steps 1 and 3 are done; step 2 was **rejected by the
+> owner**. Details are in
+> [plans/gui-test-harness-groundwork.md](../plans/gui-test-harness-groundwork.md).
 
 **Evidence.** The last paragraph of the same comment: *"for some reason there
 is a difference of some of the rendered text between local … and CI (looks like
@@ -1364,10 +1438,21 @@ regressions with it, which quietly weakens every test §5.1–§5.4 will add.
    [appRunnerSnapshots.go](../test/test_helpers/integration_common/appRunnerSnapshots.go#L120),
    not in the threshold. Download the `gui-snapshot-failures` artifact the
    workflow already uploads to see the actual CI pixels.
-2. **If it is genuinely llvmpipe text anti-aliasing**, make CI the reference:
+
+   > *Done, and the hypothesis was **disproved**.* Consecutive frames for the
+   > same action are identical; `captureScreenshot` is not racing the frame. The
+   > difference is genuine llvmpipe text anti-aliasing, so no capture-timing fix
+   > was made.
+
+2. ~~**If it is genuinely llvmpipe text anti-aliasing**, make CI the reference:
    regenerate goldens in the CI environment (run the update job, download the
    artifact, commit the images) so the *comparison* is exact and only local
-   runs are lenient.
+   runs are lenient.~~
+
+   > **Rejected by the owner.** CI is a software renderer and must not become the
+   > reference. Goldens are generated **locally on a real GPU only**, never in CI,
+   > and an agent never runs CI — ask the owner. Step 3 is what makes that safe.
+
 3. **Then replace the metric.** A mean is the wrong measure for UI diffs. Fail
    on the fraction of pixels whose per-pixel distance exceeds a small
    per-pixel tolerance (e.g. "> 0.5 % of pixels differ by > 10 %") so wide
@@ -1375,6 +1460,10 @@ regressions with it, which quietly weakens every test §5.1–§5.4 will add.
    `Comparer.Threshold` configurable and update
    [test/unit/test/test_helpers/integration_common/snapshot/comparer/](../test/unit/test/test_helpers/integration_common/snapshot/comparer/)
    alongside.
+
+   > *Done.* The comparer is now two-gate: `DefaultMeanThreshold` 0.0025 (down
+   > from 0.02) **and** `DefaultChangedPixelThreshold` 0.0005 of pixels exceeding
+   > `DefaultPixelTolerance` 64. Both are configurable and unit-tested.
 
 **If investigation shows** the difference is unavoidable and CI-generated
 goldens are impractical, say so in the constant's comment with the measured
@@ -1453,13 +1542,13 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |
 | **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |
-| **L** | §5.4 (a–c), §5.5 | GUI test-harness groundwork: handler hygiene, named mask helpers, coordinate constants, snapshot-comparison fix. Slot **before F**, so F/H write against the settled shape and a comparison that can actually fail. |
-| **M** | §5.4 (d–g) | Grows with F and H — the scroll seam (f) is a hard prerequisite for §5.2. Never build ahead of the test that needs it. |
+| ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer. §5.5 step 2 rejected — CI never becomes the golden reference. See [gui-test-harness-groundwork.md](../plans/gui-test-harness-groundwork.md). |
+| ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. See [gui-handler-framework.md](../plans/gui-handler-framework.md). |
 | **N** | §1.5 | Whole-state per-frame clones left over from batch D. Independent of every other batch; schedule when the frame cost matters. |
 
-**Note on L/M.** They are listed last only because the table is otherwise
-ordered by dependency; L should actually run before batch F. §5.5 step 1 can be
-done at any time — it needs a CI artifact, not a code freeze.
+**Note on L/M.** Both are done; they sit last in the table only because it is
+otherwise ordered by dependency. **E is next, then F**, both written against the
+handler API M settled.
 
 **Coverage note.** Batches C, D, F, H and J add tests; B, E and G mostly move
 existing behaviour. Run the coverage task before and after **every** batch
