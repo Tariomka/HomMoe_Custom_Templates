@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -68,6 +69,25 @@ func TestWhenAdvancedModeIsOn_ZeroesTheSimpleNeutralZoneCount(t *testing.T) {
 
 	// Assert
 	assert.Zero(t, validation.State.NeutralZoneCount)
+}
+
+// TestWhenValidationFixesAContentRow_TheCallersSliceIsUnchanged pins the clone
+// on entry: the DTO arrives by value, so without it the validated state would
+// hand every caller a slice that still points at the caller's own storage.
+func TestWhenValidationFixesAContentRow_TheCallersSliceIsUnchanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := dtos.NewDefaultEditorStateDto()
+	state.PlayerCount = 99
+	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "sawmill", Count: 1}}
+	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
+	validation := handler.ValidateEditorState(state, true)
+
+	// Act
+	validation.State.PlayerZoneContentRows[0].Count = 5
+
+	// Assert
+	assert.Equal(t, 1, state.PlayerZoneContentRows[0].Count)
 }
 
 func TestWhenAdvancedModeIsOn_KeepsThePerTierCounts(t *testing.T) {

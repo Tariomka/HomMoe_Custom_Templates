@@ -57,7 +57,7 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 func (this *State) handleSaveTemplate() {
 	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
 		Template:   this.GetLastTemplate(),
-		Topology:   this.innerState.GetCurrentState().Topology,
+		Topology:   this.innerState.GetTopology(),
 		OutputPath: strings.TrimSpace(this.outputPath.Text()),
 	})
 

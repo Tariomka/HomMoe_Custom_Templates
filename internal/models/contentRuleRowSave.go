@@ -1,5 +1,7 @@
 package models
 
+import "github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+
 // ContentRuleRowSave is the lightweight, JSON-friendly representation of a
 // single content rule attached to a ZoneContentRowSave. It mirrors the C#
 // `ContentRuleRowSave` record: every field is optional so that each concrete
@@ -17,4 +19,13 @@ type ContentRuleRowSave struct {
 	IsSoloEncounter *bool `json:"isSoloEncounter,omitempty"`
 	// VariantID is set by the Variant rule.
 	VariantID *int `json:"variantId,omitempty"`
+}
+
+// Clone returns a copy that shares no pointer with the receiver.
+func (this ContentRuleRowSave) Clone() ContentRuleRowSave {
+	clone := this
+	clone.IsGuarded = helpers.ClonePointer(this.IsGuarded)
+	clone.IsSoloEncounter = helpers.ClonePointer(this.IsSoloEncounter)
+	clone.VariantID = helpers.ClonePointer(this.VariantID)
+	return clone
 }

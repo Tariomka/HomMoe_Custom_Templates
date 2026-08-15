@@ -52,7 +52,7 @@ func (this *Toolbar) HandleClicks(gtx layout.Context) {
 		this.state.Save()
 	}
 	if this.buttonSaveAs.Clicked(gtx) {
-		this.state.SaveAs(this.state.GetStateData().TemplateName)
+		this.state.SaveAs(this.state.GetTemplateName())
 	}
 	if this.buttonExit.Clicked(gtx) {
 		this.state.Exit()

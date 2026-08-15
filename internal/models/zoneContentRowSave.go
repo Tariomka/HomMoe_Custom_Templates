@@ -1,5 +1,7 @@
 package models
 
+import "slices"
+
 // ZoneContentRowSave is the lightweight serialisation record for a single
 // mandatory-content UI row. It preserves the row exactly as the user
 // configured it, including the Count slider - so e.g. two separate sawmill
@@ -27,4 +29,16 @@ func (this ZoneContentRowSave) Normalized() ZoneContentRowSave {
 		out.Count = 1
 	}
 	return out
+}
+
+// Clone returns a copy that shares no backing array or pointer with the
+// receiver. A nil Rules slice stays nil, because the change detection in
+// EditorStateDto distinguishes a nil slice from an empty one.
+func (this ZoneContentRowSave) Clone() ZoneContentRowSave {
+	clone := this
+	clone.Rules = slices.Clone(this.Rules)
+	for ruleIndex := range clone.Rules {
+		clone.Rules[ruleIndex] = clone.Rules[ruleIndex].Clone()
+	}
+	return clone
 }

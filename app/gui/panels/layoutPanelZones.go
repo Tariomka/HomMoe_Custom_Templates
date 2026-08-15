@@ -84,7 +84,7 @@ func (this *LayoutPanel) getNeutralTierSectionWidget(theme *material.Theme, titl
 // advanced options) only while advanced zone control is enabled.
 func (this *LayoutPanel) getHubTierSectionWidget(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		if !common_topologies.GetTopologyCapabilities(this.state.GetStateData().Topology).UsesHub {
+		if !common_topologies.GetTopologyCapabilities(this.state.GetTopology()).UsesHub {
 			return layout.Dimensions{}
 		}
 

@@ -35,12 +35,13 @@ and §1.9 there stay numbered as they are and are restated here as §1.1 and §1
 go-ahead**, because it edits a protected directory (AGENTS.md §2.1) or reverses
 a decision the owner already made.
 
-**Item count: 0 🔴 · 6 🟠 · 10 🟡 · 3 ⚪ (19 total).**
+**Item count: 0 🔴 · 6 🟠 · 11 🟡 · 3 ⚪ (20 total).**
 
 **✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
-§3.1, §3.2 and §3.4 (batch C) — **7 done, 12 open.**
+§3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D) — **8 done, 12
+open.** Batch D spun off §1.5 (render-path clone cost).
 
-**Baselines to hold (AGENTS.md §2.3):** unit coverage **72.6 %**, floor
+**Baselines to hold (AGENTS.md §2.3):** unit coverage **72.9 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
 `integration_test` and `integration_test,gui`.
@@ -117,7 +118,7 @@ returns an unexported type.
 
 ## 1. Bugs & correctness
 
-### 1.1 🟠 Editor-state copies are shallow, so snapshots alias live slices
+### 1.1 ✅ DONE 🟠 Editor-state copies are shallow, so snapshots alias live slices
 
 *(= review-opus5-08-04 §1.4, restated with re-verified line numbers.)*
 
@@ -233,6 +234,38 @@ layout code; measure with the existing benchmarks
 visible, the fallback is to clone in `SnapshotCurrentState` +
 `ValidateEditorState` only and make `GetCurrentState` return a pointer to an
 explicitly read-only view — but take that decision to the owner first.
+
+**✅ Resolution (batch D, 2026-08-14).** Implemented as specified, and cloned at
+`GetNextState` / `OverrideState` / `SetNextState` / `UpdateCurrentState` too —
+the latter three take the DTO by value and stored its address, so the caller
+kept aliasing the slices.
+
+- New `Clone` methods: [editorStateDto.go](../internal/dtos/editorStateDto.go)
+  (+ `cloneContentRows`), [zoneContentRowSave.go](../internal/models/zoneContentRowSave.go),
+  [contentRuleRowSave.go](../internal/models/contentRuleRowSave.go) (three
+  pointer fields, so `slices.Clone` of `Rules` alone was not enough),
+  [manualZoneSave.go](../internal/dtos/editor_state_dto/manualZoneSave.go) and
+  [manualConnectionSave.go](../internal/dtos/editor_state_dto/manualConnectionSave.go).
+- `entities.Zone` turned out to be **17** slice/pointer fields deep
+  (`MainObject.Faction *TypedRef`, `TypedRef.Args` on the three biome fields and
+  both `Road` endpoints). Per §2.1 no `Clone` was added under
+  `internal/entities/` — the fields are copied from the `dtos` side by
+  `cloneZone` / `cloneMainObject` / `cloneRoad` / `cloneTypedRef`.
+- `PlacementRule.Args []any` is cloned as a slice only; the elements are boxed
+  scalars from JSON decoding. Documented in code at the boundary.
+- New shared helper [pointer.go](../internal/helpers/pointer.go) `ClonePointer`.
+- `clone_test.go` carries a **recursive reflection drift guard** that walks the
+  whole tree and fails if any clone shares a backing array or pointer, so a
+  field added to the protected `entities` types cannot silently go uncloned.
+  Verified to fail by removing a clone line.
+- The test-local `deepCloneEditorState` in
+  [equalsIgnoringManualEdits_test.go](../test/unit/internal/dtos/editorStateDto/equalsIgnoringManualEdits_test.go)
+  was replaced by the production `Clone`; it had silently omitted
+  `LowestNeutralContentRows`.
+- **Benchmark (`TabCycling`, 6×50x, steady state).** 2.88 M → 3.01 M ns/op
+  (+4.6 %), 4,676 → 6,640 allocs/op (+42 %). Owner accepted the cost. The
+  read-only-view fallback above was **not** taken; the residual is tracked as
+  §1.5.
 
 ---
 
@@ -513,6 +546,58 @@ of this item unless the owner asks.
 **Tests.** No unit test is practical for the Gio event loop. Add an entry for
 `app/gui/program.go` to the Gio-UI section of
 [test_observations.md](test_observations.md) recording the gap.
+
+---
+
+### 1.5 🟡 Panels deep-clone the whole editor state on every frame
+
+*(Spun off from §1.1, batch D, 2026-08-14. Owner decision: file, do not fix now.)*
+
+**Evidence.** `GetCurrentState` deep-clones since batch D, and five `Layout`
+paths call it once per frame through `State.GetStateData()`:
+
+- [bonusesPanel.go](../app/gui/panels/bonusesPanel.go#L63)
+- [generalPanel.go](../app/gui/panels/generalPanel.go#L105)
+- [layoutPanel.go](../app/gui/panels/layoutPanel.go#L131)
+- [layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go#L113) and
+  [#L129](../app/gui/panels/layoutPanelZones.go#L129) — twice in one frame
+
+**Cost.** `BenchmarkEditorWindow_TabCycling`, 6 samples at 50x, steady state:
+
+| | ns/op | B/op | allocs/op |
+| --- | --- | --- | --- |
+| Before batch D | 2.88 M | 1,254 K | 4,676 |
+| Batch D, deep clone | 3.05 M | 1,456 K | 6,929 |
+| Batch D + scalar accessors | **3.01 M** | **1,435 K** | **6,640** |
+
+Batch D added the clone-free readers `GetTemplateName` / `GetMapSize` /
+`GetTopology` / `GetExperimentalMapSizes` on both
+[editorState.go](../app/gui/models/editorState.go) and
+[state.go](../app/gui/drivers/state.go), which converted eight single-field call
+sites. That recovered only ~290 of the 2,253 added allocations (**13 %**) —
+the five whole-state readers above dominate and no scalar getter reaches them.
+
+Note the benchmark's default state has **no manual zones**; a template with many
+manual zones clones `entities.Zone` (17 reference fields) per zone per frame, so
+the real-world gap is wider than the table.
+
+**Fix options** (owner has not chosen one):
+
+1. A borrowed read-only accessor — `ReadCurrentState(func(*dtos.EditorStateDto))`
+   — for the five sites. Removes nearly all per-frame cloning, but hands panels a
+   live pointer by convention rather than by enforcement, partly undoing what
+   §1.1 set out to fix.
+2. Cache the clone per frame/template revision, keyed like the existing
+   `layoutCache` (`GetTemplateRevision`).
+3. Narrow the panels to the fields they actually use, extending the scalar-reader
+   approach into small per-panel view structs.
+
+Option 1 is cheapest; option 3 is the most faithful to §1.1 and folds naturally
+into **§2.1** (`EditorStateDto` rework), which introduces a model layer anyway —
+consider doing it there rather than standalone.
+
+**Tests.** Whichever option: keep the existing clone tests green, and add a
+benchmark assertion or a `test_observations.md` entry recording the frame cost.
 
 ---
 
@@ -1360,7 +1445,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **A** | §1.4 | **Done 2026-08-12.** Two-line stderr fix + a `test_observations.md` entry. |
 | ✅ **B** | §1.2 → §1.3 | **Done 2026-08-12.** No golden-template churn was required — the generator tests do not pin hub or portal guard values. |
 | ✅ **C** | §3.1, §3.2, §3.4 | **Done 2026-08-12.** Extended on review with `constants/connectionNames.go` (connection-name builders). No behaviour change. |
-| **D** | §1.1 | Deep copy + regression tests. Benchmark before/after. |
+| ✅ **D** | §1.1 | **Done 2026-08-14.** Deep `Clone` + regression tests. Cost +4.6 % frame time / +42 % allocs on `TabCycling`; spun the residual off as §1.5. |
 | **E** | §4.1 | Save To rename. Touches the file-explorer integration tests — do **before** §5.3. |
 | **F** | §5.3 | File-explorer pointer/hidden-file tests, in the file §4.1 just rewrote. |
 | **G** | §2.3 | Float preview geometry. Regenerates GPU snapshots — owner review required. Do **before** §5.1. |
@@ -1370,6 +1455,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |
 | **L** | §5.4 (a–c), §5.5 | GUI test-harness groundwork: handler hygiene, named mask helpers, coordinate constants, snapshot-comparison fix. Slot **before F**, so F/H write against the settled shape and a comparison that can actually fail. |
 | **M** | §5.4 (d–g) | Grows with F and H — the scroll seam (f) is a hard prerequisite for §5.2. Never build ahead of the test that needs it. |
+| **N** | §1.5 | Whole-state per-frame clones left over from batch D. Independent of every other batch; schedule when the frame cost matters. |
 
 **Note on L/M.** They are listed last only because the table is otherwise
 ordered by dependency; L should actually run before batch F. §5.5 step 1 can be
@@ -1377,8 +1463,9 @@ done at any time — it needs a CI artifact, not a code freeze.
 
 **Coverage note.** Batches C, D, F, H and J add tests; B, E and G mostly move
 existing behaviour. Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **72.6 %**
-(72.5 % through batch B; batch C added the helper tests).
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **72.9 %**
+(72.5 % through batch B; batch C added the helper tests, batch D the clone and
+accessor tests).
 
 ---
 
@@ -1393,7 +1480,7 @@ existing behaviour. Run the coverage task before and after **every** batch
 | Unit | `go test ./test/unit/... -count=1` | pass |
 | Integration | `go test -tags=integration_test ./test/integration/... -count=1` | pass |
 | GUI integration | `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (needs GPU) |
-| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **72.6 %** |
+| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **72.9 %** |
 | Lint | `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
 | Format | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | Wire | `wire diff ./internal/composition/...` | no diff |

@@ -2,7 +2,6 @@ package editorStateDto_test
 
 import (
 	"reflect"
-	"slices"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
@@ -264,37 +263,11 @@ func fuzzedEditorState() dtos.EditorStateDto {
 	return state
 }
 
+// deepCloneEditorState is the production deep copy, behind a local name so the
+// comparison tests read as "these two states are independent copies". Its own
+// isolation guarantees are pinned in clone_test.go.
 func deepCloneEditorState(source dtos.EditorStateDto) dtos.EditorStateDto {
-	cloned := source
-	cloned.Bonuses = slices.Clone(source.Bonuses)
-	cloned.PlayerZoneContentRows = deepCloneContentRows(source.PlayerZoneContentRows)
-	cloned.LowNeutralContentRows = deepCloneContentRows(source.LowNeutralContentRows)
-	cloned.MediumNeutralContentRows = deepCloneContentRows(source.MediumNeutralContentRows)
-	cloned.HighNeutralContentRows = deepCloneContentRows(source.HighNeutralContentRows)
-	cloned.HubZoneContentRows = deepCloneContentRows(source.HubZoneContentRows)
-	return cloned
-}
-
-func deepCloneContentRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
-	cloned := slices.Clone(rows)
-	for rowIndex := range cloned {
-		cloned[rowIndex].Rules = slices.Clone(cloned[rowIndex].Rules)
-		for ruleIndex := range cloned[rowIndex].Rules {
-			rule := &cloned[rowIndex].Rules[ruleIndex]
-			rule.IsGuarded = clonePointer(rule.IsGuarded)
-			rule.IsSoloEncounter = clonePointer(rule.IsSoloEncounter)
-			rule.VariantID = clonePointer(rule.VariantID)
-		}
-	}
-	return cloned
-}
-
-func clonePointer[Value any](source *Value) *Value {
-	if source == nil {
-		return nil
-	}
-	value := *source
-	return &value
+	return source.Clone()
 }
 
 // mutateFieldValue changes a struct field to a value that differs from the

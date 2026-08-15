@@ -140,6 +140,45 @@ func NewDefaultEditorStateDto() EditorStateDto {
 	}
 }
 
+// Clone returns a copy that shares no backing array or pointer with the
+// receiver, so an in-place edit of any element on either side stays invisible
+// to the other. A plain struct copy duplicates slice headers only, which would
+// hide element mutations from the change detection in
+// EqualsIgnoringManualEdits.
+func (this *EditorStateDto) Clone() EditorStateDto {
+	clone := *this
+
+	clone.Bonuses = slices.Clone(this.Bonuses)
+	clone.PlayerZoneContentRows = cloneContentRows(this.PlayerZoneContentRows)
+	clone.LowestNeutralContentRows = cloneContentRows(this.LowestNeutralContentRows)
+	clone.LowNeutralContentRows = cloneContentRows(this.LowNeutralContentRows)
+	clone.MediumNeutralContentRows = cloneContentRows(this.MediumNeutralContentRows)
+	clone.HighNeutralContentRows = cloneContentRows(this.HighNeutralContentRows)
+	clone.HubZoneContentRows = cloneContentRows(this.HubZoneContentRows)
+
+	clone.ManualZones = slices.Clone(this.ManualZones)
+	for zoneIndex := range clone.ManualZones {
+		clone.ManualZones[zoneIndex] = clone.ManualZones[zoneIndex].Clone()
+	}
+
+	clone.ManualConnections = slices.Clone(this.ManualConnections)
+	for connectionIndex := range clone.ManualConnections {
+		clone.ManualConnections[connectionIndex] = clone.ManualConnections[connectionIndex].Clone()
+	}
+
+	return clone
+}
+
+// cloneContentRows deep-copies a content-row slice, preserving a nil slice as
+// nil because the change detection distinguishes nil from empty.
+func cloneContentRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
+	clone := slices.Clone(rows)
+	for rowIndex := range clone {
+		clone[rowIndex] = clone[rowIndex].Clone()
+	}
+	return clone
+}
+
 // LayoutDefiningOptionsChanged reports whether any option that changes the set
 // of zones or the connection graph differs between two editor states. When
 // these are unchanged, manual zone edits remain valid and can be reapplied.

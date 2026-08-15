@@ -167,7 +167,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 				theme, "Adjust the options to generate the map layout.", canvasSize, outerCanvasSize)(gtx)
 		}
 
-		topology := this.state.GetStateData().Topology
+		topology := this.state.GetTopology()
 		canvasSide := float64(canvasSize.X)
 		previewLayout, err := this.layoutCache.Get(this.state.GetTemplateRevision(), topology, canvasSide,
 			func() (preview.Layout, error) {

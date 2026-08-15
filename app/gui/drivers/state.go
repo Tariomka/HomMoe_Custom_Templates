@@ -15,6 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 const (
@@ -92,6 +93,16 @@ func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg,
 func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
 func (this *State) GetStateData() dtos.EditorStateDto { return this.innerState.GetCurrentState() }
+
+// Clone-free single-setting readers for per-frame Layout code; see EditorState.
+
+func (this *State) GetTemplateName() string { return this.innerState.GetTemplateName() }
+
+func (this *State) GetMapSize() int { return this.innerState.GetMapSize() }
+
+func (this *State) GetTopology() config.MapTopology { return this.innerState.GetTopology() }
+
+func (this *State) GetExperimentalMapSizes() bool { return this.innerState.GetExperimentalMapSizes() }
 
 func (this *State) GetCurrentPath() string { return this.currentPath }
 

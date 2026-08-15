@@ -55,6 +55,9 @@ func (this *stateHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, e
 func (this *stateHandler) ValidateEditorState(
 	stateDto dtos.EditorStateDto,
 	fixIssues bool) dtos.EditorStateValidationDto {
+	// Cloned on entry so the fixes below never write through to the caller's
+	// slices, and so the returned state does not alias them either.
+	stateDto = stateDto.Clone()
 	issues := this.editorValidator.Validate(&stateDto)
 	warnings := make([]string, 0, len(issues))
 	for _, issue := range issues {

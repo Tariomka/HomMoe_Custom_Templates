@@ -25,7 +25,7 @@ func (this *State) Load(onLoaded func()) {
 
 func (this *State) Save() {
 	if this.currentPath == "" {
-		this.SaveAs(this.innerState.GetCurrentState().TemplateName)
+		this.SaveAs(this.innerState.GetTemplateName())
 		return
 	}
 
