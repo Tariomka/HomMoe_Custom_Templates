@@ -48,6 +48,13 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   is left in the dialog is rendering and click wiring only.
   Still uncovered: the hidden-file toggle and the pointer-driven row/scroll
   interactions (owner decision - excluded from the scenario set).
+  Since batch E ("Save As" -> "Save To") the save-name field is read-only and
+  fed only by `State.SaveTo`, which sanitizes and trims before appending the
+  suffix. `resolveSaveTarget`'s whitespace-only rejection is therefore no longer
+  reachable through any production path - only by calling
+  `dialogs.NewSaveFileDialog` directly - so its test was dropped in favour of
+  `TestWhenNoNameWasResolved_TheConfirmButtonIsDisabled`, which covers the state
+  the UI can actually reach (an unnamed template).
 
 - app/gui/dialogs/zoneEditorDialog.go with its canvas, snap, property-panel,
   geometry, and transient-state sibling files - the Manual Zone Editor
@@ -97,15 +104,15 @@ Still unit-untestable (dialog-callback or Gio territory):
   (returns a Gio widget). Covered by the integration suite.
 - stateFiles.go - `handleSaveState` / `handleLoadState` success paths and
   `suggestDirectory` are only reachable through file-dialog callbacks
-  (`Load`/`SaveAs` pick handlers); unit tests assert the dialogs open, the
+  (`Load`/`SaveTo` pick handlers); unit tests assert the dialogs open, the
   integration suite exercises the load/save flows via the
   `integration_test`-gated `SaveStateToFile`/`LoadStateFromFile` exports.
-- stateFiles.go - `SaveAs`'s "only record `currentPath` when the write
+- stateFiles.go - `SaveTo`'s "only record `currentPath` when the write
   succeeded" rule (review item §1.2) cannot be unit tested: the decision lives
   in the closure handed to `dialogs.NewSaveFileDialog`, which is stored in the
   unexported `onSave` field and normally fires only from `confirmSelection` /
   `confirmOverwrite`, both of which need a `layout.Context`. The regression is
-  covered by `test/integration/stateSaveAs_integration_test.go` through the
+  covered by `test/integration/stateSaveTo_integration_test.go` through the
   `integration_test`-gated `DialogHost.GetTopDialog` and
   `FileExplorerDialog.ConfirmSave` exports.
 - stateFiles.go - `PickOutputDir` / `RevealOutputDir` only open dialogs whose

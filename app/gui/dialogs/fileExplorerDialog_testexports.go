@@ -40,8 +40,15 @@ func (this *FileExplorerDialog) ClickNewFolder() { this.newFolderBtn.Click() }
 // ClickCreateFolder ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) ClickCreateFolder() { this.createFolderBtn.Click() }
 
-// SetFilename ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) SetFilename(name string) { this.filenameEd.SetText(name) }
+// ResolvedSaveName returns the read-only name the save will use.
+// ONLY FOR INTEGRATION TEST USE
+func (this *FileExplorerDialog) ResolvedSaveName() string { return this.filenameEd.Text() }
+
+// SaveNameReadOnly reports whether the save-name field refuses edits. It only
+// answers truthfully after a frame has been laid out, because the widget's
+// read-only flag is applied by the textbox widget.
+// ONLY FOR INTEGRATION TEST USE
+func (this *FileExplorerDialog) SaveNameReadOnly() bool { return this.filenameEd.ReadOnly }
 
 // SetNewFolderName ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) SetNewFolderName(name string) { this.newFolderEd.SetText(name) }

@@ -151,7 +151,8 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
    **Bonuses & Bans** tabs.
 3. (Optional) On the **Layout & Zones** tab open the **Manual zone editor** to
    tweak the zones and connections of the last generated template.
-4. **Save** / **Save As** writes a `.gen.json` settings file (your inputs).
+4. **Save** / **Save To** writes a `.gen.json` settings file (your inputs).
+   The filename comes from the template name; **Save To** only picks the folder.
 5. Click **Generate** to build the template and refresh the preview,
    then **Save Template** to write `<TemplateName>.rmg.json` (plus a preview
    `.png`) into the output folder.

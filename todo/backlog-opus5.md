@@ -72,7 +72,7 @@ are **not** re-reported here.
 | Hub / random-portal guard values are wrong | Carried, **root cause confirmed**, split into two items | §1.2, §1.3 |
 | Rework `EditorStateDto` | Carried, target package decided by owner: new **non-protected** `internal/entities/editor_state/` | §2.1 |
 | Move `entities/types.go` into `template/`, rename `template` → `template_entity` | Carried, ⚠ protected dir | §2.5 |
-| "Save As" is really "Save To" | Carried, UI treatment confirmed (read-only textbox) | §4.1 |
+| "Save As" is really "Save To" | ✅ Done (batch E, 2026-08-11) | §4.1 |
 
 ### 0.3 Disposition of [test_observations.md](test_observations.md)
 
@@ -1060,7 +1060,40 @@ output because `WithDistance` copies only `Min`/`Max`.
 
 ## 4. UI / UX
 
-### 4.1 🟡 "Save As" is really "Save To" — the UI offers a filename it then discards
+### 4.1 ✅ DONE — "Save As" is really "Save To" — the UI offered a filename it then discarded
+
+**Resolved 2026-08-11 (batch E).** The save dialog no longer lets the user type
+a filename it cannot honour. Outcome, so this entry stands on its own:
+
+- `getSaveRowWidget` shows a **read-only** textbox labelled `"Will save as:"`,
+  populated with the resolved name rather than a hint.
+- `State.SaveTo` (was `SaveAs`) sanitizes and trims the template name and
+  appends `.gen.json` **only when the result is non-empty** — an unnamed
+  template resolves to no filename at all, instead of the old `".gen.json"`
+  that the repository would have silently rewritten to
+  `Generated_Template.gen.json`.
+- A `hasResolvedSaveName` guard disables the confirm button and renders
+  `missingSaveNameMessage` ("Template name is required.") inline under the row,
+  mirroring the new-folder row's error pattern.
+- `onEntryClicked`'s `modeSaveFile` branch — which retargeted the save to a
+  clicked file row — was removed: with a read-only preview it would have
+  changed the target silently. Row clicks now only mean something in open mode.
+- Toolbar button `"Save As"` → `"Save To"`, dialog title `"Save File"` →
+  `"Save To"`. `NewSaveFileDialog`, `modeSaveFile` and `onSave` kept their
+  names (owner decision): they name the *explorer mode and callback*, not the
+  toolbar action.
+- `SetFilename` was dropped from the testexports (it existed only to drive an
+  editable field) in favour of the read accessors `ResolvedSaveName` and
+  `SaveNameReadOnly`.
+- The whitespace-only disabled-confirm test was deleted: that state is no
+  longer reachable through any production path. See
+  [test_observations.md](test_observations.md) for the recorded branch.
+- Docs updated in [QUICKSTART.md](../QUICKSTART.md) and
+  [README.md](../README.md); the 10 window snapshot goldens were regenerated
+  locally for the new button label.
+
+<details>
+<summary>Original finding</summary>
 
 **Evidence.** Writing editor state as `{TemplateName}.gen.json` is **intended**
 (review §1.1, owner-approved):
@@ -1087,55 +1120,7 @@ value is silently dropped —
 *directory*, nothing more, and the whole vocabulary around it ("Save As", "Save
 File", an editable filename box) promises otherwise.
 
-**Fix** (UI treatment confirmed by the owner 2026-08-11: **read-only textbox**,
-not a label — the value is filename-shaped and belongs in a field).
-
-- [fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go#L35-L51) —
-  `getSaveRowWidget`: pass `readonly = true` to
-  [`NewTextboxWidget`](../app/gui/widgets/textboxWidget.go#L17-L38) (the
-  parameter already exists and already sets `textEditor.Editor.ReadOnly`), and
-  relabel `"Save as:"` → `"Will save as:"` so the row reads as a preview of the
-  resolved name. The field must be **populated with the resolved name**, not a
-  hint, since the user can no longer type it.
-- [toolbar.go](../app/gui/editor/toolbar.go#L13-L73) — button `"Save As"` →
-  `"Save To"`, field `buttonSaveAs` → `buttonSaveTo`.
-- [stateFiles.go](../app/gui/drivers/stateFiles.go#L26-L42) — `State.SaveAs` →
-  `State.SaveTo`, including the `Save` fallback at
-  [#L27-L30](../app/gui/drivers/stateFiles.go#L27-L30).
-- [fileExplorerDialogModes.go](../app/gui/dialogs/fileExplorerDialogModes.go#L29-L42) —
-  dialog title `"Save File"` → `"Save To"`. **`NewSaveFileDialog`,
-  `modeSaveFile` and `onSave` stay** (owner decision): they name the *explorer
-  mode and callback*, not the toolbar action.
-- Docs: [QUICKSTART.md](../QUICKSTART.md#L48) and
-  [QUICKSTART.md](../QUICKSTART.md#L109), [README.md](../README.md#L154).
-
-**Tests.**
-
-- Rename `test/integration/stateSaveAs_integration_test.go` →
-  `stateSaveTo_integration_test.go` with its helper `newSaveAsProbe` and both
-  test names (`TestWhenSaveAsFails_CurrentPathIsNotRecorded`,
-  `TestWhenSaveAsSucceeds_CurrentPathIsRecorded`). It uses the `ConfirmSave`
-  testexport, not `SetFilename`, so it needs no behavioural change.
-- Rename `test/unit/app/gui/drivers/stateFiles/saveAs_test.go` →
-  `saveTo_test.go` (`TestWhenSaveAsIsCalled_DialogIsOpened`), and fix the name
-  reference in
-  [save_test.go](../test/unit/app/gui/drivers/stateFiles/save_test.go#L11).
-- [fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go#L73-L119):
-  `TestWhenSaveDialogIsConfirmed_TheTypedNameBecomesTheSaveTarget` and
-  `TestWhenSaveDialogIsConfirmedThroughTheDriver_AFileLandsInTheChosenDirectory`
-  both drive `SetFilename`; rewrite them as "the field shows the resolved name
-  and cannot be edited" / "the file lands in the chosen directory under the
-  resolved name".
-  `TestWhenTheFilenameIsWhitespaceOnly_TheConfirmButtonIsDisabled` and
-  `TestWhenTheFilenameIsValid_TheConfirmButtonIsEnabled` need a **new trigger**
-  — the user can no longer produce a whitespace filename. **If investigation
-  shows** the whitespace state is now unreachable through any public path,
-  delete the disabled-case test and record the removed branch in
-  [test_observations.md](test_observations.md) rather than adding a test-only
-  seam.
-- [fileExplorerDialog_testexports.go](../app/gui/dialogs/fileExplorerDialog_testexports.go#L5-L45):
-  `SetFilename` exists only to drive an editable field — remove it, or replace
-  it with a read accessor. `ConfirmSave` stays.
+</details>
 
 ---
 
@@ -1602,8 +1587,8 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **B** | §1.2 → §1.3 | **Done 2026-08-12.** No golden-template churn was required — the generator tests do not pin hub or portal guard values. |
 | ✅ **C** | §3.1, §3.2, §3.4 | **Done 2026-08-12.** Extended on review with `constants/connectionNames.go` (connection-name builders). No behaviour change. |
 | ✅ **D** | §1.1 | **Done 2026-08-14.** Deep `Clone` + regression tests. Cost +4.6 % frame time / +42 % allocs on `TabCycling`; spun the residual off as §1.5. |
-| **E** | §4.1 | Save To rename. Touches the file-explorer integration tests — do **before** §5.3. |
-| **F** | §5.3 | File-explorer pointer/hidden-file tests, in the file §4.1 just rewrote. |
+| ✅ **E** | §4.1 | **Done 2026-08-11.** Save To rename + read-only resolved-name preview + blank-name guard. Regenerated the 10 window goldens for the new button label. |
+| **F** | §5.3 | File-explorer pointer/hidden-file tests, in the file §4.1 just rewrote. **Note:** §4.1 removed the save-mode row-click behaviour, so the row-click selection test now applies to **open mode only**. |
 | **G** | §2.3 | Float preview geometry. Regenerates GPU snapshots — owner review required. Do **before** §5.1. |
 | **H** | §5.1, §5.2 | Zone-editor pointer + property-panel tests, against the post-§2.3 coordinates. |
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |

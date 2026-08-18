@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenSaveAsIsCalled_DialogIsOpened(t *testing.T) {
+func TestWhenSaveToIsCalled_DialogIsOpened(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := drivers.NewUIState(
@@ -19,7 +19,7 @@ func TestWhenSaveAsIsCalled_DialogIsOpened(t *testing.T) {
 		false)
 
 	// Act
-	state.SaveAs(gofakeit.ProductName())
+	state.SaveTo(gofakeit.ProductName())
 
 	// Assert
 	assert.True(t, state.GetDialogHost().IsOpen())

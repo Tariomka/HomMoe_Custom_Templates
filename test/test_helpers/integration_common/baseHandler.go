@@ -57,7 +57,7 @@ func (this *BaseHandler) ClickBonusesAndBansTab() *BonusesAndBansTabHandler {
 }
 
 // ClickNew discards the editor state and starts a fresh template. The toolbar
-// methods take no snapshot: Load and Save As open a dialog listing the
+// methods take no snapshot: Load and Save To open a dialog listing the
 // per-machine templates directory (AGENTS.md 2.7), which no golden can hold.
 func (this *BaseHandler) ClickNew() *BaseHandler {
 	this.runner.tb.Helper()
@@ -71,9 +71,9 @@ func (this *BaseHandler) ClickLoad() *FileExplorerHandler {
 	return &FileExplorerHandler{base: this}
 }
 
-func (this *BaseHandler) ClickSaveAs() *FileExplorerHandler {
+func (this *BaseHandler) ClickSaveTo() *FileExplorerHandler {
 	this.runner.tb.Helper()
-	this.runner.ClickAt(f32.Pt(saveAsButtonX, toolbarCenterY))
+	this.runner.ClickAt(f32.Pt(saveToButtonX, toolbarCenterY))
 	return &FileExplorerHandler{base: this}
 }
 

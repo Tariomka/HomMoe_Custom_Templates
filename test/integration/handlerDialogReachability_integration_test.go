@@ -35,13 +35,13 @@ func TestHandlerDialogs_ClosingFileExplorerDismissesIt(t *testing.T) {
 	assert.False(t, dialog.IsOpen())
 }
 
-func TestHandlerDialogs_SaveAsOpensFileExplorer(t *testing.T) {
+func TestHandlerDialogs_SaveToOpensFileExplorer(t *testing.T) {
 	// Arrange
 	runner := integration_common.NewAppRunner(t)
 	handler := integration_common.NewHandler(runner)
 
 	// Act
-	dialog := handler.ClickSaveAs()
+	dialog := handler.ClickSaveTo()
 
 	// Assert
 	assert.True(t, dialog.IsOpen())

@@ -9,13 +9,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
-// Load opens the file picker and installs the picked .gen.json editor state.
-// The picker is asynchronous, so callers must NOT resync their widgets at
-// call time - onLoaded runs inside the pick handler, after the loaded state
-// has been installed and only when loading succeeded.
+// Load loads in an editor state from a file. The file picker is asynchronous,
+// so onLoaded is used to resync the UI only when loading succeeded.
 func (this *State) Load(onLoaded func()) {
-	// Editor state by default is loaded from the same directory as the executable.
-	dir := this.workingDirectory()
+	dir := this.workingDirectory() // Editor state by default is loaded from the same directory as the executable.
 	this.dialogs.Open(dialogs.NewOpenFileDialog(this.fileSystem, dir, []string{configFileExtension}, func(path string) {
 		if this.handleLoadState(path) && onLoaded != nil {
 			onLoaded()
@@ -25,18 +22,22 @@ func (this *State) Load(onLoaded func()) {
 
 func (this *State) Save() {
 	if this.currentPath == "" {
-		this.SaveAs(this.innerState.GetTemplateName())
+		this.SaveTo(this.innerState.GetTemplateName())
 		return
 	}
 
 	this.handleSaveState(this.currentPath)
 }
 
-func (this *State) SaveAs(templateName string) {
-	// Editor state by default is saved in the same directory as the executable.
-	dir := this.workingDirectory()
-	defaultName := helpers.SanitizeFilename(strings.TrimSpace(templateName)) + configFileExtension
-	this.dialogs.Open(dialogs.NewSaveFileDialog(this.fileSystem, dir, defaultName, func(path string) {
+// SaveTo saves editor state to the file designated by templateName. The directory is picked via dialog.
+func (this *State) SaveTo(templateName string) {
+	dir := this.workingDirectory() // Editor state by default is saved in the same directory as the executable.
+	resolvedName := strings.TrimSpace(templateName)
+	if resolvedName != "" {
+		resolvedName = helpers.SanitizeFilename(resolvedName) + configFileExtension
+	}
+
+	this.dialogs.Open(dialogs.NewSaveFileDialog(this.fileSystem, dir, resolvedName, func(path string) {
 		this.handleSaveState(path)
 	}))
 }

@@ -39,7 +39,7 @@ const (
 
 	newButtonX    = 32
 	loadButtonX   = 84
-	saveAsButtonX = 200
+	saveToButtonX = 200
 
 	// mapSizeSelectorTrigger* opens the General tab's map size dropdown.
 	// Confirmed by clicking it and observing the option rows appear.

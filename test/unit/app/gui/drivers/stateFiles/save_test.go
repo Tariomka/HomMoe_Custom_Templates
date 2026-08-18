@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenNoCurrentPathExists_SaveOpensSaveAsDialog(t *testing.T) {
+func TestWhenNoCurrentPathExists_SaveOpensSaveToDialog(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}

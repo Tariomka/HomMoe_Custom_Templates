@@ -67,10 +67,11 @@ func TestWhenOpenDialogConfirmsAFile_TheEditorStateIsLoaded(t *testing.T) {
 	assert.Equal(t, templateName, target.GetStateData().TemplateName)
 }
 
-// TestWhenSaveDialogIsConfirmed_TheTypedNameBecomesTheSaveTarget pins the
-// dialog's own contract: the filename field plus the current directory produce
-// the path handed to the save callback, suffix included.
-func TestWhenSaveDialogIsConfirmed_TheTypedNameBecomesTheSaveTarget(t *testing.T) {
+// TestWhenSaveDialogIsConfirmed_TheResolvedNameBecomesTheSaveTarget pins the
+// dialog's own contract: the name it was opened with plus the current directory
+// produce the path handed to the save callback, suffix included. The name comes
+// from the caller because the field is a read-only preview.
+func TestWhenSaveDialogIsConfirmed_TheResolvedNameBecomesTheSaveTarget(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	directory := t.TempDir()
@@ -80,9 +81,8 @@ func TestWhenSaveDialogIsConfirmed_TheTypedNameBecomesTheSaveTarget(t *testing.T
 	dialog := dialogs.NewSaveFileDialog(
 		composition.InitializeFileSystemHandler(),
 		directory,
-		"",
+		filename,
 		func(path string) { savedPath = path })
-	dialog.SetFilename(filename)
 
 	// Act
 	dialog.ClickConfirm()
@@ -90,6 +90,65 @@ func TestWhenSaveDialogIsConfirmed_TheTypedNameBecomesTheSaveTarget(t *testing.T
 
 	// Assert
 	assert.Equal(t, filepath.Join(directory, filename+saveSuffix), savedPath)
+}
+
+// TestWhenTheSaveDialogIsLaidOut_TheNameFieldIsReadOnly guards the point of the
+// rename: the row previews the name the state will be written under, so the
+// user must not be able to type a name that would then be discarded.
+func TestWhenTheSaveDialogIsLaidOut_TheNameFieldIsReadOnly(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	dialog := dialogs.NewSaveFileDialog(
+		composition.InitializeFileSystemHandler(),
+		t.TempDir(),
+		gofakeit.LetterN(8),
+		nil)
+
+	// Act
+	frameFileExplorer(t, dialog, themes.NewTheme())
+
+	// Assert
+	assert.True(t, dialog.SaveNameReadOnly())
+}
+
+// TestWhenNoNameWasResolved_TheConfirmButtonIsDisabled: an unnamed template
+// resolves to no filename, and the field can no longer be typed into, so the
+// save has to be refused up front instead of writing under a fallback name.
+func TestWhenNoNameWasResolved_TheConfirmButtonIsDisabled(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	dialog := dialogs.NewSaveFileDialog(
+		composition.InitializeFileSystemHandler(),
+		t.TempDir(),
+		"",
+		nil)
+
+	// Act
+	frameFileExplorer(t, dialog, themes.NewTheme())
+
+	// Assert
+	assert.True(t, dialog.ConfirmDisabled())
+}
+
+// TestWhenAFileRowIsClickedInSaveMode_TheResolvedNameIsUnchanged: a row click
+// used to retarget the save at the clicked file, which would silently write the
+// state under a name the template does not have.
+func TestWhenAFileRowIsClickedInSaveMode_TheResolvedNameIsUnchanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	directory := t.TempDir()
+	resolvedName := gofakeit.LetterN(8) + saveSuffix
+	existing := gofakeit.LetterN(9) + saveSuffix
+	require.NoError(t, os.WriteFile(filepath.Join(directory, existing), []byte("{}"), 0o600))
+	dialog := dialogs.NewSaveFileDialog(
+		composition.InitializeFileSystemHandler(), directory, resolvedName, nil)
+	require.True(t, dialog.ClickEntry(existing), "the fixture must be listed")
+
+	// Act
+	frameFileExplorer(t, dialog, themes.NewTheme())
+
+	// Assert
+	assert.Equal(t, resolvedName, dialog.ResolvedSaveName())
 }
 
 // TestWhenSaveDialogIsConfirmedThroughTheDriver_AFileLandsInTheChosenDirectory
@@ -103,8 +162,7 @@ func TestWhenSaveDialogIsConfirmedThroughTheDriver_AFileLandsInTheChosenDirector
 	fileSystem := composition.InitializeFileSystemHandler()
 	state := drivers.NewUIState(
 		composition.InitializeGuiHandler(), fileSystem, composition.InitializeRegenerationHandler(), false)
-	dialog := dialogs.NewSaveFileDialog(fileSystem, directory, "", state.SaveStateToFile)
-	dialog.SetFilename(gofakeit.LetterN(8))
+	dialog := dialogs.NewSaveFileDialog(fileSystem, directory, gofakeit.LetterN(8), state.SaveStateToFile)
 
 	// Act
 	dialog.ClickConfirm()
@@ -243,26 +301,7 @@ func TestWhenSaveTargetIsAnExistingFolder_TheSaveIsRefused(t *testing.T) {
 	assert.Equal(t, "A folder with that name already exists.", dialog.SaveError())
 }
 
-// TestWhenTheFilenameIsWhitespaceOnly_TheConfirmButtonIsDisabled: the button's
-// enabled state and the save's success derive from the same predicate, so a
-// click can no longer look accepted and do nothing.
-func TestWhenTheFilenameIsWhitespaceOnly_TheConfirmButtonIsDisabled(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		t.TempDir(),
-		"   ",
-		nil)
-
-	// Act
-	frameFileExplorer(t, dialog, themes.NewTheme())
-
-	// Assert
-	assert.True(t, dialog.ConfirmDisabled())
-}
-
-func TestWhenTheFilenameIsValid_TheConfirmButtonIsEnabled(t *testing.T) {
+func TestWhenANameWasResolved_TheConfirmButtonIsEnabled(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	dialog := dialogs.NewSaveFileDialog(
