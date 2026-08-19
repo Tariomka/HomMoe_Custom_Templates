@@ -71,7 +71,6 @@ type FileExplorerDialog struct {
 	hiddenToggle        widget.Clickable
 	newFolderBtn        widget.Clickable
 	createFolderBtn     widget.Clickable
-	cancelFolderBtn     widget.Clickable
 	confirmBtn          widget.Clickable
 	cancelBtn           widget.Clickable
 	overwriteConfirmBtn widget.Clickable
@@ -140,10 +139,6 @@ func (this *FileExplorerDialog) Body(gtx layout.Context, theme *material.Theme) 
 	if this.canModify() && this.newFolderActive {
 		if this.createFolderBtn.Clicked(gtx) {
 			this.tryCreateFolder()
-		}
-		if this.cancelFolderBtn.Clicked(gtx) {
-			this.newFolderActive = false
-			this.newFolderErr = ""
 		}
 	}
 

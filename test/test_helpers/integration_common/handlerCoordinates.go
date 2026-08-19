@@ -108,7 +108,45 @@ const (
 	// Olden Era templates directory.
 	outputDirectoryPathTop    = 809
 	outputDirectoryPathBottom = 838
+
+	// fileDialogPanel* bound the modal panel DialogHost centers on screen for
+	// the file explorer's 720x560 PreferredSize. Buttons are looked up inside
+	// this rectangle so the dialog's own Save and Cancel are told apart from the
+	// toolbar's, which stay laid out behind the scrim.
+	fileDialogPanelWidth  = 720
+	fileDialogPanelHeight = 560
+	fileDialogPanelLeft   = (WindowWidth - fileDialogPanelWidth) / 2
+	fileDialogPanelTop    = (WindowHeight - fileDialogPanelHeight) / 2
+
+	// fileDialogListScroll* is a point over the file explorer's listing. Every
+	// row is clickable, but a row absorbs taps only - the wheel reaches the
+	// enclosing material.List.
+	fileDialogListScrollX = fileDialogPanelLeft + fileDialogPanelWidth/2
+	fileDialogListScrollY = fileDialogPanelTop + 200
+
+	// fileStatus* bound the toolbar's right-hand "File: ..." column. It reports
+	// the path of the file being edited: the per-run temporary directory in a
+	// fixture-backed test, and a per-machine path otherwise.
+	fileStatusLeft   = 1000
+	fileStatusBottom = 46
+
+	// headerBarSlack widens the file explorer's path bar mask vertically,
+	// because the mask is derived from the header buttons flanking the bar and
+	// the textbox between them is not exactly as tall as they are.
+	headerBarSlack = 6
 )
+
+// fileDialogRect is the modal panel the file explorer is drawn into.
+func fileDialogRect() image.Rectangle {
+	return image.Rect(
+		fileDialogPanelLeft, fileDialogPanelTop,
+		fileDialogPanelLeft+fileDialogPanelWidth, fileDialogPanelTop+fileDialogPanelHeight)
+}
+
+// fileStatusMask covers the toolbar's current-file path, which is per-run.
+func fileStatusMask() image.Rectangle {
+	return image.Rect(fileStatusLeft, 0, WindowWidth, fileStatusBottom)
+}
 
 // previewCanvasMask covers the interior of the preview canvas, whose contents
 // are regenerated with fresh randomness whenever the topology is Random.

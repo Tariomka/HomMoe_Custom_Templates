@@ -49,10 +49,45 @@ func (this *Window) GetStateDriver() *drivers.State {
 	return this.state
 }
 
+// SetTemplateName ONLY FOR INTEGRATION TEST USE
+// Seeds the name the Save To dialog derives its filename from. The panels are
+// resynced afterwards because every layout writes their widget values back over
+// the editor state, which would otherwise undo this on the very next frame.
+func (this *Window) SetTemplateName(name string) {
+	this.state.UpdateState(func(state *dtos.EditorStateDto) { state.TemplateName = name })
+	this.load()
+}
+
 // scrollablePanel is satisfied by the panels that expose their list position
 // through a *_testexports.go file.
 type scrollablePanel interface {
 	ScrollPosition() (int, int)
+}
+
+// IFileExplorerDialog is the observation surface of dialogs.FileExplorerDialog,
+// satisfied by the accessors on its own *_testexports.go file. It is declared
+// here instead of in a *Interface.go file of its own because outside test/ only
+// *_testexports.go may carry the integration_test tag (AGENTS.md 4.6.1), and a
+// test-only contract must not reach production builds.
+type IFileExplorerDialog interface {
+	CurrentDir() string
+	EntryNames() []string
+	SelectedPath() string
+	ScrollPosition() (int, int)
+	ResolvedSaveName() string
+	SaveNameReadOnly() bool
+	ConfirmDisabled() bool
+	NewFolderActive() bool
+	OverwriteActive() bool
+	SaveError() string
+	NewFolderError() string
+}
+
+// TopFileExplorer ONLY FOR INTEGRATION TEST USE
+// Returns the top-most dialog as a file explorer, and whether it is one.
+func (this *Window) TopFileExplorer() (IFileExplorerDialog, bool) {
+	dialog, ok := this.state.GetDialogHost().GetTopDialog().(IFileExplorerDialog)
+	return dialog, ok
 }
 
 // SelectedPanelScrollPosition ONLY FOR INTEGRATION TEST USE

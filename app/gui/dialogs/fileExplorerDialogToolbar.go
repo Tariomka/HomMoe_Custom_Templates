@@ -75,9 +75,7 @@ func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) lay
 						widgets.NewDefaultComponentSpacer(),
 						layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
 						widgets.NewDefaultComponentSpacer(),
-						layout.Rigid(widgets.NewButtonWidget(theme, "Create", &this.createFolderBtn, false)),
-						widgets.NewDefaultComponentSpacer(),
-						layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelFolderBtn, false)),
+						layout.Rigid(widgets.NewButtonWidget(theme, "Create Folder", &this.createFolderBtn, false)),
 					)
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {

@@ -55,6 +55,23 @@ func (this *AppRunner) MaskRect(rect image.Rectangle) {
 	this.masker.AddRect(rect)
 }
 
+// UnmaskRect lifts a rectangle registered with MaskRect, for a region that is
+// only nondeterministic while something transient is on screen.
+func (this *AppRunner) UnmaskRect(rect image.Rectangle) {
+	this.tb.Helper()
+	if !this.masker.RemoveRect(rect) {
+		this.tb.Fatalf("UnmaskRect: %v was never masked", rect)
+	}
+}
+
+// SnapshotsEnabled reports whether EnableSnapshots armed this runner, including
+// the headed run that captures nothing. Handlers use it to refuse an action they
+// cannot produce a machine-independent golden for.
+func (this *AppRunner) SnapshotsEnabled() bool {
+	this.tb.Helper()
+	return this.snapshotFile != ""
+}
+
 // VerifySnapshot renders, masks and then saves (-update) or validates the
 // screenshot for the action that just completed. No-op unless EnableSnapshots
 // armed this runner with a headless window.

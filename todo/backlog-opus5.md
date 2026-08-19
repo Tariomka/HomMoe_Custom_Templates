@@ -84,7 +84,7 @@ now provides `ClickAt`, `MoveTo`, `DragTo` and `InputText`):
 | --- | --- |
 | Zone editor: drag-to-connect, zone drag + snapping ("need synthetic pointer events — still future work") | §5.1 |
 | Zone editor: property panels' `widget.Editor` / dropdown paths | §5.2 |
-| File explorer: hidden-file toggle + pointer-driven row/scroll interactions (was "owner decision — excluded"; owner re-opened it 2026-08-11) | §5.3 |
+| File explorer: hidden-file toggle + pointer-driven row/scroll interactions (was "owner decision — excluded"; owner re-opened it 2026-08-11) | §5.3 ✅ done |
 
 **Left in place as accepted, intentional gaps — do not re-report:** all the
 Gio-widget/panel entries (`buttonWidget`, `sliderRowWidget`, `layoutPanel*`,
@@ -1193,7 +1193,22 @@ Focus the field with `ClickAt` before `InputText` (the helper's doc comment
 requires it). Assert through `State.ApplyEditedZones` output, not through
 dialog internals.
 
-### 5.3 🟡 File explorer: hidden-file toggle and pointer-driven row/scroll interactions
+### 5.3 ✅ FIXED 🟡 File explorer: hidden-file toggle and pointer-driven row/scroll interactions
+
+**Fixed in batch F, 2026-08-14.** See
+[plans/batch-f-file-explorer.md](../plans/batch-f-file-explorer.md). The listing
+behaviours landed as five new tests in
+[fileExplorerDialogListing_integration_test.go](../test/integration/gui/fileExplorerDialogListing_integration_test.go)
+(toggle on, toggle off, row selection in open mode, directory descent, wheel
+scroll), and the twelve existing tests in
+[fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go)
+were migrated onto the same handler, so the whole dialog is now driven by real
+pointer events through the real toolbar with a golden per action. Every `Click*`
+test-export on the dialog was deleted as a result. The listing rows had no
+accessibility label to address, so `getEntryRowWidget` now emits button
+semantics; that is the one production line the tests required.
+
+**Original report follows.**
 
 **Evidence.** [test_observations.md](test_observations.md) for the file
 explorer: *"Still uncovered: the hidden-file toggle and the pointer-driven
@@ -1588,7 +1603,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **C** | §3.1, §3.2, §3.4 | **Done 2026-08-12.** Extended on review with `constants/connectionNames.go` (connection-name builders). No behaviour change. |
 | ✅ **D** | §1.1 | **Done 2026-08-14.** Deep `Clone` + regression tests. Cost +4.6 % frame time / +42 % allocs on `TabCycling`; spun the residual off as §1.5. |
 | ✅ **E** | §4.1 | **Done 2026-08-11.** Save To rename + read-only resolved-name preview + blank-name guard. Regenerated the 10 window goldens for the new button label. |
-| **F** | §5.3 | File-explorer pointer/hidden-file tests, in the file §4.1 just rewrote. **Note:** §4.1 removed the save-mode row-click behaviour, so the row-click selection test now applies to **open mode only**. |
+| ✅ **F** | §5.3 | **Done 2026-08-14.** File-explorer pointer/hidden-file tests plus a full migration of the existing dialog tests onto `FileExplorerHandler`; the save-mode row-click test applies to **open mode only**, per §4.1. Coverage flat at 72.9 %. |
 | **G** | §2.3 | Float preview geometry. Regenerates GPU snapshots — owner review required. Do **before** §5.1. |
 | **H** | §5.1, §5.2 | Zone-editor pointer + property-panel tests, against the post-§2.3 coordinates. |
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |

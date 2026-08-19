@@ -12,7 +12,7 @@ import (
 // Load loads in an editor state from a file. The file picker is asynchronous,
 // so onLoaded is used to resync the UI only when loading succeeded.
 func (this *State) Load(onLoaded func()) {
-	dir := this.workingDirectory() // Editor state by default is loaded from the same directory as the executable.
+	dir := this.getWorkingDirectory()
 	this.dialogs.Open(dialogs.NewOpenFileDialog(this.fileSystem, dir, []string{configFileExtension}, func(path string) {
 		if this.handleLoadState(path) && onLoaded != nil {
 			onLoaded()
@@ -31,7 +31,7 @@ func (this *State) Save() {
 
 // SaveTo saves editor state to the file designated by templateName. The directory is picked via dialog.
 func (this *State) SaveTo(templateName string) {
-	dir := this.workingDirectory() // Editor state by default is saved in the same directory as the executable.
+	dir := this.getWorkingDirectory()
 	resolvedName := strings.TrimSpace(templateName)
 	if resolvedName != "" {
 		resolvedName = helpers.SanitizeFilename(resolvedName) + configFileExtension
@@ -112,10 +112,18 @@ func (this *State) handleLoadState(path string) bool {
 	return true
 }
 
-// workingDirectory returns the process working directory, resolved through the
-// filesystem handler so the driver performs no path arithmetic of its own.
-// ResolveStartDirectory always yields an existing directory, so unlike the
-// raw [os.Getwd] it never needs a caller-side fallback.
-func (this *State) workingDirectory() string {
+// getWorkingDirectory returns the directory a file dialog should open at: the
+// one holding the file currently being edited, so a second Load or Save To
+// lands where the user last worked, falling back to the process working
+// directory before anything has been opened or saved. Resolution goes through
+// the filesystem handler so the driver performs no path arithmetic of its own -
+// ResolveStartDirectory climbs from a file path to its containing directory and
+// always yields an existing one, so unlike the raw [os.Getwd] it never needs a
+// caller-side fallback.
+func (this *State) getWorkingDirectory() string {
+	if this.currentPath != "" {
+		return this.fileSystem.ResolveStartDirectory(this.currentPath)
+	}
+
 	return this.fileSystem.ResolveStartDirectory(".")
 }

@@ -82,7 +82,7 @@ func NewUIState(
 			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)
 		}
 
-		templateDir = state.workingDirectory()
+		templateDir = state.getWorkingDirectory()
 	}
 	state.outputPath.SetText(templateDir)
 	return state

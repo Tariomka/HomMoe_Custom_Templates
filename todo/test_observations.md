@@ -37,17 +37,23 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   `confirmButtonState` and `tryCreateFolder` need `layout.Context` +
   `widget.Clickable` click routing, so they have no unit tests. Since 2026-08-07
   (review item §2.1/§2.5) they ARE covered end-to-end by
-  test/integration/gui/fileExplorerDialog_integration_test.go, which drives real
-  frames and queues clicks with `widget.Clickable.Click` through the
-  `integration_test`-gated accessors in `fileExplorerDialog_testexports.go`:
-  open-and-load, save target resolution, save through the real state driver,
-  the overwrite prompt (gated write, cancel, confirm), new-folder creation, the
-  existing-folder refusal and the disabled-confirm predicate. All filesystem
-  *policy* (listing, filtering, hidden entries, roots, path resolution, reserved
-  names) moved to internal/services/file_system and is unit-tested there; what
-  is left in the dialog is rendering and click wiring only.
-  Still uncovered: the hidden-file toggle and the pointer-driven row/scroll
-  interactions (owner decision - excluded from the scenario set).
+  test/integration/gui/fileExplorerDialog_integration_test.go and, since batch F
+  (§5.3), test/integration/gui/fileExplorerDialogListing_integration_test.go.
+  Both drive the real toolbar and inject real pointer events through
+  `integration_common.FileExplorerHandler`, which resolves every button and
+  listing row by its accessibility label, and both compare a golden image per
+  action: open-and-load, save target resolution, save through the real state
+  driver, the overwrite prompt (gated write, cancel, confirm), new-folder
+  creation and dismissal, the existing-folder refusal, the disabled-confirm
+  predicate, the hidden-file toggle in both directions, row selection, directory
+  descent and wheel scrolling. All filesystem *policy* (listing, filtering,
+  hidden entries, roots, path resolution, reserved names) moved to
+  internal/services/file_system and is unit-tested there; what is left in the
+  dialog is rendering and click wiring only.
+  Still uncovered end-to-end: the Windows-only `hasHiddenAttribute` branch of
+  the hidden-entry filter. The toggle tests exercise the dot-prefix rule, which
+  is what both platforms share; the file-attribute rule is unit-tested only,
+  because setting it needs a syscall no fixture builder should be making.
   Since batch E ("Save As" -> "Save To") the save-name field is read-only and
   fed only by `State.SaveTo`, which sanitizes and trims before appending the
   suffix. `resolveSaveTarget`'s whitespace-only rejection is therefore no longer
@@ -117,6 +123,12 @@ Still unit-untestable (dialog-callback or Gio territory):
   `FileExplorerDialog.ConfirmSave` exports.
 - stateFiles.go - `PickOutputDir` / `RevealOutputDir` only open dialogs whose
   behavior lives in the dialog implementations.
+- stateFiles.go - `getWorkingDirectory`'s `currentPath != ""` branch: nothing
+  outside the driver can set `currentPath`, which is written only by the private
+  `handleSaveState` / `handleLoadState`, so a unit test always measures the
+  fallback. Batch F covered the branch end-to-end instead, through the
+  `integration_test`-gated `State.SetCurrentPath` that the GUI suite's fixture
+  directories are seeded with.
 - stateGeneration.go - `reapplyManualEdits` castle-change branch requires a
   generation-then-castle-option-change sequence entangled with the real
   mapper; exercised by the integration suite's manual-edit scenarios.

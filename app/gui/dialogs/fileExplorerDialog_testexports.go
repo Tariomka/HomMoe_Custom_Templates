@@ -9,37 +9,6 @@ func (this *FileExplorerDialog) ConfirmSave(path string) {
 	}
 }
 
-// ClickEntry queues a click on the listed entry called name and reports whether
-// such an entry exists. ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) ClickEntry(name string) bool {
-	for _, entry := range this.entries {
-		if entry.Name == name {
-			this.clickFor(entry.Path).Click()
-			return true
-		}
-	}
-
-	return false
-}
-
-// ClickUp ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) ClickUp() { this.upBtn.Click() }
-
-// ClickConfirm ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) ClickConfirm() { this.confirmBtn.Click() }
-
-// ClickOverwriteConfirm ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) ClickOverwriteConfirm() { this.overwriteConfirmBtn.Click() }
-
-// ClickOverwriteCancel ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) ClickOverwriteCancel() { this.overwriteCancelBtn.Click() }
-
-// ClickNewFolder ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) ClickNewFolder() { this.newFolderBtn.Click() }
-
-// ClickCreateFolder ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) ClickCreateFolder() { this.createFolderBtn.Click() }
-
 // ResolvedSaveName returns the read-only name the save will use.
 // ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) ResolvedSaveName() string { return this.filenameEd.Text() }
@@ -49,9 +18,6 @@ func (this *FileExplorerDialog) ResolvedSaveName() string { return this.filename
 // read-only flag is applied by the textbox widget.
 // ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) SaveNameReadOnly() bool { return this.filenameEd.ReadOnly }
-
-// SetNewFolderName ONLY FOR INTEGRATION TEST USE
-func (this *FileExplorerDialog) SetNewFolderName(name string) { this.newFolderEd.SetText(name) }
 
 // CurrentDir ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) CurrentDir() string { return this.currentDir }
@@ -70,8 +36,18 @@ func (this *FileExplorerDialog) EntryNames() []string {
 // SelectedPath ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) SelectedPath() string { return this.selectedPath }
 
+// ScrollPosition returns the listing's first visible row and its pixel offset.
+// ONLY FOR INTEGRATION TEST USE
+func (this *FileExplorerDialog) ScrollPosition() (int, int) {
+	return this.list.Position.First, this.list.Position.Offset
+}
+
 // OverwriteActive ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) OverwriteActive() bool { return this.overwriteActive }
+
+// NewFolderActive reports whether the inline new-folder row is showing.
+// ONLY FOR INTEGRATION TEST USE
+func (this *FileExplorerDialog) NewFolderActive() bool { return this.newFolderActive }
 
 // SaveError ONLY FOR INTEGRATION TEST USE
 func (this *FileExplorerDialog) SaveError() string { return this.saveErr }

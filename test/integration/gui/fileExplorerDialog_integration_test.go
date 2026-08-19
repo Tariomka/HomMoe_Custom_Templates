@@ -3,18 +3,12 @@
 package gui_test
 
 import (
-	"image"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
-	"gioui.org/widget/material"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
-	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/brianvoe/gofakeit/v7"
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,297 +16,267 @@ import (
 // saveSuffix mirrors the dialog's enforced save extension.
 const saveSuffix = ".gen.json"
 
-// frameFileExplorer lays out one dialog frame the way DialogHost does on every
-// vsync - button clicks queued with widget.Clickable.Click are consumed here -
-// and reports whether the dialog asked to close.
-func frameFileExplorer(t *testing.T, dialog *dialogs.FileExplorerDialog, theme *material.Theme) bool {
+// The template name a fresh editor starts with and the file the Save To dialog
+// therefore resolves it to. Every action below is compared against a golden, so
+// the names the dialog renders are fixed rather than fuzzed.
+const (
+	defaultTemplateName = "Custom Template"
+	defaultSaveFile     = defaultTemplateName + saveSuffix
+)
+
+// The names the tests seed or type. Fixed for the same reason.
+const (
+	roundTripTemplateName = "Round Trip"
+	roundTripSaveFile     = roundTripTemplateName + saveSuffix
+	discardedTemplateName = "Discarded"
+	existingSaveFile      = "existing.gen.json"
+	createdFolderName     = "nested"
+)
+
+// newEditor builds a snapshot-verified editor pointed at an empty fixture
+// directory, which is where its Load and Save To dialogs open. The runner is
+// returned alongside the handler because the editor state these tests assert on
+// is read through it.
+func newEditor(t *testing.T) (*integration_common.AppRunner, *integration_common.BaseHandler) {
 	t.Helper()
-	gtx, frameRouter := newDialogContext(image.Pt(720, 560))
-	_, done := dialog.Body(gtx, theme)
-	frameRouter.Frame(gtx.Ops)
-	return done
+	runner := integration_common.NewAppRunner(t)
+	if !integration_common.IsHeadless() {
+		runner.SetRenderDelay(500 * time.Millisecond)
+	}
+
+	return runner, integration_common.NewHandler(runner).WithFixtureDirectory().WithSnapshots()
 }
 
-// TestWhenOpenDialogConfirmsAFile_TheEditorStateIsLoaded drives the whole open
-// flow: list a directory, click a row, confirm, and let the pick handler install
-// the state - the path the review found untested because it needs a
-// layout.Context.
+// TestWhenOpenDialogConfirmsAFile_TheEditorStateIsLoaded drives the whole round
+// trip through the real toolbar: save the editor to the fixture directory,
+// change the state, then load the saved file back and confirm the change was
+// undone by the load rather than by the dialog closing.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenOpenDialogConfirmsAFile_TheEditorStateIsLoaded(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	directory := t.TempDir()
-	theme := themes.NewTheme()
-	fileSystem := composition.InitializeFileSystemHandler()
-	templateName := gofakeit.LetterN(8)
-
-	source := drivers.NewUIState(
-		composition.InitializeGuiHandler(), fileSystem, composition.InitializeRegenerationHandler(), false)
-	source.UpdateState(func(state *dtos.EditorStateDto) { state.TemplateName = templateName })
-	source.SaveStateToFile(filepath.Join(directory, gofakeit.LetterN(6)+saveSuffix))
-	fixturePath := source.GetCurrentPath()
-	require.FileExists(t, fixturePath)
-
-	target := drivers.NewUIState(
-		composition.InitializeGuiHandler(), fileSystem, composition.InitializeRegenerationHandler(), false)
-	dialog := dialogs.NewOpenFileDialog(fileSystem, directory, []string{saveSuffix}, target.LoadStateFromFile)
-	require.True(t, dialog.ClickEntry(filepath.Base(fixturePath)), "the saved fixture must be listed")
-	require.False(t, frameFileExplorer(t, dialog, theme))
-	require.Equal(t, fixturePath, dialog.SelectedPath())
+	runner, handler := newEditor(t)
+	runner.SetTemplateName(roundTripTemplateName)
+	handler.ClickSaveTo().ClickSave()
+	require.FileExists(t, filepath.Join(handler.FixtureDirectory(), roundTripSaveFile))
+	runner.SetTemplateName(discardedTemplateName)
 
 	// Act
-	dialog.ClickConfirm()
-	frameFileExplorer(t, dialog, theme)
+	handler.ClickLoad().ClickRow(roundTripSaveFile).ClickOpen()
 
 	// Assert
-	assert.Equal(t, templateName, target.GetStateData().TemplateName)
+	assert.Equal(t, roundTripTemplateName, runner.CurrentState().TemplateName)
 }
 
 // TestWhenSaveDialogIsConfirmed_TheResolvedNameBecomesTheSaveTarget pins the
-// dialog's own contract: the name it was opened with plus the current directory
-// produce the path handed to the save callback, suffix included. The name comes
-// from the caller because the field is a read-only preview.
+// dialog's contract: the name it was opened with plus the directory it is
+// showing produce the path the editor then remembers, suffix included. The name
+// is never typed because the field is a read-only preview.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenSaveDialogIsConfirmed_TheResolvedNameBecomesTheSaveTarget(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	directory := t.TempDir()
-	theme := themes.NewTheme()
-	filename := gofakeit.LetterN(8)
-	var savedPath string
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		directory,
-		filename,
-		func(path string) { savedPath = path })
+	runner, handler := newEditor(t)
 
 	// Act
-	dialog.ClickConfirm()
-	frameFileExplorer(t, dialog, theme)
+	handler.ClickSaveTo().ClickSave()
 
 	// Assert
-	assert.Equal(t, filepath.Join(directory, filename+saveSuffix), savedPath)
+	assert.Equal(t, filepath.Join(handler.FixtureDirectory(), defaultSaveFile), runner.CurrentPath())
 }
 
 // TestWhenTheSaveDialogIsLaidOut_TheNameFieldIsReadOnly guards the point of the
-// rename: the row previews the name the state will be written under, so the
-// user must not be able to type a name that would then be discarded.
+// rename: the row previews the name the state will be written under, so the user
+// must not be able to type a name that would then be discarded.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenTheSaveDialogIsLaidOut_TheNameFieldIsReadOnly(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		t.TempDir(),
-		gofakeit.LetterN(8),
-		nil)
+	_, handler := newEditor(t)
 
 	// Act
-	frameFileExplorer(t, dialog, themes.NewTheme())
+	explorer := handler.ClickSaveTo()
 
 	// Assert
-	assert.True(t, dialog.SaveNameReadOnly())
+	assert.True(t, explorer.Dialog().SaveNameReadOnly())
 }
 
 // TestWhenNoNameWasResolved_TheConfirmButtonIsDisabled: an unnamed template
 // resolves to no filename, and the field can no longer be typed into, so the
 // save has to be refused up front instead of writing under a fallback name.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenNoNameWasResolved_TheConfirmButtonIsDisabled(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		t.TempDir(),
-		"",
-		nil)
+	runner, handler := newEditor(t)
+	runner.SetTemplateName("")
 
 	// Act
-	frameFileExplorer(t, dialog, themes.NewTheme())
+	explorer := handler.ClickSaveTo()
 
 	// Assert
-	assert.True(t, dialog.ConfirmDisabled())
+	assert.True(t, explorer.Dialog().ConfirmDisabled())
+}
+
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
+func TestWhenANameWasResolved_TheConfirmButtonIsEnabled(t *testing.T) {
+	// Arrange
+	_, handler := newEditor(t)
+
+	// Act
+	explorer := handler.ClickSaveTo()
+
+	// Assert
+	assert.False(t, explorer.Dialog().ConfirmDisabled())
 }
 
 // TestWhenAFileRowIsClickedInSaveMode_TheResolvedNameIsUnchanged: a row click
 // used to retarget the save at the clicked file, which would silently write the
 // state under a name the template does not have.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenAFileRowIsClickedInSaveMode_TheResolvedNameIsUnchanged(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	directory := t.TempDir()
-	resolvedName := gofakeit.LetterN(8) + saveSuffix
-	existing := gofakeit.LetterN(9) + saveSuffix
-	require.NoError(t, os.WriteFile(filepath.Join(directory, existing), []byte("{}"), 0o600))
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(), directory, resolvedName, nil)
-	require.True(t, dialog.ClickEntry(existing), "the fixture must be listed")
+	_, handler := newEditor(t)
+	handler.WithFixtureFiles(existingSaveFile)
 
 	// Act
-	frameFileExplorer(t, dialog, themes.NewTheme())
+	explorer := handler.ClickSaveTo().ClickRow(existingSaveFile)
 
 	// Assert
-	assert.Equal(t, resolvedName, dialog.ResolvedSaveName())
+	assert.Equal(t, defaultSaveFile, explorer.Dialog().ResolvedSaveName())
 }
 
-// TestWhenSaveDialogIsConfirmedThroughTheDriver_AFileLandsInTheChosenDirectory
-// runs the same confirm through the real state driver and repository, so the
-// assertion is about bytes on disk rather than a callback argument.
-func TestWhenSaveDialogIsConfirmedThroughTheDriver_AFileLandsInTheChosenDirectory(t *testing.T) {
-	t.Parallel()
+// TestWhenSaveDialogIsConfirmed_AFileLandsInTheChosenDirectory asserts about
+// bytes on disk rather than the path the editor recorded, so the repository is
+// covered as well as the driver.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
+func TestWhenSaveDialogIsConfirmed_AFileLandsInTheChosenDirectory(t *testing.T) {
 	// Arrange
-	directory := t.TempDir()
-	theme := themes.NewTheme()
-	fileSystem := composition.InitializeFileSystemHandler()
-	state := drivers.NewUIState(
-		composition.InitializeGuiHandler(), fileSystem, composition.InitializeRegenerationHandler(), false)
-	dialog := dialogs.NewSaveFileDialog(fileSystem, directory, gofakeit.LetterN(8), state.SaveStateToFile)
+	_, handler := newEditor(t)
 
 	// Act
-	dialog.ClickConfirm()
-	require.True(t, frameFileExplorer(t, dialog, theme), "a successful save must close the dialog")
+	handler.ClickSaveTo().ClickSave()
 
 	// Assert
-	written, err := filepath.Glob(filepath.Join(directory, "*"+saveSuffix))
+	written, err := filepath.Glob(filepath.Join(handler.FixtureDirectory(), "*"+saveSuffix))
 	require.NoError(t, err)
 	assert.Len(t, written, 1)
 }
 
-// newOverwriteProbe opens a save dialog whose target already exists and drives
-// the confirm click that must raise the overwrite prompt instead of writing. The
-// save callback rewrites the file, standing in for the state driver, so a gated
-// write is observable on disk.
-func newOverwriteProbe(
-	t *testing.T,
-	theme *material.Theme) (dialog *dialogs.FileExplorerDialog, target string) {
+// newOverwriteProbe saves the editor once, changes the state so a second save
+// would produce different bytes, then confirms that second save onto the same
+// target - which must raise the overwrite prompt instead of writing. The bytes
+// the first save produced come back with it, so a gated write is observable.
+func newOverwriteProbe(t *testing.T) (
+	explorer *integration_common.FileExplorerHandler, target string, original []byte) {
 	t.Helper()
-	directory := t.TempDir()
-	filename := gofakeit.LetterN(8)
-	target = filepath.Join(directory, filename+saveSuffix)
-	require.NoError(t, os.WriteFile(target, []byte("original"), 0o600))
+	_, handler := newEditor(t)
+	handler.ClickSaveTo().ClickSave()
 
-	dialog = dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		directory,
-		filename,
-		func(path string) {
-			require.NoError(t, os.WriteFile(path, []byte("rewritten"), 0o600))
-		})
+	target = filepath.Join(handler.FixtureDirectory(), defaultSaveFile)
+	original, err := os.ReadFile(target)
+	require.NoError(t, err)
+	require.NotEmpty(t, original)
 
-	dialog.ClickConfirm()
-	require.False(t, frameFileExplorer(t, dialog, theme), "the prompt must keep the dialog open")
-	require.True(t, dialog.OverwriteActive(), "confirming an existing target must raise the prompt")
+	explorer = handler.ClickGeneralTab().SelectGameMode(true).ClickSaveTo().ClickSave()
+	require.True(t, explorer.Dialog().OverwriteActive(), "saving onto an existing file must raise the prompt")
 
-	return dialog, target
+	return explorer, target, original
 }
 
 // TestWhenSaveTargetAlreadyExists_ConfirmDoesNotWrite: raising the prompt must
 // not be preceded by the write it is meant to guard.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenSaveTargetAlreadyExists_ConfirmDoesNotWrite(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	_, target := newOverwriteProbe(t, themes.NewTheme())
+	_, target, original := newOverwriteProbe(t)
 
 	// Act
 	content, err := os.ReadFile(target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, "original", string(content))
+	assert.Equal(t, string(original), string(content))
 }
 
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenOverwriteIsCancelled_TheExistingFileIsUntouched(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	theme := themes.NewTheme()
-	dialog, target := newOverwriteProbe(t, theme)
+	explorer, target, original := newOverwriteProbe(t)
 
 	// Act
-	dialog.ClickOverwriteCancel()
-	frameFileExplorer(t, dialog, theme)
+	explorer.ClickOverwriteCancel()
 
 	// Assert
 	content, err := os.ReadFile(target)
 	require.NoError(t, err)
-	assert.Equal(t, "original", string(content))
+	assert.Equal(t, string(original), string(content))
 }
 
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenOverwriteIsConfirmed_TheFileIsRewritten(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	theme := themes.NewTheme()
-	dialog, target := newOverwriteProbe(t, theme)
+	explorer, target, original := newOverwriteProbe(t)
 
 	// Act
-	dialog.ClickOverwriteConfirm()
-	frameFileExplorer(t, dialog, theme)
+	explorer.ClickOverwrite()
 
 	// Assert
 	content, err := os.ReadFile(target)
 	require.NoError(t, err)
-	assert.Equal(t, "rewritten", string(content))
+	assert.NotEqual(t, string(original), string(content))
 }
 
 // TestWhenANewFolderIsCreated_ItAppearsInTheParentListing: creation navigates
 // into the new folder, so the listing is checked from the parent it was made in.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenANewFolderIsCreated_ItAppearsInTheParentListing(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	directory := t.TempDir()
-	theme := themes.NewTheme()
-	folderName := gofakeit.LetterN(8)
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		directory,
-		gofakeit.LetterN(6),
-		nil)
-	dialog.ClickNewFolder()
-	require.False(t, frameFileExplorer(t, dialog, theme))
+	_, handler := newEditor(t)
+	explorer := handler.ClickSaveTo().ClickNewFolder().TypeFolderName(createdFolderName).ClickCreateFolder()
+	require.Empty(t, explorer.Dialog().NewFolderError())
 
 	// Act
-	dialog.SetNewFolderName(folderName)
-	dialog.ClickCreateFolder()
-	require.False(t, frameFileExplorer(t, dialog, theme))
-	require.Empty(t, dialog.NewFolderError())
-	dialog.ClickUp()
-	frameFileExplorer(t, dialog, theme)
+	explorer.ClickBack()
 
 	// Assert
-	assert.Contains(t, dialog.EntryNames(), folderName)
+	assert.Contains(t, explorer.Dialog().EntryNames(), createdFolderName)
+}
+
+// TestWhenNewFolderIsClickedTwice_TheRowIsDismissed: the button is a toggle, so
+// a user who changes their mind has to be able to put the row away again.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
+func TestWhenNewFolderIsClickedTwice_TheRowIsDismissed(t *testing.T) {
+	// Arrange
+	_, handler := newEditor(t)
+	explorer := handler.ClickSaveTo().ClickNewFolder()
+	require.True(t, explorer.Dialog().NewFolderActive())
+
+	// Act
+	explorer.ClickNewFolder()
+
+	// Assert
+	assert.False(t, explorer.Dialog().NewFolderActive())
 }
 
 // TestWhenSaveTargetIsAnExistingFolder_TheSaveIsRefused covers the defect where
 // a directory sharing the save target's name was offered as an overwrite; the
 // New Folder button makes "name.gen.json" a reachable folder name.
+//
+//nolint:paralleltest // Snapshots need exclusive access to the single headless GPU window.
 func TestWhenSaveTargetIsAnExistingFolder_TheSaveIsRefused(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	directory := t.TempDir()
-	theme := themes.NewTheme()
-	filename := gofakeit.LetterN(8)
-	require.NoError(t, os.Mkdir(filepath.Join(directory, filename+saveSuffix), 0o750))
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		directory,
-		filename,
-		func(string) { require.Fail(t, "a folder must never be overwritten") })
+	_, handler := newEditor(t)
+	handler.WithFixtureFolders(defaultSaveFile)
 
 	// Act
-	dialog.ClickConfirm()
-	frameFileExplorer(t, dialog, theme)
+	explorer := handler.ClickSaveTo().ClickSave()
 
 	// Assert
-	assert.Equal(t, "A folder with that name already exists.", dialog.SaveError())
-}
-
-func TestWhenANameWasResolved_TheConfirmButtonIsEnabled(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	dialog := dialogs.NewSaveFileDialog(
-		composition.InitializeFileSystemHandler(),
-		t.TempDir(),
-		gofakeit.LetterN(8),
-		nil)
-
-	// Act
-	frameFileExplorer(t, dialog, themes.NewTheme())
-
-	// Assert
-	assert.False(t, dialog.ConfirmDisabled())
+	assert.Equal(t, "A folder with that name already exists.", explorer.Dialog().SaveError())
 }

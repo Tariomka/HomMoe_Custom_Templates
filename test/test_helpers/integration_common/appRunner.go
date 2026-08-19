@@ -273,6 +273,42 @@ func (this *AppRunner) CloseTopDialog() {
 	this.mu.Unlock()
 }
 
+// TopFileExplorer returns the open file explorer dialog and whether the
+// top-most dialog is one (lock-guarded).
+func (this *AppRunner) TopFileExplorer() (editor.IFileExplorerDialog, bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.TopFileExplorer()
+}
+
+// SetCurrentPath seeds the file the editor is working on, which is where the
+// Load and Save To dialogs open (lock-guarded).
+func (this *AppRunner) SetCurrentPath(path string) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.App.GetStateDriver().SetCurrentPath(path)
+	this.mu.Unlock()
+}
+
+// CurrentPath returns the file the editor last loaded from or saved to
+// (lock-guarded).
+func (this *AppRunner) CurrentPath() string {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.GetStateDriver().GetCurrentPath()
+}
+
+// SetTemplateName seeds the name the Save To dialog derives its filename from
+// (lock-guarded).
+func (this *AppRunner) SetTemplateName(name string) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.App.SetTemplateName(name)
+	this.mu.Unlock()
+}
+
 // CurrentState returns the editor's current state snapshot (lock-guarded).
 func (this *AppRunner) CurrentState() dtos.EditorStateDto {
 	this.tb.Helper()
