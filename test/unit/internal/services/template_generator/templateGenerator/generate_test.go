@@ -51,11 +51,10 @@ func firstMainObjectTypes(zones []entities.Zone) []string {
 	return objectTypes
 }
 
-func TestWhenDefaultConfigurationWithShuffleDisabled_ReturnsGoldenTemplate(t *testing.T) {
+func TestWhenDefaultConfiguration_ReturnsGoldenTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.ShufflePlayerZones = false // Deterministic player-zone ordering for a stable golden comparison.
 	generator := test_helpers.NewTemplateGenerator(configuration)
 	expected := test_helpers.GetDefaultTemplate()
 

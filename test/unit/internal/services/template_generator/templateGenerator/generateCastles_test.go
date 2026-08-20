@@ -19,7 +19,6 @@ func newAbandonedOutpostConfiguration(spawnOutposts bool) *config.GeneratorConfi
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = 2
-	configuration.ShufflePlayerZones = false
 	configuration.ZoneConfiguration.Advanced.Enabled = true
 	configuration.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1
 	configuration.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
@@ -89,7 +88,6 @@ func newPlayerOwnedCastlesConfiguration(ownedPerZone int) *config.GeneratorConfi
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = 2
-	configuration.ShufflePlayerZones = false
 	configuration.ZoneConfiguration.PlayerZoneCastles = 1
 	configuration.ZoneConfiguration.PlayerOwnedCastles = ownedPerZone
 	return configuration

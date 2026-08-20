@@ -24,8 +24,7 @@ func NewCrossTopologyService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *CrossTopologyService {
+	connectionService base.ITopologyConnectionService) *CrossTopologyService {
 	return &CrossTopologyService{
 		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
 			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
@@ -115,6 +114,7 @@ func (this *CrossTopologyService) createCrossPairs(
 		if len(indices) == 0 {
 			continue
 		}
+
 		// The center joins the innermost zone of each arm.
 		if centerIndex >= 0 {
 			builder.add(centerIndex, indices[0])

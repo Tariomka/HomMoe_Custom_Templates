@@ -54,11 +54,6 @@ type GeneratorConfig struct {
 	MediumNeutralMandatoryContent []entities.MandatoryContentItem
 	HighNeutralMandatoryContent   []entities.MandatoryContentItem
 	HubZoneMandatoryContent       []entities.MandatoryContentItem
-
-	// ShufflePlayerZones randomizes which physical zone each player starts in.
-	// Enabled by default so generated templates vary between runs; tests can
-	// disable it to obtain deterministic output.
-	ShufflePlayerZones bool
 }
 
 func NewGeneratorConfig() *GeneratorConfig {
@@ -105,7 +100,6 @@ func NewGeneratorConfig() *GeneratorConfig {
 			PointsToWin:        2,
 			SaveArmy:           true,
 		},
-		ShufflePlayerZones: true,
 	}
 }
 

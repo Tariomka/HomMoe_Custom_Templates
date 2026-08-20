@@ -23,8 +23,7 @@ func NewChainClusterService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *ChainClusterService {
+	connectionService base.ITopologyConnectionService) *ChainClusterService {
 	return &ChainClusterService{
 		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}

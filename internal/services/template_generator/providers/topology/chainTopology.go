@@ -23,8 +23,7 @@ func NewChainTopologyService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *ChainTopologyService {
+	connectionService base.ITopologyConnectionService) *ChainTopologyService {
 	return &ChainTopologyService{
 		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
@@ -32,38 +31,37 @@ func NewChainTopologyService(
 
 func (this *ChainTopologyService) CreateTopologyVariant(
 	configuration config.GeneratorConfig,
-	playerLetters []string,
+	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
 	holdCityNeutralLetter string) entities.Variant {
-	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLetters, neutralZones, false)
-	isIsolated := configuration.NoDirectPlayerConnections && len(playerLetters) > 1
-	connNames := this.createConnectionNames(playerLetters, orderedLabels, isIsolated)
+	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, false)
+	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
+	connNames := this.createConnectionNames(playerLabels, orderedLabels, isIsolated)
 
 	zones := this.createZones(
-		configuration, playerLetters, orderedLabels, tuning, neutralZones, holdCityNeutralLetter, connNames)
-	conns := this.createConnections(playerLetters, orderedLabels, tuning, neutralZones, connNames)
+		configuration, playerLabels, orderedLabels, tuning, neutralZones, holdCityNeutralLetter, connNames)
+	conns := this.createConnections(playerLabels, orderedLabels, tuning, neutralZones, connNames)
 	if configuration.RandomPortals {
-		conns = append(conns,
-			this.CreateRandomPortalConnections(
-				playerLetters, orderedLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
+		conns = append(conns, this.CreateRandomPortalConnections(
+			playerLabels, orderedLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	if isIsolated {
-		conns = append(conns, this.CreateMissingPlayerConnections(playerLetters, zones, conns, tuning)...)
+		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
 	}
-	return this.CreateVariant(playerLetters, orderedLabels[0], len(orderedLabels), zones, conns)
+	return this.CreateVariant(playerLabels, orderedLabels[0], len(orderedLabels), zones, conns)
 }
 
 func (this *ChainTopologyService) createConnectionNames(
-	playerLetters, orderedLabels []string,
+	playerLabels, orderedLabels []string,
 	isIsolated bool) []string {
 	labelCount := len(orderedLabels)
 
 	connNames := make([]string, labelCount-1)
 	for i := range labelCount - 1 {
 		if isIsolated &&
-			slices.Contains(playerLetters, orderedLabels[i]) &&
-			slices.Contains(playerLetters, orderedLabels[i+1]) {
+			slices.Contains(playerLabels, orderedLabels[i]) &&
+			slices.Contains(playerLabels, orderedLabels[i+1]) {
 			continue
 		}
 

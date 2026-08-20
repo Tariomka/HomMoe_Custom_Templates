@@ -29,8 +29,7 @@ func NewGeometricHubTopologyService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *GeometricHubTopologyService {
+	connectionService base.ITopologyConnectionService) *GeometricHubTopologyService {
 	return &GeometricHubTopologyService{
 		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
@@ -52,17 +51,15 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	zones := this.createZones(configuration, playerLabels, neutralZones, layout, connectionNames, tuning)
 	conns := this.createConnections(playerLabels, neutralZones, layout, tuning)
 	if configuration.RandomPortals {
-		conns = append(conns,
-			this.CreateRandomPortalConnections(
-				playerLabels, allLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
+		conns = append(conns, this.CreateRandomPortalConnections(
+			playerLabels, allLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(allLabels)+1, zones, conns)
 }
 
 // createConnectionNameIndex maps every label (and "Hub") to the names of its
 // named connections, so each zone's roads can reference them.
-func (this *GeometricHubTopologyService) createConnectionNameIndex(
-	layout *geometricHubLayout) map[string][]string {
+func (this *GeometricHubTopologyService) createConnectionNameIndex(layout *geometricHubLayout) map[string][]string {
 	names := map[string][]string{}
 	for _, edge := range layout.directEdges {
 		name := constants.GetGeometricHubConnectionNameFor(edge[0], edge[1])

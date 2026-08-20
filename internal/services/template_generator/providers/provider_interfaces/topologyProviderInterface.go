@@ -14,7 +14,4 @@ type ITopologyProvider interface {
 		neutralZones neutral_zone.Plans,
 		tuning models.GenerationTuning,
 		holdCityNeutralLabel string) entities.Variant
-
-	// ShufflePlayerZones is a fluent setter and returns the receiver.
-	ShufflePlayerZones(enabled bool) ITopologyProvider
 }

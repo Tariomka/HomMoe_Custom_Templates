@@ -156,12 +156,7 @@ func (this *TopologyBase) CreateRandomPortalConnections(
 	maxCount int,
 	neutralZones neutral_zone.Plans) []entities.Connection {
 	return this.connectionService.CreateRandomPortalConnections(
-		playerLabels,
-		orderedLabels,
-		tuning,
-		maxCount,
-		neutralZones,
-	)
+		playerLabels, orderedLabels, tuning, maxCount, neutralZones)
 }
 
 func (this *TopologyBase) CreateMissingPlayerConnections(
@@ -180,14 +175,7 @@ func (this *TopologyBase) CreateMissingConnections(
 	tuning models.GenerationTuning,
 	neutralZones neutral_zone.Plans) []entities.Connection {
 	return this.connectionService.CreateMissingConnections(
-		playerLabels,
-		allLabels,
-		positions,
-		zones,
-		connections,
-		tuning,
-		neutralZones,
-	)
+		playerLabels, allLabels, positions, zones, connections, tuning, neutralZones)
 }
 
 func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []entities.Road {

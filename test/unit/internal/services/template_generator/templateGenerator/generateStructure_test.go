@@ -35,7 +35,6 @@ func TestWhenRingTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegre
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = 4
 	configuration.ZoneConfiguration.NeutralZoneCount = 4
-	configuration.ShufflePlayerZones = false // Deterministic zero-angle zone.
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act

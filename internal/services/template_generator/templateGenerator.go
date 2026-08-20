@@ -65,7 +65,6 @@ func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
 	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
 
 	variant := this.topologyProvider.
-		ShufflePlayerZones(this.configuration.ShufflePlayerZones).
 		CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel)
 	this.gladiatorProvider.PlaceArena(*this.configuration, &variant)
 

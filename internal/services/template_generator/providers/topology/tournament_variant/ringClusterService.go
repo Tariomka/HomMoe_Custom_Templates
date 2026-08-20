@@ -15,16 +15,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
-type RingClusterService struct {
-	base.TopologyBase
-}
+type RingClusterService struct{ base.TopologyBase }
 
 func NewRingClusterService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *RingClusterService {
+	connectionService base.ITopologyConnectionService) *RingClusterService {
 	return &RingClusterService{
 		TopologyBase: base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 	}
@@ -53,9 +50,7 @@ func (this *RingClusterService) CreateClusterVariant(
 	return zones, connections
 }
 
-func (this *RingClusterService) createLabels(
-	playerNeutralZonePlans neutral_zone.Plans,
-	playerLabel string) []string {
+func (this *RingClusterService) createLabels(playerNeutralZonePlans neutral_zone.Plans, playerLabel string) []string {
 	sortedNeutralZonePlans := neutral_zone.Plans{}
 	sortedNeutralZonePlans.AddPlans(playerNeutralZonePlans...)
 	sortedNeutralZonePlans.SortByBalanceScoreAscending()
@@ -109,8 +104,7 @@ func (this *RingClusterService) createSinglePlayerZone(
 	playerLabel string,
 	playerIndex int,
 	tuning models.GenerationTuning) entities.Zone {
-	return this.CreateClusterZone(
-		configuration, playerLabel, nil, playerIndex, true, false, tuning, nil)
+	return this.CreateClusterZone(configuration, playerLabel, nil, playerIndex, true, false, tuning, nil)
 }
 
 func (this *RingClusterService) createConnections(

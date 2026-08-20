@@ -1,6 +1,7 @@
 package topologyProvider_test
 
 import (
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -179,4 +180,37 @@ func TestWhenTournamentModeWithThreePlayerLabels_UsesSelectedTopology(t *testing
 		}
 	}
 	assert.Equal(t, 1, hubZoneCount)
+}
+
+func TestWhenCalled_DoesNotMutateInputLabels(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	playerLabels := []string{"A", "B", "C", "D", "E", "F", "G", "H"}
+	expectedLabels := slices.Clone(playerLabels)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	tuning := buildVariantInputs(configuration, playerLabels, nil)
+	provider := test_helpers.NewTopologyProvider()
+
+	// Act
+	provider.CreateTopologyVariant(*configuration, playerLabels, nil, tuning, "")
+
+	// Assert
+	assert.Equal(t, expectedLabels, playerLabels)
+}
+
+func TestWhenCalled_NamesOneSpawnZonePerPlayerLabel(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	playerLabels := []string{"A", "B", "C", "D"}
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	tuning := buildVariantInputs(configuration, playerLabels, nil)
+	provider := test_helpers.NewTopologyProvider()
+
+	// Act
+	variant := provider.CreateTopologyVariant(*configuration, playerLabels, nil, tuning, "")
+
+	// Assert
+	assert.Equal(t, []string{"Spawn-A", "Spawn-B", "Spawn-C", "Spawn-D"}, spawnZoneNames(variant))
 }

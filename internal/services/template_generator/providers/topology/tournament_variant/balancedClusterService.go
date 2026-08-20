@@ -32,8 +32,7 @@ func NewBalancedClusterService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *BalancedClusterService {
+	connectionService base.ITopologyConnectionService) *BalancedClusterService {
 	return &BalancedClusterService{
 		TopologyBase:          base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		positionLayoutService: position_layout.NewPositionLayoutService(),
@@ -81,15 +80,9 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	}
 
 	connections := this.createConnections(
-		playerLabel, orderedLabels,
-		tuning, allNeutralZonePlans,
-		connectionNames, sortedPairs)
-	connections = append(
-		connections,
-		this.CreateMissingConnections(
-			singlePlayerList, orderedLabels,
-			positions, zones, connections,
-			tuning, allNeutralZonePlans)...)
+		playerLabel, orderedLabels, tuning, allNeutralZonePlans, connectionNames, sortedPairs)
+	connections = append(connections, this.CreateMissingConnections(
+		singlePlayerList, orderedLabels, positions, zones, connections, tuning, allNeutralZonePlans)...)
 	return zones, connections
 }
 
@@ -158,8 +151,10 @@ func (this *BalancedClusterService) createSortedPairs(
 		if sortedPairs[i][0] != sortedPairs[j][0] {
 			return sortedPairs[i][0] < sortedPairs[j][0]
 		}
+
 		return sortedPairs[i][1] < sortedPairs[j][1]
 	})
+
 	return sortedPairs
 }
 
@@ -175,9 +170,7 @@ func bucketIndicesByTier(orderedLabels []string, allNeutralZonePlans neutral_zon
 
 // sortTiersByAngle orders every tier's indexes by their angle around the map
 // center and returns the sorted indexes alongside the matching angles.
-func sortTiersByAngle(
-	tierIndices map[int][]int,
-	rawPositions models.Positions) (map[int][]int, map[int][]float64) {
+func sortTiersByAngle(tierIndices map[int][]int, rawPositions models.Positions) (map[int][]int, map[int][]float64) {
 	tierSorted := map[int][]int{}
 	tierAngles := map[int][]float64{}
 	for tier, indexes := range tierIndices {
@@ -187,6 +180,7 @@ func sortTiersByAngle(
 			return math.Atan2(rawPositions[sorted[i]].Y-0.5, rawPositions[sorted[i]].X-0.5) <
 				math.Atan2(rawPositions[sorted[j]].Y-0.5, rawPositions[sorted[j]].X-0.5)
 		})
+
 		tierSorted[tier] = sorted
 		angles := make([]float64, len(sorted))
 		for j, zoneIndex := range sorted {
@@ -205,6 +199,7 @@ func addSameRingPairs(addPair func(a, b int), tierSorted map[int][]int) {
 		if ringSize < 3 {
 			continue
 		}
+
 		for i := range sorted {
 			addPair(sorted[i], sorted[(i+1)%ringSize])
 		}
@@ -238,16 +233,13 @@ func addCrossRingPairs(
 		bestDistance := math.MaxFloat64
 		for outerIndex := range outerSorted {
 			if distance := misc.GetShortestAngleDistance(
-				innerAngles[innerIndex],
-				outerAngles[outerIndex],
-			); distance < bestDistance {
+				innerAngles[innerIndex], outerAngles[outerIndex]); distance < bestDistance {
 				bestDistance = distance
 			}
 		}
 		for outerIndex := range outerSorted {
 			if misc.GetShortestAngleDistance(
-				innerAngles[innerIndex],
-				outerAngles[outerIndex]) <= bestDistance+epsilon {
+				innerAngles[innerIndex], outerAngles[outerIndex]) <= bestDistance+epsilon {
 				addPair(innerSorted[innerIndex], outerSorted[outerIndex])
 			}
 		}

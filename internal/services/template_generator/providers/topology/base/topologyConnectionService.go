@@ -133,8 +133,7 @@ func (this *TopologyConnectionService) CreateMissingConnections(
 	zones []entities.Zone,
 	connections []entities.Connection,
 	tuning models.GenerationTuning,
-	neutralZones neutral_zone.Plans,
-) []entities.Connection {
+	neutralZones neutral_zone.Plans) []entities.Connection {
 	if len(allLabels) < 2 {
 		return nil
 	}
@@ -185,8 +184,7 @@ func (this *TopologyConnectionService) GetBorderGuardValue(
 	labelA, labelB string,
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
-	tuning models.GenerationTuning,
-) int {
+	tuning models.GenerationTuning) int {
 	higherQuality := max(
 		labelQuality(labelA, playerLabels, neutralZones),
 		labelQuality(labelB, playerLabels, neutralZones))
@@ -196,17 +194,15 @@ func (this *TopologyConnectionService) GetBorderGuardValue(
 // labelQuality ranks a label for guarding purposes. QualityUnknown is -1, so a
 // player label always loses the max against a real tier while still supplying
 // the player-border guard value when both endpoints are players.
-func labelQuality(
-	label string,
-	playerLabels []string,
-	neutralZones neutral_zone.Plans,
-) neutral_zone.Quality {
+func labelQuality(label string, playerLabels []string, neutralZones neutral_zone.Plans) neutral_zone.Quality {
 	if zone_helpers.IsZoneNameHub(label) {
 		return neutral_zone.QualityHighest
 	}
+
 	if slices.Contains(playerLabels, label) {
 		return neutral_zone.QualityUnknown
 	}
+
 	return neutralZones.GetQuality(label)
 }
 
@@ -214,8 +210,7 @@ func (this *TopologyConnectionService) createBridgeConnection(
 	bridgeName, zoneFrom, zoneTo, labelA, labelB string,
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
-	tuning models.GenerationTuning,
-) entities.Connection {
+	tuning models.GenerationTuning) entities.Connection {
 	return variant_content.NewConnectionBuilder().
 		WithName(bridgeName).
 		WithFrom(zoneFrom).
@@ -231,8 +226,7 @@ func (this *TopologyConnectionService) createBridgeConnection(
 
 func (this *TopologyConnectionService) buildZoneAdjacency(
 	playerLabels, allLabels []string,
-	connections []entities.Connection,
-) data.Adjacency[int] {
+	connections []entities.Connection) data.Adjacency[int] {
 	nodes := make([]int, len(allLabels))
 	for index := range nodes {
 		nodes[index] = index
@@ -304,9 +298,11 @@ func appendBridgeRoads(zones []entities.Zone, zoneFrom, zoneTo, bridgeName strin
 		zoneIndex := slices.IndexFunc(zones, func(candidate entities.Zone) bool {
 			return candidate.Name == zoneName
 		})
+
 		if zoneIndex < 0 {
 			continue
 		}
+
 		roadBuilder := variant_content.NewRoadBuilder().WithTo(
 			variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
 		switch {
@@ -333,6 +329,7 @@ func buildNonAdjacentDerangement(count int) []int {
 			return destinations
 		}
 	}
+
 	return buildShiftDerangement(count)
 }
 
@@ -352,6 +349,7 @@ func tryRandomDerangement(count int) ([]int, bool) {
 		if foundIndex < 0 {
 			return nil, false
 		}
+
 		destinations[index] = candidates[foundIndex]
 		used[candidates[foundIndex]] = true
 	}
@@ -363,6 +361,7 @@ func pickDerangementTarget(candidates []int, used []bool, sourceIndex, count int
 		if used[candidates[index]] {
 			continue
 		}
+
 		candidate := candidates[index]
 		if candidate != sourceIndex &&
 			candidate != (sourceIndex+1)%count &&
@@ -370,11 +369,13 @@ func pickDerangementTarget(candidates []int, used []bool, sourceIndex, count int
 			return index
 		}
 	}
+
 	for index := range candidates {
 		if !used[candidates[index]] && candidates[index] != sourceIndex {
 			return index
 		}
 	}
+
 	return -1
 }
 
