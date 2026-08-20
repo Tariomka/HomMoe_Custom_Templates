@@ -1,11 +1,14 @@
-# Session Carry-Forward — batch H complete (backlog §5.1 + §5.2)
+# Session Carry-Forward — batch H complete, reviewed and committed
 
 ## 1. Session goal
 
 Finish [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md)
-starting at Phase 3 — the zone-editor pointer flows (§5.1), the property panels
-(§5.2), then the documentation and gate phase. **All five phases are now
-complete.**
+starting at Phase 3 — the zone-editor pointer flows (backlog §5.1), the property
+panels (§5.2), then the documentation and gate phase. **All five phases are
+complete, the owner has reviewed the work, and it is committed** as `e56262b`
+("Batch H wip"), `8388ce8` ("Batch H done") and `eaf1b77` ("docs") on
+`AD/fixing_some_stuff_08-12`. The working tree is clean and nothing is
+outstanding.
 
 ## 2. Fixes applied
 
@@ -100,19 +103,18 @@ Last full run — every gate green:
 
 ## 6. Git status snapshot
 
-Branch: `AD/fixing_some_stuff_08-12`. Nothing was staged or committed.
+Branch: `AD/fixing_some_stuff_08-12`. **Working tree clean** —
+`git status --short` returns nothing.
 
 ```
- M plans/batch-h-zone-editor-gui-tests.md
- M todo/backlog-opus5.md
- M todo/test_observations.md
-?? test/integration/gui/zoneEditorPointer_integration_test.go
-?? test/integration/gui/zoneEditorProperties_integration_test.go
-?? 145 new .golden files under test/test_helpers/integration_common/snapshot/__snapshots__/
+eaf1b77 (HEAD -> AD/fixing_some_stuff_08-12) docs
+8388ce8 Batch H done
+e56262b Batch H wip
 ```
 
-No tracked golden is modified — the four that were accidentally regenerated have
-been restored.
+Everything listed in §4 is in those three commits. No tracked golden was
+modified — the four that a too-broad `-update` regex had regenerated were
+restored before the review, so only the 145 genuinely new goldens landed.
 
 ## 7. Rejections / things not done
 
@@ -141,21 +143,23 @@ been restored.
 
 ## 9. Next recommended actions
 
-1. Review the two new test files and the three updated documents, then stage and
-   commit (owner only).
-2. Batch **I** — backlog §2.1, the `EditorStateDto` rework. It needs its own
+1. Batch **I** — backlog §2.1, the `EditorStateDto` rework. It needs its own
    `plans/` file (AGENTS.md §2.4): multi-phase, twelve packages, depends on §1.1
-   for `Clone`.
+   for `Clone`. Backlog §1.5 (the per-frame clone cost measured in batch D) is
+   meant to be folded into it rather than fixed separately.
+2. Delete the finished plan file
+   [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md)
+   per the doc-lifecycle rule — backlog §5.1/§5.2 are already self-contained, so
+   nothing is lost with it.
 3. If the Hub side-panel gap ever blocks a test, fix `zoneRowY` to key off the
    note's line count rather than off `IsZoneNameNeutral`.
 
 ## 10. Carry-forward prompt
 
-> Read `AGENTS.md` first, then
-> [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md)
-> — batch H is **complete**: all five phases done, every gate green, awaiting the
-> owner's review and commit. Full handoff in
-> `./.agent/session-carry-forward.md`.
+> Read `AGENTS.md` first, then `todo/backlog-opus5.md`. Batch **H** (§5.1 +
+> §5.2, the zone-editor GUI tests) is **finished, reviewed and committed** —
+> nothing about it is outstanding and its plan file may already be gone. Full
+> handoff in `./.agent/session-carry-forward.md`.
 >
 > Hard rules, one line each: never modify `data/`,
 > `internal/entities/template/` or `internal/registry/` without explicit
