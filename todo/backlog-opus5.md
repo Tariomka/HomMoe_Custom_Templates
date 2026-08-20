@@ -39,7 +39,7 @@ a decision the owner already made.
 
 **✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
 §3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D), §5.3 (batch F) ·
-**2026-08-19:** §2.3 (batch G) — **10 done, 10 open.**
+**2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) — **12 done, 8 open.**
 Batch D spun off §1.5 (render-path clone cost).
 
 **Baselines to hold (AGENTS.md §2.3):** unit coverage **72.9 %**, floor
@@ -1169,72 +1169,63 @@ File", an editable filename box) promises otherwise.
 
 ## 5. Testing
 
-### 5.1 🟠 Zone editor pointer flows are untested (drag-to-connect, zone drag + snapping)
+### 5.1 ✅ FIXED 🟠 Zone editor pointer flows are untested (drag-to-connect, zone drag + snapping)
 
-**Evidence.** [test_observations.md](test_observations.md) records for the zone
-editor: *"Still uncovered: … the pointer flows (drag-to-connect, zone drag +
-snapping), which need synthetic pointer events - the test/performance AppRunner
-pattern is the way in, and it is still future work."*
+**Fixed in batch H, 2026-08-11.** See
+[plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md).
+The pointer flows landed as eight tests in
+[zoneEditorPointer_integration_test.go](../test/integration/gui/zoneEditorPointer_integration_test.go),
+driven through the real window over the Geometric Hub layout: a zone dragged to
+a new position and committed through Apply's normalized manual position, a drag
+that snaps onto another zone's centre line and the grid, a drag-to-connect in
+Add connection mode, a drag that ends on empty canvas and creates nothing, a
+right-click that deletes a curve, a zone placed from Add zone mode, the placed
+zone landing where it was clicked, and a drag inside the 6 px dead zone that
+moves nothing.
 
-That seam now exists:
-[appRunner.go](../test/test_helpers/integration_common/appRunner.go#L152-L217)
-provides `ClickAt`, `MoveTo`, `DragTo(from, to image.Point)` (press +
-8 interpolated moves + release) and `InputText`. `DragTo` is already used to
-drive `gesture.Drag` widgets.
+Each test asserts a state change as well as its golden, since a golden alone
+cannot tell "the drag did the right thing" from "nothing happened". The canvas
+coordinates come from the post-§2.3 float geometry and are pinned exactly - the
+snap test pins `(290, 251.88571428571436)` - because a pin that rounds would
+hide the very regression §2.3 was about. Snap **guides** are deliberately not
+asserted: every zone in this layout shares x = 290, so several guides propose
+the same correction and which one is reported depends on map iteration order.
 
-**Why it matters.** Drag-to-connect and zone-drag-with-snapping are the two
-interactions where the manual zone editor actually changes user data. The
-supporting geometry is unit-tested at ≥ 92.9 % in
-[internal/services/connection_editor](../internal/services/connection_editor/),
-but nothing proves the *dialog wires the pointer to it correctly* — a swapped
-argument or a missing mode check would ship silently.
+[test_observations.md](test_observations.md) was updated to point at the new
+tests instead of calling them future work.
 
-**Fix.** Add scenarios to
-[zoneEditorDialog_integration_test.go](../test/integration/gui/zoneEditorDialog_integration_test.go)
-(or a sibling `zoneEditorPointer_integration_test.go`), tagged
-`//go:build integration_test && gui` since they drive real frames:
+### 5.2 ✅ FIXED 🟡 Zone editor property panels (`widget.Editor` / dropdown paths) are untested
 
-- `TestWhenAZoneIsDraggedToANewPosition_TheAppliedLayoutRecordsIt`
-- `TestWhenAZoneIsDraggedNearAGuide_ItSnapsToTheGuide`
-- `TestWhenADragStartsOnAZoneInAddConnectionMode_AConnectionIsCreated`
-- `TestWhenADragEndsOnEmptyCanvas_NoConnectionIsCreated`
+**Fixed in batch H, 2026-08-11.** See
+[plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md).
+The panels landed as eighteen tests in
+[zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go):
+the zone `Size`, `Guard x` and `Weekly +` editors including `Size`'s clamp to
+0.1–2.0 and its rounding to two decimals; the neutral-zone `Quality` and
+`Castles` dropdowns, which exercise the `ApplyZoneEditorQuality` reprofile path;
+the connection guard value typed and a non-numeric value rejected; the `Type`,
+`Guard zone`, `Guard preset` and `Weekly +` connection dropdowns; and the
+Advanced options checkbox together with the `Match group`, `Guard escape` and
+`Sim turn squad` rows it reveals.
 
-Read results back through the existing
-`zoneEditorDialog_testexports.go` accessors and `State.ApplyEditedZones`; use
-the canvas coordinates already pinned by
-[zoneEditorGeometry_integration_test.go](../test/integration/gui/zoneEditorGeometry_integration_test.go#L138-L163)
-so the tests do not hard-code fresh magic points.
+Zone assertions read the editor's own zones, connection assertions go through
+`ClickApply()` and `CurrentState().ManualConnections` - committed state either
+way, never widget text.
 
-**⚠ Ordering:** if §2.3 (float geometry) is scheduled, land it **first** — these
-tests pin canvas coordinates and would need rewriting otherwise.
+Two items from the original sketch changed:
 
-**Then:** delete the "still future work" sentence from
-[test_observations.md](test_observations.md) and replace it with a pointer to
-the new tests.
+- `TestWhenAZoneNameIsTyped_…` **was not written**: the zone name is a read-only
+  `material.Body1` label and the dialog offers no rename, so there is no path to
+  drive. Recorded in the test file and in [test_observations.md](test_observations.md).
+- Typing **inserts at the caret, which sits at the start of a focused field**,
+  so the expectations are written for insertion rather than replacement (typing
+  `1` into `35000` yields `135000`).
 
-### 5.2 🟡 Zone editor property panels (`widget.Editor` / dropdown paths) are untested
-
-**Evidence.** Same entry in [test_observations.md](test_observations.md):
-*"Still uncovered: the property panels' `widget.Editor`/dropdown paths…"*.
-`AppRunner.InputText` plus `ClickAt` now cover both input kinds, and
-[pickerDialog_integration_test.go](../test/integration/gui/pickerDialog_integration_test.go)
-already demonstrates the dropdown-click pattern.
-
-**Why it matters.** The zone/connection property panels are where a user renames
-a zone, changes its castle count and re-profiles its tier — the exact paths
-§2.2 will touch.
-
-**Fix.** New `test/integration/gui/zoneEditorProperties_integration_test.go`
-(`//go:build integration_test && gui`):
-
-- `TestWhenAZoneNameIsTyped_TheAppliedZoneCarriesTheNewName`
-- `TestWhenAZoneQualityIsPickedFromTheDropdown_TheZoneIsReprofiled`
-- `TestWhenAConnectionGuardValueIsTyped_TheAppliedConnectionCarriesIt`
-- `TestWhenANonNumericGuardValueIsTyped_TheValueIsRejected`
-
-Focus the field with `ClickAt` before `InputText` (the helper's doc comment
-requires it). Assert through `State.ApplyEditedZones` output, not through
-dialog internals.
+One harness gap is filed rather than fixed: `integration_common`'s
+`zoneEditorZone*Y` rows were measured on a zone whose note wraps to one line,
+which a player spawn and a neutral zone do but the shared `Hub` does not, so the
+Hub's property rows cannot be clicked through the handler. The rows are the same
+code for every zone, so no behaviour is left uncovered.
 
 ### 5.3 ✅ FIXED 🟡 File explorer: hidden-file toggle and pointer-driven row/scroll interactions
 
@@ -1406,12 +1397,24 @@ the background, so inheriting its clicks would be a lie). One struct per file
 > *Done.* Three tab handlers embed `*BaseHandler` (a pointer, so the shift state
 > of (e) is shared rather than copied). Two dialog handlers — `FileExplorer` and
 > `ZoneEditor` — hold `base *BaseHandler` without embedding and expose only
-> `IsOpen()` / `Close()`. They are **reachability-only**: they own no canvas
-> coordinates and take no snapshot, because driving a dialog through the window
+> `IsOpen()` / `Close()`. They were **reachability-only**: they owned no canvas
+> coordinates and took no snapshot, because driving a dialog through the window
 > is nondeterministic by construction (the explorer lists the machine-detected
 > templates directory, AGENTS.md §2.7; the zone editor draws a freshly randomised
-> layout). The dialog *behaviour* tests of §5.1–§5.3 construct the dialog directly
-> through the package-local `newDialogContext` and do not use these handlers.
+> layout). The dialog *behaviour* tests of §5.1–§5.3 constructed the dialog
+> directly through the package-local `newDialogContext`.
+>
+> **Superseded for both handlers.** Batch F gave `FileExplorerHandler` a seeded
+> fixture directory and a golden per action, and batch H did the same for
+> `ZoneEditorHandler`: `WithFixtureDirectory()` masks the per-machine path and
+> `LayoutAndZonesTabHandler.SelectTopology` takes the layout off Random, which is
+> what made snapshotting deterministic. Both are now **driving** handlers with
+> canvas and side-panel coordinates and a snapshot per action, and §5.1–§5.3 are
+> written against them rather than against `newDialogContext`. Only the five
+> zone-editor cases the window cannot reach (see the Phase 2 summary of
+> [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md))
+> are still dialog-direct.
+>
 > Toolbar methods are `ClickNew` / `ClickLoad` / `ClickSaveAs`; **`Exit` is never
 > reachable** (`State.Exit()` calls `os.Exit(0)` and would kill the test process)
 > and `Save` is excluded because it writes into the real output directory.
@@ -1648,7 +1651,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **E** | §4.1 | **Done 2026-08-11.** Save To rename + read-only resolved-name preview + blank-name guard. Regenerated the 10 window goldens for the new button label. |
 | ✅ **F** | §5.3 | **Done 2026-08-14.** File-explorer pointer/hidden-file tests plus a full migration of the existing dialog tests onto `FileExplorerHandler`; the save-mode row-click test applies to **open mode only**, per §4.1. Coverage flat at 72.9 %. |
 | ✅ **G** | §2.3 | **Done 2026-08-19.** Float preview geometry end to end, rounded once at the draw boundary. **No goldens moved** — the preview canvas is masked and the zone-editor handler takes no snapshots, so no `-update` was needed. Coverage flat at 72.9 %. Plan: [plans/batch-g-float-preview-geometry.md](../plans/batch-g-float-preview-geometry.md). |
-| **H** | §5.1, §5.2 | Zone-editor pointer + property-panel tests, against the post-§2.3 coordinates. |
+| ✅ **H** | §5.1, §5.2 | **Done 2026-08-11.** Zone-editor pointer + property-panel tests against the post-§2.3 float coordinates: eight pointer tests and eighteen property tests, all driven through the real window with a golden per action. Turned `ZoneEditorHandler` from a reachability-only handler into a driving one (canvas, side-panel and Apply actions). `TestWhenAZoneNameIsTyped_…` dropped — the zone name is a read-only label. Coverage flat. Plan: [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md). |
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |
 | **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |

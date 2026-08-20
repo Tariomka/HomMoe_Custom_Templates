@@ -441,9 +441,9 @@ nothing committed.
 
 ## Phase 3: §5.1 pointer flows
 
-Status: Not started
+Status: Complete
 
-- [ ] `zoneEditorPointer_integration_test.go`
+- [x] `zoneEditorPointer_integration_test.go`
       (`//go:build integration_test && gui`):
       - `TestWhenAZoneIsDraggedToANewPosition_TheAppliedLayoutRecordsIt`
       - `TestWhenAZoneIsDraggedNearAGuide_ItSnapsToTheGuide`
@@ -451,11 +451,11 @@ Status: Not started
       - `TestWhenADragEndsOnEmptyCanvas_NoConnectionIsCreated`
       - `TestWhenACurveIsRightClicked_ThatConnectionIsDeleted`
       - `TestWhenAddZoneModeIsArmedAndEmptyCanvasIsClicked_AZoneIsPlaced`
-- [ ] Drags must clear the 6 px dead zone
+- [x] Drags must clear the 6 px dead zone
       (`zoneDragDeadZonePx`) or they are only selections.
-- [ ] Snap assertions use **fractional** post-batch-G coordinates: the grid
+- [x] Snap assertions use **fractional** post-batch-G coordinates: the grid
       correction is no longer rounded away.
-- [ ] Goldens generated locally, `-run`-scoped.
+- [x] Goldens generated locally, `-run`-scoped.
 
 ### Verification Plan
 
@@ -465,13 +465,45 @@ Status: Not started
 
 ### Phase Summary
 
-_(write when phase completes)_
+All six §5.1 pointer flows now run through the real window in
+[test/integration/gui/zoneEditorPointer_integration_test.go](../test/integration/gui/zoneEditorPointer_integration_test.go),
+plus two extra tests the checklist did not name but the flows demand:
+`TestWhenAZoneIsPlacedOnEmptyCanvas_ItSitsWhereItWasClicked` (the placement
+test above only proves a zone appeared, not *where*) and
+`TestWhenAZoneIsDraggedInsideTheDeadZone_ItDoesNotMove` (the dead zone is a
+precondition of every other drag test, so it deserves its own guard).
+The gui suite passed twice in a row with no `-update`; `testlayoutcheck`,
+`go build ./...`, both `go vet` runs, `gofmt` and `golangci-lint-v2` are clean
+(0 issues).
+
+Key facts, recorded so a future agent does not have to re-probe:
+
+- **Geometric Hub, 2-player default template** — canvas side 580 px, zone
+  radius `31.485714285714288`, grid step `8.99591836734694`. Zones:
+  `Hub` (290, 290), `Spawn-A` (290, 86.17142857142858),
+  `Spawn-B` (290, 493.8285714285714). Connections `Portal-Hub-A` and
+  `Portal-Hub-B`. All three zones share x = 290, so anything well left of that
+  line is empty canvas — `(120, 120)` is the spot the tests use.
+- **Guide ties are nondeterministic.** Because every zone sits on x = 290,
+  several alignment guides propose the same X correction and the *reported*
+  winning guide depends on map iteration order. Assert the resulting
+  **position**, never `SnapGuides()`.
+- **The snap pin is exact on purpose**: `(290, 251.88571428571436)`. Per §2 of
+  this plan a pin that rounds is a regression in the test. If this ever fails
+  on arm64 it is the FMA-fusion open question, not a production bug.
+- **`DragTo` interpolates in window integer pixels** and the final Move lands
+  exactly on the target; `onRelease` only ends the drag, so the committed
+  position comes from the last Move.
+- A user-added connection has an **empty** `Name` (`NewDefaultConnection` never
+  sets one), so connection assertions after `ClickAddConnection` compare
+  endpoint pairs via `edgePairs`, not names.
+- `GetNextZoneLabel` yields `Neutral-C` as the first free label for this layout.
 
 ## Phase 4: §5.2 property panels
 
-Status: Not started
+Status: Complete
 
-- [ ] `zoneEditorProperties_integration_test.go`
+- [x] `zoneEditorProperties_integration_test.go`
       (`//go:build integration_test && gui`), covering all five approved
       groups:
       - zone textboxes: Size, Guard x, Weekly +
@@ -481,10 +513,10 @@ Status: Not started
       - connection dropdowns: Type, Guard zone, Guard preset, Weekly
       - the Advanced options checkbox and the Match group / Guard escape /
         Sim turn squad rows it reveals
-- [ ] Note in the file that **the zone name is a read-only label**, so §5.2's
+- [x] Note in the file that **the zone name is a read-only label**, so §5.2's
       `TestWhenAZoneNameIsTyped_…` was not written and why.
-- [ ] Focus each field with a click before typing, per `InputText`'s contract.
-- [ ] Goldens generated locally, `-run`-scoped.
+- [x] Focus each field with a click before typing, per `InputText`'s contract.
+- [x] Goldens generated locally, `-run`-scoped.
 
 ### Verification Plan
 
@@ -494,23 +526,67 @@ Status: Not started
 
 ### Phase Summary
 
-_(write when phase completes)_
+[test/integration/gui/zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go)
+adds eighteen tests across the five approved groups: six zone textbox tests
+(one per field plus the three `Size` clamp/round cases), two neutral-zone
+dropdown tests, three connection textbox tests (guard value typed, guard value
+rejected, increment typed), four connection dropdown tests and three advanced
+tests (the checkbox is exercised by the three rows it reveals). All eighteen
+passed on the first `-update` run; the gui suite then passed twice with no
+`-update`, and `testlayoutcheck`, `gofmt` and `golangci-lint-v2` (0 issues) are
+clean.
+
+Facts discovered while writing them, recorded so they need no re-probing:
+
+- **The zone name is a read-only `material.Body1` label.** `zonePropertyRows`
+  draws it and the dialog offers no rename, so §5.2's
+  `TestWhenAZoneNameIsTyped_…` has nothing to drive. Noted in the file.
+- **The caret sits at the start of a freshly focused field**, so `InputText`
+  *prepends*: typing `1` into a field showing `0.2` leaves `10.2`, and typing
+  `1` into `35000` leaves `135000`. Every expectation is written for insertion.
+  `AppRunner.InputText`'s "replaces the current selection" comment is only true
+  when something is actually selected, which a plain click does not do.
+- **The side-panel row constants were measured on a zone with a one-line note.**
+  A player spawn and a neutral zone match; the shared `Hub` does **not** - its
+  note ("Quality presets apply to neutral zones only.") wraps differently, so
+  clicks on `zoneEditorZone*Y` miss the fields entirely and typing silently does
+  nothing. The textbox tests therefore drive `Spawn-A`. `zoneRowY` only
+  distinguishes neutral zones, so this is a gap in the harness, not in the
+  tests; logged in [todo/test_observations.md](../todo/test_observations.md).
+- **Quality and Castles are neutral-only rows.** The Geometric Hub layout ships
+  no neutral zone (`Hub` is `ZoneTypeHub`), so those tests place `Neutral-C`
+  with Add zone mode first.
+- **The option labels**, confirmed against the live panel: Type `Direct` /
+  `Portal`; Guard zone `Hub` / `Spawn-A`; Guard preset `Default (35000)`,
+  `Weakest (45000)`, `Low (52000)`, `Medium (62000)`, `High (70000)`,
+  `Very High (75000)` (the hub guard table, because `Hub` classifies as
+  Platinum); Weekly `Slow (5%)` … `Very Fast (25%)`; Quality `Plastic`,
+  `Bronze`, `Silver`, `Gold`; Castles `0`–`4`.
+- **`Portal-Hub-A`'s defaults**: type `Portal`, guard zone `Hub`, guard value
+  `35000`, weekly `0.15`, no match group, both advanced flags off.
+- **Connections have no dialog-side read accessor** - `EditedConnectionNames()`
+  returns names only - so every connection assertion goes through `ClickApply()`
+  and `CurrentState().ManualConnections`, which is the committed state the plan
+  asks for anyway.
+- **A castle count of N shows up as N `MainObjects` of type `City`**, and a Gold
+  reprofile swaps the tier-three content pool for tier four and five, which is
+  what the two dropdown tests assert.
 
 ## Phase 5: Documentation and gates
 
-Status: Not started
+Status: Complete
 
-- [ ] [todo/test_observations.md](../todo/test_observations.md): delete the
+- [x] [todo/test_observations.md](../todo/test_observations.md): delete the
       "Still uncovered: the property panels' `widget.Editor`/dropdown paths and
       the pointer flows … still future work" sentence and replace it with a
       pointer to the new tests; record anything that genuinely stayed
       uncovered, with the reason.
-- [ ] [todo/backlog-opus5.md](../todo/backlog-opus5.md): mark §5.1 and §5.2
+- [x] [todo/backlog-opus5.md](../todo/backlog-opus5.md): mark §5.1 and §5.2
       ✅ DONE and self-contained, update the header item counts and the §8
       batch table with row **H**.
-- [ ] Correct backlog §5.4(d)'s claim that the zone-editor handler is
+- [x] Correct backlog §5.4(d)'s claim that the zone-editor handler is
       reachability-only, since batch H made it a driving handler.
-- [ ] Full gate run (see below) and a carry-forward document.
+- [x] Full gate run (see below) and a carry-forward document.
 
 ### Verification Plan
 
@@ -527,12 +603,88 @@ Every gate green, matching the batch-G baseline:
 
 ### Phase Summary
 
-_(write when phase completes)_
+All three documents were updated and every gate is green:
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | clean |
+| `go vet ./...` | clean |
+| `go vet -tags='integration_test,gui' ./...` | clean |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test ./test/unit/... -count=1` | pass |
+| `go test -tags=integration_test ./test/integration/... -count=1` | pass |
+| `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (run three times) |
+| Unit coverage | **72.8 %** (floor 72.5 %, flat — this batch adds only gated GUI tests, which the unit profile does not see) |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+
+The backlog's stated coverage figure of 72.9 % predates this session; the
+measured total was 72.8 % both before and after batch H, so nothing regressed.
+`coverage.txt`, `coverage.html` and `lcov.info` were regenerated.
 
 ## Final Recap
 
-_(write when all phases complete)_
+Batch H closes backlog §5.1 and §5.2. The manual zone editor is now driven end
+to end through the real window: `ZoneEditorHandler` grew from a
+reachability-only handler into a driving one, and twenty-six new tests exercise
+the two interaction surfaces that actually change user data.
+
+**What landed**
+
+- **Phase 0** measured the dialog and side-panel geometry with a throwaway probe
+  and proved the window frames are stable enough to snapshot.
+- **Phase 1** added the production canvas-offset field, the dialog and window
+  test-exports (`IZoneEditorDialog`, `TopZoneEditor()`),
+  `LayoutAndZonesTabHandler.SelectTopology`, and the `ZoneEditorHandler` canvas,
+  side-panel and dialog-button actions with one coordinate-mapping seam.
+- **Phase 2** moved the behaviour tests off `newDialogContext` onto the window,
+  re-derived the geometry pins for the float coordinates of batch G, and kept
+  dialog-direct only the five cases the window cannot reach.
+- **Phase 3** added
+  [zoneEditorPointer_integration_test.go](../test/integration/gui/zoneEditorPointer_integration_test.go)
+  — eight tests covering zone drag + Apply, snapping, drag-to-connect, a drag
+  ending on empty canvas, right-click curve deletion, zone placement, placement
+  position, and the 6 px drag dead zone.
+- **Phase 4** added
+  [zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go)
+  — eighteen tests covering the zone editors (with `Size` clamping and
+  rounding), the neutral Quality/Castles reprofile, the connection guard value
+  typed and rejected, the four connection dropdowns, and the Advanced options
+  checkbox with the three rows it reveals.
+- **Phase 5** updated [todo/test_observations.md](../todo/test_observations.md),
+  [todo/backlog-opus5.md](../todo/backlog-opus5.md) (§5.1, §5.2, §5.4(d), the
+  header counts and the §8 batch table) and ran every gate.
+
+**What was deliberately not done**
+
+- `TestWhenAZoneNameIsTyped_…` — the zone name is a read-only label.
+- Snap-guide assertions — guide ties are nondeterministic in this layout.
+- A `zoneRowY` fix for the shared `Hub`, whose note wraps differently than a
+  spawn's; filed in `test_observations.md` because no behaviour is uncovered.
+- Nothing was staged or committed, and no golden was generated in CI.
+
+**Known open question:** the exact-float pins may need re-verification on arm64,
+where FMA fusion can change the last bit. See §8 of this plan.
 
 ## Deployment Plan
 
-_(write when all phases complete)_
+This batch is test-only apart from the Phase 1 production change (the canvas
+offset stored alongside `side` in the dialog's geometry state) and adds no
+user-visible behaviour. There is nothing to release; "deployment" is the review
+and commit the owner performs.
+
+1. **Review the working tree.** `git status --short` — expect the two new test
+   files, the modified zone-editor test files and handlers from phases 1–2, the
+   new `.golden` snapshots under `test/integration/gui/testdata`, the three
+   documents from phase 5, this plan, and the regenerated `coverage.txt`,
+   `coverage.html` and `lcov.info`.
+2. **Confirm no probe survived.** No file matching `zzprobe*` should exist under
+   [test/integration/gui/](../test/integration/gui/).
+3. **Re-run the gates** from the Phase 5 table on the review machine. The GPU
+   suite needs a real GPU; run it **without** `-update` — a golden must never be
+   regenerated as part of accepting the change.
+4. **Stage and commit** (owner only, per AGENTS.md §2.5). The new `.golden`
+   files are binary and add roughly 9 MB; that is the price of a golden per
+   action and matches the existing 173-file baseline.
+5. **No runtime configuration, migration or rollback step exists.** Reverting is
+   a plain `git revert` of the commit.

@@ -81,10 +81,28 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   delete-selected, the add-connection/add-zone mode toggles, button labels read
   back off the semantics tree, plus the Phase 0 numeric geometry pins that guard
   the extraction.
-  Still uncovered: the property panels' `widget.Editor`/dropdown paths and the
-  pointer flows (drag-to-connect, zone drag + snapping), which need synthetic
-  pointer events - the test/performance AppRunner pattern is the way in, and it
-  is still future work.
+  Since 2026-08-11 (batch H) the synthetic-pointer and keyboard paths are driven
+  too, through the `integration_common` handlers: the pointer flows in
+  test/integration/gui/zoneEditorPointer_integration_test.go (zone drag +
+  Apply round-trip, snapping, drag-to-connect and the drag that ends on empty
+  canvas, right-click delete of a curve, and placing a zone from Add zone mode)
+  and the property panels in
+  test/integration/gui/zoneEditorProperties_integration_test.go (the zone Size /
+  Guard x / Weekly + editors including `Size` clamping and rounding, the neutral
+  Quality and Castles dropdowns with their `ApplyZoneEditorQuality` reprofile,
+  the connection guard value typed and rejected, the Type / Guard zone / Guard
+  preset / Weekly dropdowns, and the Advanced options checkbox with the Match
+  group, Guard escape and Sim turn squad rows it reveals).
+  Still uncovered, with reasons:
+  - The zone **name** row is a read-only `material.Body1` label and the dialog
+    offers no rename, so there is no typing path to drive.
+  - `integration_common`'s `zoneEditorZone*Y` row coordinates were measured on a
+    zone whose note wraps to one line, which a player spawn and a neutral zone
+    do but the shared `Hub` does not, so the Hub's property rows cannot be
+    clicked through the handler. `zoneRowY` only compensates for neutral zones.
+    The rows themselves are the same code for every zone, so the gap costs no
+    coverage - it is a harness limitation to fix if a Hub-specific behaviour
+    ever needs driving.
 
 - app/gui/panels/layoutPanel.go + layoutPanelTopology.go + layoutPanelZones.go
   and previewPanel.go - Layout/Preview panels (layoutPanel method-split by
