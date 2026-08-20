@@ -242,26 +242,26 @@ and seeing the three rows appear):
 
 ## Phase 1: Accessors and handler build-out
 
-Status: Not started
+Status: Complete
 
-- [ ] Production: store the canvas offset alongside the existing `side` in
+- [x] Production: store the canvas offset alongside the existing `side` in
       `zoneEditorGeometryState`, assigned in
       [layoutCanvas](../app/gui/dialogs/zoneEditorCanvas.go#L32). One
       assignment, no behaviour change.
-- [ ] `zoneEditorDialog_testexports.go`: `CanvasOrigin()`, `CanvasSide()`, and
+- [x] `zoneEditorDialog_testexports.go`: `CanvasOrigin()`, `CanvasSide()`, and
       the drag/mode readbacks a golden cannot express (dragged zone, pending
       connection source, snap-guide state).
-- [ ] `window_testexports.go`: `IZoneEditorDialog` + `TopZoneEditor()`,
+- [x] `window_testexports.go`: `IZoneEditorDialog` + `TopZoneEditor()`,
       mirroring `IFileExplorerDialog` / `TopFileExplorer` exactly, including the
       comment explaining why the contract is declared there.
-- [ ] `LayoutAndZonesTabHandler.SelectTopology(name)` — opens the dropdown,
+- [x] `LayoutAndZonesTabHandler.SelectTopology(name)` — opens the dropdown,
       clicks the row, commits, snapshots, clears `isRandomTopology` and lifts
       the preview-canvas mask.
-- [ ] `ZoneEditorHandler`: canvas actions (`ClickCanvasAt`, `DragZone`,
+- [x] `ZoneEditorHandler`: canvas actions (`ClickCanvasAt`, `DragZone`,
       `DragFromZoneTo`, `RightClickEdge`, `ClickEmptyCanvas`), toolbar actions
       by label, side-panel actions (`TypeZoneSize`, `SelectZoneQuality`, …),
       a `Dialog()` observation surface, and a golden per action.
-- [ ] Canvas-to-window coordinate mapping in one place, backed by a permanent
+- [x] Canvas-to-window coordinate mapping in one place, backed by a permanent
       calibration test that presses a zone's mapped point and asserts that zone
       became the selection.
 
@@ -274,29 +274,97 @@ Status: Not started
 
 ### Phase Summary
 
-_(write when phase completes)_
+The handler can now drive the zone editor end to end through the real window,
+and the canvas coordinate mapping is proven by a test rather than asserted in a
+comment.
+
+**Production (one file pair, no behaviour change).**
+`zoneEditorGeometryState` gained a `canvasOrigin image.Point`, assigned once in
+`layoutCanvas` — the two `offsetX`/`offsetY` locals became that one field, which
+is also what `op.Offset` is now pushed with. That is the whole production
+change.
+
+**Accessor names had to dodge the `cmd/testlayoutcheck` name collision trap.**
+The checker matches test-only exports by identifier *name* across the whole
+tree, not by receiver type, so an accessor named after anything an ordinary
+field is called drags every untagged file that mentions it into a violation.
+`CanvasSide` is a field on `dtos.PreviewLayoutRequestDto` and
+`dtos.ZoneEditorGeometryRequestDto` and appears in six unit test files;
+`DraggedZone` is a field on `dtos.ZoneEditorSnapRequestDto` and appears in two.
+Both were renamed: the accessors are `CanvasSquareSide()` and `DraggingZone()`.
+The testexports side always yields — grep any new name tree-wide before adding
+it.
+
+**New accessors.** `zoneEditorDialog_testexports.go`: `CanvasOrigin()`,
+`CanvasSquareSide()`, `DraggingZone()`, `PendingConnectionSource()`,
+`SnapEnabled()`. `window_testexports.go`: the read-only `IZoneEditorDialog`
+contract and `TopZoneEditor()`, mirroring the file explorer pair including the
+AGENTS.md 4.6.1 comment. `editor` importing `dialogs` is cycle-free — only
+`app/gui/program.go` imports `editor`. The contract is deliberately
+observation-only: a test drives the dialog by clicking the real window and only
+reads state back through it.
+
+**Coordinate mapping.** `windowPoint = canvasBoxOrigin + CanvasOrigin() +
+canvasLocalPoint`. Only `canvasBoxOrigin` is measured — `(314, 181)`, derived
+from the Phase 0 canvas square `(355, 181)` minus the runtime-reported offset
+`(41, 0)` — and everything else is read from the dialog, so a side-panel or
+aspect change is absorbed rather than silently mis-aimed. It lives in exactly
+one place, `ZoneEditorHandler.CanvasPoint`.
+[zoneEditorCanvasMapping_integration_test.go](../test/integration/gui/zoneEditorCanvasMapping_integration_test.go)
+presses every zone's mapped point and asserts each became the selection, with a
+`require` guard that the topology really did leave Random first.
+
+**Two frames the handler chain was missing.** A Gio `Clickable` is polled during
+the layout it acts on, so the tab switch and the dialog push both land *after*
+the frame the click was queued against. `SelectTopology` therefore renders a
+frame before reaching for the dropdown trigger, and `OpenZoneEditor` renders one
+before wrapping the dialog — without the latter the canvas has never been
+measured and `ZonePositions()` is empty. This is the failure mode to look for
+first if a later handler action seems to click nothing.
+
+**Two layout rules the handler encodes.** A side-panel dropdown pushes every row
+below it down, so an option is *only* ever addressed by label inside
+`zoneEditorSidePanelRect()`, never by coordinate. And a neutral zone carries no
+note row, so its property rows sit `zoneEditorSidePanelNoteDrop` (29 dp) higher
+than the constants, which are measured on a zone that has one;
+`ZoneEditorHandler.zoneRowY` applies that correction off
+`zone_helpers.IsZoneNameNeutral`. Note the discriminator is *neutral*, not
+*player spawn*: a non-neutral non-spawn zone gets a different note row, but it
+still gets one.
+
+**`ClickEmptyCanvas` was deliberately not written.** `ClickCanvasAt(position)`
+already is that action — a click on empty canvas is a click at a position that
+happens to hit nothing. A second method would only have been an alias.
+
+**Verification run.** `test-layout check passed`; `go build ./...`,
+`go vet ./...` and `go vet -tags='integration_test,gui' ./...` clean;
+`gofmt -l` empty; unit, integration and `integration_test,gui` suites all green;
+`golangci-lint-v2` reports `0 issues.`; coverage 72.8 %, unchanged and above the
+72.5 % floor. No goldens were generated — snapshots stay off until Phase 2, and
+`ZoneEditorHandler.verifySnapshot` fatals if one is asked for while the topology
+is still Random.
 
 ## Phase 2: Rewrite the existing zone-editor tests onto the handler
 
-Status: Not started
+Status: Complete
 
-- [ ] Move the behaviour tests in
+- [x] Move the behaviour tests in
       [zoneEditorDialog_integration_test.go](../test/integration/gui/zoneEditorDialog_integration_test.go)
       onto the handler: button labels, Undo, Revert to Base, Apply, delete
       selected, mode toggles, selection rendering — asserting through
       `Window.CurrentState()` / the state driver and a golden per action.
-- [ ] Re-derive the pins in
+- [x] Re-derive the pins in
       [zoneEditorGeometry_integration_test.go](../test/integration/gui/zoneEditorGeometry_integration_test.go)
       from the real dialog geometry and assert them through
       `TopZoneEditor()`. Keep them **exact float** assertions: their job is to
       guard batch G's single-rounding property, so a pin that rounds is a
       regression in the test, not a tidier number.
-- [ ] Keep dialog-direct, unchanged, the five tests the window cannot reach:
+- [x] Keep dialog-direct, unchanged, the five tests the window cannot reach:
       the two `RevertToBaseCannotRegenerate` cases, the two Apply/RevertToBase
       flag cases, `TestWhenRevertToBaseFailed_TheApplyReportsNoRevert`, and
       `TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions`. Add a
       one-line comment on the file's fixture explaining why they stay.
-- [ ] Generate the goldens locally, `-run`-scoped per test.
+- [x] Generate the goldens locally, `-run`-scoped per test.
 
 ### Verification Plan
 
@@ -307,7 +375,69 @@ Status: Not started
 
 ### Phase Summary
 
-_(write when phase completes)_
+The zone-editor GUI tests now live in three files instead of two.
+
+**What the real window actually renders.** A probe over every topology label
+(since deleted) settled the fixture question the plan could not answer on paper.
+The default two-player template gives the dialog a **580 px** canvas, zone radius
+`31.485714285714288` and grid step `8.99591836734694` for *every* topology; only
+the layout differs. `Square` and `Chain` draw two spawns and one connection,
+`Ring` draws two spawns joined **twice**, `Hub` draws a neutral hub sitting
+exactly on the chord between the spawns plus six edges, `Geometric Hub` draws a
+deletable neutral hub and one named portal per spawn, and `Shared Web` draws a
+neutral third zone. Each geometry property therefore got the topology that is
+the only reachable layout to exhibit it, rather than a synthetic fixture.
+
+**[zoneEditorActions_integration_test.go](../test/integration/gui/zoneEditorActions_integration_test.go)
+(new).** Eighteen behaviour tests driven through `AppRunner` over the
+`Geometric Hub` layout: button labels, selection, delete selected, undo, apply,
+revert to base and the add-mode toggles. `openZoneEditor` calls
+`WithFixtureDirectory()` **before** `WithSnapshots()` — the toolbar reports the
+current file's per-machine path and sits above the dialog panel, so without the
+fixture mask every golden would be machine-specific. The three label tests and
+the geometry tests skip snapshots: they assert semantics and numbers, and a
+golden per action there would only add near-identical PNGs.
+
+**[zoneEditorGeometry_integration_test.go](../test/integration/gui/zoneEditorGeometry_integration_test.go)
+(rewritten).** Every pin re-derived against the live canvas and kept exact:
+`Spawn-A` at `(46.39999999999995, 46.39999999999995)` is the single-rounding
+guard in its rawest form. Two pins changed shape. Edge grouping is now asserted
+as the **zone-pair sequence** rather than as names, because `Hub` emits two
+connections per pair and one of each pair carries an empty name; the sequence
+also shows that the reversed `Spawn-B → Spawn-A` edge groups with its forward
+twin instead of opening a new group. The near-chord bulge is `Pseudo-A-B`,
+whose control point is pushed out to `x = 181.02856` by the hub sitting on the
+chord — a far more convincing case than the old 14 px obstacle fixture.
+
+**[zoneEditorDialog_integration_test.go](../test/integration/gui/zoneEditorDialog_integration_test.go)
+(trimmed).** The five callback tests stay, plus
+`TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions`, and a header
+comment now says why. **Deviation from the checklist:** the three snap tests and
+the guide-overlay render test also stayed dialog-direct. They need an exact
+dragged position (`SnapDraggedPosition(203, 351)` → `200 + 6/7`), which a
+pointer gesture rounded to a whole pixel cannot express, and driving them
+through `TopZoneEditor()` would mean putting `SetSnapEnabled` / `BeginZoneDrag`
+/ `SnapDraggedPosition` on an interface that owner decision 9 approved as
+deliberately read-only. Phase 3's `TestWhenAZoneIsDraggedNearAGuide_ItSnapsToTheGuide`
+covers the same behaviour through a real drag, so the two are complementary
+rather than duplicated.
+
+**Harness additions.** `AppRunner.ButtonLabelsIn(area)` (the existing
+`ButtonBoundsIn` fails on more than one match, so it cannot enumerate) and
+`ZoneEditorHandler.ButtonLabels()`. `ClickAddConnection` / `ClickAddZone` now
+pick their label from the current mode: both buttons **relabel themselves while
+armed** (`"Adding... (click empty to stop)"`, `"Placing... (click a zone to
+stop)"`), so clicking them a second time by the idle label fails to find a
+button at all.
+
+**Verification.** `go test -tags='integration_test,gui' ./test/integration/gui/...
+-count=1` passed twice with no `-update` (12.5 s, 12.0 s), proving the goldens
+are stable rather than freshly written. Also green: `go run
+./cmd/testlayoutcheck .`, `go build ./...`, both vets, `gofmt -l` on the touched
+files, `go test ./test/unit/...`, `go test -tags=integration_test
+./test/integration/...`, `golangci-lint-v2 run ./...` → `0 issues.`, coverage
+**72.8 %** (unchanged — Phase 2 touched no production code). Nothing staged,
+nothing committed.
 
 ## Phase 3: §5.1 pointer flows
 

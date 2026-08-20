@@ -74,6 +74,20 @@ const (
 	zoneEditorButtonX = 846
 	zoneEditorButtonY = 129
 
+	// topologySelectorTrigger* opens the Layout & Zones tab's topology dropdown.
+	// Confirmed by clicking it and then clicking a row, asserting
+	// EditorStateDto.Topology.
+	topologySelectorTriggerX = 366
+	topologySelectorTriggerY = 124
+
+	// topologyOption* bound the block the open topology dropdown draws its rows
+	// in. The rows do emit semantic.Button, so they are addressed by label
+	// inside this rectangle rather than by a row index.
+	topologyOptionsLeft   = 178
+	topologyOptionsTop    = 138
+	topologyOptionsRight  = 556
+	topologyOptionsBottom = 420
+
 	// advancedZoneControlCheckbox* toggles "Advanced zone control", which adds
 	// enough rows to give the Layout & Zones panel a ~386px scroll range (it
 	// overflows by only ~18px otherwise). Confirmed by clicking it and asserting
@@ -134,7 +148,86 @@ const (
 	// because the mask is derived from the header buttons flanking the bar and
 	// the textbox between them is not exactly as tall as they are.
 	headerBarSlack = 6
+
+	// zoneEditorPanel* bound the modal panel DialogHost centers on screen for
+	// the zone editor's 1000x720 PreferredSize. Its buttons are looked up inside
+	// this rectangle so they are told apart from the tab's own, which stay laid
+	// out behind the scrim.
+	zoneEditorPanelWidth  = 1000
+	zoneEditorPanelHeight = 720
+	zoneEditorPanelLeft   = (WindowWidth - zoneEditorPanelWidth) / 2
+	zoneEditorPanelTop    = (WindowHeight - zoneEditorPanelHeight) / 2
+
+	// zoneEditorCanvasBox* is where the space reserved for the canvas starts.
+	// The canvas centres a square inside that space and reports the centring
+	// offset through CanvasOrigin(), so only this origin has to be measured -
+	// the square itself is derived. The calibration test presses every zone's
+	// mapped point and asserts it became the selection.
+	zoneEditorCanvasBoxLeft = 314
+	zoneEditorCanvasBoxTop  = 181
+
+	// zoneEditorSnapCheckbox* is the toolbar's "Snap" checkbox, which emits a
+	// semantic.CheckBox rather than a labelled button. Confirmed by clicking it
+	// and asserting SnapEnabled.
+	zoneEditorSnapCheckboxX = 809
+	zoneEditorSnapCheckboxY = 153
+
+	// zoneEditorSidePanel* bound the properties column to the right of the
+	// canvas. Its editors and dropdown triggers are centered on
+	// zoneEditorSidePanelFieldX, its full-width buttons on
+	// zoneEditorSidePanelButtonX.
+	zoneEditorSidePanelLeft     = 996
+	zoneEditorSidePanelRight    = 1266
+	zoneEditorSidePanelFieldX   = 1186
+	zoneEditorSidePanelButtonX  = 1131
+	zoneEditorSidePanelNoteDrop = 29
+
+	// zoneEditorZone*Y are the property rows of a selected zone, measured on a
+	// player spawn. A neutral zone carries no "spawn" note row, so every one of
+	// its rows sits zoneEditorSidePanelNoteDrop higher - see zoneRowY.
+	zoneEditorZoneSizeY    = 259
+	zoneEditorZoneGuardY   = 290
+	zoneEditorZoneWeeklyY  = 317
+	zoneEditorZoneQualityY = 348
+	zoneEditorZoneCastlesY = 375
+
+	// zoneEditorConnection*Y are the property rows of a selected connection with
+	// its advanced options collapsed.
+	zoneEditorConnectionTypeY        = 230
+	zoneEditorConnectionGuardZoneY   = 257
+	zoneEditorConnectionGuardPresetY = 288
+	zoneEditorConnectionGuardValueY  = 315
+	zoneEditorConnectionWeeklyY      = 346
+	zoneEditorConnectionIncrementY   = 373
+	zoneEditorConnectionAdvancedY    = 413
+
+	// zoneEditorConnectionAdvanced*Y are the rows the advanced options reveal.
+	zoneEditorConnectionMatchGroupY   = 446
+	zoneEditorConnectionGuardEscapeY  = 480
+	zoneEditorConnectionSimTurnSquadY = 520
 )
+
+// zoneEditorRect is the modal panel the zone editor is drawn into.
+func zoneEditorRect() image.Rectangle {
+	return image.Rect(
+		zoneEditorPanelLeft, zoneEditorPanelTop,
+		zoneEditorPanelLeft+zoneEditorPanelWidth, zoneEditorPanelTop+zoneEditorPanelHeight)
+}
+
+// zoneEditorSidePanelRect is the properties column, used to look up the rows an
+// open dropdown draws. A dropdown pushes every row below it down, so an option
+// is only ever addressed by label inside this rectangle, never by coordinate.
+func zoneEditorSidePanelRect() image.Rectangle {
+	return image.Rect(
+		zoneEditorSidePanelLeft, zoneEditorPanelTop,
+		zoneEditorSidePanelRight, zoneEditorPanelTop+zoneEditorPanelHeight)
+}
+
+// topologyOptionsRect is the block the open topology dropdown draws its rows in.
+func topologyOptionsRect() image.Rectangle {
+	return image.Rect(
+		topologyOptionsLeft, topologyOptionsTop, topologyOptionsRight, topologyOptionsBottom)
+}
 
 // fileDialogRect is the modal panel the file explorer is drawn into.
 func fileDialogRect() image.Rectangle {

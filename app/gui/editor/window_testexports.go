@@ -3,8 +3,13 @@
 package editor
 
 import (
+	"image"
+
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
 // LoadStateFromFile ONLY FOR INTEGRATION TEST USE
@@ -87,6 +92,42 @@ type IFileExplorerDialog interface {
 // Returns the top-most dialog as a file explorer, and whether it is one.
 func (this *Window) TopFileExplorer() (IFileExplorerDialog, bool) {
 	dialog, ok := this.state.GetDialogHost().GetTopDialog().(IFileExplorerDialog)
+	return dialog, ok
+}
+
+// IZoneEditorDialog is the observation surface of dialogs.ZoneEditorDialog,
+// satisfied by the accessors on its own *_testexports.go file. Like
+// IFileExplorerDialog it is declared here rather than in a *Interface.go file
+// because outside test/ only *_testexports.go may carry the integration_test
+// tag (AGENTS.md 4.6.1), and a test-only contract must not reach production
+// builds. It is deliberately read-only: a test drives the dialog by clicking
+// and dragging the real window, and only reads state back through this.
+type IZoneEditorDialog interface {
+	CanvasOrigin() image.Point
+	CanvasSquareSide() int
+	CanvasGridStep() float64
+	CanvasZoneRadius() float64
+	ZonePositions() map[string]models.Position
+	EdgeGeometries() []dialogs.EdgeGeometry
+	HitTestCanvasNode(pos models.Position) string
+	HitTestCanvasEdge(pos models.Position) string
+	SelectedZone() string
+	SelectedConnection() string
+	EditedZones() []entities.Zone
+	EditedConnectionNames() []string
+	AddConnectionModeActive() bool
+	AddZoneModeActive() bool
+	DraggingZone() string
+	PendingConnectionSource() string
+	SnapEnabled() bool
+	SnapGuides() (x float64, xActive bool, y float64, yActive bool)
+	StatusHint() string
+}
+
+// TopZoneEditor ONLY FOR INTEGRATION TEST USE
+// Returns the top-most dialog as a zone editor, and whether it is one.
+func (this *Window) TopZoneEditor() (IZoneEditorDialog, bool) {
+	dialog, ok := this.state.GetDialogHost().GetTopDialog().(IZoneEditorDialog)
 	return dialog, ok
 }
 

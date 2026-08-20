@@ -30,14 +30,11 @@ import (
 // coordinates are square-local because the centring offset is pushed first and
 // the pointer area is registered within that transform.
 func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.Theme) layout.Dimensions {
-	maxX := gtx.Constraints.Max.X
-	maxY := gtx.Constraints.Max.Y
-	outer := image.Pt(maxX, maxY)
-	side := max(min(maxX, maxY), 80)
+	outer := gtx.Constraints.Max
+	side := max(min(outer.X, outer.Y), 80)
 	canvasSize := image.Pt(side, side)
-	offsetX := (maxX - side) / 2
-	offsetY := (maxY - side) / 2
-	defer op.Offset(image.Pt(offsetX, offsetY)).Push(gtx.Ops).Pop()
+	this.canvasOrigin = outer.Sub(canvasSize).Div(2)
+	defer op.Offset(this.canvasOrigin).Push(gtx.Ops).Pop()
 
 	paint.FillShape(gtx.Ops, themes.ColorsPreview.Background, clip.Rect(image.Rectangle{Max: canvasSize}).Op())
 	frameRadius := gtx.Dp(unit.Dp(6))

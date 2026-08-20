@@ -3,6 +3,8 @@
 package dialogs
 
 import (
+	"image"
+
 	"gioui.org/f32"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -20,6 +22,15 @@ type EdgeGeometry struct {
 	ControlPoint f32.Point
 	MidPoint     models.Position
 }
+
+// CanvasOrigin returns where the centred canvas square starts inside the space
+// the canvas was laid out in, so a window-coordinate caller can convert to the
+// square-local coordinates every other accessor here speaks.
+// ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) CanvasOrigin() image.Point { return this.canvasOrigin }
+
+// CanvasSquareSide ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) CanvasSquareSide() int { return this.side }
 
 // RecomputeGeometry rebuilds node positions and edge curves for a square canvas
 // of the given side, exactly as a laid-out frame would. ONLY FOR INTEGRATION TEST USE
@@ -151,6 +162,18 @@ func (this *ZoneEditorDialog) AddConnectionModeActive() bool { return this.addMo
 
 // AddZoneModeActive ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) AddZoneModeActive() bool { return this.addZoneMode }
+
+// DraggingZone returns the zone the pointer is currently moving, or "" when no
+// zone drag is in progress. ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) DraggingZone() string { return this.zoneDragName }
+
+// PendingConnectionSource returns the zone an in-progress connection drag
+// started from, or "" when no rubber band is being drawn.
+// ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) PendingConnectionSource() string { return this.pendingFrom }
+
+// SnapEnabled ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) SnapEnabled() bool { return this.snapBool.Value }
 
 // EditedZones ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) EditedZones() []entities.Zone { return this.zones }

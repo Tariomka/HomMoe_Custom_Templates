@@ -62,6 +62,29 @@ func (this *AppRunner) ClickButton(label string) {
 	this.clickBounds(this.ButtonBounds(label))
 }
 
+// ButtonLabelsIn returns the label of every button the current frame publishes
+// inside area, for the assertions that are about what the UI offers rather than
+// about pressing any one of them.
+func (this *AppRunner) ButtonLabelsIn(area image.Rectangle) []string {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	this.frameLocked()
+
+	labels := make([]string, 0)
+	for _, node := range this.router.AppendSemantics(nil) {
+		bounds := node.Desc.Bounds
+		if node.Desc.Class != semantic.Button || node.Desc.Label == "" {
+			continue
+		}
+		if bounds.Min.Add(bounds.Max).Div(2).In(area) {
+			labels = append(labels, node.Desc.Label)
+		}
+	}
+
+	return labels
+}
+
 // ClickButtonIn taps the center of the button labelled label inside area.
 func (this *AppRunner) ClickButtonIn(area image.Rectangle, label string) {
 	this.tb.Helper()

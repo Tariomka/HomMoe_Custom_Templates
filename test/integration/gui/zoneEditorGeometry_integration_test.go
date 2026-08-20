@@ -7,274 +7,203 @@ import (
 
 	"gioui.org/f32"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
-	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// geometryCanvasSide is the canvas side these tests lay geometry out on. At
-// exactly 700px the preview metrics scale is 1.0, so every expected coordinate
-// below is an exact integer rather than a scaled approximation.
-const geometryCanvasSide = 700
+// Each topology below is picked for the one geometry property it is the only
+// reachable layout to exhibit: Square for a plain two-zone placement, Ring for a
+// pair of connections sharing the same two zones, Hub for a zone sitting on the
+// chord between two others, and Geometric Hub for a curve that runs straight.
+const (
+	squareLayout    = "Square"
+	ringLayout      = "Ring"
+	hubLayout       = "Hub"
+	hubToSpawnAEdge = "Portal-Hub-A"
+)
 
-// geometryZoneRadius is the zone radius the preview layout settles on for the
-// fixtures below: the zones are far enough apart that the radius is not
-// shrunk, so it stays at the unscaled maximum.
-const geometryZoneRadius = 38.0
+// edgePairs reports the zone pair of every edge in layout order, which is what
+// the grouping assertions are about. The Hub topology emits more than one
+// connection per pair, so names would not tell the grouping apart.
+func edgePairs(edges []dialogs.EdgeGeometry) [][2]string {
+	pairs := make([][2]string, 0, len(edges))
+	for _, edge := range edges {
+		pairs = append(pairs, [2]string{edge.From, edge.To})
+	}
 
-// newGeometryZone builds a zone pinned to a normalized manual position. When
-// every zone carries one, the preview layout honours them verbatim, which makes
-// the resulting canvas geometry fully deterministic.
-func newGeometryZone(name string, x, y float64) entities.Zone {
-	position := [2]float64{x, y}
-
-	return entities.Zone{Name: name, ManualPosition: &position}
+	return pairs
 }
 
-func newGeometryConnection(name, from, to string) entities.Connection {
-	return entities.Connection{Name: name, From: from, To: to, ConnectionType: "Direct"}
-}
-
-// newGeometryDialog builds a zone editor over the given deterministic fixture
-// and lays its geometry out once.
-func newGeometryDialog(
-	t *testing.T,
-	zones []entities.Zone,
-	connections []entities.Connection,
-) *dialogs.ZoneEditorDialog {
+// findEdge returns the first edge with the given name.
+func findEdge(t *testing.T, edges []dialogs.EdgeGeometry, name string) dialogs.EdgeGeometry {
 	t.Helper()
-	handler := composition.InitializeGuiHandler()
-	options := handler.GetZoneEditorOptions(dtos.NewDefaultEditorStateDto(), len(zones))
-	dialog := dialogs.NewZoneEditorDialog(
-		zones,
-		connections,
-		options.Topology,
-		options.Tuning,
-		options.GenerateRoads,
-		handler,
-		nil,
-		nil,
-	)
-	dialog.RecomputeGeometry(geometryCanvasSide)
-	require.Equal(t, geometryZoneRadius, dialog.CanvasZoneRadius(),
-		"the fixture must keep the unscaled zone radius, otherwise every expectation below shifts")
+	for _, edge := range edges {
+		if edge.Name == name {
+			return edge
+		}
+	}
+	t.Fatalf("the canvas laid out no edge called %q", name)
 
-	return dialog
+	return dialogs.EdgeGeometry{}
 }
 
-// newTriangleFixture places three zones at (140,350), (560,350) and (350,140)
-// and links A-B twice plus A-C once, so the parallel-edge spread is exercised.
-func newTriangleFixture(t *testing.T) *dialogs.ZoneEditorDialog {
-	t.Helper()
-
-	return newGeometryDialog(t,
-		[]entities.Zone{
-			newGeometryZone("A", 0.2, 0.5),
-			newGeometryZone("B", 0.8, 0.5),
-			newGeometryZone("C", 0.5, 0.2),
-		},
-		[]entities.Connection{
-			newGeometryConnection("ab", "A", "B"),
-			newGeometryConnection("ac", "A", "C"),
-			newGeometryConnection("ba", "B", "A"),
-		})
-}
-
-// newObstacleFixture places a third zone 14px off the A-B chord, close enough
-// to push the curve clear of it.
-func newObstacleFixture(t *testing.T) *dialogs.ZoneEditorDialog {
-	t.Helper()
-
-	return newGeometryDialog(t,
-		[]entities.Zone{
-			newGeometryZone("A", 0.2, 0.5),
-			newGeometryZone("B", 0.8, 0.5),
-			newGeometryZone("D", 0.5, 0.52),
-		},
-		[]entities.Connection{newGeometryConnection("ab", "A", "B")})
-}
-
-func TestWhenZonesCarryManualPositions_TheCanvasPlacesThemVerbatim(t *testing.T) {
-	t.Parallel()
+// The canvas rounds once, at draw time. Every coordinate it hands back is the
+// unrounded layout value, so pinning them exactly is what stops a rounding step
+// from creeping back into the pipeline.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenTheCanvasPlacesAGeneratedLayout_TheZonePositionsAreUnrounded(t *testing.T) {
 	// Arrange
-	dialog := newTriangleFixture(t)
+	_, zoneEditor := openZoneEditor(t, squareLayout, false)
 
 	// Act
-	positions := dialog.ZonePositions()
+	positions := zoneEditor.Dialog().ZonePositions()
 
 	// Assert
 	assert.Equal(t, map[string]models.Position{
-		"A": data.NewVec2(140.0, 350.0),
-		"B": data.NewVec2(560.0, 350.0),
-		"C": data.NewVec2(350.0, 140.0),
+		"Spawn-A": data.NewVec2(46.39999999999995, 46.39999999999995),
+		"Spawn-B": data.NewVec2(533.6, 533.6),
 	}, positions)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenTheDialogOpens_TheCanvasIsSquaredToTheBoxItWasGiven(t *testing.T) {
+	// Arrange
+	_, zoneEditor := openZoneEditor(t, squareLayout, false)
+
+	// Act
+	side := zoneEditor.Dialog().CanvasSquareSide()
+
+	// Assert
+	assert.Equal(t, 580, side)
+}
+
+// Two zones are one pair whichever way round a connection names them, so the
+// reversed Spawn-B to Spawn-A edge groups with its forward twin rather than
+// starting a group of its own.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenConnectionsSharePairs_TheyAreGroupedInFirstSeenOrder(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newTriangleFixture(t)
+	_, zoneEditor := openZoneEditor(t, hubLayout, false)
 
 	// Act
-	edges := dialog.EdgeGeometries()
+	pairs := edgePairs(zoneEditor.Dialog().EdgeGeometries())
 
 	// Assert
-	assert.Equal(t, []string{"ab", "ba", "ac"}, edgeNames(edges))
+	assert.Equal(t, [][2]string{
+		{"Hub", "Spawn-A"},
+		{"Hub", "Spawn-A"},
+		{"Spawn-A", "Spawn-B"},
+		{"Spawn-B", "Spawn-A"},
+		{"Hub", "Spawn-B"},
+		{"Hub", "Spawn-B"},
+	}, pairs)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenTwoConnectionsSharePair_TheirCurvesSpreadSymmetrically(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newTriangleFixture(t)
+	_, zoneEditor := openZoneEditor(t, ringLayout, false)
+	edges := zoneEditor.Dialog().EdgeGeometries()
+	require.Len(t, edges, 2, "the ring layout must pair the two spawns twice for the spread to show")
 
 	// Act
-	edges := dialog.EdgeGeometries()
+	controlPoints := []f32.Point{edges[0].ControlPoint, edges[1].ControlPoint}
 
 	// Assert
-	assert.Equal(t,
-		[]f32.Point{f32.Pt(350, 368), f32.Pt(350, 332)},
-		[]f32.Point{edges[0].ControlPoint, edges[1].ControlPoint})
+	assert.Equal(t, []f32.Point{f32.Pt(272, 290), f32.Pt(308, 290)}, controlPoints)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAnEdgeIsLaidOut_ItsLabelSitsOnTheCurveMidpoint(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newTriangleFixture(t)
+	_, zoneEditor := openZoneEditor(t, ringLayout, false)
 
 	// Act
-	edges := dialog.EdgeGeometries()
+	edge := findEdge(t, zoneEditor.Dialog().EdgeGeometries(), "Ring-A-B")
 
 	// Assert
-	assert.Equal(t, data.NewVec2(350.0, 359.0), edges[0].MidPoint)
+	assert.Equal(t, data.NewVec2(281.0, 290.0), edge.MidPoint)
 }
 
+// The hub sits exactly on the chord between the two spawns, so the pseudo edge
+// joining them has to bow far enough sideways to clear it.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAZoneSitsNearTheChord_TheCurveBulgesClearOfIt(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newObstacleFixture(t)
+	_, zoneEditor := openZoneEditor(t, hubLayout, false)
 
 	// Act
-	edges := dialog.EdgeGeometries()
+	edge := findEdge(t, zoneEditor.Dialog().EdgeGeometries(), "Pseudo-A-B")
 
 	// Assert
-	assert.Equal(t, f32.Pt(350, 274), edges[0].ControlPoint)
+	assert.Equal(t, f32.Pt(181.02856, 290), edge.ControlPoint)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAPointIsInsideAZone_TheHitTestNamesThatZone(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newTriangleFixture(t)
+	_, zoneEditor := openZoneEditor(t, squareLayout, false)
 
 	// Act
-	hit := dialog.HitTestCanvasNode(data.NewVec2(140.0, 350.0))
+	hit := zoneEditor.Dialog().HitTestCanvasNode(zoneEditor.ZonePosition("Spawn-A"))
 
 	// Assert
-	assert.Equal(t, "A", hit)
+	assert.Equal(t, "Spawn-A", hit)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAPointIsJustOutsideEveryZone_TheHitTestNamesNone(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newTriangleFixture(t)
+	_, zoneEditor := openZoneEditor(t, squareLayout, false)
+	center := zoneEditor.ZonePosition("Spawn-A")
+	justOutside := data.NewVec2(center.X+zoneEditor.Dialog().CanvasZoneRadius()+1, center.Y)
 
 	// Act
-	hit := dialog.HitTestCanvasNode(data.NewVec2(140.0+geometryZoneRadius+1.0, 350.0))
+	hit := zoneEditor.Dialog().HitTestCanvasNode(justOutside)
 
 	// Assert
 	assert.Empty(t, hit)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAPointSitsOnACurve_TheEdgeHitTestNamesThatConnection(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newObstacleFixture(t)
+	_, zoneEditor := openZoneEditor(t, geometricHubLayout, false)
+	edge := findEdge(t, zoneEditor.Dialog().EdgeGeometries(), hubToSpawnAEdge)
 
 	// Act
-	hit := dialog.HitTestCanvasEdge(data.NewVec2(350.0, 312.0))
+	hit := zoneEditor.Dialog().HitTestCanvasEdge(edge.MidPoint)
 
 	// Assert
-	assert.Equal(t, "ab", hit)
+	assert.Equal(t, hubToSpawnAEdge, hit)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAPointIsFarFromEveryCurve_TheEdgeHitTestNamesNone(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newObstacleFixture(t)
+	_, zoneEditor := openZoneEditor(t, geometricHubLayout, false)
 
 	// Act
-	hit := dialog.HitTestCanvasEdge(data.NewVec2(350.0, 350.0))
+	hit := zoneEditor.Dialog().HitTestCanvasEdge(data.NewVec2(10.0, 10.0))
 
 	// Assert
 	assert.Empty(t, hit)
 }
 
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenTheZoneRadiusIsKnown_TheSnapGridHoldsSevenCellsPerDiameter(t *testing.T) {
-	t.Parallel()
 	// Arrange
-	dialog := newTriangleFixture(t)
+	_, zoneEditor := openZoneEditor(t, squareLayout, false)
+	radius := zoneEditor.Dialog().CanvasZoneRadius()
 
 	// Act
-	step := dialog.CanvasGridStep()
+	step := zoneEditor.Dialog().CanvasGridStep()
 
 	// Assert
-	assert.InDelta(t, geometryZoneRadius*2.0/7.0, step, 1e-9)
-}
-
-func TestWhenSnappingIsDisabled_TheDraggedPositionIsUntouched(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	dialog := newTriangleFixture(t)
-	dialog.SetSnapEnabled(false)
-	dialog.BeginZoneDrag("A")
-
-	// Act
-	snapped := dialog.SnapDraggedPosition(data.NewVec2(200.0, 355.0))
-
-	// Assert
-	assert.Equal(t, data.NewVec2(200.0, 355.0), snapped)
-}
-
-func TestWhenSnappingIsEnabled_TheDraggedZoneHoldsOntoNearbyGuides(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	dialog := newTriangleFixture(t)
-	dialog.SetSnapEnabled(true)
-	dialog.BeginZoneDrag("A")
-
-	// Act
-	snapped := dialog.SnapDraggedPosition(data.NewVec2(200.0, 355.0))
-
-	// Assert
-	assert.Equal(t, data.NewVec2(200.0+6.0/7.0, 350.0), snapped)
-}
-
-func TestWhenAZoneGuideIsHeld_OnlyThatAxisReportsAGuide(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	dialog := newTriangleFixture(t)
-	dialog.SetSnapEnabled(true)
-	dialog.BeginZoneDrag("A")
-
-	// Act
-	dialog.SnapDraggedPosition(data.NewVec2(200.0, 355.0))
-	_, xActive, _, yActive := dialog.SnapGuides()
-
-	// Assert
-	// The guide coordinate itself is not pinned: the three candidate guides at
-	// 312/350/388 are all exactly 5px away, so which one wins depends on the
-	// position map's iteration order. Only the axis flags are deterministic.
-	assert.Equal(t, []bool{false, true}, []bool{xActive, yActive})
-}
-
-func edgeNames(edges []dialogs.EdgeGeometry) []string {
-	names := make([]string, 0, len(edges))
-	for _, edge := range edges {
-		names = append(names, edge.Name)
-	}
-
-	return names
+	assert.InDelta(t, radius*2/7, step, 1e-9)
 }

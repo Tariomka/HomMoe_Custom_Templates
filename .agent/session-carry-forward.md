@@ -2,243 +2,227 @@
 
 ## 1. Session goal
 
-Implement backlog **batch G** — `todo/backlog-opus5.md` §2.3, *preview geometry
-is integer-only although a `Vec2` already exists* — under a plan file, per
-AGENTS.md §2.4.
+Implement backlog **batch H** — `todo/backlog-opus5.md` §5.1 (zone-editor
+pointer flows) and §5.2 (zone-editor property panels) — under
+[plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md),
+per AGENTS.md §2.4. Phases 0, 1 and 2 of six are done.
 
 ## 2. Fixes applied
 
-- **Two contradictory rounding rules in the same package.** `commitPositions`
-  rounded (`image.Pt(int(math.Round(...)))`) while `canvasMetrics.center()`
-  truncated, both in
-  [layoutGeometry.go](../internal/services/preview_service/layoutGeometry.go).
-  Both are gone: positions are committed as raw `float64` and `center()` returns
-  `data.NewVec2(this.cx, this.cy)`. The same `image.Pt(int(math.Round(...)))`
-  pattern was removed from
-  [layoutRingHub.go](../internal/services/preview_service/layoutRingHub.go) and
-  [layoutBalancedRings.go](../internal/services/preview_service/layoutBalancedRings.go).
-- **Pointer input was truncated before hit-testing.**
-  [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go) did
-  `image.Pt(int(e.Position.X), int(e.Position.Y))`, so hit-testing and snapping
-  saw the pixel the pointer landed in rather than where it actually was. The
-  `f32` position now flows through as `data.Vec2[float64]`.
-- **`helpers.GetPointOnQuadraticBezierCurve` was dead.** Its three call sites all
-  migrated to the pre-existing float variant `GetVectorOnQuadraticBezierCurve`,
-  so it was deleted from [math.go](../internal/helpers/math.go).
-- **Duplicated selection-ring drawing.** `drawNodes` had two identical blocks
-  that would each have needed the new rounding; extracted as
-  `drawSelectionRing`.
+- **The canvas origin was a pair of locals no one could read back.**
+  [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go) computed
+  `offsetX`/`offsetY` inside `layoutCanvas` and threw them away, so nothing
+  outside the frame could turn a canvas-local position into a window pixel. It
+  is now the `canvasOrigin` field on
+  [zoneEditorGeometryState.go](../app/gui/dialogs/zoneEditorGeometryState.go).
+  Behaviour-neutral; it is the only production change in phases 0–2.
+- **`ClickAddConnection` / `ClickAddZone` could not turn a mode off.** Both
+  toolbar buttons relabel themselves while armed
+  (`"Adding... (click empty to stop)"`, `"Placing... (click a zone to stop)"`),
+  so a second click addressed by the idle label found no button at all. The
+  handler now picks the label from the current mode.
+- **`ShufflePlayerZones` removed outright** (already reviewed and committed by
+  the author earlier in the session).
 
 ## 3. Features added / changed
 
-No user-visible behaviour changed, but two outputs shifted by design (see §8).
+No user-visible behaviour changed. The GUI test harness gained the ability to
+drive the zone editor through the real window:
 
-- **The layout pipeline is `float64` end to end.** `preview.Layout.Positions` /
-  `ZoneRadius`, `preview.Zone.Center`, `preview.Connection.Start/Ctrl/End`,
-  `ZoneEditorGeometry.Positions` / `ZoneRadius`, `ZoneEditorEdge.MidPoint` and
-  `ZoneEditorSnapResult.Position` are all float. Leaving any of them integer
-  would have re-quantised one step downstream and defeated the item.
-- **Rounding happens exactly once per output.**
-  [app/gui/utils/draw.go](../app/gui/utils/draw.go) is the single rounding site
-  for the Gio canvases; the pixel loop in
-  [assetProvider.go](../internal/services/asset_provider/assetProvider.go) is the
-  one for the generated PNG. `drawAsset` deliberately keeps a **fractional**
-  centre — the bilinear sample resolves it, so sub-pixel placement survives into
-  the image.
-- **`utils.ToF32Point`** — new [app/gui/utils/math.go](../app/gui/utils/math.go),
-  the `Vec2[float64]` → `f32.Point` bridge. It lives in `app/gui/utils` and not
-  beside `Vec2` so that no package under `internal/` imports Gio, which is still
-  true.
-- **`zoneEditorGeometryService` lost conversions rather than gaining them.**
-  `HitTestNode`, `HitTestEdge`, `SnapPosition`, `GridStep`, `buildEdges`,
-  `obstacleBulge` and `otherZoneGuides` already computed in `float64` via
-  `math.Hypot`; the change mostly deletes the round-trip through `image.Point`.
-  `GridStep` no longer passes through an int, and `SnapPosition` no longer
-  rounds its result.
-
-**Constraint discovered:** `internal/models` imports `internal/models/preview`,
-so `preview` **cannot** import `models`. The `preview` types therefore spell the
-type `data.Vec2[float64]` while everything outside spells it `models.Position`.
-`models.Position = data.Vec2[float64]` is a type alias, so they are identical —
-this is cosmetic only, but it explains the mixed spelling.
+- **`editor.IZoneEditorDialog`** — a deliberately read-only observation surface
+  on `Window.TopZoneEditor()`, mirroring the existing `IFileExplorerDialog`. It
+  is declared in [window_testexports.go](../app/gui/editor/window_testexports.go)
+  rather than a `*Interface.go` file because outside `test/` only
+  `*_testexports.go` may carry the `integration_test` tag (AGENTS.md §4.6.1).
+- **`ZoneEditorHandler`** — grown from a stub into a full handler: canvas
+  coordinate mapping, zone/connection clicking, dragging, right-click,
+  toolbar/footer buttons, and every side-panel field for both zones and
+  connections. It verifies a golden per action, file-explorer style, and fatals
+  if snapshots are on while the topology is still `Random`.
+- **`AppRunner.RightClickAt`** and **`AppRunner.ButtonLabelsIn(area)`** — the
+  latter because `ButtonBoundsIn` fails on more than one match and so cannot
+  enumerate.
 
 ## 4. File modifications
 
-Models and DTOs:
+Production (one behaviour-neutral change):
 
-| File | Change |
-| --- | --- |
-| [internal/models/preview/previewLayout.go](../internal/models/preview/previewLayout.go) | `Positions map[string]data.Vec2[float64]`, `ZoneRadius float64`. |
-| [internal/models/preview/previewZone.go](../internal/models/preview/previewZone.go) | `Center` → `data.Vec2[float64]`. |
-| [internal/models/preview/previewConnection.go](../internal/models/preview/previewConnection.go) | `Start`, `Ctrl`, `End` → `data.Vec2[float64]`. |
-| [internal/models/zoneEditorGeometry.go](../internal/models/zoneEditorGeometry.go) | `Positions map[string]Position`, `ZoneRadius float64`. |
-| [internal/models/zoneEditorEdge.go](../internal/models/zoneEditorEdge.go) | `MidPoint` → `data.Vec2[float64]`. |
-| [internal/models/zoneEditorSnapResult.go](../internal/models/zoneEditorSnapResult.go) | `Position` → `models.Position`. |
-| [internal/dtos/zoneEditorHitTestRequestDto.go](../internal/dtos/zoneEditorHitTestRequestDto.go), [zoneEditorSnapRequestDto.go](../internal/dtos/zoneEditorSnapRequestDto.go) | Float positions and radius. |
+- [app/gui/dialogs/zoneEditorGeometryState.go](../app/gui/dialogs/zoneEditorGeometryState.go)
+  — added the `canvasOrigin image.Point` field.
+- [app/gui/dialogs/zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go)
+  — `layoutCanvas` assigns that field instead of two locals.
 
-Services and handlers:
+Test-only exports:
 
-| File | Change |
-| --- | --- |
-| [layoutGeometry.go](../internal/services/preview_service/layoutGeometry.go) | Both rounding rules removed; `generatorCoords` still converts the protected `*[2]float64` at the read site. |
-| [layoutRingHub.go](../internal/services/preview_service/layoutRingHub.go), [layoutBalancedRings.go](../internal/services/preview_service/layoutBalancedRings.go) | Float placement, float `ZoneRadius`. |
-| [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go) | `buildPreviewConnections` takes float positions; ctrl point computed with `Subtract`/`Add`/`MultiplyScalar`. |
-| [previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go), [assetFitter.go](../internal/services/preview_service/assetFitter.go) | Float draw calls; rounding moved to the brush rect. |
-| [assetProvider.go](../internal/services/asset_provider/assetProvider.go) | `DrawPlayerZone` / `DrawNeutralZone` / `DrawArenaMarker` / `drawAsset` take float centres. |
-| [zoneEditorGeometryService.go](../internal/services/connection_editor/zoneEditorGeometryService.go) + its interface | Fully float; `image` import dropped. |
-| [zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go), [guiHandler.go](../internal/handlers/guiHandler.go) + [zoneEditorHandlerInterface.go](../internal/handlers/handler_interfaces/zoneEditorHandlerInterface.go) | Forwarding layers follow the new signatures. |
-| [internal/helpers/math.go](../internal/helpers/math.go) | `CalculatePointTowards` takes/returns `Vec2[float64]`; `GetPointOnQuadraticBezierCurve` **deleted**. |
+- [app/gui/dialogs/zoneEditorDialog_testexports.go](../app/gui/dialogs/zoneEditorDialog_testexports.go)
+  — added `CanvasOrigin`, `CanvasSquareSide`, `DraggingZone`,
+  `PendingConnectionSource`, `SnapEnabled`.
+- [app/gui/editor/window_testexports.go](../app/gui/editor/window_testexports.go)
+  — added `IZoneEditorDialog` and `Window.TopZoneEditor()`.
 
-GUI:
+Harness:
 
-| File | Change |
-| --- | --- |
-| [app/gui/utils/math.go](../app/gui/utils/math.go) | `ToF32Point`. |
-| [app/gui/utils/draw.go](../app/gui/utils/draw.go) | The single rounding site; `DrawConnection` / `DrawPreviewZone` / `drawCurve` / `drawOffsetText` take floats. |
-| [app/gui/dialogs/zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go) | Pointer truncation dropped; `drawSelectionRing` extracted. |
-| [app/gui/dialogs/zoneEditorSnap.go](../app/gui/dialogs/zoneEditorSnap.go), [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go), [zoneEditorInteractionState.go](../app/gui/dialogs/zoneEditorInteractionState.go) | Float drag/press positions and normalised manual positions. |
-| [app/gui/dialogs/zoneEditorDialog_testexports.go](../app/gui/dialogs/zoneEditorDialog_testexports.go) | `ZonePositions`, `CanvasZoneRadius`, `HitTest*`, `SnapDraggedPosition` follow the new types. |
-| [app/gui/panels/previewPanel.go](../app/gui/panels/previewPanel.go) | **No edit needed** — it already forwarded `ZoneRadius`, which changed type underneath it. |
+- [test/test_helpers/integration_common/appRunner.go](../test/test_helpers/integration_common/appRunner.go)
+  — added `TopZoneEditor()` and `RightClickAt`.
+- [test/test_helpers/integration_common/appRunnerSemantics.go](../test/test_helpers/integration_common/appRunnerSemantics.go)
+  — added `ButtonLabelsIn`.
+- [test/test_helpers/integration_common/handlerCoordinates.go](../test/test_helpers/integration_common/handlerCoordinates.go)
+  — added the topology-dropdown and zone-editor coordinate blocks plus
+  `zoneEditorRect()`, `zoneEditorSidePanelRect()`, `topologyOptionsRect()`.
+- [test/test_helpers/integration_common/layoutAndZonesTabHandler.go](../test/test_helpers/integration_common/layoutAndZonesTabHandler.go)
+  — added `SelectTopology` and `OpenZoneEditor`.
+- [test/test_helpers/integration_common/zoneEditorHandler.go](../test/test_helpers/integration_common/zoneEditorHandler.go)
+  — rewritten from 21 lines into the full handler.
 
-Docs / planning:
+Tests:
 
-| File | Change |
-| --- | --- |
-| [plans/batch-g-float-preview-geometry.md](../plans/batch-g-float-preview-geometry.md) | **New.** Five phases, all `Complete`, each with a Phase Summary, plus Final Recap and Deployment Plan. |
-| [todo/backlog-opus5.md](../todo/backlog-opus5.md) | §2.3 marked ✅ and self-contained; §8 batch **G** row and the header counts updated. |
+- [test/integration/gui/zoneEditorCanvasMapping_integration_test.go](../test/integration/gui/zoneEditorCanvasMapping_integration_test.go)
+  — new, permanent calibration test: every mapped zone point, when pressed,
+  becomes the selection.
+- [test/integration/gui/zoneEditorActions_integration_test.go](../test/integration/gui/zoneEditorActions_integration_test.go)
+  — new, 18 window-driven behaviour tests.
+- [test/integration/gui/zoneEditorGeometry_integration_test.go](../test/integration/gui/zoneEditorGeometry_integration_test.go)
+  — rewritten onto `TopZoneEditor()` with re-derived pins.
+- [test/integration/gui/zoneEditorDialog_integration_test.go](../test/integration/gui/zoneEditorDialog_integration_test.go)
+  — trimmed to what a click cannot reach.
+- `test/test_helpers/integration_common/snapshot/__snapshots__/zoneEditorActions_integration_test/`
+  — new goldens, generated locally on the real GPU, `-run`-scoped.
 
 ## 5. Tests added or updated
 
-Added:
+Last full run, all green:
 
-- [test/unit/internal/helpers/math/calculatePointTowards_test.go](../test/unit/internal/helpers/math/calculatePointTowards_test.go)
-  and [getVectorOnQuadraticBezierCurve_test.go](../test/unit/internal/helpers/math/getVectorOnQuadraticBezierCurve_test.go) —
-  **neither function had any test at all**, and `CalculatePointTowards` changed
-  signature, so AGENTS.md §2.3 required them.
-- `TestWhenTwoZonesAreLessThanAPixelApart_TheirCentresDiffer` in
-  [buildPreviewLayout_test.go](../test/unit/internal/services/preview_service/previewLayoutService/buildPreviewLayout_test.go) —
-  the test named by the backlog item. Two manual zones 0.3 px apart, a case the
-  integer layout collapsed onto one pixel.
-- `TestWhenOnlyTheGridIsInReach_TheDraggedPositionKeepsTheFractionalCorrection`
-  in [snapPosition_test.go](../test/unit/internal/services/connection_editor/zoneEditorGeometryService/snapPosition_test.go) —
-  pins that the grid correction is no longer rounded away.
-
-Updated: the `previewLayoutService`, `zoneEditorGeometryService`, `guiHandler`,
-`zoneEditorHandler`, `previewHandler`, `assetProvider` and `previewLayoutCache`
-unit folders; [zoneEditorGeometry_integration_test.go](../test/integration/gui/zoneEditorGeometry_integration_test.go)
-and [zoneEditorDialog_integration_test.go](../test/integration/gui/zoneEditorDialog_integration_test.go);
-and the [zoneEditorGeometryServiceMock](../test/test_helpers/zoneEditorGeometryServiceMock.go) /
-[templateHandlerMock](../test/test_helpers/templateHandlerMock.go).
-
-Assertion policy applied as decided: **exact literals in integration tests**,
-**`InDelta` at 1e-9 in unit tests**.
-
-**No goldens were regenerated** — see §8.
-
-**Gate results — all green:**
-
-| Gate | Result |
+| Command | Result |
 | --- | --- |
-| `go build ./...` | clean |
-| `go vet ./...` and `go vet -tags='integration_test,gui' ./...` | clean |
 | `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
-| `go test ./test/unit/... -count=1` | pass |
-| `go test -tags=integration_test ./test/integration/... -count=1` | pass |
-| `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass |
-| Unit coverage | **72.9 %** (flat; floor is 72.5 %) |
-| `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
-| `gofmt -l ./app ./internal ./test ./cmd` | empty |
-| `wire diff ./internal/composition/...` | no diff |
+| `go build ./...`, `go vet ./...`, `go vet -tags='integration_test,gui' ./...` | clean |
+| `gofmt -l app internal test cmd` | empty |
+| `go test -count=1 ./test/unit/...` | pass |
+| `go test -tags=integration_test -count=1 ./test/integration/...` | `ok … 2.351s` |
+| `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` | `ok` twice in a row with no `-update` (12.5 s, 12.0 s) |
+| `golangci-lint-v2 run ./... --issues-exit-code=0` | `0 issues.` |
+| unit coverage | **72.8 %** (floor 72.5 %) |
 
 ## 6. Git status snapshot
 
-Branch: `AD/fixing_some_stuff_08-12`. **Working tree clean.**
+Branch `AD/fixing_some_stuff_08-12`. Everything below is **staged by the
+author** — the agent staged nothing and committed nothing. Working tree clean
+apart from the index.
 
 ```
-c09dc8b (HEAD -> AD/fixing_some_stuff_08-12) Batch G done
-3b0e689 (origin/AD/fixing_some_stuff_08-12) Docs
-d37d1fa Batch F done
+M  app/gui/dialogs/zoneEditorCanvas.go
+M  app/gui/dialogs/zoneEditorDialog_testexports.go
+M  app/gui/dialogs/zoneEditorGeometryState.go
+M  app/gui/editor/window_testexports.go
+M  plans/batch-h-zone-editor-gui-tests.md
+A  test/integration/gui/zoneEditorActions_integration_test.go
+A  test/integration/gui/zoneEditorCanvasMapping_integration_test.go
+M  test/integration/gui/zoneEditorDialog_integration_test.go
+M  test/integration/gui/zoneEditorGeometry_integration_test.go
+M  test/test_helpers/integration_common/appRunner.go
+M  test/test_helpers/integration_common/appRunnerSemantics.go
+M  test/test_helpers/integration_common/handlerCoordinates.go
+M  test/test_helpers/integration_common/layoutAndZonesTabHandler.go
+M  test/test_helpers/integration_common/zoneEditorHandler.go
+A  test/test_helpers/integration_common/snapshot/__snapshots__/zoneEditorActions_integration_test/*  (goldens)
 ```
 
-The owner reviewed, staged and committed batch G as `c09dc8b`, making his own
-edits to roughly eighteen of the touched files before committing. It is **not
-pushed** — `origin` is at `3b0e689`, one commit behind. Nothing unstaged is
-inherited.
+The `ShufflePlayerZones` removal was reviewed and committed earlier in the
+session and is no longer in the index.
 
-Per AGENTS.md §2.5 and the owner's standing instruction — *"leave the staging
-area alone entirely"* — the agent never staged or committed anything, and used
-`Remove-Item` rather than `git rm`. Do not run any git staging command.
+## 7. Rejections / things the author declined
 
-## 7. Rejections / things the owner declined
-
-- Nothing was declined this session. Seven scope questions were asked up front
-  and all seven answered before any code was written; they are recorded verbatim
-  in the plan file's *Owner decisions* section and must not be re-litigated.
-- The owner approved a **wider** scope than §2.3 literally specifies: all four
-  downstream fields (`preview.Zone.Center`, `Connection.Start/Ctrl/End`,
-  `ZoneEditorEdge.MidPoint`, `ZoneEditorSnapResult.Position`) were floated too.
+- **The dialog-direct harness route was rejected.** The zone editor is driven
+  through `AppRunner` and the real window by extending `ZoneEditorHandler` the
+  way `FileExplorerHandler` was extended. Backlog §5.4(d)'s "reachability-only"
+  note is superseded and still needs correcting in Phase 5.
+- **`ShufflePlayerZones` was not kept or re-scoped** — removed outright.
+- **The `Ring` → "Default" topology mapping must not be documented or
+  "fixed".** Standing ruling: `Ring` is the fallback selection while `Random` is
+  first in the dropdown, by design.
+- **The output directory must never be persisted** (AGENTS.md §2.7). Standing.
+- All nine "Owner decisions" in the plan file are marked *do not re-litigate*.
 
 ## 8. Open questions
 
-- **The backlog's snapshot prediction was wrong, in our favour.** §2.3 warned
-  that the GPU suite would need `-update` and owner eyeballing. It did not: the
-  suite passed unchanged on the first run, because the preview canvas is masked
-  by the harness and the zone-editor handler takes no snapshots. **No `-update`
-  was ever run and none of the 62 goldens moved.** The §5.3 lesson (scope
-  `-update` with `-run`) was therefore never exercised and still stands untested.
-- **Two values changed, both intended and both verified by hand.** A snap that
-  returned `x = 201` now returns `x = 200 + 6/7` — the grid step is `2·38/7` and
-  the leading edge at `x = 162` puts the 15th grid line 6/7 px right of 200. The
-  ring zero-angle slot yields `47.99999999999997` instead of `48`, so that one
-  assertion became `InDeltaSlice`.
-- **`.gen.json` gains sub-pixel precision.** `zoneEditorDialog.go` normalises
-  zone centres into the persisted `manualPosition` field, which now carries
-  fractional values. The field was already `float64`, so old and new files stay
-  mutually readable — but the owner accepted this side effect knowingly, and it
-  is worth remembering if a diff of saved files ever looks noisy.
-- `Zone.GeneratorPosition *[2]float64` was **not** touched; converting it is
-  backlog §2.4, owner-gated, and now unblocked by this batch.
-- Nothing is blocked.
+- **Exact-float pins and non-amd64.** The geometry pins are exact
+  `assert.Equal` on values like `46.39999999999995`, which is what the plan asks
+  for (a pin that rounds is a regression in the test). Go may fuse
+  multiply-add on arm64, so those digits are guaranteed only on the platforms
+  the project builds for today. Left as-is deliberately; revisit if an arm64
+  runner ever appears.
+- **The `Hub` topology emits unnamed duplicate connections.** The Phase 2 probe
+  found six edges for three zones: `Hub-A`, an unnamed second `Hub → Spawn-A`,
+  `Pseudo-A-B`, `Pseudo-B-A`, `Hub-B`, and an unnamed second `Hub → Spawn-B`.
+  That may be a production bug in the topology provider rather than a rendering
+  artefact. Not investigated — outside batch H's scope, but worth a backlog item.
+- **Phase 2 deviation, accepted by the author.** The three snap tests and the
+  guide-overlay test stayed dialog-direct: they need an exact dragged position
+  (`SnapDraggedPosition(203, 351)` → `200 + 6/7`) that a pixel-rounded gesture
+  cannot express, and moving them would mean putting `SetSnapEnabled` /
+  `BeginZoneDrag` / `SnapDraggedPosition` onto an interface owner decision 9
+  approved as read-only. Phase 3's real-drag snap test covers the same
+  behaviour.
 
 ## 9. Next recommended actions
 
-1. Push `AD/fixing_some_stuff_08-12` when the owner is ready — batches E, F and
-   G are all on it and `origin` is one commit behind.
-2. Start **batch H** (backlog §5.1 + §5.2, zone-editor pointer and
-   property-panel tests). It was gated on §2.3 and is now unblocked; write it
-   against the post-batch-G **fractional** coordinates, not the old integers.
-3. Batch **I** (§2.1, `EditorStateDto` rework) is the next large one and needs
-   its own `plans/` file — multi-phase, twelve packages.
+1. **Phase 3 — §5.1 pointer flows.** New
+   `test/integration/gui/zoneEditorPointer_integration_test.go` with
+   `TestWhenAZoneIsDraggedToANewPosition_TheAppliedLayoutRecordsIt`,
+   `TestWhenAZoneIsDraggedNearAGuide_ItSnapsToTheGuide`,
+   `TestWhenADragStartsOnAZoneInAddConnectionMode_AConnectionIsCreated`,
+   `TestWhenADragEndsOnEmptyCanvas_NoConnectionIsCreated`,
+   `TestWhenACurveIsRightClicked_ThatConnectionIsDeleted`,
+   `TestWhenAddZoneModeIsArmedAndEmptyCanvasIsClicked_AZoneIsPlaced`. Drags must
+   clear the 6 px `zoneDragDeadZonePx`; every test asserts a state change as
+   well as a golden.
+2. **Phase 4 — §5.2 property panels.** New
+   `zoneEditorProperties_integration_test.go` covering zone textboxes, zone
+   dropdowns (the `ApplyZoneEditorQuality` reprofile path), connection guard
+   value including a non-numeric rejection, connection dropdowns, and the
+   Advanced options rows. Document why the zone-name test was not written: the
+   zone name is a read-only `material.Body1` label, there is no editor.
+   `InputText` inserts at the caret rather than replacing.
+3. **Phase 5 — wrap-up.** Update `todo/test_observations.md`; mark backlog
+   §5.1/§5.2 done and add row **H** to the §8 batch table; correct §5.4(d); run
+   the full gate; fill in the plan's Final Recap and Deployment Plan.
 
 ## 10. Carry-forward prompt
 
-> Read `AGENTS.md` first, then `todo/backlog-opus5.md`.
+> Read `AGENTS.md` first, then
+> `plans/batch-h-zone-editor-gui-tests.md` — phases 0, 1 and 2 are Complete and
+> reviewed; start at Phase 3.
 >
 > Hard rules, one line each: never modify `data/`,
 > `internal/entities/template/` or `internal/registry/` without explicit
 > approval; everything must build and run on both Windows and Linux (use
 > `path/filepath`, and chain PowerShell with `;`, never `&&`); every change
 > ships with tests and unit coverage must not drop below 72.5 % (currently
-> 72.9 %); durable multi-session work gets a plan file under `plans/`; never
+> 72.8 %); durable multi-session work gets a plan file under `plans/`; never
 > stage and never commit — I review, stage and commit myself, so leave the
 > staging area alone entirely, and delete files with `Remove-Item`, never
 > `git rm`; never change where `.rmg.json` is written and never persist the
 > output directory; never run a bulk in-place rewrite over the repository;
-> never run CI and never generate snapshot goldens in CI.
+> never run CI and never generate snapshot goldens in CI — generate them
+> locally on the real GPU, always `-run`-scoped.
 >
-> Batch **G** (backlog §2.3, float preview geometry) is **complete, green and
-> committed** as `c09dc8b` on `AD/fixing_some_stuff_08-12`, unpushed. The
-> preview and zone-editor pipeline is now `float64` end to end and rounds
-> exactly once — at `app/gui/utils/draw.go` for the Gio canvases and at the
-> pixel loop in `assetProvider` for the PNG. No goldens moved.
+> Where work left off: the zone editor is now fully drivable through the real
+> window. `integration_common.ZoneEditorHandler` exposes the canvas, the
+> toolbar, the footer and every side-panel field; `editor.IZoneEditorDialog`
+> (on `Window.TopZoneEditor()`) is the read-only observation surface. The
+> existing zone-editor tests have been rewritten onto that handler with a
+> golden per action. What is left is Phase 3 (§5.1 pointer flows), Phase 4
+> (§5.2 property panels) and Phase 5 (backlog and wrap-up).
 >
-> Next up is batch **H** (backlog §5.1 and §5.2 — zone-editor pointer tests and
-> property-panel tests). It was gated on §2.3 and is now unblocked. Write it
-> against the post-batch-G **fractional** coordinates: pointer positions are no
-> longer truncated, snapped positions keep their fractional grid correction, and
-> `SnapPosition` returns e.g. `200 + 6/7` where it used to return `201`. When
-> generating goldens, scope `-update` with `-run` so unrelated goldens in the
-> package are not rewritten. Before starting, prompt me to confirm the item and
-> surface every open question first.
+> Two things that will save you an hour: the canvas is **580 px** with zone
+> radius `31.485714285714288` for every topology, and each topology draws a
+> different layout — `Geometric Hub` gives a deletable neutral hub plus one
+> named portal per spawn and is what the behaviour tests use. A Gio
+> `widget.Clickable` is polled **during** the layout it acts on, so a click's
+> effect only shows on the frame after the one it was queued against; the
+> handler already inserts the extra `NextFrame()` calls, but any new
+> click-then-read helper needs the same.
 >
-> Full handoff: `./.agent/session-carry-forward.md`.
+> See `./.agent/session-carry-forward.md` for the full handoff, including the
+> open questions in §8 (exact-float pins on arm64, and the unnamed duplicate
+> connections the `Hub` topology emits).

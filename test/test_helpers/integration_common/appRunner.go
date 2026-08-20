@@ -164,6 +164,26 @@ func (this *AppRunner) ClickAt(point f32.Point) {
 	this.invalidate()
 }
 
+// RightClickAt injects a synthetic secondary-button mouse click at point. Touch
+// carries no buttons, so a right click is the one gesture that has to be sent
+// as a mouse event.
+func (this *AppRunner) RightClickAt(point f32.Point) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	this.router.Queue(
+		pointer.Event{
+			Kind:     pointer.Press,
+			Source:   pointer.Mouse,
+			Buttons:  pointer.ButtonSecondary,
+			Position: point,
+		},
+		pointer.Event{Kind: pointer.Release, Source: pointer.Mouse, Position: point})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
+}
+
 // MoveTo injects a synthetic touch move at point. The leading frame registers
 // the input areas, the trailing frame processes the move. Both run under one
 // lock so a render cannot observe a half-applied move.
@@ -280,6 +300,15 @@ func (this *AppRunner) TopFileExplorer() (editor.IFileExplorerDialog, bool) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.TopFileExplorer()
+}
+
+// TopZoneEditor returns the open zone editor dialog and whether the top-most
+// dialog is one (lock-guarded).
+func (this *AppRunner) TopZoneEditor() (editor.IZoneEditorDialog, bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.TopZoneEditor()
 }
 
 // SetCurrentPath seeds the file the editor is working on, which is where the
