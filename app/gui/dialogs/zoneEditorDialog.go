@@ -451,8 +451,8 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 		}
 		if pos, ok := this.geometry.Positions[this.zones[i].Name]; ok {
 			this.zones[i].ManualPosition = &[2]float64{
-				float64(pos.X) / float64(this.side),
-				float64(pos.Y) / float64(this.side),
+				pos.X / float64(this.side),
+				pos.Y / float64(this.side),
 			}
 		} else {
 			open := this.zoneHandler.FindOpenZonePosition(this.manualPositions())
@@ -474,7 +474,7 @@ func (this *ZoneEditorDialog) manualPositions() [][2]float64 {
 // addZoneAt appends a new medium-quality neutral zone at the clicked canvas
 // position. The add-zone mode stays active so several zones can be placed
 // without re-clicking the toolbar button.
-func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
+func (this *ZoneEditorDialog) addZoneAt(pos models.Position) {
 	if this.side <= 0 {
 		return
 	}
@@ -491,8 +491,8 @@ func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
 		GenerateRoads: this.generateRoads,
 		Tuning:        this.tuning,
 	})
-	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
-	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
+	x := math.Min(math.Max(pos.X/float64(this.side), 0.04), 0.96)
+	y := math.Min(math.Max(pos.Y/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
 	this.zones = append(this.zones, zone)
 	this.geometryDirty = true

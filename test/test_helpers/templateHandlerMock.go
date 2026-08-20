@@ -1,8 +1,6 @@
 package test_helpers
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -37,8 +35,8 @@ type TemplateHandlerMock struct {
 	RemoveZoneEditorZoneFunc        func(dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto
 	BuildZoneEditorGeometryFunc     func(dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry
 	HitTestZoneEditorNodeFunc       func(dtos.ZoneEditorHitTestRequestDto) string
-	HitTestZoneEditorEdgeFunc       func(image.Point, []models.ZoneEditorEdge) int
-	GetZoneEditorGridStepFunc       func(int) float64
+	HitTestZoneEditorEdgeFunc       func(models.Position, []models.ZoneEditorEdge) int
+	GetZoneEditorGridStepFunc       func(float64) float64
 	SnapZoneEditorPositionFunc      func(dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult
 	DescribeExistingBonusesFunc     func([]config.BonusEntry) dtos.ExistingBonusesDto
 	BuildBonusEntriesFunc           func(dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto
@@ -175,7 +173,7 @@ func (this *TemplateHandlerMock) BuildZoneEditorGeometry(
 	if this.BuildZoneEditorGeometryFunc != nil {
 		return this.BuildZoneEditorGeometryFunc(request)
 	}
-	return models.ZoneEditorGeometry{Positions: map[string]image.Point{}}
+	return models.ZoneEditorGeometry{Positions: map[string]models.Position{}}
 }
 
 func (this *TemplateHandlerMock) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string {
@@ -186,7 +184,7 @@ func (this *TemplateHandlerMock) HitTestZoneEditorNode(request dtos.ZoneEditorHi
 }
 
 func (this *TemplateHandlerMock) HitTestZoneEditorEdge(
-	position image.Point,
+	position models.Position,
 	edges []models.ZoneEditorEdge,
 ) int {
 	if this.HitTestZoneEditorEdgeFunc != nil {
@@ -195,7 +193,7 @@ func (this *TemplateHandlerMock) HitTestZoneEditorEdge(
 	return -1
 }
 
-func (this *TemplateHandlerMock) GetZoneEditorGridStep(zoneRadius int) float64 {
+func (this *TemplateHandlerMock) GetZoneEditorGridStep(zoneRadius float64) float64 {
 	if this.GetZoneEditorGridStepFunc != nil {
 		return this.GetZoneEditorGridStepFunc(zoneRadius)
 	}

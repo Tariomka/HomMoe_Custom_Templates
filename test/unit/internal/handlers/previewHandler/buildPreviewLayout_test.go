@@ -93,7 +93,7 @@ func TestWhenTopologyAndCanvasSideAreProvided_ForwardsThemToTheLayoutService(t *
 func TestWhenLayoutIsComputed_ReturnsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := preview.Layout{ZoneRadius: gofakeit.IntRange(10, 40)}
+	expected := preview.Layout{ZoneRadius: gofakeit.Float64Range(10, 40)}
 	handler := handlers.NewPreviewHandler(newLayoutServiceReturning(expected))
 
 	// Act

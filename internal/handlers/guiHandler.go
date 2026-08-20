@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
@@ -144,11 +142,11 @@ func (this *GUIHandler) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequ
 	return this.zoneEditorHandler.HitTestZoneEditorNode(request)
 }
 
-func (this *GUIHandler) HitTestZoneEditorEdge(position image.Point, edges []models.ZoneEditorEdge) int {
+func (this *GUIHandler) HitTestZoneEditorEdge(position models.Position, edges []models.ZoneEditorEdge) int {
 	return this.zoneEditorHandler.HitTestZoneEditorEdge(position, edges)
 }
 
-func (this *GUIHandler) GetZoneEditorGridStep(zoneRadius int) float64 {
+func (this *GUIHandler) GetZoneEditorGridStep(zoneRadius float64) float64 {
 	return this.zoneEditorHandler.GetZoneEditorGridStep(zoneRadius)
 }
 

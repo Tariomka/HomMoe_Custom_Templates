@@ -56,7 +56,7 @@ func (this *PreviewGeneratorService) CreatePreviewImage(
 		return canvas
 	}
 
-	scale := min(float64(layout.ZoneRadius)/assetRadius, 1.15)
+	scale := min(layout.ZoneRadius/assetRadius, 1.15)
 	fitterCallback := newAssetFitter(layout.Zones, scale)
 
 	this.drawConnections(canvas, layout.Connections, fitterCallback, scale)
@@ -94,32 +94,32 @@ func (this *PreviewGeneratorService) drawConnections(
 		}
 
 		if conn.IsGladiatorArena() {
-			midPoint := helpers.GetPointOnQuadraticBezierCurve(startPoint, controlPoint, endPoint, 0.5)
+			midPoint := helpers.GetVectorOnQuadraticBezierCurve(startPoint, controlPoint, endPoint, 0.5)
 			this.assetProvider.DrawArenaMarker(canvas, midPoint, scale*arenaMarkerScale)
 		}
 	}
 }
 
-func (this *PreviewGeneratorService) drawSolidLine(canvas *image.RGBA, start, ctrl, end image.Point) {
+func (this *PreviewGeneratorService) drawSolidLine(canvas *image.RGBA, start, ctrl, end data.Vec2[float64]) {
 	previousPoint := start
 	for i := range segmentsSolid {
 		t := float64(i+1) / segmentsSolid
-		currentPoint := helpers.GetPointOnQuadraticBezierCurve(start, ctrl, end, t)
+		currentPoint := helpers.GetVectorOnQuadraticBezierCurve(start, ctrl, end, t)
 		this.drawLine(canvas, previousPoint, currentPoint)
 		previousPoint = currentPoint
 	}
 }
 
-func (this *PreviewGeneratorService) drawDashedLine(canvas *image.RGBA, start, ctrl, end image.Point) {
+func (this *PreviewGeneratorService) drawDashedLine(canvas *image.RGBA, start, ctrl, end data.Vec2[float64]) {
 	period := dashLength + dashGap
 	traveled := 0.0
 	previousPoint := start
 	for i := range segmentsDashed {
 		t := float64(i+1) / segmentsDashed
-		currentPoint := helpers.GetPointOnQuadraticBezierCurve(start, ctrl, end, t)
+		currentPoint := helpers.GetVectorOnQuadraticBezierCurve(start, ctrl, end, t)
 		segmentLength := math.Hypot(
-			float64(currentPoint.X-previousPoint.X),
-			float64(currentPoint.Y-previousPoint.Y))
+			currentPoint.X-previousPoint.X,
+			currentPoint.Y-previousPoint.Y)
 		if math.Mod(traveled+segmentLength/2, period) < dashLength {
 			this.drawLine(canvas, previousPoint, currentPoint)
 		}
@@ -128,20 +128,18 @@ func (this *PreviewGeneratorService) drawDashedLine(canvas *image.RGBA, start, c
 	}
 }
 
-func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end image.Point) {
-	delta := end.Sub(start)
-	steps := max(math.Abs(float64(delta.X)), math.Abs(float64(delta.Y)))
+func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end data.Vec2[float64]) {
+	delta := end.Subtract(start)
+	steps := max(math.Abs(delta.X), math.Abs(delta.Y))
 	if steps <= 0 {
 		return
 	}
 
-	increment := data.Vec2FromPoint[float64](delta).DivideScalar(steps)
+	increment := delta.DivideScalar(steps)
 	half := connectorLineWidth / 2
 	brushSource := image.NewUniform(color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF})
 	for i := range int(steps) {
-		center := data.Vec2FromPoint[float64](start).
-			Add(increment.MultiplyScalar(float64(i))).
-			ToPointRounded()
+		center := start.Add(increment.MultiplyScalar(float64(i))).ToPointRounded()
 		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
 			Intersect(canvas.Bounds()) // Square brush around the center, clipped to the canvas.
 		draw.Draw(canvas, brush, brushSource, image.Point{}, draw.Src)

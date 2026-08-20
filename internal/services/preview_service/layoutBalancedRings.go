@@ -1,11 +1,11 @@
 package preview_service
 
 import (
-	"image"
 	"math"
 	"sort"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 )
 
 // layoutBalancedRings renders the Circles topology as concentric rings keyed
@@ -28,7 +28,7 @@ func (this *PreviewLayoutService) layoutBalancedRings(zones []entities.Zone, sid
 	drawRadius := side/2.0 - metrics.margin - metrics.zoneRadiusMax
 	zoneRadius := fitRingZoneRadius(rings, drawRadius, metrics.minGap, metrics.zoneRadiusMax)
 	ringRadii := assignRingRadii(rings, zoneRadius, drawRadius, metrics.minGap)
-	this.layout.ZoneRadius = int(math.Round(zoneRadius))
+	this.layout.ZoneRadius = zoneRadius
 	this.placeRings(zones, rings, ringRadii, metrics)
 }
 
@@ -103,30 +103,32 @@ func fitRingZoneRadius(rings [][]int, drawRadius, minGap, maxRadius float64) flo
 
 // placeRings distributes each ring's zones evenly around its canvas radius,
 // anchored at the first zone's raw angle so the rendered ring preserves the
-// original neighbour ordering.
+// original neighbor ordering.
 func (this *PreviewLayoutService) placeRings(
 	zones []entities.Zone,
 	rings [][]int,
 	ringRadii []float64,
 	metrics canvasMetrics) {
-	rawCx, rawCy := positionCentroid(zones)
+	rawCenter := positionCentroid(zones)
 	for ringIndex, group := range rings {
 		count := len(group)
 		if count == 0 {
 			continue
 		}
+
 		if count == 1 && ringIndex == 0 {
 			this.layout.Positions[zones[group[0]].Name] = metrics.center()
 			continue
 		}
-		sorted := sortIndicesByAngle(zones, group, rawCx, rawCy)
-		firstAngle := positionAngle(zones[sorted[0]], rawCx, rawCy)
+
+		sorted := sortIndicesByAngle(zones, group, rawCenter)
+		firstAngle := positionAngle(zones[sorted[0]], rawCenter)
 		canvasRadius := ringRadii[ringIndex]
 		for j, zoneIndex := range sorted {
 			angle := firstAngle + 2.0*math.Pi*float64(j)/float64(count)
 			x := metrics.cx + math.Cos(angle)*canvasRadius
 			y := metrics.cy + math.Sin(angle)*canvasRadius
-			this.layout.Positions[zones[zoneIndex].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+			this.layout.Positions[zones[zoneIndex].Name] = data.NewVec2(x, y)
 		}
 	}
 }

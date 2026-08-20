@@ -11,7 +11,7 @@ func TestWhenTheGridStepIsRequested_ReturnsTheServiceValue(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
-	zoneRadius := gofakeit.Number(1, 60)
+	zoneRadius := gofakeit.Float64Range(1, 60)
 	expected := gofakeit.Float64Range(1, 40)
 	fixture.geometry.On("GridStep", zoneRadius).Return(expected)
 

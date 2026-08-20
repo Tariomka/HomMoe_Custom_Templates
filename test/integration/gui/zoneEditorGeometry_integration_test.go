@@ -3,7 +3,6 @@
 package gui_test
 
 import (
-	"image"
 	"testing"
 
 	"gioui.org/f32"
@@ -11,6 +10,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +24,7 @@ const geometryCanvasSide = 700
 // geometryZoneRadius is the zone radius the preview layout settles on for the
 // fixtures below: the zones are far enough apart that the radius is not
 // shrunk, so it stays at the unscaled maximum.
-const geometryZoneRadius = 38
+const geometryZoneRadius = 38.0
 
 // newGeometryZone builds a zone pinned to a normalized manual position. When
 // every zone carries one, the preview layout honours them verbatim, which makes
@@ -106,10 +107,10 @@ func TestWhenZonesCarryManualPositions_TheCanvasPlacesThemVerbatim(t *testing.T)
 	positions := dialog.ZonePositions()
 
 	// Assert
-	assert.Equal(t, map[string]image.Point{
-		"A": image.Pt(140, 350),
-		"B": image.Pt(560, 350),
-		"C": image.Pt(350, 140),
+	assert.Equal(t, map[string]models.Position{
+		"A": data.NewVec2(140.0, 350.0),
+		"B": data.NewVec2(560.0, 350.0),
+		"C": data.NewVec2(350.0, 140.0),
 	}, positions)
 }
 
@@ -148,7 +149,7 @@ func TestWhenAnEdgeIsLaidOut_ItsLabelSitsOnTheCurveMidpoint(t *testing.T) {
 	edges := dialog.EdgeGeometries()
 
 	// Assert
-	assert.Equal(t, image.Pt(350, 359), edges[0].MidPoint)
+	assert.Equal(t, data.NewVec2(350.0, 359.0), edges[0].MidPoint)
 }
 
 func TestWhenAZoneSitsNearTheChord_TheCurveBulgesClearOfIt(t *testing.T) {
@@ -169,7 +170,7 @@ func TestWhenAPointIsInsideAZone_TheHitTestNamesThatZone(t *testing.T) {
 	dialog := newTriangleFixture(t)
 
 	// Act
-	hit := dialog.HitTestCanvasNode(image.Pt(140, 350))
+	hit := dialog.HitTestCanvasNode(data.NewVec2(140.0, 350.0))
 
 	// Assert
 	assert.Equal(t, "A", hit)
@@ -181,7 +182,7 @@ func TestWhenAPointIsJustOutsideEveryZone_TheHitTestNamesNone(t *testing.T) {
 	dialog := newTriangleFixture(t)
 
 	// Act
-	hit := dialog.HitTestCanvasNode(image.Pt(140+geometryZoneRadius+1, 350))
+	hit := dialog.HitTestCanvasNode(data.NewVec2(140.0+geometryZoneRadius+1.0, 350.0))
 
 	// Assert
 	assert.Empty(t, hit)
@@ -193,7 +194,7 @@ func TestWhenAPointSitsOnACurve_TheEdgeHitTestNamesThatConnection(t *testing.T) 
 	dialog := newObstacleFixture(t)
 
 	// Act
-	hit := dialog.HitTestCanvasEdge(image.Pt(350, 312))
+	hit := dialog.HitTestCanvasEdge(data.NewVec2(350.0, 312.0))
 
 	// Assert
 	assert.Equal(t, "ab", hit)
@@ -205,7 +206,7 @@ func TestWhenAPointIsFarFromEveryCurve_TheEdgeHitTestNamesNone(t *testing.T) {
 	dialog := newObstacleFixture(t)
 
 	// Act
-	hit := dialog.HitTestCanvasEdge(image.Pt(350, 350))
+	hit := dialog.HitTestCanvasEdge(data.NewVec2(350.0, 350.0))
 
 	// Assert
 	assert.Empty(t, hit)
@@ -220,7 +221,7 @@ func TestWhenTheZoneRadiusIsKnown_TheSnapGridHoldsSevenCellsPerDiameter(t *testi
 	step := dialog.CanvasGridStep()
 
 	// Assert
-	assert.InDelta(t, float64(geometryZoneRadius)*2.0/7.0, step, 1e-9)
+	assert.InDelta(t, geometryZoneRadius*2.0/7.0, step, 1e-9)
 }
 
 func TestWhenSnappingIsDisabled_TheDraggedPositionIsUntouched(t *testing.T) {
@@ -231,10 +232,10 @@ func TestWhenSnappingIsDisabled_TheDraggedPositionIsUntouched(t *testing.T) {
 	dialog.BeginZoneDrag("A")
 
 	// Act
-	snapped := dialog.SnapDraggedPosition(image.Pt(200, 355))
+	snapped := dialog.SnapDraggedPosition(data.NewVec2(200.0, 355.0))
 
 	// Assert
-	assert.Equal(t, image.Pt(200, 355), snapped)
+	assert.Equal(t, data.NewVec2(200.0, 355.0), snapped)
 }
 
 func TestWhenSnappingIsEnabled_TheDraggedZoneHoldsOntoNearbyGuides(t *testing.T) {
@@ -245,10 +246,10 @@ func TestWhenSnappingIsEnabled_TheDraggedZoneHoldsOntoNearbyGuides(t *testing.T)
 	dialog.BeginZoneDrag("A")
 
 	// Act
-	snapped := dialog.SnapDraggedPosition(image.Pt(200, 355))
+	snapped := dialog.SnapDraggedPosition(data.NewVec2(200.0, 355.0))
 
 	// Assert
-	assert.Equal(t, image.Pt(201, 350), snapped)
+	assert.Equal(t, data.NewVec2(200.0+6.0/7.0, 350.0), snapped)
 }
 
 func TestWhenAZoneGuideIsHeld_OnlyThatAxisReportsAGuide(t *testing.T) {
@@ -259,7 +260,7 @@ func TestWhenAZoneGuideIsHeld_OnlyThatAxisReportsAGuide(t *testing.T) {
 	dialog.BeginZoneDrag("A")
 
 	// Act
-	dialog.SnapDraggedPosition(image.Pt(200, 355))
+	dialog.SnapDraggedPosition(data.NewVec2(200.0, 355.0))
 	_, xActive, _, yActive := dialog.SnapGuides()
 
 	// Assert

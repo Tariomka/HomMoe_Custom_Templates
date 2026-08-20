@@ -1,8 +1,6 @@
 package handler_interfaces
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -27,7 +25,7 @@ type IZoneEditorHandler interface {
 	RemoveZoneEditorZone(request dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto
 	BuildZoneEditorGeometry(request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry
 	HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string
-	HitTestZoneEditorEdge(position image.Point, edges []models.ZoneEditorEdge) int
-	GetZoneEditorGridStep(zoneRadius int) float64
+	HitTestZoneEditorEdge(position models.Position, edges []models.ZoneEditorEdge) int
+	GetZoneEditorGridStep(zoneRadius float64) float64
 	SnapZoneEditorPosition(request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult
 }

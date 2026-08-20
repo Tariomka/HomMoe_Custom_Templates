@@ -21,12 +21,11 @@ func (this *PreviewLayoutService) layoutFixedPositions(
 		return
 	}
 
-	px, py := generatorCoords(zones)
-	// The margin reserves room for the largest possible zone radius, so the
-	// eventual radius (never larger) always fits.
-	fitToCanvas(px, py, metrics, metrics.margin+metrics.zoneRadiusMax+extraInset*metrics.scale, true)
-	radius := radiusFromClosestPair(px, py, metrics.zoneRadiusMax, metrics.minGap)
-	this.commitPositions(zones, px, py, radius)
+	positions := getGeneratorCoordinates(zones)
+	// The margin reserves room for the largest possible zone radius, so the eventual radius (never larger) always fits.
+	fitToCanvas(positions, metrics, metrics.margin+metrics.zoneRadiusMax+extraInset*metrics.scale, true)
+	radius := radiusFromClosestPair(positions, metrics.zoneRadiusMax, metrics.minGap)
+	this.commitPositions(zones, positions, radius)
 }
 
 // fixedGeometryEdgeInset returns the extra border padding for a
@@ -37,9 +36,11 @@ func fixedGeometryEdgeInset(topology config.MapTopology, zones []entities.Zone) 
 	if topology != config.TopologyGeometricHub {
 		return 0
 	}
+
 	if countPlayerZones(zones) >= csGeoHubCrowdedMinPlayers {
 		return csGeoHubEdgeInsetCrowded
 	}
+
 	return csGeoHubEdgeInset
 }
 

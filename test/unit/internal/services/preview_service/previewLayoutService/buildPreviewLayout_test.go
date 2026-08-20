@@ -1,11 +1,11 @@
 package previewLayoutService_test
 
 import (
-	"image"
 	"math"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
@@ -20,7 +20,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
-	expected := preview.Layout{Positions: map[string]image.Point{}}
+	expected := preview.Layout{Positions: map[string]data.Vec2[float64]{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(nil, config.TopologyRing, layoutSide)
@@ -33,7 +33,7 @@ func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
-	expected := preview.Layout{Positions: map[string]image.Point{}}
+	expected := preview.Layout{Positions: map[string]data.Vec2[float64]{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(&entities.RmgTemplate{}, config.TopologyRing, layoutSide)
@@ -46,7 +46,7 @@ func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService()
-	expected := preview.Layout{Positions: map[string]image.Point{}}
+	expected := preview.Layout{Positions: map[string]data.Vec2[float64]{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(templateWith(nil, nil), config.TopologyRing, layoutSide)
@@ -75,9 +75,11 @@ func TestWhenRingTopologyIsLaidOut_EveryZoneStaysInsideTheCanvas(t *testing.T) {
 
 	// Assert
 	require.Len(t, layout.Positions, len(zones))
-	canvasBounds := image.Rect(0, 0, layoutSide, layoutSide)
 	for zoneName, zonePosition := range layout.Positions {
-		assert.True(t, zonePosition.In(canvasBounds), "zone %s at %v escapes the canvas", zoneName, zonePosition)
+		assert.True(t,
+			zonePosition.X >= 0 && zonePosition.X <= layoutSide &&
+				zonePosition.Y >= 0 && zonePosition.Y <= layoutSide,
+			"zone %s at %v escapes the canvas", zoneName, zonePosition)
 	}
 }
 
@@ -89,9 +91,9 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemVerbatim(t *testing.T) {
 		manualZone("Spawn-A", 0.25, 0.5),
 		manualZone("Neutral-B", 0.75, 0.5),
 	}
-	expected := map[string]image.Point{
-		"Spawn-A":   image.Pt(175, 350),
-		"Neutral-B": image.Pt(525, 350),
+	expected := map[string]data.Vec2[float64]{
+		"Spawn-A":   data.NewVec2(175.0, 350.0),
+		"Neutral-B": data.NewVec2(525.0, 350.0),
 	}
 
 	// Act
@@ -99,6 +101,23 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemVerbatim(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, expected, layout.Positions)
+}
+
+func TestWhenTwoZonesAreLessThanAPixelApart_TheirCentresDiffer(t *testing.T) {
+	t.Parallel()
+	// Arrange - the two manual positions are 0.3px apart on the canvas, which
+	// the old integer layout collapsed onto the same pixel.
+	service := preview_service.NewPreviewLayoutService()
+	zones := []entities.Zone{
+		manualZone("Spawn-A", 0.5, 0.5),
+		manualZone("Neutral-B", 0.5+0.3/layoutSide, 0.5),
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, layoutSide)
+
+	// Assert
+	assert.NotEqual(t, layout.Positions["Spawn-A"], layout.Positions["Neutral-B"])
 }
 
 func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing.T) {
@@ -119,7 +138,7 @@ func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing
 	left := layout.Positions["Spawn-A"]
 	middle := layout.Positions["Neutral-B"]
 	right := layout.Positions["Spawn-C"]
-	assert.Equal(t, image.Pt((left.X+right.X)/2, (left.Y+right.Y)/2), middle)
+	assert.Equal(t, left.Add(right).MultiplyScalar(0.5), middle)
 }
 
 func TestWhenGeometricHubTopologyIsLaidOut_FigureKeepsExtraBorderClearance(t *testing.T) {
@@ -449,7 +468,7 @@ func TestWhenOnlyOneZoneExists_CentersItOnCanvas(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 func TestWhenZoneIsNamedHub_PlacesItAtCanvasCenter(t *testing.T) {
@@ -462,7 +481,7 @@ func TestWhenZoneIsNamedHub_PlacesItAtCanvasCenter(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Hub"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Hub"])
 }
 
 // ── implicit hub rejection ───────────────────────────────────────────
@@ -484,7 +503,7 @@ func TestWhenNeutralTouchesEverySpawn_DoesNotCenterIt(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
 
 	// Assert
-	assert.NotEqual(t, image.Pt(300, 300), layout.Positions["Neutral-H"])
+	assert.NotEqual(t, data.NewVec2(300.0, 300.0), layout.Positions["Neutral-H"])
 }
 
 func TestWhenNeutralTouchesEverySpawn_DoesNotFlagItAsHub(t *testing.T) {
@@ -678,7 +697,7 @@ func TestWhenCirclesTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyCircles, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 // ── connection rendering ─────────────────────────────────────────────
@@ -798,7 +817,7 @@ func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) 
 	expected := preview.Zone{
 		Name:    "Spawn-A",
 		Label:   "A",
-		Center:  image.Pt(300, 300),
+		Center:  data.NewVec2(300.0, 300.0),
 		Type:    preview.ZoneTypePlayer,
 		Quality: neutral_zone.QualityUnknown,
 		Castles: 1,
@@ -913,7 +932,7 @@ func TestWhenFixedGeometryTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologySquare, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 func TestWhenFixedGeometryZonesShareOnePosition_PositionsBothAtSamePoint(t *testing.T) {
@@ -1000,7 +1019,7 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyCircles, 600)
 
 	// Assert
-	assert.Less(t, layout.ZoneRadius, 33)
+	assert.Less(t, layout.ZoneRadius, 33.0)
 }
 
 // ── scatter edge cases ───────────────────────────────────────────────
@@ -1015,7 +1034,7 @@ func TestWhenRandomTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 func TestWhenConnectedScatterZonesShareOnePosition_PositionsBothZones(t *testing.T) {
@@ -1145,10 +1164,10 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testin
 		manualZone("Spawn-B", 0.75, 0.5),
 		manualZone("Spawn-C", 0.5, 0.25),
 	}
-	expected := map[string]image.Point{
-		"Spawn-A": image.Pt(150, 300),
-		"Spawn-B": image.Pt(450, 300),
-		"Spawn-C": image.Pt(300, 150),
+	expected := map[string]data.Vec2[float64]{
+		"Spawn-A": data.NewVec2(150.0, 300.0),
+		"Spawn-B": data.NewVec2(450.0, 300.0),
+		"Spawn-C": data.NewVec2(300.0, 150.0),
 	}
 
 	// Act
@@ -1192,7 +1211,7 @@ func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCenter(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyHubAndSpoke, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Neutral-X"])
 }
 
 func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCenter(t *testing.T) {
@@ -1213,7 +1232,7 @@ func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCenter(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyHubAndSpoke, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Neutral-X"])
 }
 
 func TestWhenHubSpokeConnectionIsDuplicated_PlacesTheSpokeOnce(t *testing.T) {
@@ -1259,5 +1278,8 @@ func TestWhenZeroAngleZoneIsSet_RotatesThatZoneToFirstRingSlot(t *testing.T) {
 	layout := service.BuildPreviewLayout(rmgTemplate, config.TopologyRing, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 48), layout.Positions["Spawn-B"])
+	assert.InDeltaSlice(t,
+		[]float64{300.0, 48.0},
+		[]float64{layout.Positions["Spawn-B"].X, layout.Positions["Spawn-B"].Y},
+		1e-9)
 }

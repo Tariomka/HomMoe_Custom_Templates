@@ -1,8 +1,6 @@
 package test_helpers
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -27,30 +25,30 @@ func (this *ZoneEditorGeometryServiceMock) BuildGeometry(
 }
 
 func (this *ZoneEditorGeometryServiceMock) HitTestNode(
-	position image.Point,
-	positions map[string]image.Point,
-	zoneRadius int) string {
+	position models.Position,
+	positions map[string]models.Position,
+	zoneRadius float64) string {
 	arguments := this.Called(position, positions, zoneRadius)
 	return arguments.String(0)
 }
 
 func (this *ZoneEditorGeometryServiceMock) HitTestEdge(
-	position image.Point,
+	position models.Position,
 	edges []models.ZoneEditorEdge) int {
 	arguments := this.Called(position, edges)
 	return arguments.Int(0)
 }
 
-func (this *ZoneEditorGeometryServiceMock) GridStep(zoneRadius int) float64 {
+func (this *ZoneEditorGeometryServiceMock) GridStep(zoneRadius float64) float64 {
 	arguments := this.Called(zoneRadius)
 	step, _ := arguments.Get(0).(float64)
 	return step
 }
 
 func (this *ZoneEditorGeometryServiceMock) SnapPosition(
-	position image.Point,
-	positions map[string]image.Point,
-	zoneRadius int,
+	position models.Position,
+	positions map[string]models.Position,
+	zoneRadius float64,
 	draggedZone string) models.ZoneEditorSnapResult {
 	arguments := this.Called(position, positions, zoneRadius, draggedZone)
 	result, _ := arguments.Get(0).(models.ZoneEditorSnapResult)

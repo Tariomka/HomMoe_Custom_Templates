@@ -35,11 +35,12 @@ and §1.9 there stay numbered as they are and are restated here as §1.1 and §1
 go-ahead**, because it edits a protected directory (AGENTS.md §2.1) or reverses
 a decision the owner already made.
 
-**Item count: 0 🔴 · 6 🟠 · 11 🟡 · 3 ⚪ (20 total).**
+**Item count: 0 🔴 · 6 🟠 · 10 🟡 · 3 ⚪ (20 total).**
 
 **✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
-§3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D) — **8 done, 12
-open.** Batch D spun off §1.5 (render-path clone cost).
+§3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D), §5.3 (batch F) ·
+**2026-08-19:** §2.3 (batch G) — **10 done, 10 open.**
+Batch D spun off §1.5 (render-path clone cost).
 
 **Baselines to hold (AGENTS.md §2.3):** unit coverage **72.9 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
@@ -725,7 +726,7 @@ re-profiled zone reports the new tier and a saved/loaded manual zone keeps it.
 
 ---
 
-### 2.3 🟡 Preview geometry is integer-only although a `Vec2` already exists
+### 2.3 ✅ Preview geometry is integer-only although a `Vec2` already exists
 
 **Evidence.** [previewLayout.go](../internal/models/preview/previewLayout.go#L5-L11):
 
@@ -800,6 +801,48 @@ sub-pixel changes are exactly what that suite is meant to catch.
 The numeric geometry pins in
 [zoneEditorGeometry_integration_test.go](../test/integration/gui/zoneEditorGeometry_integration_test.go#L138-L163)
 will shift — update them deliberately, do not relax them to `InDelta`.
+
+**✅ Resolved 2026-08-19 (batch G).** Implemented as specified, all four steps.
+`Layout.Positions` is `map[string]data.Vec2[float64]` and `Layout.ZoneRadius` is
+`float64`; `preview.Zone.Center`, `preview.Connection.Start/Ctrl/End`,
+`ZoneEditorEdge.MidPoint` and `ZoneEditorSnapResult.Position` were floated with
+them, since leaving any of those integer would re-quantise one step downstream
+and defeat the item. `internal/models/preview` uses `data.Vec2[float64]` rather
+than the `models.Position` alias because `internal/models` imports it — the two
+are the same type.
+
+Rounding now happens exactly once per output: `app/gui/utils/draw.go` for the
+Gio canvases (the `Vec2[float64]` → `f32.Point` bridge is
+`app/gui/utils.ToF32Point`, kept out of `internal/` so no `internal` package
+imports Gio) and the pixel loop in `assetProvider` for the PNG. Both former
+rules are gone — `commitPositions` no longer rounds and `canvasMetrics.center()`
+no longer truncates. Pointer input is no longer truncated in
+`zoneEditorCanvas.go`, so hit-testing and snapping see the true position.
+
+`Zone.GeneratorPosition` was **not** touched; `generatorCoords` still converts at
+the read site.
+
+Two expectations changed value, both by design: a snap that returned `x = 201`
+now returns `x = 200 + 6/7`, and the ring-layout zero-angle slot yields
+`47.99999999999997` instead of `48`. Normalised `manualPosition` values in
+`.gen.json` gain sub-pixel precision; the field is already `float64`, so old and
+new files stay mutually readable.
+
+`TestWhenTwoZonesAreLessThanAPixelApart_TheirCentresDiffer` was added, and
+`helpers.CalculatePointTowards` / `GetVectorOnQuadraticBezierCurve` — which had
+no tests at all — got their first ones.
+`helpers.GetPointOnQuadraticBezierCurve` became dead in the process and was
+removed.
+
+**No snapshots were regenerated.** The prediction in the item above turned out
+to be wrong: the GPU suite passed unchanged on the first run, because the
+preview canvas is masked by the harness and the zone-editor handler takes no
+snapshots. No `-update` was run and no owner eyeballing was needed. The numeric
+pins in `zoneEditorGeometry_integration_test.go` were updated to exact new
+literals as instructed.
+
+Coverage flat at **72.9 %**. Full record:
+[plans/batch-g-float-preview-geometry.md](../plans/batch-g-float-preview-geometry.md).
 
 ---
 
@@ -1604,7 +1647,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **D** | §1.1 | **Done 2026-08-14.** Deep `Clone` + regression tests. Cost +4.6 % frame time / +42 % allocs on `TabCycling`; spun the residual off as §1.5. |
 | ✅ **E** | §4.1 | **Done 2026-08-11.** Save To rename + read-only resolved-name preview + blank-name guard. Regenerated the 10 window goldens for the new button label. |
 | ✅ **F** | §5.3 | **Done 2026-08-14.** File-explorer pointer/hidden-file tests plus a full migration of the existing dialog tests onto `FileExplorerHandler`; the save-mode row-click test applies to **open mode only**, per §4.1. Coverage flat at 72.9 %. |
-| **G** | §2.3 | Float preview geometry. Regenerates GPU snapshots — owner review required. Do **before** §5.1. |
+| ✅ **G** | §2.3 | **Done 2026-08-19.** Float preview geometry end to end, rounded once at the draw boundary. **No goldens moved** — the preview canvas is masked and the zone-editor handler takes no snapshots, so no `-update` was needed. Coverage flat at 72.9 %. Plan: [plans/batch-g-float-preview-geometry.md](../plans/batch-g-float-preview-geometry.md). |
 | **H** | §5.1, §5.2 | Zone-editor pointer + property-panel tests, against the post-§2.3 coordinates. |
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |
 | **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |

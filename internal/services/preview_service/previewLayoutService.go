@@ -1,7 +1,6 @@
 package preview_service
 
 import (
-	"image"
 	"math"
 	"strings"
 
@@ -40,7 +39,7 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 	template *entities.RmgTemplate,
 	topology config.MapTopology,
 	side float64) preview.Layout {
-	this.layout = &preview.Layout{Positions: map[string]image.Point{}}
+	this.layout = &preview.Layout{Positions: map[string]data.Vec2[float64]{}}
 	if template == nil || len(template.Variants) == 0 {
 		return *this.layout
 	}
@@ -89,6 +88,23 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 	default:
 		this.layoutRingOrHub(zones, connections, side)
 	}
+}
+
+// layoutManualPositions places zones exactly where the manual zone editor put
+// them: canvas = normalized position × side. The mapping must stay trivially
+// invertible (p = pos / side) so dragging in the editor is exact. The zone
+// radius shrinks just enough to keep the closest pair of zones from
+// overlapping.
+func (this *PreviewLayoutService) layoutManualPositions(zones []entities.Zone, side float64) {
+	metrics := newCanvasMetrics(side)
+
+	var positions models.Positions
+	for _, zone := range zones {
+		p := *zone.ManualPosition // Is this required to be copied? can't it be used directly safely?
+		positions.Add(data.NewVec2(p[0], p[1]).MultiplyScalar(side))
+	}
+	radius := radiusFromClosestPair(positions, metrics.zoneRadiusMax, metrics.minGap)
+	this.commitPositions(zones, positions, radius)
 }
 
 // buildPreviewZones turns every positioned zone into its drawable preview
@@ -149,14 +165,16 @@ func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 // straight.
 func (this *PreviewLayoutService) buildPreviewConnections(
 	connections []entities.Connection,
-	positions map[string]image.Point) []preview.Connection {
+	positions map[string]data.Vec2[float64]) []preview.Connection {
 	type pairKey struct{ start, end string }
 	sortedKey := func(connection entities.Connection) pairKey {
 		if connection.From > connection.To {
 			return pairKey{connection.To, connection.From}
 		}
+
 		return pairKey{connection.From, connection.To}
 	}
+
 	visible := func(connection entities.Connection) bool {
 		_, okFrom := positions[connection.From]
 		_, okTo := positions[connection.To]
@@ -185,15 +203,14 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 
 		startPoint := positions[key.start]
 		endPoint := positions[key.end]
-		delta := data.Vec2FromPoint[float64](endPoint.Sub(startPoint))
+		delta := endPoint.Subtract(startPoint)
 		distance := math.Max(math.Hypot(delta.X, delta.Y), 1)
 		spread := (float64(index) - float64(counts[key]-1)/2.0) * spacingBetweenEdges
 		// Ctrl offset is 2× the desired bulge: a quadratic Bézier's midpoint
 		// sits halfway between the chord midpoint and the control point.
-		ctrl := data.Vec2FromPoint[float64](startPoint.Add(endPoint)).MultiplyScalar(0.5).
+		ctrl := startPoint.Add(endPoint).MultiplyScalar(0.5).
 			// ( x, y ) → ( y, -x ) rotates it 90°
-			Add(data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance)).
-			ToPointRounded()
+			Add(data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance))
 		result = append(
 			result,
 			preview.Connection{
@@ -201,8 +218,7 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 				End:   endPoint,
 				Ctrl:  ctrl,
 				Type:  getPreviewConnectionType(connection),
-			},
-		)
+			})
 	}
 	return result
 }

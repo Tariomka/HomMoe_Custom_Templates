@@ -1,7 +1,6 @@
 package connection_editor
 
 import (
-	"image"
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
@@ -80,15 +79,14 @@ func (this *ZoneEditorGeometryService) BuildGeometry(
 }
 
 func (this *ZoneEditorGeometryService) HitTestNode(
-	position image.Point,
-	positions map[string]image.Point,
-	zoneRadius int) string {
+	position models.Position,
+	positions map[string]models.Position,
+	zoneRadius float64) string {
 	best := ""
 	bestDistance := math.MaxFloat64
-	reach := float64(zoneRadius)
 	for name, center := range positions {
-		distance := math.Hypot(float64(position.X-center.X), float64(position.Y-center.Y))
-		if distance <= reach && distance < bestDistance {
+		distance := position.Subtract(center).Distance()
+		if distance <= zoneRadius && distance < bestDistance {
 			bestDistance = distance
 			best = name
 		}
@@ -97,7 +95,7 @@ func (this *ZoneEditorGeometryService) HitTestNode(
 }
 
 func (this *ZoneEditorGeometryService) HitTestEdge(
-	position image.Point,
+	position models.Position,
 	edges []models.ZoneEditorEdge) int {
 	best := -1
 	bestDistance := edgeHitReachPx
@@ -110,7 +108,7 @@ func (this *ZoneEditorGeometryService) HitTestEdge(
 				edge.ControlPoint,
 				edge.EndPoint,
 				ratio)
-			distance := math.Hypot(float64(position.X)-bezierPoint.X, float64(position.Y)-bezierPoint.Y)
+			distance := position.Subtract(bezierPoint).Distance()
 			if distance < bestDistance {
 				bestDistance = distance
 				best = index
@@ -120,29 +118,27 @@ func (this *ZoneEditorGeometryService) HitTestEdge(
 	return best
 }
 
-func (this *ZoneEditorGeometryService) GridStep(zoneRadius int) float64 {
-	return float64(zoneRadius) * 2.0 / gridCellsPerZoneDiameter
+func (this *ZoneEditorGeometryService) GridStep(zoneRadius float64) float64 {
+	return zoneRadius * 2.0 / gridCellsPerZoneDiameter
 }
 
 func (this *ZoneEditorGeometryService) SnapPosition(
-	position image.Point,
-	positions map[string]image.Point,
-	zoneRadius int,
+	position models.Position,
+	positions map[string]models.Position,
+	zoneRadius float64,
 	draggedZone string) models.ZoneEditorSnapResult {
 	if zoneRadius <= 0 {
 		return models.ZoneEditorSnapResult{Position: position}
 	}
-	radius := float64(zoneRadius)
+
 	// The dragged zone's own snap points on each axis: leading edge, center,
 	// trailing edge.
-	offsets := [3]float64{-radius, 0, radius}
-	guidesX, guidesY := otherZoneGuides(positions, draggedZone, radius)
+	offsets := [3]float64{-zoneRadius, 0, zoneRadius} // Probably can just be a Vec3
+	guidesX, guidesY := otherZoneGuides(positions, draggedZone, zoneRadius)
 	step := this.GridStep(zoneRadius)
-	x, guideX, hitX := snapAxis(float64(position.X), offsets, guidesX, step)
-	y, guideY, hitY := snapAxis(float64(position.Y), offsets, guidesY, step)
-	result := models.ZoneEditorSnapResult{
-		Position: image.Pt(int(math.Round(x)), int(math.Round(y))),
-	}
+	x, guideX, hitX := snapAxis(position.X, offsets, guidesX, step)
+	y, guideY, hitY := snapAxis(position.Y, offsets, guidesY, step)
+	result := models.ZoneEditorSnapResult{Position: data.NewVec2(x, y)}
 	if hitX {
 		result.GuideX, result.HasGuideX = guideX, true
 	}
@@ -157,8 +153,8 @@ func (this *ZoneEditorGeometryService) SnapPosition(
 // straight chord and bending clear of intermediate nodes.
 func buildEdges(
 	connections []entities.Connection,
-	positions map[string]image.Point,
-	zoneRadius int) []models.ZoneEditorEdge {
+	positions map[string]models.Position,
+	zoneRadius float64) []models.ZoneEditorEdge {
 	order, groups := groupConnectionsByPair(connections)
 	edges := make([]models.ZoneEditorEdge, 0, len(connections))
 	for _, key := range order {
@@ -177,28 +173,25 @@ func buildEdges(
 			if connection.From > connection.To {
 				canonicalA, canonicalB = canonicalB, canonicalA
 			}
-			deltaX := float64(canonicalB.X - canonicalA.X)
-			deltaY := float64(canonicalB.Y - canonicalA.Y)
-			distance := math.Hypot(deltaX, deltaY)
+			delta := canonicalB.Subtract(canonicalA)
+			distance := delta.Distance()
 			if distance < 1 {
 				distance = 1
 			}
-			normalX := deltaY / distance
-			normalY := -deltaX / distance
+			normal := delta.RotateClockwise().DivideScalar(distance)
 			spread := (float64(slot) - float64(count-1)/2.0) * parallelEdgeGapPx
-			bulge := spread + obstacleBulge(positions, zoneRadius, canonicalA, canonicalB, normalX, normalY)
-			midX := float64(startPoint.X+endPoint.X) / 2.0
-			midY := float64(startPoint.Y+endPoint.Y) / 2.0
-			controlX := midX + 2.0*bulge*normalX
-			controlY := midY + 2.0*bulge*normalY
-			labelX := 0.25*float64(startPoint.X) + 0.5*controlX + 0.25*float64(endPoint.X)
-			labelY := 0.25*float64(startPoint.Y) + 0.5*controlY + 0.25*float64(endPoint.Y)
+			bulge := spread + obstacleBulge(positions, zoneRadius, canonicalA, canonicalB, normal)
+			midPoint := startPoint.Add(endPoint).MultiplyScalar(0.5)
+			controlPoint := midPoint.Add(normal.MultiplyScalar(2.0 * bulge))
+			labelPoint := startPoint.MultiplyScalar(0.25).
+				Add(controlPoint.MultiplyScalar(0.5)).
+				Add(endPoint.MultiplyScalar(0.25))
 			edges = append(edges, models.ZoneEditorEdge{
 				ConnectionIndex: connectionIndex,
-				StartPoint:      data.NewVec2(float64(startPoint.X), float64(startPoint.Y)),
-				EndPoint:        data.NewVec2(float64(endPoint.X), float64(endPoint.Y)),
-				ControlPoint:    data.NewVec2(controlX, controlY),
-				MidPoint:        image.Pt(int(labelX), int(labelY)),
+				StartPoint:      startPoint,
+				EndPoint:        endPoint,
+				ControlPoint:    controlPoint,
+				MidPoint:        labelPoint,
 			})
 		}
 	}
@@ -229,36 +222,34 @@ func groupConnectionsByPair(
 // obstacleBulge returns a perpendicular push so a curve bends clear of any zone
 // node that lies close to the straight chord between its two endpoints.
 func obstacleBulge(
-	positions map[string]image.Point,
-	zoneRadius int,
-	chordStart, chordEnd image.Point,
-	normalX, normalY float64) float64 {
-	clearance := float64(zoneRadius) + obstacleClearancePx
-	startX, startY := float64(chordStart.X), float64(chordStart.Y)
-	segmentX := float64(chordEnd.X - chordStart.X)
-	segmentY := float64(chordEnd.Y - chordStart.Y)
-	segmentLengthSquared := segmentX*segmentX + segmentY*segmentY
+	positions map[string]models.Position,
+	zoneRadius float64,
+	chordStart, chordEnd models.Position,
+	normal models.Position) float64 {
+	clearance := zoneRadius + obstacleClearancePx
+	segment := chordEnd.Subtract(chordStart)
+	segmentLengthSquared := segment.SquaredLength()
 	if segmentLengthSquared < 1 {
 		return 0
 	}
+
 	best := 0.0
 	bestMagnitude := 0.0
 	for _, center := range positions {
-		centerX, centerY := float64(center.X), float64(center.Y)
-		ratio := ((centerX-startX)*segmentX + (centerY-startY)*segmentY) / segmentLengthSquared
+		ratio := center.Subtract(chordStart).DotProduct(segment) / segmentLengthSquared
 		if ratio <= obstacleChordMargin || ratio >= 1-obstacleChordMargin {
 			continue
 		}
-		closestX := startX + ratio*segmentX
-		closestY := startY + ratio*segmentY
-		perpendicular := math.Hypot(centerX-closestX, centerY-closestY)
+
+		offset := center.Subtract(chordStart.Add(segment.MultiplyScalar(ratio)))
+		perpendicular := offset.Distance()
 		if perpendicular >= clearance {
 			continue
 		}
-		side := (centerX-closestX)*normalX + (centerY-closestY)*normalY
+
 		need := (clearance - perpendicular) + obstacleBulgePaddingPx
 		signed := need
-		if side >= 0 {
+		if offset.DotProduct(normal) >= 0 {
 			signed = -need
 		}
 		if math.Abs(signed) > bestMagnitude {
@@ -272,16 +263,16 @@ func obstacleBulge(
 // otherZoneGuides collects the horizontal and vertical guide coordinates
 // (edge / center / edge) of every zone except the dragged one.
 func otherZoneGuides(
-	positions map[string]image.Point,
+	positions map[string]models.Position,
 	draggedZone string,
-	radius float64) (guidesX, guidesY []float64) {
+	radius float64,
+) (guidesX, guidesY []float64) { // This needs to return data.Positions, but for not I'm leaving as is to not allocate more arrays in snapAxis
 	for name, center := range positions {
 		if name == draggedZone {
 			continue
 		}
-		centerX, centerY := float64(center.X), float64(center.Y)
-		guidesX = append(guidesX, centerX-radius, centerX, centerX+radius)
-		guidesY = append(guidesY, centerY-radius, centerY, centerY+radius)
+		guidesX = append(guidesX, center.X-radius, center.X, center.X+radius)
+		guidesY = append(guidesY, center.Y-radius, center.Y, center.Y+radius)
 	}
 	return guidesX, guidesY
 }
@@ -291,7 +282,7 @@ func otherZoneGuides(
 // coordinate is returned so the caller can draw an alignment indicator.
 func snapAxis(
 	value float64,
-	offsets [3]float64,
+	offsets [3]float64, // Probably can just be a Vec3
 	guides []float64,
 	gridStep float64,
 ) (snapped float64, guide float64, zoneGuideHit bool) {
@@ -309,6 +300,7 @@ func snapAxis(
 	if math.Abs(best) <= zoneSnapThresholdPx {
 		return value + best, bestGuide, true
 	}
+
 	if gridStep > 0 {
 		best = math.MaxFloat64
 		for _, offset := range offsets {
@@ -321,5 +313,6 @@ func snapAxis(
 			return value + best, 0, false
 		}
 	}
+
 	return value, 0, false
 }

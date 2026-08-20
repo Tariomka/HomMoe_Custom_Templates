@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"gioui.org/f32"
 	"gioui.org/font"
 	"gioui.org/io/event"
 	"gioui.org/io/pointer"
@@ -91,11 +90,13 @@ func (this *ZoneEditorDialog) handlePointer(gtx layout.Context) {
 		if !ok {
 			break
 		}
+
 		pe, ok := ev.(pointer.Event)
 		if !ok {
 			continue
 		}
-		pos := image.Pt(int(pe.Position.X), int(pe.Position.Y))
+
+		pos := utils.ToVec2(pe.Position)
 		switch pe.Kind {
 		case pointer.Press:
 			this.onPress(pos, pe)
@@ -109,7 +110,7 @@ func (this *ZoneEditorDialog) handlePointer(gtx layout.Context) {
 	}
 }
 
-func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
+func (this *ZoneEditorDialog) onPress(pos models.Position, pe pointer.Event) {
 	node := this.hitTestNode(pos)
 	if pe.Buttons&pointer.ButtonSecondary != 0 {
 		if edge := this.hitTestEdge(pos); edge != nil {
@@ -117,6 +118,7 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 		}
 		return
 	}
+
 	if this.addMode {
 		if node != "" {
 			this.beginConnectionDrag(node, pos)
@@ -125,6 +127,7 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 		}
 		return
 	}
+
 	if this.addZoneMode {
 		if node == "" {
 			this.addZoneAt(pos)
@@ -133,11 +136,13 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 		}
 		return
 	}
+
 	if node != "" {
 		this.selectZone(node)
 		this.beginZoneDrag(node, pos)
 		return
 	}
+
 	if edge := this.hitTestEdge(pos); edge != nil {
 		this.selectConnection(edge)
 		this.syncedFor = nil
@@ -146,12 +151,13 @@ func (this *ZoneEditorDialog) onPress(pos image.Point, pe pointer.Event) {
 	}
 }
 
-func (this *ZoneEditorDialog) onRelease(pos image.Point) {
+func (this *ZoneEditorDialog) onRelease(pos models.Position) {
 	this.endZoneDrag()
 	from := this.finishConnectionDrag()
 	if !this.addMode || from == "" {
 		return
 	}
+
 	target := this.hitTestNode(pos)
 	if target != "" && target != from {
 		// Stay in add mode so several connections can be chained without
@@ -160,7 +166,7 @@ func (this *ZoneEditorDialog) onRelease(pos image.Point) {
 	}
 }
 
-func (this *ZoneEditorDialog) hitTestNode(pos image.Point) string {
+func (this *ZoneEditorDialog) hitTestNode(pos models.Position) string {
 	return this.zoneHandler.HitTestZoneEditorNode(dtos.ZoneEditorHitTestRequestDto{
 		Position:   pos,
 		Positions:  this.geometry.Positions,
@@ -168,7 +174,7 @@ func (this *ZoneEditorDialog) hitTestNode(pos image.Point) string {
 	})
 }
 
-func (this *ZoneEditorDialog) hitTestEdge(pos image.Point) *entities.Connection {
+func (this *ZoneEditorDialog) hitTestEdge(pos models.Position) *entities.Connection {
 	edgeIndex := this.zoneHandler.HitTestZoneEditorEdge(pos, this.geometry.Edges)
 	if edgeIndex < 0 {
 		return nil
@@ -199,12 +205,6 @@ func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 	})
 }
 
-// toCanvasPoint converts a geometry coordinate into the float32 point Gio's
-// path builder expects.
-func toCanvasPoint(vector data.Vec2[float64]) f32.Point {
-	return f32.Pt(float32(vector.X), float32(vector.Y))
-}
-
 func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Theme) {
 	for i := range this.geometry.Edges {
 		edge := this.geometry.Edges[i]
@@ -212,6 +212,7 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 		if connection == nil {
 			continue
 		}
+
 		lineColor := themes.ColorsPreview.DirectLine
 		width := float32(gtx.Dp(unit.Dp(2)))
 		if strings.EqualFold(connection.ConnectionType, "Portal") {
@@ -224,28 +225,21 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 		}
 		var path clip.Path
 		path.Begin(gtx.Ops)
-		path.MoveTo(toCanvasPoint(edge.StartPoint))
-		path.QuadTo(toCanvasPoint(edge.ControlPoint), toCanvasPoint(edge.EndPoint))
+		path.MoveTo(utils.ToF32Point(edge.StartPoint))
+		path.QuadTo(utils.ToF32Point(edge.ControlPoint), utils.ToF32Point(edge.EndPoint))
 		paint.FillShape(gtx.Ops, lineColor, clip.Stroke{Path: path.End(), Width: width}.Op())
 
 		if connection.IsUserAdded {
 			marker := gtx.Dp(unit.Dp(3))
+			mid := edge.MidPoint.ToPointRounded()
 			dot := image.Rect(
-				edge.MidPoint.X-marker,
-				edge.MidPoint.Y-marker,
-				edge.MidPoint.X+marker,
-				edge.MidPoint.Y+marker,
-			)
+				mid.X-marker, mid.Y-marker,
+				mid.X+marker, mid.Y+marker)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.UserAddedDot, clip.UniformRRect(dot, marker).Op(gtx.Ops))
 		}
 		drawCanvasText(
-			gtx,
-			theme,
-			image.Pt(edge.MidPoint.X, edge.MidPoint.Y-gtx.Dp(unit.Dp(9))),
-			strconv.Itoa(connection.GuardValue),
-			9,
-			themes.ColorsZoneEditor.GuardLabel,
-		)
+			gtx, theme, edge.MidPoint.Subtract(data.NewVec2(0, float64(gtx.Dp(unit.Dp(9))))),
+			strconv.Itoa(connection.GuardValue), 9, themes.ColorsZoneEditor.GuardLabel)
 	}
 }
 
@@ -253,19 +247,19 @@ func (this *ZoneEditorDialog) drawRubberBand(gtx layout.Context) {
 	if !this.addMode || !this.dragging || this.pendingFrom == "" {
 		return
 	}
+
 	center, ok := this.geometry.Positions[this.pendingFrom]
 	if !ok {
 		return
 	}
+
 	var path clip.Path
 	path.Begin(gtx.Ops)
-	path.MoveTo(f32.Pt(float32(center.X), float32(center.Y)))
-	path.LineTo(f32.Pt(float32(this.dragPos.X), float32(this.dragPos.Y)))
+	path.MoveTo(utils.ToF32Point(center))
+	path.LineTo(utils.ToF32Point(this.dragPos))
 	paint.FillShape(
-		gtx.Ops,
-		themes.ColorsZoneEditor.EdgeSelected,
-		clip.Stroke{Path: path.End(), Width: float32(gtx.Dp(unit.Dp(2)))}.Op(),
-	)
+		gtx.Ops, themes.ColorsZoneEditor.EdgeSelected,
+		clip.Stroke{Path: path.End(), Width: float32(gtx.Dp(unit.Dp(2)))}.Op())
 }
 
 func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Theme) {
@@ -273,40 +267,47 @@ func (this *ZoneEditorDialog) drawNodes(gtx layout.Context, theme *material.Them
 		if zone.Type == preview.ZoneTypePlayer {
 			continue
 		}
+
 		utils.DrawPreviewZone(gtx, theme, zone, this.geometry.ZoneRadius)
 	}
 	for _, zone := range this.geometry.Zones {
 		if zone.Type != preview.ZoneTypePlayer {
 			continue
 		}
+
 		utils.DrawPreviewZone(gtx, theme, zone, this.geometry.ZoneRadius)
 	}
 	if this.addMode && this.pendingFrom != "" {
 		if center, ok := this.geometry.Positions[this.pendingFrom]; ok {
-			reach := this.geometry.ZoneRadius + 4
-			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
-			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
-				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
-				Width: float32(gtx.Dp(unit.Dp(2))),
-			}.Op())
+			this.drawSelectionRing(gtx, center)
 		}
 	}
 	if !this.addMode && this.selectedZone != "" {
 		if center, ok := this.geometry.Positions[this.selectedZone]; ok {
-			reach := this.geometry.ZoneRadius + 4
-			rect := image.Rect(center.X-reach, center.Y-reach, center.X+reach, center.Y+reach)
-			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
-				Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
-				Width: float32(gtx.Dp(unit.Dp(2))),
-			}.Op())
+			this.drawSelectionRing(gtx, center)
 		}
 	}
+}
+
+// drawSelectionRing outlines a node that is selected or is the source of a
+// pending connection. The float centre is snapped here because Gio's rounded
+// rectangles are defined on the integer pixel grid.
+func (this *ZoneEditorDialog) drawSelectionRing(gtx layout.Context, center models.Position) {
+	reach := int(math.Round(this.geometry.ZoneRadius)) + 4
+	pixelCenter := center.ToPointRounded()
+	rect := image.Rect(
+		pixelCenter.X-reach, pixelCenter.Y-reach,
+		pixelCenter.X+reach, pixelCenter.Y+reach)
+	paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.EdgeSelected, clip.Stroke{
+		Path:  clip.UniformRRect(rect, reach).Path(gtx.Ops),
+		Width: float32(gtx.Dp(unit.Dp(2))),
+	}.Op())
 }
 
 // moveDraggedZone updates the dragged zone's manual position. The drag only
 // starts once the pointer moved a few pixels from the press point, so plain
 // clicks still just select.
-func (this *ZoneEditorDialog) moveDraggedZone(pos image.Point) {
+func (this *ZoneEditorDialog) moveDraggedZone(pos models.Position) {
 	if this.addMode || this.zoneDragName == "" || this.side <= 0 {
 		return
 	}
@@ -322,8 +323,8 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos image.Point) {
 		return
 	}
 	pos = this.snapDraggedPosition(pos)
-	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
-	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
+	x := math.Min(math.Max(pos.X/float64(this.side), 0.04), 0.96)
+	y := math.Min(math.Max(pos.Y/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
 	this.geometryDirty = true
 }
@@ -331,11 +332,10 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos image.Point) {
 func drawCanvasText(
 	gtx layout.Context,
 	theme *material.Theme,
-	center image.Point,
+	center models.Position,
 	text string,
 	sizeSp int,
-	textColor color.NRGBA,
-) {
+	textColor color.NRGBA) {
 	macro := op.Record(gtx.Ops)
 	local := gtx
 	local.Constraints.Min = image.Point{}
@@ -345,7 +345,8 @@ func drawCanvasText(
 	label.Font = font.Font{Weight: font.Medium}
 	dims := label.Layout(local)
 	call := macro.Stop()
-	offset := op.Offset(image.Pt(center.X-dims.Size.X/2, center.Y-dims.Size.Y/2)).Push(gtx.Ops)
+	pixelCenter := center.ToPointRounded()
+	offset := op.Offset(image.Pt(pixelCenter.X-dims.Size.X/2, pixelCenter.Y-dims.Size.Y/2)).Push(gtx.Ops)
 	call.Add(gtx.Ops)
 	offset.Pop()
 }

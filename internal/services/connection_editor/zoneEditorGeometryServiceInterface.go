@@ -1,8 +1,6 @@
 package connection_editor
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -23,21 +21,21 @@ type IZoneEditorGeometryService interface {
 
 	// HitTestNode returns the name of the zone whose node covers position, or
 	// "" when no node does.
-	HitTestNode(position image.Point, positions map[string]image.Point, zoneRadius int) string
+	HitTestNode(position models.Position, positions map[string]models.Position, zoneRadius float64) string
 
 	// HitTestEdge returns the index of the edge whose curve passes closest to
 	// position, or -1 when no curve is within reach.
-	HitTestEdge(position image.Point, edges []models.ZoneEditorEdge) int
+	HitTestEdge(position models.Position, edges []models.ZoneEditorEdge) int
 
 	// GridStep returns the snapping-grid cell size in canvas pixels.
-	GridStep(zoneRadius int) float64
+	GridStep(zoneRadius float64) float64
 
 	// SnapPosition nudges a dragged zone's center so its edges or center hold
 	// onto nearby alignment guides and grid lines. It never pulls from afar:
 	// only a position already within the hold distance sticks.
 	SnapPosition(
-		position image.Point,
-		positions map[string]image.Point,
-		zoneRadius int,
+		position models.Position,
+		positions map[string]models.Position,
+		zoneRadius float64,
 		draggedZone string) models.ZoneEditorSnapResult
 }

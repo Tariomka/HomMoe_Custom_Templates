@@ -5,6 +5,8 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
 // layoutScatter renders the organic position-driven topologies (Random and
@@ -23,17 +25,17 @@ func (this *PreviewLayoutService) layoutScatter(
 
 	adj := buildScatterAdjacency(zones, conns)
 	zoneRadius := scatterZoneRadius(adj, metrics)
-	px, py := projectScatterPositions(zones, adj, zoneRadius, metrics)
+	positions := projectScatterPositions(zones, adj, zoneRadius, metrics)
 
-	relaxPasses(px, py, adj, zoneRadius)
+	relaxPasses(positions, adj, zoneRadius)
 
 	// Final fit: recenter the bounding box then shrink only if it overflows
 	// the padded canvas.
-	shrink := fitToCanvas(px, py, metrics, zoneRadius+metrics.margin, false)
+	shrink := fitToCanvas(positions, metrics, zoneRadius+metrics.margin, false)
 	if shrink < 1.0 {
 		zoneRadius = math.Max(zoneRadius*shrink, csZoneRadiusFloor)
 	}
-	this.commitPositions(zones, px, py, zoneRadius)
+	this.commitPositions(zones, positions, zoneRadius)
 }
 
 // buildScatterAdjacency builds the direct-only, deduplicated adjacency lists
@@ -83,22 +85,20 @@ func projectScatterPositions(
 	zones []entities.Zone,
 	adj [][]int,
 	zoneRadius float64,
-	metrics canvasMetrics) (px, py []float64) {
+	metrics canvasMetrics) models.Positions {
 	gScale := metrics.side - 2.0*metrics.margin
 	if mean := meanRawEdgeLength(zones, adj); mean > 1e-6 {
-		gScale = zoneRadius * scatterIdealMult / mean
+		gScale = zoneRadius * scatterIdealMultiplier / mean
 	}
 
-	rawCx, rawCy := positionCentroid(zones)
-	px = make([]float64, len(zones))
-	py = make([]float64, len(zones))
-	for i, zone := range zones {
-		p := *zone.GeneratorPosition
-		px[i] = (p[0] - rawCx) * gScale
-		py[i] = (p[1] - rawCy) * gScale
+	rawCenter := positionCentroid(zones)
+	var positions models.Positions
+	for _, zone := range zones {
+		p := *zone.GeneratorPosition // Is this required to be copied? can't it be used directly safely?
+		positions.Add(data.NewVec2(p[0], p[1]).Subtract(rawCenter).MultiplyScalar(gScale))
 	}
-	fitToCanvas(px, py, metrics, zoneRadius+metrics.margin, false)
-	return px, py
+	fitToCanvas(positions, metrics, zoneRadius+metrics.margin, false)
+	return positions
 }
 
 // meanRawEdgeLength averages the raw generator-space length of the direct
@@ -125,12 +125,12 @@ func meanRawEdgeLength(zones []entities.Zone, adj [][]int) float64 {
 // relaxPasses alternates two correction passes until the layout settles: a
 // hard-floor pass that pushes overlapping zones apart and an edge-clearance
 // pass that nudges zones off connection lines.
-func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
+func relaxPasses(positions models.Positions, adj [][]int, zoneRadius float64) {
 	minDist := zoneRadius * scatterMinDist
 	edgeClear := zoneRadius * scatterEdgeClear
 	for range 500 {
-		pushed := pushApartPass(px, py, minDist)
-		nudged := nudgeOffEdgesPass(px, py, adj, edgeClear)
+		pushed := pushApartPass(positions, minDist)
+		nudged := nudgeOffEdgesPass(positions, adj, edgeClear)
 		if !pushed && !nudged {
 			break
 		}
@@ -139,24 +139,22 @@ func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
 
 // pushApartPass symmetrically pushes every zone pair closer than minDist
 // apart. Reports whether anything moved.
-func pushApartPass(px, py []float64, minDist float64) bool {
+func pushApartPass(positions models.Positions, minDist float64) bool {
 	moved := false
-	for i := range px {
-		for j := i + 1; j < len(px); j++ {
-			dx := px[i] - px[j]
-			dy := py[i] - py[j]
-			d := math.Hypot(dx, dy)
-			if d >= minDist {
+	for i := range positions {
+		for j := i + 1; j < len(positions); j++ {
+			deltaPosition := positions[i].Subtract(positions[j])
+			distance := deltaPosition.Distance()
+			if distance >= minDist {
 				continue
 			}
-			if d < 1e-3 {
-				dx, dy, d = 1, 0, 1e-3
+
+			if distance < 1e-3 {
+				deltaPosition, distance = data.NewVec2(1.0, 0.0), 1e-3
 			}
-			push := (minDist - d) / 2.0
-			px[i] += dx / d * push
-			py[i] += dy / d * push
-			px[j] -= dx / d * push
-			py[j] -= dy / d * push
+			push := (minDist - distance) / 2.0
+			positions[i] = positions[i].Add(deltaPosition.MultiplyScalar(push / distance))
+			positions[j] = positions[j].Subtract(deltaPosition.MultiplyScalar(push / distance))
 			moved = true
 		}
 	}
@@ -165,14 +163,15 @@ func pushApartPass(px, py []float64, minDist float64) bool {
 
 // nudgeOffEdgesPass moves any zone that sits too close to another pair's
 // connection line perpendicularly off it. Reports whether anything moved.
-func nudgeOffEdgesPass(px, py []float64, adj [][]int, edgeClear float64) bool {
+func nudgeOffEdgesPass(positions models.Positions, adj [][]int, edgeClear float64) bool {
 	moved := false
-	for a := range px {
-		for _, b := range adj[a] {
-			if b <= a {
+	for index := range positions {
+		for _, adjacencyValue := range adj[index] {
+			if adjacencyValue <= index {
 				continue
 			}
-			if nudgeZonesOffEdge(px, py, adj, a, b, edgeClear) {
+
+			if nudgeZonesOffEdge(positions, adj, index, adjacencyValue, edgeClear) {
 				moved = true
 			}
 		}
@@ -183,62 +182,62 @@ func nudgeOffEdgesPass(px, py []float64, adj [][]int, edgeClear float64) bool {
 // nudgeZonesOffEdge checks every third zone against the a-b segment and moves
 // the ones within edgeClear to whichever perpendicular side sits farther from
 // their own neighbours. Reports whether anything moved.
-func nudgeZonesOffEdge(px, py []float64, adj [][]int, a, b int, edgeClear float64) bool {
-	ex := px[b] - px[a]
-	ey := py[b] - py[a]
-	elen2 := ex*ex + ey*ey
+func nudgeZonesOffEdge(positions models.Positions, adj [][]int, a, b int, edgeClear float64) bool {
+	delta := positions[b].Subtract(positions[a])
+	elen2 := delta.SquaredLength()
 	if elen2 < 1e-3 {
 		return false
 	}
 	elenInv := 1.0 / math.Sqrt(elen2)
 
 	moved := false
-	for c := range px {
+	for c := range positions {
 		if c == a || c == b {
 			continue
 		}
-		tProj := ((px[c]-px[a])*ex + (py[c]-py[a])*ey) / elen2
+
+		tProj := positions[c].Subtract(positions[a]).DotProduct(delta) / elen2
 		if tProj < 0 || tProj > 1 {
 			continue
 		}
-		projX := px[a] + tProj*ex
-		projY := py[a] + tProj*ey
-		nx := px[c] - projX
-		ny := py[c] - projY
-		dist := math.Hypot(nx, ny)
-		if dist >= edgeClear {
+
+		projected := positions[a].Add(delta.MultiplyScalar(tProj))
+		projectedDelta := positions[c].Subtract(projected)
+		distance := projectedDelta.Distance()
+		if distance >= edgeClear {
 			continue
 		}
-		var perpX, perpY float64
-		if dist < 1e-3 {
-			perpX = ey * elenInv
-			perpY = -ex * elenInv
+
+		var perp data.Vec2[float64]
+		if distance < 1e-3 {
+			perp = data.NewVec2(delta.Y, -delta.X).MultiplyScalar(elenInv)
 		} else {
-			perpX = nx / dist
-			perpY = ny / dist
+			perp = projectedDelta.DivideScalar(distance)
 		}
-		px[c], py[c] = preferredNudge(px, py, adj[c],
-			projX+perpX*edgeClear, projY+perpY*edgeClear,
-			projX-perpX*edgeClear, projY-perpY*edgeClear)
+		positions[c] = preferredNudge(positions, adj[c],
+			projected.Add(perp.MultiplyScalar(edgeClear)),
+			projected.Subtract(perp.MultiplyScalar(edgeClear)))
 		moved = true
 	}
 	return moved
 }
 
 // preferredNudge picks whichever candidate point sits farther (in summed
-// squared distance) from the zone's own neighbours, keeping its edges long.
-func preferredNudge(px, py []float64, neighbours []int, ax, ay, bx, by float64) (float64, float64) {
+// squared distance) from the zone's own neighbors, keeping its edges long.
+func preferredNudge(
+	positions models.Positions,
+	neighbors []int,
+	positionA, positionB data.Vec2[float64]) data.Vec2[float64] {
 	scoreA, scoreB := 0.0, 0.0
-	for _, nb := range neighbours {
-		dax := ax - px[nb]
-		day := ay - py[nb]
-		dbx := bx - px[nb]
-		dby := by - py[nb]
-		scoreA += dax*dax + day*day
-		scoreB += dbx*dbx + dby*dby
+	for _, nb := range neighbors {
+		deltaA := positionA.Subtract(positions[nb])
+		deltaB := positionB.Subtract(positions[nb])
+		scoreA += deltaA.SquaredLength()
+		scoreB += deltaB.SquaredLength()
 	}
 	if scoreB < scoreA {
-		return bx, by
+		return positionB
 	}
-	return ax, ay
+
+	return positionA
 }

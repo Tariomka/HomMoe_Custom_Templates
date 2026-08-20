@@ -1,8 +1,6 @@
 package guiHandler_test
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
@@ -178,11 +176,11 @@ func (this *handlerDependenciesStub) HitTestZoneEditorNode(dtos.ZoneEditorHitTes
 	return ""
 }
 
-func (this *handlerDependenciesStub) HitTestZoneEditorEdge(image.Point, []models.ZoneEditorEdge) int {
+func (this *handlerDependenciesStub) HitTestZoneEditorEdge(models.Position, []models.ZoneEditorEdge) int {
 	return -1
 }
 
-func (this *handlerDependenciesStub) GetZoneEditorGridStep(int) float64 {
+func (this *handlerDependenciesStub) GetZoneEditorGridStep(float64) float64 {
 	return 0
 }
 

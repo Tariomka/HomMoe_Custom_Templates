@@ -1,11 +1,11 @@
 package zoneEditorGeometryService_test
 
 import (
-	"image"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +34,7 @@ func TestWhenTheGeometryIsBuilt_TheZoneRadiusIsReportedVerbatim(t *testing.T) {
 	geometry := service.BuildGeometry(nil, nil, config.MapTopology(gofakeit.Word()), fixtureCanvasSide)
 
 	// Assert
-	assert.Equal(t, fixtureZoneRadius, geometry.ZoneRadius)
+	assert.InDelta(t, fixtureZoneRadius, geometry.ZoneRadius, 1e-9)
 }
 
 func TestWhenTheGeometryIsBuilt_TheCanvasSideAndTopologyReachThePreviewLayout(t *testing.T) {
@@ -94,7 +94,7 @@ func TestWhenAnEdgeIsLaidOut_ItsLabelSitsOnTheCurveMidpoint(t *testing.T) {
 
 	// Assert
 	require.Len(t, geometry.Edges, 2)
-	assert.Equal(t, image.Pt(350, 359), geometry.Edges[0].MidPoint)
+	assert.Equal(t, data.NewVec2(350.0, 359.0), geometry.Edges[0].MidPoint)
 }
 
 func TestWhenTwoConnectionsSharePair_TheirCurvesSpreadSymmetrically(t *testing.T) {
@@ -166,7 +166,10 @@ func TestWhenAnEndpointHasNoPosition_TheConnectionIsSkipped(t *testing.T) {
 func TestWhenBothEndpointsShareAPosition_TheCurveCollapsesOntoThatPoint(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	stacked := map[string]image.Point{"A": image.Pt(140, 350), "B": image.Pt(140, 350)}
+	stacked := map[string]models.Position{
+		"A": data.NewVec2(140.0, 350.0),
+		"B": data.NewVec2(140.0, 350.0),
+	}
 	service, _ := newGeometryFixture(stacked)
 	connections := []entities.Connection{newConnection("ab", "A", "B")}
 

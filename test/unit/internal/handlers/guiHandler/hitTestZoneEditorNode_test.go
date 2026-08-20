@@ -1,10 +1,11 @@
 package guiHandler_test
 
 import (
-	"image"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,8 +14,8 @@ func TestWhenANodeHitTestRequested_NamesTheZoneUnderThePoint(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	request := dtos.ZoneEditorHitTestRequestDto{
-		Position:   image.Pt(150, 350),
-		Positions:  map[string]image.Point{"Spawn-A": image.Pt(140, 350)},
+		Position:   data.NewVec2(150.0, 350.0),
+		Positions:  map[string]models.Position{"Spawn-A": data.NewVec2(140.0, 350.0)},
 		ZoneRadius: 38,
 	}
 

@@ -4,6 +4,7 @@ import (
 	"image"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/asset_provider"
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,7 @@ import (
 
 const (
 	canvasSide   = 64
-	canvasCenter = canvasSide / 2
+	canvasCenter = (float64)(canvasSide) / 2
 	spriteScale  = 0.5
 )
 
@@ -32,7 +33,7 @@ func mustNewProvider(t *testing.T) *asset_provider.AssetProvider {
 func renderPlayer(t *testing.T, zone preview.Zone) *image.RGBA {
 	t.Helper()
 	canvas := newCanvas()
-	mustNewProvider(t).DrawPlayerZone(canvas, zone, image.Pt(canvasCenter, canvasCenter), spriteScale)
+	mustNewProvider(t).DrawPlayerZone(canvas, zone, data.NewVec2(canvasCenter, canvasCenter), spriteScale)
 	return canvas
 }
 
@@ -40,7 +41,7 @@ func renderPlayer(t *testing.T, zone preview.Zone) *image.RGBA {
 func renderNeutral(t *testing.T, zone preview.Zone) *image.RGBA {
 	t.Helper()
 	canvas := newCanvas()
-	mustNewProvider(t).DrawNeutralZone(canvas, zone, image.Pt(canvasCenter, canvasCenter), spriteScale)
+	mustNewProvider(t).DrawNeutralZone(canvas, zone, data.NewVec2(canvasCenter, canvasCenter), spriteScale)
 	return canvas
 }
 
@@ -48,6 +49,6 @@ func renderNeutral(t *testing.T, zone preview.Zone) *image.RGBA {
 func renderArenaMarker(t *testing.T) *image.RGBA {
 	t.Helper()
 	canvas := newCanvas()
-	mustNewProvider(t).DrawArenaMarker(canvas, image.Pt(canvasCenter, canvasCenter), spriteScale)
+	mustNewProvider(t).DrawArenaMarker(canvas, data.NewVec2(canvasCenter, canvasCenter), spriteScale)
 	return canvas
 }

@@ -17,7 +17,7 @@ import (
 func newCountingBuild(callCount *int) func() (preview.Layout, error) {
 	return func() (preview.Layout, error) {
 		*callCount++
-		return preview.Layout{ZoneRadius: *callCount}, nil
+		return preview.Layout{ZoneRadius: float64(*callCount)}, nil
 	}
 }
 

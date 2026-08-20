@@ -1,7 +1,6 @@
 package zoneEditorGeometryService_test
 
 import (
-	"image"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
@@ -27,7 +26,7 @@ func TestWhenAPointSitsOnACurve_TheEdgeHitTestReturnsThatEdge(t *testing.T) {
 	edges := []models.ZoneEditorEdge{straightEdge(0, 0)}
 
 	// Act
-	index := service.HitTestEdge(image.Pt(50, 5), edges)
+	index := service.HitTestEdge(data.NewVec2(50.0, 5.0), edges)
 
 	// Assert
 	assert.Equal(t, 0, index)
@@ -40,7 +39,7 @@ func TestWhenAPointIsFarFromEveryCurve_TheEdgeHitTestReturnsNoIndex(t *testing.T
 	edges := []models.ZoneEditorEdge{straightEdge(0, 0)}
 
 	// Act
-	index := service.HitTestEdge(image.Pt(50, 50), edges)
+	index := service.HitTestEdge(data.NewVec2(50.0, 50.0), edges)
 
 	// Assert
 	assert.Equal(t, -1, index)
@@ -53,7 +52,7 @@ func TestWhenTwoCurvesAreInReach_TheNearestOneIsReturned(t *testing.T) {
 	edges := []models.ZoneEditorEdge{straightEdge(0, 0), straightEdge(1, 20)}
 
 	// Act
-	index := service.HitTestEdge(image.Pt(50, 18), edges)
+	index := service.HitTestEdge(data.NewVec2(50.0, 18.0), edges)
 
 	// Assert
 	assert.Equal(t, 1, index)
@@ -65,7 +64,7 @@ func TestWhenThereAreNoEdges_TheEdgeHitTestReturnsNoIndex(t *testing.T) {
 	service, _ := newGeometryFixture(nil)
 
 	// Act
-	index := service.HitTestEdge(image.Pt(50, 0), nil)
+	index := service.HitTestEdge(data.NewVec2(50.0, 0.0), nil)
 
 	// Assert
 	assert.Equal(t, -1, index)

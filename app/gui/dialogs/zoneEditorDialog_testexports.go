@@ -3,10 +3,10 @@
 package dialogs
 
 import (
-	"image"
-
 	"gioui.org/f32"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
 // EdgeGeometry is a test-visible copy of one laid-out connection curve.
@@ -18,7 +18,7 @@ type EdgeGeometry struct {
 	StartPoint   f32.Point
 	EndPoint     f32.Point
 	ControlPoint f32.Point
-	MidPoint     image.Point
+	MidPoint     models.Position
 }
 
 // RecomputeGeometry rebuilds node positions and edge curves for a square canvas
@@ -26,12 +26,12 @@ type EdgeGeometry struct {
 func (this *ZoneEditorDialog) RecomputeGeometry(side int) { this.recomputeGeometry(side) }
 
 // ZonePositions ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) ZonePositions() map[string]image.Point {
+func (this *ZoneEditorDialog) ZonePositions() map[string]models.Position {
 	return this.geometry.Positions
 }
 
 // CanvasZoneRadius ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) CanvasZoneRadius() int { return this.geometry.ZoneRadius }
+func (this *ZoneEditorDialog) CanvasZoneRadius() float64 { return this.geometry.ZoneRadius }
 
 // EdgeGeometries returns the laid-out connection curves in draw order.
 // ONLY FOR INTEGRATION TEST USE
@@ -42,13 +42,14 @@ func (this *ZoneEditorDialog) EdgeGeometries() []EdgeGeometry {
 		if connection == nil {
 			continue
 		}
+
 		edges = append(edges, EdgeGeometry{
 			Name:         connection.Name,
 			From:         connection.From,
 			To:           connection.To,
-			StartPoint:   toCanvasPoint(edge.StartPoint),
-			EndPoint:     toCanvasPoint(edge.EndPoint),
-			ControlPoint: toCanvasPoint(edge.ControlPoint),
+			StartPoint:   utils.ToF32Point(edge.StartPoint),
+			EndPoint:     utils.ToF32Point(edge.EndPoint),
+			ControlPoint: utils.ToF32Point(edge.ControlPoint),
 			MidPoint:     edge.MidPoint,
 		})
 	}
@@ -58,14 +59,14 @@ func (this *ZoneEditorDialog) EdgeGeometries() []EdgeGeometry {
 
 // HitTestCanvasNode returns the zone whose node covers pos, or "" when none
 // does. ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) HitTestCanvasNode(pos image.Point) string {
+func (this *ZoneEditorDialog) HitTestCanvasNode(pos models.Position) string {
 	return this.hitTestNode(pos)
 }
 
 // HitTestCanvasEdge returns the name of the connection whose curve passes
 // closest to pos, or "" when no curve is within reach.
 // ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) HitTestCanvasEdge(pos image.Point) string {
+func (this *ZoneEditorDialog) HitTestCanvasEdge(pos models.Position) string {
 	if edge := this.hitTestEdge(pos); edge != nil {
 		return edge.Name
 	}
@@ -88,7 +89,7 @@ func (this *ZoneEditorDialog) BeginZoneDrag(name string) {
 }
 
 // SnapDraggedPosition ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) SnapDraggedPosition(pos image.Point) image.Point {
+func (this *ZoneEditorDialog) SnapDraggedPosition(pos models.Position) models.Position {
 	return this.snapDraggedPosition(pos)
 }
 

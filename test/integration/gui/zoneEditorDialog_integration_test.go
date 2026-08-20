@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -336,7 +337,7 @@ func TestWhenSnapIsOnAndAZoneIsDragged_TheEditorRendersTheGuideOverlay(t *testin
 	dialog := newTriangleFixture(t)
 	dialog.SetSnapEnabled(true)
 	dialog.BeginZoneDrag("A")
-	dialog.SnapDraggedPosition(image.Pt(200, 355))
+	dialog.SnapDraggedPosition(data.NewVec2(200.0, 355.0))
 	_, _, _, yActive := dialog.SnapGuides()
 	require.True(t, yActive, "the fixture must hold a horizontal guide for the overlay to render")
 

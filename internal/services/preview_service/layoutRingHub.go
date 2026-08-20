@@ -1,10 +1,10 @@
 package preview_service
 
 import (
-	"image"
 	"math"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 )
 
@@ -52,7 +52,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 	}
 
 	zoneRadius := ringZoneRadius(len(outer), hubIdx >= 0, metrics)
-	this.layout.ZoneRadius = int(math.Round(zoneRadius))
+	this.layout.ZoneRadius = zoneRadius
 
 	ringRadius0 := side/2.0 - metrics.margin
 	ringRadius := math.Max(metrics.hubRadiusMin+zoneRadius+metrics.minGap,
@@ -65,7 +65,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 		angle := -math.Pi/2.0 + float64(i)*2.0*math.Pi/float64(len(outer))
 		x := metrics.cx + math.Cos(angle)*ringRadius
 		y := metrics.cy + math.Sin(angle)*ringRadius
-		this.layout.Positions[zones[zoneIndex].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+		this.layout.Positions[zones[zoneIndex].Name] = data.NewVec2(x, y)
 	}
 }
 
@@ -120,7 +120,7 @@ func (this *PreviewLayoutService) layoutMultiHub(
 	zoneRadius := math.Min(metrics.zoneRadiusMax, (radialLeft*sinA-metrics.minGap/2.0)/(1.0+sinA))
 	zoneRadius = math.Max(1.0, zoneRadius)
 	spokeRing := math.Max(radialLeft-zoneRadius, metrics.hubRadiusMin+metrics.minGap+zoneRadius)
-	this.layout.ZoneRadius = int(math.Round(zoneRadius))
+	this.layout.ZoneRadius = zoneRadius
 
 	for h, hubIndex := range hubIndices {
 		hubAngle := -math.Pi/2.0 + float64(h)*2.0*math.Pi/float64(numHubs)
@@ -129,7 +129,7 @@ func (this *PreviewLayoutService) layoutMultiHub(
 			hx = metrics.cx + math.Cos(hubAngle)*hubRing
 			hy = metrics.cy + math.Sin(hubAngle)*hubRing
 		}
-		this.layout.Positions[zones[hubIndex].Name] = image.Pt(int(math.Round(hx)), int(math.Round(hy)))
+		this.layout.Positions[zones[hubIndex].Name] = data.NewVec2(hx, hy)
 
 		spokes := hubSpokes[zones[hubIndex].Name]
 		if len(spokes) == 0 {
@@ -143,7 +143,7 @@ func (this *PreviewLayoutService) layoutMultiHub(
 			angle := spokeBase + float64(i)*2.0*math.Pi/float64(len(spokes))
 			x := hx + math.Cos(angle)*spokeRing
 			y := hy + math.Sin(angle)*spokeRing
-			this.layout.Positions[zones[spokeIndex].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+			this.layout.Positions[zones[spokeIndex].Name] = data.NewVec2(x, y)
 		}
 	}
 	// Stragglers (e.g. cross-cluster zones) collapse to canvas center.
