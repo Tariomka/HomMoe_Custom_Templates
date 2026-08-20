@@ -113,7 +113,9 @@
     "coverage-gutters.showGutterCoverage": true,
     "workbench.editorAssociations": {
         "*.golden": "imagePreview.previewEditor",
-		"*.failure": "imagePreview.previewEditor",
+        "*.failure": "imagePreview.previewEditor",
+        "*.copilotmd": "vscode.markdown.preview.editor",
+        "*.md": "vscode.markdown.editor"
     },
     "workbench.diffEditorAssociations": {
         "*.golden": "imagePreview.previewEditor",
