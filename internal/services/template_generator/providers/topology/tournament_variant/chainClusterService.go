@@ -36,9 +36,7 @@ func (this *ChainClusterService) CreateClusterVariant(
 	playerIndex int,
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	chainLabels := append([]string{playerLabel},
-		linq.FromSlice(playerNeutralZonePlans).
-			SelectString(func(x neutral_zone.Plan) string { return x.Label }).
-			ToSlice()...)
+		linq.FromSlice(playerNeutralZonePlans).Select(func(x neutral_zone.Plan) string { return x.Label }).ToSlice()...)
 	connectionNames := make([]string, len(chainLabels)-1)
 	for index := range connectionNames {
 		connectionNames[index] = constants.GetTournamentChainConnectionNameFor(chainLabels[index], chainLabels[index+1])

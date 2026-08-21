@@ -65,7 +65,7 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		for playerIndex := range 2 {
 			clusterLabels := linq.FromSlice(perPlayerNeutralZones[playerIndex]).
-				SelectString(func(x neutral_zone.Plan) string { return x.Label }).
+				Select(func(x neutral_zone.Plan) string { return x.Label }).
 				ToSlice()
 			conns = append(conns,
 				this.CreateRandomPortalConnections(

@@ -28,10 +28,7 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 	zones []entities.Zone,
 	playerZoneNames map[string]bool) entities.Connection {
 	quality := this.zoneClassifier.GetConnectionGuardQuality(
-		from,
-		to,
-		zones,
-		linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
+		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
 	return variant_content.NewConnectionBuilder().
 		WithFrom(from).
 		WithTo(to).

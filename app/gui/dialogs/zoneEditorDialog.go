@@ -77,26 +77,19 @@ func NewZoneEditorDialog(
 	onApply func(dtos.ZoneEditorZonesDto),
 	onRevertToBase func() (dtos.ZoneEditorZonesDto, bool)) *ZoneEditorDialog {
 	dialog := &ZoneEditorDialog{
-		topology:       topology,
-		tuning:         tuning,
-		generateRoads:  generateRoads,
-		onApply:        onApply,
-		onRevertToBase: onRevertToBase,
-		zoneHandler:    zoneHandler,
-		zoneEditorGeometryState: zoneEditorGeometryState{
-			geometryDirty: true,
-		},
-		zoneEditorConnectionPropertiesState: zoneEditorConnectionPropertiesState{
-			typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
-			guardZoneDropdown: components.NewDropdownSelector(nil),
-			guardDropdown:     components.NewDropdownSelector(nil),
-			weeklyDropdown: components.NewDropdownSelector(
-				common_connections.GetGuardWeeklyIncrementLabels()),
-		},
-		zoneEditorZonePropertiesState: zoneEditorZonePropertiesState{
-			qualityDropdown: components.NewDropdownSelector(neutral_zone.GetQualityNames()),
-			castleDropdown:  components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
-		},
+		topology:          topology,
+		tuning:            tuning,
+		generateRoads:     generateRoads,
+		onApply:           onApply,
+		onRevertToBase:    onRevertToBase,
+		zoneHandler:       zoneHandler,
+		geometryDirty:     true,
+		typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
+		guardZoneDropdown: components.NewDropdownSelector(nil),
+		guardDropdown:     components.NewDropdownSelector(nil),
+		weeklyDropdown:    components.NewDropdownSelector(common_connections.GetGuardWeeklyIncrementLabels()),
+		qualityDropdown:   components.NewDropdownSelector(neutral_zone.GetQualityNames()),
+		castleDropdown:    components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
 	}
 	dialog.setEditingSet(zones, connections)
 	dialog.scroll.Axis = layout.Vertical

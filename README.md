@@ -117,7 +117,7 @@ Generated template preview:
 
 ## Building & Running
 
-Requires **Go 1.26.5** or later (see [go.mod](go.mod)).
+Requires **Go 1.27.0** or later (see [go.mod](go.mod)).
 
 ```powershell
 # Run directly

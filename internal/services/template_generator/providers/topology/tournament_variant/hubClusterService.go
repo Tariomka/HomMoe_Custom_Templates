@@ -37,9 +37,7 @@ func (this *HubClusterService) CreateClusterVariant(
 	playerLabel string) ([]entities.Zone, []entities.Connection) {
 	hubName := constants.GetHubZoneNameFor(playerLabel)
 	spokeLabels := append([]string{playerLabel},
-		linq.FromSlice(playerNeutralZonePlans).
-			SelectString(func(x neutral_zone.Plan) string { return x.Label }).
-			ToSlice()...)
+		linq.FromSlice(playerNeutralZonePlans).Select(func(x neutral_zone.Plan) string { return x.Label }).ToSlice()...)
 	spokeConnNames := make([]string, len(spokeLabels))
 	for index, label := range spokeLabels {
 		spokeConnNames[index] = constants.GetTournamentHubAndSpokeConnectionNameFor(playerLabel, label)

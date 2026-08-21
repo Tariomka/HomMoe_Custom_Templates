@@ -1,6 +1,6 @@
 module github.com/Tariomka/hommoe_custom_templates/tools
 
-go 1.26.5
+go 1.27.0
 
 tool (
 	github.com/goforj/wire/cmd/wire

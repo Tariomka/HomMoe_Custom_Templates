@@ -6,7 +6,7 @@ then click **Generate** + **Save Template** to write a `.rmg.json` file.
 
 ## 1. Run the App
 
-Requires Go **1.26.5+**.
+Requires Go **1.27.0+**.
 
 ```powershell
 # Run directly
@@ -219,7 +219,7 @@ and the shape each one produces.
   running over Remote Desktop or in a headless container, run on a real
   desktop session instead. On Linux, make sure the development packages listed
   under [Building on Linux](#building-on-linux) are installed.
-- **`go build` complains about Go version** — install Go 1.26.5 or later
+- **`go build` complains about Go version** — install Go 1.27.0 or later
   (`go version`).
 - **`Save Template` is disabled** — click **Generate** first; the button only
   enables once a template is in memory.

@@ -111,7 +111,7 @@ func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 	}
 
 	neutralLabels := linq.FromSlice(neutralZones).
-		SelectString(func(x neutral_zone.Plan) string { return x.Label }).
+		Select(func(x neutral_zone.Plan) string { return x.Label }).
 		ToSlice()
 	return append(playerLabels, neutralLabels...)
 }
@@ -144,7 +144,7 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 	neutralZones neutral_zone.Plans) []string {
 	if len(playerLabels) == 0 {
 		return linq.FromSlice(neutralZones).
-			SelectString(func(x neutral_zone.Plan) string { return x.Label }).
+			Select(func(x neutral_zone.Plan) string { return x.Label }).
 			ToSlice()
 	}
 
@@ -168,7 +168,7 @@ func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
 	}
 	neutralZoneGaps := utils.AssignNeutralZonesToGaps(neutralZones, capacities, true)
 	orderedLabels := linq.FromSlice(utils.OrderEdgeGap(neutralZoneGaps[0], true)).
-		SelectString(func(x neutral_zone.Plan) string { return x.Label }).
+		Select(func(x neutral_zone.Plan) string { return x.Label }).
 		ToSlice()
 	for index, playerLabel := range playerLabels {
 		orderedLabels = append(orderedLabels, playerLabel)

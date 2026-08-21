@@ -25,6 +25,54 @@ type BannableItemEntry struct {
 	Category string
 }
 
+func GetBannableItemsWithExclusions(excluded []string) []BannableItemEntry {
+	items := slices.DeleteFunc(
+		buildBannableItems(),
+		func(item BannableItemEntry) bool { return slices.Contains(excluded, item.Sid) })
+	slices.SortStableFunc(items, CompareBannableItems)
+	return items
+}
+
+// FindBannableItem returns the catalog entry for an artifact SID, or ok=false
+// when the SID is not in the catalog (e.g. a custom/modded artifact).
+func FindBannableItem(sid string) (BannableItemEntry, bool) {
+	for _, item := range buildBannableItems() {
+		if item.Sid == sid {
+			return item, true
+		}
+	}
+	return BannableItemEntry{}, false
+}
+
+// GetBannedItemLabel returns the display name and category for a banned artifact.
+func GetBannedItemLabel(sid string) (name, category string) {
+	if item, ok := FindBannableItem(sid); ok {
+		return item.Name, item.Category
+	}
+
+	return SidToDisplayName(sid), "Misc"
+}
+
+// SidToDisplayName converts a snake_case SID (with optional _artifact suffix)
+// to a sentence-case display name. Used as a fallback for IDs not present in
+// any catalog.
+func SidToDisplayName(sid string) string {
+	s := strings.ReplaceAll(strings.ReplaceAll(sid, "_artifact", ""), "_", " ")
+	if len(s) == 0 {
+		return sid
+	}
+
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func CompareBannableItems(a, b BannableItemEntry) int {
+	if comparison := cmp.Compare(a.Category, b.Category); comparison != 0 {
+		return comparison
+	}
+
+	return cmp.Compare(a.Name, b.Name)
+}
+
 func buildBannableItems() []BannableItemEntry {
 	items := []BannableItemEntry{}
 	items = append(items, buildMovementItems()...)
@@ -393,51 +441,4 @@ func buildScholarsWisdomItems() []BannableItemEntry {
 		{sids.ScholarsTiara, "Scholar's Wisdom: Scholar's Tiara", categorySet},
 		{sids.ScholarsOberegus, "Scholar's Wisdom: Scholar's Oberegus", categorySet},
 	}
-}
-
-func GetBannableItemsWithExclusions(excluded []string) []BannableItemEntry {
-	items := slices.DeleteFunc(
-		buildBannableItems(),
-		func(item BannableItemEntry) bool { return slices.Contains(excluded, item.Sid) })
-	slices.SortStableFunc(items, CompareBannableItems)
-	return items
-}
-
-// FindBannableItem returns the catalog entry for an artifact SID, or ok=false
-// when the SID is not in the catalog (e.g. a custom/modded artifact).
-func FindBannableItem(sid string) (BannableItemEntry, bool) {
-	for _, item := range buildBannableItems() {
-		if item.Sid == sid {
-			return item, true
-		}
-	}
-	return BannableItemEntry{}, false
-}
-
-// GetBannedItemLabel returns the display name and category for a banned artifact.
-func GetBannedItemLabel(sid string) (name, category string) {
-	if item, ok := FindBannableItem(sid); ok {
-		return item.Name, item.Category
-	}
-
-	return SidToDisplayName(sid), "Misc"
-}
-
-// SidToDisplayName converts a snake_case SID (with optional _artifact suffix)
-// to a sentence-case display name. Used as a fallback for IDs not present in
-// any catalog.
-func SidToDisplayName(sid string) string {
-	s := strings.ReplaceAll(strings.ReplaceAll(sid, "_artifact", ""), "_", " ")
-	if len(s) == 0 {
-		return sid
-	}
-	return strings.ToUpper(s[:1]) + s[1:]
-}
-
-func CompareBannableItems(a, b BannableItemEntry) int {
-	if comparison := cmp.Compare(a.Category, b.Category); comparison != 0 {
-		return comparison
-	}
-
-	return cmp.Compare(a.Name, b.Name)
 }

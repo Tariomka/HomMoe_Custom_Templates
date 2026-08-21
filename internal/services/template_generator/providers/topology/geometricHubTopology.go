@@ -43,9 +43,7 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	_ string) entities.Variant {
 	layout := newGeometricHubLayout(playerLabels, neutralZones)
 	allLabels := append(append([]string{}, playerLabels...),
-		linq.FromSlice(neutralZones).
-			SelectString(func(plan neutral_zone.Plan) string { return plan.Label }).
-			ToSlice()...)
+		linq.FromSlice(neutralZones).Select(func(plan neutral_zone.Plan) string { return plan.Label }).ToSlice()...)
 
 	connectionNames := this.createConnectionNameIndex(layout)
 	zones := this.createZones(configuration, playerLabels, neutralZones, layout, connectionNames, tuning)

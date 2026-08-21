@@ -78,7 +78,7 @@ func NewGeneralPanel(state *drivers.State) *GeneralPanel {
 		}()),
 		mapSizeSelector: components.NewDropdownSelector(func() []string {
 			return linq.FromSlice(constants.GetMapSizes(state.GetExperimentalMapSizes())).
-				SelectString(func(ms constants.MapSize) string { return ms.Label }).
+				Select(func(ms constants.MapSize) string { return ms.Label }).
 				ToSlice()
 		}()),
 		state: state,

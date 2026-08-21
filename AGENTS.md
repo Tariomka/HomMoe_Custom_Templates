@@ -7,9 +7,9 @@ working on the **HomMoe Custom Templates** repository. Follow them strictly.
 
 ## 1. Project Snapshot
 
-- **Language / Toolchain:** Go 1.26.5. Two modules: the application module
+- **Language / Toolchain:** Go 1.27.0. Two modules: the application module
   `github.com/Tariomka/hommoe_custom_templates` at the repository root, and
-  [tools/go.mod](tools/go.mod), a tools-only module (also Go 1.26.5) that pins
+  [tools/go.mod](tools/go.mod), a tools-only module (also Go 1.27.0) that pins
   `wire`, `golangci-lint` and `gcov2lcov` through `tool` directives.
 - **UI:** Gio (`gioui.org v0.10.0`) — immediate-mode desktop GUI.
 - **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might

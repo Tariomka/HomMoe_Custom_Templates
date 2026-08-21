@@ -4,11 +4,6 @@ import "iter"
 
 type Predicate[T any] = func(T) bool
 
-// Iterable is an interface that has to be implemented by a custom collection to work with linq.
-type Iterable[T any] interface {
-	Iterate() iter.Seq[T]
-}
-
 // Query is the type returned from query functions. It can be iterated manually
 // using Iterate property. Example:
 //
@@ -53,26 +48,16 @@ func (this Query[T]) Where(predicate Predicate[T]) Query[T] {
 	}
 }
 
-// SelectString projects each element of a collection into a new string form.
-func (this Query[T]) SelectString(selector func(T) string) Query[string] {
-	return Query[string]{
-		Iterate: func(yield func(string) bool) {
+// Select projects each element of a collection into a new form.
+func (this Query[T]) Select[TResult any](selector func(T) TResult) Query[TResult] {
+	return Query[TResult]{
+		Iterate: func(yield func(TResult) bool) {
 			this.Iterate(func(item T) bool {
 				return yield(selector(item))
 			})
 		},
 	}
 }
-
-// func (this Query[T]) Select[TResult any](selector func(T) TResult) Query[TResult] { // Should be valid with 1.27
-// 	return Query[TResult]{
-// 		Iterate: func(yield func(TResult) bool) {
-// 			this.Iterate(func(item T) bool {
-// 				return yield(selector(item))
-// 			})
-// 		},
-// 	}
-// }
 
 // ToSlice executes the query and returns the results as a slice. The returned slice is a copy, not a reference.
 func (this Query[T]) ToSlice() []T {

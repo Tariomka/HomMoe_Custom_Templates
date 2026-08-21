@@ -58,9 +58,7 @@ func (this *HubTopologyService) createOuterLabels(
 	}
 
 	return append(playerLabels,
-		linq.FromSlice(neutralZones).
-			SelectString(func(nz neutral_zone.Plan) string { return nz.Label }).
-			ToSlice()...)
+		linq.FromSlice(neutralZones).Select(func(nz neutral_zone.Plan) string { return nz.Label }).ToSlice()...)
 }
 
 func (this *HubTopologyService) createZones(

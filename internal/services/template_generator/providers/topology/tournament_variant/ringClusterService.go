@@ -70,7 +70,7 @@ func (this *RingClusterService) createLabels(playerNeutralZonePlans neutral_zone
 
 	return append([]string{playerLabel},
 		linq.FromSlice(orderedNeutralZonePlans).
-			SelectString(func(x neutral_zone.Plan) string { return x.Label }).
+			Select(func(x neutral_zone.Plan) string { return x.Label }).
 			ToSlice()...)
 }
 

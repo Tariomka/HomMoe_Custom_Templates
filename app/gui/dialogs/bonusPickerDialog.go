@@ -68,7 +68,7 @@ func NewBonusPickerDialog(
 	summary := handler.DescribeExistingBonuses(existing)
 
 	labels := linq.FromSlice(constants.GetBonusTypeOptions()).
-		SelectString(func(opt constants.BonusTypeOption) string { return opt.Label }).
+		Select(func(opt constants.BonusTypeOption) string { return opt.Label }).
 		ToSlice()
 
 	dialog := &BonusPickerDialog{
