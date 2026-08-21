@@ -72,7 +72,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.12.2
+          version: v2.13.1
           install-mode: binary
           args: --disable=godox,dupl,unparam,gochecknoglobals # these are the same linters marked as warning level in .golangci.yml
 
