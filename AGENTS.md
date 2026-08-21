@@ -199,9 +199,9 @@ When orchestrating subagents, pick the model per task using these ratings
 |-----------------|------|--------------|-------|
 | claude-opus-5   | 5    | 8            | 9     |
 | claude-fable-5  | 2    | 9            | 10    |
-| gpt-5.6-sol     | 6    | 7            | 5     |
+| gpt-5.6-sol     | 6    | 7            | 6     |
 | kimi-k3         | 7    | 7            | 7     |
-| gpt-5.6-terra   | 7    | 7            | 5     |
+| gpt-5.6-terra   | 7    | 7            | 6     |
 | grok-4.6        | 8    | 6            | 5     |
 | claude-opus-4.8 | 4    | 7            | 7     |
 | gpt-5.5         | 4    | 6            | 4     |
