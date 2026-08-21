@@ -841,8 +841,8 @@ snapshots. No `-update` was run and no owner eyeballing was needed. The numeric
 pins in `zoneEditorGeometry_integration_test.go` were updated to exact new
 literals as instructed.
 
-Coverage flat at **72.9 %**. Full record:
-[plans/batch-g-float-preview-geometry.md](../plans/batch-g-float-preview-geometry.md).
+Coverage flat at **72.9 %**. The batch G plan file has since been deleted, so
+this entry is the record.
 
 ---
 
@@ -1171,9 +1171,7 @@ File", an editable filename box) promises otherwise.
 
 ### 5.1 ✅ FIXED 🟠 Zone editor pointer flows are untested (drag-to-connect, zone drag + snapping)
 
-**Fixed in batch H, 2026-08-11.** See
-[plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md).
-The pointer flows landed as eight tests in
+**Fixed in batch H, 2026-08-11.** The pointer flows landed as eight tests in
 [zoneEditorPointer_integration_test.go](../test/integration/gui/zoneEditorPointer_integration_test.go),
 driven through the real window over the Geometric Hub layout: a zone dragged to
 a new position and committed through Apply's normalized manual position, a drag
@@ -1191,14 +1189,20 @@ hide the very regression §2.3 was about. Snap **guides** are deliberately not
 asserted: every zone in this layout shares x = 290, so several guides propose
 the same correction and which one is reported depends on map iteration order.
 
+⚠ **The exact float pin is an unverified portability risk.**
+`251.88571428571436` is the full-precision result of the amd64 computation, and
+it has only ever been run there. If the geometry ever evaluates differently on
+arm64 the assertion breaks, and the failure will look like a snapping bug rather
+than a platform difference. Rounding the pin is **not** the fix — that is exactly
+what §2.3 was about. If it does break, pin with a tolerance far tighter than one
+pixel (an `InDelta` of ~1e-9) so a real regression still fails.
+
 [test_observations.md](test_observations.md) was updated to point at the new
 tests instead of calling them future work.
 
 ### 5.2 ✅ FIXED 🟡 Zone editor property panels (`widget.Editor` / dropdown paths) are untested
 
-**Fixed in batch H, 2026-08-11.** See
-[plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md).
-The panels landed as eighteen tests in
+**Fixed in batch H, 2026-08-11.** The panels landed as eighteen tests in
 [zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go):
 the zone `Size`, `Guard x` and `Weekly +` editors including `Size`'s clamp to
 0.1–2.0 and its rounding to two decimals; the neutral-zone `Quality` and
@@ -1227,10 +1231,19 @@ which a player spawn and a neutral zone do but the shared `Hub` does not, so the
 Hub's property rows cannot be clicked through the handler. The rows are the same
 code for every zone, so no behaviour is left uncovered.
 
+⚠ **Open: is a golden per handler action the right granularity?** Batches F–H
+adopted "one snapshot per action", which left roughly 145 new goldens beside the
+~173 already committed — on the order of 21 MB of PNGs in the repository. The
+question was never settled, and every future driving handler compounds it. The
+trade-off: a golden per action is what localises a visual regression to the
+action that caused it, but most of these snapshots differ from their neighbour in
+a few pixels of one widget. If the size becomes a problem, the lever is to keep a
+golden only for actions that change layout and assert committed **state** for the
+rest — not to loosen the comparison tolerance, which §5.5 already closed off.
+
 ### 5.3 ✅ FIXED 🟡 File explorer: hidden-file toggle and pointer-driven row/scroll interactions
 
-**Fixed in batch F, 2026-08-14.** See
-[plans/batch-f-file-explorer.md](../plans/batch-f-file-explorer.md). The listing
+**Fixed in batch F, 2026-08-14.** The listing
 behaviours landed as five new tests in
 [fileExplorerDialogListing_integration_test.go](../test/integration/gui/fileExplorerDialogListing_integration_test.go)
 (toggle on, toggle off, row selection in open mode, directory descent, wheel
@@ -1411,9 +1424,8 @@ the background, so inheriting its clicks would be a lie). One struct per file
 > what made snapshotting deterministic. Both are now **driving** handlers with
 > canvas and side-panel coordinates and a snapshot per action, and §5.1–§5.3 are
 > written against them rather than against `newDialogContext`. Only the five
-> zone-editor cases the window cannot reach (see the Phase 2 summary of
-> [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md))
-> are still dialog-direct.
+> zone-editor cases the window cannot reach are still dialog-direct; each one
+> names its reason in the test file itself.
 >
 > Toolbar methods are `ClickNew` / `ClickLoad` / `ClickSaveAs`; **`Exit` is never
 > reachable** (`State.Exit()` calls `os.Exit(0)` and would kill the test process)
@@ -1650,8 +1662,8 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **D** | §1.1 | **Done 2026-08-14.** Deep `Clone` + regression tests. Cost +4.6 % frame time / +42 % allocs on `TabCycling`; spun the residual off as §1.5. |
 | ✅ **E** | §4.1 | **Done 2026-08-11.** Save To rename + read-only resolved-name preview + blank-name guard. Regenerated the 10 window goldens for the new button label. |
 | ✅ **F** | §5.3 | **Done 2026-08-14.** File-explorer pointer/hidden-file tests plus a full migration of the existing dialog tests onto `FileExplorerHandler`; the save-mode row-click test applies to **open mode only**, per §4.1. Coverage flat at 72.9 %. |
-| ✅ **G** | §2.3 | **Done 2026-08-19.** Float preview geometry end to end, rounded once at the draw boundary. **No goldens moved** — the preview canvas is masked and the zone-editor handler takes no snapshots, so no `-update` was needed. Coverage flat at 72.9 %. Plan: [plans/batch-g-float-preview-geometry.md](../plans/batch-g-float-preview-geometry.md). |
-| ✅ **H** | §5.1, §5.2 | **Done 2026-08-11.** Zone-editor pointer + property-panel tests against the post-§2.3 float coordinates: eight pointer tests and eighteen property tests, all driven through the real window with a golden per action. Turned `ZoneEditorHandler` from a reachability-only handler into a driving one (canvas, side-panel and Apply actions). `TestWhenAZoneNameIsTyped_…` dropped — the zone name is a read-only label. Coverage flat. Plan: [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md). |
+| ✅ **G** | §2.3 | **Done 2026-08-19.** Float preview geometry end to end, rounded once at the draw boundary. **No goldens moved** — the preview canvas is masked and the zone-editor handler takes no snapshots, so no `-update` was needed. Coverage flat at 72.9 %. Record: §2.3. |
+| ✅ **H** | §5.1, §5.2 | **Done 2026-08-11.** Zone-editor pointer + property-panel tests against the post-§2.3 float coordinates: eight pointer tests and eighteen property tests, all driven through the real window with a golden per action. Turned `ZoneEditorHandler` from a reachability-only handler into a driving one (canvas, side-panel and Apply actions). `TestWhenAZoneNameIsTyped_…` dropped — the zone name is a read-only label. Coverage flat. Record: §5.1, §5.2. |
 | **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |
 | **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |

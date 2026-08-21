@@ -1,167 +1,175 @@
-# Session Carry-Forward — batch H complete, reviewed and committed
+# Session Carry-Forward — 2026-08-21
 
 ## 1. Session goal
 
-Finish [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md)
-starting at Phase 3 — the zone-editor pointer flows (backlog §5.1), the property
-panels (§5.2), then the documentation and gate phase. **All five phases are
-complete, the owner has reviewed the work, and it is committed** as `e56262b`
-("Batch H wip"), `8388ce8` ("Batch H done") and `eaf1b77` ("docs") on
-`AD/fixing_some_stuff_08-12`. The working tree is clean and nothing is
-outstanding.
+Plan batch **I** (backlog §2.1, the `EditorStateDto` rework, plus §1.5 folded in)
+and produce its plan file. **No production code was to be written, and none was.**
 
 ## 2. Fixes applied
 
-- Corrected the exact-float snap pin in the Phase 3 drag-snap test to
-  `(290, 251.88571428571436)` after the first `-update` run reported the real
-  value.
-- Restored four goldens of the pre-existing
-  `TestWhenAConnectionIsSelected_TheEditorRendersItsPropertyPanel` that a
-  too-broad `-run` regex (`TestWhenAConnection`) had regenerated during the
-  Phase 4 `-update` run. The GPU suite passes against the original bytes.
-- Corrected backlog §5.4(d), which still claimed `ZoneEditorHandler` (and
-  `FileExplorerHandler`) were reachability-only handlers.
+No production or test code was touched — this was a planning session.
+
+Two **documentation** defects were fixed in
+[todo/backlog-opus5.md](../todo/backlog-opus5.md):
+
+- **Seven dangling links.** Every `../plans/` reference in the backlog pointed at
+  a deleted file — the batch F, G and H plans are all gone, so §2.3, §5.1, §5.2,
+  §5.3, §5.4's blockquote and both the G and H rows of the §8 batch table linked
+  to nothing. Each entry now carries its own record instead of delegating to a
+  document that no longer exists, which is what the doc-lifecycle rule asks for.
+- **Two batch H notes with no durable home** were folded in before this file was
+  overwritten (see §3).
+
+The only other corrections were to the batch I plan itself, after an independent
+review falsified six of its claims (see §7 and §8).
 
 ## 3. Features added / changed
 
-No production change this session — batch H's only production edit (the canvas
-offset stored on the dialog's geometry state) landed in Phase 1, before it.
+None in the codebase.
 
-- **§5.1 pointer flows** are now driven through the real window, so a swapped
-  argument or a missing mode check in the dialog's pointer wiring can no longer
-  ship silently.
-- **§5.2 property panels** are now driven through the real window, covering
-  every `widget.Editor` and dropdown the zone and connection panels offer.
+**Two batch H notes were rescued into the backlog.** Both existed only in the
+deleted batch H plan and in the previous version of this file, so the next
+overwrite would have destroyed them:
+
+- The **arm64 float-pin risk** is now recorded in §5.1, together with the reason
+  rounding the pin is not an acceptable fix and what to do instead (an `InDelta`
+  far tighter than a pixel).
+- The **golden-footprint question** is now an open item in §5.2, with the numbers
+  and the lever to pull if the size becomes a problem.
+
+**Design settled for batch I** (16 owner questions across four rounds — all
+answered, all forks closed; treat these as decided and **do not relitigate**):
+
+- **Anonymous embedding all the way.** Nine behaviour-free entity group structs
+  are embedded anonymously into a new `EditorStateModel`. Go's field promotion
+  keeps `state.MapSize` compiling at every one of the ~1,000 access sites, and
+  `encoding/json` flattens anonymously embedded structs, so the on-disk shape
+  stays flat for free. This is what makes a 72-field regroup tractable.
+- **The model becomes the runtime type.** `EditorStateDto` survives only at the
+  load/save boundary, shrinking to
+  `{SchemaVersion int; EditorState EditorStateModel}` with a **named** field plus
+  custom `MarshalJSON`/`UnmarshalJSON` that re-flattens the wire format and adds
+  `schemaVersion` as a sibling key (always written as `1`; a `0` read from an
+  existing file is normalised through an explicit migration hook).
+- **json tags live on the entity leaf fields.** Entities are strictly
+  behaviour-free, so per §4.6 they need no tests of their own; all behaviour
+  moves to the model.
+- **Packages:** `internal/entities/editor_state/`,
+  `internal/models/editor_state_model/` (named this way to dodge a package-name
+  collision with the entity package), the three `internal/dtos/editorState*Dto.go`
+  files move into `internal/dtos/editor_state_dto/`, content-row defaults move to
+  `internal/common/common_zone_contents/`, and §1.5's per-panel view structs land
+  in `app/gui/models/`.
+- **Groups (72 fields, 9 groups):** `templateIdentity` (2), `mapSettings` (2),
+  `playerSettings` (4), `neutralZoneSettings` (11), `castleSettings` (10),
+  `generationSettings` (15), `gameRuleSettings` (16), `contentSettings` (10),
+  `manualEditSettings` (2). There is deliberately **no** `hubZoneSettings` group —
+  `HubZoneSize` went to `generationSettings` with the other two zone sizes, and
+  `HubZoneCastles` to `castleSettings`.
 
 ## 4. File modifications
 
-Created:
+| File | Change |
+| --- | --- |
+| [plans/batch-i-editor-state-rework.md](../plans/batch-i-editor-state-rework.md) | **Created.** The batch I plan: design-decision table, field→group map, phase-ordering rationale, nine numbered hazards, seven phases each with checkbox items / Verification Plan / empty Phase Summary, and Final Recap + Deployment Plan placeholders. |
+| [.agent/session-carry-forward.md](session-carry-forward.md) | **Rewritten** (this file) — replaced the batch H handoff. |
+| [todo/backlog-opus5.md](../todo/backlog-opus5.md) | Repaired seven dangling `../plans/` links; folded the arm64 float-pin caveat into §5.1 and the golden-footprint open question into §5.2. |
 
-- [test/integration/gui/zoneEditorPointer_integration_test.go](../test/integration/gui/zoneEditorPointer_integration_test.go)
-  — eight §5.1 tests plus the shared `manualZoneSave` helper and the layout
-  constants (`spawnAZoneName`, `spawnBZoneName`, `placedZoneName`,
-  `emptyCanvasSpot`, `draggedZoneSpot`, `nearZoneLineSpot`).
-- [test/integration/gui/zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go)
-  — eighteen §5.2 tests plus `editedZone`, `manualConnectionSave` and
-  `selectPlacedNeutralZone`.
-- 145 new `.golden` snapshots under
-  `test/test_helpers/integration_common/snapshot/__snapshots__/` for the two new
-  test files (one golden per handler action, matching the existing convention).
+Repository memory (`/memories/repo/conventions.md`, outside the repo tree) also
+gained a "Batch I PLANNED" block recording the census numbers, the owner
+decisions and the six review traps, because the plan file will be deleted at the
+end of batch I per the doc-lifecycle rule.
 
-Edited:
-
-- [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md)
-  — phases 3, 4 and 5 marked Complete with summaries; Final Recap and Deployment
-  Plan written.
-- [todo/test_observations.md](../todo/test_observations.md) — the "still future
-  work" sentence replaced with a pointer to the new tests, plus the two gaps
-  that genuinely remain and why.
-- [todo/backlog-opus5.md](../todo/backlog-opus5.md) — §5.1 and §5.2 rewritten as
-  self-contained ✅ FIXED entries, §5.4(d) corrected, header count updated to
-  "12 done, 8 open", §8 batch table row **H** marked done.
-
-Deleted:
-
-- Three temporary probe files (`zzprobe*_integration_test.go`), removed with
-  `Remove-Item`. None remain.
-
-Regenerated (gitignored, so absent from `git status`): `coverage.txt`,
-`coverage.html`, `lcov.info`.
+**No file under `app/`, `internal/`, `test/`, `cmd/` or `data/` was touched.**
 
 ## 5. Tests added or updated
 
-26 new tests, all `//go:build integration_test && gui`, all
-`//nolint:paralleltest` (the single headless GPU window is exclusive).
+None. No test run was performed this session, because nothing was changed — the
+last known-good state is the one batch H left behind (all suites green,
+coverage 72.8 %).
 
-Pointer flows (8): zone dragged and committed through Apply; drag snapped to a
-guide; drag-to-connect in Add connection mode; drag ending on empty canvas
-creating nothing; right-click deleting a curve; zone placed from Add zone mode;
-placed zone sitting where it was clicked; drag inside the 6 px dead zone moving
-nothing.
+The plan specifies the test work batch I must do, notably:
 
-Property panels (18): zone `Size` typed / clamped high / clamped low / rounded
-to two decimals; zone `Guard x`; zone `Weekly +`; neutral `Quality` reprofile;
-neutral `Castles`; connection guard value typed; connection guard value
-non-numeric rejected; connection increment typed; connection `Type`,
-`Guard zone`, `Guard preset`, `Weekly +`; advanced `Match group`,
-`Guard escape`, `Sim turn squad`.
-
-Last full run — every gate green:
-
-| Gate | Result |
-| --- | --- |
-| `go build ./...` | clean |
-| `go vet ./...` | clean |
-| `go vet -tags='integration_test,gui' ./...` | clean |
-| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
-| `go test ./test/unit/... -count=1` | pass |
-| `go test -tags=integration_test ./test/integration/... -count=1` | pass |
-| `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (four consecutive runs, no `-update`) |
-| Unit coverage | **72.8 %** (floor 72.5 %, flat — gated GUI tests do not enter the unit profile) |
-| `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
-| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+- A parsed-value golden round-trip test guarding the `.gen.json` wire shape,
+  backed by a new all-fields fixture in `test/test_helpers/testdata/`. **No
+  checked-in `.gen.json` fixture exists today** — the round trip is currently
+  only exercised through temp files, which is why the golden has to be generated
+  from *current* code in Phase 1, before anything moves.
+- A rewrite of the equality drift guard in
+  [test/unit/internal/dtos/editorStateDto/equalsIgnoringManualEdits_test.go](../test/unit/internal/dtos/editorStateDto/equalsIgnoringManualEdits_test.go#L211-L230),
+  which walks `NumField()` at the top level only and so would silently stop
+  covering every field once they move into embedded groups.
 
 ## 6. Git status snapshot
 
-Branch: `AD/fixing_some_stuff_08-12`. **Working tree clean** —
-`git status --short` returns nothing.
+- **Branch:** `AD/fixing_some_stuff_08-12`
+- **HEAD:** `94bc9a4 agents update` (in sync with `origin/`)
+- **`git status --short`:** `?? plans/` — plus this file will now show as
+  ` M .agent/session-carry-forward.md`, since it is tracked (committed in
+  `4586f88`).
 
-```
-eaf1b77 (HEAD -> AD/fixing_some_stuff_08-12) docs
-8388ce8 Batch H done
-e56262b Batch H wip
-```
+**Nothing was staged and nothing was committed.** The staging area was left
+untouched, as required.
 
-Everything listed in §4 is in those three commits. No tracked golden was
-modified — the four that a too-broad `-update` regex had regenerated were
-restored before the review, so only the 145 genuinely new goldens landed.
+## 7. Rejections / things the user declined
 
-## 7. Rejections / things not done
+Nothing the owner declined outright, but three of my proposals were **overruled
+during the question rounds**, and the plan reflects their answer, not mine:
 
-- `TestWhenAZoneNameIsTyped_TheAppliedZoneCarriesTheNewName` (backlog §5.2) was
-  **not written**: the zone name is a read-only `material.Body1` label and the
-  dialog offers no rename, so there is nothing to drive.
-- **Snap guides are not asserted.** Every zone in the Geometric Hub layout sits
-  on x = 290, so several alignment guides propose the same correction and which
-  one is reported depends on map iteration order. The resulting *position* is
-  asserted instead.
-- **`zoneRowY` was not extended to the shared `Hub`.** Its note wraps
-  differently than a spawn's, so the measured side-panel rows miss the Hub's
-  fields and typing silently does nothing. The rows are the same code for every
-  zone, so no behaviour is uncovered; filed in `test_observations.md` rather
-  than fixed, to keep the batch to what was asked.
+- I proposed the DTO embed the model anonymously (symmetry with everything
+  else). The owner required a **named** `EditorState` field plus a
+  `schemaVersion` sibling — which I had to point out would nest the JSON and
+  break the flat-shape invariant. The owner's resolution was custom marshalling
+  to keep the file flat.
+- I proposed pushing the `editorState*Dto` internal structs into a subpackage of
+  their own; the owner ruled there are too few of them to justify it, so they sit
+  alongside the other DTOs.
+- The independent review argued `internal/entities/editor_state/` contradicts
+  AGENTS.md §4.4's placement table. **The owner's earlier decision stands** and
+  the plan carries an explicit "this is deliberate, do not 'fix' it" note. The
+  review's other half of that finding — that "commit the fixture" violates the
+  no-commit rule — was accepted and reworded.
 
 ## 8. Open questions
 
-- **arm64 float pins.** The exact-float expectations (notably
-  `251.88571428571436`) may differ in the last bit on a platform where the
-  compiler fuses multiply-add. Not reproducible here; recorded in §8 of the plan
-  and still unverified.
-- **Golden footprint.** The 145 new goldens join 173 existing ones (21.7 MB).
-  Worth an owner decision on whether a golden per handler action is still the
-  right default for property-panel tests.
+1. **Owner sign-off on the plan itself.** Blocking; no phase should start
+   without it.
+2. **Phase 2 owner gate — the field→group table.** The 72-field split is the one
+   decision the whole refactor is built on and the one that is expensive to
+   revisit later, so Phase 2 deliberately ends waiting for an explicit ack.
+3. **`internal/entities/editor_state/` vs AGENTS.md §4.4.** Settled by owner
+   decision, but §4.4's table still says otherwise, so a future reviewer will
+   likely raise it again. Worth either amending §4.4 or leaving the note in
+   place permanently.
+4. **Is a golden per handler action the right granularity?** Inherited from
+   batch H and now recorded in backlog §5.2 rather than left to be lost. Not
+   blocking anything, but it compounds with every new driving handler.
 
 ## 9. Next recommended actions
 
-1. Batch **I** — backlog §2.1, the `EditorStateDto` rework. It needs its own
-   `plans/` file (AGENTS.md §2.4): multi-phase, twelve packages, depends on §1.1
-   for `Clone`. Backlog §1.5 (the per-frame clone cost measured in batch D) is
-   meant to be folded into it rather than fixed separately.
-2. Delete the finished plan file
-   [plans/batch-h-zone-editor-gui-tests.md](../plans/batch-h-zone-editor-gui-tests.md)
-   per the doc-lifecycle rule — backlog §5.1/§5.2 are already self-contained, so
-   nothing is lost with it.
-3. If the Hub side-panel gap ever blocks a test, fix `zoneRowY` to key off the
-   note's line count rather than off `IsZoneNameNeutral`.
+1. **Read and sign off** [plans/batch-i-editor-state-rework.md](../plans/batch-i-editor-state-rework.md).
+2. **Then start Phase 1** of the plan: record before-coverage; build an
+   all-fields DTO and marshal it with *current* code into
+   `test/test_helpers/testdata/editorState_v0_flat.gen.json`; add the
+   parsed-value golden round-trip test; move the three `editorState*Dto.go`
+   files into `internal/dtos/editor_state_dto/`; strip the self-qualifiers; add
+   the import to the four sibling DTOs that carry the type; update the ~12
+   consumer packages file-by-file (**never** a bulk rewrite); move the mirrored
+   unit-test folders.
+3. Work strictly **Phases 1 → 7 in order** — the ordering is what keeps the
+   build green at every boundary.
+4. When batch I's plan is deleted at the end of §7, **fold its record into the
+   backlog in the same pass** — the seven dead links fixed this session all came
+   from skipping that step.
 
 ## 10. Carry-forward prompt
 
-> Read `AGENTS.md` first, then `todo/backlog-opus5.md`. Batch **H** (§5.1 +
-> §5.2, the zone-editor GUI tests) is **finished, reviewed and committed** —
-> nothing about it is outstanding and its plan file may already be gone. Full
-> handoff in `./.agent/session-carry-forward.md`.
+> Read `AGENTS.md` first, then `plans/batch-i-editor-state-rework.md` — the batch
+> I plan (backlog §2.1, the `EditorStateDto` rework) is written, independently
+> reviewed and corrected, but **no code has been written yet**. It is awaiting
+> owner sign-off; ask before starting Phase 1.
 >
-> Hard rules, one line each: never modify `data/`,
+> The hard rules, one line each: never modify `data/`,
 > `internal/entities/template/` or `internal/registry/` without explicit
 > approval; everything must build and run on both Windows and Linux (use
 > `path/filepath`, chain PowerShell with `;`, never `&&`); every change ships
@@ -172,7 +180,20 @@ restored before the review, so only the 145 genuinely new goldens landed.
 > change where `.rmg.json` is written and never persist the output directory;
 > never run a bulk in-place rewrite over the repository; never run CI and never
 > generate snapshot goldens in CI — generate them locally on the real GPU, always
-> `-run`-scoped **and scoped tightly enough not to match neighbouring tests**.
+> `-run`-scoped and scoped tightly enough not to match neighbouring tests.
 >
-> The next piece of work is batch **I** (backlog §2.1, the `EditorStateDto`
-> rework), which needs its own plan file before any code is written.
+> Where work left off: the plan is complete through all seven phases and the
+> design is fully settled — nine behaviour-free entity groups anonymously
+> embedded into `EditorStateModel`, which becomes the runtime type, with
+> `EditorStateDto` shrinking to a versioned persistence shell whose custom
+> marshalling keeps `.gen.json` flat. Do not relitigate the design decisions in
+> §0 of the plan; they are the owner's answers to 16 questions. Three review
+> findings are load-bearing and easy to trip over again: Phase 3 **must** keep
+> DTO-signature shim methods or the build breaks on promoted methods;
+> `omitempty` already conflates nil and empty on disk, so that distinction is
+> in-memory only and must not be "fixed"; and regrouping reorders JSON keys, so
+> every round-trip gate compares parsed objects, never bytes.
+>
+> Full handoff in `./.agent/session-carry-forward.md`. Note §9.4: when a plan
+> file is deleted, its record must be folded into the backlog **in the same
+> pass** — skipping that is what left seven dead links behind this session.
