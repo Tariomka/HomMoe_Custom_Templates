@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +43,7 @@ func TestWindow_LoadReflectsInRenderedUI(t *testing.T) {
 
 	// Author a distinctive saved state through the real save path.
 	author := newUIState()
-	author.UpdateState(func(s *dtos.EditorStateDto) {
+	author.UpdateState(func(s *editor_state_dto.EditorStateDto) {
 		s.TemplateName = "Window Loaded"
 		s.PlayerCount = 5
 		s.Topology = config.TopologyCross

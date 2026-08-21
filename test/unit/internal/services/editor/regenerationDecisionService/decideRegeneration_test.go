@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
@@ -16,14 +17,14 @@ import (
 // changes silently.
 const debounceWindow = 300 * time.Millisecond
 
-func defaultState() *dtos.EditorStateDto {
-	state := dtos.NewDefaultEditorStateDto()
+func defaultState() *editor_state_dto.EditorStateDto {
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	return &state
 }
 
 // layoutChangedState returns a state differing from defaultState in a
 // layout-defining option, which invalidates any hand-made zone layout.
-func layoutChangedState() *dtos.EditorStateDto {
+func layoutChangedState() *editor_state_dto.EditorStateDto {
 	state := defaultState()
 	state.Topology = config_inner.TopologyChain
 	return state
@@ -31,7 +32,7 @@ func layoutChangedState() *dtos.EditorStateDto {
 
 // nonLayoutChangedState differs from defaultState only in an option that does
 // not alter the zone or connection graph, so it is debounced instead.
-func nonLayoutChangedState() *dtos.EditorStateDto {
+func nonLayoutChangedState() *editor_state_dto.EditorStateDto {
 	state := defaultState()
 	state.ResourceDensityPercent = 50
 	return state

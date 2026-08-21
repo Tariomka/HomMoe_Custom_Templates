@@ -6,15 +6,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func newStateWithNaN() dtos.EditorStateDto {
-	state := dtos.NewDefaultEditorStateDto()
+func newStateWithNaN() editor_state_dto.EditorStateDto {
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.PlayerZoneSize = math.NaN()
 
 	return state
@@ -27,7 +27,7 @@ func TestWhenStateIsSaved_ReturnsPathWithGenJsonExtension(t *testing.T) {
 
 	// Act
 	writtenPath, err := repositories.NewEditorStateRepository().Save(
-		outputDir, "My_State", dtos.NewDefaultEditorStateDto())
+		outputDir, "My_State", editor_state_dto.NewDefaultEditorStateDto())
 
 	// Assert
 	require.NoError(t, err)
@@ -39,7 +39,7 @@ func TestWhenStateIsSaved_WritesIndentedJson(t *testing.T) {
 	// Arrange
 	outputDir := t.TempDir()
 	writtenPath, err := repositories.NewEditorStateRepository().Save(
-		outputDir, "State", dtos.NewDefaultEditorStateDto())
+		outputDir, "State", editor_state_dto.NewDefaultEditorStateDto())
 	require.NoError(t, err)
 
 	// Act
@@ -57,7 +57,7 @@ func TestWhenStateNameContainsInvalidCharacters_WritesUnderASanitizedName(t *tes
 
 	// Act
 	writtenPath, err := repositories.NewEditorStateRepository().Save(
-		outputDir, "a/b:c", dtos.NewDefaultEditorStateDto())
+		outputDir, "a/b:c", editor_state_dto.NewDefaultEditorStateDto())
 
 	// Assert
 	require.NoError(t, err)
@@ -71,7 +71,7 @@ func TestWhenStateNameIsOnlyWhitespace_FallsBackToGeneratedTemplateFileName(t *t
 
 	// Act
 	writtenPath, err := repositories.NewEditorStateRepository().Save(
-		outputDir, "   ", dtos.NewDefaultEditorStateDto())
+		outputDir, "   ", editor_state_dto.NewDefaultEditorStateDto())
 
 	// Assert
 	require.NoError(t, err)
@@ -84,7 +84,8 @@ func TestWhenStateDirectoryIsMissing_CreatesIt(t *testing.T) {
 	outputDir := filepath.Join(t.TempDir(), "nested", "state")
 
 	// Act
-	_, err := repositories.NewEditorStateRepository().Save(outputDir, "State", dtos.NewDefaultEditorStateDto())
+	_, err := repositories.NewEditorStateRepository().
+		Save(outputDir, "State", editor_state_dto.NewDefaultEditorStateDto())
 
 	// Assert
 	require.NoError(t, err)
@@ -95,7 +96,7 @@ func TestWhenSavedStateIsLoaded_RoundTripsState(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	repository := repositories.NewEditorStateRepository()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.TemplateName = gofakeit.ProductName()
 	state.PlayerCount = gofakeit.Number(2, 8)
 	writtenPath, err := repository.Save(t.TempDir(), "State", state)
@@ -159,7 +160,8 @@ func TestWhenStateParentPathIsAFile_ReturnsError(t *testing.T) {
 	outputDir := filepath.Join(blockerPath, "child")
 
 	// Act
-	_, err := repositories.NewEditorStateRepository().Save(outputDir, "State", dtos.NewDefaultEditorStateDto())
+	_, err := repositories.NewEditorStateRepository().
+		Save(outputDir, "State", editor_state_dto.NewDefaultEditorStateDto())
 
 	// Assert
 	assert.Error(t, err)

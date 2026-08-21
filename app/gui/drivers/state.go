@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
@@ -92,7 +93,9 @@ func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg,
 
 func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
-func (this *State) GetStateData() dtos.EditorStateDto { return this.innerState.GetCurrentState() }
+func (this *State) GetStateData() editor_state_dto.EditorStateDto {
+	return this.innerState.GetCurrentState()
+}
 
 // Clone-free single-setting readers for per-frame Layout code; see EditorState.
 
@@ -126,7 +129,7 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
+func (this *State) UpdateState(updateFunc func(*editor_state_dto.EditorStateDto)) {
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
 		this.unsaved = true

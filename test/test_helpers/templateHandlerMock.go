@@ -2,6 +2,7 @@ package test_helpers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -16,12 +17,12 @@ import (
 type TemplateHandlerMock struct {
 	mock.Mock
 
-	ValidateEditorStateFunc         func(dtos.EditorStateDto, bool) dtos.EditorStateValidationDto
+	ValidateEditorStateFunc         func(editor_state_dto.EditorStateDto, bool) editor_state_dto.EditorStateValidationDto
 	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error)
 	GetContentRuleEditorOptionsFunc func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
 	DescribeContentRuleFunc         func(models.SidMapping, models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto
 	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []entities.Zone
-	GetZoneEditorOptionsFunc        func(dtos.EditorStateDto, int) dtos.ZoneEditorOptionsDto
+	GetZoneEditorOptionsFunc        func(editor_state_dto.EditorStateDto, int) dtos.ZoneEditorOptionsDto
 	CountZoneCastlesFunc            func(entities.Zone) int
 	GetZoneQualityFunc              func(entities.Zone) neutral_zone.Quality
 	GetZoneConnectionQualityFunc    func(string, string, []entities.Zone, map[string]bool) neutral_zone.Quality
@@ -44,7 +45,9 @@ type TemplateHandlerMock struct {
 	GetSpellCountLabelFunc          func(int) string
 }
 
-func (this *TemplateHandlerMock) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
+func (this *TemplateHandlerMock) GenerateTemplate(
+	stateDto editor_state_dto.EditorStateDto,
+) (dtos.TemplateLoadDto, error) {
 	arguments := this.Called(stateDto)
 	template, _ := arguments.Get(0).(dtos.TemplateLoadDto)
 	return template, arguments.Error(1)
@@ -66,7 +69,7 @@ func (this *TemplateHandlerMock) ReapplyCastleSettings(
 }
 
 func (this *TemplateHandlerMock) GetZoneEditorOptions(
-	state dtos.EditorStateDto,
+	state editor_state_dto.EditorStateDto,
 	totalZoneCount int,
 ) dtos.ZoneEditorOptionsDto {
 	if this.GetZoneEditorOptionsFunc != nil {
@@ -214,26 +217,29 @@ func (this *TemplateHandlerMock) SaveTemplate(templateDto dtos.TemplateSaveDto) 
 	return arguments.String(0), arguments.Error(1)
 }
 
-func (this *TemplateHandlerMock) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
+func (this *TemplateHandlerMock) LoadState(
+	path string,
+	fixIssues bool,
+) (*editor_state_dto.EditorStateDto, []string, error) {
 	arguments := this.Called(path, fixIssues)
-	state, _ := arguments.Get(0).(*dtos.EditorStateDto)
+	state, _ := arguments.Get(0).(*editor_state_dto.EditorStateDto)
 	warnings, _ := arguments.Get(1).([]string)
 	return state, warnings, arguments.Error(2)
 }
 
-func (this *TemplateHandlerMock) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
+func (this *TemplateHandlerMock) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {
 	arguments := this.Called(stateDto)
 	return arguments.String(0), arguments.Error(1)
 }
 
 func (this *TemplateHandlerMock) ValidateEditorState(
-	stateDto dtos.EditorStateDto,
+	stateDto editor_state_dto.EditorStateDto,
 	fixIssues bool,
-) dtos.EditorStateValidationDto {
+) editor_state_dto.EditorStateValidationDto {
 	if this.ValidateEditorStateFunc != nil {
 		return this.ValidateEditorStateFunc(stateDto, fixIssues)
 	}
-	return dtos.EditorStateValidationDto{State: stateDto}
+	return editor_state_dto.EditorStateValidationDto{State: stateDto}
 }
 
 func (this *TemplateHandlerMock) BuildPreviewLayout(

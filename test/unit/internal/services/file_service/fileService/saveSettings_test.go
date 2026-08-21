@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +15,7 @@ func TestWhenSettingsAreSaved_UsesTheDirectoryOfTheGivenPath(t *testing.T) {
 	// Arrange
 	service, mocks := newServiceWithMocks()
 	outputDirectory := filepath.Join("out", "states")
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.TemplateName = "My Template"
 	mocks.editorState.On("Save", outputDirectory, "My Template", state).Return("written", nil)
 
@@ -31,7 +31,7 @@ func TestWhenStateTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.TemplateName = "a/b:c"
 	mocks.editorState.On("Save", ".", "a/b:c", state).Return("written", nil)
 
@@ -47,7 +47,7 @@ func TestWhenSettingsAreSaved_ReturnsThePathTheRepositoryWrote(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.TemplateName = "Name"
 	expectedPath := filepath.Join("out", "Name.gen.json")
 	mocks.editorState.On("Save", "out", "Name", state).Return(expectedPath, nil)
@@ -64,7 +64,7 @@ func TestWhenSettingsCannotBeSaved_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.TemplateName = "Name"
 	expectedError := errors.New("disk full")
 	mocks.editorState.On("Save", "out", "Name", state).Return("", expectedError)

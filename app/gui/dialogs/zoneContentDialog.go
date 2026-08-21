@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -124,7 +124,7 @@ func (this *ZoneContentDialog) persist() {
 // seeded defaults for the Player tier, otherwise an empty list.
 func (this *ZoneContentDialog) resetToDefault() {
 	if this.isPlayerTier {
-		this.loadRowsIntoSections(dtos.DefaultPlayerZoneContentRows())
+		this.loadRowsIntoSections(editor_state_dto.DefaultPlayerZoneContentRows())
 		return
 	}
 	this.loadRowsIntoSections(nil)

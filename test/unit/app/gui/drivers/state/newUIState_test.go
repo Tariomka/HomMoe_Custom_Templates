@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +19,7 @@ func TestWhenStateIsCreated_StateDataIsDefault(t *testing.T) {
 		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
 
 	// Assert
-	assert.Equal(t, dtos.NewDefaultEditorStateDto(), state.GetStateData())
+	assert.Equal(t, editor_state_dto.NewDefaultEditorStateDto(), state.GetStateData())
 }
 
 func TestWhenStateIsCreated_NoDialogIsOpen(t *testing.T) {

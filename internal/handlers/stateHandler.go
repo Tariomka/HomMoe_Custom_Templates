@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
@@ -24,7 +24,7 @@ func NewStateHandler(
 	}
 }
 
-func (this *stateHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
+func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
 		return nil, nil, common_errors.ErrNoOutputPath
@@ -39,7 +39,7 @@ func (this *stateHandler) LoadState(path string, fixIssues bool) (*dtos.EditorSt
 	return &validation.State, validation.Warnings, nil
 }
 
-func (this *stateHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
+func (this *stateHandler) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {
 	if stateDto.State == nil {
 		return "", common_errors.ErrNothingToSave
 	}
@@ -53,8 +53,8 @@ func (this *stateHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, e
 }
 
 func (this *stateHandler) ValidateEditorState(
-	stateDto dtos.EditorStateDto,
-	fixIssues bool) dtos.EditorStateValidationDto {
+	stateDto editor_state_dto.EditorStateDto,
+	fixIssues bool) editor_state_dto.EditorStateValidationDto {
 	// Cloned on entry so the fixes below never write through to the caller's
 	// slices, and so the returned state does not alias them either.
 	stateDto = stateDto.Clone()
@@ -70,10 +70,10 @@ func (this *stateHandler) ValidateEditorState(
 		normalizeInactiveNeutralCounts(&stateDto)
 	}
 
-	return dtos.EditorStateValidationDto{State: stateDto, Warnings: warnings}
+	return editor_state_dto.EditorStateValidationDto{State: stateDto, Warnings: warnings}
 }
 
-func normalizeInactiveNeutralCounts(stateDto *dtos.EditorStateDto) {
+func normalizeInactiveNeutralCounts(stateDto *editor_state_dto.EditorStateDto) {
 	if stateDto.AdvancedMode {
 		stateDto.NeutralZoneCount = 0
 		return

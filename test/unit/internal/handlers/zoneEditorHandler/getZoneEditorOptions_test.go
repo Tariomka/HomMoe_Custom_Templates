@@ -3,7 +3,7 @@ package zoneEditorHandler_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/brianvoe/gofakeit/v7"
@@ -15,7 +15,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheStatesTopology(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.Topology = config.TopologyChain
 	fixture.mapper.On("FromEditorState", state).Return(config.NewGeneratorConfig())
 	fixture.tuningFactory.On("Create", mock.Anything, mock.Anything).Return(models.GenerationTuning{})
@@ -31,7 +31,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheStatesRoadFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.GenerateRoads = true
 	fixture.mapper.On("FromEditorState", state).Return(config.NewGeneratorConfig())
 	fixture.tuningFactory.On("Create", mock.Anything, mock.Anything).Return(models.GenerationTuning{})
@@ -47,7 +47,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheTuningForTheZoneCount(t *testin
 	t.Parallel()
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	totalZoneCount := gofakeit.IntRange(1, 20)
 	configuration := config.NewGeneratorConfig()
 	expected := models.GenerationTuning{ContentScale: gofakeit.Float64Range(0.5, 2)}

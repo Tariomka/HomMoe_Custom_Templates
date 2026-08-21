@@ -4,7 +4,7 @@ import (
 	"image"
 	"path/filepath"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 )
@@ -12,13 +12,13 @@ import (
 // FileService decides where and under what name persisted files go; the
 // repositories own the encoding, the extension and the atomic replacement.
 type FileService struct {
-	editorStateRepository repositories.IFileRepository[dtos.EditorStateDto]
+	editorStateRepository repositories.IFileRepository[editor_state_dto.EditorStateDto]
 	templateRepository    repositories.IFileRepository[entities.RmgTemplate]
 	previewRepository     repositories.IFileRepository[image.RGBA]
 }
 
 func NewFileService(
-	editorStateRepository repositories.IFileRepository[dtos.EditorStateDto],
+	editorStateRepository repositories.IFileRepository[editor_state_dto.EditorStateDto],
 	templateRepository repositories.IFileRepository[entities.RmgTemplate],
 	previewRepository repositories.IFileRepository[image.RGBA]) IFileService {
 	return &FileService{
@@ -29,7 +29,7 @@ func NewFileService(
 }
 
 // LoadSettingsFile reads settings file from the given filepath and returns the parsed settings object.
-func (this *FileService) LoadSettingsFile(filePath string) (*dtos.EditorStateDto, error) {
+func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_dto.EditorStateDto, error) {
 	editorState, err := this.editorStateRepository.Load(filePath)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (this *FileService) LoadSettingsFile(filePath string) (*dtos.EditorStateDto
 
 // SaveSettings writes the editor state next to filePath, named after the
 // template, and returns the path actually written.
-func (this *FileService) SaveSettings(filePath string, editorState *dtos.EditorStateDto) (string, error) {
+func (this *FileService) SaveSettings(filePath string, editorState *editor_state_dto.EditorStateDto) (string, error) {
 	return this.editorStateRepository.Save(
 		filepath.Dir(filePath),
 		editorState.TemplateName,

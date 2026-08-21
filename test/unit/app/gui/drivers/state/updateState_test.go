@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,7 @@ func TestWhenUpdateChangesState_ChangeIsApplied(t *testing.T) {
 	playerCount := gofakeit.Number(3, 8)
 
 	// Act
-	state.UpdateState(func(dto *dtos.EditorStateDto) { dto.PlayerCount = playerCount })
+	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.PlayerCount = playerCount })
 
 	// Assert
 	assert.Equal(t, playerCount, state.GetStateData().PlayerCount)
@@ -46,7 +47,7 @@ func TestWhenUpdateChangesStateAfterGeneration_StateBecomesUnsaved(t *testing.T)
 	state := newGeneratedState()
 
 	// Act
-	state.UpdateState(func(dto *dtos.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
 
 	// Assert
 	assert.True(t, state.IsUnsaved())
@@ -58,7 +59,7 @@ func TestWhenUpdateDoesNotChangeStateAfterGeneration_StateStaysSaved(t *testing.
 	state := newGeneratedState()
 
 	// Act
-	state.UpdateState(func(_ *dtos.EditorStateDto) {})
+	state.UpdateState(func(_ *editor_state_dto.EditorStateDto) {})
 
 	// Assert
 	assert.False(t, state.IsUnsaved())

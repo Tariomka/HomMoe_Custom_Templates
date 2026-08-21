@@ -1,6 +1,9 @@
 package editor
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+)
 
 // IRegenerationDecisionService owns when the live preview regenerates and
 // whether hand-made zone edits survive that regeneration.
@@ -10,5 +13,5 @@ import "github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 // the returned NextStateAction themselves.
 type IRegenerationDecisionService interface {
 	DecideRegeneration(request dtos.RegenerationDecisionRequestDto) dtos.RegenerationDecisionDto
-	DecideManualEditReapplication(previous, current *dtos.EditorStateDto) dtos.ManualEditDecisionDto
+	DecideManualEditReapplication(previous, current *editor_state_dto.EditorStateDto) dtos.ManualEditDecisionDto
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,9 +68,9 @@ func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.
 	// Arrange
 	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "roundtrip-state.gen.json")
-	savedState := dtos.NewDefaultEditorStateDto()
+	savedState := editor_state_dto.NewDefaultEditorStateDto()
 	savedState.TemplateName = gofakeit.ProductName()
-	savedPath, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
+	savedPath, saveErr := handler.SaveState(editor_state_dto.EditorStateSaveDto{
 		State:      &savedState,
 		OutputPath: statePath,
 	})
@@ -90,8 +90,8 @@ func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	statePath := filepath.Join(t.TempDir(), "valid-state.gen.json")
-	savedState := dtos.NewDefaultEditorStateDto()
-	savedPath, saveErr := handler.SaveState(dtos.EditorStateSaveDto{
+	savedState := editor_state_dto.NewDefaultEditorStateDto()
+	savedPath, saveErr := handler.SaveState(editor_state_dto.EditorStateSaveDto{
 		State:      &savedState,
 		OutputPath: statePath,
 	})

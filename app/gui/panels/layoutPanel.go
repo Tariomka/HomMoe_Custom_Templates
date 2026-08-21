@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -171,7 +171,7 @@ func (this *LayoutPanel) LoadFromState() {
 }
 
 func (this *LayoutPanel) SaveToState() {
-	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
+	this.state.UpdateState(func(settings *editor_state_dto.EditorStateDto) {
 		settings.Topology = this.getCurrentTopology().Type
 
 		settings.GenerateRoads = this.chkRoads.Value

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
@@ -39,7 +40,7 @@ func NewZoneEditorHandler(
 }
 
 func (this *zoneEditorHandler) GetZoneEditorOptions(
-	state dtos.EditorStateDto,
+	state editor_state_dto.EditorStateDto,
 	totalZoneCount int) dtos.ZoneEditorOptionsDto {
 	configuration := this.mapper.FromEditorState(state)
 	return dtos.ZoneEditorOptionsDto{
@@ -68,14 +69,12 @@ func (this *zoneEditorHandler) GetZoneConnectionGuardQuality(
 	return this.zoneClassifier.GetConnectionGuardQuality(from, to, zones, playerNames)
 }
 
-func (this *zoneEditorHandler) ApplyZoneEditorQuality(
-	request dtos.ZoneEditorQualityRequestDto) entities.Zone {
+func (this *zoneEditorHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {
 	this.zoneEditor.ApplyNeutralZoneQuality(
 		&request.Zone,
 		request.Quality,
 		request.CastleCount,
-		request.Tuning,
-	)
+		request.Tuning)
 	return request.Zone
 }
 
@@ -90,12 +89,7 @@ func (this *zoneEditorHandler) DescribeZoneEditorGraph(
 
 func (this *zoneEditorHandler) CreateZoneEditorConnection(
 	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
-	return this.connectionEditor.NewDefaultConnection(
-		request.From,
-		request.To,
-		request.Zones,
-		request.PlayerZoneNames,
-	)
+	return this.connectionEditor.NewDefaultConnection(request.From, request.To, request.Zones, request.PlayerZoneNames)
 }
 
 func (this *zoneEditorHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
@@ -112,8 +106,7 @@ func (this *zoneEditorHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEdit
 		request.Quality,
 		request.CastleCount,
 		request.GenerateRoads,
-		request.Tuning,
-	)
+		request.Tuning)
 }
 
 func (this *zoneEditorHandler) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
@@ -122,22 +115,13 @@ func (this *zoneEditorHandler) CanDeleteZone(zoneName string, playerZoneNames ma
 
 func (this *zoneEditorHandler) RemoveZoneEditorZone(
 	request dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto {
-	zones, connections := this.zoneEditor.RemoveZone(
-		request.Zones,
-		request.Connections,
-		request.ZoneName,
-	)
+	zones, connections := this.zoneEditor.RemoveZone(request.Zones, request.Connections, request.ZoneName)
 	return dtos.ZoneEditorMutationDto{Zones: zones, Connections: connections}
 }
 
 func (this *zoneEditorHandler) BuildZoneEditorGeometry(
 	request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
-	return this.geometry.BuildGeometry(
-		request.Zones,
-		request.Connections,
-		request.Topology,
-		request.CanvasSide,
-	)
+	return this.geometry.BuildGeometry(request.Zones, request.Connections, request.Topology, request.CanvasSide)
 }
 
 func (this *zoneEditorHandler) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string {
@@ -154,10 +138,5 @@ func (this *zoneEditorHandler) GetZoneEditorGridStep(zoneRadius float64) float64
 
 func (this *zoneEditorHandler) SnapZoneEditorPosition(
 	request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
-	return this.geometry.SnapPosition(
-		request.Position,
-		request.Positions,
-		request.ZoneRadius,
-		request.DraggedZone,
-	)
+	return this.geometry.SnapPosition(request.Position, request.Positions, request.ZoneRadius, request.DraggedZone)
 }

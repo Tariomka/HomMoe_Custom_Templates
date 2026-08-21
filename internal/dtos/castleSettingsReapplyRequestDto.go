@@ -8,5 +8,5 @@ import (
 type CastleSettingsReapplyRequestDto struct {
 	Zones       []entities.Zone
 	Changes     editor_state_dto.CastleSettingChanges
-	EditorState EditorStateDto
+	EditorState editor_state_dto.EditorStateDto
 }

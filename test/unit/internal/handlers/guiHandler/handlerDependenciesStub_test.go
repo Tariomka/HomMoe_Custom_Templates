@@ -2,6 +2,7 @@ package guiHandler_test
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
@@ -22,7 +23,7 @@ type handlerDependenciesStub struct {
 }
 
 func (this *handlerDependenciesStub) GenerateTemplate(
-	dtos.EditorStateDto,
+	editor_state_dto.EditorStateDto,
 ) (dtos.TemplateLoadDto, error) {
 	this.templateWorkflowCalled = true
 	return dtos.TemplateLoadDto{}, nil
@@ -41,20 +42,20 @@ func (this *handlerDependenciesStub) ReapplyCastleSettings(
 }
 
 func (this *handlerDependenciesStub) ValidateEditorState(
-	stateDto dtos.EditorStateDto,
+	stateDto editor_state_dto.EditorStateDto,
 	_ bool,
-) dtos.EditorStateValidationDto {
-	return dtos.EditorStateValidationDto{State: stateDto}
+) editor_state_dto.EditorStateValidationDto {
+	return editor_state_dto.EditorStateValidationDto{State: stateDto}
 }
 
 func (this *handlerDependenciesStub) LoadState(
 	_ string,
 	_ bool,
-) (*dtos.EditorStateDto, []string, error) {
+) (*editor_state_dto.EditorStateDto, []string, error) {
 	return nil, nil, nil
 }
 
-func (this *handlerDependenciesStub) SaveState(dtos.EditorStateSaveDto) (string, error) {
+func (this *handlerDependenciesStub) SaveState(editor_state_dto.EditorStateSaveDto) (string, error) {
 	this.statePersistenceCalled = true
 	return "", nil
 }
@@ -86,7 +87,7 @@ func (this *handlerDependenciesStub) DescribeContentRule(
 }
 
 func (this *handlerDependenciesStub) GetZoneEditorOptions(
-	dtos.EditorStateDto,
+	editor_state_dto.EditorStateDto,
 	int,
 ) dtos.ZoneEditorOptionsDto {
 	return dtos.ZoneEditorOptionsDto{}

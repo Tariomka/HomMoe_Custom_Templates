@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -41,7 +42,7 @@ func TestWhenGenerateTemplateCalled_DelegatesToTemplateHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.GenerateTemplate(dtos.EditorStateDto{})
+	_, _ = handler.GenerateTemplate(editor_state_dto.EditorStateDto{})
 
 	// Assert
 	assert.True(t, stub.templateWorkflowCalled)
@@ -69,7 +70,7 @@ func TestWhenSaveStateCalled_DelegatesToStateHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.SaveState(dtos.EditorStateSaveDto{})
+	_, _ = handler.SaveState(editor_state_dto.EditorStateSaveDto{})
 
 	// Assert
 	assert.True(t, stub.statePersistenceCalled)

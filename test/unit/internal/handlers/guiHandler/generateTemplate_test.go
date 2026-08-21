@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,7 +14,7 @@ func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto := editor_state_dto.NewDefaultEditorStateDto()
 	stateDto.TemplateName = ""
 
 	// Act
@@ -28,7 +28,7 @@ func TestWhenStateIsDefault_ReturnsNoError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto := editor_state_dto.NewDefaultEditorStateDto()
 
 	// Act
 	_, err := handler.GenerateTemplate(stateDto)
@@ -41,7 +41,7 @@ func TestWhenStateIsDefault_ReturnsGeneratedTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto := editor_state_dto.NewDefaultEditorStateDto()
 
 	// Act
 	loadDto, err := handler.GenerateTemplate(stateDto)
@@ -55,7 +55,7 @@ func TestWhenStateCarriesCustomName_GeneratedTemplateUsesThatName(t *testing.T) 
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto := editor_state_dto.NewDefaultEditorStateDto()
 	stateDto.TemplateName = gofakeit.ProductName()
 
 	// Act
@@ -70,7 +70,7 @@ func TestWhenStateIsDefault_GeneratedTemplateHasOneVariant(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto := editor_state_dto.NewDefaultEditorStateDto()
 
 	// Act
 	loadDto, err := handler.GenerateTemplate(stateDto)
@@ -84,7 +84,7 @@ func TestWhenPlayerCountIsAboveMaximum_ReturnsValidationWarning(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	stateDto := dtos.NewDefaultEditorStateDto()
+	stateDto := editor_state_dto.NewDefaultEditorStateDto()
 	stateDto.PlayerCount = 50
 
 	// Act

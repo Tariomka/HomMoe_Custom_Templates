@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -16,7 +15,7 @@ import (
 func TestWhenStatesAreFullyIdentical_ReportsEqual(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	left := dtos.NewDefaultEditorStateDto()
+	left := editor_state_dto.NewDefaultEditorStateDto()
 	right := left
 
 	// Act
@@ -29,7 +28,7 @@ func TestWhenStatesAreFullyIdentical_ReportsEqual(t *testing.T) {
 func TestWhenOnlyManualEditFieldsDiffer_ReportsEqual(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	left := dtos.NewDefaultEditorStateDto()
+	left := editor_state_dto.NewDefaultEditorStateDto()
 	right := left
 	right.ManualZones = []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
 	right.ManualConnections = []editor_state_dto.ManualConnectionSave{
@@ -46,7 +45,7 @@ func TestWhenOnlyManualEditFieldsDiffer_ReportsEqual(t *testing.T) {
 func TestWhenNonManualFieldDiffers_ReportsNotEqual(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	left := dtos.NewDefaultEditorStateDto()
+	left := editor_state_dto.NewDefaultEditorStateDto()
 	right := left
 	right.TemplateName = "Different Name"
 
@@ -133,55 +132,61 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		subtestName string
-		mutate      func(state *dtos.EditorStateDto)
+		mutate      func(state *editor_state_dto.EditorStateDto)
 	}{
-		{"StatesAreDeepClones_MatchesDeepEqual", func(_ *dtos.EditorStateDto) {}},
-		{"IntFieldDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) { state.PlayerCount++ }},
-		{"FloatFieldDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) { state.PlayerZoneSize += 0.25 }},
-		{"BoolFieldDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"StatesAreDeepClones_MatchesDeepEqual", func(_ *editor_state_dto.EditorStateDto) {}},
+		{"IntFieldDiffers_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) { state.PlayerCount++ }},
+		{
+			"FloatFieldDiffers_MatchesDeepEqual",
+			func(state *editor_state_dto.EditorStateDto) { state.PlayerZoneSize += 0.25 },
+		},
+		{"BoolFieldDiffers_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.AdvancedMode = !state.AdvancedMode
 		}},
-		{"TopologyDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"TopologyDiffers_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.Topology = config.TopologyHubAndSpoke
 		}},
-		{"BonusEntryDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) { state.Bonuses[0].Param += "0" }},
-		{"BonusesNilOnOneSide_MatchesDeepEqual", func(state *dtos.EditorStateDto) { state.Bonuses = nil }},
-		{"RowAppended_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{
+			"BonusEntryDiffers_MatchesDeepEqual",
+			func(state *editor_state_dto.EditorStateDto) { state.Bonuses[0].Param += "0" },
+		},
+		{"BonusesNilOnOneSide_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) { state.Bonuses = nil }},
+		{"RowAppended_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.HighNeutralContentRows = append(state.HighNeutralContentRows, models.ZoneContentRowSave{Sid: "extra"})
 		}},
 		{
 			"RowCountFieldDiffers_MatchesDeepEqual",
-			func(state *dtos.EditorStateDto) { state.HighNeutralContentRows[0].Count++ },
+			func(state *editor_state_dto.EditorStateDto) { state.HighNeutralContentRows[0].Count++ },
 		},
 		{
 			"RowSidDiffers_MatchesDeepEqual",
-			func(state *dtos.EditorStateDto) { state.HighNeutralContentRows[0].Sid += "x" },
+			func(state *editor_state_dto.EditorStateDto) { state.HighNeutralContentRows[0].Sid += "x" },
 		},
-		{"RuleNameDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"RuleNameDiffers_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.HighNeutralContentRows[0].Rules[0].Name += "x"
 		}},
-		{"RuleGuardedValueDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"RuleGuardedValueDiffers_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			*state.HighNeutralContentRows[0].Rules[0].IsGuarded = !*state.HighNeutralContentRows[0].Rules[0].IsGuarded
 		}},
-		{"RuleGuardedNilOnOneSide_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"RuleGuardedNilOnOneSide_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.HighNeutralContentRows[0].Rules[0].IsGuarded = nil
 		}},
-		{"RuleSoloEncounterValueDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"RuleSoloEncounterValueDiffers_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			*state.HighNeutralContentRows[0].Rules[0].IsSoloEncounter = !*state.HighNeutralContentRows[0].Rules[0].IsSoloEncounter
 		}},
-		{"RuleVariantIDValueDiffers_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"RuleVariantIDValueDiffers_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			*state.HighNeutralContentRows[0].Rules[0].VariantID++
 		}},
-		{"RulesNilVersusEmpty_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"RulesNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.HighNeutralContentRows[1].Rules = []models.ContentRuleRowSave{}
 		}},
-		{"RowsNilVersusEmpty_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"RowsNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.MediumNeutralContentRows = []models.ZoneContentRowSave{}
 		}},
-		{"ManualZonesDiffer_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"ManualZonesDiffer_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.ManualZones = []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
 		}},
-		{"ManualConnectionsDiffer_MatchesDeepEqual", func(state *dtos.EditorStateDto) {
+		{"ManualConnectionsDiffer_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
 			state.ManualConnections = []editor_state_dto.ManualConnectionSave{
 				{Connection: entities.Connection{Name: "A-B"}, IsUserAdded: true},
 			}
@@ -211,7 +216,7 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 func TestWhenAnyNonManualFieldIsMutated_ReportsNotEqual(t *testing.T) {
 	t.Parallel()
 	ignoredFields := map[string]bool{"ManualZones": true, "ManualConnections": true}
-	stateType := reflect.TypeFor[dtos.EditorStateDto]()
+	stateType := reflect.TypeFor[editor_state_dto.EditorStateDto]()
 	for fieldIndex := range stateType.NumField() {
 		field := stateType.Field(fieldIndex)
 		t.Run(field.Name+"Mutated_ReportsNotEqual", func(t *testing.T) {
@@ -234,8 +239,8 @@ func TestWhenAnyNonManualFieldIsMutated_ReportsNotEqual(t *testing.T) {
 // content rows (including pointer rule fields) on top of the defaults.
 // MediumNeutralContentRows stays nil and the second high-neutral row keeps
 // nil Rules so nil-versus-empty mutations exercise both directions.
-func fuzzedEditorState() dtos.EditorStateDto {
-	state := dtos.NewDefaultEditorStateDto()
+func fuzzedEditorState() editor_state_dto.EditorStateDto {
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.TemplateName = gofakeit.ProductName()
 	state.PlayerCount = gofakeit.Number(2, 8)
 	state.NeutralZoneCount = gofakeit.Number(0, 16)
@@ -266,7 +271,7 @@ func fuzzedEditorState() dtos.EditorStateDto {
 // deepCloneEditorState is the production deep copy, behind a local name so the
 // comparison tests read as "these two states are independent copies". Its own
 // isolation guarantees are pinned in clone_test.go.
-func deepCloneEditorState(source dtos.EditorStateDto) dtos.EditorStateDto {
+func deepCloneEditorState(source editor_state_dto.EditorStateDto) editor_state_dto.EditorStateDto {
 	return source.Clone()
 }
 
@@ -294,7 +299,7 @@ func mutateFieldValue(t *testing.T, fieldValue reflect.Value) {
 
 // reflectDeepEqualIgnoringManualEdits is the pre-optimization reference
 // implementation the hand-rolled comparison must stay equivalent to.
-func reflectDeepEqualIgnoringManualEdits(left, right dtos.EditorStateDto) bool {
+func reflectDeepEqualIgnoringManualEdits(left, right editor_state_dto.EditorStateDto) bool {
 	left.ManualZones, left.ManualConnections = nil, nil
 	right.ManualZones, right.ManualConnections = nil, nil
 	return reflect.DeepEqual(left, right)

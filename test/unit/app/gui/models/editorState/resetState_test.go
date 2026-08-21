@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,7 +13,7 @@ func TestWhenModifiedStateIsReset_DefaultValuesAreRestored(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) {
+	state.UpdateCurrentState(func(dto *editor_state_dto.EditorStateDto) {
 		dto.TemplateName = gofakeit.Name()
 		dto.PlayerCount = gofakeit.Number(3, 8)
 	})
@@ -22,7 +22,7 @@ func TestWhenModifiedStateIsReset_DefaultValuesAreRestored(t *testing.T) {
 	state.ResetState()
 
 	// Assert
-	assert.Equal(t, dtos.NewDefaultEditorStateDto(), state.GetCurrentState())
+	assert.Equal(t, editor_state_dto.NewDefaultEditorStateDto(), state.GetCurrentState())
 }
 
 func TestWhenStateWithSnapshotIsReset_PreviousStateIsDropped(t *testing.T) {

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -67,7 +68,7 @@ func (this *GUIHandler) GetSelectedPickerIDs(
 	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
 }
 
-func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
+func (this *GUIHandler) GenerateTemplate(stateDto editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
 	return this.templateHandler.GenerateTemplate(stateDto)
 }
 
@@ -79,7 +80,9 @@ func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapply
 	return this.templateHandler.ReapplyCastleSettings(request)
 }
 
-func (this *GUIHandler) GetZoneEditorOptions(state dtos.EditorStateDto, totalZoneCount int) dtos.ZoneEditorOptionsDto {
+func (this *GUIHandler) GetZoneEditorOptions(
+	state editor_state_dto.EditorStateDto,
+	totalZoneCount int) dtos.ZoneEditorOptionsDto {
 	return this.zoneEditorHandler.GetZoneEditorOptions(state, totalZoneCount)
 }
 
@@ -228,15 +231,15 @@ func (this *GUIHandler) ClampContentCount(count int, maxCount int) int {
 }
 
 func (this *GUIHandler) ValidateEditorState(
-	stateDto dtos.EditorStateDto,
-	fixIssues bool) dtos.EditorStateValidationDto {
+	stateDto editor_state_dto.EditorStateDto,
+	fixIssues bool) editor_state_dto.EditorStateValidationDto {
 	return this.stateHandler.ValidateEditorState(stateDto, fixIssues)
 }
 
-func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
+func (this *GUIHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
 	return this.stateHandler.LoadState(path, fixIssues)
 }
 
-func (this *GUIHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
+func (this *GUIHandler) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {
 	return this.stateHandler.SaveState(stateDto)
 }

@@ -30,7 +30,7 @@ func TestWhenCastleSettingsAreReapplied_PassesTheMappedConfigurationToTheReapply
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	zones := []entities.Zone{{Name: gofakeit.Word()}}
 	changes := editor_state_dto.CastleSettingChanges{PlayerCastles: true}
 	configuration := namedConfiguration()

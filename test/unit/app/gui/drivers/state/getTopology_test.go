@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +18,7 @@ func TestWhenTopologyWasUpdated_GetTopologyReturnsIt(t *testing.T) {
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
 		false)
-	state.UpdateState(func(dto *dtos.EditorStateDto) { dto.Topology = config.TopologyHubAndSpoke })
+	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.Topology = config.TopologyHubAndSpoke })
 
 	// Act
 	actual := state.GetTopology()

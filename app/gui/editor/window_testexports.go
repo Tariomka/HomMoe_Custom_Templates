@@ -7,7 +7,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -25,7 +25,7 @@ func (this *Window) SaveStateToFile(path string) {
 }
 
 // CurrentState ONLY FOR INTEGRATION TEST USE
-func (this *Window) CurrentState() dtos.EditorStateDto {
+func (this *Window) CurrentState() editor_state_dto.EditorStateDto {
 	return this.state.GetStateData()
 }
 
@@ -59,7 +59,7 @@ func (this *Window) GetStateDriver() *drivers.State {
 // resynced afterwards because every layout writes their widget values back over
 // the editor state, which would otherwise undo this on the very next frame.
 func (this *Window) SetTemplateName(name string) {
-	this.state.UpdateState(func(state *dtos.EditorStateDto) { state.TemplateName = name })
+	this.state.UpdateState(func(state *editor_state_dto.EditorStateDto) { state.TemplateName = name })
 	this.load()
 }
 

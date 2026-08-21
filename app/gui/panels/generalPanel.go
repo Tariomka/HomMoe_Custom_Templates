@@ -13,7 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
@@ -148,7 +148,7 @@ func (this *GeneralPanel) LoadFromState() {
 }
 
 func (this *GeneralPanel) SaveToState() {
-	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
+	this.state.UpdateState(func(settings *editor_state_dto.EditorStateDto) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
 		settings.MapSize = this.getCurrentMapSize().Size

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,7 +42,7 @@ func TestWhenStateFileContainsValidJson_OverridesPersistedFieldsOnDefaults(t *te
 	statePath := filepath.Join(t.TempDir(), "ok.gen.json")
 	body := `{"templateName":"X","playerCount":4,"mapSize":192}`
 	require.NoError(t, os.WriteFile(statePath, []byte(body), 0o644))
-	expected := dtos.NewDefaultEditorStateDto()
+	expected := editor_state_dto.NewDefaultEditorStateDto()
 	expected.TemplateName = "X"
 	expected.PlayerCount = 4
 	expected.MapSize = 192

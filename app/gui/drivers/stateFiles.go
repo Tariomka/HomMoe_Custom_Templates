@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -77,7 +77,7 @@ func (this *State) RevealOutputDir() {
 }
 
 func (this *State) handleSaveState(path string) {
-	savedPath, err := this.handler.SaveState(dtos.EditorStateSaveDto{
+	savedPath, err := this.handler.SaveState(editor_state_dto.EditorStateSaveDto{
 		State:      new(this.innerState.GetCurrentState()),
 		OutputPath: path,
 	})

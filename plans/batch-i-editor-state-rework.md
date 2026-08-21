@@ -143,43 +143,68 @@ had each falsified something it originally claimed. Treat them as load-bearing.
 ---
 
 ## Phase 1: Baseline guard + DTO package move
-Status: Not started   <!-- Not started | In progress | Complete -->
+Status: Complete   <!-- Not started | In progress | Complete -->
 
 Freeze today's on-disk format as a committed artefact **before any code changes**,
 then perform the pure package move on its own so the noisy import diff never
 mixes with a behaviour change.
 
-- [ ] Confirm the field count is exactly 72 and record any discrepancy here.
-- [ ] Record the **before** coverage number (AGENTS.md §2.3) so every later phase
-      has a baseline to compare against.
-- [ ] Write a throwaway program (or a temporary test) that builds an
+- [x] Confirm the field count is exactly 72 and record any discrepancy here.
+      **72 confirmed, no discrepancy** — counted by hand on
+      [editorStateDto.go](../internal/dtos/editorStateDto.go) (24 + 36 + 4 + 6 + 2)
+      and re-confirmed mechanically by the fixture's top-level key count assertion.
+- [x] Record the **before** coverage number (AGENTS.md §2.3) so every later phase
+      has a baseline to compare against. **Baseline = 73.6 %** on a clean tree.
+      This supersedes the 72.8 % quoted in the carry-forward (the Go 1.27 batch
+      raised it); the 72.5 % floor still governs.
+- [x] Write a throwaway program (or a temporary test) that builds an
       `EditorStateDto` with **every** field set to a distinctive non-zero value,
       including all six content-row slices, bonuses, manual zones and manual
       connections, and marshal it with the **current** code.
-- [ ] Add the result as `test/test_helpers/testdata/editorState_v0_flat.gen.json`
+      Builder kept permanently as
+      [allFieldsEditorState.go](../test/test_helpers/allFieldsEditorState.go)
+      (`NewAllFieldsEditorStateDto`); the throwaway `cmd/tmpfixturegen` generator
+      wrote the fixture through the **real** `EditorStateRepository.Save` and was
+      then deleted.
+- [x] Add the result as `test/test_helpers/testdata/editorState_v0_flat.gen.json`
       — a new **unstaged** file; do not stage it and do not commit it. Name it
       `_v0_` because it has no `schemaVersion`: it is the legacy-shape fixture
       that Phase 5's migration hook must keep loading.
-- [ ] Add a golden round-trip test that loads the fixture and asserts every one of
+- [x] Add a golden round-trip test that loads the fixture and asserts every one of
       the 72 fields survives with its distinctive value. Compare **parsed values,
       never bytes** (hazard 3). This test must stay green, unchanged in intent,
       through every later phase.
-- [ ] Move [editorStateDto.go](../internal/dtos/editorStateDto.go),
+      Added as
+      [editorStateWireFormat_integration_test.go](../test/integration/editorStateWireFormat_integration_test.go)
+      — **untagged** (production APIs only, no `*_testexports.go`, no GPU), so it
+      runs in a plain `go test ./test/...`. Three gates: fixture unmarshals into a
+      **zero** DTO and equals the builder; the fixture has exactly 72 top-level
+      keys; marshalling the builder equals the fixture **as parsed maps**.
+- [x] Move [editorStateDto.go](../internal/dtos/editorStateDto.go),
       [editorStateSaveDto.go](../internal/dtos/editorStateSaveDto.go) and
       [editorStateValidationDto.go](../internal/dtos/editorStateValidationDto.go)
       into `internal/dtos/editor_state_dto/`.
-- [ ] Strip the now-invalid self-qualifiers inside the moved file
+- [x] Strip the now-invalid self-qualifiers inside the moved file
       (`editor_state_dto.ManualZoneSave` → `ManualZoneSave`, likewise
       `CastleSettingChanges`) and drop the self-import (hazard 4).
-- [ ] Add the new import to the four sibling DTOs left in `internal/dtos/` that
-      carry editor state: `regenerationDecisionRequestDto.go`,
-      `templateUpdateDto.go`, `castleSettingsReapplyRequestDto.go`,
-      `manualEditDecisionDto.go`.
-- [ ] Update imports and qualifiers (`dtos.EditorStateDto` →
+      Four sites, exactly as surveyed.
+- [x] Add the new import to the **three** sibling DTOs left in `internal/dtos/`
+      that carry editor state: `regenerationDecisionRequestDto.go`,
+      `templateUpdateDto.go`, `castleSettingsReapplyRequestDto.go`.
+      **Plan correction:** `manualEditDecisionDto.go` needs **no** change — it
+      only references `*editor_state_dto.CastleSettingChanges` and already
+      imports that package. §0.3 hazard 4 lists it in error. The compiler
+      confirmed this: after the move it reported exactly these three files.
+- [x] Update imports and qualifiers (`dtos.EditorStateDto` →
       `editor_state_dto.EditorStateDto`) across the 12 production packages and the
       test tree. Do this file by file — **no bulk in-place rewrite** (AGENTS.md §2.6).
-- [ ] Move the mirrored unit-test folders to
+      **104 files, 509 sites.** Owner approved the mechanism: substitution of the
+      five fixed, unambiguous tokens over an **explicit enumerated file list**
+      (§2.6's own "explicit list from `gofmt -l`" pattern), never a repo-wide sweep.
+- [x] Move the mirrored unit-test folders to
       `test/unit/internal/dtos/editor_state_dto/…` per AGENTS.md §4.6.
+      `test/unit/internal/dtos/editorStateDto/` →
+      `test/unit/internal/dtos/editor_state_dto/editorStateDto/` (7 files).
 
 ### Verification Plan
 - `go build ./...` clean; `go vet ./...` and
@@ -194,7 +219,58 @@ mixes with a behaviour change.
   behaviour change**.
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete.** All verification gates green:
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | clean |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test ./test/... -count=1` (untagged, incl. the new golden test) | exit 0 |
+| `go test -tags=integration_test ./test/integration/... -count=1` | exit 0 |
+| `go test ./test/unit/... -count=1` | exit 0, 164 packages |
+| Coverage | **73.7 %** (baseline 73.6 %, floor 72.5 %) |
+| `gofmt -l .` | empty |
+| `golangci-lint-v2 run ./...` | 50 issues, **all pre-existing `funcorder`**; down from 71 |
+
+What exists now:
+
+- `internal/dtos/editor_state_dto/` owns `editorStateDto.go`, `editorStateSaveDto.go`
+  and `editorStateValidationDto.go` alongside the three types that were already
+  there. `internal/dtos/` keeps only the carrier DTOs, which now qualify.
+- The wire format is frozen by
+  [editorState_v0_flat.gen.json](../test/test_helpers/testdata/editorState_v0_flat.gen.json),
+  written through the **real** `EditorStateRepository.Save`, and guarded by three
+  untagged tests in
+  [editorStateWireFormat_integration_test.go](../test/integration/editorStateWireFormat_integration_test.go).
+  The builder [allFieldsEditorState.go](../test/test_helpers/allFieldsEditorState.go)
+  is permanent — Phase 5 regenerates the `_v1_` fixture from the same builder.
+
+Decisions and gotchas for whoever picks this up:
+
+- **The golden test is untagged on purpose.** It touches production APIs only, so
+  it runs in a plain `go test ./test/...`. Do not add `integration_test` to it.
+- **Zero-value unmarshal is deliberate.** The fixture is loaded into a *zero*
+  `EditorStateDto`, not over `NewDefaultEditorStateDto()`. That is what proves the
+  file alone carries all 72 values; loading over defaults would let a dropped
+  field pass by inheriting its default. Do not "fix" this to match
+  `editorStateRepository.Load`.
+- **Every bool in the fixture is `true`** for the same reason — a `false` would
+  pass vacuously against a zero struct.
+- **Comparisons are parsed objects, never bytes** (hazard 3), so Phase 2–3
+  regrouping may reorder keys freely without touching this test.
+- The 72-key count is now asserted mechanically, so Phase 2's field→group split
+  cannot silently lose or add a key.
+- Three files — [state.go](../app/gui/drivers/state.go),
+  [editorState.go](../app/gui/models/editorState.go),
+  [layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go) — carry extra
+  reflow in the diff. They were **already** non-`gofmt`-clean at HEAD (single-line
+  function bodies), and the longer `editor_state_dto.` qualifier pushed those
+  lines past the `golines` limit, so a reflow was unavoidable. It was applied by
+  the project's own *"Go: Run Linter"* `--fix` task, not by an ad-hoc `gofmt -w`.
+- `coverage.txt`, `coverage.html` and `lcov.info` are regenerated tracked
+  artefacts, expected in the diff.
+- Nothing is staged. Nothing is committed.
 
 ---
 

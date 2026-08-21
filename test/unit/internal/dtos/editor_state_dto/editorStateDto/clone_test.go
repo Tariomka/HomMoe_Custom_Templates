@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/brianvoe/gofakeit/v7"
@@ -27,7 +27,7 @@ func TestWhenStateIsCloned_CloneEqualsTheSource(t *testing.T) {
 func TestWhenSliceIsNil_CloneSliceStaysNil(t *testing.T) {
 	t.Parallel()
 	// Arrange - nil must not become empty: the change detection tells them apart.
-	state := dtos.EditorStateDto{}
+	state := editor_state_dto.EditorStateDto{}
 
 	// Act
 	clone := state.Clone()
@@ -130,24 +130,24 @@ func TestWhenEveryReferenceFieldIsWalked_CloneSharesNoStorageWithTheSource(t *te
 	assertNoSharedStorage(t, reflect.ValueOf(state), reflect.ValueOf(clone), "EditorStateDto")
 }
 
-func contentRowFields() map[string]func(state *dtos.EditorStateDto) []models.ZoneContentRowSave {
-	return map[string]func(state *dtos.EditorStateDto) []models.ZoneContentRowSave{
-		"PlayerZoneContentRows": func(state *dtos.EditorStateDto) []models.ZoneContentRowSave {
+func contentRowFields() map[string]func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave {
+	return map[string]func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave{
+		"PlayerZoneContentRows": func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave {
 			return state.PlayerZoneContentRows
 		},
-		"LowestNeutralContentRows": func(state *dtos.EditorStateDto) []models.ZoneContentRowSave {
+		"LowestNeutralContentRows": func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave {
 			return state.LowestNeutralContentRows
 		},
-		"LowNeutralContentRows": func(state *dtos.EditorStateDto) []models.ZoneContentRowSave {
+		"LowNeutralContentRows": func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave {
 			return state.LowNeutralContentRows
 		},
-		"MediumNeutralContentRows": func(state *dtos.EditorStateDto) []models.ZoneContentRowSave {
+		"MediumNeutralContentRows": func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave {
 			return state.MediumNeutralContentRows
 		},
-		"HighNeutralContentRows": func(state *dtos.EditorStateDto) []models.ZoneContentRowSave {
+		"HighNeutralContentRows": func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave {
 			return state.HighNeutralContentRows
 		},
-		"HubZoneContentRows": func(state *dtos.EditorStateDto) []models.ZoneContentRowSave {
+		"HubZoneContentRows": func(state *editor_state_dto.EditorStateDto) []models.ZoneContentRowSave {
 			return state.HubZoneContentRows
 		},
 	}
@@ -155,7 +155,7 @@ func contentRowFields() map[string]func(state *dtos.EditorStateDto) []models.Zon
 
 // newContentRowState returns a state whose six content-row slices and bonus
 // list each hold one row, with a rule pointer on the player rows.
-func newContentRowState() dtos.EditorStateDto {
+func newContentRowState() editor_state_dto.EditorStateDto {
 	newRow := func() []models.ZoneContentRowSave {
 		return []models.ZoneContentRowSave{{
 			Sid:   gofakeit.LetterN(10),
@@ -164,7 +164,7 @@ func newContentRowState() dtos.EditorStateDto {
 		}}
 	}
 
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.PlayerZoneContentRows = newRow()
 	state.LowestNeutralContentRows = newRow()
 	state.LowNeutralContentRows = newRow()
@@ -178,9 +178,9 @@ func newContentRowState() dtos.EditorStateDto {
 // newFullyPopulatedState builds a state in which every slice holds an element
 // and every pointer is set, recursively, so the drift guard has something to
 // compare on every branch of the tree.
-func newFullyPopulatedState(t *testing.T) dtos.EditorStateDto {
+func newFullyPopulatedState(t *testing.T) editor_state_dto.EditorStateDto {
 	t.Helper()
-	var state dtos.EditorStateDto
+	var state editor_state_dto.EditorStateDto
 	fillReferenceFields(reflect.ValueOf(&state).Elem())
 	require.NotEmpty(t, state.ManualZones, "the populator must reach the manual-edit slices")
 	return state

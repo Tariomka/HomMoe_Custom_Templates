@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -123,7 +124,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	zones := []entities.Zone{{Name: gofakeit.Word()}}
 	expected := []entities.MandatoryContent{{Name: gofakeit.Word()}}
 	configuration := namedConfiguration()

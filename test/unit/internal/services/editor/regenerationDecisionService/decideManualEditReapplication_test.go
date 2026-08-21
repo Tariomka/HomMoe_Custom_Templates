@@ -15,7 +15,7 @@ func manualZoneSaves() []editor_state_dto.ManualZoneSave {
 	return []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
 }
 
-func stateWithManualEdits() *dtos.EditorStateDto {
+func stateWithManualEdits() *editor_state_dto.EditorStateDto {
 	state := defaultState()
 	state.ManualZones = manualZoneSaves()
 	return state

@@ -3,14 +3,14 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenStateIsConstructed_CurrentStateIsDefault(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := dtos.NewDefaultEditorStateDto()
+	expected := editor_state_dto.NewDefaultEditorStateDto()
 
 	// Act
 	state := newEditorState()

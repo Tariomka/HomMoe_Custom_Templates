@@ -3,7 +3,6 @@ package editorStateDto_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +10,7 @@ import (
 func TestWhenNothingChanged_ReportsNoChanges(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	previous := dtos.NewDefaultEditorStateDto()
+	previous := editor_state_dto.NewDefaultEditorStateDto()
 	current := previous
 
 	// Act
@@ -24,7 +23,7 @@ func TestWhenNothingChanged_ReportsNoChanges(t *testing.T) {
 func TestWhenSimpleModeNeutralCountChanges_FlagsNeutralSimpleOnly(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	previous := dtos.NewDefaultEditorStateDto()
+	previous := editor_state_dto.NewDefaultEditorStateDto()
 	current := previous
 	current.NeutralZoneCastles = 3
 	current.NeutralHighCastlesPerZone = 4 // advanced-only option, must be ignored
@@ -39,7 +38,7 @@ func TestWhenSimpleModeNeutralCountChanges_FlagsNeutralSimpleOnly(t *testing.T) 
 func TestWhenAdvancedModeHighCountChanges_FlagsNeutralHighOnly(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	previous := dtos.NewDefaultEditorStateDto()
+	previous := editor_state_dto.NewDefaultEditorStateDto()
 	previous.AdvancedMode = true
 	current := previous
 	current.NeutralHighCastlesPerZone = 4
@@ -55,7 +54,7 @@ func TestWhenAdvancedModeHighCountChanges_FlagsNeutralHighOnly(t *testing.T) {
 func TestWhenAdvancedModeLowestCountChanges_FlagsNeutralLowestOnly(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	previous := dtos.NewDefaultEditorStateDto()
+	previous := editor_state_dto.NewDefaultEditorStateDto()
 	previous.AdvancedMode = true
 	current := previous
 	current.NeutralLowestCastlesPerZone = 4
@@ -70,7 +69,7 @@ func TestWhenAdvancedModeLowestCountChanges_FlagsNeutralLowestOnly(t *testing.T)
 func TestWhenPlayerAndHubCountsChange_FlagsPlayerCastlesAndHub(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	previous := dtos.NewDefaultEditorStateDto()
+	previous := editor_state_dto.NewDefaultEditorStateDto()
 	current := previous
 	current.PlayerOwnedCastles = 2
 	current.HubZoneCastles = 3

@@ -3,7 +3,7 @@ package editorStateDto_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,64 +12,67 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		subtestName string
-		mutate      func(state *dtos.EditorStateDto)
+		mutate      func(state *editor_state_dto.EditorStateDto)
 	}{
-		{"WhenPlayerCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.PlayerCount++ }},
+		{"WhenPlayerCountChanges_ReportsChanged", func(state *editor_state_dto.EditorStateDto) { state.PlayerCount++ }},
 		{
 			"WhenTopologyChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.Topology = config.TopologyChain },
+			func(state *editor_state_dto.EditorStateDto) { state.Topology = config.TopologyChain },
 		},
 		{
 			"WhenGenerateRoadsFlips_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.GenerateRoads = !state.GenerateRoads },
+			func(state *editor_state_dto.EditorStateDto) { state.GenerateRoads = !state.GenerateRoads },
 		},
 		{
 			"WhenRandomPortalsFlips_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.RandomPortals = !state.RandomPortals },
+			func(state *editor_state_dto.EditorStateDto) { state.RandomPortals = !state.RandomPortals },
 		},
 		{
 			"WhenNoDirectPlayerConnFlips_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.NoDirectPlayerConn = !state.NoDirectPlayerConn },
+			func(state *editor_state_dto.EditorStateDto) { state.NoDirectPlayerConn = !state.NoDirectPlayerConn },
 		},
 		{
 			"WhenMaxPortalConnectionsChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.MaxPortalConnections++ },
+			func(state *editor_state_dto.EditorStateDto) { state.MaxPortalConnections++ },
 		},
 		{
 			"WhenAdvancedModeFlips_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.AdvancedMode = !state.AdvancedMode },
+			func(state *editor_state_dto.EditorStateDto) { state.AdvancedMode = !state.AdvancedMode },
 		},
-		{"WhenNeutralZoneCountChanges_ReportsChanged", func(state *dtos.EditorStateDto) { state.NeutralZoneCount++ }},
+		{
+			"WhenNeutralZoneCountChanges_ReportsChanged",
+			func(state *editor_state_dto.EditorStateDto) { state.NeutralZoneCount++ },
+		},
 		{
 			"WhenNeutralLowNoCastleCountChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.NeutralLowNoCastleCount++ },
+			func(state *editor_state_dto.EditorStateDto) { state.NeutralLowNoCastleCount++ },
 		},
 		{
 			"WhenNeutralLowCastleCountChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.NeutralLowCastleCount++ },
+			func(state *editor_state_dto.EditorStateDto) { state.NeutralLowCastleCount++ },
 		},
 		{
 			"WhenNeutralMediumNoCastleCountChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.NeutralMediumNoCastleCount++ },
+			func(state *editor_state_dto.EditorStateDto) { state.NeutralMediumNoCastleCount++ },
 		},
 		{
 			"WhenNeutralMediumCastleCountChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.NeutralMediumCastleCount++ },
+			func(state *editor_state_dto.EditorStateDto) { state.NeutralMediumCastleCount++ },
 		},
 		{
 			"WhenNeutralHighNoCastleCountChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.NeutralHighNoCastleCount++ },
+			func(state *editor_state_dto.EditorStateDto) { state.NeutralHighNoCastleCount++ },
 		},
 		{
 			"WhenNeutralHighCastleCountChanges_ReportsChanged",
-			func(state *dtos.EditorStateDto) { state.NeutralHighCastleCount++ },
+			func(state *editor_state_dto.EditorStateDto) { state.NeutralHighCastleCount++ },
 		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			previous := dtos.NewDefaultEditorStateDto()
+			previous := editor_state_dto.NewDefaultEditorStateDto()
 			incoming := previous
 			testCase.mutate(&incoming)
 
@@ -85,7 +88,7 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 func TestWhenStatesAreIdentical_ReportsUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	previous := dtos.NewDefaultEditorStateDto()
+	previous := editor_state_dto.NewDefaultEditorStateDto()
 	incoming := previous
 
 	// Act
@@ -98,7 +101,7 @@ func TestWhenStatesAreIdentical_ReportsUnchanged(t *testing.T) {
 func TestWhenOnlyNonLayoutOptionsChange_ReportsUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	previous := dtos.NewDefaultEditorStateDto()
+	previous := editor_state_dto.NewDefaultEditorStateDto()
 	incoming := previous
 	incoming.TemplateName = "Renamed"
 	incoming.NeutralZoneCastles = previous.NeutralZoneCastles + 2

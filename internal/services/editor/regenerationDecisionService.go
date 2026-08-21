@@ -70,7 +70,7 @@ func (this *RegenerationDecisionService) DecideRegeneration(
 // Manual edits are dropped when a layout-defining option changed, because the
 // hand-made layout no longer describes the regenerated map.
 func (this *RegenerationDecisionService) DecideManualEditReapplication(
-	previous, current *dtos.EditorStateDto) dtos.ManualEditDecisionDto {
+	previous, current *editor_state_dto.EditorStateDto) dtos.ManualEditDecisionDto {
 	if !current.HasManualEdits() {
 		return dtos.ManualEditDecisionDto{}
 	}

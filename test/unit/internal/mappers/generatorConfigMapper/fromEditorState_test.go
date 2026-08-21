@@ -3,7 +3,7 @@ package generatorConfigMapper_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
@@ -28,109 +28,109 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 
 	testCases := []struct {
 		subtestName string
-		mutate      func(state *dtos.EditorStateDto)
+		mutate      func(state *editor_state_dto.EditorStateDto)
 		actual      func(configuration *config.GeneratorConfig) any
 		expected    any
 	}{
 		{
 			"WhenTemplateNameProvided_CopiesTemplateName",
-			func(state *dtos.EditorStateDto) { state.TemplateName = templateName },
+			func(state *editor_state_dto.EditorStateDto) { state.TemplateName = templateName },
 			func(configuration *config.GeneratorConfig) any { return configuration.TemplateName },
 			templateName,
 		},
 		{
 			"WhenGameModeProvided_CopiesGameMode",
-			func(state *dtos.EditorStateDto) { state.GameMode = "SingleHero" },
+			func(state *editor_state_dto.EditorStateDto) { state.GameMode = "SingleHero" },
 			func(configuration *config.GeneratorConfig) any { return configuration.GameMode },
 			"SingleHero",
 		},
 		{
 			"WhenPlayerCountProvided_CopiesPlayerCount",
-			func(state *dtos.EditorStateDto) { state.PlayerCount = playerCount },
+			func(state *editor_state_dto.EditorStateDto) { state.PlayerCount = playerCount },
 			func(configuration *config.GeneratorConfig) any { return configuration.PlayerCount },
 			playerCount,
 		},
 		{
 			"WhenMapSizeProvided_CopiesMapSize",
-			func(state *dtos.EditorStateDto) { state.MapSize = mapSize },
+			func(state *editor_state_dto.EditorStateDto) { state.MapSize = mapSize },
 			func(configuration *config.GeneratorConfig) any { return configuration.MapSize },
 			mapSize,
 		},
 		{
 			"WhenTopologyProvided_CopiesTopology",
-			func(state *dtos.EditorStateDto) { state.Topology = config.TopologyChain },
+			func(state *editor_state_dto.EditorStateDto) { state.Topology = config.TopologyChain },
 			func(configuration *config.GeneratorConfig) any { return configuration.Topology },
 			config.TopologyChain,
 		},
 		{
 			"WhenGenerateRoadsEnabled_CopiesFlag",
-			func(state *dtos.EditorStateDto) { state.GenerateRoads = true },
+			func(state *editor_state_dto.EditorStateDto) { state.GenerateRoads = true },
 			func(configuration *config.GeneratorConfig) any { return configuration.GenerateRoads },
 			true,
 		},
 		{
 			"WhenRandomPortalsEnabled_CopiesFlag",
-			func(state *dtos.EditorStateDto) { state.RandomPortals = true },
+			func(state *editor_state_dto.EditorStateDto) { state.RandomPortals = true },
 			func(configuration *config.GeneratorConfig) any { return configuration.RandomPortals },
 			true,
 		},
 		{
 			"WhenMaxPortalConnectionsProvided_CopiesCount",
-			func(state *dtos.EditorStateDto) { state.MaxPortalConnections = maxPortals },
+			func(state *editor_state_dto.EditorStateDto) { state.MaxPortalConnections = maxPortals },
 			func(configuration *config.GeneratorConfig) any { return configuration.MaxPortalConnections },
 			maxPortals,
 		},
 		{
 			"WhenMatchPlayerCastleFactionsEnabled_CopiesFlag",
-			func(state *dtos.EditorStateDto) { state.MatchPlayerCastleFactions = true },
+			func(state *editor_state_dto.EditorStateDto) { state.MatchPlayerCastleFactions = true },
 			func(configuration *config.GeneratorConfig) any { return configuration.MatchPlayerCastleFactions },
 			true,
 		},
 		{
 			"WhenSpawnRemoteFootholdsDisabled_CopiesFlag",
-			func(state *dtos.EditorStateDto) { state.SpawnRemoteFootholds = false },
+			func(state *editor_state_dto.EditorStateDto) { state.SpawnRemoteFootholds = false },
 			func(configuration *config.GeneratorConfig) any { return configuration.SpawnRemoteFootholds },
 			false,
 		},
 		{
 			"WhenRemoteFootholdCountProvided_CopiesCount",
-			func(state *dtos.EditorStateDto) { state.RemoteFootholdCount = remoteFootholds },
+			func(state *editor_state_dto.EditorStateDto) { state.RemoteFootholdCount = remoteFootholds },
 			func(configuration *config.GeneratorConfig) any { return configuration.RemoteFootholdCount },
 			remoteFootholds,
 		},
 		{
 			"WhenNoDirectPlayerConnEnabled_CopiesFlagToNoDirectPlayerConnections",
-			func(state *dtos.EditorStateDto) { state.NoDirectPlayerConn = true },
+			func(state *editor_state_dto.EditorStateDto) { state.NoDirectPlayerConn = true },
 			func(configuration *config.GeneratorConfig) any { return configuration.NoDirectPlayerConnections },
 			true,
 		},
 		{
 			"WhenBannedItemsProvided_CopiesText",
-			func(state *dtos.EditorStateDto) { state.BannedItems = bannedItems },
+			func(state *editor_state_dto.EditorStateDto) { state.BannedItems = bannedItems },
 			func(configuration *config.GeneratorConfig) any { return configuration.BannedItems },
 			bannedItems,
 		},
 		{
 			"WhenBannedMagicsProvided_CopiesText",
-			func(state *dtos.EditorStateDto) { state.BannedMagics = bannedMagics },
+			func(state *editor_state_dto.EditorStateDto) { state.BannedMagics = bannedMagics },
 			func(configuration *config.GeneratorConfig) any { return configuration.BannedMagics },
 			bannedMagics,
 		},
 		{
 			"WhenValueOverridesTextProvided_CopiesText",
-			func(state *dtos.EditorStateDto) { state.ValueOverridesText = valueOverrides },
+			func(state *editor_state_dto.EditorStateDto) { state.ValueOverridesText = valueOverrides },
 			func(configuration *config.GeneratorConfig) any { return configuration.ValueOverridesText },
 			valueOverrides,
 		},
 		{
 			"WhenFactionLawXpPercentProvided_CopiesPercent",
-			func(state *dtos.EditorStateDto) { state.FactionLawXpPercent = factionLawXp },
+			func(state *editor_state_dto.EditorStateDto) { state.FactionLawXpPercent = factionLawXp },
 			func(configuration *config.GeneratorConfig) any { return configuration.FactionLawsExpPercent },
 			factionLawXp,
 		},
 		{
 			"WhenAstrologyXpPercentProvided_CopiesPercent",
-			func(state *dtos.EditorStateDto) { state.AstrologyXpPercent = astrologyXp },
+			func(state *editor_state_dto.EditorStateDto) { state.AstrologyXpPercent = astrologyXp },
 			func(configuration *config.GeneratorConfig) any { return configuration.AstrologyExpPercent },
 			astrologyXp,
 		},
@@ -139,7 +139,7 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 		t.Run(testCase.subtestName, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
-			state := dtos.NewDefaultEditorStateDto()
+			state := editor_state_dto.NewDefaultEditorStateDto()
 			testCase.mutate(&state)
 
 			// Act
@@ -154,7 +154,7 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.NeutralZoneCount = 5
 	state.PlayerOwnedCastles = 1
 	state.PlayerZoneCastles = 2
@@ -226,7 +226,7 @@ func TestWhenZoneOptionsProvided_PopulatesZoneConfiguration(t *testing.T) {
 func TestWhenHeroOptionsProvided_PopulatesHeroSettings(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.HeroCountMin = 2
 	state.HeroCountMax = 9
 	state.HeroCountIncrement = 3
@@ -242,7 +242,7 @@ func TestWhenHeroOptionsProvided_PopulatesHeroSettings(t *testing.T) {
 func TestWhenManualCityHoldOptionsProvided_PopulatesGameEndConditions(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.VictoryCondition = "win_condition_1"
 	state.CityHold = true
 	state.CityHoldDays = 10
@@ -268,7 +268,7 @@ func TestWhenManualCityHoldOptionsProvided_PopulatesGameEndConditions(t *testing
 func TestWhenVictoryConditionIsCityHoldAndFlagIsFalse_PreservesFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.VictoryCondition = "win_condition_5"
 	state.CityHold = false
 
@@ -282,7 +282,7 @@ func TestWhenVictoryConditionIsCityHoldAndFlagIsFalse_PreservesFlag(t *testing.T
 func TestWhenGladiatorArenaOptionsProvided_PopulatesGladiatorArenaRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.GladiatorArena = true
 	state.GladiatorArenaDaysDelayStart = 12
 	state.GladiatorArenaCountDay = 4
@@ -298,7 +298,7 @@ func TestWhenGladiatorArenaOptionsProvided_PopulatesGladiatorArenaRules(t *testi
 func TestWhenTournamentOptionsProvided_PopulatesTournamentRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.Tournament = true
 	state.TournamentFirstTournamentDay = 21
 	state.TournamentInterval = 5
@@ -322,7 +322,7 @@ func TestWhenTournamentOptionsProvided_PopulatesTournamentRules(t *testing.T) {
 func TestWhenContentRowsProvidedForEveryZoneKind_PopulatesEveryMandatoryCollection(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "a", Count: 1}}
 	state.LowNeutralContentRows = []models.ZoneContentRowSave{{Sid: "b", Count: 1}}
 	state.MediumNeutralContentRows = []models.ZoneContentRowSave{{Sid: "c", Count: 1}}
@@ -346,7 +346,7 @@ func TestWhenContentRowsProvidedForEveryZoneKind_PopulatesEveryMandatoryCollecti
 func TestWhenPlayerRowHasCountTwo_ExpandsIntoTwoMandatoryItems(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 2, IsMine: true}}
 
 	// Act
@@ -359,7 +359,7 @@ func TestWhenPlayerRowHasCountTwo_ExpandsIntoTwoMandatoryItems(t *testing.T) {
 func TestWhenPlayerRowIsMine_PropagatesIsMineFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 1, IsMine: true}}
 
 	// Act
@@ -373,7 +373,7 @@ func TestWhenPlayerRowIsMine_PropagatesIsMineFlag(t *testing.T) {
 func TestWhenHighNeutralRowProvided_CopiesSidToMandatoryItem(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	state.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "pandora_box", Count: 1}}
 
 	// Act
@@ -387,7 +387,7 @@ func TestWhenHighNeutralRowProvided_CopiesSidToMandatoryItem(t *testing.T) {
 func TestWhenBonusEntriesProvided_CopiesBonuses(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_dto.NewDefaultEditorStateDto()
 	bonuses := []config_inner.BonusEntry{
 		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "7"},
 	}

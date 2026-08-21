@@ -1,7 +1,7 @@
 package mappers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
@@ -17,7 +17,8 @@ func NewConfigMapper(contentItemMapper IMandatoryContentItemMapper) IGeneratorCo
 
 // FromEditorState translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
-func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateDto) *config.GeneratorConfig {
+func (this *GeneratorConfigMapper) FromEditorState(
+	editorState editor_state_dto.EditorStateDto) *config.GeneratorConfig {
 	generatorSettings := config.NewGeneratorConfig()
 	generatorSettings.TemplateName = editorState.TemplateName
 	generatorSettings.GameMode = editorState.GameMode
@@ -35,18 +36,14 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	generatorSettings.BannedMagics = editorState.BannedMagics
 	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
 	generatorSettings.Bonuses = editorState.Bonuses
-	generatorSettings.PlayerZoneMandatoryContent = this.contentItemMapper.FromRows(
-		editorState.PlayerZoneContentRows)
+	generatorSettings.PlayerZoneMandatoryContent = this.contentItemMapper.FromRows(editorState.PlayerZoneContentRows)
 	generatorSettings.LowestNeutralMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.LowestNeutralContentRows)
-	generatorSettings.LowNeutralMandatoryContent = this.contentItemMapper.FromRows(
-		editorState.LowNeutralContentRows)
+	generatorSettings.LowNeutralMandatoryContent = this.contentItemMapper.FromRows(editorState.LowNeutralContentRows)
 	generatorSettings.MediumNeutralMandatoryContent = this.contentItemMapper.FromRows(
 		editorState.MediumNeutralContentRows)
-	generatorSettings.HighNeutralMandatoryContent = this.contentItemMapper.FromRows(
-		editorState.HighNeutralContentRows)
-	generatorSettings.HubZoneMandatoryContent = this.contentItemMapper.FromRows(
-		editorState.HubZoneContentRows)
+	generatorSettings.HighNeutralMandatoryContent = this.contentItemMapper.FromRows(editorState.HighNeutralContentRows)
+	generatorSettings.HubZoneMandatoryContent = this.contentItemMapper.FromRows(editorState.HubZoneContentRows)
 	generatorSettings.FactionLawsExpPercent = editorState.FactionLawXpPercent
 	generatorSettings.AstrologyExpPercent = editorState.AstrologyXpPercent
 
@@ -59,7 +56,7 @@ func (this *GeneratorConfigMapper) FromEditorState(editorState dtos.EditorStateD
 	return generatorSettings
 }
 
-func (this *GeneratorConfigMapper) mapZoneConfig(editorState dtos.EditorStateDto) config.ZoneConfig {
+func (this *GeneratorConfigMapper) mapZoneConfig(editorState editor_state_dto.EditorStateDto) config.ZoneConfig {
 	return config.ZoneConfig{
 		NeutralZoneCount:            editorState.NeutralZoneCount,
 		PlayerOwnedCastles:          editorState.PlayerOwnedCastles,
@@ -94,7 +91,7 @@ func (this *GeneratorConfigMapper) mapZoneConfig(editorState dtos.EditorStateDto
 	}
 }
 
-func (this *GeneratorConfigMapper) mapHeroSettings(editorState dtos.EditorStateDto) config.HeroSettings {
+func (this *GeneratorConfigMapper) mapHeroSettings(editorState editor_state_dto.EditorStateDto) config.HeroSettings {
 	return config.HeroSettings{
 		HeroCountMin:       editorState.HeroCountMin,
 		HeroCountMax:       editorState.HeroCountMax,
@@ -102,7 +99,8 @@ func (this *GeneratorConfigMapper) mapHeroSettings(editorState dtos.EditorStateD
 	}
 }
 
-func (this *GeneratorConfigMapper) mapGameEndConditions(editorState dtos.EditorStateDto) *config.GameEndConditions {
+func (this *GeneratorConfigMapper) mapGameEndConditions(
+	editorState editor_state_dto.EditorStateDto) *config.GameEndConditions {
 	return &config.GameEndConditions{
 		VictoryCondition: editorState.VictoryCondition,
 		CityHold:         editorState.CityHold,
@@ -113,7 +111,8 @@ func (this *GeneratorConfigMapper) mapGameEndConditions(editorState dtos.EditorS
 	}
 }
 
-func (this *GeneratorConfigMapper) mapGladiatorArenaRules(editorState dtos.EditorStateDto) *config.GladiatorArenaRules {
+func (this *GeneratorConfigMapper) mapGladiatorArenaRules(
+	editorState editor_state_dto.EditorStateDto) *config.GladiatorArenaRules {
 	return &config.GladiatorArenaRules{
 		Enabled:        editorState.GladiatorArena,
 		DaysDelayStart: editorState.GladiatorArenaDaysDelayStart,
@@ -121,7 +120,8 @@ func (this *GeneratorConfigMapper) mapGladiatorArenaRules(editorState dtos.Edito
 	}
 }
 
-func (this *GeneratorConfigMapper) mapTournamentRules(editorState dtos.EditorStateDto) *config.TournamentRules {
+func (this *GeneratorConfigMapper) mapTournamentRules(
+	editorState editor_state_dto.EditorStateDto) *config.TournamentRules {
 	return &config.TournamentRules{
 		Enabled:            editorState.Tournament,
 		FirstTournamentDay: editorState.TournamentFirstTournamentDay,

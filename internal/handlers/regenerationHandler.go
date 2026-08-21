@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 )
@@ -14,19 +15,16 @@ type regenerationHandler struct {
 }
 
 func NewRegenerationHandler(
-	regenerationDecision editor.IRegenerationDecisionService,
-) handler_interfaces.IRegenerationHandler {
+	regenerationDecision editor.IRegenerationDecisionService) handler_interfaces.IRegenerationHandler {
 	return &regenerationHandler{regenerationDecision: regenerationDecision}
 }
 
 func (this *regenerationHandler) DecideRegeneration(
-	request dtos.RegenerationDecisionRequestDto,
-) dtos.RegenerationDecisionDto {
+	request dtos.RegenerationDecisionRequestDto) dtos.RegenerationDecisionDto {
 	return this.regenerationDecision.DecideRegeneration(request)
 }
 
 func (this *regenerationHandler) DecideManualEditReapplication(
-	previous, current *dtos.EditorStateDto,
-) dtos.ManualEditDecisionDto {
+	previous, current *editor_state_dto.EditorStateDto) dtos.ManualEditDecisionDto {
 	return this.regenerationDecision.DecideManualEditReapplication(previous, current)
 }

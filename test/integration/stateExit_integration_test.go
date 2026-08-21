@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +30,7 @@ func newExitProbe() (state *drivers.State, exitCalled *bool) {
 // same way panel SaveToState calls do.
 func markUnsaved(state *drivers.State) {
 	current := state.GetStateData()
-	state.UpdateState(func(s *dtos.EditorStateDto) { s.PlayerCount = current.PlayerCount + 1 })
+	state.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.PlayerCount = current.PlayerCount + 1 })
 }
 
 // TestExit_WithCleanState_ClosesImmediately: no unsaved changes means no

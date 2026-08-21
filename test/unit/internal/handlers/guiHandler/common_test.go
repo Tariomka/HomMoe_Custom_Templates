@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
@@ -21,7 +21,7 @@ import (
 func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateHandler) *entities.RmgTemplate {
 	t.Helper()
 
-	loadDto, err := handler.GenerateTemplate(dtos.NewDefaultEditorStateDto())
+	loadDto, err := handler.GenerateTemplate(editor_state_dto.NewDefaultEditorStateDto())
 	require.NoError(t, err)
 	require.NotNil(t, loadDto.Template)
 	require.NotEmpty(t, loadDto.Template.Variants)

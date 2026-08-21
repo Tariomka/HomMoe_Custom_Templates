@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +23,7 @@ func TestWhenAssignedNextStateDiffersFromCurrent_AssignedStateIsStored(t *testin
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	divergent := dtos.NewDefaultEditorStateDto()
+	divergent := editor_state_dto.NewDefaultEditorStateDto()
 	divergent.PlayerCount++
 
 	// Act

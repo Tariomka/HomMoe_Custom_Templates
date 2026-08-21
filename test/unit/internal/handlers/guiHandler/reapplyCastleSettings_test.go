@@ -19,7 +19,7 @@ func TestWhenCastleSettingsChange_ReturnsServiceEquivalentZones(t *testing.T) {
 	template := test_helpers.GetDefaultTemplate()
 	expectedZones := cloneZones(t, template.Variants[0].Zones)
 	actualZones := cloneZones(t, template.Variants[0].Zones)
-	editorState := dtos.NewDefaultEditorStateDto()
+	editorState := editor_state_dto.NewDefaultEditorStateDto()
 	editorState.NeutralZoneCastles = 2
 	changes := editor_state_dto.CastleSettingChanges{NeutralSimple: true}
 	configuration := test_helpers.NewConfigMapper().FromEditorState(editorState)
