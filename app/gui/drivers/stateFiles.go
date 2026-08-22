@@ -93,13 +93,13 @@ func (this *State) handleSaveState(path string) {
 }
 
 func (this *State) handleLoadState(path string) bool {
-	dto, warnings, err := this.handler.LoadState(path, true)
+	loaded, warnings, err := this.handler.LoadState(path, true)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
 		return false
 	}
 
-	this.innerState.OverrideState(*dto)
+	this.innerState.OverrideState(*loaded)
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()

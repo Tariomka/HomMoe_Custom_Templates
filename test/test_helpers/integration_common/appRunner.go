@@ -38,7 +38,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
 
@@ -339,7 +339,7 @@ func (this *AppRunner) SetTemplateName(name string) {
 }
 
 // CurrentState returns the editor's current state snapshot (lock-guarded).
-func (this *AppRunner) CurrentState() editor_state_dto.EditorStateDto {
+func (this *AppRunner) CurrentState() editor_state_model.EditorState {
 	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()

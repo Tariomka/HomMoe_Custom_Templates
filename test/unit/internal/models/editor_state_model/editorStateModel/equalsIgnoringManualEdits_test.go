@@ -135,64 +135,64 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		subtestName string
-		mutate      func(state *editor_state_model.EditorStateModel)
+		mutate      func(state *editor_state_model.EditorState)
 	}{
-		{"StatesAreDeepClones_MatchesDeepEqual", func(_ *editor_state_model.EditorStateModel) {}},
-		{"IntFieldDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) { state.PlayerCount++ }},
+		{"StatesAreDeepClones_MatchesDeepEqual", func(_ *editor_state_model.EditorState) {}},
+		{"IntFieldDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) { state.PlayerCount++ }},
 		{
 			"FloatFieldDiffers_MatchesDeepEqual",
-			func(state *editor_state_model.EditorStateModel) { state.PlayerZoneSize += 0.25 },
+			func(state *editor_state_model.EditorState) { state.PlayerZoneSize += 0.25 },
 		},
-		{"BoolFieldDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"BoolFieldDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.AdvancedMode = !state.AdvancedMode
 		}},
-		{"TopologyDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"TopologyDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.Topology = config.TopologyHubAndSpoke
 		}},
 		{
 			"BonusEntryDiffers_MatchesDeepEqual",
-			func(state *editor_state_model.EditorStateModel) { state.Bonuses[0].Param += "0" },
+			func(state *editor_state_model.EditorState) { state.Bonuses[0].Param += "0" },
 		},
 		{
 			"BonusesNilOnOneSide_MatchesDeepEqual",
-			func(state *editor_state_model.EditorStateModel) { state.Bonuses = nil },
+			func(state *editor_state_model.EditorState) { state.Bonuses = nil },
 		},
-		{"RowAppended_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RowAppended_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.HighNeutralContentRows = append(state.HighNeutralContentRows, models.ZoneContentRowSave{Sid: "extra"})
 		}},
 		{
 			"RowCountFieldDiffers_MatchesDeepEqual",
-			func(state *editor_state_model.EditorStateModel) { state.HighNeutralContentRows[0].Count++ },
+			func(state *editor_state_model.EditorState) { state.HighNeutralContentRows[0].Count++ },
 		},
 		{
 			"RowSidDiffers_MatchesDeepEqual",
-			func(state *editor_state_model.EditorStateModel) { state.HighNeutralContentRows[0].Sid += "x" },
+			func(state *editor_state_model.EditorState) { state.HighNeutralContentRows[0].Sid += "x" },
 		},
-		{"RuleNameDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RuleNameDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.HighNeutralContentRows[0].Rules[0].Name += "x"
 		}},
-		{"RuleGuardedValueDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RuleGuardedValueDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			*state.HighNeutralContentRows[0].Rules[0].IsGuarded = !*state.HighNeutralContentRows[0].Rules[0].IsGuarded
 		}},
-		{"RuleGuardedNilOnOneSide_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RuleGuardedNilOnOneSide_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.HighNeutralContentRows[0].Rules[0].IsGuarded = nil
 		}},
-		{"RuleSoloEncounterValueDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RuleSoloEncounterValueDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			*state.HighNeutralContentRows[0].Rules[0].IsSoloEncounter = !*state.HighNeutralContentRows[0].Rules[0].IsSoloEncounter
 		}},
-		{"RuleVariantIDValueDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RuleVariantIDValueDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			*state.HighNeutralContentRows[0].Rules[0].VariantID++
 		}},
-		{"RulesNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RulesNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.HighNeutralContentRows[1].Rules = []models.ContentRuleRowSave{}
 		}},
-		{"RowsNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"RowsNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.MediumNeutralContentRows = []models.ZoneContentRowSave{}
 		}},
-		{"ManualZonesDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"ManualZonesDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.ManualZones = []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
 		}},
-		{"ManualConnectionsDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorStateModel) {
+		{"ManualConnectionsDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.ManualConnections = []editor_state.ManualConnectionSave{
 				{Connection: entities.Connection{Name: "A-B"}, IsUserAdded: true},
 			}
@@ -284,7 +284,7 @@ type leafField struct {
 // "Group.Field" paths. Only anonymous fields are descended into, so the walk
 // stops at the leaves the hand-rolled comparison is written against.
 func modelLeafFields() []leafField {
-	return appendLeafFields(nil, reflect.TypeFor[editor_state_model.EditorStateModel](), nil, "")
+	return appendLeafFields(nil, reflect.TypeFor[editor_state_model.EditorState](), nil, "")
 }
 
 func appendLeafFields(leaves []leafField, structType reflect.Type, indexes []int, pathPrefix string) []leafField {
@@ -304,7 +304,7 @@ func appendLeafFields(leaves []leafField, structType reflect.Type, indexes []int
 // content rows (including pointer rule fields) on top of the defaults.
 // MediumNeutralContentRows stays nil and the second high-neutral row keeps
 // nil Rules so nil-versus-empty mutations exercise both directions.
-func fuzzedEditorState() editor_state_model.EditorStateModel {
+func fuzzedEditorState() editor_state_model.EditorState {
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.TemplateName = gofakeit.ProductName()
 	state.PlayerCount = gofakeit.Number(2, 8)
@@ -336,7 +336,7 @@ func fuzzedEditorState() editor_state_model.EditorStateModel {
 // deepCloneEditorState is the production deep copy, behind a local name so the
 // comparison tests read as "these two states are independent copies". Its own
 // isolation guarantees are pinned in clone_test.go.
-func deepCloneEditorState(source editor_state_model.EditorStateModel) editor_state_model.EditorStateModel {
+func deepCloneEditorState(source editor_state_model.EditorState) editor_state_model.EditorState {
 	return source.Clone()
 }
 
@@ -364,7 +364,7 @@ func mutateFieldValue(t *testing.T, fieldValue reflect.Value) {
 
 // reflectDeepEqualIgnoringManualEdits is the pre-optimization reference
 // implementation the hand-rolled comparison must stay equivalent to.
-func reflectDeepEqualIgnoringManualEdits(left, right editor_state_model.EditorStateModel) bool {
+func reflectDeepEqualIgnoringManualEdits(left, right editor_state_model.EditorState) bool {
 	left.ManualZones, left.ManualConnections = nil, nil
 	right.ManualZones, right.ManualConnections = nil, nil
 	return reflect.DeepEqual(left, right)

@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
@@ -68,8 +69,8 @@ func (this *GUIHandler) GetSelectedPickerIDs(
 	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
 }
 
-func (this *GUIHandler) GenerateTemplate(stateDto editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	return this.templateHandler.GenerateTemplate(stateDto)
+func (this *GUIHandler) GenerateTemplate(state editor_state_model.EditorState) (dtos.TemplateLoadDto, error) {
+	return this.templateHandler.GenerateTemplate(state)
 }
 
 func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {
@@ -81,7 +82,7 @@ func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapply
 }
 
 func (this *GUIHandler) GetZoneEditorOptions(
-	state editor_state_dto.EditorStateDto,
+	state editor_state_model.EditorState,
 	totalZoneCount int) dtos.ZoneEditorOptionsDto {
 	return this.zoneEditorHandler.GetZoneEditorOptions(state, totalZoneCount)
 }
@@ -231,12 +232,12 @@ func (this *GUIHandler) ClampContentCount(count int, maxCount int) int {
 }
 
 func (this *GUIHandler) ValidateEditorState(
-	stateDto editor_state_dto.EditorStateDto,
+	state editor_state_model.EditorState,
 	fixIssues bool) editor_state_dto.EditorStateValidationDto {
-	return this.stateHandler.ValidateEditorState(stateDto, fixIssues)
+	return this.stateHandler.ValidateEditorState(state, fixIssues)
 }
 
-func (this *GUIHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
+func (this *GUIHandler) LoadState(path string, fixIssues bool) (*editor_state_model.EditorState, []string, error) {
 	return this.stateHandler.LoadState(path, fixIssues)
 }
 

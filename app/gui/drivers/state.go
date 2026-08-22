@@ -12,11 +12,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 const (
@@ -93,7 +93,7 @@ func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg,
 
 func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
-func (this *State) GetStateData() editor_state_dto.EditorStateDto {
+func (this *State) GetStateData() editor_state_model.EditorState {
 	return this.innerState.GetCurrentState()
 }
 
@@ -129,7 +129,7 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-func (this *State) UpdateState(updateFunc func(*editor_state_dto.EditorStateDto)) {
+func (this *State) UpdateState(updateFunc func(*editor_state_model.EditorState)) {
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
 		this.unsaved = true

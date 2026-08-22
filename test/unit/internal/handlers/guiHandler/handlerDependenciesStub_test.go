@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
@@ -23,7 +24,7 @@ type handlerDependenciesStub struct {
 }
 
 func (this *handlerDependenciesStub) GenerateTemplate(
-	editor_state_dto.EditorStateDto,
+	editor_state_model.EditorState,
 ) (dtos.TemplateLoadDto, error) {
 	this.templateWorkflowCalled = true
 	return dtos.TemplateLoadDto{}, nil
@@ -42,7 +43,7 @@ func (this *handlerDependenciesStub) ReapplyCastleSettings(
 }
 
 func (this *handlerDependenciesStub) ValidateEditorState(
-	stateDto editor_state_dto.EditorStateDto,
+	stateDto editor_state_model.EditorState,
 	_ bool,
 ) editor_state_dto.EditorStateValidationDto {
 	return editor_state_dto.EditorStateValidationDto{State: stateDto}
@@ -51,7 +52,7 @@ func (this *handlerDependenciesStub) ValidateEditorState(
 func (this *handlerDependenciesStub) LoadState(
 	_ string,
 	_ bool,
-) (*editor_state_dto.EditorStateDto, []string, error) {
+) (*editor_state_model.EditorState, []string, error) {
 	return nil, nil, nil
 }
 
@@ -87,7 +88,7 @@ func (this *handlerDependenciesStub) DescribeContentRule(
 }
 
 func (this *handlerDependenciesStub) GetZoneEditorOptions(
-	editor_state_dto.EditorStateDto,
+	editor_state_model.EditorState,
 	int,
 ) dtos.ZoneEditorOptionsDto {
 	return dtos.ZoneEditorOptionsDto{}

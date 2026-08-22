@@ -6,10 +6,10 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -52,11 +52,11 @@ func NewTemplateHandler(
 	}
 }
 
-func (this *templateHandler) GenerateTemplate(stateDto editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	validation := this.stateHandler.ValidateEditorState(stateDto, true)
-	stateDto = validation.State
+func (this *templateHandler) GenerateTemplate(state editor_state_model.EditorState) (dtos.TemplateLoadDto, error) {
+	validation := this.stateHandler.ValidateEditorState(state, true)
+	state = validation.State
 
-	configuration := this.mapper.FromEditorState(stateDto)
+	configuration := this.mapper.FromEditorState(state)
 	if configuration.TemplateName == "" {
 		return dtos.TemplateLoadDto{}, common_errors.ErrNoTemplateName
 	}

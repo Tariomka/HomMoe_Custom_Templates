@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -10,9 +9,9 @@ import (
 
 type EditorState struct {
 	validationHandler handler_interfaces.IStateValidationHandler
-	current           *editor_state_dto.EditorStateDto
-	previous          *editor_state_dto.EditorStateDto
-	next              *editor_state_dto.EditorStateDto
+	current           *editor_state_model.EditorState
+	previous          *editor_state_model.EditorState
+	next              *editor_state_model.EditorState
 }
 
 func NewEditorState(validationHandler handler_interfaces.IStateValidationHandler) *EditorState {
@@ -22,17 +21,17 @@ func NewEditorState(validationHandler handler_interfaces.IStateValidationHandler
 }
 
 func (this *EditorState) ResetState() {
-	this.OverrideState(editor_state_dto.NewDefaultEditorStateDto())
+	this.OverrideState(editor_state_model.NewDefaultEditorStateModel())
 }
 
-func (this *EditorState) OverrideState(state editor_state_dto.EditorStateDto) {
+func (this *EditorState) OverrideState(state editor_state_model.EditorState) {
 	storedState := state.Clone()
 	this.previous = nil
 	this.current = &storedState
 	this.next = nil
 }
 
-func (this *EditorState) GetCurrentState() editor_state_dto.EditorStateDto {
+func (this *EditorState) GetCurrentState() editor_state_model.EditorState {
 	return this.current.Clone()
 }
 
@@ -44,7 +43,7 @@ func (this *EditorState) GetTopology() config.MapTopology { return this.current.
 
 func (this *EditorState) GetExperimentalMapSizes() bool { return this.current.ExperimentalMapSizes }
 
-func (this *EditorState) UpdateCurrentState(updateFunc func(state *editor_state_dto.EditorStateDto)) {
+func (this *EditorState) UpdateCurrentState(updateFunc func(state *editor_state_model.EditorState)) {
 	updatedState := this.current.Clone()
 	updateFunc(&updatedState)
 	validation := this.validationHandler.ValidateEditorState(updatedState, true)
@@ -59,7 +58,7 @@ func (this *EditorState) SnapshotCurrentState() {
 
 func (this *EditorState) HasPreviousState() bool { return this.previous != nil }
 
-func (this *EditorState) GetPreviousState() *editor_state_dto.EditorStateDto {
+func (this *EditorState) GetPreviousState() *editor_state_model.EditorState {
 	if this.previous == nil {
 		return nil
 	}
@@ -68,7 +67,7 @@ func (this *EditorState) GetPreviousState() *editor_state_dto.EditorStateDto {
 	return &previousState
 }
 
-func (this *EditorState) GetNextState() *editor_state_dto.EditorStateDto {
+func (this *EditorState) GetNextState() *editor_state_model.EditorState {
 	if this.next == nil {
 		return nil
 	}
@@ -79,7 +78,7 @@ func (this *EditorState) GetNextState() *editor_state_dto.EditorStateDto {
 
 func (this *EditorState) ResetNextState() { this.next = nil }
 
-func (this *EditorState) SetNextState(state editor_state_dto.EditorStateDto) {
+func (this *EditorState) SetNextState(state editor_state_model.EditorState) {
 	storedState := state.Clone()
 	this.next = &storedState
 }

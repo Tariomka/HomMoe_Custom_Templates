@@ -10,11 +10,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-// EditorStateModel is the runtime editor state: the nine behaviour-free entity
+// EditorState is the runtime editor state: the nine behaviour-free entity
 // groups plus the behaviour that operates across them. The groups are embedded
 // anonymously so every field stays directly selectable and encoding/json keeps
 // emitting them as one flat object.
-type EditorStateModel struct {
+type EditorState struct {
 	editor_state.TemplateIdentity
 	editor_state.MapSettings
 	editor_state.PlayerSettings
@@ -26,10 +26,10 @@ type EditorStateModel struct {
 	editor_state.ManualEditSettings
 }
 
-func NewDefaultEditorStateModel() EditorStateModel {
+func NewDefaultEditorStateModel() EditorState {
 	winConditions := registry.GetWinningConditionValues()
 	gameModes := registry.GetGameModeValues()
-	return EditorStateModel{
+	return EditorState{
 		TemplateName:                 "Custom Template",
 		GameMode:                     gameModes.Classic,
 		MapSize:                      160,
@@ -77,7 +77,7 @@ func NewDefaultEditorStateModel() EditorStateModel {
 // to the other. A plain struct copy duplicates slice headers only, which would
 // hide element mutations from the change detection in
 // EqualsIgnoringManualEdits.
-func (this *EditorStateModel) Clone() EditorStateModel {
+func (this *EditorState) Clone() EditorState {
 	clone := *this
 
 	clone.Bonuses = slices.Clone(this.Bonuses)
@@ -108,7 +108,7 @@ func (this *EditorStateModel) Clone() EditorStateModel {
 // LayoutDefiningOptionsChanged reports whether any option that changes the set
 // of zones or the connection graph differs between two editor states. When
 // these are unchanged, manual zone edits remain valid and can be reapplied.
-func (this *EditorStateModel) LayoutDefiningOptionsChanged(incoming *EditorStateModel) bool {
+func (this *EditorState) LayoutDefiningOptionsChanged(incoming *EditorState) bool {
 	return this.PlayerCount != incoming.PlayerCount ||
 		this.Topology != incoming.Topology ||
 		this.GenerateRoads != incoming.GenerateRoads ||
@@ -123,7 +123,7 @@ func (this *EditorStateModel) LayoutDefiningOptionsChanged(incoming *EditorState
 // gates which neutral options are relevant; it cannot flip between the two
 // states here because such a flip is layout-defining and discards manual edits
 // before castle propagation is ever considered.
-func (this *EditorStateModel) DiffCastleSettings(incoming *EditorStateModel) CastleSettingChanges {
+func (this *EditorState) DiffCastleSettings(incoming *EditorState) CastleSettingChanges {
 	changes := CastleSettingChanges{
 		PlayerCastles: this.PlayerZoneCastles != incoming.PlayerZoneCastles ||
 			this.PlayerOwnedCastles != incoming.PlayerOwnedCastles,
@@ -149,7 +149,7 @@ func (this *EditorStateModel) DiffCastleSettings(incoming *EditorStateModel) Cas
 // on the UI hot path several times per frame. Every non-manual field must be
 // covered here; the per-field mutation test on this method trips when a new
 // field is added to any entity group without extending the comparison.
-func (this *EditorStateModel) EqualsIgnoringManualEdits(other *EditorStateModel) bool {
+func (this *EditorState) EqualsIgnoringManualEdits(other *EditorState) bool {
 	return this.zoneOptionScalarsEqual(other) &&
 		this.generationOptionScalarsEqual(other) &&
 		this.gameRuleScalarsEqual(other) &&
@@ -163,13 +163,13 @@ func (this *EditorStateModel) EqualsIgnoringManualEdits(other *EditorStateModel)
 		contentRowSlicesEqual(this.HubZoneContentRows, other.HubZoneContentRows)
 }
 
-func (this *EditorStateModel) HasManualEdits() bool {
+func (this *EditorState) HasManualEdits() bool {
 	return len(this.ManualZones) > 0 || len(this.ManualConnections) > 0
 }
 
 // zoneCountOptionsChanged reports whether the number of neutral zones differs
 // between two editor states.
-func (this *EditorStateModel) zoneCountOptionsChanged(incoming *EditorStateModel) bool {
+func (this *EditorState) zoneCountOptionsChanged(incoming *EditorState) bool {
 	return this.AdvancedMode != incoming.AdvancedMode ||
 		this.NeutralZoneCount != incoming.NeutralZoneCount ||
 		this.NeutralLowestNoCastleCount != incoming.NeutralLowestNoCastleCount ||
@@ -186,7 +186,7 @@ func (this *EditorStateModel) zoneCountOptionsChanged(incoming *EditorStateModel
 // count options.
 //
 //nolint:dupl // comparison chains over disjoint field groups are inherently similar
-func (this *EditorStateModel) zoneOptionScalarsEqual(other *EditorStateModel) bool {
+func (this *EditorState) zoneOptionScalarsEqual(other *EditorState) bool {
 	return this.TemplateName == other.TemplateName &&
 		this.GameMode == other.GameMode &&
 		this.MapSize == other.MapSize &&
@@ -217,7 +217,7 @@ func (this *EditorStateModel) zoneOptionScalarsEqual(other *EditorStateModel) bo
 // heroes, topology, connections and densities.
 //
 //nolint:dupl // comparison chains over disjoint field groups are inherently similar
-func (this *EditorStateModel) generationOptionScalarsEqual(other *EditorStateModel) bool {
+func (this *EditorState) generationOptionScalarsEqual(other *EditorState) bool {
 	return this.ExperimentalMapSizes == other.ExperimentalMapSizes &&
 		this.PlayerZoneSize == other.PlayerZoneSize &&
 		this.NeutralZoneSize == other.NeutralZoneSize &&
@@ -244,7 +244,7 @@ func (this *EditorStateModel) generationOptionScalarsEqual(other *EditorStateMod
 // the banned content free-text fields.
 //
 //nolint:dupl // comparison chains over disjoint field groups are inherently similar
-func (this *EditorStateModel) gameRuleScalarsEqual(other *EditorStateModel) bool {
+func (this *EditorState) gameRuleScalarsEqual(other *EditorState) bool {
 	return this.VictoryCondition == other.VictoryCondition &&
 		this.FactionLawXpPercent == other.FactionLawXpPercent &&
 		this.AstrologyXpPercent == other.AstrologyXpPercent &&

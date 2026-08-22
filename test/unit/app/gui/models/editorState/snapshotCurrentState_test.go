@@ -3,8 +3,8 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,7 @@ func TestWhenCurrentStateChangesAfterSnapshot_SnapshotKeepsOldValues(t *testing.
 	state.SnapshotCurrentState()
 
 	// Act
-	state.UpdateCurrentState(func(dto *editor_state_dto.EditorStateDto) { dto.PlayerCount++ })
+	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) { dto.PlayerCount++ })
 
 	// Assert - the snapshot still holds the old player count, so the state reads as changed
 	assert.True(t, state.WasStateChanged())
@@ -41,13 +41,13 @@ func TestWhenSnapshotTakenAndContentRowMutatedInPlace_ReportsStateChanged(t *tes
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	state.UpdateCurrentState(func(dto *editor_state_dto.EditorStateDto) {
+	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) {
 		dto.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "sawmill", Count: 1}}
 	})
 	state.SnapshotCurrentState()
 
 	// Act
-	state.UpdateCurrentState(func(dto *editor_state_dto.EditorStateDto) { dto.PlayerZoneContentRows[0].Count = 5 })
+	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) { dto.PlayerZoneContentRows[0].Count = 5 })
 
 	// Assert
 	assert.True(t, state.WasStateChanged())

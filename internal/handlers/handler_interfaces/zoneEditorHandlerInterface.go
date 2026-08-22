@@ -2,14 +2,14 @@ package handler_interfaces
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
 type IZoneEditorHandler interface {
-	GetZoneEditorOptions(state editor_state_dto.EditorStateDto, totalZoneCount int) dtos.ZoneEditorOptionsDto
+	GetZoneEditorOptions(state editor_state_model.EditorState, totalZoneCount int) dtos.ZoneEditorOptionsDto
 	CountZoneCastles(zone entities.Zone) int
 	GetZoneQuality(zone entities.Zone) neutral_zone.Quality
 	GetZoneConnectionGuardQuality(

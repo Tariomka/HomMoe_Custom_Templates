@@ -6,9 +6,9 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -131,7 +131,7 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	template.MandatoryContent = nil
-	editorState := editor_state_dto.NewDefaultEditorStateDto()
+	editorState := editor_state_model.NewDefaultEditorStateModel()
 	configuration := test_helpers.NewConfigMapper().FromEditorState(editorState)
 	expectedContent := newMandatoryContentProvider().CreateContentsForZones(
 		*configuration,
@@ -163,7 +163,7 @@ func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
 		MainObjects:        []entities.MainObject{{Type: "City"}},
 	}}
 	template := &entities.RmgTemplate{Variants: []entities.Variant{{Zones: zones}}}
-	editorState := editor_state_dto.NewDefaultEditorStateDto()
+	editorState := editor_state_model.NewDefaultEditorStateModel()
 	editorState.SpawnRemoteFootholds = false
 	editorState.MediumNeutralContentRows = []models.ZoneContentRowSave{{Sid: "medium_only", Count: 1}}
 	editorState.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "high_only", Count: 1}}

@@ -14,9 +14,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -73,7 +73,7 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 
 	// Author a distinctive state and persist it through the real save path.
 	author := newUIState()
-	author.UpdateState(func(s *editor_state_dto.EditorStateDto) {
+	author.UpdateState(func(s *editor_state_model.EditorState) {
 		s.TemplateName = "Loaded Template"
 		s.PlayerCount = 6
 		s.Topology = config.TopologyCross
@@ -156,7 +156,7 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 
 	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
-	var onDisk editor_state_dto.EditorStateDto
+	var onDisk editor_state_model.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 
 	require.Len(t, onDisk.ManualZones, len(zones), "gen.json did not persist all manual zones")
@@ -218,7 +218,7 @@ func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 
-	var onDisk editor_state_dto.EditorStateDto
+	var onDisk editor_state_model.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 	assert.Empty(t, onDisk.ManualZones)
 	assert.Empty(t, onDisk.ManualConnections)
@@ -246,7 +246,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	})
 
 	// A structural change (player count) must regenerate from scratch.
-	state.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.PlayerCount = 4 })
+	state.UpdateState(func(s *editor_state_model.EditorState) { s.PlayerCount = 4 })
 	state.AutoRegenerate(now)
 
 	regenerated := state.GetLastTemplate()
@@ -269,7 +269,7 @@ func TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave(t *testing.T) {
 
 	// Author a state with the non-default game mode and persist it.
 	author := newUIState()
-	author.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.GameMode = singleHero })
+	author.UpdateState(func(s *editor_state_model.EditorState) { s.GameMode = singleHero })
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)

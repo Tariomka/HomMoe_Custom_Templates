@@ -6,7 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +56,7 @@ func TestWhenLayoutOptionChanges_RegeneratesImmediately(t *testing.T) {
 	// Arrange
 	state, handlerMock := newAutoRegenerateState()
 	state.AutoRegenerate(time.Now())
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.PlayerCount++ })
+	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.PlayerCount++ })
 
 	// Act
 	state.AutoRegenerate(time.Now())
@@ -71,7 +71,7 @@ func TestWhenNonLayoutOptionChanges_DebounceTimerIsArmed(t *testing.T) {
 	state, _ := newAutoRegenerateState()
 	now := time.Now()
 	state.AutoRegenerate(now)
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = gofakeit.ProductName() })
 
 	// Act
 	redrawAt, scheduleRedraw := state.AutoRegenerate(now)
@@ -88,7 +88,7 @@ func TestWhenNonLayoutOptionChanges_NoImmediateRegeneration(t *testing.T) {
 	state, handlerMock := newAutoRegenerateState()
 	now := time.Now()
 	state.AutoRegenerate(now)
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = gofakeit.ProductName() })
 
 	// Act
 	state.AutoRegenerate(now)
@@ -103,7 +103,7 @@ func TestWhenDebounceHasNotElapsed_KeepsWaiting(t *testing.T) {
 	state, _ := newAutoRegenerateState()
 	now := time.Now()
 	state.AutoRegenerate(now)
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = gofakeit.ProductName() })
 	state.AutoRegenerate(now)
 
 	// Act
@@ -119,7 +119,7 @@ func TestWhenDebounceElapsesWithoutFurtherEdits_Regenerates(t *testing.T) {
 	state, handlerMock := newAutoRegenerateState()
 	now := time.Now()
 	state.AutoRegenerate(now)
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = gofakeit.ProductName() })
 	state.AutoRegenerate(now)
 
 	// Act

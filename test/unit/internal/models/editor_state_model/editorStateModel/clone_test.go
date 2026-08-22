@@ -27,7 +27,7 @@ func TestWhenStateIsCloned_CloneEqualsTheSource(t *testing.T) {
 func TestWhenSliceIsNil_CloneSliceStaysNil(t *testing.T) {
 	t.Parallel()
 	// Arrange - nil must not become empty: the change detection tells them apart.
-	state := editor_state_model.EditorStateModel{}
+	state := editor_state_model.EditorState{}
 
 	// Act
 	clone := state.Clone()
@@ -130,24 +130,24 @@ func TestWhenEveryReferenceFieldIsWalked_CloneSharesNoStorageWithTheSource(t *te
 	assertNoSharedStorage(t, reflect.ValueOf(state), reflect.ValueOf(clone), "EditorStateModel")
 }
 
-func contentRowFields() map[string]func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave {
-	return map[string]func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave{
-		"PlayerZoneContentRows": func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave {
+func contentRowFields() map[string]func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
+	return map[string]func(state *editor_state_model.EditorState) []models.ZoneContentRowSave{
+		"PlayerZoneContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
 			return state.PlayerZoneContentRows
 		},
-		"LowestNeutralContentRows": func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave {
+		"LowestNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
 			return state.LowestNeutralContentRows
 		},
-		"LowNeutralContentRows": func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave {
+		"LowNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
 			return state.LowNeutralContentRows
 		},
-		"MediumNeutralContentRows": func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave {
+		"MediumNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
 			return state.MediumNeutralContentRows
 		},
-		"HighNeutralContentRows": func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave {
+		"HighNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
 			return state.HighNeutralContentRows
 		},
-		"HubZoneContentRows": func(state *editor_state_model.EditorStateModel) []models.ZoneContentRowSave {
+		"HubZoneContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
 			return state.HubZoneContentRows
 		},
 	}
@@ -155,7 +155,7 @@ func contentRowFields() map[string]func(state *editor_state_model.EditorStateMod
 
 // newContentRowState returns a state whose six content-row slices and bonus
 // list each hold one row, with a rule pointer on the player rows.
-func newContentRowState() editor_state_model.EditorStateModel {
+func newContentRowState() editor_state_model.EditorState {
 	newRow := func() []models.ZoneContentRowSave {
 		return []models.ZoneContentRowSave{{
 			Sid:   gofakeit.LetterN(10),
@@ -178,9 +178,9 @@ func newContentRowState() editor_state_model.EditorStateModel {
 // newFullyPopulatedState builds a state in which every slice holds an element
 // and every pointer is set, recursively, so the drift guard has something to
 // compare on every branch of the tree.
-func newFullyPopulatedState(t *testing.T) editor_state_model.EditorStateModel {
+func newFullyPopulatedState(t *testing.T) editor_state_model.EditorState {
 	t.Helper()
-	var state editor_state_model.EditorStateModel
+	var state editor_state_model.EditorState
 	fillReferenceFields(reflect.ValueOf(&state).Elem())
 	require.NotEmpty(t, state.ManualZones, "the populator must reach the manual-edit slices")
 	return state

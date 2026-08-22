@@ -6,9 +6,9 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -57,7 +57,7 @@ func NewEditorStateValidator() IEditorStateValidator {
 // against the editor's allowed ranges and the known registry values. It never
 // modifies the state; each returned issue carries a Fix that applies the
 // correction. An empty result means the state is valid.
-func (this *EditorStateValidator) Validate(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) Validate(state *editor_state_model.EditorState) []ValidationIssue {
 	issues := this.validateRangedFields(state)
 	issues = append(issues, this.validateRangedFloatFields(state)...)
 	issues = append(issues, this.validateHeroCountOrder(state)...)
@@ -68,7 +68,7 @@ func (this *EditorStateValidator) Validate(state *editor_state_dto.EditorStateDt
 	return issues
 }
 
-func (this *EditorStateValidator) validateRangedFields(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateRangedFields(state *editor_state_model.EditorState) []ValidationIssue {
 	issues := []ValidationIssue{}
 	for _, check := range this.getRangedIntFieldDescriptors() {
 		currentValue := *check.value(state)
@@ -78,7 +78,7 @@ func (this *EditorStateValidator) validateRangedFields(state *editor_state_dto.E
 
 		issues = append(issues, ValidationIssue{
 			Message: fmt.Sprintf("%s %d is outside [%d, %d]", check.name, currentValue, check.lowest, check.highest),
-			fix: func(state *editor_state_dto.EditorStateDto) {
+			fix: func(state *editor_state_model.EditorState) {
 				fieldValue := check.value(state)
 				*fieldValue = helpers.Clamp(*fieldValue, check.lowest, check.highest)
 			},
@@ -87,7 +87,8 @@ func (this *EditorStateValidator) validateRangedFields(state *editor_state_dto.E
 	return issues
 }
 
-func (this *EditorStateValidator) validateRangedFloatFields(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateRangedFloatFields(
+	state *editor_state_model.EditorState) []ValidationIssue {
 	issues := []ValidationIssue{}
 	for _, check := range this.getRangedFloatFieldDescriptors() {
 		currentValue := *check.value(state)
@@ -97,7 +98,7 @@ func (this *EditorStateValidator) validateRangedFloatFields(state *editor_state_
 
 		issues = append(issues, ValidationIssue{
 			Message: fmt.Sprintf("%s %g is outside [%g, %g]", check.name, currentValue, check.lowest, check.highest),
-			fix: func(state *editor_state_dto.EditorStateDto) {
+			fix: func(state *editor_state_model.EditorState) {
 				fieldValue := check.value(state)
 				*fieldValue = helpers.Clamp(*fieldValue, check.lowest, check.highest)
 			},
@@ -106,20 +107,20 @@ func (this *EditorStateValidator) validateRangedFloatFields(state *editor_state_
 	return issues
 }
 
-func (this *EditorStateValidator) validateHeroCountOrder(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateHeroCountOrder(state *editor_state_model.EditorState) []ValidationIssue {
 	if state.HeroCountMax >= state.HeroCountMin {
 		return nil
 	}
 
 	return []ValidationIssue{{
 		Message: fmt.Sprintf("heroMax %d is less than heroMin %d", state.HeroCountMax, state.HeroCountMin),
-		fix: func(state *editor_state_dto.EditorStateDto) {
+		fix: func(state *editor_state_model.EditorState) {
 			state.HeroCountMax = max(state.HeroCountMax, state.HeroCountMin)
 		},
 	}}
 }
 
-func (this *EditorStateValidator) validateMapSize(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateMapSize(state *editor_state_model.EditorState) []ValidationIssue {
 	nearest := common.GetNearestMapSize(state.MapSize)
 	if nearest.Size == state.MapSize {
 		return nil
@@ -127,26 +128,27 @@ func (this *EditorStateValidator) validateMapSize(state *editor_state_dto.Editor
 
 	return []ValidationIssue{{
 		Message: fmt.Sprintf("mapSize %d is not a valid map size (nearest: %d)", state.MapSize, nearest.Size),
-		fix: func(state *editor_state_dto.EditorStateDto) {
+		fix: func(state *editor_state_model.EditorState) {
 			state.MapSize = common.GetNearestMapSize(state.MapSize).Size
 		},
 	}}
 }
 
-func (this *EditorStateValidator) validateGameMode(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateGameMode(state *editor_state_model.EditorState) []ValidationIssue {
 	if slices.Contains(registry.GetGameModeList(), state.GameMode) {
 		return nil
 	}
 
 	return []ValidationIssue{{
 		Message: fmt.Sprintf("gameMode %q is not a known game mode", state.GameMode),
-		fix: func(state *editor_state_dto.EditorStateDto) {
+		fix: func(state *editor_state_model.EditorState) {
 			state.GameMode = registry.GetGameModeValues().Classic
 		},
 	}}
 }
 
-func (this *EditorStateValidator) validateVictoryCondition(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateVictoryCondition(
+	state *editor_state_model.EditorState) []ValidationIssue {
 	winConditionValues := registry.GetWinningConditionValues()
 	validConditions := []string{
 		winConditionValues.Standard,
@@ -162,13 +164,13 @@ func (this *EditorStateValidator) validateVictoryCondition(state *editor_state_d
 
 	return []ValidationIssue{{
 		Message: fmt.Sprintf("victoryCondition %q is not a known victory condition", state.VictoryCondition),
-		fix: func(state *editor_state_dto.EditorStateDto) {
+		fix: func(state *editor_state_model.EditorState) {
 			state.VictoryCondition = registry.GetWinningConditionValues().Standard
 		},
 	}}
 }
 
-func (this *EditorStateValidator) validateTopology(state *editor_state_dto.EditorStateDto) []ValidationIssue {
+func (this *EditorStateValidator) validateTopology(state *editor_state_model.EditorState) []ValidationIssue {
 	for descriptor := range common_topologies.GetTopologyDescriptorSeq() {
 		if descriptor.Type == state.Topology {
 			return nil
@@ -177,7 +179,7 @@ func (this *EditorStateValidator) validateTopology(state *editor_state_dto.Edito
 
 	return []ValidationIssue{{
 		Message: fmt.Sprintf("topology %q is not a known topology", state.Topology),
-		fix: func(state *editor_state_dto.EditorStateDto) {
+		fix: func(state *editor_state_model.EditorState) {
 			state.Topology = config.TopologyRandom
 		},
 	}}
@@ -192,91 +194,91 @@ func (this *EditorStateValidator) validateTopology(state *editor_state_dto.Edito
 func (this *EditorStateValidator) getRangedIntFieldDescriptors() []rangedFieldDescriptor[int] {
 	return []rangedFieldDescriptor[int]{
 		newRangedFieldDescriptor("playerCount", playerCountLowest, playerCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.PlayerCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.PlayerCount }),
 		newRangedFieldDescriptor("heroMin", heroCountLowest, heroCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.HeroCountMin }),
+			func(state *editor_state_model.EditorState) *int { return &state.HeroCountMin }),
 		newRangedFieldDescriptor("heroMax", heroCountLowest, heroCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.HeroCountMax }),
+			func(state *editor_state_model.EditorState) *int { return &state.HeroCountMax }),
 		newRangedFieldDescriptor("heroIncrement", heroIncrementLowest, heroIncrementHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.HeroCountIncrement }),
+			func(state *editor_state_model.EditorState) *int { return &state.HeroCountIncrement }),
 		newRangedFieldDescriptor("resourceDensity", percentLowest, percentHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.ResourceDensityPercent }),
+			func(state *editor_state_model.EditorState) *int { return &state.ResourceDensityPercent }),
 		newRangedFieldDescriptor("structureDensity", percentLowest, percentHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.StructureDensityPercent }),
+			func(state *editor_state_model.EditorState) *int { return &state.StructureDensityPercent }),
 		newRangedFieldDescriptor("neutralStackStrength", percentLowest, percentHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralStackStrengthPercent }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralStackStrengthPercent }),
 		newRangedFieldDescriptor("borderGuardStrength", percentLowest, percentHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.BorderGuardStrengthPercent }),
+			func(state *editor_state_model.EditorState) *int { return &state.BorderGuardStrengthPercent }),
 		newRangedFieldDescriptor("factionLawsExp", percentLowest, percentHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.FactionLawXpPercent }),
+			func(state *editor_state_model.EditorState) *int { return &state.FactionLawXpPercent }),
 		newRangedFieldDescriptor("astrologyExp", percentLowest, percentHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.AstrologyXpPercent }),
+			func(state *editor_state_model.EditorState) *int { return &state.AstrologyXpPercent }),
 		newRangedFieldDescriptor("neutralZoneCount", countLowest, neutralZoneCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralZoneCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralZoneCount }),
 		newRangedFieldDescriptor("playerOwnedCastles", countLowest, castleCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.PlayerOwnedCastles }),
+			func(state *editor_state_model.EditorState) *int { return &state.PlayerOwnedCastles }),
 		newRangedFieldDescriptor("playerCastles", countLowest, castleCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.PlayerZoneCastles }),
+			func(state *editor_state_model.EditorState) *int { return &state.PlayerZoneCastles }),
 		newRangedFieldDescriptor("neutralCastles", countLowest, castleCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralZoneCastles }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralZoneCastles }),
 		newRangedFieldDescriptor("abandonedOutpostCount", countLowest, castleCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.AbandonedOutpostCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.AbandonedOutpostCount }),
 		newRangedFieldDescriptor("hubCastles", countLowest, castleCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.HubZoneCastles }),
+			func(state *editor_state_model.EditorState) *int { return &state.HubZoneCastles }),
 		newRangedFieldDescriptor("remoteFootholdCount", countLowest, remoteFootholdHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.RemoteFootholdCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.RemoteFootholdCount }),
 		newRangedFieldDescriptor("maxPortalConns", countLowest, portalConnectionsHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.MaxPortalConnections }),
+			func(state *editor_state_model.EditorState) *int { return &state.MaxPortalConnections }),
 		newRangedFieldDescriptor("neutralLowestNoCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralLowestNoCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralLowestNoCastleCount }),
 		newRangedFieldDescriptor("neutralLowestCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralLowestCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralLowestCastleCount }),
 		newRangedFieldDescriptor("neutralLowNoCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralLowNoCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralLowNoCastleCount }),
 		newRangedFieldDescriptor("neutralLowCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralLowCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralLowCastleCount }),
 		newRangedFieldDescriptor("neutralMediumNoCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralMediumNoCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralMediumNoCastleCount }),
 		newRangedFieldDescriptor("neutralMediumCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralMediumCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralMediumCastleCount }),
 		newRangedFieldDescriptor("neutralHighNoCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralHighNoCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralHighNoCastleCount }),
 		newRangedFieldDescriptor("neutralHighCastle", countLowest, neutralTierCountHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralHighCastleCount }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralHighCastleCount }),
 		newRangedFieldDescriptor("neutralLowestCastlesPerZone", countLowest, castlesPerZoneHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralLowestCastlesPerZone }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralLowestCastlesPerZone }),
 		newRangedFieldDescriptor("neutralLowCastlesPerZone", countLowest, castlesPerZoneHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralLowCastlesPerZone }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralLowCastlesPerZone }),
 		newRangedFieldDescriptor("neutralMedCastlesPerZone", countLowest, castlesPerZoneHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralMediumCastlesPerZone }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralMediumCastlesPerZone }),
 		newRangedFieldDescriptor("neutralHighCastlesPerZone", countLowest, castlesPerZoneHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.NeutralHighCastlesPerZone }),
+			func(state *editor_state_model.EditorState) *int { return &state.NeutralHighCastlesPerZone }),
 		newRangedFieldDescriptor("lostStartCityDay", ruleDayLowest, ruleDayHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.LostStartCityDay }),
+			func(state *editor_state_model.EditorState) *int { return &state.LostStartCityDay }),
 		newRangedFieldDescriptor("cityHoldDays", ruleDayLowest, ruleDayHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.CityHoldDays }),
+			func(state *editor_state_model.EditorState) *int { return &state.CityHoldDays }),
 		newRangedFieldDescriptor("gladiatorArenaDaysDelayStart", ruleDayLowest, arenaDelayHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.GladiatorArenaDaysDelayStart }),
+			func(state *editor_state_model.EditorState) *int { return &state.GladiatorArenaDaysDelayStart }),
 		newRangedFieldDescriptor("gladiatorArenaCountDay", ruleDayLowest, ruleDayHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.GladiatorArenaCountDay }),
+			func(state *editor_state_model.EditorState) *int { return &state.GladiatorArenaCountDay }),
 		newRangedFieldDescriptor("tournamentFirstTournamentDay", tournamentDayLowest, tournamentDayHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.TournamentFirstTournamentDay }),
+			func(state *editor_state_model.EditorState) *int { return &state.TournamentFirstTournamentDay }),
 		newRangedFieldDescriptor("tournamentInterval", tournamentDayLowest, tournamentDayHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.TournamentInterval }),
+			func(state *editor_state_model.EditorState) *int { return &state.TournamentInterval }),
 		newRangedFieldDescriptor("tournamentPointsToWin", tournamentPointsLowest, tournamentPointsHighest,
-			func(state *editor_state_dto.EditorStateDto) *int { return &state.TournamentPointsToWin }),
+			func(state *editor_state_model.EditorState) *int { return &state.TournamentPointsToWin }),
 	}
 }
 
 func (this *EditorStateValidator) getRangedFloatFieldDescriptors() []rangedFieldDescriptor[float64] {
 	return []rangedFieldDescriptor[float64]{
 		newRangedFieldDescriptor("playerZoneSize", zoneSizeLowest, zoneSizeHighest,
-			func(state *editor_state_dto.EditorStateDto) *float64 { return &state.PlayerZoneSize }),
+			func(state *editor_state_model.EditorState) *float64 { return &state.PlayerZoneSize }),
 		newRangedFieldDescriptor("neutralZoneSize", zoneSizeLowest, zoneSizeHighest,
-			func(state *editor_state_dto.EditorStateDto) *float64 { return &state.NeutralZoneSize }),
+			func(state *editor_state_model.EditorState) *float64 { return &state.NeutralZoneSize }),
 		newRangedFieldDescriptor("hubZoneSize", zoneSizeLowest, zoneSizeHighest,
-			func(state *editor_state_dto.EditorStateDto) *float64 { return &state.HubZoneSize }),
+			func(state *editor_state_model.EditorState) *float64 { return &state.HubZoneSize }),
 		newRangedFieldDescriptor("guardRandomization", guardRandomizationLowest, guardRandomizationHighest,
-			func(state *editor_state_dto.EditorStateDto) *float64 { return &state.GuardRandomization }),
+			func(state *editor_state_model.EditorState) *float64 { return &state.GuardRandomization }),
 	}
 }

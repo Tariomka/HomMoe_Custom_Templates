@@ -12,63 +12,63 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		subtestName string
-		mutate      func(state *editor_state_model.EditorStateModel)
+		mutate      func(state *editor_state_model.EditorState)
 	}{
 		{
 			"WhenPlayerCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.PlayerCount++ },
+			func(state *editor_state_model.EditorState) { state.PlayerCount++ },
 		},
 		{
 			"WhenTopologyChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.Topology = config.TopologyChain },
+			func(state *editor_state_model.EditorState) { state.Topology = config.TopologyChain },
 		},
 		{
 			"WhenGenerateRoadsFlips_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.GenerateRoads = !state.GenerateRoads },
+			func(state *editor_state_model.EditorState) { state.GenerateRoads = !state.GenerateRoads },
 		},
 		{
 			"WhenRandomPortalsFlips_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.RandomPortals = !state.RandomPortals },
+			func(state *editor_state_model.EditorState) { state.RandomPortals = !state.RandomPortals },
 		},
 		{
 			"WhenNoDirectPlayerConnFlips_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NoDirectPlayerConn = !state.NoDirectPlayerConn },
+			func(state *editor_state_model.EditorState) { state.NoDirectPlayerConn = !state.NoDirectPlayerConn },
 		},
 		{
 			"WhenMaxPortalConnectionsChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.MaxPortalConnections++ },
+			func(state *editor_state_model.EditorState) { state.MaxPortalConnections++ },
 		},
 		{
 			"WhenAdvancedModeFlips_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.AdvancedMode = !state.AdvancedMode },
+			func(state *editor_state_model.EditorState) { state.AdvancedMode = !state.AdvancedMode },
 		},
 		{
 			"WhenNeutralZoneCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NeutralZoneCount++ },
+			func(state *editor_state_model.EditorState) { state.NeutralZoneCount++ },
 		},
 		{
 			"WhenNeutralLowNoCastleCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NeutralLowNoCastleCount++ },
+			func(state *editor_state_model.EditorState) { state.NeutralLowNoCastleCount++ },
 		},
 		{
 			"WhenNeutralLowCastleCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NeutralLowCastleCount++ },
+			func(state *editor_state_model.EditorState) { state.NeutralLowCastleCount++ },
 		},
 		{
 			"WhenNeutralMediumNoCastleCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NeutralMediumNoCastleCount++ },
+			func(state *editor_state_model.EditorState) { state.NeutralMediumNoCastleCount++ },
 		},
 		{
 			"WhenNeutralMediumCastleCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NeutralMediumCastleCount++ },
+			func(state *editor_state_model.EditorState) { state.NeutralMediumCastleCount++ },
 		},
 		{
 			"WhenNeutralHighNoCastleCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NeutralHighNoCastleCount++ },
+			func(state *editor_state_model.EditorState) { state.NeutralHighNoCastleCount++ },
 		},
 		{
 			"WhenNeutralHighCastleCountChanges_ReportsChanged",
-			func(state *editor_state_model.EditorStateModel) { state.NeutralHighCastleCount++ },
+			func(state *editor_state_model.EditorState) { state.NeutralHighCastleCount++ },
 		},
 	}
 	for _, testCase := range testCases {

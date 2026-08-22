@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +45,7 @@ func TestWhenStateIsReset_StateDataReturnsToDefault(t *testing.T) {
 	state.Reset()
 
 	// Assert
-	assert.Equal(t, editor_state_dto.NewDefaultEditorStateDto(), state.GetStateData())
+	assert.Equal(t, editor_state_model.NewDefaultEditorStateModel(), state.GetStateData())
 }
 
 func TestWhenStateIsReset_StatusReportsNewFile(t *testing.T) {
@@ -70,6 +70,6 @@ func newDirtyGeneratedState() *drivers.State {
 	state := drivers.NewUIState(
 		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
 	state.Generate()
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = gofakeit.ProductName() })
 	return state
 }

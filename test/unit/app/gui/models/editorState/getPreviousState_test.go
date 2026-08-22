@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +70,7 @@ func TestWhenStateIsOverridden_PreviousStateIsCleared(t *testing.T) {
 	state.SnapshotCurrentState()
 
 	// Act
-	state.OverrideState(editor_state_dto.NewDefaultEditorStateDto())
+	state.OverrideState(editor_state_model.NewDefaultEditorStateModel())
 
 	// Assert
 	assert.Nil(t, state.GetPreviousState())

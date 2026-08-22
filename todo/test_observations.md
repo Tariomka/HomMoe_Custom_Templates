@@ -204,3 +204,13 @@ Still unit-untestable (dialog-callback or Gio territory):
   fails 100 consecutive randomized attempts, which cannot be forced without
   seeding control over `math/rand` inside production code. Deterministic
   fallback, purely defensive; do not add a seam to reach it.
+
+- Batch I Phase 4 (2026-08-22) - roughly 55 test-local identifiers named `dto`
+  or `stateDto` now hold an `EditorStateModel` rather than a DTO, mostly as the
+  closure parameter of `UpdateState` / `UpdateCurrentState` (e.g.
+  test/unit/app/gui/drivers/state/, test/unit/app/gui/models/editorState/,
+  test/unit/internal/handlers/guiHandler/). They were deliberately left as-is:
+  in most of those closures the enclosing scope already binds `state` to the
+  driver `State`, so a blind rename to `state` would shadow it, and the gain is
+  purely cosmetic. Production-side names were fixed in the same phase. Rename
+  them opportunistically when a file is edited for another reason.

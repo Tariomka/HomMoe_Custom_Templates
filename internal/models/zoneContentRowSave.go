@@ -33,7 +33,7 @@ func (this ZoneContentRowSave) Normalized() ZoneContentRowSave {
 
 // Clone returns a copy that shares no backing array or pointer with the
 // receiver. A nil Rules slice stays nil, because the change detection in
-// EditorStateDto distinguishes a nil slice from an empty one.
+// EditorStateModel distinguishes a nil slice from an empty one.
 func (this ZoneContentRowSave) Clone() ZoneContentRowSave {
 	clone := this
 	clone.Rules = slices.Clone(this.Rules)

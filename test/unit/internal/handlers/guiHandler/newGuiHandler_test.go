@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +43,7 @@ func TestWhenGenerateTemplateCalled_DelegatesToTemplateHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.GenerateTemplate(editor_state_dto.EditorStateDto{})
+	_, _ = handler.GenerateTemplate(editor_state_model.EditorState{})
 
 	// Assert
 	assert.True(t, stub.templateWorkflowCalled)

@@ -10,6 +10,14 @@ Backlog items closed by this work: [§2.1](../todo/backlog-opus5.md) and
 
 ## For Future Agents
 
+> **⚠ Read [§0.4](#04-layering-doctrine--entity--model--dto) first.** On
+> 2026-08-22 the owner corrected the premise this plan was built on:
+> `EditorStateDto` is **not** the persisted `.gen.json` shape — that is an
+> **Entity's** job. §0 rows "DTO shape" and "Wire shape", the whole of Phase 5,
+> and Phase 4's grep gate are **superseded**. Phases 1–4 are done and committed
+> or unstaged as described, but their *direction* is corrected by
+> **Phases 8–12**. Revised order: **8 → 9 → 10 → 11 → 6 → 12 → 7**.
+
 As work proceeds: mark checkboxes `- [x]` as items complete; when a phase is done,
 set its status to `Complete` and write its **Phase Summary** (what was done, key
 decisions, anything needed to continue with zero context); run the phase's
@@ -172,6 +180,251 @@ had each falsified something it originally claimed. Treat them as load-bearing.
     undoes Phase 1's consolidation — that is expected, not a regression.
     `internal/entities` must remain the base layer: it imports nothing from
     `models`, `dtos` or `helpers`, and `entities/editor_state` must not either.
+
+---
+
+## 0.4 Layering doctrine — Entity / Model / DTO
+
+**Owner ruling, 2026-08-22. This supersedes any contrary statement earlier in
+this plan.** It is the standard enterprise three-layer split used in C# and Java
+projects; see [Baeldung — Entities vs DTOs](https://www.baeldung.com/java-entity-vs-dto)
+and [DevsDaily — Entity, Model, ViewModel and DTO in C#](https://devsdaily.com/understanding-entity-model-viewmodel-and-dto-in-csharp/).
+
+| Layer | Type | Declared in | May be used by | Logic |
+| --- | --- | --- | --- | --- |
+| **Database** | Entity | `internal/entities/` | `internal/repositories/` only | none beyond (de)serialisation — i.e. json tags |
+| **Service** | Model | `internal/models/` | `internal/services/`, `internal/validators/`, `internal/mappers/`, `internal/repositories/` | **all business logic lives here** |
+| **Consumer** | DTO | `internal/dtos/` | `internal/handlers/`, and in `app/` **only at handler call sites** | none |
+
+The rules, stated exactly:
+
+- An **Entity** is literally the boundary to external storage — files on disk,
+  rows in a database. It has no logic beyond serialising to and from its storage
+  format (here, JSON).
+- An Entity **may be embedded in, or held as a field of, a Model**. In that case
+  it is the *Model* that is being used, not the Entity, and that is allowed. An
+  Entity must never be passed around by itself above the repository.
+- A **Model** carries the business logic, is used in services, and **never leaves
+  the backend**. `app/` must not see a Model.
+- A **DTO** is the contract between the frontend (`app/gui/`) and the backend
+  (`internal/`). It has no innate logic and exists only to cross the API
+  boundary — which, in this project, is `internal/handlers/`. A DTO in
+  `internal/` may therefore be used **only** in `internal/handlers/`, and in
+  `app/` only at the handler call site.
+- **Dependency direction is DTO → Model → Entity and never the reverse.** An
+  Entity that imports `internal/models` is a defect, not a shortcut.
+
+### 0.4.1 Request/response flow
+
+The consuming UI creates a **request DTO**; each layer converts it down, and the
+answer travels back up. Conversion happens at exactly two seams — the handler
+(DTO ⇄ Model) and the repository (Model ⇄ Entity).
+
+```mermaid
+sequenceDiagram
+    participant GUI as app/gui
+    participant H as internal/handlers
+    participant S as internal/services
+    participant R as internal/repositories
+    participant Disk as .gen.json / .rmg.json
+
+    GUI->>H: request DTO
+    Note over H: maps DTO → Model
+    H->>S: Model
+    S->>R: Model
+    Note over R: save: maps Model → Entity
+    R->>Disk: Entity
+    Disk-->>R: Entity
+    Note over R: load: maps Entity → Model
+    R-->>S: Model
+    S-->>H: Model
+    Note over H: maps Model → DTO
+    H-->>GUI: response DTO
+```
+
+- **Save.** The GUI builds a request DTO → the handler maps it to a Model → the
+  service works on the Model → the repository maps the Model to an Entity and
+  writes it.
+- **Load.** The repository reads an Entity and **returns a Model** to the service
+  → the service returns the Model to the handler → the handler maps it to a
+  response DTO → the GUI renders the DTO.
+
+### 0.4.2 What this batch got wrong
+
+Phases 1–4 were built on the premise that `EditorStateDto` is the persisted
+`.gen.json` shape. **It is not, and was never meant to be** — that is an Entity's
+job, and correcting it is the whole point of the rework. Four concrete defects
+follow from the mistake:
+
+1. **The persisted shape is a DTO.** `internal/repositories/editorStateRepository.go`
+   is typed `IFileRepository[editor_state_dto.EditorStateDto]`, so the storage
+   boundary speaks the consumer type. §0's "DTO shape" and "Wire shape" rows and
+   the whole of **Phase 5** are built on this and are superseded.
+2. **Phase 4 pushed `app/` onto the Model.** It is backwards: the GUI must hold
+   the DTO. Phase 4's own grep gate ("`EditorStateDto` only in
+   `editor_state_dto`, `repositories`, `file_service`") encodes the inverted
+   rule and must be replaced by the §0.4 table.
+3. **The dependency arrow is reversed in the entity layer.**
+   [contentSettings.go](../internal/entities/editor_state/contentSettings.go)
+   imports `internal/models` and `internal/models/config`;
+   [generationSettings.go](../internal/entities/editor_state/generationSettings.go)
+   imports `internal/models/config`. Entities depend on Models today.
+4. **AGENTS.md §4.4 contradicts the doctrine.** It currently permits packages
+   outside `internal/` to use `internal/models/` and `internal/entities/` for
+   "data typing". Under §0.4 only `internal/dtos/` is permitted there.
+
+**Scope note — the breach is repository-wide, not Batch I's alone.** 36 files
+under `app/` import `internal/models` or `internal/entities` (Phase 4 added 8 of
+them; the other 28 predate this batch). Fixing all of them is a separate batch.
+Phases 8–12 below correct **editor state** and put a mechanical guard in place;
+the rest is recorded as a backlog item in Phase 12.
+
+### 0.4.3 Editor-state flows in the target state (after Phases 8–12)
+
+These are the concrete shapes of §0.4.1 for editor state, as they must look once
+the correction phases are done. Solid arrows are the request path, dotted arrows
+the response path; the label on each arrow is **the type that crosses it**.
+
+Invariants visible in all three — use them as the review checklist:
+
+- There are exactly **two conversion seams**: `internal/handlers` (DTO ⇄ Model)
+  and `internal/repositories` (Model ⇄ Entity). Nowhere else converts.
+- `app/` never names a Model or an Entity. `internal/repositories` never names a
+  DTO. `internal/services` and `internal/validators` never name a DTO.
+- The Entity exists only inside the repository; it never crosses that subgraph's
+  border.
+
+#### Save
+
+```mermaid
+flowchart TD
+    subgraph app["app/gui — consumer layer"]
+        A1["panel.SaveToState()<br/>mutates the working EditorStateDto"]
+        A2["drivers.State.handleSaveState(path)"]
+        A3["EditorStateSaveDto{ State, OutputPath }"]
+    end
+
+    subgraph handlers["internal/handlers — API boundary"]
+        H1["IStatePersistenceHandler.SaveState(EditorStateSaveDto)"]
+        H2["mappers.EditorStateMapper.ToModel(dto)"]
+    end
+
+    subgraph services["internal/services — service layer"]
+        S1["file_service.SaveSettings(path, *EditorState)"]
+    end
+
+    subgraph repos["internal/repositories — database layer"]
+        R1["EditorStateRepository.Save(dir, name, EditorState)"]
+        R2["toEntity(model)<br/>EditorStateEntity{ SchemaVersion: 1, 9 groups }"]
+        R3["json.Marshal → atomicFileWriter"]
+    end
+
+    Disk[("&lt;TemplateName&gt;.gen.json")]
+
+    A1 --> A2 --> A3
+    A3 -->|"DTO"| H1 --> H2
+    H2 -->|"Model"| S1
+    S1 -->|"Model"| R1 --> R2
+    R2 -->|"Entity"| R3 --> Disk
+    Disk -.->|"savedPath string"| A2
+```
+
+#### Load
+
+```mermaid
+flowchart TD
+    subgraph app["app/gui — consumer layer"]
+        A1["drivers.State.handleLoadState(path)"]
+        A2["models.EditorState.OverrideState(EditorStateDto)"]
+        A3["panel.LoadFromState()"]
+    end
+
+    subgraph handlers["internal/handlers — API boundary"]
+        H1["IStatePersistenceHandler.LoadState(path, fixIssues)"]
+        H2["mappers.EditorStateMapper.ToDto(model)"]
+        H3["envelope DTO<br/>{ State EditorStateDto, Warnings []string }"]
+    end
+
+    subgraph services["internal/services — service layer"]
+        S1["file_service.LoadSettingsFile(path)"]
+        V1["validators.Validate(*EditorState) → []ValidationIssue"]
+        V2["issue.Fix(*EditorState) when fixIssues"]
+    end
+
+    subgraph repos["internal/repositories — database layer"]
+        R1["EditorStateRepository.Load(path)"]
+        R2["json.Unmarshal into a defaults-seeded EditorStateEntity<br/>merge into the receiver, never zero it"]
+        R3["migrate SchemaVersion 0 → 1"]
+        R4["toModel(entity)"]
+    end
+
+    Disk[("&lt;path&gt;.gen.json")]
+
+    A1 --> H1 --> S1 --> R1 --> R2
+    Disk --> R2
+    R2 --> R3 --> R4
+    R4 -.->|"Model"| S1
+    S1 -.->|"Model"| H1
+    H1 --> V1 --> V2
+    V2 -.->|"Model"| H2 --> H3
+    H3 -.->|"DTO"| A1 --> A2 --> A3
+```
+
+#### Update (a single edited setting)
+
+Runs on the frame path, so it is the flow most sensitive to the Phase 11
+decision — see the note under the diagram.
+
+```mermaid
+flowchart TD
+    subgraph app["app/gui — consumer layer"]
+        A1["widget changed → panel.SaveToState()"]
+        A2["drivers.State.UpdateState(func(*EditorStateDto))"]
+        A3["models.EditorState.UpdateCurrentState<br/>copy current DTO, apply the mutation"]
+        A4["store returned DTO as current"]
+        A5["WasStateChanged() → unsaved / confirmExit"]
+    end
+
+    subgraph handlers["internal/handlers — API boundary"]
+        H1["IStateValidationHandler.ValidateEditorState(EditorStateDto, fixIssues)"]
+        H2["mappers.EditorStateMapper.ToModel(dto)"]
+        H3["mappers.EditorStateMapper.ToDto(model)"]
+        H4["EditorStateValidationDto{ State, Warnings }"]
+        H5["IStateComparisonHandler.EqualsIgnoringManualEdits(previous, current)"]
+    end
+
+    subgraph services["internal/services — service layer"]
+        V1["EditorStateValidator.Validate(*EditorState)"]
+        V2["issue.Fix(*EditorState) when fixIssues"]
+        V3["normalizeInactiveNeutralCounts(*EditorState)"]
+        M1["EditorState.EqualsIgnoringManualEdits(*EditorState)"]
+    end
+
+    A1 --> A2 --> A3
+    A3 -->|"DTO"| H1 --> H2
+    H2 -->|"Model"| V1 --> V2 --> V3
+    V3 -.->|"Model"| H3 --> H4
+    H4 -.->|"DTO"| A4 --> A5
+    A5 -->|"DTO"| H5 --> M1
+    M1 -.->|"bool"| A5
+```
+
+Notes on the update flow, all of which are **open until the owner answers Phase
+11's decision**:
+
+- `H5` / `M1` are drawn as a handler round trip because
+  `EqualsIgnoringManualEdits` is Model logic and `app/` may not call it directly.
+  The same applies to `LayoutDefiningOptionsChanged`, `DiffCastleSettings` and
+  `HasManualEdits`. `IStateComparisonHandler` is an **invented name** — no such
+  interface exists yet.
+- The "copy current DTO" step in `A3` is drawn as staying inside `app/`. That is
+  Phase 11 option (b): copying a logic-free struct is view-layer plumbing, not
+  business logic. Under option (a) it becomes another handler call and the
+  diagram gains a second round trip per edit.
+- Every arrow crossing the `app` ⇄ `handlers` border on this path costs a
+  DTO ⇄ Model conversion **per frame**, which is exactly what Phase 6 is trying
+  to reduce. Phase 11 must be decided with Phase 6's benchmark in view, not
+  separately.
 
 ---
 
@@ -500,34 +753,51 @@ explicitly (open question 2 from the carry-forward), so the
 ---
 
 ## Phase 4: Swap the runtime type to the model
-Status: Not started
+Status: Complete
 
 Pure type-name substitution. Because fields stay promoted, **no field-access site
 changes** — only signatures and variable types.
 
-- [ ] `app/gui/models.EditorState`: `current`/`previous`/`next` become
+**Owner rulings (2026-08-22), settled before the phase started:**
+
+- `EditorStateSaveDto` and `EditorStateValidationDto` **stay in
+  `internal/dtos/editor_state_dto/`**. The package is not "the persistence
+  shell" — it is the DTO package for `EditorState(Model)` operations (load,
+  save, validate). Only their `State` field type changes. Do not propose moving
+  them to `internal/dtos/` again.
+- The model↔DTO conversion gets a **named API** on the DTO:
+  `NewEditorStateDto(model)` and `(*EditorStateDto).Model()`. `file_service`
+  calls those, so Phase 5's reshape to a named field rewrites those two bodies
+  and nothing else. This is hazard 5's "named owner".
+
+**Plan correction:** `ManualEditDecisionDto` needs **no** change. Phase 2 moved
+`CastleSettingChanges` to `editor_state_model`, so it already carries no editor
+state. The carrier list below is over-inclusive by one — the same class of error
+as §0.3 hazard 4's `manualEditDecisionDto.go` entry.
+
+- [x] `app/gui/models.EditorState`: `current`/`previous`/`next` become
       `*editor_state_model.EditorStateModel`; update `GetCurrentState`,
       `OverrideState`, `SetNextState`, `UpdateCurrentState`, `GetPreviousState`,
       `GetNextState`.
-- [ ] `internal/handlers/handler_interfaces`: `IStateValidationHandler` and the
+- [x] `internal/handlers/handler_interfaces`: `IStateValidationHandler` and the
       other DTO-carrying signatures take/return the model.
-- [ ] `internal/validators`: `ValidationIssue.Fix(*EditorStateModel)`; the 45
+- [x] `internal/validators`: `ValidationIssue.Fix(*EditorStateModel)`; the 45
       validated fields and 46 issue categories are unchanged.
-- [ ] `internal/mappers/generatorConfigMapper.go`: `FromEditorState` takes the
+- [x] `internal/mappers/generatorConfigMapper.go`: `FromEditorState` takes the
       model. All 69 field reads stay as written.
-- [ ] `app/gui/drivers`, `app/gui/editor`, `app/gui/panels`,
+- [x] `app/gui/drivers`, `app/gui/editor`, `app/gui/panels`,
       `internal/services/editor`: update the types they pass through.
-- [ ] `internal/repositories` and `internal/services/file_service` keep the
+- [x] `internal/repositories` and `internal/services/file_service` keep the
       **DTO** — they are the load/save boundary. Name the owner of the conversion
       explicitly: `file_service` wraps model→DTO on save and unwraps DTO→model on
       load, and nothing above it sees a DTO (hazard 5).
-- [ ] Convert the **carrier DTOs** that hold editor state inside another DTO to
+- [x] Convert the **carrier DTOs** that hold editor state inside another DTO to
       carry the model: `EditorStateSaveDto`, `EditorStateValidationDto`,
       `RegenerationDecisionRequestDto`, `TemplateUpdateDto`,
-      `CastleSettingsReapplyRequestDto`, `ManualEditDecisionDto`. This is the item
-      most likely to be under-estimated — it is not just interface signatures.
-- [ ] Delete the Phase 3 shim methods once every caller is on the model.
-- [ ] Update every mock under [test/test_helpers](../test/test_helpers) and the
+      `CastleSettingsReapplyRequestDto`, ~~`ManualEditDecisionDto`~~. This is the
+      item most likely to be under-estimated — it is not just interface signatures.
+- [x] Delete the Phase 3 shim methods once every caller is on the model.
+- [x] Update every mock under [test/test_helpers](../test/test_helpers) and the
       affected unit/integration tests.
 
 ### Verification Plan
@@ -543,12 +813,106 @@ changes** — only signatures and variable types.
 - Coverage ≥ 72.5 % and not below the Phase 1 baseline.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Complete.** 99 files, **+530/−628** — the phase is net-negative because the four
+Phase 3 shims and their five delegation tests went away.
+
+**The boundary now has a name.** `file_service` is the only thing that converts:
+[fileService.go](../internal/services/file_service/fileService.go) unwraps with
+`dto.Model()` on load and wraps with `editor_state_dto.NewEditorStateDto(*model)`
+on save. Both helpers live in
+[editorStateDto.go](../internal/dtos/editor_state_dto/editorStateDto.go) and are
+the *only* two places that know how the DTO stores the model, so Phase 5's
+reshape to a named field rewrites those two bodies and nothing else.
+`IFileService` is model-facing on both methods; `repositories` still speaks
+`IFileRepository[EditorStateDto]`.
+
+**Grep gate passes.** `EditorStateDto` now appears in production code only in
+`internal/dtos/editor_state_dto` (8), `internal/repositories` (6) and
+`internal/services/file_service` (3). One stale comment in
+[zoneContentRowSave.go](../internal/models/zoneContentRowSave.go) was retargeted
+at `EditorStateModel`; it was the only other hit.
+
+**Two plan items were wrong and are corrected above.** `ManualEditDecisionDto`
+needed no change — Phase 2 had already moved `CastleSettingChanges` to
+`editor_state_model`, so it carries no editor state. And the owner ruled that
+`EditorStateSaveDto` / `EditorStateValidationDto` **stay** in `editor_state_dto`:
+they are the DTOs for `EditorState(Model)` *operations*, not for the persisted
+object, so the package is not "the persistence shell" and must not be treated as
+one.
+
+**Mechanism.** The type swap was a substitution of two fixed, unambiguous tokens
+(`editor_state_dto.EditorStateDto` → `editor_state_model.EditorStateModel`,
+`…NewDefaultEditorStateDto` → `…NewDefaultEditorStateModel`) over an **explicit
+enumerated file list** — the same owner-approved mechanism as Phase 1, never a
+repo-wide sweep. Five paths were deliberately **excluded** because they must keep
+the DTO: `test_helpers/allFieldsEditorState.go`,
+`test/integration/editorStateWireFormat_integration_test.go`,
+`test/unit/…/editorStateRepository/`, `test/unit/…/editorStateDto/` and
+`test/unit/…/fileService/`. The last of those is genuinely **mixed** — the
+repository mock is typed on the DTO while the service API is model-facing — and
+was rewritten by hand.
+
+**New tests.**
+[editorStateRoundTrip_integration_test.go](../test/integration/editorStateRoundTrip_integration_test.go)
+is the non-aliasing gate the verification plan asked for: save through the real
+`InitializeGuiHandler()` graph, then prove that mutating a returned model
+(scalar *and* slice element) leaves a reload untouched, that mutating the source
+model after a save does not reach the file, and that a full round-trip returns
+the all-fields model unchanged. It is **untagged** — production APIs only, no GPU
+— so it runs in a plain `go test ./test/...`, matching the Phase 1 golden test.
+`NewEditorStateDto` and `Model` got the two unit files §4.6 requires.
+
+**Naming cleanup, deliberately partial.** Parameters literally named `stateDto`
+that now carry a *model* were renamed to `state` in production
+(`guiHandler`, `stateHandler`, `templateHandler`, `templateHandlerInterface`) and
+in `TemplateHandlerMock`; `stateFiles.handleLoadState`'s `dto` became `loaded`.
+**~55 test-local `dto` / `stateDto` identifiers were left alone on purpose**: in
+most of those closures the enclosing scope already binds `state` to the driver
+`State`, so a blind rename would shadow it. Renaming them is cosmetic and is
+recorded in [todo/test_observations.md](../todo/test_observations.md) rather than
+smuggled into this diff.
+
+**Gates.**
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | exit 0 |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test -count=1 ./test/unit/...` | exit 0 |
+| `go test -count=1 ./test/...` (incl. the frozen golden test, untouched) | exit 0 |
+| `go test -tags=integration_test -count=1 ./test/integration/...` | exit 0 |
+| `go test -tags='integration_test,gui' -count=1 ./test/integration/gui/...` | exit 0, **no `-update`** |
+| Grep gate | DTO confined to the three permitted packages |
+| Coverage | **73.7 %** (Phase 1 baseline 73.6 %, floor 72.5 %) |
+| `gofmt -l .` | empty |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+
+`coverage.txt` / `coverage.html` / `lcov.info` regenerate identically and do not
+dirty the tree. Nothing was staged and nothing was committed.
+
+**For Phase 5.** The frozen golden test still passes **untouched**, which is the
+proof the wire format did not move. Phase 5 only has to: reshape the DTO to
+`{ SchemaVersion int; EditorState EditorStateModel }`, rewrite the bodies of
+`NewEditorStateDto` / `Model` / `NewDefaultEditorStateDto`, add
+`MarshalJSON`/`UnmarshalJSON`, and point the repository at the new field.
+`test_helpers.NewAllFieldsEditorStateModel()` already exists for the `_v1_`
+fixture.
 
 ---
 
 ## Phase 5: Versioned persistence shell
-Status: Not started
+Status: **Superseded — do not execute.** See §0.4 and Phase 9.
+
+> This phase puts `SchemaVersion`, `MarshalJSON` and `UnmarshalJSON` on the
+> **DTO**, i.e. it makes the consumer contract the file format. Under the §0.4
+> layering doctrine that is an **Entity's** job. Every item below is still
+> wanted — versioning, the migration hook, the merge-into-receiver unmarshal, the
+> `_v0_`/`_v1_` fixtures, the `omitempty` characterisation — but it belongs on
+> `EditorStateEntity`. **Phase 9 carries all of it forward**; hazards 8 and 9
+> apply there unchanged. Kept here only so the reasoning behind each item is not
+> lost.
 
 - [ ] Reshape the DTO to
       `struct { SchemaVersion int; EditorState editor_state_model.EditorStateModel }`
@@ -621,7 +985,7 @@ _(write when phase completes)_
 ---
 
 ## Phase 7: Cleanup, docs and gates
-Status: Not started
+Status: Not started — **runs last, after Phase 12** (see the correction phases).
 
 - [ ] Remove any delegation shim left from Phases 3–5.
 - [ ] Update the architecture description in [README.md](../README.md#L233),
@@ -642,6 +1006,254 @@ Status: Not started
   `gofmt -l ./app ./internal ./test ./cmd` empty, coverage ≥ 72.5 %.
 - `git status --short` reviewed and reported to the owner. **Nothing staged,
   nothing committed.**
+
+### Phase Summary
+_(write when phase completes)_
+
+---
+
+# Correction phases (added 2026-08-22)
+
+Phases 8–12 exist because Phases 1–5 were designed around the premise that
+`EditorStateDto` is the persisted `.gen.json` shape. **§0.4 settles that it is
+not.** Read §0.4 and §0.4.2 before touching any of them.
+
+**Revised phase order: 8 → 9 → 10 → 11 → 6 → 12 → 7.** Phase 5 is superseded by
+Phase 9. Phase 6 (the per-frame clone) must run **after** Phase 11, because
+Phase 11 changes what the panels hold and would otherwise invalidate Phase 6's
+view structs. Phase 7 (cleanup, docs and gates) now runs **last, after Phase 12**,
+not after Phase 6.
+
+## Decision required before Phase 8 — what happens to the unstaged Phase 4 diff
+
+Phase 4 is complete, green and **unstaged** (101 modified, 4 deleted, 3
+untracked). Its central deliverable — moving `app/` and the handler signatures
+from the DTO onto the Model — is **backwards** under §0.4, and Phase 11 reverses
+it. The owner must choose; the agent must **not** discard the tree unasked.
+
+| Option | Consequence |
+| --- | --- |
+| **A — keep it, pivot forward** | Phases 10–11 rewrite ~80 of the same files a second time. Keeps the Phase 3 shim removal and the round-trip tests without redoing them. |
+| **B — revert the Phase 4 diff to `0ca3b6d`, start at Phase 8** | Avoids the double-churn in the GUI and ~70 test files. Costs a redo of the shim deletion (small) — **save [editorStateRoundTrip_integration_test.go](../test/integration/editorStateRoundTrip_integration_test.go) and the two new DTO unit tests before reverting**, they are still wanted. |
+
+**Recommendation: B.** At `0ca3b6d` the GUI and handlers already name
+`EditorStateDto` at exactly the call sites §0.4 wants them to. Only the DTO's
+*shape* is wrong there, and Phase 10 fixes the shape in one package. Phase 4
+moved those call sites to the Model, so keeping it means moving them back — the
+same ~80 files touched twice for no net gain. **Only the owner may revert**;
+`git restore`/`git checkout` on a working tree the agent did not create is
+destructive and out of bounds without an explicit instruction.
+
+Phases 8–12 are written to be valid under either option.
+
+---
+
+## Phase 8: Restore the dependency direction in the entity layer
+Status: Not started
+
+Entities must import nothing from `internal/models`. Today two of the nine
+groups do (§0.4.2 defect 3), so the arrow points the wrong way at the bottom of
+the stack. Nothing above can be laid out correctly until this is fixed.
+
+- [ ] Give `internal/entities/editor_state/` its own leaf types so it imports no
+      model package. The offenders:
+      [contentSettings.go](../internal/entities/editor_state/contentSettings.go)
+      (`models.ZoneContentRowSave`, `config.BonusEntry`) and
+      [generationSettings.go](../internal/entities/editor_state/generationSettings.go)
+      (`config.MapTopology`).
+- [ ] `ZoneContentRowSave` and `ContentRuleRowSave` carry `Clone()` /
+      `Normalized()`, so they are **Models**. Split each into a behaviour-free
+      entity row (fields + json tags, in `entities/editor_state/`) and keep the
+      model in `internal/models/`, embedding or wrapping the entity per §0.4.
+- [ ] **Owner decision:** `config.MapTopology` and `config.BonusEntry` live in
+      `internal/models/config`, which the generator uses heavily. Options:
+      (a) move the enum/constant types to `internal/common/` per AGENTS.md §4.4
+      ("constants, IDs, immutable lookup tables"), which is the clean fix but
+      touches the generator; (b) declare entity-local counterparts and convert at
+      the repository seam. Do not start until this is answered.
+- [ ] `EditorState` keeps embedding the nine entity groups anonymously — §0.4
+      explicitly allows an Entity to be embedded in a Model.
+- [ ] Re-check `manualZoneSave.go` / `manualConnectionSave.go`: they import
+      `internal/entities`, which is entity→entity and therefore fine.
+
+### Verification Plan
+- No file under `internal/entities/` imports `internal/models`,
+  `internal/dtos`, `internal/services`, `internal/handlers` or
+  `internal/helpers`. Assert it mechanically, not by eye — this is Phase 12's
+  rule, brought forward for this phase.
+- Phase 1's frozen golden test passes **unchanged**: splitting a row type must
+  not move a json key. Parsed objects, never bytes (hazard 3).
+- `go build ./...`, both `go vet` variants, full unit + integration suites,
+  coverage ≥ 72.5 %.
+
+### Phase Summary
+_(write when phase completes)_
+
+---
+
+## Phase 9: Make the persisted shape an Entity (carries Phase 5 forward)
+Status: Not started
+
+Every item of the superseded Phase 5 is still wanted; it moves onto the Entity.
+Hazards 2, 3, 8 and 9 apply here unchanged.
+
+- [ ] Add `internal/entities/editor_state/editorStateEntity.go`:
+      `EditorStateEntity { SchemaVersion int; <the 9 groups> }`. Behaviour-free
+      apart from (de)serialisation, which §0.4 explicitly allows an Entity.
+- [ ] `MarshalJSON` via a **locally declared** alias type that embeds the groups
+      — never the entity itself (hazard 9) — so the wire format stays flat with
+      `schemaVersion` as a sibling key. Always write `1`.
+- [ ] `UnmarshalJSON` that **merges into the existing receiver**, preserving the
+      seed-defaults-then-overlay semantic of
+      [editorStateRepository.go](../internal/repositories/editorStateRepository.go#L26-L29)
+      (hazard 8), then an explicit migration hook normalising `0` → `1`.
+- [ ] Retype `EditorStateRepository`: it reads and writes the **Entity**, and
+      maps Entity ⇄ Model at its own boundary — `Load` returns a Model, `Save`
+      takes a Model (§0.4.1).
+- [ ] **Owner decision:** where the Entity ⇄ Model mapping lives. AGENTS.md §4.4
+      says `internal/mappers/`, but §0.4 says Entities are used only in
+      repositories. Recommendation: keep it **private to
+      `internal/repositories/`**, so "Entities are used only in repositories"
+      stays literally true and needs no carve-out.
+- [ ] `internal/services/file_service` speaks **Models only** — delete the
+      model↔DTO conversion Phase 4 put there.
+- [ ] Delete `NewEditorStateDto` and `(*EditorStateDto).Model()`. They exist only
+      to make the DTO a persistence shell.
+- [ ] Regenerate the golden as `editorState_v1_flat.gen.json` and keep **both**
+      unstaged fixtures: `_v0_` proves legacy files still load, `_v1_` proves the
+      current writer round-trips.
+- [ ] Tests: the legacy fixture loads and lands at version 1; the two fixtures
+      have the same key set apart from `schemaVersion` (**parsed objects, not
+      bytes**); an absent content-row key still yields the seeded default; and the
+      `omitempty` characterisation test pinning hazard 2.
+
+### Verification Plan
+- Load every real `.gen.json` in [output/](../output/) and assert no error and a
+  non-default template name — the owner's own legacy files are the realest
+  migration evidence available.
+- `EditorStateDto` no longer appears anywhere in `internal/repositories` or
+  `internal/services`.
+- Marshal the default state and compare the **parsed object** against the
+  pre-batch output; the only permitted delta is the added `schemaVersion` key.
+- Full unit + integration suites, coverage ≥ 72.5 %.
+
+### Phase Summary
+_(write when phase completes)_
+
+---
+
+## Phase 10: Rebuild `EditorStateDto` as a consumer contract
+Status: Not started
+
+After Phase 9 the DTO has no persistence job left. It becomes what §0.4 says it
+is: a logic-free contract between `app/gui/` and `internal/handlers/`.
+
+- [ ] Reduce `EditorStateDto` to a **flat, behaviour-free struct** — no embedded
+      model, no methods, no `MarshalJSON`. Start 1:1 with the persisted field set
+      so this phase carries no behaviour change; record here any field the GUI
+      turns out not to need, but do not drop it in the same pass.
+- [ ] Add `internal/mappers/editorStateMapper.go` — `ToModel(dto)` and
+      `ToDto(model)` — per AGENTS.md §4.4 ("data mappers and converters").
+- [ ] Every handler that takes or returns editor state takes and returns the
+      **DTO**, and calls the mapper at its own boundary:
+      `IStatePersistenceHandler`, `IStateValidationHandler`, `ITemplateHandler`,
+      `IZoneEditorHandler`, `IRegenerationHandler`.
+- [ ] Restore the envelope DTOs to carrying DTOs: `EditorStateSaveDto`,
+      `EditorStateValidationDto`, `RegenerationDecisionRequestDto`,
+      `TemplateUpdateDto`, `CastleSettingsReapplyRequestDto`.
+- [ ] Audit `internal/dtos/` for DTOs currently used **below** the handler layer.
+      Any such use is a §0.4 violation; either the type is really a Model, or the
+      service signature is wrong. List what is found before changing it.
+
+### Verification Plan
+- No package other than `internal/handlers/**`, `internal/dtos/**` and `app/**`
+  imports `internal/dtos/...`.
+- `internal/services`, `internal/validators` and `internal/mappers` mention no
+  DTO type in any exported signature.
+- Full unit + integration suites; the frozen golden test still passes untouched;
+  coverage ≥ 72.5 %.
+
+### Phase Summary
+_(write when phase completes)_
+
+---
+
+## Phase 11: Move `app/` off the Model
+Status: Not started
+
+This is the phase that reverses Phase 4's direction. `app/` holds DTOs and
+reaches business logic only through handler calls.
+
+- [ ] `app/gui/models.EditorState`: `current` / `previous` / `next` become
+      `*editor_state_dto.EditorStateDto`.
+- [ ] The panels' closures become `UpdateState(func(*editor_state_dto.EditorStateDto))`
+      — [bonusesPanel.go](../app/gui/panels/bonusesPanel.go),
+      [generalPanel.go](../app/gui/panels/generalPanel.go),
+      [layoutPanel.go](../app/gui/panels/layoutPanel.go),
+      [layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go).
+- [ ] The five pieces of state logic the GUI calls today are **Model** logic and
+      must move behind handler calls: `Clone`, `EqualsIgnoringManualEdits`,
+      `LayoutDefiningOptionsChanged`, `DiffCastleSettings`, `HasManualEdits`.
+      `ToManualZoneSaves` / `FromManualZoneSaves` likewise.
+- [ ] **Owner decision — the cost of doing this literally.** `Clone` and
+      `EqualsIgnoringManualEdits` run on the frame path. Routing them through a
+      handler adds a DTO⇄Model conversion per frame, which pulls directly against
+      Phase 6's allocation goal. Options: (a) literal — every call is a handler
+      call, and Phase 6 absorbs the cost with per-panel view DTOs; (b) the GUI
+      keeps a *local, `app/`-side* copy helper for the DTO (a plain struct copy
+      plus slice clones), which is view-layer plumbing rather than business logic,
+      and only the four comparison methods become handler calls. **Answer this
+      before starting.**
+- [ ] `app/` stops importing `internal/models/editor_state_model` and
+      `internal/entities` for editor state.
+- [ ] Re-point `app/gui/editor/window_testexports.go` and every mock and test.
+
+### Verification Plan
+- No file under `app/` imports `internal/models/editor_state_model` or
+  `internal/entities/editor_state`.
+- **GPU suite passes without `-update`** — this phase changes what the panels
+  read, so the rendering has to be proven unchanged.
+- Round-trip non-aliasing tests still pass; full unit + integration suites;
+  coverage ≥ 72.5 %.
+
+### Phase Summary
+_(write when phase completes)_
+
+---
+
+## Phase 12: Enforce the layering mechanically
+Status: Not started
+
+§0.4 was violated silently for four phases because nothing checked it. A doctrine
+without a gate is a suggestion.
+
+- [ ] Extend [cmd/testlayoutcheck](../cmd/testlayoutcheck) (or add a sibling
+      `cmd/layeringcheck`) with import rules that fail the build:
+      - `internal/entities/**` must not import `internal/models`, `internal/dtos`,
+        `internal/services`, `internal/handlers` or `internal/helpers`.
+      - `internal/entities/**` must be imported only by `internal/repositories/**`,
+        `internal/models/**` and `internal/entities/**`.
+      - `internal/dtos/**` must be imported only by `internal/handlers/**`,
+        `internal/dtos/**` and `app/**`.
+      - `internal/models/**` must not be imported by `app/**`.
+- [ ] Seed the checker with an **explicit, shrinking allow-list** of the
+      pre-existing violations so it can be turned on before they are all fixed.
+      An empty allow-list is the end state, not the starting condition.
+- [ ] Add a VS Code task for it and wire it into the Phase 7 gate list.
+- [ ] Amend **AGENTS.md §4.4**: packages outside `internal/` may use
+      `internal/dtos/` only. Fold the §0.4 table and the §0.4.1 flow into the
+      instructions so the doctrine outlives this plan file.
+- [ ] Record the residual breach as its own backlog entry:
+      **28 pre-existing files under `app/` import `internal/models` or
+      `internal/entities`** for things other than editor state (`config`,
+      `neutral_zone`, `preview`, `entities.Zone`/`Connection`). Out of scope for
+      Batch I; it needs its own batch and its own owner sign-off.
+
+### Verification Plan
+- `go run ./cmd/testlayoutcheck .` (or the new checker) exits 0 with the
+  allow-list, and exits 1 when a deliberate test violation is introduced —
+  prove the gate actually trips.
+- Every Phase 7 gate green.
 
 ### Phase Summary
 _(write when phase completes)_

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 )
 
@@ -29,22 +30,25 @@ func NewFileService(
 }
 
 // LoadSettingsFile reads settings file from the given filepath and returns the parsed settings object.
-func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_dto.EditorStateDto, error) {
+// It is the only place that unwraps the persistence DTO; nothing above it sees one.
+func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, error) {
 	editorState, err := this.editorStateRepository.Load(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	return &editorState, nil
+	return editorState.Model(), nil
 }
 
 // SaveSettings writes the editor state next to filePath, named after the
 // template, and returns the path actually written.
-func (this *FileService) SaveSettings(filePath string, editorState *editor_state_dto.EditorStateDto) (string, error) {
+func (this *FileService) SaveSettings(
+	filePath string,
+	editorState *editor_state_model.EditorState) (string, error) {
 	return this.editorStateRepository.Save(
 		filepath.Dir(filePath),
 		editorState.TemplateName,
-		*editorState)
+		editor_state_dto.NewEditorStateDto(*editorState))
 }
 
 // SaveTemplateWithPreview writes the template and, when previewImage is not

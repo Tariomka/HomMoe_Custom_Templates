@@ -1,8 +1,8 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -14,7 +14,7 @@ type GeneratorConfigMapperMock struct {
 }
 
 func (this *GeneratorConfigMapperMock) FromEditorState(
-	editorState editor_state_dto.EditorStateDto,
+	editorState editor_state_model.EditorState,
 ) *config.GeneratorConfig {
 	arguments := this.Called(editorState)
 	configuration, _ := arguments.Get(0).(*config.GeneratorConfig)

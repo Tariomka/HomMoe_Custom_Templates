@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,9 +30,10 @@ func TestWhenSettingsFileIsLoaded_ReturnsTheLoadedState(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	expected := editor_state_dto.NewDefaultEditorStateDto()
+	expected := editor_state_model.NewDefaultEditorStateModel()
 	expected.TemplateName = "Loaded"
-	mocks.editorState.On("Load", "state.gen.json").Return(expected, nil)
+	mocks.editorState.On("Load", "state.gen.json").
+		Return(editor_state_dto.NewEditorStateDto(expected), nil)
 
 	// Act
 	actual, err := service.LoadSettingsFile("state.gen.json")

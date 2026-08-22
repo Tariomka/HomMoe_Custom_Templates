@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
@@ -114,7 +113,7 @@ func manualZoneSaves() []editor_state.ManualZoneSave {
 	return []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
 }
 
-func stateWithManualEdits() *editor_state_dto.EditorStateDto {
+func stateWithManualEdits() *editor_state_model.EditorState {
 	state := defaultState()
 	state.ManualZones = manualZoneSaves()
 	return state

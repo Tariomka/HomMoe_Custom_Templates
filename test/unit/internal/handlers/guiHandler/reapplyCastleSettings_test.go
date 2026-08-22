@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -20,7 +19,7 @@ func TestWhenCastleSettingsChange_ReturnsServiceEquivalentZones(t *testing.T) {
 	template := test_helpers.GetDefaultTemplate()
 	expectedZones := cloneZones(t, template.Variants[0].Zones)
 	actualZones := cloneZones(t, template.Variants[0].Zones)
-	editorState := editor_state_dto.NewDefaultEditorStateDto()
+	editorState := editor_state_model.NewDefaultEditorStateModel()
 	editorState.NeutralZoneCastles = 2
 	changes := editor_state_model.CastleSettingChanges{NeutralSimple: true}
 	configuration := test_helpers.NewConfigMapper().FromEditorState(editorState)

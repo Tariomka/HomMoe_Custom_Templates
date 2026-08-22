@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
@@ -24,7 +25,7 @@ func NewStateHandler(
 	}
 }
 
-func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
+func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_model.EditorState, []string, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
 		return nil, nil, common_errors.ErrNoOutputPath
@@ -53,38 +54,38 @@ func (this *stateHandler) SaveState(stateDto editor_state_dto.EditorStateSaveDto
 }
 
 func (this *stateHandler) ValidateEditorState(
-	stateDto editor_state_dto.EditorStateDto,
+	state editor_state_model.EditorState,
 	fixIssues bool) editor_state_dto.EditorStateValidationDto {
 	// Cloned on entry so the fixes below never write through to the caller's
 	// slices, and so the returned state does not alias them either.
-	stateDto = stateDto.Clone()
-	issues := this.editorValidator.Validate(&stateDto)
+	state = state.Clone()
+	issues := this.editorValidator.Validate(&state)
 	warnings := make([]string, 0, len(issues))
 	for _, issue := range issues {
 		if fixIssues {
-			issue.Fix(&stateDto)
+			issue.Fix(&state)
 		}
 		warnings = append(warnings, issue.Message)
 	}
 	if fixIssues {
-		normalizeInactiveNeutralCounts(&stateDto)
+		normalizeInactiveNeutralCounts(&state)
 	}
 
-	return editor_state_dto.EditorStateValidationDto{State: stateDto, Warnings: warnings}
+	return editor_state_dto.EditorStateValidationDto{State: state, Warnings: warnings}
 }
 
-func normalizeInactiveNeutralCounts(stateDto *editor_state_dto.EditorStateDto) {
-	if stateDto.AdvancedMode {
-		stateDto.NeutralZoneCount = 0
+func normalizeInactiveNeutralCounts(state *editor_state_model.EditorState) {
+	if state.AdvancedMode {
+		state.NeutralZoneCount = 0
 		return
 	}
 
-	stateDto.NeutralLowestNoCastleCount = 0
-	stateDto.NeutralLowestCastleCount = 0
-	stateDto.NeutralLowNoCastleCount = 0
-	stateDto.NeutralLowCastleCount = 0
-	stateDto.NeutralMediumNoCastleCount = 0
-	stateDto.NeutralMediumCastleCount = 0
-	stateDto.NeutralHighNoCastleCount = 0
-	stateDto.NeutralHighCastleCount = 0
+	state.NeutralLowestNoCastleCount = 0
+	state.NeutralLowestCastleCount = 0
+	state.NeutralLowNoCastleCount = 0
+	state.NeutralLowCastleCount = 0
+	state.NeutralMediumNoCastleCount = 0
+	state.NeutralMediumCastleCount = 0
+	state.NeutralHighNoCastleCount = 0
+	state.NeutralHighCastleCount = 0
 }

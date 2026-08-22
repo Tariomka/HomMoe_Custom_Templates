@@ -3,8 +3,8 @@ package test_helpers
 import (
 	"image"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -14,15 +14,15 @@ type FileServiceMock struct {
 	mock.Mock
 }
 
-func (this *FileServiceMock) LoadSettingsFile(filePath string) (*editor_state_dto.EditorStateDto, error) {
+func (this *FileServiceMock) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, error) {
 	arguments := this.Called(filePath)
-	state, _ := arguments.Get(0).(*editor_state_dto.EditorStateDto)
+	state, _ := arguments.Get(0).(*editor_state_model.EditorState)
 	return state, arguments.Error(1)
 }
 
 func (this *FileServiceMock) SaveSettings(
 	filePath string,
-	editorState *editor_state_dto.EditorStateDto,
+	editorState *editor_state_model.EditorState,
 ) (string, error) {
 	arguments := this.Called(filePath, editorState)
 	return arguments.String(0), arguments.Error(1)

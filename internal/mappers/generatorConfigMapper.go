@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 type GeneratorConfigMapper struct {
@@ -18,7 +18,7 @@ func NewConfigMapper(contentItemMapper IMandatoryContentItemMapper) IGeneratorCo
 // FromEditorState translates a SettingsFile (UI persistence model)
 // into a GeneratorSettings (generator input model).
 func (this *GeneratorConfigMapper) FromEditorState(
-	editorState editor_state_dto.EditorStateDto) *config.GeneratorConfig {
+	editorState editor_state_model.EditorState) *config.GeneratorConfig {
 	generatorSettings := config.NewGeneratorConfig()
 	generatorSettings.TemplateName = editorState.TemplateName
 	generatorSettings.GameMode = editorState.GameMode
@@ -56,7 +56,7 @@ func (this *GeneratorConfigMapper) FromEditorState(
 	return generatorSettings
 }
 
-func (this *GeneratorConfigMapper) mapZoneConfig(editorState editor_state_dto.EditorStateDto) config.ZoneConfig {
+func (this *GeneratorConfigMapper) mapZoneConfig(editorState editor_state_model.EditorState) config.ZoneConfig {
 	return config.ZoneConfig{
 		NeutralZoneCount:            editorState.NeutralZoneCount,
 		PlayerOwnedCastles:          editorState.PlayerOwnedCastles,
@@ -91,7 +91,9 @@ func (this *GeneratorConfigMapper) mapZoneConfig(editorState editor_state_dto.Ed
 	}
 }
 
-func (this *GeneratorConfigMapper) mapHeroSettings(editorState editor_state_dto.EditorStateDto) config.HeroSettings {
+func (this *GeneratorConfigMapper) mapHeroSettings(
+	editorState editor_state_model.EditorState,
+) config.HeroSettings {
 	return config.HeroSettings{
 		HeroCountMin:       editorState.HeroCountMin,
 		HeroCountMax:       editorState.HeroCountMax,
@@ -100,7 +102,7 @@ func (this *GeneratorConfigMapper) mapHeroSettings(editorState editor_state_dto.
 }
 
 func (this *GeneratorConfigMapper) mapGameEndConditions(
-	editorState editor_state_dto.EditorStateDto) *config.GameEndConditions {
+	editorState editor_state_model.EditorState) *config.GameEndConditions {
 	return &config.GameEndConditions{
 		VictoryCondition: editorState.VictoryCondition,
 		CityHold:         editorState.CityHold,
@@ -112,7 +114,7 @@ func (this *GeneratorConfigMapper) mapGameEndConditions(
 }
 
 func (this *GeneratorConfigMapper) mapGladiatorArenaRules(
-	editorState editor_state_dto.EditorStateDto) *config.GladiatorArenaRules {
+	editorState editor_state_model.EditorState) *config.GladiatorArenaRules {
 	return &config.GladiatorArenaRules{
 		Enabled:        editorState.GladiatorArena,
 		DaysDelayStart: editorState.GladiatorArenaDaysDelayStart,
@@ -121,7 +123,7 @@ func (this *GeneratorConfigMapper) mapGladiatorArenaRules(
 }
 
 func (this *GeneratorConfigMapper) mapTournamentRules(
-	editorState editor_state_dto.EditorStateDto) *config.TournamentRules {
+	editorState editor_state_model.EditorState) *config.TournamentRules {
 	return &config.TournamentRules{
 		Enabled:            editorState.Tournament,
 		FirstTournamentDay: editorState.TournamentFirstTournamentDay,

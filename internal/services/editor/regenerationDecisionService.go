@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
@@ -71,7 +70,7 @@ func (this *RegenerationDecisionService) DecideRegeneration(
 // Manual edits are dropped when a layout-defining option changed, because the
 // hand-made layout no longer describes the regenerated map.
 func (this *RegenerationDecisionService) DecideManualEditReapplication(
-	previous, current *editor_state_dto.EditorStateDto) dtos.ManualEditDecisionDto {
+	previous, current *editor_state_model.EditorState) dtos.ManualEditDecisionDto {
 	if !current.HasManualEdits() {
 		return dtos.ManualEditDecisionDto{}
 	}

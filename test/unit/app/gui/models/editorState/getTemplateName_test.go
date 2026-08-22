@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +13,7 @@ func TestWhenTemplateNameWasUpdated_GetTemplateNameReturnsIt(t *testing.T) {
 	// Arrange
 	state := newEditorState()
 	templateName := gofakeit.ProductName()
-	state.UpdateCurrentState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = templateName })
+	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) { dto.TemplateName = templateName })
 
 	// Act
 	actual := state.GetTemplateName()

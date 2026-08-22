@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -40,7 +40,7 @@ func NewZoneEditorHandler(
 }
 
 func (this *zoneEditorHandler) GetZoneEditorOptions(
-	state editor_state_dto.EditorStateDto,
+	state editor_state_model.EditorState,
 	totalZoneCount int) dtos.ZoneEditorOptionsDto {
 	configuration := this.mapper.FromEditorState(state)
 	return dtos.ZoneEditorOptionsDto{

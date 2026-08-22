@@ -16,9 +16,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 type BonusesPanel struct {
@@ -69,7 +69,7 @@ func (this *BonusesPanel) LoadFromState() {
 }
 
 func (this *BonusesPanel) SaveToState() {
-	this.state.UpdateState(func(settings *editor_state_dto.EditorStateDto) {
+	this.state.UpdateState(func(settings *editor_state_model.EditorState) {
 		settings.Bonuses = this.bonuses
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")

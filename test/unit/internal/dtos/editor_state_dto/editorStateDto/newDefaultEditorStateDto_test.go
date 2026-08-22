@@ -16,5 +16,5 @@ func TestWhenDefaultStateIsCreated_CarriesTheDefaultModel(t *testing.T) {
 	state := editor_state_dto.NewDefaultEditorStateDto()
 
 	// Assert
-	assert.Equal(t, editor_state_model.NewDefaultEditorStateModel(), state.EditorStateModel)
+	assert.Equal(t, editor_state_model.NewDefaultEditorStateModel(), state.EditorState)
 }

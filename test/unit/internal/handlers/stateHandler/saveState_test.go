@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,7 @@ func TestWhenThereIsNoStateToSave_ReturnsNothingToSaveError(t *testing.T) {
 func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, newPassingValidator())
 
 	// Act
@@ -42,7 +43,7 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, newPassingValidator())
 
 	// Act
@@ -56,7 +57,7 @@ func TestWhenStateOutputPathIsPadded_SavesToTheTrimmedPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	outputPath := gofakeit.Word()
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("SaveSettings", outputPath, &state).Return(gofakeit.Word(), nil)
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
@@ -72,7 +73,7 @@ func TestWhenStateIsSaved_ReturnsTheWrittenPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedPath := gofakeit.Word() + ".gen.json"
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("SaveSettings", mock.Anything, mock.Anything).Return(expectedPath, nil)
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
@@ -91,7 +92,7 @@ func TestWhenStateCannotBeSaved_PropagatesTheError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedError := errors.New(gofakeit.Sentence(3))
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("SaveSettings", mock.Anything, mock.Anything).Return("", expectedError)
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())

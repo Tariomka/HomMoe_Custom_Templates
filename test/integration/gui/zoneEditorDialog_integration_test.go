@@ -10,9 +10,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -47,7 +47,7 @@ func newGeometryDialog(
 ) *dialogs.ZoneEditorDialog {
 	t.Helper()
 	handler := composition.InitializeGuiHandler()
-	options := handler.GetZoneEditorOptions(editor_state_dto.NewDefaultEditorStateDto(), len(zones))
+	options := handler.GetZoneEditorOptions(editor_state_model.NewDefaultEditorStateModel(), len(zones))
 	dialog := dialogs.NewZoneEditorDialog(
 		zones,
 		connections,
@@ -112,7 +112,7 @@ func newApplyCaptureFixture(
 		newGeometryZone("B", 0.8, 0.5),
 	}
 	connections := []entities.Connection{newGeometryConnection("ab", "A", "B")}
-	options := handler.GetZoneEditorOptions(editor_state_dto.NewDefaultEditorStateDto(), len(zones))
+	options := handler.GetZoneEditorOptions(editor_state_model.NewDefaultEditorStateModel(), len(zones))
 	capture := &applyCapture{}
 	dialog := dialogs.NewZoneEditorDialog(
 		zones,
@@ -151,7 +151,7 @@ func TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := composition.InitializeGuiHandler()
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	generated, err := handler.GenerateTemplate(state)
 	require.NoError(t, err)
 	require.NotNil(t, generated.Template)

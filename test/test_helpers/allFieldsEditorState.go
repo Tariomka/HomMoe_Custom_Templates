@@ -12,7 +12,7 @@ import (
 // NewAllFieldsEditorStateDto wraps the all-fields model in the persistence
 // shell, which is what the frozen .gen.json fixture is written from.
 func NewAllFieldsEditorStateDto() editor_state_dto.EditorStateDto {
-	return editor_state_dto.EditorStateDto{EditorStateModel: NewAllFieldsEditorStateModel()}
+	return editor_state_dto.NewEditorStateDto(NewAllFieldsEditorStateModel())
 }
 
 // NewAllFieldsEditorStateModel builds an editor state in which every persisted
@@ -23,8 +23,8 @@ func NewAllFieldsEditorStateDto() editor_state_dto.EditorStateDto {
 // impossible to miss.
 //
 //nolint:funlen // one assignment per persisted field; splitting it would hide the 1:1 field coverage this fixture exists to guarantee.
-func NewAllFieldsEditorStateModel() editor_state_model.EditorStateModel {
-	return editor_state_model.EditorStateModel{
+func NewAllFieldsEditorStateModel() editor_state_model.EditorState {
+	return editor_state_model.EditorState{
 		TemplateName: "All Fields Fixture",
 		GameMode:     "SingleHero",
 

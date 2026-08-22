@@ -3,9 +3,9 @@ package stateHandler_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -18,7 +18,7 @@ func TestWhenStateHasNoIssues_ReturnsNoWarnings(t *testing.T) {
 	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, newPassingValidator())
 
 	// Act
-	validation := handler.ValidateEditorState(editor_state_dto.NewDefaultEditorStateDto(), true)
+	validation := handler.ValidateEditorState(editor_state_model.NewDefaultEditorStateModel(), true)
 
 	// Assert
 	assert.Empty(t, validation.Warnings)
@@ -27,7 +27,7 @@ func TestWhenStateHasNoIssues_ReturnsNoWarnings(t *testing.T) {
 func TestWhenIssuesAreNotFixed_ReturnsTheStateUnmodified(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.AdvancedMode = true
 	state.NeutralZoneCount = gofakeit.IntRange(1, 16)
 	handler := handlers.NewStateHandler(
@@ -45,7 +45,7 @@ func TestWhenIssuesAreFixed_AppliesEachIssueFix(t *testing.T) {
 	t.Parallel()
 	// Arrange - the real validator is used because ValidationIssue's fix is
 	// package-private and cannot be supplied by a mock.
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.PlayerCount = 99
 	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
 
@@ -59,7 +59,7 @@ func TestWhenIssuesAreFixed_AppliesEachIssueFix(t *testing.T) {
 func TestWhenAdvancedModeIsOn_ZeroesTheSimpleNeutralZoneCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.AdvancedMode = true
 	state.NeutralZoneCount = gofakeit.IntRange(1, 16)
 	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, newPassingValidator())
@@ -77,7 +77,7 @@ func TestWhenAdvancedModeIsOn_ZeroesTheSimpleNeutralZoneCount(t *testing.T) {
 func TestWhenValidationFixesAContentRow_TheCallersSliceIsUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := editor_state_dto.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.PlayerCount = 99
 	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "sawmill", Count: 1}}
 	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
@@ -166,8 +166,8 @@ func TestWhenStateIsValidated_LeavesTheCallersStateUntouched(t *testing.T) {
 
 // advancedTierCountsState returns a state whose eight per-tier neutral counts
 // are all non-zero, so a normalization to zero is observable.
-func advancedTierCountsState() editor_state_dto.EditorStateDto {
-	state := editor_state_dto.NewDefaultEditorStateDto()
+func advancedTierCountsState() editor_state_model.EditorState {
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.NeutralLowestNoCastleCount = gofakeit.IntRange(1, 8)
 	state.NeutralLowestCastleCount = gofakeit.IntRange(1, 8)
 	state.NeutralLowNoCastleCount = gofakeit.IntRange(1, 8)
@@ -179,7 +179,7 @@ func advancedTierCountsState() editor_state_dto.EditorStateDto {
 	return state
 }
 
-func tierCountsOf(state editor_state_dto.EditorStateDto) []int {
+func tierCountsOf(state editor_state_model.EditorState) []int {
 	return []int{
 		state.NeutralLowestNoCastleCount,
 		state.NeutralLowestCastleCount,

@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +17,7 @@ func TestWhenNothingWasModified_DefaultStateIsReturned(t *testing.T) {
 	current := state.GetCurrentState()
 
 	// Assert
-	assert.Equal(t, editor_state_dto.NewDefaultEditorStateDto(), current)
+	assert.Equal(t, editor_state_model.NewDefaultEditorStateModel(), current)
 }
 
 func TestWhenReturnedStateIsMutated_StoredStateStaysUnchanged(t *testing.T) {
@@ -31,5 +31,5 @@ func TestWhenReturnedStateIsMutated_StoredStateStaysUnchanged(t *testing.T) {
 	copyOfState.PlayerCount = gofakeit.Number(3, 8)
 
 	// Assert
-	assert.Equal(t, editor_state_dto.NewDefaultEditorStateDto(), state.GetCurrentState())
+	assert.Equal(t, editor_state_model.NewDefaultEditorStateModel(), state.GetCurrentState())
 }

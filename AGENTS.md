@@ -363,6 +363,34 @@ Place new code in the package whose responsibility matches its role:
   `internal/dtos/` is the highest layer - it is used for transferring data from and
   to `app/.../` - it can import `internal/entities/`, `internal/models/` and any data
   related additional packages (`internal/helpers/`, `internal/registry/`, `internal/common/`, etc.).
+  - In theory, if `app/` would be detached from the project, it would have a separate model
+    implementation, but here `app/.../` can use the `internal/models/` instead of duplicating code.
+  - Object traversal flow for request(from app)-response(from internal handlers):
+
+    ```mermaid
+    sequenceDiagram
+        participant GUI as app/{user interface implementation}
+        participant H as internal/handlers
+        participant S as internal/services
+        participant R as internal/repositories
+        participant Disk as .gen.json / .rmg.json
+
+        Note over GUI: maps stored Model → DTO
+        GUI->>H: request DTO
+        Note over H: maps DTO → Model
+        H->>S: Model
+        S->>R: Model
+        Note over R: save: maps Model → Entity
+        R->>Disk: Entity
+        Disk-->>R: Entity
+        Note over R: load: maps Entity → Model
+        R-->>S: Model
+        S-->>H: Model
+        Note over H: maps Model → DTO
+        H-->>GUI: response DTO
+        Note over GUI: maps DTO → Model and stores it
+    ```
+
 - Packages outside `internal/` must enter internal functionality
   (services, validators, etc.) through `internal/handlers/`; data accessing
   (`internal/registry/`, `internal/common/`), data typing (`internal/models/`, `internal/dtos/`)

@@ -8,9 +8,9 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -61,7 +61,7 @@ func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutral_z
 func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T) {
 	now := time.Now()
 	state := newUIState()
-	state.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.NeutralZoneCount = 4 })
+	state.UpdateState(func(s *editor_state_model.EditorState) { s.NeutralZoneCount = 4 })
 	state.AutoRegenerate(now)
 
 	template := state.GetLastTemplate()
@@ -85,7 +85,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	expectedConnections := connectionKeys(connections)
 
 	// The "last change after manual editing" is a castle count.
-	state.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.NeutralZoneCastles = 3 })
+	state.UpdateState(func(s *editor_state_model.EditorState) { s.NeutralZoneCastles = 3 })
 	regenerateAfterDebounce(state, now)
 
 	got := state.GetLastTemplate()
@@ -123,7 +123,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 	now := time.Now()
 	state := newUIState()
-	state.UpdateState(func(s *editor_state_dto.EditorStateDto) {
+	state.UpdateState(func(s *editor_state_model.EditorState) {
 		s.AdvancedMode = true
 		s.NeutralLowCastleCount = 2  // two Low zones with one castle each
 		s.NeutralHighCastleCount = 1 // one High zone with one castle
@@ -144,7 +144,7 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 		Connections: template.Variants[0].Connections,
 	})
 
-	state.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.NeutralHighCastlesPerZone = 3 })
+	state.UpdateState(func(s *editor_state_model.EditorState) { s.NeutralHighCastlesPerZone = 3 })
 	regenerateAfterDebounce(state, now)
 
 	got := state.GetLastTemplate()
@@ -172,7 +172,7 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 	now := time.Now()
 	state := newUIState()
-	state.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.NeutralZoneCount = 3 })
+	state.UpdateState(func(s *editor_state_model.EditorState) { s.NeutralZoneCount = 3 })
 	state.AutoRegenerate(now)
 
 	template := state.GetLastTemplate()
@@ -190,7 +190,7 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 	})
 
 	// Non-castle, non-layout change.
-	state.UpdateState(func(s *editor_state_dto.EditorStateDto) { s.NeutralStackStrengthPercent = 150 })
+	state.UpdateState(func(s *editor_state_model.EditorState) { s.NeutralStackStrengthPercent = 150 })
 	regenerateAfterDebounce(state, now)
 
 	got := state.GetLastTemplate()

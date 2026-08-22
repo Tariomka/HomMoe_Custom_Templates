@@ -8,35 +8,22 @@ import (
 // editor. The model is embedded anonymously so the persisted object stays flat
 // and every field selector keeps resolving.
 type EditorStateDto struct {
-	editor_state_model.EditorStateModel
+	editor_state_model.EditorState
 }
 
 func NewDefaultEditorStateDto() EditorStateDto {
-	return EditorStateDto{EditorStateModel: editor_state_model.NewDefaultEditorStateModel()}
+	return EditorStateDto{EditorState: editor_state_model.NewDefaultEditorStateModel()}
 }
 
-// Clone shadows the promoted EditorStateModel.Clone so callers still holding a
-// DTO get a DTO back. Temporary: it goes away once every caller is on the model.
-func (this *EditorStateDto) Clone() EditorStateDto {
-	return EditorStateDto{EditorStateModel: this.EditorStateModel.Clone()}
+// NewEditorStateDto wraps a runtime model for persistence. It and Model are the
+// only two places that know how the DTO stores the model, so reshaping the DTO
+// stays confined to this file.
+func NewEditorStateDto(state editor_state_model.EditorState) EditorStateDto {
+	return EditorStateDto{EditorState: state}
 }
 
-// LayoutDefiningOptionsChanged shadows the promoted method so it keeps taking a
-// DTO. Temporary, as with Clone.
-func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDto) bool {
-	return this.EditorStateModel.LayoutDefiningOptionsChanged(&incoming.EditorStateModel)
-}
-
-// DiffCastleSettings shadows the promoted method so it keeps taking a DTO.
-// Temporary, as with Clone.
-func (this *EditorStateDto) DiffCastleSettings(
-	incoming *EditorStateDto,
-) editor_state_model.CastleSettingChanges {
-	return this.EditorStateModel.DiffCastleSettings(&incoming.EditorStateModel)
-}
-
-// EqualsIgnoringManualEdits shadows the promoted method so it keeps taking a
-// DTO. Temporary, as with Clone.
-func (this *EditorStateDto) EqualsIgnoringManualEdits(other *EditorStateDto) bool {
-	return this.EditorStateModel.EqualsIgnoringManualEdits(&other.EditorStateModel)
+// Model returns the runtime model carried by the DTO. The result aliases the
+// receiver's slices; callers that keep it past the receiver's lifetime clone.
+func (this *EditorStateDto) Model() *editor_state_model.EditorState {
+	return &this.EditorState
 }

@@ -3,7 +3,7 @@ package dtos
 import (
 	"time"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // RegenerationDecisionRequestDto is everything the regeneration decision
@@ -14,9 +14,9 @@ import (
 // window elapses; both are supplied by the caller so the decision stays
 // deterministic and testable.
 type RegenerationDecisionRequestDto struct {
-	Previous      *editor_state_dto.EditorStateDto
-	Current       *editor_state_dto.EditorStateDto
-	Next          *editor_state_dto.EditorStateDto
+	Previous      *editor_state_model.EditorState
+	Current       *editor_state_model.EditorState
+	Next          *editor_state_model.EditorState
 	Now           time.Time
 	DebounceDueAt time.Time
 }
