@@ -1,9 +1,9 @@
-package editorStateDto_test
+package defaultPlayerZoneContentRows_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zone_contents"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +12,7 @@ func TestWhenDefaultRowsAreBuilt_ReturnsFourteenRows(t *testing.T) {
 	// Arrange
 
 	// Act
-	rows := editor_state_dto.DefaultPlayerZoneContentRows()
+	rows := common_zone_contents.GetDefaultPlayerZoneContentRows()
 
 	// Assert
 	assert.Len(t, rows, 14)
@@ -27,7 +27,7 @@ func TestWhenDefaultRowsAreBuilt_MarksOnlyFirstSevenRowsAsMines(t *testing.T) {
 	}
 
 	// Act
-	rows := editor_state_dto.DefaultPlayerZoneContentRows()
+	rows := common_zone_contents.GetDefaultPlayerZoneContentRows()
 
 	// Assert
 	actualMineFlags := make([]bool, 0, len(rows))
@@ -42,7 +42,7 @@ func TestWhenDefaultRowsAreBuilt_GuardsEveryRow(t *testing.T) {
 	// Arrange
 
 	// Act
-	rows := editor_state_dto.DefaultPlayerZoneContentRows()
+	rows := common_zone_contents.GetDefaultPlayerZoneContentRows()
 
 	// Assert
 	guardedRowCount := 0

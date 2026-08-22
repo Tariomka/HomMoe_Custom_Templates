@@ -1,18 +1,18 @@
-package manualConnectionSave_test
+package manualConnectionSaveModel_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
 
 // referenceFieldCase reads a value reachable only through a slice or pointer,
 // and mutates that same value in place.
 type referenceFieldCase struct {
-	read   func(save editor_state_dto.ManualConnectionSave) any
-	mutate func(save editor_state_dto.ManualConnectionSave)
+	read   func(save editor_state_model.ManualConnectionSaveModel) any
+	mutate func(save editor_state_model.ManualConnectionSaveModel)
 }
 
 func TestWhenSaveIsCloned_ScalarFieldsAreCopied(t *testing.T) {
@@ -53,38 +53,38 @@ func TestWhenAReferenceFieldIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *test
 func referenceFieldCases() map[string]referenceFieldCase {
 	return map[string]referenceFieldCase{
 		"WhenRoadFlagIsMutated_SourceIsUnchanged": {
-			read:   func(save editor_state_dto.ManualConnectionSave) any { return *save.Connection.Road },
-			mutate: func(save editor_state_dto.ManualConnectionSave) { *save.Connection.Road = false },
+			read:   func(save editor_state_model.ManualConnectionSaveModel) any { return *save.Connection.Road },
+			mutate: func(save editor_state_model.ManualConnectionSaveModel) { *save.Connection.Road = false },
 		},
 		"WhenPortalPlacementRuleFromIsMutated_SourceIsUnchanged": {
-			read: func(save editor_state_dto.ManualConnectionSave) any {
+			read: func(save editor_state_model.ManualConnectionSaveModel) any {
 				return save.Connection.PortalPlacementRulesFrom[0].Type
 			},
-			mutate: func(save editor_state_dto.ManualConnectionSave) {
+			mutate: func(save editor_state_model.ManualConnectionSaveModel) {
 				save.Connection.PortalPlacementRulesFrom[0].Type = "changed"
 			},
 		},
 		"WhenPortalPlacementRuleFromArgsIsMutated_SourceIsUnchanged": {
-			read: func(save editor_state_dto.ManualConnectionSave) any {
+			read: func(save editor_state_model.ManualConnectionSaveModel) any {
 				return save.Connection.PortalPlacementRulesFrom[0].Args[0]
 			},
-			mutate: func(save editor_state_dto.ManualConnectionSave) {
+			mutate: func(save editor_state_model.ManualConnectionSaveModel) {
 				save.Connection.PortalPlacementRulesFrom[0].Args[0] = "changed"
 			},
 		},
 		"WhenPortalPlacementRuleToIsMutated_SourceIsUnchanged": {
-			read: func(save editor_state_dto.ManualConnectionSave) any {
+			read: func(save editor_state_model.ManualConnectionSaveModel) any {
 				return save.Connection.PortalPlacementRulesTo[0].Weight
 			},
-			mutate: func(save editor_state_dto.ManualConnectionSave) {
+			mutate: func(save editor_state_model.ManualConnectionSaveModel) {
 				save.Connection.PortalPlacementRulesTo[0].Weight = 99
 			},
 		},
 		"WhenPortalPlacementRuleToArgsIsMutated_SourceIsUnchanged": {
-			read: func(save editor_state_dto.ManualConnectionSave) any {
+			read: func(save editor_state_model.ManualConnectionSaveModel) any {
 				return save.Connection.PortalPlacementRulesTo[0].Args[0]
 			},
-			mutate: func(save editor_state_dto.ManualConnectionSave) {
+			mutate: func(save editor_state_model.ManualConnectionSaveModel) {
 				save.Connection.PortalPlacementRulesTo[0].Args[0] = "changed"
 			},
 		},
@@ -93,7 +93,7 @@ func referenceFieldCases() map[string]referenceFieldCase {
 
 // newPopulatedSave builds a save whose every reference-typed field carries data,
 // so that a missed copy in cloneConnection shows up as shared storage.
-func newPopulatedSave() editor_state_dto.ManualConnectionSave {
+func newPopulatedSave() editor_state_model.ManualConnectionSaveModel {
 	connection := entities.Connection{
 		Name:                     "connection",
 		From:                     "a",
@@ -103,5 +103,7 @@ func newPopulatedSave() editor_state_dto.ManualConnectionSave {
 		PortalPlacementRulesTo:   []entities.PlacementRule{{Type: "Crossroads", Args: []any{"toArg"}, Weight: 2}},
 	}
 
-	return editor_state_dto.ManualConnectionSave{Connection: connection, IsUserAdded: true}
+	return editor_state_model.ManualConnectionSaveModel{
+		Connection: connection, IsUserAdded: true,
+	}
 }

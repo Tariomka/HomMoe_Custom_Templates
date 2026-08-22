@@ -6,6 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/brianvoe/gofakeit/v7"
@@ -30,8 +31,8 @@ func TestWhenOnlyManualEditFieldsDiffer_ReportsEqual(t *testing.T) {
 	// Arrange
 	left := editor_state_dto.NewDefaultEditorStateDto()
 	right := left
-	right.ManualZones = []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
-	right.ManualConnections = []editor_state_dto.ManualConnectionSave{
+	right.ManualZones = []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+	right.ManualConnections = []editor_state.ManualConnectionSave{
 		{Connection: entities.Connection{Name: "A-B"}, IsUserAdded: true},
 	}
 
@@ -184,10 +185,10 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 			state.MediumNeutralContentRows = []models.ZoneContentRowSave{}
 		}},
 		{"ManualZonesDiffer_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
-			state.ManualZones = []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+			state.ManualZones = []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
 		}},
 		{"ManualConnectionsDiffer_MatchesDeepEqual", func(state *editor_state_dto.EditorStateDto) {
-			state.ManualConnections = []editor_state_dto.ManualConnectionSave{
+			state.ManualConnections = []editor_state.ManualConnectionSave{
 				{Connection: entities.Connection{Name: "A-B"}, IsUserAdded: true},
 			}
 		}},

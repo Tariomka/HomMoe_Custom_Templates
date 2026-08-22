@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +25,7 @@ func TestWhenOnlyManualZonesArePresent_ReportsManualEdits(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_dto.NewDefaultEditorStateDto()
-	state.ManualZones = []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+	state.ManualZones = []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
 
 	// Act
 	hasEdits := state.HasManualEdits()
@@ -37,7 +38,7 @@ func TestWhenOnlyManualConnectionsArePresent_ReportsManualEdits(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_dto.NewDefaultEditorStateDto()
-	state.ManualConnections = []editor_state_dto.ManualConnectionSave{
+	state.ManualConnections = []editor_state.ManualConnectionSave{
 		{Connection: entities.Connection{Name: "A-B"}},
 	}
 

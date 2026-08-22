@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 type EditorState struct {
@@ -92,8 +93,8 @@ func (this *EditorState) WasStateChanged() bool {
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
 
 func (this *EditorState) SetManualEdits(zones []entities.Zone, connections []entities.Connection) {
-	this.current.ManualZones = editor_state_dto.ToManualZoneSaves(zones)
-	this.current.ManualConnections = editor_state_dto.ToManualConnectionSaves(connections)
+	this.current.ManualZones = editor_state_model.ToManualZoneSaves(zones)
+	this.current.ManualConnections = editor_state_model.ToManualConnectionSaves(connections)
 }
 
 // ClearManualEdits drops the manual snapshot, used when a layout-defining
@@ -106,9 +107,9 @@ func (this *EditorState) ClearManualEdits() {
 }
 
 func (this *EditorState) GetManualZones() []entities.Zone {
-	return editor_state_dto.FromManualZoneSaves(this.current.ManualZones)
+	return editor_state_model.FromManualZoneSaves(this.current.ManualZones)
 }
 
 func (this *EditorState) GetManualConnections() []entities.Connection {
-	return editor_state_dto.FromManualConnectionSaves(this.current.ManualConnections)
+	return editor_state_model.FromManualConnectionSaves(this.current.ManualConnections)
 }

@@ -7,12 +7,12 @@ package connection_editor
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -52,7 +52,7 @@ func NewManualReapplyService(
 //     no-castle plan.
 func (this *ManualReapplyService) ApplyCastleSettingChanges(
 	zones []entities.Zone,
-	changes editor_state_dto.CastleSettingChanges,
+	changes editor_state_model.CastleSettingChanges,
 	configuration *config.GeneratorConfig) {
 	if !changes.Any() {
 		return
@@ -105,9 +105,8 @@ func (this *ManualReapplyService) SetNeutralZoneCastleCount(
 // to with-castle zones of the matching quality.
 func (this *ManualReapplyService) neutralCastleTarget(
 	zone entities.Zone,
-	changes editor_state_dto.CastleSettingChanges,
-	configuration *config.GeneratorConfig,
-) (int, bool) {
+	changes editor_state_model.CastleSettingChanges,
+	configuration *config.GeneratorConfig) (int, bool) {
 	zoneConfiguration := configuration.ZoneConfiguration
 	if changes.NeutralSimple {
 		return helpers.Clamp(zoneConfiguration.NeutralZoneCastles, 0, 4), true
@@ -149,8 +148,7 @@ func (this *ManualReapplyService) neutralCastleTarget(
 func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 	zone *entities.Zone,
 	configuration *config.GeneratorConfig,
-	tuning models.GenerationTuning,
-) {
+	tuning models.GenerationTuning) {
 	if len(zone.MainObjects) == 0 || zone.MainObjects[0].Type != registry.GetMainObjectTypeValues().Spawn {
 		return
 	}
@@ -175,8 +173,7 @@ func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 func (this *ManualReapplyService) rebuildHubZoneCastles(
 	zone *entities.Zone,
 	castleCount int,
-	tuning models.GenerationTuning,
-) {
+	tuning models.GenerationTuning) {
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
 		this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity),

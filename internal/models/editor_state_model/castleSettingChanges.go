@@ -1,4 +1,4 @@
-package editor_state_dto
+package editor_state_model
 
 // CastleSettingChanges reports which castle-count options differ between two
 // editor states. These are the only generator options that override manual

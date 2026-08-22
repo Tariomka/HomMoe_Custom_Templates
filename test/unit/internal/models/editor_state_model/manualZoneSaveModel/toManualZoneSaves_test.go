@@ -1,10 +1,11 @@
-package manualZoneSave_test
+package manualZoneSaveModel_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +15,7 @@ func TestWhenZoneListIsEmpty_ReturnsNil(t *testing.T) {
 	var zones []entities.Zone
 
 	// Act
-	saves := editor_state_dto.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaves(zones)
 
 	// Assert
 	assert.Nil(t, saves)
@@ -29,13 +30,13 @@ func TestWhenZonesHaveManualPositions_PreservesEachPositionInSave(t *testing.T) 
 		{Name: "Zone A", ManualPosition: firstPosition},
 		{Name: "Zone B", ManualPosition: secondPosition},
 	}
-	expected := []editor_state_dto.ManualZoneSave{
+	expected := []editor_state.ManualZoneSave{
 		{Zone: zones[0], ManualPosition: firstPosition},
 		{Zone: zones[1], ManualPosition: secondPosition},
 	}
 
 	// Act
-	saves := editor_state_dto.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaves(zones)
 
 	// Assert
 	assert.Equal(t, expected, saves)
@@ -47,7 +48,7 @@ func TestWhenZoneHasNoManualPosition_SavesNilPosition(t *testing.T) {
 	zones := []entities.Zone{{Name: "Zone A"}}
 
 	// Act
-	saves := editor_state_dto.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaves(zones)
 
 	// Assert
 	assert.Nil(t, saves[0].ManualPosition)

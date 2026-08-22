@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // autoRegenerationDebounce is how long editing must pause before a
@@ -76,7 +77,7 @@ func (this *RegenerationDecisionService) DecideManualEditReapplication(
 	}
 
 	if previous == nil {
-		return dtos.ManualEditDecisionDto{ReapplyWithCastleChanges: &editor_state_dto.CastleSettingChanges{}}
+		return dtos.ManualEditDecisionDto{ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{}}
 	}
 
 	if previous.LayoutDefiningOptionsChanged(current) {

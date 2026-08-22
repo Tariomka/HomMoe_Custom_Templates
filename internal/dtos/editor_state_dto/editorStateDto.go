@@ -3,12 +3,13 @@ package editor_state_dto
 import (
 	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zone_contents"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
-
-const guardedRuleName = "Guarded"
 
 // EditorStateDto is the serialized .gen.json file produced and consumed by the editor.
 type EditorStateDto struct {
@@ -89,8 +90,8 @@ type EditorStateDto struct {
 	HubZoneContentRows       []models.ZoneContentRowSave `json:"hubZoneContentRows,omitempty"`
 
 	// ── Manual zone editor edits ─────────────────────────────────────────
-	ManualZones       []ManualZoneSave       `json:"manualZones,omitempty"`
-	ManualConnections []ManualConnectionSave `json:"manualConnections,omitempty"`
+	ManualZones       []editor_state.ManualZoneSave       `json:"manualZones,omitempty"`
+	ManualConnections []editor_state.ManualConnectionSave `json:"manualConnections,omitempty"`
 }
 
 func NewDefaultEditorStateDto() EditorStateDto {
@@ -135,7 +136,7 @@ func NewDefaultEditorStateDto() EditorStateDto {
 		TournamentInterval:           7,
 		TournamentPointsToWin:        2,
 		TournamentSaveArmy:           true,
-		PlayerZoneContentRows:        DefaultPlayerZoneContentRows(),
+		PlayerZoneContentRows:        common_zone_contents.GetDefaultPlayerZoneContentRows(),
 	}
 }
 
@@ -157,12 +158,16 @@ func (this *EditorStateDto) Clone() EditorStateDto {
 
 	clone.ManualZones = slices.Clone(this.ManualZones)
 	for zoneIndex := range clone.ManualZones {
-		clone.ManualZones[zoneIndex] = clone.ManualZones[zoneIndex].Clone()
+		zoneModel := editor_state_model.ManualZoneSaveModel{ManualZoneSave: clone.ManualZones[zoneIndex]}
+		clone.ManualZones[zoneIndex] = zoneModel.Clone().ManualZoneSave
 	}
 
 	clone.ManualConnections = slices.Clone(this.ManualConnections)
 	for connectionIndex := range clone.ManualConnections {
-		clone.ManualConnections[connectionIndex] = clone.ManualConnections[connectionIndex].Clone()
+		connectionModel := editor_state_model.ManualConnectionSaveModel{
+			ManualConnectionSave: clone.ManualConnections[connectionIndex],
+		}
+		clone.ManualConnections[connectionIndex] = connectionModel.Clone().ManualConnectionSave
 	}
 
 	return clone
@@ -196,8 +201,8 @@ func (this *EditorStateDto) LayoutDefiningOptionsChanged(incoming *EditorStateDt
 // gates which neutral options are relevant; it cannot flip between the two
 // states here because such a flip is layout-defining and discards manual edits
 // before castle propagation is ever considered.
-func (this *EditorStateDto) DiffCastleSettings(incoming *EditorStateDto) CastleSettingChanges {
-	changes := CastleSettingChanges{
+func (this *EditorStateDto) DiffCastleSettings(incoming *EditorStateDto) editor_state_model.CastleSettingChanges {
+	changes := editor_state_model.CastleSettingChanges{
 		PlayerCastles: this.PlayerZoneCastles != incoming.PlayerZoneCastles ||
 			this.PlayerOwnedCastles != incoming.PlayerOwnedCastles,
 		Hub: this.HubZoneCastles != incoming.HubZoneCastles,
@@ -337,109 +342,6 @@ func (this *EditorStateDto) gameRuleScalarsEqual(other *EditorStateDto) bool {
 		this.BannedItems == other.BannedItems &&
 		this.BannedMagics == other.BannedMagics &&
 		this.ValueOverridesText == other.ValueOverridesText
-}
-
-// DefaultPlayerZoneContentRows returns the historical default mandatory-content
-// rows seeded into every player zone: the six basic mines plus an alchemy lab,
-// a couple of guarded treasures, random hires and resource banks.
-func DefaultPlayerZoneContentRows() []models.ZoneContentRowSave {
-	rows := defaultPlayerZoneMineRows()
-	rows = append(rows, defaultPlayerZoneTreasureRows()...)
-	rows = append(rows, defaultPlayerZoneHireAndBankRows()...)
-	return rows
-}
-
-// defaultPlayerZoneMineRows returns the six basic mines plus an alchemy lab:
-// the wood, ore and gold mines near the town, the rest next to a road.
-func defaultPlayerZoneMineRows() []models.ZoneContentRowSave {
-	interactable := registry.GetMapObjectAllInteractableValues()
-	nearTown := models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Near"}
-	nextToRoad := models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Next To"}
-	return []models.ZoneContentRowSave{
-		defaultGuardedMineRow(interactable.WoodMine, nearTown),
-		defaultGuardedMineRow(interactable.OreMine, nearTown),
-		defaultGuardedMineRow(interactable.GoldMine, nearTown),
-		defaultGuardedMineRow(interactable.CrystalMine, nextToRoad),
-		defaultGuardedMineRow(interactable.MercuryMine, nextToRoad),
-		defaultGuardedMineRow(interactable.GemstoneMine, nextToRoad),
-		defaultGuardedMineRow(interactable.AlchemyLab, nextToRoad),
-	}
-}
-
-// defaultGuardedMineRow builds a single guarded mine row with the given
-// distance rule.
-func defaultGuardedMineRow(sid string, distanceRule models.ContentRuleRowSave) models.ZoneContentRowSave {
-	return models.ZoneContentRowSave{
-		Sid:    sid,
-		Count:  1,
-		IsMine: true,
-		Rules: []models.ContentRuleRowSave{
-			{Name: guardedRuleName, IsGuarded: new(true)},
-			distanceRule,
-		},
-	}
-}
-
-// defaultPlayerZoneTreasureRows returns the guarded treasures: a pandora box
-// and an epic random item.
-func defaultPlayerZoneTreasureRows() []models.ZoneContentRowSave {
-	resources := registry.GetMapObjectResourceValues()
-	randomItems := registry.GetMapObjectRandomItemValues()
-
-	return []models.ZoneContentRowSave{
-		{
-			Sid:   resources.PandoraBox,
-			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: new(true)}},
-		},
-		{
-			Sid:   randomItems.RandomItemEpic,
-			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: new(true)}},
-		},
-	}
-}
-
-// defaultPlayerZoneHireAndBankRows returns the guarded random-hire and
-// resource-bank group rows.
-func defaultPlayerZoneHireAndBankRows() []models.ZoneContentRowSave {
-	randomHires := registry.GetMandatoryContentRandomHiresBuildingValues()
-	basicRandomHires := registry.GetMandatoryContentBasicRandomHiresBuildingValues()
-	basicResourceBanks := registry.GetMandatoryContentBasicResourceBanksBuildingValues()
-
-	trueVal := true // To not allocate multiple times
-	return []models.ZoneContentRowSave{
-		{
-			Sid:     randomHires.RandomHiresLowTier,
-			Count:   2,
-			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
-		},
-		{
-			Sid:     randomHires.RandomHiresHighTier,
-			Count:   1,
-			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
-		},
-		{
-			Sid:     basicRandomHires.BasicRandomHires,
-			Count:   1,
-			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
-		},
-		{
-			Sid:     basicResourceBanks.BasicResourceBanksTier1,
-			Count:   2,
-			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
-		},
-		{
-			Sid:     basicResourceBanks.BasicResourceBanksTier2,
-			Count:   1,
-			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
-		},
-	}
 }
 
 func contentRowSlicesEqual(left, right []models.ZoneContentRowSave) bool {

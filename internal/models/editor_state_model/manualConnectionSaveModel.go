@@ -1,36 +1,38 @@
-package editor_state_dto
+package editor_state_model
 
 import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
-// ManualConnectionSave persists a connection edited in the manual zone editor,
-// capturing the runtime-only IsUserAdded flag that entities.Connection omits
-// from JSON (json:"-").
-type ManualConnectionSave struct {
-	Connection  entities.Connection `json:"connection"`
-	IsUserAdded bool                `json:"isUserAdded,omitempty"`
+// ManualConnectionSaveModel adds behaviour to the behaviour-free
+// editor_state.ManualConnectionSave entity.
+type ManualConnectionSaveModel struct {
+	editor_state.ManualConnectionSave
 }
 
 // ToManualConnectionSaves converts live editor connections into their
 // serializable form, preserving the IsUserAdded flag.
-func ToManualConnectionSaves(connections []entities.Connection) []ManualConnectionSave {
+func ToManualConnectionSaves(connections []entities.Connection) []editor_state.ManualConnectionSave {
 	if len(connections) == 0 {
 		return nil
 	}
-	saves := make([]ManualConnectionSave, 0, len(connections))
+	saves := make([]editor_state.ManualConnectionSave, 0, len(connections))
 	for _, connection := range connections {
-		saves = append(saves, ManualConnectionSave{Connection: connection, IsUserAdded: connection.IsUserAdded})
+		saves = append(
+			saves,
+			editor_state.ManualConnectionSave{Connection: connection, IsUserAdded: connection.IsUserAdded},
+		)
 	}
 	return saves
 }
 
 // FromManualConnectionSaves rebuilds live editor connections from their
 // serialized form, restoring the IsUserAdded flag.
-func FromManualConnectionSaves(saves []ManualConnectionSave) []entities.Connection {
+func FromManualConnectionSaves(saves []editor_state.ManualConnectionSave) []entities.Connection {
 	if len(saves) == 0 {
 		return nil
 	}
@@ -48,8 +50,8 @@ func FromManualConnectionSaves(saves []ManualConnectionSave) []entities.Connecti
 // therefore carries no Clone of its own, so every one of its reference-typed
 // fields is copied here; a field added there must be added to cloneConnection
 // as well.
-func (this ManualConnectionSave) Clone() ManualConnectionSave {
-	return ManualConnectionSave{
+func (this ManualConnectionSaveModel) Clone() ManualConnectionSaveModel {
+	return ManualConnectionSaveModel{
 		Connection:  cloneConnection(this.Connection),
 		IsUserAdded: this.IsUserAdded,
 	}

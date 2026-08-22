@@ -139,6 +139,36 @@ had each falsified something it originally claimed. Treat them as load-bearing.
 9. **`MarshalJSON` recursion.** The alias type inside `MarshalJSON` must be a
    locally declared type that embeds the model — not the DTO — or the marshaller
    calls itself forever.
+10. **Import cycle — the shared types cannot stay in `editor_state_dto`.**
+    Found while starting Phase 2; the plan's first draft missed it entirely.
+    `ManualZoneSave`, `ManualConnectionSave` and `CastleSettingChanges` live in
+    `internal/dtos/editor_state_dto/`, but Phase 2's `manualEditSettings.go`
+    must hold the first two and Phase 3's model must return the third. Combined
+    with the settled DTO shape (`editor_state_dto` → `editor_state_model`) and
+    the model → entities edge, that closes a cycle:
+
+    ```
+    editor_state_dto ──embeds──▶ editor_state_model ──embeds──▶ entities/editor_state
+           ▲                                                             │
+           └──────────── ManualZoneSave / CastleSettingChanges ◀─────────┘
+    ```
+
+    Only the third edge is removable, so those three types **must** move out.
+    **Owner ruling (2026-08-21):** split them by behaviour.
+    - The two pure structs (fields + json tags only, no methods) go to
+      `internal/entities/editor_state/`, keeping entities behaviour-free per §0.
+    - `CastleSettingChanges` (it has `Any()`) and two wrapper models embedding
+      the pure structs — `ManualZoneSaveModel`, `ManualConnectionSaveModel`,
+      carrying `Clone()` — go to `internal/models/editor_state_model/`.
+    - The four `To…`/`From…` converters keep returning the **entity** slice, so
+      no assignment site needs an unwrap loop. The six private deep-clone
+      helpers for `entities.Zone`/`entities.Connection` stay private in
+      `editor_state_model`.
+
+    This runs as **Phase 2 step 0**, before the group extraction, and partly
+    undoes Phase 1's consolidation — that is expected, not a regression.
+    `internal/entities` must remain the base layer: it imports nothing from
+    `models`, `dtos` or `helpers`, and `entities/editor_state` must not either.
 
 ---
 
@@ -275,18 +305,23 @@ Decisions and gotchas for whoever picks this up:
 ---
 
 ## Phase 2: Extract the entity groups
-Status: Not started
+Status: Complete
 
-- [ ] Create `internal/entities/editor_state/` with the 9 files from §0.1, one
+- [x] **Step 0 — break the import cycle (hazard 10).** Move `ManualZoneSave` and
+      `ManualConnectionSave` (pure structs) to `internal/entities/editor_state/`;
+      move `CastleSettingChanges`, the two wrapper models and the four converters
+      to `internal/models/editor_state_model/`. Update consumers and move the
+      three mirrored unit-test folders. Must land before the groups are written.
+- [x] Create `internal/entities/editor_state/` with the 9 files from §0.1, one
       struct per file, camelCase file names (AGENTS.md §4.1).
-- [ ] Move each field **with its existing json tag verbatim**. Do not rename, do
+- [x] Move each field **with its existing json tag verbatim**. Do not rename, do
       not reorder within a group, do not change a type.
-- [ ] Create `internal/common/common_zone_contents/` and move
+- [x] Create `internal/common/common_zone_contents/` and move
       `DefaultPlayerZoneContentRows` → `GetDefaultPlayerZoneContentRows`, with the
       four private helpers renamed to a `get` prefix.
-- [ ] Move its unit test to the mirrored
+- [x] Move its unit test to the mirrored
       `test/unit/internal/common/common_zone_contents/…` folder.
-- [ ] Leave `EditorStateDto` untouched this phase — the entities exist but nothing
+- [x] Leave `EditorStateDto` untouched this phase — the entities exist but nothing
       uses them yet, so the phase is purely additive.
 
 ### Verification Plan
@@ -298,7 +333,55 @@ Status: Not started
 - **Owner gate:** the §0.1 field→group table is signed off before Phase 3 starts.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Step 0 — the import cycle (hazard 10).** Writing the groups would have closed
+`editor_state_dto → editor_state_model → entities/editor_state → editor_state_dto`.
+The first edge is a settled §0 decision and the second is the point of the batch,
+so only the third was removable. Owner ruling: behaviour-free structs
+(`ManualZoneSave`, `ManualConnectionSave`) go to `internal/entities/editor_state/`;
+`CastleSettingChanges`, the two wrapper models (`ManualZoneSaveModel`,
+`ManualConnectionSaveModel`, anonymous embeds with `Clone()`) and the four
+converters go to `internal/models/editor_state_model/`. Converters return the
+**entity** slice; the six deep-clone helpers stay **private** in
+`editor_state_model`. This partly undoes Phase 1's consolidation, and it makes the
+layering rule load-bearing: **`internal/entities` must import nothing from
+`models`/`dtos`/`helpers`.**
+
+**Groups.** `internal/entities/editor_state/` now holds the 9 structs from §0.1
+(`templateIdentity` 2, `mapSettings` 2, `playerSettings` 4, `neutralZoneSettings`
+11, `castleSettings` 10, `generationSettings` 15, `gameRuleSettings` 16,
+`contentSettings` 10, `manualEditSettings` 2) — **72 tagged fields**, every tag
+verbatim.
+
+**Tag verification.** The plan called for comparing the tag set against the DTO at
+HEAD, but Phase 1 is now committed (`586fc18 "Batch I wip"`) and that path no
+longer exists. Compared instead against the frozen wire-format fixture
+`test/test_helpers/testdata/editorState_v0_flat.gen.json` — a stronger check:
+entity tag count 72, fixture key count 72, sets equal, 0 duplicates.
+
+**Content rows.** `GetDefaultPlayerZoneContentRows` (+ four `get`-prefixed private
+helpers and `const guardedRuleName`) moved to
+`internal/common/common_zone_contents/`; both callers (`editorStateDto.go`,
+`app/gui/dialogs/zoneContentDialog.go`) updated; the unit test moved to the
+mirrored folder. `editorStateDto.go` net `14 +/112 -`.
+
+**Gates.** `go build` clean; `go vet -tags='integration_test,gui'` clean;
+`gofmt -l .` empty; `testlayoutcheck` passed; unit, default (frozen golden test
+included) and tagged-integration suites all exit 0 — re-run after the lint pass.
+Coverage **73.6 %** (floor 72.5 %). Lint `--fix` took 85 issues → **21, all
+pre-existing `funcorder`**; `git status --short` counts were identical before and
+after, confirming no drive-by files. Overall diff: 32 files, +85/−1007.
+
+**Gotchas worth remembering.** (a) `embedlit`/modernize collapses
+`Model{Embedded: X{...}}` to `Model{{...}}`, which orphaned the
+`entities/editor_state` import in both `clone_test.go` files. (b) PowerShell
+`-replace '…' , '$1' + $type` parses `$1ManualZoneSave` as a *group name*, so the
+replacement silently no-ops — use a separate blanket pass. (c) The plan's hazard 4
+is also inaccurate: it lists `manualEditDecisionDto.go` as a Phase 1 change that
+was never needed.
+
+**Next:** Phase 3 is blocked on the owner gate — the §0.1 field→group table must be
+signed off first.
 
 ---
 

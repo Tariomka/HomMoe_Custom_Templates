@@ -3,8 +3,8 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +21,7 @@ func TestWhenZonesAreApplied_ManualZoneSavesAreStoredInCurrentState(t *testing.T
 
 	// Assert
 	assert.Equal(t,
-		[]editor_state_dto.ManualZoneSave{{Zone: zone, ManualPosition: position}},
+		[]editor_state.ManualZoneSave{{Zone: zone, ManualPosition: position}},
 		state.GetCurrentState().ManualZones)
 }
 
@@ -36,6 +36,6 @@ func TestWhenConnectionsAreApplied_ManualConnectionSavesAreStoredInCurrentState(
 
 	// Assert
 	assert.Equal(t,
-		[]editor_state_dto.ManualConnectionSave{{Connection: connection, IsUserAdded: true}},
+		[]editor_state.ManualConnectionSave{{Connection: connection, IsUserAdded: true}},
 		state.GetCurrentState().ManualConnections)
 }

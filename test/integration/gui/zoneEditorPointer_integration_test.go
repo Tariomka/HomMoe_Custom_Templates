@@ -5,7 +5,7 @@ package gui_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
@@ -36,7 +36,7 @@ var (
 func manualZoneSave(
 	t *testing.T,
 	runner *integration_common.AppRunner,
-	name string) editor_state_dto.ManualZoneSave {
+	name string) editor_state.ManualZoneSave {
 	t.Helper()
 	for _, save := range runner.CurrentState().ManualZones {
 		if save.Zone.Name == name {
@@ -45,7 +45,7 @@ func manualZoneSave(
 	}
 	t.Fatalf("the editor state committed no manual zone called %q", name)
 
-	return editor_state_dto.ManualZoneSave{}
+	return editor_state.ManualZoneSave{}
 }
 
 // A drag has to survive the round trip through the canvas' normalized manual

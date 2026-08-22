@@ -3,6 +3,7 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
@@ -126,8 +127,8 @@ func allFieldsContentRows(sid string, variantID int) []models.ZoneContentRowSave
 
 // allFieldsManualZones builds a manual zone carrying the normalized position
 // that entities.Zone itself omits from JSON.
-func allFieldsManualZones() []editor_state_dto.ManualZoneSave {
-	return []editor_state_dto.ManualZoneSave{{
+func allFieldsManualZones() []editor_state.ManualZoneSave {
+	return []editor_state.ManualZoneSave{{
 		Zone: entities.Zone{
 			Name:                 "Fixture-Spawn-A",
 			Size:                 1.35,
@@ -142,8 +143,8 @@ func allFieldsManualZones() []editor_state_dto.ManualZoneSave {
 
 // allFieldsManualConnections builds a manual connection carrying the
 // user-added flag that entities.Connection itself omits from JSON.
-func allFieldsManualConnections() []editor_state_dto.ManualConnectionSave {
-	return []editor_state_dto.ManualConnectionSave{{
+func allFieldsManualConnections() []editor_state.ManualConnectionSave {
+	return []editor_state.ManualConnectionSave{{
 		Connection: entities.Connection{
 			Name:                 "Fixture-Conn-A-B",
 			From:                 "Fixture-Spawn-A",

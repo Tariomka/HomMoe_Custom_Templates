@@ -1,10 +1,10 @@
 package connection_editor
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // IManualReapplyService is the contract for pushing changed castle-count
@@ -14,7 +14,7 @@ type IManualReapplyService interface {
 	// edited zones whose castle-count option changed.
 	ApplyCastleSettingChanges(
 		zones []entities.Zone,
-		changes editor_state_dto.CastleSettingChanges,
+		changes editor_state_model.CastleSettingChanges,
 		configuration *config.GeneratorConfig)
 
 	// SetNeutralZoneCastleCount rebuilds only the zone's City castles for the

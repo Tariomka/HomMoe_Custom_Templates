@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -32,7 +33,7 @@ func TestWhenCastleSettingsAreReapplied_PassesTheMappedConfigurationToTheReapply
 	fixture := newTemplateHandlerFixture()
 	state := editor_state_dto.NewDefaultEditorStateDto()
 	zones := []entities.Zone{{Name: gofakeit.Word()}}
-	changes := editor_state_dto.CastleSettingChanges{PlayerCastles: true}
+	changes := editor_state_model.CastleSettingChanges{PlayerCastles: true}
 	configuration := namedConfiguration()
 	fixture.mapper.On("FromEditorState", state).Return(configuration)
 	fixture.manualReapply.On("ApplyCastleSettingChanges", zones, changes, configuration).Return()

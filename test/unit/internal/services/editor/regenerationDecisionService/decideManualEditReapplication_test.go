@@ -6,13 +6,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
 
-func manualZoneSaves() []editor_state_dto.ManualZoneSave {
-	return []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
+func manualZoneSaves() []editor_state.ManualZoneSave {
+	return []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
 }
 
 func stateWithManualEdits() *editor_state_dto.EditorStateDto {
@@ -31,7 +33,7 @@ func TestWhenNoPreviousGenerationAndManualEditsExist_Reapplies(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, dtos.ManualEditDecisionDto{
-		ReapplyWithCastleChanges: &editor_state_dto.CastleSettingChanges{},
+		ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{},
 	}, decision)
 }
 
@@ -69,7 +71,7 @@ func TestWhenManualEditsExistAndLayoutUnchanged_Reapplies(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, dtos.ManualEditDecisionDto{
-		ReapplyWithCastleChanges: &editor_state_dto.CastleSettingChanges{},
+		ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{},
 	}, decision)
 }
 
@@ -102,7 +104,7 @@ func TestWhenCastleOptionChangedSinceGeneration_ReportsCastleChange(t *testing.T
 
 	// Assert
 	assert.Equal(t,
-		&editor_state_dto.CastleSettingChanges{PlayerCastles: true},
+		&editor_state_model.CastleSettingChanges{PlayerCastles: true},
 		decision.ReapplyWithCastleChanges)
 }
 
@@ -115,5 +117,5 @@ func TestWhenCastleOptionsUnchangedSinceGeneration_ReportsNoCastleChange(t *test
 	decision := service.DecideManualEditReapplication(defaultState(), stateWithManualEdits())
 
 	// Assert
-	assert.Equal(t, &editor_state_dto.CastleSettingChanges{}, decision.ReapplyWithCastleChanges)
+	assert.Equal(t, &editor_state_model.CastleSettingChanges{}, decision.ReapplyWithCastleChanges)
 }

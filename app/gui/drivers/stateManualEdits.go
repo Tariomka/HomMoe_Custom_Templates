@@ -7,8 +7,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
@@ -104,7 +104,7 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 // last generation - the only generator options that override manual edits -
 // the new counts are first pushed into the snapshot and the updated snapshot
 // is stored back so later regenerations and saves carry it.
-func (this *State) reapplyManualEdits(castleChanges editor_state_dto.CastleSettingChanges) {
+func (this *State) reapplyManualEdits(castleChanges editor_state_model.CastleSettingChanges) {
 	zones := this.innerState.GetManualZones()
 	connections := this.innerState.GetManualConnections()
 	if castleChanges.Any() {

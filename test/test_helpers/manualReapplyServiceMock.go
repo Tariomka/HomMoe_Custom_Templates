@@ -1,10 +1,10 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -17,7 +17,7 @@ type ManualReapplyServiceMock struct {
 
 func (this *ManualReapplyServiceMock) ApplyCastleSettingChanges(
 	zones []entities.Zone,
-	changes editor_state_dto.CastleSettingChanges,
+	changes editor_state_model.CastleSettingChanges,
 	configuration *config.GeneratorConfig) {
 	this.Called(zones, changes, configuration)
 }

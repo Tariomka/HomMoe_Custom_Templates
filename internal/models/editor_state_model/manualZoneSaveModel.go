@@ -1,38 +1,36 @@
-package editor_state_dto
+package editor_state_model
 
 import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
-// ManualZoneSave persists a zone edited in the manual zone editor. The zone's
-// ManualPosition is captured separately because entities.Zone deliberately
-// omits it from JSON (json:"-"), yet that normalized position is the essential
-// piece of a hand-made layout and must survive a save/load round-trip.
-type ManualZoneSave struct {
-	Zone           entities.Zone `json:"zone"`
-	ManualPosition *[2]float64   `json:"manualPosition,omitempty"`
+// ManualZoneSaveModel adds behaviour to the behaviour-free
+// editor_state.ManualZoneSave entity.
+type ManualZoneSaveModel struct {
+	editor_state.ManualZoneSave
 }
 
 // ToManualZoneSaves converts live editor zones into their serializable form,
 // preserving each zone's ManualPosition outside the entities.Zone JSON.
-func ToManualZoneSaves(zones []entities.Zone) []ManualZoneSave {
+func ToManualZoneSaves(zones []entities.Zone) []editor_state.ManualZoneSave {
 	if len(zones) == 0 {
 		return nil
 	}
 
-	saves := make([]ManualZoneSave, 0, len(zones))
+	saves := make([]editor_state.ManualZoneSave, 0, len(zones))
 	for _, zone := range zones {
-		saves = append(saves, ManualZoneSave{Zone: zone, ManualPosition: zone.ManualPosition})
+		saves = append(saves, editor_state.ManualZoneSave{Zone: zone, ManualPosition: zone.ManualPosition})
 	}
 	return saves
 }
 
 // FromManualZoneSaves rebuilds live editor zones from their serialized form,
 // restoring each zone's ManualPosition.
-func FromManualZoneSaves(saves []ManualZoneSave) []entities.Zone {
+func FromManualZoneSaves(saves []editor_state.ManualZoneSave) []entities.Zone {
 	if len(saves) == 0 {
 		return nil
 	}
@@ -50,8 +48,8 @@ func FromManualZoneSaves(saves []ManualZoneSave) []entities.Zone {
 // receiver. entities.Zone lives in the protected template tree and therefore
 // carries no Clone of its own, so every one of its reference-typed fields is
 // copied here; a field added there must be added to cloneZone as well.
-func (this ManualZoneSave) Clone() ManualZoneSave {
-	return ManualZoneSave{
+func (this ManualZoneSaveModel) Clone() ManualZoneSaveModel {
+	return ManualZoneSaveModel{
 		Zone:           cloneZone(this.Zone),
 		ManualPosition: helpers.ClonePointer(this.ManualPosition),
 	}

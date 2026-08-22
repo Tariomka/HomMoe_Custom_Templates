@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zone_contents"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -43,8 +43,7 @@ func NewZoneContentDialog(
 	rows []models.ZoneContentRowSave,
 	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	opener interfaces.DialogOpener,
-	onApply func([]models.ZoneContentRowSave),
-) *ZoneContentDialog {
+	onApply func([]models.ZoneContentRowSave)) *ZoneContentDialog {
 	dialog := &ZoneContentDialog{
 		zcMines: NewZoneContentSection(
 			"Mines", constants.ContentItemGroup.Mines, 3, true, contentRuleHandler),
@@ -75,13 +74,9 @@ func NewZoneContentDialog(
 	return dialog
 }
 
-func (this *ZoneContentDialog) Title() string {
-	return this.title
-}
+func (this *ZoneContentDialog) Title() string { return this.title }
 
-func (this *ZoneContentDialog) PreferredSize() (unit.Dp, unit.Dp) {
-	return unit.Dp(640), unit.Dp(560)
-}
+func (this *ZoneContentDialog) PreferredSize() (unit.Dp, unit.Dp) { return unit.Dp(640), unit.Dp(560) }
 
 func (this *ZoneContentDialog) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
 	if this.btnReset.Clicked(gtx) {
@@ -124,7 +119,7 @@ func (this *ZoneContentDialog) persist() {
 // seeded defaults for the Player tier, otherwise an empty list.
 func (this *ZoneContentDialog) resetToDefault() {
 	if this.isPlayerTier {
-		this.loadRowsIntoSections(editor_state_dto.DefaultPlayerZoneContentRows())
+		this.loadRowsIntoSections(common_zone_contents.GetDefaultPlayerZoneContentRows())
 		return
 	}
 	this.loadRowsIntoSections(nil)

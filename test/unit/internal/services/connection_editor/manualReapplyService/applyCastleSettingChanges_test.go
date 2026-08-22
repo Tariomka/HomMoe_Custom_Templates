@@ -3,9 +3,9 @@ package manualReapplyService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 
 	// Act
 	newManualReapplyService().
-		ApplyCastleSettingChanges(zones, editor_state_dto.CastleSettingChanges{}, configuration)
+		ApplyCastleSettingChanges(zones, editor_state_model.CastleSettingChanges{}, configuration)
 
 	// Assert
 	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
@@ -37,7 +37,7 @@ func applySimpleModeChange() []entities.Zone {
 		makeSpawnZone("A", "Player1", 1),
 	}
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_dto.CastleSettingChanges{NeutralSimple: true}, configuration)
+		zones, editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
 	return zones
 }
 
@@ -79,7 +79,7 @@ func applyAdvancedHighChange() []entities.Zone {
 		makeNeutralZone("I", neutral_zone.QualityHigh, 0),
 	}
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_dto.CastleSettingChanges{NeutralHigh: true}, configuration)
+		zones, editor_state_model.CastleSettingChanges{NeutralHigh: true}, configuration)
 	return zones
 }
 
@@ -121,7 +121,7 @@ func applyPlayerCastleChange() []entities.Zone {
 		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
 	}
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_dto.CastleSettingChanges{PlayerCastles: true}, configuration)
+		zones, editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
 	return zones
 }
 
@@ -206,7 +206,7 @@ func TestWhenSpawnZoneLacksSpawnCastle_LeavesItUntouched(t *testing.T) {
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_dto.CastleSettingChanges{PlayerCastles: true}, configuration)
+		zones, editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
 
 	// Assert
 	assert.Equal(t, []entities.MainObject{{Type: "City"}}, zones[0].MainObjects,
@@ -224,7 +224,7 @@ func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_dto.CastleSettingChanges{Hub: true}, configuration)
+		zones, editor_state_model.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
 	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
@@ -241,7 +241,7 @@ func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_dto.CastleSettingChanges{Hub: true}, configuration)
+		zones, editor_state_model.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
 	assert.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
@@ -256,7 +256,7 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_dto.CastleSettingChanges{NeutralSimple: true}, configuration)
+		zones, editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
 
 	// Assert
 	castleRoadCount := 0

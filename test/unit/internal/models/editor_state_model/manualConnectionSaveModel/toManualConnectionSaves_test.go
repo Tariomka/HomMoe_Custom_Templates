@@ -1,10 +1,11 @@
-package manualConnectionSave_test
+package manualConnectionSaveModel_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +15,7 @@ func TestWhenConnectionListIsEmpty_ReturnsNil(t *testing.T) {
 	var connections []entities.Connection
 
 	// Act
-	saves := editor_state_dto.ToManualConnectionSaves(connections)
+	saves := editor_state_model.ToManualConnectionSaves(connections)
 
 	// Assert
 	assert.Nil(t, saves)
@@ -27,13 +28,13 @@ func TestWhenConnectionsCarryUserAddedFlags_PreservesEachFlagInSave(t *testing.T
 		{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true},
 		{Name: "B-C", From: "Zone B", To: "Zone C", IsUserAdded: false},
 	}
-	expected := []editor_state_dto.ManualConnectionSave{
+	expected := []editor_state.ManualConnectionSave{
 		{Connection: connections[0], IsUserAdded: true},
 		{Connection: connections[1], IsUserAdded: false},
 	}
 
 	// Act
-	saves := editor_state_dto.ToManualConnectionSaves(connections)
+	saves := editor_state_model.ToManualConnectionSaves(connections)
 
 	// Assert
 	assert.Equal(t, expected, saves)

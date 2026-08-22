@@ -29,9 +29,7 @@ type DialogHost struct {
 }
 
 // Open pushes the given dialog onto the stack, making it the active modal.
-func (this *DialogHost) Open(dialog interfaces.IDialog) {
-	this.stack = append(this.stack, dialog)
-}
+func (this *DialogHost) Open(dialog interfaces.IDialog) { this.stack = append(this.stack, dialog) }
 
 // Close dismisses the top-most modal, if any, resuming the one beneath it.
 func (this *DialogHost) Close() {
@@ -41,9 +39,7 @@ func (this *DialogHost) Close() {
 }
 
 // IsOpen reports whether any modal is currently shown.
-func (this *DialogHost) IsOpen() bool {
-	return len(this.stack) > 0
-}
+func (this *DialogHost) IsOpen() bool { return len(this.stack) > 0 }
 
 func (this *DialogHost) GetActiveDialogWidget(theme *material.Theme) layout.Widget {
 	active := this.getTopDialog()
@@ -96,33 +92,32 @@ func (this *DialogHost) layoutPanel(gtx layout.Context, theme *material.Theme) l
 		Width: float32(gtx.Dp(unit.Dp(1))),
 	}.Op())
 
-	return layout.UniformInset(constants.DefaultPaddingLarge+4).
-		Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(this.getHeaderWidget(theme)),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					width := gtx.Constraints.Max.X
-					height := gtx.Dp(unit.Dp(1))
-					paint.FillShape(gtx.Ops, themes.ColorsBase.Border, clip.Rect{Max: image.Pt(width, height)}.Op())
-					return layout.Dimensions{Size: image.Pt(width, height)}
-				}),
-				layout.Rigid(widgets.NewHorizontalSpacerWidget(10)),
-				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-					active := this.getTopDialog()
-					if active == nil {
-						return layout.Dimensions{}
-					}
+	return layout.UniformInset(constants.DefaultPaddingLarge+4).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(this.getHeaderWidget(theme)),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				width := gtx.Constraints.Max.X
+				height := gtx.Dp(unit.Dp(1))
+				paint.FillShape(gtx.Ops, themes.ColorsBase.Border, clip.Rect{Max: image.Pt(width, height)}.Op())
+				return layout.Dimensions{Size: image.Pt(width, height)}
+			}),
+			layout.Rigid(widgets.NewHorizontalSpacerWidget(10)),
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				active := this.getTopDialog()
+				if active == nil {
+					return layout.Dimensions{}
+				}
 
-					dims, done := active.Body(gtx, theme)
-					if done {
-						this.Close()
-						gtx.Execute(op.InvalidateCmd{}) // Schedule a redraw
-					}
-					return dims
-				}),
-			)
-		})
+				dims, done := active.Body(gtx, theme)
+				if done {
+					this.Close()
+					gtx.Execute(op.InvalidateCmd{}) // Schedule a redraw
+				}
+				return dims
+			}),
+		)
+	})
 }
 
 func (this *DialogHost) getHeaderWidget(theme *material.Theme) layout.Widget {
@@ -159,6 +154,7 @@ func (this *DialogHost) getTopDialog() interfaces.IDialog {
 	if len(this.stack) == 0 {
 		return nil
 	}
+
 	return this.stack[len(this.stack)-1]
 }
 
@@ -167,5 +163,6 @@ func (this *DialogHost) getDialogTitle() string {
 	if active := this.getTopDialog(); active != nil {
 		return active.Title()
 	}
+
 	return ""
 }
