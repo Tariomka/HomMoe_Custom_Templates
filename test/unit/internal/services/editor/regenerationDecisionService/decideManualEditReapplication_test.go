@@ -13,16 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func manualZoneSaves() []editor_state.ManualZoneSave {
-	return []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
-}
-
-func stateWithManualEdits() *editor_state_dto.EditorStateDto {
-	state := defaultState()
-	state.ManualZones = manualZoneSaves()
-	return state
-}
-
 func TestWhenNoPreviousGenerationAndManualEditsExist_Reapplies(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -118,4 +108,14 @@ func TestWhenCastleOptionsUnchangedSinceGeneration_ReportsNoCastleChange(t *test
 
 	// Assert
 	assert.Equal(t, &editor_state_model.CastleSettingChanges{}, decision.ReapplyWithCastleChanges)
+}
+
+func manualZoneSaves() []editor_state.ManualZoneSave {
+	return []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
+}
+
+func stateWithManualEdits() *editor_state_dto.EditorStateDto {
+	state := defaultState()
+	state.ManualZones = manualZoneSaves()
+	return state
 }

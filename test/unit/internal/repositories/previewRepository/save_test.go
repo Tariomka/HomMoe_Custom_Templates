@@ -12,16 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newPreviewImage() image.RGBA {
-	return *image.NewRGBA(image.Rect(0, 0, 16, 16))
-}
-
-// A zero-sized image is rejected by [png.Encode], which is the only encode
-// failure reachable without a test-only seam.
-func newUnencodablePreviewImage() image.RGBA {
-	return image.RGBA{}
-}
-
 func TestWhenPreviewIsSaved_ReturnsPathWithPngExtension(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -174,3 +164,9 @@ func TestWhenPreviewTargetPathIsADirectory_ReturnsError(t *testing.T) {
 	// Assert
 	assert.Error(t, err)
 }
+
+func newPreviewImage() image.RGBA { return *image.NewRGBA(image.Rect(0, 0, 16, 16)) }
+
+// A zero-sized image is rejected by [png.Encode], which is the only encode
+// failure reachable without a test-only seam.
+func newUnencodablePreviewImage() image.RGBA { return image.RGBA{} }

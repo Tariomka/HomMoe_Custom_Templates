@@ -10,14 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func hubCityHoldConfig(playerCount int) config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
-	configuration.PlayerCount = playerCount
-	configuration.GameEndConditions.CityHold = true
-	return *configuration
-}
-
 func TestWhenNoNeutralPlansExist_ReturnsEmptyLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -93,4 +85,12 @@ func TestWhenQualityAlsoTies_PicksNeutralWithCastle(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, "D", label)
+}
+
+func hubCityHoldConfig(playerCount int) config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.PlayerCount = playerCount
+	configuration.GameEndConditions.CityHold = true
+	return *configuration
 }

@@ -11,70 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type countFieldCase struct {
-	name      string
-	fieldName string
-	highest   int
-	mutate    func(state *editor_state_dto.EditorStateDto, value int)
-}
-
-func countFieldCases() []countFieldCase {
-	return []countFieldCase{
-		{"NeutralZoneCount", "neutralZoneCount", 16,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralZoneCount = value }},
-		{"PlayerOwnedCastles", "playerOwnedCastles", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.PlayerOwnedCastles = value }},
-		{"PlayerCastles", "playerCastles", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.PlayerZoneCastles = value }},
-		{"NeutralCastles", "neutralCastles", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralZoneCastles = value }},
-		{"AbandonedOutpostCount", "abandonedOutpostCount", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.AbandonedOutpostCount = value }},
-		{"HubCastles", "hubCastles", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.HubZoneCastles = value }},
-		{"RemoteFootholdCount", "remoteFootholdCount", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.RemoteFootholdCount = value }},
-		{"MaxPortalConns", "maxPortalConns", 32,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.MaxPortalConnections = value }},
-		{"NeutralLowestNoCastle", "neutralLowestNoCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowestNoCastleCount = value }},
-		{"NeutralLowestCastle", "neutralLowestCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowestCastleCount = value }},
-		{"NeutralLowNoCastle", "neutralLowNoCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowNoCastleCount = value }},
-		{"NeutralLowCastle", "neutralLowCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowCastleCount = value }},
-		{"NeutralMediumNoCastle", "neutralMediumNoCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralMediumNoCastleCount = value }},
-		{"NeutralMediumCastle", "neutralMediumCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralMediumCastleCount = value }},
-		{"NeutralHighNoCastle", "neutralHighNoCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralHighNoCastleCount = value }},
-		{"NeutralHighCastle", "neutralHighCastle", 8,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralHighCastleCount = value }},
-		{"NeutralLowestCastlesPerZone", "neutralLowestCastlesPerZone", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowestCastlesPerZone = value }},
-		{"NeutralLowCastlesPerZone", "neutralLowCastlesPerZone", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowCastlesPerZone = value }},
-		{"NeutralMedCastlesPerZone", "neutralMedCastlesPerZone", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralMediumCastlesPerZone = value }},
-		{"NeutralHighCastlesPerZone", "neutralHighCastlesPerZone", 4,
-			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralHighCastlesPerZone = value }},
-	}
-}
-
-func issueMessages(issues []validators.ValidationIssue) []string {
-	messages := make([]string, 0, len(issues))
-	for _, issue := range issues {
-		messages = append(messages, issue.Message)
-	}
-	return messages
-}
-
-func validate(state *editor_state_dto.EditorStateDto) []validators.ValidationIssue {
-	return validators.NewEditorStateValidator().Validate(state)
-}
-
 func TestWhenStateIsDefault_ReturnsNoIssues(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -395,4 +331,68 @@ func TestWhenVictoryConditionIsUnknown_ReturnsIssue(t *testing.T) {
 	// Assert
 	assert.Contains(t, issueMessages(issues),
 		`victoryCondition "NotARealCondition" is not a known victory condition`)
+}
+
+type countFieldCase struct {
+	name      string
+	fieldName string
+	highest   int
+	mutate    func(state *editor_state_dto.EditorStateDto, value int)
+}
+
+func countFieldCases() []countFieldCase {
+	return []countFieldCase{
+		{"NeutralZoneCount", "neutralZoneCount", 16,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralZoneCount = value }},
+		{"PlayerOwnedCastles", "playerOwnedCastles", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.PlayerOwnedCastles = value }},
+		{"PlayerCastles", "playerCastles", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.PlayerZoneCastles = value }},
+		{"NeutralCastles", "neutralCastles", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralZoneCastles = value }},
+		{"AbandonedOutpostCount", "abandonedOutpostCount", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.AbandonedOutpostCount = value }},
+		{"HubCastles", "hubCastles", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.HubZoneCastles = value }},
+		{"RemoteFootholdCount", "remoteFootholdCount", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.RemoteFootholdCount = value }},
+		{"MaxPortalConns", "maxPortalConns", 32,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.MaxPortalConnections = value }},
+		{"NeutralLowestNoCastle", "neutralLowestNoCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowestNoCastleCount = value }},
+		{"NeutralLowestCastle", "neutralLowestCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowestCastleCount = value }},
+		{"NeutralLowNoCastle", "neutralLowNoCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowNoCastleCount = value }},
+		{"NeutralLowCastle", "neutralLowCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowCastleCount = value }},
+		{"NeutralMediumNoCastle", "neutralMediumNoCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralMediumNoCastleCount = value }},
+		{"NeutralMediumCastle", "neutralMediumCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralMediumCastleCount = value }},
+		{"NeutralHighNoCastle", "neutralHighNoCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralHighNoCastleCount = value }},
+		{"NeutralHighCastle", "neutralHighCastle", 8,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralHighCastleCount = value }},
+		{"NeutralLowestCastlesPerZone", "neutralLowestCastlesPerZone", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowestCastlesPerZone = value }},
+		{"NeutralLowCastlesPerZone", "neutralLowCastlesPerZone", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralLowCastlesPerZone = value }},
+		{"NeutralMedCastlesPerZone", "neutralMedCastlesPerZone", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralMediumCastlesPerZone = value }},
+		{"NeutralHighCastlesPerZone", "neutralHighCastlesPerZone", 4,
+			func(state *editor_state_dto.EditorStateDto, value int) { state.NeutralHighCastlesPerZone = value }},
+	}
+}
+
+func issueMessages(issues []validators.ValidationIssue) []string {
+	messages := make([]string, 0, len(issues))
+	for _, issue := range issues {
+		messages = append(messages, issue.Message)
+	}
+	return messages
+}
+
+func validate(state *editor_state_dto.EditorStateDto) []validators.ValidationIssue {
+	return validators.NewEditorStateValidator().Validate(state)
 }

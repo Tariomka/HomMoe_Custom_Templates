@@ -13,16 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newAutoRegenerateState returns a State wired to a mock whose GenerateTemplate
-// always succeeds, plus the mock for call-count assertions.
-func newAutoRegenerateState() (*drivers.State, *test_helpers.TemplateHandlerMock) {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
-	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	return drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false), handlerMock
-}
-
 func TestWhenStateWasNeverGenerated_GeneratesImmediately(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -137,4 +127,14 @@ func TestWhenDebounceElapsesWithoutFurtherEdits_Regenerates(t *testing.T) {
 
 	// Assert
 	handlerMock.AssertNumberOfCalls(t, "GenerateTemplate", 2)
+}
+
+// newAutoRegenerateState returns a State wired to a mock whose GenerateTemplate
+// always succeeds, plus the mock for call-count assertions.
+func newAutoRegenerateState() (*drivers.State, *test_helpers.TemplateHandlerMock) {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	template := test_helpers.GetDefaultTemplate()
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
+	return drivers.NewUIState(
+		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false), handlerMock
 }

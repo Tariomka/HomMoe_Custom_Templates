@@ -82,20 +82,6 @@ func TestWhenTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
 	}
 }
 
-// newCirclesMixedNeutralConfiguration builds a four-player circles
-// configuration with two castle-free neutral zones of every quality tier.
-func newCirclesMixedNeutralConfiguration() *config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyCircles
-	configuration.PlayerCount = 4
-	configuration.ZoneConfiguration.NeutralZoneCount = 0
-	configuration.ZoneConfiguration.Advanced.Enabled = true
-	configuration.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = 2
-	configuration.ZoneConfiguration.Advanced.NeutralMediumNoCastleCount = 2
-	configuration.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = 2
-	return configuration
-}
-
 func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesZoneForEveryPlannedZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -118,16 +104,6 @@ func TestWhenCirclesTopologyWithMixedNeutralTiers_CreatesConnections(t *testing.
 
 	// Assert
 	assert.NotEmpty(t, actual.Variants[0].Connections)
-}
-
-// sumConnectionGuardValues totals the guard values of every connection in the
-// template's first variant.
-func sumConnectionGuardValues(generated *entities.RmgTemplate) int {
-	total := 0
-	for _, connection := range generated.Variants[0].Connections {
-		total += connection.GuardValue
-	}
-	return total
 }
 
 func TestWhenNeutralZonesAreHighQuality_ProducesStrongerBorderGuardsThanLowQuality(t *testing.T) {
@@ -188,4 +164,28 @@ func TestWhenCityHoldEnabledWithMixedNeutralTiers_MarksExactlyOneHoldCityMainObj
 		}
 	}
 	assert.Len(t, holdCityObjects, 1)
+}
+
+// sumConnectionGuardValues totals the guard values of every connection in the
+// template's first variant.
+func sumConnectionGuardValues(generated *entities.RmgTemplate) int {
+	total := 0
+	for _, connection := range generated.Variants[0].Connections {
+		total += connection.GuardValue
+	}
+	return total
+}
+
+// newCirclesMixedNeutralConfiguration builds a four-player circles
+// configuration with two castle-free neutral zones of every quality tier.
+func newCirclesMixedNeutralConfiguration() *config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyCircles
+	configuration.PlayerCount = 4
+	configuration.ZoneConfiguration.NeutralZoneCount = 0
+	configuration.ZoneConfiguration.Advanced.Enabled = true
+	configuration.ZoneConfiguration.Advanced.NeutralLowNoCastleCount = 2
+	configuration.ZoneConfiguration.Advanced.NeutralMediumNoCastleCount = 2
+	configuration.ZoneConfiguration.Advanced.NeutralHighNoCastleCount = 2
+	return configuration
 }

@@ -17,27 +17,6 @@ import (
 // changes silently.
 const debounceWindow = 300 * time.Millisecond
 
-func defaultState() *editor_state_dto.EditorStateDto {
-	state := editor_state_dto.NewDefaultEditorStateDto()
-	return &state
-}
-
-// layoutChangedState returns a state differing from defaultState in a
-// layout-defining option, which invalidates any hand-made zone layout.
-func layoutChangedState() *editor_state_dto.EditorStateDto {
-	state := defaultState()
-	state.Topology = config_inner.TopologyChain
-	return state
-}
-
-// nonLayoutChangedState differs from defaultState only in an option that does
-// not alter the zone or connection graph, so it is debounced instead.
-func nonLayoutChangedState() *editor_state_dto.EditorStateDto {
-	state := defaultState()
-	state.ResourceDensityPercent = 50
-	return state
-}
-
 func TestWhenNoPreviousGenerationExists_RegeneratesImmediately(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -244,4 +223,25 @@ func TestWhenOnlyManualEditsDiffer_CancelsPendingDebounce(t *testing.T) {
 		Regenerate:      false,
 		NextStateAction: dtos.NextStateClear,
 	}, decision)
+}
+
+func defaultState() *editor_state_dto.EditorStateDto {
+	state := editor_state_dto.NewDefaultEditorStateDto()
+	return &state
+}
+
+// layoutChangedState returns a state differing from defaultState in a
+// layout-defining option, which invalidates any hand-made zone layout.
+func layoutChangedState() *editor_state_dto.EditorStateDto {
+	state := defaultState()
+	state.Topology = config_inner.TopologyChain
+	return state
+}
+
+// nonLayoutChangedState differs from defaultState only in an option that does
+// not alter the zone or connection graph, so it is debounced instead.
+func nonLayoutChangedState() *editor_state_dto.EditorStateDto {
+	state := defaultState()
+	state.ResourceDensityPercent = 50
+	return state
 }

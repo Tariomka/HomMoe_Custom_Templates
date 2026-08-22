@@ -14,10 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newPositionedTopologyBuilder() *topology.PositionedTopologyBuilder {
-	return topology.NewPositionedTopologyBuilder(test_helpers.NewZoneFactories())
-}
-
 func TestWhenLayoutIsBuilt_StampsGeneratorPosition(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -157,4 +153,8 @@ func countConnectionsWithPrefix(connections []entities.Connection, prefix string
 		}
 	}
 	return count
+}
+
+func newPositionedTopologyBuilder() *topology.PositionedTopologyBuilder {
+	return topology.NewPositionedTopologyBuilder(test_helpers.NewZoneFactories())
 }

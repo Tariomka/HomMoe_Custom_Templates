@@ -12,18 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newGeneratedState returns a State that has generated once, so a previous
-// state snapshot exists and change detection is active.
-func newGeneratedState() *drivers.State {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
-	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
-	state.Generate()
-	return state
-}
-
 func TestWhenUpdateChangesState_ChangeIsApplied(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -63,4 +51,16 @@ func TestWhenUpdateDoesNotChangeStateAfterGeneration_StateStaysSaved(t *testing.
 
 	// Assert
 	assert.False(t, state.IsUnsaved())
+}
+
+// newGeneratedState returns a State that has generated once, so a previous
+// state snapshot exists and change detection is active.
+func newGeneratedState() *drivers.State {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	template := test_helpers.GetDefaultTemplate()
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
+	state := drivers.NewUIState(
+		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+	state.Generate()
+	return state
 }

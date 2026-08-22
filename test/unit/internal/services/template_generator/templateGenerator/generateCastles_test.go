@@ -12,36 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newAbandonedOutpostConfiguration builds a deterministic two-player ring
-// configuration with one low- and one medium-tier neutral castle zone, so
-// abandoned-outpost behaviour can be compared with and without the option.
-func newAbandonedOutpostConfiguration(spawnOutposts bool) *config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
-	configuration.PlayerCount = 2
-	configuration.ZoneConfiguration.Advanced.Enabled = true
-	configuration.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1
-	configuration.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
-	configuration.ZoneConfiguration.Advanced.NeutralLowCastlesPerZone = 1
-	configuration.ZoneConfiguration.Advanced.NeutralMediumCastlesPerZone = 1
-	configuration.ZoneConfiguration.SpawnAbandonedOutposts = spawnOutposts
-	return configuration
-}
-
-// countNeutralMainObjectsOfType counts main objects of the given type across
-// all neutral zones of the template's first variant.
-func countNeutralMainObjectsOfType(generated *entities.RmgTemplate, objectType string) int {
-	count := 0
-	for _, zone := range zonesWithPrefix(generated, "Neutral-") {
-		for _, mainObject := range zone.MainObjects {
-			if mainObject.Type == objectType {
-				count++
-			}
-		}
-	}
-	return count
-}
-
 func TestWhenAbandonedOutpostsDisabled_AddsNoAbandonedOutpostMainObjects(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -79,30 +49,6 @@ func TestWhenAbandonedOutpostsEnabled_KeepsNeutralCityCount(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, baselineCityCount, countNeutralMainObjectsOfType(actual, "City"))
-}
-
-// newPlayerOwnedCastlesConfiguration builds a deterministic two-player ring
-// configuration with one unclaimed extra castle and the given number of
-// pre-owned castles per spawn zone.
-func newPlayerOwnedCastlesConfiguration(ownedPerZone int) *config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
-	configuration.PlayerCount = 2
-	configuration.ZoneConfiguration.PlayerZoneCastles = 1
-	configuration.ZoneConfiguration.PlayerOwnedCastles = ownedPerZone
-	return configuration
-}
-
-// countZoneCitiesWhere counts City main objects of the zone matching the
-// given predicate.
-func countZoneCitiesWhere(zone entities.Zone, predicate func(entities.MainObject) bool) int {
-	count := 0
-	for _, mainObject := range zone.MainObjects {
-		if mainObject.Type == "City" && predicate(mainObject) {
-			count++
-		}
-	}
-	return count
 }
 
 func TestWhenPlayerOwnedCastlesConfigured_AddsOwnedCityPerCountInEachSpawnZone(t *testing.T) {
@@ -220,4 +166,58 @@ func TestWhenGenerating_AssignsPlayerToEachSpawnMainObject(t *testing.T) {
 		spawnAssignments = append(spawnAssignments, zone.MainObjects[0].Spawn)
 	}
 	assert.NotContains(t, spawnAssignments, "")
+}
+
+// newPlayerOwnedCastlesConfiguration builds a deterministic two-player ring
+// configuration with one unclaimed extra castle and the given number of
+// pre-owned castles per spawn zone.
+func newPlayerOwnedCastlesConfiguration(ownedPerZone int) *config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = 2
+	configuration.ZoneConfiguration.PlayerZoneCastles = 1
+	configuration.ZoneConfiguration.PlayerOwnedCastles = ownedPerZone
+	return configuration
+}
+
+// countZoneCitiesWhere counts City main objects of the zone matching the
+// given predicate.
+func countZoneCitiesWhere(zone entities.Zone, predicate func(entities.MainObject) bool) int {
+	count := 0
+	for _, mainObject := range zone.MainObjects {
+		if mainObject.Type == "City" && predicate(mainObject) {
+			count++
+		}
+	}
+	return count
+}
+
+// newAbandonedOutpostConfiguration builds a deterministic two-player ring
+// configuration with one low- and one medium-tier neutral castle zone, so
+// abandoned-outpost behaviour can be compared with and without the option.
+func newAbandonedOutpostConfiguration(spawnOutposts bool) *config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = 2
+	configuration.ZoneConfiguration.Advanced.Enabled = true
+	configuration.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1
+	configuration.ZoneConfiguration.Advanced.NeutralMediumCastleCount = 1
+	configuration.ZoneConfiguration.Advanced.NeutralLowCastlesPerZone = 1
+	configuration.ZoneConfiguration.Advanced.NeutralMediumCastlesPerZone = 1
+	configuration.ZoneConfiguration.SpawnAbandonedOutposts = spawnOutposts
+	return configuration
+}
+
+// countNeutralMainObjectsOfType counts main objects of the given type across
+// all neutral zones of the template's first variant.
+func countNeutralMainObjectsOfType(generated *entities.RmgTemplate, objectType string) int {
+	count := 0
+	for _, zone := range zonesWithPrefix(generated, "Neutral-") {
+		for _, mainObject := range zone.MainObjects {
+			if mainObject.Type == objectType {
+				count++
+			}
+		}
+	}
+	return count
 }

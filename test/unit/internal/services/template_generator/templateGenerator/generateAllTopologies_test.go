@@ -9,24 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// allGeneratorTopologies lists every topology the generator supports, so the
-// cross-topology contract tests exercise each layout implementation.
-func allGeneratorTopologies() []config.MapTopology {
-	return []config.MapTopology{
-		config.TopologyRing,
-		config.TopologyChain,
-		config.TopologyHubAndSpoke,
-		config.TopologyGeometricHub,
-		config.TopologySharedWeb,
-		config.TopologyRandom,
-		config.TopologyCircles,
-		config.TopologySquare,
-		config.TopologyGeometric,
-		config.TopologyCross,
-		config.TopologyFractal,
-	}
-}
-
 func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlannedZone(t *testing.T) {
 	t.Parallel()
 	for _, topology := range allGeneratorTopologies() {
@@ -136,5 +118,23 @@ func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testi
 			}
 			assert.Empty(t, invalidReferences)
 		})
+	}
+}
+
+// allGeneratorTopologies lists every topology the generator supports, so the
+// cross-topology contract tests exercise each layout implementation.
+func allGeneratorTopologies() []config.MapTopology {
+	return []config.MapTopology{
+		config.TopologyRing,
+		config.TopologyChain,
+		config.TopologyHubAndSpoke,
+		config.TopologyGeometricHub,
+		config.TopologySharedWeb,
+		config.TopologyRandom,
+		config.TopologyCircles,
+		config.TopologySquare,
+		config.TopologyGeometric,
+		config.TopologyCross,
+		config.TopologyFractal,
 	}
 }

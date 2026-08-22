@@ -14,27 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// buildVariantInputs prepares the label/plan/tuning inputs CreateTopologyVariant
-// needs for the given configuration.
-func buildVariantInputs(
-	configuration *config.GeneratorConfig,
-	playerLabels []string,
-	neutralZones neutral_zone.Plans) models.GenerationTuning {
-	return test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(neutralZones))
-}
-
-// spawnZoneNames returns the sorted names of the variant's spawn zones.
-func spawnZoneNames(variant entities.Variant) []string {
-	var names []string
-	for _, zone := range variant.Zones {
-		if strings.HasPrefix(zone.Name, "Spawn-") {
-			names = append(names, zone.Name)
-		}
-	}
-	sort.Strings(names)
-	return names
-}
-
 func TestWhenRingTopologySelected_CreatesZonePerLabelAndNeutralPlan(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -213,4 +192,25 @@ func TestWhenCalled_NamesOneSpawnZonePerPlayerLabel(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, []string{"Spawn-A", "Spawn-B", "Spawn-C", "Spawn-D"}, spawnZoneNames(variant))
+}
+
+// buildVariantInputs prepares the label/plan/tuning inputs CreateTopologyVariant
+// needs for the given configuration.
+func buildVariantInputs(
+	configuration *config.GeneratorConfig,
+	playerLabels []string,
+	neutralZones neutral_zone.Plans) models.GenerationTuning {
+	return test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(neutralZones))
+}
+
+// spawnZoneNames returns the sorted names of the variant's spawn zones.
+func spawnZoneNames(variant entities.Variant) []string {
+	var names []string
+	for _, zone := range variant.Zones {
+		if strings.HasPrefix(zone.Name, "Spawn-") {
+			names = append(names, zone.Name)
+		}
+	}
+	sort.Strings(names)
+	return names
 }

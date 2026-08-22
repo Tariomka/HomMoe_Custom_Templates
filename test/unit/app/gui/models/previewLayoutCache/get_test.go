@@ -12,15 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newCountingBuild returns a build function that reports how often it ran and
-// hands back a layout whose radius identifies the call that produced it.
-func newCountingBuild(callCount *int) func() (preview.Layout, error) {
-	return func() (preview.Layout, error) {
-		*callCount++
-		return preview.Layout{ZoneRadius: float64(*callCount)}, nil
-	}
-}
-
 func TestWhenKeyIsUnchanged_BuildsOnlyOnce(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -157,4 +148,13 @@ func TestWhenBuildFails_IsNotCached(t *testing.T) {
 	// Assert
 	require.Error(t, err)
 	assert.Equal(t, 2, callCount)
+}
+
+// newCountingBuild returns a build function that reports how often it ran and
+// hands back a layout whose radius identifies the call that produced it.
+func newCountingBuild(callCount *int) func() (preview.Layout, error) {
+	return func() (preview.Layout, error) {
+		*callCount++
+		return preview.Layout{ZoneRadius: float64(*callCount)}, nil
+	}
 }

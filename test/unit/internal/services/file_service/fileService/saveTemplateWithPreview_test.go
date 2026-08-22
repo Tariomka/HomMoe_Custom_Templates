@@ -11,10 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newPreviewImage() *image.RGBA {
-	return image.NewRGBA(image.Rect(0, 0, 16, 16))
-}
-
 func TestWhenSavedTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -154,3 +150,5 @@ func TestWhenPreviewCannotBeSaved_ReturnsError(t *testing.T) {
 	// Assert
 	assert.ErrorIs(t, err, expectedError)
 }
+
+func newPreviewImage() *image.RGBA { return image.NewRGBA(image.Rect(0, 0, 16, 16)) }

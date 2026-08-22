@@ -12,13 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newTwoNeutralPlans() neutral_zone.Plans {
-	neutralZones := neutral_zone.Plans{}
-	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutral_zone.QualityHigh, 1)
-	return neutralZones
-}
-
 func TestWhenPlayerHasTwoNeutralPlans_CreatesHubSpawnAndNeutralZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -172,4 +165,11 @@ func TestWhenHubMandatoryContentIsEmpty_HubZoneHasNoMandatoryContent(t *testing.
 
 	// Assert
 	assert.Empty(t, zones[0].MandatoryContent)
+}
+
+func newTwoNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityHigh, 1)
+	return neutralZones
 }

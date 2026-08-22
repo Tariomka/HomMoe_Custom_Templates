@@ -11,51 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newEditedSession generates a template, stamps manual positions on every zone
-// and applies them, leaving a state that carries a persisted manual snapshot.
-func newEditedSession(t *testing.T) *drivers.State {
-	t.Helper()
-	state := drivers.NewUIState(
-		composition.InitializeGuiHandler(),
-		composition.InitializeFileSystemHandler(),
-		composition.InitializeRegenerationHandler(),
-		false)
-	state.Generate()
-	template := state.GetLastTemplate()
-	require.NotNil(t, template)
-	require.NotEmpty(t, template.Variants)
-
-	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
-	for i := range zones {
-		pinned := [2]float64{0.1, 0.2}
-		zones[i].ManualPosition = &pinned
-	}
-	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
-		Zones:       zones,
-		Connections: template.Variants[0].Connections,
-	})
-	stateData := state.GetStateData()
-	require.True(t, stateData.HasManualEdits(), "the edit must be applied before it can be reverted")
-
-	return state
-}
-
-// zonesCarryManualPositions reports whether any zone of the live template is
-// still pinned to a hand-placed position.
-func zonesCarryManualPositions(state *drivers.State) bool {
-	template := state.GetLastTemplate()
-	if template == nil || len(template.Variants) == 0 {
-		return false
-	}
-	for _, zone := range template.Variants[0].Zones {
-		if zone.ManualPosition != nil {
-			return true
-		}
-	}
-
-	return false
-}
-
 // Previewing must not touch the live template - otherwise cancelling the
 // editor leaves the base on screen with no way back to the edited layout.
 func TestWhenPreviewingTheBase_TheEditedTemplateStaysOnScreen(t *testing.T) {
@@ -155,4 +110,49 @@ func TestWhenEditsAreAppliedTwice_TheManualSnapshotSurvives(t *testing.T) {
 	// Assert
 	stateData := state.GetStateData()
 	assert.True(t, stateData.HasManualEdits())
+}
+
+// newEditedSession generates a template, stamps manual positions on every zone
+// and applies them, leaving a state that carries a persisted manual snapshot.
+func newEditedSession(t *testing.T) *drivers.State {
+	t.Helper()
+	state := drivers.NewUIState(
+		composition.InitializeGuiHandler(),
+		composition.InitializeFileSystemHandler(),
+		composition.InitializeRegenerationHandler(),
+		false)
+	state.Generate()
+	template := state.GetLastTemplate()
+	require.NotNil(t, template)
+	require.NotEmpty(t, template.Variants)
+
+	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
+	for i := range zones {
+		pinned := [2]float64{0.1, 0.2}
+		zones[i].ManualPosition = &pinned
+	}
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:       zones,
+		Connections: template.Variants[0].Connections,
+	})
+	stateData := state.GetStateData()
+	require.True(t, stateData.HasManualEdits(), "the edit must be applied before it can be reverted")
+
+	return state
+}
+
+// zonesCarryManualPositions reports whether any zone of the live template is
+// still pinned to a hand-placed position.
+func zonesCarryManualPositions(state *drivers.State) bool {
+	template := state.GetLastTemplate()
+	if template == nil || len(template.Variants) == 0 {
+		return false
+	}
+	for _, zone := range template.Variants[0].Zones {
+		if zone.ManualPosition != nil {
+			return true
+		}
+	}
+
+	return false
 }

@@ -12,22 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newUnsavedState returns a State with a generated template and an unsaved
-// change, plus a flag pointer reporting whether Exit closed the application.
-func newUnsavedState() (state *drivers.State, exited *bool) {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
-	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state = drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
-	state.Generate()
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
-
-	exited = new(bool)
-	state.SetOnExit(func() { *exited = true })
-	return state, exited
-}
-
 func TestWhenUnsavedAndExitPressedOnce_ApplicationDoesNotExit(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -96,4 +80,20 @@ func TestWhenEditsFollowExitConfirmation_ExitIsBlockedAgain(t *testing.T) {
 
 	// Assert
 	assert.False(t, *exited)
+}
+
+// newUnsavedState returns a State with a generated template and an unsaved
+// change, plus a flag pointer reporting whether Exit closed the application.
+func newUnsavedState() (state *drivers.State, exited *bool) {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	template := test_helpers.GetDefaultTemplate()
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
+	state = drivers.NewUIState(
+		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+	state.Generate()
+	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+
+	exited = new(bool)
+	state.SetOnExit(func() { *exited = true })
+	return state, exited
 }

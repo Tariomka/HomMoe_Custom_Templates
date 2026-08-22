@@ -11,16 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newFailingState returns a State whose generator always errors.
-func newFailingState() *drivers.State {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	handlerMock.On("GenerateTemplate", mock.Anything).
-		Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
-
-	return drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
-}
-
 func TestWhenPreviewingTheBase_TheGeneratedZonesAreReturned(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -117,4 +107,14 @@ func TestWhenGenerationFails_NoBaseZonesAreReturned(t *testing.T) {
 
 	// Assert
 	assert.Empty(t, base.Zones)
+}
+
+// newFailingState returns a State whose generator always errors.
+func newFailingState() *drivers.State {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	handlerMock.On("GenerateTemplate", mock.Anything).
+		Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
+
+	return drivers.NewUIState(
+		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
 }

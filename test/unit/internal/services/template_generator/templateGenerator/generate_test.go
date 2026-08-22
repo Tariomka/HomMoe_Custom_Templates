@@ -14,43 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// zonesWithPrefix returns the zones of the template's first variant whose name
-// starts with the given prefix.
-func zonesWithPrefix(generated *entities.RmgTemplate, prefix string) []entities.Zone {
-	return linq.FromSlice(generated.Variants[0].Zones).
-		Where(func(zone entities.Zone) bool { return strings.HasPrefix(zone.Name, prefix) }).
-		ToSlice()
-}
-
-// extraCastleFactionTypes collects the faction type of the second main object
-// (the first extra castle) of every spawn zone, using "<missing>" when the
-// castle or its faction is absent so a mismatch shows up in the assertion.
-func extraCastleFactionTypes(spawnZones []entities.Zone) []string {
-	var factionTypes []string
-	for _, zone := range spawnZones {
-		if len(zone.MainObjects) < 2 || zone.MainObjects[1].Faction == nil {
-			factionTypes = append(factionTypes, "<missing>")
-			continue
-		}
-		factionTypes = append(factionTypes, zone.MainObjects[1].Faction.Type)
-	}
-	return factionTypes
-}
-
-// firstMainObjectTypes collects the type of the first main object of every
-// given zone, using "<missing>" when a zone has no main objects.
-func firstMainObjectTypes(zones []entities.Zone) []string {
-	var objectTypes []string
-	for _, zone := range zones {
-		if len(zone.MainObjects) == 0 {
-			objectTypes = append(objectTypes, "<missing>")
-			continue
-		}
-		objectTypes = append(objectTypes, zone.MainObjects[0].Type)
-	}
-	return objectTypes
-}
-
 func TestWhenDefaultConfiguration_ReturnsGoldenTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -275,15 +238,6 @@ func TestWhenSharedWebTopologyWithZeroNeutralZones_NamesForcedNeutralZoneAfterPl
 	neutralZones := zonesWithPrefix(actual, "Neutral-")
 	expectedName := fmt.Sprintf("Neutral-%c", 'A'+playerCount)
 	assert.Equal(t, []string{expectedName}, firstZoneNames(neutralZones))
-}
-
-// firstZoneNames returns the names of the given zones in order.
-func firstZoneNames(zones []entities.Zone) []string {
-	var names []string
-	for _, zone := range zones {
-		names = append(names, zone.Name)
-	}
-	return names
 }
 
 func TestWhenPositionDrivenTopologySelected_SetsGeneratorPositionOnAllZones(t *testing.T) {
@@ -891,4 +845,50 @@ func TestWhenGenerating_PlacesSpawnMainObjectFirstInEachSpawnZone(t *testing.T) 
 	// Assert
 	expectedTypes := slices.Repeat([]string{"Spawn"}, playerCount)
 	assert.Equal(t, expectedTypes, firstMainObjectTypes(zonesWithPrefix(actual, "Spawn-")))
+}
+
+// zonesWithPrefix returns the zones of the template's first variant whose name
+// starts with the given prefix.
+func zonesWithPrefix(generated *entities.RmgTemplate, prefix string) []entities.Zone {
+	return linq.FromSlice(generated.Variants[0].Zones).
+		Where(func(zone entities.Zone) bool { return strings.HasPrefix(zone.Name, prefix) }).
+		ToSlice()
+}
+
+// extraCastleFactionTypes collects the faction type of the second main object
+// (the first extra castle) of every spawn zone, using "<missing>" when the
+// castle or its faction is absent so a mismatch shows up in the assertion.
+func extraCastleFactionTypes(spawnZones []entities.Zone) []string {
+	var factionTypes []string
+	for _, zone := range spawnZones {
+		if len(zone.MainObjects) < 2 || zone.MainObjects[1].Faction == nil {
+			factionTypes = append(factionTypes, "<missing>")
+			continue
+		}
+		factionTypes = append(factionTypes, zone.MainObjects[1].Faction.Type)
+	}
+	return factionTypes
+}
+
+// firstMainObjectTypes collects the type of the first main object of every
+// given zone, using "<missing>" when a zone has no main objects.
+func firstMainObjectTypes(zones []entities.Zone) []string {
+	var objectTypes []string
+	for _, zone := range zones {
+		if len(zone.MainObjects) == 0 {
+			objectTypes = append(objectTypes, "<missing>")
+			continue
+		}
+		objectTypes = append(objectTypes, zone.MainObjects[0].Type)
+	}
+	return objectTypes
+}
+
+// firstZoneNames returns the names of the given zones in order.
+func firstZoneNames(zones []entities.Zone) []string {
+	var names []string
+	for _, zone := range zones {
+		names = append(names, zone.Name)
+	}
+	return names
 }

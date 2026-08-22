@@ -13,20 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newGeneratedState returns a State holding the default template, plus its
-// mock for further expectations, and the template's zones and connections to
-// edit.
-func newGeneratedState() (
-	*drivers.State, *test_helpers.TemplateHandlerMock, []entities.Zone, []entities.Connection) {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
-	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
-	state.Generate()
-	return state, handlerMock, template.Variants[0].Zones, template.Variants[0].Connections
-}
-
 func TestWhenNoTemplateWasGenerated_EditsAreIgnored(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -206,4 +192,18 @@ func TestWhenApplyingWithoutARevert_TheManualSnapshotIsStoredAnyway(t *testing.T
 	// Assert
 	stateData := state.GetStateData()
 	assert.True(t, stateData.HasManualEdits())
+}
+
+// newGeneratedState returns a State holding the default template, plus its
+// mock for further expectations, and the template's zones and connections to
+// edit.
+func newGeneratedState() (
+	*drivers.State, *test_helpers.TemplateHandlerMock, []entities.Zone, []entities.Connection) {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	template := test_helpers.GetDefaultTemplate()
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
+	state := drivers.NewUIState(
+		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+	state.Generate()
+	return state, handlerMock, template.Variants[0].Zones, template.Variants[0].Connections
 }

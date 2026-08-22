@@ -14,25 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newTournamentConfiguration builds a two-player tournament configuration for
-// the given per-cluster topology and neutral zone count.
-func newTournamentConfiguration(
-	topology config.MapTopology,
-	playerCount int,
-	neutralZoneCount int) *config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = topology
-	configuration.PlayerCount = playerCount
-	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
-	configuration.TournamentRules = &config.TournamentRules{
-		Enabled:            true,
-		FirstTournamentDay: 14,
-		Interval:           7,
-		PointsToWin:        2,
-	}
-	return configuration
-}
-
 func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -129,4 +110,23 @@ func TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections(t *testing
 		Where(func(connection entities.Connection) bool { return connection.ConnectionType == "Portal" }).
 		Any()
 	assert.True(t, hasPortalConnections)
+}
+
+// newTournamentConfiguration builds a two-player tournament configuration for
+// the given per-cluster topology and neutral zone count.
+func newTournamentConfiguration(
+	topology config.MapTopology,
+	playerCount int,
+	neutralZoneCount int) *config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = topology
+	configuration.PlayerCount = playerCount
+	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
+	configuration.TournamentRules = &config.TournamentRules{
+		Enabled:            true,
+		FirstTournamentDay: 14,
+		Interval:           7,
+		PointsToWin:        2,
+	}
+	return configuration
 }

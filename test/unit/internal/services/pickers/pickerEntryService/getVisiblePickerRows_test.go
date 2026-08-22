@@ -8,14 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func pickerRowFixtureEntries() []dtos.PickerEntryDto {
-	return []dtos.PickerEntryDto{
-		{ID: "a", Group: "Weapons", Haystack: "sword"},
-		{ID: "b", Group: "Weapons", Haystack: "axe"},
-		{ID: "c", Group: "Armor", Haystack: "shield"},
-	}
-}
-
 func TestWhenThePickerIsGrouped_EachGroupIsHeadedOnceBeforeItsEntries(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -71,4 +63,12 @@ func TestWhenNothingMatchesTheFilter_NoRowsAreProduced(t *testing.T) {
 
 	// Assert
 	assert.Empty(t, rows)
+}
+
+func pickerRowFixtureEntries() []dtos.PickerEntryDto {
+	return []dtos.PickerEntryDto{
+		{ID: "a", Group: "Weapons", Haystack: "sword"},
+		{ID: "b", Group: "Weapons", Haystack: "axe"},
+		{ID: "c", Group: "Armor", Haystack: "shield"},
+	}
 }

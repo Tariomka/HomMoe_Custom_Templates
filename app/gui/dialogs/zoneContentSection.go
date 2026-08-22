@@ -17,38 +17,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
-// zoneContentRow is one editable item inside a zone-content section.
-type zoneContentRow struct {
-	Mapping models.SidMapping
-	Count   int
-	IsGroup bool
-	rules   []models.ContentRuleRowSave
-
-	countSld  widget.Float
-	manageBtn widget.Clickable
-	removeBtn widget.Clickable
-	dupBtn    widget.Clickable
-}
-
-func newZoneContentRow(
-	mapping models.SidMapping,
-	count int,
-	rules []models.ContentRuleRowSave,
-	isGroup bool) *zoneContentRow {
-	return &zoneContentRow{
-		Mapping: mapping,
-		Count:   count,
-		IsGroup: isGroup,
-		rules:   utils.CloneRuleRows(rules),
-	}
-}
-
-// Rules returns a defensive copy of the row's content rules, letting the parent
-// panel serialize them without exposing the row's mutable slice.
-func (this *zoneContentRow) Rules() []models.ContentRuleRowSave {
-	return utils.CloneRuleRows(this.rules)
-}
-
 // ZoneContentSection is one of the mandatory-content groups.
 type ZoneContentSection struct {
 	Title              string
@@ -122,7 +90,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			if idx < 0 || idx >= len(this.Items) {
 				idx = 0
 			}
-			this.Add(this.Items[idx], 1, this.defaultContentRules(this.Items[idx]), false)
+			this.Add(this.Items[idx], 1, this.contentRuleHandler.GetDefaultContentRules(this.Items[idx]), false)
 		}
 		// Process per-row clicks (collect indices to remove).
 		keep := this.rows[:0]
@@ -196,7 +164,8 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-							label := material.Body1(theme, this.rowDisplayName(row))
+							label := material.Body1(theme,
+								this.contentRuleHandler.GetContentRowDisplayName(row.Mapping, row.rules))
 							label.Color = themes.ColorsBase.Accent
 							label.TextSize = unit.Sp(13)
 							return label.Layout(gtx)
@@ -228,7 +197,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 // placeholder when the row has no rules.
 func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneContentRow) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		markers := this.ruleMarkers(row.Mapping, row.rules)
+		markers := this.contentRuleHandler.GetContentRuleMarkers(row.Mapping, row.rules)
 		if markers == "" {
 			label := material.Body2(theme, "(none)")
 			label.Color = themes.ColorsBase.TextDim
@@ -240,25 +209,4 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 		label.TextSize = unit.Sp(13)
 		return label.Layout(gtx)
 	}
-}
-
-// rowDisplayName mirrors the C# ZoneContentItemUI.DisplayName: the item name,
-// with the chosen variant's description appended when a Variant rule applies.
-func (this *ZoneContentSection) rowDisplayName(row *zoneContentRow) string {
-	return this.contentRuleHandler.GetContentRowDisplayName(row.Mapping, row.rules)
-}
-
-// defaultContentRules is the rule list applied to a freshly-added row: a single
-// Guarded rule, matching the historical default of the Guarded checkbox.
-func (this *ZoneContentSection) defaultContentRules(content models.SidMapping) []models.ContentRuleRowSave {
-	return this.contentRuleHandler.GetDefaultContentRules(content)
-}
-
-// ruleMarkers returns the concatenated marker badges for a rule list (e.g.
-// "G · R · S"), skipping rules that have no marker (Variant) or are invalid.
-func (this *ZoneContentSection) ruleMarkers(
-	mapping models.SidMapping,
-	rules []models.ContentRuleRowSave,
-) string {
-	return this.contentRuleHandler.GetContentRuleMarkers(mapping, rules)
 }

@@ -11,32 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mustNewGenerator fails the test immediately when the embedded assets cannot load.
-func mustNewGenerator(t *testing.T) preview_service.IPreviewGeneratorService {
-	t.Helper()
-	generator, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
-	require.NoError(t, err)
-	return generator
-}
-
-// ringTemplate builds a small two-player ring template with plain connections.
-func ringTemplate() *entities.RmgTemplate {
-	return &entities.RmgTemplate{
-		Variants: []entities.Variant{{
-			Zones: []entities.Zone{
-				{Name: "Spawn-A"}, {Name: "Neutral-B"},
-				{Name: "Spawn-C"}, {Name: "Neutral-D"},
-			},
-			Connections: []entities.Connection{
-				{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Direct"},
-				{From: "Neutral-B", To: "Spawn-C", ConnectionType: "Direct"},
-				{From: "Spawn-C", To: "Neutral-D", ConnectionType: "Direct"},
-				{From: "Neutral-D", To: "Spawn-A", ConnectionType: "Direct"},
-			},
-		}},
-	}
-}
-
 func TestWhenTemplateIsRendered_ReturnsFullSizeCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -151,4 +125,30 @@ func TestWhenSameTemplateIsRenderedTwice_ProducesIdenticalImages(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, firstRender.Pix, secondRender.Pix)
+}
+
+// mustNewGenerator fails the test immediately when the embedded assets cannot load.
+func mustNewGenerator(t *testing.T) preview_service.IPreviewGeneratorService {
+	t.Helper()
+	generator, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
+	require.NoError(t, err)
+	return generator
+}
+
+// ringTemplate builds a small two-player ring template with plain connections.
+func ringTemplate() *entities.RmgTemplate {
+	return &entities.RmgTemplate{
+		Variants: []entities.Variant{{
+			Zones: []entities.Zone{
+				{Name: "Spawn-A"}, {Name: "Neutral-B"},
+				{Name: "Spawn-C"}, {Name: "Neutral-D"},
+			},
+			Connections: []entities.Connection{
+				{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Direct"},
+				{From: "Neutral-B", To: "Spawn-C", ConnectionType: "Direct"},
+				{From: "Spawn-C", To: "Neutral-D", ConnectionType: "Direct"},
+				{From: "Neutral-D", To: "Spawn-A", ConnectionType: "Direct"},
+			},
+		}},
+	}
 }

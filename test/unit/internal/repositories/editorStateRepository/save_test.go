@@ -13,13 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newStateWithNaN() editor_state_dto.EditorStateDto {
-	state := editor_state_dto.NewDefaultEditorStateDto()
-	state.PlayerZoneSize = math.NaN()
-
-	return state
-}
-
 func TestWhenStateIsSaved_ReturnsPathWithGenJsonExtension(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -165,4 +158,11 @@ func TestWhenStateParentPathIsAFile_ReturnsError(t *testing.T) {
 
 	// Assert
 	assert.Error(t, err)
+}
+
+func newStateWithNaN() editor_state_dto.EditorStateDto {
+	state := editor_state_dto.NewDefaultEditorStateDto()
+	state.PlayerZoneSize = math.NaN()
+
+	return state
 }

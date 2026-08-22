@@ -12,20 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// maxCountFor returns the MaxCount of the limit with the given SID in the
-// first limit group, and fails the test when the SID has no limit entry.
-func maxCountFor(t *testing.T, groups []entities.ContentCountLimit, sid string) int {
-	t.Helper()
-	require.NotEmpty(t, groups)
-	for _, limit := range groups[0].Limits {
-		if strings.EqualFold(limit.SID, sid) {
-			return limit.MaxCount
-		}
-	}
-	t.Fatalf("no content limit found for SID %q", sid)
-	return 0
-}
-
 func TestWhenDefaultConfiguration_CreatesSeventeenLimitGroups(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -189,4 +175,18 @@ func TestWhenLowestTierRequestsMoreThanDefaultCap_LiftsLimit(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, 3, maxCountFor(t, groups, fountainSid))
+}
+
+// maxCountFor returns the MaxCount of the limit with the given SID in the
+// first limit group, and fails the test when the SID has no limit entry.
+func maxCountFor(t *testing.T, groups []entities.ContentCountLimit, sid string) int {
+	t.Helper()
+	require.NotEmpty(t, groups)
+	for _, limit := range groups[0].Limits {
+		if strings.EqualFold(limit.SID, sid) {
+			return limit.MaxCount
+		}
+	}
+	t.Fatalf("no content limit found for SID %q", sid)
+	return 0
 }

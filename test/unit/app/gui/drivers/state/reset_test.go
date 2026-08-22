@@ -12,19 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newDirtyGeneratedState returns a State with a generated template and an
-// unsaved change, so Reset has something to clear in every dimension.
-func newDirtyGeneratedState() *drivers.State {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
-	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
-	state.Generate()
-	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
-	return state
-}
-
 func TestWhenStateIsReset_UnsavedFlagIsCleared(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -72,4 +59,17 @@ func TestWhenStateIsReset_StatusReportsNewFile(t *testing.T) {
 	// Assert
 	message, isError := state.GetStatus()
 	assert.Equal(t, []any{"New settings file.", false}, []any{message, isError})
+}
+
+// newDirtyGeneratedState returns a State with a generated template and an
+// unsaved change, so Reset has something to clear in every dimension.
+func newDirtyGeneratedState() *drivers.State {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	template := test_helpers.GetDefaultTemplate()
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
+	state := drivers.NewUIState(
+		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+	state.Generate()
+	state.UpdateState(func(dto *editor_state_dto.EditorStateDto) { dto.TemplateName = gofakeit.ProductName() })
+	return state
 }

@@ -11,14 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newThreeNeutralPlans() neutral_zone.Plans {
-	neutralZones := neutral_zone.Plans{}
-	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("E", neutral_zone.QualityHigh, 1)
-	return neutralZones
-}
-
 func TestWhenPlayerHasThreeNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -139,4 +131,12 @@ func TestWhenSecondPlayerClusterIsBuilt_SpawnCastleBelongsToPlayerTwo(t *testing
 
 	// Assert
 	assert.Equal(t, "Player2", zones[0].MainObjects[0].Spawn)
+}
+
+func newThreeNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("E", neutral_zone.QualityHigh, 1)
+	return neutralZones
 }

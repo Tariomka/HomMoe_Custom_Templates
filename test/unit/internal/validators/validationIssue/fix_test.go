@@ -10,17 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// applyAllFixes validates the state and applies every returned fix in order,
-// requiring that at least one issue was found.
-func applyAllFixes(t *testing.T, state *editor_state_dto.EditorStateDto) {
-	t.Helper()
-	issues := validators.NewEditorStateValidator().Validate(state)
-	require.NotEmpty(t, issues)
-	for _, issue := range issues {
-		issue.Fix(state)
-	}
-}
-
 func TestWhenPlayerCountAboveMaximum_FixClampsToMaximum(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -138,4 +127,15 @@ func TestWhenVictoryConditionIsUnknown_FixResetsToStandard(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, registry.GetWinningConditionValues().Standard, state.VictoryCondition)
+}
+
+// applyAllFixes validates the state and applies every returned fix in order,
+// requiring that at least one issue was found.
+func applyAllFixes(t *testing.T, state *editor_state_dto.EditorStateDto) {
+	t.Helper()
+	issues := validators.NewEditorStateValidator().Validate(state)
+	require.NotEmpty(t, issues)
+	for _, issue := range issues {
+		issue.Fix(state)
+	}
 }

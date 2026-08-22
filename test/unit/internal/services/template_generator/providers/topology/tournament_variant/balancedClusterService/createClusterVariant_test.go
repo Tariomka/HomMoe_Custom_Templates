@@ -12,15 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newFourNeutralPlans() neutral_zone.Plans {
-	neutralZones := neutral_zone.Plans{}
-	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("E", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("F", neutral_zone.QualityHigh, 1)
-	return neutralZones
-}
-
 func TestWhenPlayerHasFourNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -189,4 +180,13 @@ func countWithPrefix(connections []entities.Connection, prefix string) int {
 		}
 	}
 	return count
+}
+
+func newFourNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("E", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("F", neutral_zone.QualityHigh, 1)
+	return neutralZones
 }

@@ -45,27 +45,6 @@ type MultiSelectPicker struct {
 	cancelBtn widget.Clickable
 }
 
-func newMultiSelectPicker(
-	title string,
-	entries []dtos.PickerEntryDto,
-	grouped bool,
-	pickerHandler handler_interfaces.IPickerHandler) *MultiSelectPicker {
-	picker := &MultiSelectPicker{
-		title:         title,
-		prefW:         unit.Dp(560),
-		prefH:         unit.Dp(560),
-		entries:       entries,
-		grouped:       grouped,
-		addLabel:      "Add Selected",
-		selected:      map[string]bool{},
-		clicks:        map[string]*widget.Clickable{},
-		pickerHandler: pickerHandler,
-	}
-	picker.search.SingleLine = true
-	picker.scroll.Axis = layout.Vertical
-	return picker
-}
-
 func NewItemPickerDialog(
 	title string,
 	excluded []string,
@@ -157,6 +136,27 @@ func NewValueOverridePickerDialog(
 		}
 		onApply(lines)
 	}
+	return picker
+}
+
+func newMultiSelectPicker(
+	title string,
+	entries []dtos.PickerEntryDto,
+	grouped bool,
+	pickerHandler handler_interfaces.IPickerHandler) *MultiSelectPicker {
+	picker := &MultiSelectPicker{
+		title:         title,
+		prefW:         unit.Dp(560),
+		prefH:         unit.Dp(560),
+		entries:       entries,
+		grouped:       grouped,
+		addLabel:      "Add Selected",
+		selected:      map[string]bool{},
+		clicks:        map[string]*widget.Clickable{},
+		pickerHandler: pickerHandler,
+	}
+	picker.search.SingleLine = true
+	picker.scroll.Axis = layout.Vertical
 	return picker
 }
 

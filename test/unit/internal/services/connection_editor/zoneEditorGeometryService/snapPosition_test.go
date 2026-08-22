@@ -8,12 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// singleGuideZone parks one zone whose horizontal guides (312 / 350 / 388) are
-// the only alignment lines a dragged zone can hold onto.
-func singleGuideZone() map[string]models.Position {
-	return map[string]models.Position{"A": data.NewVec2(350.0, 350.0)}
-}
-
 func TestWhenTheZoneRadiusIsUnknown_TheDraggedPositionIsUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -99,4 +93,10 @@ func TestWhenTheDraggedZoneIsTheOnlyZone_ItDoesNotHoldOntoItself(t *testing.T) {
 
 	// Assert
 	assert.False(t, result.HasGuideY)
+}
+
+// singleGuideZone parks one zone whose horizontal guides (312 / 350 / 388) are
+// the only alignment lines a dragged zone can hold onto.
+func singleGuideZone() map[string]models.Position {
+	return map[string]models.Position{"A": data.NewVec2(350.0, 350.0)}
 }

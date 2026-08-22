@@ -8,17 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// straightEdge is a degenerate quadratic curve: a horizontal line at the given
-// height, which keeps the expected distances in these tests obvious.
-func straightEdge(connectionIndex int, height float64) models.ZoneEditorEdge {
-	return models.ZoneEditorEdge{
-		ConnectionIndex: connectionIndex,
-		StartPoint:      data.NewVec2(0.0, height),
-		ControlPoint:    data.NewVec2(50.0, height),
-		EndPoint:        data.NewVec2(100.0, height),
-	}
-}
-
 func TestWhenAPointSitsOnACurve_TheEdgeHitTestReturnsThatEdge(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -68,4 +57,15 @@ func TestWhenThereAreNoEdges_TheEdgeHitTestReturnsNoIndex(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, -1, index)
+}
+
+// straightEdge is a degenerate quadratic curve: a horizontal line at the given
+// height, which keeps the expected distances in these tests obvious.
+func straightEdge(connectionIndex int, height float64) models.ZoneEditorEdge {
+	return models.ZoneEditorEdge{
+		ConnectionIndex: connectionIndex,
+		StartPoint:      data.NewVec2(0.0, height),
+		ControlPoint:    data.NewVec2(50.0, height),
+		EndPoint:        data.NewVec2(100.0, height),
+	}
 }

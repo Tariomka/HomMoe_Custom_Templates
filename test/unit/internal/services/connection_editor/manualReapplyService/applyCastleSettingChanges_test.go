@@ -26,21 +26,6 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
-// applySimpleModeChange runs the simple-mode neutral castle propagation over a
-// castled neutral zone, a castle-less neutral zone and a spawn zone.
-func applySimpleModeChange() []entities.Zone {
-	configuration := config.NewGeneratorConfig()
-	configuration.ZoneConfiguration.NeutralZoneCastles = 2
-	zones := []entities.Zone{
-		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
-		makeNeutralZone("H", neutral_zone.QualityHigh, 0),
-		makeSpawnZone("A", "Player1", 1),
-	}
-	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
-	return zones
-}
-
 func TestWhenSimpleModeCountChanges_UpdatesCastledNeutralZone(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
@@ -68,21 +53,6 @@ func TestWhenSimpleModeCountChanges_LeavesSpawnZoneUntouched(t *testing.T) {
 	assert.Len(t, zones[2].MainObjects, 2, "spawn zones must not react to a neutral option")
 }
 
-// applyAdvancedHighChange runs the advanced-mode high-tier castle propagation
-// over a manually re-tiered high zone, a low zone and a castle-less high zone.
-func applyAdvancedHighChange() []entities.Zone {
-	configuration := config.NewGeneratorConfig()
-	configuration.ZoneConfiguration.Advanced.NeutralHighCastlesPerZone = 3
-	zones := []entities.Zone{
-		makeNeutralZone("G", neutral_zone.QualityHigh, 1),
-		makeNeutralZone("H", neutral_zone.QualityLow, 1),
-		makeNeutralZone("I", neutral_zone.QualityHigh, 0),
-	}
-	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{NeutralHigh: true}, configuration)
-	return zones
-}
-
 func TestWhenHighTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
@@ -108,21 +78,6 @@ func TestWhenHighTierCountChanges_KeepsCastleLessZoneWithoutCastles(t *testing.T
 
 	// Assert
 	assert.Equal(t, 0, test_helpers.NewZoneEditorService().CountZoneCastles(zones[2]))
-}
-
-// applyPlayerCastleChange runs the player-castle propagation over a spawn zone
-// and a neutral zone: one owned extra castle and two unclaimed ones.
-func applyPlayerCastleChange() []entities.Zone {
-	configuration := config.NewGeneratorConfig()
-	configuration.ZoneConfiguration.PlayerZoneCastles = 2
-	configuration.ZoneConfiguration.PlayerOwnedCastles = 1
-	zones := []entities.Zone{
-		makeSpawnZone("A", "Player1", 0),
-		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
-	}
-	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
-	return zones
 }
 
 func TestWhenPlayerCastlesChange_RebuildsSpawnZoneWithSpawnPlusThreeCastles(t *testing.T) {
@@ -267,4 +222,49 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 	}
 	assert.Equal(t, 2, castleRoadCount,
 		"expected castle roads from the primary castle to both extra castles")
+}
+
+// applySimpleModeChange runs the simple-mode neutral castle propagation over a
+// castled neutral zone, a castle-less neutral zone and a spawn zone.
+func applySimpleModeChange() []entities.Zone {
+	configuration := config.NewGeneratorConfig()
+	configuration.ZoneConfiguration.NeutralZoneCastles = 2
+	zones := []entities.Zone{
+		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
+		makeNeutralZone("H", neutral_zone.QualityHigh, 0),
+		makeSpawnZone("A", "Player1", 1),
+	}
+	newManualReapplyService().ApplyCastleSettingChanges(
+		zones, editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
+	return zones
+}
+
+// applyAdvancedHighChange runs the advanced-mode high-tier castle propagation
+// over a manually re-tiered high zone, a low zone and a castle-less high zone.
+func applyAdvancedHighChange() []entities.Zone {
+	configuration := config.NewGeneratorConfig()
+	configuration.ZoneConfiguration.Advanced.NeutralHighCastlesPerZone = 3
+	zones := []entities.Zone{
+		makeNeutralZone("G", neutral_zone.QualityHigh, 1),
+		makeNeutralZone("H", neutral_zone.QualityLow, 1),
+		makeNeutralZone("I", neutral_zone.QualityHigh, 0),
+	}
+	newManualReapplyService().ApplyCastleSettingChanges(
+		zones, editor_state_model.CastleSettingChanges{NeutralHigh: true}, configuration)
+	return zones
+}
+
+// applyPlayerCastleChange runs the player-castle propagation over a spawn zone
+// and a neutral zone: one owned extra castle and two unclaimed ones.
+func applyPlayerCastleChange() []entities.Zone {
+	configuration := config.NewGeneratorConfig()
+	configuration.ZoneConfiguration.PlayerZoneCastles = 2
+	configuration.ZoneConfiguration.PlayerOwnedCastles = 1
+	zones := []entities.Zone{
+		makeSpawnZone("A", "Player1", 0),
+		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
+	}
+	newManualReapplyService().ApplyCastleSettingChanges(
+		zones, editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
+	return zones
 }

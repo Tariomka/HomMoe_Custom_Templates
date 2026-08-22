@@ -11,17 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// solidImage builds a width x height RGBA image filled with the given color.
-func solidImage(width, height int, fill color.NRGBA) *image.RGBA {
-	result := image.NewRGBA(image.Rect(0, 0, width, height))
-	for row := range height {
-		for column := range width {
-			result.SetRGBA(column, row, color.RGBA{R: fill.R, G: fill.G, B: fill.B, A: 255})
-		}
-	}
-	return result
-}
-
 func TestWhenImagesAreIdentical_ReturnsZero(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -132,4 +121,15 @@ func TestWhenImagesAreEmpty_ReturnsZero(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, snapshot.Difference{}, difference)
+}
+
+// solidImage builds a width x height RGBA image filled with the given color.
+func solidImage(width, height int, fill color.NRGBA) *image.RGBA {
+	result := image.NewRGBA(image.Rect(0, 0, width, height))
+	for row := range height {
+		for column := range width {
+			result.SetRGBA(column, row, color.RGBA{R: fill.R, G: fill.G, B: fill.B, A: 255})
+		}
+	}
+	return result
 }
