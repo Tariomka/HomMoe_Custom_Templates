@@ -339,18 +339,34 @@ embeds the other handler interfaces).
 
 Place new code in the package whose responsibility matches its role:
 
-| Kind of code                                              | Location                                                                                                                                                                  |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| UI / rendering (Gio widgets, layouts, theming, input)     | [app/gui/](app/gui/)                                                                                                                                                      |
-| Data structs / DTOs / factory functions (no behaviour)    | [internal/models/](internal/models/) + [internal/dtos/](internal/dtos/); read-only `.rmg.json` schema in [internal/entities/](internal/entities/) (`template/`, see §2.1) |
-| Business logic, orchestrators, services                   | [internal/services/](internal/services/) + [internal/handlers/](internal/handlers/)                                                                                       |
-| Constants, IDs, immutable lookup tables                   | [internal/constants/](internal/constants/) + [internal/registry/](internal/registry/)                                                                                     |
-| Misc / cross-cutting utility functions                    | [internal/helpers/](internal/helpers/)                                                                                                                                    |
+| Kind of code                                                            | Location                                                                                                                                       |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI / rendering (Gio widgets, layouts, theming, input)                   | [app/gui/](app/gui/)                                                                                                                           |
+| Serializable objects (entities)                                         | [internal/entities/](internal/entities/); read-only `.rmg.json` schema in [internal/entities/template/](internal/entities/template) (see §2.1) |
+| Data transfer objects                                                   | [internal/dtos/](internal/dtos/)                                                                                                               |
+| Data structs with attached logic (might have factory functions as well) | [internal/models/](internal/models/)                                                                                                           |
+| Data mappers and converters                                             | [internal/mappers/](internal/mappers/)                                                                                                         |
+| Orchestrators / entry points                                            | [internal/handlers/](internal/handlers/)                                                                                                       |
+| Business logic, services                                                | [internal/services/](internal/services/)                                                                                                       |
+| Game data values (exclusively)                                          | [internal/registry/](internal/registry/) (read-only, see §2.1)                                                                                 |
+| Constants, IDs, immutable lookup tables (non game values)               | [internal/common/](internal/common/)                                                                                                           |
+| Misc / cross-cutting utility functions                                  | [internal/helpers/](internal/helpers/)                                                                                                         |
+| Validators                                                              | [internal/validators/](internal/validators/)                                                                                                   |
 
 - If a struct or function has dependencies (helper structs, private types)
   **that are not used anywhere else**, nest them in a sibling folder next to
   the dependant file rather than polluting a shared package.
 - Do not introduce new top-level packages without a clear reason.
+- `internal/entities/` is the base data layer and as such should never import other
+  packages (except `internal/helpers/data/`); `internal/models/` is the second layer -
+  it can import `internal/entities/`, `internal/helpers/`, `internal/registry/`;
+  `internal/dtos/` is the highest layer - it is used for transferring data from and
+  to `app/.../` - it can import `internal/entities/`, `internal/models/` and any data
+  related additional packages (`internal/helpers/`, `internal/registry/`, `internal/common/`, etc.).
+- Packages outside `internal/` must enter internal functionality
+  (services, validators, etc.) through `internal/handlers/`; data accessing
+  (`internal/registry/`, `internal/common/`), data typing (`internal/models/`, `internal/dtos/`)
+  and usage of helpers (`internal/helpers`) is permitted.
 
 ### 4.5 UI vs. business logic separation
 

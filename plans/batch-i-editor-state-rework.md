@@ -35,7 +35,7 @@ never `&&`; unit coverage must not drop below **72.5 %** (currently 72.8 %).
 | DTO shape | `EditorStateDto { SchemaVersion int; EditorState editor_state_model.EditorStateModel }` — a **named** field, not embedded. |
 | Wire shape | Stays **flat**. `MarshalJSON`/`UnmarshalJSON` on the DTO hoist the model's fields using an internal anonymous-embedding alias, so `schemaVersion` sits as a sibling of the existing 72 keys. |
 | `schemaVersion` | Always written as `1`. On load, `0` is normalised to `1` through an explicit migration hook. |
-| Entity package | `internal/entities/editor_state/` (package `editor_state`). **Note:** AGENTS.md §4.4's table points non-`.rmg.json` data structs at `internal/models/`; the owner decided on 2026-08-11 and re-confirmed on 2026-08-21 to put these under `internal/entities/` instead. That departure is deliberate — do not "fix" it. |
+| Entity package | `internal/entities/editor_state/` (package `editor_state`). The owner decided on 2026-08-11 and re-confirmed on 2026-08-21 to put these under `internal/entities/` rather than `internal/models/`. AGENTS.md §4.4 carries this carve-out explicitly since Phase 3 — do not "fix" it. |
 | Model package | `internal/models/editor_state_model/` (package `editor_state_model`) — renamed from `editor_state` to avoid a package-name collision with the entities. |
 | DTO package | The three `editorState*Dto.go` files move into the existing `internal/dtos/editor_state_dto/`, alongside its current internals. |
 | Content defaults | `DefaultPlayerZoneContentRows` and its helpers move to a new `internal/common/common_zone_contents/`, with `Get`/`get` prefixes, mirroring [neutralZoneProfile.go](../internal/common/common_zones/neutralZoneProfile.go). |
@@ -129,9 +129,12 @@ had each falsified something it originally claimed. Treat them as load-bearing.
    must be rewritten to enumerate recursive leaf paths, ignore only the two
    manual-edit leaves, exclude `SchemaVersion`, and mutate the model rather than
    the DTO shell.
-7. **Named literal.** `NewDefaultEditorStateDto` is the only keyed literal with
-   ~32 named fields; it becomes a nested literal and is the one place the
-   compiler will not help after promotion.
+7. ~~**Named literal.**~~ **Falsified in Phase 3.** The plan expected
+   `NewDefaultEditorStateDto`'s ~32 named fields to become a nested literal. Go
+   1.27 accepts **promoted fields as composite-literal keys**, so the literal
+   stays flat — and `modernize`'s `embedlit` rule rewrites the nested form back
+   to the flat one, so flat is also what the linter demands. Eliding only the
+   type (`Group: {…}`) is invalid Go.
 8. **Load seeds defaults.** [editorStateRepository.go](../internal/repositories/editorStateRepository.go#L26-L29)
    unmarshals *over* `NewDefaultEditorStateDto()`, which is how absent keys keep
    their defaults. `UnmarshalJSON` in Phase 5 must preserve that merge semantic —
@@ -386,28 +389,28 @@ signed off first.
 ---
 
 ## Phase 3: Introduce the model, DTO delegates
-Status: Not started
+Status: Complete
 
-- [ ] Create `internal/models/editor_state_model/editorStateModel.go` —
+- [x] Create `internal/models/editor_state_model/editorStateModel.go` —
       `EditorStateModel` anonymously embedding the 9 entity structs.
-- [ ] Move the behaviour onto it: `Clone`, `LayoutDefiningOptionsChanged`,
+- [x] Move the behaviour onto it: `Clone`, `LayoutDefiningOptionsChanged`,
       `DiffCastleSettings`, `EqualsIgnoringManualEdits`, `HasManualEdits`, the
       private comparison helpers, and a `NewDefaultEditorStateModel` factory
       carrying the current defaults.
-- [ ] Reduce `EditorStateDto` to `struct { editor_state_model.EditorStateModel }`
+- [x] Reduce `EditorStateDto` to `struct { editor_state_model.EditorStateModel }`
       — **anonymous, temporarily** — so every `state.MapSize` selector and the flat
       json output are unchanged and the whole repository still compiles untouched.
-- [ ] Keep **DTO-signature shim methods** on the DTO that shadow the promoted
+- [x] Keep **DTO-signature shim methods** on the DTO that shadow the promoted
       ones (hazard 1): `Clone() EditorStateDto`,
       `EqualsIgnoringManualEdits(*EditorStateDto) bool`,
       `LayoutDefiningOptionsChanged(*EditorStateDto) bool`,
       `DiffCastleSettings(*EditorStateDto) CastleSettingChanges`. Each delegates
       to the embedded model. Without these, Phase 3 does **not** build.
-- [ ] `NewDefaultEditorStateDto` delegates to `NewDefaultEditorStateModel`.
-- [ ] Move the DTO behaviour tests to
+- [x] `NewDefaultEditorStateDto` delegates to `NewDefaultEditorStateModel`.
+- [x] Move the DTO behaviour tests to
       `test/unit/internal/models/editor_state_model/editorStateModel/<method>_test.go`,
       one file per public method (AGENTS.md §4.6).
-- [ ] Leave the recursive clone guard alone; rewrite the equality guard to walk
+- [x] Leave the recursive clone guard alone; rewrite the equality guard to walk
       recursive **leaf paths** instead of top-level fields (hazard 6), and add a
       case proving it still trips when a field is added to a nested group but
       omitted from the comparison.
@@ -420,7 +423,79 @@ Status: Not started
 - Coverage ≥ 72.5 % and not below the Phase 1 baseline.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Complete.** The owner signed off the §0.1 field→group table before this phase
+started, as the Phase 2 gate required.
+
+What exists now:
+
+- [editorStateModel.go](../internal/models/editor_state_model/editorStateModel.go)
+  holds `EditorStateModel` — the nine entity groups embedded anonymously — plus
+  every method that used to live on the DTO (`NewDefaultEditorStateModel`,
+  `Clone`, `LayoutDefiningOptionsChanged`, `DiffCastleSettings`,
+  `EqualsIgnoringManualEdits`, `HasManualEdits`, the three scalar-comparison
+  helpers and the content-row/pointer helpers). Bodies were moved **verbatim**;
+  only the receiver and parameter types changed.
+- [editorStateDto.go](../internal/dtos/editor_state_dto/editorStateDto.go) is now
+  41 lines: the embedded model, `NewDefaultEditorStateDto` delegating to
+  `NewDefaultEditorStateModel`, and the four DTO-signature shims. `HasManualEdits`
+  needs no shim — its signature does not mention the state type, so the promoted
+  method is used as-is.
+
+**Hazard 7 is obsolete on Go 1.27 — and the linter enforces the flat form.**
+The plan assumed `NewDefaultEditorStateDto` would have to become a *nested*
+literal. Go 1.27 accepts **promoted fields as keys in a composite literal**, so
+`EditorStateModel{TemplateName: …, MapSize: …}` compiles unchanged, and
+`modernize`'s `embedlit` rule actively rewrites the nested form back to the flat
+one. Both `NewDefaultEditorStateModel` and
+[allFieldsEditorState.go](../test/test_helpers/allFieldsEditorState.go) therefore
+kept their original flat literals. Note the inverse trap: `Group: {…}` (eliding
+only the type) is **not** valid Go and does not compile — it is either the full
+`Group: pkg.Group{…}` or the flat promoted keys.
+
+**Test moves.** The five behaviour test files moved to
+`test/unit/internal/models/editor_state_model/editorStateModel/`, with
+`newDefaultEditorStateDto_test.go` renamed to `newDefaultEditorStateModel_test.go`.
+The DTO folder was repopulated with **thin delegation tests** for the four shims
+and the factory, so §4.6's one-file-per-public-method rule still holds while the
+shims exist; Phase 4 deletes both the shims and those files.
+
+**Equality drift guard (hazard 6), as rewritten.** It now enumerates recursive
+**leaf paths** (`"MapSettings.MapSize"`), descending only through *anonymous*
+fields, and mutates through `FieldByIndex`. `SchemaVersion` needs no exclusion:
+the guard walks the model, and Phase 5 puts the version on the DTO shell. The
+"proof it still trips" case is
+`TestWhenTheLeafWalkIsBuilt_ReachesEveryFieldOfEveryGroup`, a single
+`assert.Equal` on a group→field-count map — it fails both when the walk stops at
+a group (nested fields unreached, so an uncompared one could hide) and when any
+group gains or loses a field. It is the §0.1 table asserted mechanically.
+
+**Unexpected side effect worth knowing.** Two `//nolint:govet` directives in
+[getCurrentState_test.go](../test/unit/app/gui/models/editorState/getCurrentState_test.go)
+became *unused* and were removed: `govet`'s `unusedwrite` analyzer no longer
+fires on `copyOfState.TemplateName = …` now that the field is promoted through
+two levels of embedding.
+
+**Gates.**
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | exit 0 |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test -count=1 ./test/unit/...` | exit 0 |
+| `go test -count=1 ./test/...` (incl. the frozen golden test, untouched) | exit 0 |
+| `go test -tags=integration_test -count=1 ./test/integration/...` | exit 0 |
+| Coverage | **73.7 %** (Phase 1 baseline 73.6 %, floor 72.5 %) |
+| `gofmt -l .` | empty |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+
+The GPU suite was not run: no rendering code changed. Phase 4's plan requires it.
+Nothing was staged and nothing was committed.
+
+**Also amended:** AGENTS.md §4.4 now carries the editor-state carve-out
+explicitly (open question 2 from the carry-forward), so the
+`internal/entities/editor_state/` placement no longer contradicts the table.
 
 ---
 

@@ -6,9 +6,16 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
-// NewAllFieldsEditorStateDto builds an editor state in which every persisted
+// NewAllFieldsEditorStateDto wraps the all-fields model in the persistence
+// shell, which is what the frozen .gen.json fixture is written from.
+func NewAllFieldsEditorStateDto() editor_state_dto.EditorStateDto {
+	return editor_state_dto.EditorStateDto{EditorStateModel: NewAllFieldsEditorStateModel()}
+}
+
+// NewAllFieldsEditorStateModel builds an editor state in which every persisted
 // field carries a distinctive value that differs from both the Go zero value
 // and the seeded default. It backs the frozen .gen.json fixture guarding the
 // on-disk wire format: unmarshalling the fixture into a zero-valued state must
@@ -16,8 +23,8 @@ import (
 // impossible to miss.
 //
 //nolint:funlen // one assignment per persisted field; splitting it would hide the 1:1 field coverage this fixture exists to guarantee.
-func NewAllFieldsEditorStateDto() editor_state_dto.EditorStateDto {
-	return editor_state_dto.EditorStateDto{
+func NewAllFieldsEditorStateModel() editor_state_model.EditorStateModel {
+	return editor_state_model.EditorStateModel{
 		TemplateName: "All Fields Fixture",
 		GameMode:     "SingleHero",
 

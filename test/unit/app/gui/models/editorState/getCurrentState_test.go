@@ -27,8 +27,8 @@ func TestWhenReturnedStateIsMutated_StoredStateStaysUnchanged(t *testing.T) {
 	copyOfState := state.GetCurrentState()
 
 	// Act
-	copyOfState.TemplateName = gofakeit.Name()      //nolint:govet // this is testing object mutability
-	copyOfState.PlayerCount = gofakeit.Number(3, 8) //nolint:govet // this is testing object mutability
+	copyOfState.TemplateName = gofakeit.Name()
+	copyOfState.PlayerCount = gofakeit.Number(3, 8)
 
 	// Assert
 	assert.Equal(t, editor_state_dto.NewDefaultEditorStateDto(), state.GetCurrentState())
