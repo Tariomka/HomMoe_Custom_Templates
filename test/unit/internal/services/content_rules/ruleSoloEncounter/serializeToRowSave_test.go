@@ -18,7 +18,7 @@ func TestWhenSoloRuleIsSerialized_WritesNameAndTrueState(t *testing.T) {
 	saved := rule.SerializeToRowSave()
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: "Solo Encounter", IsSoloEncounter: &isSoloEncounter}, saved)
+	assert.Equal(t, models.ContentRuleRow{Name: "Solo Encounter", IsSoloEncounter: &isSoloEncounter}, saved)
 }
 
 func TestWhenNotSoloRuleIsSerialized_WritesNameAndFalseState(t *testing.T) {
@@ -31,5 +31,5 @@ func TestWhenNotSoloRuleIsSerialized_WritesNameAndFalseState(t *testing.T) {
 	saved := rule.SerializeToRowSave()
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: "Solo Encounter", IsSoloEncounter: &isSoloEncounter}, saved)
+	assert.Equal(t, models.ContentRuleRow{Name: "Solo Encounter", IsSoloEncounter: &isSoloEncounter}, saved)
 }

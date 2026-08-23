@@ -14,14 +14,14 @@ func TestWhenNoRuleOfThatTypeExists_TheRuleIsAppended(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := zone_content.NewZoneContentEditorService()
-	existing := models.ContentRuleRowSave{Name: gofakeit.Word()}
-	added := models.ContentRuleRowSave{Name: gofakeit.Sentence(2)}
+	existing := models.ContentRuleRow{Name: gofakeit.Word()}
+	added := models.ContentRuleRow{Name: gofakeit.Sentence(2)}
 
 	// Act
-	rules := service.UpsertContentRule([]models.ContentRuleRowSave{existing}, added)
+	rules := service.UpsertContentRule([]models.ContentRuleRow{existing}, added)
 
 	// Assert
-	assert.Equal(t, []models.ContentRuleRowSave{existing, added}, rules)
+	assert.Equal(t, []models.ContentRuleRow{existing, added}, rules)
 }
 
 func TestWhenARuleOfThatTypeExists_ItIsReplacedInPlace(t *testing.T) {
@@ -29,13 +29,13 @@ func TestWhenARuleOfThatTypeExists_ItIsReplacedInPlace(t *testing.T) {
 	// Arrange
 	service := zone_content.NewZoneContentEditorService()
 	name := gofakeit.Word()
-	replacement := models.ContentRuleRowSave{Name: name, DistanceName: gofakeit.Word()}
+	replacement := models.ContentRuleRow{Name: name, DistanceName: gofakeit.Word()}
 
 	// Act
-	rules := service.UpsertContentRule([]models.ContentRuleRowSave{{Name: name}}, replacement)
+	rules := service.UpsertContentRule([]models.ContentRuleRow{{Name: name}}, replacement)
 
 	// Assert
-	assert.Equal(t, []models.ContentRuleRowSave{replacement}, rules)
+	assert.Equal(t, []models.ContentRuleRow{replacement}, rules)
 }
 
 func TestWhenTheExistingRuleNameDiffersOnlyByCase_ItIsStillReplaced(t *testing.T) {
@@ -43,11 +43,11 @@ func TestWhenTheExistingRuleNameDiffersOnlyByCase_ItIsStillReplaced(t *testing.T
 	// Arrange
 	service := zone_content.NewZoneContentEditorService()
 	name := gofakeit.Word()
-	replacement := models.ContentRuleRowSave{Name: strings.ToUpper(name)}
+	replacement := models.ContentRuleRow{Name: strings.ToUpper(name)}
 
 	// Act
-	rules := service.UpsertContentRule([]models.ContentRuleRowSave{{Name: name}}, replacement)
+	rules := service.UpsertContentRule([]models.ContentRuleRow{{Name: name}}, replacement)
 
 	// Assert
-	assert.Equal(t, []models.ContentRuleRowSave{replacement}, rules)
+	assert.Equal(t, []models.ContentRuleRow{replacement}, rules)
 }

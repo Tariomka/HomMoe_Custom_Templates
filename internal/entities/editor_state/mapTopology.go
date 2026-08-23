@@ -1,4 +1,4 @@
-package config_inner
+package editor_state
 
 // MapTopology enumerates the supported map shapes.
 type MapTopology string

@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -71,7 +70,7 @@ func NewGeneratorConfig() *GeneratorConfig {
 		RemoteFootholdCount:   1,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,
-		Topology:              config_inner.TopologyCircles,
+		Topology:              TopologyCircles,
 		FactionLawsExpPercent: 100,
 		AstrologyExpPercent:   100,
 		ZoneConfiguration: ZoneConfig{
@@ -119,7 +118,7 @@ func (this *GeneratorConfig) IsCityHoldMode() bool {
 }
 
 func (this *GeneratorConfig) IsHubCityToHold() bool {
-	return (this.Topology == config_inner.TopologyHubAndSpoke || this.Topology == config_inner.TopologyGeometricHub) &&
+	return (this.Topology == TopologyHubAndSpoke || this.Topology == TopologyGeometricHub) &&
 		this.IsCityHoldMode()
 }
 
@@ -150,6 +149,7 @@ func (this *GeneratorConfig) GetGameEndConditions() GameEndConditions {
 	if this.GameEndConditions != nil {
 		return *this.GameEndConditions
 	}
+
 	return GameEndConditions{
 		VictoryCondition: registry.GetWinningConditionValues().Standard,
 		LostStartCityDay: 3,
@@ -161,6 +161,7 @@ func (this *GeneratorConfig) GetGladiatorArenaRules() GladiatorArenaRules {
 	if this.GladiatorArenaRules != nil {
 		return *this.GladiatorArenaRules
 	}
+
 	return GladiatorArenaRules{}
 }
 
@@ -168,6 +169,7 @@ func (this *GeneratorConfig) GetTournamentRules() TournamentRules {
 	if this.TournamentRules != nil {
 		return *this.TournamentRules
 	}
+
 	return TournamentRules{}
 }
 

@@ -11,7 +11,7 @@ const guardedRuleName = "Guarded"
 // mandatory-content rows seeded into every player zone: the six basic mines
 // plus an alchemy lab, a couple of guarded treasures, random hires and
 // resource banks.
-func GetDefaultPlayerZoneContentRows() []models.ZoneContentRowSave {
+func GetDefaultPlayerZoneContentRows() []models.ZoneContentRow {
 	rows := getPlayerZoneMineRows()
 	rows = append(rows, getPlayerZoneTreasureRows()...)
 	rows = append(rows, getPlayerZoneHireAndBankRows()...)
@@ -20,11 +20,11 @@ func GetDefaultPlayerZoneContentRows() []models.ZoneContentRowSave {
 
 // getPlayerZoneMineRows returns the six basic mines plus an alchemy lab:
 // the wood, ore and gold mines near the town, the rest next to a road.
-func getPlayerZoneMineRows() []models.ZoneContentRowSave {
+func getPlayerZoneMineRows() []models.ZoneContentRow {
 	interactable := registry.GetMapObjectAllInteractableValues()
-	nearTown := models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Near"}
-	nextToRoad := models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Next To"}
-	return []models.ZoneContentRowSave{
+	nearTown := models.ContentRuleRow{Name: "Distance to town", DistanceName: "Near"}
+	nextToRoad := models.ContentRuleRow{Name: "Distance to road", DistanceName: "Next To"}
+	return []models.ZoneContentRow{
 		getGuardedMineRow(interactable.WoodMine, nearTown),
 		getGuardedMineRow(interactable.OreMine, nearTown),
 		getGuardedMineRow(interactable.GoldMine, nearTown),
@@ -37,12 +37,12 @@ func getPlayerZoneMineRows() []models.ZoneContentRowSave {
 
 // getGuardedMineRow builds a single guarded mine row with the given
 // distance rule.
-func getGuardedMineRow(sid string, distanceRule models.ContentRuleRowSave) models.ZoneContentRowSave {
-	return models.ZoneContentRowSave{
+func getGuardedMineRow(sid string, distanceRule models.ContentRuleRow) models.ZoneContentRow {
+	return models.ZoneContentRow{
 		Sid:    sid,
 		Count:  1,
 		IsMine: true,
-		Rules: []models.ContentRuleRowSave{
+		Rules: []models.ContentRuleRow{
 			{Name: guardedRuleName, IsGuarded: new(true)},
 			distanceRule,
 		},
@@ -51,62 +51,62 @@ func getGuardedMineRow(sid string, distanceRule models.ContentRuleRowSave) model
 
 // getPlayerZoneTreasureRows returns the guarded treasures: a pandora box
 // and an epic random item.
-func getPlayerZoneTreasureRows() []models.ZoneContentRowSave {
+func getPlayerZoneTreasureRows() []models.ZoneContentRow {
 	resources := registry.GetMapObjectResourceValues()
 	randomItems := registry.GetMapObjectRandomItemValues()
 
-	return []models.ZoneContentRowSave{
+	return []models.ZoneContentRow{
 		{
 			Sid:   resources.PandoraBox,
 			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: new(true)}},
+			Rules: []models.ContentRuleRow{{Name: guardedRuleName, IsGuarded: new(true)}},
 		},
 		{
 			Sid:   randomItems.RandomItemEpic,
 			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: new(true)}},
+			Rules: []models.ContentRuleRow{{Name: guardedRuleName, IsGuarded: new(true)}},
 		},
 	}
 }
 
 // getPlayerZoneHireAndBankRows returns the guarded random-hire and
 // resource-bank group rows.
-func getPlayerZoneHireAndBankRows() []models.ZoneContentRowSave {
+func getPlayerZoneHireAndBankRows() []models.ZoneContentRow {
 	randomHires := registry.GetMandatoryContentRandomHiresBuildingValues()
 	basicRandomHires := registry.GetMandatoryContentBasicRandomHiresBuildingValues()
 	basicResourceBanks := registry.GetMandatoryContentBasicResourceBanksBuildingValues()
 
 	trueVal := true // To not allocate multiple times
-	return []models.ZoneContentRowSave{
+	return []models.ZoneContentRow{
 		{
 			Sid:     randomHires.RandomHiresLowTier,
 			Count:   2,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRow{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     randomHires.RandomHiresHighTier,
 			Count:   1,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRow{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     basicRandomHires.BasicRandomHires,
 			Count:   1,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRow{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     basicResourceBanks.BasicResourceBanksTier1,
 			Count:   2,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRow{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 		{
 			Sid:     basicResourceBanks.BasicResourceBanksTier2,
 			Count:   1,
 			IsGroup: true,
-			Rules:   []models.ContentRuleRowSave{{Name: guardedRuleName, IsGuarded: &trueVal}},
+			Rules:   []models.ContentRuleRow{{Name: guardedRuleName, IsGuarded: &trueVal}},
 		},
 	}
 }

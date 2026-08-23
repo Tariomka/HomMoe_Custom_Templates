@@ -79,7 +79,7 @@ func TestWhenValidationFixesAContentRow_TheCallersSliceIsUnchanged(t *testing.T)
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.PlayerCount = 99
-	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "sawmill", Count: 1}}
+	state.PlayerZoneContentRows = []models.ZoneContentRow{{Sid: "sawmill", Count: 1}}
 	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
 	validation := handler.ValidateEditorState(state, true)
 

@@ -56,7 +56,7 @@ func TestWhenSavedNameDiffersOnlyByCase_RestoresRule(t *testing.T) {
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	saved := models.ContentRuleRowSave{Name: "gUaRdEd", IsGuarded: &isGuarded}
+	saved := models.ContentRuleRow{Name: "gUaRdEd", IsGuarded: &isGuarded}
 
 	// Act
 	restored := service.CreateRuleFromSavedRule(saved, models.SidMapping{Sid: "x"})
@@ -72,23 +72,23 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 	someVariantID := 0
 	testCases := []struct {
 		name  string
-		saved models.ContentRuleRowSave
+		saved models.ContentRuleRow
 	}{
-		{"WhenNameIsUnknown_ReturnsNil", models.ContentRuleRowSave{Name: "Nope"}},
-		{"WhenGuardedValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Guarded"}},
-		{"WhenSoloEncounterValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Solo Encounter"}},
-		{"WhenVariantIdIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Variant"}},
+		{"WhenNameIsUnknown_ReturnsNil", models.ContentRuleRow{Name: "Nope"}},
+		{"WhenGuardedValueIsMissing_ReturnsNil", models.ContentRuleRow{Name: "Guarded"}},
+		{"WhenSoloEncounterValueIsMissing_ReturnsNil", models.ContentRuleRow{Name: "Solo Encounter"}},
+		{"WhenVariantIdIsMissing_ReturnsNil", models.ContentRuleRow{Name: "Variant"}},
 		{
 			"WhenRoadDistanceNameIsUnknown_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Whatever"},
+			models.ContentRuleRow{Name: "Distance to road", DistanceName: "Whatever"},
 		},
 		{
 			"WhenTownDistanceNameIsUnknown_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Whatever"},
+			models.ContentRuleRow{Name: "Distance to town", DistanceName: "Whatever"},
 		},
 		{
 			"WhenVariantIdIsNotDefinedForContent_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Variant", VariantID: &invalidVariantID},
+			models.ContentRuleRow{Name: "Variant", VariantID: &invalidVariantID},
 		},
 	}
 
@@ -108,7 +108,7 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 	t.Run("WhenContentHasNoVariants_ReturnsNil", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		saved := models.ContentRuleRowSave{Name: "Variant", VariantID: &someVariantID}
+		saved := models.ContentRuleRow{Name: "Variant", VariantID: &someVariantID}
 
 		// Act
 		restored := service.CreateRuleFromSavedRule(saved, models.SidMapping{Sid: "x"})

@@ -1,6 +1,8 @@
 package dialogs
 
 import (
+	"slices"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -11,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zone_contents"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/editor_state_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -27,7 +30,7 @@ type ZoneContentDialog struct {
 
 	title        string
 	isPlayerTier bool
-	onApply      func([]models.ZoneContentRowSave)
+	onApply      func([]models.ZoneContentRow)
 
 	btnReset widget.Clickable
 	scroll   widget.List
@@ -40,21 +43,20 @@ type ZoneContentDialog struct {
 func NewZoneContentDialog(
 	title string,
 	isPlayerTier bool,
-	rows []models.ZoneContentRowSave,
+	rows []models.ZoneContentRow,
 	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	opener interfaces.DialogOpener,
-	onApply func([]models.ZoneContentRowSave)) *ZoneContentDialog {
+	onApply func([]models.ZoneContentRow)) *ZoneContentDialog {
 	dialog := &ZoneContentDialog{
-		zcMines: NewZoneContentSection(
-			"Mines", constants.ContentItemGroup.Mines, 3, true, contentRuleHandler),
+		zcMines: NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true, contentRuleHandler),
 		zcUtilities: NewZoneContentSection("Utility Structures",
 			constants.ContentItemGroup.UtilityStructures, 10, false, contentRuleHandler),
-		zcTreasures: NewZoneContentSection(
-			"Treasures", constants.ContentItemGroup.Treasures, 10, false, contentRuleHandler),
+		zcTreasures: NewZoneContentSection("Treasures",
+			constants.ContentItemGroup.Treasures, 10, false, contentRuleHandler),
 		zcHires: NewZoneContentSection("Unit Recruitment",
 			constants.ContentItemGroup.UnitRecruitment, 10, false, contentRuleHandler),
-		zcBanks: NewZoneContentSection(
-			"Resource Banks", constants.ContentItemGroup.ResourceBanks, 10, false, contentRuleHandler),
+		zcBanks: NewZoneContentSection("Resource Banks",
+			constants.ContentItemGroup.ResourceBanks, 10, false, contentRuleHandler),
 		zcHeroImprovement: NewZoneContentSection("Hero Improvement",
 			constants.ContentItemGroup.HeroImprovementStructures, 10, false, contentRuleHandler),
 		title:        title,
@@ -97,8 +99,7 @@ func (this *ZoneContentDialog) Body(gtx layout.Context, theme *material.Theme) (
 		this.zcHeroImprovement.Layout(theme),
 	}
 
-	dims := material.List(theme, &this.scroll).Layout(
-		gtx, len(widgetsList),
+	dims := material.List(theme, &this.scroll).Layout(gtx, len(widgetsList),
 		func(gtx layout.Context, index int) layout.Dimensions { return widgetsList[index](gtx) })
 
 	// Persist after the sections have processed this frame's clicks so the
@@ -122,12 +123,13 @@ func (this *ZoneContentDialog) resetToDefault() {
 		this.loadRowsIntoSections(common_zone_contents.GetDefaultPlayerZoneContentRows())
 		return
 	}
+
 	this.loadRowsIntoSections(nil)
 }
 
 // loadRowsIntoSections replaces the section rows with the given list, routing
 // each row to its appropriate section.
-func (this *ZoneContentDialog) loadRowsIntoSections(rows []models.ZoneContentRowSave) {
+func (this *ZoneContentDialog) loadRowsIntoSections(rows []models.ZoneContentRow) {
 	this.zcMines.ClearRows()
 	this.zcUtilities.ClearRows()
 	this.zcTreasures.ClearRows()
@@ -135,12 +137,12 @@ func (this *ZoneContentDialog) loadRowsIntoSections(rows []models.ZoneContentRow
 	this.zcBanks.ClearRows()
 	this.zcHeroImprovement.ClearRows()
 	for _, raw := range rows {
-		row := raw.Normalized()
+		row := editor_state_helpers.NormalizeZoneContentRow(raw)
 		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
 		if found, ok := utils.GetSidMappingBySid(row.Sid); ok {
 			mapping = found
 		}
-		var rules []models.ContentRuleRowSave
+		var rules []models.ContentRuleRow
 		if len(row.Rules) > 0 {
 			rules = row.Rules
 		}
@@ -172,16 +174,16 @@ func (this *ZoneContentDialog) routeToSection(sid string, isMine bool) *ZoneCont
 
 // collectSectionRows reads the current sections back into a flat slice of
 // save-rows tagged with the correct IsMine flag.
-func (this *ZoneContentDialog) collectSectionRows() []models.ZoneContentRowSave {
-	var out []models.ZoneContentRowSave
+func (this *ZoneContentDialog) collectSectionRows() []models.ZoneContentRow {
+	var out []models.ZoneContentRow
 	gather := func(section *ZoneContentSection, isMine bool) {
 		for row := range section.IterateRows() {
-			out = append(out, models.ZoneContentRowSave{
+			out = append(out, models.ZoneContentRow{
 				Sid:     row.Mapping.Sid,
 				Count:   row.Count,
 				IsGroup: row.IsGroup,
 				IsMine:  isMine,
-				Rules:   row.Rules(),
+				Rules:   slices.Clone(row.rules),
 			})
 		}
 	}
@@ -200,5 +202,6 @@ func sectionContains(list []models.SidMapping, sid string) bool {
 			return true
 		}
 	}
+
 	return false
 }

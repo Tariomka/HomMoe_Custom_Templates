@@ -54,7 +54,7 @@ func TestWhenADistanceToRoadRuleIsComposed_ItCarriesTheSelectedDistance(t *testi
 	})
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: name, DistanceName: distance}, result.Rule)
+	assert.Equal(t, models.ContentRuleRow{Name: name, DistanceName: distance}, result.Rule)
 }
 
 func TestWhenADistanceToTownRuleIsComposed_ItCarriesTheSelectedDistance(t *testing.T) {
@@ -71,7 +71,7 @@ func TestWhenADistanceToTownRuleIsComposed_ItCarriesTheSelectedDistance(t *testi
 	})
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: name, DistanceName: distance}, result.Rule)
+	assert.Equal(t, models.ContentRuleRow{Name: name, DistanceName: distance}, result.Rule)
 }
 
 func TestWhenAGuardedRuleIsComposed_ItCarriesTheCheckboxValue(t *testing.T) {

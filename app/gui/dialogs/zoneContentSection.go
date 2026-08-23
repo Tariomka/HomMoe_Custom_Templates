@@ -61,16 +61,14 @@ func (this *ZoneContentSection) SetDialogOpener(opener interfaces.DialogOpener) 
 func (this *ZoneContentSection) Add(
 	mapping models.SidMapping,
 	count int,
-	rules []models.ContentRuleRowSave,
+	rules []models.ContentRuleRow,
 	group bool) {
 	this.rows = append(
 		this.rows,
 		newZoneContentRow(mapping, this.contentRuleHandler.ClampContentCount(count, this.MaxCount), rules, group))
 }
 
-func (this *ZoneContentSection) ClearRows() {
-	this.rows = nil
-}
+func (this *ZoneContentSection) ClearRows() { this.rows = nil }
 
 func (this *ZoneContentSection) IterateRows() iter.Seq[*zoneContentRow] {
 	return func(yield func(*zoneContentRow) bool) {
@@ -98,12 +96,14 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 			if row.removeBtn.Clicked(gtx) {
 				continue
 			}
+
 			if row.dupBtn.Clicked(gtx) {
 				keep = append(keep, row)
 				clone := newZoneContentRow(row.Mapping, row.Count, row.rules, row.IsGroup)
 				keep = append(keep, clone)
 				continue
 			}
+
 			keep = append(keep, row)
 		}
 		this.rows = keep
@@ -128,6 +128,7 @@ func (this *ZoneContentSection) Layout(theme *material.Theme) layout.Widget {
 					label.Color = themes.ColorsBase.TextDim
 					return layout.Inset{Top: unit.Dp(4), Left: unit.Dp(4)}.Layout(gtx, label.Layout)
 				}
+
 				children := make([]layout.FlexChild, 0, len(this.rows)*2)
 				for i, row := range this.rows {
 					if i > 0 {
@@ -156,7 +157,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 		if row.manageBtn.Clicked(gtx) && this.openDialog != nil {
 			captured := row
 			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules, this.contentRuleHandler,
-				func(updated []models.ContentRuleRowSave) { captured.rules = updated }))
+				func(updated []models.ContentRuleRow) { captured.rules = updated }))
 		}
 
 		return widgets.NewPanelWidget(unit.Dp(6), func(gtx layout.Context) layout.Dimensions {
@@ -204,6 +205,7 @@ func (this *ZoneContentSection) layoutMarkers(theme *material.Theme, row *zoneCo
 			label.TextSize = unit.Sp(12)
 			return label.Layout(gtx)
 		}
+
 		label := material.Body1(theme, markers)
 		label.Color = themes.ColorsBase.AccentBright
 		label.TextSize = unit.Sp(13)

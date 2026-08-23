@@ -10,8 +10,8 @@ import (
 type IContentRuleService interface {
 	GetRules() []IContentRule
 	ApplyRulesToItem(item *entities.MandatoryContentItem, rules []IContentRule)
-	CreateRuleFromSavedRule(saved models.ContentRuleRowSave, content models.SidMapping) IContentRule
-	RestoreRulesFromRow(row models.ZoneContentRowSave, content models.SidMapping) []IContentRule
+	CreateRuleFromSavedRule(saved models.ContentRuleRow, content models.SidMapping) IContentRule
+	RestoreRulesFromRow(row models.ZoneContentRow, content models.SidMapping) []IContentRule
 	GetDistanceDisplayNames() []string
 	GetVariantsForContent(content models.SidMapping) []models.VariantMapping
 	GetVariantForContentByID(content models.SidMapping, variantID int) (models.VariantMapping, bool)

@@ -28,7 +28,7 @@ func TestWhenRowsAreMapped_UsesTheInjectedContentRuleService(t *testing.T) {
 	contentRuleService.On("RestoreRulesFromRow", mock.Anything, mock.Anything).Return(nil)
 	contentRuleService.On("ApplyRulesToItem", mock.Anything, mock.Anything).Return()
 	mapper := mappers.NewMandatoryContentItemMapper(contentRuleService)
-	rows := []models.ZoneContentRowSave{{Sid: gofakeit.LetterN(8), Count: 1}}
+	rows := []models.ZoneContentRow{{Sid: gofakeit.LetterN(8), Count: 1}}
 
 	// Act
 	mapper.FromRows(rows)

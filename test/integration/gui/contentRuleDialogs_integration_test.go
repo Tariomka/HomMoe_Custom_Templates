@@ -25,10 +25,9 @@ func TestWhenManageRulesDialogHasVariantRule_RendersContent(t *testing.T) {
 	variantID := 2
 	dialog := dialogs.NewManageRulesDialog(
 		constants.ContentIDs.DragonUtopia,
-		[]models.ContentRuleRowSave{{Name: "Variant", VariantID: &variantID}},
+		[]models.ContentRuleRow{{Name: "Variant", VariantID: &variantID}},
 		composition.InitializeGuiHandler(),
-		nil,
-	)
+		nil)
 	gtx, frameRouter := newDialogContext(image.Pt(540, 500))
 
 	// Act
@@ -44,23 +43,22 @@ func TestWhenZoneContentDialogRenders_PreservesSavedRules(t *testing.T) {
 	// Arrange
 	variantID := 2
 	guarded := false
-	expected := []models.ZoneContentRowSave{{
+	expected := []models.ZoneContentRow{{
 		Sid:   constants.ContentIDs.DragonUtopia.Sid,
 		Count: 2,
-		Rules: []models.ContentRuleRowSave{
+		Rules: []models.ContentRuleRow{
 			{Name: "Variant", VariantID: &variantID},
 			{Name: "Guarded", IsGuarded: &guarded},
 		},
 	}}
-	var persisted []models.ZoneContentRowSave
+	var persisted []models.ZoneContentRow
 	dialog := dialogs.NewZoneContentDialog(
 		"Zone Content: High Neutral",
 		false,
 		expected,
 		composition.InitializeGuiHandler(),
 		nil,
-		func(rows []models.ZoneContentRowSave) { persisted = rows },
-	)
+		func(rows []models.ZoneContentRow) { persisted = rows })
 	gtx, frameRouter := newDialogContext(image.Pt(640, 560))
 
 	// Act

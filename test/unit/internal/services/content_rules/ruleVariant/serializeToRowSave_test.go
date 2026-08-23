@@ -22,5 +22,5 @@ func TestWhenRuleIsSerialized_WritesNameAndVariantId(t *testing.T) {
 	saved := rule.SerializeToRowSave()
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: "Variant", VariantID: &expectedID}, saved)
+	assert.Equal(t, models.ContentRuleRow{Name: "Variant", VariantID: &expectedID}, saved)
 }

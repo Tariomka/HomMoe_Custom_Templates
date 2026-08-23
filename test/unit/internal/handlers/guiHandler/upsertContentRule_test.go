@@ -12,11 +12,11 @@ func TestWhenARuleIsUpsertedIntoAnEmptyList_ItIsAppended(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	rule := models.ContentRuleRowSave{Name: gofakeit.Word()}
+	rule := models.ContentRuleRow{Name: gofakeit.Word()}
 
 	// Act
 	rules := handler.UpsertContentRule(nil, rule)
 
 	// Assert
-	assert.Equal(t, []models.ContentRuleRowSave{rule}, rules)
+	assert.Equal(t, []models.ContentRuleRow{rule}, rules)
 }

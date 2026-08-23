@@ -14,11 +14,11 @@ func TestWhenTheRowNameIsRequested_TheContentNameAndDescriptionsAreHandedToTheSe
 	// Arrange
 	fixture := newZoneContentHandlerFixture()
 	content := models.SidMapping{Name: gofakeit.Word()}
-	rules := []models.ContentRuleRowSave{{Name: gofakeit.Word()}}
+	rules := []models.ContentRuleRow{{Name: gofakeit.Word()}}
 	description := dtos.ContentRuleDescriptionDto{Key: dtos.ContentRuleKeyVariant, Valid: true}
 	fixture.contentRules.DescribeContentRuleFunc = func(
 		models.SidMapping,
-		models.ContentRuleRowSave,
+		models.ContentRuleRow,
 	) dtos.ContentRuleDescriptionDto {
 		return description
 	}

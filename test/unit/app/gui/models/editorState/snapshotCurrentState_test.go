@@ -42,7 +42,7 @@ func TestWhenSnapshotTakenAndContentRowMutatedInPlace_ReportsStateChanged(t *tes
 	// Arrange
 	state := newEditorState()
 	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) {
-		dto.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "sawmill", Count: 1}}
+		dto.PlayerZoneContentRows = []models.ZoneContentRow{{Sid: "sawmill", Count: 1}}
 	})
 	state.SnapshotCurrentState()
 

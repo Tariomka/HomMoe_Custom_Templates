@@ -26,7 +26,7 @@ func TestWhenRowSidIsEmpty_SkipsRow(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
-	rows := []models.ZoneContentRowSave{{Sid: "", Count: 2}}
+	rows := []models.ZoneContentRow{{Sid: "", Count: 2}}
 
 	// Act
 	actual := mapper.FromRows(rows)
@@ -39,7 +39,7 @@ func TestWhenRowCountIsThree_CreatesThreeIdenticalItems(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
-	rows := []models.ZoneContentRowSave{{Sid: "sawmill", Count: 3}}
+	rows := []models.ZoneContentRow{{Sid: "sawmill", Count: 3}}
 
 	// Act
 	actual := mapper.FromRows(rows)
@@ -56,7 +56,7 @@ func TestWhenRowCountIsBelowOne_NormalizesToSingleItem(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
-	rows := []models.ZoneContentRowSave{{Sid: "sawmill", Count: 0}}
+	rows := []models.ZoneContentRow{{Sid: "sawmill", Count: 0}}
 
 	// Act
 	actual := mapper.FromRows(rows)
@@ -69,7 +69,7 @@ func TestWhenRowIsGroup_SetsIncludeListsInsteadOfSid(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
-	rows := []models.ZoneContentRowSave{{Sid: "include_list_dwellings", Count: 1, IsGroup: true}}
+	rows := []models.ZoneContentRow{{Sid: "include_list_dwellings", Count: 1, IsGroup: true}}
 
 	// Act
 	actual := mapper.FromRows(rows)
@@ -84,7 +84,7 @@ func TestWhenRowIsMine_SetsIsMineOnItem(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
-	rows := []models.ZoneContentRowSave{{Sid: "gold_mine", Count: 1, IsMine: true}}
+	rows := []models.ZoneContentRow{{Sid: "gold_mine", Count: 1, IsMine: true}}
 
 	// Act
 	actual := mapper.FromRows(rows)
@@ -98,10 +98,10 @@ func TestWhenRowHasGuardedRule_AppliesGuardedFlagToItem(t *testing.T) {
 	// Arrange
 	guarded := true
 	mapper := mappers.NewMandatoryContentItemMapper(content_rules.NewContentRuleService())
-	rows := []models.ZoneContentRowSave{{
+	rows := []models.ZoneContentRow{{
 		Sid:   "sawmill",
 		Count: 1,
-		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: &guarded}},
+		Rules: []models.ContentRuleRow{{Name: "Guarded", IsGuarded: &guarded}},
 	}}
 
 	// Act

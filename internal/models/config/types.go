@@ -1,43 +1,46 @@
 package config
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+)
 
 type (
 	AdvancedSettings    = config_inner.AdvancedSettings
-	BonusEntry          = config_inner.BonusEntry
-	BonusPresetType     = config_inner.BonusPresetType
+	BonusEntry          = editor_state.BonusEntry
+	BonusPresetType     = editor_state.BonusPresetType
 	GameEndConditions   = config_inner.GameEndConditions
 	GladiatorArenaRules = config_inner.GladiatorArenaRules
 	HeroSettings        = config_inner.HeroSettings
-	MapTopology         = config_inner.MapTopology
+	MapTopology         = editor_state.MapTopology
 	TournamentRules     = config_inner.TournamentRules
 	ZoneConfig          = config_inner.ZoneConfig
 )
 
 const (
-	BonusTownPortalFree   = config_inner.BonusTownPortalFree
-	BonusSpell            = config_inner.BonusSpell
-	BonusUnitMultiplier   = config_inner.BonusUnitMultiplier
-	BonusMovementBonus    = config_inner.BonusMovementBonus
-	BonusStartingItem     = config_inner.BonusStartingItem
-	BonusStartingGold     = config_inner.BonusStartingGold
-	BonusStartingGems     = config_inner.BonusStartingGems
-	BonusStartingCrystals = config_inner.BonusStartingCrystals
-	BonusStartingMercury  = config_inner.BonusStartingMercury
-	BonusStartingWood     = config_inner.BonusStartingWood
-	BonusStartingOre      = config_inner.BonusStartingOre
+	BonusTownPortalFree   = editor_state.BonusTownPortalFree
+	BonusSpell            = editor_state.BonusSpell
+	BonusUnitMultiplier   = editor_state.BonusUnitMultiplier
+	BonusMovementBonus    = editor_state.BonusMovementBonus
+	BonusStartingItem     = editor_state.BonusStartingItem
+	BonusStartingGold     = editor_state.BonusStartingGold
+	BonusStartingGems     = editor_state.BonusStartingGems
+	BonusStartingCrystals = editor_state.BonusStartingCrystals
+	BonusStartingMercury  = editor_state.BonusStartingMercury
+	BonusStartingWood     = editor_state.BonusStartingWood
+	BonusStartingOre      = editor_state.BonusStartingOre
 )
 
 const (
-	TopologyRing         MapTopology = config_inner.TopologyRing
-	TopologyHubAndSpoke  MapTopology = config_inner.TopologyHubAndSpoke
-	TopologyChain        MapTopology = config_inner.TopologyChain
-	TopologySharedWeb    MapTopology = config_inner.TopologySharedWeb
-	TopologyRandom       MapTopology = config_inner.TopologyRandom
-	TopologyCircles      MapTopology = config_inner.TopologyCircles
-	TopologySquare       MapTopology = config_inner.TopologySquare
-	TopologyGeometric    MapTopology = config_inner.TopologyGeometric
-	TopologyCross        MapTopology = config_inner.TopologyCross
-	TopologyFractal      MapTopology = config_inner.TopologyFractal
-	TopologyGeometricHub MapTopology = config_inner.TopologyGeometricHub
+	TopologyRing         MapTopology = editor_state.TopologyRing
+	TopologyHubAndSpoke  MapTopology = editor_state.TopologyHubAndSpoke
+	TopologyChain        MapTopology = editor_state.TopologyChain
+	TopologySharedWeb    MapTopology = editor_state.TopologySharedWeb
+	TopologyRandom       MapTopology = editor_state.TopologyRandom
+	TopologyCircles      MapTopology = editor_state.TopologyCircles
+	TopologySquare       MapTopology = editor_state.TopologySquare
+	TopologyGeometric    MapTopology = editor_state.TopologyGeometric
+	TopologyCross        MapTopology = editor_state.TopologyCross
+	TopologyFractal      MapTopology = editor_state.TopologyFractal
+	TopologyGeometricHub MapTopology = editor_state.TopologyGeometricHub
 )

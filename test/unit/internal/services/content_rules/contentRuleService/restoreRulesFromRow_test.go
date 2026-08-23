@@ -13,7 +13,7 @@ func TestWhenRowHasSerializedRules_RestoresEachRule(t *testing.T) {
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	row := models.ZoneContentRowSave{Sid: "x", Rules: []models.ContentRuleRowSave{
+	row := models.ZoneContentRow{Sid: "x", Rules: []models.ContentRuleRow{
 		{Name: "Guarded", IsGuarded: &isGuarded},
 		{Name: "Distance to road", DistanceName: "Far"},
 	}}
@@ -33,7 +33,7 @@ func TestWhenRowHasNoRules_ReturnsNoRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	row := models.ZoneContentRowSave{Sid: "x"}
+	row := models.ZoneContentRow{Sid: "x"}
 
 	// Act
 	rules := service.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
@@ -47,7 +47,7 @@ func TestWhenSavedRuleIsInvalid_SkipsIt(t *testing.T) {
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	row := models.ZoneContentRowSave{Sid: "x", Rules: []models.ContentRuleRowSave{
+	row := models.ZoneContentRow{Sid: "x", Rules: []models.ContentRuleRow{
 		{Name: "Nope"},
 		{Name: "Guarded", IsGuarded: &isGuarded},
 	}}

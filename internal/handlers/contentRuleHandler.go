@@ -76,7 +76,7 @@ func (this *contentRuleHandler) GetContentRuleEditorOptions(
 
 func (this *contentRuleHandler) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
+	savedRule models.ContentRuleRow) dtos.ContentRuleDescriptionDto {
 	description := dtos.ContentRuleDescriptionDto{
 		Key:         contentRuleKeyFromName(savedRule.Name),
 		DisplayText: savedRule.Name,

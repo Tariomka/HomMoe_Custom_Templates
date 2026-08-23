@@ -17,6 +17,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
@@ -113,7 +114,7 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if presetType.IsResource() {
+			if config_helpers.IsResource(presetType) {
 				return layout.Dimensions{}
 			}
 

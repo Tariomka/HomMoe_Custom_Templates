@@ -1,8 +1,9 @@
 package dialogs
 
 import (
+	"slices"
+
 	"gioui.org/widget"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
@@ -11,7 +12,7 @@ type zoneContentRow struct {
 	Mapping models.SidMapping
 	Count   int
 	IsGroup bool
-	rules   []models.ContentRuleRowSave
+	rules   []models.ContentRuleRow
 
 	countSld  widget.Float
 	manageBtn widget.Clickable
@@ -22,18 +23,12 @@ type zoneContentRow struct {
 func newZoneContentRow(
 	mapping models.SidMapping,
 	count int,
-	rules []models.ContentRuleRowSave,
+	rules []models.ContentRuleRow,
 	isGroup bool) *zoneContentRow {
 	return &zoneContentRow{
 		Mapping: mapping,
 		Count:   count,
 		IsGroup: isGroup,
-		rules:   utils.CloneRuleRows(rules),
+		rules:   slices.Clone(rules),
 	}
-}
-
-// Rules returns a defensive copy of the row's content rules, letting the parent
-// panel serialize them without exposing the row's mutable slice.
-func (this *zoneContentRow) Rules() []models.ContentRuleRowSave {
-	return utils.CloneRuleRows(this.rules)
 }

@@ -18,7 +18,7 @@ func TestWhenRuleIsSerialized_WritesNameAndDistanceName(t *testing.T) {
 	saved := rule.SerializeToRowSave()
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{
+	assert.Equal(t, models.ContentRuleRow{
 		Name:         "Distance to town",
 		DistanceName: "Near",
 	}, saved)

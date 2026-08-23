@@ -3,7 +3,8 @@ package bonusEntry_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,8 +12,8 @@ import (
 func TestWhenEntriesAreIdentical_ProducesSameHash(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := config_inner.BonusEntry{
-		PresetType:     config_inner.BonusSpell,
+	entry := editor_state.BonusEntry{
+		PresetType:     editor_state.BonusSpell,
 		ReceiverFilter: "start_hero",
 		Param:          gofakeit.Word(),
 		Param2:         "1",
@@ -20,17 +21,17 @@ func TestWhenEntriesAreIdentical_ProducesSameHash(t *testing.T) {
 	duplicate := entry
 
 	// Act
-	actual := entry.GetHash()
+	actual := config_helpers.GetHash(entry)
 
 	// Assert
-	assert.Equal(t, duplicate.GetHash(), actual)
+	assert.Equal(t, config_helpers.GetHash(duplicate), actual)
 }
 
 func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := config_inner.BonusEntry{
-		PresetType:     config_inner.BonusStartingGold,
+	entry := editor_state.BonusEntry{
+		PresetType:     editor_state.BonusStartingGold,
 		ReceiverFilter: "all_heroes",
 		Param:          "500",
 	}
@@ -38,40 +39,40 @@ func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
 	other.Param = "700"
 
 	// Act
-	actual := entry.GetHash()
+	actual := config_helpers.GetHash(entry)
 
 	// Assert
-	assert.NotEqual(t, other.GetHash(), actual)
+	assert.NotEqual(t, config_helpers.GetHash(other), actual)
 }
 
 func TestWhenEntriesDifferInPresetType_ProducesDifferentHashes(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := config_inner.BonusEntry{
-		PresetType:     config_inner.BonusStartingWood,
+	entry := editor_state.BonusEntry{
+		PresetType:     editor_state.BonusStartingWood,
 		ReceiverFilter: "start_hero",
 		Param:          "7",
 	}
 	other := entry
-	other.PresetType = config_inner.BonusStartingOre
+	other.PresetType = editor_state.BonusStartingOre
 
 	// Act
-	actual := entry.GetHash()
+	actual := config_helpers.GetHash(entry)
 
 	// Assert
-	assert.NotEqual(t, other.GetHash(), actual)
+	assert.NotEqual(t, config_helpers.GetHash(other), actual)
 }
 
 func TestWhenHashIsComputed_ReturnsSha256DigestLength(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := config_inner.BonusEntry{
-		PresetType:     config_inner.BonusTownPortalFree,
+	entry := editor_state.BonusEntry{
+		PresetType:     editor_state.BonusTownPortalFree,
 		ReceiverFilter: gofakeit.Word(),
 	}
 
 	// Act
-	actual := entry.GetHash()
+	actual := config_helpers.GetHash(entry)
 
 	// Assert
 	assert.Len(t, actual, 32)

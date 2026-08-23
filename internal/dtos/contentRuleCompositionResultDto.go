@@ -6,6 +6,6 @@ import "github.com/Tariomka/hommoe_custom_templates/internal/models"
 // from the manage-rules editor state. Valid is false when the editor selection
 // cannot produce a rule.
 type ContentRuleCompositionResultDto struct {
-	Rule  models.ContentRuleRowSave
+	Rule  models.ContentRuleRow
 	Valid bool
 }

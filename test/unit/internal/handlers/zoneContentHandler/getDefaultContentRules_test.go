@@ -17,7 +17,7 @@ func TestWhenDefaultRulesAreRequested_TheEditorOptionsAreHandedToTheService(t *t
 	options := dtos.ContentRuleEditorOptionsDto{
 		Rules: []dtos.ContentRuleOptionDto{{Key: dtos.ContentRuleKeyGuarded, Name: gofakeit.Word()}},
 	}
-	expected := []models.ContentRuleRowSave{{Name: gofakeit.Word()}}
+	expected := []models.ContentRuleRow{{Name: gofakeit.Word()}}
 	fixture.contentRules.GetContentRuleEditorOptionsFunc = func(models.SidMapping) dtos.ContentRuleEditorOptionsDto {
 		return options
 	}

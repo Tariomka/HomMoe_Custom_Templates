@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -323,11 +322,11 @@ func TestWhenContentRowsProvidedForEveryZoneKind_PopulatesEveryMandatoryCollecti
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
-	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "a", Count: 1}}
-	state.LowNeutralContentRows = []models.ZoneContentRowSave{{Sid: "b", Count: 1}}
-	state.MediumNeutralContentRows = []models.ZoneContentRowSave{{Sid: "c", Count: 1}}
-	state.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "d", Count: 1}}
-	state.HubZoneContentRows = []models.ZoneContentRowSave{{Sid: "e", Count: 1}}
+	state.PlayerZoneContentRows = []models.ZoneContentRow{{Sid: "a", Count: 1}}
+	state.LowNeutralContentRows = []models.ZoneContentRow{{Sid: "b", Count: 1}}
+	state.MediumNeutralContentRows = []models.ZoneContentRow{{Sid: "c", Count: 1}}
+	state.HighNeutralContentRows = []models.ZoneContentRow{{Sid: "d", Count: 1}}
+	state.HubZoneContentRows = []models.ZoneContentRow{{Sid: "e", Count: 1}}
 
 	// Act
 	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
@@ -347,7 +346,7 @@ func TestWhenPlayerRowHasCountTwo_ExpandsIntoTwoMandatoryItems(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
-	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 2, IsMine: true}}
+	state.PlayerZoneContentRows = []models.ZoneContentRow{{Sid: "mine_gold", Count: 2, IsMine: true}}
 
 	// Act
 	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
@@ -360,7 +359,7 @@ func TestWhenPlayerRowIsMine_PropagatesIsMineFlag(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
-	state.PlayerZoneContentRows = []models.ZoneContentRowSave{{Sid: "mine_gold", Count: 1, IsMine: true}}
+	state.PlayerZoneContentRows = []models.ZoneContentRow{{Sid: "mine_gold", Count: 1, IsMine: true}}
 
 	// Act
 	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
@@ -374,7 +373,7 @@ func TestWhenHighNeutralRowProvided_CopiesSidToMandatoryItem(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
-	state.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "pandora_box", Count: 1}}
+	state.HighNeutralContentRows = []models.ZoneContentRow{{Sid: "pandora_box", Count: 1}}
 
 	// Act
 	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
@@ -388,8 +387,8 @@ func TestWhenBonusEntriesProvided_CopiesBonuses(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
-	bonuses := []config_inner.BonusEntry{
-		{PresetType: config_inner.BonusStartingWood, ReceiverFilter: "start_hero", Param: "7"},
+	bonuses := []config.BonusEntry{
+		{PresetType: config.BonusStartingWood, ReceiverFilter: "start_hero", Param: "7"},
 	}
 	state.Bonuses = bonuses
 

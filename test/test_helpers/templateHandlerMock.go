@@ -21,7 +21,7 @@ type TemplateHandlerMock struct {
 	ValidateEditorStateFunc         func(editor_state_model.EditorState, bool) editor_state_dto.EditorStateValidationDto
 	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error)
 	GetContentRuleEditorOptionsFunc func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
-	DescribeContentRuleFunc         func(models.SidMapping, models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto
+	DescribeContentRuleFunc         func(models.SidMapping, models.ContentRuleRow) dtos.ContentRuleDescriptionDto
 	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []entities.Zone
 	GetZoneEditorOptionsFunc        func(editor_state_model.EditorState, int) dtos.ZoneEditorOptionsDto
 	CountZoneCastlesFunc            func(entities.Zone) int
@@ -263,7 +263,7 @@ func (this *TemplateHandlerMock) GetContentRuleEditorOptions(
 
 func (this *TemplateHandlerMock) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave,
+	savedRule models.ContentRuleRow,
 ) dtos.ContentRuleDescriptionDto {
 	if this.DescribeContentRuleFunc != nil {
 		return this.DescribeContentRuleFunc(content, savedRule)
@@ -313,23 +313,23 @@ func (this *TemplateHandlerMock) ComposeContentRule(
 }
 
 func (this *TemplateHandlerMock) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave,
-) []models.ContentRuleRowSave {
+	rules []models.ContentRuleRow,
+	rule models.ContentRuleRow,
+) []models.ContentRuleRow {
 	return zone_content.NewZoneContentEditorService().UpsertContentRule(rules, rule)
 }
 
-func (this *TemplateHandlerMock) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRowSave {
+func (this *TemplateHandlerMock) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRow {
 	return nil
 }
 
-func (this *TemplateHandlerMock) GetContentRuleMarkers(models.SidMapping, []models.ContentRuleRowSave) string {
+func (this *TemplateHandlerMock) GetContentRuleMarkers(models.SidMapping, []models.ContentRuleRow) string {
 	return ""
 }
 
 func (this *TemplateHandlerMock) GetContentRowDisplayName(
 	content models.SidMapping,
-	_ []models.ContentRuleRowSave,
+	_ []models.ContentRuleRow,
 ) string {
 	return content.Name
 }

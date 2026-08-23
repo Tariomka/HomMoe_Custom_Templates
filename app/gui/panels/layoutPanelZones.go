@@ -130,34 +130,26 @@ func (this *LayoutPanel) handleZoneContentDialogClicks(gtx layout.Context) {
 	switch {
 	case this.btnPlayerContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Player", true, settings.PlayerZoneContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRowSave) {
-				s.PlayerZoneContentRows = rows
-			})
+			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.PlayerZoneContentRows = rows })
 	case this.btnLowestContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Lowest Neutral", false, settings.LowestNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRowSave) {
+			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) {
 				s.LowestNeutralContentRows = rows
 			})
 	case this.btnLowContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Low Neutral", false, settings.LowNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRowSave) {
-				s.LowNeutralContentRows = rows
-			})
+			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.LowNeutralContentRows = rows })
 	case this.btnMedContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Medium Neutral", false, settings.MediumNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRowSave) {
+			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) {
 				s.MediumNeutralContentRows = rows
 			})
 	case this.btnHighContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: High Neutral", false, settings.HighNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRowSave) {
-				s.HighNeutralContentRows = rows
-			})
+			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.HighNeutralContentRows = rows })
 	case this.btnHubContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Hub", false, settings.HubZoneContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRowSave) {
-				s.HubZoneContentRows = rows
-			})
+			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.HubZoneContentRows = rows })
 	}
 }
 
@@ -166,11 +158,11 @@ func (this *LayoutPanel) handleZoneContentDialogClicks(gtx layout.Context) {
 func (this *LayoutPanel) openZoneContentDialog(
 	title string,
 	isPlayerTier bool,
-	rows []models.ZoneContentRowSave,
-	set func(*editor_state_model.EditorState, []models.ZoneContentRowSave)) {
+	rows []models.ZoneContentRow,
+	set func(*editor_state_model.EditorState, []models.ZoneContentRow)) {
 	this.state.GetDialogHost().Open(dialogs.NewZoneContentDialog(
 		title, isPlayerTier, rows, this.contentRuleHandler, this.state.GetDialogHost().Open,
-		func(updated []models.ZoneContentRowSave) {
+		func(updated []models.ZoneContentRow) {
 			this.state.UpdateState(func(s *editor_state_model.EditorState) { set(s, updated) })
 		}))
 }

@@ -24,7 +24,8 @@ func NewRuleSoloEncounter(isSoloEncounter bool) *RuleSoloEncounter {
 	return &RuleSoloEncounter{IsSoloEncounter: isSoloEncounter}
 }
 
-func (this *RuleSoloEncounter) Name() string        { return RuleSoloEncounterName }
+func (this *RuleSoloEncounter) Name() string { return RuleSoloEncounterName }
+
 func (this *RuleSoloEncounter) Description() string { return RuleSoloEncounterDescription }
 
 // Marker shows "S" when solo and "!S" when explicitly not solo.
@@ -44,9 +45,9 @@ func (this *RuleSoloEncounter) Apply(item *entities.MandatoryContentItem) {
 	item.SoloEncounter = this.IsSoloEncounter
 }
 
-func (this *RuleSoloEncounter) SerializeToRowSave() models.ContentRuleRowSave {
+func (this *RuleSoloEncounter) SerializeToRowSave() models.ContentRuleRow {
 	value := this.IsSoloEncounter
-	return models.ContentRuleRowSave{
+	return models.ContentRuleRow{
 		Name:            this.Name(),
 		IsSoloEncounter: &value,
 	}

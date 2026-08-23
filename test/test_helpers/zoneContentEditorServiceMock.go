@@ -21,17 +21,17 @@ func (this *ZoneContentEditorServiceMock) ComposeContentRule(
 }
 
 func (this *ZoneContentEditorServiceMock) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave) []models.ContentRuleRowSave {
+	rules []models.ContentRuleRow,
+	rule models.ContentRuleRow) []models.ContentRuleRow {
 	arguments := this.Called(rules, rule)
-	merged, _ := arguments.Get(0).([]models.ContentRuleRowSave)
+	merged, _ := arguments.Get(0).([]models.ContentRuleRow)
 	return merged
 }
 
 func (this *ZoneContentEditorServiceMock) GetDefaultContentRules(
-	options dtos.ContentRuleEditorOptionsDto) []models.ContentRuleRowSave {
+	options dtos.ContentRuleEditorOptionsDto) []models.ContentRuleRow {
 	arguments := this.Called(options)
-	rules, _ := arguments.Get(0).([]models.ContentRuleRowSave)
+	rules, _ := arguments.Get(0).([]models.ContentRuleRow)
 	return rules
 }
 

@@ -10,13 +10,17 @@ Backlog items closed by this work: [§2.1](../todo/backlog-opus5.md) and
 
 ## For Future Agents
 
-> **⚠ Read [§0.4](#04-layering-doctrine--entity--model--dto) first.** On
+> **⚠ Read [§0.4](#04-layering-doctrine--entity--model--dto) first, then
+> [§0.5](#05-owner-decisions-2026-08-22-round-2--these-settle-phases-812).** On
 > 2026-08-22 the owner corrected the premise this plan was built on:
 > `EditorStateDto` is **not** the persisted `.gen.json` shape — that is an
 > **Entity's** job. §0 rows "DTO shape" and "Wire shape", the whole of Phase 5,
 > and Phase 4's grep gate are **superseded**. Phases 1–4 are done and committed
-> or unstaged as described, but their *direction* is corrected by
-> **Phases 8–12**. Revised order: **8 → 9 → 10 → 11 → 6 → 12 → 7**.
+> (`a264d0b`), but their *direction* is corrected by **Phases 8–12**. Revised
+> order: **8 → 9 → 10 → 11 → 6 → 12 → 7**.
+>
+> **§0.5 overrides §0.4 where they conflict** — most importantly, `app/` **may**
+> hold a Model; only the *crossing* into `internal/` must be a DTO.
 
 As work proceeds: mark checkboxes `- [x]` as items complete; when a phase is done,
 set its status to `Complete` and write its **Phase Summary** (what was done, key
@@ -192,7 +196,7 @@ and [DevsDaily — Entity, Model, ViewModel and DTO in C#](https://devsdaily.com
 
 | Layer | Type | Declared in | May be used by | Logic |
 | --- | --- | --- | --- | --- |
-| **Database** | Entity | `internal/entities/` | `internal/repositories/` only | none beyond (de)serialisation — i.e. json tags |
+| **Database** | Entity | `internal/entities/` | `internal/repositories/` and `internal/mappers/` only | none beyond (de)serialisation — i.e. json tags |
 | **Service** | Model | `internal/models/` | `internal/services/`, `internal/validators/`, `internal/mappers/`, `internal/repositories/` | **all business logic lives here** |
 | **Consumer** | DTO | `internal/dtos/` | `internal/handlers/`, and in `app/` **only at handler call sites** | none |
 
@@ -425,6 +429,128 @@ Notes on the update flow, all of which are **open until the owner answers Phase
   DTO ⇄ Model conversion **per frame**, which is exactly what Phase 6 is trying
   to reduce. Phase 11 must be decided with Phase 6's benchmark in view, not
   separately.
+
+---
+
+## 0.5 Owner decisions, 2026-08-22 (round 2) — these settle Phases 8–12
+
+Answers to the four blocking questions in the carry-forward, plus the follow-ups
+they raised. **These override §0.4 where they conflict, and §0.4.3's diagrams are
+partly invalidated by decision 1 — see the note under it.**
+
+### 0.5.1 `app/` keeps the Model; the DTO is the *crossing*, not the storage
+
+**AGENTS.md §4.4 is authoritative over plan §0.4 on this point.** The owner's
+committed amendment (`a264d0b`) states it directly: *"if `app/` would be detached
+from the project, it would have a separate model implementation, but here
+`app/.../` can use the `internal/models/` instead of duplicating code"*, and its
+sequence diagram has the GUI **storing a Model**, mapping *stored Model → DTO* on
+the request and *DTO → Model and stores it* on the response.
+
+So the rule is **not** "`app/` never sees a Model". It is:
+
+> `app/` may **hold** a Model as its working state, but every **crossing** into
+> `internal/` is a DTO. The handler boundary speaks DTO in both directions.
+
+Consequences, all load-bearing:
+
+- **Phase 4 is correct as committed.** `app/gui/models.EditorState` keeps
+  `*editor_state_model.EditorState` for `current`/`previous`/`next`.
+- **Phase 11 shrinks drastically.** It no longer retypes the panels or moves the
+  five state methods behind handlers. It becomes: *the handler call sites pass
+  DTOs*. Rewritten below.
+- **Phase 12 drops the rule `internal/models/** must not be imported by app/**`.**
+  The entity and DTO rules stand.
+- **§0.4's line "A Model never leaves the backend. `app/` must not see one" is
+  superseded.** Left in place for the record; read it together with this section.
+- The 28-file "residue" the carry-forward flagged (`config`, `neutral_zone`,
+  `preview`, `entities.Zone`) is **no longer a breach** for the model half. Only
+  the `internal/entities` imports under `app/` remain questionable, and they are
+  still out of scope for Batch I.
+
+### 0.5.2 Phase 8 — the entity layer gets its own leaf types
+
+The owner's ruling, verbatim in intent: move `MapTopology`, `BonusEntry`,
+`ZoneContentRowSave` (renamed **`ZoneContentRow`**) and `ContentRuleRowSave`
+(renamed **`ContentRuleRow`**) into `internal/entities/editor_state/`. **Do not
+move attached methods** — behaviour that came off a type becomes a **function**.
+
+- `BonusPresetType` is dragged along because it is `BonusEntry.PresetType`'s
+  type. Its constants move with it.
+- Behaviour lifted off those types becomes plain functions in
+  `internal/helpers/`, following the existing
+  [road_helpers/roadType.go](../internal/helpers/road_helpers/roadType.go) /
+  [zone_helpers/zoneNameType.go](../internal/helpers/zone_helpers/zoneNameType.go)
+  convention — package per domain, value as the first argument:
+
+  | Was | Becomes |
+  | --- | --- |
+  | `BonusEntry.GetHash() string` | `config_helpers.GetHash(BonusEntry) string` |
+  | `BonusPresetType.String() string` | `config_helpers.GetString(BonusPresetType) string` |
+  | `BonusPresetType.IsResource() bool` | `config_helpers.IsResource(BonusPresetType) bool` |
+  | `ZoneContentRowSave.Clone()` / `.Normalized()` | `editor_state_helpers.CloneZoneContentRow(...)` / `NormalizeZoneContentRow(...)` |
+  | `ContentRuleRowSave.Clone()` | `editor_state_helpers.CloneContentRuleRow(...)` |
+
+- **No wrapper structs.** Wrappers were considered and rejected: the entity
+  groups hold `[]ZoneContentRow` and `[]BonusEntry` as *slices*, and Go slices do
+  not interconvert, so a wrapper type would force wrap/unwrap at ~85 call sites
+  (`ContentSettings.Bonuses`, `GeneratorConfig.Bonuses`, `bonusesPanel.bonuses`,
+  the picker callback, `cloneContentRows`, and the six content-row fields).
+  Functions over entity values keep one type end to end and put the logic in the
+  same layer a wrapper would have.
+
+**Alias façades absorb the churn.** The old spellings keep working because their
+declaring packages re-export the entity types:
+
+- [internal/models/config/types.go](../internal/models/config/types.go) —
+  `MapTopology`, `BonusEntry`, `BonusPresetType` and all their constants
+  re-point at `editor_state.*`. **182 files import `config`; none of them
+  change.**
+- `internal/models/` re-exports `ZoneContentRow` / `ContentRuleRow`. **77 files
+  reference these types; none of their imports change** — only the `Save` suffix
+  is dropped, by semantic rename.
+
+This is deliberate and symmetrical with the decision below: an alias names the
+*same* type, so it is not a layering violation — `models.ZoneContentRow` **is**
+`editor_state.ZoneContentRow`. It also keeps the entity package's name out of 77
+service/app files, which is *more* §0.4-compliant than importing it there. The
+façades are deletable later, one caller at a time, as their own batch.
+
+### 0.5.3 `internal/entities/types.go` → `internal/entities/template/types.go`
+
+Requested by the owner, but the file is `package entities`, so moving it renames
+the package for **426 importers** (282 `test/unit`, 85 `internal/services`, 15
+`test/test_helpers`, 11 `app/gui`, 11 `internal/dtos`, …). A 426-file identifier
+rename inside Batch I would collide with AGENTS.md §2.6 and bury the layering
+work.
+
+**Chosen: the zero-churn form.** `internal/entities/template/types.go` becomes
+the canonical alias home, and `internal/entities/types.go` shrinks to re-alias
+it. Aliases of aliases name the identical type, so nothing else recompiles and
+both spellings stay valid. The root façade can then be retired incrementally in
+a dedicated batch.
+
+> **§2.1 note.** This adds a file to the read-only
+> `internal/entities/template/`. The owner gave explicit approval for exactly
+> this file. **No existing file in that directory is modified**, so the
+> `.rmg.json` schema and game compatibility are untouched.
+
+### 0.5.4 Phase 9 — Entity ⇄ Model mapping lives in `internal/mappers/`
+
+`internal/mappers/editorStateEntityMapper.go`, per AGENTS.md §4.4 ("data mappers
+and converters"). This needs a **carve-out to §0.4**, which says Entities are used
+only in `internal/repositories/`: the permitted namers of an Entity are
+`internal/repositories/`, `internal/models/`, `internal/entities/`,
+`internal/helpers/*_helpers/` and now `internal/mappers/`. Phase 12's checker
+must encode that list, not §0.4's shorter one.
+
+### 0.5.5 Phase 6 / Phase 11 frame path — deferred, decide on numbers
+
+Deliberately **not** answered up front. Phase 6's allocation benchmark runs
+first and the measurement decides. Under decision 0.5.1 the pressure largely
+evaporates anyway — `app/` keeps the Model, so no per-frame DTO ⇄ Model
+conversion is introduced on the update path, and §0.4.3's update flowchart
+overstates the cost.
 
 ---
 
@@ -1026,10 +1152,14 @@ not after Phase 6.
 
 ## Decision required before Phase 8 — what happens to the unstaged Phase 4 diff
 
-Phase 4 is complete, green and **unstaged** (101 modified, 4 deleted, 3
-untracked). Its central deliverable — moving `app/` and the handler signatures
-from the DTO onto the Model — is **backwards** under §0.4, and Phase 11 reverses
-it. The owner must choose; the agent must **not** discard the tree unasked.
+**Resolved 2026-08-22: Option A.** The owner committed the Phase 4 diff as
+`a264d0b "Batch I wip 4"` (111 files, +1641/−941), together with the plan edits
+and the AGENTS.md §4.4 amendment. The working tree is clean and Phase 4 stands.
+See [§0.5.1](#051-app-keeps-the-model-the-dto-is-the-crossing-not-the-storage) —
+the amendment also makes Phase 4's *direction* correct, so Phase 11 no longer
+reverses it.
+
+The original options are kept below for the record.
 
 | Option | Consequence |
 | --- | --- |
@@ -1049,32 +1179,80 @@ Phases 8–12 are written to be valid under either option.
 ---
 
 ## Phase 8: Restore the dependency direction in the entity layer
-Status: Not started
+Status: Complete
 
 Entities must import nothing from `internal/models`. Today two of the nine
 groups do (§0.4.2 defect 3), so the arrow points the wrong way at the bottom of
 the stack. Nothing above can be laid out correctly until this is fixed.
 
-- [ ] Give `internal/entities/editor_state/` its own leaf types so it imports no
-      model package. The offenders:
-      [contentSettings.go](../internal/entities/editor_state/contentSettings.go)
-      (`models.ZoneContentRowSave`, `config.BonusEntry`) and
-      [generationSettings.go](../internal/entities/editor_state/generationSettings.go)
-      (`config.MapTopology`).
-- [ ] `ZoneContentRowSave` and `ContentRuleRowSave` carry `Clone()` /
-      `Normalized()`, so they are **Models**. Split each into a behaviour-free
-      entity row (fields + json tags, in `entities/editor_state/`) and keep the
-      model in `internal/models/`, embedding or wrapping the entity per §0.4.
-- [ ] **Owner decision:** `config.MapTopology` and `config.BonusEntry` live in
-      `internal/models/config`, which the generator uses heavily. Options:
-      (a) move the enum/constant types to `internal/common/` per AGENTS.md §4.4
-      ("constants, IDs, immutable lookup tables"), which is the clean fix but
-      touches the generator; (b) declare entity-local counterparts and convert at
-      the repository seam. Do not start until this is answered.
-- [ ] `EditorState` keeps embedding the nine entity groups anonymously — §0.4
-      explicitly allows an Entity to be embedded in a Model.
-- [ ] Re-check `manualZoneSave.go` / `manualConnectionSave.go`: they import
-      `internal/entities`, which is entity→entity and therefore fine.
+Design settled in [§0.5.2](#052-phase-8--the-entity-layer-gets-its-own-leaf-types)
+and [§0.5.3](#053-internalentitiestypesgo--internalentitiestemplatetypesgo).
+The offenders are exactly two files:
+[contentSettings.go](../internal/entities/editor_state/contentSettings.go)
+(`models.ZoneContentRowSave`, `config.BonusEntry`) and
+[generationSettings.go](../internal/entities/editor_state/generationSettings.go)
+(`config.MapTopology`).
+
+**8a — template alias façade (§0.5.3).**
+
+- [x] Add `internal/entities/template/types.go` (`package template`) holding the
+      alias block currently in [internal/entities/types.go](../internal/entities/types.go).
+      Omit `RmgTemplate` — it is *declared* in that package already, so aliasing
+      it there is a redeclaration.
+- [x] Shrink `internal/entities/types.go` to re-alias `template.*`. Both
+      spellings then name the identical type; no other file changes.
+
+**8b — entity leaf types.** New files under `internal/entities/editor_state/`,
+all behaviour-free (fields, json tags, constants — no methods):
+
+- [x] `mapTopology.go` — `type MapTopology string` + the 11 `Topology*` constants.
+- [x] `bonusPresetType.go` — `type BonusPresetType int` + the 11 `Bonus*` constants.
+- [x] `bonusEntry.go` — `BonusEntry{PresetType, ReceiverFilter, Param, Param2}`.
+- [x] `contentRuleRow.go` — `ContentRuleRow`, renamed from `ContentRuleRowSave`.
+- [x] `zoneContentRow.go` — `ZoneContentRow`, renamed from `ZoneContentRowSave`;
+      `Rules []ContentRuleRow`.
+- [x] **json tags copied byte-for-byte.** A renamed *type* must not move a *key*;
+      Phase 1's frozen golden proves it.
+
+**8c — helper functions (§0.5.2 table).**
+
+- [x] `internal/helpers/config_helpers/bonusEntry.go` — `GetHash`.
+- [x] `internal/helpers/config_helpers/bonusPresetType.go` — `GetString`, `IsResource`.
+- [x] `internal/helpers/editor_state_helpers/zoneContentRow.go` —
+      `CloneZoneContentRow`, `CloneZoneContentRows`, `NormalizeZoneContentRow`.
+- [x] `internal/helpers/editor_state_helpers/contentRuleRow.go` —
+      `CloneContentRuleRow`, `CloneContentRuleRows`.
+
+**8d — re-point the façades, delete the originals.**
+
+- [x] [config/types.go](../internal/models/config/types.go): `MapTopology`,
+      `BonusEntry`, `BonusPresetType` and every `Bonus*` / `Topology*` constant
+      re-point at `editor_state.*`.
+- [x] `Remove-Item` `config_inner/mapTopology.go`, `bonusEntry.go`,
+      `bonusPresetType.go`.
+- [x] `internal/models/zoneContentRow.go` + `contentRuleRow.go` replace the two
+      `*RowSave.go` files with alias declarations.
+- [x] Semantic rename (`vscode_renameSymbol`, **not** a text sweep — §2.6)
+      `ZoneContentRowSave` → `ZoneContentRow`, `ContentRuleRowSave` →
+      `ContentRuleRow` across all 77 referencing files.
+
+**8e — the two entity groups.**
+
+- [x] `contentSettings.go` and `generationSettings.go` end with **no import
+      block at all**.
+
+**8f — method call sites** (the only behavioural edits):
+`editorStateModel.go` `cloneContentRows`, `app/gui/utils/models.go`
+`CloneRuleRows`, `services/bonuses/bonusEntryService.go` `GetHash`,
+`bonusPickerDialog.go` and `bonusesPanel.go` `IsResource`, plus any
+`.Normalized()` caller.
+
+**8g — tests** relocate to mirror the new impl paths per §4.6: the
+`config_inner/bonusEntry` and `config_inner/bonusPresetType` folders move under
+`test/unit/internal/helpers/config_helpers/`, and the two `*RowSave` folders
+under `test/unit/internal/helpers/editor_state_helpers/`. The json round-trip
+tests move to the entity path — they characterise the persisted format and are
+worth keeping despite §4.6's "pure data structs need no tests".
 
 ### Verification Plan
 - No file under `internal/entities/` imports `internal/models`,
@@ -1087,11 +1265,79 @@ the stack. Nothing above can be laid out correctly until this is fixed.
   coverage ≥ 72.5 %.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Done 2026-08-23. All gates green.** The entity layer no longer depends on the
+model layer: `go list` over all **9** packages under `internal/entities/`
+reports **zero** imports of `internal/models`, `internal/dtos`,
+`internal/services`, `internal/handlers` or `internal/helpers`. That is the
+whole point of the phase and it is now mechanically true.
+
+**Shape of the change.** Five behaviour-free leaf types were added to
+`internal/entities/editor_state/` — `MapTopology`, `BonusPresetType`,
+`BonusEntry`, `ContentRuleRow`, `ZoneContentRow` — with json tags copied
+verbatim. The behaviour that used to hang off them became functions in two new
+helper packages, per the `road_helpers`/`zone_helpers` convention:
+`internal/helpers/config_helpers` (`GetHash`, `GetString`, `IsResource`) and
+`internal/helpers/editor_state_helpers` (`CloneZoneContentRow(s)`,
+`NormalizeZoneContentRow`, `CloneContentRuleRow(s)`).
+
+**Churn was absorbed by alias façades, exactly as §0.5.2 planned.**
+`internal/models/config/types.go` re-points `MapTopology` / `BonusEntry` /
+`BonusPresetType` and all 22 constants at the entity types, so **none of the 182
+files importing `config` changed**. `internal/models/{zoneContentRow,
+contentRuleRow}.go` re-export the two rows, so the 77 files referencing them
+only lost the `Save` suffix — applied by `vscode_renameSymbol` (290 edits, ~70
+files), never by a text sweep.
+
+**Only six production call sites changed behaviourally**, all method → function:
+`editorStateModel.cloneContentRows`, `mandatoryContentItemMapper.FromRows`,
+`bonusEntryService` (×2), `bonusPickerDialog`, `bonusesPanel`,
+`zoneContentDialog`.
+
+**Deleted:** `config_inner/{mapTopology,bonusEntry,bonusPresetType}.go` and
+`internal/models/{zoneContentRowSave,contentRuleRowSave}.go`.
+
+**Tests relocated** to mirror the new impl paths: the two `config_inner` folders
+moved under `test/unit/internal/helpers/config_helpers/`, the two `*RowSave`
+clone/normalize folders under
+`test/unit/internal/helpers/editor_state_helpers/`, and the two json round-trip
+files under `test/unit/internal/entities/editor_state/` — they characterise the
+persisted format and are deliberately kept despite §4.6's "pure data structs
+need no tests". Four emptied folders were removed.
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet -tags='integration_test,gui' ./...` | exit 0 |
+| `gofmt -l .` | empty |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `go test ./test/unit/...` | pass |
+| `go test ./test/...` (untagged) | pass |
+| `go test -tags=integration_test ./test/integration/...` | pass |
+| GPU suite, **no `-update`** | pass (24.0s) |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| Unit coverage | **73.7 %** — unchanged, floor 72.5 % |
+
+**8a note.** `internal/entities/template/types.go` was added as the canonical
+alias home and `internal/entities/types.go` now re-aliases it; all 426 importers
+were left untouched. The owner separately simplified
+`internal/entities/template/rmgTemplate.go` to use the new unqualified names and
+staged it. **The agent is not permitted to modify `rmgTemplate.go` or any
+`template` subpackage** — that file is the owner's to change.
+
+**Carried into Phase 12:** `.golangci.yml` has a `config-inner-private` depguard
+rule but nothing yet guards the entity layer. Phase 12's checker should encode
+the §0.5.4 namer list and can lean on `go list` for the import graph, as used to
+verify this phase.
+
+**Not done here, and deliberately:** `internal/models` still holds the two row
+aliases and `internal/entities/types.go` still exists. Both are façades kept to
+bound this diff; retiring them is its own batch.
 
 ---
 
 ## Phase 9: Make the persisted shape an Entity (carries Phase 5 forward)
+
 Status: Not started
 
 Every item of the superseded Phase 5 is still wanted; it moves onto the Entity.
@@ -1110,11 +1356,12 @@ Hazards 2, 3, 8 and 9 apply here unchanged.
 - [ ] Retype `EditorStateRepository`: it reads and writes the **Entity**, and
       maps Entity ⇄ Model at its own boundary — `Load` returns a Model, `Save`
       takes a Model (§0.4.1).
-- [ ] **Owner decision:** where the Entity ⇄ Model mapping lives. AGENTS.md §4.4
-      says `internal/mappers/`, but §0.4 says Entities are used only in
-      repositories. Recommendation: keep it **private to
-      `internal/repositories/`**, so "Entities are used only in repositories"
-      stays literally true and needs no carve-out.
+- [ ] **Owner decision — resolved (§0.5.4):** the Entity ⇄ Model mapping lives in
+      `internal/mappers/editorStateEntityMapper.go`, per AGENTS.md §4.4. §0.4's
+      "Entities are used only in repositories" gains a carve-out: the permitted
+      namers of an Entity are `internal/repositories/`, `internal/models/`,
+      `internal/entities/`, `internal/helpers/*_helpers/` and
+      `internal/mappers/`. Phase 12's checker encodes that list.
 - [ ] `internal/services/file_service` speaks **Models only** — delete the
       model↔DTO conversion Phase 4 put there.
 - [ ] Delete `NewEditorStateDto` and `(*EditorStateDto).Model()`. They exist only
@@ -1178,41 +1425,43 @@ _(write when phase completes)_
 
 ---
 
-## Phase 11: Move `app/` off the Model
+## Phase 11: DTOs at the handler crossings
 Status: Not started
 
-This is the phase that reverses Phase 4's direction. `app/` holds DTOs and
-reaches business logic only through handler calls.
+**Rewritten 2026-08-22 under [§0.5.1](#051-app-keeps-the-model-the-dto-is-the-crossing-not-the-storage).**
+The original Phase 11 moved `app/` off the Model entirely; AGENTS.md §4.4 says
+`app/` **may** hold a Model and only the *crossing* into `internal/` must be a
+DTO. So this phase no longer reverses Phase 4 — it finishes it.
 
-- [ ] `app/gui/models.EditorState`: `current` / `previous` / `next` become
-      `*editor_state_dto.EditorStateDto`.
-- [ ] The panels' closures become `UpdateState(func(*editor_state_dto.EditorStateDto))`
-      — [bonusesPanel.go](../app/gui/panels/bonusesPanel.go),
-      [generalPanel.go](../app/gui/panels/generalPanel.go),
-      [layoutPanel.go](../app/gui/panels/layoutPanel.go),
-      [layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go).
-- [ ] The five pieces of state logic the GUI calls today are **Model** logic and
-      must move behind handler calls: `Clone`, `EqualsIgnoringManualEdits`,
-      `LayoutDefiningOptionsChanged`, `DiffCastleSettings`, `HasManualEdits`.
-      `ToManualZoneSaves` / `FromManualZoneSaves` likewise.
-- [ ] **Owner decision — the cost of doing this literally.** `Clone` and
-      `EqualsIgnoringManualEdits` run on the frame path. Routing them through a
-      handler adds a DTO⇄Model conversion per frame, which pulls directly against
-      Phase 6's allocation goal. Options: (a) literal — every call is a handler
-      call, and Phase 6 absorbs the cost with per-panel view DTOs; (b) the GUI
-      keeps a *local, `app/`-side* copy helper for the DTO (a plain struct copy
-      plus slice clones), which is view-layer plumbing rather than business logic,
-      and only the four comparison methods become handler calls. **Answer this
-      before starting.**
-- [ ] `app/` stops importing `internal/models/editor_state_model` and
-      `internal/entities` for editor state.
-- [ ] Re-point `app/gui/editor/window_testexports.go` and every mock and test.
+- [ ] `app/gui/models.EditorState` **keeps** `*editor_state_model.EditorState`
+      for `current` / `previous` / `next`. No change.
+- [ ] The panels' closures **keep** `UpdateState(func(*editor_state_model.EditorState))`.
+      No change.
+- [ ] Every **handler call** from `app/` passes and receives the DTO produced by
+      Phase 10, with the GUI mapping stored Model → request DTO and response DTO
+      → stored Model at that call site — exactly the two `Note over GUI` steps in
+      AGENTS.md §4.4's diagram. The sites are the `IStatePersistenceHandler`,
+      `IStateValidationHandler`, `ITemplateHandler`, `IZoneEditorHandler` and
+      `IRegenerationHandler` calls in [app/gui/drivers/](../app/gui/drivers/).
+- [ ] The five state methods (`Clone`, `EqualsIgnoringManualEdits`,
+      `LayoutDefiningOptionsChanged`, `DiffCastleSettings`, `HasManualEdits`)
+      **stay callable from `app/`** — they are Model methods on a Model `app/`
+      legitimately holds. The original bullet moving them behind handlers is
+      withdrawn, and with it the per-frame conversion cost.
+- [ ] `app/` stops importing `internal/entities/editor_state`. The `internal/models`
+      imports stay.
+- [ ] Re-point `app/gui/editor/window_testexports.go` and the mocks only where
+      handler signatures actually changed.
+
+> Because the GUI maps at the call site, the mapper from Phase 10 must be
+> reachable from `app/` — `internal/mappers/` is already permitted there under
+> AGENTS.md §4.4.
 
 ### Verification Plan
-- No file under `app/` imports `internal/models/editor_state_model` or
-  `internal/entities/editor_state`.
-- **GPU suite passes without `-update`** — this phase changes what the panels
-  read, so the rendering has to be proven unchanged.
+- No file under `app/` imports `internal/entities/editor_state`.
+- Every editor-state handler signature in `handler_interfaces` names a DTO, and
+  no `app/` → `internal/` call passes a Model across the boundary.
+- **GPU suite passes without `-update`** — the rendering must be proven unchanged.
 - Round-trip non-aliasing tests still pass; full unit + integration suites;
   coverage ≥ 72.5 %.
 
@@ -1232,22 +1481,24 @@ without a gate is a suggestion.
       - `internal/entities/**` must not import `internal/models`, `internal/dtos`,
         `internal/services`, `internal/handlers` or `internal/helpers`.
       - `internal/entities/**` must be imported only by `internal/repositories/**`,
-        `internal/models/**` and `internal/entities/**`.
+        `internal/models/**`, `internal/entities/**`, `internal/mappers/**` and
+        `internal/helpers/*_helpers/**` (§0.5.4).
       - `internal/dtos/**` must be imported only by `internal/handlers/**`,
         `internal/dtos/**` and `app/**`.
-      - `internal/models/**` must not be imported by `app/**`.
+      - ~~`internal/models/**` must not be imported by `app/**`.~~ **Withdrawn**
+        under §0.5.1 — AGENTS.md §4.4 permits it explicitly.
 - [ ] Seed the checker with an **explicit, shrinking allow-list** of the
       pre-existing violations so it can be turned on before they are all fixed.
       An empty allow-list is the end state, not the starting condition.
 - [ ] Add a VS Code task for it and wire it into the Phase 7 gate list.
-- [ ] Amend **AGENTS.md §4.4**: packages outside `internal/` may use
-      `internal/dtos/` only. Fold the §0.4 table and the §0.4.1 flow into the
-      instructions so the doctrine outlives this plan file.
-- [ ] Record the residual breach as its own backlog entry:
-      **28 pre-existing files under `app/` import `internal/models` or
-      `internal/entities`** for things other than editor state (`config`,
-      `neutral_zone`, `preview`, `entities.Zone`/`Connection`). Out of scope for
-      Batch I; it needs its own batch and its own owner sign-off.
+- [ ] Amend **AGENTS.md §4.4**: fold the §0.4 table, the §0.5.1 crossing rule and
+      the §0.5.4 Entity-namer list into the instructions so the doctrine outlives
+      this plan file. Do **not** forbid `app/` → `internal/models`.
+- [ ] Record the residual breach as its own backlog entry: the `app/` files that
+      import `internal/entities` directly (`entities.Zone` / `entities.Connection`
+      in the zone editor and preview). Under §0.5.1 the `internal/models` imports
+      are **no longer** a breach, so the residue is smaller than the 28 files the
+      carry-forward recorded. Out of scope for Batch I.
 
 ### Verification Plan
 - `go run ./cmd/testlayoutcheck .` (or the new checker) exits 0 with the

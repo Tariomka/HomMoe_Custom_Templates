@@ -6,5 +6,5 @@ import (
 )
 
 type IMandatoryContentItemMapper interface {
-	FromRows(rows []models.ZoneContentRowSave) []entities.MandatoryContentItem
+	FromRows(rows []models.ZoneContentRow) []entities.MandatoryContentItem
 }

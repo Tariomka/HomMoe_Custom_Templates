@@ -116,13 +116,13 @@ func NewAllFieldsEditorStateModel() editor_state_model.EditorState {
 
 // allFieldsContentRows builds a one-row content list whose every field, and
 // every field of its single rule, is populated.
-func allFieldsContentRows(sid string, variantID int) []models.ZoneContentRowSave {
-	return []models.ZoneContentRowSave{{
+func allFieldsContentRows(sid string, variantID int) []models.ZoneContentRow {
+	return []models.ZoneContentRow{{
 		Sid:     sid,
 		Count:   variantID,
 		IsGroup: true,
 		IsMine:  true,
-		Rules: []models.ContentRuleRowSave{{
+		Rules: []models.ContentRuleRow{{
 			Name:            "Guarded",
 			DistanceName:    "Very Far",
 			IsGuarded:       new(true),

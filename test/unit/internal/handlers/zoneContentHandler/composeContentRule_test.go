@@ -17,7 +17,7 @@ func TestWhenAContentRuleIsComposed_ReturnsTheServiceResult(t *testing.T) {
 		Option: dtos.ContentRuleOptionDto{Key: dtos.ContentRuleKeyGuarded, Name: gofakeit.Word()},
 	}
 	expected := dtos.ContentRuleCompositionResultDto{
-		Rule:  models.ContentRuleRowSave{Name: gofakeit.Word()},
+		Rule:  models.ContentRuleRow{Name: gofakeit.Word()},
 		Valid: true,
 	}
 	fixture.contentEditor.On("ComposeContentRule", request).Return(expected)

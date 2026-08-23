@@ -165,8 +165,8 @@ func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
 	template := &entities.RmgTemplate{Variants: []entities.Variant{{Zones: zones}}}
 	editorState := editor_state_model.NewDefaultEditorStateModel()
 	editorState.SpawnRemoteFootholds = false
-	editorState.MediumNeutralContentRows = []models.ZoneContentRowSave{{Sid: "medium_only", Count: 1}}
-	editorState.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "high_only", Count: 1}}
+	editorState.MediumNeutralContentRows = []models.ZoneContentRow{{Sid: "medium_only", Count: 1}}
+	editorState.HighNeutralContentRows = []models.ZoneContentRow{{Sid: "high_only", Count: 1}}
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       zones,

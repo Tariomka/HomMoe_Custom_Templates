@@ -130,24 +130,24 @@ func TestWhenEveryReferenceFieldIsWalked_CloneSharesNoStorageWithTheSource(t *te
 	assertNoSharedStorage(t, reflect.ValueOf(state), reflect.ValueOf(clone), "EditorStateModel")
 }
 
-func contentRowFields() map[string]func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
-	return map[string]func(state *editor_state_model.EditorState) []models.ZoneContentRowSave{
-		"PlayerZoneContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
+func contentRowFields() map[string]func(state *editor_state_model.EditorState) []models.ZoneContentRow {
+	return map[string]func(state *editor_state_model.EditorState) []models.ZoneContentRow{
+		"PlayerZoneContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRow {
 			return state.PlayerZoneContentRows
 		},
-		"LowestNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
+		"LowestNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRow {
 			return state.LowestNeutralContentRows
 		},
-		"LowNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
+		"LowNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRow {
 			return state.LowNeutralContentRows
 		},
-		"MediumNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
+		"MediumNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRow {
 			return state.MediumNeutralContentRows
 		},
-		"HighNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
+		"HighNeutralContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRow {
 			return state.HighNeutralContentRows
 		},
-		"HubZoneContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRowSave {
+		"HubZoneContentRows": func(state *editor_state_model.EditorState) []models.ZoneContentRow {
 			return state.HubZoneContentRows
 		},
 	}
@@ -156,11 +156,11 @@ func contentRowFields() map[string]func(state *editor_state_model.EditorState) [
 // newContentRowState returns a state whose six content-row slices and bonus
 // list each hold one row, with a rule pointer on the player rows.
 func newContentRowState() editor_state_model.EditorState {
-	newRow := func() []models.ZoneContentRowSave {
-		return []models.ZoneContentRowSave{{
+	newRow := func() []models.ZoneContentRow {
+		return []models.ZoneContentRow{{
 			Sid:   gofakeit.LetterN(10),
 			Count: 1,
-			Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: new(true)}},
+			Rules: []models.ContentRuleRow{{Name: "Guarded", IsGuarded: new(true)}},
 		}}
 	}
 

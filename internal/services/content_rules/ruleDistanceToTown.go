@@ -30,21 +30,22 @@ func NewRuleDistanceToTown(distance *models.DistancePreset) *RuleDistanceToTown 
 	return &RuleDistanceToTown{Distance: resolved}
 }
 
-func (this *RuleDistanceToTown) Name() string        { return RuleDistanceToTownName }
+func (this *RuleDistanceToTown) Name() string { return RuleDistanceToTownName }
+
 func (this *RuleDistanceToTown) Description() string { return RuleDistanceToTownDescription }
-func (this *RuleDistanceToTown) Marker() string      { return RuleDistanceToTownMarker }
+
+func (this *RuleDistanceToTown) Marker() string { return RuleDistanceToTownMarker }
 
 func (this *RuleDistanceToTown) DisplayText() string {
 	return fmt.Sprintf("%s: %s", this.Name(), this.Distance.Name)
 }
 
 func (this *RuleDistanceToTown) Apply(item *entities.MandatoryContentItem) {
-	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().
-		BuildCastleRule(this.Distance, 1))
+	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildCastleRule(this.Distance, 1))
 }
 
-func (this *RuleDistanceToTown) SerializeToRowSave() models.ContentRuleRowSave {
-	return models.ContentRuleRowSave{
+func (this *RuleDistanceToTown) SerializeToRowSave() models.ContentRuleRow {
+	return models.ContentRuleRow{
 		Name:         this.Name(),
 		DistanceName: this.Distance.Name,
 	}

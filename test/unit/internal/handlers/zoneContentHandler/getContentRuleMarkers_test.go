@@ -14,10 +14,10 @@ func TestWhenMarkersAreRequested_TheDescribedRulesAreHandedToTheService(t *testi
 	// Arrange
 	fixture := newZoneContentHandlerFixture()
 	content := models.SidMapping{Name: gofakeit.Word()}
-	rules := []models.ContentRuleRowSave{{Name: gofakeit.Word()}, {Name: gofakeit.Sentence(2)}}
+	rules := []models.ContentRuleRow{{Name: gofakeit.Word()}, {Name: gofakeit.Sentence(2)}}
 	fixture.contentRules.DescribeContentRuleFunc = func(
 		_ models.SidMapping,
-		savedRule models.ContentRuleRowSave,
+		savedRule models.ContentRuleRow,
 	) dtos.ContentRuleDescriptionDto {
 		return dtos.ContentRuleDescriptionDto{Marker: savedRule.Name, Valid: true}
 	}

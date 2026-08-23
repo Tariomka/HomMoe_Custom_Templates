@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
@@ -234,7 +234,7 @@ func defaultState() *editor_state_model.EditorState {
 // layout-defining option, which invalidates any hand-made zone layout.
 func layoutChangedState() *editor_state_model.EditorState {
 	state := defaultState()
-	state.Topology = config_inner.TopologyChain
+	state.Topology = config.TopologyChain
 	return state
 }
 

@@ -12,9 +12,9 @@ func TestWhenAContentRuleIsUpserted_ReturnsTheServiceRuleList(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newZoneContentHandlerFixture()
-	rules := []models.ContentRuleRowSave{{Name: gofakeit.Word()}}
-	rule := models.ContentRuleRowSave{Name: gofakeit.Word()}
-	expected := []models.ContentRuleRowSave{{Name: gofakeit.Sentence(2)}}
+	rules := []models.ContentRuleRow{{Name: gofakeit.Word()}}
+	rule := models.ContentRuleRow{Name: gofakeit.Word()}
+	expected := []models.ContentRuleRow{{Name: gofakeit.Sentence(2)}}
 	fixture.contentEditor.On("UpsertContentRule", rules, rule).Return(expected)
 
 	// Act

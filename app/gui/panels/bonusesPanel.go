@@ -17,6 +17,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
@@ -165,16 +166,8 @@ func (this *BonusesPanel) getValueOverridesWidgets(theme *material.Theme) []layo
 
 	for i, line := range this.valueOverrides {
 		name, value := overrideLabel(line)
-		overrideRows = append(
-			overrideRows,
-			this.getEntryRowWidget(
-				theme,
-				themes.ColorsDotCategories.Resource,
-				name,
-				value,
-				&this.overrideRemoveBtns[i],
-			),
-		)
+		overrideRows = append(overrideRows, this.getEntryRowWidget(
+			theme, themes.ColorsDotCategories.Resource, name, value, &this.overrideRemoveBtns[i]))
 	}
 	return overrideRows
 }
@@ -326,7 +319,7 @@ func bonusDisplayName(entry config.BonusEntry) string {
 
 // bonusReceiverLabel is the dim trailing text; hidden for resource bonuses.
 func bonusReceiverLabel(entry config.BonusEntry) string {
-	if entry.PresetType.IsResource() {
+	if config_helpers.IsResource(entry.PresetType) {
 		return ""
 	}
 

@@ -1,10 +1,10 @@
-package contentRuleRowSave_test
+package contentRuleRow_test
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +12,7 @@ import (
 func TestWhenAllFieldsAreEmpty_SerializesToEmptyObject(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := models.ContentRuleRowSave{}
+	rule := editor_state.ContentRuleRow{}
 
 	// Act
 	data, err := json.Marshal(rule)
@@ -25,7 +25,7 @@ func TestWhenAllFieldsAreEmpty_SerializesToEmptyObject(t *testing.T) {
 func TestWhenOnlyNameAndDistanceAreSet_SerializesOnlyThoseFields(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Far"}
+	rule := editor_state.ContentRuleRow{Name: "Distance to road", DistanceName: "Far"}
 
 	// Act
 	data, err := json.Marshal(rule)
@@ -38,7 +38,7 @@ func TestWhenOnlyNameAndDistanceAreSet_SerializesOnlyThoseFields(t *testing.T) {
 func TestWhenPointerFieldIsSetToFalse_StillSerializesField(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := models.ContentRuleRowSave{Name: "Guarded", IsGuarded: new(false)}
+	rule := editor_state.ContentRuleRow{Name: "Guarded", IsGuarded: new(false)}
 
 	// Act
 	data, err := json.Marshal(rule)
@@ -51,7 +51,7 @@ func TestWhenPointerFieldIsSetToFalse_StillSerializesField(t *testing.T) {
 func TestWhenSerializedRuleIsDeserialized_RoundTripsAllFields(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	original := models.ContentRuleRowSave{
+	original := editor_state.ContentRuleRow{
 		Name:            "Variant",
 		DistanceName:    "Near",
 		IsGuarded:       new(true),
@@ -62,7 +62,7 @@ func TestWhenSerializedRuleIsDeserialized_RoundTripsAllFields(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	var roundTripped models.ContentRuleRowSave
+	var roundTripped editor_state.ContentRuleRow
 	require.NoError(t, json.Unmarshal(data, &roundTripped))
 
 	// Assert

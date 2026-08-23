@@ -1,9 +1,10 @@
-package contentRuleRowSave_test
+package contentRuleRow_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/editor_state_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,10 +13,10 @@ import (
 func TestWhenRuleIsCloned_ScalarFieldsAreCopied(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := models.ContentRuleRowSave{Name: gofakeit.LetterN(8), DistanceName: gofakeit.LetterN(6)}
+	rule := editor_state.ContentRuleRow{Name: gofakeit.LetterN(8), DistanceName: gofakeit.LetterN(6)}
 
 	// Act
-	clone := rule.Clone()
+	clone := editor_state_helpers.CloneContentRuleRow(rule)
 
 	// Assert
 	assert.Equal(t, rule, clone)
@@ -24,10 +25,10 @@ func TestWhenRuleIsCloned_ScalarFieldsAreCopied(t *testing.T) {
 func TestWhenPointersAreNil_ClonePointersStayNil(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := models.ContentRuleRowSave{Name: gofakeit.LetterN(8)}
+	rule := editor_state.ContentRuleRow{Name: gofakeit.LetterN(8)}
 
 	// Act
-	clone := rule.Clone()
+	clone := editor_state_helpers.CloneContentRuleRow(rule)
 
 	// Assert
 	assert.Nil(t, clone.IsGuarded)
@@ -36,8 +37,8 @@ func TestWhenPointersAreNil_ClonePointersStayNil(t *testing.T) {
 func TestWhenGuardedPointerIsMutatedOnTheClone_SourceIsUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := models.ContentRuleRowSave{Name: gofakeit.LetterN(8), IsGuarded: new(true)}
-	clone := rule.Clone()
+	rule := editor_state.ContentRuleRow{Name: gofakeit.LetterN(8), IsGuarded: new(true)}
+	clone := editor_state_helpers.CloneContentRuleRow(rule)
 
 	// Act
 	*clone.IsGuarded = false
@@ -50,8 +51,8 @@ func TestWhenGuardedPointerIsMutatedOnTheClone_SourceIsUnchanged(t *testing.T) {
 func TestWhenSoloEncounterPointerIsMutatedOnTheClone_SourceIsUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rule := models.ContentRuleRowSave{Name: gofakeit.LetterN(8), IsSoloEncounter: new(true)}
-	clone := rule.Clone()
+	rule := editor_state.ContentRuleRow{Name: gofakeit.LetterN(8), IsSoloEncounter: new(true)}
+	clone := editor_state_helpers.CloneContentRuleRow(rule)
 
 	// Act
 	*clone.IsSoloEncounter = false
@@ -65,8 +66,8 @@ func TestWhenVariantIdPointerIsMutatedOnTheClone_SourceIsUnchanged(t *testing.T)
 	t.Parallel()
 	// Arrange
 	variantID := gofakeit.IntRange(1, 100)
-	rule := models.ContentRuleRowSave{Name: gofakeit.LetterN(8), VariantID: &variantID}
-	clone := rule.Clone()
+	rule := editor_state.ContentRuleRow{Name: gofakeit.LetterN(8), VariantID: &variantID}
+	clone := editor_state_helpers.CloneContentRuleRow(rule)
 
 	// Act
 	*clone.VariantID = variantID + 1

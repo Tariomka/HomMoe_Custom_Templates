@@ -8,5 +8,5 @@ type ContentRuleDescriptionDto struct {
 	Marker       string
 	VariantLabel string
 	Valid        bool
-	SavedRule    models.ContentRuleRowSave
+	SavedRule    models.ContentRuleRow
 }

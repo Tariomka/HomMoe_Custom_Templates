@@ -82,7 +82,7 @@ func (this *handlerDependenciesStub) GetContentRuleEditorOptions(
 
 func (this *handlerDependenciesStub) DescribeContentRule(
 	models.SidMapping,
-	models.ContentRuleRowSave,
+	models.ContentRuleRow,
 ) dtos.ContentRuleDescriptionDto {
 	return dtos.ContentRuleDescriptionDto{}
 }
@@ -222,21 +222,21 @@ func (this *handlerDependenciesStub) ComposeContentRule(
 }
 
 func (this *handlerDependenciesStub) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave,
-) []models.ContentRuleRowSave {
+	rules []models.ContentRuleRow,
+	rule models.ContentRuleRow,
+) []models.ContentRuleRow {
 	this.contentRuleCalled = true
 	return append(rules, rule)
 }
 
-func (this *handlerDependenciesStub) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRowSave {
+func (this *handlerDependenciesStub) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRow {
 	this.contentRuleCalled = true
 	return nil
 }
 
 func (this *handlerDependenciesStub) GetContentRuleMarkers(
 	models.SidMapping,
-	[]models.ContentRuleRowSave,
+	[]models.ContentRuleRow,
 ) string {
 	this.contentRuleCalled = true
 	return ""
@@ -244,7 +244,7 @@ func (this *handlerDependenciesStub) GetContentRuleMarkers(
 
 func (this *handlerDependenciesStub) GetContentRowDisplayName(
 	content models.SidMapping,
-	_ []models.ContentRuleRowSave,
+	_ []models.ContentRuleRow,
 ) string {
 	this.contentRuleCalled = true
 	return content.Name

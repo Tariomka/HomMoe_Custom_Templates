@@ -18,7 +18,7 @@ func TestWhenGuardedRuleIsSerialized_WritesNameAndTrueState(t *testing.T) {
 	saved := rule.SerializeToRowSave()
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: "Guarded", IsGuarded: &isGuarded}, saved)
+	assert.Equal(t, models.ContentRuleRow{Name: "Guarded", IsGuarded: &isGuarded}, saved)
 }
 
 func TestWhenUnguardedRuleIsSerialized_WritesNameAndFalseState(t *testing.T) {
@@ -31,5 +31,5 @@ func TestWhenUnguardedRuleIsSerialized_WritesNameAndFalseState(t *testing.T) {
 	saved := rule.SerializeToRowSave()
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: "Guarded", IsGuarded: &isGuarded}, saved)
+	assert.Equal(t, models.ContentRuleRow{Name: "Guarded", IsGuarded: &isGuarded}, saved)
 }

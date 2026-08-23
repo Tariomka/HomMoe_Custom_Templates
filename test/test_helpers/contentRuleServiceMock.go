@@ -26,7 +26,7 @@ func (this *ContentRuleServiceMock) ApplyRulesToItem(
 }
 
 func (this *ContentRuleServiceMock) CreateRuleFromSavedRule(
-	saved models.ContentRuleRowSave,
+	saved models.ContentRuleRow,
 	content models.SidMapping) content_rules.IContentRule {
 	arguments := this.Called(saved, content)
 	rule, _ := arguments.Get(0).(content_rules.IContentRule)
@@ -34,7 +34,7 @@ func (this *ContentRuleServiceMock) CreateRuleFromSavedRule(
 }
 
 func (this *ContentRuleServiceMock) RestoreRulesFromRow(
-	row models.ZoneContentRowSave,
+	row models.ZoneContentRow,
 	content models.SidMapping) []content_rules.IContentRule {
 	arguments := this.Called(row, content)
 	rules, _ := arguments.Get(0).([]content_rules.IContentRule)

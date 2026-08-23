@@ -105,7 +105,7 @@ func TestWhenContentRowSliceIsNilVersusEmpty_ReportsNotEqual(t *testing.T) {
 	// Arrange
 	left := fuzzedEditorState()
 	right := deepCloneEditorState(left)
-	right.MediumNeutralContentRows = []models.ZoneContentRowSave{}
+	right.MediumNeutralContentRows = []models.ZoneContentRow{}
 
 	// Act
 	equal := left.EqualsIgnoringManualEdits(&right)
@@ -158,7 +158,7 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 			func(state *editor_state_model.EditorState) { state.Bonuses = nil },
 		},
 		{"RowAppended_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
-			state.HighNeutralContentRows = append(state.HighNeutralContentRows, models.ZoneContentRowSave{Sid: "extra"})
+			state.HighNeutralContentRows = append(state.HighNeutralContentRows, models.ZoneContentRow{Sid: "extra"})
 		}},
 		{
 			"RowCountFieldDiffers_MatchesDeepEqual",
@@ -184,10 +184,10 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 			*state.HighNeutralContentRows[0].Rules[0].VariantID++
 		}},
 		{"RulesNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
-			state.HighNeutralContentRows[1].Rules = []models.ContentRuleRowSave{}
+			state.HighNeutralContentRows[1].Rules = []models.ContentRuleRow{}
 		}},
 		{"RowsNilVersusEmpty_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
-			state.MediumNeutralContentRows = []models.ZoneContentRowSave{}
+			state.MediumNeutralContentRows = []models.ZoneContentRow{}
 		}},
 		{"ManualZonesDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.ManualZones = []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
@@ -317,11 +317,11 @@ func fuzzedEditorState() editor_state_model.EditorState {
 		ReceiverFilter: "start_hero",
 		Param:          gofakeit.DigitN(4),
 	}}
-	state.HighNeutralContentRows = []models.ZoneContentRowSave{
+	state.HighNeutralContentRows = []models.ZoneContentRow{
 		{
 			Sid:   gofakeit.LetterN(12),
 			Count: gofakeit.Number(1, 5),
-			Rules: []models.ContentRuleRowSave{{
+			Rules: []models.ContentRuleRow{{
 				Name:            "Guarded",
 				IsGuarded:       new(gofakeit.Bool()),
 				IsSoloEncounter: new(gofakeit.Bool()),

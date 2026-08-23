@@ -10,10 +10,8 @@ import (
 // catalogue the section presents.
 type IZoneContentEditorService interface {
 	ComposeContentRule(request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto
-	UpsertContentRule(
-		rules []models.ContentRuleRowSave,
-		rule models.ContentRuleRowSave) []models.ContentRuleRowSave
-	GetDefaultContentRules(options dtos.ContentRuleEditorOptionsDto) []models.ContentRuleRowSave
+	UpsertContentRule(rules []models.ContentRuleRow, rule models.ContentRuleRow) []models.ContentRuleRow
+	GetDefaultContentRules(options dtos.ContentRuleEditorOptionsDto) []models.ContentRuleRow
 	GetContentRuleMarkers(descriptions []dtos.ContentRuleDescriptionDto) string
 	GetContentRowDisplayName(name string, descriptions []dtos.ContentRuleDescriptionDto) string
 	SortContentItemsByName(items []models.SidMapping) []models.SidMapping

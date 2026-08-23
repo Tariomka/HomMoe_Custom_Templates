@@ -63,9 +63,7 @@ func (this *GUIHandler) GetVisiblePickerRows(
 	return this.pickerHandler.GetVisiblePickerRows(entries, filter, grouped)
 }
 
-func (this *GUIHandler) GetSelectedPickerIDs(
-	entries []dtos.PickerEntryDto,
-	selected map[string]bool) []string {
+func (this *GUIHandler) GetSelectedPickerIDs(entries []dtos.PickerEntryDto, selected map[string]bool) []string {
 	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
 }
 
@@ -112,8 +110,7 @@ func (this *GUIHandler) DescribeZoneEditorGraph(
 	return this.zoneEditorHandler.DescribeZoneEditorGraph(zones, connections)
 }
 
-func (this *GUIHandler) CreateZoneEditorConnection(
-	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
+func (this *GUIHandler) CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
 	return this.zoneEditorHandler.CreateZoneEditorConnection(request)
 }
 
@@ -137,8 +134,7 @@ func (this *GUIHandler) RemoveZoneEditorZone(request dtos.ZoneEditorRemoveReques
 	return this.zoneEditorHandler.RemoveZoneEditorZone(request)
 }
 
-func (this *GUIHandler) BuildZoneEditorGeometry(
-	request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
+func (this *GUIHandler) BuildZoneEditorGeometry(request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
 	return this.zoneEditorHandler.BuildZoneEditorGeometry(request)
 }
 
@@ -154,8 +150,7 @@ func (this *GUIHandler) GetZoneEditorGridStep(zoneRadius float64) float64 {
 	return this.zoneEditorHandler.GetZoneEditorGridStep(zoneRadius)
 }
 
-func (this *GUIHandler) SnapZoneEditorPosition(
-	request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
+func (this *GUIHandler) SnapZoneEditorPosition(request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
 	return this.zoneEditorHandler.SnapZoneEditorPosition(request)
 }
 
@@ -163,8 +158,7 @@ func (this *GUIHandler) DescribeExistingBonuses(existing []config.BonusEntry) dt
 	return this.bonusHandler.DescribeExistingBonuses(existing)
 }
 
-func (this *GUIHandler) BuildBonusEntries(
-	request dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto {
+func (this *GUIHandler) BuildBonusEntries(request dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto {
 	return this.bonusHandler.BuildBonusEntries(request)
 }
 
@@ -192,7 +186,7 @@ func (this *GUIHandler) GetContentRuleEditorOptions(content models.SidMapping) d
 
 func (this *GUIHandler) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
+	savedRule models.ContentRuleRow) dtos.ContentRuleDescriptionDto {
 	return this.contentRuleHandler.DescribeContentRule(content, savedRule)
 }
 
@@ -202,24 +196,20 @@ func (this *GUIHandler) ComposeContentRule(
 }
 
 func (this *GUIHandler) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave) []models.ContentRuleRowSave {
+	rules []models.ContentRuleRow,
+	rule models.ContentRuleRow) []models.ContentRuleRow {
 	return this.contentRuleHandler.UpsertContentRule(rules, rule)
 }
 
-func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []models.ContentRuleRowSave {
+func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []models.ContentRuleRow {
 	return this.contentRuleHandler.GetDefaultContentRules(content)
 }
 
-func (this *GUIHandler) GetContentRuleMarkers(
-	content models.SidMapping,
-	rules []models.ContentRuleRowSave) string {
+func (this *GUIHandler) GetContentRuleMarkers(content models.SidMapping, rules []models.ContentRuleRow) string {
 	return this.contentRuleHandler.GetContentRuleMarkers(content, rules)
 }
 
-func (this *GUIHandler) GetContentRowDisplayName(
-	content models.SidMapping,
-	rules []models.ContentRuleRowSave) string {
+func (this *GUIHandler) GetContentRowDisplayName(content models.SidMapping, rules []models.ContentRuleRow) string {
 	return this.contentRuleHandler.GetContentRowDisplayName(content, rules)
 }
 

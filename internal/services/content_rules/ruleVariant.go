@@ -49,9 +49,11 @@ func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVarian
 	return &RuleVariant{Mapping: resolved, VariantID: id}, nil
 }
 
-func (this *RuleVariant) Name() string        { return RuleVariantName }
+func (this *RuleVariant) Name() string { return RuleVariantName }
+
 func (this *RuleVariant) Description() string { return RuleVariantDescription }
-func (this *RuleVariant) Marker() string      { return RuleVariantMarker }
+
+func (this *RuleVariant) Marker() string { return RuleVariantMarker }
 
 func (this *RuleVariant) DisplayText() string {
 	if description, ok := this.Mapping.GetVariantByID(this.VariantID); ok {
@@ -66,9 +68,9 @@ func (this *RuleVariant) Apply(item *entities.MandatoryContentItem) {
 	item.Variant = &id
 }
 
-func (this *RuleVariant) SerializeToRowSave() models.ContentRuleRowSave {
+func (this *RuleVariant) SerializeToRowSave() models.ContentRuleRow {
 	id := this.VariantID
-	return models.ContentRuleRowSave{
+	return models.ContentRuleRow{
 		Name:      this.Name(),
 		VariantID: &id,
 	}

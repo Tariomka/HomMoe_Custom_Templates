@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zone_contents"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/editor_state_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -268,22 +269,18 @@ func (this *EditorState) gameRuleScalarsEqual(other *EditorState) bool {
 
 // cloneContentRows deep-copies a content-row slice, preserving a nil slice as
 // nil because the change detection distinguishes nil from empty.
-func cloneContentRows(rows []models.ZoneContentRowSave) []models.ZoneContentRowSave {
-	clone := slices.Clone(rows)
-	for rowIndex := range clone {
-		clone[rowIndex] = clone[rowIndex].Clone()
-	}
-	return clone
+func cloneContentRows(rows []models.ZoneContentRow) []models.ZoneContentRow {
+	return editor_state_helpers.CloneZoneContentRows(rows)
 }
 
-func contentRowSlicesEqual(left, right []models.ZoneContentRowSave) bool {
+func contentRowSlicesEqual(left, right []models.ZoneContentRow) bool {
 	return (left == nil) == (right == nil) && slices.EqualFunc(left, right, contentRowsEqual)
 }
 
 // contentRowsEqual compares the scalar row fields and the rules element-wise.
-// New ZoneContentRowSave fields must be added here; the fuzz-parity test on
+// New ZoneContentRow fields must be added here; the fuzz-parity test on
 // EqualsIgnoringManualEdits guards against drift.
-func contentRowsEqual(left, right models.ZoneContentRowSave) bool {
+func contentRowsEqual(left, right models.ZoneContentRow) bool {
 	return left.Sid == right.Sid &&
 		left.Count == right.Count &&
 		left.IsGroup == right.IsGroup &&
@@ -294,7 +291,7 @@ func contentRowsEqual(left, right models.ZoneContentRowSave) bool {
 
 // contentRulesEqual compares two content rules; the pointer fields compare by
 // pointed-to value, matching [reflect.DeepEqual].
-func contentRulesEqual(left, right models.ContentRuleRowSave) bool {
+func contentRulesEqual(left, right models.ContentRuleRow) bool {
 	leftScalars := left
 	rightScalars := right
 	leftScalars.IsGuarded, rightScalars.IsGuarded = nil, nil
@@ -312,5 +309,6 @@ func pointedValuesEqual[Value comparable](left, right *Value) bool {
 	if left == nil || right == nil {
 		return left == right
 	}
+
 	return *left == *right
 }

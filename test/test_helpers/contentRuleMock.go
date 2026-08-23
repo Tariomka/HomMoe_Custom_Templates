@@ -32,9 +32,9 @@ func (this *ContentRuleMock) DisplayText() string {
 	return arguments.String(0)
 }
 
-func (this *ContentRuleMock) SerializeToRowSave() models.ContentRuleRowSave {
+func (this *ContentRuleMock) SerializeToRowSave() models.ContentRuleRow {
 	arguments := this.Called()
-	row, _ := arguments.Get(0).(models.ContentRuleRowSave)
+	row, _ := arguments.Get(0).(models.ContentRuleRow)
 	return row
 }
 

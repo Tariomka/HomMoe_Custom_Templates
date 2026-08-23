@@ -25,6 +25,7 @@ func (this VariantMapping) GetVariantByID(id int) (string, bool) {
 			return tuple.Value, true
 		}
 	}
+
 	return "", false
 }
 
@@ -51,6 +52,4 @@ func (this VariantMapping) DisplayText() string {
 }
 
 // String implements [fmt.Stringer] so a VariantMapping renders as its display text.
-func (this VariantMapping) String() string {
-	return this.DisplayText()
-}
+func (this VariantMapping) String() string { return this.DisplayText() }

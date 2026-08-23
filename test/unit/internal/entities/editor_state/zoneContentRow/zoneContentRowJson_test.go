@@ -1,10 +1,10 @@
-package zoneContentRowSave_test
+package zoneContentRow_test
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,10 +12,10 @@ import (
 func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	original := models.ZoneContentRowSave{
+	original := editor_state.ZoneContentRow{
 		Sid:   "dragon_utopia",
 		Count: 2,
-		Rules: []models.ContentRuleRowSave{
+		Rules: []editor_state.ContentRuleRow{
 			{Name: "Guarded", IsGuarded: new(true)},
 			{Name: "Distance to road", DistanceName: "Far"},
 			{Name: "Variant", VariantID: new(1)},
@@ -25,7 +25,7 @@ func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
 	require.NoError(t, err)
 
 	// Act
-	var roundTripped models.ZoneContentRowSave
+	var roundTripped editor_state.ZoneContentRow
 	require.NoError(t, json.Unmarshal(data, &roundTripped))
 
 	// Assert
@@ -35,10 +35,10 @@ func TestWhenRowWithRulesIsSerialized_RoundTripsRules(t *testing.T) {
 func TestWhenRowIsSerialized_UsesRulesFormatWithoutLegacyFlatFields(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	row := models.ZoneContentRowSave{
+	row := editor_state.ZoneContentRow{
 		Sid:   "x",
 		Count: 1,
-		Rules: []models.ContentRuleRowSave{{Name: "Guarded", IsGuarded: new(true)}},
+		Rules: []editor_state.ContentRuleRow{{Name: "Guarded", IsGuarded: new(true)}},
 	}
 
 	// Act
