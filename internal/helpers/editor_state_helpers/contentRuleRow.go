@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 )
 
-// CloneContentRuleRow deep-clones a ror.
+// CloneContentRuleRow deep-clones a rule row.
 func CloneContentRuleRow(rule editor_state.ContentRuleRow) editor_state.ContentRuleRow {
 	clone := rule
 	clone.IsGuarded = helpers.ClonePointer(rule.IsGuarded)
