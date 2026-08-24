@@ -58,21 +58,19 @@ func (this *atomicFileWriter) WriteJSON(
 	directory, fileName, extension string,
 	value any) (string, error) {
 	return this.Write(directory, fileName, extension, func(file *os.File) error {
-		// The v1 option set is deliberate: it pins the on-disk format the game and the
-		// saved templates already use. Dropping it changes what gets written - v2 keeps
-		// `omitempty` fields holding false or 0, writes a nil slice as [] rather than
-		// null, and leaves map keys unordered.
-		return json.MarshalWrite(file, value, jsonV1.DefaultOptionsV1(), jsontext.WithIndent(jsonIndent))
+		return json.MarshalWrite(
+			file, value,
+			jsontext.WithIndent(jsonIndent),
+			jsonV1.OmitEmptyWithLegacySemantics(true),
+			json.FormatNilSliceAsNull(true),
+			json.FormatNilMapAsNull(true))
 	})
 }
 
 func (this *atomicFileWriter) encodeToTemporaryFile(
 	temporaryPath string,
 	encode func(file *os.File) error) (err error) {
-	file, err := os.OpenFile(
-		temporaryPath,
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-		constants.FilePermission)
+	file, err := os.OpenFile(temporaryPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, constants.FilePermission)
 	if err != nil {
 		return err
 	}
@@ -105,15 +103,12 @@ func (this *atomicFileWriter) commit(temporaryPath, destinationPath string) erro
 			time.Sleep(renameRetryDelay)
 		}
 	}
-
 	return fmt.Errorf("could not replace %s: %w", destinationPath, err)
 }
 
 // discard drops the temporary file; the destination still holds the previous
 // valid contents, so losing the half-written copy is the correct outcome.
-func (this *atomicFileWriter) discard(temporaryPath string) {
-	_ = os.Remove(temporaryPath)
-}
+func (this *atomicFileWriter) discard(temporaryPath string) { _ = os.Remove(temporaryPath) }
 
 func (this *atomicFileWriter) resolveFileName(fileName string) string {
 	safeName := helpers.SanitizeFilename(fileName)
