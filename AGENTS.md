@@ -259,6 +259,7 @@ any file you *do* touch must leave the repo in conformance.
   descriptive names (`zoneIndex`, `playerCount`, `templatePath`).
 - **Allowed exceptions** — only the well-established Go idioms:
   - `i`, `j` for loop indices only, but if a single for loop, better use `index`
+  - `x` in simple `linq.Select` queries (single returns with no closures, example `return x.Label`)
   - `err` for errors
   - `ok` for the comma-ok idiom
   - `ctx` for `context.Context`
