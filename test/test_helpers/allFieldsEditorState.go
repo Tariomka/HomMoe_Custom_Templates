@@ -11,7 +11,7 @@ import (
 
 // NewAllFieldsEditorStateEntity is the all-fields model in its persisted shape,
 // which is what the frozen .gen.json fixtures are written from and compared to.
-func NewAllFieldsEditorStateEntity() editor_state.EditorStateEntity {
+func NewAllFieldsEditorStateEntity() editor_state.EditorState {
 	return mappers.NewEditorStateEntityMapper().ToEntity(NewAllFieldsEditorStateModel())
 }
 
@@ -25,6 +25,8 @@ func NewAllFieldsEditorStateEntity() editor_state.EditorStateEntity {
 //nolint:funlen // one assignment per persisted field; splitting it would hide the 1:1 field coverage this fixture exists to guarantee.
 func NewAllFieldsEditorStateModel() editor_state_model.EditorState {
 	return editor_state_model.EditorState{
+		SchemaVersion: editor_state.CurrentEditorStateSchemaVersion,
+
 		TemplateName: "All Fields Fixture",
 		GameMode:     "SingleHero",
 

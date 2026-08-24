@@ -223,11 +223,14 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 func TestWhenAnyNonManualFieldIsMutated_ReportsNotEqual(t *testing.T) {
 	t.Parallel()
 	ignoredLeaves := map[string]bool{
+		// Persistence metadata, not a setting: every in-memory state is at the
+		// current version because the mapper stamps it on the way through.
+		"SchemaVersion":                        true,
 		"ManualEditSettings.ManualZones":       true,
 		"ManualEditSettings.ManualConnections": true,
 	}
 	for _, leaf := range modelLeafFields() {
-		t.Run(leaf.path+"Mutated_ReportsNotEqual", func(t *testing.T) {
+		t.Run(settingPath(leaf)+"Mutated_ReportsNotEqual", func(t *testing.T) {
 			t.Parallel()
 			// Arrange
 			left := fuzzedEditorState()
@@ -238,7 +241,7 @@ func TestWhenAnyNonManualFieldIsMutated_ReportsNotEqual(t *testing.T) {
 			equal := left.EqualsIgnoringManualEdits(&right)
 
 			// Assert
-			assert.Equal(t, ignoredLeaves[leaf.path], equal)
+			assert.Equal(t, ignoredLeaves[settingPath(leaf)], equal)
 		})
 	}
 }
@@ -251,6 +254,7 @@ func TestWhenTheLeafWalkIsBuilt_ReachesEveryFieldOfEveryGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedFieldsPerGroup := map[string]int{
+		"SchemaVersion":       1,
 		"TemplateIdentity":    2,
 		"MapSettings":         2,
 		"PlayerSettings":      4,
@@ -265,7 +269,7 @@ func TestWhenTheLeafWalkIsBuilt_ReachesEveryFieldOfEveryGroup(t *testing.T) {
 	// Act
 	fieldsPerGroup := map[string]int{}
 	for _, leaf := range modelLeafFields() {
-		groupName, _, _ := strings.Cut(leaf.path, ".")
+		groupName, _, _ := strings.Cut(settingPath(leaf), ".")
 		fieldsPerGroup[groupName]++
 	}
 
@@ -278,6 +282,14 @@ func TestWhenTheLeafWalkIsBuilt_ReachesEveryFieldOfEveryGroup(t *testing.T) {
 type leafField struct {
 	path    string
 	indexes []int
+}
+
+// modelEmbedPrefix is the model's own embed of the persisted entity. Stripping
+// it keeps every path below named after the settings group that declares it.
+const modelEmbedPrefix = "EditorState."
+
+func settingPath(leaf leafField) string {
+	return strings.TrimPrefix(leaf.path, modelEmbedPrefix)
 }
 
 // modelLeafFields lists every field of every embedded entity group, as

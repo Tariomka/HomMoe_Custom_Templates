@@ -4,7 +4,9 @@ import (
 	"image"
 	"path/filepath"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 )
@@ -12,30 +14,33 @@ import (
 // FileService decides where and under what name persisted files go; the
 // repositories own the encoding, the extension and the atomic replacement.
 type FileService struct {
-	editorStateRepository repositories.IFileRepository[editor_state_model.EditorState]
-	templateRepository    repositories.IFileRepository[entities.RmgTemplate]
+	editorStateRepository repositories.IFileRepository[editor_state.EditorState]
+	templateRepository    repositories.IFileRepository[template.RmgTemplate]
 	previewRepository     repositories.IFileRepository[image.RGBA]
+	editorStateMapper     mappers.IEditorStateEntityMapper
 }
 
 func NewFileService(
-	editorStateRepository repositories.IFileRepository[editor_state_model.EditorState],
-	templateRepository repositories.IFileRepository[entities.RmgTemplate],
-	previewRepository repositories.IFileRepository[image.RGBA]) IFileService {
+	editorStateRepository repositories.IFileRepository[editor_state.EditorState],
+	templateRepository repositories.IFileRepository[template.RmgTemplate],
+	previewRepository repositories.IFileRepository[image.RGBA],
+	editorStateMapper mappers.IEditorStateEntityMapper) IFileService {
 	return &FileService{
 		editorStateRepository: editorStateRepository,
 		templateRepository:    templateRepository,
 		previewRepository:     previewRepository,
+		editorStateMapper:     editorStateMapper,
 	}
 }
 
 // LoadSettingsFile reads settings file from the given filepath and returns the parsed settings object.
 func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, error) {
-	editorState, err := this.editorStateRepository.Load(filePath)
-	if err != nil {
+	entity := this.editorStateMapper.NewDefaultEntity()
+	if err := this.editorStateRepository.Load(filePath, &entity); err != nil {
 		return nil, err
 	}
 
-	return &editorState, nil
+	return new(this.editorStateMapper.ToModel(entity)), nil
 }
 
 // SaveSettings writes the editor state next to filePath, named after the
@@ -43,10 +48,8 @@ func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_model.
 func (this *FileService) SaveSettings(
 	filePath string,
 	editorState *editor_state_model.EditorState) (string, error) {
-	return this.editorStateRepository.Save(
-		filepath.Dir(filePath),
-		editorState.TemplateName,
-		*editorState)
+	entity := this.editorStateMapper.ToEntity(*editorState)
+	return this.editorStateRepository.Save(filepath.Dir(filePath), editorState.TemplateName, entity)
 }
 
 // SaveTemplateWithPreview writes the template and, when previewImage is not
@@ -54,7 +57,7 @@ func (this *FileService) SaveSettings(
 // caller can report the partial success.
 func (this *FileService) SaveTemplateWithPreview(
 	directory string,
-	template *entities.RmgTemplate,
+	template *template.RmgTemplate,
 	previewImage *image.RGBA) (string, error) {
 	templatePath, err := this.templateRepository.Save(directory, template.Name, *template)
 	if err != nil {

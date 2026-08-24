@@ -6,39 +6,29 @@ import (
 )
 
 // EditorStateEntityMapper converts between the persisted editor state and the
-// runtime one. Both carry the same nine field groups, so the conversion is a
-// regrouping rather than a copy: the slices inside are shared with the argument.
+// runtime one. The model embeds the entity, so the conversion carries the whole
+// group set across in one assignment and only the schema version needs deciding.
 type EditorStateEntityMapper struct{}
 
 func NewEditorStateEntityMapper() IEditorStateEntityMapper {
 	return &EditorStateEntityMapper{}
 }
 
-func (this *EditorStateEntityMapper) ToEntity(state editor_state_model.EditorState) editor_state.EditorStateEntity {
-	return editor_state.EditorStateEntity{
-		SchemaVersion:       editor_state.CurrentEditorStateSchemaVersion,
-		TemplateIdentity:    state.TemplateIdentity,
-		MapSettings:         state.MapSettings,
-		PlayerSettings:      state.PlayerSettings,
-		NeutralZoneSettings: state.NeutralZoneSettings,
-		CastleSettings:      state.CastleSettings,
-		GenerationSettings:  state.GenerationSettings,
-		GameRuleSettings:    state.GameRuleSettings,
-		ContentSettings:     state.ContentSettings,
-		ManualEditSettings:  state.ManualEditSettings,
-	}
+// NewDefaultEntity is the seed a load decodes over: a key the file omits keeps
+// the default instead of collapsing to a zero value. A zero-seeded decode
+// cannot tell an absent key from an explicit false or 0, so the seed has to be
+// in place before the file is read.
+func (this *EditorStateEntityMapper) NewDefaultEntity() editor_state.EditorState {
+	return this.ToEntity(editor_state_model.NewDefaultEditorStateModel())
 }
 
-func (this *EditorStateEntityMapper) ToModel(entity editor_state.EditorStateEntity) editor_state_model.EditorState {
-	return editor_state_model.EditorState{
-		TemplateIdentity:    entity.TemplateIdentity,
-		MapSettings:         entity.MapSettings,
-		PlayerSettings:      entity.PlayerSettings,
-		NeutralZoneSettings: entity.NeutralZoneSettings,
-		CastleSettings:      entity.CastleSettings,
-		GenerationSettings:  entity.GenerationSettings,
-		GameRuleSettings:    entity.GameRuleSettings,
-		ContentSettings:     entity.ContentSettings,
-		ManualEditSettings:  entity.ManualEditSettings,
-	}
+func (this *EditorStateEntityMapper) ToEntity(state editor_state_model.EditorState) editor_state.EditorState {
+	entity := state.EditorState
+	entity.SchemaVersion = editor_state.CurrentEditorStateSchemaVersion
+	return entity
+}
+
+func (this *EditorStateEntityMapper) ToModel(entity editor_state.EditorState) editor_state_model.EditorState {
+	entity.SchemaVersion = editor_state.CurrentEditorStateSchemaVersion
+	return editor_state_model.EditorState{EditorState: entity}
 }

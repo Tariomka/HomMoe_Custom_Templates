@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,8 +18,7 @@ func TestWhenStateIsSaved_ReturnsPathWithGenJsonExtension(t *testing.T) {
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := newRepository().Save(
-		outputDir, "My_State", editor_state_model.NewDefaultEditorStateModel())
+	writtenPath, err := newRepository().Save(outputDir, "My_State", editor_state.EditorState{})
 
 	// Assert
 	require.NoError(t, err)
@@ -30,8 +29,7 @@ func TestWhenStateIsSaved_WritesIndentedJson(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
-	writtenPath, err := newRepository().Save(
-		outputDir, "State", editor_state_model.NewDefaultEditorStateModel())
+	writtenPath, err := newRepository().Save(outputDir, "State", editor_state.EditorState{})
 	require.NoError(t, err)
 
 	// Act
@@ -48,8 +46,7 @@ func TestWhenStateNameContainsInvalidCharacters_WritesUnderASanitizedName(t *tes
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := newRepository().Save(
-		outputDir, "a/b:c", editor_state_model.NewDefaultEditorStateModel())
+	writtenPath, err := newRepository().Save(outputDir, "a/b:c", editor_state.EditorState{})
 
 	// Assert
 	require.NoError(t, err)
@@ -62,8 +59,7 @@ func TestWhenStateNameIsOnlyWhitespace_FallsBackToGeneratedTemplateFileName(t *t
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := newRepository().Save(
-		outputDir, "   ", editor_state_model.NewDefaultEditorStateModel())
+	writtenPath, err := newRepository().Save(outputDir, "   ", editor_state.EditorState{})
 
 	// Assert
 	require.NoError(t, err)
@@ -76,8 +72,7 @@ func TestWhenStateDirectoryIsMissing_CreatesIt(t *testing.T) {
 	outputDir := filepath.Join(t.TempDir(), "nested", "state")
 
 	// Act
-	_, err := newRepository().
-		Save(outputDir, "State", editor_state_model.NewDefaultEditorStateModel())
+	_, err := newRepository().Save(outputDir, "State", editor_state.EditorState{})
 
 	// Assert
 	require.NoError(t, err)
@@ -88,14 +83,17 @@ func TestWhenSavedStateIsLoaded_RoundTripsState(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	repository := newRepository()
-	state := editor_state_model.NewDefaultEditorStateModel()
-	state.TemplateName = gofakeit.ProductName()
-	state.PlayerCount = gofakeit.Number(2, 8)
+	state := editor_state.EditorState{
+		SchemaVersion: editor_state.CurrentEditorStateSchemaVersion,
+		TemplateName:  gofakeit.ProductName(),
+		PlayerCount:   gofakeit.Number(2, 8),
+	}
 	writtenPath, err := repository.Save(t.TempDir(), "State", state)
 	require.NoError(t, err)
+	loaded := editor_state.EditorState{}
 
 	// Act
-	loaded, loadErr := repository.Load(writtenPath)
+	loadErr := repository.Load(writtenPath, &loaded)
 
 	// Assert
 	require.NoError(t, loadErr)
@@ -152,16 +150,12 @@ func TestWhenStateParentPathIsAFile_ReturnsError(t *testing.T) {
 	outputDir := filepath.Join(blockerPath, "child")
 
 	// Act
-	_, err := newRepository().
-		Save(outputDir, "State", editor_state_model.NewDefaultEditorStateModel())
+	_, err := newRepository().Save(outputDir, "State", editor_state.EditorState{})
 
 	// Assert
 	assert.Error(t, err)
 }
 
-func newStateWithNaN() editor_state_model.EditorState {
-	state := editor_state_model.NewDefaultEditorStateModel()
-	state.PlayerZoneSize = math.NaN()
-
-	return state
+func newStateWithNaN() editor_state.EditorState {
+	return editor_state.EditorState{PlayerZoneSize: math.NaN()}
 }

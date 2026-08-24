@@ -16,21 +16,14 @@ import (
 // anonymously so every field stays directly selectable and encoding/json keeps
 // emitting them as one flat object.
 type EditorState struct {
-	editor_state.TemplateIdentity
-	editor_state.MapSettings
-	editor_state.PlayerSettings
-	editor_state.NeutralZoneSettings
-	editor_state.CastleSettings
-	editor_state.GenerationSettings
-	editor_state.GameRuleSettings
-	editor_state.ContentSettings
-	editor_state.ManualEditSettings
+	editor_state.EditorState
 }
 
 func NewDefaultEditorStateModel() EditorState {
 	winConditions := registry.GetWinningConditionValues()
 	gameModes := registry.GetGameModeValues()
 	return EditorState{
+		SchemaVersion:                editor_state.CurrentEditorStateSchemaVersion,
 		TemplateName:                 "Custom Template",
 		GameMode:                     gameModes.Classic,
 		MapSize:                      160,
@@ -82,12 +75,12 @@ func (this *EditorState) Clone() EditorState {
 	clone := *this
 
 	clone.Bonuses = slices.Clone(this.Bonuses)
-	clone.PlayerZoneContentRows = cloneContentRows(this.PlayerZoneContentRows)
-	clone.LowestNeutralContentRows = cloneContentRows(this.LowestNeutralContentRows)
-	clone.LowNeutralContentRows = cloneContentRows(this.LowNeutralContentRows)
-	clone.MediumNeutralContentRows = cloneContentRows(this.MediumNeutralContentRows)
-	clone.HighNeutralContentRows = cloneContentRows(this.HighNeutralContentRows)
-	clone.HubZoneContentRows = cloneContentRows(this.HubZoneContentRows)
+	clone.PlayerZoneContentRows = editor_state_helpers.CloneZoneContentRows(this.PlayerZoneContentRows)
+	clone.LowestNeutralContentRows = editor_state_helpers.CloneZoneContentRows(this.LowestNeutralContentRows)
+	clone.LowNeutralContentRows = editor_state_helpers.CloneZoneContentRows(this.LowNeutralContentRows)
+	clone.MediumNeutralContentRows = editor_state_helpers.CloneZoneContentRows(this.MediumNeutralContentRows)
+	clone.HighNeutralContentRows = editor_state_helpers.CloneZoneContentRows(this.HighNeutralContentRows)
+	clone.HubZoneContentRows = editor_state_helpers.CloneZoneContentRows(this.HubZoneContentRows)
 
 	clone.ManualZones = slices.Clone(this.ManualZones)
 	for zoneIndex := range clone.ManualZones {
@@ -265,12 +258,6 @@ func (this *EditorState) gameRuleScalarsEqual(other *EditorState) bool {
 		this.BannedItems == other.BannedItems &&
 		this.BannedMagics == other.BannedMagics &&
 		this.ValueOverridesText == other.ValueOverridesText
-}
-
-// cloneContentRows deep-copies a content-row slice, preserving a nil slice as
-// nil because the change detection distinguishes nil from empty.
-func cloneContentRows(rows []models.ZoneContentRow) []models.ZoneContentRow {
-	return editor_state_helpers.CloneZoneContentRows(rows)
 }
 
 func contentRowSlicesEqual(left, right []models.ZoneContentRow) bool {

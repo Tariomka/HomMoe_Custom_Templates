@@ -2,7 +2,7 @@ package config_helpers
 
 import (
 	"crypto/sha256"
-	"encoding/json"
+	"encoding/json/v2"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 )

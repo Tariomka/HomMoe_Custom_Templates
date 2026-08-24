@@ -17,14 +17,15 @@ func TestWhenSettingsAreSaved_UsesTheDirectoryOfTheGivenPath(t *testing.T) {
 	outputDirectory := filepath.Join("out", "states")
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.TemplateName = "My Template"
-	mocks.editorState.On("Save", outputDirectory, "My Template", state).Return("written", nil)
+	saved := mocks.mapper.ToEntity(state)
+	mocks.editorState.On("Save", outputDirectory, "My Template", saved).Return("written", nil)
 
 	// Act
 	_, err := service.SaveSettings(filepath.Join(outputDirectory, "ignored.gen.json"), &state)
 
 	// Assert
 	require.NoError(t, err)
-	mocks.editorState.AssertCalled(t, "Save", outputDirectory, "My Template", state)
+	mocks.editorState.AssertCalled(t, "Save", outputDirectory, "My Template", saved)
 }
 
 func TestWhenStateTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository(t *testing.T) {
@@ -33,14 +34,15 @@ func TestWhenStateTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository
 	service, mocks := newServiceWithMocks()
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.TemplateName = "a/b:c"
-	mocks.editorState.On("Save", ".", "a/b:c", state).Return("written", nil)
+	saved := mocks.mapper.ToEntity(state)
+	mocks.editorState.On("Save", ".", "a/b:c", saved).Return("written", nil)
 
 	// Act
 	_, err := service.SaveSettings("ignored.gen.json", &state)
 
 	// Assert
 	require.NoError(t, err)
-	mocks.editorState.AssertCalled(t, "Save", ".", "a/b:c", state)
+	mocks.editorState.AssertCalled(t, "Save", ".", "a/b:c", saved)
 }
 
 func TestWhenSettingsAreSaved_ReturnsThePathTheRepositoryWrote(t *testing.T) {
@@ -50,7 +52,7 @@ func TestWhenSettingsAreSaved_ReturnsThePathTheRepositoryWrote(t *testing.T) {
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.TemplateName = "Name"
 	expectedPath := filepath.Join("out", "Name.gen.json")
-	mocks.editorState.On("Save", "out", "Name", state).
+	mocks.editorState.On("Save", "out", "Name", mocks.mapper.ToEntity(state)).
 		Return(expectedPath, nil)
 
 	// Act
@@ -68,7 +70,7 @@ func TestWhenSettingsCannotBeSaved_ReturnsError(t *testing.T) {
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.TemplateName = "Name"
 	expectedError := errors.New("disk full")
-	mocks.editorState.On("Save", "out", "Name", state).
+	mocks.editorState.On("Save", "out", "Name", mocks.mapper.ToEntity(state)).
 		Return("", expectedError)
 
 	// Act

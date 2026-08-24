@@ -1,7 +1,9 @@
 package repositories
 
 import (
-	"encoding/json"
+	jsonV1 "encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,6 +18,7 @@ const (
 	defaultName         = "Generated_Template"
 	renameAttempts      = 5
 	renameRetryDelay    = 20 * time.Millisecond
+	jsonIndent          = "  "
 )
 
 type atomicFileWriter struct{}
@@ -59,13 +62,11 @@ func (this *atomicFileWriter) WriteJSON(
 	extension string,
 	value any) (string, error) {
 	return this.Write(directory, fileName, extension, func(file *os.File) error {
-		data, err := json.MarshalIndent(value, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		_, err = file.Write(data)
-		return err
+		// The v1 option set is deliberate: it pins the on-disk format the game and the
+		// saved templates already use. Dropping it changes what gets written - v2 keeps
+		// `omitempty` fields holding false or 0, writes a nil slice as [] rather than
+		// null, and leaves map keys unordered.
+		return json.MarshalWrite(file, value, jsonV1.DefaultOptionsV1(), jsontext.WithIndent(jsonIndent))
 	})
 }
 

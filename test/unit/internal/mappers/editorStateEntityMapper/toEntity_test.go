@@ -31,7 +31,6 @@ func TestWhenAStateIsMappedToTheEntity_EveryPersistedFieldIsCarried(t *testing.T
 	entityJSON, marshalErr := json.Marshal(entity)
 	require.NoError(t, marshalErr)
 	require.NoError(t, json.Unmarshal(entityJSON, &actual))
-	delete(actual, "schemaVersion")
 	assert.Equal(t, expected, actual)
 }
 

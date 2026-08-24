@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,14 +25,31 @@ func TestWhenTheLegacyStateFixtureIsLoaded_EveryPersistedFieldKeepsItsValue(t *t
 	t.Parallel()
 	// Arrange
 	data := readEditorStateFixture(t, "editorState_v0_flat.gen.json")
-	var loaded editor_state.EditorStateEntity
+	var loaded editor_state.EditorState
+	// The legacy file predates the version key, so it decodes at 0; the mapper
+	// is what lands it at the current version.
+	expected := test_helpers.NewAllFieldsEditorStateEntity()
+	expected.SchemaVersion = 0
 
 	// Act
 	err := json.Unmarshal(data, &loaded)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, test_helpers.NewAllFieldsEditorStateEntity(), loaded)
+	assert.Equal(t, expected, loaded)
+}
+
+func TestWhenTheLegacyStateFixtureIsMappedToAState_ItLandsAtTheCurrentSchemaVersion(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	var loaded editor_state.EditorState
+	require.NoError(t, json.Unmarshal(readEditorStateFixture(t, "editorState_v0_flat.gen.json"), &loaded))
+
+	// Act
+	state := mappers.NewEditorStateEntityMapper().ToModel(loaded)
+
+	// Assert
+	assert.Equal(t, editor_state.CurrentEditorStateSchemaVersion, state.SchemaVersion)
 }
 
 func TestWhenTheLegacyStateFixtureIsParsed_ItCarriesEveryPersistedKey(t *testing.T) {
@@ -56,7 +74,7 @@ func TestWhenTheCurrentStateFixtureIsLoaded_EveryPersistedFieldKeepsItsValue(t *
 	t.Parallel()
 	// Arrange
 	data := readEditorStateFixture(t, "editorState_v1_flat.gen.json")
-	var loaded editor_state.EditorStateEntity
+	var loaded editor_state.EditorState
 
 	// Act
 	err := json.Unmarshal(data, &loaded)

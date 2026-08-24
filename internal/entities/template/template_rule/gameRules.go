@@ -1,6 +1,9 @@
 package template_rule
 
-import "encoding/json"
+import (
+	"encoding/json/jsontext"
+	"encoding/json/v2"
+)
 
 // GameRules describes the gameplay rules for the template.
 //
@@ -34,25 +37,32 @@ type GameRules struct {
 	AstrologyExpModifier   float64 `json:"astrologyExpModifier,omitempty"`
 }
 
-// UnmarshalJSON allows GameRules to also decode templates where the WinConditions
+// UnmarshalJSONFrom allows GameRules to also decode templates where the WinConditions
 // fields appear flat inside `gameRules` (alongside `bonuses`, `encounterHoles`,
 // etc.) instead of being nested under `winConditions`. Notable example: the
 // "Zookeeper" template. The nested `winConditions` block, when present, still
 // takes precedence; flat sibling fields only fill values that the nested form
 // omitted.
-func (this *GameRules) UnmarshalJSON(data []byte) error {
+func (this *GameRules) UnmarshalJSONFrom(decoder *jsontext.Decoder) error {
+	// The object is read once and decoded twice, so it has to be buffered.
+	value, err := decoder.ReadValue()
+	if err != nil {
+		return err
+	}
+
 	// Decode the standard GameRules layout (including any nested winConditions).
 	type alias GameRules
-	if err := json.Unmarshal(data, (*alias)(this)); err != nil {
+	if err = json.Unmarshal(value, (*alias)(this)); err != nil {
 		return err
 	}
 
 	// Also try to populate WinConditions from the same JSON object treated as a
 	// flat WinConditions blob (Zookeeper-style flat templates).
 	var flat WinConditions
-	err := json.Unmarshal(data, &flat) // flat decode failure is non-fatal - the regular decode already succeeded.
+	err = json.Unmarshal(value, &flat) // flat decode failure is non-fatal - the regular decode already succeeded.
 	if err == nil {
 		this.WinConditions.MergeWinConditionsIfDoesNotExist(flat)
 	}
+
 	return nil
 }
