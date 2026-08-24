@@ -1,18 +1,18 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
-// NewAllFieldsEditorStateDto wraps the all-fields model in the persistence
-// shell, which is what the frozen .gen.json fixture is written from.
-func NewAllFieldsEditorStateDto() editor_state_dto.EditorStateDto {
-	return editor_state_dto.NewEditorStateDto(NewAllFieldsEditorStateModel())
+// NewAllFieldsEditorStateEntity is the all-fields model in its persisted shape,
+// which is what the frozen .gen.json fixtures are written from and compared to.
+func NewAllFieldsEditorStateEntity() editor_state.EditorStateEntity {
+	return mappers.NewEditorStateEntityMapper().ToEntity(NewAllFieldsEditorStateModel())
 }
 
 // NewAllFieldsEditorStateModel builds an editor state in which every persisted

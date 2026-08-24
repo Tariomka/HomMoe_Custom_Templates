@@ -73,6 +73,7 @@ var InfrastructureSet = wire.NewSet(
 	repositories.NewTemplateRepository,
 	file_service.NewFileService,
 	mappers.NewConfigMapper,
+	mappers.NewEditorStateEntityMapper,
 	mappers.NewMandatoryContentItemMapper,
 	validators.NewEditorStateValidator,
 )

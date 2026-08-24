@@ -6,7 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 )
 
-// CloneContentRuleRow returns a copy that shares no pointer with the original.
+// CloneContentRuleRow deep-clones a ror.
 func CloneContentRuleRow(rule editor_state.ContentRuleRow) editor_state.ContentRuleRow {
 	clone := rule
 	clone.IsGuarded = helpers.ClonePointer(rule.IsGuarded)
@@ -15,10 +15,7 @@ func CloneContentRuleRow(rule editor_state.ContentRuleRow) editor_state.ContentR
 	return clone
 }
 
-// CloneContentRuleRows deep-clones a rule slice. A nil slice stays nil, because
-// the editor-state change detection distinguishes nil from empty.
+// CloneContentRuleRows deep-clones a rule slice.
 func CloneContentRuleRows(rules []editor_state.ContentRuleRow) []editor_state.ContentRuleRow {
-	return linq.FromSlice(rules).
-		Select(func(rule editor_state.ContentRuleRow) editor_state.ContentRuleRow { return CloneContentRuleRow(rule) }).
-		ToSlice()
+	return linq.FromSlice(rules).Select(CloneContentRuleRow).ToSlice()
 }

@@ -1338,38 +1338,38 @@ bound this diff; retiring them is its own batch.
 
 ## Phase 9: Make the persisted shape an Entity (carries Phase 5 forward)
 
-Status: Not started
+Status: Complete
 
 Every item of the superseded Phase 5 is still wanted; it moves onto the Entity.
 Hazards 2, 3, 8 and 9 apply here unchanged.
 
-- [ ] Add `internal/entities/editor_state/editorStateEntity.go`:
+- [x] Add `internal/entities/editor_state/editorStateEntity.go`:
       `EditorStateEntity { SchemaVersion int; <the 9 groups> }`. Behaviour-free
       apart from (de)serialisation, which §0.4 explicitly allows an Entity.
-- [ ] `MarshalJSON` via a **locally declared** alias type that embeds the groups
+- [x] `MarshalJSON` via a **locally declared** alias type that embeds the groups
       — never the entity itself (hazard 9) — so the wire format stays flat with
       `schemaVersion` as a sibling key. Always write `1`.
-- [ ] `UnmarshalJSON` that **merges into the existing receiver**, preserving the
+- [x] `UnmarshalJSON` that **merges into the existing receiver**, preserving the
       seed-defaults-then-overlay semantic of
       [editorStateRepository.go](../internal/repositories/editorStateRepository.go#L26-L29)
       (hazard 8), then an explicit migration hook normalising `0` → `1`.
-- [ ] Retype `EditorStateRepository`: it reads and writes the **Entity**, and
+- [x] Retype `EditorStateRepository`: it reads and writes the **Entity**, and
       maps Entity ⇄ Model at its own boundary — `Load` returns a Model, `Save`
       takes a Model (§0.4.1).
-- [ ] **Owner decision — resolved (§0.5.4):** the Entity ⇄ Model mapping lives in
+- [x] **Owner decision — resolved (§0.5.4):** the Entity ⇄ Model mapping lives in
       `internal/mappers/editorStateEntityMapper.go`, per AGENTS.md §4.4. §0.4's
       "Entities are used only in repositories" gains a carve-out: the permitted
       namers of an Entity are `internal/repositories/`, `internal/models/`,
       `internal/entities/`, `internal/helpers/*_helpers/` and
       `internal/mappers/`. Phase 12's checker encodes that list.
-- [ ] `internal/services/file_service` speaks **Models only** — delete the
+- [x] `internal/services/file_service` speaks **Models only** — delete the
       model↔DTO conversion Phase 4 put there.
-- [ ] Delete `NewEditorStateDto` and `(*EditorStateDto).Model()`. They exist only
+- [x] Delete `NewEditorStateDto` and `(*EditorStateDto).Model()`. They exist only
       to make the DTO a persistence shell.
-- [ ] Regenerate the golden as `editorState_v1_flat.gen.json` and keep **both**
+- [x] Regenerate the golden as `editorState_v1_flat.gen.json` and keep **both**
       unstaged fixtures: `_v0_` proves legacy files still load, `_v1_` proves the
       current writer round-trips.
-- [ ] Tests: the legacy fixture loads and lands at version 1; the two fixtures
+- [x] Tests: the legacy fixture loads and lands at version 1; the two fixtures
       have the same key set apart from `schemaVersion` (**parsed objects, not
       bytes**); an absent content-row key still yields the seeded default; and the
       `omitempty` characterisation test pinning hazard 2.
@@ -1385,7 +1385,113 @@ Hazards 2, 3, 8 and 9 apply here unchanged.
 - Full unit + integration suites, coverage ≥ 72.5 %.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Done 2026-08-23. All gates green.** The `.gen.json` file is now an Entity. The
+storage boundary speaks `EditorStateEntity` to the disk and
+`editor_state_model.EditorState` to everything above it, and nothing under
+`internal/repositories` or `internal/services` names a DTO any more (verified by
+a tree scan, not by eye).
+
+**What exists now.**
+
+- [editorStateEntity.go](../internal/entities/editor_state/editorStateEntity.go)
+  — the nine groups embedded anonymously plus `SchemaVersion`, with
+  `MarshalJSON` / `UnmarshalJSON` and a private `migrateSchemaVersion` hook.
+  `CurrentEditorStateSchemaVersion = 1`.
+- [editorStateEntityMapper.go](../internal/mappers/editorStateEntityMapper.go)
+  + its interface — `ToEntity` / `ToModel`. Both sides carry the *same* nine
+  group types, so the mapping is a regrouping, not a copy: nine field
+  assignments each, and the slices stay shared with the argument. Registered in
+  `InfrastructureSet`; `wire gen` re-run, `wire diff` clean.
+- `NewEditorStateRepository(mapper)` returns
+  `IFileRepository[editor_state_model.EditorState]`. `Load` decodes **over the
+  mapped defaults**, `Save` maps then writes. `file_service` lost its
+  `editor_state_dto` import entirely.
+- `EditorStateDto` keeps only its embedded model and `NewDefaultEditorStateDto`.
+  It is now referenced by **no production code at all** — that is expected and
+  temporary; Phase 10 rebuilds it as the consumer contract.
+
+**Hazard 9, resolved by type definition rather than by embedding.** The plan said
+"a locally declared alias type that embeds the groups". A `type
+editorStateFields EditorStateEntity` definition is the same thing without
+duplicating the nine-field list: it has the entity's layout but **not** its
+methods, so neither codec can re-enter itself. Embedding `EditorStateEntity`
+instead would promote `MarshalJSON` and recurse forever.
+
+**Hazard 8 held.** `UnmarshalJSON` seeds `editorStateFields` *from the receiver*
+before decoding, so an absent key keeps whatever the caller put there. The
+repository relies on that: it decodes over
+`ToEntity(NewDefaultEditorStateModel())`, exactly as the old code decoded over
+`NewDefaultEditorStateDto()`.
+
+**Two lint rules changed the struct's shape — worth knowing before "fixing" it
+back.**
+
+- `embeddedstructfieldcheck` forbids a regular field before embedded ones, so
+  `SchemaVersion` is declared **last** and `schemaVersion` is therefore the
+  **last** key in the file, not the first. Purely cosmetic; every test compares
+  parsed objects (hazard 3).
+- `recvcheck` flags the value/pointer receiver mix that a JSON codec pair
+  inherently has. It carries a `//nolint:recvcheck` with the reason: `MarshalJSON`
+  **must** take a value so that both a state and a `*state` serialise through it
+  — with a pointer receiver, `json.Marshal(entity)` would silently skip the
+  version stamp.
+
+**Fixtures.** `editorState_v1_flat.gen.json` was written through the **real**
+`EditorStateRepository.Save` by a throwaway `cmd/tmpfixturegen`, which was then
+deleted. Both fixtures are kept and both are untracked. `_v0_` (72 keys, no
+`schemaVersion`) proves a legacy file still loads and lands at version 1; `_v1_`
+(73 keys) proves the current writer round-trips.
+`test_helpers.NewAllFieldsEditorStateDto` became
+**`NewAllFieldsEditorStateEntity`**, built by running the all-fields model
+through the real mapper — so a group the mapper forgets to carry fails the
+fixture comparison instead of being mirrored by a hand-written expectation.
+
+**Tests added.**
+
+```text
+test/unit/internal/entities/editor_state/editorStateEntity/{marshalJSON,unmarshalJSON}_test.go
+test/unit/internal/mappers/editorStateEntityMapper/{newEditorStateEntityMapper,toEntity,toModel}_test.go
+```
+
+plus two repository cases covering the seeded defaults, and a rewritten
+[editorStateWireFormat_integration_test.go](../test/integration/editorStateWireFormat_integration_test.go)
+(still untagged) with six cases across the two fixtures.
+`test/unit/internal/dtos/editor_state_dto/editorStateDto/{model,newEditorStateDto}_test.go`
+were deleted with their subjects.
+
+**Hazard 2 characterised, not fixed.** `TestWhenContentRowsAreNil_TheKeyIsNotWritten`
+and `TestWhenContentRowsAreEmpty_TheKeyIsNotWrittenEither` pin that `omitempty`
+conflates the two on disk, and
+`TestWhenStateFileCarriesEmptyContentRows_TheSeededDefaultRowsSurviveToo` pins
+that either one reloads as the default. The nil-versus-empty distinction
+`EqualsIgnoringManualEdits` draws is in-memory only and stays that way.
+
+**Real-file migration evidence.** All three legacy files in [output/](../output/)
+— `Buggy preview`, `Custom Template`, `Custom Template2` — load without error
+and keep their template names, player counts and 14 content rows. Checked with a
+throwaway `cmd/tmplegacyload`, deleted afterwards.
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | exit 0 |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 |
+| `go test ./test/unit/...` | exit 0 |
+| `go test ./test/...` (untagged) | exit 0 |
+| `go test -tags=integration_test ./test/integration/...` | exit 0 |
+| GPU suite, **no `-update`** | exit 0 |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| Unit coverage | **73.7 %** — unchanged, floor 72.5 % |
+
+**Two pre-existing `gocritic unlambda` findings** in the Phase 8 helpers
+(`CloneContentRuleRows`, `CloneZoneContentRows`) were cleared in passing so the
+lint baseline stays at 0; both are one-line `Select(func(x) { return f(x) })` →
+`Select(f)`.
+
+Nothing was staged and nothing was committed.
 
 ---
 

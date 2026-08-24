@@ -3,8 +3,8 @@ package fileService_test
 import (
 	"image"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,14 +28,14 @@ func (this *mockFileRepository[T]) Save(directory string, filename string, entit
 }
 
 type serviceMocks struct {
-	editorState *mockFileRepository[editor_state_dto.EditorStateDto]
+	editorState *mockFileRepository[editor_state_model.EditorState]
 	template    *mockFileRepository[entities.RmgTemplate]
 	preview     *mockFileRepository[image.RGBA]
 }
 
 func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
 	mocks := serviceMocks{
-		editorState: &mockFileRepository[editor_state_dto.EditorStateDto]{},
+		editorState: &mockFileRepository[editor_state_model.EditorState]{},
 		template:    &mockFileRepository[entities.RmgTemplate]{},
 		preview:     &mockFileRepository[image.RGBA]{},
 	}

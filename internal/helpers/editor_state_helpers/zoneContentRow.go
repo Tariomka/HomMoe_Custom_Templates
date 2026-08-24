@@ -14,18 +14,14 @@ func NormalizeZoneContentRow(row editor_state.ZoneContentRow) editor_state.ZoneC
 	return out
 }
 
-// CloneZoneContentRow returns a copy that shares no backing array or pointer
-// with the original. A nil Rules slice stays nil, because the editor-state
-// change detection distinguishes a nil slice from an empty one.
+// CloneZoneContentRow deep-clones a row.
 func CloneZoneContentRow(row editor_state.ZoneContentRow) editor_state.ZoneContentRow {
 	clone := row
 	clone.Rules = CloneContentRuleRows(row.Rules)
 	return clone
 }
 
-// CloneZoneContentRows deep-clones a row slice, preserving nil.
+// CloneZoneContentRows deep-clones a row slice.
 func CloneZoneContentRows(rows []editor_state.ZoneContentRow) []editor_state.ZoneContentRow {
-	return linq.FromSlice(rows).
-		Select(func(row editor_state.ZoneContentRow) editor_state.ZoneContentRow { return CloneZoneContentRow(row) }).
-		ToSlice()
+	return linq.FromSlice(rows).Select(CloneZoneContentRow).ToSlice()
 }

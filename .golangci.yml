@@ -177,8 +177,8 @@ linters:
             - "!**/internal/entities/**"
             - "!$test"
           deny:
-            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/entities/template
-              desc: import internal/entities instead
+            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/entities/template/**
+              desc: import internal/entities/template instead
 
         deprecated:
           files:

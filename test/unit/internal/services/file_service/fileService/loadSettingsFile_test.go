@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +15,7 @@ func TestWhenSettingsFileIsRequested_LoadsItFromTheGivenPath(t *testing.T) {
 	// Arrange
 	service, mocks := newServiceWithMocks()
 	settingsPath := filepath.Join("any", "where", "state.gen.json")
-	mocks.editorState.On("Load", settingsPath).Return(editor_state_dto.NewDefaultEditorStateDto(), nil)
+	mocks.editorState.On("Load", settingsPath).Return(editor_state_model.NewDefaultEditorStateModel(), nil)
 
 	// Act
 	_, err := service.LoadSettingsFile(settingsPath)
@@ -33,7 +32,7 @@ func TestWhenSettingsFileIsLoaded_ReturnsTheLoadedState(t *testing.T) {
 	expected := editor_state_model.NewDefaultEditorStateModel()
 	expected.TemplateName = "Loaded"
 	mocks.editorState.On("Load", "state.gen.json").
-		Return(editor_state_dto.NewEditorStateDto(expected), nil)
+		Return(expected, nil)
 
 	// Act
 	actual, err := service.LoadSettingsFile("state.gen.json")
@@ -48,7 +47,7 @@ func TestWhenSettingsFileCannotBeLoaded_ReturnsError(t *testing.T) {
 	// Arrange
 	service, mocks := newServiceWithMocks()
 	expectedError := errors.New("unreadable")
-	mocks.editorState.On("Load", "state.gen.json").Return(editor_state_dto.EditorStateDto{}, expectedError)
+	mocks.editorState.On("Load", "state.gen.json").Return(editor_state_model.EditorState{}, expectedError)
 
 	// Act
 	_, err := service.LoadSettingsFile("state.gen.json")
