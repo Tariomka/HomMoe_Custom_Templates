@@ -22,7 +22,7 @@ func (this *PreviewRepository) Load(_ string, _ *image.RGBA) error {
 	return common_errors.ErrNotImplemented
 }
 
-func (this *PreviewRepository) Save(directory string, filename string, entity image.RGBA) (string, error) {
+func (this *PreviewRepository) Save(directory, filename string, entity image.RGBA) (string, error) {
 	return this.writer.Write(directory, filename, previewExtension, func(file *os.File) error {
 		return png.Encode(file, &entity)
 	})

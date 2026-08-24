@@ -27,9 +27,6 @@ func (this *EditorStateRepository) Load(filePath string, target *editor_state.Ed
 	return json.Unmarshal(data, target)
 }
 
-func (this *EditorStateRepository) Save(
-	directory string,
-	filename string,
-	entity editor_state.EditorState) (string, error) {
+func (this *EditorStateRepository) Save(directory, filename string, entity editor_state.EditorState) (string, error) {
 	return this.writer.WriteJSON(directory, filename, editorStateExtension, &entity)
 }

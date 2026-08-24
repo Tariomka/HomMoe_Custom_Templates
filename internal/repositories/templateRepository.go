@@ -19,6 +19,6 @@ func (this *TemplateRepository) Load(_ string, _ *template.RmgTemplate) error {
 	return common_errors.ErrNotImplemented
 }
 
-func (this *TemplateRepository) Save(directory string, filename string, entity template.RmgTemplate) (string, error) {
+func (this *TemplateRepository) Save(directory, filename string, entity template.RmgTemplate) (string, error) {
 	return this.writer.WriteJSON(directory, filename, templateExtension, &entity)
 }

@@ -30,9 +30,7 @@ func newAtomicFileWriter() *atomicFileWriter {
 // Write encodes into "{directory}/TEMP-{fileName}{extension}" and renames it
 // onto "{directory}/{fileName}{extension}", returning the destination path.
 func (this *atomicFileWriter) Write(
-	directory string,
-	fileName string,
-	extension string,
+	directory, fileName, extension string,
 	encode func(file *os.File) error) (string, error) {
 	if err := os.MkdirAll(directory, constants.FolderPermission); err != nil {
 		return "", err
@@ -57,9 +55,7 @@ func (this *atomicFileWriter) Write(
 
 // WriteJSON marshals value as indented JSON through write.
 func (this *atomicFileWriter) WriteJSON(
-	directory string,
-	fileName string,
-	extension string,
+	directory, fileName, extension string,
 	value any) (string, error) {
 	return this.Write(directory, fileName, extension, func(file *os.File) error {
 		// The v1 option set is deliberate: it pins the on-disk format the game and the
@@ -98,7 +94,7 @@ func (this *atomicFileWriter) encodeToTemporaryFile(
 
 // commit retries the rename because on Windows it fails while another process
 // (the game, an editor) still holds the destination open.
-func (this *atomicFileWriter) commit(temporaryPath string, destinationPath string) error {
+func (this *atomicFileWriter) commit(temporaryPath, destinationPath string) error {
 	var err error
 	for attempt := range renameAttempts {
 		if err = os.Rename(temporaryPath, destinationPath); err == nil {
