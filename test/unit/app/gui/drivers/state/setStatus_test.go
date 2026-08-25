@@ -16,6 +16,7 @@ func TestWhenStatusIsSet_GetStatusReturnsMessageAndSeverity(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
 		false)
 	expectedMessage := gofakeit.Sentence(5)
 	expectedIsError := gofakeit.Bool()

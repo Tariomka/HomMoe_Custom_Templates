@@ -136,5 +136,10 @@ func newAutoRegenerateState() (*drivers.State, *test_helpers.TemplateHandlerMock
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	return drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false), handlerMock
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	), handlerMock
 }

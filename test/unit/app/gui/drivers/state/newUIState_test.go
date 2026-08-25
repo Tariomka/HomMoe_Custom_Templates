@@ -16,7 +16,12 @@ func TestWhenStateIsCreated_StateDataIsDefault(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Assert
 	assert.Equal(t, editor_state_model.NewDefaultEditorStateModel(), state.GetStateData())
@@ -29,7 +34,12 @@ func TestWhenStateIsCreated_NoDialogIsOpen(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Assert
 	assert.False(t, state.GetDialogHost().IsOpen())
@@ -42,7 +52,12 @@ func TestWhenTemplateDirLookupIsSkipped_OutputPathIsEmpty(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Assert
 	assert.Empty(t, state.GetOutputPath())
@@ -57,7 +72,12 @@ func TestWhenTemplateDirLookupIsRequested_OutputPathIsSet(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), true)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		true,
+	)
 
 	// Assert
 	assert.NotEmpty(t, state.GetOutputPath())

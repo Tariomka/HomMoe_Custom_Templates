@@ -1,24 +1,17 @@
-# Agent Operating Instructions
+# Heroes of Might and Magic: Olden Era - Custom Templates
 
-These instructions apply to any AI coding agent (GitHub Copilot, Claude, etc.)
-working on the **HomMoe Custom Templates** repository. Follow them strictly.
+A desktop GUI for designing and generating `.rmg.json` random map templates for
+**Heroes of Might and Magic: Olden Era**.
 
 ---
 
-## 1. Project Snapshot
+## 1. Overview
 
-- **Language / Toolchain:** Go 1.27.0. Two modules: the application module
-  `github.com/Tariomka/hommoe_custom_templates` at the repository root, and
-  [tools/go.mod](tools/go.mod), a tools-only module (also Go 1.27.0) that pins
-  `wire`, `golangci-lint` and `gcov2lcov` through `tool` directives.
-- **UI:** Gio (`gioui.org v0.10.0`) — immediate-mode desktop GUI.
-- **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
-  and Magic: Olden Era* and persist editor state as `.gen.json` files.
-- **Entry point:** [main.go](main.go) → [app/gui/program.go](app/gui/program.go) (`StartApplication`).
-- **Core generation:** [internal/services/template_generator/templateGenerator.go](internal/services/template_generator/templateGenerator.go).
-
-Always read [README.md](README.md) and the relevant package before making
-non-trivial changes.
+This is a highly performant, fully offline, multi-platform, native Golang application,
+rendered using immediate-mode rendering library GioUI.
+Most of the projects don't really accomplish all of those points so I strive to keep the project
+simple, well structured and most importantly performant, so you need to do it as well. Clean and
+concise architecture is also an aspiration so that the codebase would be understandable and extendable.
 
 ---
 
@@ -58,12 +51,8 @@ The project must build and run on **both Windows and Linux**. Therefore:
 - Use `filepath.Join`, `filepath.Separator`, `os.UserConfigDir`, etc.
 - Avoid OS-specific syscalls without a build-tag-guarded fallback.
 - No CRLF-only assumptions; read files as bytes/strings and let Go normalize.
-- Avoid shell-specific commands in code; if a tool/script is needed, provide
-  both `.ps1` (Windows) and `.sh` (Linux) variants or use a Go program.
-- Do not introduce dependencies that are Windows- or Linux-only without
-  build tags (`//go:build windows` / `//go:build linux`).
-- When suggesting terminal commands to the user, remember the workspace's
-  default shell is **PowerShell on Windows** — chain with `;`, never `&&`.
+- Avoid shell-specific commands in code; if a tool/script is needed, use a Go program.
+- Do not introduce dependencies that are Windows- or Linux-only without build tags (`//go:build windows` / `//go:build linux`).
 
 ### 2.3 Test coverage
 
@@ -344,7 +333,7 @@ Place new code in the package whose responsibility matches its role:
 | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | UI / rendering (Gio widgets, layouts, theming, input)                   | [app/gui/](app/gui/)                                                                                                                           |
 | Serializable objects (entities)                                         | [internal/entities/](internal/entities/); read-only `.rmg.json` schema in [internal/entities/template/](internal/entities/template) (see §2.1) |
-| Data transfer objects                                                   | [internal/dtos/](internal/dtos/)                                                                                                               |
+| Minimal data transfer objects                                           | [internal/dtos/](internal/dtos/)                                                                                                               |
 | Data structs with attached logic (might have factory functions as well) | [internal/models/](internal/models/)                                                                                                           |
 | Data mappers and converters                                             | [internal/mappers/](internal/mappers/)                                                                                                         |
 | Orchestrators / entry points                                            | [internal/handlers/](internal/handlers/)                                                                                                       |
@@ -380,12 +369,12 @@ Place new code in the package whose responsibility matches its role:
         GUI->>H: request DTO
         Note over H: maps DTO → Model
         H->>S: Model
-        S->>R: Model
-        Note over R: save: maps Model → Entity
+        Note over S: save: maps Model → Entity
+        S->>R: Entity
         R->>Disk: Entity
         Disk-->>R: Entity
-        Note over R: load: maps Entity → Model
-        R-->>S: Model
+        R-->>S: Entity
+        Note over S: load: maps Entity → Model
         S-->>H: Model
         Note over H: maps Model → DTO
         H-->>GUI: response DTO
@@ -395,7 +384,7 @@ Place new code in the package whose responsibility matches its role:
 - Packages outside `internal/` must enter internal functionality
   (services, validators, etc.) through `internal/handlers/`; data accessing
   (`internal/registry/`, `internal/common/`), data typing (`internal/models/`, `internal/dtos/`)
-  and usage of helpers (`internal/helpers`) is permitted.
+  and usage of helpers (`internal/helpers`, `internal/mappers`) is permitted.
 
 ### 4.5 UI vs. business logic separation
 
@@ -601,10 +590,14 @@ alongside `golangci-lint` and `gcov2lcov`; install it with
 `go install github.com/goforj/wire/cmd/wire@latest`. A missing or ambiguous provider is
 a **generation-time** failure — treat a broken `wire gen` as a broken build.
 
-### 4.7 Writing the Plan
+### 4.7 Comments
 
-Save to `plans/<descriptive-name>.md` in the repository root (create `plans/` if needed).
-Use this self-documenting template:
+Don't overuse code comments. Comments describe how a thing is used, and move when the code moves.
+To be used mostly to describe functions, not to annotate every line of behavior.
+
+### 4.8 Writing the Plan
+
+Save to `.agent/plans/<descriptive-name>.md` in the repository root. Use this self-documenting template:
 
 ```markdown
 # <Work Title>
@@ -703,6 +696,11 @@ no prior memory must be able to resume work from it alone.
 - If a tool call rejects/errors or the user declines a suggestion, note it
   immediately so it lands in the *Rejections* section.
 
+### 5.4 Local memories
+
+If you need to track any specific information between sessions, write it up in `.agents/memories`
+instead of populating some arbitrary temporary user directory.
+
 ---
 
 ## 6. Communication Style
@@ -712,9 +710,9 @@ no prior memory must be able to resume work from it alone.
 - Use Markdown. Wrap symbols in backticks; link files using
   `[path](path)` or `[path](path#L10-L20)` (workspace-relative, never
   inside backticks).
+- Never name internal tools to the user ("I'll run the tests", not "I'll use `runTests`").
 - No emojis unless the user asks.
-- Never name internal tools to the user ("I'll run the tests", not "I'll
-  use `runTests`").
+- Don't use sloppy LLM speech, no em dashes, etc., put some soul into your responses.
 
 ---
 

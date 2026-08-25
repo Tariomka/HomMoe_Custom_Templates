@@ -43,7 +43,7 @@ func TestWhenGenerateTemplateCalled_DelegatesToTemplateHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.GenerateTemplate(editor_state_model.EditorState{})
+	_, _ = handler.GenerateTemplate(toDto(editor_state_model.EditorState{}))
 
 	// Assert
 	assert.True(t, stub.templateWorkflowCalled)

@@ -6,10 +6,10 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -20,6 +20,7 @@ import (
 type templateHandler struct {
 	templateGenerator template_generator.ITemplateGenerator
 	mapper            mappers.IGeneratorConfigMapper
+	editorStateMapper mappers.IEditorStateMapper
 	contentProvider   provider_interfaces.IMandatoryContentProvider
 	connectionEditor  connection_editor.IConnectionEditorService
 	zoneEditor        connection_editor.IZoneEditorService
@@ -32,6 +33,7 @@ type templateHandler struct {
 func NewTemplateHandler(
 	templateGenerator template_generator.ITemplateGenerator,
 	mapper mappers.IGeneratorConfigMapper,
+	editorStateMapper mappers.IEditorStateMapper,
 	contentProvider provider_interfaces.IMandatoryContentProvider,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
@@ -42,6 +44,7 @@ func NewTemplateHandler(
 	return &templateHandler{
 		templateGenerator: templateGenerator,
 		mapper:            mapper,
+		editorStateMapper: editorStateMapper,
 		contentProvider:   contentProvider,
 		connectionEditor:  connectionEditor,
 		zoneEditor:        zoneEditor,
@@ -52,11 +55,11 @@ func NewTemplateHandler(
 	}
 }
 
-func (this *templateHandler) GenerateTemplate(state editor_state_model.EditorState) (dtos.TemplateLoadDto, error) {
-	validation := this.stateHandler.ValidateEditorState(state, true)
-	state = validation.State
+func (this *templateHandler) GenerateTemplate(
+	state editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
+	validation := this.stateHandler.ValidateEditorState(this.editorStateMapper.ToModel(state), true)
 
-	configuration := this.mapper.FromEditorState(state)
+	configuration := this.mapper.FromEditorState(validation.State)
 	if configuration.TemplateName == "" {
 		return dtos.TemplateLoadDto{}, common_errors.ErrNoTemplateName
 	}
@@ -88,7 +91,7 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 	// Rebuild mandatory content from the final zones so a zone re-tiered in the
 	// manual editor gets the content of its new quality instead of the original tier.
 	if templateDto.EditorState != nil {
-		configuration := this.mapper.FromEditorState(*templateDto.EditorState)
+		configuration := this.mapper.FromEditorState(this.editorStateMapper.ToModel(*templateDto.EditorState))
 		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(
 			*configuration, newTemplate.Variants[0].Zones)
 	}
@@ -103,8 +106,9 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 
 func (this *templateHandler) ReapplyCastleSettings(
 	request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
-	configuration := this.mapper.FromEditorState(request.EditorState)
-	this.manualReapply.ApplyCastleSettingChanges(request.Zones, request.Changes, configuration)
+	configuration := this.mapper.FromEditorState(this.editorStateMapper.ToModel(request.EditorState))
+	changes := this.editorStateMapper.ToCastleSettingChangesModel(request.Changes)
+	this.manualReapply.ApplyCastleSettingChanges(request.Zones, changes, configuration)
 	return request.Zones
 }
 

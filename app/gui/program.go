@@ -28,7 +28,8 @@ func eventLoop(version string) {
 	windowLayout := editor.NewWindow(
 		composition.InitializeGuiHandler(),
 		composition.InitializeFileSystemHandler(),
-		composition.InitializeRegenerationHandler())
+		composition.InitializeRegenerationHandler(),
+		composition.InitializeEditorStateMapper())
 	windowLayout.SetOnExit(func() { window.Perform(system.ActionClose) })
 	theme := themes.NewTheme()
 	positionLogger := utils.NewButtonPositionLogger(slog.Default())

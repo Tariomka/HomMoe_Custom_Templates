@@ -18,7 +18,12 @@ func TestWhenGenerationSucceeds_LastTemplateIsStored(t *testing.T) {
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Act
 	state.Generate()
@@ -34,7 +39,12 @@ func TestWhenGenerationSucceeds_StatusReportsGeneratedTemplate(t *testing.T) {
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Act
 	state.Generate()
@@ -51,7 +61,12 @@ func TestWhenGenerationFails_ErrorStatusIsSet(t *testing.T) {
 	handlerMock.On("GenerateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Act
 	state.Generate()
@@ -68,7 +83,12 @@ func TestWhenGenerationFails_NoTemplateIsStored(t *testing.T) {
 	handlerMock.On("GenerateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Act
 	state.Generate()

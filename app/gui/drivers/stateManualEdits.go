@@ -45,7 +45,7 @@ func (this *State) ApplyEditedZones(request dtos.ZoneEditorZonesDto) {
 // than the one the manual edits were originally made on; that layout is not
 // retained anywhere.
 func (this *State) PreviewBaseZones() (dtos.ZoneEditorZonesDto, bool) {
-	dto, err := this.handler.GenerateTemplate(this.innerState.GetCurrentState())
+	dto, err := this.handler.GenerateTemplate(this.GetStateDto())
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
 		return dtos.ZoneEditorZonesDto{}, false
@@ -69,12 +69,11 @@ func matchesZoneSet(left, right dtos.ZoneEditorZonesDto) bool {
 }
 
 func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []entities.Connection) {
-	editorState := this.innerState.GetCurrentState()
 	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    this.lastTemplate,
 		Zones:       zones,
 		Connections: connections,
-		EditorState: &editorState,
+		EditorState: new(this.GetStateDto()),
 	})
 
 	if err != nil && errors.Is(err, common_errors.ErrProvidedTemplateInvalid) {
@@ -110,8 +109,8 @@ func (this *State) reapplyManualEdits(castleChanges editor_state_model.CastleSet
 	if castleChanges.Any() {
 		zones = this.handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{
 			Zones:       zones,
-			Changes:     castleChanges,
-			EditorState: this.innerState.GetCurrentState(),
+			Changes:     this.editorStateMapper.ToCastleSettingChangesDto(castleChanges),
+			EditorState: this.GetStateDto(),
 		})
 		this.innerState.SetManualEdits(zones, connections)
 	}

@@ -3,10 +3,10 @@ package regenerationDecisionService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +21,7 @@ func TestWhenNoPreviousGenerationAndManualEditsExist_Reapplies(t *testing.T) {
 	decision := service.DecideManualEditReapplication(nil, stateWithManualEdits())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{
+	assert.Equal(t, regeneration.ManualEditDecision{
 		ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{},
 	}, decision)
 }
@@ -35,7 +35,7 @@ func TestWhenNoPreviousGenerationAndNoManualEdits_DoesNotReapply(t *testing.T) {
 	decision := service.DecideManualEditReapplication(nil, defaultState())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{}, decision)
+	assert.Equal(t, regeneration.ManualEditDecision{}, decision)
 }
 
 func TestWhenNoManualEditsExist_DoesNotReapply(t *testing.T) {
@@ -47,7 +47,7 @@ func TestWhenNoManualEditsExist_DoesNotReapply(t *testing.T) {
 	decision := service.DecideManualEditReapplication(defaultState(), defaultState())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{}, decision)
+	assert.Equal(t, regeneration.ManualEditDecision{}, decision)
 }
 
 func TestWhenManualEditsExistAndLayoutUnchanged_Reapplies(t *testing.T) {
@@ -59,7 +59,7 @@ func TestWhenManualEditsExistAndLayoutUnchanged_Reapplies(t *testing.T) {
 	decision := service.DecideManualEditReapplication(defaultState(), stateWithManualEdits())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{
+	assert.Equal(t, regeneration.ManualEditDecision{
 		ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{},
 	}, decision)
 }

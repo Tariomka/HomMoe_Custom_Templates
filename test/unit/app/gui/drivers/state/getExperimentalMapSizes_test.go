@@ -16,6 +16,7 @@ func TestWhenExperimentalMapSizesWasEnabled_GetExperimentalMapSizesReturnsTrue(t
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
 		false)
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.ExperimentalMapSizes = true })
 

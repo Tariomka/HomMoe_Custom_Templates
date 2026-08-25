@@ -18,7 +18,7 @@ func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
 	stateDto.TemplateName = ""
 
 	// Act
-	_, err := handler.GenerateTemplate(stateDto)
+	_, err := handler.GenerateTemplate(toDto(stateDto))
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoTemplateName)
@@ -31,7 +31,7 @@ func TestWhenStateIsDefault_ReturnsNoError(t *testing.T) {
 	stateDto := editor_state_model.NewDefaultEditorStateModel()
 
 	// Act
-	_, err := handler.GenerateTemplate(stateDto)
+	_, err := handler.GenerateTemplate(toDto(stateDto))
 
 	// Assert
 	assert.NoError(t, err)
@@ -44,7 +44,7 @@ func TestWhenStateIsDefault_ReturnsGeneratedTemplate(t *testing.T) {
 	stateDto := editor_state_model.NewDefaultEditorStateModel()
 
 	// Act
-	loadDto, err := handler.GenerateTemplate(stateDto)
+	loadDto, err := handler.GenerateTemplate(toDto(stateDto))
 
 	// Assert
 	require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestWhenStateCarriesCustomName_GeneratedTemplateUsesThatName(t *testing.T) 
 	stateDto.TemplateName = gofakeit.ProductName()
 
 	// Act
-	loadDto, err := handler.GenerateTemplate(stateDto)
+	loadDto, err := handler.GenerateTemplate(toDto(stateDto))
 
 	// Assert
 	require.NoError(t, err)
@@ -73,7 +73,7 @@ func TestWhenStateIsDefault_GeneratedTemplateHasOneVariant(t *testing.T) {
 	stateDto := editor_state_model.NewDefaultEditorStateModel()
 
 	// Act
-	loadDto, err := handler.GenerateTemplate(stateDto)
+	loadDto, err := handler.GenerateTemplate(toDto(stateDto))
 
 	// Assert
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestWhenPlayerCountIsAboveMaximum_ReturnsValidationWarning(t *testing.T) {
 	stateDto.PlayerCount = 50
 
 	// Act
-	loadDto, err := handler.GenerateTemplate(stateDto)
+	loadDto, err := handler.GenerateTemplate(toDto(stateDto))
 
 	// Assert
 	require.NoError(t, err)

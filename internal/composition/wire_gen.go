@@ -52,6 +52,7 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iContentRuleService := content_rules.NewContentRuleService()
 	iMandatoryContentItemMapper := mappers.NewMandatoryContentItemMapper(iContentRuleService)
 	iGeneratorConfigMapper := mappers.NewConfigMapper(iMandatoryContentItemMapper)
+	iEditorStateMapper := mappers.NewEditorStateMapper()
 	iConnectionEditorService := connection_editor.NewConnectionEditorService(iZoneClassifier)
 	iManualReapplyService := connection_editor.NewManualReapplyService(iZoneEditorService, iCastleFactory, iZoneClassifier, iGenerationTuningFactory)
 	iFileRepository := repositories.NewEditorStateRepository()
@@ -62,14 +63,14 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iPreviewLayoutService := preview_service.NewPreviewLayoutService()
 	iPreviewGeneratorService := providePreviewGenerator(iPreviewLayoutService)
 	iEditorStateValidator := validators.NewEditorStateValidator()
-	iStateHandler := handlers.NewStateHandler(iFileService, iEditorStateValidator)
-	iTemplateHandler := handlers.NewTemplateHandler(iTemplateGenerator, iGeneratorConfigMapper, iMandatoryContentProvider, iConnectionEditorService, iZoneEditorService, iManualReapplyService, iFileService, iPreviewGeneratorService, iStateHandler)
+	iStateHandler := handlers.NewStateHandler(iFileService, iEditorStateValidator, iEditorStateMapper)
+	iTemplateHandler := handlers.NewTemplateHandler(iTemplateGenerator, iGeneratorConfigMapper, iEditorStateMapper, iMandatoryContentProvider, iConnectionEditorService, iZoneEditorService, iManualReapplyService, iFileService, iPreviewGeneratorService, iStateHandler)
 	iPreviewHandler := handlers.NewPreviewHandler(iPreviewLayoutService)
 	iContentRuleHandler := handlers.NewContentRuleHandler(iContentRuleService)
 	iZoneContentEditorService := zone_content.NewZoneContentEditorService()
 	iZoneContentHandler := handlers.NewZoneContentHandler(iContentRuleHandler, iZoneContentEditorService)
 	iZoneEditorGeometryService := connection_editor.NewZoneEditorGeometryService(iPreviewLayoutService)
-	iZoneEditorHandler := handlers.NewZoneEditorHandler(iGeneratorConfigMapper, iZoneClassifier, iConnectionEditorService, iZoneEditorService, iZoneEditorGeometryService, iGenerationTuningFactory)
+	iZoneEditorHandler := handlers.NewZoneEditorHandler(iGeneratorConfigMapper, iEditorStateMapper, iZoneClassifier, iConnectionEditorService, iZoneEditorService, iZoneEditorGeometryService, iGenerationTuningFactory)
 	iBonusEntryService := bonuses.NewBonusEntryService()
 	iBonusHandler := handlers.NewBonusHandler(iBonusEntryService)
 	iPickerEntryService := pickers.NewPickerEntryService()
@@ -87,6 +88,12 @@ func InitializeFileSystemHandler() handler_interfaces.IFileSystemHandler {
 
 func InitializeRegenerationHandler() handler_interfaces.IRegenerationHandler {
 	iRegenerationDecisionService := editor.NewRegenerationDecisionService()
-	iRegenerationHandler := handlers.NewRegenerationHandler(iRegenerationDecisionService)
+	iEditorStateMapper := mappers.NewEditorStateMapper()
+	iRegenerationHandler := handlers.NewRegenerationHandler(iRegenerationDecisionService, iEditorStateMapper)
 	return iRegenerationHandler
+}
+
+func InitializeEditorStateMapper() mappers.IEditorStateMapper {
+	iEditorStateMapper := mappers.NewEditorStateMapper()
+	return iEditorStateMapper
 }

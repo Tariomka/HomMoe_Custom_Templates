@@ -141,7 +141,7 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 		Template:    template,
 		Zones:       template.Variants[0].Zones,
 		Connections: template.Variants[0].Connections,
-		EditorState: &editorState,
+		EditorState: toDtoPointer(&editorState),
 	}
 
 	// Act
@@ -171,7 +171,7 @@ func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
 		Template:    template,
 		Zones:       zones,
 		Connections: nil,
-		EditorState: &editorState,
+		EditorState: toDtoPointer(&editorState),
 	}
 
 	// Act

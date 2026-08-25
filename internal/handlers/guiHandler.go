@@ -67,7 +67,8 @@ func (this *GUIHandler) GetSelectedPickerIDs(entries []dtos.PickerEntryDto, sele
 	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
 }
 
-func (this *GUIHandler) GenerateTemplate(state editor_state_model.EditorState) (dtos.TemplateLoadDto, error) {
+func (this *GUIHandler) GenerateTemplate(
+	state editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
 	return this.templateHandler.GenerateTemplate(state)
 }
 
@@ -80,7 +81,7 @@ func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapply
 }
 
 func (this *GUIHandler) GetZoneEditorOptions(
-	state editor_state_model.EditorState,
+	state editor_state_dto.EditorStateDto,
 	totalZoneCount int) dtos.ZoneEditorOptionsDto {
 	return this.zoneEditorHandler.GetZoneEditorOptions(state, totalZoneCount)
 }
@@ -227,7 +228,9 @@ func (this *GUIHandler) ValidateEditorState(
 	return this.stateHandler.ValidateEditorState(state, fixIssues)
 }
 
-func (this *GUIHandler) LoadState(path string, fixIssues bool) (*editor_state_model.EditorState, []string, error) {
+func (this *GUIHandler) LoadState(
+	path string,
+	fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
 	return this.stateHandler.LoadState(path, fixIssues)
 }
 

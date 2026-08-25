@@ -18,7 +18,12 @@ func TestWhenNoTemplateWasGenerated_EditsAreIgnored(t *testing.T) {
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{})
@@ -76,7 +81,7 @@ func TestWhenTemplateExists_CurrentEditorStateIsSentForUpdate(t *testing.T) {
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
 
 	// Assert
-	assert.Equal(t, &expectedState, updateRequest.EditorState)
+	assert.Equal(t, newEditorStateMapper().ToDtoPointer(&expectedState), updateRequest.EditorState)
 }
 
 func TestWhenTemplateExists_StatusReportsAppliedCounts(t *testing.T) {
@@ -203,7 +208,12 @@ func newGeneratedState() (
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 	state.Generate()
 	return state, handlerMock, template.Variants[0].Zones, template.Variants[0].Connections
 }

@@ -116,5 +116,10 @@ func newFailingState() *drivers.State {
 		Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
 
 	return drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 }

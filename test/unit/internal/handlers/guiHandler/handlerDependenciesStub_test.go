@@ -24,7 +24,7 @@ type handlerDependenciesStub struct {
 }
 
 func (this *handlerDependenciesStub) GenerateTemplate(
-	editor_state_model.EditorState,
+	editor_state_dto.EditorStateDto,
 ) (dtos.TemplateLoadDto, error) {
 	this.templateWorkflowCalled = true
 	return dtos.TemplateLoadDto{}, nil
@@ -52,7 +52,7 @@ func (this *handlerDependenciesStub) ValidateEditorState(
 func (this *handlerDependenciesStub) LoadState(
 	_ string,
 	_ bool,
-) (*editor_state_model.EditorState, []string, error) {
+) (*editor_state_dto.EditorStateDto, []string, error) {
 	return nil, nil, nil
 }
 
@@ -88,7 +88,7 @@ func (this *handlerDependenciesStub) DescribeContentRule(
 }
 
 func (this *handlerDependenciesStub) GetZoneEditorOptions(
-	editor_state_model.EditorState,
+	editor_state_dto.EditorStateDto,
 	int,
 ) dtos.ZoneEditorOptionsDto {
 	return dtos.ZoneEditorOptionsDto{}

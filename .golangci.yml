@@ -144,8 +144,6 @@ linters:
               desc: app/* must invoke domain services through handlers
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/repositories
               desc: app/* must reach persistence through handlers
-            - pkg: github.com/Tariomka/hommoe_custom_templates/internal/mappers
-              desc: app/* must reach mapping through handlers
             - pkg: github.com/Tariomka/hommoe_custom_templates/internal/validators
               desc: app/* must reach validation through handlers
 

@@ -23,7 +23,7 @@ type TemplateHandlerMock struct {
 	GetContentRuleEditorOptionsFunc func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
 	DescribeContentRuleFunc         func(models.SidMapping, models.ContentRuleRow) dtos.ContentRuleDescriptionDto
 	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []entities.Zone
-	GetZoneEditorOptionsFunc        func(editor_state_model.EditorState, int) dtos.ZoneEditorOptionsDto
+	GetZoneEditorOptionsFunc        func(editor_state_dto.EditorStateDto, int) dtos.ZoneEditorOptionsDto
 	CountZoneCastlesFunc            func(entities.Zone) int
 	GetZoneQualityFunc              func(entities.Zone) neutral_zone.Quality
 	GetZoneConnectionQualityFunc    func(string, string, []entities.Zone, map[string]bool) neutral_zone.Quality
@@ -47,7 +47,7 @@ type TemplateHandlerMock struct {
 }
 
 func (this *TemplateHandlerMock) GenerateTemplate(
-	state editor_state_model.EditorState,
+	state editor_state_dto.EditorStateDto,
 ) (dtos.TemplateLoadDto, error) {
 	arguments := this.Called(state)
 	template, _ := arguments.Get(0).(dtos.TemplateLoadDto)
@@ -70,7 +70,7 @@ func (this *TemplateHandlerMock) ReapplyCastleSettings(
 }
 
 func (this *TemplateHandlerMock) GetZoneEditorOptions(
-	state editor_state_model.EditorState,
+	state editor_state_dto.EditorStateDto,
 	totalZoneCount int,
 ) dtos.ZoneEditorOptionsDto {
 	if this.GetZoneEditorOptionsFunc != nil {
@@ -221,9 +221,9 @@ func (this *TemplateHandlerMock) SaveTemplate(templateDto dtos.TemplateSaveDto) 
 func (this *TemplateHandlerMock) LoadState(
 	path string,
 	fixIssues bool,
-) (*editor_state_model.EditorState, []string, error) {
+) (*editor_state_dto.EditorStateDto, []string, error) {
 	arguments := this.Called(path, fixIssues)
-	state, _ := arguments.Get(0).(*editor_state_model.EditorState)
+	state, _ := arguments.Get(0).(*editor_state_dto.EditorStateDto)
 	warnings, _ := arguments.Get(1).([]string)
 	return state, warnings, arguments.Error(2)
 }

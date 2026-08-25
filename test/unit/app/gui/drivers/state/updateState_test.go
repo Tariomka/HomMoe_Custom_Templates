@@ -19,6 +19,7 @@ func TestWhenUpdateChangesState_ChangeIsApplied(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
 		false)
 	playerCount := gofakeit.Number(3, 8)
 
@@ -60,7 +61,12 @@ func newGeneratedState() *drivers.State {
 	template := test_helpers.GetDefaultTemplate()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
+		false,
+	)
 	state.Generate()
 	return state
 }

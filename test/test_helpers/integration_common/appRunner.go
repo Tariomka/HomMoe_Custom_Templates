@@ -38,6 +38,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
@@ -94,7 +95,8 @@ func NewAppRunner(tb testing.TB) *AppRunner {
 		App: editor.NewWindow(
 			composition.InitializeGuiHandler(),
 			composition.InitializeFileSystemHandler(),
-			composition.InitializeRegenerationHandler()),
+			composition.InitializeRegenerationHandler(),
+			mappers.NewEditorStateMapper()),
 		theme: themes.NewTheme(),
 		tb:    tb,
 	}

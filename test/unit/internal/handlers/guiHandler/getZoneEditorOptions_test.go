@@ -23,7 +23,7 @@ func TestWhenFullVariantZoneCountIsProvided_ReturnsMappedZoneEditorOptions(t *te
 	}
 
 	// Act
-	result := handler.GetZoneEditorOptions(state, fullVariantZoneCount)
+	result := handler.GetZoneEditorOptions(toDto(state), fullVariantZoneCount)
 
 	// Assert
 	assert.Equal(t, expected, result)

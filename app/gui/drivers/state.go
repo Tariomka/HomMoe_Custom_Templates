@@ -12,9 +12,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
@@ -24,9 +26,10 @@ const (
 )
 
 type State struct {
-	handler      handler_interfaces.IGuiHandler
-	fileSystem   handler_interfaces.IFileSystemHandler
-	regeneration handler_interfaces.IRegenerationHandler
+	handler           handler_interfaces.IGuiHandler
+	fileSystem        handler_interfaces.IFileSystemHandler
+	regeneration      handler_interfaces.IRegenerationHandler
+	editorStateMapper mappers.IEditorStateMapper
 
 	innerState *models.EditorState
 
@@ -62,12 +65,14 @@ func NewUIState(
 	handler handler_interfaces.IGuiHandler,
 	fileSystem handler_interfaces.IFileSystemHandler,
 	regeneration handler_interfaces.IRegenerationHandler,
+	editorStateMapper mappers.IEditorStateMapper,
 	findTemplateDir bool) *State {
 	state := &State{
-		handler:      handler,
-		fileSystem:   fileSystem,
-		regeneration: regeneration,
-		innerState:   models.NewEditorState(handler),
+		handler:           handler,
+		fileSystem:        fileSystem,
+		regeneration:      regeneration,
+		editorStateMapper: editorStateMapper,
+		innerState:        models.NewEditorState(handler),
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
@@ -95,6 +100,10 @@ func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
 func (this *State) GetStateData() editor_state_model.EditorState {
 	return this.innerState.GetCurrentState()
+}
+
+func (this *State) GetStateDto() editor_state_dto.EditorStateDto {
+	return this.editorStateMapper.ToDto(this.innerState.GetCurrentState())
 }
 
 // Clone-free single-setting readers for per-frame Layout code; see EditorState.

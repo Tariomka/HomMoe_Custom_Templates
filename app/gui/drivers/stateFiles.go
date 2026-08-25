@@ -78,7 +78,7 @@ func (this *State) RevealOutputDir() {
 
 func (this *State) handleSaveState(path string) {
 	savedPath, err := this.handler.SaveState(editor_state_dto.EditorStateSaveDto{
-		State:      new(this.innerState.GetCurrentState()),
+		State:      new(this.GetStateDto()),
 		OutputPath: path,
 	})
 	if err != nil {
@@ -99,7 +99,7 @@ func (this *State) handleLoadState(path string) bool {
 		return false
 	}
 
-	this.innerState.OverrideState(*loaded)
+	this.innerState.OverrideState(this.editorStateMapper.ToModel(*loaded))
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()

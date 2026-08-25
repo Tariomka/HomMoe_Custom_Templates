@@ -17,6 +17,7 @@ func TestWhenTopologyWasUpdated_GetTopologyReturnsIt(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
+		newEditorStateMapper(),
 		false)
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.Topology = config.TopologyHubAndSpoke })
 

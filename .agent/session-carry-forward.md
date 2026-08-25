@@ -1,137 +1,105 @@
-# Session Carry-Forward — 2026-08-23 (Batch I, Phase 9)
+# Session Carry-Forward — 2026-08-24 (Batch I, Phase 10)
 
 ## 1. Session goal
 
-Execute **Phase 9** of
+Execute **Phase 10** of
 [plans/batch-i-editor-state-rework.md](../plans/batch-i-editor-state-rework.md)
-— make the persisted `.gen.json` shape an **Entity**, carrying forward every
-item of the superseded Phase 5. **Done, green, unstaged and uncommitted.**
+— rebuild `EditorStateDto` as a logic-free consumer contract and make the
+editor-state handler crossings speak it. **Done, all gates green, unstaged and
+uncommitted.** Phase 11 was folded in and is now marked superseded.
 
-## 2. Doctrine (unchanged from last session — read before touching anything)
+## 2. Read this before touching anything
 
-Plan **§0.5 overrides §0.4** wherever they conflict:
+Plan **§0.5 overrides §0.4**, and the new **§0.6** (written this session)
+settles Phase 10. The doctrine is unchanged:
 
-- **Entity** = `internal/entities/`, database layer, no logic beyond
-  (de)serialisation; may be embedded in a Model.
-- **Model** = `internal/models/`, service layer, owns all business logic.
-- **DTO** = `internal/dtos/`, consumer layer, no logic, the `app/` ↔ `internal/`
-  contract.
-- Direction is **DTO → Model → Entity**, never the reverse. Two conversion seams
-  only: the handler (DTO ⇄ Model) and the repository (Model ⇄ Entity).
-- **`app/` MAY hold a Model** (AGENTS.md §4.4). Only the *crossing* into
-  `internal/` must be a DTO. Do not "fix" that.
-- Permitted Entity namers (§0.5.4): `repositories`, `models`, `entities`,
-  `helpers/*_helpers`, **`mappers`**.
+- **Entity** = `internal/entities/`, DB layer, no logic beyond (de)serialisation.
+- **Model** = `internal/models/`, service layer, owns the business logic.
+- **DTO** = `internal/dtos/`, the `app/` ↔ `internal/` crossing, no logic.
+- Direction **DTO → Model → Entity**, never the reverse. Two conversion seams:
+  the handler (DTO ⇄ Model) and the repository/FileService (Model ⇄ Entity).
+- **`app/` MAY hold a Model.** Only the *crossing* must be a DTO.
 
-Phase order stays **8 → 9 → 10 → 11 → 6 → 12 → 7**. Phase 5 is superseded.
+**Phase order is now 8 → 9 → 10 → 6 → 12 → 7.** Phases 5 and 11 are superseded.
+**Next is Phase 6** (stop the per-frame whole-state clone, backlog §1.5).
 
-## 3. Phase 9 — what shipped
+## 3. Owner decisions taken this session (§0.6 of the plan)
 
-The `.gen.json` file is an Entity now. `EditorStateDto` appears **nowhere** under
-`internal/repositories` or `internal/services` (verified by a tree scan), and the
-entity layer still imports nothing from `models`/`dtos`/`services`/`handlers`/
-`helpers` (verified with `go list -deps`).
+1. **DTO shape — nine group DTOs, converted as structs.** Not 72 flat fields.
+2. **Leaf types reused through the §0.5.2 alias façade**, never copied.
+3. **`app/` may import `internal/mappers`** — depguard relaxed, AGENTS.md §4.4
+   amended.
+4. **Phase 11 folded into Phase 10.**
+5. **Regeneration envelopes split in two** — DTO crosses, model type goes to the
+   service.
+6. **Every crossing swaps except `ValidateEditorState`** (per-frame path).
+7. **Full DI for the new mapper**, threaded from the composition root.
 
-- **`internal/entities/editor_state/editorStateEntity.go`** — the nine groups
-  embedded anonymously plus `SchemaVersion`, with `MarshalJSON`,
-  `UnmarshalJSON` and a private `migrateSchemaVersion` hook.
-  `CurrentEditorStateSchemaVersion = 1`; `MarshalJSON` always stamps it.
-- **`internal/mappers/editorStateEntityMapper.go`** (+ interface) — `ToEntity` /
-  `ToModel`. Both sides carry the *same* nine group types, so each direction is
-  nine field assignments and the slices stay shared with the argument.
-  Registered in `InfrastructureSet`; `wire gen` re-run, `wire diff` clean.
-- **`NewEditorStateRepository(mapper)`** returns
-  `IFileRepository[editor_state_model.EditorState]`. `Load` decodes over the
-  mapped defaults then maps to a Model; `Save` maps then writes.
-- **`file_service`** lost its `editor_state_dto` import entirely — Models only.
-- **Deleted** `NewEditorStateDto` and `(*EditorStateDto).Model()`.
-  `EditorStateDto` is now referenced by **zero production code**. That is
-  expected and temporary — Phase 10 rebuilds it as the consumer contract.
+## 4. What shipped
 
-### Three traps that shaped the code — do not "simplify" them back
+### The trick worth remembering
 
-1. **Recursion (hazard 9).** The codec alias is
-   `type editorStateFields EditorStateEntity` — a **type definition**, which
-   copies the layout but *not* the methods. Embedding `EditorStateEntity` in a
-   helper struct would promote `MarshalJSON` and recurse forever.
-2. **Defaults (hazard 8).** `UnmarshalJSON` seeds `editorStateFields`
-   **from the receiver** before decoding, so an absent key keeps the seeded
-   value. The repository leans on that: it decodes over
-   `ToEntity(NewDefaultEditorStateModel())`. Never zero the receiver.
-3. **Receiver shape.** `MarshalJSON` **must** take a value, so that both a state
-   and a `*state` serialise through it; with a pointer receiver
-   `json.Marshal(entity)` on a value silently skips the version stamp. That
-   mixes receivers, which `recvcheck` flags, hence the `//nolint:recvcheck` with
-   a reason on the struct.
+`EditorStateDto` embeds nine mirror structs. **Go ignores struct tags when
+deciding conversion identity**, so the mapper is
+`editor_state_dto.MapSettingsDto(state.MapSettings)` — nine conversions per
+direction — and **a field added to an entity group but not mirrored in its DTO
+does not compile.** That is a compile-time drift guard; it is why the DTO is
+grouped rather than flat, and it is why no reflection drift test was needed.
+Field **order** matters as much as names and types.
 
-Two linters also changed the struct's shape: `embeddedstructfieldcheck` forbids
-a regular field before embedded ones, so **`SchemaVersion` is declared last** and
-`schemaVersion` is the **last** key in the file, not the first. Cosmetic only —
-every gate compares parsed objects, never bytes (hazard 3).
+### Created
 
-## 4. File modifications
+- `internal/dtos/editor_state_dto/` — 10 new files: the nine group DTOs plus
+  `castleSettingChangesDto.go`.
+- `internal/mappers/editorStateMapper.go` + `…MapperInterface.go` —
+  `ToDto`/`ToModel`, nil-safe `ToDtoPointer`/`ToModelPointer`, and the
+  `CastleSettingChanges` pair.
+- `internal/models/regeneration/` — `DecisionRequest`, `Decision`,
+  `ManualEditDecision`, `NextStateAction`.
+- `test/unit/internal/mappers/editorStateMapper/` — new coverage.
+- `common_test.go` in the four `test/unit/app/gui/drivers/*` folders (a shared
+  `newEditorStateMapper()` helper).
 
-**Created**
+### Deleted
 
-- `internal/entities/editor_state/editorStateEntity.go`
-- `internal/mappers/editorStateEntityMapper.go`, `…MapperInterface.go`
-- `test/test_helpers/testdata/editorState_v1_flat.gen.json` (untracked fixture)
-- `test/unit/internal/entities/editor_state/editorStateEntity/{marshalJSON,unmarshalJSON}_test.go`
-- `test/unit/internal/mappers/editorStateEntityMapper/{newEditorStateEntityMapper,toEntity,toModel}_test.go`
-- `test/unit/internal/repositories/editorStateRepository/common_test.go`
+- `test/unit/internal/dtos/editor_state_dto/` — `NewDefaultEditorStateDto` and
+  the four delegation shims are gone, so the tests had no subject. A
+  behaviour-free struct needs none per §4.6.
 
-**Deleted**
+### Changed shape
 
-- `test/unit/internal/dtos/editor_state_dto/editorStateDto/{model,newEditorStateDto}_test.go`
-  — their subjects are gone.
+- Eight crossings now take/return `EditorStateDto`: `LoadState`, `SaveState`,
+  `GenerateTemplate`, `UpdateTemplate`, `ReapplyCastleSettings`,
+  `DecideRegeneration`, `DecideManualEditReapplication`, `GetZoneEditorOptions`.
+- `NewStateHandler`, `NewTemplateHandler` (3rd arg), `NewZoneEditorHandler`
+  (2nd arg), `NewRegenerationHandler` all gained the mapper.
+- `drivers.NewUIState(handler, fileSystem, regeneration, mapper, findTemplateDir)`
+  and `editor.NewWindow(handler, fileSystem, regeneration, mapper)`.
+- `drivers.State` gained `GetStateDto()`.
+- `internal/services/editor` **no longer imports `internal/dtos` at all**.
 
-**Edited** — `internal/repositories/editorStateRepository.go`,
-`internal/services/file_service/fileService.go`,
-`internal/dtos/editor_state_dto/editorStateDto.go`,
-`internal/composition/{providerSets,wire_gen}.go`,
-`internal/helpers/editor_state_helpers/{contentRuleRow,zoneContentRow}.go`
-(two pre-existing `gocritic unlambda` findings cleared so the lint baseline stays
-at 0), `test/test_helpers/allFieldsEditorState.go`,
-`test/integration/editorStateWireFormat_integration_test.go` (rewritten),
-`test/unit/internal/repositories/editorStateRepository/{load,save,newEditorStateRepository}_test.go`,
-`test/unit/internal/services/file_service/fileService/{common,loadSettingsFile,saveSettings}_test.go`,
-plus the plan.
+## 5. Three things that will bite the next agent
 
-`coverage.txt` / `coverage.html` / `lcov.info` were regenerated and came out
-byte-identical, so they do not appear in the diff.
+1. **`internal/models` cannot import `editor_state_model`.** There is a real
+   cycle: `internal/models` ← `common_zone_contents` ← `editor_state_model`. The
+   regeneration types were planned for `internal/models` and had to move to
+   `internal/models/regeneration/`. `dtos.NextStateAction` is now an **alias** of
+   `regeneration.NextStateAction`, which is why every `dtos.NextStateClear` in
+   `app/` still compiles.
+2. **`ValidateEditorState` is deliberately still on the Model.** It is called
+   from `app/gui/models.EditorState.UpdateCurrentState` on every panel write.
+   `EditorStateValidationDto` therefore still carries a Model. Do not "fix" it
+   without a measurement.
+3. **I corrupted a file with PowerShell once this session** —
+   `Get-Content x | … | Set-Content -NoNewline` joins every line into one
+   (`package editorimport …`). Recovered with `git restore` on that single file.
+   The repo memory already warns about this; it is real. Use the edit tools.
 
-**Two throwaway programs were written, run and deleted**: `cmd/tmpfixturegen`
-(wrote the `_v1_` fixture through the *real* `EditorStateRepository.Save`) and
-`cmd/tmplegacyload` (loaded the owner's real `output/*.gen.json`). Neither is in
-the tree.
+## 6. Tests
 
-## 5. Tests
-
-`test_helpers.NewAllFieldsEditorStateDto` became **`NewAllFieldsEditorStateEntity`**,
-built by running the all-fields model through the *real* mapper — so a group the
-mapper forgets to carry fails the fixture comparison instead of being mirrored by
-a hand-written expectation.
-
-Two fixtures are kept, both untracked:
-
-- `editorState_v0_flat.gen.json` — 72 keys, **no** `schemaVersion`. Proves a
-  legacy file loads and lands at version 1.
-- `editorState_v1_flat.gen.json` — 73 keys. Proves the current writer
-  round-trips.
-
-`editorStateWireFormat_integration_test.go` (still **untagged**) now has six
-cases across the two fixtures, all comparing parsed objects.
-
-**Hazard 2 is characterised, not fixed.** `omitempty` conflates nil and empty on
-disk; `TestWhenContentRowsAreNil_TheKeyIsNotWritten`,
-`TestWhenContentRowsAreEmpty_TheKeyIsNotWrittenEither` and
-`TestWhenStateFileCarriesEmptyContentRows_TheSeededDefaultRowsSurviveToo` pin
-that. The nil-versus-empty distinction `EqualsIgnoringManualEdits` draws is
-in-memory only and must stay that way.
-
-**Migration evidence on real files:** all three `output/*.gen.json` — `Buggy
-preview`, `Custom Template`, `Custom Template2` — load without error and keep
-their template names, player counts and 14 content rows.
+Suites all green. The **frozen fixtures and the untagged
+`editorStateWireFormat_integration_test.go` passed unchanged**, as expected —
+the DTO is off the persistence path entirely.
 
 | Gate | Result |
 | --- | --- |
@@ -143,101 +111,110 @@ their template names, player counts and 14 content rows.
 | `go test ./test/unit/...` | exit 0 |
 | `go test ./test/...` (untagged) | exit 0 |
 | `go test -tags=integration_test ./test/integration/...` | exit 0 |
-| GPU suite `-tags='integration_test,gui'`, **no `-update`** | exit 0 |
+| GPU suite, **no `-update`** | exit 0 (40.3 s) |
 | `golangci-lint-v2 run ./...` | **0 issues** |
 | Unit coverage | **73.7 %** — unchanged, floor 72.5 % |
 
-## 6. Git status snapshot
+**Benchmark** (`BenchmarkEditorWindow_TabCycling`, `-benchtime=50x -count=6`,
+baseline from a detached worktree at `2106c70`): **+24 allocs/op (9,520 →
+9,544, +0.25 %)**, +2.1 % B/op, ns/op inside the noise. The crossing is free
+because `ValidateEditorState` was excluded from it.
+
+## 7. Git status snapshot
 
 - **Branch:** `AD/fixing_some_stuff_08-12`
-- **HEAD:** `8072a53 "docs"` (on top of `54191b7 "Batch I wip 5"`, which carried
-  Phase 8).
-- **Index: empty. Nothing staged, nothing committed.** 17 modified files, 2
-  deletions, 7 new paths — the list in §4.
-- No `git mv` and no `git rm` were used; `Move-Item` / `Remove-Item` only.
+- **HEAD:** `2106c70 "PR review"` — Phase 9 is already committed, and the owner
+  reworked it after the previous handoff was written.
+- **Index empty. Nothing staged, nothing committed.** ~100 paths: 82 modified,
+  1 deleted, 17 new. No `git mv`, no `git rm`.
 
-## 7. Rejections / things declined
+## 8. Rejections / things not done
 
-- **Rejected — literally embedding the nine groups in a second struct** for the
-  `MarshalJSON` alias. A `type X EditorStateEntity` definition is equivalent,
-  cannot recurse, and does not duplicate a 72-field list.
-- **Rejected — giving `MarshalJSON` a pointer receiver** to silence `recvcheck`.
-  It would make value marshalling silently skip the version stamp.
-- **Rejected — deleting `EditorStateDto`** now that nothing uses it. Phase 10
-  rebuilds it in place; deleting and re-adding it would churn the same files
-  twice.
-- **Not done — Phase 12's layering checker pulled forward.** Still worth doing
-  (the previous session recommended it); Phase 9 was verified with one-off
-  `go list -deps` and `Select-String` scans instead.
+- **Rejected — 72 flat DTO fields.** It is the "can silently drop one" shape the
+  owner rejected for the entity mapper in Phase 9; the grouped form gets a
+  compile-time guard instead.
+- **Rejected — embedding the entity groups in the DTO.** One-line mapper, but
+  `internal/dtos` would name an Entity, which §0.5.4's namer list and Phase 12's
+  checker forbid.
+- **Not done — the remaining DTO-below-handler breaches.** Phase 10 said list,
+  not fix. Three services remain (below).
+- **Not done — deleting `EditorStateValidationDto`'s Model.** Deliberate.
 
-## 8. Open questions
+## 9. Open questions
 
-1. **None block Phase 10.**
-2. **Phase 6's benchmark still owes an answer** for §0.5.5, when Phase 6 runs.
-3. **Repository memory duplication** (`/memories/repo/conventions.md`) — now
-   flagged five sessions running: ~1,250 lines of roughly four copies of the same
-   body. A Phase 9 section was appended and the Batch I doctrine corrected at the
-   end of the file, but the stale duplicated copies still contradict §0.5 higher
-   up. It needs a real dedupe pass.
+1. **None block Phase 6.**
+2. §0.5.5 still owes an answer on the Phase 6 frame path; the benchmark above is
+   a useful new datum (the crossing costs 0.25 % allocs).
+3. **Repo memory duplication** (`/memories/repo/conventions.md`) — now flagged
+   six sessions running: ~1,280 lines, roughly four copies of the same body.
+   Still needs a real dedupe pass.
 
-## 9. Next recommended actions
+## 10. Next recommended actions
 
-1. **Phase 10** — rebuild `EditorStateDto` as a flat, behaviour-free consumer
-   contract; add `internal/mappers/editorStateMapper.go` (`ToModel` / `ToDto`);
-   make every editor-state handler take and return the DTO and map at its own
-   boundary; restore the envelope DTOs (`EditorStateSaveDto`,
-   `EditorStateValidationDto`, `RegenerationDecisionRequestDto`,
-   `TemplateUpdateDto`, `CastleSettingsReapplyRequestDto`) to carrying DTOs; and
-   audit `internal/dtos/` for DTOs used *below* the handler layer.
-2. Then **11 → 6 → 12 → 7**.
-3. Consider pulling **Phase 12's checker forward** before Phase 10, so the DTO
-   import rule (`internal/dtos/**` imported only by `internal/handlers/**`,
-   `internal/dtos/**` and `app/**`) is machine-checked while Phase 10 is being
-   written rather than after.
+1. **Review and commit Phase 10.**
+2. **Phase 6** — stop the per-frame whole-state clone (backlog §1.5).
+3. Then **12 → 7**. Phase 12's checker must encode the §0.5.4 Entity-namer list
+   (`repositories`, `models`, `entities`, `helpers/*_helpers`, `mappers`) and the
+   DTO rule, seeded with an allow-list holding the three services below.
+4. **Residual audit for Phase 12's allow-list** — DTOs still used below the
+   handler layer:
 
-## 10. Carry-forward prompt
+   | Package | DTOs it names |
+   | --- | --- |
+   | `internal/services/bonuses` | `BonusCompositionRequestDto`, `BonusCompositionResultDto`, `ExistingBonusesDto` |
+   | `internal/services/pickers` | `PickerItemDto`, `PickerSpellDto`, `PickerEntryDto`, `PickerRowDto` |
+   | `internal/services/zone_content` | `ContentRuleCompositionRequestDto`, `ContentRuleCompositionResultDto` |
+
+   Each wants the treatment the regeneration service just got: a model-side
+   request/result pair, mapped at the handler.
+
+## 11. Carry-forward prompt
 
 > Read `AGENTS.md` first, then `plans/batch-i-editor-state-rework.md` — and in
-> that plan read **§0.5 before §0.4**, because §0.5 overrides §0.4 wherever they
-> conflict. The layering doctrine, as settled: **Entity** = database layer,
-> `internal/entities/`, no logic beyond json tags and (de)serialisation, may be
-> embedded in a Model; **Model** = service layer, `internal/models/`, owns all
-> business logic; **DTO** = consumer layer, `internal/dtos/`, no logic, the
-> `app/` ↔ `internal/` contract. Dependency direction is DTO → Model → Entity,
-> never the reverse. Conversion happens at exactly two seams: the handler
-> (DTO ⇄ Model) and the repository (Model ⇄ Entity). **`app/` MAY hold a
-> Model** — AGENTS.md §4.4 says so explicitly; only the *crossing* into
-> `internal/` must be a DTO. Do not "fix" that.
+> that plan read **§0.6, then §0.5, then §0.4**, because each overrides the one
+> after it. The layering doctrine, as settled: **Entity** = database layer,
+> `internal/entities/`, no logic beyond json tags and (de)serialisation;
+> **Model** = service layer, `internal/models/`, owns all business logic;
+> **DTO** = consumer layer, `internal/dtos/`, no logic, the `app/` ↔ `internal/`
+> contract. Dependency direction is DTO → Model → Entity, never the reverse.
+> Conversion happens at exactly two seams: the handler (DTO ⇄ Model) and the
+> repository/FileService (Model ⇄ Entity). **`app/` MAY hold a Model** — AGENTS.md
+> §4.4 says so explicitly, and as of this session `app/` may also import
+> `internal/mappers`, because the consumer has to build the crossing DTO itself.
+> Do not "fix" either.
 >
-> **Phases 1–9 are complete.** Phases 1–8 are committed through `8072a53` on
-> branch `AD/fixing_some_stuff_08-12`; **Phase 9 is finished and green but sits
-> unstaged in the working tree** — review and commit it before starting new work.
-> Phase 5 is **superseded — do not execute**. Next is **Phase 10**, then
-> 11 → 6 → 12 → 7. No decisions are outstanding.
+> **Phases 1–4 and 8–10 are complete.** Phases 1–9 are committed through
+> `2106c70` on branch `AD/fixing_some_stuff_08-12`; **Phase 10 is finished and
+> green but sits unstaged in the working tree** — review and commit it before
+> starting new work. Phases **5 and 11 are superseded — do not execute**. Next is
+> **Phase 6**, then 12 → 7. No decisions are outstanding.
 >
 > The hard rules, one line each: never modify `data/`, `internal/registry/`, or
-> **anything under `internal/entities/template/`** — `rmgTemplate.go` and the
-> `template_*` subpackages are the owner's alone; everything must build and run
+> **anything under `internal/entities/template/`**; everything must build and run
 > on Windows and Linux (use `path/filepath`; chain PowerShell with `;`, never
 > `&&`); every change ships with tests and unit coverage must not drop below
 > 72.5 % (currently 73.7 %); **never stage and never commit** — the owner
 > reviews, stages and commits, so **use `Move-Item`, never `git mv`**, and delete
 > with `Remove-Item`, never `git rm`; never change where `.rmg.json` is written
 > and never persist the output directory; never run a bulk in-place rewrite over
-> the repository — use `vscode_renameSymbol` for renames; cap sessions at ~50
-> messages and hand off through this file.
+> the repository, and never round-trip a `.go` file through
+> `Get-Content`/`Set-Content` (it joins every line and corrupts the file — it
+> happened this session); cap sessions at ~50 messages and hand off through this
+> file.
 >
-> Standing traps for Phase 10: `EditorStateDto` currently has **no production
-> caller at all** — Phase 9 emptied it deliberately, so start 1:1 with the
-> persisted field set and change no behaviour in the same pass; the two frozen
-> fixtures under `test/test_helpers/testdata/` and the untagged
+> Standing traps for Phase 6: the per-frame path is
+> `app/gui/models.EditorState.UpdateCurrentState`, which deep-`Clone()`s and then
+> calls `ValidateEditorState` — that crossing was **deliberately left on the
+> Model** in Phase 10 precisely so Phase 6 could measure it without a DTO
+> conversion in the way; `internal/models` **cannot** import
+> `editor_state_model` (real cycle via `common_zone_contents`), which is why the
+> regeneration types live in `internal/models/regeneration/`; measure with
+> `BenchmarkEditorWindow_TabCycling -benchtime=50x -count=6` against a detached
+> `git worktree` baseline and read the steady-state samples, and the current
+> figure to beat is **9,544 allocs/op, 927 KB/op**; the two frozen fixtures under
+> `test/test_helpers/testdata/` and the untagged
 > `editorStateWireFormat_integration_test.go` must keep passing **unchanged**,
-> and they compare **parsed objects, never bytes**; `test_helpers` now exposes
-> `NewAllFieldsEditorStateEntity` and `NewAllFieldsEditorStateModel` (the `…Dto`
-> builder is gone); Go 1.27 allows **promoted fields as composite-literal keys**
-> and the linter's `embedlit` rule enforces that flat form, but eliding only the
-> type (`Group: {…}`) does **not** compile; `embeddedstructfieldcheck` forbids a
-> regular field declared before embedded ones. Run `golangci-lint-v2`
+> and they compare **parsed objects, never bytes**. Run `golangci-lint-v2`
 > report-only first and scope any `--fix` to the packages you actually want
 > rewritten.
 >

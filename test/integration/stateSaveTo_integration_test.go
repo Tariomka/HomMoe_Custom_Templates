@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -37,6 +38,7 @@ func newSaveToProbe(t *testing.T, saveResult error) (state *drivers.State, writt
 		handlerMock,
 		composition.InitializeFileSystemHandler(),
 		composition.InitializeRegenerationHandler(),
+		mappers.NewEditorStateMapper(),
 		false)
 
 	state.SaveTo(gofakeit.ProductName())
@@ -83,6 +85,7 @@ func newSaveToDialog(t *testing.T, templateName string) *dialogs.FileExplorerDia
 		&test_helpers.TemplateHandlerMock{},
 		composition.InitializeFileSystemHandler(),
 		composition.InitializeRegenerationHandler(),
+		mappers.NewEditorStateMapper(),
 		false)
 
 	state.SaveTo(templateName)

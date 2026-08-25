@@ -32,7 +32,7 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	state := editor_state_model.NewDefaultEditorStateModel()
-	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: &state, OutputPath: ""}
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: ""}
 
 	// Act
 	_, err := handler.SaveState(stateSaveDto)
@@ -46,7 +46,7 @@ func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing
 	// Arrange
 	handler := newProductionGuiHandler()
 	state := editor_state_model.NewDefaultEditorStateModel()
-	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: &state, OutputPath: " \t  "}
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: " \t  "}
 
 	// Act
 	_, err := handler.SaveState(stateSaveDto)
@@ -63,7 +63,7 @@ func TestWhenStateAndOutputPathAreValid_ReturnsPathNamedAfterTemplate(t *testing
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.TemplateName = "My Template"
 	stateSaveDto := editor_state_dto.EditorStateSaveDto{
-		State:      &state,
+		State:      toDtoPointer(&state),
 		OutputPath: filepath.Join(outputDirectory, "ignored-name.gen.json"),
 	}
 
@@ -81,7 +81,7 @@ func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "written-state.gen.json")
 	state := editor_state_model.NewDefaultEditorStateModel()
-	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: &state, OutputPath: outputPath}
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: outputPath}
 
 	// Act
 	savedPath, err := handler.SaveState(stateSaveDto)
@@ -97,7 +97,7 @@ func TestWhenStateOutputDirectoryDoesNotExist_CreatesItAndWritesTheFile(t *testi
 	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "no-such-directory", "state.gen.json")
 	state := editor_state_model.NewDefaultEditorStateModel()
-	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: &state, OutputPath: outputPath}
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: outputPath}
 
 	// Act
 	savedPath, err := handler.SaveState(stateSaveDto)

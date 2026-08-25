@@ -136,7 +136,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	loadDto, _ := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    singleVariantTemplate(),
 		Zones:       zones,
-		EditorState: &state,
+		EditorState: fixture.editorStateMapper.ToDtoPointer(&state),
 	})
 
 	// Assert

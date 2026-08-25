@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -21,12 +23,26 @@ import (
 func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateHandler) *entities.RmgTemplate {
 	t.Helper()
 
-	loadDto, err := handler.GenerateTemplate(editor_state_model.NewDefaultEditorStateModel())
+	loadDto, err := handler.GenerateTemplate(toDto(editor_state_model.NewDefaultEditorStateModel()))
 	require.NoError(t, err)
 	require.NotNil(t, loadDto.Template)
 	require.NotEmpty(t, loadDto.Template.Variants)
 
 	return loadDto.Template
+}
+
+func toDto(state editor_state_model.EditorState) editor_state_dto.EditorStateDto {
+	return mappers.NewEditorStateMapper().ToDto(state)
+}
+
+func toDtoPointer(state *editor_state_model.EditorState) *editor_state_dto.EditorStateDto {
+	return mappers.NewEditorStateMapper().ToDtoPointer(state)
+}
+
+func toCastleSettingChangesDto(
+	changes editor_state_model.CastleSettingChanges,
+) editor_state_dto.CastleSettingChangesDto {
+	return mappers.NewEditorStateMapper().ToCastleSettingChangesDto(changes)
 }
 
 // newProductionGuiHandler builds the same handler graph the application uses.
