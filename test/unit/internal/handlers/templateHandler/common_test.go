@@ -1,9 +1,10 @@
 package templateHandler_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
@@ -11,7 +12,6 @@ import (
 // built from, so a test can arrange one collaborator and assert on another.
 type templateHandlerFixture struct {
 	handler           handler_interfaces.ITemplateHandler
-	editorStateMapper mappers.IEditorStateMapper
 	templateGenerator *test_helpers.TemplateGeneratorMock
 	mapper            *test_helpers.GeneratorConfigMapperMock
 	contentProvider   *test_helpers.MandatoryContentProviderMock
@@ -34,13 +34,11 @@ func newTemplateHandlerFixture() *templateHandlerFixture {
 		fileService:       &test_helpers.FileServiceMock{},
 		previewGenerator:  &test_helpers.PreviewGeneratorServiceMock{},
 		stateHandler:      &test_helpers.StateHandlerMock{},
-		editorStateMapper: mappers.NewEditorStateMapper(),
 	}
 
 	fixture.handler = handlers.NewTemplateHandler(
 		fixture.templateGenerator,
 		fixture.mapper,
-		fixture.editorStateMapper,
 		fixture.contentProvider,
 		fixture.connectionEditor,
 		fixture.zoneEditor,
@@ -51,4 +49,8 @@ func newTemplateHandlerFixture() *templateHandlerFixture {
 	)
 
 	return fixture
+}
+
+func toDto(state editor_state_model.EditorState) editor_state_dto.EditorStateDto {
+	return editor_state_dto.EditorStateDto{EditorState: state}
 }

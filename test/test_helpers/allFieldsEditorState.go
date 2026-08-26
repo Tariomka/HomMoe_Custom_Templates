@@ -4,7 +4,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
@@ -118,13 +117,13 @@ func NewAllFieldsEditorStateModel() editor_state_model.EditorState {
 
 // allFieldsContentRows builds a one-row content list whose every field, and
 // every field of its single rule, is populated.
-func allFieldsContentRows(sid string, variantID int) []models.ZoneContentRow {
-	return []models.ZoneContentRow{{
+func allFieldsContentRows(sid string, variantID int) []editor_state_model.ZoneContentRow {
+	return []editor_state_model.ZoneContentRow{{
 		Sid:     sid,
 		Count:   variantID,
 		IsGroup: true,
 		IsMine:  true,
-		Rules: []models.ContentRuleRow{{
+		Rules: []editor_state_model.ContentRuleRow{{
 			Name:            "Guarded",
 			DistanceName:    "Very Far",
 			IsGuarded:       new(true),
@@ -136,8 +135,8 @@ func allFieldsContentRows(sid string, variantID int) []models.ZoneContentRow {
 
 // allFieldsManualZones builds a manual zone carrying the normalized position
 // that entities.Zone itself omits from JSON.
-func allFieldsManualZones() []editor_state.ManualZoneSave {
-	return []editor_state.ManualZoneSave{{
+func allFieldsManualZones() []editor_state_model.ManualZoneSave {
+	return []editor_state_model.ManualZoneSave{{
 		Zone: entities.Zone{
 			Name:                 "Fixture-Spawn-A",
 			Size:                 1.35,
@@ -152,8 +151,8 @@ func allFieldsManualZones() []editor_state.ManualZoneSave {
 
 // allFieldsManualConnections builds a manual connection carrying the
 // user-added flag that entities.Connection itself omits from JSON.
-func allFieldsManualConnections() []editor_state.ManualConnectionSave {
-	return []editor_state.ManualConnectionSave{{
+func allFieldsManualConnections() []editor_state_model.ManualConnectionSave {
+	return []editor_state_model.ManualConnectionSave{{
 		Connection: entities.Connection{
 			Name:                 "Fixture-Conn-A-B",
 			From:                 "Fixture-Spawn-A",

@@ -6,32 +6,27 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 )
 
 type stateHandler struct {
-	fileService       file_service.IFileService
-	editorValidator   validators.IEditorStateValidator
-	editorStateMapper mappers.IEditorStateMapper
+	fileService     file_service.IFileService
+	editorValidator validators.IEditorStateValidator
 }
 
 func NewStateHandler(
 	fileService file_service.IFileService,
-	editorValidator validators.IEditorStateValidator,
-	editorStateMapper mappers.IEditorStateMapper) handler_interfaces.IStateHandler {
+	editorValidator validators.IEditorStateValidator) handler_interfaces.IStateHandler {
 	return &stateHandler{
-		fileService:       fileService,
-		editorValidator:   editorValidator,
-		editorStateMapper: editorStateMapper,
+		fileService:     fileService,
+		editorValidator: editorValidator,
 	}
 }
 
-func (this *stateHandler) LoadState(
-	path string,
-	fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
+func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
+	// TODO: should just return EditorStateValidationDto, instead of EditorStateDto + warnings
 	path = strings.TrimSpace(path)
 	if path == "" {
 		return nil, nil, common_errors.ErrNoOutputPath
@@ -43,7 +38,7 @@ func (this *stateHandler) LoadState(
 	}
 
 	validation := this.ValidateEditorState(*loaded, fixIssues)
-	return this.editorStateMapper.ToDtoPointer(&validation.State), validation.Warnings, nil
+	return &editor_state_dto.EditorStateDto{EditorState: validation.State}, validation.Warnings, nil
 }
 
 func (this *stateHandler) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {
@@ -56,7 +51,7 @@ func (this *stateHandler) SaveState(stateDto editor_state_dto.EditorStateSaveDto
 		return "", common_errors.ErrNoOutputPath
 	}
 
-	return this.fileService.SaveSettings(outputPath, this.editorStateMapper.ToModelPointer(stateDto.State))
+	return this.fileService.SaveSettings(outputPath, &stateDto.State.EditorState)
 }
 
 func (this *stateHandler) ValidateEditorState(

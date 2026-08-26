@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -32,17 +31,11 @@ func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateH
 }
 
 func toDto(state editor_state_model.EditorState) editor_state_dto.EditorStateDto {
-	return mappers.NewEditorStateMapper().ToDto(state)
+	return editor_state_dto.EditorStateDto{EditorState: state}
 }
 
 func toDtoPointer(state *editor_state_model.EditorState) *editor_state_dto.EditorStateDto {
-	return mappers.NewEditorStateMapper().ToDtoPointer(state)
-}
-
-func toCastleSettingChangesDto(
-	changes editor_state_model.CastleSettingChanges,
-) editor_state_dto.CastleSettingChangesDto {
-	return mappers.NewEditorStateMapper().ToCastleSettingChangesDto(changes)
+	return &editor_state_dto.EditorStateDto{EditorState: *state}
 }
 
 // newProductionGuiHandler builds the same handler graph the application uses.

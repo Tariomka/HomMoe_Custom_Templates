@@ -109,7 +109,7 @@ func (this *State) reapplyManualEdits(castleChanges editor_state_model.CastleSet
 	if castleChanges.Any() {
 		zones = this.handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{
 			Zones:       zones,
-			Changes:     this.editorStateMapper.ToCastleSettingChangesDto(castleChanges),
+			Changes:     castleChanges,
 			EditorState: this.GetStateDto(),
 		})
 		this.innerState.SetManualEdits(zones, connections)

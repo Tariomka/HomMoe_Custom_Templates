@@ -3,8 +3,8 @@ package bonusEntry_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,8 +12,8 @@ import (
 func TestWhenEntriesAreIdentical_ProducesSameHash(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := editor_state.BonusEntry{
-		PresetType:     editor_state.BonusSpell,
+	entry := editor_state_model.BonusEntry{
+		PresetType:     editor_state_model.BonusSpell,
 		ReceiverFilter: "start_hero",
 		Param:          gofakeit.Word(),
 		Param2:         "1",
@@ -30,8 +30,8 @@ func TestWhenEntriesAreIdentical_ProducesSameHash(t *testing.T) {
 func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := editor_state.BonusEntry{
-		PresetType:     editor_state.BonusStartingGold,
+	entry := editor_state_model.BonusEntry{
+		PresetType:     editor_state_model.BonusStartingGold,
 		ReceiverFilter: "all_heroes",
 		Param:          "500",
 	}
@@ -48,13 +48,13 @@ func TestWhenEntriesDifferInParam_ProducesDifferentHashes(t *testing.T) {
 func TestWhenEntriesDifferInPresetType_ProducesDifferentHashes(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := editor_state.BonusEntry{
-		PresetType:     editor_state.BonusStartingWood,
+	entry := editor_state_model.BonusEntry{
+		PresetType:     editor_state_model.BonusStartingWood,
 		ReceiverFilter: "start_hero",
 		Param:          "7",
 	}
 	other := entry
-	other.PresetType = editor_state.BonusStartingOre
+	other.PresetType = editor_state_model.BonusStartingOre
 
 	// Act
 	actual := config_helpers.GetHash(entry)
@@ -66,8 +66,8 @@ func TestWhenEntriesDifferInPresetType_ProducesDifferentHashes(t *testing.T) {
 func TestWhenHashIsComputed_ReturnsSha256DigestLength(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entry := editor_state.BonusEntry{
-		PresetType:     editor_state.BonusTownPortalFree,
+	entry := editor_state_model.BonusEntry{
+		PresetType:     editor_state_model.BonusTownPortalFree,
 		ReceiverFilter: gofakeit.Word(),
 	}
 

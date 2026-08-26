@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // ManageRulesDialog edits the polymorphic content-rule list for a single
@@ -22,8 +23,8 @@ import (
 // adds or updates a rule (one per type).
 type ManageRulesDialog struct {
 	mapping models.SidMapping
-	rules   []models.ContentRuleRow
-	onApply func([]models.ContentRuleRow)
+	rules   []editor_state_model.ContentRuleRow
+	onApply func([]editor_state_model.ContentRuleRow)
 
 	contentRuleHandler handler_interfaces.IZoneContentHandler
 	types              []dtos.ContentRuleOptionDto
@@ -48,9 +49,9 @@ type ManageRulesDialog struct {
 // invoked with the edited rule list when the user clicks Apply.
 func NewManageRulesDialog(
 	mapping models.SidMapping,
-	rules []models.ContentRuleRow,
+	rules []editor_state_model.ContentRuleRow,
 	contentRuleHandler handler_interfaces.IZoneContentHandler,
-	onApply func([]models.ContentRuleRow)) *ManageRulesDialog {
+	onApply func([]editor_state_model.ContentRuleRow)) *ManageRulesDialog {
 	options := contentRuleHandler.GetContentRuleEditorOptions(mapping)
 	dialog := &ManageRulesDialog{
 		mapping:            mapping,
@@ -265,10 +266,10 @@ func (this *ManageRulesDialog) upsertFromEditor() {
 	this.rules = this.contentRuleHandler.UpsertContentRule(this.rules, saved)
 }
 
-func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRow, bool) {
+func (this *ManageRulesDialog) buildRuleFromEditor() (editor_state_model.ContentRuleRow, bool) {
 	option, ok := this.selectedRuleType()
 	if !ok {
-		return models.ContentRuleRow{}, false
+		return editor_state_model.ContentRuleRow{}, false
 	}
 
 	result := this.contentRuleHandler.ComposeContentRule(dtos.ContentRuleCompositionRequestDto{
@@ -294,6 +295,6 @@ func (this *ManageRulesDialog) selectedRuleType() (dtos.ContentRuleOptionDto, bo
 
 // ruleDisplayText reconstructs a rule's user-facing description, falling back to
 // the raw name when the saved data cannot be resolved to a known rule.
-func (this *ManageRulesDialog) ruleDisplayText(saved models.ContentRuleRow) string {
+func (this *ManageRulesDialog) ruleDisplayText(saved editor_state_model.ContentRuleRow) string {
 	return this.contentRuleHandler.DescribeContentRule(this.mapping, saved).DisplayText
 }

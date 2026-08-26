@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
@@ -136,7 +137,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	loadDto, _ := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    singleVariantTemplate(),
 		Zones:       zones,
-		EditorState: fixture.editorStateMapper.ToDtoPointer(&state),
+		EditorState: &editor_state_dto.EditorStateDto{EditorState: state},
 	})
 
 	// Assert

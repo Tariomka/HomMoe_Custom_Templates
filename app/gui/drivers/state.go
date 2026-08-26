@@ -16,20 +16,16 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
-const (
-	configFileExtension = ".gen.json"
-)
+const configFileExtension = ".gen.json"
 
 type State struct {
-	handler           handler_interfaces.IGuiHandler
-	fileSystem        handler_interfaces.IFileSystemHandler
-	regeneration      handler_interfaces.IRegenerationHandler
-	editorStateMapper mappers.IEditorStateMapper
+	handler      handler_interfaces.IGuiHandler
+	fileSystem   handler_interfaces.IFileSystemHandler
+	regeneration handler_interfaces.IRegenerationHandler
 
 	innerState *models.EditorState
 
@@ -65,14 +61,12 @@ func NewUIState(
 	handler handler_interfaces.IGuiHandler,
 	fileSystem handler_interfaces.IFileSystemHandler,
 	regeneration handler_interfaces.IRegenerationHandler,
-	editorStateMapper mappers.IEditorStateMapper,
 	findTemplateDir bool) *State {
 	state := &State{
-		handler:           handler,
-		fileSystem:        fileSystem,
-		regeneration:      regeneration,
-		editorStateMapper: editorStateMapper,
-		innerState:        models.NewEditorState(handler),
+		handler:      handler,
+		fileSystem:   fileSystem,
+		regeneration: regeneration,
+		innerState:   models.NewEditorState(handler),
 	}
 	state.outputPath.SingleLine = true
 	state.dialogs = &DialogHost{}
@@ -103,7 +97,7 @@ func (this *State) GetStateData() editor_state_model.EditorState {
 }
 
 func (this *State) GetStateDto() editor_state_dto.EditorStateDto {
-	return this.editorStateMapper.ToDto(this.innerState.GetCurrentState())
+	return editor_state_dto.EditorStateDto{EditorState: this.GetStateData()}
 }
 
 // Clone-free single-setting readers for per-frame Layout code; see EditorState.
@@ -161,4 +155,22 @@ func (this *State) hasTemplateVariants() bool {
 func (this *State) setLastTemplate(template *entities.RmgTemplate) {
 	this.lastTemplate = template
 	this.templateRevision++
+}
+
+func (this *State) getPreviousStateDto() *editor_state_dto.EditorStateDto {
+	state := this.innerState.GetPreviousState()
+	if state == nil {
+		return nil
+	}
+
+	return &editor_state_dto.EditorStateDto{EditorState: *state}
+}
+
+func (this *State) getNextStateDto() *editor_state_dto.EditorStateDto {
+	state := this.innerState.GetNextState()
+	if state == nil {
+		return nil
+	}
+
+	return &editor_state_dto.EditorStateDto{EditorState: *state}
 }

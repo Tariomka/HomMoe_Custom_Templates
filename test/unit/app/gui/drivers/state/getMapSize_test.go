@@ -17,8 +17,9 @@ func TestWhenMapSizeWasUpdated_GetMapSizeReturnsIt(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
+
 		false)
+
 	mapSize := gofakeit.Number(100, 300)
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.MapSize = mapSize })
 

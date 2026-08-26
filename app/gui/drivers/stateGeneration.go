@@ -27,9 +27,9 @@ func (this *State) SaveTemplate() { this.handleSaveTemplate() }
 // input.
 func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
 	decision := this.regeneration.DecideRegeneration(dtos.RegenerationDecisionRequestDto{
-		Previous:      this.editorStateMapper.ToDtoPointer(this.innerState.GetPreviousState()),
+		Previous:      this.getPreviousStateDto(),
 		Current:       new(this.GetStateDto()),
-		Next:          this.editorStateMapper.ToDtoPointer(this.innerState.GetNextState()),
+		Next:          this.getNextStateDto(),
 		Now:           now,
 		DebounceDueAt: this.applyNextStateAt,
 	})
@@ -90,12 +90,10 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 
 	// The decision compares against the state of the LAST generation, so it
 	// must be taken before applyGeneratedTemplate snapshots the current state.
-	manualEdits := this.regeneration.DecideManualEditReapplication(
-		this.editorStateMapper.ToDtoPointer(this.innerState.GetPreviousState()), &currentState)
+	manualEdits := this.regeneration.DecideManualEditReapplication(this.getPreviousStateDto(), &currentState)
 	this.applyGeneratedTemplate(dto.Template)
 	if manualEdits.ReapplyWithCastleChanges != nil && this.hasTemplateVariants() {
-		this.reapplyManualEdits(
-			this.editorStateMapper.ToCastleSettingChangesModel(*manualEdits.ReapplyWithCastleChanges))
+		this.reapplyManualEdits(*manualEdits.ReapplyWithCastleChanges)
 	} else if manualEdits.ReapplyWithCastleChanges == nil {
 		this.innerState.ClearManualEdits()
 	}

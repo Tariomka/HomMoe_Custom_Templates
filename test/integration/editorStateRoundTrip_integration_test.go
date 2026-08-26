@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,7 +54,7 @@ func TestWhenAStateIsSavedThroughTheHandler_TheSourceModelIsNotAliasedByTheFile(
 	handler := composition.InitializeGuiHandler()
 	state := test_helpers.NewAllFieldsEditorStateModel()
 	savedPath, err := handler.SaveState(editor_state_dto.EditorStateSaveDto{
-		State:      mappers.NewEditorStateMapper().ToDtoPointer(&state),
+		State:      &editor_state_dto.EditorStateDto{EditorState: state},
 		OutputPath: filepath.Join(t.TempDir(), "ignored.gen.json"),
 	})
 	require.NoError(t, err)
@@ -82,7 +81,7 @@ func TestWhenAStateIsRoundTripped_TheReloadedModelEqualsTheSavedOne(t *testing.T
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, mappers.NewEditorStateMapper().ToDto(test_helpers.NewAllFieldsEditorStateModel()), *loaded)
+	assert.Equal(t, editor_state_dto.EditorStateDto{EditorState: test_helpers.NewAllFieldsEditorStateModel()}, *loaded)
 }
 
 // saveRoundTripState writes the all-fields state through the real handler graph
@@ -92,7 +91,7 @@ func saveRoundTripState(t *testing.T) (handler_interfaces.IGuiHandler, string) {
 	handler := composition.InitializeGuiHandler()
 	state := test_helpers.NewAllFieldsEditorStateModel()
 	savedPath, err := handler.SaveState(editor_state_dto.EditorStateSaveDto{
-		State:      mappers.NewEditorStateMapper().ToDtoPointer(&state),
+		State:      &editor_state_dto.EditorStateDto{EditorState: state},
 		OutputPath: filepath.Join(t.TempDir(), "ignored.gen.json"),
 	})
 	require.NoError(t, err)

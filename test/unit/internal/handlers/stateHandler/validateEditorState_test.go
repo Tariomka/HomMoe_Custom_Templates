@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -19,7 +17,6 @@ func TestWhenStateHasNoIssues_ReturnsNoWarnings(t *testing.T) {
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
 		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
 	)
 
 	// Act
@@ -37,8 +34,7 @@ func TestWhenIssuesAreNotFixed_ReturnsTheStateUnmodified(t *testing.T) {
 	state.NeutralZoneCount = gofakeit.IntRange(1, 16)
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		newValidatorReporting(gofakeit.Sentence(3)),
-		mappers.NewEditorStateMapper())
+		newValidatorReporting(gofakeit.Sentence(3)))
 
 	// Act
 	validation := handler.ValidateEditorState(state, false)
@@ -56,7 +52,6 @@ func TestWhenIssuesAreFixed_AppliesEachIssueFix(t *testing.T) {
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
 		validators.NewEditorStateValidator(),
-		mappers.NewEditorStateMapper(),
 	)
 
 	// Act
@@ -74,9 +69,7 @@ func TestWhenAdvancedModeIsOn_ZeroesTheSimpleNeutralZoneCount(t *testing.T) {
 	state.NeutralZoneCount = gofakeit.IntRange(1, 16)
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
-	)
+		newPassingValidator())
 
 	// Act
 	validation := handler.ValidateEditorState(state, true)
@@ -93,12 +86,11 @@ func TestWhenValidationFixesAContentRow_TheCallersSliceIsUnchanged(t *testing.T)
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.PlayerCount = 99
-	state.PlayerZoneContentRows = []models.ZoneContentRow{{Sid: "sawmill", Count: 1}}
+	state.PlayerZoneContentRows = []editor_state_model.ZoneContentRow{{Sid: "sawmill", Count: 1}}
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		validators.NewEditorStateValidator(),
-		mappers.NewEditorStateMapper(),
-	)
+		validators.NewEditorStateValidator())
+
 	validation := handler.ValidateEditorState(state, true)
 
 	// Act
@@ -115,9 +107,8 @@ func TestWhenAdvancedModeIsOn_KeepsThePerTierCounts(t *testing.T) {
 	state.AdvancedMode = true
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
-	)
+		newPassingValidator())
+
 	expected := tierCountsOf(state)
 
 	// Act
@@ -134,9 +125,7 @@ func TestWhenAdvancedModeIsOff_ZeroesThePerTierCounts(t *testing.T) {
 	state.AdvancedMode = false
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
-	)
+		newPassingValidator())
 
 	// Act
 	validation := handler.ValidateEditorState(state, true)
@@ -153,9 +142,7 @@ func TestWhenAdvancedModeIsOff_KeepsTheSimpleNeutralZoneCount(t *testing.T) {
 	state.NeutralZoneCount = gofakeit.IntRange(1, 16)
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
-	)
+		newPassingValidator())
 
 	// Act
 	validation := handler.ValidateEditorState(state, true)
@@ -171,9 +158,8 @@ func TestWhenIssuesAreNotFixed_SkipsTheInactiveCountNormalization(t *testing.T) 
 	state.AdvancedMode = false
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
-	)
+		newPassingValidator())
+
 	expected := tierCountsOf(state)
 
 	// Act
@@ -190,9 +176,8 @@ func TestWhenStateIsValidated_LeavesTheCallersStateUntouched(t *testing.T) {
 	state.AdvancedMode = false
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
-		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
-	)
+		newPassingValidator())
+
 	expected := tierCountsOf(state)
 
 	// Act

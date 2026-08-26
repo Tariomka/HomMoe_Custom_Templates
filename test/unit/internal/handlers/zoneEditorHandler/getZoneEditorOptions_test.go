@@ -21,7 +21,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheStatesTopology(t *testing.T) {
 	fixture.tuningFactory.On("Create", mock.Anything, mock.Anything).Return(models.GenerationTuning{})
 
 	// Act
-	options := fixture.handler.GetZoneEditorOptions(fixture.editorStateMapper.ToDto(state), gofakeit.IntRange(1, 20))
+	options := fixture.handler.GetZoneEditorOptions(toDto(state), gofakeit.IntRange(1, 20))
 
 	// Assert
 	assert.Equal(t, config.TopologyChain, options.Topology)
@@ -37,7 +37,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheStatesRoadFlag(t *testing.T) {
 	fixture.tuningFactory.On("Create", mock.Anything, mock.Anything).Return(models.GenerationTuning{})
 
 	// Act
-	options := fixture.handler.GetZoneEditorOptions(fixture.editorStateMapper.ToDto(state), gofakeit.IntRange(1, 20))
+	options := fixture.handler.GetZoneEditorOptions(toDto(state), gofakeit.IntRange(1, 20))
 
 	// Assert
 	assert.True(t, options.GenerateRoads)
@@ -55,7 +55,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheTuningForTheZoneCount(t *testin
 	fixture.tuningFactory.On("Create", configuration, totalZoneCount).Return(expected)
 
 	// Act
-	options := fixture.handler.GetZoneEditorOptions(fixture.editorStateMapper.ToDto(state), totalZoneCount)
+	options := fixture.handler.GetZoneEditorOptions(toDto(state), totalZoneCount)
 
 	// Assert
 	assert.Equal(t, expected, options.Tuning)

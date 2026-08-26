@@ -12,6 +12,5 @@ import (
 // so that app/ never has to import internal/services.
 type IRegenerationHandler interface {
 	DecideRegeneration(request dtos.RegenerationDecisionRequestDto) dtos.RegenerationDecisionDto
-	DecideManualEditReapplication(
-		previous, current *editor_state_dto.EditorStateDto) dtos.ManualEditDecisionDto
+	DecideManualEditReapplication(previous, current *editor_state_dto.EditorStateDto) dtos.ManualEditDecisionDto
 }

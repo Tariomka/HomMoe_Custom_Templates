@@ -21,9 +21,8 @@ func TestWhenGenerationSucceeds_LastTemplateIsStored(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.Generate()
@@ -42,9 +41,8 @@ func TestWhenGenerationSucceeds_StatusReportsGeneratedTemplate(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.Generate()
@@ -64,9 +62,8 @@ func TestWhenGenerationFails_ErrorStatusIsSet(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.Generate()
@@ -86,9 +83,8 @@ func TestWhenGenerationFails_NoTemplateIsStored(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.Generate()

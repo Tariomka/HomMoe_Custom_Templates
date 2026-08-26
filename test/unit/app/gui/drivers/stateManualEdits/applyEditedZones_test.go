@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -21,9 +22,8 @@ func TestWhenNoTemplateWasGenerated_EditsAreIgnored(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{})
@@ -81,7 +81,7 @@ func TestWhenTemplateExists_CurrentEditorStateIsSentForUpdate(t *testing.T) {
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
 
 	// Assert
-	assert.Equal(t, newEditorStateMapper().ToDtoPointer(&expectedState), updateRequest.EditorState)
+	assert.Equal(t, &editor_state_dto.EditorStateDto{EditorState: expectedState}, updateRequest.EditorState)
 }
 
 func TestWhenTemplateExists_StatusReportsAppliedCounts(t *testing.T) {
@@ -211,9 +211,9 @@ func newGeneratedState() (
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
+
 	state.Generate()
 	return state, handlerMock, template.Variants[0].Zones, template.Variants[0].Connections
 }

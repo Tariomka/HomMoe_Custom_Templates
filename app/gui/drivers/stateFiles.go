@@ -99,7 +99,7 @@ func (this *State) handleLoadState(path string) bool {
 		return false
 	}
 
-	this.innerState.OverrideState(this.editorStateMapper.ToModel(*loaded))
+	this.innerState.OverrideState(loaded.EditorState)
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()

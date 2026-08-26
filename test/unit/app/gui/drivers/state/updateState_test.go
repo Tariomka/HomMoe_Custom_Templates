@@ -19,8 +19,9 @@ func TestWhenUpdateChangesState_ChangeIsApplied(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
+
 		false)
+
 	playerCount := gofakeit.Number(3, 8)
 
 	// Act
@@ -64,9 +65,9 @@ func newGeneratedState() *drivers.State {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
+
 	state.Generate()
 	return state
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -73,7 +72,7 @@ func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.
 	savedState := editor_state_model.NewDefaultEditorStateModel()
 	savedState.TemplateName = gofakeit.ProductName()
 	savedPath, saveErr := handler.SaveState(editor_state_dto.EditorStateSaveDto{
-		State:      mappers.NewEditorStateMapper().ToDtoPointer(&savedState),
+		State:      toDtoPointer(&savedState),
 		OutputPath: statePath,
 	})
 	require.NoError(t, saveErr)
@@ -94,7 +93,7 @@ func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
 	statePath := filepath.Join(t.TempDir(), "valid-state.gen.json")
 	savedState := editor_state_model.NewDefaultEditorStateModel()
 	savedPath, saveErr := handler.SaveState(editor_state_dto.EditorStateSaveDto{
-		State:      mappers.NewEditorStateMapper().ToDtoPointer(&savedState),
+		State:      toDtoPointer(&savedState),
 		OutputPath: statePath,
 	})
 	require.NoError(t, saveErr)

@@ -3,7 +3,7 @@
 ## 1. Session goal
 
 Execute **Phase 10** of
-[plans/batch-i-editor-state-rework.md](../plans/batch-i-editor-state-rework.md)
+[plans/batch-i-editor-state-rework.md](./plans/batch-i-editor-state-rework.md)
 — rebuild `EditorStateDto` as a logic-free consumer contract and make the
 editor-state handler crossings speak it. **Done, all gates green, unstaged and
 uncommitted.** Phase 11 was folded in and is now marked superseded.
@@ -170,7 +170,7 @@ because `ValidateEditorState` was excluded from it.
 
 ## 11. Carry-forward prompt
 
-> Read `AGENTS.md` first, then `plans/batch-i-editor-state-rework.md` — and in
+> Read `AGENTS.md` first, then `.agent/plans/batch-i-editor-state-rework.md` — and in
 > that plan read **§0.6, then §0.5, then §0.4**, because each overrides the one
 > after it. The layering doctrine, as settled: **Entity** = database layer,
 > `internal/entities/`, no logic beyond json tags and (de)serialisation;

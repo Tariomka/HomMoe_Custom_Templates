@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -165,8 +164,8 @@ func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
 	template := &entities.RmgTemplate{Variants: []entities.Variant{{Zones: zones}}}
 	editorState := editor_state_model.NewDefaultEditorStateModel()
 	editorState.SpawnRemoteFootholds = false
-	editorState.MediumNeutralContentRows = []models.ZoneContentRow{{Sid: "medium_only", Count: 1}}
-	editorState.HighNeutralContentRows = []models.ZoneContentRow{{Sid: "high_only", Count: 1}}
+	editorState.MediumNeutralContentRows = []editor_state_model.ZoneContentRow{{Sid: "medium_only", Count: 1}}
+	editorState.HighNeutralContentRows = []editor_state_model.ZoneContentRow{{Sid: "high_only", Count: 1}}
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       zones,

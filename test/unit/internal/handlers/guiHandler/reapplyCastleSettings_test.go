@@ -28,7 +28,7 @@ func TestWhenCastleSettingsChange_ReturnsServiceEquivalentZones(t *testing.T) {
 	// Act
 	result := handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{
 		Zones:       actualZones,
-		Changes:     toCastleSettingChangesDto(changes),
+		Changes:     changes,
 		EditorState: toDto(editorState),
 	})
 

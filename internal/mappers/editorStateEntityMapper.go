@@ -23,12 +23,31 @@ func (this *EditorStateEntityMapper) NewDefaultEntity() editor_state.EditorState
 }
 
 func (this *EditorStateEntityMapper) ToEntity(state editor_state_model.EditorState) editor_state.EditorState {
-	entity := state.EditorState
-	entity.SchemaVersion = editor_state.CurrentEditorStateSchemaVersion
-	return entity
+	return editor_state.EditorState{
+		TemplateIdentity:    state.TemplateIdentity.TemplateIdentity,
+		MapSettings:         state.MapSettings.MapSettings,
+		PlayerSettings:      state.PlayerSettings.PlayerSettings,
+		NeutralZoneSettings: state.NeutralZoneSettings.NeutralZoneSettings,
+		CastleSettings:      state.CastleSettings.CastleSettings,
+		GenerationSettings:  state.GenerationSettings.GenerationSettings,
+		GameRuleSettings:    state.GameRuleSettings.GameRuleSettings,
+		ContentSettings:     editor_state_model.ToContentSettingsEntity(state.ContentSettings),
+		ManualEditSettings:  editor_state_model.ToManualEditSettingsEntity(state.ManualEditSettings),
+		SchemaVersion:       editor_state.CurrentEditorStateSchemaVersion,
+	}
 }
 
 func (this *EditorStateEntityMapper) ToModel(entity editor_state.EditorState) editor_state_model.EditorState {
-	entity.SchemaVersion = editor_state.CurrentEditorStateSchemaVersion
-	return editor_state_model.EditorState{EditorState: entity}
+	return editor_state_model.EditorState{
+		TemplateIdentity:    editor_state_model.TemplateIdentity{TemplateIdentity: entity.TemplateIdentity},
+		MapSettings:         editor_state_model.MapSettings{MapSettings: entity.MapSettings},
+		PlayerSettings:      editor_state_model.PlayerSettings{PlayerSettings: entity.PlayerSettings},
+		NeutralZoneSettings: editor_state_model.NeutralZoneSettings{NeutralZoneSettings: entity.NeutralZoneSettings},
+		CastleSettings:      editor_state_model.CastleSettings{CastleSettings: entity.CastleSettings},
+		GenerationSettings:  editor_state_model.GenerationSettings{GenerationSettings: entity.GenerationSettings},
+		GameRuleSettings:    editor_state_model.GameRuleSettings{GameRuleSettings: entity.GameRuleSettings},
+		ContentSettings:     editor_state_model.ToContentSettingsModel(entity.ContentSettings),
+		ManualEditSettings:  editor_state_model.ToManualEditSettingsModel(entity.ManualEditSettings),
+		SchemaVersion:       editor_state.CurrentEditorStateSchemaVersion,
+	}
 }

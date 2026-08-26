@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // Rule metadata constants for the solo-encounter rule.
@@ -45,9 +45,9 @@ func (this *RuleSoloEncounter) Apply(item *entities.MandatoryContentItem) {
 	item.SoloEncounter = this.IsSoloEncounter
 }
 
-func (this *RuleSoloEncounter) SerializeToRowSave() models.ContentRuleRow {
+func (this *RuleSoloEncounter) SerializeToRowSave() editor_state_model.ContentRuleRow {
 	value := this.IsSoloEncounter
-	return models.ContentRuleRow{
+	return editor_state_model.ContentRuleRow{
 		Name:            this.Name(),
 		IsSoloEncounter: &value,
 	}

@@ -71,9 +71,9 @@ func newDirtyGeneratedState() *drivers.State {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
+
 	state.Generate()
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = gofakeit.ProductName() })
 	return state

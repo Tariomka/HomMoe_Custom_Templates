@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 type ContentRuleService struct {
@@ -40,7 +41,7 @@ func (this *ContentRuleService) ApplyRulesToItem(item *entities.MandatoryContent
 }
 
 func (this *ContentRuleService) CreateRuleFromSavedRule(
-	saved models.ContentRuleRow,
+	saved editor_state_model.ContentRuleRow,
 	content models.SidMapping) IContentRule {
 	switch {
 	case strings.EqualFold(saved.Name, RuleDistanceToRoadName):
@@ -79,7 +80,7 @@ func (this *ContentRuleService) CreateRuleFromSavedRule(
 }
 
 func (this *ContentRuleService) RestoreRulesFromRow(
-	row models.ZoneContentRow,
+	row editor_state_model.ZoneContentRow,
 	content models.SidMapping) []IContentRule {
 	var result []IContentRule
 	for _, savedRule := range row.Rules {

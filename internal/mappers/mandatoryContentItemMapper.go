@@ -2,8 +2,8 @@ package mappers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/editor_state_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
@@ -16,14 +16,15 @@ func NewMandatoryContentItemMapper(contentRuleService content_rules.IContentRule
 	return &MandatoryContentItemMapper{contentRuleService: contentRuleService}
 }
 
-func (this *MandatoryContentItemMapper) FromRows(rows []models.ZoneContentRow) []entities.MandatoryContentItem {
+func (this *MandatoryContentItemMapper) FromRows(
+	rows []editor_state_model.ZoneContentRow) []entities.MandatoryContentItem {
 	if len(rows) == 0 {
 		return nil
 	}
 
 	var items []entities.MandatoryContentItem
 	for _, rawRow := range rows {
-		row := editor_state_helpers.NormalizeZoneContentRow(rawRow)
+		row := rawRow.Normalized()
 		if row.Sid == "" {
 			continue
 		}
@@ -34,7 +35,7 @@ func (this *MandatoryContentItemMapper) FromRows(rows []models.ZoneContentRow) [
 	return items
 }
 
-func (this *MandatoryContentItemMapper) fromRow(row models.ZoneContentRow) entities.MandatoryContentItem {
+func (this *MandatoryContentItemMapper) fromRow(row editor_state_model.ZoneContentRow) entities.MandatoryContentItem {
 	sid := row.Sid
 	if row.IsGroup {
 		sid = ""

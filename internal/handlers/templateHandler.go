@@ -20,7 +20,6 @@ import (
 type templateHandler struct {
 	templateGenerator template_generator.ITemplateGenerator
 	mapper            mappers.IGeneratorConfigMapper
-	editorStateMapper mappers.IEditorStateMapper
 	contentProvider   provider_interfaces.IMandatoryContentProvider
 	connectionEditor  connection_editor.IConnectionEditorService
 	zoneEditor        connection_editor.IZoneEditorService
@@ -33,7 +32,6 @@ type templateHandler struct {
 func NewTemplateHandler(
 	templateGenerator template_generator.ITemplateGenerator,
 	mapper mappers.IGeneratorConfigMapper,
-	editorStateMapper mappers.IEditorStateMapper,
 	contentProvider provider_interfaces.IMandatoryContentProvider,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
@@ -44,7 +42,6 @@ func NewTemplateHandler(
 	return &templateHandler{
 		templateGenerator: templateGenerator,
 		mapper:            mapper,
-		editorStateMapper: editorStateMapper,
 		contentProvider:   contentProvider,
 		connectionEditor:  connectionEditor,
 		zoneEditor:        zoneEditor,
@@ -57,7 +54,7 @@ func NewTemplateHandler(
 
 func (this *templateHandler) GenerateTemplate(
 	state editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	validation := this.stateHandler.ValidateEditorState(this.editorStateMapper.ToModel(state), true)
+	validation := this.stateHandler.ValidateEditorState(state.EditorState, true)
 
 	configuration := this.mapper.FromEditorState(validation.State)
 	if configuration.TemplateName == "" {
@@ -91,7 +88,7 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 	// Rebuild mandatory content from the final zones so a zone re-tiered in the
 	// manual editor gets the content of its new quality instead of the original tier.
 	if templateDto.EditorState != nil {
-		configuration := this.mapper.FromEditorState(this.editorStateMapper.ToModel(*templateDto.EditorState))
+		configuration := this.mapper.FromEditorState(templateDto.EditorState.EditorState)
 		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(
 			*configuration, newTemplate.Variants[0].Zones)
 	}
@@ -106,9 +103,8 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 
 func (this *templateHandler) ReapplyCastleSettings(
 	request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
-	configuration := this.mapper.FromEditorState(this.editorStateMapper.ToModel(request.EditorState))
-	changes := this.editorStateMapper.ToCastleSettingChangesModel(request.Changes)
-	this.manualReapply.ApplyCastleSettingChanges(request.Zones, changes, configuration)
+	configuration := this.mapper.FromEditorState(request.EditorState.EditorState)
+	this.manualReapply.ApplyCastleSettingChanges(request.Zones, request.Changes, configuration)
 	return request.Zones
 }
 

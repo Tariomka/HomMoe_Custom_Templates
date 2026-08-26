@@ -16,9 +16,8 @@ func TestWhenNoCurrentPathExists_SaveOpensSaveToDialog(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.Save()
@@ -35,9 +34,8 @@ func TestWhenNoCurrentPathExists_SaveDoesNotCallHandler(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.Save()

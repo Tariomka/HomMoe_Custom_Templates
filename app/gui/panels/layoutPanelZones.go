@@ -9,7 +9,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
@@ -129,26 +128,34 @@ func (this *LayoutPanel) handleZoneContentDialogClicks(gtx layout.Context) {
 	switch {
 	case this.btnPlayerContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Player", true, settings.PlayerZoneContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.PlayerZoneContentRows = rows })
+			func(state *editor_state_model.EditorState, rows []editor_state_model.ZoneContentRow) {
+				state.PlayerZoneContentRows = rows
+			})
 	case this.btnLowestContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Lowest Neutral", false, settings.LowestNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) {
-				s.LowestNeutralContentRows = rows
+			func(state *editor_state_model.EditorState, rows []editor_state_model.ZoneContentRow) {
+				state.LowestNeutralContentRows = rows
 			})
 	case this.btnLowContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Low Neutral", false, settings.LowNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.LowNeutralContentRows = rows })
+			func(state *editor_state_model.EditorState, rows []editor_state_model.ZoneContentRow) {
+				state.LowNeutralContentRows = rows
+			})
 	case this.btnMedContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Medium Neutral", false, settings.MediumNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) {
-				s.MediumNeutralContentRows = rows
+			func(state *editor_state_model.EditorState, rows []editor_state_model.ZoneContentRow) {
+				state.MediumNeutralContentRows = rows
 			})
 	case this.btnHighContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: High Neutral", false, settings.HighNeutralContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.HighNeutralContentRows = rows })
+			func(state *editor_state_model.EditorState, rows []editor_state_model.ZoneContentRow) {
+				state.HighNeutralContentRows = rows
+			})
 	case this.btnHubContent.Clicked(gtx):
 		this.openZoneContentDialog("Zone Content: Hub", false, settings.HubZoneContentRows,
-			func(s *editor_state_model.EditorState, rows []models.ZoneContentRow) { s.HubZoneContentRows = rows })
+			func(state *editor_state_model.EditorState, rows []editor_state_model.ZoneContentRow) {
+				state.HubZoneContentRows = rows
+			})
 	}
 }
 
@@ -157,11 +164,11 @@ func (this *LayoutPanel) handleZoneContentDialogClicks(gtx layout.Context) {
 func (this *LayoutPanel) openZoneContentDialog(
 	title string,
 	isPlayerTier bool,
-	rows []models.ZoneContentRow,
-	set func(*editor_state_model.EditorState, []models.ZoneContentRow)) {
+	rows []editor_state_model.ZoneContentRow,
+	set func(*editor_state_model.EditorState, []editor_state_model.ZoneContentRow)) {
 	this.state.GetDialogHost().Open(dialogs.NewZoneContentDialog(
 		title, isPlayerTier, rows, this.contentRuleHandler, this.state.GetDialogHost().Open,
-		func(updated []models.ZoneContentRow) {
+		func(updated []editor_state_model.ZoneContentRow) {
 			this.state.UpdateState(func(s *editor_state_model.EditorState) { set(s, updated) })
 		}))
 }

@@ -112,14 +112,11 @@ func TestWhenGenerationFails_NoBaseZonesAreReturned(t *testing.T) {
 // newFailingState returns a State whose generator always errors.
 func newFailingState() *drivers.State {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	handlerMock.On("GenerateTemplate", mock.Anything).
-		Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
 
 	return drivers.NewUIState(
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+		false)
 }

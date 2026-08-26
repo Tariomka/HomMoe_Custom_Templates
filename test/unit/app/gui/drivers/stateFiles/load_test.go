@@ -15,7 +15,7 @@ func TestWhenLoadIsCalled_DialogIsOpened(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
+
 		false)
 
 	// Act

@@ -74,7 +74,6 @@ var InfrastructureSet = wire.NewSet(
 	file_service.NewFileService,
 	mappers.NewConfigMapper,
 	mappers.NewEditorStateEntityMapper,
-	mappers.NewEditorStateMapper,
 	mappers.NewMandatoryContentItemMapper,
 	validators.NewEditorStateValidator,
 )
@@ -115,13 +114,5 @@ var FileSystemSet = wire.NewSet(
 // regenerate shares no collaborator with actually generating.
 var RegenerationSet = wire.NewSet(
 	editor_services.NewRegenerationDecisionService,
-	mappers.NewEditorStateMapper,
 	handlers.NewRegenerationHandler,
-)
-
-// EditorStateMapperSet exposes the DTO <-> Model mapper on its own, because the
-// GUI maps its stored Model into a request DTO at every handler call site and
-// so needs the mapper without any of the graph behind it.
-var EditorStateMapperSet = wire.NewSet(
-	mappers.NewEditorStateMapper,
 )

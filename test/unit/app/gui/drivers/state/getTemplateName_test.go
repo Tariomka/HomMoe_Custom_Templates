@@ -17,8 +17,9 @@ func TestWhenTemplateNameWasUpdated_GetTemplateNameReturnsIt(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
+
 		false)
+
 	templateName := gofakeit.ProductName()
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = templateName })
 

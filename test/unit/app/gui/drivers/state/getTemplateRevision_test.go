@@ -96,7 +96,5 @@ func newRevisionState() (*drivers.State, *test_helpers.TemplateHandlerMock) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	), handlerMock
+		false), handlerMock
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 )
 
@@ -44,8 +45,8 @@ func (this *RuleDistanceToTown) Apply(item *entities.MandatoryContentItem) {
 	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildCastleRule(this.Distance, 1))
 }
 
-func (this *RuleDistanceToTown) SerializeToRowSave() models.ContentRuleRow {
-	return models.ContentRuleRow{
+func (this *RuleDistanceToTown) SerializeToRowSave() editor_state_model.ContentRuleRow {
+	return editor_state_model.ContentRuleRow{
 		Name:         this.Name(),
 		DistanceName: this.Distance.Name,
 	}

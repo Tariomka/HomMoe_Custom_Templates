@@ -14,38 +14,35 @@ import (
 )
 
 type zoneEditorHandler struct {
-	mapper            mappers.IGeneratorConfigMapper
-	editorStateMapper mappers.IEditorStateMapper
-	zoneClassifier    zone_interfaces.IZoneClassifier
-	connectionEditor  connection_editor.IConnectionEditorService
-	zoneEditor        connection_editor.IZoneEditorService
-	geometry          connection_editor.IZoneEditorGeometryService
-	tuningFactory     generation_tuning.IGenerationTuningFactory
+	mapper           mappers.IGeneratorConfigMapper
+	zoneClassifier   zone_interfaces.IZoneClassifier
+	connectionEditor connection_editor.IConnectionEditorService
+	zoneEditor       connection_editor.IZoneEditorService
+	geometry         connection_editor.IZoneEditorGeometryService
+	tuningFactory    generation_tuning.IGenerationTuningFactory
 }
 
 func NewZoneEditorHandler(
 	mapper mappers.IGeneratorConfigMapper,
-	editorStateMapper mappers.IEditorStateMapper,
 	zoneClassifier zone_interfaces.IZoneClassifier,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
 	geometry connection_editor.IZoneEditorGeometryService,
 	tuningFactory generation_tuning.IGenerationTuningFactory) handler_interfaces.IZoneEditorHandler {
 	return &zoneEditorHandler{
-		mapper:            mapper,
-		editorStateMapper: editorStateMapper,
-		zoneClassifier:    zoneClassifier,
-		connectionEditor:  connectionEditor,
-		zoneEditor:        zoneEditor,
-		geometry:          geometry,
-		tuningFactory:     tuningFactory,
+		mapper:           mapper,
+		zoneClassifier:   zoneClassifier,
+		connectionEditor: connectionEditor,
+		zoneEditor:       zoneEditor,
+		geometry:         geometry,
+		tuningFactory:    tuningFactory,
 	}
 }
 
 func (this *zoneEditorHandler) GetZoneEditorOptions(
 	state editor_state_dto.EditorStateDto,
 	totalZoneCount int) dtos.ZoneEditorOptionsDto {
-	configuration := this.mapper.FromEditorState(this.editorStateMapper.ToModel(state))
+	configuration := this.mapper.FromEditorState(state.EditorState)
 	return dtos.ZoneEditorOptionsDto{
 		Topology:      state.Topology,
 		Tuning:        this.tuningFactory.Create(configuration, totalZoneCount),

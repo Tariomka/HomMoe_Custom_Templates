@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -121,7 +120,6 @@ func newEditedSession(t *testing.T) *drivers.State {
 		composition.InitializeGuiHandler(),
 		composition.InitializeFileSystemHandler(),
 		composition.InitializeRegenerationHandler(),
-		mappers.NewEditorStateMapper(),
 		false)
 	state.Generate()
 	template := state.GetLastTemplate()

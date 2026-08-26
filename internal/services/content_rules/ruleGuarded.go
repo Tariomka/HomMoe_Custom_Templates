@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // Rule metadata constants for the guarded rule.
@@ -43,9 +43,9 @@ func (this *RuleGuarded) DisplayText() string {
 
 func (this *RuleGuarded) Apply(item *entities.MandatoryContentItem) { item.IsGuarded = this.IsGuarded }
 
-func (this *RuleGuarded) SerializeToRowSave() models.ContentRuleRow {
+func (this *RuleGuarded) SerializeToRowSave() editor_state_model.ContentRuleRow {
 	value := this.IsGuarded
-	return models.ContentRuleRow{
+	return editor_state_model.ContentRuleRow{
 		Name:      this.Name(),
 		IsGuarded: &value,
 	}

@@ -71,7 +71,7 @@ func TestWhenManualEditsExistButLayoutChanged_DoesNotReapply(t *testing.T) {
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	current := layoutChangedState()
-	current.ManualZones = manualZoneSaves()
+	current.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
 
 	// Act
 	decision := service.DecideManualEditReapplication(defaultState(), current)
@@ -115,6 +115,6 @@ func manualZoneSaves() []editor_state.ManualZoneSave {
 
 func stateWithManualEdits() *editor_state_model.EditorState {
 	state := defaultState()
-	state.ManualZones = manualZoneSaves()
+	state.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
 	return state
 }

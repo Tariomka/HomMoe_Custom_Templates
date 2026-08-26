@@ -187,7 +187,7 @@ func (this *GUIHandler) GetContentRuleEditorOptions(content models.SidMapping) d
 
 func (this *GUIHandler) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRow) dtos.ContentRuleDescriptionDto {
+	savedRule editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto {
 	return this.contentRuleHandler.DescribeContentRule(content, savedRule)
 }
 
@@ -197,20 +197,24 @@ func (this *GUIHandler) ComposeContentRule(
 }
 
 func (this *GUIHandler) UpsertContentRule(
-	rules []models.ContentRuleRow,
-	rule models.ContentRuleRow) []models.ContentRuleRow {
+	rules []editor_state_model.ContentRuleRow,
+	rule editor_state_model.ContentRuleRow) []editor_state_model.ContentRuleRow {
 	return this.contentRuleHandler.UpsertContentRule(rules, rule)
 }
 
-func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []models.ContentRuleRow {
+func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []editor_state_model.ContentRuleRow {
 	return this.contentRuleHandler.GetDefaultContentRules(content)
 }
 
-func (this *GUIHandler) GetContentRuleMarkers(content models.SidMapping, rules []models.ContentRuleRow) string {
+func (this *GUIHandler) GetContentRuleMarkers(
+	content models.SidMapping,
+	rules []editor_state_model.ContentRuleRow) string {
 	return this.contentRuleHandler.GetContentRuleMarkers(content, rules)
 }
 
-func (this *GUIHandler) GetContentRowDisplayName(content models.SidMapping, rules []models.ContentRuleRow) string {
+func (this *GUIHandler) GetContentRowDisplayName(
+	content models.SidMapping,
+	rules []editor_state_model.ContentRuleRow) string {
 	return this.contentRuleHandler.GetContentRowDisplayName(content, rules)
 }
 

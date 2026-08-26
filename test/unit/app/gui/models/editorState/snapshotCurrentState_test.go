@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
@@ -42,7 +41,7 @@ func TestWhenSnapshotTakenAndContentRowMutatedInPlace_ReportsStateChanged(t *tes
 	// Arrange
 	state := newEditorState()
 	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) {
-		dto.PlayerZoneContentRows = []models.ZoneContentRow{{Sid: "sawmill", Count: 1}}
+		dto.PlayerZoneContentRows = []editor_state_model.ZoneContentRow{{Sid: "sawmill", Count: 1}}
 	})
 	state.SnapshotCurrentState()
 

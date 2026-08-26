@@ -3,37 +3,37 @@ package config_helpers
 import (
 	"strconv"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
-func GetString(presetType editor_state.BonusPresetType) string {
+func GetString(presetType editor_state_model.BonusPresetType) string {
 	switch presetType {
-	case editor_state.BonusTownPortalFree:
+	case editor_state_model.BonusTownPortalFree:
 		return "TownPortalFree"
-	case editor_state.BonusSpell:
+	case editor_state_model.BonusSpell:
 		return "Spell"
-	case editor_state.BonusUnitMultiplier:
+	case editor_state_model.BonusUnitMultiplier:
 		return "UnitMultiplier"
-	case editor_state.BonusMovementBonus:
+	case editor_state_model.BonusMovementBonus:
 		return "MovementBonus"
-	case editor_state.BonusStartingItem:
+	case editor_state_model.BonusStartingItem:
 		return "StartingItem"
-	case editor_state.BonusStartingGold:
+	case editor_state_model.BonusStartingGold:
 		return "StartingGold"
-	case editor_state.BonusStartingGems:
+	case editor_state_model.BonusStartingGems:
 		return "StartingGems"
-	case editor_state.BonusStartingCrystals:
+	case editor_state_model.BonusStartingCrystals:
 		return "StartingCrystals"
-	case editor_state.BonusStartingMercury:
+	case editor_state_model.BonusStartingMercury:
 		return "StartingMercury"
-	case editor_state.BonusStartingWood:
+	case editor_state_model.BonusStartingWood:
 		return "StartingWood"
-	case editor_state.BonusStartingOre:
+	case editor_state_model.BonusStartingOre:
 		return "StartingOre"
 	}
 	return strconv.Itoa(int(presetType))
 }
 
-func IsResource(presetType editor_state.BonusPresetType) bool {
-	return presetType >= editor_state.BonusStartingGold
+func IsResource(presetType editor_state_model.BonusPresetType) bool {
+	return presetType >= editor_state_model.BonusStartingGold
 }

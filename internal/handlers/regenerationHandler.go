@@ -4,7 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 )
@@ -15,24 +15,21 @@ import (
 // stays testable inside internal/services.
 type regenerationHandler struct {
 	regenerationDecision editor.IRegenerationDecisionService
-	editorStateMapper    mappers.IEditorStateMapper
 }
 
 func NewRegenerationHandler(
-	regenerationDecision editor.IRegenerationDecisionService,
-	editorStateMapper mappers.IEditorStateMapper) handler_interfaces.IRegenerationHandler {
+	regenerationDecision editor.IRegenerationDecisionService) handler_interfaces.IRegenerationHandler {
 	return &regenerationHandler{
 		regenerationDecision: regenerationDecision,
-		editorStateMapper:    editorStateMapper,
 	}
 }
 
 func (this *regenerationHandler) DecideRegeneration(
 	request dtos.RegenerationDecisionRequestDto) dtos.RegenerationDecisionDto {
 	decision := this.regenerationDecision.DecideRegeneration(regeneration.DecisionRequest{
-		Previous:      this.editorStateMapper.ToModelPointer(request.Previous),
-		Current:       this.editorStateMapper.ToModelPointer(request.Current),
-		Next:          this.editorStateMapper.ToModelPointer(request.Next),
+		Previous:      toEditorStateModel(request.Previous),
+		Current:       toEditorStateModel(request.Current),
+		Next:          toEditorStateModel(request.Next),
 		Now:           request.Now,
 		DebounceDueAt: request.DebounceDueAt,
 	})
@@ -43,13 +40,20 @@ func (this *regenerationHandler) DecideRegeneration(
 func (this *regenerationHandler) DecideManualEditReapplication(
 	previous, current *editor_state_dto.EditorStateDto) dtos.ManualEditDecisionDto {
 	decision := this.regenerationDecision.DecideManualEditReapplication(
-		this.editorStateMapper.ToModelPointer(previous),
-		this.editorStateMapper.ToModelPointer(current))
+		toEditorStateModel(previous),
+		toEditorStateModel(current))
 
 	if decision.ReapplyWithCastleChanges == nil {
 		return dtos.ManualEditDecisionDto{}
 	}
 
-	changes := this.editorStateMapper.ToCastleSettingChangesDto(*decision.ReapplyWithCastleChanges)
-	return dtos.ManualEditDecisionDto{ReapplyWithCastleChanges: &changes}
+	return dtos.ManualEditDecisionDto{ReapplyWithCastleChanges: decision.ReapplyWithCastleChanges}
+}
+
+func toEditorStateModel(dto *editor_state_dto.EditorStateDto) *editor_state_model.EditorState {
+	if dto == nil {
+		return nil
+	}
+
+	return &dto.EditorState
 }

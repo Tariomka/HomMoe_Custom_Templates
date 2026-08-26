@@ -699,7 +699,8 @@ no prior memory must be able to resume work from it alone.
 ### 5.4 Local memories
 
 If you need to track any specific information between sessions, write it up in `.agents/memories`
-instead of populating some arbitrary temporary user directory.
+instead of populating some arbitrary temporary user directory. Occasionally clear out stale and/or
+irrelevant memories.
 
 ---
 

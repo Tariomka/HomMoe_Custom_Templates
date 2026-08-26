@@ -26,7 +26,7 @@ func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
 	fixture.mapper.On("FromEditorState", state).Return(configuration)
 
 	// Act
-	_, err := fixture.handler.GenerateTemplate(fixture.editorStateMapper.ToDto(state))
+	_, err := fixture.handler.GenerateTemplate(toDto(state))
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoTemplateName)
@@ -44,7 +44,7 @@ func TestWhenGenerationYieldsNoTemplate_ReturnsGeneratedTemplateInvalidError(t *
 	fixture.templateGenerator.On("Generate").Return(nil, nil)
 
 	// Act
-	_, err := fixture.handler.GenerateTemplate(fixture.editorStateMapper.ToDto(state))
+	_, err := fixture.handler.GenerateTemplate(toDto(state))
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrGeneratedTemplateInvalid)
@@ -63,7 +63,7 @@ func TestWhenTemplateIsGenerated_ReturnsIt(t *testing.T) {
 	fixture.templateGenerator.On("Generate").Return(expected, nil)
 
 	// Act
-	loadDto, err := fixture.handler.GenerateTemplate(fixture.editorStateMapper.ToDto(state))
+	loadDto, err := fixture.handler.GenerateTemplate(toDto(state))
 
 	// Assert
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestWhenValidationAndGenerationBothWarn_ConcatenatesTheWarnings(t *testing.
 		Return(&entities.RmgTemplate{}, []string{generationWarning})
 
 	// Act
-	loadDto, _ := fixture.handler.GenerateTemplate(fixture.editorStateMapper.ToDto(state))
+	loadDto, _ := fixture.handler.GenerateTemplate(toDto(state))
 
 	// Assert
 	assert.Equal(t, []string{validationWarning, generationWarning}, loadDto.Warnings)
@@ -105,7 +105,7 @@ func TestWhenValidationFixesTheState_MapsTheFixedState(t *testing.T) {
 	fixture.templateGenerator.On("Generate").Return(&entities.RmgTemplate{}, nil)
 
 	// Act
-	_, _ = fixture.handler.GenerateTemplate(fixture.editorStateMapper.ToDto(state))
+	_, _ = fixture.handler.GenerateTemplate(toDto(state))
 
 	// Assert
 	fixture.mapper.AssertCalled(t, "FromEditorState", fixedState)
@@ -124,7 +124,7 @@ func TestWhenStateIsMapped_ConfiguresTheGeneratorWithTheMappedConfiguration(t *t
 	fixture.templateGenerator.On("Generate").Return(&entities.RmgTemplate{}, nil)
 
 	// Act
-	_, _ = fixture.handler.GenerateTemplate(fixture.editorStateMapper.ToDto(state))
+	_, _ = fixture.handler.GenerateTemplate(toDto(state))
 
 	// Assert
 	fixture.templateGenerator.AssertCalled(t, "SetConfiguration", configuration)

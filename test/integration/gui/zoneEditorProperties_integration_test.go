@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -64,7 +64,7 @@ func editedZone(
 func manualConnectionSave(
 	t *testing.T,
 	runner *integration_common.AppRunner,
-	name string) editor_state.ManualConnectionSave {
+	name string) editor_state_model.ManualConnectionSave {
 	t.Helper()
 	for _, save := range runner.CurrentState().ManualConnections {
 		if save.Connection.Name == name {
@@ -73,7 +73,7 @@ func manualConnectionSave(
 	}
 	t.Fatalf("the editor state committed no manual connection called %q", name)
 
-	return editor_state.ManualConnectionSave{}
+	return editor_state_model.ManualConnectionSave{}
 }
 
 // selectPlacedNeutralZone places a zone on empty canvas and selects it, which is

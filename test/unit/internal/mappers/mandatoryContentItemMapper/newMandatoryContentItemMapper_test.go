@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -28,7 +28,7 @@ func TestWhenRowsAreMapped_UsesTheInjectedContentRuleService(t *testing.T) {
 	contentRuleService.On("RestoreRulesFromRow", mock.Anything, mock.Anything).Return(nil)
 	contentRuleService.On("ApplyRulesToItem", mock.Anything, mock.Anything).Return()
 	mapper := mappers.NewMandatoryContentItemMapper(contentRuleService)
-	rows := []models.ZoneContentRow{{Sid: gofakeit.LetterN(8), Count: 1}}
+	rows := []editor_state_model.ZoneContentRow{{Sid: gofakeit.LetterN(8), Count: 1}}
 
 	// Act
 	mapper.FromRows(rows)

@@ -15,6 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // ZoneContentSection is one of the mandatory-content groups.
@@ -61,7 +62,7 @@ func (this *ZoneContentSection) SetDialogOpener(opener interfaces.DialogOpener) 
 func (this *ZoneContentSection) Add(
 	mapping models.SidMapping,
 	count int,
-	rules []models.ContentRuleRow,
+	rules []editor_state_model.ContentRuleRow,
 	group bool) {
 	this.rows = append(
 		this.rows,
@@ -157,7 +158,7 @@ func (this *ZoneContentSection) layoutRow(theme *material.Theme, row *zoneConten
 		if row.manageBtn.Clicked(gtx) && this.openDialog != nil {
 			captured := row
 			this.openDialog(NewManageRulesDialog(captured.Mapping, captured.rules, this.contentRuleHandler,
-				func(updated []models.ContentRuleRow) { captured.rules = updated }))
+				func(updated []editor_state_model.ContentRuleRow) { captured.rules = updated }))
 		}
 
 		return widgets.NewPanelWidget(unit.Dp(6), func(gtx layout.Context) layout.Dimensions {

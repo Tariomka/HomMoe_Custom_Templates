@@ -11,10 +11,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zone_contents"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/editor_state_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // ZoneContentDialog is a single-tier version of the former Zone Content tab. It
@@ -30,7 +29,7 @@ type ZoneContentDialog struct {
 
 	title        string
 	isPlayerTier bool
-	onApply      func([]models.ZoneContentRow)
+	onApply      func([]editor_state_model.ZoneContentRow)
 
 	btnReset widget.Clickable
 	scroll   widget.List
@@ -43,10 +42,10 @@ type ZoneContentDialog struct {
 func NewZoneContentDialog(
 	title string,
 	isPlayerTier bool,
-	rows []models.ZoneContentRow,
+	rows []editor_state_model.ZoneContentRow,
 	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	opener interfaces.DialogOpener,
-	onApply func([]models.ZoneContentRow)) *ZoneContentDialog {
+	onApply func([]editor_state_model.ZoneContentRow)) *ZoneContentDialog {
 	dialog := &ZoneContentDialog{
 		zcMines: NewZoneContentSection("Mines", constants.ContentItemGroup.Mines, 3, true, contentRuleHandler),
 		zcUtilities: NewZoneContentSection("Utility Structures",
@@ -120,7 +119,7 @@ func (this *ZoneContentDialog) persist() {
 // seeded defaults for the Player tier, otherwise an empty list.
 func (this *ZoneContentDialog) resetToDefault() {
 	if this.isPlayerTier {
-		this.loadRowsIntoSections(common_zone_contents.GetDefaultPlayerZoneContentRows())
+		this.loadRowsIntoSections(editor_state_model.GetDefaultPlayerZoneContentRows())
 		return
 	}
 
@@ -129,7 +128,7 @@ func (this *ZoneContentDialog) resetToDefault() {
 
 // loadRowsIntoSections replaces the section rows with the given list, routing
 // each row to its appropriate section.
-func (this *ZoneContentDialog) loadRowsIntoSections(rows []models.ZoneContentRow) {
+func (this *ZoneContentDialog) loadRowsIntoSections(rows []editor_state_model.ZoneContentRow) {
 	this.zcMines.ClearRows()
 	this.zcUtilities.ClearRows()
 	this.zcTreasures.ClearRows()
@@ -137,12 +136,12 @@ func (this *ZoneContentDialog) loadRowsIntoSections(rows []models.ZoneContentRow
 	this.zcBanks.ClearRows()
 	this.zcHeroImprovement.ClearRows()
 	for _, raw := range rows {
-		row := editor_state_helpers.NormalizeZoneContentRow(raw)
+		row := raw.Normalized()
 		mapping := models.SidMapping{Sid: row.Sid, Name: row.Sid}
 		if found, ok := utils.GetSidMappingBySid(row.Sid); ok {
 			mapping = found
 		}
-		var rules []models.ContentRuleRow
+		var rules []editor_state_model.ContentRuleRow
 		if len(row.Rules) > 0 {
 			rules = row.Rules
 		}
@@ -174,11 +173,11 @@ func (this *ZoneContentDialog) routeToSection(sid string, isMine bool) *ZoneCont
 
 // collectSectionRows reads the current sections back into a flat slice of
 // save-rows tagged with the correct IsMine flag.
-func (this *ZoneContentDialog) collectSectionRows() []models.ZoneContentRow {
-	var out []models.ZoneContentRow
+func (this *ZoneContentDialog) collectSectionRows() []editor_state_model.ZoneContentRow {
+	var out []editor_state_model.ZoneContentRow
 	gather := func(section *ZoneContentSection, isMine bool) {
 		for row := range section.IterateRows() {
-			out = append(out, models.ZoneContentRow{
+			out = append(out, editor_state_model.ZoneContentRow{
 				Sid:     row.Mapping.Sid,
 				Count:   row.Count,
 				IsGroup: row.IsGroup,

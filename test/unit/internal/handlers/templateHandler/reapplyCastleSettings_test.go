@@ -40,8 +40,8 @@ func TestWhenCastleSettingsAreReapplied_PassesTheMappedConfigurationToTheReapply
 	// Act
 	_ = fixture.handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{
 		Zones:       zones,
-		Changes:     fixture.editorStateMapper.ToCastleSettingChangesDto(changes),
-		EditorState: fixture.editorStateMapper.ToDto(state),
+		Changes:     changes,
+		EditorState: toDto(state),
 	})
 
 	// Assert

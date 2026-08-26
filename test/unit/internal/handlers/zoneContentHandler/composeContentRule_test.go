@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +17,7 @@ func TestWhenAContentRuleIsComposed_ReturnsTheServiceResult(t *testing.T) {
 		Option: dtos.ContentRuleOptionDto{Key: dtos.ContentRuleKeyGuarded, Name: gofakeit.Word()},
 	}
 	expected := dtos.ContentRuleCompositionResultDto{
-		Rule:  models.ContentRuleRow{Name: gofakeit.Word()},
+		Rule:  editor_state_model.ContentRuleRow{Name: gofakeit.Word()},
 		Valid: true,
 	}
 	fixture.contentEditor.On("ComposeContentRule", request).Return(expected)

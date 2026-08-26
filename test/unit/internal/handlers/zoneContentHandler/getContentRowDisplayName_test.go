@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,11 +15,11 @@ func TestWhenTheRowNameIsRequested_TheContentNameAndDescriptionsAreHandedToTheSe
 	// Arrange
 	fixture := newZoneContentHandlerFixture()
 	content := models.SidMapping{Name: gofakeit.Word()}
-	rules := []models.ContentRuleRow{{Name: gofakeit.Word()}}
+	rules := []editor_state_model.ContentRuleRow{{Name: gofakeit.Word()}}
 	description := dtos.ContentRuleDescriptionDto{Key: dtos.ContentRuleKeyVariant, Valid: true}
 	fixture.contentRules.DescribeContentRuleFunc = func(
 		models.SidMapping,
-		models.ContentRuleRow,
+		editor_state_model.ContentRuleRow,
 	) dtos.ContentRuleDescriptionDto {
 		return description
 	}

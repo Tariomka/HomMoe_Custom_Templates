@@ -10,9 +10,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,7 +48,7 @@ func newGeometryDialog(
 ) *dialogs.ZoneEditorDialog {
 	t.Helper()
 	handler := composition.InitializeGuiHandler()
-	stateDto := mappers.NewEditorStateMapper().ToDto(editor_state_model.NewDefaultEditorStateModel())
+	stateDto := editor_state_dto.EditorStateDto{EditorState: editor_state_model.NewDefaultEditorStateModel()}
 	options := handler.GetZoneEditorOptions(stateDto, len(zones))
 	dialog := dialogs.NewZoneEditorDialog(
 		zones,
@@ -114,7 +114,7 @@ func newApplyCaptureFixture(
 		newGeometryZone("B", 0.8, 0.5),
 	}
 	connections := []entities.Connection{newGeometryConnection("ab", "A", "B")}
-	stateDto := mappers.NewEditorStateMapper().ToDto(editor_state_model.NewDefaultEditorStateModel())
+	stateDto := editor_state_dto.EditorStateDto{EditorState: editor_state_model.NewDefaultEditorStateModel()}
 	options := handler.GetZoneEditorOptions(stateDto, len(zones))
 	capture := &applyCapture{}
 	dialog := dialogs.NewZoneEditorDialog(
@@ -154,7 +154,7 @@ func TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := composition.InitializeGuiHandler()
-	state := mappers.NewEditorStateMapper().ToDto(editor_state_model.NewDefaultEditorStateModel())
+	state := editor_state_dto.EditorStateDto{EditorState: editor_state_model.NewDefaultEditorStateModel()}
 	generated, err := handler.GenerateTemplate(state)
 	require.NoError(t, err)
 	require.NotNil(t, generated.Template)

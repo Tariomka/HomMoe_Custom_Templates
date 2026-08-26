@@ -57,8 +57,9 @@ func TestWhenSavedAndExitPressed_ApplicationExits(t *testing.T) {
 		&test_helpers.TemplateHandlerMock{},
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
+
 		false)
+
 	exited := false
 	state.SetOnExit(func() { exited = true })
 
@@ -93,9 +94,9 @@ func newUnsavedState() (state *drivers.State, exited *bool) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
+
 	state.Generate()
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.TemplateName = gofakeit.ProductName() })
 

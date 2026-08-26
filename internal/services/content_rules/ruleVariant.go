@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // Rule metadata constants for the variant rule.
@@ -68,9 +69,9 @@ func (this *RuleVariant) Apply(item *entities.MandatoryContentItem) {
 	item.Variant = &id
 }
 
-func (this *RuleVariant) SerializeToRowSave() models.ContentRuleRow {
+func (this *RuleVariant) SerializeToRowSave() editor_state_model.ContentRuleRow {
 	id := this.VariantID
-	return models.ContentRuleRow{
+	return editor_state_model.ContentRuleRow{
 		Name:      this.Name(),
 		VariantID: &id,
 	}

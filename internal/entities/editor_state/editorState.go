@@ -12,6 +12,5 @@ type EditorState struct {
 	GameRuleSettings
 	ContentSettings
 	ManualEditSettings
-
-	SchemaVersion int `json:"schemaVersion"`
+	SchemaOptions
 }

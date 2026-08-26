@@ -3,6 +3,7 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/mock"
 )
@@ -26,7 +27,7 @@ func (this *ContentRuleServiceMock) ApplyRulesToItem(
 }
 
 func (this *ContentRuleServiceMock) CreateRuleFromSavedRule(
-	saved models.ContentRuleRow,
+	saved editor_state_model.ContentRuleRow,
 	content models.SidMapping) content_rules.IContentRule {
 	arguments := this.Called(saved, content)
 	rule, _ := arguments.Get(0).(content_rules.IContentRule)
@@ -34,7 +35,7 @@ func (this *ContentRuleServiceMock) CreateRuleFromSavedRule(
 }
 
 func (this *ContentRuleServiceMock) RestoreRulesFromRow(
-	row models.ZoneContentRow,
+	row editor_state_model.ZoneContentRow,
 	content models.SidMapping) []content_rules.IContentRule {
 	arguments := this.Called(row, content)
 	rules, _ := arguments.Get(0).([]content_rules.IContentRule)

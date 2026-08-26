@@ -3,7 +3,7 @@ package ruleVariant_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,5 +22,5 @@ func TestWhenRuleIsSerialized_WritesNameAndVariantId(t *testing.T) {
 	saved := rule.SerializeToRowSave()
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRow{Name: "Variant", VariantID: &expectedID}, saved)
+	assert.Equal(t, editor_state_model.ContentRuleRow{Name: "Variant", VariantID: &expectedID}, saved)
 }

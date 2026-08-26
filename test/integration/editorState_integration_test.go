@@ -15,7 +15,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -29,7 +28,6 @@ func newUIState() *drivers.State {
 		composition.InitializeGuiHandler(),
 		composition.InitializeFileSystemHandler(),
 		composition.InitializeRegenerationHandler(),
-		mappers.NewEditorStateMapper(),
 		true)
 }
 
@@ -44,7 +42,6 @@ func newEditorSession() (state *drivers.State, saveFrame func(), loadPanels func
 		backend,
 		composition.InitializeFileSystemHandler(),
 		composition.InitializeRegenerationHandler(),
-		mappers.NewEditorStateMapper(),
 		true)
 	editorPanels := []interfaces.IPanel{
 		panels.NewGeneralPanel(state),

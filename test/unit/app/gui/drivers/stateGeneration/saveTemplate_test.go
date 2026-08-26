@@ -20,9 +20,8 @@ func TestWhenTemplateSaveSucceeds_StatusReportsSavedPath(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.SaveTemplate()
@@ -41,9 +40,8 @@ func TestWhenTemplateSaveFailsBeforeWriting_ErrorStatusIsSet(t *testing.T) {
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.SaveTemplate()
@@ -63,9 +61,8 @@ func TestWhenTemplateSavedButPreviewFails_StatusWarnsAboutPreview(t *testing.T) 
 		handlerMock,
 		test_helpers.NewFileSystemHandler(),
 		test_helpers.NewRegenerationHandler(),
-		newEditorStateMapper(),
-		false,
-	)
+
+		false)
 
 	// Act
 	state.SaveTemplate()

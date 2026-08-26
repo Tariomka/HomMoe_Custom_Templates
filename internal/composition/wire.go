@@ -6,10 +6,8 @@
 package composition
 
 import (
-	"github.com/goforj/wire"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/goforj/wire"
 )
 
 func InitializeGuiHandler() handler_interfaces.IGuiHandler {
@@ -24,10 +22,5 @@ func InitializeFileSystemHandler() handler_interfaces.IFileSystemHandler {
 
 func InitializeRegenerationHandler() handler_interfaces.IRegenerationHandler {
 	wire.Build(RegenerationSet)
-	return nil
-}
-
-func InitializeEditorStateMapper() mappers.IEditorStateMapper {
-	wire.Build(EditorStateMapperSet)
 	return nil
 }

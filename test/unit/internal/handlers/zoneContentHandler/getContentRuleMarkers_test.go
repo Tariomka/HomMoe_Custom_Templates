@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,10 +15,10 @@ func TestWhenMarkersAreRequested_TheDescribedRulesAreHandedToTheService(t *testi
 	// Arrange
 	fixture := newZoneContentHandlerFixture()
 	content := models.SidMapping{Name: gofakeit.Word()}
-	rules := []models.ContentRuleRow{{Name: gofakeit.Word()}, {Name: gofakeit.Sentence(2)}}
+	rules := []editor_state_model.ContentRuleRow{{Name: gofakeit.Word()}, {Name: gofakeit.Sentence(2)}}
 	fixture.contentRules.DescribeContentRuleFunc = func(
 		_ models.SidMapping,
-		savedRule models.ContentRuleRow,
+		savedRule editor_state_model.ContentRuleRow,
 	) dtos.ContentRuleDescriptionDto {
 		return dtos.ContentRuleDescriptionDto{Marker: savedRule.Name, Valid: true}
 	}

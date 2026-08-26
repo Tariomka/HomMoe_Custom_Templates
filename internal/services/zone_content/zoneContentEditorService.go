@@ -7,6 +7,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // contentRuleMarkerSeparator joins the marker badges shown on a content row.
@@ -26,31 +27,31 @@ func (this *ZoneContentEditorService) ComposeContentRule(
 			return dtos.ContentRuleCompositionResultDto{}
 		}
 
-		return validRule(models.ContentRuleRow{
+		return validRule(editor_state_model.ContentRuleRow{
 			Name:         request.Option.Name,
 			DistanceName: request.DistanceNames[request.DistanceIndex],
 		})
 	case dtos.ContentRuleKeyGuarded:
 		guarded := request.IsGuarded
-		return validRule(models.ContentRuleRow{Name: request.Option.Name, IsGuarded: &guarded})
+		return validRule(editor_state_model.ContentRuleRow{Name: request.Option.Name, IsGuarded: &guarded})
 	case dtos.ContentRuleKeySoloEncounter:
 		solo := request.IsSoloEncounter
-		return validRule(models.ContentRuleRow{Name: request.Option.Name, IsSoloEncounter: &solo})
+		return validRule(editor_state_model.ContentRuleRow{Name: request.Option.Name, IsSoloEncounter: &solo})
 	case dtos.ContentRuleKeyVariant:
 		if request.VariantIndex < 0 || request.VariantIndex >= len(request.VariantIDs) {
 			return dtos.ContentRuleCompositionResultDto{}
 		}
 
 		variantID := request.VariantIDs[request.VariantIndex]
-		return validRule(models.ContentRuleRow{Name: request.Option.Name, VariantID: &variantID})
+		return validRule(editor_state_model.ContentRuleRow{Name: request.Option.Name, VariantID: &variantID})
 	}
 
 	return dtos.ContentRuleCompositionResultDto{}
 }
 
 func (this *ZoneContentEditorService) UpsertContentRule(
-	rules []models.ContentRuleRow,
-	rule models.ContentRuleRow) []models.ContentRuleRow {
+	rules []editor_state_model.ContentRuleRow,
+	rule editor_state_model.ContentRuleRow) []editor_state_model.ContentRuleRow {
 	for index := range rules {
 		if strings.EqualFold(rules[index].Name, rule.Name) {
 			rules[index] = rule
@@ -62,12 +63,12 @@ func (this *ZoneContentEditorService) UpsertContentRule(
 }
 
 func (this *ZoneContentEditorService) GetDefaultContentRules(
-	options dtos.ContentRuleEditorOptionsDto) []models.ContentRuleRow {
+	options dtos.ContentRuleEditorOptionsDto) []editor_state_model.ContentRuleRow {
 	for _, option := range options.Rules {
 		if option.Key == dtos.ContentRuleKeyGuarded {
 			guarded := true
 
-			return []models.ContentRuleRow{{Name: option.Name, IsGuarded: &guarded}}
+			return []editor_state_model.ContentRuleRow{{Name: option.Name, IsGuarded: &guarded}}
 		}
 	}
 
@@ -116,6 +117,6 @@ func (this *ZoneContentEditorService) ClampContentCount(count int, maxCount int)
 	return count
 }
 
-func validRule(rule models.ContentRuleRow) dtos.ContentRuleCompositionResultDto {
+func validRule(rule editor_state_model.ContentRuleRow) dtos.ContentRuleCompositionResultDto {
 	return dtos.ContentRuleCompositionResultDto{Rule: rule, Valid: true}
 }

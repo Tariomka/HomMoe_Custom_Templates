@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -21,7 +21,6 @@ func TestWhenStatePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
 		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
 	)
 
 	// Act
@@ -37,7 +36,6 @@ func TestWhenStatePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
 		newPassingValidator(),
-		mappers.NewEditorStateMapper(),
 	)
 
 	// Act
@@ -54,7 +52,7 @@ func TestWhenStatePathIsPadded_LoadsTheTrimmedPath(t *testing.T) {
 	state := editor_state_model.NewDefaultEditorStateModel()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("LoadSettingsFile", path).Return(&state, nil)
-	handler := handlers.NewStateHandler(fileService, newPassingValidator(), mappers.NewEditorStateMapper())
+	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
 	_, _, _ = handler.LoadState("  "+path+"  ", true)
@@ -69,7 +67,7 @@ func TestWhenSettingsFileCannotBeLoaded_PropagatesTheError(t *testing.T) {
 	expectedError := errors.New(gofakeit.Sentence(3))
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("LoadSettingsFile", mock.Anything).Return(nil, expectedError)
-	handler := handlers.NewStateHandler(fileService, newPassingValidator(), mappers.NewEditorStateMapper())
+	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
 	_, _, err := handler.LoadState(gofakeit.Word(), true)
@@ -83,7 +81,7 @@ func TestWhenSettingsFileCannotBeLoaded_ReturnsNoState(t *testing.T) {
 	// Arrange
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("LoadSettingsFile", mock.Anything).Return(nil, errors.New(gofakeit.Sentence(3)))
-	handler := handlers.NewStateHandler(fileService, newPassingValidator(), mappers.NewEditorStateMapper())
+	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
 	state, _, _ := handler.LoadState(gofakeit.Word(), true)
@@ -99,14 +97,14 @@ func TestWhenSettingsFileIsLoaded_ReturnsTheValidatedState(t *testing.T) {
 	loaded.TemplateName = gofakeit.Word()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("LoadSettingsFile", mock.Anything).Return(&loaded, nil)
-	handler := handlers.NewStateHandler(fileService, newPassingValidator(), mappers.NewEditorStateMapper())
+	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
 	state, _, err := handler.LoadState(gofakeit.Word(), true)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, mappers.NewEditorStateMapper().ToDto(loaded), *state)
+	assert.Equal(t, editor_state_dto.EditorStateDto{EditorState: loaded}, *state)
 }
 
 func TestWhenValidationReportsIssues_ReturnsThemAsWarnings(t *testing.T) {
@@ -120,7 +118,6 @@ func TestWhenValidationReportsIssues_ReturnsThemAsWarnings(t *testing.T) {
 	handler := handlers.NewStateHandler(
 		fileService,
 		newValidatorReporting(firstMessage, secondMessage),
-		mappers.NewEditorStateMapper(),
 	)
 
 	// Act
