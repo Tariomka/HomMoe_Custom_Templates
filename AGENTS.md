@@ -447,7 +447,7 @@ mocking; use `gofakeit` for fuzzed input data wherever possible.
 - Private code is tested indirectly through public entry points — never add
   helpers/seams to implementation code just to make it testable. If code is
   unreachable through public APIs, record it in
-  [todo/test_observations.md](todo/test_observations.md) instead.
+  [.agent/backlog/test_observations.md](.agent/backlog/test_observations.md) instead.
 - Code that is exercised indirectly by other tests still requires its **own**
   test folder with dedicated tests, so coverage can be assessed per file.
 - `*_testexports.go` files (`//go:build integration_test`) must never be used
@@ -455,7 +455,7 @@ mocking; use `gofakeit` for fuzzed input data wherever possible.
   unit test must never carry the `integration_test` tag (see §4.6.1).
 - Gio-UI-heavy code (widgets, dialogs, panels, window/event-loop code) that
   requires a `layout.Context`/window is covered by the integration suite, not
-  unit tests; list such files in [todo/test_observations.md](todo/test_observations.md).
+  unit tests; list such files in [.agent/backlog/test_observations.md](.agent/backlog/test_observations.md).
 
 See §2.3 for coverage requirements.
 
