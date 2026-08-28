@@ -193,7 +193,7 @@ When orchestrating subagents, pick the model per task using these ratings
 | gpt-5.6-terra   | 7    | 7            | 6     |
 | grok-4.6        | 8    | 6            | 5     |
 | claude-opus-4.8 | 4    | 7            | 7     |
-| gpt-5.5         | 4    | 6            | 4     |
+| gpt-5.6-luna    | 8    | 6            | 4     |
 | sonnet-5        | 4    | 3            | 5     |
 
 Application directives:
@@ -208,12 +208,11 @@ Application directives:
   related requires taste > 7.
 - Review of plans/implementations must be done by opus-5 preferably
   (use fable-5 sparingly as it is much more costly);
-  optionally add gpt-5.6-terra as an extra independent perspective.
+  optionally add gpt-5.6-sol/gpt-5.6-terra as an extra independent perspective.
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (gpt-5.6-terra,
-  kimi-k3, grok-4.6, gpt-5.5) for read-only exploration, searching, summarizing, and
-  mechanical/repetitive edits; reserve opus-5/fable-5 for design
-  decisions, tricky debugging, and final review.
+- Match model to task shape: use cheap, high-cost-rating models (kimi-k3, gpt-5.6-terra,
+  grok-4.6, gpt-5.6-luna) for read-only exploration, searching, summarizing, and
+  mechanical/repetitive edits; reserve opus-5/fable-5 for design decisions, tricky debugging, and final review.
 - Parallelize independent exploration and/or action execution
   (like running tests) across cheap subagents rather than serializing
   everything through one expensive model.
