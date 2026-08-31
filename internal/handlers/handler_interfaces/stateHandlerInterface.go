@@ -11,7 +11,7 @@ type IStateHandler interface {
 }
 
 type IStatePersistenceHandler interface {
-	LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error)
+	LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateValidationDto, error)
 	SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error)
 }
 

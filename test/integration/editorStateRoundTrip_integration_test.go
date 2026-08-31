@@ -16,36 +16,36 @@ func TestWhenALoadedStateScalarIsMutated_ReloadingIsUnaffected(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler, savedPath := saveRoundTripState(t)
-	first, _, err := handler.LoadState(savedPath, false)
+	first, err := handler.LoadState(savedPath, false)
 	require.NoError(t, err)
-	first.TemplateName = "Mutated After Load"
+	first.State.TemplateName = "Mutated After Load"
 
 	// Act
-	second, _, err := handler.LoadState(savedPath, false)
+	second, err := handler.LoadState(savedPath, false)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, test_helpers.NewAllFieldsEditorStateModel().TemplateName, second.TemplateName)
+	assert.Equal(t, test_helpers.NewAllFieldsEditorStateModel().TemplateName, second.State.TemplateName)
 }
 
 func TestWhenALoadedStateSliceIsMutated_ReloadingIsUnaffected(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler, savedPath := saveRoundTripState(t)
-	first, _, err := handler.LoadState(savedPath, false)
+	first, err := handler.LoadState(savedPath, false)
 	require.NoError(t, err)
-	require.NotEmpty(t, first.PlayerZoneContentRows)
-	first.PlayerZoneContentRows[0].Sid = "mutated-after-load"
+	require.NotEmpty(t, first.State.PlayerZoneContentRows)
+	first.State.PlayerZoneContentRows[0].Sid = "mutated-after-load"
 
 	// Act
-	second, _, err := handler.LoadState(savedPath, false)
+	second, err := handler.LoadState(savedPath, false)
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(
 		t,
 		test_helpers.NewAllFieldsEditorStateModel().PlayerZoneContentRows,
-		second.PlayerZoneContentRows)
+		second.State.PlayerZoneContentRows)
 }
 
 func TestWhenAStateIsSavedThroughTheHandler_TheSourceModelIsNotAliasedByTheFile(t *testing.T) {
@@ -61,14 +61,14 @@ func TestWhenAStateIsSavedThroughTheHandler_TheSourceModelIsNotAliasedByTheFile(
 	state.PlayerZoneContentRows[0].Sid = "mutated-after-save"
 
 	// Act
-	loaded, _, err := handler.LoadState(savedPath, false)
+	loaded, err := handler.LoadState(savedPath, false)
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(
 		t,
 		test_helpers.NewAllFieldsEditorStateModel().PlayerZoneContentRows,
-		loaded.PlayerZoneContentRows)
+		loaded.State.PlayerZoneContentRows)
 }
 
 func TestWhenAStateIsRoundTripped_TheReloadedModelEqualsTheSavedOne(t *testing.T) {
@@ -77,11 +77,11 @@ func TestWhenAStateIsRoundTripped_TheReloadedModelEqualsTheSavedOne(t *testing.T
 	handler, savedPath := saveRoundTripState(t)
 
 	// Act
-	loaded, _, err := handler.LoadState(savedPath, false)
+	loaded, err := handler.LoadState(savedPath, false)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, editor_state_dto.EditorStateDto{EditorState: test_helpers.NewAllFieldsEditorStateModel()}, *loaded)
+	assert.Equal(t, test_helpers.NewAllFieldsEditorStateModel(), loaded.State)
 }
 
 // saveRoundTripState writes the all-fields state through the real handler graph

@@ -232,9 +232,7 @@ func (this *GUIHandler) ValidateEditorState(
 	return this.stateHandler.ValidateEditorState(state, fixIssues)
 }
 
-func (this *GUIHandler) LoadState(
-	path string,
-	fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
+func (this *GUIHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateValidationDto, error) {
 	return this.stateHandler.LoadState(path, fixIssues)
 }
 

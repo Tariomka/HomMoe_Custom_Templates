@@ -25,20 +25,19 @@ func NewStateHandler(
 	}
 }
 
-func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateDto, []string, error) {
-	// TODO: should just return EditorStateValidationDto, instead of EditorStateDto + warnings
+func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateValidationDto, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
-		return nil, nil, common_errors.ErrNoOutputPath
+		return nil, common_errors.ErrNoOutputPath
 	}
 
 	loaded, err := this.fileService.LoadSettingsFile(path)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	validation := this.ValidateEditorState(*loaded, fixIssues)
-	return &editor_state_dto.EditorStateDto{EditorState: validation.State}, validation.Warnings, nil
+	return &validation, nil
 }
 
 func (this *stateHandler) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {

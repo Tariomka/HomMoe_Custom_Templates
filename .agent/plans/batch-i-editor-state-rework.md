@@ -1238,7 +1238,8 @@ passed, `wire diff` exit 0, `go test ./test/unit/...`, `go test ./test/...`
 suite **without `-update`** (35.0 s). Unit coverage **73.9 %**, unchanged, floor
 72.5 %. `golangci-lint-v2` reports **1 issue** — the owner's `godox` TODO in
 [stateHandler.go](../../internal/handlers/stateHandler.go), i.e. the current
-baseline, no regression.
+baseline, no regression. *(That TODO was cleared straight afterwards, so the
+baseline is now 0 — see Phase 7.)*
 
 ---
 
@@ -1256,9 +1257,12 @@ Status: Not started — **runs last, after Phase 12** (see the correction phases
       moved to `.agent/backlog/` and those links now dangle. Same for the
       relative links inside `.agent/backlog/review-opus5-08-04.md`, which is now
       two levels deep and still uses single-`../` paths.
-- [ ] Resolve the `godox` TODO in
+- [x] Resolve the `godox` TODO in
       [stateHandler.go](../../internal/handlers/stateHandler.go) or accept it,
-      so the lint baseline returns to **0 issues**.
+      so the lint baseline returns to **0 issues**. **Done 2026-08-31** —
+      `LoadState` now returns `(*EditorStateValidationDto, error)` instead of
+      `(*EditorStateDto, []string, error)`. Lint is at **0 issues**; that is the
+      baseline again.
 - [ ] Delete this plan file once the backlog entries are self-contained
       (doc-lifecycle rule), using `Remove-Item`.
 - [ ] Write `./.agent/session-carry-forward.md` per AGENTS.md §5.2.
@@ -1907,9 +1911,11 @@ these.
 
 **Re-run after the §0.7 rework (2026-08-26):** every gate above green again, and
 coverage rose to **73.9 %**. Lint finished at **1 issue** — a `godox` TODO the
-owner left in [stateHandler.go](../../internal/handlers/stateHandler.go), which is
-theirs to resolve, not a regression. Treat **1 godox issue** as the current lint
-baseline until that TODO is cleared.
+owner left in [stateHandler.go](../../internal/handlers/stateHandler.go).
+
+> That TODO was resolved on 2026-08-31 (see Phase 7), so the lint baseline is
+> **0 issues** again. `LoadState` returns a single
+> `*EditorStateValidationDto` now, not `*EditorStateDto` plus a warnings slice.
 
 The frozen fixtures and the untagged `editorStateWireFormat_integration_test.go`
 passed **unchanged** through both rounds, as expected: the DTO is off the

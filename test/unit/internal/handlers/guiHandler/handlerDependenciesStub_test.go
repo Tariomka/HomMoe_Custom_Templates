@@ -51,9 +51,8 @@ func (this *handlerDependenciesStub) ValidateEditorState(
 
 func (this *handlerDependenciesStub) LoadState(
 	_ string,
-	_ bool,
-) (*editor_state_dto.EditorStateDto, []string, error) {
-	return nil, nil, nil
+	_ bool) (*editor_state_dto.EditorStateValidationDto, error) {
+	return &editor_state_dto.EditorStateValidationDto{}, nil
 }
 
 func (this *handlerDependenciesStub) SaveState(editor_state_dto.EditorStateSaveDto) (string, error) {

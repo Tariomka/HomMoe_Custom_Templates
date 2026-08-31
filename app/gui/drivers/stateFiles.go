@@ -93,18 +93,20 @@ func (this *State) handleSaveState(path string) {
 }
 
 func (this *State) handleLoadState(path string) bool {
-	loaded, warnings, err := this.handler.LoadState(path, true)
+	loaded, err := this.handler.LoadState(path, true)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
 		return false
 	}
 
-	this.innerState.OverrideState(loaded.EditorState)
+	this.innerState.OverrideState(loaded.State)
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()
-	if len(warnings) > 0 {
-		this.SetStatus(fmt.Sprintf("Loaded %s (adjusted: %s)", path, strings.Join(warnings, "; ")), false)
+	if len(loaded.Warnings) > 0 {
+		this.SetStatus(
+			fmt.Sprintf("Loaded %s (adjusted: %s)", path, strings.Join(loaded.Warnings, "; ")),
+			false)
 		return true
 	}
 

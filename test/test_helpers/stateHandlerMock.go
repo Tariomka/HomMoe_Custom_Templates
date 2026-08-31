@@ -15,12 +15,10 @@ type StateHandlerMock struct {
 
 func (this *StateHandlerMock) LoadState(
 	path string,
-	fixIssues bool,
-) (*editor_state_dto.EditorStateDto, []string, error) {
+	fixIssues bool) (*editor_state_dto.EditorStateValidationDto, error) {
 	arguments := this.Called(path, fixIssues)
-	state, _ := arguments.Get(0).(*editor_state_dto.EditorStateDto)
-	warnings, _ := arguments.Get(1).([]string)
-	return state, warnings, arguments.Error(2)
+	validation, _ := arguments.Get(0).(*editor_state_dto.EditorStateValidationDto)
+	return validation, arguments.Error(1)
 }
 
 func (this *StateHandlerMock) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {

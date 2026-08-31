@@ -19,7 +19,7 @@ func TestWhenStateFilePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	handler := newProductionGuiHandler()
 
 	// Act
-	_, _, err := handler.LoadState("", true)
+	_, err := handler.LoadState("", true)
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
@@ -31,7 +31,7 @@ func TestWhenStateFilePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T
 	handler := newProductionGuiHandler()
 
 	// Act
-	_, _, err := handler.LoadState("  \t  ", true)
+	_, err := handler.LoadState("  \t  ", true)
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
@@ -44,7 +44,7 @@ func TestWhenStateFileDoesNotExist_ReturnsNotExistError(t *testing.T) {
 	missingPath := filepath.Join(t.TempDir(), "missing-state.gen.json")
 
 	// Act
-	_, _, err := handler.LoadState(missingPath, true)
+	_, err := handler.LoadState(missingPath, true)
 
 	// Assert
 	assert.ErrorIs(t, err, os.ErrNotExist)
@@ -58,7 +58,7 @@ func TestWhenStateFileContainsInvalidJson_ReturnsError(t *testing.T) {
 	require.NoError(t, os.WriteFile(corruptPath, []byte("this is { not valid json"), 0o644))
 
 	// Act
-	_, _, err := handler.LoadState(corruptPath, true)
+	_, err := handler.LoadState(corruptPath, true)
 
 	// Assert
 	assert.Error(t, err)
@@ -78,12 +78,12 @@ func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.
 	require.NoError(t, saveErr)
 
 	// Act
-	loadedState, _, err := handler.LoadState(savedPath, true)
+	loaded, err := handler.LoadState(savedPath, true)
 
 	// Assert
 	require.NoError(t, err)
-	require.NotNil(t, loadedState)
-	assert.Equal(t, toDto(savedState), *loadedState)
+	require.NotNil(t, loaded)
+	assert.Equal(t, savedState, loaded.State)
 }
 
 func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
@@ -99,11 +99,11 @@ func TestWhenStateFileIsValid_ReturnsNoWarnings(t *testing.T) {
 	require.NoError(t, saveErr)
 
 	// Act
-	_, warnings, err := handler.LoadState(savedPath, true)
+	loaded, err := handler.LoadState(savedPath, true)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Empty(t, warnings)
+	assert.Empty(t, loaded.Warnings)
 }
 
 func TestWhenStateFileHasOutOfRangeValues_ReturnsWarnings(t *testing.T) {
@@ -114,11 +114,11 @@ func TestWhenStateFileHasOutOfRangeValues_ReturnsWarnings(t *testing.T) {
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 
 	// Act
-	_, warnings, err := handler.LoadState(statePath, true)
+	loaded, err := handler.LoadState(statePath, true)
 
 	// Assert
 	require.NoError(t, err)
-	assert.NotEmpty(t, warnings)
+	assert.NotEmpty(t, loaded.Warnings)
 }
 
 func TestWhenFixIssuesIsTrue_ReturnsStateWithIssuesFixed(t *testing.T) {
@@ -129,11 +129,11 @@ func TestWhenFixIssuesIsTrue_ReturnsStateWithIssuesFixed(t *testing.T) {
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 
 	// Act
-	loadedState, _, err := handler.LoadState(statePath, true)
+	loaded, err := handler.LoadState(statePath, true)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, 8, loadedState.PlayerCount)
+	assert.Equal(t, 8, loaded.State.PlayerCount)
 }
 
 func TestWhenFixIssuesIsFalse_ReturnsStateWithIssuesUnfixed(t *testing.T) {
@@ -144,11 +144,11 @@ func TestWhenFixIssuesIsFalse_ReturnsStateWithIssuesUnfixed(t *testing.T) {
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 
 	// Act
-	loadedState, _, err := handler.LoadState(statePath, false)
+	loaded, err := handler.LoadState(statePath, false)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, 50, loadedState.PlayerCount)
+	assert.Equal(t, 50, loaded.State.PlayerCount)
 }
 
 func TestWhenFixIssuesIsFalse_StillReturnsWarnings(t *testing.T) {
@@ -159,9 +159,9 @@ func TestWhenFixIssuesIsFalse_StillReturnsWarnings(t *testing.T) {
 	require.NoError(t, os.WriteFile(statePath, []byte(`{"playerCount": 50}`), 0o644))
 
 	// Act
-	_, warnings, err := handler.LoadState(statePath, false)
+	loaded, err := handler.LoadState(statePath, false)
 
 	// Assert
 	require.NoError(t, err)
-	assert.NotEmpty(t, warnings)
+	assert.NotEmpty(t, loaded.Warnings)
 }

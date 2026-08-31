@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -24,7 +23,7 @@ func TestWhenStatePathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	)
 
 	// Act
-	_, _, err := handler.LoadState("", true)
+	_, err := handler.LoadState("", true)
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
@@ -39,7 +38,7 @@ func TestWhenStatePathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	)
 
 	// Act
-	_, _, err := handler.LoadState("  \t ", true)
+	_, err := handler.LoadState("  \t ", true)
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
@@ -55,7 +54,7 @@ func TestWhenStatePathIsPadded_LoadsTheTrimmedPath(t *testing.T) {
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
-	_, _, _ = handler.LoadState("  "+path+"  ", true)
+	_, _ = handler.LoadState("  "+path+"  ", true)
 
 	// Assert
 	fileService.AssertCalled(t, "LoadSettingsFile", path)
@@ -70,7 +69,7 @@ func TestWhenSettingsFileCannotBeLoaded_PropagatesTheError(t *testing.T) {
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
-	_, _, err := handler.LoadState(gofakeit.Word(), true)
+	_, err := handler.LoadState(gofakeit.Word(), true)
 
 	// Assert
 	assert.ErrorIs(t, err, expectedError)
@@ -84,10 +83,10 @@ func TestWhenSettingsFileCannotBeLoaded_ReturnsNoState(t *testing.T) {
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
-	state, _, _ := handler.LoadState(gofakeit.Word(), true)
+	validation, _ := handler.LoadState(gofakeit.Word(), true)
 
 	// Assert
-	assert.Nil(t, state)
+	assert.Nil(t, validation)
 }
 
 func TestWhenSettingsFileIsLoaded_ReturnsTheValidatedState(t *testing.T) {
@@ -100,11 +99,11 @@ func TestWhenSettingsFileIsLoaded_ReturnsTheValidatedState(t *testing.T) {
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
-	state, _, err := handler.LoadState(gofakeit.Word(), true)
+	validation, err := handler.LoadState(gofakeit.Word(), true)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, editor_state_dto.EditorStateDto{EditorState: loaded}, *state)
+	assert.Equal(t, loaded, validation.State)
 }
 
 func TestWhenValidationReportsIssues_ReturnsThemAsWarnings(t *testing.T) {
@@ -121,8 +120,8 @@ func TestWhenValidationReportsIssues_ReturnsThemAsWarnings(t *testing.T) {
 	)
 
 	// Act
-	_, warnings, _ := handler.LoadState(gofakeit.Word(), false)
+	validation, _ := handler.LoadState(gofakeit.Word(), false)
 
 	// Assert
-	assert.Equal(t, []string{firstMessage, secondMessage}, warnings)
+	assert.Equal(t, []string{firstMessage, secondMessage}, validation.Warnings)
 }
