@@ -210,8 +210,8 @@ Application directives:
   (use fable-5 sparingly as it is much more costly);
   optionally add gpt-5.6-sol/gpt-5.6-terra as an extra independent perspective.
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (kimi-k3, gpt-5.6-terra,
-  grok-4.6, gpt-5.6-luna) for read-only exploration, searching, summarizing, and
+- Match model to task shape: use cheap, high-cost-rating models (kimi-k3, gpt-5.6-luna,
+  gpt-5.6-terra, grok-4.6) for read-only exploration, searching, summarizing, and
   mechanical/repetitive edits; reserve opus-5/fable-5 for design decisions, tricky debugging, and final review.
 - Parallelize independent exploration and/or action execution
   (like running tests) across cheap subagents rather than serializing
