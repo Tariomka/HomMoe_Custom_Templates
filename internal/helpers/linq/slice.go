@@ -181,3 +181,20 @@ func (this Query[T]) DistinctBy(selector func(T) any) Query[T] {
 		},
 	}
 }
+
+// SelectSlice is the eager equivalent of FromSlice(...).Select(...).ToSlice().
+// It allocates nothing for an empty source and sizes the result exactly once,
+// where the lazy chain allocates its closures and regrows the result even when
+// there is nothing to project. Use it on the per-frame clone paths.
+func SelectSlice[S ~[]T, T, TResult any](source S, selector func(T) TResult) []TResult {
+	if len(source) == 0 {
+		return nil
+	}
+
+	result := make([]TResult, 0, len(source))
+	for _, item := range source {
+		result = append(result, selector(item))
+	}
+
+	return result
+}

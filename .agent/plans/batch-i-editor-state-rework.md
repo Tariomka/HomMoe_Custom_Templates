@@ -32,9 +32,10 @@ Backlog items closed by this work: [§2.1](../backlog/backlog-opus5.md) and
 > **Entity's** job. §0 rows "DTO shape" and "Wire shape", the whole of Phase 5,
 > and Phase 4's grep gate are **superseded**.
 >
-> **State as of 2026-08-26:** Phases 1–4 and 8–10 are **complete and committed**
-> through `2fc6b13`; the working tree is clean. Phases 5 and 11 are
-> **superseded — do not execute**. Remaining order: **6 → 12 → 7**.
+> **State as of 2026-08-31:** Phases 1–4, 6 and 8–10 are **complete**; 1–4 and
+> 8–10 are committed through `2fc6b13`, **Phase 6 is uncommitted in the working
+> tree** awaiting the owner's review. Phases 5 and 11 are **superseded — do not
+> execute**. Remaining order: **12 → 7**.
 
 As work proceeds: mark checkboxes `- [x]` as items complete; when a phase is done,
 set its status to `Complete` and write its **Phase Summary** (what was done, key
@@ -1118,7 +1119,7 @@ _(write when phase completes)_
 ---
 
 ## Phase 6: Stop the per-frame whole-state clone (backlog §1.5)
-Status: Not started — **next phase to run.**
+Status: **Complete** (2026-08-31).
 
 > **Refreshed 2026-08-26.** The two numbers this phase used to quote are both
 > stale: the batch-D figures below come from a different tree *and* different
@@ -1131,21 +1132,20 @@ Historical, for context only — batch D on `BenchmarkEditorWindow_TabCycling`:
 **3.01 M ns/op · 1,435 KB/op · 6,640 allocs/op** (pre-batch-D was 4,676 allocs/op).
 Acceptance: any measurable improvement, recorded below.
 
-- [ ] Re-measure the baseline on this machine first — every earlier number in
+- [x] Re-measure the baseline on this machine first — every earlier number in
       this plan is from a superseded tree.
-- [ ] Add read-only per-panel view structs in `app/gui/models/`, each carrying
-      only what its panel renders.
-- [ ] Convert the five cloning `Layout` paths:
-      [bonusesPanel.go](../../app/gui/panels/bonusesPanel.go#L63),
-      [generalPanel.go](../../app/gui/panels/generalPanel.go#L105),
-      [layoutPanel.go](../../app/gui/panels/layoutPanel.go#L131) and
-      [layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go#L113) and
-      [#L129](../../app/gui/panels/layoutPanelZones.go#L129).
-      **Re-locate these by name, not by line number** — the Phase 10 sweep moved
-      them.
-- [ ] Keep the clone on any path that hands state **out** of the model — the
+- [x] ~~Add read-only per-panel view structs in `app/gui/models/`, each carrying
+      only what its panel renders.~~ **Not built — the profile said no.** See the
+      Phase Summary: no panel reads the whole state per frame except one click
+      handler, which now reads it on the click instead.
+- [x] Convert the five cloning `Layout` paths — of the five, only
+      `handleZoneContentDialogClicks` in
+      [layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go) was actually
+      per-frame; the four `LoadFromState` sites are event-driven.
+- [x] Keep the clone on any path that hands state **out** of the model — the
       §1.1 aliasing fix must not be undone.
-- [ ] Unit tests for each new view struct's projection.
+- [x] Unit tests for each new view struct's projection — replaced by tests for
+      `linq.SelectSlice`, the projection helper that carries the whole win.
 
 **The measurement this phase exists to take.** `ValidateEditorState` was kept on
 the Model precisely so this phase could price the per-frame path without a DTO
@@ -1162,7 +1162,83 @@ calls the validator on every panel write.
 - Full unit + integration suites pass; coverage ≥ 72.5 %.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Result — `BenchmarkEditorWindow_TabCycling`, headless, `-benchtime=50x -count=6`,
+baseline taken on the clean tree at `540f7eb` (= `2fc6b13` plus three doc-only
+commits):**
+
+| | allocs/op | B/op | ns/op (median of 6) |
+| --- | --- | --- | --- |
+| Before | 12,689–12,691 | 1,045.0 KB | 4.05 M |
+| After | 4,772–4,774 | 720.0 KB | 3.57 M |
+| Δ | **−62.4 %** | **−31.1 %** | **−11.8 %** |
+
+**What the profile actually said.** The plan's bullet list was written against a
+batch-D-era reading of the tree and pointed at the wrong code. An
+`alloc_objects` profile (`-benchtime=200x -memprofile`) attributed **75.2 % of
+every allocation in the benchmark** to `editor_state_model.EditorState.Clone`,
+split across its callers: `UpdateCurrentState` 37.4 %, `stateHandler.
+ValidateEditorState` 29.3 %, `GetCurrentState` 24.1 %, `GetPreviousState` 9.2 %.
+Inside `Clone`, 97 % of that went into `CloneZoneContentRows`.
+
+The cost was not the clone *count* but the clone *mechanism*. Every row-slice
+clone ran `linq.FromSlice(x).Select(f).ToSlice()`, a lazy chain that allocates
+its three closures and boxes `ToSlice`'s accumulator **before it looks at the
+source**, then regrows the result with `append`. `EditorState.Clone` runs eight
+such chains, and six of the eight are empty on a default state — including
+`editor_state_helpers.CloneZoneContentRow`'s clone of the embedded entity's
+`Rules`, which §0.7.4 deliberately keeps nil. Roughly a quarter of all
+allocations in the whole benchmark were chains projecting nothing.
+
+**The four changes.**
+
+1. **`linq.SelectSlice`** ([slice.go](../../internal/helpers/linq/slice.go)) —
+   the eager equivalent of `FromSlice(...).Select(...).ToSlice()`. Returns `nil`
+   for an empty source without allocating and sizes the result exactly once.
+   Semantics match the lazy chain exactly, including empty → `nil`.
+2. **The five clone helpers on the frame path use it**: `CloneContentRuleRows` /
+   `CloneZoneContentRows` in both
+   [editor_state_helpers](../../internal/helpers/editor_state_helpers/) and
+   [editor_state_model](../../internal/models/editor_state_model/), plus the
+   `ManualZones` / `ManualConnections` chains in `EditorState.Clone`. The two
+   `linq` chains there collapse to method expressions, so the per-element
+   closure is gone as well.
+3. **`handleZoneContentDialogClicks` stopped cloning the whole state per frame.**
+   It cloned the state to read six row slices that only matter when one of six
+   buttons was clicked. `openZoneContentDialog` now takes a *getter* instead of a
+   row slice and reads the state itself, so the clone happens on the click. The
+   `switch` and its short-circuit over `Clicked(gtx)` are untouched — a click
+   left unread this frame must still be readable next frame.
+4. **Nothing else.** The clones in `UpdateCurrentState`, `ValidateEditorState`,
+   `GetCurrentState`, `GetPreviousState` and `AutoRegenerate` all hand state
+   across a boundary, so they stay (§1.1). The `UpdateCurrentState` →
+   `ValidateEditorState` pair is a genuine double deep-clone and is the largest
+   remaining item, but collapsing it means letting `updateFunc` mutate through to
+   the live `current`, which is exactly the aliasing the bullet above forbids.
+   With each clone now ~9× cheaper the case for taking that risk is weak; it is
+   left as a note, not a task.
+
+**Why no per-panel view structs.** The bullet assumed the panels read whole state
+every frame. They do not: `LoadFromState` runs from the panel constructors and
+from `Window.load()` (toolbar new/open), never from `Layout`. The one genuine
+per-frame reader was the click handler in change 3, and the fix there is to not
+read at all rather than to read into a new type. Building six view structs would
+have added types and mapping code for zero measured gain, which §3.1 forbids.
+
+**Where the remaining allocations are.** Re-profiled after the change: the state
+path is down from ~1.72 M sampled objects to ~0.20 M (−88 %), and what is left
+is one `make` per content row per clone — the irreducible cost of a deep clone.
+Everything above it in the profile is now Gio rendering (`GetPanelWidget`,
+`newSectionHeaderWidget`, glyph shaping), which is a different backlog item.
+
+**Gates** — all green: `go build ./...`, both `go vet` variants,
+`gofmt -l ./app ./internal ./test ./cmd` empty, `go run ./cmd/testlayoutcheck .`
+passed, `wire diff` exit 0, `go test ./test/unit/...`, `go test ./test/...`
+(untagged), `go test -tags=integration_test ./test/integration/...`, and the GPU
+suite **without `-update`** (35.0 s). Unit coverage **73.9 %**, unchanged, floor
+72.5 %. `golangci-lint-v2` reports **1 issue** — the owner's `godox` TODO in
+[stateHandler.go](../../internal/handlers/stateHandler.go), i.e. the current
+baseline, no regression.
 
 ---
 
@@ -1921,7 +1997,7 @@ _(write when phase completes)_
 ---
 
 ## Phase 12: Enforce the layering mechanically
-Status: Not started — **runs after Phase 6.**
+Status: Not started — **next phase to run** (Phase 6 is done).
 
 §0.4 was violated silently for four phases because nothing checked it. A doctrine
 without a gate is a suggestion.

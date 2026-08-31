@@ -17,5 +17,5 @@ func CloneContentRuleRow(rule editor_state.ContentRuleRow) editor_state.ContentR
 
 // CloneContentRuleRows deep-clones a rule slice.
 func CloneContentRuleRows(rules []editor_state.ContentRuleRow) []editor_state.ContentRuleRow {
-	return linq.FromSlice(rules).Select(CloneContentRuleRow).ToSlice()
+	return linq.SelectSlice(rules, CloneContentRuleRow)
 }

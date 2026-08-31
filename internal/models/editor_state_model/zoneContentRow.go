@@ -47,7 +47,7 @@ func ToZoneContentRowEntities(rows []ZoneContentRow) []editor_state.ZoneContentR
 
 // CloneZoneContentRows deep-clones a row slice.
 func CloneZoneContentRows(rows []ZoneContentRow) []ZoneContentRow {
-	return linq.FromSlice(rows).Select(ZoneContentRow.Clone).ToSlice()
+	return linq.SelectSlice(rows, ZoneContentRow.Clone)
 }
 
 // Clone returns a copy sharing no backing array or pointer with the receiver.

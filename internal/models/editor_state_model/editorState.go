@@ -85,13 +85,8 @@ func (this *EditorState) Clone() EditorState {
 	clone.HighNeutralContentRows = CloneZoneContentRows(this.HighNeutralContentRows)
 	clone.HubZoneContentRows = CloneZoneContentRows(this.HubZoneContentRows)
 
-	clone.ManualZones = linq.FromSlice(this.ManualZones).
-		Select(func(zone ManualZoneSave) ManualZoneSave { return zone.Clone() }).
-		ToSlice()
-
-	clone.ManualConnections = linq.FromSlice(this.ManualConnections).
-		Select(func(conn ManualConnectionSave) ManualConnectionSave { return conn.Clone() }).
-		ToSlice()
+	clone.ManualZones = linq.SelectSlice(this.ManualZones, ManualZoneSave.Clone)
+	clone.ManualConnections = linq.SelectSlice(this.ManualConnections, ManualConnectionSave.Clone)
 
 	return clone
 }

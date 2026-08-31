@@ -88,3 +88,8 @@ possibly using the current separated structure of the editor state and the secti
 the json.
 
 ---
+
+In [layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go) instead of creating
+setters and getters, make Editor Stage have those setters and getters.
+
+---

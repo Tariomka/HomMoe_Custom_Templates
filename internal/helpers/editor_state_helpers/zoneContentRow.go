@@ -23,5 +23,5 @@ func CloneZoneContentRow(row editor_state.ZoneContentRow) editor_state.ZoneConte
 
 // CloneZoneContentRows deep-clones a row slice.
 func CloneZoneContentRows(rows []editor_state.ZoneContentRow) []editor_state.ZoneContentRow {
-	return linq.FromSlice(rows).Select(CloneZoneContentRow).ToSlice()
+	return linq.SelectSlice(rows, CloneZoneContentRow)
 }

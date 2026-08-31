@@ -36,7 +36,7 @@ func ToContentRuleRowEntities(rules []ContentRuleRow) []editor_state.ContentRule
 
 // CloneContentRuleRows deep-clones a rule slice.
 func CloneContentRuleRows(rules []ContentRuleRow) []ContentRuleRow {
-	return linq.FromSlice(rules).Select(ContentRuleRow.Clone).ToSlice()
+	return linq.SelectSlice(rules, ContentRuleRow.Clone)
 }
 
 // Clone returns a copy sharing no pointer with the receiver.
