@@ -433,7 +433,8 @@ package instead.
   lives in [internal/services/](internal/services/) (or `models/`,
   `helpers/`, `constants/` as appropriate) and is invoked by the GUI layer.
 - If you find yourself writing an `if`/`switch` in a GUI file that decides
-  *what* to do (rather than *how to draw*), extract it into a service.
+  *what* to do (rather than *how to draw*), extract it into a service
+  (except in cases where it is pure UI logic, UI data and/or UI view-model shaping).
 
 ### 4.6 Tests
 
