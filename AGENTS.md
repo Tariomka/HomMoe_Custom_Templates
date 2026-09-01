@@ -292,15 +292,16 @@ number of interfaces:
 Examples of each:
 
 1. [.../tournament_variant/clusterServiceInterface.go](internal/services/template_generator/providers/topology/tournament_variant/clusterServiceInterface.go)
-   — one interface for four implementations, all in that package;
-   [internal/services/zones/zoneLabelProviderInterface.go](internal/services/zones/zoneLabelProviderInterface.go)
-   — one interface for one implementation. Likewise
+   — one interface for four implementations, all in that package. Likewise
    [internal/services/connection_editor/](internal/services/connection_editor/)
    holds three interfaces for its three implementations.
 2. [internal/handlers/](internal/handlers/) has six implementation files, so its
    contracts live in
    [internal/handlers/handler_interfaces/](internal/handlers/handler_interfaces/)
-   (six files, eight interfaces).
+   (six files, eight interfaces). Same for
+   [internal/services/zones/](internal/services/zones/) — six implementation
+   files, contracts in
+   [internal/services/zones/zone_interfaces/](internal/services/zones/zone_interfaces/).
 3. [app/gui/interfaces/](app/gui/interfaces/) holds the shared `IDialog` /
    `IPanel` contracts: `drivers` and `panels` both implement them, and declaring
    them in either package would create a `drivers`↔`panels` and

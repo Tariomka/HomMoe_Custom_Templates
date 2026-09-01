@@ -1,6 +1,6 @@
 # Backlog — 2026-08-11 (Claude Opus 5)
 
-Compiled backlog in the format of [review-prompt.md](review-prompt.md)
+Compiled backlog in the format of [review-prompt.md](../promt_templates/review-prompt.md)
 (*Output format*). Every item below was re-verified against the source on
 2026-08-11 at the state described in `.agent/session-carry-forward.md` (all 46
 findings of [review-opus5-08-04.md](review-opus5-08-04.md) closed except §1.4
@@ -13,7 +13,7 @@ and §1.9, working tree clean apart from the owner's own staged files).
 | [review-opus5-08-04.md](review-opus5-08-04.md) | §1.4, §1.9 (the only two left open) |
 | `backlog.md` (deleted in `cd7ad10`) | all 9 items |
 | [test_observations.md](test_observations.md) | the 3 gaps that became writable once `AppRunner` gained `DragTo`/`MoveTo`/`InputText` |
-| [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106) | the owner's 46-line design comment, split into §5.4 and §5.5 |
+| [runnerHandler.go](../../test/test_helpers/integration_common/runnerHandler.go#L61-L106) | the owner's 46-line design comment, split into §5.4 and §5.5 |
 
 **Supersession.** This document **superseded `todo/backlog.md` in full**
 — every one of its items is dispositioned in §0 and restated below with fresh
@@ -39,11 +39,12 @@ a decision the owner already made.
 
 **✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
 §3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D), §5.3 (batch F) ·
-**2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) — **12 done, 9 open.**
-Batch D spun off §1.5 (render-path clone cost); batch I spun off §2.6
-(entities named outside the permitted layers).
+**2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) · **2026-09-01:**
+§2.1 and §1.5 (batch I) — **14 done, 7 open.**
+Batch D spun off §1.5 (render-path clone cost), which batch I then absorbed;
+batch I spun off §2.6 (entities named outside the permitted layers).
 
-**Baselines to hold (AGENTS.md §2.3):** unit coverage **72.9 %**, floor
+**Baselines to hold (AGENTS.md §2.3):** unit coverage **73.9 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
 `integration_test` and `integration_test,gui`.
@@ -79,7 +80,7 @@ are **not** re-reported here.
 ### 0.3 Disposition of [test_observations.md](test_observations.md)
 
 **Promoted to backlog items** (they were recorded as "future work" only because
-no synthetic-pointer seam existed; [appRunner.go](../test/test_helpers/integration_common/appRunner.go#L152-L217)
+no synthetic-pointer seam existed; [appRunner.go](../../test/test_helpers/integration_common/appRunner.go#L152-L217)
 now provides `ClickAt`, `MoveTo`, `DragTo` and `InputText`):
 
 | Observation | New section |
@@ -96,7 +97,7 @@ Gio-widget/panel entries (`buttonWidget`, `sliderRowWidget`, `layoutPanel*`,
 `providePreviewGenerator` `err != nil`, `atomicFileWriter` `Close`/`Sync`,
 `helpers/io.go` Steam discovery, `buildShiftDerangement`).
 
-### 0.4 Disposition of the [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106) design comment
+### 0.4 Disposition of the [runnerHandler.go](../../test/test_helpers/integration_common/runnerHandler.go#L61-L106) design comment
 
 The comment is a design note, not a to-do list, and it mixes two unrelated
 problems. It is split as follows and **the comment itself should shrink to a
@@ -125,7 +126,7 @@ returns an unexported type.
 *(= review-opus5-08-04 §1.4, restated with re-verified line numbers.)*
 
 **Evidence.** `EditorStateDto` holds nine slice fields —
-[editorStateDto.go](../internal/dtos/editorStateDto.go#L82-L94):
+[editorStateDto.go](../../internal/dtos/editorStateDto.go#L82-L94):
 
 ```go
 	Bonuses            []config.BonusEntry `json:"bonuses"`
@@ -140,7 +141,7 @@ returns an unexported type.
 ```
 
 Three places copy the struct by value and treat the result as an independent
-snapshot — [editorState.go](../app/gui/models/editorState.go#L31-L33):
+snapshot — [editorState.go](../../app/gui/models/editorState.go#L31-L33):
 
 ```go
 func (this *EditorState) GetCurrentState() dtos.EditorStateDto {
@@ -148,7 +149,7 @@ func (this *EditorState) GetCurrentState() dtos.EditorStateDto {
 }
 ```
 
-[editorState.go](../app/gui/models/editorState.go#L40-L44):
+[editorState.go](../../app/gui/models/editorState.go#L40-L44):
 
 ```go
 func (this *EditorState) SnapshotCurrentState() {
@@ -158,18 +159,18 @@ func (this *EditorState) SnapshotCurrentState() {
 }
 ```
 
-[stateHandler.go](../internal/handlers/stateHandler.go#L55-L70) —
+[stateHandler.go](../../internal/handlers/stateHandler.go#L55-L70) —
 `ValidateEditorState(stateDto dtos.EditorStateDto, …)` takes the DTO **by
 value**, mutates it through `issue.Fix(&stateDto)` /
 `normalizeInactiveNeutralCounts(&stateDto)`, and returns it inside
 `dtos.EditorStateValidationDto{State: stateDto, …}`.
-[editorState.go](../app/gui/models/editorState.go#L46-L54) does the same
+[editorState.go](../../app/gui/models/editorState.go#L46-L54) does the same
 shallow trick again in `GetPreviousState`.
 
 **Why it is wrong.** A struct copy duplicates slice *headers*, not backing
 arrays, so `this.previous` shares element storage with `this.current`. Change
 detection compares element-wise
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L187-L199) →
+([editorStateDto.go](../../internal/dtos/editorStateDto.go#L187-L199) →
 `contentRowSlicesEqual` / `slices.Equal`), so **any in-place element write makes
 the change invisible to the unsaved/regenerate machinery**: the editor would not
 mark the file dirty and `AutoRegenerate` would not fire. The same aliasing leaks
@@ -178,13 +179,13 @@ live editor state out of `GetCurrentState()` to every panel and to
 
 This is **latent, not live** today: every current writer replaces the whole
 slice rather than an element
-([layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go#L133-L148),
-[bonusesPanel.go](../app/gui/panels/bonusesPanel.go#L248),
-[editorState.go](../app/gui/models/editorState.go#L116-L119)). One in-place edit
+([layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go#L133-L148),
+[bonusesPanel.go](../../app/gui/panels/bonusesPanel.go#L248),
+[editorState.go](../../app/gui/models/editorState.go#L116-L119)). One in-place edit
 anywhere reintroduces the bug with no compiler or lint signal.
 
 **Fix.** Add an explicit deep copy beside the existing methods in
-[editorStateDto.go](../internal/dtos/editorStateDto.go):
+[editorStateDto.go](../../internal/dtos/editorStateDto.go):
 
 ```go
 // Clone returns a copy that shares no backing array with the receiver.
@@ -207,14 +208,14 @@ clone there too rather than leaving a second shallow copy on the books.
 
 The **elements must be checked for nested slices**:
 `models.ZoneContentRowSave` carries `Rules []models.ContentRuleRowSave`
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L338-L346) shows rows
+([editorStateDto.go](../../internal/dtos/editorStateDto.go#L338-L346) shows rows
 built with `Rules: []models.ContentRuleRowSave{…}`), so a `slices.Clone` of the
 row slice is **not** enough — write a `cloneContentRows` helper that also clones
 each row's `Rules`. Re-check `editor_state_dto.ManualZoneSave` /
 `ManualConnectionSave`: they wrap `entities.Zone` / `entities.Connection`, which
 **do** contain slices (`MandatoryContent`, placement rules, roads). ⚠ Those
 element types live in the protected
-[internal/entities/template/](../internal/entities/template/) tree — do **not**
+[internal/entities/template/](../../internal/entities/template/) tree — do **not**
 add `Clone` methods there. Clone their slice fields from the `dtos` side, or, if
 that proves unreadable, stop at the top level and document the boundary in the
 test.
@@ -242,12 +243,12 @@ explicitly read-only view — but take that decision to the owner first.
 the latter three take the DTO by value and stored its address, so the caller
 kept aliasing the slices.
 
-- New `Clone` methods: [editorStateDto.go](../internal/dtos/editorStateDto.go)
-  (+ `cloneContentRows`), [zoneContentRowSave.go](../internal/models/zoneContentRowSave.go),
-  [contentRuleRowSave.go](../internal/models/contentRuleRowSave.go) (three
+- New `Clone` methods: [editorStateDto.go](../../internal/dtos/editorStateDto.go)
+  (+ `cloneContentRows`), [zoneContentRowSave.go](../../internal/models/zoneContentRowSave.go),
+  [contentRuleRowSave.go](../../internal/models/contentRuleRowSave.go) (three
   pointer fields, so `slices.Clone` of `Rules` alone was not enough),
-  [manualZoneSave.go](../internal/dtos/editor_state_dto/manualZoneSave.go) and
-  [manualConnectionSave.go](../internal/dtos/editor_state_dto/manualConnectionSave.go).
+  [manualZoneSave.go](../../internal/dtos/editor_state_dto/manualZoneSave.go) and
+  [manualConnectionSave.go](../../internal/dtos/editor_state_dto/manualConnectionSave.go).
 - `entities.Zone` turned out to be **17** slice/pointer fields deep
   (`MainObject.Faction *TypedRef`, `TypedRef.Args` on the three biome fields and
   both `Road` endpoints). Per §2.1 no `Clone` was added under
@@ -255,13 +256,13 @@ kept aliasing the slices.
   `cloneZone` / `cloneMainObject` / `cloneRoad` / `cloneTypedRef`.
 - `PlacementRule.Args []any` is cloned as a slice only; the elements are boxed
   scalars from JSON decoding. Documented in code at the boundary.
-- New shared helper [pointer.go](../internal/helpers/pointer.go) `ClonePointer`.
+- New shared helper [pointer.go](../../internal/helpers/pointer.go) `ClonePointer`.
 - `clone_test.go` carries a **recursive reflection drift guard** that walks the
   whole tree and fails if any clone shares a backing array or pointer, so a
   field added to the protected `entities` types cannot silently go uncloned.
   Verified to fail by removing a clone line.
 - The test-local `deepCloneEditorState` in
-  [equalsIgnoringManualEdits_test.go](../test/unit/internal/dtos/editorStateDto/equalsIgnoringManualEdits_test.go)
+  [equalsIgnoringManualEdits_test.go](../../test/unit/internal/dtos/editorStateDto/equalsIgnoringManualEdits_test.go)
   was replaced by the production `Clone`; it had silently omitted
   `LowestNeutralContentRows`.
 - **Benchmark (`TabCycling`, 6×50x, steady state).** 2.88 M → 3.01 M ns/op
@@ -274,7 +275,7 @@ kept aliasing the slices.
 ### 1.2 ✅ DONE 🟠 Hub-touching connections are guarded as *player borders*, not as hub borders
 
 **Resolved 2026-08-12 (batch B).** `constants.IsHubLabel`
-([hubLabel.go](../internal/common/constants/hubLabel.go)) plus a private
+([hubLabel.go](../../internal/common/constants/hubLabel.go)) plus a private
 `labelQuality` helper collapsed `GetBorderGuardValue` to
 `max(labelQuality(a), labelQuality(b)).GetGuardValue()`; `hubTopology`,
 `geometricHubTopology` and `hubClusterService` now pass the hub label instead of
@@ -283,7 +284,7 @@ added to `neutral_zone.Plans`. Player/plan pairs are bit-identical to before.
 The golden generator tests needed **no** expectation change.
 
 **Evidence.** The hub zone is built with the top tier —
-[zoneFactory.go](../internal/services/zones/zoneFactory.go#L120-L141):
+[zoneFactory.go](../../internal/services/zones/zoneFactory.go#L120-L141):
 
 ```go
 		Profile: common_zones.GetNeutralZoneProfile(neutral_zone.QualityHighest)
@@ -292,7 +293,7 @@ The golden generator tests needed **no** expectation change.
 but the hub is deliberately **not** in `neutral_zone.Plans`, and every hub
 topology therefore substitutes a *player* label as the guard anchor.
 
-[hubTopology.go](../internal/services/template_generator/providers/topology/hubTopology.go#L99-L108):
+[hubTopology.go](../../internal/services/template_generator/providers/topology/hubTopology.go#L99-L108):
 
 ```go
 		hubAnchor := label
@@ -302,7 +303,7 @@ topology therefore substitutes a *player* label as the guard anchor.
 		hubGuard := this.GetBorderGuardValue(hubAnchor, label, playerLabels, neutralZones, tuning)
 ```
 
-[geometricHubTopology.go](../internal/services/template_generator/providers/topology/geometricHubTopology.go#L143-L158):
+[geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L143-L158):
 
 ```go
 	guardAnchor := playerLabels[0]
@@ -315,24 +316,24 @@ topology therefore substitutes a *player* label as the guard anchor.
 			WithGuardValue(this.GetBorderGuardValue(guardAnchor, guardLabel, playerLabels, neutralZones, tuning)).
 ```
 
-[hubClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L94):
+[hubClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L94):
 
 ```go
 			WithGuardValue(this.GetBorderGuardValue(playerLabel, spokeLabel, []string{playerLabel}, allNeutralZonePlans, tuning)).
 ```
 
 `GetBorderGuardValue`
-([topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L180-L201))
+([topologyConnectionService.go](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L180-L201))
 knows only *player* and *plan* labels, so it can never see the hub.
 
 **Why it is wrong.** With both endpoints resolving to player labels the function
 returns `QualityUnknown.GetGuardValue()` = **30 000**
-([neutralZoneQuality.go](../internal/models/neutral_zone/neutralZoneQuality.go#L14-L30));
+([neutralZoneQuality.go](../../internal/models/neutral_zone/neutralZoneQuality.go#L14-L30));
 hub-to-neutral returns the *neutral's* tier (as low as 10 000). The hub is the
 richest zone on the map (`QualityHighest` = **35 000**), so its borders are
 systematically under-guarded — players reach the hub's Platinum content behind a
 Bronze/player-grade guard. The bug is invisible in tests because
-[getBorderGuardValue_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/getBorderGuardValue_test.go#L12-L112)
+[getBorderGuardValue_test.go](../../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/getBorderGuardValue_test.go#L12-L112)
 only exercises player and plan labels.
 
 **Fix** (rule confirmed by the owner 2026-08-11: **hub edges = `max(Highest,
@@ -375,16 +376,16 @@ func (this *TopologyConnectionService) GetBorderGuardValue(
 `IsHubLabel` must match both `constants.HubZoneName` (`"Hub"`, used by
 `hubTopology` and `geometricHubTopology`) and the tournament form
 `constants.HubZonePrefix + playerLabel` (`"Hub-A"`,
-[hubClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L39)).
+[hubClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L39)).
 Zone labels are `A…AF`
-([zoneLabels.go](../internal/common/constants/zoneLabels.go)), so the prefix
+([zoneLabels.go](../../internal/common/constants/zoneLabels.go)), so the prefix
 cannot collide with a real label.
 
 Then fix the three callers to pass the hub, not a player:
 
-- [hubTopology.go](../internal/services/template_generator/providers/topology/hubTopology.go#L99-L108) — delete `hubAnchor`, call `GetBorderGuardValue(constants.HubZoneName, label, …)`.
-- [geometricHubTopology.go](../internal/services/template_generator/providers/topology/geometricHubTopology.go#L143-L160) — delete `guardAnchor`/`guardLabel`, call `GetBorderGuardValue(constants.HubZoneName, label, …)`.
-- [hubClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L94) — pass `hubName` as the first argument instead of `playerLabel`.
+- [hubTopology.go](../../internal/services/template_generator/providers/topology/hubTopology.go#L99-L108) — delete `hubAnchor`, call `GetBorderGuardValue(constants.HubZoneName, label, …)`.
+- [geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L143-L160) — delete `guardAnchor`/`guardLabel`, call `GetBorderGuardValue(constants.HubZoneName, label, …)`.
+- [hubClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L94) — pass `hubName` as the first argument instead of `playerLabel`.
 
 **Explicitly do NOT** add the hub as an ordinary entry in `neutral_zone.Plans` —
 the plans list drives neutral-zone *generation* (counts, castles, profiles), and
@@ -419,7 +420,7 @@ portals are guarded by the higher endpoint tier and scaled exactly once. The
 `25 000` literal is gone, which closes §3.3 as well.
 
 **Evidence.**
-[topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L30-L68):
+[topologyConnectionService.go](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L30-L68):
 
 ```go
 func (this *TopologyConnectionService) CreateRandomPortalConnections(
@@ -433,7 +434,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 
 The signature does not even accept `neutral_zone.Plans`, so tier information is
 not available at the call. The current unit test pins the literal —
-[createRandomPortalConnections_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createRandomPortalConnections_test.go#L53-L75).
+[createRandomPortalConnections_test.go](../../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createRandomPortalConnections_test.go#L53-L75).
 
 **Why it is wrong.** A portal that drops a player straight into a Platinum
 neutral zone is guarded at 25 000 (the `QualityHigh` value), while the direct
@@ -446,37 +447,37 @@ back door. Symmetrically, a portal into a Plastic zone is over-guarded
 `GetBorderGuardValue`:
 
 1. Add `neutralZones neutral_zone.Plans` to `CreateRandomPortalConnections` in
-   [topologyConnectionServiceInterface.go](../internal/services/template_generator/providers/topology/base/topologyConnectionServiceInterface.go#L10),
-   [topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L30-L34)
+   [topologyConnectionServiceInterface.go](../../internal/services/template_generator/providers/topology/base/topologyConnectionServiceInterface.go#L10),
+   [topologyConnectionService.go](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L30-L34)
    and the pass-through in
-   [topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go#L153-L158).
+   [topologyBase.go](../../internal/services/template_generator/providers/topology/base/topologyBase.go#L153-L158).
 2. Replace the literal with
    `WithGuardValue(this.GetBorderGuardValue(fromLabel, toLabel, playerLabels, neutralZones, tuning))`.
    **Do not double-scale** — `GetBorderGuardValue` already applies
    `tuning.ScaleByBorderGuardStrength`.
 3. Update the seven call sites, each of which already has the plans in scope:
-   [chainTopology.go](../internal/services/template_generator/providers/topology/chainTopology.go#L47),
-   [geometricHubTopology.go](../internal/services/template_generator/providers/topology/geometricHubTopology.go#L57),
-   [hubTopology.go](../internal/services/template_generator/providers/topology/hubTopology.go#L46),
-   [positionedTopologyBuilder.go](../internal/services/template_generator/providers/topology/positionedTopologyBuilder.go#L57),
-   [ringTopology.go](../internal/services/template_generator/providers/topology/ringTopology.go#L45),
-   [tournamentTopology.go](../internal/services/template_generator/providers/topology/tournamentTopology.go#L71),
-   [webTopology.go](../internal/services/template_generator/providers/topology/webTopology.go#L51).
+   [chainTopology.go](../../internal/services/template_generator/providers/topology/chainTopology.go#L47),
+   [geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L57),
+   [hubTopology.go](../../internal/services/template_generator/providers/topology/hubTopology.go#L46),
+   [positionedTopologyBuilder.go](../../internal/services/template_generator/providers/topology/positionedTopologyBuilder.go#L57),
+   [ringTopology.go](../../internal/services/template_generator/providers/topology/ringTopology.go#L45),
+   [tournamentTopology.go](../../internal/services/template_generator/providers/topology/tournamentTopology.go#L71),
+   [webTopology.go](../../internal/services/template_generator/providers/topology/webTopology.go#L51).
 
 This removes the `25000` literal, so §3.3 disappears with it.
 
 **Verified non-issue (do not "fix"):** random portals can never touch the hub —
 `hubTopology` passes only `outerLabels`
-([hubTopology.go](../internal/services/template_generator/providers/topology/hubTopology.go#L39-L48))
+([hubTopology.go](../../internal/services/template_generator/providers/topology/hubTopology.go#L39-L48))
 and `geometricHubTopology` passes players + plan labels
-([geometricHubTopology.go](../internal/services/template_generator/providers/topology/geometricHubTopology.go#L46-L59)).
+([geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L46-L59)).
 Hub portals in the geometric layout are created separately and are covered by
 §1.2.
 
 **Tests to add / update.**
 
 - Rewrite the guard expectations in
-  [createRandomPortalConnections_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createRandomPortalConnections_test.go)
+  [createRandomPortalConnections_test.go](../../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createRandomPortalConnections_test.go)
   →  `TestWhenPortalJoinsTwoNeutralZones_UsesTheHigherTierGuardValue`,
   `TestWhenPortalJoinsTwoPlayerZones_UsesThePlayerBorderGuardValue`.
 - Golden generator expectations will move for every topology with
@@ -492,12 +493,12 @@ Hub portals in the geometric layout are created separately and are covered by
 *(= review-opus5-08-04 §1.9, restated with re-verified line numbers.)*
 
 **Resolved 2026-08-12 (batch A).** The `app.DestroyEvent` error branch in
-[program.go](../app/gui/program.go) now writes to `os.Stderr` before the
+[program.go](../../app/gui/program.go) now writes to `os.Stderr` before the
 discarded `slog.Error`; the optional `os.Exit`/`main.go` refactor was **not**
 done. `app/gui/program.go` was added to the Gio-UI section of
 [test_observations.md](test_observations.md).
 
-**Evidence.** [program.go](../app/gui/program.go#L34-L41):
+**Evidence.** [program.go](../../app/gui/program.go#L34-L41):
 
 ```go
 	for {
@@ -511,15 +512,15 @@ done. `app/gui/program.go` was added to the Gio-UI section of
 ```
 
 but `getAndConfigureWindow` — called at
-[program.go](../app/gui/program.go#L26), i.e. *before* the loop — installs a
-discard logger at [program.go](../app/gui/program.go#L58):
+[program.go](../../app/gui/program.go#L26), i.e. *before* the loop — installs a
+discard logger at [program.go](../../app/gui/program.go#L58):
 
 ```go
 	slog.SetDefault(slog.New(slog.DiscardHandler))
 ```
 
 Logging is only re-enabled by the opt-in `-with-logging` flag
-([program.go](../app/gui/program.go#L69-L72)).
+([program.go](../../app/gui/program.go#L69-L72)).
 
 **Why it is wrong.** When Gio fails to create or maintain the window (no GPU,
 missing X/Wayland libraries on Linux, driver fault), the user sees the app
@@ -539,10 +540,10 @@ configured `slog` default:
 ```
 
 `depguard` denies `log` in non-main files
-([.golangci.yml](../.golangci.yml)) but not `fmt`, so this stays lint-clean.
+([.golangci.yml](../../.golangci.yml)) but not `fmt`, so this stays lint-clean.
 Secondary, **optional**: `os.Exit` inside the loop skips deferred cleanup —
 harmless today (nothing is deferred), but returning an error to
-[main.go](../main.go) would make the bootstrap testable. Do not do that as part
+[main.go](../../main.go) would make the bootstrap testable. Do not do that as part
 of this item unless the owner asks.
 
 **Tests.** No unit test is practical for the Gio event loop. Add an entry for
@@ -551,158 +552,211 @@ of this item unless the owner asks.
 
 ---
 
-### 1.5 🟡 Panels deep-clone the whole editor state on every frame
+### 1.5 ✅ FIXED 🟡 Panels deep-clone the whole editor state on every frame
 
-*(Spun off from §1.1, batch D, 2026-08-14. Owner decision: file, do not fix now.)*
+*(Spun off from §1.1, batch D, 2026-08-14. Fixed in batch I phase 6, 2026-08-31.)*
 
-**Evidence.** `GetCurrentState` deep-clones since batch D, and five `Layout`
-paths call it once per frame through `State.GetStateData()`:
+**What was wrong.** `GetCurrentState` deep-clones since batch D, and the render
+path called it several times a frame. Batch D's clone-free scalar readers
+(`GetTemplateName` / `GetMapSize` / `GetTopology` / `GetExperimentalMapSizes` on
+[editorState.go](../../app/gui/models/editorState.go) and
+[state.go](../../app/gui/drivers/state.go)) converted eight single-field call
+sites but recovered only ~13 % of the added allocations, because the whole-state
+readers dominated and no scalar getter reaches them.
 
-- [bonusesPanel.go](../app/gui/panels/bonusesPanel.go#L63)
-- [generalPanel.go](../app/gui/panels/generalPanel.go#L105)
-- [layoutPanel.go](../app/gui/panels/layoutPanel.go#L131)
-- [layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go#L113) and
-  [#L129](../app/gui/panels/layoutPanelZones.go#L129) — twice in one frame
+**What the profile actually said.** The original write-up blamed five `Layout`
+paths in the panels. That was wrong: four of the five are `LoadFromState`, which
+runs from the panel constructors and from `Window.load()` (toolbar new/open),
+never per frame. An `alloc_objects` profile of
+`BenchmarkEditorWindow_TabCycling` put **75.2 % of every allocation in the
+benchmark** inside `editor_state_model.EditorState.Clone` — 97 % of that in
+`CloneZoneContentRows` — reached from `UpdateCurrentState` (37.4 %),
+`stateHandler.ValidateEditorState` (29.3 %), `GetCurrentState` (24.1 %) and
+`GetPreviousState` (9.2 %).
 
-**Cost.** `BenchmarkEditorWindow_TabCycling`, 6 samples at 50x, steady state:
+The cost was the clone *mechanism*, not the clone count. Every row-slice clone
+ran `linq.FromSlice(x).Select(f).ToSlice()`, a lazy chain that allocates its
+three closures and boxes `ToSlice`'s accumulator **before it looks at the
+source**, then regrows the result with `append`. `EditorState.Clone` runs eight
+such chains and six are empty on a default state — including the clone of the
+embedded entity's `Rules`, which the model deliberately keeps nil. Roughly a
+quarter of all allocations in the benchmark were chains projecting nothing.
 
-| | ns/op | B/op | allocs/op |
+**What was done.**
+
+1. Added `linq.SelectSlice` ([slice.go](../../internal/helpers/linq/slice.go)) —
+   the eager equivalent of `FromSlice(...).Select(...).ToSlice()`. Returns `nil`
+   for an empty source without allocating and sizes the result exactly once;
+   semantics match the lazy chain including empty → `nil`.
+2. Pointed the five clone helpers on the frame path at it:
+   `CloneContentRuleRows` / `CloneZoneContentRows` in both
+   [editor_state_helpers](../../internal/helpers/editor_state_helpers/) and
+   [editor_state_model](../../internal/models/editor_state_model/), plus the
+   `ManualZones` / `ManualConnections` chains in `EditorState.Clone`.
+3. Stopped `handleZoneContentDialogClicks`
+   ([layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go)) cloning the
+   whole state per frame. It cloned to read six row slices that only matter when
+   one of six buttons was clicked; `openZoneContentDialog` now takes a getter and
+   reads the state itself. The `switch` and its short-circuit over `Clicked(gtx)`
+   are untouched — a click left unread this frame must stay readable next frame.
+
+**Result** — `BenchmarkEditorWindow_TabCycling`, headless, `-benchtime=50x
+-count=6`:
+
+| | allocs/op | B/op | ns/op (median of 6) |
 | --- | --- | --- | --- |
-| Before batch D | 2.88 M | 1,254 K | 4,676 |
-| Batch D, deep clone | 3.05 M | 1,456 K | 6,929 |
-| Batch D + scalar accessors | **3.01 M** | **1,435 K** | **6,640** |
+| Before batch D | 4,676 | 1,254 KB | 2.88 M |
+| Batch D + scalar accessors | 6,640 | 1,435 KB | 3.01 M |
+| Before batch I phase 6 | 12,690 | 1,045 KB | 4.05 M |
+| **After** | **4,773** | **720 KB** | **3.57 M** |
 
-Batch D added the clone-free readers `GetTemplateName` / `GetMapSize` /
-`GetTopology` / `GetExperimentalMapSizes` on both
-[editorState.go](../app/gui/models/editorState.go) and
-[state.go](../app/gui/drivers/state.go), which converted eight single-field call
-sites. That recovered only ~290 of the 2,253 added allocations (**13 %**) —
-the five whole-state readers above dominate and no scalar getter reaches them.
+−62.4 % allocations, −31.1 % bytes, −11.8 % wall clock against the tree it was
+measured on. (The batch-D rows come from a different tree *and* different
+hardware — compare only the last two rows.) Re-profiled after: the state path
+fell from ~1.72 M sampled objects to ~0.20 M (−88 %), and everything above it in
+the profile is now Gio rendering.
 
-Note the benchmark's default state has **no manual zones**; a template with many
-manual zones clones `entities.Zone` (17 reference fields) per zone per frame, so
-the real-world gap is wider than the table.
+**What was deliberately *not* done.**
 
-**Fix options** (owner has not chosen one):
+- **No per-panel view structs.** Fix option 3 below assumed the panels read whole
+  state every frame. They do not. The one genuine per-frame reader was the click
+  handler, and the fix there is to not read at all rather than to read into a new
+  type. Six view structs for zero measured gain is what AGENTS.md §3.1 forbids.
+- **The clones that hand state *out* of the model stay** — `UpdateCurrentState`,
+  `ValidateEditorState`, `GetCurrentState`, `GetPreviousState` and
+  `AutoRegenerate`. Undoing those would undo §1.1.
+- `UpdateCurrentState` → `ValidateEditorState` is a genuine double deep-clone and
+  is the largest remaining item, but collapsing it means letting `updateFunc`
+  mutate through to the live `current`. With each clone now ~9× cheaper the case
+  for taking that risk is weak. Recorded here, not scheduled.
 
-1. A borrowed read-only accessor — `ReadCurrentState(func(*dtos.EditorStateDto))`
-   — for the five sites. Removes nearly all per-frame cloning, but hands panels a
-   live pointer by convention rather than by enforcement, partly undoing what
-   §1.1 set out to fix.
-2. Cache the clone per frame/template revision, keyed like the existing
-   `layoutCache` (`GetTemplateRevision`).
-3. Narrow the panels to the fields they actually use, extending the scalar-reader
-   approach into small per-panel view structs.
-
-Option 1 is cheapest; option 3 is the most faithful to §1.1 and folds naturally
-into **§2.1** (`EditorStateDto` rework), which introduces a model layer anyway —
-consider doing it there rather than standalone.
-
-**Tests.** Whichever option: keep the existing clone tests green, and add a
-benchmark assertion or a `test_observations.md` entry recording the frame cost.
+**The three options this item originally listed** — a borrowed read-only
+accessor, a per-frame cache keyed on `GetTemplateRevision`, per-panel view
+structs — were all superseded by the measurement. None was implemented.
 
 ---
 
 ## 2. Architecture & modelling
 
-### 2.1 🟠 `EditorStateDto` is a flat god-DTO with no entity/model layer
+### 2.1 ✅ FIXED 🟠 `EditorStateDto` is a flat god-DTO with no entity/model layer
 
-**Evidence.** [editorStateDto.go](../internal/dtos/editorStateDto.go) is a
-single struct carrying identity, map, player, neutral-zone, castle, advanced
-tier, faction, generation, connectivity, density, topology, victory, arena,
-tournament and XP fields, plus banned content, overrides, bonuses, six
-mandatory-content row slices, and both manual-edit slices
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L15-L94)) — then adds
-defaults, layout comparison, castle diffing, manual-edit-insensitive equality
-and their private helpers
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L97-L447)).
+*(Batch I, 2026-08-21 → 2026-09-01. The doctrine that came out of it is now
+**AGENTS.md §4.4.1**; read that first, this entry is the history.)*
 
-It is imported by **twelve** production packages: `app/gui/drivers`,
-`app/gui/editor`, `app/gui/models`, `app/gui/panels`, `internal/dtos`,
-`internal/handlers`, `internal/handlers/handler_interfaces`, `internal/mappers`,
-`internal/repositories`, `internal/services/editor`,
-`internal/services/file_service`, `internal/validators`.
+**What was wrong.** `internal/dtos/editorStateDto.go` was a single struct
+carrying identity, map, player, neutral-zone, castle, advanced tier, faction,
+generation, connectivity, density, topology, victory, arena, tournament and XP
+fields, plus banned content, overrides, bonuses, six mandatory-content row
+slices and both manual-edit slices — then added defaults, layout comparison,
+castle diffing, manual-edit-insensitive equality and their private helpers. 72
+fields and ~350 lines of behaviour in one file, imported by **twelve**
+production packages.
 
-**Why it is wrong.** The DTO is simultaneously the persistence schema
-(`.gen.json` tags), the GUI's working state, the validator's target and the
-mapper's input, so every one of those concerns is coupled to the others: adding
-a field means touching the on-disk format, the panels, the validator and the
-mapper at once, and the equality/diff logic (§1.1's aliasing surface) lives in
-the same file as the JSON contract. There is no layer that owns the *meaning* of
-editor state independently of how it is serialised.
+It was simultaneously the persistence schema (`.gen.json` tags), the GUI's
+working state, the validator's target and the mapper's input, so adding a field
+meant touching the on-disk format, the panels, the validator and the mapper at
+once, and the equality/diff logic (§1.1's aliasing surface) lived in the same
+file as the JSON contract. No layer owned the *meaning* of editor state
+independently of how it is serialised.
 
-**Fix** (target decided by owner 2026-08-11 — a **new, non-protected** package,
-so `internal/entities/template/` is untouched).
+**The shape that shipped.** Three layers, and the ordering matters because the
+first attempt got it backwards:
 
-1. Create `internal/entities/editor_state/` holding the behaviour-free value
-   groups the DTO currently flattens: e.g. `mapSettings.go`, `playerSettings.go`,
-   `neutralZoneSettings.go`, `castleSettings.go`, `generationSettings.go`,
-   `gameRuleSettings.go`, `contentSettings.go`, `manualEditSettings.go`
-   (file-per-struct, camelCase names, AGENTS.md §4.1).
-2. Add `internal/models/editorStateModel.go` — a model that **wraps** those
-   entities and owns the behaviour currently on the DTO
-   (`LayoutDefiningOptionsChanged`, `DiffCastleSettings`,
-   `EqualsIgnoringManualEdits`, `HasManualEdits`, the `Clone` from §1.1, the
-   defaults factory).
-3. Reduce `dtos.EditorStateDto` to the model **embedded** plus the JSON tags,
-   so the serialisation contract is the only thing left in `dtos`.
+- **Entity** — `internal/entities/editor_state/`, nine behaviour-free groups
+  (`templateIdentity`, `mapSettings`, `playerSettings`, `neutralZoneSettings`,
+  `castleSettings`, `generationSettings`, `gameRuleSettings`, `contentSettings`,
+  `manualEditSettings`) plus the leaf types `BonusEntry`, `ZoneContentRow`,
+  `ContentRuleRow`, `ManualZoneSave`, `ManualConnectionSave`. JSON tags only.
+  `MapTopology` lives in `internal/entities/topology/`.
+- **Model** — `internal/models/editor_state_model/`. **The model owns the
+  structure.** Each group embeds its entity group and adds the behaviour;
+  `ContentSettings` and `ManualEditSettings` cannot embed, because their slices
+  must carry *model* element types and Go slices do not interconvert, so they are
+  re-declared with explicit `ToXModel` / `ToXEntity` converters. `ZoneContentRow`
+  embeds the entity but shadows `Rules` with `[]ContentRuleRow`, leaving the
+  embedded slice nil so there is one source of truth.
+- **DTO** — `internal/dtos/editor_state_dto/`. The owner's rule: *"redefinition
+  is expected in Models, but it should never happen in DTOs."* So
+  `EditorStateDto` is literally `struct { editor_state_model.EditorState }` and
+  declares nothing else. **A DTO embedding or carrying a Model is intended** —
+  `EditorStateValidationDto.State`, `CastleSettingsReapplyRequestDto.Changes` and
+  `ManualEditDecisionDto.ReapplyWithCastleChanges` all do it deliberately. Do not
+  "fix" them.
 
-**⚠ Do this as a plan file under `plans/`, not in one pass** (AGENTS.md §2.4) —
-twelve packages and the `.gen.json` round trip are at stake. Suggested phasing:
-extract entities → introduce the model with the behaviour moved (DTO delegates)
-→ embed the model in the DTO → migrate consumers package by package → delete the
-delegation shims.
+`app/` **may hold a Model** as its working state; only the *crossing* into
+`internal/` is a DTO. Conversion happens at exactly two seams:
+`internal/handlers` (DTO ⇄ Model) and `internal/repositories` (Model ⇄ Entity).
 
-**Non-negotiable invariant:** the on-disk `.gen.json` field names and shape must
-not change. Every phase must keep
-`test/integration/` load/save round trips green, and the phase that touches the
-DTO must add a golden-file test: write a `.gen.json` with the pre-change code,
-load it with the post-change code, assert every field survives.
+**The non-negotiable invariant held.** The on-disk `.gen.json` field names and
+shape never changed. Two frozen fixtures under `test/test_helpers/testdata/` and
+the untagged `editorStateWireFormat_integration_test.go` passed **unchanged**
+through every phase, comparing parsed objects rather than bytes.
 
-**Tests.** Each new entity/model file gets its mirrored folder under
-`test/unit/`; the behaviour tests currently under
-`test/unit/internal/dtos/editorStateDto/` move with the methods.
+**Course corrections worth remembering.**
 
-**Blocked by:** §1.1 should land first — `Clone` belongs on the model, and
-writing it twice is wasted work.
+1. **Phases 1–5 were built on a false premise** — that `EditorStateDto` is the
+   persisted `.gen.json` shape. It is not; that is an Entity's job. Phase 5 was
+   abandoned and phases 8–12 added to correct it.
+2. **The first Phase 10 inverted the layers** — it made the Model a thin wrapper
+   around the entity and the DTO a full structural rewrite (nine `*Dto` group
+   structs plus a DI'd DTO⇄Model mapper). The owner reversed it; that mapper and
+   those structs are deleted. Do not propose them again.
+3. **Two dereference bugs were found in the regeneration path.** `nil` is
+   load-bearing there: a nil `Previous` means "first generation" and a nil `Next`
+   means "unarmed debounce". `new(getPreviousStateDto())` always yields a
+   non-nil pointer and destroyed the signal. Any refactor of those four call
+   sites must preserve nil.
+4. **`LoadState` stopped returning `(*EditorStateDto, []string, error)`** and now
+   returns `(*editor_state_dto.EditorStateValidationDto, error)` — the envelope
+   the handler was unpacking only for every caller to re-pair.
+
+**The gate.** §0.4 was violated silently for four phases because nothing checked
+it, so phase 12 added
+[layering_test.go](../../test/unit/architecture/dependency/layering_test.go):
+entities may not import upward (0 violations), entities may be named only by
+repositories/models/entities/mappers/`*_helpers`, DTOs may be named only by
+handlers/dtos/`app/`. Its two seeded allow-lists are the residual breach, tracked
+as **§2.6**; they only ever shrink.
+
+**Related:** §1.5 (the per-frame clone cost) was folded in as phase 6.
 
 ---
 
 ### 2.2 🟡 ⚠ Zone tier has no single source of truth
 
 **Evidence.** `neutral_zone.Quality`
-([neutralZoneQuality.go](../internal/models/neutral_zone/neutralZoneQuality.go#L3-L12))
+([neutralZoneQuality.go](../../internal/models/neutral_zone/neutralZoneQuality.go#L3-L12))
 is the tier enum. During generation the tier is explicit on
 `neutral_zone.Plan`
-([neutralZonePlan.go](../internal/models/neutral_zone/neutralZonePlan.go#L11-L15)),
+([neutralZonePlan.go](../../internal/models/neutral_zone/neutralZonePlan.go#L11-L15)),
 but the finished `entities.Zone` carries **no tier**, so
-[zoneClassifier.go](../internal/services/zones/zoneClassifier.go#L23-L177)
+[zoneClassifier.go](../../internal/services/zones/zoneClassifier.go#L23-L177)
 re-derives it from layout + resource pools + guarded/unguarded pool IDs across
 three content-inference branches.
 
 Consumers that all depend on that re-derivation:
-[previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go#L103-L116),
-[zoneEditorZoneProps.go](../app/gui/dialogs/zoneEditorZoneProps.go#L61-L64),
-[zoneEditorService.go](../internal/services/connection_editor/zoneEditorService.go#L187-L222),
-[manualReapplyService.go](../internal/services/connection_editor/manualReapplyService.go#L88-L124),
-[mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L88-L115),
-[gladiatorArenaProvider.go](../internal/services/template_generator/providers/gladiatorArenaProvider.go#L85-L111),
-[zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go#L58-L81),
-[connectionEditorService.go](../internal/services/connection_editor/connectionEditorService.go#L24-L39).
+[previewLayoutService.go](../../internal/services/preview_service/previewLayoutService.go#L103-L116),
+[zoneEditorZoneProps.go](../../app/gui/dialogs/zoneEditorZoneProps.go#L61-L64),
+[zoneEditorService.go](../../internal/services/connection_editor/zoneEditorService.go#L187-L222),
+[manualReapplyService.go](../../internal/services/connection_editor/manualReapplyService.go#L88-L124),
+[mandatoryContentProvider.go](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L88-L115),
+[gladiatorArenaProvider.go](../../internal/services/template_generator/providers/gladiatorArenaProvider.go#L85-L111),
+[zoneEditorHandler.go](../../internal/handlers/zoneEditorHandler.go#L58-L81),
+[connectionEditorService.go](../../internal/services/connection_editor/connectionEditorService.go#L24-L39).
 
 **Why it is wrong.** Tier is decided once at plan time, thrown away, then
 reconstructed by pattern-matching on content. Every feature that edits a zone's
 content (the manual editor's re-profile action, mandatory-content regeneration)
 can silently flip the inferred tier, and the inference rules must stay in lockstep
 with the profile catalogue in
-[neutralZoneProfile.go](../internal/common/common_zones/neutralZoneProfile.go#L10-L25)
+[neutralZoneProfile.go](../../internal/common/common_zones/neutralZoneProfile.go#L10-L25)
 with nothing enforcing that.
 
 **Fix — two branches, owner picks:**
 
 - **Branch A (owner's first idea, ⚠ protected dir).** Add a runtime-only
   `Quality` field to `entities.Zone`
-  ([zone.go](../internal/entities/template/template_variant/zone.go)) tagged
+  ([zone.go](../../internal/entities/template/template_variant/zone.go)) tagged
   `json:"-"` exactly like the existing `GeneratorPosition`, set it in
   `ZoneFactory` at creation, and reduce `ZoneClassifier` to a fallback for zones
   that arrive without it (loaded manual snapshots). **Requires explicit owner
@@ -711,7 +765,7 @@ with nothing enforcing that.
   the emitted `.rmg.json` is byte-identical before and after.
 - **Branch B (owner's second idea, no protected edits).** Keep `entities.Zone`
   as is and make `neutral_zone.Profile`
-  ([neutralZoneProfile.go](../internal/models/neutral_zone/neutralZoneProfile.go#L3-L20))
+  ([neutralZoneProfile.go](../../internal/models/neutral_zone/neutralZoneProfile.go#L3-L20))
   carry its own `Quality`, then have every consumer above resolve tier through a
   single `IZoneTierService` that prefers a recorded profile and falls back to
   `ZoneClassifier`. No schema change, but the tier still has to be carried
@@ -729,7 +783,7 @@ re-profiled zone reports the new tier and a saved/loaded manual zone keeps it.
 
 ### 2.3 ✅ Preview geometry is integer-only although a `Vec2` already exists
 
-**Evidence.** [previewLayout.go](../internal/models/preview/previewLayout.go#L5-L11):
+**Evidence.** [previewLayout.go](../../internal/models/preview/previewLayout.go#L5-L11):
 
 ```go
 type Layout struct {
@@ -741,24 +795,24 @@ type Layout struct {
 ```
 
 Positions are rounded at
-[layoutGeometry.go](../internal/services/preview_service/layoutGeometry.go#L82-L93)
+[layoutGeometry.go](../../internal/services/preview_service/layoutGeometry.go#L82-L93)
 (`image.Pt(int(math.Round(px[i])), int(math.Round(py[i])))`), and again
 independently in
-[layoutRingHub.go](../internal/services/preview_service/layoutRingHub.go#L63-L69)
+[layoutRingHub.go](../../internal/services/preview_service/layoutRingHub.go#L63-L69)
 and
-[layoutBalancedRings.go](../internal/services/preview_service/layoutBalancedRings.go#L119-L129);
+[layoutBalancedRings.go](../../internal/services/preview_service/layoutBalancedRings.go#L119-L129);
 `canvasMetrics.center()` **truncates** rather than rounds
-([layoutGeometry.go](../internal/services/preview_service/layoutGeometry.go#L65-L67)).
+([layoutGeometry.go](../../internal/services/preview_service/layoutGeometry.go#L65-L67)).
 The integers then propagate into the editor:
-[zoneEditorGeometryService.go](../internal/services/connection_editor/zoneEditorGeometryService.go#L73-L79)
+[zoneEditorGeometryService.go](../../internal/services/connection_editor/zoneEditorGeometryService.go#L73-L79)
 copies them straight into `models.ZoneEditorGeometry`, and hit-testing works in
 `image.Point`
-([zoneEditorGeometryService.go](../internal/services/connection_editor/zoneEditorGeometryService.go#L81-L96)).
+([zoneEditorGeometryService.go](../../internal/services/connection_editor/zoneEditorGeometryService.go#L81-L96)).
 
 Meanwhile a generic float vector already exists —
-[vec2.go](../internal/helpers/data/vec2.go#L8-L69) (`Vec2[T]`, `Vec2FromPoint`,
+[vec2.go](../../internal/helpers/data/vec2.go#L8-L69) (`Vec2[T]`, `Vec2FromPoint`,
 `ToPoint`, `ToPointRounded`) — and `models.Position = data.Vec2[float64]`
-([position.go](../internal/models/position.go#L5-L10)) is what the topology
+([position.go](../../internal/models/position.go#L5-L10)) is what the topology
 builders already work in.
 
 **Why it is wrong.** Every layout strategy quantises to whole pixels *before*
@@ -774,33 +828,33 @@ rules (round vs. truncate).
 2. `Layout.ZoneRadius` → `float64`.
 3. Push floats through `models.ZoneEditorGeometry` and the hit-testing /
    edge-building in
-   [zoneEditorGeometryService.go](../internal/services/connection_editor/zoneEditorGeometryService.go)
+   [zoneEditorGeometryService.go](../../internal/services/connection_editor/zoneEditorGeometryService.go)
    (`HitTestNode`, `HitTestEdge`, `buildEdges`) — they already compute in
    `float64` internally via `math.Hypot`, so this mostly deletes conversions.
 4. **Round only at the final draw call**: the PNG renderer
-   ([previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go#L51-L72))
+   ([previewGeneratorService.go](../../internal/services/preview_service/previewGeneratorService.go#L51-L72))
    and the Gio canvases
-   ([previewPanel.go](../app/gui/panels/previewPanel.go#L170-L239),
-   [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go#L92-L207)).
+   ([previewPanel.go](../../app/gui/panels/previewPanel.go#L170-L239),
+   [zoneEditorCanvas.go](../../app/gui/dialogs/zoneEditorCanvas.go#L92-L207)).
    Use `Vec2.ToPointRounded()` / `f32.Pt` there — the canvas already draws
    Beziers in `f32.Point`, so step 4 in the editor is mostly *removing* the
    round-trip through `image.Point`.
 
 **⚠ Protected boundary:** `Zone.GeneratorPosition *[2]float64`
-([zone.go](../internal/entities/template/template_variant/zone.go#L7-L23))
+([zone.go](../../internal/entities/template/template_variant/zone.go#L7-L23))
 stays exactly as it is for this item — converting it is §2.4 and needs owner
 approval. Convert at the read site (`generatorCoords`,
-[layoutGeometry.go](../internal/services/preview_service/layoutGeometry.go#L95-L106)).
+[layoutGeometry.go](../../internal/services/preview_service/layoutGeometry.go#L95-L106)).
 
 **Tests.** The preview layout services already have mirrored unit folders under
 `test/unit/internal/services/preview_service/` — update the expected values and
 add `TestWhenTwoZonesAreLessThanAPixelApart_TheirCentresDiffer`. The GPU-gated
 snapshot suite
-([window_snapshot_integration_test.go](../test/integration/gui/window_snapshot_integration_test.go))
+([window_snapshot_integration_test.go](../../test/integration/gui/window_snapshot_integration_test.go))
 will need `-update`; **the owner must eyeball the regenerated snapshots**, since
 sub-pixel changes are exactly what that suite is meant to catch.
 The numeric geometry pins in
-[zoneEditorGeometry_integration_test.go](../test/integration/gui/zoneEditorGeometry_integration_test.go#L138-L163)
+[zoneEditorGeometry_integration_test.go](../../test/integration/gui/zoneEditorGeometry_integration_test.go#L138-L163)
 will shift — update them deliberately, do not relax them to `InDelta`.
 
 **✅ Resolved 2026-08-19 (batch G).** Implemented as specified, all four steps.
@@ -849,10 +903,10 @@ this entry is the record.
 
 ### 2.4 ⚪ ⚠ Replace `[2]float64` with `Vec2` in the template entities
 
-**Evidence.** [zone.go](../internal/entities/template/template_variant/zone.go#L7-L23)
+**Evidence.** [zone.go](../../internal/entities/template/template_variant/zone.go#L7-L23)
 declares `GeneratorPosition *[2]float64` (`json:"-"`), and producers stamp it
 as an array literal —
-[geometricHubTopology.go](../internal/services/template_generator/providers/topology/geometricHubTopology.go#L104-L119):
+[geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L104-L119):
 
 ```go
 	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
@@ -869,7 +923,7 @@ in `positionedTopologyBuilder`, `geometricHubTopology`, `balancedClusterService`
 and the preview `generatorCoords` helper.
 
 **⚠ OWNER DECISION REQUIRED — protected directory.**
-[internal/entities/template/](../internal/entities/template/) is read-only under
+[internal/entities/template/](../../internal/entities/template/) is read-only under
 AGENTS.md §2.1. The field is `json:"-"`, so changing its Go type **cannot**
 change the emitted `.rmg.json`, but the rule is absolute: **do not start this
 without the owner explicitly approving the edit to
@@ -881,7 +935,7 @@ without the owner explicitly approving the edit to
 `internal/models` already imports `internal/entities` (it does, via
 `ManualZoneSave` in `internal/dtos/editor_state_dto`), the type must instead be
 `*data.Vec2[float64]` from
-[vec2.go](../internal/helpers/data/vec2.go), which has no such dependency.
+[vec2.go](../../internal/helpers/data/vec2.go), which has no such dependency.
 Then delete the pack/unpack at every producer and consumer.
 
 **Blocked by:** §2.3 — do that first so the preview side is already float-native
@@ -895,7 +949,7 @@ identical.
 
 ### 2.5 ⚪ ⚠ Move `entities/types.go` under `template/` and rename `template` → `template_entity`
 
-**Evidence.** [types.go](../internal/entities/types.go) is a single
+**Evidence.** [types.go](../../internal/entities/types.go) is a single
 alias-only file re-exporting 40 types out of the seven `template*` subpackages:
 
 ```go
@@ -916,7 +970,7 @@ boundary of the protected tree ambiguous.
 
 **⚠ OWNER DECISION REQUIRED — protected directory.** The rename touches the
 `package` clause of **every file** under
-[internal/entities/template/](../internal/entities/template/) and moves a file
+[internal/entities/template/](../../internal/entities/template/) and moves a file
 *into* that tree. AGENTS.md §2.1 forbids both without explicit approval. There
 is no functional benefit, only naming; **do not start without a go-ahead.**
 
@@ -925,7 +979,7 @@ is no functional benefit, only naming; **do not start without a go-ahead.**
    change its package clause; the aliases then reference sibling subpackages.
 2. Rename the directory `internal/entities/template` →
    `internal/entities/template_entity` and update the `package template` clause
-   in [rmgTemplate.go](../internal/entities/template/rmgTemplate.go).
+   in [rmgTemplate.go](../../internal/entities/template/rmgTemplate.go).
 3. Update every import path across the repo.
 4. ⚠ **Do not** run a bulk in-place rewrite (AGENTS.md §2.6). Use
    `gopls rename` / the language server, then `gofmt -w` on the explicit list
@@ -1004,16 +1058,16 @@ independent, and safe to batch together.
 
 Already centralised and correctly used — do **not** re-report: guard weekly
 increments
-([guardWeeklyIncrement.go](../internal/common/common_connections/guardWeeklyIncrement.go)),
+([guardWeeklyIncrement.go](../../internal/common/common_connections/guardWeeklyIncrement.go)),
 guard-strength presets
-([guardStrength.go](../internal/common/common_connections/guardStrength.go)),
+([guardStrength.go](../../internal/common/common_connections/guardStrength.go)),
 content-distance presets
-([distancePresets.go](../internal/common/common_distances/distancePresets.go)),
+([distancePresets.go](../../internal/common/common_distances/distancePresets.go)),
 zone names/prefixes and labels
-([zoneNames.go](../internal/common/constants/zoneNames.go),
-[zoneLabels.go](../internal/common/constants/zoneLabels.go)), map sizes
-([mapSizes.go](../internal/common/mapSizes.go)), permissions
-([permissions.go](../internal/common/constants/permissions.go)).
+([zoneNames.go](../../internal/common/constants/zoneNames.go),
+[zoneLabels.go](../../internal/common/constants/zoneLabels.go)), map sizes
+([mapSizes.go](../../internal/common/mapSizes.go)), permissions
+([permissions.go](../../internal/common/constants/permissions.go)).
 
 ### 3.1 ✅ DONE 🟡 `"mandatory_content_hub"` is repeated in four production files
 
@@ -1021,16 +1075,16 @@ zone names/prefixes and labels
 of §3.2.
 
 **Evidence.**
-[mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L120)
-and [#L146](../internal/services/template_generator/providers/mandatoryContentProvider.go#L146),
-[hubTopology.go](../internal/services/template_generator/providers/topology/hubTopology.go#L77),
-[geometricHubTopology.go](../internal/services/template_generator/providers/topology/geometricHubTopology.go#L94),
-[hubClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L66).
+[mandatoryContentProvider.go](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L120)
+and [#L146](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L146),
+[hubTopology.go](../../internal/services/template_generator/providers/topology/hubTopology.go#L77),
+[geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L94),
+[hubClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L66).
 
 **Why it is wrong.** The string is a cross-file contract: the topology writes it
 into `Zone.MandatoryContent`, the content provider must emit a group with the
 same name, and the parallel C# editor reads it
-([mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L132)
+([mandatoryContentProvider.go](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L132)
 documents that). A typo in one of five places produces a template the game
 silently generates without hub content.
 
@@ -1050,7 +1104,7 @@ Replace all five literals. **Keep the exact strings** — they are the on-disk
 contract with the game.
 
 **Tests.** The existing tests already assert the literal
-(e.g. [createContents_test.go](../test/unit/internal/services/template_generator/providers/mandatoryContentProvider/createContents_test.go#L233)) —
+(e.g. [createContents_test.go](../../test/unit/internal/services/template_generator/providers/mandatoryContentProvider/createContents_test.go#L233)) —
 leave the *test-side* literals as literals so they still catch an accidental
 change to the constant's value. Add
 `test/unit/internal/common/constants/mandatoryContentNames/` only if a helper
@@ -1059,13 +1113,13 @@ function (not a bare constant) ends up being introduced.
 ### 3.2 ✅ DONE 🟡 `"mandatory_content_neutral_"` / `"mandatory_content_side_"` prefixes repeated
 
 **Evidence.** Neutral prefix:
-[mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L61),
-[#L106](../internal/services/template_generator/providers/mandatoryContentProvider.go#L106),
-[topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go#L120).
+[mandatoryContentProvider.go](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L61),
+[#L106](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L106),
+[topologyBase.go](../../internal/services/template_generator/providers/topology/base/topologyBase.go#L120).
 Side prefix:
-[mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L48),
-[#L92](../internal/services/template_generator/providers/mandatoryContentProvider.go#L92),
-[zoneFactory.go](../internal/services/zones/zoneFactory.go#L68).
+[mandatoryContentProvider.go](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L48),
+[#L92](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L92),
+[zoneFactory.go](../../internal/services/zones/zoneFactory.go#L68).
 
 **Fix.** Same constants file as §3.1. Consider two tiny helpers
 (`NeutralMandatoryContentName(label string) string`,
@@ -1077,12 +1131,12 @@ option taken and a naming convention the owner set: a name **builder** is
 `Get<X>For(label)` — `Get` separates it from the constant, `For` says it derives
 a new name rather than returning one.
 
-- [contentNames.go](../internal/common/constants/contentNames.go) —
+- [contentNames.go](../../internal/common/constants/contentNames.go) —
   `HubContentName`, `NeutralContentPrefix`, `SideContentPrefix`,
   `GetNeutralContentNameFor`, `GetSideContentNameFor`. No
   `"mandatory_content_*"` literal remains outside this file; test-side literals
   were deliberately left in place.
-- [zoneNames.go](../internal/common/constants/zoneNames.go) gained the matching
+- [zoneNames.go](../../internal/common/constants/zoneNames.go) gained the matching
   `GetHubZoneNameFor` / `GetPlayerZoneNameFor` / `GetNeutralZoneNameFor`, and
   every production `XZonePrefix + label` now goes through them.
 - The prefix **checks** were routed to the pre-existing
@@ -1090,24 +1144,24 @@ a new name rather than returning one.
   `internal/common/constants/hubLabel.go` (`IsHubLabel`, added in batch B) be
   deleted in favour of `zone_helpers.IsZoneNameHub`.
 - Scope the owner added on review: connection names got the same treatment in
-  [connectionNames.go](../internal/common/constants/connectionNames.go) — 19
+  [connectionNames.go](../../internal/common/constants/connectionNames.go) — 19
   unexported prefixes plus `Get*ConnectionNameFor` builders, wired through the
   chain/ring/web/geometric/tournament topologies.
 
 Not converted, deliberately: the exact-`"Hub"`-vs-`"Hub-"` distinction in
-[layoutRingHub.go](../internal/services/preview_service/layoutRingHub.go#L32-L43),
+[layoutRingHub.go](../../internal/services/preview_service/layoutRingHub.go#L32-L43),
 where `IsZoneNameHub` would conflate the shared hub with a per-player hub and
 change the preview layout.
 
 ### 3.3 ✅ DONE 🟡 Portal guard `25000` magic literal
 
 **Evidence.**
-[topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L64):
+[topologyConnectionService.go](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L64):
 `WithGuardValue(tuning.ScaleByBorderGuardStrength(25000))`.
 
 **Disposition: superseded by §1.3.** Landing §1.3 deletes the literal outright.
 Only if §1.3 is deferred should this be done on its own, as a named constant in
-[common_connections](../internal/common/common_connections/) — note the value is
+[common_connections](../../internal/common/common_connections/) — note the value is
 numerically identical to `neutral_zone.QualityHigh.GetGuardValue()`, so name it
 for its meaning, not its number.
 
@@ -1116,7 +1170,7 @@ for its meaning, not its number.
 ### 3.4 ✅ DONE 🟡 Foothold placement distances are inline literals
 
 **Evidence.**
-[mandatoryContentProvider.go](../internal/services/template_generator/providers/mandatoryContentProvider.go#L161-L189):
+[mandatoryContentProvider.go](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L161-L189):
 
 ```go
 					BuildCrossroadsRule(models.DistancePreset{Min: 0.2, Max: 0.3}, 0),
@@ -1130,12 +1184,12 @@ for its meaning, not its number.
 expressed as anonymous `DistancePreset` literals in the middle of a builder
 chain, while every other distance in the project comes from the named catalogue
 in
-[distancePresets.go](../internal/common/common_distances/distancePresets.go).
+[distancePresets.go](../../internal/common/common_distances/distancePresets.go).
 Nothing tells a future maintainer what `0.5/0.5` means or that it is meant to
 differ from `Far`.
 
 **Fix.** Add a `GetFootholdDistancePresets()` (or three named presets) to
-[common_distances](../internal/common/common_distances/), following the shape of
+[common_distances](../../internal/common/common_distances/), following the shape of
 `GetContentDistancePresets`, and reference them from the provider.
 **Do not silently reuse the existing content presets** — `0.2–0.3` and
 `0.2–0.4` do not match any of `Next To`/`Near`/`Medium`/`Far`/`Very Far`, so
@@ -1148,7 +1202,7 @@ tests must keep asserting the *numeric* values so a constant rename cannot
 silently retune placement.
 
 **Resolved 2026-08-12 (batch C).**
-[footholdDistancePresets.go](../internal/common/common_distances/footholdDistancePresets.go)
+[footholdDistancePresets.go](../../internal/common/common_distances/footholdDistancePresets.go)
 exposes `GetFootholdDistancePresets()` returning a named struct
 (`Crossroads`, `NearMainCastle`, `NearSecondCastle`); the bounds are unchanged
 and the presets are deliberately **not** in the user-facing
@@ -1187,8 +1241,8 @@ a filename it cannot honour. Outcome, so this entry stands on its own:
 - The whitespace-only disabled-confirm test was deleted: that state is no
   longer reachable through any production path. See
   [test_observations.md](test_observations.md) for the recorded branch.
-- Docs updated in [QUICKSTART.md](../QUICKSTART.md) and
-  [README.md](../README.md); the 10 window snapshot goldens were regenerated
+- Docs updated in [QUICKSTART.md](../../QUICKSTART.md) and
+  [README.md](../../README.md); the 10 window snapshot goldens were regenerated
   locally for the new button label.
 
 <details>
@@ -1196,15 +1250,15 @@ a filename it cannot honour. Outcome, so this entry stands on its own:
 
 **Evidence.** Writing editor state as `{TemplateName}.gen.json` is **intended**
 (review §1.1, owner-approved):
-[fileService.go](../internal/services/file_service/fileService.go#L41-L48)
+[fileService.go](../../internal/services/file_service/fileService.go#L41-L48)
 passes `filepath.Dir(filePath)` and `editorState.TemplateName` to the
 repository, and
-[saveSettings_test.go](../test/unit/internal/services/file_service/fileService/saveSettings_test.go#L14-L60)
+[saveSettings_test.go](../../test/unit/internal/services/file_service/fileService/saveSettings_test.go#L14-L60)
 pins that behaviour deliberately.
 
 The defect is the UI. The dialog still offers an editable **name** field whose
 value is silently dropped —
-[fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go#L35-L51):
+[fileExplorerDialogToolbar.go](../../app/gui/dialogs/fileExplorerDialogToolbar.go#L35-L51):
 
 ```go
 	hint := fmt.Sprintf("filename%s", saveFileSuffix)
@@ -1228,7 +1282,7 @@ File", an editable filename box) promises otherwise.
 ### 5.1 ✅ FIXED 🟠 Zone editor pointer flows are untested (drag-to-connect, zone drag + snapping)
 
 **Fixed in batch H, 2026-08-11.** The pointer flows landed as eight tests in
-[zoneEditorPointer_integration_test.go](../test/integration/gui/zoneEditorPointer_integration_test.go),
+[zoneEditorPointer_integration_test.go](../../test/integration/gui/zoneEditorPointer_integration_test.go),
 driven through the real window over the Geometric Hub layout: a zone dragged to
 a new position and committed through Apply's normalized manual position, a drag
 that snaps onto another zone's centre line and the grid, a drag-to-connect in
@@ -1259,7 +1313,7 @@ tests instead of calling them future work.
 ### 5.2 ✅ FIXED 🟡 Zone editor property panels (`widget.Editor` / dropdown paths) are untested
 
 **Fixed in batch H, 2026-08-11.** The panels landed as eighteen tests in
-[zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go):
+[zoneEditorProperties_integration_test.go](../../test/integration/gui/zoneEditorProperties_integration_test.go):
 the zone `Size`, `Guard x` and `Weekly +` editors including `Size`'s clamp to
 0.1–2.0 and its rounding to two decimals; the neutral-zone `Quality` and
 `Castles` dropdowns, which exercise the `ApplyZoneEditorQuality` reprofile path;
@@ -1301,10 +1355,10 @@ rest — not to loosen the comparison tolerance, which §5.5 already closed off.
 
 **Fixed in batch F, 2026-08-14.** The listing
 behaviours landed as five new tests in
-[fileExplorerDialogListing_integration_test.go](../test/integration/gui/fileExplorerDialogListing_integration_test.go)
+[fileExplorerDialogListing_integration_test.go](../../test/integration/gui/fileExplorerDialogListing_integration_test.go)
 (toggle on, toggle off, row selection in open mode, directory descent, wheel
 scroll), and the twelve existing tests in
-[fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go)
+[fileExplorerDialog_integration_test.go](../../test/integration/gui/fileExplorerDialog_integration_test.go)
 were migrated onto the same handler, so the whole dialog is now driven by real
 pointer events through the real toolbar with a golden per action. Every `Click*`
 test-export on the dialog was deleted as a result. The listing rows had no
@@ -1319,7 +1373,7 @@ row/scroll interactions (owner decision - excluded from the scenario set)."*
 The owner re-opened this on 2026-08-11.
 
 The toggle exists at
-[fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go#L31)
+[fileExplorerDialogToolbar.go](../../app/gui/dialogs/fileExplorerDialogToolbar.go#L31)
 (`widgets.NewToggleButtonWidget(theme, "Show hidden", &this.hiddenToggle, this.showHidden)`),
 and the underlying filtering policy is already unit-tested in
 `internal/services/file_system`.
@@ -1329,7 +1383,7 @@ flips a field but never re-lists, or a row click that resolves the wrong entry,
 would pass every existing test.
 
 **Fix.** Extend
-[fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go):
+[fileExplorerDialog_integration_test.go](../../test/integration/gui/fileExplorerDialog_integration_test.go):
 
 - `TestWhenShowHiddenIsToggledOn_HiddenEntriesAppearInTheListing`
 - `TestWhenShowHiddenIsToggledOff_HiddenEntriesDisappearAgain`
@@ -1387,7 +1441,7 @@ file. Do §4.1 first or expect a merge conflict.
 > -count=1 -update`. Always name the tests — a bare `-update` rewrites goldens you
 > did not intend to touch. `.golden` files are PNGs; copy to `.png` to view.
 
-**Evidence.** [runnerHandler.go](../test/test_helpers/integration_common/runnerHandler.go#L61-L106)
+**Evidence.** [runnerHandler.go](../../test/test_helpers/integration_common/runnerHandler.go#L61-L106)
 carries a 46-line first-person design note above a struct that currently
 implements three tab clicks and one mask. The whole framework today is:
 
@@ -1399,8 +1453,8 @@ func (this *baseHandler) ClickGeneralTab() *baseHandler {
 }
 ```
 
-Consumers: [window_snapshot_integration_test.go](../test/integration/gui/window_snapshot_integration_test.go#L20-L25)
-and [window_tab_cycling_test.go](../test/performance/window_tab_cycling_test.go#L25).
+Consumers: [window_snapshot_integration_test.go](../../test/integration/gui/window_snapshot_integration_test.go#L20-L25)
+and [window_tab_cycling_test.go](../../test/performance/window_tab_cycling_test.go#L25).
 
 **Why it matters.** Gio has no Playwright/Selenium, so this handler *is* the
 GUI test API. §5.1, §5.2 and §5.3 will each be written against it; if they land
@@ -1426,7 +1480,7 @@ literal but stop scattering them.** Gio exposes no widget-rect lookup without a
 new `*_testexports.go` seam, and computing positions from the layout code would
 re-implement the thing under test. Put them in one `handlerCoordinates.go` as
 named constants derived where possible from
-[app/gui/constants/ui.go](../app/gui/constants/ui.go) (`DefaultPadding`,
+[app/gui/constants/ui.go](../../app/gui/constants/ui.go) (`DefaultPadding`,
 `DefaultLabelWidth`, `DefaultPreviewWidthMaximum`), so a padding change is one
 edit rather than a hunt. Only compute at runtime where a value genuinely varies
 (slider value → x, list row index → y).
@@ -1581,7 +1635,7 @@ section so the design lives in one place.
 **Evidence.** The last paragraph of the same comment: *"for some reason there
 is a difference of some of the rendered text between local … and CI (looks like
 some of the text is grayed out like not finishing a rerender)"*. The tolerance
-that absorbs it is [comparer.go](../test/test_helpers/integration_common/snapshot/comparer.go#L8-L11):
+that absorbs it is [comparer.go](../../test/test_helpers/integration_common/snapshot/comparer.go#L8-L11):
 
 ```go
 // DefaultSnapshotThreshold is the maximum allowed normalized mean color
@@ -1592,7 +1646,7 @@ const DefaultSnapshotThreshold = 0.02
 
 The two environments are genuinely different: goldens are generated locally on
 Windows against a real GPU, while
-[pr-validation.yml](../.github/workflows/pr-validation.yml#L244-L257) runs the
+[pr-validation.yml](../../.github/workflows/pr-validation.yml#L244-L257) runs the
 suite under `xvfb-run` with `LIBGL_ALWAYS_SOFTWARE=1` (Mesa llvmpipe).
 
 **Why it matters.** `Compare` returns a **mean** distance over the whole
@@ -1608,7 +1662,7 @@ regressions with it, which quietly weakens every test §5.1–§5.4 will add.
    Capture two consecutive frames for the same action and compare them: if
    frame 2 differs from frame 1, `captureScreenshot` is racing the frame and
    the fix belongs in
-   [appRunnerSnapshots.go](../test/test_helpers/integration_common/appRunnerSnapshots.go#L120),
+   [appRunnerSnapshots.go](../../test/test_helpers/integration_common/appRunnerSnapshots.go#L120),
    not in the threshold. Download the `gui-snapshot-failures` artifact the
    workflow already uploads to see the actual CI pixels.
 
@@ -1631,7 +1685,7 @@ regressions with it, which quietly weakens every test §5.1–§5.4 will add.
    per-pixel tolerance (e.g. "> 0.5 % of pixels differ by > 10 %") so wide
    faint AA noise passes while a small solid change fails. Keep
    `Comparer.Threshold` configurable and update
-   [test/unit/test/test_helpers/integration_common/snapshot/comparer/](../test/unit/test/test_helpers/integration_common/snapshot/comparer/)
+   [test/unit/test/test_helpers/integration_common/snapshot/comparer/](../../test/unit/test/test_helpers/integration_common/snapshot/comparer/)
    alongside.
 
    > *Done.* The comparer is now two-gate: `Compare` returns
@@ -1657,9 +1711,9 @@ worst-case difference — a documented 2 % is fine, an unexplained one is not.
 ### 6.1 ⚪ `createTopologyAdjacency` dead Chain/Ring branches
 
 **Evidence.**
-[zoneLabelProvider.go](../internal/services/zones/zoneLabelProvider.go#L212)
+[zoneLabelProvider.go](../../internal/services/zones/zoneLabelProvider.go#L212)
 declares `createTopologyAdjacency`; its only call site is
-[#L82](../internal/services/zones/zoneLabelProvider.go#L82). The
+[#L82](../../internal/services/zones/zoneLabelProvider.go#L82). The
 `case TopologyChain` and `case TopologyRing, TopologyCircles` branches (and the
 `isIsolated` guard they use) are unreachable: the only production caller,
 `GetHoldCityLabel`, gates on `IsHubCityToHold()`
@@ -1720,22 +1774,21 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **F** | §5.3 | **Done 2026-08-14.** File-explorer pointer/hidden-file tests plus a full migration of the existing dialog tests onto `FileExplorerHandler`; the save-mode row-click test applies to **open mode only**, per §4.1. Coverage flat at 72.9 %. |
 | ✅ **G** | §2.3 | **Done 2026-08-19.** Float preview geometry end to end, rounded once at the draw boundary. **No goldens moved** — the preview canvas is masked and the zone-editor handler takes no snapshots, so no `-update` was needed. Coverage flat at 72.9 %. Record: §2.3. |
 | ✅ **H** | §5.1, §5.2 | **Done 2026-08-11.** Zone-editor pointer + property-panel tests against the post-§2.3 float coordinates: eight pointer tests and eighteen property tests, all driven through the real window with a golden per action. Turned `ZoneEditorHandler` from a reachability-only handler into a driving one (canvas, side-panel and Apply actions). `TestWhenAZoneNameIsTyped_…` dropped — the zone name is a read-only label. Coverage flat. Record: §5.1, §5.2. |
-| **I** | §2.1 | `EditorStateDto` rework. **Needs a `plans/` file** (AGENTS.md §2.4) — multi-phase, twelve packages. Depends on §1.1 for `Clone`. |
+| ✅ **I** | §2.1, §1.5 | **Done 2026-09-01.** `EditorStateDto` rework across twelve phases (5 and 11 superseded mid-flight), folding in §1.5 as phase 6. Entity/Model/DTO split with the **Model owning the structure**; `.gen.json` shape unchanged throughout. Phase 6 cut render-path allocations by 62 %; phase 12 added the layering gate and spun off §2.6. Doctrine now lives in **AGENTS.md §4.4.1**. Records: §2.1, §1.5, §2.6. |
 | **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |
 | ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer, and a real font-fallback bug in `themes.NewTheme`. §5.5 step 2 rejected — CI never becomes the golden reference. Full record in §5.4/§5.5 above. |
 | ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. Full record in §5.4 above. |
-| **N** | §1.5 | Whole-state per-frame clones left over from batch D. Independent of every other batch; schedule when the frame cost matters. |
+| ✅ **N** | §1.5 | **Folded into batch I phase 6, 2026-08-31.** Never ran standalone — the measurement showed the cost was the clone *mechanism* (lazy `linq` chains allocating for empty slices), not the panel read sites this item named. Record: §1.5. |
+| **O** | §2.6 | Drain the two layering allow-lists seeded by batch I phase 12. Four independent steps, one package at a time; step 1 (the three DTO-consuming services) is the smallest and clears a list entirely. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is
-otherwise ordered by dependency. **E is next, then F**, both written against the
-handler API M settled.
+otherwise ordered by dependency.
 
-**Coverage note.** Batches C, D, F, H and J add tests; B, E and G mostly move
-existing behaviour. Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **72.9 %**
+**Coverage note.** Run the coverage task before and after **every** batch
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **73.9 %**
 (72.5 % through batch B; batch C added the helper tests, batch D the clone and
-accessor tests).
+accessor tests, batch I the entity/model/converter tests).
 
 ---
 
@@ -1747,10 +1800,11 @@ accessor tests).
 | Vet (default) | `go vet ./...` | clean |
 | Vet (gated) | `go vet -tags='integration_test,gui' ./...` | clean |
 | Test layout | `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| Layering | `go test ./test/unit/architecture/... -count=1` | pass (also runs inside the unit gate; see AGENTS.md §4.4.1) |
 | Unit | `go test ./test/unit/... -count=1` | pass |
 | Integration | `go test -tags=integration_test ./test/integration/... -count=1` | pass |
 | GUI integration | `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (needs GPU) |
-| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **72.9 %** |
+| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **73.9 %** |
 | Lint | `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
 | Format | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | Wire | `wire diff ./internal/composition/...` | no diff |

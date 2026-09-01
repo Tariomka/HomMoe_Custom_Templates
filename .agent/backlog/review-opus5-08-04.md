@@ -49,14 +49,14 @@ fixed; the ones with fresh evidence gathered this session:
 
 | Prior item | Re-verification at `687f47d` |
 | --- | --- |
-| Historical §1.5 unknown victory coercion | **Still fixed.** `constants.GetVictoryCondition` returns `(Victory, bool)`; a `.gen.json` with an unknown value is caught by [editorStateValidator.go](../internal/validators/editorStateValidator.go#L115-L133) and reset to `Standard` with a warning. |
+| Historical §1.5 unknown victory coercion | **Still fixed.** `constants.GetVictoryCondition` returns `(Victory, bool)`; a `.gen.json` with an unknown value is caught by [editorStateValidator.go](../../internal/validators/editorStateValidator.go#L115-L133) and reset to `Standard` with a warning. |
 | Historical §1.6 `UpdateTemplate` aliases `Variants` | **Still fixed.** |
-| Historical §4.1 per-frame reflection | **Still fixed.** [editorStateDto.go](../internal/dtos/editorStateDto.go#L186-L201) uses the hand-rolled `EqualsIgnoringManualEdits`. |
-| Historical §4.2 static tab allocations | **Still fixed.** [window.go](../app/gui/editor/window.go#L74-L86) caches `tabChildren`. |
-| Historical §7.7 Dependabot | **Still fixed.** [.github/dependabot.yml](../.github/dependabot.yml) covers root `gomod` + `github-actions`, weekly, grouped. |
+| Historical §4.1 per-frame reflection | **Still fixed.** [editorStateDto.go](../../internal/dtos/editorStateDto.go#L186-L201) uses the hand-rolled `EqualsIgnoringManualEdits`. |
+| Historical §4.2 static tab allocations | **Still fixed.** [window.go](../../app/gui/editor/window.go#L74-L86) caches `tabChildren`. |
+| Historical §7.7 Dependabot | **Still fixed.** [.github/dependabot.yml](../../.github/dependabot.yml) covers root `gomod` + `github-actions`, weekly, grouped. |
 | Historical §7.6 tracked output artifacts | **Still fixed.** `git ls-files --ignored --exclude-standard -c` → 0; no tracked `*.exe/dll/so/prof/out/test/html/info/txt`. |
 | Prior §0.2 "`go mod tidy -diff` fails on Windows (EOL artifact)" | **No longer reproducible.** `go mod tidy -diff` now exits **0** for both the root module and `tools/`. Item closed. |
-| Prior §1.5 / historical zone-editor quality-index panic | **Fixed.** [zoneEditorZoneProps.go](../app/gui/dialogs/zoneEditorZoneProps.go#L60-L66) now uses `SelectByName(quality.GetName())` instead of indexing `QualityLabels`. |
+| Prior §1.5 / historical zone-editor quality-index panic | **Fixed.** [zoneEditorZoneProps.go](../../app/gui/dialogs/zoneEditorZoneProps.go#L60-L66) now uses `SelectByName(quality.GetName())` instead of indexing `QualityLabels`. |
 | Prior §8 lint baseline 84 `gochecknoglobals` | **Improved.** Uncapped run now reports **40**; `internal/registry`, `content_rules`, `connection_editor`, `placement_rule`, `common` and `generatorConfig` globals are no longer reported. |
 | Prior §6.1 coverage 62.2% | **Improved to 64.7%.** |
 
@@ -64,10 +64,10 @@ fixed; the ones with fresh evidence gathered this session:
 
 | Item | Disposition |
 | --- | --- |
-| Prior **§1.3** zone-editor "Reset to generated" semantics | **Fixed** by Batch 15 Phase 4, then reworked in Phase 4b and Phase 4c after the owner tested each round — it is no longer deferred, and the deferral note below is kept only so the item is not re-reported as a *new* finding. The single misleading button is gone; the toolbar now offers **"Undo"** (one-shot restore of the current editing session, purely in-session — Apply afterwards re-commits the previously applied edits) and **"Revert to Base"** (asks the driver for a freshly generated, manual-edit-free layout via `State.PreviewBaseZones` in [stateManualEdits.go](../app/gui/drivers/stateManualEdits.go) and shows it in the open editor). The revert **commits nothing**: the live template and the persisted snapshot only change when the user applies, so Cancel keeps the previously edited layout. The dialog carries no revert policy: it hands zones out and takes zones back through `dtos.ZoneEditorZonesDto`, reporting the bare fact that a revert happened via `RevertToBase`, and `State.ApplyEditedZones` decides — an untouched base clears the manual snapshot, a base the user then edited is stored as an ordinary manual snapshot. The in-code deferral comment has been deleted, and the non-test Go tree still has **zero** TODO/FIXME/HACK-class comments. |
+| Prior **§1.3** zone-editor "Reset to generated" semantics | **Fixed** by Batch 15 Phase 4, then reworked in Phase 4b and Phase 4c after the owner tested each round — it is no longer deferred, and the deferral note below is kept only so the item is not re-reported as a *new* finding. The single misleading button is gone; the toolbar now offers **"Undo"** (one-shot restore of the current editing session, purely in-session — Apply afterwards re-commits the previously applied edits) and **"Revert to Base"** (asks the driver for a freshly generated, manual-edit-free layout via `State.PreviewBaseZones` in [stateManualEdits.go](../../app/gui/drivers/stateManualEdits.go) and shows it in the open editor). The revert **commits nothing**: the live template and the persisted snapshot only change when the user applies, so Cancel keeps the previously edited layout. The dialog carries no revert policy: it hands zones out and takes zones back through `dtos.ZoneEditorZonesDto`, reporting the bare fact that a revert happened via `RevertToBase`, and `State.ApplyEditedZones` decides — an untouched base clears the manual snapshot, a base the user then edited is stored as an ordinary manual snapshot. The in-code deferral comment has been deleted, and the non-test Go tree still has **zero** TODO/FIXME/HACK-class comments. |
 | Prior **§6.2** file-explorer interaction test | **Already tracked** in [test_observations.md](test_observations.md). Not re-reported. |
 | Prior **§6.3** manual zone-editor interaction test | **Already tracked** in [test_observations.md](test_observations.md). Not re-reported. |
-| Prior **§7.2** release action SHA pin | **Owner declined** (commit `838306a` left the pin commented out deliberately). Note only: the action has since moved to [release.yml](../.github/workflows/release.yml#L94) `softprops/action-gh-release@v3`; still a mutable major tag, still owner territory. |
+| Prior **§7.2** release action SHA pin | **Owner declined** (commit `838306a` left the pin commented out deliberately). Note only: the action has since moved to [release.yml](../../.github/workflows/release.yml#L94) `softprops/action-gh-release@v3`; still a mutable major tag, still owner territory. |
 | Prior **§8** `gochecknoglobals` catalogue cleanup | **Owner's responsibility** (historical §3.4). CI disables the linter deliberately. §10 gives the full current inventory for the record only. |
 | Prior §0.2 historical §5.3 exported funcs returning private types | **Owner-retained API style.** |
 | Prior §0.2 historical §5.4 default `slog` logger global | **Accepted configuration** (`sloglint` clean). See §1.9 for a *different*, behavioural aspect of the same code that is a new finding. |
@@ -79,7 +79,7 @@ fixed; the ones with fresh evidence gathered this session:
 | Backlog: zone tier property on entities; consolidate road distances; "app should only use entities/models/handlers/commons"; common generation values; rework `EditorStateDto`; rename `template` → `template_entity` | Owner future-work. §2.2 below overlapped the "app should only use…" item; it was raised as a *current* layering finding with evidence, not as a backlog restatement. ✅ Both are now closed by Batch 14 — see §2.2 and [backlog.md](backlog.md); the "UI uses services directly" claim in the road-distances item was found to be false and corrected there. |
 | test_observations: Gio widgets/dialogs/panels at 0% | **Accepted integration territory** under AGENTS.md §4.6. §6.4 raises only the two *non-Gio* catalogs. |
 | test_observations: `drivers.State` dialog-bound branches, `topologyConnectionService` private policy, unreachable defensive branches (`connectInteriorStables` len==0, `providePreviewGenerator` err!=nil) | Accepted, already registered. |
-| Repo memory: "GUI has four tabs / Zone Content tab / footer panel" | **Stale memory.** [window.go](../app/gui/editor/window.go#L36-L40) has three tabs. ✅ Docs corrected in Batch 9 (§9.2); repo memory updated in the same batch. |
+| Repo memory: "GUI has four tabs / Zone Content tab / footer panel" | **Stale memory.** [window.go](../../app/gui/editor/window.go#L36-L40) has three tabs. ✅ Docs corrected in Batch 9 (§9.2); repo memory updated in the same batch. |
 | Repo memory: "coverage 86–92%, Go 1.26.3 root, Gio v0.9.0" | **Stale.** Current: 64.7%, Go 1.26.5, Gio v0.10.0. |
 | Repo memory: "arena assets embedded but not decoded/drawn" | **Confirmed still true this session** — promoted to a real finding with evidence at §2.7 (it is a shipped-binary cost plus a documented-but-absent feature, not just a note). |
 
@@ -107,18 +107,18 @@ fixed; the ones with fresh evidence gathered this session:
 **Fixed 2026-08-05.** The owner replaced this item's proposed design (a private
 `AtomicFileWriter` inside `internal/services/file_service/`) with a repository
 layer, reusing the pre-existing but unimplemented
-[fileRepositoryInterface.go](../internal/repositories/fileRepositoryInterface.go):
+[fileRepositoryInterface.go](../../internal/repositories/fileRepositoryInterface.go):
 
-- [atomicFileWriter.go](../internal/repositories/atomicFileWriter.go) — private
+- [atomicFileWriter.go](../../internal/repositories/atomicFileWriter.go) — private
   to `internal/repositories`. `MkdirAll` → write `{dir}/TEMP-{name}{ext}` →
   `Sync` → `Close` (close error wins when the encode succeeded) → bounded
   `os.Rename` retry (5 attempts, 20 ms apart) onto `{dir}/{name}{ext}`. Every
   failure path removes the temporary file and leaves the destination untouched.
-- [editorStateRepository.go](../internal/repositories/editorStateRepository.go),
-  [templateRepository.go](../internal/repositories/templateRepository.go),
-  [previewRepository.go](../internal/repositories/previewRepository.go) own the
+- [editorStateRepository.go](../../internal/repositories/editorStateRepository.go),
+  [templateRepository.go](../../internal/repositories/templateRepository.go),
+  [previewRepository.go](../../internal/repositories/previewRepository.go) own the
   extension (`.gen.json` / `.rmg.json` / `.png`) and the encoding.
-- [fileService.go](../internal/services/file_service/fileService.go) is now a
+- [fileService.go](../../internal/services/file_service/fileService.go) is now a
   pure controller: it decides the directory and the requested name and hands
   them to a repository, which sanitizes the name (falling back to
   `Generated_Template`) inside the writer. It gained
@@ -131,7 +131,7 @@ the previous valid contents, so the half-written copy is the one to lose.
 
 Point 4 was decided by the owner in favour of **keeping the documented
 partial-success contract**: a preview failure still returns the template path so
-[stateGeneration.go](../app/gui/drivers/stateGeneration.go#L79-L85) can report it.
+[stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L79-L85) can report it.
 
 Two deliberate behaviour changes follow from routing everything through the
 repositories, both approved by the owner:
@@ -153,7 +153,7 @@ round trip. The `FileService` folder was rewritten against mocked
 
 **Original finding follows.**
 
-**Evidence.** [fileService.go](../internal/services/file_service/fileService.go#L45-L53):
+**Evidence.** [fileService.go](../../internal/services/file_service/fileService.go#L45-L53):
 
 ```go
 // SaveSettings writes settings object to the given filepath as JSON.
@@ -167,7 +167,7 @@ func (this *FileService) SaveSettings(filePath string, editorState *dtos.EditorS
 }
 ```
 
-and [fileService.go](../internal/services/file_service/fileService.go#L67-L75):
+and [fileService.go](../../internal/services/file_service/fileService.go#L67-L75):
 
 ```go
 	out := filepath.Join(directory, safeName+templateExtension)
@@ -200,7 +200,7 @@ disk-full between truncate and completion leaves a zero-length or half-written
 4. **If investigation shows** the two-file template+PNG write must be
    transactional (JSON succeeds, PNG fails), write *both* temps first and commit
    both, or explicitly document the partial-success contract that
-   [stateGeneration.go](../app/gui/drivers/stateGeneration.go#L79-L85) already
+   [stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L79-L85) already
    surfaces to the user.
 
 **Tests to add** (AGENTS.md §4.6 mirror layout):
@@ -231,7 +231,7 @@ in the closure handed to `dialogs.NewSaveFileDialog`, which stores it in the
 unexported `onSave` field, and `onSave` normally fires only from
 `confirmSelection` / `confirmOverwrite` — both of which require a
 `layout.Context`. Per this item's own fallback clause the scenario went to
-[stateSaveAs_integration_test.go](../test/integration/stateSaveAs_integration_test.go)
+[stateSaveAs_integration_test.go](../../test/integration/stateSaveAs_integration_test.go)
 (`TestWhenSaveAsFails_CurrentPathIsNotRecorded` /
 `TestWhenSaveAsSucceeds_CurrentPathIsRecorded`), backed by two new
 `*_testexports.go` accessors — `DialogHost.GetTopDialog` and
@@ -239,7 +239,7 @@ unexported `onSave` field, and `onSave` normally fires only from
 means by the `integration_test` tag. The unit-level gap is recorded in
 [test_observations.md](test_observations.md).
 
-**Evidence.** [stateFiles.go](../app/gui/drivers/stateFiles.go#L39-L49):
+**Evidence.** [stateFiles.go](../../app/gui/drivers/stateFiles.go#L39-L49):
 
 ```go
 func (this *State) SaveAs(templateName string) {
@@ -256,7 +256,7 @@ func (this *State) SaveAs(templateName string) {
 ```
 
 `handleSaveState` returns nothing and swallows the outcome
-([stateFiles.go](../app/gui/drivers/stateFiles.go#L85-L97)):
+([stateFiles.go](../../app/gui/drivers/stateFiles.go#L85-L97)):
 
 ```go
 func (this *State) handleSaveState(path string) {
@@ -273,14 +273,14 @@ func (this *State) handleSaveState(path string) {
 **Why it is wrong.** On a failed *Save As* (read-only directory, invalid path,
 disk full), the status line says "Save failed" but `currentPath` is now set to a
 path that holds no file. Subsequent `Save`
-([stateFiles.go](../app/gui/drivers/stateFiles.go#L30-L37)) takes the
+([stateFiles.go](../../app/gui/drivers/stateFiles.go#L30-L37)) takes the
 `currentPath != ""` branch and silently retargets the same broken path instead
 of re-prompting. Worse, the toolbar
-([toolbar.go](../app/gui/editor/toolbar.go#L78-L85)) now displays that path as
+([toolbar.go](../../app/gui/editor/toolbar.go#L78-L85)) now displays that path as
 the active file *without* the unsaved `*` marker only after a later successful
 save — meaning the user believes their work is filed under a location that was
 never written. Contrast with `Load`, where the equivalent bug was already fixed:
-[stateFiles.go](../app/gui/drivers/stateFiles.go#L23-L27) only runs `onLoaded`
+[stateFiles.go](../../app/gui/drivers/stateFiles.go#L23-L27) only runs `onLoaded`
 when `handleLoadState` returns `true`.
 
 **Fix.** Make `handleSaveState` return `bool` (mirroring `handleLoadState`) and
@@ -294,7 +294,7 @@ gate the assignment:
 	}))
 ```
 
-Update the sole other caller at [stateFiles.go](../app/gui/drivers/stateFiles.go#L36)
+Update the sole other caller at [stateFiles.go](../../app/gui/drivers/stateFiles.go#L36)
 to ignore the result.
 
 **Tests to add.**
@@ -318,9 +318,9 @@ cleanup, so `ShouldReapplyManualEdits` dropped its now-redundant
 `!this.HasPreviousState() ||` short-circuit and reads as `HasManualEdits() &&
 !WasLayoutChanged()`. Regression test:
 `TestWhenNoPreviousStateExists_ReportsLayoutNotChanged` in
-[wasLayoutChanged_test.go](../test/unit/app/gui/models/editorState/wasLayoutChanged_test.go).
+[wasLayoutChanged_test.go](../../test/unit/app/gui/models/editorState/wasLayoutChanged_test.go).
 
-**Evidence.** [editorState.go](../app/gui/models/editorState.go#L92-L94):
+**Evidence.** [editorState.go](../../app/gui/models/editorState.go#L92-L94):
 
 ```go
 func (this *EditorState) WasLayoutChanged() bool {
@@ -328,7 +328,7 @@ func (this *EditorState) WasLayoutChanged() bool {
 }
 ```
 
-Every sibling guards ([editorState.go](../app/gui/models/editorState.go#L84-L98)):
+Every sibling guards ([editorState.go](../../app/gui/models/editorState.go#L84-L98)):
 
 ```go
 func (this *EditorState) WasStateChanged() bool {
@@ -341,20 +341,20 @@ func (this *EditorState) WasLayoutUnchanged() bool {
 ```
 
 `previous` is explicitly `nil` after `OverrideState`
-([editorState.go](../app/gui/models/editorState.go#L25-L29)) — i.e. after every
+([editorState.go](../../app/gui/models/editorState.go#L25-L29)) — i.e. after every
 `New` and every settings-file load — and after `ResetPreviousState()`.
 
 **Why it is wrong.** `LayoutDefiningOptionsChanged` is a pointer method that
 immediately reads `this.PlayerCount`
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L147-L156)), so a nil
+([editorStateDto.go](../../internal/dtos/editorStateDto.go#L147-L156)), so a nil
 receiver panics and takes the whole GUI down. The exported method is currently
 safe only by accident, and only along one path:
-`ResetNextStateIfLayoutChanged` ([editorState.go](../app/gui/models/editorState.go#L53-L60))
+`ResetNextStateIfLayoutChanged` ([editorState.go](../../app/gui/models/editorState.go#L53-L60))
 does **not** guard, and is saved solely by `AutoRegenerate` checking
 `HasPreviousState()` several lines earlier in a *different file*
-([stateGeneration.go](../app/gui/drivers/stateGeneration.go#L36-L47)). The one
+([stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L36-L47)). The one
 caller that does guard, `ShouldReapplyManualEdits`
-([editorState.go](../app/gui/models/editorState.go#L139-L144)), relies on `||`
+([editorState.go](../../app/gui/models/editorState.go#L139-L144)), relies on `||`
 short-circuit — a refactor that reorders that expression is an instant crash.
 
 **Fix.** Add the guard to the method itself so the invariant lives with the data:
@@ -382,11 +382,11 @@ first, which is exactly why the nil path was never exercised.
 ### 1.4 🟠 Editor-state copies are shallow, so snapshots alias live slices
 
 **Evidence.** `EditorStateDto` holds nine slice fields
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L81-L98)): `Bonuses`,
+([editorStateDto.go](../../internal/dtos/editorStateDto.go#L81-L98)): `Bonuses`,
 six `[]models.ZoneContentRowSave`, `ManualZones`, `ManualConnections`. Three
 places copy the struct by value and treat the result as an independent snapshot:
 
-[editorState.go](../app/gui/models/editorState.go#L31-L33):
+[editorState.go](../../app/gui/models/editorState.go#L31-L33):
 
 ```go
 func (this *EditorState) GetCurrentState() dtos.EditorStateDto {
@@ -394,7 +394,7 @@ func (this *EditorState) GetCurrentState() dtos.EditorStateDto {
 }
 ```
 
-[editorState.go](../app/gui/models/editorState.go#L41-L45):
+[editorState.go](../../app/gui/models/editorState.go#L41-L45):
 
 ```go
 func (this *EditorState) SnapshotCurrentState() {
@@ -404,14 +404,14 @@ func (this *EditorState) SnapshotCurrentState() {
 }
 ```
 
-[stateHandler.go](../internal/handlers/stateHandler.go#L59-L74) —
+[stateHandler.go](../../internal/handlers/stateHandler.go#L59-L74) —
 `ValidateEditorState(stateDto dtos.EditorStateDto, ...)` takes the DTO **by
 value** and returns `dtos.EditorStateValidationDto{State: stateDto, ...}`.
 
 **Why it is wrong.** A struct copy duplicates slice *headers*, not backing
 arrays. `this.previous` therefore shares element storage with `this.current`.
 Change detection compares them element-wise
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L186-L201) →
+([editorStateDto.go](../../internal/dtos/editorStateDto.go#L186-L201) →
 `contentRowSlicesEqual` / `slices.Equal`), so **any in-place element write makes
 the change invisible to `WasStateChanged()`** — the editor would not mark the
 file unsaved and `AutoRegenerate` would not regenerate. The same aliasing leaks
@@ -420,11 +420,11 @@ the live editor state out of `GetCurrentState()` to every panel and to
 
 This is currently **latent, not live**: every writer replaces the whole slice
 rather than an element —
-[layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go#L133-L148) assigns
+[layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go#L133-L148) assigns
 `s.PlayerZoneContentRows = rows` etc.,
-[bonusesPanel.go](../app/gui/panels/bonusesPanel.go#L248) reslices with a
+[bonusesPanel.go](../../app/gui/panels/bonusesPanel.go#L248) reslices with a
 capacity-limited three-index slice, and
-[editorState.go](../app/gui/models/editorState.go#L116-L119) reassigns
+[editorState.go](../../app/gui/models/editorState.go#L116-L119) reassigns
 `ManualZones`/`ManualConnections`. One in-place edit anywhere reintroduces the
 bug with no compiler or lint signal.
 
@@ -437,7 +437,7 @@ func (this *EditorStateDto) Clone() EditorStateDto { ... slices.Clone each slice
 ```
 
 Place it beside the existing methods in
-[editorStateDto.go](../internal/dtos/editorStateDto.go). Note the *elements*
+[editorStateDto.go](../../internal/dtos/editorStateDto.go). Note the *elements*
 (`config.BonusEntry`, `models.ZoneContentRowSave`,
 `editor_state_dto.ManualZoneSave`) must themselves be checked for nested slices
 — **if investigation shows** they contain slices (e.g. rule rows inside a zone
@@ -458,7 +458,7 @@ content row), clone recursively and add the tripwire test below.
 
 **Fixed 2026-08-05.** `nonNegativeIntFields()` / `validateNonNegativeFields()`
 are gone; all twenty count fields moved into `rangedIntFields()` in
-[editorStateValidator.go](../internal/validators/editorStateValidator.go), which
+[editorStateValidator.go](../../internal/validators/editorStateValidator.go), which
 is now a single declarative table of every bounded integer. Ceilings are named
 constants taken from the matching editor slider:
 
@@ -490,8 +490,8 @@ constants taken from the matching editor slider:
   the feature; if the feature goes, its two entries go with it.
 
 Floats are handled by a `rangedFloatFields()` sibling backed by new
-[floatField.go](../internal/validators/floatField.go) and
-[rangedFloatField.go](../internal/validators/rangedFloatField.go), reusing
+[floatField.go](../../internal/validators/floatField.go) and
+[rangedFloatField.go](../../internal/validators/rangedFloatField.go), reusing
 `helpers.Clamp`. `validateTopology` mirrors `validateGameMode` and falls back to
 `config.TopologyRandom`.
 
@@ -503,7 +503,7 @@ updated.
 
 #### 1.5 original text
 
-**Evidence.** [editorStateValidator.go](../internal/validators/editorStateValidator.go#L62-L77)
+**Evidence.** [editorStateValidator.go](../../internal/validators/editorStateValidator.go#L62-L77)
 only clamps at zero:
 
 ```go
@@ -515,12 +515,12 @@ only clamps at zero:
 ```
 
 and the twenty fields in
-[editorStateValidator.go](../internal/validators/editorStateValidator.go#L172-L211)
+[editorStateValidator.go](../../internal/validators/editorStateValidator.go#L172-L211)
 — `neutralZoneCount`, `abandonedOutpostCount`, all eight neutral tier counts,
 all four castles-per-zone, `hubCastles`, `remoteFootholdCount`,
 `maxPortalConns` — carry no maximum. `playerCount` and the percentage fields
 *are* range-checked
-([editorStateValidator.go](../internal/validators/editorStateValidator.go#L134-L170)),
+([editorStateValidator.go](../../internal/validators/editorStateValidator.go#L134-L170)),
 which shows the mechanism exists and simply was not applied here.
 
 Additionally **not validated at all**: `PlayerZoneSize`, `NeutralZoneSize`,
@@ -538,8 +538,8 @@ precisely to be the boundary.
 **Fix.** Convert the twenty entries from `nonNegativeIntFields()` to
 `rangedIntFields()` with defensible ceilings derived from the UI sliders (the
 GUI already constrains them — read the `Max` of the corresponding slider in
-[layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go) and
-[generalPanel.go](../app/gui/panels/generalPanel.go) and reuse those numbers as
+[layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go) and
+[generalPanel.go](../../app/gui/panels/generalPanel.go) and reuse those numbers as
 named constants). Add a `rangedFloatFields()` sibling for the four float fields.
 Add a `validateTopology` mirroring `validateGameMode`.
 Every clamp already produces a user-visible warning through the existing
@@ -560,7 +560,7 @@ them, get confirmation, then implement.
 
 **Fixed 2026-08-05** as part of §1.1. `SavePreviewImage` no longer exists; the
 preview is written by
-[previewRepository.go](../internal/repositories/previewRepository.go) through the
+[previewRepository.go](../../internal/repositories/previewRepository.go) through the
 shared `atomicFileWriter`, so `png.Encode` writes into `TEMP-{name}.png` and the
 destination is only replaced once encoding succeeded. The writer uses exactly the
 named-return `defer` this item prescribes, so a `Close` error wins whenever the
@@ -575,7 +575,7 @@ recorded in [test_observations.md](test_observations.md).
 
 **Original finding follows.**
 
-**Evidence.** [fileService.go](../internal/services/file_service/fileService.go#L95-L107):
+**Evidence.** [fileService.go](../../internal/services/file_service/fileService.go#L95-L107):
 
 ```go
 	out := filepath.Join(directory, safeName+pngExtension)
@@ -649,7 +649,7 @@ entry points and had the signature changed outright.
 
 #### 1.7 original text
 
-**Evidence.** [gameRulesProvider.go](../internal/services/template_generator/providers/gameRulesProvider.go#L38-L57):
+**Evidence.** [gameRulesProvider.go](../../internal/services/template_generator/providers/gameRulesProvider.go#L38-L57):
 
 ```go
 func (this *GameRulesProvider) CreateValueOverrides(configuration config.GeneratorConfig) []entities.ValueOverride {
@@ -677,7 +677,7 @@ func (this *GameRulesProvider) CreateValueOverrides(configuration config.Generat
 `dragon_utopia = 30 000` or `dragon_utopia:30000` gets a template that generates
 successfully, reports no problem, and simply ignores the override. The generator
 already has a warnings channel — `GenerateTemplate` returns `dto.Warnings` and
-[stateGeneration.go](../app/gui/drivers/stateGeneration.go#L113-L116) surfaces
+[stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L113-L116) surfaces
 the count — so the reporting mechanism exists and is unused here. The SID itself
 is *deliberately* not validated (free-text by design), but a syntactically
 unparseable line is a user error, not a design choice.
@@ -735,18 +735,18 @@ asserting blank lines produce no warning.
 > path.
 
 **Evidence.** The output directory lives only as a Gio widget on the driver
-([state.go](../app/gui/drivers/state.go#L34)):
+([state.go](../../app/gui/drivers/state.go#L34)):
 
 ```go
 	outputPath   widget.Editor
 ```
 
 It is seeded once from Steam detection at
-[state.go](../app/gui/drivers/state.go#L62-L74), written by the picker at
-[stateFiles.go](../app/gui/drivers/stateFiles.go#L75), and read at
-[stateGeneration.go](../app/gui/drivers/stateGeneration.go#L71). It appears
+[state.go](../../app/gui/drivers/state.go#L62-L74), written by the picker at
+[stateFiles.go](../../app/gui/drivers/stateFiles.go#L75), and read at
+[stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L71). It appears
 **nowhere** in `EditorStateDto`
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L15-L98)) — I grepped
+([editorStateDto.go](../../internal/dtos/editorStateDto.go#L15-L98)) — I grepped
 `outputPath` across `app/gui/**` and the only five hits are the five lines
 above.
 
@@ -780,7 +780,7 @@ tests for the new preference read/write; plus a round-trip test in
 
 ### 1.9 🟡 A fatal window error is logged to a discard handler, then the process exits silently
 
-**Evidence.** [program.go](../app/gui/program.go#L25-L47):
+**Evidence.** [program.go](../../app/gui/program.go#L25-L47):
 
 ```go
 func eventLoop(version string) {
@@ -796,14 +796,14 @@ func eventLoop(version string) {
 ```
 
 but `getAndConfigureWindow` — called on the line *above* — installs a discard
-logger at [program.go](../app/gui/program.go#L56):
+logger at [program.go](../../app/gui/program.go#L56):
 
 ```go
 	slog.SetDefault(slog.New(slog.DiscardHandler))
 ```
 
 Logging is only re-enabled by the opt-in `-with-logging` flag
-([program.go](../app/gui/program.go#L68-L71)).
+([program.go](../../app/gui/program.go#L68-L71)).
 
 **Why it is wrong.** When Gio fails to create or maintain the window (no GPU,
 missing X/Wayland libraries on Linux, driver fault), the user sees the app
@@ -824,7 +824,7 @@ configured `slog` default:
 ```
 
 Note `depguard` denies `log` in non-main files
-([.golangci.yml](../.golangci.yml)) but not `fmt`, so this stays lint-clean.
+([.golangci.yml](../../.golangci.yml)) but not `fmt`, so this stays lint-clean.
 Secondary: `os.Exit` inside the loop skips deferred cleanup — currently harmless
 (nothing is deferred), but returning an error to `main.go` would be cleaner if
 the owner wants a testable bootstrap.
@@ -901,17 +901,17 @@ instead (see §2.5).
 
 🟠 The file-explorer dialog implements filesystem policy inside the GUI layer
 
-**Evidence.** [fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go)
+**Evidence.** [fileExplorerDialog.go](../../app/gui/dialogs/fileExplorerDialog.go)
 makes **sixteen** direct `os`/`filepath` calls, including directory creation:
 
 | Line | Call |
 | --- | --- |
-| [493](../app/gui/dialogs/fileExplorerDialog.go#L493) | `os.Stat(path)` (overwrite detection) |
-| [524](../app/gui/dialogs/fileExplorerDialog.go#L524) | `os.ReadDir(dir)` |
-| [603](../app/gui/dialogs/fileExplorerDialog.go#L603) | `filepath.Dir(this.currentDir)` |
-| [645](../app/gui/dialogs/fileExplorerDialog.go#L645), [653](../app/gui/dialogs/fileExplorerDialog.go#L653) | `filepath.Base` / `filepath.Join` (name sanitisation) |
-| [671-672](../app/gui/dialogs/fileExplorerDialog.go#L671-L672) | `filepath.Join` + `os.Mkdir(target, 0o750)` |
-| [706](../app/gui/dialogs/fileExplorerDialog.go#L706), [720-729](../app/gui/dialogs/fileExplorerDialog.go#L720-L729), [738-744](../app/gui/dialogs/fileExplorerDialog.go#L738-L744) | root/home/cwd discovery |
+| [493](../../app/gui/dialogs/fileExplorerDialog.go#L493) | `os.Stat(path)` (overwrite detection) |
+| [524](../../app/gui/dialogs/fileExplorerDialog.go#L524) | `os.ReadDir(dir)` |
+| [603](../../app/gui/dialogs/fileExplorerDialog.go#L603) | `filepath.Dir(this.currentDir)` |
+| [645](../../app/gui/dialogs/fileExplorerDialog.go#L645), [653](../../app/gui/dialogs/fileExplorerDialog.go#L653) | `filepath.Base` / `filepath.Join` (name sanitisation) |
+| [671-672](../../app/gui/dialogs/fileExplorerDialog.go#L671-L672) | `filepath.Join` + `os.Mkdir(target, 0o750)` |
+| [706](../../app/gui/dialogs/fileExplorerDialog.go#L706), [720-729](../../app/gui/dialogs/fileExplorerDialog.go#L720-L729), [738-744](../../app/gui/dialogs/fileExplorerDialog.go#L738-L744) | root/home/cwd discovery |
 
 AGENTS.md §4.5 is explicit: code under `app/gui/` "must contain only rendering
 logic"; the depguard rule `no-services-from-app` enforces the *import* direction
@@ -922,7 +922,7 @@ detection, name sanitisation and directory creation are persistence policy, not
 drawing. Consequences today: the file is 20.4% covered and 653 LOC because none
 of that logic is reachable without a Gio context (§6 / test_observations.md);
 `os.Mkdir(target, 0o750)` here disagrees with `folderPermission = 0o755` in
-[fileService.go](../internal/services/file_service/fileService.go#L14-L18)
+[fileService.go](../../internal/services/file_service/fileService.go#L14-L18)
 (§5.1); and a future TUI/web front-end (`app/tui/`, `app/web/` both exist as
 placeholders) would have to reimplement all of it.
 
@@ -1002,9 +1002,9 @@ authoritative baseline is the current one recorded in
 <details>
 <summary>Original finding (for reference)</summary>
 
-**Evidence.** [stateGeneration.go](../app/gui/drivers/stateGeneration.go#L30-L65)
+**Evidence.** [stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L30-L65)
 implements the regeneration state machine (immediate vs. debounced vs. waiting),
-and [stateGeneration.go](../app/gui/drivers/stateGeneration.go#L88-L120) decides
+and [stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L88-L120) decides
 manual-edit reapplication ordering:
 
 ```go
@@ -1022,10 +1022,10 @@ manual-edit reapplication ordering:
 ```
 
 with the supporting predicates in
-[editorState.go](../app/gui/models/editorState.go#L53-L60) and
-[editorState.go](../app/gui/models/editorState.go#L136-L150), and the castle
+[editorState.go](../../app/gui/models/editorState.go#L53-L60) and
+[editorState.go](../../app/gui/models/editorState.go#L136-L150), and the castle
 propagation in
-[stateManualEdits.go](../app/gui/drivers/stateManualEdits.go).
+[stateManualEdits.go](../../app/gui/drivers/stateManualEdits.go).
 
 **Why it is wrong.** This is business logic by AGENTS.md §4.5's own test — it
 decides *what* to do, not *how to draw*. The comment quoted above documents a
@@ -1081,7 +1081,7 @@ service is the one consulted.
 
 🟠 `NewMandatoryContentItemMapper` constructs its own collaborator, bypassing wire
 
-**Evidence.** [mandatoryContentItemMapper.go](../internal/mappers/mandatoryContentItemMapper.go#L10-L16):
+**Evidence.** [mandatoryContentItemMapper.go](../../internal/mappers/mandatoryContentItemMapper.go#L10-L16):
 
 ```go
 type MandatoryContentItemMapper struct {
@@ -1095,8 +1095,8 @@ func NewMandatoryContentItemMapper() *MandatoryContentItemMapper {
 
 **Why it is wrong.** Every other `internal/` constructor takes its dependencies
 as parameters so `wire` can build the graph
-([wire_gen.go](../internal/composition/wire_gen.go), providers declared in
-[providerSets.go](../internal/composition/providerSets.go)). This one hard-wires
+([wire_gen.go](../../internal/composition/wire_gen.go), providers declared in
+[providerSets.go](../../internal/composition/providerSets.go)). This one hard-wires
 a concrete `*ContentRuleService`, so: the DI graph no longer describes the real
 object graph; a second `ContentRuleService` instance exists alongside the wired
 one; and the mapper cannot be unit-tested against a stub rule service.
@@ -1110,7 +1110,7 @@ func NewMandatoryContentItemMapper(contentRuleService *content_rules.ContentRule
 ```
 
 Add the provider to the appropriate set in
-[providerSets.go](../internal/composition/providerSets.go) and regenerate with
+[providerSets.go](../../internal/composition/providerSets.go) and regenerate with
 the *"Go: Generate wire injectors"* task (`wire gen ./internal/composition/...`,
 AGENTS.md §4.6.2 — never pass `-tags=wireinject` to build/test). Fix the call
 sites the compiler surfaces.
@@ -1160,7 +1160,7 @@ those call sites compiles untouched; only the tournament tests needed the new
 
 🟠 `NewTopologyBase` constructs its own collaborators
 
-**Evidence.** [topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go#L14-L29)
+**Evidence.** [topologyBase.go](../../internal/services/template_generator/providers/topology/base/topologyBase.go#L14-L29)
 creates `zones.NewZoneLabelProvider()` and `newTopologyConnectionService(...)`
 inside the constructor rather than receiving them.
 
@@ -1171,7 +1171,7 @@ deterministic label provider. `zoneLabelProvider.go` is 228 LOC of real logic.
 
 **Fix.** Same shape as §2.3 — parameterise the constructor, register providers,
 regenerate wire. Do §2.3 and §2.4 in one PR since both touch
-[providerSets.go](../internal/composition/providerSets.go).
+[providerSets.go](../../internal/composition/providerSets.go).
 
 **Tests to add.** Extend
 `test/unit/internal/services/template_generator/providers/topology/base/topologyBase/`
@@ -1187,11 +1187,11 @@ siblings plus one the finding did not anticipate:
 
 | File | LOC | Holds |
 | --- | --- | --- |
-| [fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go) | 221 | the struct, `newFileExplorerDialog`, the `IDialog` methods, navigation |
-| [fileExplorerDialogConfirm.go](../app/gui/dialogs/fileExplorerDialogConfirm.go) | 156 | footer, button state, confirm / overwrite flow |
-| [fileExplorerDialogEntries.go](../app/gui/dialogs/fileExplorerDialogEntries.go) | 130 | directory load, list and row rendering |
-| [fileExplorerDialogToolbar.go](../app/gui/dialogs/fileExplorerDialogToolbar.go) | 103 | header, save row, new-folder row |
-| [fileExplorerDialogModes.go](../app/gui/dialogs/fileExplorerDialogModes.go) | 65 | the `fileDialogMode` enum and the four public constructors |
+| [fileExplorerDialog.go](../../app/gui/dialogs/fileExplorerDialog.go) | 221 | the struct, `newFileExplorerDialog`, the `IDialog` methods, navigation |
+| [fileExplorerDialogConfirm.go](../../app/gui/dialogs/fileExplorerDialogConfirm.go) | 156 | footer, button state, confirm / overwrite flow |
+| [fileExplorerDialogEntries.go](../../app/gui/dialogs/fileExplorerDialogEntries.go) | 130 | directory load, list and row rendering |
+| [fileExplorerDialogToolbar.go](../../app/gui/dialogs/fileExplorerDialogToolbar.go) | 103 | header, save row, new-folder row |
+| [fileExplorerDialogModes.go](../../app/gui/dialogs/fileExplorerDialogModes.go) | 65 | the `fileDialogMode` enum and the four public constructors |
 
 The extra file exists because the four constructors are what makes the type
 "simultaneously an open dialog, a save dialog, a folder picker and a browser";
@@ -1203,7 +1203,7 @@ split.
 **Tests.** §2.1's service tests cover the extracted policy. The
 `test_observations.md` entry the finding points at is now closed too: ten
 scenarios in
-[fileExplorerDialog_integration_test.go](../test/integration/gui/fileExplorerDialog_integration_test.go)
+[fileExplorerDialog_integration_test.go](../../test/integration/gui/fileExplorerDialog_integration_test.go)
 drive the real dialog — open→confirm, save target resolution, a save through
 `drivers.State` that lands bytes on disk, the three overwrite paths, folder
 creation, and D1's and D2's dialog branches which no unit test can reach. They
@@ -1274,7 +1274,7 @@ integration scenario in [test_observations.md](test_observations.md).
 > `internal/services/pickers` and `internal/services/zone_content`.
 > Total unit coverage rose **69.3 % → 72.5 %**.
 
-**Evidence.** [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go#L31-L61)
+**Evidence.** [zoneEditorDialog.go](../../app/gui/dialogs/zoneEditorDialog.go#L31-L61)
 embeds five state structs (canvas, connection properties, zone properties, snap,
 content) totalling roughly 58 fields and 42 methods across
 `zoneEditorDialog.go` (479 LOC), `zoneEditorCanvas.go` (454),
@@ -1315,7 +1315,7 @@ widget handles. Not worth a standalone PR.
 > behaviour (see §9.5).
 
 **Evidence.** Six arena sprites are compiled into every binary via
-[assetProvider.go](../internal/services/asset_provider/assetProvider.go#L25-L26):
+[assetProvider.go](../../internal/services/asset_provider/assetProvider.go#L25-L26):
 
 ```go
 	//go:embed assets/*.png
@@ -1325,11 +1325,11 @@ widget handles. Not worth a standalone PR.
 `internal/services/asset_provider/assets/` contains `gladiator_arena.png`,
 `neutral_none_arena.png`, `neutral_low_arena.png`, `neutral_medium_arena.png`,
 `neutral_high_arena.png`, `neutral_highest_arena.png`. None is referenced:
-[assetProvider.go](../internal/services/asset_provider/assetProvider.go#L32-L37)
+[assetProvider.go](../../internal/services/asset_provider/assetProvider.go#L32-L37)
 lists exactly ten neutral asset names and no arena variant, and the provider
 exposes only `DrawBackground`, `DrawPlayerZone`, `DrawNeutralZone`.
 
-Correspondingly, [previewConnection.go](../internal/models/preview/previewConnection.go#L21-L26)
+Correspondingly, [previewConnection.go](../../internal/models/preview/previewConnection.go#L21-L26)
 declares:
 
 ```go
@@ -1341,12 +1341,12 @@ const (
 )
 ```
 
-but [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go#L194-L203)
+but [previewLayoutService.go](../../internal/services/preview_service/previewLayoutService.go#L194-L203)
 only ever assigns `ConnectionTypeDirect` or `ConnectionTypePortal`. A
 repository-wide grep finds `preview.ConnectionTypeGladiatorArena` at its
 declaration and **nowhere else**.
 
-Meanwhile [docs/gladiator-arena-marker.md](../docs/gladiator-arena-marker.md)
+Meanwhile [docs/gladiator-arena-marker.md](../../docs/gladiator-arena-marker.md)
 documents crossed-swords markers for exactly this case (and points at a
 package that does not exist — §9.5).
 
@@ -1361,7 +1361,7 @@ catch because the producing code uses an `if`, not a `switch`.
 - **Finish:** add the six names to the neutral/arena asset tables, add a
   `DrawArenaZone`, and set `ConnectionTypeGladiatorArena` /
   `ConnectionTypeProximity` in
-  [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go#L194-L203)
+  [previewLayoutService.go](../../internal/services/preview_service/previewLayoutService.go#L194-L203)
   from `registry.GetConnectionTypeValues().GladiatorArena` / `.Proximity`
   (`registry` is read-only — read the constants, do not edit them). Then render
   the marker in `previewGeneratorService.go`.
@@ -1386,11 +1386,11 @@ caught this).
 `WithGuardWeeklyIncrement(0.15)` across twelve files now read
 `WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard)`.
 The single `WithGuardWeeklyIncrement(0.20)` in
-[zoneFactory.go](../internal/services/zones/zoneFactory.go) was deliberately left
+[zoneFactory.go](../../internal/services/zones/zoneFactory.go) was deliberately left
 alone — it is a distinct value, not the standard one, and was out of scope.
 
 **Evidence.** The value is already modelled —
-[guardWeeklyIncrement.go](../internal/common/common_connections/guardWeeklyIncrement.go#L13):
+[guardWeeklyIncrement.go](../../internal/common/common_connections/guardWeeklyIncrement.go#L13):
 
 ```go
 		Standard: 0.15,
@@ -1400,18 +1400,18 @@ yet fifteen production sites write the literal instead:
 
 | File | Lines |
 | --- | --- |
-| [topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L64) | 64, 116, 193 |
-| [chainTopology.go](../internal/services/template_generator/providers/topology/chainTopology.go#L134) | 134 |
-| [geometricHubTopology.go](../internal/services/template_generator/providers/topology/geometricHubTopology.go#L138) | 138, 160 |
-| [hubTopology.go](../internal/services/template_generator/providers/topology/hubTopology.go#L128) | 128, 138 |
-| [positionedTopologyBuilder.go](../internal/services/template_generator/providers/topology/positionedTopologyBuilder.go#L152) | 152 |
-| [ringTopology.go](../internal/services/template_generator/providers/topology/ringTopology.go#L131) | 131 |
-| [webTopology.go](../internal/services/template_generator/providers/topology/webTopology.go#L175) | 175, 196 |
-| [balancedClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/balancedClusterService.go#L332) | 332 |
-| [chainClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/chainClusterService.go#L98) | 98 |
-| [hubClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L105) | 105 |
-| [ringClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/ringClusterService.go#L144) | 144 |
-| [castleFactory.go](../internal/services/zones/castleFactory.go#L48) | 48 |
+| [topologyConnectionService.go](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L64) | 64, 116, 193 |
+| [chainTopology.go](../../internal/services/template_generator/providers/topology/chainTopology.go#L134) | 134 |
+| [geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L138) | 138, 160 |
+| [hubTopology.go](../../internal/services/template_generator/providers/topology/hubTopology.go#L128) | 128, 138 |
+| [positionedTopologyBuilder.go](../../internal/services/template_generator/providers/topology/positionedTopologyBuilder.go#L152) | 152 |
+| [ringTopology.go](../../internal/services/template_generator/providers/topology/ringTopology.go#L131) | 131 |
+| [webTopology.go](../../internal/services/template_generator/providers/topology/webTopology.go#L175) | 175, 196 |
+| [balancedClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/balancedClusterService.go#L332) | 332 |
+| [chainClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/chainClusterService.go#L98) | 98 |
+| [hubClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L105) | 105 |
+| [ringClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/ringClusterService.go#L144) | 144 |
+| [castleFactory.go](../../internal/services/zones/castleFactory.go#L48) | 48 |
 
 all as `WithGuardWeeklyIncrement(0.15).`
 
@@ -1438,7 +1438,7 @@ and must continue to pass unchanged — that is the verification.
 tournament cluster services to **all ten** duplicated sites. The shared helper is
 `TopologyBase.CreateClusterZone(configuration, label, connectionNames,
 playerIndex, isSpawn, isHoldCity, tuning, allNeutralZonePlans)` in
-[topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go);
+[topologyBase.go](../../internal/services/template_generator/providers/topology/base/topologyBase.go);
 it performs the spawn/neutral choice, the `Player%d` naming and the
 `FirstOrDefault` plan lookup that every call site previously repeated.
 
@@ -1448,9 +1448,9 @@ Converted call sites: `ringClusterService.go` (2), `hubClusterService.go`,
 `ringTopology.go`, `webTopology.go` (2). The now-unused `linq` imports in
 `chainTopology.go`, `positionedTopologyBuilder.go` and `ringTopology.go` were
 removed. Covered by
-[createClusterZone_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createClusterZone_test.go).
+[createClusterZone_test.go](../../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createClusterZone_test.go).
 
-**Evidence.** [ringClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/ringClusterService.go#L97-L108):
+**Evidence.** [ringClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/ringClusterService.go#L97-L108):
 
 ```go
 		if index == 0 {
@@ -1468,10 +1468,10 @@ removed. Covered by
 		}
 ```
 
-and [hubClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L72-L86)
+and [hubClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/hubClusterService.go#L72-L86)
 — byte-identical apart from the connection-name variable. The same block recurs
-at [chainClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/chainClusterService.go#L67)
-and [balancedClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/balancedClusterService.go#L279).
+at [chainClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/chainClusterService.go#L67)
+and [balancedClusterService.go](../../internal/services/template_generator/providers/topology/tournament_variant/balancedClusterService.go#L279).
 
 **Why it is wrong.** Nine and eight positional arguments respectively, repeated
 four times. A new parameter on `CreateSpawnZone` means four identical edits, and
@@ -1503,11 +1503,11 @@ neutral branches.
 ### 3.3 ✅ FIXED 🟡 The spell-label helper exists twice, verbatim, under two names
 
 **Fixed 2026-08-06 (Batch 10).** Both copies (`bannedSpellLabel` in
-[bonusesPanel.go](../app/gui/panels/bonusesPanel.go) and `spellNameAndSchool` in
-[bonusPickerDialog.go](../app/gui/dialogs/bonusPickerDialog.go)) were deleted in
+[bonusesPanel.go](../../app/gui/panels/bonusesPanel.go) and `spellNameAndSchool` in
+[bonusPickerDialog.go](../../app/gui/dialogs/bonusPickerDialog.go)) were deleted in
 favour of a single exported `constants.SpellNameAndSchool` in the new
-[spellLabel.go](../app/gui/constants/spellLabel.go), with four unit tests in
-[spellNameAndSchool_test.go](../test/unit/app/gui/constants/spellLabel/spellNameAndSchool_test.go).
+[spellLabel.go](../../app/gui/constants/spellLabel.go), with four unit tests in
+[spellNameAndSchool_test.go](../../test/unit/app/gui/constants/spellLabel/spellNameAndSchool_test.go).
 
 **Behaviour note.** Both originals ended with `if label == "" { label =
 spell.School }`. That branch is provably a no-op — `GetSpellSchoolDisplayName`
@@ -1515,7 +1515,7 @@ returns one of five non-empty constants or the raw `schoolType`, so `label` is
 empty only when `spell.School` is empty, in which case the assignment changes
 nothing. It was dropped rather than carried forward as an uncoverable branch.
 
-**Evidence.** [bonusesPanel.go](../app/gui/panels/bonusesPanel.go#L386-L397):
+**Evidence.** [bonusesPanel.go](../../app/gui/panels/bonusesPanel.go#L386-L397):
 
 ```go
 // bannedSpellLabel returns the display name and school label for a banned spell.
@@ -1532,7 +1532,7 @@ func bannedSpellLabel(sid string) (name, school string) {
 }
 ```
 
-[bonusPickerDialog.go](../app/gui/dialogs/bonusPickerDialog.go#L448-L459):
+[bonusPickerDialog.go](../../app/gui/dialogs/bonusPickerDialog.go#L448-L459):
 
 ```go
 // spellNameAndSchool resolves a spell SID to its display name and school
@@ -1566,7 +1566,7 @@ falls back to the raw school; unknown SID returns sentence-cased name and
 ### 3.4 ✅ FIXED 🟡 `buttonWidget.go` duplicates its render body (the repository's only `dupl` findings)
 
 **Fixed by the owner in `0311318`, verified 2026-08-06 (Batch 10).**
-[buttonWidget.go](../app/gui/widgets/buttonWidget.go) now has a private
+[buttonWidget.go](../../app/gui/widgets/buttonWidget.go) now has a private
 `newBaseButtonWidget(label, labelWidget, backgroundColor, borderColor)` plus
 `newButtonInset()`; `NewButtonWidget` and `NewToggleButtonWidget` delegate to it.
 `NewSegmentButtonWidget` was deliberately **not** folded in — it uses
@@ -1585,13 +1585,13 @@ app/gui/widgets/buttonWidget.go:33: 33-47 lines are duplicate of `app/gui/widget
 app/gui/widgets/buttonWidget.go:67: 67-81 lines are duplicate of `app/gui/widgets/buttonWidget.go:33-47`
 ```
 
-[buttonWidget.go](../app/gui/widgets/buttonWidget.go#L33-L47) (inside
+[buttonWidget.go](../../app/gui/widgets/buttonWidget.go#L33-L47) (inside
 `NewButtonWidget`) and
-[buttonWidget.go](../app/gui/widgets/buttonWidget.go#L67-L81) (inside
+[buttonWidget.go](../../app/gui/widgets/buttonWidget.go#L67-L81) (inside
 `NewToggleButtonWidget`) share an identical `material.Clickable(...)` body; the
 functions differ only in how `textColor` / `backgroundColor` / `borderColor` are
 derived. `NewSegmentButtonWidget` at
-[buttonWidget.go](../app/gui/widgets/buttonWidget.go#L86-L90) begins the same
+[buttonWidget.go](../../app/gui/widgets/buttonWidget.go#L86-L90) begins the same
 pattern a third time.
 
 **Fix.** Extract a private
@@ -1627,18 +1627,18 @@ screen.
 this finding suggested:
 
 - `internal/services/preview_service/` (the first choice) is rejected by
-  [dependency_test.go](../test/unit/architecture/dependency/dependency_test.go) —
+  [dependency_test.go](../../test/unit/architecture/dependency/dependency_test.go) —
   `app/**` may only import `internal/{common,composition,constants,dtos,entities,handlers,helpers,models,registry}`.
 - `app/gui/panels/` (this finding's own fallback) compiles and passes, but that
   package had never appeared in a unit-test binary. Adding a test for it pulled
   **284 untested GUI functions** into the coverage denominator and dropped the
   reported total from 65.0% to 60.1%, which trips the *"Fail if coverage
   drops"* gate in
-  [pr-validation.yml](../.github/workflows/pr-validation.yml). `app/gui/models/`
+  [pr-validation.yml](../../.github/workflows/pr-validation.yml). `app/gui/models/`
   is already exercised by the `drivers` tests, so the total stays at 65.0%.
 
 **The zone-editor canvas needed nothing.**
-[zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go) already guards the
+[zoneEditorCanvas.go](../../app/gui/dialogs/zoneEditorCanvas.go) already guards the
 same call with a `geometryDirty`/`geometrySide` pair that every mutator raises.
 That guard is strictly finer-grained than a layout key, because it also catches
 zone drags the key cannot express, so it was left alone rather than
@@ -1648,7 +1648,7 @@ double-cached.
 reinstated benchmark. That is wrong under AGENTS.md §4.6.1: the tag applies if
 and only if the file consumes a `*_testexports.go` accessor, and this benchmark
 uses production APIs and needs no GPU. It is untagged, like
-[template_generation_test.go](../test/performance/template_generation_test.go),
+[template_generation_test.go](../../test/performance/template_generation_test.go),
 so it runs in a plain `go test ./test/...`.
 
 **Reproduced before the fix** (`-benchtime=50x`, same CPU as the original
@@ -1670,7 +1670,7 @@ stay comparable over time.
 
 #### 4.1 original text
 
-**Evidence.** [previewPanel.go](../app/gui/panels/previewPanel.go#L149-L172) —
+**Evidence.** [previewPanel.go](../../app/gui/panels/previewPanel.go#L149-L172) —
 the call is inside the returned per-frame widget closure, with no cache and no
 revision key:
 
@@ -1686,7 +1686,7 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 ```
 
 For scatter topologies that reaches
-[layoutScatter.go](../internal/services/preview_service/layoutScatter.go#L128-L137):
+[layoutScatter.go](../../internal/services/preview_service/layoutScatter.go#L128-L137):
 
 ```go
 func relaxPasses(px, py []float64, adj [][]int, zoneRadius float64) {
@@ -1710,7 +1710,7 @@ with `pushApartPass` being O(zones²) per pass.
 | Circles, 8 players, 16 neutrals | 36 654 | 37 000 | 338 |
 
 **Why it is wrong.** `TopologyRandom` is the shipped default
-([editorStateDto.go](../internal/dtos/editorStateDto.go#L118)). At 8 players /
+([editorStateDto.go](../../internal/dtos/editorStateDto.go#L118)). At 8 players /
 16 neutrals the preview burns **2.1 ms and 391 allocations every single frame**
 — about 13% of a 60 fps frame budget — recomputing a deterministic result from
 unchanged inputs. This runs on idle repaints, pointer motion, status-line
@@ -1722,7 +1722,7 @@ super-linearly.
 `(templateRevision, topology, canvasSide)`:
 
 1. Add a monotonically-increasing revision counter to `drivers.State`, bumped in
-   `applyGeneratedTemplate` ([stateGeneration.go](../app/gui/drivers/stateGeneration.go#L124-L128)),
+   `applyGeneratedTemplate` ([stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L124-L128)),
    `clearGeneratedState`, and wherever manual edits install a new variant.
    Expose `GetTemplateRevision() uint64`. Prefer this over hashing the template.
 2. In `PreviewPanel`, store `cachedKey` + `cachedLayout`; rebuild only on key
@@ -1750,18 +1750,18 @@ super-linearly.
 
 **Fixed 2026-08-05** as part of §1.1, using this item's fallback rather than
 waiting for §2.1. The two permission values moved into a new
-[internal/constants/filePermissions.go](../internal/constants/filePermissions.go)
+[internal/constants/filePermissions.go](../../internal/constants/filePermissions.go)
 (`FolderPermission = 0o755`, `FileReadWritePermission = 0o644`) — the package
 AGENTS.md §4.4 already prescribes for constants but which did not exist yet.
 `internal/repositories` and
-[fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go) both consume it,
+[fileExplorerDialog.go](../../app/gui/dialogs/fileExplorerDialog.go) both consume it,
 so the in-app explorer now creates `0o755` directories like every other path.
 `internal/constants` had to be added to the allow-list in
 `test/unit/architecture/dependency/dependency_test.go` so `app/*` may import it.
 
 **Original finding follows.**
 
-**Evidence.** [fileService.go](../internal/services/file_service/fileService.go#L14-L18):
+**Evidence.** [fileService.go](../../internal/services/file_service/fileService.go#L14-L18):
 
 ```go
 const (
@@ -1769,7 +1769,7 @@ const (
 	fileReadWritePermission = 0o644
 ```
 
-vs. [fileExplorerDialog.go](../app/gui/dialogs/fileExplorerDialog.go#L672):
+vs. [fileExplorerDialog.go](../../app/gui/dialogs/fileExplorerDialog.go#L672):
 
 ```go
 	if err := os.Mkdir(target, 0o750); err != nil {
@@ -1794,7 +1794,7 @@ delete it, so `SnapshotCurrentState` now really does clear `next`, with a
 one-line comment stating why (a fresh snapshot supersedes any debounced state
 still waiting to be applied). Behaviourally this is a no-op today — both
 production call sites are in
-[stateGeneration.go](../app/gui/drivers/stateGeneration.go), and on every path
+[stateGeneration.go](../../app/gui/drivers/stateGeneration.go), and on every path
 that reaches them `next` is either already `nil` (`AutoRegenerate` clears it
 first) or would be cleared by the next frame's
 `ResetNextStateIfStateWasNotChanged` (manual `Generate()` button) — but the
@@ -1802,7 +1802,7 @@ invariant is now explicit instead of accidental. The full unit suite passes
 unchanged.
 
 
-**Evidence.** [editorState.go](../app/gui/models/editorState.go#L41-L45):
+**Evidence.** [editorState.go](../../app/gui/models/editorState.go#L41-L45):
 
 ```go
 func (this *EditorState) SnapshotCurrentState() {
@@ -1820,7 +1820,7 @@ because it carries no TODO marker.
 
 **Fix.** Delete the line and, if the decision matters, replace it with a
 sentence explaining why `next` deliberately survives a snapshot. Verify against
-[stateGeneration.go](../app/gui/drivers/stateGeneration.go#L30-L65), which is the
+[stateGeneration.go](../../app/gui/drivers/stateGeneration.go#L30-L65), which is the
 only consumer of the debounce pointer.
 
 ---
@@ -1831,9 +1831,9 @@ only consumer of the debounce pointer.
 struct:
 
 - `ZoneFactory.CreateSpawnZone(models.SpawnZoneCreationRequest)` — new
-  [spawnZoneCreationRequest.go](../internal/models/spawnZoneCreationRequest.go).
+  [spawnZoneCreationRequest.go](../../internal/models/spawnZoneCreationRequest.go).
 - `TopologyBase.CreateNeutralZone(models.TopologyNeutralZoneCreationRequest)` —
-  new [topologyNeutralZoneCreationRequest.go](../internal/models/topologyNeutralZoneCreationRequest.go).
+  new [topologyNeutralZoneCreationRequest.go](../../internal/models/topologyNeutralZoneCreationRequest.go).
 
 For naming consistency the pre-existing creation structs were renamed to the
 same `...CreationRequest` family, with their files renamed per AGENTS.md §4.1:
@@ -1864,7 +1864,7 @@ required beyond §3.2's.
 
 ### 5.4 ⚪ `.gitignore` blanket-ignores every top-level `.txt`
 
-**Evidence.** [.gitignore](../.gitignore) contains, alongside the explicit
+**Evidence.** [.gitignore](../../.gitignore) contains, alongside the explicit
 `coverage.txt`:
 
 ```
@@ -1894,9 +1894,9 @@ package with) references an accessor declared in a `*_testexports.go`
 implementation file. That is the whole rule."* — followed by *"The tag is NOT a
 label for 'this is an integration/performance test.'"* and an explicit
 instruction not to blanket-apply it to everything under
-[test/integration/](../test/integration/).
+[test/integration/](../../test/integration/).
 
-[rmgTemplateModel_test.go](../test/integration/rmgTemplateModel_test.go)
+[rmgTemplateModel_test.go](../../test/integration/rmgTemplateModel_test.go)
 references **no** test-only export (verified by grepping every accessor declared
 in `window_testexports.go` / `state_testexports.go`); it only decodes
 `.rmg.json` files from `data/` through production APIs. Adding the tag would
@@ -1969,11 +1969,11 @@ exercised indirectly by other tests still requires its **own** test folder").
 services — every load, save, generate, preview and zone-edit request crosses it.
 It contains real logic, not pass-throughs: `stateHandler.LoadState` trims and
 rejects empty paths, `ValidateEditorState` applies fixes conditionally, and
-`normalizeInactiveNeutralCounts` ([stateHandler.go](../internal/handlers/stateHandler.go#L76-L89))
+`normalizeInactiveNeutralCounts` ([stateHandler.go](../../internal/handlers/stateHandler.go#L76-L89))
 **silently zeroes eight user-supplied fields** depending on `AdvancedMode`
 without emitting a warning — behaviour that no test asserts and no user is told
 about. `previewHandler.BuildPreviewLayout` synthesises a template from loose
-zones/connections ([previewHandler.go](../internal/handlers/previewHandler.go#L20-L31))
+zones/connections ([previewHandler.go](../../internal/handlers/previewHandler.go#L20-L31))
 with an untested nil/empty matrix.
 
 **Fix.** Add mirrored folders with one file per public method:
@@ -2003,9 +2003,9 @@ Cover explicitly: empty/whitespace path → `ErrNoOutputPath`; nil state →
 
 **Evidence.** All three import `app/gui/constants` at line 6:
 
-- [createRuleFromSavedRule_test.go](../test/unit/internal/services/content_rules/contentRuleService/createRuleFromSavedRule_test.go#L1-L10)
-- [getVariantForContentById_test.go](../test/unit/internal/services/content_rules/variantMappingCatalog/getVariantForContentById_test.go#L1-L10)
-- [getVariantsForContent_test.go](../test/unit/internal/services/content_rules/variantMappingCatalog/getVariantsForContent_test.go#L1-L10)
+- [createRuleFromSavedRule_test.go](../../test/unit/internal/services/content_rules/contentRuleService/createRuleFromSavedRule_test.go#L1-L10)
+- [getVariantForContentById_test.go](../../test/unit/internal/services/content_rules/variantMappingCatalog/getVariantForContentById_test.go#L1-L10)
+- [getVariantsForContent_test.go](../../test/unit/internal/services/content_rules/variantMappingCatalog/getVariantsForContent_test.go#L1-L10)
 
 (The prior review reported this against `variantMappingManager/` and
 `contentRuleManager/`; those folders were renamed, the violation moved with
@@ -2027,7 +2027,7 @@ from package-local SID string consts (`dragon_utopia`, `pandora_box`,
 `monty_hall`, `watchtower`); the owner chose literals over importing
 `internal/registry` so the tests stay decoupled from both layers. The const
 block for `variantMappingCatalog_test` lives in
-[getVariantsForContent_test.go](../test/unit/internal/services/content_rules/variantMappingCatalog/getVariantsForContent_test.go)
+[getVariantsForContent_test.go](../../test/unit/internal/services/content_rules/variantMappingCatalog/getVariantsForContent_test.go)
 (the only file that uses all four); `contentRuleService_test` declares its own.
 No production change, no new tests — the existing assertions are unchanged and
 still pass. The hole is now closed by the depguard scope in §6.5.
@@ -2075,7 +2075,7 @@ rules all carry `!$test`, so no linter inspects test files' imports.
 **Fix.** Add a depguard scope rather than a unit-test folder — the prior
 review's suggested `test/unit/repository/testLayout/` location itself violates
 the mirror convention (its own verification pass flagged this). In
-[.golangci.yml](../.golangci.yml) add:
+[.golangci.yml](../../.golangci.yml) add:
 
 ```yaml
       test-unit-internal-no-gui:
@@ -2087,7 +2087,7 @@ the mirror convention (its own verification pass flagged this). In
 ```
 
 For the build-tag rule, add a small CI step in
-[pr-validation.yml](../.github/workflows/pr-validation.yml) that greps the first
+[pr-validation.yml](../../.github/workflows/pr-validation.yml) that greps the first
 non-blank line of every `test/integration/**/*_test.go` and
 `test/performance/*_test.go` and fails if it is not the constraint. Keep it in
 CI, not in Go, so it does not need a mirror folder.
@@ -2098,7 +2098,7 @@ must report exactly the three §6.3 files until they are fixed, then zero.
 **Fixed 2026-08-05, with three owner-approved deviations.**
 
 1. **Depguard scope — landed as specified.** `test-unit-internal-no-gui` in
-   [.golangci.yml](../.golangci.yml) denies `app/*` from `**/test/unit/internal/**`.
+   [.golangci.yml](../../.golangci.yml) denies `app/*` from `**/test/unit/internal/**`.
    Verified by temporarily reintroducing a GUI import, which the linter flagged,
    then removing it. The owner first asked to widen the scope to
    `test/integration` as well; that was withdrawn once it became clear that four
@@ -2111,8 +2111,8 @@ must report exactly the three §6.3 files until they are fixed, then zero.
    of every `test/integration/**` and `test/performance/*_test.go` must be the
    constraint" rests on the same pre-2026-08-05 wording of AGENTS.md §4.6.1 that
    §6.1 was rejected over. Implemented literally it would fail immediately on
-   [rmgTemplateModel_test.go](../test/integration/rmgTemplateModel_test.go) and
-   [template_generation_test.go](../test/performance/template_generation_test.go),
+   [rmgTemplateModel_test.go](../../test/integration/rmgTemplateModel_test.go) and
+   [template_generation_test.go](../../test/performance/template_generation_test.go),
    both of which are *correctly* untagged. The check therefore enforces the rule
    as it actually reads today. It fails the build when:
    - a `_test.go` file calls an accessor declared in a `*_testexports.go` file
@@ -2124,12 +2124,12 @@ must report exactly the three §6.3 files until they are fixed, then zero.
 
 3. **It is a Go program, not a shell step.** "Keep it in CI, not in Go" was
    overridden by the owner so the check is cross-platform and locally runnable
-   (AGENTS.md §2.2). [cmd/testlayoutcheck](../cmd/testlayoutcheck/main.go) wraps
+   (AGENTS.md §2.2). [cmd/testlayoutcheck](../../cmd/testlayoutcheck/main.go) wraps
    `checker.TestLayoutChecker`, which parses build constraints with
    `go/build/constraint` and resolves accessor names from the AST rather than by
    grepping. `cmd/` is excluded from `-coverpkg`, so it does not move the
    coverage denominator; it is covered by
-   [test/unit/cmd/testlayoutcheck/checker/testLayoutChecker/](../test/unit/cmd/testlayoutcheck/checker/testLayoutChecker/check_test.go)
+   [test/unit/cmd/testlayoutcheck/checker/testLayoutChecker/](../../test/unit/cmd/testlayoutcheck/checker/testLayoutChecker/check_test.go)
    (14 tests, one per rule plus the regression cases below).
 
    Two false positives found while building it, both now regression-tested: a
@@ -2140,7 +2140,7 @@ must report exactly the three §6.3 files until they are fixed, then zero.
    files outside `test/`.
 
    Wired into the `check-build` job of
-   [pr-validation.yml](../.github/workflows/pr-validation.yml) as
+   [pr-validation.yml](../../.github/workflows/pr-validation.yml) as
    `go run ./cmd/testlayoutcheck .` — it therefore runs on pushes to `master` as
    well as on pull requests. Current tree: **passes with zero violations.**
 
@@ -2148,7 +2148,7 @@ must report exactly the three §6.3 files until they are fixed, then zero.
 
 ### 6.6 ⚪ The integration suite depends on a hand-maintained golden template
 
-**Evidence.** [defaultTemplate.go](../test/test_helpers/defaultTemplate.go#L12-L31)
+**Evidence.** [defaultTemplate.go](../../test/test_helpers/defaultTemplate.go#L12-L31)
 loads `test/test_helpers/defaultTemplate.json` and applies imperative
 post-processing; nine test files consume it.
 
@@ -2183,18 +2183,18 @@ The workflow name "PR Tests" is accurate under this policy, so the proposed
 rename is also declined. §8.3's fix item 1 ("remove the PR gate so pushes are
 scanned") is void for the same reason — the scheduled scan alone addresses it.
 
-**Evidence.** [pr-validation.yml](../.github/workflows/pr-validation.yml#L4-L7)
+**Evidence.** [pr-validation.yml](../../.github/workflows/pr-validation.yml#L4-L7)
 triggers on both `push: master` and `pull_request: master`, but six of ten jobs
 are PR-gated:
 
 | Job | Line | Gate |
 | --- | --- | --- |
-| `check-go-mod` | [21](../.github/workflows/pr-validation.yml#L21) | PR only |
-| `run-gci-lint` | [43](../.github/workflows/pr-validation.yml#L43) | PR only |
-| `run-vulnerability-scan` | [66](../.github/workflows/pr-validation.yml#L66) | PR only |
-| `run-race-tests` | [154](../.github/workflows/pr-validation.yml#L154) | PR only |
-| `code_coverage` (enforces the 60.0% floor) | [172](../.github/workflows/pr-validation.yml#L172) | PR only |
-| `run-gui-integration-tests` | [224](../.github/workflows/pr-validation.yml#L224) | PR only |
+| `check-go-mod` | [21](../../.github/workflows/pr-validation.yml#L21) | PR only |
+| `run-gci-lint` | [43](../../.github/workflows/pr-validation.yml#L43) | PR only |
+| `run-vulnerability-scan` | [66](../../.github/workflows/pr-validation.yml#L66) | PR only |
+| `run-race-tests` | [154](../../.github/workflows/pr-validation.yml#L154) | PR only |
+| `code_coverage` (enforces the 60.0% floor) | [172](../../.github/workflows/pr-validation.yml#L172) | PR only |
+| `run-gui-integration-tests` | [224](../../.github/workflows/pr-validation.yml#L224) | PR only |
 
 Only `check-build`, `check-windows`, `run-unit-tests` and
 `run-integration-tests` run on a direct push.
@@ -2222,21 +2222,21 @@ intentionally permitted before changing the trigger shape.
 
 **Fixed 2026-08-05.** `permissions:\n  contents: read` added immediately after
 the `on:`/`concurrency:` block in both
-[pr-validation.yml](../.github/workflows/pr-validation.yml) and
-[release.yml](../.github/workflows/release.yml), and included in the two
+[pr-validation.yml](../../.github/workflows/pr-validation.yml) and
+[release.yml](../../.github/workflows/release.yml), and included in the two
 workflows created this session
-([tools-validation.yml](../.github/workflows/tools-validation.yml),
-[security-scan.yml](../.github/workflows/security-scan.yml)). Existing per-job
+([tools-validation.yml](../../.github/workflows/tools-validation.yml),
+[security-scan.yml](../../.github/workflows/security-scan.yml)). Existing per-job
 narrowing is untouched: `code_coverage` still adds `actions: read` +
 `pull-requests: write`, and the release publish job still raises to
 `contents: write`. `actionlint` reports no findings on any of the four
 workflows.
 
-**Evidence.** [pr-validation.yml](../.github/workflows/pr-validation.yml#L1-L16)
+**Evidence.** [pr-validation.yml](../../.github/workflows/pr-validation.yml#L1-L16)
 declares `name`, `on` and `env` but no `permissions`. The only narrowing is
 inside `code_coverage` at
-[pr-validation.yml](../.github/workflows/pr-validation.yml#L175). In
-[release.yml](../.github/workflows/release.yml#L77) the publish job narrows to
+[pr-validation.yml](../../.github/workflows/pr-validation.yml#L175). In
+[release.yml](../../.github/workflows/release.yml#L77) the publish job narrows to
 `contents: write`, but the build job does not.
 
 **Why it is wrong.** Every unnarrowed job inherits the repository/organisation
@@ -2261,21 +2261,21 @@ for coverage; `contents: write` for release publishing). Re-run the composite
 ### 7.3 ✅ FIXED 🟡 `actions/setup-go` version drift between the workflows and the composite action
 
 **Fixed 2026-08-05.** The composite action
-[setup-steps/action.yml](../.github/workflows/setup-steps/action.yml) now uses
+[setup-steps/action.yml](../../.github/workflows/setup-steps/action.yml) now uses
 `actions/setup-go@v7`, matching the direct use in `check-go-mod`. Every job in
 the repository is on `@v7`. The `go-version` input default (`1.26.5`) and
 `cache: true` are unchanged, so cache-key behaviour should be verified on the
 next CI run.
 
-**Evidence.** [pr-validation.yml](../.github/workflows/pr-validation.yml#L30)
+**Evidence.** [pr-validation.yml](../../.github/workflows/pr-validation.yml#L30)
 uses `actions/setup-go@v7`, while the composite action every other job calls —
-[setup-steps/action.yml](../.github/workflows/setup-steps/action.yml#L14) — uses
+[setup-steps/action.yml](../../.github/workflows/setup-steps/action.yml#L14) — uses
 `actions/setup-go@v6`.
 
 **Why it is wrong.** Nine of ten jobs run on `@v6` and exactly one on `@v7`, so
 toolchain-setup and caching behaviour differ between `check-build` and every
 other job. Dependabot's `github-actions` ecosystem groups only *minor and patch*
-updates ([dependabot.yml](../.github/dependabot.yml)), so the major bump was
+updates ([dependabot.yml](../../.github/dependabot.yml)), so the major bump was
 applied by hand in one place and missed in the other — and will stay split.
 
 **Fix.** Bump the composite to `actions/setup-go@v7`, or pin both to `@v6`.
@@ -2292,7 +2292,7 @@ next run.
    `tools/` verification run only when `tools/` actually changes, and GitHub's
    `paths:` filter exists at the workflow-trigger level, not per job. It
    therefore lives in a new path-filtered workflow,
-   [tools-validation.yml](../.github/workflows/tools-validation.yml), triggered
+   [tools-validation.yml](../../.github/workflows/tools-validation.yml), triggered
    on `tools/**` (plus the workflow file itself) for both `pull_request` and
    `push: master`. It runs `go mod tidy -diff` with `working-directory: tools`.
    ⚠ **Because of the path filter this workflow must not be added to branch
@@ -2310,7 +2310,7 @@ nothing to compile. The tidy check is the whole of the available signal.
 **Evidence.** Every CI Go command targets the root module —
 `go build ./...`, `go vet -tags=integration_test ./...`,
 `go test ./test/...`, and `check-go-mod` — and none runs inside `tools/`.
-[tools/go.mod](../tools/go.mod) is a separate module:
+[tools/go.mod](../../tools/go.mod) is a separate module:
 
 ```
 module github.com/Tariomka/hommoe_custom_templates/tools
@@ -2344,14 +2344,14 @@ valid but the divergence is undocumented.
 
 ### 7.5 ⚪ CI lints with four linters disabled
 
-**Evidence.** [pr-validation.yml](../.github/workflows/pr-validation.yml#L61):
+**Evidence.** [pr-validation.yml](../../.github/workflows/pr-validation.yml#L61):
 
 ```yaml
           args: --disable=godox,dupl,unparam,gochecknoglobals # these are the same linters marked as warning level in .golangci.yml
 ```
 
 **Why it is recorded, not flagged.** This is deliberate and matches the
-`severity: warning` entries in [.golangci.yml](../.golangci.yml). The
+`severity: warning` entries in [.golangci.yml](../../.golangci.yml). The
 consequence worth knowing: all **42** locally-reported issues (§10) are in the
 disabled set, so CI's lint job reports zero and the two `dupl` findings in §3.4
 never gate a merge. No change recommended; recorded so the §10 numbers are not
@@ -2388,7 +2388,7 @@ Your code is affected by 1 vulnerability from 1 module.
 ```
 
 The dependency is indirect —
-[go.mod](../go.mod#L26): `golang.org/x/text v0.38.0 // indirect` — pulled in
+[go.mod](../../go.mod#L26): `golang.org/x/text v0.38.0 // indirect` — pulled in
 through Gio's text handling, and the trace starts at the application's own entry
 point.
 
@@ -2430,7 +2430,7 @@ Vulnerability #2: GO-2026-5942
     Fixed in: golang.org/x/net@v0.56.0
 ```
 
-[go.mod](../go.mod#L25): `golang.org/x/net v0.55.0 // indirect`.
+[go.mod](../../go.mod#L25): `golang.org/x/net v0.55.0 // indirect`.
 
 **Why it matters.** The symbol scan shows no current call path, so this is not
 an active exploit surface. It should still be bumped in the same PR as §8.1 —
@@ -2450,7 +2450,7 @@ protection, so a push-triggered scan would only re-scan code a pull request had
 just scanned. The PR gate on `run-vulnerability-scan` stays.
 
 Fix item 2 is implemented as a dedicated workflow,
-[security-scan.yml](../.github/workflows/security-scan.yml): `schedule` with
+[security-scan.yml](../../.github/workflows/security-scan.yml): `schedule` with
 `cron: '0 6 * * 1'` (Mondays 06:00 UTC), `permissions: contents: read`, and the
 same `golang/govulncheck-action@v1` invocation as the PR job. A dedicated
 workflow was chosen over adding `schedule:` to `pr-validation.yml` because the
@@ -2462,7 +2462,7 @@ is what needs re-scanning.
 the owner declined a `workflow_dispatch` companion trigger.
 
 **Evidence.** `run-vulnerability-scan` is gated at
-[pr-validation.yml](../.github/workflows/pr-validation.yml#L66) with
+[pr-validation.yml](../../.github/workflows/pr-validation.yml#L66) with
 `if: ${{ github.event_name == 'pull_request' }}`, and there is no scheduled run.
 
 **Why it is wrong.** A vulnerability disclosed *after* a PR merges is never
@@ -2491,7 +2491,7 @@ is exactly this case — the code did not change, the advisory did.
 > `examples/` package, no doc test); the snippet was type-checked once manually
 > with `go vet` in a scratch package.
 
-**Evidence.** [QUICKSTART.md](../QUICKSTART.md#L111-L133):
+**Evidence.** [QUICKSTART.md](../../QUICKSTART.md#L111-L133):
 
 ```go
     cfg.Topology = config.TopologyDefault // Ring
@@ -2503,14 +2503,14 @@ is exactly this case — the code did not change, the advisory did.
 
 1. `config.TopologyDefault` does not exist. The Ring topology constant is
    `TopologyRing` with the *value* `"Default"`
-   ([mapTopology.go](../internal/models/config/config_inner/mapTopology.go#L6-L7)).
+   ([mapTopology.go](../../internal/models/config/config_inner/mapTopology.go#L6-L7)).
 2. `template_generator.NewTemplateGenerator` does not take one argument — it
    takes eight injected providers (see the wire providers in
-   [providerSets.go](../internal/composition/providerSets.go)); the tests use
+   [providerSets.go](../../internal/composition/providerSets.go)); the tests use
    the `test_helpers.NewTemplateGenerator(configuration)` wrapper.
 3. `services.WriteTemplate` does not exist. The current API is
    `(*file_service.FileService).SaveTemplate(directory string, template *entities.RmgTemplate) (string, error)`
-   ([fileService.go](../internal/services/file_service/fileService.go#L58)).
+   ([fileService.go](../../internal/services/file_service/fileService.go#L58)).
 
 **Why it is wrong.** The section is titled "Programmatic Use" and is the only
 non-GUI entry point documented. A user copying it gets three compile errors, and
@@ -2557,14 +2557,14 @@ simply be marked internal-only.
 
 | Doc claim | Reality |
 | --- | --- |
-| [QUICKSTART.md](../QUICKSTART.md#L3-L5) "across four tabs"; [QUICKSTART.md](../QUICKSTART.md#L31) "the four configuration tabs"; §"3. Zone Content" tab | [window.go](../app/gui/editor/window.go#L36-L40) builds **three**: `General`, `Layout & Zones`, `Bonuses & Bans`. There is no `zoneContentPanel.go`; zone content is a dialog opened from Layout & Zones. |
-| [README.md](../README.md#L80-L97) "four configuration tabs" incl. `Zone Content` | Same. |
-| [QUICKSTART.md](../QUICKSTART.md#L30) toolbar `New, Open…, Save, Save As…` | [toolbar.go](../app/gui/editor/toolbar.go#L64-L74) renders `New`, **`Load`**, `Save`, `Save As`, **`Exit`**. The doc has the wrong label for one button and omits another. |
-| [QUICKSTART.md](../QUICKSTART.md#L33-L35) preview panel has a `Refresh` button | [previewPanel.go](../app/gui/panels/previewPanel.go#L55-L75) has `Browse`, `Reveal`, `Generate`, `Save Template`. No `Refresh` exists anywhere. |
-| [QUICKSTART.md](../QUICKSTART.md#L36-L39) "**Footer** (bottom): output folder picker…" | There is no footer region. Those controls are inside `PreviewPanel`. |
-| [QUICKSTART.md](../QUICKSTART.md#L36) / [QUICKSTART.md](../QUICKSTART.md#L104) "`Generate Template`" button; "**Reveal** opens the output folder in your file explorer" | The button is labelled `Generate`; `Reveal` opens the **in-app** browser — [stateFiles.go](../app/gui/drivers/stateFiles.go#L81-L83) calls `dialogs.NewBrowseDialog`. |
-| [QUICKSTART.md](../QUICKSTART.md#L79-L81) "`services.SaveSettingsFile` / `services.LoadSettingsFile`" | The methods are `(*file_service.FileService).SaveSettings` / `.LoadSettingsFile` ([fileService.go](../internal/services/file_service/fileService.go#L31-L53)). |
-| [README.md](../README.md#L46) source tree | Lists `General / Layout / Zone Content / Bonuses & Bans / preview / footer`. Real panels: `generalPanel.go`, `layoutPanel.go`, `bonusesPanel.go`, `previewPanel.go`. |
+| [QUICKSTART.md](../../QUICKSTART.md#L3-L5) "across four tabs"; [QUICKSTART.md](../../QUICKSTART.md#L31) "the four configuration tabs"; §"3. Zone Content" tab | [window.go](../../app/gui/editor/window.go#L36-L40) builds **three**: `General`, `Layout & Zones`, `Bonuses & Bans`. There is no `zoneContentPanel.go`; zone content is a dialog opened from Layout & Zones. |
+| [README.md](../../README.md#L80-L97) "four configuration tabs" incl. `Zone Content` | Same. |
+| [QUICKSTART.md](../../QUICKSTART.md#L30) toolbar `New, Open…, Save, Save As…` | [toolbar.go](../../app/gui/editor/toolbar.go#L64-L74) renders `New`, **`Load`**, `Save`, `Save As`, **`Exit`**. The doc has the wrong label for one button and omits another. |
+| [QUICKSTART.md](../../QUICKSTART.md#L33-L35) preview panel has a `Refresh` button | [previewPanel.go](../../app/gui/panels/previewPanel.go#L55-L75) has `Browse`, `Reveal`, `Generate`, `Save Template`. No `Refresh` exists anywhere. |
+| [QUICKSTART.md](../../QUICKSTART.md#L36-L39) "**Footer** (bottom): output folder picker…" | There is no footer region. Those controls are inside `PreviewPanel`. |
+| [QUICKSTART.md](../../QUICKSTART.md#L36) / [QUICKSTART.md](../../QUICKSTART.md#L104) "`Generate Template`" button; "**Reveal** opens the output folder in your file explorer" | The button is labelled `Generate`; `Reveal` opens the **in-app** browser — [stateFiles.go](../../app/gui/drivers/stateFiles.go#L81-L83) calls `dialogs.NewBrowseDialog`. |
+| [QUICKSTART.md](../../QUICKSTART.md#L79-L81) "`services.SaveSettingsFile` / `services.LoadSettingsFile`" | The methods are `(*file_service.FileService).SaveSettings` / `.LoadSettingsFile` ([fileService.go](../../internal/services/file_service/fileService.go#L31-L53)). |
+| [README.md](../../README.md#L46) source tree | Lists `General / Layout / Zone Content / Bonuses & Bans / preview / footer`. Real panels: `generalPanel.go`, `layoutPanel.go`, `bonusesPanel.go`, `previewPanel.go`. |
 
 **Why it is wrong.** A new user cannot map the guide onto the window; a
 contributor searches for files that do not exist. This has now survived two
@@ -2572,9 +2572,9 @@ consecutive reviews.
 
 **Fix.** One docs-only PR. Generate the tree section from the real directory
 listing; rewrite the tab and control sections from
-[window.go](../app/gui/editor/window.go),
-[toolbar.go](../app/gui/editor/toolbar.go) and
-[previewPanel.go](../app/gui/panels/previewPanel.go); correct the persistence
+[window.go](../../app/gui/editor/window.go),
+[toolbar.go](../../app/gui/editor/toolbar.go) and
+[previewPanel.go](../../app/gui/panels/previewPanel.go); correct the persistence
 API names. Update repository memory afterwards (`/memories/repo/`) so the stale
 "four tabs" note (§0.2) is corrected at the source.
 
@@ -2588,9 +2588,9 @@ example.
 > **FIXED (Batch 9).** Both the requirements line and the troubleshooting entry
 > now say Go 1.26.5+.
 
-**Evidence.** [QUICKSTART.md](../QUICKSTART.md#L10): "Requires Go **1.25.8+**."
-[go.mod](../go.mod#L3) declares `go 1.26.5`, and CI pins `GO_VERSION: 1.26.5`
-([pr-validation.yml](../.github/workflows/pr-validation.yml#L12)).
+**Evidence.** [QUICKSTART.md](../../QUICKSTART.md#L10): "Requires Go **1.25.8+**."
+[go.mod](../../go.mod#L3) declares `go 1.26.5`, and CI pins `GO_VERSION: 1.26.5`
+([pr-validation.yml](../../.github/workflows/pr-validation.yml#L12)).
 
 **Why it is wrong.** A user on Go 1.25.8 following the instructions gets a
 toolchain error at `go run .`, not a clear "upgrade Go" message.
@@ -2605,8 +2605,8 @@ toolchain error at `go run .`, not a clear "upgrade Go" message.
 > count or repeats the list — both the Layout & Zones section and §7 link to the
 > README topology table, which is now the single source.
 
-**Evidence.** [QUICKSTART.md](../QUICKSTART.md#L56): "pick one of ten layouts".
-[mapTopology.go](../internal/models/config/config_inner/mapTopology.go#L6-L18)
+**Evidence.** [QUICKSTART.md](../../QUICKSTART.md#L56): "pick one of ten layouts".
+[mapTopology.go](../../internal/models/config/config_inner/mapTopology.go#L6-L18)
 declares **eleven**: Ring, HubAndSpoke, Chain, SharedWeb, Random, Circles,
 Square, Geometric, Cross, Fractal, GeometricHub. (README's own topology table is
 correct with eleven — the two docs disagree with each other.)
@@ -2625,11 +2625,11 @@ README table so only one place needs maintenance.
 > replaced by a "How this project places and draws the arena" section describing
 > the §2.7 implementation.
 
-**Evidence.** [gladiator-arena-marker.md](../docs/gladiator-arena-marker.md#L111-L131)
+**Evidence.** [gladiator-arena-marker.md](../../docs/gladiator-arena-marker.md#L111-L131)
 locates the arena sprites under `internal/services/previewassets/`.
 A file search for `internal/services/**/previewassets/**` returns **no files**.
 The assets are at `internal/services/asset_provider/assets/`, embedded at
-[assetProvider.go](../internal/services/asset_provider/assetProvider.go#L25-L26).
+[assetProvider.go](../../internal/services/asset_provider/assetProvider.go#L25-L26).
 
 **Fix.** Correct the path. Do this together with §2.7, since the same document
 describes the rendering behaviour that is not implemented — whichever way §2.7 is
@@ -2651,12 +2651,12 @@ resolved (finish or remove), this document must be updated to match.
 
 **Evidence.**
 
-- [AGENTS.md](../AGENTS.md#L10): "**Language / Toolchain:** Go 1.26.5, single
+- [AGENTS.md](../../AGENTS.md#L10): "**Language / Toolchain:** Go 1.26.5, single
   module `github.com/Tariomka/hommoe_custom_templates`." There are **two**
-  modules: the root and [tools/go.mod](../tools/go.mod) (`go 1.26.3`). AGENTS.md
+  modules: the root and [tools/go.mod](../../tools/go.mod) (`go 1.26.3`). AGENTS.md
   §4.6.2 itself later refers to "the `tool` directive of `tools/go.mod`",
   contradicting §1.
-- [AGENTS.md](../AGENTS.md) §4.6.1 tells agents to use the VS Code tasks
+- [AGENTS.md](../../AGENTS.md) §4.6.1 tells agents to use the VS Code tasks
   *"go: test (default, no integration_test)"* and *"go: test
   integration+performance (integration_test)"*. Neither label exists in
   `.vscode/tasks.json`. The actual labels are `Go: Run Unit tests`,
@@ -2685,13 +2685,13 @@ there.
 > with the exact sixteen packages from the composite action, and the
 > troubleshooting entry for "window doesn't open" links to it.
 
-**Evidence.** [setup-steps/action.yml](../.github/workflows/setup-steps/action.yml)
+**Evidence.** [setup-steps/action.yml](../../.github/workflows/setup-steps/action.yml)
 installs sixteen system packages before any Linux build (`libgles2-mesa-dev`,
 `libegl1-mesa-dev`, `libffi-dev`, `libxkbcommon-dev`, `libxkbcommon-x11-dev`,
 `libvulkan-dev`, `libwayland-dev`, `libx11-dev`, `libx11-xcb-dev`, `libxcb1-dev`,
 `libxcursor-dev`, `libxfixes-dev`, `libxrandr-dev`, `libxinerama-dev`,
-`libxi-dev`, `xorg-dev`). Neither [README.md](../README.md) nor
-[QUICKSTART.md](../QUICKSTART.md) mentions any of them.
+`libxi-dev`, `xorg-dev`). Neither [README.md](../../README.md) nor
+[QUICKSTART.md](../../QUICKSTART.md) mentions any of them.
 
 **Why it is recorded.** AGENTS.md §2.2 mandates Linux support, and the release
 workflow ships a Linux binary with `CGO_ENABLED=1`. A Linux contributor running
@@ -2712,15 +2712,15 @@ exists. CI disables all four linters below (§7.5), so CI's lint job is green.
 
 | Linter | Count | Location | Disposition |
 | --- | ---: | --- | --- |
-| `dupl` | 2 | [buttonWidget.go](../app/gui/widgets/buttonWidget.go#L33) 33-47 ↔ 67-81 | **Actionable — §3.4.** The repository's only duplication findings. |
-| `gochecknoglobals` | 6 | [providerSets.go](../internal/composition/providerSets.go#L26) lines 26, 35, 48, 58, 65, 74 — `ZoneSet`, `GenerationSet`, `EditorSet`, `InfrastructureSet`, `HandlerSet`, `GuiHandlerSet` | **Unavoidable.** `wire.NewSet` values must be package-level. Candidate for a `nolint` with reason, or a path exclusion for `internal/composition/`. |
-| `gochecknoglobals` | 16 | [common.go](../internal/services/template_generator/providers/common.go#L6) lines 6–21 — `buildingObjects`, `championSelectRules`, `gameModes`, `heroBuffBuildings`, `magicBuildings`, `nonContentObjects`, `randomUnitBanks`, `resourceObjects`, `ruleTypes`, `t1GuardedResourceBanks`, `t1StatsAndSkillsBuildings`, `t2StatsAndSkillsBuildings`, `unitBanks`, `visionBuildings`, `winConditionValues`, `zoneLayouts` | **Owner's responsibility** (historical §3.4). Immutable registry aliases. |
-| `gochecknoglobals` | 6 | `app/gui/constants` — [contentIds.go](../app/gui/constants/contentIds.go#L132) `ContentIDs`; [gameModes.go](../app/gui/constants/gameModes.go#L5) `GameModeValues`, `GameModes`; [legend.go](../app/gui/constants/legend.go#L15) `LegendRows`; [spells.go](../app/gui/constants/spells.go#L22) `SpellSchoolDisplayNames`, `KnownSpells` | **Owner's responsibility.** UI display catalogues. |
-| `gochecknoglobals` | 4 | [bonusPickerDialog.go](../app/gui/dialogs/bonusPickerDialog.go#L24) lines 24, 32, 46, 48 — `receiversFilters`, `bonusTypeOptions`, `bonusReceiverOptions`, `bonusResourceDefaults` | **Owner's responsibility.** Dialog catalogues. |
-| `gochecknoglobals` | 4 | `internal/services/builders/variant_content` — [mainObjectBuilder.go](../internal/services/builders/variant_content/mainObjectBuilder.go#L9) `castleQualities`; [typedRefBuilder.go](../internal/services/builders/variant_content/typedRefBuilder.go#L9) `roadConnTypes`, `biomeTypes`; [zoneBuilder.go](../internal/services/builders/variant_content/zoneBuilder.go#L8) `layoutValues` | **Owner's responsibility.** Registry aliases. |
-| `gochecknoglobals` | 2 | [assetProvider.go](../internal/services/asset_provider/assetProvider.go#L30) `loadAssetProvider`, `neutralAssetNames` | **Justified.** `loadAssetProvider` is a `sync.OnceValues` memo whose package-level lifetime is the point (see the in-code comment). Leave. |
-| `gochecknoglobals` | 1 | [lookupSid.go](../app/gui/utils/lookupSid.go#L30) `allSidMappings` | **Owner's responsibility.** |
-| `gochecknoglobals` | 1 | [previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go#L27) `connectorLineColor` | **Owner's responsibility.** Immutable colour constant. |
+| `dupl` | 2 | [buttonWidget.go](../../app/gui/widgets/buttonWidget.go#L33) 33-47 ↔ 67-81 | **Actionable — §3.4.** The repository's only duplication findings. |
+| `gochecknoglobals` | 6 | [providerSets.go](../../internal/composition/providerSets.go#L26) lines 26, 35, 48, 58, 65, 74 — `ZoneSet`, `GenerationSet`, `EditorSet`, `InfrastructureSet`, `HandlerSet`, `GuiHandlerSet` | **Unavoidable.** `wire.NewSet` values must be package-level. Candidate for a `nolint` with reason, or a path exclusion for `internal/composition/`. |
+| `gochecknoglobals` | 16 | [common.go](../../internal/services/template_generator/providers/common.go#L6) lines 6–21 — `buildingObjects`, `championSelectRules`, `gameModes`, `heroBuffBuildings`, `magicBuildings`, `nonContentObjects`, `randomUnitBanks`, `resourceObjects`, `ruleTypes`, `t1GuardedResourceBanks`, `t1StatsAndSkillsBuildings`, `t2StatsAndSkillsBuildings`, `unitBanks`, `visionBuildings`, `winConditionValues`, `zoneLayouts` | **Owner's responsibility** (historical §3.4). Immutable registry aliases. |
+| `gochecknoglobals` | 6 | `app/gui/constants` — [contentIds.go](../../app/gui/constants/contentIds.go#L132) `ContentIDs`; [gameModes.go](../../app/gui/constants/gameModes.go#L5) `GameModeValues`, `GameModes`; [legend.go](../../app/gui/constants/legend.go#L15) `LegendRows`; [spells.go](../../app/gui/constants/spells.go#L22) `SpellSchoolDisplayNames`, `KnownSpells` | **Owner's responsibility.** UI display catalogues. |
+| `gochecknoglobals` | 4 | [bonusPickerDialog.go](../../app/gui/dialogs/bonusPickerDialog.go#L24) lines 24, 32, 46, 48 — `receiversFilters`, `bonusTypeOptions`, `bonusReceiverOptions`, `bonusResourceDefaults` | **Owner's responsibility.** Dialog catalogues. |
+| `gochecknoglobals` | 4 | `internal/services/builders/variant_content` — [mainObjectBuilder.go](../../internal/services/builders/variant_content/mainObjectBuilder.go#L9) `castleQualities`; [typedRefBuilder.go](../../internal/services/builders/variant_content/typedRefBuilder.go#L9) `roadConnTypes`, `biomeTypes`; [zoneBuilder.go](../../internal/services/builders/variant_content/zoneBuilder.go#L8) `layoutValues` | **Owner's responsibility.** Registry aliases. |
+| `gochecknoglobals` | 2 | [assetProvider.go](../../internal/services/asset_provider/assetProvider.go#L30) `loadAssetProvider`, `neutralAssetNames` | **Justified.** `loadAssetProvider` is a `sync.OnceValues` memo whose package-level lifetime is the point (see the in-code comment). Leave. |
+| `gochecknoglobals` | 1 | [lookupSid.go](../../app/gui/utils/lookupSid.go#L30) `allSidMappings` | **Owner's responsibility.** |
+| `gochecknoglobals` | 1 | [previewGeneratorService.go](../../internal/services/preview_service/previewGeneratorService.go#L27) `connectorLineColor` | **Owner's responsibility.** Immutable colour constant. |
 | **Total** | **42** | | **2 actionable (§3.4); 40 owner-controlled or justified.** |
 
 ---
@@ -2735,15 +2735,15 @@ Checked this session and found correct — recorded so they are not re-examined:
 - No production file under `app/**` imports `internal/services/**` or
   `internal/handlers` (the concrete package). All nine `app → internal/handlers`
   imports target `handler_interfaces` and are depguard-approved:
-  [ruleDialog.go](../app/gui/dialogs/ruleDialog.go#L16),
-  [zoneContent.go](../app/gui/dialogs/zoneContent.go#L19),
-  [zoneContentDialog.go](../app/gui/dialogs/zoneContentDialog.go#L13),
-  [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go#L21),
-  [state.go](../app/gui/drivers/state.go#L17),
-  [window.go](../app/gui/editor/window.go#L17),
-  [editorState.go](../app/gui/models/editorState.go#L7),
-  [layoutPanel.go](../app/gui/panels/layoutPanel.go#L13),
-  [previewPanel.go](../app/gui/panels/previewPanel.go#L22).
+  [ruleDialog.go](../../app/gui/dialogs/ruleDialog.go#L16),
+  [zoneContent.go](../../app/gui/dialogs/zoneContent.go#L19),
+  [zoneContentDialog.go](../../app/gui/dialogs/zoneContentDialog.go#L13),
+  [zoneEditorDialog.go](../../app/gui/dialogs/zoneEditorDialog.go#L21),
+  [state.go](../../app/gui/drivers/state.go#L17),
+  [window.go](../../app/gui/editor/window.go#L17),
+  [editorState.go](../../app/gui/models/editorState.go#L7),
+  [layoutPanel.go](../../app/gui/panels/layoutPanel.go#L13),
+  [previewPanel.go](../../app/gui/panels/previewPanel.go#L22).
 - `internal/services/preview_service` uses the standard `image`/`color` packages,
   not Gio types — the service layer is genuinely UI-free.
 - Protected directories (`data/`, `internal/entities/template/`,
@@ -2753,16 +2753,16 @@ Checked this session and found correct — recorded so they are not re-examined:
 **Correctness**
 
 - Unknown topology values from a `.gen.json` are safe:
-  [topologyServiceLookup.go](../internal/services/template_generator/providers/topologyServiceLookup.go#L56-L62)
+  [topologyServiceLookup.go](../../internal/services/template_generator/providers/topologyServiceLookup.go#L56-L62)
   falls back to Ring, and
-  [topologies.go](../internal/common/common_topologies/topologies.go#L139-L160)
+  [topologies.go](../../internal/common/common_topologies/topologies.go#L139-L160)
   falls back to `descriptorValues.Default` / `topologies[0]` for both
   type-lookup and index-lookup. No panic path.
 - `Load` correctly runs `onLoaded` only on success
-  ([stateFiles.go](../app/gui/drivers/stateFiles.go#L23-L27)) — the historical
+  ([stateFiles.go](../../app/gui/drivers/stateFiles.go#L23-L27)) — the historical
   panel-clobber regression is still fixed.
 - `MapSize` from a `.gen.json` is snapped to the nearest valid size with a
-  warning ([editorStateValidator.go](../internal/validators/editorStateValidator.go#L90-L102)).
+  warning ([editorStateValidator.go](../../internal/validators/editorStateValidator.go#L90-L102)).
 - `GameMode` and `VictoryCondition` are validated against the registry with
   documented fallbacks.
 - `zoneEditorZoneProps.go` no longer indexes `QualityLabels` by index (previously
@@ -2786,7 +2786,7 @@ Checked this session and found correct — recorded so they are not re-examined:
   prior review's Windows/EOL discrepancy no longer reproduces.
 - `git ls-files --ignored --exclude-standard -c` → 0 tracked ignored files.
 - No tracked binaries, profiles, coverage artefacts or generated output.
-- [.gitattributes](../.gitattributes) forces `*.go text eol=lf`, so the LF
+- [.gitattributes](../../.gitattributes) forces `*.go text eol=lf`, so the LF
   convention is enforced at checkout — no formatter CRLF findings.
 - `wire_gen.go` is committed with the inverse `!wireinject` constraint, exactly
   as AGENTS.md §4.6.2 requires; `wire.go` correctly shows as excluded.

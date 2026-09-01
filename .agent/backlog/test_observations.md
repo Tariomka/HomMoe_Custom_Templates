@@ -214,3 +214,15 @@ Still unit-untestable (dialog-callback or Gio territory):
   driver `State`, so a blind rename to `state` would shadow it, and the gain is
   purely cosmetic. Production-side names were fixed in the same phase. Rename
   them opportunistically when a file is edited for another reason.
+
+- Batch I Phase 6 (2026-08-31) - **the per-frame allocation budget has no
+  automated guard.** The phase cut `BenchmarkEditorWindow_TabCycling` from
+  ~12,690 to ~4,773 allocs/op, but nothing fails if it climbs back: the
+  benchmark needs a GPU, carries the `integration_test,gui` tags and is
+  therefore never run in CI. An `allocs/op` assertion was considered and
+  rejected - `testing.AllocsPerRun` over a Gio frame is dominated by rendering
+  and font shaping, so a threshold tight enough to catch a regression in
+  `EditorState.Clone` would be far too flaky to keep. The recorded figures in
+  backlog §1.5 are the reference; re-measure by hand when touching
+  `EditorState.Clone`, `linq.SelectSlice` or the clone helpers in
+  internal/models/editor_state_model/ and internal/helpers/editor_state_helpers/.
