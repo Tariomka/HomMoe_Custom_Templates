@@ -42,9 +42,10 @@ a decision the owner already made.
 **2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) · **2026-09-01:**
 §2.1 and §1.5 (batch I) — **14 done, 7 open.**
 Batch D spun off §1.5 (render-path clone cost), which batch I then absorbed;
-batch I spun off §2.6 (entities named outside the permitted layers).
+batch I spun off §2.6 (entities named outside the permitted layers), whose
+step 1 batch O then closed.
 
-**Baselines to hold (AGENTS.md §2.3):** unit coverage **73.9 %**, floor
+**Baselines to hold (AGENTS.md §2.3):** unit coverage **73.8 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
 `integration_test` and `integration_test,gui`.
@@ -716,7 +717,7 @@ it, so phase 12 added
 entities may not import upward (0 violations), entities may be named only by
 repositories/models/entities/mappers/`*_helpers`, DTOs may be named only by
 handlers/dtos/`app/`. Its two seeded allow-lists are the residual breach, tracked
-as **§2.6**; they only ever shrink.
+as **§2.6**; they only ever shrink. Batch O closed the DTO one at two entries.
 
 **Related:** §1.5 (the per-frame clone cost) was folded in as phase 6.
 
@@ -998,6 +999,9 @@ only the rename.
 
 ### 2.6 🟠 113 production files name an Entity from outside the permitted layers
 
+*(The DTO half of this item — step 1 — is **closed**; the entity half, steps
+2–4, is what remains open.)*
+
 **Evidence.** Batch I §12 turned the Entity/Model/DTO doctrine into a gate
 ([test/unit/architecture/dependency/layering_test.go](../../test/unit/architecture/dependency/layering_test.go)).
 Turning it on exposed the pre-existing breach it had to be seeded with:
@@ -1012,9 +1016,11 @@ outside the permitted namers (`internal/repositories`, `internal/models`,
 | `app/gui/**` (4 packages: `dialogs`, `drivers`, `editor`, `models`) | 11 |
 | `internal/handlers` + `handler_interfaces` | 6 |
 
-A second, much smaller list rides along in the same test: **6 files in 3
+A second, much smaller list rode along in the same test: **6 files in 3
 packages** (`internal/services/bonuses`, `internal/services/pickers`,
-`internal/services/zone_content`) consume DTOs below the handler boundary.
+`internal/services/zone_content`) consumed DTOs below the handler boundary.
+Batch O closed that list at **4 files in 2 packages** — see step 1; it does not
+drain to zero, and the two survivors are there by decision.
 
 **Why it is not simply a defect.** Base `internal/entities` is the `.rmg.json`
 schema vocabulary — `Zone`, `Connection`, `RmgTemplate` — and §0.5.3 of the
@@ -1028,10 +1034,48 @@ as the generic argument of `repositories.IFileRepository[editor_state.EditorStat
 
 **Fix (incremental, one package per batch — the allow-list only ever shrinks).**
 
-1. `internal/services/{bonuses,pickers,zone_content}` — give each the treatment
-   `internal/services/editor` got in Batch I Phase 10: a model-side
-   request/result pair with the handler mapping onto it. Removes the DTO
-   allow-list entirely.
+1. ✅ **DONE (batch O, 2026-09-01) — the DTO allow-list is closed at two
+   entries, not zero.** The original plan was to give all three services the
+   treatment `internal/services/editor` got in Batch I Phase 10 (a model-side
+   request/result pair, handler mapping onto it) and empty the list. What the
+   scoping pass actually found:
+
+   - **`internal/services/pickers` was not a service at all.** Its types were
+     `Label`, `Badge`, `Trailing`, `Haystack`, `IsGroupHeader`,
+     `GroupMatchCount` — what the picker dialog *draws*. It sat under
+     `internal/services` only because AGENTS.md §4.5 bans logic in GUI files.
+     It was **deleted**, and the logic now lives as package-level functions in
+     [app/gui/models/](../../app/gui/models/) (`pickerItem.go`,
+     `pickerSpell.go`, `pickerEntry.go`, `pickerRow.go`), with its four DTOs,
+     `pickerHandler.go`, `pickerHandlerInterface.go`, the `IPickerHandler`
+     embed, six `GUIHandler` passthroughs, its mock and two wire providers
+     going with it. Its unit tests moved to `test/unit/app/gui/models/`, so
+     none of the logic dropped out of unit coverage.
+   - **`bonuses` and `zone_content` keep their DTOs, by owner decision.** Their
+     DTOs are the form and result shapes of two dialogs. Mirroring the seven
+     types (`ExistingBonusesDto`, `BonusCompositionRequestDto`,
+     `BonusCompositionResultDto`, `ContentRuleCompositionRequestDto`,
+     `ContentRuleCompositionResultDto`, `ContentRuleEditorOptionsDto`,
+     `ContentRuleDescriptionDto`, dragging `ContentRuleOptionDto`,
+     `ContentRuleVariantOptionDto` and `ContentRuleKey` along) with Model twins
+     plus a handler slice converter each buys no behaviour and no clarity.
+
+   **`dtoNamerAllowList` therefore reads `{bonuses, zone_content}` and that is
+   its end state, not a way-point.** The comment above it says so. The rule
+   "only ever remove entries" still holds — do not add a third.
+
+   **A measurement correction worth keeping.** The first scope read claimed six
+   of the eleven picker/bonus/rule DTOs "never cross into `app/`" and could be
+   moved to `internal/models` for free. That measured where a type is *named*,
+   not where it *crosses*: all six are consumed with `:=`, so the identifier
+   never appears while the type crosses just the same (`ExistingBonusesDto` and
+   `BonusCompositionResultDto` in `bonusPickerDialog.go`, `PickerRowDto` in
+   `pickerDialog.go`, `ContentRuleEditorOptionsDto`,
+   `ContentRuleCompositionResultDto` and `ContentRuleDescriptionDto` in
+   `ruleDialog.go`). **All eleven were genuine crossing DTOs.** To decide
+   whether a type crosses a boundary, follow the method signatures the other
+   side calls — never grep for the type name.
+
 2. `internal/dtos` and `internal/handlers` — decide whether the DTO layer
    naming `entities.Zone` / `entities.RmgTemplate` is a breach at all, or
    whether the schema vocabulary deserves a documented carve-out like
@@ -1780,15 +1824,16 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer, and a real font-fallback bug in `themes.NewTheme`. §5.5 step 2 rejected — CI never becomes the golden reference. Full record in §5.4/§5.5 above. |
 | ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. Full record in §5.4 above. |
 | ✅ **N** | §1.5 | **Folded into batch I phase 6, 2026-08-31.** Never ran standalone — the measurement showed the cost was the clone *mechanism* (lazy `linq` chains allocating for empty slices), not the panel read sites this item named. Record: §1.5. |
-| **O** | §2.6 | Drain the two layering allow-lists seeded by batch I phase 12. Four independent steps, one package at a time; step 1 (the three DTO-consuming services) is the smallest and clears a list entirely. |
+| ✅ **O** | §2.6 step 1 | **Done 2026-09-01.** Closed the **DTO** allow-list at **two entries, not zero**. `internal/services/pickers` was view-model logic, not a service: deleted, and rebuilt as package-level functions in `app/gui/models/` along with its handler, interface, four DTOs, mock and wire providers. `bonuses` and `zone_content` keep their DTOs by owner decision, under a written justification in the list's comment. §2.6 steps 2–4 (the 113-file **entity** list) are untouched and stay open. Record: §2.6. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is
 otherwise ordered by dependency.
 
 **Coverage note.** Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **73.9 %**
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **73.8 %**
 (72.5 % through batch B; batch C added the helper tests, batch D the clone and
-accessor tests, batch I the entity/model/converter tests).
+accessor tests, batch I the entity/model/converter tests; batch O gave back
+0.1 pp with the two constructors it deleted).
 
 ---
 
@@ -1804,7 +1849,7 @@ accessor tests, batch I the entity/model/converter tests).
 | Unit | `go test ./test/unit/... -count=1` | pass |
 | Integration | `go test -tags=integration_test ./test/integration/... -count=1` | pass |
 | GUI integration | `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (needs GPU) |
-| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **73.9 %** |
+| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **73.8 %** |
 | Lint | `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
 | Format | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | Wire | `wire diff ./internal/composition/...` | no diff |

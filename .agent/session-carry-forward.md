@@ -1,236 +1,232 @@
-# Session Carry-Forward — 2026-09-01 (Batch O, phase 1 done)
+# Session Carry-Forward — 2026-09-01 (Batch O closed, Batch J planned)
 
 ## 1. Session goal
 
-Close **Batch I** (phase 7 docs), then start **Batch O** — backlog §2.6 step 1,
-stopping `internal/services` from naming DTOs. Batch I is committed. Batch O
-**phase 1 is complete and staged**; **phase 2 is docs-only and unfinished**.
+Finish **Batch O phase 2** (documentation only), then scope and plan **Batch J**
+(backlog §2.2 branch B — zone tier single source of truth).
 
-Plan: [.agent/plans/batch-o-picker-view-model.md](plans/batch-o-picker-view-model.md).
+Both are done. **No Go code was written this session** — batch O phase 2 was
+docs, and batch J is planned but not started.
+
+Plans: [.agent/plans/batch-o-picker-view-model.md](plans/batch-o-picker-view-model.md)
+(complete), [.agent/plans/batch-j-zone-tier-source-of-truth.md](plans/batch-j-zone-tier-source-of-truth.md)
+(written, phase 1 not started).
 
 ## 2. Read this before touching anything
 
-**`AGENTS.md` §4.4.1** carries the Entity/Model/DTO doctrine (it moved out of the
-Batch I plan file, which was deleted). The three things most often gotten wrong:
+**`AGENTS.md` §4.4.1** carries the Entity/Model/DTO doctrine. The three things
+most often gotten wrong:
 
 - **The Model owns the structure.** *"Redefinition is expected in Models, but it
   should never happen in DTOs."* `EditorStateDto` is literally
   `struct { editor_state_model.EditorState }`. **A DTO carrying a Model is
-  intended** — do not "fix" `EditorStateValidationDto.State`,
-  `CastleSettingsReapplyRequestDto.Changes` or
-  `ManualEditDecisionDto.ReapplyWithCastleChanges`.
+  intended** — do not "fix" it.
 - **`app/` may hold a Model**; only the *crossing* into `internal/` is a DTO.
   `app/` → `internal/models` is fine; `app/` → `internal/mappers`,
   `internal/services`, `internal/repositories`, `internal/validators` is not.
-- The doctrine is enforced by
+- Enforced by
   [test/unit/architecture/dependency/layering_test.go](../test/unit/architecture/dependency/layering_test.go).
   **Its allow-lists only ever shrink — never add an entry, clean the package.**
 
-## 3. The mistake I made, so you don't repeat it
+**The measurement lesson, still worth internalising.** To decide whether a type
+crosses a layer boundary, follow the *method signatures the other side calls* —
+never grep for the type name. Six DTOs consumed with `:=` looked like they never
+reached `app/` and did. This is now recorded permanently in backlog §2.6 step 1.
 
-Scoping batch O, I reported that six of the eleven DTOs "never cross into
-`app/`" and could therefore be moved to `internal/models/` for free. **That was
-wrong.** I had grepped for where each type is *named* in `app/`, not where it
-*crosses*. All six are consumed with `:=`, so the identifier never appears while
-the type crosses just the same:
+## 3. What shipped this session
 
-| Type | Crossing call site |
-| --- | --- |
-| `ExistingBonusesDto` | `bonusPickerDialog.go:69` — `summary := handler.DescribeExistingBonuses(...)` |
-| `BonusCompositionResultDto` | `bonusPickerDialog.go:221` — `result := this.handler.BuildBonusEntries(...)` |
-| `PickerRowDto` | `pickerDialog.go:227` — `model := this.pickerHandler.GetVisiblePickerRows(...)` |
-| `ContentRuleEditorOptionsDto` | `ruleDialog.go:55` — `options := contentRuleHandler.GetContentRuleEditorOptions(...)` |
-| `ContentRuleCompositionResultDto` | `ruleDialog.go:275` — `result := ...ComposeContentRule(...)` |
-| `ContentRuleDescriptionDto` | `ruleDialog.go:299` — `...DescribeContentRule(...).DisplayText` |
+### Batch O phase 2 — docs (unstaged, needs a commit)
 
-**All eleven are genuine crossing DTOs.** When measuring whether a type crosses a
-boundary, follow the *method signatures the other side calls*, never a grep for
-the type name. This is recorded as §0.1 of the batch-O plan; do not re-propose a
-"move the non-crossing ones for free" plan, because there are none.
+Phase 1 was **committed by the owner** as `85a7d76 "Batch O wip"` between
+sessions. Phase 2 made the backlog agree with the code:
 
-## 4. Owner decisions for batch O (settled — do not relitigate)
+- **§2.6 step 1 rewritten** as ✅ DONE, closed at **two allow-list entries, not
+  zero**: `pickers` was view-model logic and was deleted into `app/gui/models/`;
+  `bonuses` and `zone_content` keep their DTOs by owner decision. The §0.1
+  measurement correction is folded in.
+- **§2.6 heading kept** — it names the *113 entity* files and never implied the
+  DTO list drains to zero; a one-line note now says which half is closed.
+- The "6 files in 3 packages" evidence line records the close at **4 files in 2
+  packages**. Entity counts (113 / 85 / 11 / 11 / 6) were **re-measured and are
+  unchanged** — the deleted picker DTOs named no entity, and the new
+  `app/gui/models` files name none either.
+- **§8 row O marked ✅ done**, scoped to "§2.6 step 1", stating that steps 2–4
+  stay open.
+- Coverage refreshed **73.9 % → 73.8 %** in all three places that quote it.
+- Plan file closed out: phase 1 and 2 checkboxes ticked, Phase Summaries, Final
+  Recap and Deployment Plan written.
 
-1. **`internal/services/pickers` is deleted, not modelled.** Its types were
-   `Label`, `Badge`, `Trailing`, `Haystack`, `IsGroupHeader`, `GroupMatchCount` —
-   what the picker dialog draws. It sat in `internal/services` only because
-   AGENTS §4.5 bans logic in GUI files.
-2. **It lands in `app/gui/models/`**, not as private helpers in
-   `app/gui/dialogs/` — that would push its tests into the GPU suite and lose
-   unit coverage.
-3. **AGENTS.md §4.5 is left alone.** Its "extract it into a service" sentence
-   reads as if it forbids this move; the owner accepts that and does **not** want
-   a view-model carve-out written into the instructions. Do not add one.
-4. **`bonuses` and `zone_content` keep their DTOs**, under a written
-   justification in the allow-list. Mirroring seven types with Model twins plus
-   handler slice converters buys no behaviour and no clarity.
-5. **The DTO allow-list ends at two entries.** That is the end state for §2.6
-   step 1, not a way-point.
+**Verified the allow-list is still load-bearing**: dropping
+`internal/services/bonuses` makes `TestWhenDtoConsumersAreScanned_…` fail naming
+`bonusEntryService.go` and `bonusEntryServiceInterface.go`; restored immediately.
 
-## 5. What shipped this session
+### Batch J — planned only, no code
 
-### Batch I phase 7 — docs (committed, `1aff58f` + `0b3d1dd`)
+[.agent/plans/batch-j-zone-tier-source-of-truth.md](plans/batch-j-zone-tier-source-of-truth.md),
+five phases, ~31 production files. Two exploration passes mapped the whole
+`entities.Zone` surface before any decision was taken.
 
-- `README.md` — generation flow no longer claims the GUI "collects widget input
-  into `dtos.EditorStateDto`"; layer descriptions and directory tree corrected.
-- Backlog §2.1 and §1.5 rewritten as self-contained ✅ FIXED entries; counts,
-  batch table and §9 baselines refreshed.
-- `test_observations.md` — new entry: the per-frame allocation budget has **no
-  automated guard** (the benchmark needs a GPU and never runs in CI; an
-  `AllocsPerRun` assertion was rejected as too flaky over a Gio frame).
-- **408 dangling markdown links repaired** (156 backlog + 252 review doc), verified
-  byte-safe: 393 insertions, 393 deletions, no line-ending or BOM drift.
-- `AGENTS.md` §4.2.2's interface-placement example was factually wrong and is fixed.
-- **`.agent/plans/batch-i-editor-state-rework.md` was deleted** per its own
-  doc-lifecycle rule. Recover with
-  `git show 938ef55:.agent/plans/batch-i-editor-state-rework.md`.
+## 4. Owner decisions for batch J (settled — do not relitigate)
 
-### Batch O phase 1 — the picker move (staged, not committed)
+1. **Branch B, not A.** No `Quality` field on `entities.Zone`. Branch A is not a
+   shortcut to fall back on when phase 4 gets tedious.
+2. **`models.QualifiedZone`, and it embeds `entities.Zone`.** Field promotion
+   keeps every `zone.Name` / `zone.Layout` compiling, turning most of phase 4
+   into a type swap. Name chosen over `PlannedZone` (misleading — the type also
+   carries hand-created and `.rmg.json`-loaded zones) and `TieredZone`.
+3. **The store behind the wrapper is the generator.** `Variant.Zones` is
+   protected and is rewritten on *both* the generate and apply-back paths, so a
+   wrapper with no store is the classifier with extra steps. `Generate` returns
+   the tiers it planned; `drivers.State` carries the index.
+4. **`Generate()` changes signature** to `(*models.GeneratedTemplate, []string)`;
+   the ~130 test call sites take the mechanical `actual` → `actual.Template`
+   edit. A `GenerateWithTiers()` second entry point was **rejected**.
+5. **`IZoneTierService` replaces `IZoneClassifier.GetQuality`** at all 8
+   consumers and absorbs `GetGuardQuality` / `GetConnectionGuardQuality`.
+   `ZoneClassifier` becomes the private fallback and **can never be deleted** —
+   a raw `.rmg.json` load has no recorded tier.
+6. **Persisted tier is nullable.** `omitempty` on a plain `int8` would silently
+   drop every Plastic zone (`QualityLowest` is 0). Entity stores `*int8` (it may
+   not import `internal/models/neutral_zone`); model exposes
+   `*neutral_zone.Quality`.
+7. **The 9 zone-editor DTOs carry `[]models.QualifiedZone`.**
+8. **Output changes are approved.** Zones the classifier calls `Unknown` will
+   start getting planned mandatory-content rows, arena eligibility, castle
+   city-guard values and connection guard defaults. **Every delta must be
+   enumerated in the phase summary that causes it.**
+9. **One batch, phased, reviewed per phase.**
 
-`internal/services/pickers` no longer exists. The logic is four files in
-[app/gui/models/](../app/gui/models/) as **package-level functions** (the service
-was stateless, so there was nothing to inject):
+## 5. Two traps found while scoping batch J
 
-| File | Holds |
-| --- | --- |
-| `pickerItem.go` | `PickerItem` |
-| `pickerSpell.go` | `PickerSpell` |
-| `pickerEntry.go` | `PickerEntry`, the three builders, `NormalizePickerFilter`, `GetSelectedPickerIDs` |
-| `pickerRow.go` | `PickerRow`, `GetVisiblePickerRows`, `countGroupMatches` |
+- **`PreviewLayoutService` bypasses DI** — `NewPreviewLayoutService()` hard-builds
+  its own `NewZoneClassifier()`, so it is not the wire singleton and would
+  silently keep inferring. Phase 1 fixes it (~60 test call sites follow).
+- **`Unknown` → Plastic is a silent down-tier** —
+  `GetNeutralZoneProfile(QualityUnknown)` returns the Lowest profile, so an
+  unclassifiable zone whose castles are rebuilt gets Plastic city stats today.
 
-**Deleted:** the service (2 files), `pickerHandler.go`,
-`pickerHandlerInterface.go`, the four picker DTOs, `PickerEntryServiceMock`, the
-`IPickerHandler` embed in `IGuiHandler`, six passthroughs on `GUIHandler`, six on
-`TemplateHandlerMock`, six on the `guiHandler` test stub (plus its now-unused
-`pickerCalled` field), and two wire providers. `NewGuiHandler` lost a parameter;
-`wire_gen.go` was **regenerated**, never hand-edited.
+## 6. Gates
 
-**One behavioural note.** The three builders now use `linq.SelectSlice`, which
-returns `nil` rather than an empty slice for empty input. Checked against the
-tests *first* — they assert `assert.Empty`, which passes either way.
-
-**Tests moved, not lost.** The 7 service tests became 5 under
-`test/unit/app/gui/models/pickerEntry/` and 1 under `.../pickerRow/`. The 8
-`pickerHandler` and 6 `guiHandler` picker tests were **deleted** — they tested
-passthroughs on a handler that no longer exists.
-`newPickerEntryService_test.go` and `newPickerHandler_test.go` went with their
-constructors, which is the entire −0.1 pp coverage move.
-
-**Owner review changes, both kept:** `pickerDialog_testexports.go` lost 4 lines
-(an accessor that only existed to reach the picker handler), and
-`internal/dtos/pickerSpellDto.go` was **renamed** into
-`app/gui/models/pickerSpell.go` rather than deleted-and-recreated so git records
-the move — same for four of the six moved test files.
-
-## 6. Gates (re-run against the reviewed, staged tree)
+Nothing executable changed this session. Re-verified after the doc edits:
 
 | Gate | Result |
 | --- | --- |
 | `go build ./...` | exit 0 |
-| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | exit 0 |
 | `gofmt -l ./app ./internal ./test ./cmd` | empty |
-| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
-| `wire diff ./internal/composition/...` | exit 0 |
-| Unit / untagged / integration | pass |
-| GPU suite, **no `-update`** | pass (22.9 s) |
-| `golangci-lint-v2 run ./...` | **0 issues** |
-| Unit coverage | **73.8 %** (floor 72.5 %) |
+| `go test ./test/unit/... -count=1` | pass (no FAIL) |
+| `go test ./test/unit/architecture/... -count=1` | pass, and fails correctly when an allow-list entry is dropped |
 
-The GPU suite passing without `-update` is the load-bearing one here: the picker
-dialogs are snapshotted, so the rendering is proven byte-identical.
+Standing baselines from batch O: coverage **73.8 %** (floor 72.5 %), lint **0
+issues**, GPU suite passes **without `-update`**.
 
 ## 7. Git status snapshot
 
-- **Branch:** `AD/fixing_some_stuff_08-12`
-- **HEAD:** `2bfc8cb "Quick update"`
-- **Everything for batch O phase 1 is STAGED, not committed** — the owner staged
-  it during review. **Do not unstage it** (AGENTS §2.5): the owner stages and
-  commits, the agent never does.
-- The only unstaged files are this one and
-  `.agent/plans/batch-o-picker-view-model.md`.
+- **Branch:** `AD/fixing_some_stuff_08-12`, ahead of origin by 5.
+- **HEAD:** `85a7d76 "Batch O wip"` (batch O phase 1, committed by the owner).
+- **Unstaged, needs review and a commit:**
+  - `.agent/backlog/backlog-opus5.md` — §2.6 step 1, §8 row O, coverage figures
+  - `.agent/plans/batch-o-picker-view-model.md` — phase 2 closed out
+  - `.agent/session-carry-forward.md` — this file
+  - `.agent/plans/batch-j-zone-tier-source-of-truth.md` — new, untracked
+- The agent has not touched the index (AGENTS §2.5).
 
 ## 8. Rejections / things not done
 
-- **Rejected — the "move six DTOs for free" plan.** It was based on a bad
-  measurement (§3). There are no free moves.
-- **Rejected — Model twins for `bonuses` and `zone_content`.** Seven types plus
-  handler slice converters for no behaviour change.
-- **Rejected — a view-model carve-out sentence in AGENTS §4.5.**
-- **Rejected — putting the picker logic in `app/gui/dialogs/` as private
-  helpers.** It would have moved its tests into the GPU suite.
-- **Not done — §2.6 steps 2–4** (the 113-file entity allow-list). Untouched by
-  batch O and still open.
+- **Rejected — `GenerateWithTiers()` as a second entry point.** It would exist
+  only to dodge test churn; §3.1 calls that a speculative abstraction.
+- **Rejected — `PlannedZone` / `TieredZone` as the wrapper name.**
+- **Rejected — branch A** (a `json:"-"` `Quality` on the protected schema).
+- **Rejected — persistence-only tier store**, and **rejected — a side index
+  without a wrapper**. The owner chose the wrapper plus a generator-sourced
+  index.
+- **Not done — §2.6 steps 2–4** (the 113-file entity list). Still open. Batch J
+  phase 5 may shrink it for free, but that is not its purpose.
+- **Not done — any batch J code.** Deliberate: batch O's docs are uncommitted,
+  and mixing two batches in one working tree makes review harder.
 
 ## 9. Open questions
 
-1. **None block phase 2.** It is pure documentation.
-2. **Repo memory duplication** (`/memories/repo/conventions.md`) — flagged nine
+1. **None block batch J phase 1.** It is fully specified.
+2. **Repo memory duplication** (`/memories/repo/conventions.md`) — flagged ten
    sessions running: ~1,300 lines, roughly four copies of the same body. Still
    needs a dedupe pass.
-3. §2.6 step 2 still asks a real design question before that list can be drained:
-   is `internal/dtos` / `internal/handlers` naming `entities.Zone` a breach at
-   all, or does the `.rmg.json` schema vocabulary deserve a documented carve-out
-   like `internal/helpers/data` already has?
+3. §2.6 step 2 still asks a real design question before that list can drain: is
+   `internal/dtos` / `internal/handlers` naming `entities.Zone` a breach at all,
+   or does the `.rmg.json` schema vocabulary deserve a documented carve-out like
+   `internal/helpers/data` already has? **Batch J phase 4 partly answers it in
+   practice** — the 9 DTOs stop naming `entities.Zone` because they carry the
+   wrapper instead.
 
 ## 10. Next recommended actions
 
-1. **Finish batch O phase 2** — three doc edits, no Go code:
-   - Rewrite backlog §2.6 step 1 as **done and closed at two entries** (not
-     shrinking to zero), folding in the §3 correction.
-   - Retitle §2.6 if its heading implies the DTO list drains to zero.
-   - Add row **O** to the §8 batch table as done.
-2. Commit, then pick up **batch J** (backlog §2.2 branch B — zone tier single
-   source of truth), which benefits from the model layer Batch I built.
+1. **Review and commit the batch O phase 2 docs** (four files in §7).
+2. **Start batch J phase 1** — `IZoneTierService` over the existing classifier.
+   Pure indirection: generated output must stay byte-identical and the GPU suite
+   must pass **without `-update`**. It is the safety net that proves the seam
+   before any behaviour moves in phase 2.
+3. Phases 2–5 in order, each reviewed and committed on its own.
 
 ## 11. Carry-forward prompt
 
-> Read `AGENTS.md` first — especially **§4.4.1**, which carries the
-> Entity/Model/DTO doctrine. In one line: **Entity** (`internal/entities/`) is
-> the database layer, json tags only; **Model** (`internal/models/`) is the
-> service layer and **owns the structure and all business logic**; **DTO**
-> (`internal/dtos/`) is the `app/` ↔ `internal/` crossing and is thin.
-> *"Redefinition is expected in Models, but it should never happen in DTOs"* — so
-> `EditorStateDto` is literally `struct { editor_state_model.EditorState }`, and
-> **a DTO carrying a Model is intended**. `app/` MAY hold a Model; only the
-> crossing must be a DTO. Do not "fix" either. The doctrine is enforced by
+> Read `AGENTS.md` first — especially **§4.4.1**, the Entity/Model/DTO doctrine.
+> In one line: **Entity** (`internal/entities/`) is the database layer, json tags
+> only; **Model** (`internal/models/`) is the service layer and **owns the
+> structure and all business logic**; **DTO** (`internal/dtos/`) is the `app/` ↔
+> `internal/` crossing and is thin. *"Redefinition is expected in Models, but it
+> should never happen in DTOs"* — **a DTO carrying a Model is intended**, and
+> `app/` MAY hold a Model. Do not "fix" either. Enforced by
 > `test/unit/architecture/dependency/layering_test.go`; its allow-lists **only
 > ever shrink** — never add an entry, clean the package instead.
 >
-> Then read `.agent/plans/batch-o-picker-view-model.md`. **Phase 1 is complete
-> and STAGED (not committed) on top of `2bfc8cb`** — do not unstage it. **Phase 2
-> is documentation only**: rewrite backlog §2.6 step 1 as *done and closed at two
-> allow-list entries* rather than shrinking to zero, retitle §2.6 if its heading
-> implies otherwise, and add row **O** to the §8 batch table. §2.6 steps 2–4 (the
-> 113-file entity list) are out of scope and stay open. After that, batch J
-> (§2.2 branch B).
+> **Batch O is finished.** Phase 1 is committed (`85a7d76`); phase 2 was docs and
+> is unstaged awaiting your commit. Do not reopen it: the DTO allow-list ends at
+> **two entries** (`bonuses`, `zone_content`) by decision, not debt.
 >
-> **A measurement mistake from last session, worth internalising:** to decide
-> whether a type crosses a layer boundary, follow the *method signatures the
-> other side calls* — never grep for the type name. Six DTOs consumed with `:=`
-> looked like they never reached `app/` and did.
+> **Your work is `.agent/plans/batch-j-zone-tier-source-of-truth.md` — read it
+> and start phase 1.** Batch J gives the zone tier a single source of truth
+> (backlog §2.2 branch B). Phase 1 is pure indirection: put an
+> `IZoneTierService` over the existing `ZoneClassifier`, swap all 8 consumers
+> onto it, and fix `PreviewLayoutService`, which hard-constructs its own
+> classifier instead of taking the wire singleton (~60 test call sites follow).
+> **Generated output must be byte-identical and the GPU suite must pass without
+> `-update`** — phase 1 is the safety net that proves the seam before behaviour
+> moves in phase 2. §0 of that plan holds nine settled owner decisions; do not
+> relitigate them.
+>
+> **A measurement lesson worth internalising:** to decide whether a type crosses
+> a layer boundary, follow the *method signatures the other side calls* — never
+> grep for the type name. Six DTOs consumed with `:=` looked like they never
+> reached `app/` and did.
 >
 > The hard rules, one line each: never modify `data/`, `internal/registry/`, or
-> **anything under `internal/entities/template/`**; everything must build and run
-> on Windows and Linux (use `path/filepath`; chain PowerShell with `;`, never
-> `&&`); every change ships with tests and unit coverage must not drop below
-> 72.5 % (currently 73.8 %); the lint baseline is **0 issues**; **never stage and
-> never commit** — the owner reviews, stages and commits, so **use `Move-Item`,
-> never `git mv`**, and delete with `Remove-Item`, never `git rm`; never change
-> where `.rmg.json` is written and never persist the output directory; never run
-> a bulk in-place rewrite over the repository, and **never round-trip a `.go`
-> file through `Get-Content`/`Set-Content`** — it joins every line and corrupts
-> the file. For bulk text edits on *markdown*, use
+> **anything under `internal/entities/template/`** — batch J is branch B
+> precisely so it never has to (`internal/entities/editor_state/` is *not*
+> protected); everything must build and run on Windows and Linux (use
+> `path/filepath`; chain PowerShell with `;`, never `&&`); every change ships
+> with tests and unit coverage must not drop below 72.5 % (currently 73.8 %);
+> the lint baseline is **0 issues**; **never stage and never commit** — the owner
+> reviews, stages and commits, so **use `Move-Item`, never `git mv`**, and delete
+> with `Remove-Item`, never `git rm`; never change where `.rmg.json` is written
+> and never persist the output directory; never run a bulk in-place rewrite over
+> the repository, and **never round-trip a `.go` file through
+> `Get-Content`/`Set-Content`** — it joins every line and corrupts the file. For
+> bulk text edits on *markdown*, use
 > `[System.IO.File]::ReadAllText`/`WriteAllText` with an explicit
 > `UTF8Encoding($false)`, then verify insertions == deletions.
 >
 > Standing traps: **nil is load-bearing** on the regeneration path (nil
-> `Previous` = first generation, nil `Next` = unarmed debounce); the two frozen
-> fixtures under `test/test_helpers/testdata/` plus the untagged
+> `Previous` = first generation, nil `Next` = unarmed debounce) and it becomes
+> load-bearing again in batch J phase 3 (nil `Quality` = "not recorded", because
+> `omitempty` on a plain int8 would silently erase every Plastic zone); the two
+> frozen fixtures under `test/test_helpers/testdata/` plus the untagged
 > `editorStateWireFormat_integration_test.go` must keep passing **unchanged**,
-> comparing **parsed objects, never bytes**; the picker dialogs are snapshotted,
-> so the GPU suite must pass **without `-update`**; and
-> `BenchmarkEditorWindow_TabCycling` needs a GPU and never runs in CI, so the
-> ~4,773 allocs/op figure has no automated guard — re-measure by hand when
-> touching `EditorState.Clone`, `linq.SelectSlice` or the clone helpers. Cap
-> sessions at ~50 messages and hand off through this file.
+> comparing **parsed objects, never bytes**; the picker and zone-editor dialogs
+> are snapshotted, so the GPU suite must pass **without `-update`**; the test
+> layout checker matches test-only export names **tree-wide**, so grep any new
+> accessor name before adding it; and `BenchmarkEditorWindow_TabCycling` needs a
+> GPU and never runs in CI, so the ~4,773 allocs/op figure has no automated
+> guard — re-measure by hand when touching `EditorState.Clone`,
+> `linq.SelectSlice` or the clone helpers. Cap sessions at ~50 messages and hand
+> off through this file.
 >
 > Full handoff in `./.agent/session-carry-forward.md`.
