@@ -32,10 +32,11 @@ Backlog items closed by this work: [§2.1](../backlog/backlog-opus5.md) and
 > **Entity's** job. §0 rows "DTO shape" and "Wire shape", the whole of Phase 5,
 > and Phase 4's grep gate are **superseded**.
 >
-> **State as of 2026-08-31:** Phases 1–4, 6 and 8–10 are **complete**; 1–4 and
-> 8–10 are committed through `2fc6b13`, **Phase 6 is uncommitted in the working
-> tree** awaiting the owner's review. Phases 5 and 11 are **superseded — do not
-> execute**. Remaining order: **12 → 7**.
+> **State as of 2026-09-01:** Phases 1–4, 6, 8–10 and 12 are **complete**;
+> everything through Phase 6 plus the `LoadState` cleanup is committed at
+> `32c92f0`, and **Phase 12 is uncommitted in the working tree** awaiting the
+> owner's review. Phases 5 and 11 are **superseded — do not execute**.
+> Remaining: **Phase 7**, which runs last.
 
 As work proceeds: mark checkboxes `- [x]` as items complete; when a phase is done,
 set its status to `Complete` and write its **Phase Summary** (what was done, key
@@ -1244,7 +1245,7 @@ baseline is now 0 — see Phase 7.)*
 ---
 
 ## Phase 7: Cleanup, docs and gates
-Status: Not started — **runs last, after Phase 12** (see the correction phases).
+Status: Not started — **the last phase; Phase 12 is done.**
 
 - [ ] Update the architecture description in [README.md](../../README.md#L233),
       which still says the GUI collects input into `dtos.EditorStateDto`.
@@ -2003,16 +2004,26 @@ _(write when phase completes)_
 ---
 
 ## Phase 12: Enforce the layering mechanically
-Status: Not started — **next phase to run** (Phase 6 is done).
+Status: **Complete** (2026-09-01).
 
 §0.4 was violated silently for four phases because nothing checked it. A doctrine
 without a gate is a suggestion.
 
 > **Refreshed 2026-08-26 against the post-§0.7 tree.** The rule list below is
 > current; the counts and exceptions were re-verified.
+>
+> **Three owner decisions, 2026-09-01, settle how it was built:**
+>
+> 1. **The entity-namer rule applies to all of `internal/entities`**, not just
+>    the editor-state subtree — seeded with the 23-package allow-list below.
+> 2. **The gate lives in the architecture unit test**, not in a new command.
+>    No `cmd/layeringcheck`, no new VS Code task.
+> 3. **The depguard `internal/mappers` permission is reverted.**
 
-- [ ] Extend [cmd/testlayoutcheck](../../cmd/testlayoutcheck) (or add a sibling
-      `cmd/layeringcheck`) with import rules that fail the build:
+- [x] ~~Extend [cmd/testlayoutcheck](../../cmd/testlayoutcheck) (or add a sibling
+      `cmd/layeringcheck`)~~ **→ decision 2:** the rules live in
+      [test/unit/architecture/dependency/layering_test.go](../../test/unit/architecture/dependency/layering_test.go),
+      beside the `dependency_test.go` that already scanned imports the same way:
       - `internal/entities/**` must not import `internal/models`, `internal/dtos`,
         `internal/services`, `internal/handlers` or `internal/helpers`.
       - `internal/entities/**` must be imported only by `internal/repositories/**`,
@@ -2027,44 +2038,108 @@ without a gate is a suggestion.
         `editor_state_model.EditorState`, and `EditorStateValidationDto.State`,
         `CastleSettingsReapplyRequestDto.Changes` and
         `ManualEditDecisionDto.ReapplyWithCastleChanges` all deliberately carry
-        Models.
-- [ ] Seed the checker with an **explicit, shrinking allow-list** of the
+        Models. **No such rule was added.**
+- [x] Seed the checker with an **explicit, shrinking allow-list** of the
       pre-existing violations so it can be turned on before they are all fixed.
       An empty allow-list is the end state, not the starting condition.
-      **The allow-list content, verified 2026-08-26:**
-      - `internal/services/bonuses`, `internal/services/pickers` and
-        `internal/services/zone_content` import `internal/dtos` (the audit in
-        Phase 10's summary lists the exact types). `internal/services/editor`,
-        `internal/validators`, `internal/repositories` and `internal/mappers` are
-        **clean** — do not allow-list them.
-      - **11 files under `app/` import the base `internal/entities` package**
-        (`entities.Zone` / `entities.Connection` in the zone editor, the drivers
-        and `app/gui/models/editorState.go`). **No file under `app/` imports
-        `internal/entities/editor_state`, `/topology` or `/template`.**
-- [ ] **Decide the fate of the unused depguard permission.** Phase 10 removed
-      `internal/mappers` from `no-services-from-app` (and added the matching entry
-      to `test/unit/architecture/dependency/dependency_test.go`) so the GUI could
-      reach the DTO⇄Model mapper. §0.7 deleted that mapper, so **nothing under
-      `app/` imports `internal/mappers` today**. Either revert both edits, or keep
-      the permission and say why in AGENTS.md §4.4. Do not leave it undecided.
-- [ ] Add a VS Code task for it and wire it into the Phase 7 gate list.
-- [ ] Amend **AGENTS.md §4.4**: fold the §0.4 table, the §0.5.1 crossing rule, the
+      **What actually went in (measured 2026-09-01, not 2026-08-26's estimate):**
+      - DTO rule — **3 packages / 6 files**: `internal/services/bonuses`,
+        `internal/services/pickers`, `internal/services/zone_content`.
+        `internal/services/editor`, `internal/validators`, `internal/repositories`
+        and `internal/mappers` are **clean** and are not listed.
+      - Entity rule — **23 packages / 113 files**, not the 11 the earlier note
+        predicted: 85 files in `internal/services`, 11 in `internal/dtos`, 11 in
+        `app/gui`, 6 in `internal/handlers`. Recorded as backlog
+        [§2.6](../backlog/backlog-opus5.md).
+      - Still true: **no file under `app/` imports `internal/entities/editor_state`,
+        `/topology` or `/template`.**
+- [x] **Decide the fate of the unused depguard permission.** → **reverted.**
+      `internal/mappers` is back in `no-services-from-app`'s deny list in
+      [.golangci.yml](../../.golangci.yml) and out of `allowedRoots` in
+      [dependency_test.go](../../test/unit/architecture/dependency/dependency_test.go).
+- [x] ~~Add a VS Code task for it and wire it into the Phase 7 gate list.~~
+      **Not needed under decision 2** — the gate is a unit test, so every gate
+      list that already runs `go test ./test/unit/...` runs it.
+- [x] Amend **AGENTS.md §4.4**: fold the §0.4 table, the §0.5.1 crossing rule, the
       §0.5.4 Entity-namer list and the §0.7 Model-owns-the-structure rule into the
       instructions so the doctrine outlives this plan file. Do **not** forbid
-      `app/` → `internal/models`.
-- [ ] Record the residual breach as its own backlog entry: the 11 `app/` files
-      that import `internal/entities` directly. Under §0.5.1 the `internal/models`
-      imports are **no longer** a breach, so the residue is far smaller than the
-      28 files an earlier carry-forward recorded. Out of scope for Batch I.
+      `app/` → `internal/models`. **Landed as a new §4.4.1.**
+- [x] Record the residual breach as its own backlog entry. It is **23 packages /
+      113 files**, not the 11 `app/` files an earlier note predicted — see
+      [§2.6](../backlog/backlog-opus5.md). Under §0.5.1 the `internal/models`
+      imports are **no longer** a breach. Out of scope for Batch I.
 
 ### Verification Plan
-- `go run ./cmd/testlayoutcheck .` (or the new checker) exits 0 with the
-  allow-list, and exits 1 when a deliberate test violation is introduced —
-  prove the gate actually trips.
+- ~~`go run ./cmd/testlayoutcheck .`~~ `go test ./test/unit/architecture/...`
+  passes with the allow-lists, and fails when a deliberate violation is
+  introduced — prove the gate actually trips.
 - Every Phase 7 gate green.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**What was built.** One new file,
+[test/unit/architecture/dependency/layering_test.go](../../test/unit/architecture/dependency/layering_test.go),
+in the same `dependency_test` package as the existing architecture test, so it
+reuses `getRepositoryRoot`, `findImports` and `modulePath` rather than growing a
+third import walker. Three rules over `app/`, `internal/` and `cmd/`; everything
+under `test/` is exempt, because a test legitimately names whatever it asserts on.
+
+| Rule | Violations today | Allow-list |
+| --- | --- | --- |
+| Entities must not import models / dtos / services / handlers / helpers | **0** | none — the rule is already clean |
+| Entities may be named only by repositories, models, entities, mappers, `*_helpers` | 113 files | **23 packages** |
+| DTOs may be named only by handlers, dtos, `app/` | 6 files | **3 packages** |
+
+**Allow-list granularity is per package, not per file.** 113 path literals is a
+snapshot nobody maintains; 23 is a list a human shrinks. The breach is
+architectural — a whole package speaks the entity vocabulary — so the package is
+the honest unit, and a new package joining the breach still trips the gate.
+
+**One carve-out was discovered and encoded.** AGENTS.md §4.4 has always permitted
+`internal/entities` to import `internal/helpers/data` (`Vec2`, `Tuple`,
+`Adjacency` — data structures, not logic). The blanket "no helpers" rule would
+have contradicted the documented exception the first time an entity used a
+`Vec2`, so `isForbiddenAboveTheEntityLayer` exempts that one package and two
+tests pin the boundary: `helpers/data` passes, `helpers/editor_state_helpers`
+does not.
+
+**The gate was proven to trip**, not just asserted to pass. Dropping
+`"internal/services/zones"` from the allow-list fails
+`TestWhenEntityConsumersAreScanned_OnlyPermittedPackagesNameAnEntity` and prints
+all five offending files with their import paths. Six further tests exercise the
+rule predicates directly against synthetic paths, so the trip behaviour is
+covered without touching production files.
+
+**Why the entity list is so much bigger than the plan expected.** The
+2026-08-26 note predicted 11 files. The real number is 113, because base
+`internal/entities` is the `.rmg.json` schema vocabulary (`Zone`, `Connection`,
+`RmgTemplate`) that §0.5.3 deliberately kept as a repo-wide alias façade — the
+generator's whole job is to build those types. Scoped to the entity layer Batch I
+actually created (`editor_state` + `topology`) the breach is **one file**,
+`internal/services/file_service/fileService.go`, and only as the generic argument
+of `repositories.IFileRepository[editor_state.EditorState]`. The owner chose the
+wide rule anyway, so the tension is now visible in the allow-list instead of
+invisible in the doctrine, and backlog §2.6 records the four-step path to
+draining it.
+
+**depguard reverted.** `internal/mappers` is denied from `app/` again in
+[.golangci.yml](../../.golangci.yml), and removed from `allowedRoots` in
+[dependency_test.go](../../test/unit/architecture/dependency/dependency_test.go).
+Nothing under `app/` imported it, so this is a no-op at compile time and a real
+constraint from here on.
+
+**AGENTS.md gained §4.4.1** — the layer table, the four rules in the order they
+are most often gotten wrong (Model owns the structure; `app/` may hold a Model;
+direction is DTO → Model → Entity; two conversion seams), and an explicit
+"the allow-lists only ever shrink, never add an entry" instruction. The stale
+`internal/mappers` permission in §4.4's last bullet is gone.
+
+**Gates** — all green: `go build ./...`, both `go vet` variants,
+`gofmt -l ./app ./internal ./test ./cmd` empty, `go run ./cmd/testlayoutcheck .`
+passed, `wire diff` exit 0, `go test ./test/unit/...`, `go test ./test/...`
+(untagged), `go test -tags=integration_test ./test/integration/...`, GPU suite
+**without `-update`** (45.8 s). Unit coverage **73.9 %**, unchanged, floor
+72.5 %. `golangci-lint-v2` **0 issues**.
 
 ---
 

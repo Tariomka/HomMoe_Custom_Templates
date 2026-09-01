@@ -80,7 +80,6 @@ func findForbiddenAppImports(t *testing.T, repositoryRoot string) map[string][]s
 		modulePath + "/internal/entities",
 		modulePath + "/internal/handlers",
 		modulePath + "/internal/helpers",
-		modulePath + "/internal/mappers",
 		modulePath + "/internal/models",
 		modulePath + "/internal/registry",
 	}

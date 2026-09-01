@@ -35,12 +35,13 @@ and §1.9 there stay numbered as they are and are restated here as §1.1 and §1
 go-ahead**, because it edits a protected directory (AGENTS.md §2.1) or reverses
 a decision the owner already made.
 
-**Item count: 0 🔴 · 6 🟠 · 10 🟡 · 3 ⚪ (20 total).**
+**Item count: 0 🔴 · 7 🟠 · 10 🟡 · 3 ⚪ (21 total).**
 
 **✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
 §3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D), §5.3 (batch F) ·
-**2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) — **12 done, 8 open.**
-Batch D spun off §1.5 (render-path clone cost).
+**2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) — **12 done, 9 open.**
+Batch D spun off §1.5 (render-path clone cost); batch I spun off §2.6
+(entities named outside the permitted layers).
 
 **Baselines to hold (AGENTS.md §2.3):** unit coverage **72.9 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
@@ -938,6 +939,61 @@ only the rename.
 **Tests.** Pure move/rename; `go build ./...`,
 `go vet -tags='integration_test,gui' ./...`,
 `go run ./cmd/testlayoutcheck .` and the full suite are the verification.
+
+---
+
+### 2.6 🟠 113 production files name an Entity from outside the permitted layers
+
+**Evidence.** Batch I §12 turned the Entity/Model/DTO doctrine into a gate
+([test/unit/architecture/dependency/layering_test.go](../../test/unit/architecture/dependency/layering_test.go)).
+Turning it on exposed the pre-existing breach it had to be seeded with:
+**113 files in 23 packages** name a type from `internal/entities` while sitting
+outside the permitted namers (`internal/repositories`, `internal/models`,
+`internal/entities`, `internal/mappers`, `internal/helpers/*_helpers`).
+
+| Area | Files |
+| --- | --- |
+| `internal/services/**` (16 packages) | 85 |
+| `internal/dtos` | 11 |
+| `app/gui/**` (4 packages: `dialogs`, `drivers`, `editor`, `models`) | 11 |
+| `internal/handlers` + `handler_interfaces` | 6 |
+
+A second, much smaller list rides along in the same test: **6 files in 3
+packages** (`internal/services/bonuses`, `internal/services/pickers`,
+`internal/services/zone_content`) consume DTOs below the handler boundary.
+
+**Why it is not simply a defect.** Base `internal/entities` is the `.rmg.json`
+schema vocabulary — `Zone`, `Connection`, `RmgTemplate` — and §0.5.3 of the
+Batch I plan deliberately kept it as a repository-wide alias façade. The whole
+generator exists to build those types, so a service naming `entities.Zone` is
+not the same kind of mistake as a service naming `editor_state.EditorState`.
+Scoped to the entity layer Batch I actually created
+(`internal/entities/editor_state` + `/topology`) the breach is **one file**:
+[fileService.go](../../internal/services/file_service/fileService.go), and only
+as the generic argument of `repositories.IFileRepository[editor_state.EditorState]`.
+
+**Fix (incremental, one package per batch — the allow-list only ever shrinks).**
+
+1. `internal/services/{bonuses,pickers,zone_content}` — give each the treatment
+   `internal/services/editor` got in Batch I Phase 10: a model-side
+   request/result pair with the handler mapping onto it. Removes the DTO
+   allow-list entirely.
+2. `internal/dtos` and `internal/handlers` — decide whether the DTO layer
+   naming `entities.Zone` / `entities.RmgTemplate` is a breach at all, or
+   whether the schema vocabulary deserves a documented carve-out like
+   `internal/helpers/data` already has.
+3. `app/gui/**` — the 11 files are the zone editor (`entities.Zone`,
+   `entities.Connection`) and the drivers. They need model wrappers before they
+   can drop the import.
+4. `internal/services/**` — the large tail. Only worth doing if step 2 rules
+   that the schema vocabulary is genuinely off limits below the repositories.
+
+**Do not** widen the allow-lists in `layering_test.go` to make a new package
+compile; clean the package instead.
+
+**Tests.** The gate is the test. Removing an allow-list entry must leave
+`go test ./test/unit/architecture/...` green; it currently fails with the exact
+file list when an entry is dropped, which is how it was verified.
 
 ---
 

@@ -381,9 +381,48 @@ Place new code in the package whose responsibility matches its role:
     ```
 
 - Packages outside `internal/` must enter internal functionality
-  (services, validators, etc.) through `internal/handlers/`; data accessing
+  (services, validators, mappers, etc.) through `internal/handlers/`; data accessing
   (`internal/registry/`, `internal/common/`), data typing (`internal/models/`, `internal/dtos/`)
-  and usage of helpers (`internal/helpers`, `internal/mappers`) is permitted.
+  and usage of helpers (`internal/helpers`) is permitted.
+
+### 4.4.1 Entity / Model / DTO — the layering doctrine
+
+This is the standard three-layer split. It is **enforced**, not advisory: see
+[test/unit/architecture/dependency/layering_test.go](test/unit/architecture/dependency/layering_test.go),
+which fails the unit suite when a rule is broken.
+
+| Layer | Type | Declared in | May be **named** by | Logic |
+| --- | --- | --- | --- | --- |
+| **Database** | Entity | `internal/entities/` | `internal/repositories/`, `internal/models/`, `internal/entities/`, `internal/mappers/`, `internal/helpers/*_helpers/` | none beyond (de)serialization — i.e. json tags |
+| **Service** | Model | `internal/models/` | `internal/services/`, `internal/validators/`, `internal/mappers/`, `internal/repositories/`, **and `app/`** | **all business logic lives here** |
+| **Consumer** | DTO | `internal/dtos/` | `internal/handlers/`, `internal/dtos/`, `app/` | none |
+
+The four rules that matter, in order of how often they are gotten wrong:
+
+1. **The Model owns the structure.** *Redefinition is expected in Models, but it
+   should never happen in DTOs.* A Model group embeds its entity group and adds
+   the behaviour; the DTO is thin. `EditorStateDto` is literally
+   `struct { editor_state_model.EditorState }`. **A DTO carrying or embedding a
+   Model is intended** — do not "fix" it.
+2. **`app/` may hold a Model; only the crossing must be a DTO.** The GUI maps
+   *stored Model → request DTO* on the way in and *response DTO → stored Model*
+   on the way back, exactly as the diagram above shows. `app/` → `internal/models`
+   is **not** a violation. `app/` → `internal/mappers`, `internal/services`,
+   `internal/repositories` or `internal/validators` is.
+3. **Dependency direction is DTO → Model → Entity and never the reverse.** An
+   entity importing `internal/models`, `internal/dtos`, `internal/services`,
+   `internal/handlers` or `internal/helpers` is a defect. The one carve-out is
+   `internal/helpers/data`, which holds generic data structures (`Vec2`,
+   `Tuple`, `Adjacency`), not logic.
+4. **Conversion happens at exactly two seams** — `internal/handlers` (DTO ⇄
+   Model) and `internal/repositories` (Model ⇄ Entity). Nowhere else converts.
+
+**Two allow-lists exist, and they only ever shrink.** The layering test carries
+the packages that predate the rule: the services that still consume DTOs
+directly, and the packages that name the base `internal/entities` types. That
+base package is the `.rmg.json` vocabulary the whole generator is built out of,
+so its list is long by design. Never add an entry to either list — clean the
+package instead.
 
 ### 4.5 UI vs. business logic separation
 
