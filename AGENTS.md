@@ -778,9 +778,9 @@ irrelevant memories.
 
 ---
 
-**TL;DR:** Don't touch [data/](data/),
-[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/). Never change
-where `.rmg.json` is written and never persist the output directory — the game
+**TL;DR:** Take a deep breath. Don't touch [data/](data/),
+[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/).
+Never change where `.rmg.json` is written and never persist the output directory — the game
 only reads templates from its own folder. Stay cross-platform.
 Cover everything you write with tests. Cap sessions at 38–50 messages and
 hand off via `./.agent/session-carry-forward.md`.
