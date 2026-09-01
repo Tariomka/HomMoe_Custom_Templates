@@ -20,7 +20,6 @@ type handlerDependenciesStub struct {
 	contentRuleCalled         bool
 	zoneEditorCalled          bool
 	bonusCalled               bool
-	pickerCalled              bool
 }
 
 func (this *handlerDependenciesStub) GenerateTemplate(
@@ -259,47 +258,6 @@ func (this *handlerDependenciesStub) ClampContentCount(count int, _ int) int {
 	return count
 }
 
-func (this *handlerDependenciesStub) BuildItemPickerEntries(
-	[]dtos.PickerItemDto,
-) []dtos.PickerEntryDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) BuildSpellPickerEntries(
-	[]dtos.PickerSpellDto,
-) []dtos.PickerEntryDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) BuildValueOverridePickerEntries([]string) []dtos.PickerEntryDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) NormalizePickerFilter(text string) string {
-	this.pickerCalled = true
-	return text
-}
-
-func (this *handlerDependenciesStub) GetVisiblePickerRows(
-	[]dtos.PickerEntryDto,
-	string,
-	bool,
-) []dtos.PickerRowDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) GetSelectedPickerIDs(
-	[]dtos.PickerEntryDto,
-	map[string]bool,
-) []string {
-	this.pickerCalled = true
-	return nil
-}
-
 func (this *handlerDependenciesStub) newHandler() handler_interfaces.IGuiHandler {
-	return handlers.NewGuiHandler(this, this, this, this, this, this, this)
+	return handlers.NewGuiHandler(this, this, this, this, this, this)
 }

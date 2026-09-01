@@ -18,7 +18,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -72,9 +71,7 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iZoneEditorHandler := handlers.NewZoneEditorHandler(iGeneratorConfigMapper, iZoneClassifier, iConnectionEditorService, iZoneEditorService, iZoneEditorGeometryService, iGenerationTuningFactory)
 	iBonusEntryService := bonuses.NewBonusEntryService()
 	iBonusHandler := handlers.NewBonusHandler(iBonusEntryService)
-	iPickerEntryService := pickers.NewPickerEntryService()
-	iPickerHandler := handlers.NewPickerHandler(iPickerEntryService)
-	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iZoneContentHandler, iZoneEditorHandler, iBonusHandler, iPickerHandler)
+	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iZoneContentHandler, iZoneEditorHandler, iBonusHandler)
 	return iGuiHandler
 }
 

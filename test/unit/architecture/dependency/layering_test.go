@@ -71,15 +71,16 @@ var entityNamerAllowList = []string{
 	"internal/services/zones/zone_interfaces",
 }
 
-// dtoNamerAllowList records the services that consumed DTOs before the rule
-// existed. Each needs the treatment internal/services/editor got in Phase 10:
-// a model-side request/result pair with the handler mapping onto it.
-// **Only ever remove entries.**
+// dtoNamerAllowList records the two services that speak DTOs **by decision, not
+// by debt** (batch O). Their DTOs are the form and result shapes of two dialogs;
+// mirroring them as Models would add a type and a handler slice converter per
+// shape without adding meaning. `internal/services/pickers` used to be here and
+// was deleted instead - it was view-model logic, and it now lives in
+// app/gui/models/. **Only ever remove entries.**
 //
 //nolint:gochecknoglobals // shared, read-only rule input for this file's tests.
 var dtoNamerAllowList = []string{
 	"internal/services/bonuses",
-	"internal/services/pickers",
 	"internal/services/zone_content",
 }
 

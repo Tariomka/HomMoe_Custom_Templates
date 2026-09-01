@@ -18,7 +18,6 @@ type GUIHandler struct {
 	contentRuleHandler handler_interfaces.IZoneContentHandler
 	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
 	bonusHandler       handler_interfaces.IBonusHandler
-	pickerHandler      handler_interfaces.IPickerHandler
 }
 
 func NewGuiHandler(
@@ -27,8 +26,7 @@ func NewGuiHandler(
 	previewHandler handler_interfaces.IPreviewHandler,
 	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	zoneEditorHandler handler_interfaces.IZoneEditorHandler,
-	bonusHandler handler_interfaces.IBonusHandler,
-	pickerHandler handler_interfaces.IPickerHandler) handler_interfaces.IGuiHandler {
+	bonusHandler handler_interfaces.IBonusHandler) handler_interfaces.IGuiHandler {
 	return &GUIHandler{
 		templateHandler:    templateHandler,
 		stateHandler:       stateHandler,
@@ -36,35 +34,7 @@ func NewGuiHandler(
 		contentRuleHandler: contentRuleHandler,
 		zoneEditorHandler:  zoneEditorHandler,
 		bonusHandler:       bonusHandler,
-		pickerHandler:      pickerHandler,
 	}
-}
-
-func (this *GUIHandler) BuildItemPickerEntries(items []dtos.PickerItemDto) []dtos.PickerEntryDto {
-	return this.pickerHandler.BuildItemPickerEntries(items)
-}
-
-func (this *GUIHandler) BuildSpellPickerEntries(spells []dtos.PickerSpellDto) []dtos.PickerEntryDto {
-	return this.pickerHandler.BuildSpellPickerEntries(spells)
-}
-
-func (this *GUIHandler) BuildValueOverridePickerEntries(sids []string) []dtos.PickerEntryDto {
-	return this.pickerHandler.BuildValueOverridePickerEntries(sids)
-}
-
-func (this *GUIHandler) NormalizePickerFilter(text string) string {
-	return this.pickerHandler.NormalizePickerFilter(text)
-}
-
-func (this *GUIHandler) GetVisiblePickerRows(
-	entries []dtos.PickerEntryDto,
-	filter string,
-	grouped bool) []dtos.PickerRowDto {
-	return this.pickerHandler.GetVisiblePickerRows(entries, filter, grouped)
-}
-
-func (this *GUIHandler) GetSelectedPickerIDs(entries []dtos.PickerEntryDto, selected map[string]bool) []string {
-	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
 }
 
 func (this *GUIHandler) GenerateTemplate(

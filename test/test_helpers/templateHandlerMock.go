@@ -8,7 +8,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/stretchr/testify/mock"
 )
@@ -338,33 +337,4 @@ func (this *TemplateHandlerMock) SortContentItemsByName(items []models.SidMappin
 
 func (this *TemplateHandlerMock) ClampContentCount(count int, maxCount int) int {
 	return zone_content.NewZoneContentEditorService().ClampContentCount(count, maxCount)
-}
-
-func (this *TemplateHandlerMock) BuildItemPickerEntries(items []dtos.PickerItemDto) []dtos.PickerEntryDto {
-	return pickers.NewPickerEntryService().BuildItemPickerEntries(items)
-}
-
-func (this *TemplateHandlerMock) BuildSpellPickerEntries(spells []dtos.PickerSpellDto) []dtos.PickerEntryDto {
-	return pickers.NewPickerEntryService().BuildSpellPickerEntries(spells)
-}
-
-func (this *TemplateHandlerMock) BuildValueOverridePickerEntries(sids []string) []dtos.PickerEntryDto {
-	return pickers.NewPickerEntryService().BuildValueOverridePickerEntries(sids)
-}
-
-func (this *TemplateHandlerMock) NormalizePickerFilter(text string) string {
-	return pickers.NewPickerEntryService().NormalizePickerFilter(text)
-}
-
-func (this *TemplateHandlerMock) GetVisiblePickerRows(
-	entries []dtos.PickerEntryDto,
-	filter string,
-	grouped bool) []dtos.PickerRowDto {
-	return pickers.NewPickerEntryService().GetVisiblePickerRows(entries, filter, grouped)
-}
-
-func (this *TemplateHandlerMock) GetSelectedPickerIDs(
-	entries []dtos.PickerEntryDto,
-	selected map[string]bool) []string {
-	return pickers.NewPickerEntryService().GetSelectedPickerIDs(entries, selected)
 }

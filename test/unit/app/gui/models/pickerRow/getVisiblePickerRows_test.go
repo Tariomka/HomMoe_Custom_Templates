@@ -1,23 +1,20 @@
-package pickerEntryService_test
+package pickerRow_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenThePickerIsGrouped_EachGroupIsHeadedOnceBeforeItsEntries(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-
 	// Act
-	rows := service.GetVisiblePickerRows(pickerRowFixtureEntries(), "", true)
+	rows := models.GetVisiblePickerRows(pickerRowFixtureEntries(), "", true)
 
 	// Assert
-	assert.Equal(t, []dtos.PickerRowDto{
+	assert.Equal(t, []models.PickerRow{
 		{IsGroupHeader: true, Group: "Weapons", GroupMatchCount: 2},
 		{Entry: pickerRowFixtureEntries()[0]},
 		{Entry: pickerRowFixtureEntries()[1]},
@@ -29,10 +26,8 @@ func TestWhenThePickerIsGrouped_EachGroupIsHeadedOnceBeforeItsEntries(t *testing
 func TestWhenThePickerIsFlat_NoGroupHeadersAreEmitted(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-
 	// Act
-	rows := service.GetVisiblePickerRows(pickerRowFixtureEntries(), "", false)
+	rows := models.GetVisiblePickerRows(pickerRowFixtureEntries(), "", false)
 
 	// Assert
 	assert.Len(t, rows, 3)
@@ -41,13 +36,11 @@ func TestWhenThePickerIsFlat_NoGroupHeadersAreEmitted(t *testing.T) {
 func TestWhenAFilterIsApplied_OnlyMatchingEntriesAndTheirGroupsRemain(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-
 	// Act
-	rows := service.GetVisiblePickerRows(pickerRowFixtureEntries(), "sword", true)
+	rows := models.GetVisiblePickerRows(pickerRowFixtureEntries(), "sword", true)
 
 	// Assert
-	assert.Equal(t, []dtos.PickerRowDto{
+	assert.Equal(t, []models.PickerRow{
 		{IsGroupHeader: true, Group: "Weapons", GroupMatchCount: 1},
 		{Entry: pickerRowFixtureEntries()[0]},
 	}, rows)
@@ -56,17 +49,15 @@ func TestWhenAFilterIsApplied_OnlyMatchingEntriesAndTheirGroupsRemain(t *testing
 func TestWhenNothingMatchesTheFilter_NoRowsAreProduced(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-
 	// Act
-	rows := service.GetVisiblePickerRows(pickerRowFixtureEntries(), "nothing", true)
+	rows := models.GetVisiblePickerRows(pickerRowFixtureEntries(), "nothing", true)
 
 	// Assert
 	assert.Empty(t, rows)
 }
 
-func pickerRowFixtureEntries() []dtos.PickerEntryDto {
-	return []dtos.PickerEntryDto{
+func pickerRowFixtureEntries() []models.PickerEntry {
+	return []models.PickerEntry{
 		{ID: "a", Group: "Weapons", Haystack: "sword"},
 		{ID: "b", Group: "Weapons", Haystack: "axe"},
 		{ID: "c", Group: "Armor", Haystack: "shield"},

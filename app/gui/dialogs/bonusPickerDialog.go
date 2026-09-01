@@ -254,7 +254,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 
 	if this.pickSpellBtn.Clicked(gtx) {
 		excluded := append(append([]string{}, this.existingSpellIDs...), this.selectedSpells...)
-		this.opener(NewSpellPickerDialog(excluded, false, this.handler, func(ids []string, _ bool) {
+		this.opener(NewSpellPickerDialog(excluded, false, func(ids []string, _ bool) {
 			// Append to (never overwrite) the current selection.
 			for _, id := range ids {
 				if id != "" && !slices.Contains(this.selectedSpells, id) {
@@ -268,7 +268,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	}
 
 	if this.pickItemBtn.Clicked(gtx) {
-		this.opener(NewItemPickerDialog("Pick Starting Item", nil, this.handler, func(ids []string) {
+		this.opener(NewItemPickerDialog("Pick Starting Item", nil, func(ids []string) {
 			if len(ids) == 0 {
 				return
 			}

@@ -1,23 +1,20 @@
-package pickerEntryService_test
+package pickerEntry_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenValueOverrideEntriesAreBuilt_TheSidIsBothIdAndLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-
 	// Act
-	entries := service.BuildValueOverridePickerEntries([]string{"Sid.Gold"})
+	entries := models.BuildValueOverridePickerEntries([]string{"Sid.Gold"})
 
 	// Assert
-	assert.Equal(t, []dtos.PickerEntryDto{{
+	assert.Equal(t, []models.PickerEntry{{
 		ID:       "Sid.Gold",
 		Label:    "Sid.Gold",
 		Haystack: "sid.gold",
@@ -27,10 +24,8 @@ func TestWhenValueOverrideEntriesAreBuilt_TheSidIsBothIdAndLabel(t *testing.T) {
 func TestWhenThereAreNoValueOverrideSids_NoEntriesAreBuilt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-
 	// Act
-	entries := service.BuildValueOverridePickerEntries(nil)
+	entries := models.BuildValueOverridePickerEntries(nil)
 
 	// Assert
 	assert.Empty(t, entries)

@@ -217,14 +217,14 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 		}))
 	}
 	if this.pickItemsBtn.Clicked(gtx) {
-		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, this.handler, func(ids []string) {
+		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, func(ids []string) {
 			this.bannedItems = appendUnique(this.bannedItems, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
 		}))
 	}
 	if this.pickSpellsBtn.Clicked(gtx) {
-		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, this.handler, func(ids []string, _ bool) {
+		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, func(ids []string, _ bool) {
 			this.bannedMagics = appendUnique(this.bannedMagics, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
@@ -232,7 +232,7 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	}
 	if this.pickOverridesBtn.Clicked(gtx) {
 		excluded := overrideSids(this.valueOverrides)
-		opener(dialogs.NewValueOverridePickerDialog(excluded, this.handler, func(lines []string) {
+		opener(dialogs.NewValueOverridePickerDialog(excluded, func(lines []string) {
 			this.valueOverrides = appendUnique(this.valueOverrides, lines)
 			this.syncRemoveButtons()
 			this.SaveToState()

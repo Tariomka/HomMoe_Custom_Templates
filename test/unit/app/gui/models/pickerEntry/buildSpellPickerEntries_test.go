@@ -1,18 +1,16 @@
-package pickerEntryService_test
+package pickerEntry_test
 
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWhenTheSchoolHasADisplayName_ItBecomesTheEntryGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-	spells := []dtos.PickerSpellDto{{
+	spells := []models.PickerSpell{{
 		Sid:               "Sid.Bless",
 		Name:              "Bless",
 		School:            "light",
@@ -21,10 +19,10 @@ func TestWhenTheSchoolHasADisplayName_ItBecomesTheEntryGroup(t *testing.T) {
 	}}
 
 	// Act
-	entries := service.BuildSpellPickerEntries(spells)
+	entries := models.BuildSpellPickerEntries(spells)
 
 	// Assert
-	assert.Equal(t, []dtos.PickerEntryDto{{
+	assert.Equal(t, []models.PickerEntry{{
 		ID:       "Sid.Bless",
 		Group:    "Light Magic",
 		Label:    "Bless",
@@ -36,11 +34,10 @@ func TestWhenTheSchoolHasADisplayName_ItBecomesTheEntryGroup(t *testing.T) {
 func TestWhenTheSchoolHasNoDisplayName_TheRawSchoolIsUsedAsTheGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-	spells := []dtos.PickerSpellDto{{Sid: "Sid.Bless", Name: "Bless", School: "light", Tier: 1}}
+	spells := []models.PickerSpell{{Sid: "Sid.Bless", Name: "Bless", School: "light", Tier: 1}}
 
 	// Act
-	entries := service.BuildSpellPickerEntries(spells)
+	entries := models.BuildSpellPickerEntries(spells)
 
 	// Assert
 	assert.Equal(t, "light", entries[0].Group)
@@ -49,10 +46,8 @@ func TestWhenTheSchoolHasNoDisplayName_TheRawSchoolIsUsedAsTheGroup(t *testing.T
 func TestWhenThereAreNoSpells_NoEntriesAreBuilt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := pickers.NewPickerEntryService()
-
 	// Act
-	entries := service.BuildSpellPickerEntries(nil)
+	entries := models.BuildSpellPickerEntries(nil)
 
 	// Assert
 	assert.Empty(t, entries)
