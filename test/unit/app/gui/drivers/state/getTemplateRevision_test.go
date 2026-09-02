@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +57,7 @@ func TestWhenManualEditsAreApplied_TemplateRevisionAdvances(t *testing.T) {
 	state, handlerMock := newRevisionState()
 	state.Generate()
 	template := state.GetLastTemplate()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	updatedTemplate.Name = gofakeit.ProductName()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
@@ -64,8 +65,8 @@ func TestWhenManualEditsAreApplied_TemplateRevisionAdvances(t *testing.T) {
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
-		Zones:       template.Variants[0].Zones,
-		Connections: template.Variants[0].Connections,
+		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones),
+		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
 	})
 
 	// Assert
@@ -90,7 +91,7 @@ func TestWhenStateIsReset_TemplateRevisionAdvances(t *testing.T) {
 // template, plus its mock so manual-edit expectations can be added.
 func newRevisionState() (*drivers.State, *test_helpers.TemplateHandlerMock) {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
+	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	return drivers.NewUIState(
 		handlerMock,

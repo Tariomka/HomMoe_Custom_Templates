@@ -1,6 +1,7 @@
 package test_helpers
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
@@ -25,6 +26,7 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) template_genera
 		configuration,
 		zoneLabelProvider,
 		generation_tuning.NewGenerationTuningFactory(),
+		mappers.NewTemplateMapper(),
 		providers.NewContentLimitProvider(),
 		providers.NewMandatoryContentProvider(zoneClassifier, zoneEditor),
 		providers.NewGameRulesProvider(),

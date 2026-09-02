@@ -15,7 +15,7 @@ func TestWhenGenerationSucceeds_LastTemplateIsStored(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
+	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
 		handlerMock,
@@ -35,7 +35,7 @@ func TestWhenGenerationSucceeds_StatusReportsGeneratedTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
+	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
 		handlerMock,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -15,26 +16,26 @@ func TestWhenPreviewingTheBase_TheGeneratedZonesAreReturned(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, _, _, _ := newGeneratedState()
-	expected := test_helpers.GetDefaultTemplate()
+	expected := test_helpers.GetDefaultTemplateModel()
 
 	// Act
 	base, _ := state.PreviewBaseZones()
 
 	// Assert
-	assert.Equal(t, expected.Variants[0].Zones, base.Zones)
+	assert.Equal(t, template_model.ToZoneEntities(expected.Variants[0].Zones), base.Zones)
 }
 
 func TestWhenPreviewingTheBase_TheGeneratedConnectionsAreReturned(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, _, _, _ := newGeneratedState()
-	expected := test_helpers.GetDefaultTemplate()
+	expected := test_helpers.GetDefaultTemplateModel()
 
 	// Act
 	base, _ := state.PreviewBaseZones()
 
 	// Assert
-	assert.Equal(t, expected.Variants[0].Connections, base.Connections)
+	assert.Equal(t, template_model.ToConnectionEntities(expected.Variants[0].Connections), base.Connections)
 }
 
 func TestWhenPreviewingTheBase_SuccessIsReported(t *testing.T) {
@@ -55,7 +56,7 @@ func TestWhenPreviewingTheBase_TheLiveTemplateIsUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	editedTemplate := test_helpers.GetDefaultTemplate()
+	editedTemplate := test_helpers.GetDefaultTemplateModel()
 	editedTemplate.Name = gofakeit.ProductName()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &editedTemplate}, nil)
@@ -72,7 +73,7 @@ func TestWhenPreviewingTheBase_TheStoredManualEditsAreUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	editedTemplate := test_helpers.GetDefaultTemplate()
+	editedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &editedTemplate}, nil)
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})

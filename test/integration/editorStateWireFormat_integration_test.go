@@ -46,7 +46,7 @@ func TestWhenTheLegacyStateFixtureIsMappedToAState_ItLandsAtTheCurrentSchemaVers
 	require.NoError(t, json.Unmarshal(readEditorStateFixture(t, "editorState_v0_flat.gen.json"), &loaded))
 
 	// Act
-	state := mappers.NewEditorStateEntityMapper().ToModel(loaded)
+	state := mappers.NewEditorStateMapper().ToModel(loaded)
 
 	// Assert
 	assert.Equal(t, editor_state.CurrentEditorStateSchemaVersion, state.SchemaVersion)

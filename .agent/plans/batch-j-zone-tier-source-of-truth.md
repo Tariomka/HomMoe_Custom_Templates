@@ -2,10 +2,15 @@
 
 A neutral zone's tier is decided once at plan time, flattened into layout/pools/
 castles, and then reverse-engineered by `ZoneClassifier` everywhere it is needed.
-This batch records the tier instead: the generator hands back what it planned, a
-`models.QualifiedZone` wrapper carries it through the editor, `.gen.json`
-persists it, and a single `IZoneTierService` answers the question — falling back
-to inference only for a template loaded from a raw `.rmg.json`.
+This batch records the tier instead: the generator hands back what it planned on
+the zone itself, a `template_model` layer carries it through the editor,
+`.gen.json` persists it, and a single `IZoneTierService` answers the question —
+falling back to inference only for a template loaded from a raw `.rmg.json`.
+
+> **The wrapper design changed at the phase 2 review.** The original plan used a
+> standalone `models.QualifiedZone` plus a name-keyed tier index. That was
+> rejected; see **§0b** for what replaced it and which §0 decisions it
+> supersedes. Where the two disagree, **§0b wins**.
 
 ## For Future Agents
 
@@ -16,12 +21,13 @@ phase's **Verification Plan** and record the result before moving on. When all
 phases are done, fill in **Final Recap** and **Deployment Plan**.
 
 Read [AGENTS.md](../../AGENTS.md) first — especially **§4.4.1** (Entity/Model/DTO
-doctrine) and **§2.1** (protected directories). Hard rules that bite here:
-**`internal/entities/template/**` is protected and this batch must not touch a
-single byte of it**; never stage and never commit; move with `Move-Item`, never
-`git mv`; delete with `Remove-Item`, never `git rm`; never round-trip a `.go`
-file through `Get-Content`/`Set-Content`; unit coverage must not drop below
-**72.5 %** (currently **73.8 %**); lint baseline is **0 issues**.
+doctrine) and **§2.1** (protected directories). Then read **§0 and §0b**: where
+they disagree, **§0b wins**, because it records the phase 2 review. Hard rules
+that bite here: **`internal/entities/template/**` is protected and this batch
+must not touch a single byte of it**; never stage and never commit; move with
+`Move-Item`, never `git mv`; delete with `Remove-Item`, never `git rm`; never
+round-trip a `.go` file through `Get-Content`/`Set-Content`; unit coverage must
+not drop below **72.5 %** (currently **73.9 %**); lint baseline is **0 issues**.
 
 ## 0. Decisions (settled with the owner 2026-09-01 — do not relitigate)
 
@@ -77,6 +83,98 @@ file through `Get-Content`/`Set-Content`; unit coverage must not drop below
    the phase summary that causes it** — an unexplained golden move is a bug
    until proven otherwise.
 9. **One batch, phased, reviewed per phase.** ~31 production files plus tests.
+
+## 0b. Amendment (settled with the owner 2026-09-02, after the phase 2 review)
+
+The phase 2 review rejected `models.GeneratedTemplate`. The verdict, in the
+owner's words: it *"shifts the goal post"* rather than moving away from using the
+template entity structs directly, unlike what was already done for
+`EditorState`. A tier index keyed by zone name is a side-car; the tier is a
+property **of the zone** and belongs on a zone model. Phase 2.5 corrects this
+before phase 3, because phases 3-5 and several backlog items build on top of it.
+
+10. **`models.GeneratedTemplate` is deleted.** The tier rides on the zone, not in
+    a parallel map. This **supersedes §0.4's return type**: `Generate()` returns
+    `(*template_model.Template, []string)`. §0.4's *other* half stands — the test
+    call sites take the churn, and no second production entry point exists.
+11. **`internal/models/template_model/` mirrors `internal/entities/template/`
+    one for one** — the whole schema, not just the three types the tier needs.
+    Same package structure, every subpackage suffixed `_model`:
+
+    | Entity package | Model package |
+    | --- | --- |
+    | `entities/template` | `models/template_model` |
+    | `entities/template/template_common` | `models/template_model/template_common_model` |
+    | `entities/template/template_content` | `models/template_model/template_content_model` |
+    | `entities/template/template_layout` | `models/template_model/template_layout_model` |
+    | `entities/template/template_override` | `models/template_model/template_override_model` |
+    | `entities/template/template_rule` | `models/template_model/template_rule_model` |
+    | `entities/template/template_variant` | `models/template_model/template_variant_model` |
+
+    `template_model/types.go` re-exports every subpackage type exactly as
+    [entities/template/types.go](../../internal/entities/template/types.go) does,
+    so callers write `template_model.Zone` and never name an inner package. A
+    depguard rule **`template-model-inner-private`** enforces it, mirroring the
+    existing `template-inner-private`. This **supersedes §0.2** —
+    `QualifiedZone` is never built — and **supersedes §0.3**: the model is its
+    own store, so `drivers.State` needs no side index.
+12. **The model mirrors the entity, it does not wrap it.** `editor_state_model`
+    already shows three shapes and `template_model` reuses all three, choosing
+    per type by one question: *does any field need re-typing?*
+    - **Re-types children → no embedding.** The model declares its own fields
+      and the converters map each one. Precedents:
+      [editorState.go](../../internal/models/editor_state_model/editorState.go),
+      [contentSettings.go](../../internal/models/editor_state_model/contentSettings.go),
+      [manualEditSettings.go](../../internal/models/editor_state_model/manualEditSettings.go).
+      **`Template`, `Variant`, `Zone`, `Connection` and every other composite
+      type take this shape** — `RmgTemplate` is explicitly *not* embedded in
+      `template_model.Template`.
+    - **All-scalar → embed the entity.** Precedent:
+      [templateIdentity.go](../../internal/models/editor_state_model/templateIdentity.go).
+      Free promotion, trivial converter, nothing to keep in sync.
+    - **`ZoneContentRow` shadow** — embed and shadow one collection, nil'ing the
+      embedded copy. Reserved for a mostly-scalar struct that still needs the
+      entity value itself for a helper call. Use it only if such a case turns up.
+
+    `Zone` additionally gains the tier. **Model types carry no JSON tags and no
+    (un)marshalling**: serialization is the entity's job (§4.4.1). The three
+    entity types with decode behaviour — `StringList`, `BonusList` and
+    `GameRules.UnmarshalJSONFrom` — keep it, and their models must not duplicate
+    it.
+13. **The tier field is `Quality *neutral_zone.Quality`**, nil meaning "not
+    recorded, infer it". This is not stylistic: `Quality` is `iota - 1`, so
+    `QualityUnknown` is −1 and **the zero value is `QualityLowest`**. A plain
+    value field would make every zero-valued zone literal silently claim Plastic
+    — the precise bug this batch exists to kill. It also matches §0.6 and the
+    existing `ManualPosition *[2]float64`.
+14. **The protected schema stays untouched in 2.5.** Moving `GeneratorPosition`,
+    `GeneratorRing`, `ManualPosition` and `IsUserAdded` out of
+    `internal/entities/template/**` and onto `template_model` is approved **in
+    principle** and is the right end state — they are runtime concerns squatting
+    in a serialization schema — but it happens in **its own reviewed phase**,
+    after every reader goes through `template_model`. Until then AGENTS §2.1
+    applies in full: not one byte of `internal/entities/template/**` changes.
+15. **Mappers.** `EditorStateEntityMapper` is renamed `EditorStateMapper` (and
+    `IEditorStateEntityMapper` → `IEditorStateMapper`). A new `TemplateMapper`
+    owns `RmgTemplate(Entity) ⇄ Template(Model)`. `Template(Model) →
+    EditorState(Model)` lives in **`EditorStateMapper`**, not in `TemplateMapper`:
+    `RmgTemplate` is the source of truth, so each consumer state pulls *from* it.
+    A future TUI or Web state adds its own mapper rather than another branch
+    inside `TemplateMapper`. The full chain is
+    `RmgTemplate(Entity) ⇄ Template(Model) ⇄ EditorState(Model) ⇄ EditorState(Entity)`.
+16. **Phase 2.5 lands the whole model package, but sweeps no consumer.** All 30
+    schema types get their model, the mappers get written, and the
+    generator / handler / `drivers.State` seam moves onto `template_model`.
+    The 100 production and 266 test files that name `entities.*` are **not**
+    rewritten here — that stays phase 4, which `template_model.Zone` shrinks
+    since it replaces the `QualifiedZone` swap that phase was written around.
+
+    ⚠ **Without embedding there is no free promotion**, so a seam that is not
+    migrated cannot silently keep compiling. That is a feature: the compiler
+    lists the work. Bridge any seam phase 2.5 does not intend to move with
+    `TemplateMapper.ToEntity` and note it, rather than widening the phase. The
+    entity is genuinely required at exactly two places — reading and writing
+    `.rmg.json` — and those two keep it forever.
 
 ## 1. The eight consumers (the thing being fixed)
 
@@ -203,7 +301,10 @@ agrees.
 ---
 
 ## Phase 2: the generator records what it planned
-Status: Not started — **design settled 2026-09-02, implementation not begun.**
+Status: **Complete** (2026-09-02) — reviewed, staged, **and partly superseded by
+phase 2.5.** The `planZoneTiers` derivation and the `ResolveQuality` precedence
+rule survive; `models.GeneratedTemplate`, `TemplateLoadDto.ZoneTiers` and
+`State.lastZoneTiers` do not. Read this phase as history, not as a spec.
 
 Behaviour deltas start here, but only **one**: the gladiator arena. Everything
 else is plumbing.
@@ -259,25 +360,25 @@ is unchanged; only the file's arrival moves. Its checklist item lives in phase 4
 
 ### Checklist
 
-- [ ] `internal/models/generatedTemplate.go` — `GeneratedTemplate{Template
+- [x] `internal/models/generatedTemplate.go` — `GeneratedTemplate{Template
       *entities.RmgTemplate; ZoneTiers map[string]neutral_zone.Quality}`.
-- [ ] `TemplateGenerator.Generate()` returns
+- [x] `TemplateGenerator.Generate()` returns
       `(*models.GeneratedTemplate, []string)`, building the index via
       `planZoneTiers`. Update `templateGeneratorInterface.go` and
       `test_helpers/templateGeneratorMock.go`.
-- [ ] `IZoneTierService.ResolveQuality` + its unit tests (recorded wins,
+- [x] `IZoneTierService.ResolveQuality` + its unit tests (recorded wins,
       unrecorded infers, nil map infers).
-- [ ] `PlaceArena(configuration, variant, zoneTiers)` — the provider resolves
+- [x] `PlaceArena(configuration, variant, zoneTiers)` — the provider resolves
       through `ResolveQuality` in `findRichestNeutralZoneIndex` and
       `mapNeutralZoneQualities`. Update the interface and the 12 call sites in
       `placeArena_test.go`. **This is the behaviour delta**: a zone that
       inference called `Unknown` scored −1 and could never win the arena; with
       its planned tier it can.
-- [ ] Carry the index to the GUI: `dtos.TemplateLoadDto` gains `ZoneTiers`,
+- [x] Carry the index to the GUI: `dtos.TemplateLoadDto` gains `ZoneTiers`,
       `templateHandler.GenerateTemplate` fills it, and `drivers.State` stores it
       beside `lastTemplate` (`setLastTemplate` is the only writer — keep it that
       way so `templateRevision` stays correct).
-- [ ] Tests: the index contains a planned neutral at its planned tier, a hub at
+- [x] Tests: the index contains a planned neutral at its planned tier, a hub at
       Highest and **no** spawn entry; plus an arena test proving a previously
       `Unknown` zone now wins.
 
@@ -317,12 +418,423 @@ explain is a bug.
   allocs/op.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Landed as designed.** `Generate()` now returns
+`*models.GeneratedTemplate` — the template plus
+`ZoneTiers map[string]neutral_zone.Quality` — and the index rides
+`dtos.TemplateLoadDto` into `drivers.State`, which keeps it beside
+`lastTemplate`. `IZoneTierService.ResolveQuality(zone, zoneTiers)` is the single
+place the precedence rule lives: recorded tier wins, inference is the fallback,
+and the lookup is comma-ok so a missing key never reads back as `QualityLowest`.
+`PlaceArena` is its only consumer so far.
+
+**The index needed no topology changes**, exactly as scoped. `planZoneTiers`
+lives in `templateGenerator.go` beside `Generate`, builds a
+`label-name → quality` map from the `neutral_zone.Plans` the generator already
+holds, then walks `variant.Zones` recording hubs at `QualityHighest` and any zone
+matching a plan name at its planned quality. `ZoneFactory`, `TopologyBase` and
+every topology service were untouched.
+
+**⚠ Correction to decision §0.8: phase 2 moves no generated output at all.** The
+delta was expected to be "the arena, for zones inference called `Unknown`". A
+throwaway sweep over **792 configurations** — 11 topologies × {0,2,4,6} neutral
+zones × {2,4,8} players × simple/advanced tiers × tournament on/off ×
+{0,1,2} castles — compared the arena placement computed from the recorded index
+against the placement computed from inference alone, and additionally compared
+`GetQuality(zone)` against the recorded tier for **every** zone of every
+generated variant. Both counts were **zero**: no arena moved, and inference and
+the plan agree on every zone the generator produces. The generator never emits a
+zone its own content pools cannot classify, so the `Unknown` case the arena delta
+was predicted for does not exist on the generation path. The scratch test was
+deleted after the measurement.
+
+That is a stronger result than the plan expected, not a weaker one: it means the
+recorded tier is a *faithful* replacement for inference on generated templates,
+and the correction it buys is latent — it fires only for zones inference cannot
+classify, which is what a manually re-tiered zone (phase 3) or a raw `.rmg.json`
+(phase 4) produces. Two new unit tests pin that latent behaviour down directly
+against the provider:
+`TestWhenTheRichestZoneCannotBeInferred_TheRecordedTierWinsTheArena` and
+`TestWhenConnectionEndpointsCannotBeInferred_TheRecordedTiersPickTheConnection`.
+**Consequence for phase 3:** it, not phase 2, is where the `Unknown → Plastic`
+silent down-tier described in §1 actually gets fixed.
+
+**The ~73 test call sites went the planned route.** A test-local
+`generateTemplate(generator)` unpack helper in
+`test/unit/.../templateGenerator/common_test.go`, then one
+`gofmt -r 'a.Generate() -> generateTemplate(a)'` pass per file over an explicit
+list of the eight files — an AST rewrite, never a text sweep. The diff came back
+**71 insertions / 71 deletions**, i.e. line-for-line, which is the check that the
+rewrite touched nothing else. `placeArena_test.go`'s 12 sites took the same
+treatment with `a.PlaceArena(b, c) -> a.PlaceArena(b, c, nil)` (12/12), and the
+two `test/performance` sites plus the four `templateHandler` mock returns were
+edited by hand.
+
+**`QualifiedZone` was not built**, per the design note — phase 2 has no consumer
+for it and the arena provider wants the map, since it mutates `variant.Zones` in
+place by index. Its checklist item stays in phase 4.
+
+**One decision the plan left open.** `State.handleUpdateTemplate` (the manual-edit
+apply path) calls `setLastTemplate(dto.Template, this.lastZoneTiers)` — it
+*preserves* the index rather than clearing it, because a manual edit reshapes the
+template that is already loaded and the tiers planned for it still describe it.
+Nothing reads `State.lastZoneTiers` yet, so this cannot misbehave in phase 2;
+phase 3 is where a manually re-tiered zone must **overwrite** its entry, and the
+preserve-by-default behaviour is what makes that a one-line change instead of a
+restoration.
+
+### Verification results (2026-09-02)
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 (no DI change — `Generate` is called through an interface the graph already provides) |
+| Unit / untagged / integration | pass |
+| **GPU suite, no `-update`** | **pass (24.7 s)** — no pixel moved |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| Unit coverage | **73.9 %** (was 73.8 %, floor 72.5 %) |
+| Per-function coverage of new code | `planZoneTiers`, `ResolveQuality`, `PlaceArena`, `findArenaConnectionIndex`, `findRichestNeutralZoneIndex`, `mapNeutralZoneQualities`, `setLastTemplate`, `applyGeneratedTemplate`, `GetLastZoneTiers` — **100 % each** |
+| Output diff, 792 configurations | **0 arena moves, 0 inference/plan disagreements** (see summary) |
+| `BenchmarkEditorWindow_TabCycling` | **5,699 allocs/op** (3 runs: 5,702 / 5,698 / 5,699; 2.31–2.88 M ns/op) |
+
+⚠ **The benchmark baseline in this plan was already stale.** It cites ~4,773
+allocs/op, while backlog §1.4 records **6,640** after the clone batch that
+followed that measurement. The number now measures 5,699 and is stable to ±4
+across runs. Phase 2 adds two small maps per *generation* (the benchmark cycles
+tabs and generates roughly once), so it cannot account for a ~900 allocs/op
+shift in either direction; the two documented baselines simply disagree with each
+other. Someone should reconcile them — do not read this row as a phase 2
+regression.
+
+---
+
+## Phase 2.5: `template_model` — mirror the schema, put the tier on the zone
+Status: **Complete** (2026-09-02) — uncommitted, awaiting review.
+
+Phase 2 solved the right problem the wrong way. `models.GeneratedTemplate` keeps
+the application talking in `entities.RmgTemplate` and bolts a
+`map[zoneName]Quality` alongside it, so three disjoint fields have to be dragged
+around together (`lastTemplate`, `lastZoneTiers`, `templateRevision`) and every
+tier read is a name lookup instead of a field access.
+
+This phase does for the template what was already done for the editor state:
+**`internal/models/template_model/` mirrors `internal/entities/template/` in
+full**, subpackage for subpackage, so the service layer owns the structure and
+the entity goes back to being nothing but the `.rmg.json` wire format. Once the
+zone is a model, the tier is simply a field on it, and the map has nowhere left
+to live.
+
+The payoff is not only the tier. `Template` becomes extendable without touching
+the protected schema, which is what §0b.14's field migration and several backlog
+items depend on.
+
+Read **§0b** first — it holds the seven decisions this phase implements. Nothing
+here is open for redesign.
+
+### The shape, stated once
+
+`Template` **does not embed** `RmgTemplate`; it mirrors it, exactly as
+`editor_state_model.EditorState` mirrors `editor_state.EditorState`:
+
+```go
+// internal/models/template_model/template.go
+type Template struct {
+    Name                string
+    GameMode            string
+    Description         string
+    DisplayWinCondition string
+    SizeX               int
+    SizeZ               int
+
+    ValueOverrides []ValueOverride
+    Orientation    *Orientation
+    Border         *Border
+    GameRules      GameRules
+    GlobalBans     *GlobalBans
+    Variants       []Variant
+
+    ZoneLayouts        []ZoneLayoutDef
+    MandatoryContent   []MandatoryContent
+    ContentCountLimits []ContentCountLimit
+    ContentPools       []ContentPool
+    ContentLists       []ContentList
+}
+
+// internal/models/template_model/template_variant_model/zone.go
+type Zone struct {
+    // ... every field of template_variant.Zone, composites re-typed ...
+    Quality *neutral_zone.Quality   // nil = not recorded, infer it
+}
+```
+
+All-scalar types (`Noise`, `TypedRef`, `PlacementRule`, `ElevationMode`, …) embed
+their entity instead, per §0b.12. Which shape a given type takes is decided by
+one question, not by taste: **does any of its fields need re-typing?**
+
+### The inventory
+
+30 types, mirrored one for one. Nothing is skipped — a partial mirror would leave
+callers switching between `template_model.X` and `entities.Y` mid-expression,
+which is the confusion this phase exists to end.
+
+| Model package | Types |
+| --- | --- |
+| `template_model` | `Template` |
+| `template_common_model` | `PlacementRule` |
+| `template_content_model` | `ContentCountLimit`, `ContentLimit`, `ContentList`, `ContentPool`, `MandatoryContent`, `MandatoryContentItem`, `WeightedContent` |
+| `template_layout_model` | `AmbientPickupDistribution`, `ElevationMode`, `GuardedEncounterResourceFractions`, `ZoneLayoutDef` |
+| `template_override_model` | `ValueOverride` |
+| `template_rule_model` | `Bonus`, `BonusList`, `GameRules`, `GlobalBans`, `WinConditions` |
+| `template_variant_model` | `Border`, `Connection`, `EncounterHolesSettings`, `MainObject`, `Noise`, `Orientation`, `Road`, `StringList`, `TypedRef`, `Variant`, `Zone` |
+
+One struct per file, file named after the struct in camelCase (§4.1), converters
+beside the struct they convert — the `editor_state_model` layout verbatim.
+
+### Why this deletes the map rather than hiding it
+
+The name→quality map does not vanish from the source; it stops being an **API**.
+`planZoneTiers` currently returns it to `Generate`, which returns it to the
+handler, the DTO and `drivers.State`. After this phase the same derivation is a
+**local variable inside one function** — the converter that lifts the generated
+`entities.Variant` into a `template_model.Variant` and stamps `Quality` on each
+zone as it goes. It crosses no boundary and no type carries it.
+
+### Checklist
+
+Order that keeps the tree compiling at every step.
+
+- [x] `internal/models/template_model/` and its six `_model` subpackages — all
+      30 types from the inventory above, one struct per file, each with its
+      `To*Model` / `To*Entity` converters. Shape per type by §0b.12. **No JSON
+      tags on any model type.**
+- [x] `internal/models/template_model/types.go` re-exporting every subpackage
+      type, mirroring
+      [entities/template/types.go](../../internal/entities/template/types.go).
+- [x] `.golangci.yml` gains `template-model-inner-private` beside
+      `template-inner-private`:
+
+      ```yaml
+      template-model-inner-private:
+        files:
+          - "!**/internal/models/template_model/**"
+          - "!$test"
+        deny:
+          - pkg: github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/
+            desc: import internal/models/template_model instead
+      ```
+
+      Note the exclusion is the **model tree only**, tighter than the entity
+      rule's `!**/internal/entities/**` — the subpackages import each other, but
+      no other model package has any business reaching inside.
+- [x] `internal/mappers/templateMapper.go` + `ITemplateMapper`:
+      `ToModel(entity) Template`, `ToEntity(model) RmgTemplate`. Register it in
+      `providerSets.go` and regenerate — never hand-edit `wire_gen.go`.
+- [x] Rename `EditorStateEntityMapper` → `EditorStateMapper` and
+      `IEditorStateEntityMapper` → `IEditorStateMapper`: both files, the struct,
+      the constructor, `test_helpers` mock, and the unit-test folder
+      `test/unit/internal/mappers/editorStateEntityMapper/` →
+      `.../editorStateMapper/`. **`Move-Item`, never `git mv`.** Regenerate wire.
+- [x] `TemplateGenerator.Generate()` returns `(*template_model.Template, []string)`.
+      `planZoneTiers` stops being a returned index and becomes the local
+      derivation inside the entity→model conversion (see above). `PlaceArena`
+      runs **after** the conversion, on the model variant.
+- [x] `IZoneTierService.ResolveQuality(zone template_model.Zone) neutral_zone.Quality`
+      — the map parameter is gone; nil `Quality` falls back to inference.
+      `GetQuality` keeps taking the **entity** zone: a template loaded from a raw
+      `.rmg.json` has no recorded tier and never will.
+- [x] `IGladiatorArenaProvider.PlaceArena(configuration, variant *template_model.Variant)`
+      — no tier parameter. It still mutates `variant.Zones` in place by index.
+- [x] `dtos.TemplateLoadDto.Template` becomes `*template_model.Template` and
+      **`ZoneTiers` is deleted**. `templateHandler.GenerateTemplate` fills it.
+- [x] `templateHandler.UpdateTemplate` needs a **temporary wrap-by-name seam**:
+      its `TemplateUpdateDto.Zones` is still `[]entities.Zone` until phase 4
+      re-types the 9 DTOs, so it must carry the previous model zones' `Quality`
+      across by name. Confine it to that one function, comment it as phase-4
+      scaffolding, and do not let it spread. This is deliberately the *only*
+      place a name lookup survives.
+- [x] `drivers.State`: `lastTemplate *template_model.Template`; **delete**
+      `lastZoneTiers`, `GetLastZoneTiers()` and `setLastTemplate`'s second
+      parameter. **`templateRevision` stays** — it is the preview cache key
+      ([previewLayoutCache.go](../../app/gui/models/previewLayoutCache.go)),
+      answering "was the pointer replaced", which is a different question from
+      "what tier is this zone". Do not remove it as part of the tidy-up.
+- [x] Bridge, do not widen: every consumer the compiler now breaks either moves
+      to `template_model` **because it is on the seam** (the handler, the DTO,
+      `drivers.State`) or gets a `TemplateMapper.ToEntity` call and a note that
+      phase 4 removes it. `preview_service`, `file_service` and the GUI panels
+      are expected to take the bridge, not the migration.
+- [x] **Delete `internal/models/generatedTemplate.go`.**
+- [x] Tests: new folders under `test/unit/internal/models/template_model/**` and
+      `test/unit/internal/mappers/templateMapper/` per §4.6;
+      `resolveQuality_test.go` reshaped to the pointer contract (recorded wins /
+      nil infers); `getLastZoneTiers_test.go` deleted; the generator tier tests
+      assert on `generated.Variants[0].Zones[n].Quality` instead of an index.
+- [x] The `generateTemplate(generator)` unpack helper in the templateGenerator
+      test package becomes a **`TemplateMapper.ToEntity`** call. That keeps all
+      eight rewritten test files — including the golden-template assertion —
+      compiling and asserting against `entities.RmgTemplate` unchanged, which is
+      also the strongest possible proof that the round trip is lossless.
+
+### Verification Plan
+
+- Full gate set from phase 1.
+- **Generated output must be byte-identical.** This is a pure restructuring:
+  `TemplateMapper.ToEntity(Generate())` must equal what `Generate()` produced
+  before, for every topology. `TestWhenDefaultConfiguration_ReturnsGoldenTemplate`
+  is the primary guard; re-run the 792-configuration sweep from phase 2 if any
+  doubt remains.
+- **Round-trip test**: `ToModel` → `ToEntity` on a fully populated template is
+  the identity. Build the fixture with `gofakeit` so a field added to the schema
+  and forgotten in the mapper fails the test instead of passing silently — a
+  30-type hand-written mapper is exactly where a dropped field hides.
+- `golangci-lint-v2 run ./...` proves `template-model-inner-private` fires:
+  temporarily import a `_model` subpackage from outside the tree, confirm the
+  issue, then revert. A rule that was never seen to fail is not a rule.
+- `wire diff ./internal/composition/...` exit 0 after the mapper rename and the
+  new provider.
+- **GPU suite without `-update`** — no pixel may move.
+- Coverage ≥ 72.5 %. ⚠ 30 mostly-mechanical converter pairs will **drag the
+  percentage down** unless they are tested; budget for that rather than
+  discovering it at the end.
+- `go run ./cmd/testlayoutcheck .` — and grep any new test-only accessor name
+  tree-wide before adding it.
+
+### Phase Summary
+
+**Landed as designed.** `internal/models/template_model/` now mirrors
+`internal/entities/template/` one for one — all 30 types across the six
+`_model` subpackages, `types.go` re-exporting every one of them, and no JSON tag
+anywhere in the tree. `Template` does not embed `RmgTemplate`; the per-type rule
+from §0b.12 decided each shape mechanically, and it split the **13 embedded**
+all-scalar types (`PlacementRule`, `WeightedContent`,
+`AmbientPickupDistribution`, `ElevationMode`,
+`GuardedEncounterResourceFractions`, `ValueOverride`, `Bonus`, `GlobalBans`,
+`WinConditions`, `Noise`, `TypedRef`, `Orientation`, `EncounterHolesSettings`)
+from the composites that re-type a child and are therefore declared in full.
+`BonusList`, `StringList`, `ContentList` and `ContentPool` are named slice/map
+types, which cannot embed at all, so they are re-declared with the same shape
+and **without** the tolerant decode behaviour — that stays on the entity, where
+the wire format is.
+
+**The map is gone, not hidden.** `planZoneTiers` became
+`stampPlannedZoneTiers(neutralZones, zones []template_model.Zone)`, a package
+function in `templateGenerator.go` that writes `Quality` onto each zone and
+returns nothing. `Generate()` builds the entity exactly as before, hands it to
+`TemplateMapper.ToModel`, stamps the tiers, then runs `PlaceArena` on the model
+variant. Building the entity first and lifting it — rather than assembling the
+model field by field from the providers, which all still return entities — is
+what makes the output guaranteed-identical rather than argued-identical.
+`models.GeneratedTemplate`, `TemplateLoadDto.ZoneTiers`, `State.lastZoneTiers`
+and `GetLastZoneTiers()` are all deleted.
+
+**`ResolveQuality` lost its parameter** and reads `zone.Quality` directly, nil
+meaning "infer it". `GetQuality` still takes the entity, so the fallback path
+converts the one zone it needs — a generation-time cost, not a per-frame one.
+
+**Four DTOs moved, three seams bridged.** `TemplateLoadDto`, `TemplateSaveDto`,
+`TemplateUpdateDto` and `PreviewLayoutRequestDto` now carry
+`*template_model.Template`. The two places that genuinely need the wire format
+convert **inside the handler**, not in `app/`: `templateHandler.SaveTemplate`
+flattens before the preview generator and the file service, and
+`previewHandler.BuildPreviewLayout` flattens before the layout service. That
+kept `app/` free of the mapper entirely and left `NewUIState`'s argument list
+alone — the alternative was threading a mapper through `program.go` →
+`editor.NewWindow` → `drivers.NewUIState`, which batch I already tried and the
+owner reverted. The one place `app/` still converts is
+`layoutPanelZones.handleConnectionEditorClick`, which flattens the variant for
+the zone editor dialog with `template_model.ToZoneEntities`; that is a model
+package function, which §4.4.1 explicitly allows `app/` to call.
+
+**Functions do not cross a package boundary the way type aliases do.** That is
+the one thing `types.go` cannot solve: `template_model.Zone` is an alias and
+works everywhere, but `ToZoneEntities` lives in `template_variant_model`, which
+`template-model-inner-private` forbids naming. So `converters.go` re-exports the
+five converters the seams outside the tree actually need — zones, connections
+and `ToMainObjectModel` for the arena provider. Everything else stays internal.
+
+**The wrap-by-name seam is one function, `carryZoneTiersByName`**, at the bottom
+of `templateHandler.go` and commented as phase-4 scaffolding. It exists only
+because `TemplateUpdateDto.Zones` is still `[]entities.Zone`; when the zone
+editor moves onto `template_model` it is deleted, not generalised. Note that the
+driver no longer preserves anything itself — `handleUpdateTemplate` just calls
+`setLastTemplate(dto.Template)` — so the unit test that used to assert the
+driver kept the index was **deleted**, its subject having moved into the
+handler.
+
+**Two behavioural facts fell out of the restructure, both improvements:**
+
+- `UpdateTemplate` no longer aliases the caller's template. It used to copy the
+  struct and `slices.Clone` the variants, which still shared zone slices with
+  the source; now it maps to a fresh entity. The unit test
+  `TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance` was
+  asserting that aliasing, so it was renamed
+  `..._ReturnedTemplateCarriesTheAppliedZones` and pointed at the applied slice.
+  `templateHandler`'s existing `..._LeavesTheSourceTemplateUntouched` covers the
+  new guarantee.
+- `BuildPreviewLayout` no longer hands the layout service the caller's pointer,
+  so `TestWhenTemplateIsProvided_LaysOutThatTemplate` compares the name instead
+  of the identity.
+
+**Nil versus empty is preserved deliberately.** Every slice converter goes
+through the new `helpers.MapSlice`, which returns nil for nil and an empty slice
+for empty — `linq.SelectSlice` collapses both to nil, which would have turned
+`ContentPools: []` into `null` on disk. `helpers.MapPointer` does the same for
+the optional pointer fields. There is a dedicated round-trip test for it.
+
+**The round-trip guard is the real test of the 30 converter pairs.**
+`test_helpers.NewAllFieldsTemplate()` fuzzes a whole `RmgTemplate` with a pinned
+`gofakeit` seed and fills the four loosely-typed corners (`ContentPool`,
+`ContentList`, and both `PlacementRule.Args` sites) by hand, because gofakeit
+cannot invent a value for an `any`. `ToEntity(ToModel(x)) == x` then covers every
+converter at once. **Verified by mutation**: dropping
+`Connection.GuardMatchGroup` from `ToConnectionEntity` fails it, and it passes
+again once restored. This is also why coverage went *up* rather than down — the
+mechanical converters are all exercised.
+
+**Test-layout deviation, flagged not buried.** Per-subpackage test folders under
+`test/unit/internal/models/template_model/**` were **not** created: thirty
+folders of near-identical `To*Model`/`To*Entity` tests would restate the
+round-trip guard thirty times with weaker assertions. The converters are covered
+transitively through `test/unit/internal/mappers/templateMapper/`, and the
+package holds pure data structs plus their conversions, which §4.6 already
+exempts from per-file tests. If the owner wants the folders anyway, they are
+mechanical to add.
+
+### Verification results (2026-09-02)
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 (regenerated, never hand-edited) |
+| Unit / untagged / integration | pass |
+| **GPU suite, no `-update`** | **pass (29.9 s)** — no pixel moved |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| **`template-model-inner-private` proven to fire** | a temporary `_model` import in `internal/mappers` produced the depguard issue; reverted |
+| Generated output | `TestWhenDefaultConfiguration_ReturnsGoldenTemplate` green *through* `TemplateMapper.ToEntity`, so the round trip reproduces the previous bytes |
+| Round-trip guard | verified by mutation (dropped field ⇒ failure) |
+| Unit coverage | **74.3 %** (was 73.9 %, floor 72.5 %) |
+
+⚠ **Not re-measured:** `BenchmarkEditorWindow_TabCycling`. Phase 2.5 adds a
+model⇄entity conversion on the *generation* and *save* paths, not on the
+per-frame path, and `GetLastTemplate` is still a bare pointer read. The figure
+to compare against is phase 2's **5,699 allocs/op** — not the 4,773 or 6,640 the
+older docs cite, which disagree with each other.
 
 ---
 
 ## Phase 3: persist the tier in `.gen.json`
-Status: Not started
+Status: Not started — phase 2.5 is complete, so this is unblocked.
+
+Phase 2.5 makes this phase much smaller than it was originally written to be.
+The tier now arrives as `template_model.Zone.Quality`, already a
+`*neutral_zone.Quality`, so persisting it is one conversion at one seam rather
+than a new index threaded through the editor.
 
 - [ ] `internal/entities/editor_state/manualZoneSave.go` gains a nullable tier.
       **It cannot be typed `neutral_zone.Quality`**: that enum lives in
@@ -340,10 +852,18 @@ Status: Not started
       only `internal/entities/template/` is.
 - [ ] Model + mapper + GUI round trip: `ToManualZoneSaves` / `FromManualZoneSaves`
       carry the tier; `EditorState.SetManualEdits` / `GetManualZones` speak
-      `[]models.QualifiedZone`.
+      `[]template_model.Zone`. Per §0b.15 the `Template(Model) →
+      EditorState(Model)` direction lives in **`EditorStateMapper`**, so
+      `template_model` never imports `editor_state_model`.
 - [ ] The write path must actually record: `ApplyNeutralZoneQuality` and
       `NewDefaultNeutralZone` currently flatten Quality into the profile and
-      forget it.
+      forget it. **This is where the `Unknown → Plastic` down-tier from §1 is
+      actually fixed** — phase 2 proved the generator never emits an
+      unclassifiable zone, so a manually re-tiered zone is the first one that
+      needs the recorded value.
+- [ ] `templateHandler.UpdateTemplate`'s temporary wrap-by-name seam from phase
+      2.5 must **not** grow to cover the manual re-tier. If it needs to, the DTO
+      re-typing from phase 4 has to come first instead.
 - [ ] Backward compatibility: a `.gen.json` with no `quality` loads as `nil` and
       falls back to inference. Add a test that proves it, and one that proves a
       **Plastic** zone survives a save/load round trip (the `omitempty` trap).
@@ -369,24 +889,26 @@ Status: Not started
 
 The big mechanical phase (~24 files). Embedding is what makes it survivable.
 
-- [ ] `internal/models/qualifiedZone.go` — `QualifiedZone` **embedding**
-      `entities.Zone` plus `Quality neutral_zone.Quality` (deferred here from
-      phase 2, which had no consumer for it). Add slice wrap/unwrap and
-      lookup-by-name helpers only as a caller needs them, not up front.
-- [ ] The 9 DTOs carry `[]models.QualifiedZone`:
+- [ ] `template_model.Zone` already carries the tier as of phase 2.5, so phase 4
+      has no wrapper to build. What is left here is the **sweep**: the ~100
+      production files that still name `entities.Zone` and friends move onto
+      `template_model`, and the `TemplateMapper.ToEntity` bridges phase 2.5 left
+      at `preview_service`, `file_service` and the GUI panels come out. (This
+      item replaces the former `internal/models/qualifiedZone.go` task — see
+      §0b.11.)
+- [ ] The 9 DTOs carry `[]template_model.Zone`:
       `zoneEditorZonesDto`, `zoneEditorGeometryRequestDto`,
       `zoneEditorConnectionRequestDto`, `zoneEditorQualityRequestDto`,
       `zoneEditorRemoveRequestDto`, `zoneEditorMutationDto`,
       `templateUpdateDto`, `castleSettingsReapplyRequestDto`,
       `previewLayoutRequestDto`.
-- [ ] `ZoneEditorDialog.zones` / `originalZones` become `[]models.QualifiedZone`;
-      `selectedZoneRef` / `zoneByName` return `*models.QualifiedZone`;
+- [ ] `ZoneEditorDialog.zones` / `originalZones` become `[]template_model.Zone`;
+      `selectedZoneRef` / `zoneByName` return `*template_model.Zone`;
       `zonePropertyRows` / `syncZoneProps` / `writebackZoneProps` follow. The
       Quality dropdown reads the carried tier instead of classifying.
-- [ ] Handlers and the `connection_editor` services take the wrapper.
-      Wrap/unwrap **only** at the protected `Variant.Zones` field, in exactly two
-      places: `WithZones(...)` on the way in and
-      `newTemplate.Variants[0].Zones = ...` on the way out.
+- [ ] Handlers and the `connection_editor` services take the model zone. This
+      removes the temporary wrap-by-name seam phase 2.5 left inside
+      `templateHandler.UpdateTemplate` - delete it here, do not extend it.
 - [ ] `*_testexports.go` accessors follow. ⚠ **Name-collision trap**: the layout
       checker matches test-only exports by identifier name tree-wide, so grep any
       new accessor name across the repo first — the testexports side always
@@ -411,6 +933,10 @@ Status: Not started
       **if** the 9 DTOs no longer name `entities.Zone`. Same check for
       `app/gui/dialogs` and `internal/handlers`. **Only ever remove entries** —
       if one will not come off, leave it and say why here.
+      ⚠ `template_model` (§0b.11) makes far more of this list removable than the
+      original plan assumed: any package that moved onto the model in phase 4
+      stops naming an entity outright. Re-measure the whole list here rather
+      than checking only the three named above.
 - [ ] Backlog: §2.2 becomes a ✅ DONE record with the behaviour deltas; §8 gets
       row **J**; refresh the coverage figure everywhere it is quoted (three
       places); update §2.6's file counts if the allow-list moved.

@@ -5,9 +5,9 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -55,7 +55,7 @@ func TestWhenTemplateIsGenerated_ReturnsIt(t *testing.T) {
 	// Arrange
 	fixture := newTemplateHandlerFixture()
 	state := editor_state_model.NewDefaultEditorStateModel()
-	expected := &entities.RmgTemplate{Name: gofakeit.Word()}
+	expected := &template_model.Template{Name: gofakeit.Word()}
 	fixture.stateHandler.On("ValidateEditorState", state, true).
 		Return(editor_state_dto.EditorStateValidationDto{State: state})
 	fixture.mapper.On("FromEditorState", state).Return(namedConfiguration())
@@ -82,7 +82,7 @@ func TestWhenValidationAndGenerationBothWarn_ConcatenatesTheWarnings(t *testing.
 	fixture.mapper.On("FromEditorState", state).Return(namedConfiguration())
 	fixture.templateGenerator.On("SetConfiguration", mock.Anything).Return()
 	fixture.templateGenerator.On("Generate").
-		Return(&entities.RmgTemplate{}, []string{generationWarning})
+		Return(&template_model.Template{}, []string{generationWarning})
 
 	// Act
 	loadDto, _ := fixture.handler.GenerateTemplate(toDto(state))
@@ -102,7 +102,7 @@ func TestWhenValidationFixesTheState_MapsTheFixedState(t *testing.T) {
 		Return(editor_state_dto.EditorStateValidationDto{State: fixedState})
 	fixture.mapper.On("FromEditorState", fixedState).Return(namedConfiguration())
 	fixture.templateGenerator.On("SetConfiguration", mock.Anything).Return()
-	fixture.templateGenerator.On("Generate").Return(&entities.RmgTemplate{}, nil)
+	fixture.templateGenerator.On("Generate").Return(&template_model.Template{}, nil)
 
 	// Act
 	_, _ = fixture.handler.GenerateTemplate(toDto(state))
@@ -121,7 +121,7 @@ func TestWhenStateIsMapped_ConfiguresTheGeneratorWithTheMappedConfiguration(t *t
 		Return(editor_state_dto.EditorStateValidationDto{State: state})
 	fixture.mapper.On("FromEditorState", state).Return(configuration)
 	fixture.templateGenerator.On("SetConfiguration", configuration).Return()
-	fixture.templateGenerator.On("Generate").Return(&entities.RmgTemplate{}, nil)
+	fixture.templateGenerator.On("Generate").Return(&template_model.Template{}, nil)
 
 	// Act
 	_, _ = fixture.handler.GenerateTemplate(toDto(state))

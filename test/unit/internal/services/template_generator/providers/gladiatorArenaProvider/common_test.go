@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -40,13 +41,16 @@ func defaultTuning() models.GenerationTuning {
 }
 
 // newNeutralZone builds a generator-shaped neutral zone whose content pools
-// classify back to the requested quality.
-func newNeutralZone(label string, quality neutral_zone.Quality) entities.Zone {
-	return test_helpers.NewZoneEditorService().
-		NewDefaultNeutralZone(label, quality, 0, false, defaultTuning())
+// classify back to the requested quality. It records no tier, so the tests that
+// use it exercise the inference fallback.
+func newNeutralZone(label string, quality neutral_zone.Quality) template_model.Zone {
+	return template_model.ToZoneModels([]entities.Zone{
+		test_helpers.NewZoneEditorService().
+			NewDefaultNeutralZone(label, quality, 0, false, defaultTuning()),
+	})[0]
 }
 
-func countArenaMainObjects(zone entities.Zone) int {
+func countArenaMainObjects(zone template_model.Zone) int {
 	count := 0
 	for _, mainObject := range zone.MainObjects {
 		if mainObject.Type == arenaObjectType {
@@ -56,7 +60,7 @@ func countArenaMainObjects(zone entities.Zone) int {
 	return count
 }
 
-func countArenaConnections(variant entities.Variant) int {
+func countArenaConnections(variant template_model.Variant) int {
 	count := 0
 	for _, connection := range variant.Connections {
 		if connection.ConnectionType == arenaObjectType {

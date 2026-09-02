@@ -13,11 +13,11 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 const configFileExtension = ".gen.json"
@@ -33,7 +33,7 @@ type State struct {
 	unsaved     bool
 
 	outputPath   widget.Editor
-	lastTemplate *entities.RmgTemplate
+	lastTemplate *template_model.Template
 	// templateRevision counts every replacement of lastTemplate, letting the
 	// preview cache detect a new template without comparing its contents.
 	templateRevision uint64
@@ -114,7 +114,7 @@ func (this *State) GetCurrentPath() string { return this.currentPath }
 
 func (this *State) IsUnsaved() bool { return this.unsaved }
 
-func (this *State) GetLastTemplate() *entities.RmgTemplate { return this.lastTemplate }
+func (this *State) GetLastTemplate() *template_model.Template { return this.lastTemplate }
 
 func (this *State) GetTemplateRevision() uint64 { return this.templateRevision }
 
@@ -152,7 +152,7 @@ func (this *State) hasTemplateVariants() bool {
 
 // setLastTemplate is the only writer of lastTemplate, so templateRevision
 // cannot drift away from the template the preview is showing.
-func (this *State) setLastTemplate(template *entities.RmgTemplate) {
+func (this *State) setLastTemplate(template *template_model.Template) {
 	this.lastTemplate = template
 	this.templateRevision++
 }

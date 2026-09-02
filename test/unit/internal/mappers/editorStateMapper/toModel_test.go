@@ -1,4 +1,4 @@
-package editorStateEntityMapper_test
+package editorStateMapper_test
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 func TestWhenAnEntityIsMappedBackToAState_TheStateEqualsTheOriginal(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	mapper := mappers.NewEditorStateEntityMapper()
+	mapper := mappers.NewEditorStateMapper()
 	expected := test_helpers.NewAllFieldsEditorStateModel()
 
 	// Act

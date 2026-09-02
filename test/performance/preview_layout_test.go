@@ -3,6 +3,7 @@ package performance_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -38,14 +39,15 @@ func BenchmarkPreviewLayoutService_BuildPreviewLayout(b *testing.B) {
 			configuration.Topology = benchmarkCase.topology
 			configuration.PlayerCount = benchmarkCase.playerCount
 			configuration.ZoneConfiguration.NeutralZoneCount = benchmarkCase.neutralZoneCount
-			template, _ := test_helpers.NewTemplateGenerator(configuration).Generate()
+			generated, _ := test_helpers.NewTemplateGenerator(configuration).Generate()
+			template := mappers.NewTemplateMapper().ToEntity(*generated)
 			service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
 
 			var layout preview.Layout
 
 			b.ReportAllocs()
 			for b.Loop() {
-				layout = service.BuildPreviewLayout(template, benchmarkCase.topology, previewCanvasSide)
+				layout = service.BuildPreviewLayout(&template, benchmarkCase.topology, previewCanvasSide)
 			}
 
 			require.NotEmpty(b, layout.Positions)

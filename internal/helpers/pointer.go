@@ -8,3 +8,12 @@ func ClonePointer[T any](source *T) *T {
 	value := *source
 	return &value
 }
+
+func MapPointer[TSource, TResult any](source *TSource, convert func(TSource) TResult) *TResult {
+	if source == nil {
+		return nil
+	}
+
+	value := convert(*source)
+	return &value
+}

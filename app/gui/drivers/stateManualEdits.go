@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
@@ -56,8 +57,8 @@ func (this *State) PreviewBaseZones() (dtos.ZoneEditorZonesDto, bool) {
 
 	variant := dto.Template.Variants[0]
 	this.pendingBaseZones = dtos.ZoneEditorZonesDto{
-		Zones:       variant.Zones,
-		Connections: variant.Connections,
+		Zones:       template_model.ToZoneEntities(variant.Zones),
+		Connections: template_model.ToConnectionEntities(variant.Connections),
 	}
 
 	return this.pendingBaseZones, true

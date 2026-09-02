@@ -133,7 +133,7 @@ func TestWhenDebounceElapsesWithoutFurtherEdits_Regenerates(t *testing.T) {
 // always succeeds, plus the mock for call-count assertions.
 func newAutoRegenerateState() (*drivers.State, *test_helpers.TemplateHandlerMock) {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
+	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	return drivers.NewUIState(
 		handlerMock,

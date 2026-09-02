@@ -1,4 +1,4 @@
-package editorStateEntityMapper_test
+package editorStateMapper_test
 
 import (
 	"testing"
@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenTheEditorStateEntityMapperIsCreated_ReturnsUsableInstance(t *testing.T) {
+func TestWhenTheEditorStateMapperIsCreated_ReturnsUsableInstance(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	mapper := mappers.NewEditorStateEntityMapper()
+	mapper := mappers.NewEditorStateMapper()
 
 	// Assert
 	assert.NotNil(t, mapper)

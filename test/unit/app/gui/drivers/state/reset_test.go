@@ -65,7 +65,7 @@ func TestWhenStateIsReset_StatusReportsNewFile(t *testing.T) {
 // unsaved change, so Reset has something to clear in every dimension.
 func newDirtyGeneratedState() *drivers.State {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
+	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
 		handlerMock,

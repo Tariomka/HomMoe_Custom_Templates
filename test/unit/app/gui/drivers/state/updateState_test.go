@@ -59,7 +59,7 @@ func TestWhenUpdateDoesNotChangeStateAfterGeneration_StateStaysSaved(t *testing.
 // state snapshot exists and change detection is active.
 func newGeneratedState() *drivers.State {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
+	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := drivers.NewUIState(
 		handlerMock,

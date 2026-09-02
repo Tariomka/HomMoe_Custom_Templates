@@ -88,7 +88,7 @@ func TestWhenEditsFollowExitConfirmation_ExitIsBlockedAgain(t *testing.T) {
 // change, plus a flag pointer reporting whether Exit closed the application.
 func newUnsavedState() (state *drivers.State, exited *bool) {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
+	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state = drivers.NewUIState(
 		handlerMock,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -15,7 +16,7 @@ import (
 func TestWhenRequestContainsTemplate_ReturnsServiceLayoutUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	rmgTemplate := &entities.RmgTemplate{Variants: []entities.Variant{{
+	rmgTemplate := entities.RmgTemplate{Variants: []entities.Variant{{
 		Zones: []entities.Zone{
 			{Name: "Spawn-A"},
 			{Name: "Spawn-B"},
@@ -28,12 +29,12 @@ func TestWhenRequestContainsTemplate_ReturnsServiceLayoutUnchanged(t *testing.T)
 		Orientation: entities.Orientation{ZeroAngleZone: "Spawn-C"},
 	}}}
 	request := dtos.PreviewLayoutRequestDto{
-		Template:   rmgTemplate,
+		Template:   new(mappers.NewTemplateMapper().ToModel(rmgTemplate)),
 		Topology:   config.TopologyRing,
 		CanvasSide: 600,
 	}
 	expected := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()).BuildPreviewLayout(
-		request.Template,
+		&rmgTemplate,
 		request.Topology,
 		request.CanvasSide,
 	)
@@ -55,7 +56,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyServiceLayout(t *testing.T) {
 		CanvasSide: 600,
 	}
 	expected := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()).BuildPreviewLayout(
-		request.Template,
+		nil,
 		request.Topology,
 		request.CanvasSide,
 	)

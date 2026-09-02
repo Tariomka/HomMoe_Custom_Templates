@@ -22,7 +22,7 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 		newTournamentConfiguration(config.TopologyRing, playerCount, gofakeit.Number(1, 20)))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	assert.Len(t, zonesWithPrefix(actual, "Spawn-"), playerCount)
@@ -35,7 +35,7 @@ func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubGuardGroups(t *t
 		newTournamentConfiguration(config.TopologyHubAndSpoke, 2, gofakeit.Number(1, 20)))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	hasHubGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
@@ -63,7 +63,7 @@ func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *test
 				newTournamentConfiguration(topology, 2, gofakeit.Number(1, 20)))
 
 			// Act
-			actual, _ := generator.Generate()
+			actual, _ := generateTemplate(generator)
 
 			// Assert
 			spawnZones := zonesWithPrefix(actual, "Spawn-")
@@ -103,7 +103,7 @@ func TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections(t *testing
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).

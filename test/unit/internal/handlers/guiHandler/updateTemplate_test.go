@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -33,7 +34,7 @@ func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testin
 	// Arrange
 	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateUpdateDto{
-		Template: &entities.RmgTemplate{Name: gofakeit.ProductName()},
+		Template: &template_model.Template{Name: gofakeit.ProductName()},
 	}
 
 	// Act
@@ -50,8 +51,8 @@ func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.
 	template := generateDefaultTemplate(t, handler)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
-		Connections: template.Variants[0].Connections,
+		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones),
+		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
 	}
 
 	// Act
@@ -66,7 +67,7 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
-	brokenConnections := slices.Clone(template.Variants[0].Connections)
+	brokenConnections := slices.Clone(template_model.ToConnectionEntities(template.Variants[0].Connections))
 	brokenConnections = append(brokenConnections, entities.Connection{
 		Name: gofakeit.ProductName(),
 		From: "No-Such-Zone",
@@ -74,7 +75,7 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	})
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
+		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones),
 		Connections: brokenConnections,
 	}
 
@@ -85,15 +86,16 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	assert.ErrorIs(t, err, common_errors.ErrZonesMissing)
 }
 
-func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testing.T) {
+func TestWhenUpdateSucceeds_ReturnedTemplateCarriesTheAppliedZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
+	zones := template_model.ToZoneEntities(template.Variants[0].Zones)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
-		Connections: template.Variants[0].Connections,
+		Zones:       zones,
+		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
 	}
 
 	// Act
@@ -101,7 +103,7 @@ func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testin
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, *template, *loadDto.Template)
+	assert.Equal(t, zones, template_model.ToZoneEntities(loadDto.Template.Variants[0].Zones))
 }
 
 func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
@@ -109,10 +111,10 @@ func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
-	require.NotEmpty(t, template.Variants[0].Zones)
+	require.NotEmpty(t, template_model.ToZoneEntities(template.Variants[0].Zones))
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones[:1],
+		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones)[:1],
 		Connections: nil,
 	}
 
@@ -121,7 +123,7 @@ func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	assert.Len(t, loadDto.Template.Variants[0].Zones, 1)
+	assert.Len(t, template_model.ToZoneEntities(loadDto.Template.Variants[0].Zones), 1)
 }
 
 func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t *testing.T) {
@@ -132,14 +134,15 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 	template.MandatoryContent = nil
 	editorState := editor_state_model.NewDefaultEditorStateModel()
 	configuration := test_helpers.NewConfigMapper().FromEditorState(editorState)
+	zones := template_model.ToZoneEntities(template.Variants[0].Zones)
 	expectedContent := newMandatoryContentProvider().CreateContentsForZones(
 		*configuration,
-		template.Variants[0].Zones,
+		zones,
 	)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
-		Connections: template.Variants[0].Connections,
+		Zones:       zones,
+		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
 		EditorState: toDtoPointer(&editorState),
 	}
 
@@ -148,7 +151,7 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, expectedContent, loadDto.Template.MandatoryContent)
+	assert.Equal(t, expectedContent, template_model.ToTemplateEntity(*loadDto.Template).MandatoryContent)
 }
 
 func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
@@ -161,7 +164,9 @@ func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
 		GuardedContentPool: []string{"classic_template_pool_random_t4_item"},
 		MainObjects:        []entities.MainObject{{Type: "City"}},
 	}}
-	template := &entities.RmgTemplate{Variants: []entities.Variant{{Zones: zones}}}
+	template := &template_model.Template{
+		Variants: []template_model.Variant{{Zones: template_model.ToZoneModels(zones)}},
+	}
 	editorState := editor_state_model.NewDefaultEditorStateModel()
 	editorState.SpawnRemoteFootholds = false
 	editorState.MediumNeutralContentRows = []editor_state_model.ZoneContentRow{{Sid: "medium_only", Count: 1}}
@@ -191,8 +196,8 @@ func TestWhenEditorStateIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
 	template.MandatoryContent = nil
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
-		Connections: template.Variants[0].Connections,
+		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones),
+		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
 	}
 
 	// Act
@@ -208,7 +213,7 @@ func TestWhenUpdateReplacesZones_CallersTemplateZonesAreNotMutated(t *testing.T)
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
-	originalZones := template.Variants[0].Zones
+	originalZones := template_model.ToZoneEntities(template.Variants[0].Zones)
 	require.NotEmpty(t, originalZones)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
@@ -221,7 +226,7 @@ func TestWhenUpdateReplacesZones_CallersTemplateZonesAreNotMutated(t *testing.T)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Len(t, template.Variants[0].Zones, len(originalZones))
+	assert.Len(t, template_model.ToZoneEntities(template.Variants[0].Zones), len(originalZones))
 }
 
 func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t *testing.T) {
@@ -229,11 +234,11 @@ func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
-	originalConnections := template.Variants[0].Connections
+	originalConnections := template_model.ToConnectionEntities(template.Variants[0].Connections)
 	require.NotEmpty(t, originalConnections)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
+		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones),
 		Connections: nil,
 	}
 
@@ -242,5 +247,5 @@ func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t
 
 	// Assert
 	require.NoError(t, err)
-	assert.Len(t, template.Variants[0].Connections, len(originalConnections))
+	assert.Len(t, template_model.ToConnectionEntities(template.Variants[0].Connections), len(originalConnections))
 }

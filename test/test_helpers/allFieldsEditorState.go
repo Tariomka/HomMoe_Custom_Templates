@@ -11,7 +11,7 @@ import (
 // NewAllFieldsEditorStateEntity is the all-fields model in its persisted shape,
 // which is what the frozen .gen.json fixtures are written from and compared to.
 func NewAllFieldsEditorStateEntity() editor_state.EditorState {
-	return mappers.NewEditorStateEntityMapper().ToEntity(NewAllFieldsEditorStateModel())
+	return mappers.NewEditorStateMapper().ToEntity(NewAllFieldsEditorStateModel())
 }
 
 // NewAllFieldsEditorStateModel builds an editor state in which every persisted

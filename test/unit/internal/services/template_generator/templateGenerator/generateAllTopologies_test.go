@@ -27,7 +27,7 @@ func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlan
 					generator := test_helpers.NewTemplateGenerator(configuration)
 
 					// Act
-					actual, _ := generator.Generate()
+					actual, _ := generateTemplate(generator)
 
 					// Assert
 					assert.GreaterOrEqual(t, len(actual.Variants[0].Zones), playerCount+neutralZoneCount)
@@ -52,7 +52,7 @@ func TestWhenAnyTopologySelected_EveryZoneHasAllRequiredFields(t *testing.T) {
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual, _ := generator.Generate()
+			actual, _ := generateTemplate(generator)
 
 			// Assert
 			var violations []string
@@ -98,7 +98,7 @@ func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testi
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual, _ := generator.Generate()
+			actual, _ := generateTemplate(generator)
 
 			// Assert
 			zoneNames := map[string]bool{}

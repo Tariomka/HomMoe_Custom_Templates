@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
@@ -39,6 +40,7 @@ func newTemplateHandlerFixture() *templateHandlerFixture {
 	fixture.handler = handlers.NewTemplateHandler(
 		fixture.templateGenerator,
 		fixture.mapper,
+		mappers.NewTemplateMapper(),
 		fixture.contentProvider,
 		fixture.connectionEditor,
 		fixture.zoneEditor,

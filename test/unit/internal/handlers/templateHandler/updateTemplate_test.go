@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -31,7 +32,7 @@ func TestWhenUpdatedTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t 
 	fixture := newTemplateHandlerFixture()
 
 	// Act
-	_, err := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{Template: &entities.RmgTemplate{}})
+	_, err := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{Template: &template_model.Template{}})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrProvidedTemplateInvalid)
@@ -51,7 +52,7 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsZones(t *testing.T) {
 	})
 
 	// Assert
-	assert.Equal(t, zones, loadDto.Template.Variants[0].Zones)
+	assert.Equal(t, zones, template_model.ToZoneEntities(loadDto.Template.Variants[0].Zones))
 }
 
 func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T) {
@@ -68,7 +69,7 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T)
 	})
 
 	// Assert
-	assert.Equal(t, connections, loadDto.Template.Variants[0].Connections)
+	assert.Equal(t, connections, template_model.ToConnectionEntities(loadDto.Template.Variants[0].Connections))
 }
 
 func TestWhenTemplateIsUpdated_LeavesTheSourceTemplateUntouched(t *testing.T) {
@@ -141,7 +142,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	})
 
 	// Assert
-	assert.Equal(t, expected, loadDto.Template.MandatoryContent)
+	assert.Equal(t, expected, template_model.ToTemplateEntity(*loadDto.Template).MandatoryContent)
 }
 
 func TestWhenTheUpdatedGraphHasErrors_ReturnsZonesMissingError(t *testing.T) {
@@ -177,9 +178,9 @@ func arrangeUpdateCollaborators(fixture *templateHandlerFixture, hasErrors bool)
 	fixture.connectionEditor.On("ComputeHasErrors", mock.Anything, mock.Anything).Return(hasErrors)
 }
 
-func singleVariantTemplate() *entities.RmgTemplate {
-	return &entities.RmgTemplate{
+func singleVariantTemplate() *template_model.Template {
+	return &template_model.Template{
 		Name:     gofakeit.Word(),
-		Variants: []entities.Variant{{Zones: []entities.Zone{{Name: gofakeit.Word()}}}},
+		Variants: []template_model.Variant{{Zones: []template_model.Zone{{Name: gofakeit.Word()}}}},
 	}
 }

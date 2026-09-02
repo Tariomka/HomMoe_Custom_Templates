@@ -7,8 +7,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +31,7 @@ func TestWhenTemplateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateSaveDto{
-		Template:   &entities.RmgTemplate{Name: "Empty Path Template"},
+		Template:   &template_model.Template{Name: "Empty Path Template"},
 		OutputPath: "",
 	}
 
@@ -47,7 +47,7 @@ func TestWhenTemplateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *test
 	// Arrange
 	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateSaveDto{
-		Template:   &entities.RmgTemplate{Name: "Whitespace Path Template"},
+		Template:   &template_model.Template{Name: "Whitespace Path Template"},
 		OutputPath: "   \t ",
 	}
 

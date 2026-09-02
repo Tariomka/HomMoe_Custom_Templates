@@ -40,7 +40,7 @@ type serviceMocks struct {
 	editorState *mockFileRepository[editor_state.EditorState]
 	template    *mockFileRepository[template.RmgTemplate]
 	preview     *mockFileRepository[image.RGBA]
-	mapper      mappers.IEditorStateEntityMapper
+	mapper      mappers.IEditorStateMapper
 }
 
 func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
@@ -48,7 +48,7 @@ func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
 		editorState: &mockFileRepository[editor_state.EditorState]{},
 		template:    &mockFileRepository[template.RmgTemplate]{},
 		preview:     &mockFileRepository[image.RGBA]{},
-		mapper:      mappers.NewEditorStateEntityMapper(),
+		mapper:      mappers.NewEditorStateMapper(),
 	}
 
 	service := file_service.NewFileService(mocks.editorState, mocks.template, mocks.preview, mocks.mapper)

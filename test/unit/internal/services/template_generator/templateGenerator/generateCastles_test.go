@@ -18,7 +18,7 @@ func TestWhenAbandonedOutpostsDisabled_AddsNoAbandonedOutpostMainObjects(t *test
 	generator := test_helpers.NewTemplateGenerator(newAbandonedOutpostConfiguration(false))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	assert.Zero(t, countNeutralMainObjectsOfType(actual, "AbandonedOutpost"))
@@ -30,7 +30,7 @@ func TestWhenAbandonedOutpostsEnabled_AddsAbandonedOutpostMainObjects(t *testing
 	generator := test_helpers.NewTemplateGenerator(newAbandonedOutpostConfiguration(true))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	assert.Positive(t, countNeutralMainObjectsOfType(actual, "AbandonedOutpost"))
@@ -39,13 +39,13 @@ func TestWhenAbandonedOutpostsEnabled_AddsAbandonedOutpostMainObjects(t *testing
 func TestWhenAbandonedOutpostsEnabled_KeepsNeutralCityCount(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	baseline, _ := test_helpers.NewTemplateGenerator(newAbandonedOutpostConfiguration(false)).Generate()
+	baseline, _ := generateTemplate(test_helpers.NewTemplateGenerator(newAbandonedOutpostConfiguration(false)))
 	baselineCityCount := countNeutralMainObjectsOfType(baseline, "City")
 	require.Positive(t, baselineCityCount, "baseline must produce neutral cities to compare against")
 	generator := test_helpers.NewTemplateGenerator(newAbandonedOutpostConfiguration(true))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	assert.Equal(t, baselineCityCount, countNeutralMainObjectsOfType(actual, "City"))
@@ -58,7 +58,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AddsOwnedCityPerCountInEachSpawnZone(t
 	generator := test_helpers.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(ownedPerZone))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	var ownedCounts []int
@@ -75,7 +75,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AssignsSpawnPlayerAsOwner(t *testing.T
 	generator := test_helpers.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	var ownerMismatches []string
@@ -96,7 +96,7 @@ func TestWhenPlayerOwnedCastlesConfigured_KeepsConfiguredUnclaimedCastleCount(t 
 	generator := test_helpers.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	var unclaimedCounts []int
@@ -113,7 +113,7 @@ func TestWhenPlayerOwnedCastlesConfigured_UnclaimedCastlesKeepGuards(t *testing.
 	generator := test_helpers.NewTemplateGenerator(newPlayerOwnedCastlesConfiguration(gofakeit.Number(1, 5)))
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	var guardViolations []string
@@ -139,7 +139,7 @@ func TestWhenPlayerZoneCastlesConfigured_CreatesSpawnPlusConfiguredCastleMainObj
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	var mainObjectCounts []int
@@ -158,7 +158,7 @@ func TestWhenGenerating_AssignsPlayerToEachSpawnMainObject(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual, _ := generator.Generate()
+	actual, _ := generateTemplate(generator)
 
 	// Assert
 	var spawnAssignments []string

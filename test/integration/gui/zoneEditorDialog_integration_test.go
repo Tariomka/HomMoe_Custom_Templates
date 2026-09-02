@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -162,8 +163,8 @@ func TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions(t *testing.T) {
 	variant := generated.Template.Variants[0]
 	options := handler.GetZoneEditorOptions(state, len(variant.Zones))
 	dialog := dialogs.NewZoneEditorDialog(
-		variant.Zones,
-		variant.Connections,
+		template_model.ToZoneEntities(variant.Zones),
+		template_model.ToConnectionEntities(variant.Connections),
 		options.Topology,
 		options.Tuning,
 		options.GenerateRoads,

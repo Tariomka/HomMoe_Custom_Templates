@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 func (this *State) Generate() { this.handleGenerateTemplate(false) }
@@ -114,7 +114,7 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 
 // applyGeneratedTemplate stores a freshly generated template as the live one
 // and records the editor state that produced it.
-func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
+func (this *State) applyGeneratedTemplate(template *template_model.Template) {
 	this.setLastTemplate(template)
 	this.innerState.SnapshotCurrentState()
 }

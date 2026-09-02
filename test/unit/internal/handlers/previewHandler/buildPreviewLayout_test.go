@@ -6,8 +6,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +21,7 @@ func TestWhenRequestIsEmpty_LaysOutNoTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	layoutService := newLayoutServiceReturning(preview.Layout{})
-	handler := handlers.NewPreviewHandler(layoutService)
+	handler := handlers.NewPreviewHandler(layoutService, mappers.NewTemplateMapper())
 
 	// Act
 	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
@@ -33,7 +35,7 @@ func TestWhenOnlyZonesAreProvided_LaysOutASynthesizedTemplate(t *testing.T) {
 	// Arrange
 	zones := []entities.Zone{{Name: gofakeit.Word()}}
 	layoutService := newLayoutServiceReturning(preview.Layout{})
-	handler := handlers.NewPreviewHandler(layoutService)
+	handler := handlers.NewPreviewHandler(layoutService, mappers.NewTemplateMapper())
 
 	// Act
 	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{Zones: zones})
@@ -47,7 +49,7 @@ func TestWhenOnlyConnectionsAreProvided_LaysOutASynthesizedTemplate(t *testing.T
 	// Arrange
 	connections := []entities.Connection{{Name: gofakeit.Word()}}
 	layoutService := newLayoutServiceReturning(preview.Layout{})
-	handler := handlers.NewPreviewHandler(layoutService)
+	handler := handlers.NewPreviewHandler(layoutService, mappers.NewTemplateMapper())
 
 	// Act
 	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{Connections: connections})
@@ -59,9 +61,9 @@ func TestWhenOnlyConnectionsAreProvided_LaysOutASynthesizedTemplate(t *testing.T
 func TestWhenTemplateIsProvided_LaysOutThatTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	template := &entities.RmgTemplate{Name: gofakeit.Word()}
+	template := &template_model.Template{Name: gofakeit.Word()}
 	layoutService := newLayoutServiceReturning(preview.Layout{})
-	handler := handlers.NewPreviewHandler(layoutService)
+	handler := handlers.NewPreviewHandler(layoutService, mappers.NewTemplateMapper())
 
 	// Act
 	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
@@ -70,7 +72,7 @@ func TestWhenTemplateIsProvided_LaysOutThatTemplate(t *testing.T) {
 	})
 
 	// Assert
-	assert.Same(t, template, laidOutTemplate(t, layoutService))
+	assert.Equal(t, template.Name, laidOutTemplate(t, layoutService).Name)
 }
 
 func TestWhenTopologyAndCanvasSideAreProvided_ForwardsThemToTheLayoutService(t *testing.T) {
@@ -78,7 +80,7 @@ func TestWhenTopologyAndCanvasSideAreProvided_ForwardsThemToTheLayoutService(t *
 	// Arrange
 	canvasSide := gofakeit.Float64Range(100, 900)
 	layoutService := newLayoutServiceReturning(preview.Layout{})
-	handler := handlers.NewPreviewHandler(layoutService)
+	handler := handlers.NewPreviewHandler(layoutService, mappers.NewTemplateMapper())
 
 	// Act
 	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
@@ -94,7 +96,7 @@ func TestWhenLayoutIsComputed_ReturnsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expected := preview.Layout{ZoneRadius: gofakeit.Float64Range(10, 40)}
-	handler := handlers.NewPreviewHandler(newLayoutServiceReturning(expected))
+	handler := handlers.NewPreviewHandler(newLayoutServiceReturning(expected), mappers.NewTemplateMapper())
 
 	// Act
 	layoutDto, err := handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})

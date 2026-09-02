@@ -17,14 +17,14 @@ type FileService struct {
 	editorStateRepository repositories.IFileRepository[editor_state.EditorState]
 	templateRepository    repositories.IFileRepository[template.RmgTemplate]
 	previewRepository     repositories.IFileRepository[image.RGBA]
-	editorStateMapper     mappers.IEditorStateEntityMapper
+	editorStateMapper     mappers.IEditorStateMapper
 }
 
 func NewFileService(
 	editorStateRepository repositories.IFileRepository[editor_state.EditorState],
 	templateRepository repositories.IFileRepository[template.RmgTemplate],
 	previewRepository repositories.IFileRepository[image.RGBA],
-	editorStateMapper mappers.IEditorStateEntityMapper) IFileService {
+	editorStateMapper mappers.IEditorStateMapper) IFileService {
 	return &FileService{
 		editorStateRepository: editorStateRepository,
 		templateRepository:    templateRepository,

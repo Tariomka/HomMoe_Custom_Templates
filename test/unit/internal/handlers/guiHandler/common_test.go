@@ -5,9 +5,9 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
@@ -19,7 +19,7 @@ import (
 
 // generateDefaultTemplate produces a real generated template from the default
 // editor state so update tests operate on realistic zones and connections.
-func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateHandler) *entities.RmgTemplate {
+func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateHandler) *template_model.Template {
 	t.Helper()
 
 	loadDto, err := handler.GenerateTemplate(toDto(editor_state_model.NewDefaultEditorStateModel()))

@@ -3,10 +3,13 @@ package dtos
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type TemplateUpdateDto struct {
-	Template    *entities.RmgTemplate
+	Template *template_model.Template
+	// Zones and Connections are still entities: the zone editor has not moved
+	// onto template_model yet, which is phase 4 of this batch.
 	Zones       []entities.Zone
 	Connections []entities.Connection
 

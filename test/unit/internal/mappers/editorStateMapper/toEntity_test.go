@@ -1,4 +1,4 @@
-package editorStateEntityMapper_test
+package editorStateMapper_test
 
 import (
 	"testing"
@@ -18,7 +18,7 @@ func TestWhenAStateIsMappedToTheEntityAndBack_EveryPersistedFieldSurvives(t *tes
 	t.Parallel()
 	// Arrange
 	state := test_helpers.NewAllFieldsEditorStateModel()
-	mapper := mappers.NewEditorStateEntityMapper()
+	mapper := mappers.NewEditorStateMapper()
 
 	// Act
 	roundTripped := mapper.ToModel(mapper.ToEntity(state))
@@ -33,7 +33,7 @@ func TestWhenAStateIsMappedToTheEntity_ItCarriesTheCurrentSchemaVersion(t *testi
 	state := test_helpers.NewAllFieldsEditorStateModel()
 
 	// Act
-	entity := mappers.NewEditorStateEntityMapper().ToEntity(state)
+	entity := mappers.NewEditorStateMapper().ToEntity(state)
 
 	// Assert
 	assert.Equal(t, editor_state.CurrentEditorStateSchemaVersion, entity.SchemaVersion)

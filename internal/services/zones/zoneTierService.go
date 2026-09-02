@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -34,6 +35,20 @@ func (this *ZoneTierService) GetQuality(zone entities.Zone) neutral_zone.Quality
 	default:
 		return neutral_zone.QualityUnknown
 	}
+}
+
+// ResolveQuality answers the tier question with the tier recorded on the zone,
+// falling back to inferring it from the zone's content pools when nothing was
+// recorded - the case for a template loaded from a raw .rmg.json.
+//
+// The nil check is load bearing: Quality counts from iota - 1, so a value field
+// would read back as QualityLowest and silently down-tier every zone nobody set.
+func (this *ZoneTierService) ResolveQuality(zone template_model.Zone) neutral_zone.Quality {
+	if zone.Quality != nil {
+		return *zone.Quality
+	}
+
+	return this.GetQuality(template_model.ToZoneEntity(zone))
 }
 
 func (this *ZoneTierService) GetGuardQuality(

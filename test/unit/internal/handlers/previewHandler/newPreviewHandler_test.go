@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +12,7 @@ import (
 func TestWhenHandlerIsCreated_ReturnsInstance(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	handler := handlers.NewPreviewHandler(&test_helpers.PreviewLayoutServiceMock{})
+	handler := handlers.NewPreviewHandler(&test_helpers.PreviewLayoutServiceMock{}, mappers.NewTemplateMapper())
 
 	// Assert
 	assert.NotNil(t, handler)

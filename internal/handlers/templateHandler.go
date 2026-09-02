@@ -10,6 +10,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -20,6 +22,7 @@ import (
 type templateHandler struct {
 	templateGenerator template_generator.ITemplateGenerator
 	mapper            mappers.IGeneratorConfigMapper
+	templateMapper    mappers.ITemplateMapper
 	contentProvider   provider_interfaces.IMandatoryContentProvider
 	connectionEditor  connection_editor.IConnectionEditorService
 	zoneEditor        connection_editor.IZoneEditorService
@@ -32,6 +35,7 @@ type templateHandler struct {
 func NewTemplateHandler(
 	templateGenerator template_generator.ITemplateGenerator,
 	mapper mappers.IGeneratorConfigMapper,
+	templateMapper mappers.ITemplateMapper,
 	contentProvider provider_interfaces.IMandatoryContentProvider,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
@@ -42,6 +46,7 @@ func NewTemplateHandler(
 	return &templateHandler{
 		templateGenerator: templateGenerator,
 		mapper:            mapper,
+		templateMapper:    templateMapper,
 		contentProvider:   contentProvider,
 		connectionEditor:  connectionEditor,
 		zoneEditor:        zoneEditor,
@@ -62,13 +67,13 @@ func (this *templateHandler) GenerateTemplate(
 	}
 
 	this.templateGenerator.SetConfiguration(configuration)
-	template, generationWarnings := this.templateGenerator.Generate()
-	if template == nil {
+	generated, generationWarnings := this.templateGenerator.Generate()
+	if generated == nil {
 		return dtos.TemplateLoadDto{}, common_errors.ErrGeneratedTemplateInvalid
 	}
 
 	warnings := slices.Concat(validation.Warnings, generationWarnings)
-	return dtos.TemplateLoadDto{Template: template, Warnings: warnings}, nil
+	return dtos.TemplateLoadDto{Template: generated, Warnings: warnings}, nil
 }
 
 func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {
@@ -76,8 +81,7 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 		return dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid
 	}
 
-	newTemplate := *templateDto.Template
-	newTemplate.Variants = slices.Clone(templateDto.Template.Variants)
+	newTemplate := this.templateMapper.ToEntity(*templateDto.Template)
 	newTemplate.Variants[0].Zones = templateDto.Zones
 	newTemplate.Variants[0].Connections = templateDto.Connections
 
@@ -98,7 +102,31 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 		err = common_errors.ErrZonesMissing
 	}
 
-	return dtos.TemplateLoadDto{Template: &newTemplate}, err
+	updated := this.templateMapper.ToModel(newTemplate)
+	carryZoneTiersByName(templateDto.Template.Variants[0].Zones, updated.Variants[0].Zones)
+
+	return dtos.TemplateLoadDto{Template: &updated}, err
+}
+
+// carryZoneTiersByName re-attaches the tier a zone already carried after the
+// edited zones round-tripped through the entity, which has nowhere to keep it.
+//
+// This is phase-4 scaffolding: it exists only because TemplateUpdateDto.Zones
+// is still []entities.Zone, and it is the last name lookup in the batch. When
+// the zone editor moves onto template_model, delete it - do not spread it.
+func carryZoneTiersByName(previous []template_model.Zone, updated []template_model.Zone) {
+	qualities := make(map[string]*neutral_zone.Quality, len(previous))
+	for _, zone := range previous {
+		if zone.Quality != nil {
+			qualities[zone.Name] = zone.Quality
+		}
+	}
+
+	for index := range updated {
+		if quality, ok := qualities[updated[index].Name]; ok {
+			updated[index].Quality = quality
+		}
+	}
 }
 
 func (this *templateHandler) ReapplyCastleSettings(
@@ -118,6 +146,9 @@ func (this *templateHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (str
 		return "", common_errors.ErrNoOutputPath
 	}
 
-	previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
-	return this.fileService.SaveTemplateWithPreview(outputPath, templateDto.Template, previewImage)
+	// Writing the .rmg.json is one of the two places the wire format is genuinely
+	// required, so this is where the model goes back to being an entity.
+	template := this.templateMapper.ToEntity(*templateDto.Template)
+	previewImage := this.previewGenerator.CreatePreviewImage(&template, templateDto.Topology)
+	return this.fileService.SaveTemplateWithPreview(outputPath, &template, previewImage)
 }

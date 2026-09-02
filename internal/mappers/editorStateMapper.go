@@ -5,24 +5,24 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
-// EditorStateEntityMapper converts between the persisted editor state and the
+// EditorStateMapper converts between the persisted editor state and the
 // runtime one. The model embeds the entity, so the conversion carries the whole
 // group set across in one assignment and only the schema version needs deciding.
-type EditorStateEntityMapper struct{}
+type EditorStateMapper struct{}
 
-func NewEditorStateEntityMapper() IEditorStateEntityMapper {
-	return &EditorStateEntityMapper{}
+func NewEditorStateMapper() IEditorStateMapper {
+	return &EditorStateMapper{}
 }
 
 // NewDefaultEntity is the seed a load decodes over: a key the file omits keeps
 // the default instead of collapsing to a zero value. A zero-seeded decode
 // cannot tell an absent key from an explicit false or 0, so the seed has to be
 // in place before the file is read.
-func (this *EditorStateEntityMapper) NewDefaultEntity() editor_state.EditorState {
+func (this *EditorStateMapper) NewDefaultEntity() editor_state.EditorState {
 	return this.ToEntity(editor_state_model.NewDefaultEditorStateModel())
 }
 
-func (this *EditorStateEntityMapper) ToEntity(state editor_state_model.EditorState) editor_state.EditorState {
+func (this *EditorStateMapper) ToEntity(state editor_state_model.EditorState) editor_state.EditorState {
 	return editor_state.EditorState{
 		TemplateIdentity:    state.TemplateIdentity.TemplateIdentity,
 		MapSettings:         state.MapSettings.MapSettings,
@@ -37,7 +37,7 @@ func (this *EditorStateEntityMapper) ToEntity(state editor_state_model.EditorSta
 	}
 }
 
-func (this *EditorStateEntityMapper) ToModel(entity editor_state.EditorState) editor_state_model.EditorState {
+func (this *EditorStateMapper) ToModel(entity editor_state.EditorState) editor_state_model.EditorState {
 	return editor_state_model.EditorState{
 		TemplateIdentity:    editor_state_model.TemplateIdentity{TemplateIdentity: entity.TemplateIdentity},
 		MapSettings:         editor_state_model.MapSettings{MapSettings: entity.MapSettings},
