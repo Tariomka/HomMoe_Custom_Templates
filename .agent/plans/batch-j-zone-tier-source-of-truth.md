@@ -202,34 +202,111 @@ agrees.
 
 ---
 
-## Phase 2: `QualifiedZone` + the generator records what it planned
-Status: Not started
+## Phase 2: the generator records what it planned
+Status: Not started — **design settled 2026-09-02, implementation not begun.**
 
-Behaviour deltas start here.
+Behaviour deltas start here, but only **one**: the gladiator arena. Everything
+else is plumbing.
 
-- [ ] `internal/models/qualifiedZone.go` — `QualifiedZone` embedding
-      `entities.Zone` plus `Quality neutral_zone.Quality`, with the helpers the
-      later phases need (wrap/unwrap a slice, look up by name). Keep it small;
-      add helpers when a caller needs one, not before.
+### How the tier gets out of the generator (settled — do not re-derive)
+
+The scoping pass found a much cheaper route than threading a collector through
+every topology service. **Every** neutral zone name in the repository is built by
+`constants.GetNeutralZoneNameFor(plan.Label)` — including the tournament cluster
+services — and labels are unique because zone names must be. So the index can be
+derived in `TemplateGenerator.Generate` from the `neutral_zone.Plans` it already
+holds, with **zero changes to `ZoneFactory`, `TopologyBase` or any topology**:
+
+```go
+// planZoneTiers records the tier the generator chose per zone name. Hub zones
+// are always built from the Highest profile; spawn zones have no tier.
+func planZoneTiers(
+    neutralZones neutral_zone.Plans,
+    variant entities.Variant) map[string]neutral_zone.Quality
+```
+
+Build a `label-name → quality` map from the plans, then walk `variant.Zones` and
+record only names that actually exist: hubs (`zone_helpers.IsZoneNameHub`) as
+`QualityHighest` — matching `CreateHubZone`, which always uses the Highest
+profile — and anything matching a plan name at its planned quality. Spawn zones
+are deliberately absent. Compute it **before** `PlaceArena` (which mutates zones
+but adds none).
+
+⚠ **Comma-ok is mandatory on every lookup.** A missing key yields `Quality(0)`,
+which is `QualityLowest` — a silent down-tier, the same class of bug as the
+`omitempty` trap in phase 3. Always `quality, ok := tiers[name]`, and fall back
+to inference when `!ok`. This also makes a `nil` map safe, which matters because
+test call sites will pass one.
+
+### The precedence rule lives in exactly one place
+
+Add to `IZoneTierService`:
+
+```go
+ResolveQuality(zone entities.Zone, zoneTiers map[string]neutral_zone.Quality) neutral_zone.Quality
+```
+
+Recorded tier wins; inference is the fallback. Phases 3 and 4 reuse it rather
+than re-implementing the precedence at each consumer.
+
+### `QualifiedZone` is deferred to phase 4
+
+The wrapper has **no consumer** until the editor chain moves, and phase 2's one
+consumer (the arena provider) wants the map, not a wrapper — it mutates
+`variant.Zones` in place by index, which a wrapper only gets in the way of.
+Building it now would be an abstraction ahead of its caller (§3.1). The design
+is unchanged; only the file's arrival moves. Its checklist item lives in phase 4.
+
+### Checklist
+
 - [ ] `internal/models/generatedTemplate.go` — `GeneratedTemplate{Template
       *entities.RmgTemplate; ZoneTiers map[string]neutral_zone.Quality}`.
-- [ ] Stamp the tier where the factory currently *consumes* it:
-      `ZoneFactory.CreateNeutralZone` takes `Quality` and converts it to a
-      Profile at [zoneFactory.go](../../internal/services/zones/zoneFactory.go);
-      `CreateHubZone` always uses `QualityHighest`; spawn zones are
-      `QualityUnknown`. Carry those out to the topology layer and into
-      `GeneratedTemplate.ZoneTiers`.
 - [ ] `TemplateGenerator.Generate()` returns
-      `(*models.GeneratedTemplate, []string)`. Update `templateHandler.go:65`
-      and the ~130 test call sites (`actual, _ :=` → `actual.Template`).
-- [ ] `IZoneTierService` gains a recorded-tier lookup that is preferred over
-      inference; `drivers.State` carries the index beside `lastTemplate`.
-- [ ] Tests: a test per consumer proving the tier it reads is the tier the
-      generator planned (backlog §2.2 asks for exactly this).
+      `(*models.GeneratedTemplate, []string)`, building the index via
+      `planZoneTiers`. Update `templateGeneratorInterface.go` and
+      `test_helpers/templateGeneratorMock.go`.
+- [ ] `IZoneTierService.ResolveQuality` + its unit tests (recorded wins,
+      unrecorded infers, nil map infers).
+- [ ] `PlaceArena(configuration, variant, zoneTiers)` — the provider resolves
+      through `ResolveQuality` in `findRichestNeutralZoneIndex` and
+      `mapNeutralZoneQualities`. Update the interface and the 12 call sites in
+      `placeArena_test.go`. **This is the behaviour delta**: a zone that
+      inference called `Unknown` scored −1 and could never win the arena; with
+      its planned tier it can.
+- [ ] Carry the index to the GUI: `dtos.TemplateLoadDto` gains `ZoneTiers`,
+      `templateHandler.GenerateTemplate` fills it, and `drivers.State` stores it
+      beside `lastTemplate` (`setLastTemplate` is the only writer — keep it that
+      way so `templateRevision` stays correct).
+- [ ] Tests: the index contains a planned neutral at its planned tier, a hub at
+      Highest and **no** spawn entry; plus an arena test proving a previously
+      `Unknown` zone now wins.
 
-**Expect goldens and generated output to move here.** Enumerate every delta —
-which topology, which zone, which of the five decisions from §1 changed, and why
-the recorded tier is the correct answer. A delta you cannot explain is a bug.
+### The ~73 test call sites
+
+`Generate()` has **one** production caller and ~73 test ones, nearly all
+`actual, _ := generator.Generate()` followed by `actual.Variants[...]`. They
+cannot be rewritten with `gofmt -r` alone, because the fix needs a second
+statement, and **a PowerShell text sweep over `.go` files is forbidden**.
+
+The safe route: all eight files in
+`test/unit/internal/services/template_generator/templateGenerator/` are one
+package, so add a **test-local** helper there —
+
+```go
+func generateTemplate(generator ...) (*entities.RmgTemplate, []string)
+```
+
+— and rewrite with one AST-safe pass per file:
+`gofmt -r 'generator.Generate() -> generateTemplate(generator)'`. This is *not*
+the rejected `GenerateWithTiers()`: that was a **production** entry point added
+to dodge churn. A test-package unpack helper is ordinary test hygiene and the
+repo already uses `common_test.go` helpers. Tests that assert on tiers call
+`Generate()` directly. The two `test/performance` sites are edited by hand.
+
+**Expect generated output to move here** — but only for the arena, and only for
+zones inference called `Unknown`. Enumerate every delta: which topology, which
+zone, and why the recorded tier is the correct answer. A delta you cannot
+explain is a bug.
 
 ### Verification Plan
 - Full gate set from phase 1.
@@ -292,6 +369,10 @@ Status: Not started
 
 The big mechanical phase (~24 files). Embedding is what makes it survivable.
 
+- [ ] `internal/models/qualifiedZone.go` — `QualifiedZone` **embedding**
+      `entities.Zone` plus `Quality neutral_zone.Quality` (deferred here from
+      phase 2, which had no consumer for it). Add slice wrap/unwrap and
+      lookup-by-name helpers only as a caller needs them, not up front.
 - [ ] The 9 DTOs carry `[]models.QualifiedZone`:
       `zoneEditorZonesDto`, `zoneEditorGeometryRequestDto`,
       `zoneEditorConnectionRequestDto`, `zoneEditorQualityRequestDto`,

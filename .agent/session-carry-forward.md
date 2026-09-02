@@ -1,202 +1,196 @@
-# Session Carry-Forward — 2026-09-01 (Batch O closed, Batch J planned)
+# Session Carry-Forward — 2026-09-02 (Batch J phase 1 done, phase 2 designed)
 
 ## 1. Session goal
 
-Finish **Batch O phase 2** (documentation only), then scope and plan **Batch J**
-(backlog §2.2 branch B — zone tier single source of truth).
+Close **Batch O phase 2** (docs), then plan and start **Batch J** (backlog §2.2
+branch B — zone tier single source of truth).
 
-Both are done. **No Go code was written this session** — batch O phase 2 was
-docs, and batch J is planned but not started.
+Batch O is finished and committed. Batch J's plan is written, **phase 1 is
+complete and reviewed**, and **phase 2 is fully designed but not started** — it
+was deliberately not begun because the session hit its ~50-message budget and
+starting a ~73-call-site refactor there would hand over a half-migrated tree.
 
-Plans: [.agent/plans/batch-o-picker-view-model.md](plans/batch-o-picker-view-model.md)
-(complete), [.agent/plans/batch-j-zone-tier-source-of-truth.md](plans/batch-j-zone-tier-source-of-truth.md)
-(written, phase 1 not started).
+Plan: [.agent/plans/batch-j-zone-tier-source-of-truth.md](plans/batch-j-zone-tier-source-of-truth.md).
 
 ## 2. Read this before touching anything
 
-**`AGENTS.md` §4.4.1** carries the Entity/Model/DTO doctrine. The three things
-most often gotten wrong:
+**`AGENTS.md` §4.4.1** carries the Entity/Model/DTO doctrine:
 
 - **The Model owns the structure.** *"Redefinition is expected in Models, but it
   should never happen in DTOs."* `EditorStateDto` is literally
   `struct { editor_state_model.EditorState }`. **A DTO carrying a Model is
   intended** — do not "fix" it.
 - **`app/` may hold a Model**; only the *crossing* into `internal/` is a DTO.
-  `app/` → `internal/models` is fine; `app/` → `internal/mappers`,
-  `internal/services`, `internal/repositories`, `internal/validators` is not.
 - Enforced by
   [test/unit/architecture/dependency/layering_test.go](../test/unit/architecture/dependency/layering_test.go).
   **Its allow-lists only ever shrink — never add an entry, clean the package.**
 
-**The measurement lesson, still worth internalising.** To decide whether a type
-crosses a layer boundary, follow the *method signatures the other side calls* —
-never grep for the type name. Six DTOs consumed with `:=` looked like they never
-reached `app/` and did. This is now recorded permanently in backlog §2.6 step 1.
+**Measuring a boundary crossing:** follow the *method signatures the other side
+calls*, never a grep for the type name. Six DTOs consumed with `:=` once looked
+like they never reached `app/` and did.
 
 ## 3. What shipped this session
 
-### Batch O phase 2 — docs (unstaged, needs a commit)
+### Batch O phase 2 — docs (committed)
 
-Phase 1 was **committed by the owner** as `85a7d76 "Batch O wip"` between
-sessions. Phase 2 made the backlog agree with the code:
+Backlog §2.6 step 1 rewritten as ✅ DONE, **closed at two allow-list entries, not
+zero**; §8 row O marked done and scoped to "step 1"; coverage figures refreshed.
+Entity counts re-measured and unchanged. §2.6 steps 2–4 stay open.
 
-- **§2.6 step 1 rewritten** as ✅ DONE, closed at **two allow-list entries, not
-  zero**: `pickers` was view-model logic and was deleted into `app/gui/models/`;
-  `bonuses` and `zone_content` keep their DTOs by owner decision. The §0.1
-  measurement correction is folded in.
-- **§2.6 heading kept** — it names the *113 entity* files and never implied the
-  DTO list drains to zero; a one-line note now says which half is closed.
-- The "6 files in 3 packages" evidence line records the close at **4 files in 2
-  packages**. Entity counts (113 / 85 / 11 / 11 / 6) were **re-measured and are
-  unchanged** — the deleted picker DTOs named no entity, and the new
-  `app/gui/models` files name none either.
-- **§8 row O marked ✅ done**, scoped to "§2.6 step 1", stating that steps 2–4
-  stay open.
-- Coverage refreshed **73.9 % → 73.8 %** in all three places that quote it.
-- Plan file closed out: phase 1 and 2 checkboxes ticked, Phase Summaries, Final
-  Recap and Deployment Plan written.
+### Batch J phase 1 — the tier service (uncommitted at time of writing)
 
-**Verified the allow-list is still load-bearing**: dropping
-`internal/services/bonuses` makes `TestWhenDtoConsumersAreScanned_…` fail naming
-`bonusEntryService.go` and `bonusEntryServiceInterface.go`; restored immediately.
+`IZoneTierService` is the only way the application asks for a zone's tier. Six
+injection sites moved onto it (mandatory content, gladiator arena, connection
+editor, manual reapply, zone editor handler, preview), field named `tierService`.
 
-### Batch J — planned only, no code
+**`PreviewLayoutService`'s DI bypass is fixed** — it hard-built its own
+classifier and was never the wire singleton. It now takes the service, and
+`wire_gen.go` proves it.
 
-[.agent/plans/batch-j-zone-tier-source-of-truth.md](plans/batch-j-zone-tier-source-of-truth.md),
-five phases, ~31 production files. Two exploration passes mapped the whole
-`entities.Zone` surface before any decision was taken.
+**`ZoneClassifier` is deleted, by owner decision at review.** The first cut had
+the tier service *wrapping* it; the owner asked for the service to own the logic
+natively so phase 2 adds the recorded-tier path to the real type rather than
+bolting it onto a forwarder. `zoneClassifier.go` and `zoneClassifierInterface.go`
+are gone; their bodies (`GetQuality`, `GetGuardQuality`,
+`GetConnectionGuardQuality` + `getCenterQuality` / `getTreasureQuality` /
+`getSidesQuality`) now live on `ZoneTierService`, which is an empty struct with a
+no-arg constructor. The whole classifier unit suite **moved intact** to
+`test/unit/internal/services/zones/zoneTierService/`; the mock became
+`ZoneTierServiceMock`.
+
+An `iface` lint hit (two identical interfaces) is what first exposed the
+redundancy — worth remembering that the linter caught a real design smell.
 
 ## 4. Owner decisions for batch J (settled — do not relitigate)
 
-1. **Branch B, not A.** No `Quality` field on `entities.Zone`. Branch A is not a
-   shortcut to fall back on when phase 4 gets tedious.
-2. **`models.QualifiedZone`, and it embeds `entities.Zone`.** Field promotion
-   keeps every `zone.Name` / `zone.Layout` compiling, turning most of phase 4
-   into a type swap. Name chosen over `PlannedZone` (misleading — the type also
-   carries hand-created and `.rmg.json`-loaded zones) and `TieredZone`.
+1. **Branch B**, not A. No `Quality` field on `entities.Zone`, ever.
+2. **`models.QualifiedZone` embeds `entities.Zone`** and adds `Quality`. Field
+   promotion keeps every `zone.Name` compiling, which is what makes phase 4 a
+   type swap instead of a rewrite. Name settled over `PlannedZone`/`TieredZone`.
 3. **The store behind the wrapper is the generator.** `Variant.Zones` is
-   protected and is rewritten on *both* the generate and apply-back paths, so a
-   wrapper with no store is the classifier with extra steps. `Generate` returns
-   the tiers it planned; `drivers.State` carries the index.
-4. **`Generate()` changes signature** to `(*models.GeneratedTemplate, []string)`;
-   the ~130 test call sites take the mechanical `actual` → `actual.Template`
-   edit. A `GenerateWithTiers()` second entry point was **rejected**.
-5. **`IZoneTierService` replaces `IZoneClassifier.GetQuality`** at all 8
-   consumers and absorbs `GetGuardQuality` / `GetConnectionGuardQuality`.
-   `ZoneClassifier` becomes the private fallback and **can never be deleted** —
-   a raw `.rmg.json` load has no recorded tier.
+   protected and rewritten on both the generate and apply-back paths, so a
+   wrapper with no store is just inference with extra steps.
+4. **`Generate()` changes signature**; ~73 test call sites take the churn. A
+   production `GenerateWithTiers()` was **rejected**.
+5. **`IZoneTierService` owns tier questions**; the classifier is deleted (see §3).
 6. **Persisted tier is nullable.** `omitempty` on a plain `int8` would silently
-   drop every Plastic zone (`QualityLowest` is 0). Entity stores `*int8` (it may
-   not import `internal/models/neutral_zone`); model exposes
-   `*neutral_zone.Quality`.
+   erase every Plastic zone (`QualityLowest` is 0). Entity stores `*int8`; model
+   exposes `*neutral_zone.Quality`.
 7. **The 9 zone-editor DTOs carry `[]models.QualifiedZone`.**
-8. **Output changes are approved.** Zones the classifier calls `Unknown` will
-   start getting planned mandatory-content rows, arena eligibility, castle
-   city-guard values and connection guard defaults. **Every delta must be
-   enumerated in the phase summary that causes it.**
+8. **Output changes are approved**, and every delta must be enumerated in the
+   phase summary that causes it.
 9. **One batch, phased, reviewed per phase.**
 
-## 5. Two traps found while scoping batch J
+## 5. Phase 2 is designed — read the plan, do not re-derive it
 
-- **`PreviewLayoutService` bypasses DI** — `NewPreviewLayoutService()` hard-builds
-  its own `NewZoneClassifier()`, so it is not the wire singleton and would
-  silently keep inferring. Phase 1 fixes it (~60 test call sites follow).
-- **`Unknown` → Plastic is a silent down-tier** —
-  `GetNeutralZoneProfile(QualityUnknown)` returns the Lowest profile, so an
-  unclassifiable zone whose castles are rebuilt gets Plastic city stats today.
+The plan's phase 2 section now carries the full implementation design found by
+reading the generation path. The three things that took the analysis:
 
-## 6. Gates
+1. **The index needs no topology changes.** Every neutral zone name in the repo
+   comes from `constants.GetNeutralZoneNameFor(plan.Label)` — tournament cluster
+   services included — so `Generate` can derive `map[zoneName]Quality` from the
+   `neutral_zone.Plans` it already holds, plus hubs at `QualityHighest`. No
+   `ZoneFactory` / `TopologyBase` / topology signature changes at all.
+2. **Comma-ok is mandatory on every tier lookup.** A missing key yields
+   `Quality(0)` = `QualityLowest`, a silent down-tier — the same bug class as the
+   `omitempty` trap. It also makes a `nil` map safe, which matters because tests
+   will pass one.
+3. **The ~73 `Generate()` call sites cannot be done by `gofmt -r` alone** (the
+   fix needs a second statement) and **a PowerShell text sweep over `.go` files
+   is forbidden**. The route is a *test-local* `generateTemplate(generator)`
+   helper in the one test package that holds eight of those files, then one
+   `gofmt -r` pass per file. That is not the rejected production entry point.
 
-Nothing executable changed this session. Re-verified after the doc edits:
+`QualifiedZone` was **moved to phase 4**, where its consumers are. Phase 2's only
+consumer, the arena provider, wants the map — it mutates `variant.Zones` in place
+by index. Building the wrapper in phase 2 would be an abstraction ahead of its
+caller (§3.1). The design is unchanged; only the file's arrival moved.
+
+**Phase 2 has exactly one behaviour delta:** the gladiator arena. A zone that
+inference called `Unknown` scored −1 and could never win the arena; with its
+planned tier it can.
+
+## 6. Gates (batch J phase 1, re-run after the classifier absorption)
 
 | Gate | Result |
 | --- | --- |
 | `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
 | `gofmt -l ./app ./internal ./test ./cmd` | empty |
-| `go test ./test/unit/... -count=1` | pass (no FAIL) |
-| `go test ./test/unit/architecture/... -count=1` | pass, and fails correctly when an allow-list entry is dropped |
-
-Standing baselines from batch O: coverage **73.8 %** (floor 72.5 %), lint **0
-issues**, GPU suite passes **without `-update`**.
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 (regenerated, never hand-edited) |
+| Unit / untagged / integration | pass |
+| **GPU suite, no `-update`** | **pass (23.9 s)** — no pixel moved |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| Unit coverage | **73.8 %** (floor 72.5 %) |
 
 ## 7. Git status snapshot
 
-- **Branch:** `AD/fixing_some_stuff_08-12`, ahead of origin by 5.
-- **HEAD:** `85a7d76 "Batch O wip"` (batch O phase 1, committed by the owner).
-- **Unstaged, needs review and a commit:**
-  - `.agent/backlog/backlog-opus5.md` — §2.6 step 1, §8 row O, coverage figures
-  - `.agent/plans/batch-o-picker-view-model.md` — phase 2 closed out
-  - `.agent/session-carry-forward.md` — this file
-  - `.agent/plans/batch-j-zone-tier-source-of-truth.md` — new, untracked
-- The agent has not touched the index (AGENTS §2.5).
+- **Branch:** `AD/fixing_some_stuff_08-12`.
+- Batch O phase 1 is committed as `85a7d76 "Batch O wip"`; batch O phase 2 docs
+  were committed after that.
+- **Batch J phase 1 is in the working tree, partly staged by the owner during
+  review.** The agent has not touched the index (AGENTS §2.5) — do not unstage.
+- `.agent/plans/batch-j-zone-tier-source-of-truth.md` and this file are the only
+  doc changes outstanding.
 
 ## 8. Rejections / things not done
 
-- **Rejected — `GenerateWithTiers()` as a second entry point.** It would exist
-  only to dodge test churn; §3.1 calls that a speculative abstraction.
-- **Rejected — `PlannedZone` / `TieredZone` as the wrapper name.**
+- **Rejected — a production `GenerateWithTiers()`.** Dodging test churn is not a
+  reason for a second entry point.
+- **Rejected — `PlannedZone` / `TieredZone`** as the wrapper name.
 - **Rejected — branch A** (a `json:"-"` `Quality` on the protected schema).
-- **Rejected — persistence-only tier store**, and **rejected — a side index
-  without a wrapper**. The owner chose the wrapper plus a generator-sourced
-  index.
-- **Not done — §2.6 steps 2–4** (the 113-file entity list). Still open. Batch J
-  phase 5 may shrink it for free, but that is not its purpose.
-- **Not done — any batch J code.** Deliberate: batch O's docs are uncommitted,
-  and mixing two batches in one working tree makes review harder.
+- **Rejected — persistence-only tier store**, and **a side index with no wrapper**.
+- **Rejected — keeping `ZoneClassifier`** as a private collaborator behind the
+  service (owner asked for outright absorption).
+- **Not done — batch J phases 2–5.** Phase 2 is designed, not written.
+- **Not done — §2.6 steps 2–4** (the 113-file entity list). Still open.
 
 ## 9. Open questions
 
-1. **None block batch J phase 1.** It is fully specified.
-2. **Repo memory duplication** (`/memories/repo/conventions.md`) — flagged ten
+1. **None block phase 2.** It is specified down to function signatures.
+2. **Repo memory duplication** (`/memories/repo/conventions.md`) — flagged eleven
    sessions running: ~1,300 lines, roughly four copies of the same body. Still
    needs a dedupe pass.
-3. §2.6 step 2 still asks a real design question before that list can drain: is
-   `internal/dtos` / `internal/handlers` naming `entities.Zone` a breach at all,
-   or does the `.rmg.json` schema vocabulary deserve a documented carve-out like
-   `internal/helpers/data` already has? **Batch J phase 4 partly answers it in
-   practice** — the 9 DTOs stop naming `entities.Zone` because they carry the
-   wrapper instead.
+3. §2.6 step 2's design question stays open, though batch J phase 4 answers part
+   of it in practice: the 9 DTOs stop naming `entities.Zone` because they carry
+   the wrapper instead.
 
 ## 10. Next recommended actions
 
-1. **Review and commit the batch O phase 2 docs** (four files in §7).
-2. **Start batch J phase 1** — `IZoneTierService` over the existing classifier.
-   Pure indirection: generated output must stay byte-identical and the GPU suite
-   must pass **without `-update`**. It is the safety net that proves the seam
-   before any behaviour moves in phase 2.
-3. Phases 2–5 in order, each reviewed and committed on its own.
+1. **Review and commit batch J phase 1** if not already done.
+2. **Do batch J phase 2** exactly as the plan's phase 2 section specifies.
+   Order that keeps the tree compiling: `GeneratedTemplate` → `Generate` +
+   `planZoneTiers` → mock and test call sites → `ResolveQuality` → `PlaceArena`
+   → `TemplateLoadDto` / `drivers.State` → new tests.
+3. Phases 3–5 in order, each reviewed and committed on its own.
 
 ## 11. Carry-forward prompt
 
 > Read `AGENTS.md` first — especially **§4.4.1**, the Entity/Model/DTO doctrine.
-> In one line: **Entity** (`internal/entities/`) is the database layer, json tags
-> only; **Model** (`internal/models/`) is the service layer and **owns the
-> structure and all business logic**; **DTO** (`internal/dtos/`) is the `app/` ↔
+> **Entity** (`internal/entities/`) is the database layer, json tags only;
+> **Model** (`internal/models/`) is the service layer and **owns the structure
+> and all business logic**; **DTO** (`internal/dtos/`) is the `app/` ↔
 > `internal/` crossing and is thin. *"Redefinition is expected in Models, but it
 > should never happen in DTOs"* — **a DTO carrying a Model is intended**, and
 > `app/` MAY hold a Model. Do not "fix" either. Enforced by
 > `test/unit/architecture/dependency/layering_test.go`; its allow-lists **only
-> ever shrink** — never add an entry, clean the package instead.
+> ever shrink**.
 >
-> **Batch O is finished.** Phase 1 is committed (`85a7d76`); phase 2 was docs and
-> is unstaged awaiting your commit. Do not reopen it: the DTO allow-list ends at
-> **two entries** (`bonuses`, `zone_content`) by decision, not debt.
+> **Then read `.agent/plans/batch-j-zone-tier-source-of-truth.md` and do phase
+> 2.** Batch J gives the zone tier a single source of truth (backlog §2.2 branch
+> B). Phase 1 is **complete**: `IZoneTierService` now owns the inference outright
+> and `ZoneClassifier` is deleted. **Phase 2 is fully designed in the plan — read
+> its "How the tier gets out of the generator" and "The ~73 test call sites"
+> sections and follow them; do not re-derive the design.** §0 holds nine settled
+> owner decisions; do not relitigate them.
 >
-> **Your work is `.agent/plans/batch-j-zone-tier-source-of-truth.md` — read it
-> and start phase 1.** Batch J gives the zone tier a single source of truth
-> (backlog §2.2 branch B). Phase 1 is pure indirection: put an
-> `IZoneTierService` over the existing `ZoneClassifier`, swap all 8 consumers
-> onto it, and fix `PreviewLayoutService`, which hard-constructs its own
-> classifier instead of taking the wire singleton (~60 test call sites follow).
-> **Generated output must be byte-identical and the GPU suite must pass without
-> `-update`** — phase 1 is the safety net that proves the seam before behaviour
-> moves in phase 2. §0 of that plan holds nine settled owner decisions; do not
-> relitigate them.
->
-> **A measurement lesson worth internalising:** to decide whether a type crosses
-> a layer boundary, follow the *method signatures the other side calls* — never
-> grep for the type name. Six DTOs consumed with `:=` looked like they never
-> reached `app/` and did.
+> Three things phase 2 will punish you for forgetting: **comma-ok on every tier
+> lookup** (a missing key yields `Quality(0)` = `QualityLowest`, a silent
+> down-tier); **never sweep `.go` files with PowerShell text replacement** — use
+> `gofmt -r` on an explicit file list, since an AST rewrite cannot mangle a file;
+> and **`QualifiedZone` belongs to phase 4**, not phase 2, because phase 2 has no
+> consumer for it.
 >
 > The hard rules, one line each: never modify `data/`, `internal/registry/`, or
 > **anything under `internal/entities/template/`** — batch J is branch B
@@ -215,10 +209,9 @@ issues**, GPU suite passes **without `-update`**.
 > `UTF8Encoding($false)`, then verify insertions == deletions.
 >
 > Standing traps: **nil is load-bearing** on the regeneration path (nil
-> `Previous` = first generation, nil `Next` = unarmed debounce) and it becomes
-> load-bearing again in batch J phase 3 (nil `Quality` = "not recorded", because
-> `omitempty` on a plain int8 would silently erase every Plastic zone); the two
-> frozen fixtures under `test/test_helpers/testdata/` plus the untagged
+> `Previous` = first generation, nil `Next` = unarmed debounce) and again in
+> phase 3 (nil `Quality` = "not recorded"); the two frozen fixtures under
+> `test/test_helpers/testdata/` plus the untagged
 > `editorStateWireFormat_integration_test.go` must keep passing **unchanged**,
 > comparing **parsed objects, never bytes**; the picker and zone-editor dialogs
 > are snapshotted, so the GPU suite must pass **without `-update`**; the test
