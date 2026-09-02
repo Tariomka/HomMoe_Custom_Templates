@@ -51,9 +51,13 @@ file through `Get-Content`/`Set-Content`; unit coverage must not drop below
    exist only to avoid test churn, which §3.1 calls a speculative abstraction.
 5. **`IZoneTierService` replaces `IZoneClassifier.GetQuality` at all 8
    consumers**, and takes `GetGuardQuality` / `GetConnectionGuardQuality` with
-   it — they are tier queries over the same data. `ZoneClassifier` survives as
-   the **private inference fallback** behind the service. It can never be
-   deleted: a template loaded from a raw `.rmg.json` has no recorded tier.
+   it — they are tier queries over the same data. **`ZoneClassifier` is deleted
+   outright** (owner call at phase 1 review): the tier service owns the
+   inference natively rather than delegating to a wrapped classifier, so that it
+   gains the recorded-tier path *alongside* the old behaviour instead of on top
+   of another type. Inference itself can never go away — a template loaded from
+   a raw `.rmg.json` has no recorded tier — but it is now the service's own
+   fallback branch, not a separate collaborator.
 6. **The persisted tier is nullable, and `nil` means "not recorded".** A plain
    `int8` with `omitempty` would **silently drop every Plastic zone**
    (`QualityLowest` is 0) back to "absent" — the exact bug this item is about.
@@ -99,26 +103,26 @@ Two traps found while scoping, both load-bearing:
 
 ---
 
-## Phase 1: `IZoneTierService` over the existing classifier
-Status: Not started
+## Phase 1: `IZoneTierService` absorbs the classifier
+Status: **Complete** (2026-09-01) — uncommitted, awaiting review.
 
 Pure indirection. The tier is still inferred, so **generated output must be
 byte-identical** — this phase is the safety net that proves the seam is correct
 before any behaviour moves.
 
-- [ ] New `internal/services/zones/zoneTierService.go` + its interface per
+- [x] New `internal/services/zones/zoneTierService.go` + its interface per
       §4.2.2 (the package already has `zone_interfaces/`, so it goes there):
       `GetQuality(zone entities.Zone) neutral_zone.Quality`,
-      `GetGuardQuality(...)`, `GetConnectionGuardQuality(...)`. Phase 1 delegates
-      all three straight to `ZoneClassifier`.
-- [ ] Swap the 8 consumers onto `IZoneTierService`. `IZoneClassifier` stops being
-      injected anywhere outside the new service.
-- [ ] `NewPreviewLayoutService()` takes the tier service as a parameter instead of
+      `GetGuardQuality(...)`, `GetConnectionGuardQuality(...)`. It **owns** the
+      inference; `zoneClassifier.go` and `IZoneClassifier` are deleted.
+- [x] Swap the 8 consumers onto `IZoneTierService`. Nothing outside the zones
+      package names a classifier any more.
+- [x] `NewPreviewLayoutService()` takes the tier service as a parameter instead of
       constructing a classifier. Update `providerSets.go`, regenerate with
       `wire gen ./internal/composition/...` — never hand-edit `wire_gen.go`.
       Update the ~60 `NewPreviewLayoutService()` call sites in
       `test/unit/internal/services/preview_service/previewLayoutService/`.
-- [ ] Unit tests for the new service per §4.6 (one folder per file, one file per
+- [x] Unit tests for the new service per §4.6 (one folder per file, one file per
       public method).
 
 ### Verification Plan
@@ -129,7 +133,72 @@ before any behaviour moves.
 - Coverage ≥ 72.5 %.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Landed.** `IZoneTierService` is now the only way the application asks for a
+zone's tier. Six injection sites moved onto it — `MandatoryContentProvider`,
+`GladiatorArenaProvider`, `ConnectionEditorService`, `ManualReapplyService`,
+`zoneEditorHandler` and `PreviewLayoutService` — and the field is named
+`tierService` everywhere, so no consumer still says "classifier".
+
+**`PreviewLayoutService`'s DI bypass is fixed.** It took no constructor argument
+and hard-built its own `NewZoneClassifier()`, so it was never the wire
+singleton. It now takes `IZoneTierService`, and `wire_gen.go` shows
+`preview_service.NewPreviewLayoutService(iZoneTierService)`. This was the trap
+that would have made phase 2 silently keep inferring on the preview path.
+
+**One deviation from the plan, settled at review.** The plan had the tier service
+*wrapping* `ZoneClassifier`. Two things pushed against that. First, with the
+service delegating one-for-one the two interfaces had **identical method sets**,
+which the `iface` linter correctly flagged as redundant against a 0-issue
+baseline. Second — the owner's call — a service that only forwards to a
+classifier means phase 2 would bolt the recorded-tier path onto a *wrapper*,
+leaving the real logic parked in another type forever.
+
+So **`ZoneClassifier` is gone**. `zoneClassifier.go` and
+`zoneClassifierInterface.go` were deleted and their bodies now live on
+`ZoneTierService` verbatim — `GetQuality`, `GetGuardQuality`,
+`GetConnectionGuardQuality` plus the three private branches `getCenterQuality`,
+`getTreasureQuality`, `getSidesQuality`. `NewZoneTierService()` takes no
+arguments and the struct is empty, exactly as `ZoneClassifier` was. Phase 2 adds
+the recorded-tier lookup as a branch **in front of** that inference, in the type
+that owns it. Consequences:
+
+- `test_helpers/zoneClassifierMock.go` was **renamed** (`Move-Item`) to
+  `zoneTierServiceMock.go`, type `ZoneTierServiceMock`. It mocks the one
+  surviving interface, and `zoneEditorHandler`'s fixture — the one place that
+  genuinely needs to fake a tier — keeps using it (`fixture.zoneClassifier` →
+  `fixture.tierService`).
+- The **whole classifier unit suite moved** to
+  `test/unit/internal/services/zones/zoneTierService/` per §4.6 (the folder is
+  named after the implementation file). Nothing was thinned: the table-driven
+  `getQuality` suite, the seven `getGuardQuality` cases and the three
+  `getConnectionGuardQuality` cases all came across intact, against the service.
+- A short-lived `test_helpers.NewZoneTierService()` shim was deleted again once
+  the constructor lost its parameter — a wrapper around a no-arg constructor is
+  noise, and going direct returns most of those test files to nearly their
+  original text.
+
+**Mechanical edits were done with `gofmt -r`**, not text substitution — an AST
+rewrite cannot mangle a `.go` file the way a `Get-Content`/`Set-Content` round
+trip can. That covered the ~60 `NewPreviewLayoutService()` call sites in one file
+plus the constructor swaps across roughly twenty test files.
+
+**No behaviour changed.** The inference code moved verbatim and every gate
+agrees.
+
+### Verification results (2026-09-01)
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 (regenerated, never hand-edited) |
+| Unit / untagged / integration | pass |
+| **GPU suite, no `-update`** | **pass (23.9 s)** — no pixel moved |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| Unit coverage | **73.8 %** (floor 72.5 %) |
 
 ---
 
@@ -165,7 +234,7 @@ the recorded tier is the correct answer. A delta you cannot explain is a bug.
 ### Verification Plan
 - Full gate set from phase 1.
 - Diff a generated `.rmg.json` for each topology before/after; every difference
-  must map to a zone the classifier called `Unknown`.
+  must map to a zone inference called `Unknown`.
 - `BenchmarkEditorWindow_TabCycling` re-measured **by hand** (needs a GPU, never
   runs in CI) if the clone path or `State` shape changed — baseline ~4,773
   allocs/op.

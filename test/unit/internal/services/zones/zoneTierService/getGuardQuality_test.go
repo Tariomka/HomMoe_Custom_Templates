@@ -1,4 +1,4 @@
-package zoneClassifier_test
+package zoneTierService_test
 
 import (
 	"testing"
@@ -13,11 +13,11 @@ import (
 func TestWhenZoneNameIsEmpty_ReturnsLowQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	zoneList := []entities.Zone{{Name: "Spawn-A"}}
 
 	// Act
-	quality := classifier.GetGuardQuality("", zoneList, []string{"Spawn-A"})
+	quality := service.GetGuardQuality("", zoneList, []string{"Spawn-A"})
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityLow, quality)
@@ -26,11 +26,11 @@ func TestWhenZoneNameIsEmpty_ReturnsLowQuality(t *testing.T) {
 func TestWhenZoneIsNotFound_ReturnsLowQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	zoneList := []entities.Zone{{Name: "Spawn-A"}}
 
 	// Act
-	quality := classifier.GetGuardQuality("Neutral-Missing", zoneList, []string{"Spawn-A"})
+	quality := service.GetGuardQuality("Neutral-Missing", zoneList, []string{"Spawn-A"})
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityLow, quality)
@@ -39,11 +39,11 @@ func TestWhenZoneIsNotFound_ReturnsLowQuality(t *testing.T) {
 func TestWhenZoneIsPlayerOwned_ReturnsUnknownQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	zoneList := []entities.Zone{{Name: "Spawn-A"}}
 
 	// Act
-	quality := classifier.GetGuardQuality("Spawn-A", zoneList, []string{"Spawn-A"})
+	quality := service.GetGuardQuality("Spawn-A", zoneList, []string{"Spawn-A"})
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityUnknown, quality)
@@ -52,11 +52,11 @@ func TestWhenZoneIsPlayerOwned_ReturnsUnknownQuality(t *testing.T) {
 func TestWhenZoneIsHub_ReturnsHighestQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	zoneList := []entities.Zone{{Name: "Hub"}}
 
 	// Act
-	quality := classifier.GetGuardQuality("Hub", zoneList, nil)
+	quality := service.GetGuardQuality("Hub", zoneList, nil)
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityHighest, quality)
@@ -65,11 +65,11 @@ func TestWhenZoneIsHub_ReturnsHighestQuality(t *testing.T) {
 func TestWhenPlayerPrefixIsNotListed_ReturnsUnknownQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	zoneList := []entities.Zone{{Name: "Spawn-B"}}
 
 	// Act
-	quality := classifier.GetGuardQuality("Spawn-B", zoneList, []string{"Spawn-A"})
+	quality := service.GetGuardQuality("Spawn-B", zoneList, []string{"Spawn-A"})
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityUnknown, quality)
@@ -78,7 +78,7 @@ func TestWhenPlayerPrefixIsNotListed_ReturnsUnknownQuality(t *testing.T) {
 func TestWhenZoneIsNeutral_ReturnsQualityFromContent(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	zoneList := []entities.Zone{{
 		Name:               "Neutral-C",
 		Layout:             registry.GetLayoutValues().TreasureZone,
@@ -86,7 +86,7 @@ func TestWhenZoneIsNeutral_ReturnsQualityFromContent(t *testing.T) {
 	}}
 
 	// Act
-	quality := classifier.GetGuardQuality("Neutral-C", zoneList, nil)
+	quality := service.GetGuardQuality("Neutral-C", zoneList, nil)
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityMedium, quality)
@@ -95,11 +95,11 @@ func TestWhenZoneIsNeutral_ReturnsQualityFromContent(t *testing.T) {
 func TestWhenZoneNameHasNoKnownPrefix_ReturnsUnknownQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	zoneList := []entities.Zone{{Name: "Colosseum"}}
 
 	// Act
-	quality := classifier.GetGuardQuality("Colosseum", zoneList, nil)
+	quality := service.GetGuardQuality("Colosseum", zoneList, nil)
 
 	// Assert
 	assert.Equal(t, neutral_zone.QualityUnknown, quality)

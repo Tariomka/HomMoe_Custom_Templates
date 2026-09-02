@@ -162,7 +162,7 @@ func TestWhenHubZoneIsCreated_ClassifiesAsHighestQuality(t *testing.T) {
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHighest, zone_services.NewZoneClassifier().GetQuality(zone))
+	assert.Equal(t, neutral_zone.QualityHighest, zone_services.NewZoneTierService().GetQuality(zone))
 }
 
 func TestWhenHubZoneIsCreated_RoadsCountCastlesOnly(t *testing.T) {

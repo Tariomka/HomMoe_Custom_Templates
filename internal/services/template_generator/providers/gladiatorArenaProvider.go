@@ -27,12 +27,12 @@ import (
 //     layouts), the arena falls back to a main object in the richest neutral
 //     zone so it is never silently dropped.
 type GladiatorArenaProvider struct {
-	zoneClassifier zone_interfaces.IZoneClassifier
+	tierService zone_interfaces.IZoneTierService
 }
 
 func NewGladiatorArenaProvider(
-	zoneClassifier zone_interfaces.IZoneClassifier) provider_interfaces.IGladiatorArenaProvider {
-	return &GladiatorArenaProvider{zoneClassifier: zoneClassifier}
+	tierService zone_interfaces.IZoneTierService) provider_interfaces.IGladiatorArenaProvider {
+	return &GladiatorArenaProvider{tierService: tierService}
 }
 
 // PlaceArena writes the arena into the variant when the configuration asks for
@@ -91,7 +91,7 @@ func (this *GladiatorArenaProvider) findRichestNeutralZoneIndex(zones []entities
 			continue
 		}
 
-		quality := this.zoneClassifier.GetQuality(zone)
+		quality := this.tierService.GetQuality(zone)
 		if bestIndex < 0 || quality > bestQuality ||
 			(quality == bestQuality && zone.Name < zones[bestIndex].Name) {
 			bestIndex, bestQuality = index, quality
@@ -105,7 +105,7 @@ func (this *GladiatorArenaProvider) mapNeutralZoneQualities(
 	qualities := make(map[string]neutral_zone.Quality, len(zones))
 	for _, zone := range zones {
 		if zone_helpers.IsZoneNameNeutral(zone.Name) {
-			qualities[zone.Name] = this.zoneClassifier.GetQuality(zone)
+			qualities[zone.Name] = this.tierService.GetQuality(zone)
 		}
 	}
 	return qualities

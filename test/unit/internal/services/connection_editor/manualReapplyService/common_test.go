@@ -18,7 +18,7 @@ func newManualReapplyService() connection_editor.IManualReapplyService {
 	return connection_editor.NewManualReapplyService(
 		test_helpers.NewZoneEditorService(),
 		zone_services.NewCastleFactory(),
-		zone_services.NewZoneClassifier(),
+		zone_services.NewZoneTierService(),
 		generation_tuning.NewGenerationTuningFactory(),
 	)
 }

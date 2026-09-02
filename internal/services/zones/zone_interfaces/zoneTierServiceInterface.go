@@ -5,7 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
-type IZoneClassifier interface {
+type IZoneTierService interface {
 	GetQuality(zone entities.Zone) neutral_zone.Quality
 
 	GetGuardQuality(

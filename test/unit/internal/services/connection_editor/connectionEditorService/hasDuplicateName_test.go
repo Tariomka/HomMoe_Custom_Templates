@@ -12,7 +12,7 @@ import (
 func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "main-road"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "main-road"},
@@ -28,7 +28,7 @@ func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
 func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "Main-Road"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "main-road"},
@@ -44,7 +44,7 @@ func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
 func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "alpha"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "beta"},
@@ -60,7 +60,7 @@ func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
 func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1", Name: "alpha"}}
 
 	// Act
@@ -73,7 +73,7 @@ func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
 func TestWhenCurrentNameIsEmpty_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	connections := []entities.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 		{From: "Neutral-1", To: "Neutral-2"},

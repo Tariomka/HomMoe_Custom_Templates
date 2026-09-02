@@ -12,7 +12,7 @@ import (
 // the application wires.
 func newMandatoryContentProvider() provider_interfaces.IMandatoryContentProvider {
 	return providers.NewMandatoryContentProvider(
-		zone_services.NewZoneClassifier(),
+		zone_services.NewZoneTierService(),
 		test_helpers.NewZoneEditorService(),
 	)
 }

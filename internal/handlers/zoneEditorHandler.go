@@ -15,7 +15,7 @@ import (
 
 type zoneEditorHandler struct {
 	mapper           mappers.IGeneratorConfigMapper
-	zoneClassifier   zone_interfaces.IZoneClassifier
+	tierService      zone_interfaces.IZoneTierService
 	connectionEditor connection_editor.IConnectionEditorService
 	zoneEditor       connection_editor.IZoneEditorService
 	geometry         connection_editor.IZoneEditorGeometryService
@@ -24,14 +24,14 @@ type zoneEditorHandler struct {
 
 func NewZoneEditorHandler(
 	mapper mappers.IGeneratorConfigMapper,
-	zoneClassifier zone_interfaces.IZoneClassifier,
+	tierService zone_interfaces.IZoneTierService,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
 	geometry connection_editor.IZoneEditorGeometryService,
 	tuningFactory generation_tuning.IGenerationTuningFactory) handler_interfaces.IZoneEditorHandler {
 	return &zoneEditorHandler{
 		mapper:           mapper,
-		zoneClassifier:   zoneClassifier,
+		tierService:      tierService,
 		connectionEditor: connectionEditor,
 		zoneEditor:       zoneEditor,
 		geometry:         geometry,
@@ -55,7 +55,7 @@ func (this *zoneEditorHandler) CountZoneCastles(zone entities.Zone) int {
 }
 
 func (this *zoneEditorHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
-	return this.zoneClassifier.GetQuality(zone)
+	return this.tierService.GetQuality(zone)
 }
 
 func (this *zoneEditorHandler) GetZoneConnectionGuardQuality(
@@ -66,7 +66,7 @@ func (this *zoneEditorHandler) GetZoneConnectionGuardQuality(
 	for playerName := range playerZoneNames {
 		playerNames = append(playerNames, playerName)
 	}
-	return this.zoneClassifier.GetConnectionGuardQuality(from, to, zones, playerNames)
+	return this.tierService.GetConnectionGuardQuality(from, to, zones, playerNames)
 }
 
 func (this *zoneEditorHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {

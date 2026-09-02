@@ -93,3 +93,21 @@ In [layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go) instead of cr
 setters and getters, make Editor Stage have those setters and getters.
 
 ---
+
+[ZoneContentEditorService](../../internal/services/zone_content/zoneContentEditorService.go)
+creates `ContentRuleCompositionResultDto` instead of returning ZoneContentRow - need to fix this -
+handler must construct the dto from the service result.
+
+---
+
+`internal\services\zones` and `internal\services\zones\zone_interfaces` has to be renamed to
+`internal\services\zone_services` and `internal\services\zone_service_interfaces` respectfully.
+
+---
+
+In rare instances there are preview artifacts. This is reproducible, likely because the artifacts
+are caused because of calculation/position inaccuracies or something along those lines. There is an
+[Editor state](../../output/research/Buggy$20Preview/Buggy%20preview.gen.json) for this scenario
+already saved.
+
+---

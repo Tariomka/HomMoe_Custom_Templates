@@ -45,7 +45,7 @@ func retierZone(state *drivers.State, zones []entities.Zone, index int, quality 
 func findNeutralOfQuality(t *testing.T, zones []entities.Zone, quality neutral_zone.Quality) int {
 	t.Helper()
 	for i, zone := range zones {
-		if zone_helpers.IsZoneNameNeutral(zone.Name) && zone_services.NewZoneClassifier().GetQuality(zone) == quality {
+		if zone_helpers.IsZoneNameNeutral(zone.Name) && zone_services.NewZoneTierService().GetQuality(zone) == quality {
 			return i
 		}
 	}
@@ -98,7 +98,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 		assert.Equalf(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
 			"zone %s must follow the new simple-mode castle count", zone.Name)
 		if zone.Name == retieredName {
-			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone),
+			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneTierService().GetQuality(zone),
 				"the manual quality change must survive the castle update")
 		}
 		assert.NotNilf(t, zone.ManualPosition, "zone %s lost its manual position", zone.Name)
@@ -155,13 +155,13 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 			continue
 		}
 		expected := 1
-		if zone_services.NewZoneClassifier().GetQuality(zone) == neutral_zone.QualityHigh {
+		if zone_services.NewZoneTierService().GetQuality(zone) == neutral_zone.QualityHigh {
 			expected = 3
 		}
 		assert.Equalf(t, expected, test_helpers.NewZoneEditorService().CountZoneCastles(zone),
-			"zone %s (quality %v)", zone.Name, zone_services.NewZoneClassifier().GetQuality(zone))
+			"zone %s (quality %v)", zone.Name, zone_services.NewZoneTierService().GetQuality(zone))
 		if zone.Name == promotedName {
-			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
+			assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneTierService().GetQuality(zone))
 		}
 	}
 }
@@ -206,7 +206,7 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 			"a non-castle option change must not touch the manual castle count")
 		assert.Equal(t, 7.5, zone.GuardMultiplier,
 			"a non-castle option change must not touch manual guard values")
-		assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
+		assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneTierService().GetQuality(zone))
 	}
 	assert.True(t, found, "manually edited zone disappeared from the regenerated template")
 }

@@ -22,16 +22,16 @@ import (
 )
 
 type MandatoryContentProvider struct {
-	zoneClassifier zone_interfaces.IZoneClassifier
-	zoneEditor     connection_editor.IZoneEditorService
+	tierService zone_interfaces.IZoneTierService
+	zoneEditor  connection_editor.IZoneEditorService
 }
 
 func NewMandatoryContentProvider(
-	zoneClassifier zone_interfaces.IZoneClassifier,
+	tierService zone_interfaces.IZoneTierService,
 	zoneEditor connection_editor.IZoneEditorService) provider_interfaces.IMandatoryContentProvider {
 	return &MandatoryContentProvider{
-		zoneClassifier: zoneClassifier,
-		zoneEditor:     zoneEditor,
+		tierService: tierService,
+		zoneEditor:  zoneEditor,
 	}
 }
 
@@ -99,7 +99,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 
 		case preview.ZoneTypeNeutral:
 			castleCount := this.zoneEditor.CountZoneCastles(zone)
-			content := cloneContentItems(neutralRowsForQuality(configuration, this.zoneClassifier.GetQuality(zone)))
+			content := cloneContentItems(neutralRowsForQuality(configuration, this.tierService.GetQuality(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}

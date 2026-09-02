@@ -1,4 +1,4 @@
-package zoneClassifier_test
+package zoneTierService_test
 
 import (
 	"testing"
@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenClassifierIsCreated_ReturnsInstance(t *testing.T) {
+func TestWhenServiceIsCreated_ReturnsInstance(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 
 	// Assert
-	assert.NotNil(t, classifier)
+	assert.NotNil(t, service)
 }

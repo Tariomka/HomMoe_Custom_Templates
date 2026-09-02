@@ -21,22 +21,22 @@ import (
 )
 
 type ManualReapplyService struct {
-	zoneEditor     IZoneEditorService
-	castleFactory  zone_interfaces.ICastleFactory
-	zoneClassifier zone_interfaces.IZoneClassifier
-	tuningFactory  generation_tuning.IGenerationTuningFactory
+	zoneEditor    IZoneEditorService
+	castleFactory zone_interfaces.ICastleFactory
+	tierService   zone_interfaces.IZoneTierService
+	tuningFactory generation_tuning.IGenerationTuningFactory
 }
 
 func NewManualReapplyService(
 	zoneEditor IZoneEditorService,
 	castleFactory zone_interfaces.ICastleFactory,
-	zoneClassifier zone_interfaces.IZoneClassifier,
+	tierService zone_interfaces.IZoneTierService,
 	tuningFactory generation_tuning.IGenerationTuningFactory) IManualReapplyService {
 	return &ManualReapplyService{
-		zoneEditor:     zoneEditor,
-		castleFactory:  castleFactory,
-		zoneClassifier: zoneClassifier,
-		tuningFactory:  tuningFactory,
+		zoneEditor:    zoneEditor,
+		castleFactory: castleFactory,
+		tierService:   tierService,
+		tuningFactory: tuningFactory,
 	}
 }
 
@@ -90,7 +90,7 @@ func (this *ManualReapplyService) SetNeutralZoneCastleCount(
 	zone *entities.Zone,
 	castleCount int,
 	tuning models.GenerationTuning) {
-	quality := this.zoneClassifier.GetQuality(*zone)
+	quality := this.tierService.GetQuality(*zone)
 	profile := common_zones.GetNeutralZoneProfile(quality)
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
@@ -116,7 +116,7 @@ func (this *ManualReapplyService) neutralCastleTarget(
 		return 0, false
 	}
 
-	switch this.zoneClassifier.GetQuality(zone) {
+	switch this.tierService.GetQuality(zone) {
 	case neutral_zone.QualityHighest:
 		if changes.Hub {
 			return helpers.Clamp(zoneConfiguration.Advanced.HubZoneCastles, 0, 4), true

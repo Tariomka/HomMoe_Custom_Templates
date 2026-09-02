@@ -14,7 +14,7 @@ func TestWhenZoneQualityIsRequested_ReturnsTheClassifiersQuality(t *testing.T) {
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
 	zone := entities.Zone{Name: gofakeit.Word()}
-	fixture.zoneClassifier.On("GetQuality", zone).Return(neutral_zone.QualityHigh)
+	fixture.tierService.On("GetQuality", zone).Return(neutral_zone.QualityHigh)
 
 	// Act
 	quality := fixture.handler.GetZoneQuality(zone)

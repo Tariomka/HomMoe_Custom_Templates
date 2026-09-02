@@ -12,7 +12,7 @@ import (
 func TestWhenZoneHasNoConnections_ReturnsThatZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}, {Name: "Neutral-2"}}
 	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
 
@@ -26,7 +26,7 @@ func TestWhenZoneHasNoConnections_ReturnsThatZone(t *testing.T) {
 func TestWhenEveryZoneIsConnected_ReturnsNoZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}}
 	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
 

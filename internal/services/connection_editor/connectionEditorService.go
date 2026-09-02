@@ -14,12 +14,12 @@ import (
 )
 
 type ConnectionEditorService struct {
-	zoneClassifier zone_interfaces.IZoneClassifier
+	tierService zone_interfaces.IZoneTierService
 }
 
 func NewConnectionEditorService(
-	zoneClassifier zone_interfaces.IZoneClassifier) IConnectionEditorService {
-	return &ConnectionEditorService{zoneClassifier: zoneClassifier}
+	tierService zone_interfaces.IZoneTierService) IConnectionEditorService {
+	return &ConnectionEditorService{tierService: tierService}
 }
 
 func (this *ConnectionEditorService) NewDefaultConnection(
@@ -27,7 +27,7 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 	to string,
 	zones []entities.Zone,
 	playerZoneNames map[string]bool) entities.Connection {
-	quality := this.zoneClassifier.GetConnectionGuardQuality(
+	quality := this.tierService.GetConnectionGuardQuality(
 		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
 	return variant_content.NewConnectionBuilder().
 		WithFrom(from).

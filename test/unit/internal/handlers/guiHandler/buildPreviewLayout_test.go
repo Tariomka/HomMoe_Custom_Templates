@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +32,7 @@ func TestWhenRequestContainsTemplate_ReturnsServiceLayoutUnchanged(t *testing.T)
 		Topology:   config.TopologyRing,
 		CanvasSide: 600,
 	}
-	expected := preview_service.NewPreviewLayoutService().BuildPreviewLayout(
+	expected := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()).BuildPreviewLayout(
 		request.Template,
 		request.Topology,
 		request.CanvasSide,
@@ -53,7 +54,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyServiceLayout(t *testing.T) {
 		Topology:   config.TopologyRing,
 		CanvasSide: 600,
 	}
-	expected := preview_service.NewPreviewLayoutService().BuildPreviewLayout(
+	expected := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()).BuildPreviewLayout(
 		request.Template,
 		request.Topology,
 		request.CanvasSide,

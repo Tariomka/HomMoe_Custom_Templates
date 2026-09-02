@@ -20,7 +20,7 @@ func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
 	test_helpers.NewZoneEditorService().ApplyNeutralZoneQuality(&zone, neutral_zone.QualityHigh, 2, tuning)
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
+	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneTierService().GetQuality(zone))
 }
 
 func TestWhenTwoCastlesAreRequested_RebuildsTwoCastles(t *testing.T) {

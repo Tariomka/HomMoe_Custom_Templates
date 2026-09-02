@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -130,7 +131,9 @@ func TestWhenSameTemplateIsRenderedTwice_ProducesIdenticalImages(t *testing.T) {
 // mustNewGenerator fails the test immediately when the embedded assets cannot load.
 func mustNewGenerator(t *testing.T) preview_service.IPreviewGeneratorService {
 	t.Helper()
-	generator, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
+	generator, err := preview_service.NewPreviewGenerator(
+		preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()),
+	)
 	require.NoError(t, err)
 	return generator
 }

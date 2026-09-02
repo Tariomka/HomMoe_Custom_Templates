@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +39,7 @@ func BenchmarkPreviewLayoutService_BuildPreviewLayout(b *testing.B) {
 			configuration.PlayerCount = benchmarkCase.playerCount
 			configuration.ZoneConfiguration.NeutralZoneCount = benchmarkCase.neutralZoneCount
 			template, _ := test_helpers.NewTemplateGenerator(configuration).Generate()
-			service := preview_service.NewPreviewLayoutService()
+			service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
 
 			var layout preview.Layout
 

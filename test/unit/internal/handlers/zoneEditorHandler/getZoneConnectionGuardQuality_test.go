@@ -17,7 +17,7 @@ func TestWhenConnectionGuardQualityIsRequested_ReturnsTheClassifiersQuality(t *t
 	to := gofakeit.Word()
 	zones := []entities.Zone{{Name: from}, {Name: to}}
 	playerName := gofakeit.Word()
-	fixture.zoneClassifier.
+	fixture.tierService.
 		On("GetConnectionGuardQuality", from, to, zones, []string{playerName}).
 		Return(neutral_zone.QualityMedium)
 
@@ -35,7 +35,7 @@ func TestWhenThereAreNoPlayerZones_PassesAnEmptyPlayerNameList(t *testing.T) {
 	fixture := newZoneEditorHandlerFixture()
 	from := gofakeit.Word()
 	to := gofakeit.Word()
-	fixture.zoneClassifier.
+	fixture.tierService.
 		On("GetConnectionGuardQuality", from, to, []entities.Zone(nil), []string{}).
 		Return(neutral_zone.QualityUnknown)
 
@@ -43,6 +43,6 @@ func TestWhenThereAreNoPlayerZones_PassesAnEmptyPlayerNameList(t *testing.T) {
 	_ = fixture.handler.GetZoneConnectionGuardQuality(from, to, nil, map[string]bool{})
 
 	// Assert
-	fixture.zoneClassifier.AssertCalled(
+	fixture.tierService.AssertCalled(
 		t, "GetConnectionGuardQuality", from, to, []entities.Zone(nil), []string{})
 }

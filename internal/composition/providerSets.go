@@ -32,7 +32,7 @@ var ZoneSet = wire.NewSet(
 	zone_services.NewCastleFactory,
 	zone_services.NewRoadFactory,
 	zone_services.NewZoneFactory,
-	zone_services.NewZoneClassifier,
+	zone_services.NewZoneTierService,
 	zone_services.NewZoneLabelProvider,
 	base.NewTopologyConnectionService,
 )

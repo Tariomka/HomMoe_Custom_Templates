@@ -1,4 +1,4 @@
-package zoneClassifier_test
+package zoneTierService_test
 
 import (
 	"testing"
@@ -13,7 +13,7 @@ import (
 
 func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 	t.Parallel()
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	layoutValues := registry.GetLayoutValues()
 	resourcePools := registry.GetResourcesContentPoolValues()
 	testCases := []struct {
@@ -176,7 +176,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 			// Arrange
 
 			// Act
-			quality := classifier.GetQuality(testCase.zone)
+			quality := service.GetQuality(testCase.zone)
 
 			// Assert
 			assert.Equal(t, testCase.expected, quality)
@@ -186,7 +186,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 
 func TestWhenGeneratedProfileRoundTrips_EveryQualityIsDetectedBack(t *testing.T) {
 	t.Parallel()
-	classifier := zones.NewZoneClassifier()
+	service := zones.NewZoneTierService()
 	testCases := []struct {
 		subtestName string
 		quality     neutral_zone.Quality
@@ -211,7 +211,7 @@ func TestWhenGeneratedProfileRoundTrips_EveryQualityIsDetectedBack(t *testing.T)
 			}
 
 			// Act
-			quality := classifier.GetQuality(zone)
+			quality := service.GetQuality(zone)
 
 			// Assert
 			assert.Equal(t, testCase.quality, quality)

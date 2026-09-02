@@ -13,13 +13,13 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
-type ZoneClassifier struct{}
+type ZoneTierService struct{}
 
-func NewZoneClassifier() zone_interfaces.IZoneClassifier {
-	return &ZoneClassifier{}
+func NewZoneTierService() zone_interfaces.IZoneTierService {
+	return &ZoneTierService{}
 }
 
-func (this *ZoneClassifier) GetQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) GetQuality(zone entities.Zone) neutral_zone.Quality {
 	if zone_helpers.IsZoneNamePlayer(zone.Name) {
 		return neutral_zone.QualityUnknown
 	}
@@ -36,7 +36,7 @@ func (this *ZoneClassifier) GetQuality(zone entities.Zone) neutral_zone.Quality 
 	}
 }
 
-func (this *ZoneClassifier) GetGuardQuality(
+func (this *ZoneTierService) GetGuardQuality(
 	zoneName string,
 	zones []entities.Zone,
 	playerNames []string) neutral_zone.Quality {
@@ -67,7 +67,7 @@ func (this *ZoneClassifier) GetGuardQuality(
 	}
 }
 
-func (this *ZoneClassifier) GetConnectionGuardQuality(
+func (this *ZoneTierService) GetConnectionGuardQuality(
 	zoneA, zoneB string,
 	zones []entities.Zone,
 	playerNames []string) neutral_zone.Quality {
@@ -81,7 +81,7 @@ func (this *ZoneClassifier) GetConnectionGuardQuality(
 		this.GetGuardQuality(zoneB, zones, playerNames))
 }
 
-func (this *ZoneClassifier) getCenterQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) getCenterQuality(zone entities.Zone) neutral_zone.Quality {
 	if len(zone.GuardedContentPool) == 0 && len(zone.UnguardedContentPool) == 0 {
 		return neutral_zone.QualityUnknown
 	}
@@ -97,7 +97,7 @@ func (this *ZoneClassifier) getCenterQuality(zone entities.Zone) neutral_zone.Qu
 	return neutral_zone.QualityUnknown
 }
 
-func (this *ZoneClassifier) getTreasureQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) getTreasureQuality(zone entities.Zone) neutral_zone.Quality {
 	if len(zone.GuardedContentPool) == 0 && len(zone.UnguardedContentPool) == 0 {
 		return neutral_zone.QualityUnknown
 	}
@@ -121,7 +121,7 @@ func (this *ZoneClassifier) getTreasureQuality(zone entities.Zone) neutral_zone.
 	return neutral_zone.QualityUnknown
 }
 
-func (this *ZoneClassifier) getSidesQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) getSidesQuality(zone entities.Zone) neutral_zone.Quality {
 	if len(zone.GuardedContentPool) == 0 && len(zone.UnguardedContentPool) == 0 {
 		return neutral_zone.QualityUnknown
 	}

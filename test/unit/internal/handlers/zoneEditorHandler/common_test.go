@@ -13,7 +13,7 @@ import (
 type zoneEditorHandlerFixture struct {
 	handler          handler_interfaces.IZoneEditorHandler
 	mapper           *test_helpers.GeneratorConfigMapperMock
-	zoneClassifier   *test_helpers.ZoneClassifierMock
+	tierService      *test_helpers.ZoneTierServiceMock
 	connectionEditor *test_helpers.ConnectionEditorServiceMock
 	zoneEditor       *test_helpers.ZoneEditorServiceMock
 	geometry         *test_helpers.ZoneEditorGeometryServiceMock
@@ -23,7 +23,7 @@ type zoneEditorHandlerFixture struct {
 func newZoneEditorHandlerFixture() *zoneEditorHandlerFixture {
 	fixture := &zoneEditorHandlerFixture{
 		mapper:           &test_helpers.GeneratorConfigMapperMock{},
-		zoneClassifier:   &test_helpers.ZoneClassifierMock{},
+		tierService:      &test_helpers.ZoneTierServiceMock{},
 		connectionEditor: &test_helpers.ConnectionEditorServiceMock{},
 		zoneEditor:       &test_helpers.ZoneEditorServiceMock{},
 		geometry:         &test_helpers.ZoneEditorGeometryServiceMock{},
@@ -32,7 +32,7 @@ func newZoneEditorHandlerFixture() *zoneEditorHandlerFixture {
 
 	fixture.handler = handlers.NewZoneEditorHandler(
 		fixture.mapper,
-		fixture.zoneClassifier,
+		fixture.tierService,
 		fixture.connectionEditor,
 		fixture.zoneEditor,
 		fixture.geometry,

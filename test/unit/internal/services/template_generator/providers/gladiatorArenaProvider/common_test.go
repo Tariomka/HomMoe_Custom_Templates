@@ -16,7 +16,7 @@ import (
 const arenaObjectType = "GladiatorArena"
 
 func newProvider() provider_interfaces.IGladiatorArenaProvider {
-	return providers.NewGladiatorArenaProvider(zone_services.NewZoneClassifier())
+	return providers.NewGladiatorArenaProvider(zone_services.NewZoneTierService())
 }
 
 // newArenaConfiguration returns a configuration that asks for the arena win

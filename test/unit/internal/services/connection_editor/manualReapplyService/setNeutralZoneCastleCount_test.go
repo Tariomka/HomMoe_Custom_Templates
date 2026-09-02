@@ -33,7 +33,7 @@ func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
 	newManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
+	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneTierService().GetQuality(zone))
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
