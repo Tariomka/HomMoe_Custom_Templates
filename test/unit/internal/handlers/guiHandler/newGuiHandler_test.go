@@ -85,7 +85,7 @@ func TestWhenBuildPreviewLayoutCalled_DelegatesToPreviewHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
+	handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
 
 	// Assert
 	assert.True(t, stub.previewCalled)

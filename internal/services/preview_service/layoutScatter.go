@@ -4,9 +4,9 @@ import (
 	"math"
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // layoutScatter renders the organic position-driven topologies (Random and
@@ -15,8 +15,8 @@ import (
 // overlapping zones apart and nudge zones off connection lines before a final
 // shrink-to-fit.
 func (this *PreviewLayoutService) layoutScatter(
-	zones []entities.Zone,
-	conns []entities.Connection,
+	zones []template_model.Zone,
+	conns []template_model.Connection,
 	side float64) {
 	metrics := newCanvasMetrics(side)
 	if this.placeTrivial(zones, metrics) {
@@ -40,7 +40,7 @@ func (this *PreviewLayoutService) layoutScatter(
 
 // buildScatterAdjacency builds the direct-only, deduplicated adjacency lists
 // that drive both the radius heuristic and the edge-clearance pass.
-func buildScatterAdjacency(zones []entities.Zone, conns []entities.Connection) [][]int {
+func buildScatterAdjacency(zones []template_model.Zone, conns []template_model.Connection) [][]int {
 	idx := make(map[string]int, len(zones))
 	for i, zone := range zones {
 		idx[zone.Name] = i
@@ -82,7 +82,7 @@ func scatterZoneRadius(adj [][]int, metrics canvasMetrics) float64 {
 // zone radius (falling back to spanning the draw area for empty graphs),
 // centered, and shrunk to fit the padded canvas.
 func projectScatterPositions(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	adj [][]int,
 	zoneRadius float64,
 	metrics canvasMetrics) models.Positions {
@@ -103,7 +103,7 @@ func projectScatterPositions(
 
 // meanRawEdgeLength averages the raw generator-space length of the direct
 // edges; returns 0 when the graph has none.
-func meanRawEdgeLength(zones []entities.Zone, adj [][]int) float64 {
+func meanRawEdgeLength(zones []template_model.Zone, adj [][]int) float64 {
 	sum, count := 0.0, 0
 	for i := range adj {
 		for _, j := range adj[i] {

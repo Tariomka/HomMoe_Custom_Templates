@@ -61,10 +61,10 @@ func TestWhenTheGeometryIsBuilt_TheZonesReachThePreviewLayout(t *testing.T) {
 	service.BuildGeometry(zones, nil, config.MapTopology(gofakeit.Word()), fixtureCanvasSide)
 
 	// Assert
-	template, _ := previewLayout.Calls[0].Arguments.Get(0).(*entities.RmgTemplate)
+	template, _ := previewLayout.Calls[0].Arguments.Get(0).(*template_model.Template)
 	require.NotNil(t, template)
 	require.NotEmpty(t, template.Variants)
-	assert.Equal(t, template_model.ToZoneEntities(zones), template.Variants[0].Zones)
+	assert.Equal(t, zones, template.Variants[0].Zones)
 }
 
 func TestWhenASingleConnectionSpansAClearChord_ItsCurveStaysOnTheChord(t *testing.T) {

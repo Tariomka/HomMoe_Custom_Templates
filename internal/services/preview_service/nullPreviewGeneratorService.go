@@ -3,8 +3,8 @@ package preview_service
 import (
 	"image"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // NullPreviewGeneratorService is the no-op preview generator used when the
@@ -17,6 +17,8 @@ func NewNullPreviewGenerator() IPreviewGeneratorService {
 }
 
 // CreatePreviewImage always returns nil, which callers treat as "no preview".
-func (this *NullPreviewGeneratorService) CreatePreviewImage(_ *entities.RmgTemplate, _ config.MapTopology) *image.RGBA {
+func (this *NullPreviewGeneratorService) CreatePreviewImage(
+	_ *template_model.Template,
+	_ config.MapTopology) *image.RGBA {
 	return nil
 }

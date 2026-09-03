@@ -19,7 +19,7 @@ type TemplateHandlerMock struct {
 	mock.Mock
 
 	ValidateEditorStateFunc         func(editor_state_model.EditorState, bool) editor_state_dto.EditorStateValidationDto
-	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error)
+	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) dtos.PreviewLayoutDto
 	GetContentRuleEditorOptionsFunc func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
 	DescribeContentRuleFunc         func(models.SidMapping, editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto
 	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []template_model.Zone
@@ -243,11 +243,11 @@ func (this *TemplateHandlerMock) ValidateEditorState(
 
 func (this *TemplateHandlerMock) BuildPreviewLayout(
 	request dtos.PreviewLayoutRequestDto,
-) (dtos.PreviewLayoutDto, error) {
+) dtos.PreviewLayoutDto {
 	if this.BuildPreviewLayoutFunc != nil {
 		return this.BuildPreviewLayoutFunc(request)
 	}
-	return dtos.PreviewLayoutDto{}, nil
+	return dtos.PreviewLayoutDto{}
 }
 
 func (this *TemplateHandlerMock) GetContentRuleEditorOptions(

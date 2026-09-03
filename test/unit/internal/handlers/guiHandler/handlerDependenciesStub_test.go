@@ -67,9 +67,9 @@ func (this *handlerDependenciesStub) SaveTemplate(dtos.TemplateSaveDto) (string,
 
 func (this *handlerDependenciesStub) BuildPreviewLayout(
 	dtos.PreviewLayoutRequestDto,
-) (dtos.PreviewLayoutDto, error) {
+) dtos.PreviewLayoutDto {
 	this.previewCalled = true
-	return dtos.PreviewLayoutDto{}, nil
+	return dtos.PreviewLayoutDto{}
 }
 
 func (this *handlerDependenciesStub) GetContentRuleEditorOptions(

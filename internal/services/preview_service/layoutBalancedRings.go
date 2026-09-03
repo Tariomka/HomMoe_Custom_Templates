@@ -4,15 +4,15 @@ import (
 	"math"
 	"sort"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // layoutBalancedRings renders the Circles topology as concentric rings keyed
 // off the zones' GeneratorRing stamps. The zone radius is binary-searched so
 // the outermost ring still fits the canvas, and each ring keeps the zones'
 // original angular neighbour ordering.
-func (this *PreviewLayoutService) layoutBalancedRings(zones []entities.Zone, side float64) {
+func (this *PreviewLayoutService) layoutBalancedRings(zones []template_model.Zone, side float64) {
 	metrics := newCanvasMetrics(side)
 	if this.placeTrivial(zones, metrics) {
 		return
@@ -35,7 +35,7 @@ func (this *PreviewLayoutService) layoutBalancedRings(zones []entities.Zone, sid
 // groupZonesByRing buckets zone indices by their GeneratorRing tier. Ring
 // index 0 holds the largest tier value present; higher indices move outwards
 // through decreasing tiers. Callers must have verified allHaveRing.
-func groupZonesByRing(zones []entities.Zone) [][]int {
+func groupZonesByRing(zones []template_model.Zone) [][]int {
 	presentSet := map[int]bool{}
 	for _, zone := range zones {
 		presentSet[*zone.GeneratorRing] = true
@@ -105,7 +105,7 @@ func fitRingZoneRadius(rings [][]int, drawRadius, minGap, maxRadius float64) flo
 // anchored at the first zone's raw angle so the rendered ring preserves the
 // original neighbor ordering.
 func (this *PreviewLayoutService) placeRings(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	rings [][]int,
 	ringRadii []float64,
 	metrics canvasMetrics) {

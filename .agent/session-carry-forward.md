@@ -1,172 +1,186 @@
-# Session carry-forward — Batch J phase 3
+# Session carry-forward — Batch J phase 4
 
 ## 1. Session goal
 
-Execute **phase 3** of `.agent/plans/batch-j-zone-tier-source-of-truth.md`:
-persist a zone's tier in `.gen.json` so it survives a save/load round trip
-instead of being reverse-engineered from the zone's content pools.
+Execute **phase 4** of `.agent/plans/batch-j-zone-tier-source-of-truth.md`: move
+the last consumers off the `TemplateMapper.ToEntity` bridges so the preview
+colours a zone by the tier that was **recorded** for it rather than by the tier
+its content pools imply, and decide explicitly which seams keep the entity.
 
-## 2. Scope decision taken up front (owner-approved)
+Phases 1, 2, 2.5 and 3 were already complete and committed (`b210640`). Phase 3
+had pulled the zone-editor half of phase 4 forward, so what remained was
+`preview_service`, `file_service`, the generator and the topology tree.
 
-Phase 3 could not be done as written. The tier's **write** path —
-`ApplyNeutralZoneQuality` and `NewDefaultNeutralZone` — is reachable only through
-the zone editor, whose DTOs and dialog still spoke `entities.Zone`, which has
-nowhere to put a tier. A manual re-tier therefore could not reach the file at
-all, and `carryZoneTiersByName` would have re-attached the **stale planned** tier
-by name.
+## 2. Fixes applied
 
-As phase 3's own last checklist item anticipated, the **zone-editor half of phase
-4 came first**. Offered A (persist only, ship a known-wrong case), B (pull the
-zone-editor chain forward, ~30 prod files) and C (full phase-4 sweep first);
-owner chose **B**, plus moving the dialog's Quality dropdown onto `ResolveQuality`
-now rather than in phase 4.
+- **The preview stopped inferring.**
+  [previewLayoutService.go](internal/services/preview_service/previewLayoutService.go)'s
+  `buildPreviewZones` now calls `ResolveQuality(zone)` instead of
+  `GetQuality(zone)`. This is the last consumer in the batch to move.
+- **`ZoneEditorGeometryService` stopped erasing the tier.**
+  [zoneEditorGeometryService.go](internal/services/connection_editor/zoneEditorGeometryService.go)
+  used to round-trip its model zones through `ToZoneEntities` to synthesise a
+  template for the layout service, which silently dropped `Quality`. It now
+  builds a model variant.
+- **`templateHandler.SaveTemplate` renders before it flattens.**
+  [templateHandler.go](internal/handlers/templateHandler.go) hands the preview
+  generator the **model** and only then maps to the entity for the file service.
+  Flatten-first would have thrown the tier away before the PNG could read it.
 
 ## 3. Features added / changed
 
-- **`editor_state.ManualZoneSave.Quality *int8 json:"quality,omitempty"`** — the
-  persisted tier. Raw ordinal because an entity may not import `internal/models`
-  (§4.4.1 rule 3); **pointer** because the enum is `iota - 1`, so `omitempty` on a
-  value field would drop every Plastic zone (ordinal 0) and reload it as "never
-  recorded". `editor_state_model.toQualityOrdinal` / `fromQualityOrdinal` convert,
-  both preserving nil.
-- **The zone-editor chain speaks `template_model.Zone`**: nine DTOs
-  (`zoneEditorZonesDto`, `…GeometryRequestDto`, `…ConnectionRequestDto`,
-  `…QualityRequestDto`, `…RemoveRequestDto`, `…MutationDto`, `templateUpdateDto`,
-  `castleSettingsReapplyRequestDto`, and `ZoneEditorNeutralZoneRequestDto`'s
-  return), `IZoneEditorHandler`, `ITemplateHandler.ReapplyCastleSettings`, all
-  four `connection_editor` services and their interfaces, `ZoneEditorDialog`,
-  `drivers.State.handleUpdateTemplate`, and
-  `models.EditorState.SetManualEdits` / `GetManualZones`.
-  Connections stayed `entities.Connection` — they carry no tier.
-- **`templateHandler.carryZoneTiersByName` is DELETED.** `UpdateTemplate` now
-  rebuilds roads on the model zones, maps the *template* through the entity for a
-  clean copy, then **re-attaches the applied model zone slice positionally**.
-  Exact, where the name lookup was neither.
-- **Four consumers stopped inferring** and now call `ResolveQuality`:
-  `ManualReapplyService.SetNeutralZoneCastleCount` + `neutralCastleTarget`
-  (**this is the §1 `Unknown → Plastic` fix** — `GetNeutralZoneProfile(Unknown)`
-  returns the Lowest profile, so an unclassifiable zone whose castles were rebuilt
-  silently got Plastic city stats), `ZoneTierService.GetGuardQuality` /
-  `GetConnectionGuardQuality` (both now take `[]template_model.Zone`),
-  `MandatoryContentProvider.CreateContentsForZones` (whose `Unknown` branch
-  attached **no** rows), and `zoneEditorHandler.GetZoneQuality` (the dialog's
-  Quality dropdown). **`GetQuality` still takes the entity** — a raw `.rmg.json`
-  has no recorded tier and never will.
-- `road_helpers.IsRoadTypeConnection` / `IsRoadTypeCastle` now take
-  `template_model.Road`. `ZoneEditorService` was their only caller, so an
-  entity-typed twin would have been dead weight.
+- **`preview_service` names no entity type at all.** `BuildPreviewLayout` and
+  `CreatePreviewImage` (real generator *and*
+  [nullPreviewGeneratorService.go](internal/services/preview_service/nullPreviewGeneratorService.go))
+  take `*template_model.Template`; all five layout strategies — ring/hub,
+  scatter, fixed geometry, balanced rings, manual positions — plus
+  [layoutGeometry.go](internal/services/preview_service/layoutGeometry.go)'s
+  shared predicates take `[]template_model.Zone` / `[]template_model.Connection`.
+- **`PreviewLayoutRequestDto` moved onto the model and then shed two fields.**
+  `Zones` / `.Connections` — the "editor-only preview when `Template` is nil"
+  branch — had **no production caller**: `previewPanel` always passes a template
+  and the zone editor goes through `ZoneEditorGeometryService`. The only reader
+  was the synthesis branch inside `previewHandler` itself. Owner confirmed the
+  removal, so both fields, the branch and the three tests that existed solely to
+  cover it are gone. The DTO is now `Template`, `Topology`, `CanvasSide`, and
+  `BuildPreviewLayout` is a single forwarding line.
+- **`NewPreviewHandler` lost its `mappers.ITemplateMapper` argument.** The
+  handler no longer converts anything; the zones-only branch builds a
+  one-variant `template_model.Template` literal rather than running the entity
+  `VariantBuilder`. `wire_gen.go` was regenerated with `wire gen`.
+- **Two seams were decided to stay on the entity, deliberately:**
+  - `file_service.SaveTemplateWithPreview` writes `.rmg.json`, one of the two
+    places §0b.16 keeps the wire format forever.
+  - The generator and the **whole topology tree** keep building entities.
+    `Generate` assembles the entity from the providers and lifts it with
+    `TemplateMapper.ToModel` before stamping tiers, and that ordering is what
+    makes `TestWhenDefaultConfiguration_ReturnsGoldenTemplate` a proof rather
+    than an argument. No topology has a tier to carry — `stampPlannedZoneTiers`
+    derives all of them afterwards. This answers the previous carry-forward's
+    open question; do not revisit it by reflex.
+
+- **`BuildPreviewLayout` no longer returns an error.** With the synthesis branch
+  gone it could only ever return `nil`, and the layout service has no failure
+  mode, so the whole chain returns a bare `dtos.PreviewLayoutDto`:
+  `IPreviewHandler`, `previewHandler`, `GUIHandler`, `TemplateHandlerMock` and
+  the guiHandler stub. That emptied
+  [previewLayoutCache.go](app/gui/models/previewLayoutCache.go) too — its `build`
+  callback and its "a failed build is not cached" retry existed only to carry
+  that error, so `Get` now takes `func() preview.Layout` and returns
+  `preview.Layout`. `previewPanel` lost the unreachable error branch it fed.
 
 ## 4. File modifications
 
-101 modified files + 1 new; full detail in the plan's **Phase 3 → Phase Summary**.
+31 modified files, nothing created, nothing deleted, nothing renamed.
 
-- **New**: `test/integration/manualZoneTierPersistence_integration_test.go`.
-- **Edited (production)**: `internal/entities/editor_state/manualZoneSave.go`;
-  `internal/models/editor_state_model/manualZoneSave.go`;
-  `internal/models/template_model/converters.go` (re-exports `ToZoneModel`,
-  `ToMainObjectModels`, `ToRoadModel(s)`); `internal/helpers/road_helpers/`;
-  `internal/services/zones/zoneTierService.go` + interface; all four
-  `connection_editor` services + interfaces; `mandatoryContentProvider` +
-  interface; `templateHandler`, `zoneEditorHandler`, `guiHandler` + two handler
-  interfaces; eight `internal/dtos/*.go`; `app/gui/dialogs/zoneEditorDialog.go`,
-  `zoneEditorZoneProps.go`, both testexports; `app/gui/drivers/stateManualEdits.go`;
-  `app/gui/models/editorState.go`; `app/gui/panels/layoutPanelZones.go`;
-  `app/gui/editor/window_testexports.go`.
-- **Edited (tests)**: seven mocks in `test/test_helpers/`, five files under
-  `test/integration/`, ~50 under `test/unit/`.
-- **Deleted**: nothing. **Renamed**: nothing.
+- **Production (18)**: `internal/composition/wire_gen.go` (regenerated);
+  `internal/dtos/previewLayoutRequestDto.go`;
+  `internal/handlers/previewHandler.go`, `templateHandler.go`, `guiHandler.go`,
+  `handler_interfaces/previewHandlerInterface.go`;
+  `internal/services/connection_editor/zoneEditorGeometryService.go`;
+  all ten files of `internal/services/preview_service/`;
+  `app/gui/models/previewLayoutCache.go`, `app/gui/panels/previewPanel.go`.
+- **Test helpers (3)**: `previewLayoutServiceMock.go`,
+  `previewGeneratorServiceMock.go`, `templateHandlerMock.go`.
+- **Tests (10)**: `test/performance/preview_layout_test.go`; the `guiHandler`
+  (×3), `previewHandler` (×2), `templateHandler`, `zoneEditorGeometryService` and
+  `previewLayoutCache` unit tests; all four preview_service unit-test files.
 
 ## 5. Tests added or updated
 
-- **`manualZoneTierPersistence_integration_test.go`** drives the real save/load
-  seam: **Plastic** survives the round trip, **Gold** does too, an unrecorded tier
-  writes **no** `quality` key and loads back as nil. Carries
-  `//go:build integration_test` because it uses the `SaveStateToFile` /
-  `LoadStateFromFile` test-only exports — the one and only reason §4.6.1 allows
-  the tag.
-  ⚠ **Mutation-verified**: making `toQualityOrdinal` drop the zero ordinal — the
-  exact shape of the `omitempty` bug — fails the Plastic test and **only** that
-  test.
-- Unit round-trip tests on `ToManualZoneSaves` / `FromManualZoneSaves` for both
-  the recorded-Plastic and the absent-quality cases.
-- `ApplyNeutralZoneQuality` and `NewDefaultNeutralZone` each gained a test
-  asserting the tier they **record**, alongside the pre-existing ones asserting
-  the profile they **stamp** — those now infer explicitly via `ToZoneEntity`, so
-  they still test what they always tested.
-- `TestWhenZoneQualityIsRequested_ReturnsTheClassifiersQuality` →
-  `..._ReturnsTheResolvedQuality` (its subject changed).
-- The gladiator-arena fixture now clears `Quality` explicitly, because
-  `NewDefaultNeutralZone` records it and those tests exercise the inference
-  fallback on purpose.
+- **New**, in
+  `test/unit/internal/services/preview_service/previewLayoutService/buildPreviewLayout_test.go`:
+  - `TestWhenZoneCarriesARecordedTier_ColoursItWithThatTierInsteadOfInferring` —
+    a zone with `Sides` layout and a `_t2_` guarded pool infers as `QualityLow`;
+    recording `QualityHigh` on it makes the preview report High.
+    ⚠ **Mutation-verified**: reverting `buildPreviewZones` to
+    `GetQuality(ToZoneEntity(zone))` fails this test and **only** this test.
+  - `TestWhenZoneCarriesNoRecordedTier_ColoursItWithTheInferredTier` — pins the
+    nil-Quality fallback so the inference branch cannot rot.
+  - A `lowTierZone` helper in that package's `common_test.go`.
+- Updated expectations, all of them because the seam's *type* changed rather
+  than its behaviour: `previewHandler`'s mock assertions and constructor call,
+  `templateHandler.SaveTemplate`'s preview-generator expectation (now the model),
+  `zoneEditorGeometryService`'s laid-out-template assertion, and the whole
+  preview_service unit suite (swept with `gofmt -r`).
+- `test/performance/preview_layout_test.go` dropped a `ToEntity` of the whole
+  generated template from its per-case setup — a strict reduction.
+
+Suite status at handoff: unit / untagged / integration / **GPU** all exit 0.
 
 ## 6. Git status snapshot
 
-Branch `AD/fixing_some_stuff_08-12`, working tree **clean**. The owner reviewed
-and committed the batch as **`b210640 Batch J wip 4`**. Nothing was staged by
-this session. The review edits were **style-only** — house brace style
-(`Quality: x}` rather than a trailing comma and a lone `}`) and flattened
-promoted-field composite literals, which is the form `embedlit` wants. No
-behaviour was changed in review.
+Branch `AD/fixing_some_stuff_08-12`. 31 modified files, **zero staged**, **zero
+`*.golden` modified**, no untracked files added. Nothing was committed.
 
 ## 7. Verification
 
 | Gate | Result |
 | --- | --- |
-| `go build ./...`, `go vet ./...`, `go vet -tags='integration_test,gui' ./...` | clean |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
 | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
-| `wire diff ./internal/composition/...` | exit 0 — signatures moved, the graph did not |
+| `wire diff ./internal/composition/...` | exit 0 (regenerated, never hand-edited) |
 | unit / untagged / integration | pass |
 | **GPU suite, no `-update`** | **pass** — no pixel moved, no golden modified |
 | `golangci-lint-v2 run ./...` | **0 issues** |
-| Unit coverage | **74.3 %** (unchanged from phase 2.5, floor 72.5 %) |
-| Frozen fixtures | unmodified — `omitempty` + absent is exactly the legacy shape |
+| Unit coverage | **74.3 %** (unchanged, floor 72.5 %) |
 
-**Why no pixel moved:** phase 2's 792-configuration sweep proved inference and
-the plan agree on every zone the generator emits, and `ApplyNeutralZoneQuality`
-stamps the pools its recorded tier implies. So `ResolveQuality` and `GetQuality`
-return the same answer for every zone reachable today — the correction is latent
-by design, and fires only for a zone inference cannot classify.
+**⚠ The plan predicted this phase would move pixels. It did not.** Two facts
+combine: phase 2's 792-configuration sweep proved inference and the plan agree on
+every zone the *generator* emits; and every zone the *editor* re-tiers goes
+through `ApplyNeutralZoneQuality`, which stamps the content pools the new tier
+implies, so inference lands on the same answer. The correction stays latent — it
+fires only for a zone whose tier is recorded but whose pools do not imply it,
+which no path reachable today produces.
+
+**The pass is not vacuous.** `BaseHandler` masks the preview canvas interior by
+default because the shipped default topology is Random, but
+`LayoutAndZonesTabHandler.SelectTopology` **lifts that mask** for any
+deterministic topology. Every snapshot after that point compares the canvas pixel
+for pixel, including the zone-editor suites that re-tier a zone through the
+dropdown.
 
 ## 8. Rejections / deliberate deviations
 
-- **Option A was rejected** (persist only, leave the dialog on entities): it would
-  have shipped a zone whose hand-picked tier is silently replaced by the stale
-  planned one.
-- **`previewLayoutRequestDto` was NOT re-typed**, and `PreviewLayoutService` still
-  calls `GetQuality`. Deliberate: it is the one seam whose change moves pixels,
-  and it belongs with phase 4's golden regeneration.
-- **The generator and topology tree were left on entities.** `Generate` builds the
-  entity and lifts it (phase 2.5), which is what makes the golden-template test
-  meaningful.
-- **`BenchmarkEditorWindow_TabCycling` was not re-measured.** Phase 3 changes no
-  per-frame path; `GetCurrentState` and the panel reads are untouched.
+- **Goldens were not regenerated.** The suite is green without `-update` and no
+  golden is stale; regenerating would rewrite ten files with anti-aliasing noise
+  and no signal.
+- **`file_service` was not moved.** It is the `.rmg.json` writer.
+- **The generator and topology tree were not moved.** See §3.
+- **`PreviewLayoutRequestDto.Zones` / `.Connections` were deleted** after the
+  owner confirmed the sweep had proved them unreachable. Three tests went with
+  them: `TestWhenOnlyZonesAreProvided_LaysOutASynthesizedTemplate`,
+  `TestWhenOnlyConnectionsAreProvided_LaysOutASynthesizedTemplate` and
+  `TestWhenRequestContainsZones_BuildsPreviewTemplate`. Nothing was recorded in
+  `test_observations.md` — the code is gone, not merely untested.
+- **The preview layout error return was deleted** on the same reasoning, at the
+  owner's request. `TestWhenBuildFails_ReturnsTheError` and
+  `TestWhenBuildFails_IsNotCached` were removed with the failure mode they
+  described — the cache can no longer be handed a build that fails.
+- **`golangci-lint --fix` restyled two signatures** as `param,\n) Ret {`; both
+  were hand-restyled to the repo's `param) Ret {` house form.
 
 ## 9. Open questions
 
-- Should the preview colour a zone by its **recorded** tier (phase 4), or is
-  inference the intended behaviour there? Changing it will move goldens, so it
-  wants an explicit decision rather than a sweep.
-- Phase 4 should state outright whether the **topology tree stays on entities**.
-  The plan's original "~100 production files move onto `template_model`" reads
-  like a reflex; the golden test argues the generator should keep building the
-  entity.
+- Phase 5 will find `internal/dtos` still on `entityNamerAllowList`: five files
+  (`templateUpdateDto`, `zoneEditorGeometryRequestDto`, `zoneEditorMutationDto`,
+  `zoneEditorRemoveRequestDto`, `zoneEditorZonesDto`) name `entities.Connection`,
+  which phase 3 deliberately left alone because a connection carries no tier.
+  Moving connections purely to shorten a list needs an explicit decision.
 
 ## 10. Next recommended actions
 
-1. **Phase 4**, in this order: `preview_service` first (the only visually
-   meaningful gap — `PreviewLayoutService.GetQuality` → `ResolveQuality`, plus
-   `previewLayoutRequestDto`), then decide per seam for `file_service`, the
-   generator and the topology tree.
-   ⚠ This is the first change in the batch that **will** move goldens. Regenerate
-   with `-update`, then check `git status` for ` M *.golden` and restore any that
-   were not yours.
-2. **Phase 5** — shrink `entityNamerAllowList` in
-   `test/unit/architecture/dependency/layering_test.go`. Phase 3 removed
-   `internal/dtos`' zone-editor entity references, so re-measure the whole list
-   rather than the three packages the plan names. Only ever remove entries.
-3. Backlog §2.2 → ✅ DONE record; §8 gets row **J**; refresh the coverage figure
-   in the three places it is quoted.
+1. **Phase 5** — re-measure `entityNamerAllowList` in
+   `test/unit/architecture/dependency/layering_test.go` across the whole list,
+   not just the three packages the plan names. **Only ever remove entries**, and
+   prove the shrink is real by re-adding a removed entry and watching the test
+   fail. `internal/dtos` will not come off yet (see §9).
+2. Backlog `.agent/backlog/backlog-opus5.md`: §2.2 becomes a ✅ DONE record with
+   the behaviour deltas; §8 gets row **J**; refresh the coverage figure in the
+   three places it is quoted.
+3. Fill in the plan's **Final Recap** and **Deployment Plan**.
 
 ## 11. Carry-forward prompt
 
@@ -177,20 +191,29 @@ by design, and fires only for a zone inference cannot classify.
 > Model is intended and `app/` may hold a Model — do not "fix" either.
 >
 > Then read `.agent/plans/batch-j-zone-tier-source-of-truth.md` and do **phase
-> 4**. Read **§0 and §0b — where they disagree, §0b wins.** Phases 1, 2, 2.5 and
-> 3 are complete and **committed** (`b210640`). Read phase 3's Phase Summary
-> before touching anything: it records that the **zone-editor half of phase 4 was
-> already done there**, so phase 4's checklist is mostly ticked and what remains
-> is `preview_service`, `file_service`, the generator and the topology tree.
+> 5**, the last one. Read **§0 and §0b — where they disagree, §0b wins.** Phases
+> 1, 2, 2.5 and 3 are committed (`b210640`); **phase 4 is complete but
+> uncommitted** — read its Phase Summary before touching anything.
+>
+> Phase 5 is a measurement, not a sweep: shrink `entityNamerAllowList` in
+> `test/unit/architecture/dependency/layering_test.go` by re-measuring the whole
+> list, **only ever removing entries**, and prove the shrink is real by re-adding
+> one and watching the test fail. `internal/dtos` will **not** come off — five
+> DTOs still name `entities.Connection`, which phase 3 deliberately left alone
+> because a connection carries no tier. Then update
+> `.agent/backlog/backlog-opus5.md` (§2.2 → ✅ DONE, §8 row **J**, coverage figure
+> in three places) and write the plan's Final Recap and Deployment Plan.
 >
 > The template layer lives in `internal/models/template_model/`, a full mirror of
 > `internal/entities/template/`. The zone tier is
 > `template_model.Zone.Quality *neutral_zone.Quality`, nil meaning "not recorded,
-> infer it", and it now persists to `.gen.json` as
-> `editor_state.ManualZoneSave.Quality *int8`. `IZoneTierService.ResolveQuality`
-> takes the **model** zone and prefers the recorded tier; `GetQuality` takes the
-> **entity** and always infers — keep both, a raw `.rmg.json` has no recorded
-> tier.
+> infer it", persisted as `editor_state.ManualZoneSave.Quality *int8`.
+> `IZoneTierService.ResolveQuality` takes the **model** zone and prefers the
+> recorded tier; `GetQuality` takes the **entity** and always infers — keep both,
+> a raw `.rmg.json` has no recorded tier. Two seams keep the entity **on
+> purpose**: `file_service` (it writes `.rmg.json`) and the generator plus the
+> whole topology tree (`Generate` lifts the assembled entity, which is what makes
+> the golden-template test a proof). Do not sweep them.
 >
 > Hard rules, one line each: never modify `data/`, `internal/registry/`, or
 > anything under `internal/entities/template/` — `internal/entities/editor_state/`
@@ -217,11 +240,9 @@ by design, and fires only for a zone inference cannot classify.
 > it; a file gets `//go:build integration_test` **only** if it calls a
 > `*_testexports.go` accessor; and `helpers.MapSlice` / `helpers.MapPointer`
 > preserve nil-vs-empty where `linq.SelectSlice` does not — never swap them
-> inside a converter.
->
-> ⚠ **Unlike every phase so far, phase 4 WILL move pixels** — the preview colours
-> a zone by inference today. Regenerate goldens with `-update`, then check
-> `git status` for ` M *.golden` and `git restore` any that were not yours.
+> inside a converter. New in phase 4: `golangci-lint --fix` wraps a long
+> signature as `param,\n) Ret {`, but the house style is `param) Ret {` —
+> restyle by hand after a `--fix`.
 >
 > Cap sessions at ~50 messages and hand off through this file. Full handoff in
 > `./.agent/session-carry-forward.md`.

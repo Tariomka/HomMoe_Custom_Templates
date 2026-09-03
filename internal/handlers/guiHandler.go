@@ -149,7 +149,7 @@ func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, 
 	return this.templateHandler.SaveTemplate(templateDto)
 }
 
-func (this *GUIHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error) {
+func (this *GUIHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) dtos.PreviewLayoutDto {
 	return this.previewHandler.BuildPreviewLayout(request)
 }
 

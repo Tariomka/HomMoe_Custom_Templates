@@ -1,9 +1,9 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -15,7 +15,7 @@ type PreviewLayoutServiceMock struct {
 }
 
 func (this *PreviewLayoutServiceMock) BuildPreviewLayout(
-	template *entities.RmgTemplate,
+	template *template_model.Template,
 	topology config.MapTopology,
 	side float64) preview.Layout {
 	arguments := this.Called(template, topology, side)

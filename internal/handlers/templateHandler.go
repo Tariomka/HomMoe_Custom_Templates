@@ -126,8 +126,10 @@ func (this *templateHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (str
 	}
 
 	// Writing the .rmg.json is one of the two places the wire format is genuinely
-	// required, so this is where the model goes back to being an entity.
+	// required, so this is where the model goes back to being an entity. The
+	// preview renders from the model, which is what lets it colour a zone by the
+	// tier the user picked rather than by the one its content pools imply.
+	previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
 	template := this.templateMapper.ToEntity(*templateDto.Template)
-	previewImage := this.previewGenerator.CreatePreviewImage(&template, templateDto.Topology)
 	return this.fileService.SaveTemplateWithPreview(outputPath, &template, previewImage)
 }

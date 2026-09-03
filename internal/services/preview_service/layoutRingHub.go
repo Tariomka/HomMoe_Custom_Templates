@@ -3,9 +3,9 @@ package preview_service
 import (
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // layoutRingOrHub renders the structured topologies (Default, HubAndSpoke,
@@ -17,8 +17,8 @@ import (
 // a hub. The preview is a faithful representation of the template data, so
 // connectivity is never used to guess an implicit hub.
 func (this *PreviewLayoutService) layoutRingOrHub(
-	zones []entities.Zone,
-	conns []entities.Connection,
+	zones []template_model.Zone,
+	conns []template_model.Connection,
 	side float64) {
 	metrics := newCanvasMetrics(side)
 	if this.placeTrivial(zones, metrics) {
@@ -92,8 +92,8 @@ func ringZoneRadius(outerCount int, hasHub bool, metrics canvasMetrics) float64 
 // hubs on an inner ring and their direct spokes around each hub. Zones that
 // spoke off no hub (e.g. cross-cluster zones) collapse to the canvas center.
 func (this *PreviewLayoutService) layoutMultiHub(
-	zones []entities.Zone,
-	conns []entities.Connection,
+	zones []template_model.Zone,
+	conns []template_model.Connection,
 	hubIndices []int,
 	metrics canvasMetrics) {
 	hubSpokes := buildHubSpokes(zones, conns, hubIndices)
@@ -157,8 +157,8 @@ func (this *PreviewLayoutService) layoutMultiHub(
 // buildHubSpokes collects each hub's directly connected zone indices
 // (structural connections only, deduplicated, in connection order).
 func buildHubSpokes(
-	zones []entities.Zone,
-	conns []entities.Connection,
+	zones []template_model.Zone,
+	conns []template_model.Connection,
 	hubIndices []int) map[string][]int {
 	zoneIdx := make(map[string]int, len(zones))
 	for i, zone := range zones {

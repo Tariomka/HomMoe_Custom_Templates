@@ -83,7 +83,7 @@ func TestWhenPreviewIsRendered_SavesItAlongsideTheTemplate(t *testing.T) {
 	template := &template_model.Template{}
 	templateEntity := new(mappers.NewTemplateMapper().ToEntity(*template))
 	previewImage := image.NewRGBA(image.Rect(0, 0, 1, 1))
-	fixture.previewGenerator.On("CreatePreviewImage", templateEntity, config.TopologyChain).Return(previewImage)
+	fixture.previewGenerator.On("CreatePreviewImage", template, config.TopologyChain).Return(previewImage)
 	fixture.fileService.On("SaveTemplateWithPreview", mock.Anything, mock.Anything, mock.Anything).
 		Return(gofakeit.Word(), nil)
 

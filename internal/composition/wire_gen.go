@@ -64,7 +64,7 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iEditorStateValidator := validators.NewEditorStateValidator()
 	iStateHandler := handlers.NewStateHandler(iFileService, iEditorStateValidator)
 	iTemplateHandler := handlers.NewTemplateHandler(iTemplateGenerator, iGeneratorConfigMapper, iTemplateMapper, iMandatoryContentProvider, iConnectionEditorService, iZoneEditorService, iManualReapplyService, iFileService, iPreviewGeneratorService, iStateHandler)
-	iPreviewHandler := handlers.NewPreviewHandler(iPreviewLayoutService, iTemplateMapper)
+	iPreviewHandler := handlers.NewPreviewHandler(iPreviewLayoutService)
 	iContentRuleHandler := handlers.NewContentRuleHandler(iContentRuleService)
 	iZoneContentEditorService := zone_content.NewZoneContentEditorService()
 	iZoneContentHandler := handlers.NewZoneContentHandler(iContentRuleHandler, iZoneContentEditorService)

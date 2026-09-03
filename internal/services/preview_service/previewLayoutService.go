@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -35,7 +35,7 @@ func NewPreviewLayoutService(tierService zone_interfaces.IZoneTierService) IPrev
 // passes; all other topologies fall back to the classic ring / hub-and-spoke
 // renderer.
 func (this *PreviewLayoutService) BuildPreviewLayout(
-	template *entities.RmgTemplate,
+	template *template_model.Template,
 	topology config.MapTopology,
 	side float64) preview.Layout {
 	this.layout = &preview.Layout{Positions: map[string]data.Vec2[float64]{}}
@@ -70,8 +70,8 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 // picking the topology-specific renderer. Each path sets layout.Positions and
 // layout.ZoneRadius.
 func (this *PreviewLayoutService) dispatchClusterLayout(
-	zones []entities.Zone,
-	connections []entities.Connection,
+	zones []template_model.Zone,
+	connections []template_model.Connection,
 	topology config.MapTopology,
 	side float64) {
 	capabilities := common_topologies.GetTopologyCapabilities(topology)
@@ -94,7 +94,7 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 // invertible (p = pos / side) so dragging in the editor is exact. The zone
 // radius shrinks just enough to keep the closest pair of zones from
 // overlapping.
-func (this *PreviewLayoutService) layoutManualPositions(zones []entities.Zone, side float64) {
+func (this *PreviewLayoutService) layoutManualPositions(zones []template_model.Zone, side float64) {
 	metrics := newCanvasMetrics(side)
 
 	var positions models.Positions
@@ -114,7 +114,7 @@ func (this *PreviewLayoutService) layoutManualPositions(zones []entities.Zone, s
 // here: in topologies like Random or Circles an ordinary neutral can happen
 // to touch every spawn without being a hub, which previously made the hub
 // marker appear (and flicker) on non-hub zones.
-func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
+func (this *PreviewLayoutService) buildPreviewZones(zones []template_model.Zone) {
 	for _, zone := range zones {
 		pos, ok := this.layout.Positions[zone.Name]
 		if !ok {
@@ -125,7 +125,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 			Name:    zone.Name,
 			Label:   helpers.GetZoneLabel(zone.Name),
 			Center:  pos,
-			Quality: this.tierService.GetQuality(zone),
+			Quality: this.tierService.ResolveQuality(zone),
 			Type:    zone_helpers.GetZoneTypeFromName(zone.Name),
 		}
 		applyMainObjects(zone, &previewZone)
@@ -135,7 +135,7 @@ func (this *PreviewLayoutService) buildPreviewZones(zones []entities.Zone) {
 
 // applyMainObjects folds the zone's Spawn/City/GladiatorArena main objects into
 // the preview zone's castle count, player-owner number and arena marker.
-func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
+func applyMainObjects(zone template_model.Zone, previewZone *preview.Zone) {
 	objectTypes := registry.GetMainObjectTypeValues()
 	for _, mainObject := range zone.MainObjects {
 		switch mainObject.Type {
@@ -163,10 +163,10 @@ func applyMainObjects(zone entities.Zone, previewZone *preview.Zone) {
 // a lone edge keeps its control point on the midpoint and therefore renders
 // straight.
 func (this *PreviewLayoutService) buildPreviewConnections(
-	connections []entities.Connection,
+	connections []template_model.Connection,
 	positions map[string]data.Vec2[float64]) []preview.Connection {
 	type pairKey struct{ start, end string }
-	sortedKey := func(connection entities.Connection) pairKey {
+	sortedKey := func(connection template_model.Connection) pairKey {
 		if connection.From > connection.To {
 			return pairKey{connection.To, connection.From}
 		}
@@ -174,7 +174,7 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 		return pairKey{connection.From, connection.To}
 	}
 
-	visible := func(connection entities.Connection) bool {
+	visible := func(connection template_model.Connection) bool {
 		_, okFrom := positions[connection.From]
 		_, okTo := positions[connection.To]
 		return okFrom && okTo
@@ -225,7 +225,7 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 // getPreviewConnectionType maps a template connection onto the drawable preview
 // type. A connection also counts as a portal when it merely carries portal
 // placement rules, because the in-game generator treats it as one.
-func getPreviewConnectionType(connection entities.Connection) preview.ConnectionType {
+func getPreviewConnectionType(connection template_model.Connection) preview.ConnectionType {
 	connectionTypes := registry.GetConnectionTypeValues()
 	if connection.ConnectionType == connectionTypes.Portal ||
 		len(connection.PortalPlacementRulesFrom) > 0 ||

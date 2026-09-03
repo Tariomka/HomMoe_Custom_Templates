@@ -26,25 +26,19 @@ func NewPreviewLayoutCache() *PreviewLayoutCache {
 }
 
 // Get returns the layout for the given inputs, calling build only when they
-// differ from the cached ones. A failed build is not cached, so the next call
-// retries it.
+// differ from the cached ones.
 func (this *PreviewLayoutCache) Get(
 	templateRevision uint64,
 	topology config.MapTopology,
 	canvasSide float64,
-	build func() (preview.Layout, error)) (preview.Layout, error) {
+	build func() preview.Layout) preview.Layout {
 	key := previewLayoutCacheKey{templateRevision, topology, canvasSide}
 	if this.hasEntry && this.key == key {
-		return this.layout, nil
-	}
-
-	layout, err := build()
-	if err != nil {
-		return preview.Layout{}, err
+		return this.layout
 	}
 
 	this.key = key
-	this.layout = layout
+	this.layout = build()
 	this.hasEntry = true
-	return layout, nil
+	return this.layout
 }

@@ -4,9 +4,9 @@ import (
 	"math"
 	"sort"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -71,7 +71,7 @@ func (this canvasMetrics) center() data.Vec2[float64] {
 // placeTrivial handles the degenerate 0- and 1-zone cases shared by every
 // renderer: the zone radius maxes out and a lone zone sits at the canvas
 // center. Reports whether the layout was fully handled.
-func (this *PreviewLayoutService) placeTrivial(zones []entities.Zone, metrics canvasMetrics) bool {
+func (this *PreviewLayoutService) placeTrivial(zones []template_model.Zone, metrics canvasMetrics) bool {
 	if len(zones) > 1 {
 		return false
 	}
@@ -83,7 +83,10 @@ func (this *PreviewLayoutService) placeTrivial(zones []entities.Zone, metrics ca
 }
 
 // commitPositions stores the working coordinates and the final zone radius in the layout.
-func (this *PreviewLayoutService) commitPositions(zones []entities.Zone, positions models.Positions, radius float64) {
+func (this *PreviewLayoutService) commitPositions(
+	zones []template_model.Zone,
+	positions models.Positions,
+	radius float64) {
 	this.layout.ZoneRadius = radius
 	for i, zone := range zones {
 		position := positions[i]
@@ -93,7 +96,7 @@ func (this *PreviewLayoutService) commitPositions(zones []entities.Zone, positio
 
 // getGeneratorCoordinates copies the zones' GeneratorPosition stamps into mutable
 // coordinate slices. Callers must have verified allHavePosition.
-func getGeneratorCoordinates(zones []entities.Zone) models.Positions {
+func getGeneratorCoordinates(zones []template_model.Zone) models.Positions {
 	var positions models.Positions
 	for _, zone := range zones {
 		p := *zone.GeneratorPosition // Is this required to be copied? can't it be used directly safely?
@@ -182,7 +185,7 @@ func isStructuralIgnored(connectionType string) bool {
 	return connectionType == connectionTypes.Proximity || connectionType == connectionTypes.Portal
 }
 
-func orderZonesByZeroAngle(zones []entities.Zone, zeroAngleZone string) []entities.Zone {
+func orderZonesByZeroAngle(zones []template_model.Zone, zeroAngleZone string) []template_model.Zone {
 	if zeroAngleZone == "" {
 		return zones
 	}
@@ -196,13 +199,13 @@ func orderZonesByZeroAngle(zones []entities.Zone, zeroAngleZone string) []entiti
 	if pivot <= 0 {
 		return zones
 	}
-	out := make([]entities.Zone, 0, len(zones))
+	out := make([]template_model.Zone, 0, len(zones))
 	out = append(out, zones[pivot:]...)
 	out = append(out, zones[:pivot]...)
 	return out
 }
 
-func allHavePosition(zones []entities.Zone) bool {
+func allHavePosition(zones []template_model.Zone) bool {
 	for _, z := range zones {
 		if z.GeneratorPosition == nil {
 			return false
@@ -212,7 +215,7 @@ func allHavePosition(zones []entities.Zone) bool {
 	return true
 }
 
-func allHaveManualPosition(zones []entities.Zone) bool {
+func allHaveManualPosition(zones []template_model.Zone) bool {
 	for _, z := range zones {
 		if z.ManualPosition == nil {
 			return false
@@ -222,7 +225,7 @@ func allHaveManualPosition(zones []entities.Zone) bool {
 	return len(zones) > 0
 }
 
-func allHaveRing(zones []entities.Zone) bool {
+func allHaveRing(zones []template_model.Zone) bool {
 	for _, z := range zones {
 		if z.GeneratorRing == nil {
 			return false
@@ -262,7 +265,7 @@ func connectedComponents(n int, adj [][]int) [][]int {
 	return comps
 }
 
-func positionCentroid(zones []entities.Zone) data.Vec2[float64] {
+func positionCentroid(zones []template_model.Zone) data.Vec2[float64] {
 	if len(zones) == 0 {
 		return data.NewVec2(0.5, 0.5)
 	}
@@ -275,7 +278,7 @@ func positionCentroid(zones []entities.Zone) data.Vec2[float64] {
 	return sum.DivideScalar(float64(len(zones)))
 }
 
-func positionAngle(z entities.Zone, rawCenter data.Vec2[float64]) float64 {
+func positionAngle(z template_model.Zone, rawCenter data.Vec2[float64]) float64 {
 	p := *z.GeneratorPosition
 	return math.Atan2(p[1]-rawCenter.Y, p[0]-rawCenter.X)
 }
@@ -283,7 +286,7 @@ func positionAngle(z entities.Zone, rawCenter data.Vec2[float64]) float64 {
 // sortIndicesByAngle returns the given zone indices reordered by their raw
 // generator position's angle around the raw centroid, preserving neighbor
 // ordering when zones are re-projected onto a canvas ring.
-func sortIndicesByAngle(zones []entities.Zone, indices []int, rawCenter data.Vec2[float64]) []int {
+func sortIndicesByAngle(zones []template_model.Zone, indices []int, rawCenter data.Vec2[float64]) []int {
 	sorted := append([]int(nil), indices...)
 	sort.SliceStable(sorted, func(i, j int) bool {
 		return positionAngle(zones[sorted[i]], rawCenter) < positionAngle(zones[sorted[j]], rawCenter)

@@ -6,11 +6,11 @@ import (
 	"image/draw"
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/asset_provider"
 )
 
@@ -46,7 +46,7 @@ func NewPreviewGenerator(layoutService IPreviewLayoutService) (IPreviewGenerator
 }
 
 func (this *PreviewGeneratorService) CreatePreviewImage(
-	template *entities.RmgTemplate,
+	template *template_model.Template,
 	topology config.MapTopology) *image.RGBA {
 	canvas := image.NewRGBA(image.Rect(0, 0, canvasSize, canvasSize))
 	this.assetProvider.DrawBackground(canvas)

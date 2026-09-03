@@ -990,7 +990,7 @@ visual-only gap and the reason no pixel moved.
 ---
 
 ## Phase 4: the rest of the sweep
-Status: Not started
+Status: **Complete** (2026-09-03) — uncommitted, awaiting review.
 
 ⚠ **Phase 3 already took the zone-editor half of this phase** — read its summary
 first. The 9 DTOs, `IZoneEditorHandler`, all four `connection_editor` services,
@@ -1010,21 +1010,21 @@ left on a `TemplateMapper.ToEntity` bridge.
       temporary wrap-by-name seam is deleted — done in phase 3.
 - [x] `*_testexports.go` accessors follow — `EditedZones()` and the
       `IZoneEditorDialog` contract moved in phase 3.
-- [ ] **`preview_service` is the one that still matters visually.**
+- [x] **`preview_service` is the one that still matters visually.**
       `PreviewLayoutService` calls `GetQuality` on the entity zone, so a zone the
       user re-tiered is coloured by inference rather than by its recorded tier.
       Move `BuildPreviewLayout` and `previewLayoutRequestDto` onto
       `template_model` and switch that call to `ResolveQuality`. ⚠ This is the
       first change in the batch that **can move pixels** — expect to regenerate
       goldens, and enumerate every zone whose colour changes.
-- [ ] `file_service`, the generator and the topology tree: decide per seam
+- [x] `file_service`, the generator and the topology tree: decide per seam
       whether they move or keep their bridge. The generator builds the entity
       and lifts it (phase 2.5), which is what makes the golden test meaningful,
       so the topology tree arguably should **stay** on entities — say so
       explicitly rather than sweeping it by reflex.
-- [ ] ⚠ **Name-collision trap** for any new testexport: the layout checker
+- [x] ⚠ **Name-collision trap** for any new testexport: the layout checker
       matches test-only exports by identifier name tree-wide, so grep first —
-      the testexports side always yields.
+      the testexports side always yields. (No new testexport was needed.)
 
 ### Verification Plan
 - Full gate set, including `go vet -tags='integration_test,gui' ./...`.
@@ -1034,7 +1034,137 @@ left on a `TemplateMapper.ToEntity` bridge.
 - Coverage ≥ 72.5 %.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**The preview now colours a zone by the tier that was recorded for it.**
+`PreviewLayoutService.buildPreviewZones` calls `ResolveQuality(zone)` instead of
+`GetQuality(zone)`, which is the last consumer in the batch to stop inferring.
+That single line is the whole behavioural point of the phase; everything else in
+the diff is the type change that made it reachable.
+
+**`preview_service` speaks `template_model` end to end.** `BuildPreviewLayout`
+and `CreatePreviewImage` (both the real generator and the null one) take
+`*template_model.Template`, and all five layout strategies — ring/hub, scatter,
+fixed geometry, balanced rings, manual positions — plus `layoutGeometry.go`'s
+shared predicates now take `[]template_model.Zone` and
+`[]template_model.Connection`. The package names no entity type at all any more.
+The sweep was done with `gofmt -r` on an explicit file list and verified with
+`git diff --numstat`: insertions equalled deletions on every file, so the AST
+rewrite touched nothing but the type names. Imports were fixed separately.
+
+**Three bridges came out, and one deliberately stayed:**
+
+- `previewHandler` no longer holds a `TemplateMapper` at all. It used to flatten
+  the request template with `ToEntity`; now it forwards the model, and the
+  zones-only branch builds a one-variant `template_model.Template` literal
+  instead of running the entity `VariantBuilder`. `NewPreviewHandler` lost its
+  second argument and `wire_gen.go` was regenerated.
+- `templateHandler.SaveTemplate` renders the preview **from the model** and only
+  then flattens for the file service. Order matters for the reason this phase
+  exists: flattening first would have thrown the tier away before the preview
+  could read it.
+- `ZoneEditorGeometryService.BuildGeometry` no longer round-trips its model zones
+  through `ToZoneEntities` to synthesise a template for the layout service. It
+  builds a model variant, lifting only the connections (which are still
+  entities). That round trip was silently erasing `Quality`, so the zone editor's
+  own canvas would have kept inferring even after this change.
+- **`file_service` stays on the entity, permanently.** `SaveTemplateWithPreview`
+  hands `*entities.RmgTemplate` to the template repository, which serializes it
+  to `.rmg.json`. That is one of the two seams §0b.16 says keeps the wire format
+  forever; converting there would be conversion for its own sake.
+
+**The generator and the topology tree stay on entities — stated outright, as the
+checklist asked.** `Generate` assembles the entity from the providers and lifts
+it with `TemplateMapper.ToModel` before stamping tiers, and that ordering is
+exactly what makes `TestWhenDefaultConfiguration_ReturnsGoldenTemplate` a proof
+rather than an argument: the golden compares the bytes the providers produced,
+not the bytes a model would round-trip to. Moving ~40 topology and builder files
+onto the model would buy nothing — no topology has a tier to carry, since
+`stampPlannedZoneTiers` derives every one of them from the plans afterwards — and
+would cost the golden its meaning. This is the answer to the carry-forward's open
+question, and it should not be revisited by reflex in a later batch.
+
+**⚠ The plan predicted this phase would move pixels. It did not, and the reason
+is worth recording rather than celebrating.** The GPU suite passes **without
+`-update`**, and no `*.golden` is modified in `git status`. Two facts combine:
+
+1. Every zone the *generator* emits has a recorded tier that inference agrees
+   with — phase 2's 792-configuration sweep measured exactly that, zero
+   disagreements.
+2. Every zone the *editor* re-tiers goes through `ApplyNeutralZoneQuality`, which
+   stamps the content pools its new tier implies. Inference reads those pools, so
+   it lands on the same answer.
+
+So the correction stays latent, as it has since phase 2: it fires only for a zone
+whose tier was recorded but whose pools do not imply it — a state no path
+reachable today produces. That is the batch working as intended, not the change
+being a no-op.
+
+**The goldens that cover the preview were genuinely exercised**, so this is not a
+vacuous pass. `BaseHandler` masks the preview canvas interior by default because
+the shipped default topology is Random, but `LayoutAndZonesTabHandler.SelectTopology`
+**lifts that mask** as soon as a deterministic topology is picked. Every snapshot
+taken after that compares the canvas pixel for pixel — including the zone-editor
+suites, which re-tier a zone through the dropdown. Only the Random-topology
+snapshots keep the canvas masked, and those could never have shown a tier change
+either way.
+
+**The real guard is therefore a unit test, and it is mutation-verified.**
+`TestWhenZoneCarriesARecordedTier_ColoursItWithThatTierInsteadOfInferring` gives a
+zone `Sides` layout and a `_t2_` guarded pool — which infers as `QualityLow` —
+then records `QualityHigh` on it and asserts the preview zone comes back High.
+Reverting `buildPreviewZones` to `GetQuality(ToZoneEntity(zone))` fails that test
+and **only** that test; restoring it passes. Its sibling,
+`TestWhenZoneCarriesNoRecordedTier_ColoursItWithTheInferredTier`, pins the
+fallback so the nil branch cannot rot.
+
+**Input for phase 5, measured rather than assumed:** `internal/dtos` still names
+`internal/entities` in five files — `templateUpdateDto`,
+`zoneEditorGeometryRequestDto`, `zoneEditorMutationDto`,
+`zoneEditorRemoveRequestDto` and `zoneEditorZonesDto` — and in every case it is
+`entities.Connection`, which phase 3 deliberately left alone because a connection
+carries no tier. So `internal/dtos` cannot come off `entityNamerAllowList` yet,
+and phase 5 should say that rather than move connections just to shorten a list.
+
+**One dead path found, and removed.** `PreviewLayoutRequestDto.Zones` /
+`.Connections` — the "editor-only preview when Template is nil" branch — had no
+production caller: `previewPanel` always passes a template, and the zone editor
+goes through `ZoneEditorGeometryService`. The only reader was the synthesis
+branch inside `previewHandler` itself, and the only writers were unit tests. Both
+fields, the branch and the three tests that existed solely to cover it are gone,
+so `BuildPreviewLayout` is now a single forwarding line. The DTO is three fields:
+`Template`, `Topology`, `CanvasSide`.
+
+**And with the branch gone, so is the error return.** `BuildPreviewLayout` could
+only ever return `nil` — the layout service has no failure mode — so the whole
+chain now returns a bare `dtos.PreviewLayoutDto`: `IPreviewHandler`,
+`previewHandler`, `GUIHandler`, the `TemplateHandlerMock` and the guiHandler
+stub. That in turn emptied `models.PreviewLayoutCache.Get`, whose `build` callback
+and "a failed build is not cached" retry existed only to carry that error; it now
+takes `func() preview.Layout` and returns `preview.Layout`. `previewPanel` lost
+its unreachable error branch, and the cache's two failure tests went with the
+failure mode they described.
+
+### Verification results (2026-09-03)
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 (regenerated after `NewPreviewHandler` lost its mapper; never hand-edited) |
+| Unit / untagged / integration | pass (exit 0) |
+| **GPU suite, no `-update`** | **pass** — no pixel moved, no golden modified (see summary for why) |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| Unit coverage | **74.3 %** (unchanged, floor 72.5 %) |
+| Recorded-tier preview guard | **verified by mutation** — reverting to `GetQuality` fails it, and only it |
+| `git status` | 27 modified files, **zero** `*.golden`, nothing staged |
+
+⚠ **Not re-measured:** `BenchmarkEditorWindow_TabCycling`. The per-frame path is
+untouched; the preview layout is rebuilt only when
+`(templateRevision, topology, canvasSide)` changes. `BenchmarkPreviewLayoutService_BuildPreviewLayout`
+did lose one whole `ToEntity` of the generated template per case in its setup,
+which is a strict reduction, not a regression.
 
 ---
 
