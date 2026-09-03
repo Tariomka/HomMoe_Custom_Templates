@@ -53,13 +53,15 @@ func (this *ZoneTierService) ResolveQuality(zone template_model.Zone) neutral_zo
 
 func (this *ZoneTierService) GetGuardQuality(
 	zoneName string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerNames []string) neutral_zone.Quality {
 	if zoneName == "" {
 		return neutral_zone.QualityLow
 	}
 
-	zone, ok := linq.FromSlice(zones).First(func(candidate entities.Zone) bool { return candidate.Name == zoneName })
+	zone, ok := linq.FromSlice(zones).First(func(candidate template_model.Zone) bool {
+		return candidate.Name == zoneName
+	})
 	if !ok {
 		return neutral_zone.QualityLow
 	}
@@ -74,7 +76,7 @@ func (this *ZoneTierService) GetGuardQuality(
 	case preview.ZoneTypePlayer:
 		return neutral_zone.QualityUnknown
 	case preview.ZoneTypeNeutral:
-		return this.GetQuality(zone)
+		return this.ResolveQuality(zone)
 	case preview.ZoneTypeUnknown:
 		fallthrough
 	default:
@@ -84,7 +86,7 @@ func (this *ZoneTierService) GetGuardQuality(
 
 func (this *ZoneTierService) GetConnectionGuardQuality(
 	zoneA, zoneB string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerNames []string) neutral_zone.Quality {
 	if zoneA != "" && zoneB != "" &&
 		slices.Contains(playerNames, zoneA) && slices.Contains(playerNames, zoneB) {

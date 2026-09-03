@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,7 +55,7 @@ func TestWhenOnlyManualEditsDifferFromSnapshot_ReportsStateNotChanged(t *testing
 	state := newEditorState()
 	state.SnapshotCurrentState()
 	state.SetManualEdits(
-		[]entities.Zone{{Name: "Zone A"}},
+		[]template_model.Zone{{Name: "Zone A"}},
 		[]entities.Connection{{Name: "A-B"}})
 
 	// Act

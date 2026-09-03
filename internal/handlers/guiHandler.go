@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type GUIHandler struct {
@@ -46,7 +47,8 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	return this.templateHandler.UpdateTemplate(templateDto)
 }
 
-func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
+func (this *GUIHandler) ReapplyCastleSettings(
+	request dtos.CastleSettingsReapplyRequestDto) []template_model.Zone {
 	return this.templateHandler.ReapplyCastleSettings(request)
 }
 
@@ -56,27 +58,27 @@ func (this *GUIHandler) GetZoneEditorOptions(
 	return this.zoneEditorHandler.GetZoneEditorOptions(state, totalZoneCount)
 }
 
-func (this *GUIHandler) CountZoneCastles(zone entities.Zone) int {
+func (this *GUIHandler) CountZoneCastles(zone template_model.Zone) int {
 	return this.zoneEditorHandler.CountZoneCastles(zone)
 }
 
-func (this *GUIHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *GUIHandler) GetZoneQuality(zone template_model.Zone) neutral_zone.Quality {
 	return this.zoneEditorHandler.GetZoneQuality(zone)
 }
 
 func (this *GUIHandler) GetZoneConnectionGuardQuality(
 	from, to string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerZoneNames map[string]bool) neutral_zone.Quality {
 	return this.zoneEditorHandler.GetZoneConnectionGuardQuality(from, to, zones, playerZoneNames)
 }
 
-func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {
+func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) template_model.Zone {
 	return this.zoneEditorHandler.ApplyZoneEditorQuality(request)
 }
 
 func (this *GUIHandler) DescribeZoneEditorGraph(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection) dtos.ZoneEditorGraphDto {
 	return this.zoneEditorHandler.DescribeZoneEditorGraph(zones, connections)
 }
@@ -89,11 +91,11 @@ func (this *GUIHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
 	return this.zoneEditorHandler.FindOpenZonePosition(occupied)
 }
 
-func (this *GUIHandler) GetNextZoneLabel(zones []entities.Zone) string {
+func (this *GUIHandler) GetNextZoneLabel(zones []template_model.Zone) string {
 	return this.zoneEditorHandler.GetNextZoneLabel(zones)
 }
 
-func (this *GUIHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone {
+func (this *GUIHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone {
 	return this.zoneEditorHandler.CreateZoneEditorNeutralZone(request)
 }
 

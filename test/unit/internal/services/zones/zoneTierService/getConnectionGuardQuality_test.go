@@ -3,8 +3,8 @@ package zoneTierService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ func TestWhenBothZonesArePlayerOwned_ReturnsUnknownQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := zones.NewZoneTierService()
-	zoneList := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+	zoneList := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 
 	// Act
 	quality := service.GetConnectionGuardQuality(
@@ -28,7 +28,7 @@ func TestWhenOneZoneIsHub_ReturnsHighestQuality(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := zones.NewZoneTierService()
-	zoneList := []entities.Zone{{Name: "Spawn-A"}, {Name: "Hub"}}
+	zoneList := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Hub"}}
 
 	// Act
 	quality := service.GetConnectionGuardQuality("Spawn-A", "Hub", zoneList, []string{"Spawn-A"})
@@ -42,7 +42,7 @@ func TestWhenBothZonesAreNeutral_HigherQualityWins(t *testing.T) {
 	// Arrange
 	service := zones.NewZoneTierService()
 	layoutValues := registry.GetLayoutValues()
-	zoneList := []entities.Zone{
+	zoneList := []template_model.Zone{
 		{Name: "Neutral-C", Layout: layoutValues.Sides, GuardedContentPool: []string{"pool_t2_x"}},
 		{Name: "Neutral-D", Layout: layoutValues.TreasureZone, GuardedContentPool: []string{"pool_t4_x"}},
 	}

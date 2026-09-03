@@ -7,10 +7,8 @@ import (
 )
 
 type TemplateUpdateDto struct {
-	Template *template_model.Template
-	// Zones and Connections are still entities: the zone editor has not moved
-	// onto template_model yet, which is phase 4 of this batch.
-	Zones       []entities.Zone
+	Template    *template_model.Template
+	Zones       []template_model.Zone
 	Connections []entities.Connection
 
 	// EditorState, when supplied, lets UpdateTemplate rebuild the template's

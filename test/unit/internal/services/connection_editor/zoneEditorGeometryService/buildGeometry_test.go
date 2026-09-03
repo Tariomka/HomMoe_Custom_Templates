@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -54,7 +55,7 @@ func TestWhenTheGeometryIsBuilt_TheZonesReachThePreviewLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, previewLayout := newGeometryFixture(chordPositions())
-	zones := []entities.Zone{{Name: "A"}, {Name: "B"}}
+	zones := []template_model.Zone{{Name: "A"}, {Name: "B"}}
 
 	// Act
 	service.BuildGeometry(zones, nil, config.MapTopology(gofakeit.Word()), fixtureCanvasSide)
@@ -63,7 +64,7 @@ func TestWhenTheGeometryIsBuilt_TheZonesReachThePreviewLayout(t *testing.T) {
 	template, _ := previewLayout.Calls[0].Arguments.Get(0).(*entities.RmgTemplate)
 	require.NotNil(t, template)
 	require.NotEmpty(t, template.Variants)
-	assert.Equal(t, zones, template.Variants[0].Zones)
+	assert.Equal(t, template_model.ToZoneEntities(zones), template.Variants[0].Zones)
 }
 
 func TestWhenASingleConnectionSpansAClearChord_ItsCurveStaysOnTheChord(t *testing.T) {

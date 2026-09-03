@@ -131,11 +131,11 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	template := state.GetLastTemplate()
 	require.NotNil(t, template, "expected a generated template")
 	require.NotEmpty(t, template.Variants)
-	require.GreaterOrEqual(t, len(template_model.ToZoneEntities(template.Variants[0].Zones)), 2)
+	require.GreaterOrEqual(t, len(template.Variants[0].Zones), 2)
 
 	// Hand-edit the layout: stamp a manual position onto every zone and add a
 	// user-created connection between the first two zones.
-	zones := append([]entities.Zone(nil), template_model.ToZoneEntities(template.Variants[0].Zones)...)
+	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.2 * float64(i+1)}
 	}
@@ -186,7 +186,7 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	require.NotNil(t, got, "expected a regenerated template after load")
 	require.NotEmpty(t, got.Variants)
 
-	gotZones := template_model.ToZoneEntities(got.Variants[0].Zones)
+	gotZones := got.Variants[0].Zones
 	require.Len(t, gotZones, len(zones), "reapplied zone count does not match the saved manual layout")
 	for i := range gotZones {
 		require.NotNilf(t, gotZones[i].ManualPosition, "zone %d lost its manual position after load", i)
@@ -237,7 +237,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	require.NotNil(t, template)
 	require.NotEmpty(t, template.Variants)
 
-	zones := append([]entities.Zone(nil), template_model.ToZoneEntities(template.Variants[0].Zones)...)
+	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.3, 0.4}
 	}
@@ -255,7 +255,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	require.NotEmpty(t, regenerated.Variants)
 	// With four players the regenerated layout has its own spawn zones; the
 	// manual single-position stamp must not have been forced back on.
-	assert.GreaterOrEqual(t, len(template_model.ToZoneEntities(regenerated.Variants[0].Zones)), 4)
+	assert.GreaterOrEqual(t, len(regenerated.Variants[0].Zones), 4)
 }
 
 // TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave is the regression

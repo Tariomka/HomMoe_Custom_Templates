@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type handlerDependenciesStub struct {
@@ -37,7 +38,7 @@ func (this *handlerDependenciesStub) UpdateTemplate(
 
 func (this *handlerDependenciesStub) ReapplyCastleSettings(
 	dtos.CastleSettingsReapplyRequestDto,
-) []entities.Zone {
+) []template_model.Zone {
 	return nil
 }
 
@@ -92,19 +93,19 @@ func (this *handlerDependenciesStub) GetZoneEditorOptions(
 	return dtos.ZoneEditorOptionsDto{}
 }
 
-func (this *handlerDependenciesStub) CountZoneCastles(entities.Zone) int {
+func (this *handlerDependenciesStub) CountZoneCastles(template_model.Zone) int {
 	this.zoneEditorCalled = true
 	return 0
 }
 
-func (this *handlerDependenciesStub) GetZoneQuality(entities.Zone) neutral_zone.Quality {
+func (this *handlerDependenciesStub) GetZoneQuality(template_model.Zone) neutral_zone.Quality {
 	return neutral_zone.QualityUnknown
 }
 
 func (this *handlerDependenciesStub) GetZoneConnectionGuardQuality(
 	string,
 	string,
-	[]entities.Zone,
+	[]template_model.Zone,
 	map[string]bool,
 ) neutral_zone.Quality {
 	return neutral_zone.QualityUnknown
@@ -112,26 +113,26 @@ func (this *handlerDependenciesStub) GetZoneConnectionGuardQuality(
 
 func (this *handlerDependenciesStub) ApplyZoneEditorQuality(
 	request dtos.ZoneEditorQualityRequestDto,
-) entities.Zone {
+) template_model.Zone {
 	return request.Zone
 }
 
 func (this *handlerDependenciesStub) DescribeZoneEditorGraph(
-	[]entities.Zone,
+	[]template_model.Zone,
 	[]entities.Connection,
 ) dtos.ZoneEditorGraphDto {
 	return dtos.ZoneEditorGraphDto{}
 }
 
 func (this *handlerDependenciesStub) ComputeHasErrors(
-	[]entities.Zone,
+	[]template_model.Zone,
 	[]entities.Connection,
 ) bool {
 	return false
 }
 
 func (this *handlerDependenciesStub) RebuildZoneConnectionRoads(
-	[]entities.Zone,
+	[]template_model.Zone,
 	[]entities.Connection,
 ) {
 }
@@ -146,14 +147,14 @@ func (this *handlerDependenciesStub) FindOpenZonePosition([][2]float64) [2]float
 	return [2]float64{}
 }
 
-func (this *handlerDependenciesStub) GetNextZoneLabel([]entities.Zone) string {
+func (this *handlerDependenciesStub) GetNextZoneLabel([]template_model.Zone) string {
 	return ""
 }
 
 func (this *handlerDependenciesStub) CreateZoneEditorNeutralZone(
 	dtos.ZoneEditorNeutralZoneRequestDto,
-) entities.Zone {
-	return entities.Zone{}
+) template_model.Zone {
+	return template_model.Zone{}
 }
 
 func (this *handlerDependenciesStub) CanDeleteZone(string, map[string]bool) bool {

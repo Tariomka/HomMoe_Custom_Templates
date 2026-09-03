@@ -7,6 +7,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // ManualZoneSave adds behaviour to the behaviour-free
@@ -16,29 +18,35 @@ type ManualZoneSave struct {
 }
 
 // ToManualZoneSaves converts live editor zones into their serializable form,
-// preserving each zone's ManualPosition outside the entities.Zone JSON.
-func ToManualZoneSaves(zones []entities.Zone) []ManualZoneSave {
+// preserving each zone's ManualPosition outside the entities.Zone JSON and its
+// recorded tier, which the .rmg.json schema has nowhere to put.
+func ToManualZoneSaves(zones []template_model.Zone) []ManualZoneSave {
 	if len(zones) == 0 {
 		return nil
 	}
 
 	return linq.FromSlice(zones).
-		Select(func(zone entities.Zone) ManualZoneSave {
-			return ManualZoneSave{Zone: zone, ManualPosition: zone.ManualPosition}
+		Select(func(zone template_model.Zone) ManualZoneSave {
+			return ManualZoneSave{
+				Zone:           template_model.ToZoneEntity(zone),
+				ManualPosition: zone.ManualPosition,
+				Quality:        toQualityOrdinal(zone.Quality)}
 		}).ToSlice()
 }
 
 // FromManualZoneSaves rebuilds live editor zones from their serialized form,
-// restoring each zone's ManualPosition.
-func FromManualZoneSaves(saves []ManualZoneSave) []entities.Zone {
+// restoring each zone's ManualPosition and recorded tier. A save written before
+// the tier was persisted has none, and the zone falls back to inference.
+func FromManualZoneSaves(saves []ManualZoneSave) []template_model.Zone {
 	if len(saves) == 0 {
 		return nil
 	}
 
 	return linq.FromSlice(saves).
-		Select(func(save ManualZoneSave) entities.Zone {
-			zone := save.Zone
+		Select(func(save ManualZoneSave) template_model.Zone {
+			zone := template_model.ToZoneModel(save.Zone)
 			zone.ManualPosition = save.ManualPosition
+			zone.Quality = fromQualityOrdinal(save.Quality)
 			return zone
 		}).ToSlice()
 }
@@ -77,7 +85,7 @@ func (this ManualZoneSave) Clone() ManualZoneSave {
 	return ManualZoneSave{
 		Zone:           cloneZone(this.Zone),
 		ManualPosition: helpers.ClonePointer(this.ManualPosition),
-	}
+		Quality:        helpers.ClonePointer(this.Quality)}
 }
 
 func cloneZone(source entities.Zone) entities.Zone {
@@ -138,4 +146,26 @@ func cloneTypedRef(source entities.TypedRef) entities.TypedRef {
 	clone := source
 	clone.Args = slices.Clone(source.Args)
 	return clone
+}
+
+// toQualityOrdinal and fromQualityOrdinal cross the entity boundary the tier
+// cannot: an entity may not name neutral_zone.Quality, so it stores the raw
+// ordinal. Both directions keep nil meaning "not recorded" - the enum's zero
+// value is QualityLowest, so collapsing nil onto it would down-tier silently.
+func toQualityOrdinal(quality *neutral_zone.Quality) *int8 {
+	if quality == nil {
+		return nil
+	}
+
+	ordinal := int8(*quality)
+	return &ordinal
+}
+
+func fromQualityOrdinal(ordinal *int8) *neutral_zone.Quality {
+	if ordinal == nil {
+		return nil
+	}
+
+	quality := neutral_zone.Quality(*ordinal)
+	return &quality
 }

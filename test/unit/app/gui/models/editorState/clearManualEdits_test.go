@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -13,7 +14,7 @@ func TestWhenStoredManualEditsAreCleared_NoManualEditsRemain(t *testing.T) {
 	// Arrange
 	state := newEditorState()
 	state.SetManualEdits(
-		[]entities.Zone{{Name: "Zone A"}},
+		[]template_model.Zone{{Name: "Zone A"}},
 		[]entities.Connection{{Name: "A-B"}})
 	require.True(t, state.HasManualEdits())
 

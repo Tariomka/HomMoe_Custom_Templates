@@ -112,7 +112,7 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	activeVariant := lastTemplate.Variants[0]
 	options := this.zoneEditorHandler.GetZoneEditorOptions(this.state.GetStateDto(), len(activeVariant.Zones))
 	this.state.GetDialogHost().Open(dialogs.NewZoneEditorDialog(
-		template_model.ToZoneEntities(activeVariant.Zones),
+		activeVariant.Zones,
 		template_model.ToConnectionEntities(activeVariant.Connections),
 		options.Topology,
 		options.Tuning,

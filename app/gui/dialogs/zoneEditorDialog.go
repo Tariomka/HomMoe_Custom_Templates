@@ -23,6 +23,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // ZoneEditorDialog is the Manual Zone Editor. It renders zones as
@@ -39,8 +40,8 @@ type ZoneEditorDialog struct {
 	zoneEditorConnectionPropertiesState
 	zoneEditorZonePropertiesState
 
-	zones          []entities.Zone
-	originalZones  []entities.Zone
+	zones          []template_model.Zone
+	originalZones  []template_model.Zone
 	playerZones    map[string]bool
 	topology       config.MapTopology
 	tuning         models.GenerationTuning
@@ -68,7 +69,7 @@ type ZoneEditorDialog struct {
 // layout for the editor to show; nothing is committed until the user applies,
 // so it may be nil.
 func NewZoneEditorDialog(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection,
 	topology config.MapTopology,
 	tuning models.GenerationTuning,
@@ -176,9 +177,9 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 // setEditingSet installs a zone and connection list as both the working copy
 // and the baseline Undo restores, so a revert to base also moves the point
 // Undo returns to.
-func (this *ZoneEditorDialog) setEditingSet(zones []entities.Zone, connections []entities.Connection) {
-	this.zones = append([]entities.Zone(nil), zones...)
-	this.originalZones = append([]entities.Zone(nil), zones...)
+func (this *ZoneEditorDialog) setEditingSet(zones []template_model.Zone, connections []entities.Connection) {
+	this.zones = append([]template_model.Zone(nil), zones...)
+	this.originalZones = append([]template_model.Zone(nil), zones...)
 	this.playerZones = make(map[string]bool)
 	for _, zone := range zones {
 		if zone_helpers.IsZoneNamePlayer(zone.Name) {
@@ -373,7 +374,7 @@ func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) 
 // discarding this session's edits only. Manual edits applied in earlier
 // sessions are untouched, and after a revert to base it returns to that base.
 func (this *ZoneEditorDialog) undoSessionEdits() {
-	this.zones = append([]entities.Zone(nil), this.originalZones...)
+	this.zones = append([]template_model.Zone(nil), this.originalZones...)
 	this.working = this.working[:0]
 	for i := range this.original {
 		clone := this.original[i]
@@ -414,14 +415,14 @@ func (this *ZoneEditorDialog) selectZone(name string) {
 	this.syncedFor = nil
 }
 
-func (this *ZoneEditorDialog) selectedZoneRef() *entities.Zone {
+func (this *ZoneEditorDialog) selectedZoneRef() *template_model.Zone {
 	if this.selectedZone == "" {
 		return nil
 	}
 	return this.zoneByName(this.selectedZone)
 }
 
-func (this *ZoneEditorDialog) zoneByName(name string) *entities.Zone {
+func (this *ZoneEditorDialog) zoneByName(name string) *template_model.Zone {
 	for i := range this.zones {
 		if this.zones[i].Name == name {
 			return &this.zones[i]

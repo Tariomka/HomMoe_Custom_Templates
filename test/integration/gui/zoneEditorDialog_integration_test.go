@@ -31,8 +31,8 @@ import (
 const geometryCanvasSide = 700
 
 // newGeometryZone builds a zone pinned at a normalized position.
-func newGeometryZone(name string, x, y float64) entities.Zone {
-	return entities.Zone{Name: name, ManualPosition: &[2]float64{x, y}}
+func newGeometryZone(name string, x, y float64) template_model.Zone {
+	return template_model.Zone{Name: name, ManualPosition: &[2]float64{x, y}}
 }
 
 // newGeometryConnection builds a plain connection between two zones.
@@ -44,7 +44,7 @@ func newGeometryConnection(name, from, to string) entities.Connection {
 // canvas out once, so the geometry is available to read back.
 func newGeometryDialog(
 	t *testing.T,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection,
 ) *dialogs.ZoneEditorDialog {
 	t.Helper()
@@ -72,7 +72,7 @@ func newTriangleFixture(t *testing.T) *dialogs.ZoneEditorDialog {
 	t.Helper()
 
 	return newGeometryDialog(t,
-		[]entities.Zone{
+		[]template_model.Zone{
 			newGeometryZone("A", 0.2, 0.5),
 			newGeometryZone("B", 0.8, 0.5),
 			newGeometryZone("C", 0.5, 0.2),
@@ -106,11 +106,11 @@ type applyCapture struct {
 // to base hands back; an empty slice makes the revert report failure.
 func newApplyCaptureFixture(
 	t *testing.T,
-	baseZones []entities.Zone,
+	baseZones []template_model.Zone,
 ) (*dialogs.ZoneEditorDialog, *applyCapture) {
 	t.Helper()
 	handler := composition.InitializeGuiHandler()
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		newGeometryZone("A", 0.2, 0.5),
 		newGeometryZone("B", 0.8, 0.5),
 	}
@@ -163,7 +163,7 @@ func TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions(t *testing.T) {
 	variant := generated.Template.Variants[0]
 	options := handler.GetZoneEditorOptions(state, len(variant.Zones))
 	dialog := dialogs.NewZoneEditorDialog(
-		template_model.ToZoneEntities(variant.Zones),
+		variant.Zones,
 		template_model.ToConnectionEntities(variant.Connections),
 		options.Topology,
 		options.Tuning,
@@ -214,7 +214,7 @@ func TestWhenRevertToBaseCannotRegenerate_TheEditorSaysSo(t *testing.T) {
 func TestWhenApplyFollowsARevertToBase_TheRevertIsReported(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	base := []entities.Zone{newGeometryZone("Fresh1", 0.3, 0.3), newGeometryZone("Fresh2", 0.7, 0.7)}
+	base := []template_model.Zone{newGeometryZone("Fresh1", 0.3, 0.3), newGeometryZone("Fresh2", 0.7, 0.7)}
 	dialog, capture := newApplyCaptureFixture(t, base)
 	dialog.ClickRevertToBase()
 	frameZoneEditor(t, dialog)

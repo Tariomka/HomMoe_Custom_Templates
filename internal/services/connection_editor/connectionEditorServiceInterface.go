@@ -2,6 +2,7 @@ package connection_editor
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // IConnectionEditorService is the contract of the connection-level behaviour of
@@ -12,15 +13,15 @@ type IConnectionEditorService interface {
 	NewDefaultConnection(
 		from string,
 		to string,
-		zones []entities.Zone,
+		zones []template_model.Zone,
 		playerZoneNames map[string]bool) entities.Connection
 
 	// FindIsolatedZones returns the names of zones that no connection touches.
-	FindIsolatedZones(zones []entities.Zone, connections []entities.Connection) []string
+	FindIsolatedZones(zones []template_model.Zone, connections []entities.Connection) []string
 
 	// ComputeHasErrors reports whether any connection references a zone that
 	// does not exist.
-	ComputeHasErrors(zones []entities.Zone, connections []entities.Connection) bool
+	ComputeHasErrors(zones []template_model.Zone, connections []entities.Connection) bool
 
 	// HasDuplicateName reports whether another connection already uses the
 	// current connection's name.

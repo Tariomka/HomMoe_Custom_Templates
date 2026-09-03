@@ -42,7 +42,7 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	zones := []entities.Zone{{Name: gofakeit.Word()}}
+	zones := []template_model.Zone{{Name: gofakeit.Word()}}
 	arrangeUpdateCollaborators(fixture, false)
 
 	// Act
@@ -52,7 +52,7 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsZones(t *testing.T) {
 	})
 
 	// Assert
-	assert.Equal(t, zones, template_model.ToZoneEntities(loadDto.Template.Variants[0].Zones))
+	assert.Equal(t, zones, loadDto.Template.Variants[0].Zones)
 }
 
 func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T) {
@@ -83,7 +83,7 @@ func TestWhenTemplateIsUpdated_LeavesTheSourceTemplateUntouched(t *testing.T) {
 	// Act
 	_, _ = fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template: source,
-		Zones:    []entities.Zone{{Name: gofakeit.Word()}},
+		Zones:    []template_model.Zone{{Name: gofakeit.Word()}},
 	})
 
 	// Assert
@@ -94,7 +94,7 @@ func TestWhenTemplateIsUpdated_RebuildsTheZoneConnectionRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	zones := []entities.Zone{{Name: gofakeit.Word()}}
+	zones := []template_model.Zone{{Name: gofakeit.Word()}}
 	connections := []entities.Connection{{Name: gofakeit.Word()}}
 	arrangeUpdateCollaborators(fixture, false)
 
@@ -127,7 +127,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	// Arrange
 	fixture := newTemplateHandlerFixture()
 	state := editor_state_model.NewDefaultEditorStateModel()
-	zones := []entities.Zone{{Name: gofakeit.Word()}}
+	zones := []template_model.Zone{{Name: gofakeit.Word()}}
 	expected := []entities.MandatoryContent{{Name: gofakeit.Word()}}
 	configuration := namedConfiguration()
 	arrangeUpdateCollaborators(fixture, false)

@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/stretchr/testify/mock"
 )
@@ -21,17 +22,17 @@ type TemplateHandlerMock struct {
 	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error)
 	GetContentRuleEditorOptionsFunc func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
 	DescribeContentRuleFunc         func(models.SidMapping, editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto
-	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []entities.Zone
+	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []template_model.Zone
 	GetZoneEditorOptionsFunc        func(editor_state_dto.EditorStateDto, int) dtos.ZoneEditorOptionsDto
-	CountZoneCastlesFunc            func(entities.Zone) int
-	GetZoneQualityFunc              func(entities.Zone) neutral_zone.Quality
-	GetZoneConnectionQualityFunc    func(string, string, []entities.Zone, map[string]bool) neutral_zone.Quality
-	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) entities.Zone
-	DescribeZoneEditorGraphFunc     func([]entities.Zone, []entities.Connection) dtos.ZoneEditorGraphDto
+	CountZoneCastlesFunc            func(template_model.Zone) int
+	GetZoneQualityFunc              func(template_model.Zone) neutral_zone.Quality
+	GetZoneConnectionQualityFunc    func(string, string, []template_model.Zone, map[string]bool) neutral_zone.Quality
+	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) template_model.Zone
+	DescribeZoneEditorGraphFunc     func([]template_model.Zone, []entities.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) entities.Connection
 	FindOpenZonePositionFunc        func([][2]float64) [2]float64
-	GetNextZoneLabelFunc            func([]entities.Zone) string
-	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone
+	GetNextZoneLabelFunc            func([]template_model.Zone) string
+	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone
 	CanDeleteZoneFunc               func(string, map[string]bool) bool
 	RemoveZoneEditorZoneFunc        func(dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto
 	BuildZoneEditorGeometryFunc     func(dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry
@@ -61,7 +62,7 @@ func (this *TemplateHandlerMock) UpdateTemplate(templateDto dtos.TemplateUpdateD
 
 func (this *TemplateHandlerMock) ReapplyCastleSettings(
 	request dtos.CastleSettingsReapplyRequestDto,
-) []entities.Zone {
+) []template_model.Zone {
 	if this.ReapplyCastleSettingsFunc != nil {
 		return this.ReapplyCastleSettingsFunc(request)
 	}
@@ -78,14 +79,14 @@ func (this *TemplateHandlerMock) GetZoneEditorOptions(
 	return dtos.ZoneEditorOptionsDto{}
 }
 
-func (this *TemplateHandlerMock) CountZoneCastles(zone entities.Zone) int {
+func (this *TemplateHandlerMock) CountZoneCastles(zone template_model.Zone) int {
 	if this.CountZoneCastlesFunc != nil {
 		return this.CountZoneCastlesFunc(zone)
 	}
 	return 0
 }
 
-func (this *TemplateHandlerMock) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *TemplateHandlerMock) GetZoneQuality(zone template_model.Zone) neutral_zone.Quality {
 	if this.GetZoneQualityFunc != nil {
 		return this.GetZoneQualityFunc(zone)
 	}
@@ -94,7 +95,7 @@ func (this *TemplateHandlerMock) GetZoneQuality(zone entities.Zone) neutral_zone
 
 func (this *TemplateHandlerMock) GetZoneConnectionGuardQuality(
 	from, to string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerZoneNames map[string]bool,
 ) neutral_zone.Quality {
 	if this.GetZoneConnectionQualityFunc != nil {
@@ -105,7 +106,7 @@ func (this *TemplateHandlerMock) GetZoneConnectionGuardQuality(
 
 func (this *TemplateHandlerMock) ApplyZoneEditorQuality(
 	request dtos.ZoneEditorQualityRequestDto,
-) entities.Zone {
+) template_model.Zone {
 	if this.ApplyZoneEditorQualityFunc != nil {
 		return this.ApplyZoneEditorQualityFunc(request)
 	}
@@ -113,7 +114,7 @@ func (this *TemplateHandlerMock) ApplyZoneEditorQuality(
 }
 
 func (this *TemplateHandlerMock) DescribeZoneEditorGraph(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection,
 ) dtos.ZoneEditorGraphDto {
 	if this.DescribeZoneEditorGraphFunc != nil {
@@ -138,7 +139,7 @@ func (this *TemplateHandlerMock) FindOpenZonePosition(occupied [][2]float64) [2]
 	return [2]float64{}
 }
 
-func (this *TemplateHandlerMock) GetNextZoneLabel(zones []entities.Zone) string {
+func (this *TemplateHandlerMock) GetNextZoneLabel(zones []template_model.Zone) string {
 	if this.GetNextZoneLabelFunc != nil {
 		return this.GetNextZoneLabelFunc(zones)
 	}
@@ -147,11 +148,11 @@ func (this *TemplateHandlerMock) GetNextZoneLabel(zones []entities.Zone) string 
 
 func (this *TemplateHandlerMock) CreateZoneEditorNeutralZone(
 	request dtos.ZoneEditorNeutralZoneRequestDto,
-) entities.Zone {
+) template_model.Zone {
 	if this.CreateZoneEditorNeutralZoneFunc != nil {
 		return this.CreateZoneEditorNeutralZoneFunc(request)
 	}
-	return entities.Zone{}
+	return template_model.Zone{}
 }
 
 func (this *TemplateHandlerMock) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {

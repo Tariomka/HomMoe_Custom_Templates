@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 )
@@ -59,13 +60,13 @@ func NewZoneEditorGeometryService(
 }
 
 func (this *ZoneEditorGeometryService) BuildGeometry(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection,
 	topology config.MapTopology,
 	canvasSide int) models.ZoneEditorGeometry {
 	template := &entities.RmgTemplate{
 		Variants: []entities.Variant{variant_content.NewVariantBuilder().
-			WithZones(zones...).
+			WithZones(template_model.ToZoneEntities(zones)...).
 			WithConnections(connections...).
 			Build()},
 	}

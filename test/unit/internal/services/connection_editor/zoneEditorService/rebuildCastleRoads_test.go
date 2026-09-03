@@ -3,7 +3,7 @@ package zoneEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,9 +11,9 @@ import (
 func TestWhenZoneHasThreeCastles_RebuildsTheCastleRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := entities.Zone{
+	zone := template_model.Zone{
 		Name:        "Neutral-Z",
-		MainObjects: []entities.MainObject{{Type: "City"}, {Type: "City"}, {Type: "City"}},
+		MainObjects: []template_model.MainObject{{Type: "City"}, {Type: "City"}, {Type: "City"}},
 	}
 
 	// Act
@@ -26,17 +26,17 @@ func TestWhenZoneHasThreeCastles_RebuildsTheCastleRoads(t *testing.T) {
 func TestWhenZoneHasStaleCastleRoads_DropsTheStaleOnes(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := entities.Zone{
+	zone := template_model.Zone{
 		Name:        "Neutral-Z",
-		MainObjects: []entities.MainObject{{Type: "City"}},
-		Roads: []entities.Road{
+		MainObjects: []template_model.MainObject{{Type: "City"}},
+		Roads: []template_model.Road{
 			{
 				From: mainObjectZeroRef(),
-				To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+				To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 			},
 			{
 				From: mainObjectZeroRef(),
-				To:   entities.TypedRef{Type: "MainObject", Args: []string{"2"}},
+				To:   template_model.TypedRef{Type: "MainObject", Args: []string{"2"}},
 			},
 		},
 	}
@@ -51,11 +51,11 @@ func TestWhenZoneHasStaleCastleRoads_DropsTheStaleOnes(t *testing.T) {
 func TestWhenZoneHasAConnectionRoad_PreservesIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := entities.Zone{
+	zone := template_model.Zone{
 		Name:        "Neutral-Z",
-		MainObjects: []entities.MainObject{{Type: "City"}, {Type: "City"}},
-		Roads: []entities.Road{
-			{From: mainObjectZeroRef(), To: entities.TypedRef{Type: "Connection", Args: []string{"Rnd-A-Z"}}},
+		MainObjects: []template_model.MainObject{{Type: "City"}, {Type: "City"}},
+		Roads: []template_model.Road{
+			{From: mainObjectZeroRef(), To: template_model.TypedRef{Type: "Connection", Args: []string{"Rnd-A-Z"}}},
 		},
 	}
 
@@ -68,7 +68,7 @@ func TestWhenZoneHasAConnectionRoad_PreservesIt(t *testing.T) {
 
 // roadTargetArgs returns the first argument of every road targeting the given
 // reference type, in road order.
-func roadTargetArgs(zone entities.Zone, referenceType string) []string {
+func roadTargetArgs(zone template_model.Zone, referenceType string) []string {
 	var args []string
 	for _, road := range zone.Roads {
 		if road.To.Type == referenceType && len(road.To.Args) > 0 {

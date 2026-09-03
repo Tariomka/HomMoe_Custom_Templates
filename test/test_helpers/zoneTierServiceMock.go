@@ -27,7 +27,7 @@ func (this *ZoneTierServiceMock) ResolveQuality(zone template_model.Zone) neutra
 
 func (this *ZoneTierServiceMock) GetGuardQuality(
 	zoneName string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerNames []string) neutral_zone.Quality {
 	arguments := this.Called(zoneName, zones, playerNames)
 	quality, _ := arguments.Get(0).(neutral_zone.Quality)
@@ -36,7 +36,7 @@ func (this *ZoneTierServiceMock) GetGuardQuality(
 
 func (this *ZoneTierServiceMock) GetConnectionGuardQuality(
 	zoneA, zoneB string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerNames []string) neutral_zone.Quality {
 	arguments := this.Called(zoneA, zoneB, zones, playerNames)
 	quality, _ := arguments.Get(0).(neutral_zone.Quality)

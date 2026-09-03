@@ -3,7 +3,6 @@
 package gladiatorArenaProvider_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -44,10 +43,10 @@ func defaultTuning() models.GenerationTuning {
 // classify back to the requested quality. It records no tier, so the tests that
 // use it exercise the inference fallback.
 func newNeutralZone(label string, quality neutral_zone.Quality) template_model.Zone {
-	return template_model.ToZoneModels([]entities.Zone{
-		test_helpers.NewZoneEditorService().
-			NewDefaultNeutralZone(label, quality, 0, false, defaultTuning()),
-	})[0]
+	zone := test_helpers.NewZoneEditorService().
+		NewDefaultNeutralZone(label, quality, 0, false, defaultTuning())
+	zone.Quality = nil
+	return zone
 }
 
 func countArenaMainObjects(zone template_model.Zone) int {

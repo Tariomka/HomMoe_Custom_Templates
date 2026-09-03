@@ -6,7 +6,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -104,7 +103,7 @@ func TestWhenEditsAreAppliedTwice_TheManualSnapshotSurvives(t *testing.T) {
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
-		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones),
+		Zones:       template.Variants[0].Zones,
 		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
 	})
 
@@ -127,7 +126,7 @@ func newEditedSession(t *testing.T) *drivers.State {
 	require.NotNil(t, template)
 	require.NotEmpty(t, template.Variants)
 
-	zones := append([]entities.Zone(nil), template_model.ToZoneEntities(template.Variants[0].Zones)...)
+	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
 		pinned := [2]float64{0.1, 0.2}
 		zones[i].ManualPosition = &pinned

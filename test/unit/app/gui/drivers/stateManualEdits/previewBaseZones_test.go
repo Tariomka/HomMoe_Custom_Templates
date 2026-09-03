@@ -22,7 +22,7 @@ func TestWhenPreviewingTheBase_TheGeneratedZonesAreReturned(t *testing.T) {
 	base, _ := state.PreviewBaseZones()
 
 	// Assert
-	assert.Equal(t, template_model.ToZoneEntities(expected.Variants[0].Zones), base.Zones)
+	assert.Equal(t, expected.Variants[0].Zones, base.Zones)
 }
 
 func TestWhenPreviewingTheBase_TheGeneratedConnectionsAreReturned(t *testing.T) {

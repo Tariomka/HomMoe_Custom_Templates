@@ -13,6 +13,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
@@ -78,7 +79,7 @@ func (this *MandatoryContentProvider) CreateContents(
 // the quality and castle count from the zone itself keeps the two in sync.
 func (this *MandatoryContentProvider) CreateContentsForZones(
 	configuration config.GeneratorConfig,
-	zones []entities.Zone) []entities.MandatoryContent {
+	zones []template_model.Zone) []entities.MandatoryContent {
 	footholdCount := 0
 	if configuration.SpawnRemoteFootholds {
 		footholdCount = configuration.RemoteFootholdCount
@@ -99,7 +100,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 
 		case preview.ZoneTypeNeutral:
 			castleCount := this.zoneEditor.CountZoneCastles(zone)
-			content := cloneContentItems(neutralRowsForQuality(configuration, this.tierService.GetQuality(zone)))
+			content := cloneContentItems(neutralRowsForQuality(configuration, this.tierService.ResolveQuality(zone)))
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}

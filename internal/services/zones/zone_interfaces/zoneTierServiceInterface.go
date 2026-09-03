@@ -13,11 +13,11 @@ type IZoneTierService interface {
 
 	GetGuardQuality(
 		zoneName string,
-		zones []entities.Zone,
+		zones []template_model.Zone,
 		playerNames []string) neutral_zone.Quality
 
 	GetConnectionGuardQuality(
 		zoneA, zoneB string,
-		zones []entities.Zone,
+		zones []template_model.Zone,
 		playerNames []string) neutral_zone.Quality
 }

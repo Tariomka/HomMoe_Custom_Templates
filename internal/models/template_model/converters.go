@@ -30,6 +30,22 @@ func ToZoneEntity(model Zone) template.Zone {
 	return template_variant_model.ToZoneEntity(model)
 }
 
+func ToZoneModel(entity template.Zone) Zone {
+	return template_variant_model.ToZoneModel(entity)
+}
+
 func ToMainObjectModel(entity template.MainObject) MainObject {
 	return template_variant_model.ToMainObjectModel(entity)
+}
+
+func ToMainObjectModels(entities []template.MainObject) []MainObject {
+	return template_variant_model.ToMainObjectModels(entities)
+}
+
+func ToRoadModel(entity template.Road) Road {
+	return template_variant_model.ToRoadModel(entity)
+}
+
+func ToRoadModels(entities []template.Road) []Road {
+	return template_variant_model.ToRoadModels(entities)
 }

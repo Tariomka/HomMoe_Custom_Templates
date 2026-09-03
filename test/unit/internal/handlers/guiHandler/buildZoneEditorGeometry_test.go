@@ -16,7 +16,7 @@ func TestWhenCanvasGeometryRequested_PlacesEveryZone(t *testing.T) {
 	handler := newProductionGuiHandler()
 	state := editor_state_model.NewDefaultEditorStateModel()
 	variant := generateDefaultTemplate(t, handler).Variants[0]
-	zones := template_model.ToZoneEntities(variant.Zones)
+	zones := variant.Zones
 	require.NotEmpty(t, zones)
 
 	// Act

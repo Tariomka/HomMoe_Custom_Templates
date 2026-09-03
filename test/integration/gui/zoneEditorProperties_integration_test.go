@@ -5,8 +5,8 @@ package gui_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,7 +46,7 @@ const (
 func editedZone(
 	t *testing.T,
 	zoneEditor *integration_common.ZoneEditorHandler,
-	name string) entities.Zone {
+	name string) template_model.Zone {
 	t.Helper()
 	for _, zone := range zoneEditor.Dialog().EditedZones() {
 		if zone.Name == name {
@@ -55,7 +55,7 @@ func editedZone(
 	}
 	t.Fatalf("the editor is not holding a zone called %q", name)
 
-	return entities.Zone{}
+	return template_model.Zone{}
 }
 
 // manualConnectionSave finds the committed manual record of a connection, which

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +17,7 @@ func TestWhenConnectionIsCreated_ReturnsTheEditorsConnection(t *testing.T) {
 	request := dtos.ZoneEditorConnectionRequestDto{
 		From:            gofakeit.Word(),
 		To:              gofakeit.Word(),
-		Zones:           []entities.Zone{{Name: gofakeit.Word()}},
+		Zones:           []template_model.Zone{{Name: gofakeit.Word()}},
 		PlayerZoneNames: map[string]bool{gofakeit.Word(): true},
 	}
 	expected := entities.Connection{From: request.From, To: request.To}

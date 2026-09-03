@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func TestWhenConnectionIsCreated_ReturnsServiceEquivalentConnection(t *testing.T
 	request := dtos.ZoneEditorConnectionRequestDto{
 		From:            "Spawn-A",
 		To:              "Spawn-B",
-		Zones:           []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}},
+		Zones:           []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}},
 		PlayerZoneNames: map[string]bool{"Spawn-A": true, "Spawn-B": true},
 	}
 	expected := entities.Connection{

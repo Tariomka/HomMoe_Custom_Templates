@@ -7,8 +7,8 @@ import (
 
 	"gioui.org/f32"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // EdgeGeometry is a test-visible copy of one laid-out connection curve.
@@ -176,7 +176,7 @@ func (this *ZoneEditorDialog) PendingConnectionSource() string { return this.pen
 func (this *ZoneEditorDialog) SnapEnabled() bool { return this.snapBool.Value }
 
 // EditedZones ONLY FOR INTEGRATION TEST USE
-func (this *ZoneEditorDialog) EditedZones() []entities.Zone { return this.zones }
+func (this *ZoneEditorDialog) EditedZones() []template_model.Zone { return this.zones }
 
 // EditedConnectionNames ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) EditedConnectionNames() []string {

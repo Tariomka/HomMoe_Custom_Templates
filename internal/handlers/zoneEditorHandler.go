@@ -8,6 +8,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -50,17 +51,20 @@ func (this *zoneEditorHandler) GetZoneEditorOptions(
 	}
 }
 
-func (this *zoneEditorHandler) CountZoneCastles(zone entities.Zone) int {
+func (this *zoneEditorHandler) CountZoneCastles(zone template_model.Zone) int {
 	return this.zoneEditor.CountZoneCastles(zone)
 }
 
-func (this *zoneEditorHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
-	return this.tierService.GetQuality(zone)
+// GetZoneQuality answers with the tier recorded on the zone, falling back to
+// inference only for a zone that never had one - a template loaded from a raw
+// .rmg.json.
+func (this *zoneEditorHandler) GetZoneQuality(zone template_model.Zone) neutral_zone.Quality {
+	return this.tierService.ResolveQuality(zone)
 }
 
 func (this *zoneEditorHandler) GetZoneConnectionGuardQuality(
 	from, to string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerZoneNames map[string]bool) neutral_zone.Quality {
 	playerNames := make([]string, 0, len(playerZoneNames))
 	for playerName := range playerZoneNames {
@@ -69,7 +73,7 @@ func (this *zoneEditorHandler) GetZoneConnectionGuardQuality(
 	return this.tierService.GetConnectionGuardQuality(from, to, zones, playerNames)
 }
 
-func (this *zoneEditorHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {
+func (this *zoneEditorHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) template_model.Zone {
 	this.zoneEditor.ApplyNeutralZoneQuality(
 		&request.Zone,
 		request.Quality,
@@ -79,7 +83,7 @@ func (this *zoneEditorHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQua
 }
 
 func (this *zoneEditorHandler) DescribeZoneEditorGraph(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection) dtos.ZoneEditorGraphDto {
 	return dtos.ZoneEditorGraphDto{
 		HasErrors:         this.connectionEditor.ComputeHasErrors(zones, connections),
@@ -96,11 +100,12 @@ func (this *zoneEditorHandler) FindOpenZonePosition(occupied [][2]float64) [2]fl
 	return this.zoneEditor.FindOpenPosition(occupied)
 }
 
-func (this *zoneEditorHandler) GetNextZoneLabel(zones []entities.Zone) string {
+func (this *zoneEditorHandler) GetNextZoneLabel(zones []template_model.Zone) string {
 	return this.zoneEditor.NextFreeZoneLabel(zones)
 }
 
-func (this *zoneEditorHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone {
+func (this *zoneEditorHandler) CreateZoneEditorNeutralZone(
+	request dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone {
 	return this.zoneEditor.NewDefaultNeutralZone(
 		request.Label,
 		request.Quality,

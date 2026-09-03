@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,14 +15,17 @@ func TestWhenZonesAreApplied_ManualZoneSavesAreStoredInCurrentState(t *testing.T
 	// Arrange
 	state := newEditorState()
 	position := &[2]float64{gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1)}
-	zone := entities.Zone{Name: "Zone A", Size: gofakeit.Float64Range(0.5, 2), ManualPosition: position}
+	zone := template_model.Zone{Name: "Zone A", Size: gofakeit.Float64Range(0.5, 2), ManualPosition: position}
 
 	// Act
-	state.SetManualEdits([]entities.Zone{zone}, nil)
+	state.SetManualEdits([]template_model.Zone{zone}, nil)
 
 	// Assert
 	assert.Equal(t,
-		[]editor_state_model.ManualZoneSave{{Zone: zone, ManualPosition: position}},
+		[]editor_state_model.ManualZoneSave{{
+			Zone:           template_model.ToZoneEntity(zone),
+			ManualPosition: position,
+		}},
 		state.GetCurrentState().ManualZones)
 }
 

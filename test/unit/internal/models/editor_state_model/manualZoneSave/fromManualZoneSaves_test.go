@@ -5,6 +5,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +31,7 @@ func TestWhenSavesCarryManualPositions_RestoresEachPositionOntoZone(t *testing.T
 		{Zone: entities.Zone{Name: "Zone A"}, ManualPosition: firstPosition},
 		{Zone: entities.Zone{Name: "Zone B"}, ManualPosition: secondPosition},
 	}
-	expected := []entities.Zone{
+	expected := []template_model.Zone{
 		{Name: "Zone A", ManualPosition: firstPosition},
 		{Name: "Zone B", ManualPosition: secondPosition},
 	}
@@ -58,4 +60,33 @@ func TestWhenSavePositionDiffersFromEmbeddedZonePosition_SavePositionWins(t *tes
 
 	// Assert
 	assert.Same(t, savedPosition, zones[0].ManualPosition)
+}
+
+func TestWhenSaveRecordsThePlasticTier_RestoresItOntoTheZone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	ordinal := int8(neutral_zone.QualityLowest)
+	saves := []editor_state_model.ManualZoneSave{
+		{Zone: entities.Zone{Name: "Neutral-C"}, Quality: &ordinal},
+	}
+
+	// Act
+	zones := editor_state_model.FromManualZoneSaves(saves)
+
+	// Assert
+	assert.Equal(t, neutral_zone.QualityLowest, *zones[0].Quality)
+}
+
+// A .gen.json written before the tier was persisted carries no quality, and
+// the zone must fall back to inference rather than claim Plastic.
+func TestWhenSaveCarriesNoQuality_LeavesTheTierUnrecorded(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	saves := []editor_state_model.ManualZoneSave{{Zone: entities.Zone{Name: "Neutral-C"}}}
+
+	// Act
+	zones := editor_state_model.FromManualZoneSaves(saves)
+
+	// Assert
+	assert.Nil(t, zones[0].Quality)
 }

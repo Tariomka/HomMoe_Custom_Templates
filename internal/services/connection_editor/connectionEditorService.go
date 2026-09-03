@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -25,7 +26,7 @@ func NewConnectionEditorService(
 func (this *ConnectionEditorService) NewDefaultConnection(
 	from string,
 	to string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerZoneNames map[string]bool) entities.Connection {
 	quality := this.tierService.GetConnectionGuardQuality(
 		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
@@ -42,7 +43,7 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 }
 
 func (this *ConnectionEditorService) FindIsolatedZones(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection) []string {
 	var isolated []string
 
@@ -61,7 +62,9 @@ func (this *ConnectionEditorService) FindIsolatedZones(
 	return isolated
 }
 
-func (this *ConnectionEditorService) ComputeHasErrors(zones []entities.Zone, connections []entities.Connection) bool {
+func (this *ConnectionEditorService) ComputeHasErrors(
+	zones []template_model.Zone,
+	connections []entities.Connection) bool {
 	zoneNames := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		zoneNames[zone.Name] = true

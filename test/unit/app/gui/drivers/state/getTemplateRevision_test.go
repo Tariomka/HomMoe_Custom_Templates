@@ -65,7 +65,7 @@ func TestWhenManualEditsAreApplied_TemplateRevisionAdvances(t *testing.T) {
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
-		Zones:       template_model.ToZoneEntities(template.Variants[0].Zones),
+		Zones:       template.Variants[0].Zones,
 		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
 	})
 

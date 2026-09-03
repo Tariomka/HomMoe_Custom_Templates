@@ -2,6 +2,7 @@ package test_helpers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -15,7 +16,7 @@ type ConnectionEditorServiceMock struct {
 func (this *ConnectionEditorServiceMock) NewDefaultConnection(
 	from string,
 	to string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerZoneNames map[string]bool) entities.Connection {
 	arguments := this.Called(from, to, zones, playerZoneNames)
 	connection, _ := arguments.Get(0).(entities.Connection)
@@ -23,7 +24,7 @@ func (this *ConnectionEditorServiceMock) NewDefaultConnection(
 }
 
 func (this *ConnectionEditorServiceMock) FindIsolatedZones(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection) []string {
 	arguments := this.Called(zones, connections)
 	names, _ := arguments.Get(0).([]string)
@@ -31,7 +32,7 @@ func (this *ConnectionEditorServiceMock) FindIsolatedZones(
 }
 
 func (this *ConnectionEditorServiceMock) ComputeHasErrors(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection) bool {
 	arguments := this.Called(zones, connections)
 	return arguments.Bool(0)

@@ -7,9 +7,9 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // LoadStateFromFile ONLY FOR INTEGRATION TEST USE
@@ -113,7 +113,7 @@ type IZoneEditorDialog interface {
 	HitTestCanvasEdge(pos models.Position) string
 	SelectedZone() string
 	SelectedConnection() string
-	EditedZones() []entities.Zone
+	EditedZones() []template_model.Zone
 	EditedConnectionNames() []string
 	AddConnectionModeActive() bool
 	AddZoneModeActive() bool

@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -25,7 +26,7 @@ func (this *MandatoryContentProviderMock) CreateContents(
 
 func (this *MandatoryContentProviderMock) CreateContentsForZones(
 	configuration config.GeneratorConfig,
-	zones []entities.Zone) []entities.MandatoryContent {
+	zones []template_model.Zone) []entities.MandatoryContent {
 	arguments := this.Called(configuration, zones)
 	contents, _ := arguments.Get(0).([]entities.MandatoryContent)
 	return contents

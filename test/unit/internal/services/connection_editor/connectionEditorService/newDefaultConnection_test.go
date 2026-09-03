@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -14,7 +15,7 @@ func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		{Name: "Spawn-A"},
 		{
 			Name:               "Neutral-Gold",
@@ -45,7 +46,7 @@ func TestWhenBothEndpointsArePlayerZones_SeedsPlayerToPlayerGeneratorDefault(t *
 	t.Parallel()
 	// Arrange
 	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
-	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+	zones := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	playerZoneNames := map[string]bool{"Spawn-A": true, "Spawn-B": true}
 
 	// Act

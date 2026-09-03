@@ -7,10 +7,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
@@ -81,56 +79,37 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 		return dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid
 	}
 
-	newTemplate := this.templateMapper.ToEntity(*templateDto.Template)
-	newTemplate.Variants[0].Zones = templateDto.Zones
-	newTemplate.Variants[0].Connections = templateDto.Connections
+	zones := templateDto.Zones
+	connections := templateDto.Connections
+	this.zoneEditor.RebuildZoneConnectionRoads(zones, connections)
 
-	this.zoneEditor.RebuildZoneConnectionRoads(
-		newTemplate.Variants[0].Zones,
-		newTemplate.Variants[0].Connections)
+	newTemplate := this.templateMapper.ToEntity(*templateDto.Template)
+	newTemplate.Variants[0].Zones = template_model.ToZoneEntities(zones)
+	newTemplate.Variants[0].Connections = connections
 
 	// Rebuild mandatory content from the final zones so a zone re-tiered in the
 	// manual editor gets the content of its new quality instead of the original tier.
 	if templateDto.EditorState != nil {
 		configuration := this.mapper.FromEditorState(templateDto.EditorState.EditorState)
-		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(
-			*configuration, newTemplate.Variants[0].Zones)
+		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(*configuration, zones)
 	}
 
 	var err error
-	if this.connectionEditor.ComputeHasErrors(newTemplate.Variants[0].Zones, newTemplate.Variants[0].Connections) {
+	if this.connectionEditor.ComputeHasErrors(zones, connections) {
 		err = common_errors.ErrZonesMissing
 	}
 
+	// Re-attaching the applied zones rather than the ones the round trip produced
+	// is what keeps each zone's recorded tier: the .rmg.json entity has nowhere
+	// to put it, so a zone that went through ToEntity comes back with none.
 	updated := this.templateMapper.ToModel(newTemplate)
-	carryZoneTiersByName(templateDto.Template.Variants[0].Zones, updated.Variants[0].Zones)
+	updated.Variants[0].Zones = zones
 
 	return dtos.TemplateLoadDto{Template: &updated}, err
 }
 
-// carryZoneTiersByName re-attaches the tier a zone already carried after the
-// edited zones round-tripped through the entity, which has nowhere to keep it.
-//
-// This is phase-4 scaffolding: it exists only because TemplateUpdateDto.Zones
-// is still []entities.Zone, and it is the last name lookup in the batch. When
-// the zone editor moves onto template_model, delete it - do not spread it.
-func carryZoneTiersByName(previous []template_model.Zone, updated []template_model.Zone) {
-	qualities := make(map[string]*neutral_zone.Quality, len(previous))
-	for _, zone := range previous {
-		if zone.Quality != nil {
-			qualities[zone.Name] = zone.Quality
-		}
-	}
-
-	for index := range updated {
-		if quality, ok := qualities[updated[index].Name]; ok {
-			updated[index].Quality = quality
-		}
-	}
-}
-
 func (this *templateHandler) ReapplyCastleSettings(
-	request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
+	request dtos.CastleSettingsReapplyRequestDto) []template_model.Zone {
 	configuration := this.mapper.FromEditorState(request.EditorState.EditorState)
 	this.manualReapply.ApplyCastleSettingChanges(request.Zones, request.Changes, configuration)
 	return request.Zones

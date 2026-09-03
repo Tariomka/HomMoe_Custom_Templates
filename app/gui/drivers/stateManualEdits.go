@@ -57,7 +57,7 @@ func (this *State) PreviewBaseZones() (dtos.ZoneEditorZonesDto, bool) {
 
 	variant := dto.Template.Variants[0]
 	this.pendingBaseZones = dtos.ZoneEditorZonesDto{
-		Zones:       template_model.ToZoneEntities(variant.Zones),
+		Zones:       variant.Zones,
 		Connections: template_model.ToConnectionEntities(variant.Connections),
 	}
 
@@ -69,7 +69,7 @@ func matchesZoneSet(left, right dtos.ZoneEditorZonesDto) bool {
 		reflect.DeepEqual(left.Connections, right.Connections)
 }
 
-func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []entities.Connection) {
+func (this *State) handleUpdateTemplate(zones []template_model.Zone, connections []entities.Connection) {
 	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    this.lastTemplate,
 		Zones:       zones,

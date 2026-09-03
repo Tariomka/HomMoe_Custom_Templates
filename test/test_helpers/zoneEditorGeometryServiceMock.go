@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -15,7 +16,7 @@ type ZoneEditorGeometryServiceMock struct {
 }
 
 func (this *ZoneEditorGeometryServiceMock) BuildGeometry(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	connections []entities.Connection,
 	topology config.MapTopology,
 	canvasSide int) models.ZoneEditorGeometry {

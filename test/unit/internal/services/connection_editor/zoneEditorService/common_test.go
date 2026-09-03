@@ -3,8 +3,8 @@
 package zoneEditorService_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // defaultTuning returns a neutral generation tuning so profile values are not
@@ -21,7 +21,7 @@ func defaultTuning() models.GenerationTuning {
 
 // roadTargets collects the first argument of every road endpoint of the given
 // TypedRef type, from both road directions.
-func roadTargets(zone entities.Zone, refType string) map[string]bool {
+func roadTargets(zone template_model.Zone, refType string) map[string]bool {
 	targets := map[string]bool{}
 	for _, road := range zone.Roads {
 		if road.To.Type == refType && len(road.To.Args) > 0 {
@@ -36,7 +36,7 @@ func roadTargets(zone entities.Zone, refType string) map[string]bool {
 
 // castleRoadTargets returns the MainObject indices linked by the zone's stone
 // castle<->castle roads from the primary main object.
-func castleRoadTargets(zone entities.Zone) []string {
+func castleRoadTargets(zone template_model.Zone) []string {
 	var targets []string
 	for _, road := range zone.Roads {
 		if road.From.Type == "MainObject" && road.To.Type == "MainObject" && len(road.To.Args) > 0 {
@@ -47,6 +47,6 @@ func castleRoadTargets(zone entities.Zone) []string {
 }
 
 // mainObjectZeroRef is the road endpoint pointing at a zone's primary main object.
-func mainObjectZeroRef() entities.TypedRef {
-	return entities.TypedRef{Type: "MainObject", Args: []string{"0"}}
+func mainObjectZeroRef() template_model.TypedRef {
+	return template_model.TypedRef{Type: "MainObject", Args: []string{"0"}}
 }

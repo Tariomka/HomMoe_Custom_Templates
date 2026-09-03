@@ -3,7 +3,7 @@ package zoneEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +22,7 @@ func TestWhenZoneListIsEmpty_ReturnsLabelA(t *testing.T) {
 func TestWhenFirstLettersAreUsed_ReturnsNextFreeLetter(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-B"},
 	}
@@ -37,7 +37,7 @@ func TestWhenFirstLettersAreUsed_ReturnsNextFreeLetter(t *testing.T) {
 func TestWhenSameLetterIsUsedAcrossPrefixes_CountsItOnce(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-A"},
 	}

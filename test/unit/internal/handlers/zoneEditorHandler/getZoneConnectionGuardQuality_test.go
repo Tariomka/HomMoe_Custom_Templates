@@ -3,8 +3,8 @@ package zoneEditorHandler_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +15,7 @@ func TestWhenConnectionGuardQualityIsRequested_ReturnsTheClassifiersQuality(t *t
 	fixture := newZoneEditorHandlerFixture()
 	from := gofakeit.Word()
 	to := gofakeit.Word()
-	zones := []entities.Zone{{Name: from}, {Name: to}}
+	zones := []template_model.Zone{{Name: from}, {Name: to}}
 	playerName := gofakeit.Word()
 	fixture.tierService.
 		On("GetConnectionGuardQuality", from, to, zones, []string{playerName}).
@@ -36,7 +36,7 @@ func TestWhenThereAreNoPlayerZones_PassesAnEmptyPlayerNameList(t *testing.T) {
 	from := gofakeit.Word()
 	to := gofakeit.Word()
 	fixture.tierService.
-		On("GetConnectionGuardQuality", from, to, []entities.Zone(nil), []string{}).
+		On("GetConnectionGuardQuality", from, to, []template_model.Zone(nil), []string{}).
 		Return(neutral_zone.QualityUnknown)
 
 	// Act
@@ -44,5 +44,5 @@ func TestWhenThereAreNoPlayerZones_PassesAnEmptyPlayerNameList(t *testing.T) {
 
 	// Assert
 	fixture.tierService.AssertCalled(
-		t, "GetConnectionGuardQuality", from, to, []entities.Zone(nil), []string{})
+		t, "GetConnectionGuardQuality", from, to, []template_model.Zone(nil), []string{})
 }

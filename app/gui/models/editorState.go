@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type EditorState struct {
@@ -91,7 +92,7 @@ func (this *EditorState) WasStateChanged() bool {
 
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
 
-func (this *EditorState) SetManualEdits(zones []entities.Zone, connections []entities.Connection) {
+func (this *EditorState) SetManualEdits(zones []template_model.Zone, connections []entities.Connection) {
 	this.current.ManualZones = editor_state_model.ToManualZoneSaves(zones)
 	this.current.ManualConnections = editor_state_model.ToManualConnectionSaves(connections)
 }
@@ -105,7 +106,7 @@ func (this *EditorState) ClearManualEdits() {
 	this.current.ManualConnections = nil
 }
 
-func (this *EditorState) GetManualZones() []entities.Zone {
+func (this *EditorState) GetManualZones() []template_model.Zone {
 	return editor_state_model.FromManualZoneSaves(this.current.ManualZones)
 }
 

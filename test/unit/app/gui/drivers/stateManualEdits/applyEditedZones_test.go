@@ -166,7 +166,7 @@ func TestWhenApplyingAnEditedRevertToBase_TheEditsAreStored(t *testing.T) {
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
 	base, _ := state.PreviewBaseZones()
-	editedZones := append([]entities.Zone(nil), base.Zones...)
+	editedZones := append([]template_model.Zone(nil), base.Zones...)
 	editedZones[0].ManualPosition = &[2]float64{0.1, 0.2}
 
 	// Act
@@ -204,7 +204,7 @@ func TestWhenApplyingWithoutARevert_TheManualSnapshotIsStoredAnyway(t *testing.T
 // mock for further expectations, and the template's zones and connections to
 // edit.
 func newGeneratedState() (
-	*drivers.State, *test_helpers.TemplateHandlerMock, []entities.Zone, []entities.Connection) {
+	*drivers.State, *test_helpers.TemplateHandlerMock, []template_model.Zone, []entities.Connection) {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
@@ -218,6 +218,6 @@ func newGeneratedState() (
 	variant := template.Variants[0]
 	return state,
 		handlerMock,
-		template_model.ToZoneEntities(variant.Zones),
+		variant.Zones,
 		template_model.ToConnectionEntities(variant.Connections)
 }

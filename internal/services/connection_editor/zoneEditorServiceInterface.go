@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // IZoneEditorService is the contract of the zone-level behaviour of the manual
@@ -15,32 +16,32 @@ type IZoneEditorService interface {
 
 	// RebuildZoneConnectionRoads recomputes each zone's connection and castle
 	// roads to match the current connection list and main objects.
-	RebuildZoneConnectionRoads(zones []entities.Zone, connections []entities.Connection)
+	RebuildZoneConnectionRoads(zones []template_model.Zone, connections []entities.Connection)
 
 	// RebuildCastleRoads regenerates only the zone's castle<->castle roads,
 	// preserving every other road.
-	RebuildCastleRoads(zone *entities.Zone)
+	RebuildCastleRoads(zone *template_model.Zone)
 
 	// NextFreeZoneLabel returns the first generator label not used by any zone,
 	// or "" when the pool is exhausted.
-	NextFreeZoneLabel(zones []entities.Zone) string
+	NextFreeZoneLabel(zones []template_model.Zone) string
 
 	// NewDefaultNeutralZone builds a manually-added neutral zone with the same
-	// builder the generator uses.
+	// builder the generator uses, recording the requested quality on it.
 	NewDefaultNeutralZone(
 		label string,
 		quality neutral_zone.Quality,
 		castleCount int,
 		generateRoads bool,
-		tuning models.GenerationTuning) entities.Zone
+		tuning models.GenerationTuning) template_model.Zone
 
 	// CountZoneCastles returns the number of City main objects in the zone.
-	CountZoneCastles(zone entities.Zone) int
+	CountZoneCastles(zone template_model.Zone) int
 
-	// ApplyNeutralZoneQuality re-applies the quality profile and rebuilds the
-	// zone's castles for the requested count.
+	// ApplyNeutralZoneQuality re-applies the quality profile, records it on the
+	// zone and rebuilds the zone's castles for the requested count.
 	ApplyNeutralZoneQuality(
-		zone *entities.Zone,
+		zone *template_model.Zone,
 		quality neutral_zone.Quality,
 		castleCount int,
 		tuning models.GenerationTuning)
@@ -51,9 +52,9 @@ type IZoneEditorService interface {
 	// RemoveZone returns the zone and connection lists without the named zone
 	// and without any connection referencing it.
 	RemoveZone(
-		zones []entities.Zone,
+		zones []template_model.Zone,
 		connections []entities.Connection,
-		zoneName string) ([]entities.Zone, []entities.Connection)
+		zoneName string) ([]template_model.Zone, []entities.Connection)
 
 	// FindOpenPosition returns a normalized position that maximizes the
 	// distance to the occupied positions.

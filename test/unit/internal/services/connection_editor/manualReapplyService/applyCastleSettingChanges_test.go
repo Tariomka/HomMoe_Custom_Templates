@@ -3,10 +3,10 @@ package manualReapplyService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	zones := []entities.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
+	zones := []template_model.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
 
 	// Act
 	newManualReapplyService().
@@ -155,8 +155,8 @@ func TestWhenSpawnZoneLacksSpawnCastle_LeavesItUntouched(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.PlayerZoneCastles = 2
-	zones := []entities.Zone{
-		{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "City"}}},
+	zones := []template_model.Zone{
+		{Name: "Spawn-A", MainObjects: []template_model.MainObject{{Type: "City"}}},
 	}
 
 	// Act
@@ -164,7 +164,7 @@ func TestWhenSpawnZoneLacksSpawnCastle_LeavesItUntouched(t *testing.T) {
 		zones, editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
 
 	// Assert
-	assert.Equal(t, []entities.MainObject{{Type: "City"}}, zones[0].MainObjects,
+	assert.Equal(t, []template_model.MainObject{{Type: "City"}}, zones[0].MainObjects,
 		"a spawn zone without a spawn castle must not be rebuilt")
 }
 
@@ -173,8 +173,8 @@ func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.HubZoneCastles = 3
-	zones := []entities.Zone{
-		{Name: "Hub", MainObjects: []entities.MainObject{{Type: "City"}}},
+	zones := []template_model.Zone{
+		{Name: "Hub", MainObjects: []template_model.MainObject{{Type: "City"}}},
 	}
 
 	// Act
@@ -190,8 +190,8 @@ func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.HubZoneCastles = 2
-	zones := []entities.Zone{
-		{Name: "Hub-A", MainObjects: []entities.MainObject{{Type: "City"}}},
+	zones := []template_model.Zone{
+		{Name: "Hub-A", MainObjects: []template_model.MainObject{{Type: "City"}}},
 	}
 
 	// Act
@@ -207,7 +207,7 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.NeutralZoneCastles = 3
-	zones := []entities.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
+	zones := []template_model.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
@@ -226,10 +226,10 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 
 // applySimpleModeChange runs the simple-mode neutral castle propagation over a
 // castled neutral zone, a castle-less neutral zone and a spawn zone.
-func applySimpleModeChange() []entities.Zone {
+func applySimpleModeChange() []template_model.Zone {
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.NeutralZoneCastles = 2
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
 		makeNeutralZone("H", neutral_zone.QualityHigh, 0),
 		makeSpawnZone("A", "Player1", 1),
@@ -241,10 +241,10 @@ func applySimpleModeChange() []entities.Zone {
 
 // applyAdvancedHighChange runs the advanced-mode high-tier castle propagation
 // over a manually re-tiered high zone, a low zone and a castle-less high zone.
-func applyAdvancedHighChange() []entities.Zone {
+func applyAdvancedHighChange() []template_model.Zone {
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.Advanced.NeutralHighCastlesPerZone = 3
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		makeNeutralZone("G", neutral_zone.QualityHigh, 1),
 		makeNeutralZone("H", neutral_zone.QualityLow, 1),
 		makeNeutralZone("I", neutral_zone.QualityHigh, 0),
@@ -256,11 +256,11 @@ func applyAdvancedHighChange() []entities.Zone {
 
 // applyPlayerCastleChange runs the player-castle propagation over a spawn zone
 // and a neutral zone: one owned extra castle and two unclaimed ones.
-func applyPlayerCastleChange() []entities.Zone {
+func applyPlayerCastleChange() []template_model.Zone {
 	configuration := config.NewGeneratorConfig()
 	configuration.ZoneConfiguration.PlayerZoneCastles = 2
 	configuration.ZoneConfiguration.PlayerOwnedCastles = 1
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		makeSpawnZone("A", "Player1", 0),
 		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
 	}

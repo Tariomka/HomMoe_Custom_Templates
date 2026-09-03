@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +12,7 @@ import (
 func TestWhenZoneIsRemoved_KeepsOnlyOtherZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-C"},
 		{Name: "Neutral-D"},
@@ -24,13 +25,13 @@ func TestWhenZoneIsRemoved_KeepsOnlyOtherZones(t *testing.T) {
 	keptZones, _ := test_helpers.NewZoneEditorService().RemoveZone(zones, connections, "Neutral-C")
 
 	// Assert
-	assert.Equal(t, []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-D"}}, keptZones)
+	assert.Equal(t, []template_model.Zone{{Name: "Spawn-A"}, {Name: "Neutral-D"}}, keptZones)
 }
 
 func TestWhenZoneIsRemoved_DropsConnectionsTouchingIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		{Name: "Spawn-A"},
 		{Name: "Neutral-C"},
 		{Name: "Neutral-D"},

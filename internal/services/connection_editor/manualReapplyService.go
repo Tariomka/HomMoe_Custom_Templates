@@ -7,7 +7,6 @@ package connection_editor
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -15,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -51,7 +51,7 @@ func NewManualReapplyService(
 //     manually re-tiered) quality - castle-less zones then keep their
 //     no-castle plan.
 func (this *ManualReapplyService) ApplyCastleSettingChanges(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	changes editor_state_model.CastleSettingChanges,
 	configuration *config.GeneratorConfig) {
 	if !changes.Any() {
@@ -86,15 +86,21 @@ func (this *ManualReapplyService) ApplyCastleSettingChanges(
 // count, keeping the quality profile, guard values, content pools and any
 // non-castle main objects (abandoned outposts) untouched - unlike
 // ApplyNeutralZoneQuality, which re-profiles the whole zone.
+//
+// The profile follows the zone's RECORDED tier where it has one. Inferring it
+// instead used to hand an unclassifiable zone QualityUnknown, whose profile is
+// the Lowest one - a silent down-tier to Plastic stats on a zone the user may
+// have set to Gold.
 func (this *ManualReapplyService) SetNeutralZoneCastleCount(
-	zone *entities.Zone,
+	zone *template_model.Zone,
 	castleCount int,
 	tuning models.GenerationTuning) {
-	quality := this.tierService.GetQuality(*zone)
+	quality := this.tierService.ResolveQuality(*zone)
 	profile := common_zones.GetNeutralZoneProfile(quality)
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
+		template_model.ToMainObjectModels(
+			this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity)),
 		preserved...)
 	this.zoneEditor.RebuildCastleRoads(zone)
 }
@@ -104,7 +110,7 @@ func (this *ManualReapplyService) SetNeutralZoneCastleCount(
 // for every neutral zone; advanced mode has per-tier counts that apply only
 // to with-castle zones of the matching quality.
 func (this *ManualReapplyService) neutralCastleTarget(
-	zone entities.Zone,
+	zone template_model.Zone,
 	changes editor_state_model.CastleSettingChanges,
 	configuration *config.GeneratorConfig) (int, bool) {
 	zoneConfiguration := configuration.ZoneConfiguration
@@ -116,7 +122,7 @@ func (this *ManualReapplyService) neutralCastleTarget(
 		return 0, false
 	}
 
-	switch this.tierService.GetQuality(zone) {
+	switch this.tierService.ResolveQuality(zone) {
 	case neutral_zone.QualityHighest:
 		if changes.Hub {
 			return helpers.Clamp(zoneConfiguration.Advanced.HubZoneCastles, 0, 4), true
@@ -146,7 +152,7 @@ func (this *ManualReapplyService) neutralCastleTarget(
 // current player-castle options. The spawn castle (main object 0) is kept
 // verbatim so the player assignment and faction survive.
 func (this *ManualReapplyService) rebuildSpawnZoneCastles(
-	zone *entities.Zone,
+	zone *template_model.Zone,
 	configuration *config.GeneratorConfig,
 	tuning models.GenerationTuning) {
 	if len(zone.MainObjects) == 0 || zone.MainObjects[0].Type != registry.GetMainObjectTypeValues().Spawn {
@@ -155,15 +161,15 @@ func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 
 	spawnCastle := zone.MainObjects[0]
 	matchFactions := configuration.MatchPlayerCastleFactions
-	mainObjects := []entities.MainObject{spawnCastle}
+	mainObjects := []template_model.MainObject{spawnCastle}
 	mainObjects = append(mainObjects,
-		this.castleFactory.CreatePlayerOwnedCastles(
-			matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles)...)
+		template_model.ToMainObjectModels(this.castleFactory.CreatePlayerOwnedCastles(
+			matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles))...)
 	mainObjects = append(mainObjects,
-		this.castleFactory.CreatePlayerUnclaimedCastles(
+		template_model.ToMainObjectModels(this.castleFactory.CreatePlayerUnclaimedCastles(
 			matchFactions,
 			tuning.ScaleByNeutralGuardStrength(5000),
-			configuration.ZoneConfiguration.PlayerZoneCastles)...)
+			configuration.ZoneConfiguration.PlayerZoneCastles))...)
 	zone.MainObjects = mainObjects
 	this.zoneEditor.RebuildCastleRoads(zone)
 }
@@ -171,12 +177,13 @@ func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 // rebuildHubZoneCastles rebuilds a hub zone's castles for the current
 // hub-castle option, keeping any non-castle main objects.
 func (this *ManualReapplyService) rebuildHubZoneCastles(
-	zone *entities.Zone,
+	zone *template_model.Zone,
 	castleCount int,
 	tuning models.GenerationTuning) {
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity),
+		template_model.ToMainObjectModels(
+			this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity)),
 		preserved...)
 	this.zoneEditor.RebuildCastleRoads(zone)
 }
@@ -184,7 +191,8 @@ func (this *ManualReapplyService) rebuildHubZoneCastles(
 // splitOutNonCastles returns the zone's non-City main objects and whether any
 // of its City castles carries the hold-city win condition, so a rebuild can
 // preserve both.
-func splitOutNonCastles(mainObjects []entities.MainObject) (preserved []entities.MainObject, isHoldCity bool) {
+func splitOutNonCastles(
+	mainObjects []template_model.MainObject) (preserved []template_model.MainObject, isHoldCity bool) {
 	mainObjectType := registry.GetMainObjectTypeValues().City
 	for _, mainObject := range mainObjects {
 		if mainObject.Type == mainObjectType {
