@@ -27,7 +27,7 @@ that bite here: **`internal/entities/template/**` is protected and this batch
 must not touch a single byte of it**; never stage and never commit; move with
 `Move-Item`, never `git mv`; delete with `Remove-Item`, never `git rm`; never
 round-trip a `.go` file through `Get-Content`/`Set-Content`; unit coverage must
-not drop below **72.5 %** (currently **73.9 %**); lint baseline is **0 issues**.
+not drop below **72.5 %** (currently **74.3 %**); lint baseline is **0 issues**.
 
 ## 0. Decisions (settled with the owner 2026-09-01 — do not relitigate)
 
@@ -1169,9 +1169,9 @@ which is a strict reduction, not a regression.
 ---
 
 ## Phase 5: shrink the allow-list, record the outcome
-Status: Not started
+Status: **Complete** (2026-09-03)
 
-- [ ] Remove `internal/dtos` from `entityNamerAllowList` in
+- [x] Remove `internal/dtos` from `entityNamerAllowList` in
       [layering_test.go](../../test/unit/architecture/dependency/layering_test.go)
       **if** the 9 DTOs no longer name `entities.Zone`. Same check for
       `app/gui/dialogs` and `internal/handlers`. **Only ever remove entries** —
@@ -1180,10 +1180,10 @@ Status: Not started
       original plan assumed: any package that moved onto the model in phase 4
       stops naming an entity outright. Re-measure the whole list here rather
       than checking only the three named above.
-- [ ] Backlog: §2.2 becomes a ✅ DONE record with the behaviour deltas; §8 gets
+- [x] Backlog: §2.2 becomes a ✅ DONE record with the behaviour deltas; §8 gets
       row **J**; refresh the coverage figure everywhere it is quoted (three
       places); update §2.6's file counts if the allow-list moved.
-- [ ] Update `.agent/session-carry-forward.md`.
+- [x] Update `.agent/session-carry-forward.md`.
 
 ### Verification Plan
 - `go test ./test/unit/architecture/... -count=1` passes, and **fails if a
@@ -1191,12 +1191,181 @@ Status: Not started
 - Every gate from every prior phase still green.
 
 ### Phase Summary
-_(write when phase completes)_
+
+**Two entries came off: `app/gui/editor` and `internal/services/preview_service`.**
+The whole list was re-measured rather than spot-checked, as the checklist
+demanded — every `.go` file under `app/`, `internal/` and `cmd/` was scanned for
+an `internal/entities` import and grouped by directory, then filtered against
+the permitted-namer prefixes. That yields **84 files in 21 packages**, down from
+the 113 files in 23 packages the gate was seeded with in batch I. The 21 groups
+matched the 21 surviving allow-list entries exactly, which is the cross-check
+that nothing was missed in either direction.
+
+`preview_service` is the interesting one and it is phase 4's doing: the package
+now names no entity type at all, because `BuildPreviewLayout`, all five layout
+strategies and `layoutGeometry.go`'s shared predicates take `template_model`.
+`app/gui/editor` is the cheap one — `window.go` had already stopped naming an
+entity in an earlier phase and nobody had re-measured.
+
+**The shrink was proven by mutation, twice.** Adding
+`"…/internal/entities"` plus a `var _ entities.Zone` to
+`previewLayoutService.go` made
+`TestWhenEntityConsumersAreScanned_OnlyPermittedPackagesNameAnEntity` fail with
+exactly `internal/services/preview_service/previewLayoutService.go`; the same
+edit in `app/gui/editor/window.go` produced exactly that file. Both were reverted
+and `git status` confirms neither production file is modified. So the two
+removals are real constraints now, not bookkeeping.
+
+**⚠ Nothing else came off, and three refusals are worth naming rather than
+retrying:**
+
+- **`internal/dtos` stays.** All five files name `entities.Connection` —
+  `templateUpdateDto`, `zoneEditorGeometryRequestDto`, `zoneEditorMutationDto`,
+  `zoneEditorRemoveRequestDto`, `zoneEditorZonesDto`. Phase 3 left connections
+  on the entity deliberately: a connection carries no tier, so moving it buys
+  nothing but a shorter list. Whether the `.rmg.json` vocabulary deserves a
+  documented carve-out the way `internal/helpers/data` has one is backlog §2.6
+  step 2, a decision — not a sweep.
+- **`app/gui/dialogs`, `app/gui/drivers`, `app/gui/models` stay**, for the same
+  reason: their zones are `template_model.Zone` now, their connections and
+  templates are not.
+- **`internal/services/file_service` and the whole `template_generator` tree
+  stay permanently**, per §0b.16 and phase 4's summary. Those two seams own the
+  wire format on purpose. An agent reading only the shrinking list would
+  eventually try to close them; the backlog §2.6 step 4 text now says outright
+  that they are exempt by decision, not by debt.
+
+**The backlog is the surviving record.** §2.2 is now a ✅ DONE entry carrying the
+design (pointer-typed tier and why, the two-query tier service and why both
+survive, the persisted `*int8`), the enumerated behaviour deltas (there are none,
+and the 792-configuration measurement that establishes it), the two permanent
+entity seams, and the dead code phase 4 removed. §8 gained row **J**. The
+coverage figure was refreshed in all three places it is quoted (the header
+baseline, the §8 coverage note, the §9 gate table). §2.6's title, area table and
+steps 3–4 were rewritten to the new counts.
+
+### Verification results (2026-09-03)
+
+| Gate | Result |
+| --- | --- |
+| `go build ./...` | exit 0 |
+| `go vet ./...` / `go vet -tags='integration_test,gui' ./...` | clean |
+| `gofmt -l ./app ./internal ./test ./cmd` | empty |
+| `go run ./cmd/testlayoutcheck .` | `test-layout check passed` |
+| `wire diff ./internal/composition/...` | exit 0 |
+| Unit / untagged / integration | pass (exit 0) |
+| **GPU suite, no `-update`** | **pass** — no golden modified |
+| `golangci-lint-v2 run ./...` | **0 issues** |
+| Unit coverage | **74.3 %** (unchanged, floor 72.5 %) |
+| Allow-list shrink | **verified by mutation** — re-importing an entity in either removed package fails the rule with exactly that file |
+| `git status` | one modified file (`layering_test.go`), zero `*.golden`, nothing staged |
 
 ---
 
 ## Final Recap
-_(write when all phases complete)_
+
+**A neutral zone's tier is now recorded where the zone is, and asked for in one
+place.** Before this batch the tier was decided once on `neutral_zone.Plan`,
+flattened into layout/pools/castles, thrown away, and then reverse-engineered by
+`ZoneClassifier` at eight consumers — so every feature that edited a zone's
+content could silently flip its tier, and the inference rules had to stay in
+lockstep with the profile catalogue with nothing enforcing it.
+
+What landed, in five phases:
+
+1. **`IZoneTierService` absorbed the classifier and `ZoneClassifier` was
+   deleted** (not wrapped — a wrapper would have parked the real logic in
+   another type forever). Six injection sites moved onto it, including
+   `PreviewLayoutService`, which had been bypassing DI by hard-building its own
+   classifier and would otherwise have kept inferring for the rest of the batch.
+2. **The generator records what it planned.** `planZoneTiers` builds the
+   label→quality map from the `neutral_zone.Plans` the generator already holds;
+   no topology, factory or builder changed.
+3. **2.5 — `internal/models/template_model/` mirrors the whole `.rmg.json`
+   schema**, and the tier rides *on the zone* as
+   `Quality *neutral_zone.Quality` rather than in a side-car map. This replaced
+   both the original `models.QualifiedZone` design and the phase 2 tier index;
+   `models.GeneratedTemplate` was deleted with them.
+4. **`.gen.json` persists the tier** as
+   `ManualZoneSave.Quality *int8 json:"quality,omitempty"`, nil-preserving in
+   both directions, with a mutation-verified guard on the Plastic (ordinal 0)
+   case that `omitempty` on a value field would have silently dropped.
+5. **The sweep** moved the zone editor, the handlers, the `connection_editor`
+   services and `preview_service` onto the model; `file_service` and the
+   generator/topology tree keep the entity permanently and on the record.
+6. **The allow-list shrank by two packages, measured and mutation-proven.**
+
+**The behavioural result is deliberately latent, and that was measured, not
+assumed.** A 792-configuration sweep found zero arena moves and zero
+inference-versus-plan disagreements; every gate, including the GPU suite, passed
+without `-update` at every phase. The generator never emits a zone its own pools
+cannot classify, and `ApplyNeutralZoneQuality` stamps the pools a re-tier
+implies, so recorded and inferred answers coincide everywhere reachable today.
+The correction fires for the state this batch set out to make unrepresentable —
+a zone whose tier is known but whose content does not imply it — and the
+`Unknown → Plastic` silent down-tier through `GetNeutralZoneProfile` is gone
+because a recorded tier is never `Unknown`.
+
+**Nothing under `internal/entities/template/**` changed.** Branch A of backlog
+§2.2 was never needed and stays closed.
+
+Coverage 72.9 % → **74.3 %**; lint held at **0** throughout; no golden moved.
 
 ## Deployment Plan
-_(write when all phases complete)_
+
+This batch ships as source only — no data file, no schema file, no build flag and
+no configuration changes with it.
+
+1. **Review the working tree.** `git status --short` should show the phase 5
+   change plus whatever of phase 4 is still uncommitted; **nothing staged**, and
+   **zero `*.golden`**. Per AGENTS §2.5 the author stages and commits, not the
+   agent.
+2. **Run the gate set from a clean tree**, in this order:
+
+   ```powershell
+   go build ./...
+   go vet ./...
+   go vet -tags='integration_test,gui' ./...
+   gofmt -l ./app ./internal ./test ./cmd
+   go run ./cmd/testlayoutcheck .
+   wire diff ./internal/composition/...
+   go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...
+   go tool cover '-func=coverage.txt'
+   go test ./test/... -count=1
+   go test -tags=integration_test ./test/integration/... -count=1
+   go test -tags='integration_test,gui' ./test/integration/gui/... -count=1
+   golangci-lint-v2 run ./... --issues-exit-code=0
+   ```
+
+   Expected: everything clean, coverage **≥ 74.3 %**, lint **0 issues**, and the
+   GPU suite green **without** `-update`. A golden that moves here is a real
+   rendering change and must be explained, not regenerated.
+3. **Commit and push.** CI re-runs the same gates on Ubuntu; the GUI job uses
+   Xvfb + Mesa llvmpipe against goldens generated locally on a real GPU, and the
+   two-gate comparer already tolerates that difference.
+4. **Migration: none, in either direction.** `quality` is a new `omitempty` key
+   in `.gen.json`. An old file simply has no key, which loads as `nil` = "infer
+   it" — exactly the pre-batch behaviour. A new file read by an old build hits an
+   unknown field, which the loader already ignores. The two frozen fixtures under
+   `test/test_helpers/testdata/` are unmodified for that reason.
+5. **`.rmg.json` is byte-identical.** Not one byte of
+   `internal/entities/template/**` changed, and `TestWhenDefaultConfiguration_ReturnsGoldenTemplate`
+   still compares the bytes the providers produced. The game reads the same file
+   it always did, from the same auto-detected templates directory.
+6. **Smoke test in the app**, since the visible surfaces did move types even
+   though they did not move pixels: generate a template, open the zone editor,
+   re-tier a neutral zone through the Quality dropdown, Apply, save the
+   `.gen.json`, reload it, and confirm the dropdown still shows the chosen tier.
+   That is the one path the whole batch exists to make reliable.
+7. **Rollback** is a plain revert of the batch's commits. No data written by the
+   new build is unreadable by the old one.
+
+## After this batch
+
+- Backlog §2.6 step 2 is the next decision: whether `internal/dtos` /
+  `internal/handlers` naming `entities.Connection` and `entities.RmgTemplate` is
+  a breach at all, or whether the `.rmg.json` vocabulary earns a documented
+  carve-out. Do not start it as a sweep.
+- Two benchmark baselines disagree in the record (phase 2's ~5,699 allocs/op
+  versus backlog §1.4's 6,640 after the clone batch). Neither is a batch J
+  regression; someone should reconcile them.

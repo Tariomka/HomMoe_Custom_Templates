@@ -40,12 +40,12 @@ a decision the owner already made.
 **✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
 §3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D), §5.3 (batch F) ·
 **2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) · **2026-09-01:**
-§2.1 and §1.5 (batch I) — **14 done, 7 open.**
+§2.1 and §1.5 (batch I) · **2026-09-03:** §2.2 (batch J) — **15 done, 6 open.**
 Batch D spun off §1.5 (render-path clone cost), which batch I then absorbed;
 batch I spun off §2.6 (entities named outside the permitted layers), whose
-step 1 batch O then closed.
+step 1 batch O then closed and whose entity list batch J shrank by two packages.
 
-**Baselines to hold (AGENTS.md §2.3):** unit coverage **73.8 %**, floor
+**Baselines to hold (AGENTS.md §2.3):** unit coverage **74.3 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
 `integration_test` and `integration_test,gui`.
@@ -723,7 +723,7 @@ as **§2.6**; they only ever shrink. Batch O closed the DTO one at two entries.
 
 ---
 
-### 2.2 🟡 ⚠ Zone tier has no single source of truth
+### 2.2 ✅ DONE 🟡 ⚠ Zone tier has no single source of truth
 
 **Evidence.** `neutral_zone.Quality`
 ([neutralZoneQuality.go](../../internal/models/neutral_zone/neutralZoneQuality.go#L3-L12))
@@ -779,6 +779,84 @@ manual-zone snapshot, that is the concrete evidence needed to justify A.
 **Tests.** Whichever branch: a test per consumer proving the tier it reads
 matches the tier the generator planned, plus a manual-editor test that a
 re-profiled zone reports the new tier and a saved/loaded manual zone keeps it.
+
+**✅ Resolved 2026-09-03 (batch J), branch B — and branch A stays closed.** The
+plan file has since been deleted, so this entry is the record.
+
+**Where the tier lives now.** `internal/models/template_model/` is a full mirror
+of `internal/entities/template/` — every schema type, one model package per
+entity subpackage, `types.go` re-exporting them so callers write
+`template_model.Zone` and never name an inner package (a depguard rule
+`template-model-inner-private` enforces that, mirroring `template-inner-private`).
+The tier is `template_model.Zone.Quality *neutral_zone.Quality`. It is a
+**pointer on purpose**: `Quality` is `iota - 1`, so the zero value is
+`QualityLowest` and a plain field would make every zero-valued zone silently
+claim Plastic — the precise bug this item existed to kill. `nil` means "not
+recorded, infer it". Persisted as
+`editor_state.ManualZoneSave.Quality *int8 json:"quality,omitempty"`, an ordinal
+rather than the enum because `internal/entities` may not import
+`internal/models` (§4.4.1 rule 3). `omitempty` on a plain `int8` would have
+dropped every Plastic zone; there is a mutation-verified guard for exactly that
+in `test/integration/manualZoneTierPersistence_integration_test.go`.
+
+**`ZoneClassifier` is gone.** `IZoneTierService` owns the inference natively —
+`zoneClassifier.go` and its interface were deleted and their bodies moved onto
+`ZoneTierService` verbatim. It exposes **two** tier queries and both are
+load-bearing: `ResolveQuality(modelZone)` prefers the recorded tier and falls
+back to inference, and `GetQuality(entityZone)` always infers. Keep both — a
+template loaded from a raw `.rmg.json` has no recorded tier and never will.
+The DI bypass in `PreviewLayoutService` (it hard-built its own
+`NewZoneClassifier()` and so was never the wire singleton) was fixed on the way
+past; without that, every later phase would have silently kept inferring on the
+preview path.
+
+**Consumers that stopped inferring** — `ManualReapplyService`
+(`SetNeutralZoneCastleCount` + `neutralCastleTarget`),
+`ZoneTierService.GetGuardQuality` / `GetConnectionGuardQuality`,
+`MandatoryContentProvider.CreateContentsForZones`,
+`zoneEditorHandler.GetZoneQuality` (the dialog's Quality dropdown),
+`GladiatorArenaProvider.PlaceArena` and
+`PreviewLayoutService.buildPreviewZones`. The `Unknown → Plastic` silent
+down-tier named in §1 of the plan is fixed by that list:
+`GetNeutralZoneProfile(QualityUnknown)` returns the Lowest profile, and a
+recorded tier is never `Unknown`.
+
+**⚠ Behaviour deltas: there are none, and that is the measured result, not an
+omission.** Decision §0.8 approved output changes and required every delta to be
+enumerated. A throwaway sweep over **792 configurations** (11 topologies ×
+{0,2,4,6} neutral zones × {2,4,8} players × simple/advanced tiers × tournament
+on/off × {0,1,2} castles) compared arena placement and every zone's tier,
+recorded versus inferred: **zero arena moves, zero disagreements**. Two facts
+explain it — the generator never emits a zone its own content pools cannot
+classify, and `ApplyNeutralZoneQuality` stamps the pools its new tier implies, so
+inference lands on the same answer after a manual re-tier. The correction is
+therefore **latent by construction**: it fires only for a zone whose tier was
+recorded but whose pools do not imply it, a state no path reachable today
+produces. No golden moved, no `-update` was run, and the GPU suite passed
+unchanged at every phase.
+
+**Two seams keep the entity forever, deliberately.** `file_service` writes
+`.rmg.json` and so must hold `*entities.RmgTemplate`; and `Generate` assembles
+the entity from the providers and *then* lifts it with `TemplateMapper.ToModel`,
+which is what keeps `TestWhenDefaultConfiguration_ReturnsGoldenTemplate` a proof
+— the golden compares the bytes the providers produced, not the bytes a model
+would round-trip to. The ~40-file topology tree stays on entities with it: no
+topology has a tier to carry, since `stampPlannedZoneTiers` derives every one of
+them from the plans afterwards. **Do not sweep those two by reflex in a later
+batch.**
+
+**Dead code removed on the way through.** `PreviewLayoutRequestDto.Zones` /
+`.Connections` — the "editor-only preview when Template is nil" branch — had no
+production caller, so the fields, the branch and its three tests are gone.
+`BuildPreviewLayout` could then only ever return `nil` for its error, so the
+whole chain down to `IPreviewHandler` returns a bare `dtos.PreviewLayoutDto`,
+and `models.PreviewLayoutCache.Get` lost the `build` callback and retry that
+existed only to carry it.
+
+**Branch A remains owner-gated in §2.4/§2.5 territory and was not needed.** Not
+one byte of `internal/entities/template/**` changed.
+
+Coverage 72.9 % → **74.3 %**; lint held at 0.
 
 ---
 
@@ -997,7 +1075,7 @@ only the rename.
 
 ---
 
-### 2.6 🟠 113 production files name an Entity from outside the permitted layers
+### 2.6 🟠 84 production files name an Entity from outside the permitted layers
 
 *(The DTO half of this item — step 1 — is **closed**; the entity half, steps
 2–4, is what remains open.)*
@@ -1005,16 +1083,24 @@ only the rename.
 **Evidence.** Batch I §12 turned the Entity/Model/DTO doctrine into a gate
 ([test/unit/architecture/dependency/layering_test.go](../../test/unit/architecture/dependency/layering_test.go)).
 Turning it on exposed the pre-existing breach it had to be seeded with:
-**113 files in 23 packages** name a type from `internal/entities` while sitting
+**113 files in 23 packages** named a type from `internal/entities` while sitting
 outside the permitted namers (`internal/repositories`, `internal/models`,
 `internal/entities`, `internal/mappers`, `internal/helpers/*_helpers`).
+**Batch J took it to 84 files in 21 packages** — `app/gui/editor` and
+`internal/services/preview_service` came off the list, the latter because
+`preview_service` now speaks `template_model` end to end. Current shape:
 
 | Area | Files |
 | --- | --- |
-| `internal/services/**` (16 packages) | 85 |
-| `internal/dtos` | 11 |
-| `app/gui/**` (4 packages: `dialogs`, `drivers`, `editor`, `models`) | 11 |
-| `internal/handlers` + `handler_interfaces` | 6 |
+| `internal/services/**` (15 packages) | 70 |
+| `app/gui/**` (3 packages: `dialogs`, `drivers`, `models`) | 6 |
+| `internal/dtos` | 5 |
+| `internal/handlers` + `handler_interfaces` | 3 |
+
+⚠ **`internal/dtos` will not come off by tidying.** All five files name
+`entities.Connection`, which batch J deliberately left alone — a connection
+carries no tier, so moving it would have been churn with no meaning behind it.
+Deciding its fate is step 2's job, not a sweep.
 
 A second, much smaller list rode along in the same test: **6 files in 3
 packages** (`internal/services/bonuses`, `internal/services/pickers`,
@@ -1080,18 +1166,24 @@ as the generic argument of `repositories.IFileRepository[editor_state.EditorStat
    naming `entities.Zone` / `entities.RmgTemplate` is a breach at all, or
    whether the schema vocabulary deserves a documented carve-out like
    `internal/helpers/data` already has.
-3. `app/gui/**` — the 11 files are the zone editor (`entities.Zone`,
-   `entities.Connection`) and the drivers. They need model wrappers before they
-   can drop the import.
+3. `app/gui/**` — the 6 remaining files are the zone editor and the drivers.
+   Batch J moved their zones onto `template_model`; what is left is
+   `entities.Connection` and `entities.RmgTemplate`.
 4. `internal/services/**` — the large tail. Only worth doing if step 2 rules
    that the schema vocabulary is genuinely off limits below the repositories.
+   **Two of those packages are exempt by decision, not by debt:**
+   `internal/services/file_service` writes `.rmg.json` and
+   `internal/services/template_generator` (with the whole topology tree beneath
+   it) assembles the entity the golden-template test compares — see §2.2.
 
 **Do not** widen the allow-lists in `layering_test.go` to make a new package
 compile; clean the package instead.
 
 **Tests.** The gate is the test. Removing an allow-list entry must leave
-`go test ./test/unit/architecture/...` green; it currently fails with the exact
-file list when an entry is dropped, which is how it was verified.
+`go test ./test/unit/architecture/...` green; it fails with the exact file list
+when an entry is dropped prematurely, which is how every removal so far was
+verified — batch J proved both of its removals by re-introducing an
+`internal/entities` import in the package and watching the rule name that file.
 
 ---
 
@@ -1819,7 +1911,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **G** | §2.3 | **Done 2026-08-19.** Float preview geometry end to end, rounded once at the draw boundary. **No goldens moved** — the preview canvas is masked and the zone-editor handler takes no snapshots, so no `-update` was needed. Coverage flat at 72.9 %. Record: §2.3. |
 | ✅ **H** | §5.1, §5.2 | **Done 2026-08-11.** Zone-editor pointer + property-panel tests against the post-§2.3 float coordinates: eight pointer tests and eighteen property tests, all driven through the real window with a golden per action. Turned `ZoneEditorHandler` from a reachability-only handler into a driving one (canvas, side-panel and Apply actions). `TestWhenAZoneNameIsTyped_…` dropped — the zone name is a read-only label. Coverage flat. Record: §5.1, §5.2. |
 | ✅ **I** | §2.1, §1.5 | **Done 2026-09-01.** `EditorStateDto` rework across twelve phases (5 and 11 superseded mid-flight), folding in §1.5 as phase 6. Entity/Model/DTO split with the **Model owning the structure**; `.gen.json` shape unchanged throughout. Phase 6 cut render-path allocations by 62 %; phase 12 added the layering gate and spun off §2.6. Doctrine now lives in **AGENTS.md §4.4.1**. Records: §2.1, §1.5, §2.6. |
-| **J** | §2.2 Branch B | Zone tier single source of truth without a protected edit. Benefits from §2.1's model layer. |
+| **J** | §2.2 Branch B | **Done 2026-09-03.** Zone tier single source of truth, no protected edit. Five phases: `IZoneTierService` absorbed and deleted `ZoneClassifier`; the generator records the tier it planned; `internal/models/template_model/` mirrors the whole `.rmg.json` schema and puts `Quality *neutral_zone.Quality` on the zone; `.gen.json` persists it as `*int8`; the sweep moved the editor, handlers and `preview_service` onto the model. **No golden moved and no pixel changed** — the correction is latent by construction (see §2.2). Coverage 72.9 % → **74.3 %**. Record: §2.2. |
 | **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |
 | ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer, and a real font-fallback bug in `themes.NewTheme`. §5.5 step 2 rejected — CI never becomes the golden reference. Full record in §5.4/§5.5 above. |
 | ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. Full record in §5.4 above. |
@@ -1830,10 +1922,11 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 otherwise ordered by dependency.
 
 **Coverage note.** Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **73.8 %**
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **74.3 %**
 (72.5 % through batch B; batch C added the helper tests, batch D the clone and
 accessor tests, batch I the entity/model/converter tests; batch O gave back
-0.1 pp with the two constructors it deleted).
+0.1 pp with the two constructors it deleted; batch J added the tier-service,
+`template_model` converter and persistence tests).
 
 ---
 
@@ -1849,7 +1942,7 @@ accessor tests, batch I the entity/model/converter tests; batch O gave back
 | Unit | `go test ./test/unit/... -count=1` | pass |
 | Integration | `go test -tags=integration_test ./test/integration/... -count=1` | pass |
 | GUI integration | `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (needs GPU) |
-| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **73.8 %** |
+| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **74.3 %** |
 | Lint | `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
 | Format | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | Wire | `wire diff ./internal/composition/...` | no diff |

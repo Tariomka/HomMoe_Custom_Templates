@@ -44,11 +44,12 @@ var dtoNamerPrefixes = []string{
 // package at a time. **Only ever remove entries.** The residual breach is
 // tracked in .agent/backlog/backlog-opus5.md.
 //
+// not debt: file_service writes .rmg.json and is permanent. Do not try to clean it.
+//
 //nolint:gochecknoglobals // shared, read-only rule input for this file's tests.
 var entityNamerAllowList = []string{
 	"app/gui/dialogs",
 	"app/gui/drivers",
-	"app/gui/editor",
 	"app/gui/models",
 	"internal/dtos",
 	"internal/handlers",
@@ -59,7 +60,6 @@ var entityNamerAllowList = []string{
 	"internal/services/connection_editor",
 	"internal/services/content_rules",
 	"internal/services/file_service",
-	"internal/services/preview_service",
 	"internal/services/template_generator",
 	"internal/services/template_generator/providers",
 	"internal/services/template_generator/providers/provider_interfaces",
