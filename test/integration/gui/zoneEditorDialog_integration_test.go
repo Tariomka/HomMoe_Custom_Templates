@@ -11,7 +11,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -36,8 +35,8 @@ func newGeometryZone(name string, x, y float64) template_model.Zone {
 }
 
 // newGeometryConnection builds a plain connection between two zones.
-func newGeometryConnection(name, from, to string) entities.Connection {
-	return entities.Connection{Name: name, From: from, To: to, ConnectionType: "Direct"}
+func newGeometryConnection(name, from, to string) template_model.Connection {
+	return template_model.Connection{Name: name, From: from, To: to, ConnectionType: "Direct"}
 }
 
 // newGeometryDialog builds a zone editor over the given layout and lays its
@@ -45,7 +44,7 @@ func newGeometryConnection(name, from, to string) entities.Connection {
 func newGeometryDialog(
 	t *testing.T,
 	zones []template_model.Zone,
-	connections []entities.Connection,
+	connections []template_model.Connection,
 ) *dialogs.ZoneEditorDialog {
 	t.Helper()
 	handler := composition.InitializeGuiHandler()
@@ -77,7 +76,7 @@ func newTriangleFixture(t *testing.T) *dialogs.ZoneEditorDialog {
 			newGeometryZone("B", 0.8, 0.5),
 			newGeometryZone("C", 0.5, 0.2),
 		},
-		[]entities.Connection{
+		[]template_model.Connection{
 			newGeometryConnection("ab", "A", "B"),
 			newGeometryConnection("ac", "A", "C"),
 			newGeometryConnection("ba", "B", "A"),
@@ -114,7 +113,7 @@ func newApplyCaptureFixture(
 		newGeometryZone("A", 0.2, 0.5),
 		newGeometryZone("B", 0.8, 0.5),
 	}
-	connections := []entities.Connection{newGeometryConnection("ab", "A", "B")}
+	connections := []template_model.Connection{newGeometryConnection("ab", "A", "B")}
 	stateDto := editor_state_dto.EditorStateDto{EditorState: editor_state_model.NewDefaultEditorStateModel()}
 	options := handler.GetZoneEditorOptions(stateDto, len(zones))
 	capture := &applyCapture{}
@@ -164,7 +163,7 @@ func TestWhenZoneEditorDialogRenders_UsesHandlerProvidedOptions(t *testing.T) {
 	options := handler.GetZoneEditorOptions(state, len(variant.Zones))
 	dialog := dialogs.NewZoneEditorDialog(
 		variant.Zones,
-		template_model.ToConnectionEntities(variant.Connections),
+		variant.Connections,
 		options.Topology,
 		options.Tuning,
 		options.GenerateRoads,

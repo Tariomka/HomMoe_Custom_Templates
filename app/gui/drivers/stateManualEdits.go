@@ -7,7 +7,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
@@ -58,7 +57,7 @@ func (this *State) PreviewBaseZones() (dtos.ZoneEditorZonesDto, bool) {
 	variant := dto.Template.Variants[0]
 	this.pendingBaseZones = dtos.ZoneEditorZonesDto{
 		Zones:       variant.Zones,
-		Connections: template_model.ToConnectionEntities(variant.Connections),
+		Connections: variant.Connections,
 	}
 
 	return this.pendingBaseZones, true
@@ -69,7 +68,7 @@ func matchesZoneSet(left, right dtos.ZoneEditorZonesDto) bool {
 		reflect.DeepEqual(left.Connections, right.Connections)
 }
 
-func (this *State) handleUpdateTemplate(zones []template_model.Zone, connections []entities.Connection) {
+func (this *State) handleUpdateTemplate(zones []template_model.Zone, connections []template_model.Connection) {
 	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    this.lastTemplate,
 		Zones:       zones,

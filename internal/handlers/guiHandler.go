@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -79,11 +78,12 @@ func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityReq
 
 func (this *GUIHandler) DescribeZoneEditorGraph(
 	zones []template_model.Zone,
-	connections []entities.Connection) dtos.ZoneEditorGraphDto {
+	connections []template_model.Connection) dtos.ZoneEditorGraphDto {
 	return this.zoneEditorHandler.DescribeZoneEditorGraph(zones, connections)
 }
 
-func (this *GUIHandler) CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
+func (this *GUIHandler) CreateZoneEditorConnection(
+	request dtos.ZoneEditorConnectionRequestDto) template_model.Connection {
 	return this.zoneEditorHandler.CreateZoneEditorConnection(request)
 }
 

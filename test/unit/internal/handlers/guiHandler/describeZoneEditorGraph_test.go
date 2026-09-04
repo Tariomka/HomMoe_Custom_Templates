@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +13,7 @@ func TestWhenGraphIsDescribed_ReturnsServiceEquivalentStatus(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	zones := []template_model.Zone{{Name: "A"}, {Name: "B"}, {Name: "C"}}
-	connections := []entities.Connection{{From: "A", To: "Missing"}}
+	connections := []template_model.Connection{{From: "A", To: "Missing"}}
 	expected := dtos.ZoneEditorGraphDto{HasErrors: true, IsolatedZoneCount: 2}
 
 	// Act

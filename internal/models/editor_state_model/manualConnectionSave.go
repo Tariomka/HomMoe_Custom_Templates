@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // ManualConnectionSave adds behaviour to the behaviour-free
@@ -16,28 +17,31 @@ type ManualConnectionSave struct {
 }
 
 // ToManualConnectionSaves converts live editor connections into their
-// serializable form, preserving the IsUserAdded flag.
-func ToManualConnectionSaves(connections []entities.Connection) []ManualConnectionSave {
+// serializable form, preserving the IsUserAdded flag that the .rmg.json schema
+// has nowhere to put.
+func ToManualConnectionSaves(connections []template_model.Connection) []ManualConnectionSave {
 	if len(connections) == 0 {
 		return nil
 	}
 
 	return linq.FromSlice(connections).
-		Select(func(connection entities.Connection) ManualConnectionSave {
-			return ManualConnectionSave{Connection: connection, IsUserAdded: connection.IsUserAdded}
+		Select(func(connection template_model.Connection) ManualConnectionSave {
+			return ManualConnectionSave{
+				Connection:  template_model.ToConnectionEntity(connection),
+				IsUserAdded: connection.IsUserAdded}
 		}).ToSlice()
 }
 
 // FromManualConnectionSaves rebuilds live editor connections from their
 // serialized form, restoring the IsUserAdded flag.
-func FromManualConnectionSaves(saves []ManualConnectionSave) []entities.Connection {
+func FromManualConnectionSaves(saves []ManualConnectionSave) []template_model.Connection {
 	if len(saves) == 0 {
 		return nil
 	}
 
 	return linq.FromSlice(saves).
-		Select(func(save ManualConnectionSave) entities.Connection {
-			connection := save.Connection
+		Select(func(save ManualConnectionSave) template_model.Connection {
+			connection := template_model.ToConnectionModel(save.Connection)
 			connection.IsUserAdded = save.IsUserAdded
 			return connection
 		}).ToSlice()

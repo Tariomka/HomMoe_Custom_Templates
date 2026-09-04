@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
@@ -33,13 +32,14 @@ func TestWhenConnectionsAreApplied_ManualConnectionSavesAreStoredInCurrentState(
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	connection := entities.Connection{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true}
+	connection := template_model.Connection{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true}
 
 	// Act
-	state.SetManualEdits(nil, []entities.Connection{connection})
+	state.SetManualEdits(nil, []template_model.Connection{connection})
 
 	// Assert
 	assert.Equal(t,
-		[]editor_state_model.ManualConnectionSave{{Connection: connection, IsUserAdded: true}},
+		[]editor_state_model.ManualConnectionSave{
+			{Connection: template_model.ToConnectionEntity(connection), IsUserAdded: true}},
 		state.GetCurrentState().ManualConnections)
 }

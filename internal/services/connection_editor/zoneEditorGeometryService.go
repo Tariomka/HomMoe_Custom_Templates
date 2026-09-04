@@ -3,7 +3,6 @@ package connection_editor
 import (
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -60,13 +59,13 @@ func NewZoneEditorGeometryService(
 
 func (this *ZoneEditorGeometryService) BuildGeometry(
 	zones []template_model.Zone,
-	connections []entities.Connection,
+	connections []template_model.Connection,
 	topology config.MapTopology,
 	canvasSide int) models.ZoneEditorGeometry {
 	template := &template_model.Template{
 		Variants: []template_model.Variant{{
 			Zones:       zones,
-			Connections: template_model.ToConnectionModels(connections),
+			Connections: connections,
 		}},
 	}
 	layout := this.previewLayout.BuildPreviewLayout(template, topology, float64(canvasSide))
@@ -152,7 +151,7 @@ func (this *ZoneEditorGeometryService) SnapPosition(
 // curve, spreading connections that share a zone pair symmetrically around the
 // straight chord and bending clear of intermediate nodes.
 func buildEdges(
-	connections []entities.Connection,
+	connections []template_model.Connection,
 	positions map[string]models.Position,
 	zoneRadius float64) []models.ZoneEditorEdge {
 	order, groups := groupConnectionsByPair(connections)
@@ -202,7 +201,7 @@ func buildEdges(
 // preserving first-seen order so parallel edges spread deterministically from
 // frame to frame.
 func groupConnectionsByPair(
-	connections []entities.Connection) ([]connectionPairKey, map[connectionPairKey][]int) {
+	connections []template_model.Connection) ([]connectionPairKey, map[connectionPairKey][]int) {
 	groups := make(map[connectionPairKey][]int)
 	order := make([]connectionPairKey, 0)
 	for index, connection := range connections {

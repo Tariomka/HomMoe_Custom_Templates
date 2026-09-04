@@ -1,7 +1,6 @@
 package connection_editor
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -12,11 +11,11 @@ import (
 type IZoneEditorService interface {
 	// EnsureConnectionNames assigns a unique name to every nameless connection,
 	// in place.
-	EnsureConnectionNames(connections []entities.Connection)
+	EnsureConnectionNames(connections []template_model.Connection)
 
 	// RebuildZoneConnectionRoads recomputes each zone's connection and castle
 	// roads to match the current connection list and main objects.
-	RebuildZoneConnectionRoads(zones []template_model.Zone, connections []entities.Connection)
+	RebuildZoneConnectionRoads(zones []template_model.Zone, connections []template_model.Connection)
 
 	// RebuildCastleRoads regenerates only the zone's castle<->castle roads,
 	// preserving every other road.
@@ -53,8 +52,8 @@ type IZoneEditorService interface {
 	// and without any connection referencing it.
 	RemoveZone(
 		zones []template_model.Zone,
-		connections []entities.Connection,
-		zoneName string) ([]template_model.Zone, []entities.Connection)
+		connections []template_model.Connection,
+		zoneName string) ([]template_model.Zone, []template_model.Connection)
 
 	// FindOpenPosition returns a normalized position that maximizes the
 	// distance to the occupied positions.

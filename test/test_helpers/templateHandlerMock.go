@@ -3,7 +3,6 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
@@ -28,8 +27,8 @@ type TemplateHandlerMock struct {
 	GetZoneQualityFunc              func(template_model.Zone) neutral_zone.Quality
 	GetZoneConnectionQualityFunc    func(string, string, []template_model.Zone, map[string]bool) neutral_zone.Quality
 	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) template_model.Zone
-	DescribeZoneEditorGraphFunc     func([]template_model.Zone, []entities.Connection) dtos.ZoneEditorGraphDto
-	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) entities.Connection
+	DescribeZoneEditorGraphFunc     func([]template_model.Zone, []template_model.Connection) dtos.ZoneEditorGraphDto
+	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) template_model.Connection
 	FindOpenZonePositionFunc        func([][2]float64) [2]float64
 	GetNextZoneLabelFunc            func([]template_model.Zone) string
 	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone
@@ -115,7 +114,7 @@ func (this *TemplateHandlerMock) ApplyZoneEditorQuality(
 
 func (this *TemplateHandlerMock) DescribeZoneEditorGraph(
 	zones []template_model.Zone,
-	connections []entities.Connection,
+	connections []template_model.Connection,
 ) dtos.ZoneEditorGraphDto {
 	if this.DescribeZoneEditorGraphFunc != nil {
 		return this.DescribeZoneEditorGraphFunc(zones, connections)
@@ -125,11 +124,11 @@ func (this *TemplateHandlerMock) DescribeZoneEditorGraph(
 
 func (this *TemplateHandlerMock) CreateZoneEditorConnection(
 	request dtos.ZoneEditorConnectionRequestDto,
-) entities.Connection {
+) template_model.Connection {
 	if this.CreateZoneEditorConnectionFunc != nil {
 		return this.CreateZoneEditorConnectionFunc(request)
 	}
-	return entities.Connection{}
+	return template_model.Connection{}
 }
 
 func (this *TemplateHandlerMock) FindOpenZonePosition(occupied [][2]float64) [2]float64 {

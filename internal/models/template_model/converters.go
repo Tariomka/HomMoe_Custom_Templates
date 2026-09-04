@@ -34,6 +34,14 @@ func ToZoneModel(entity template.Zone) Zone {
 	return template_variant_model.ToZoneModel(entity)
 }
 
+func ToConnectionEntity(model Connection) template.Connection {
+	return template_variant_model.ToConnectionEntity(model)
+}
+
+func ToConnectionModel(entity template.Connection) Connection {
+	return template_variant_model.ToConnectionModel(entity)
+}
+
 func ToMainObjectModel(entity template.MainObject) MainObject {
 	return template_variant_model.ToMainObjectModel(entity)
 }

@@ -3,7 +3,6 @@ package connectionEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
@@ -24,7 +23,7 @@ func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 		},
 	}
 	playerZoneNames := map[string]bool{"Spawn-A": true}
-	expected := entities.Connection{
+	expected := template_model.Connection{
 		From:                 "Spawn-A",
 		To:                   "Neutral-Gold",
 		ConnectionType:       "Direct",

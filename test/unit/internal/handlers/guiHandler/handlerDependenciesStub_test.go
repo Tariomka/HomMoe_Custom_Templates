@@ -3,7 +3,6 @@ package guiHandler_test
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -119,28 +118,28 @@ func (this *handlerDependenciesStub) ApplyZoneEditorQuality(
 
 func (this *handlerDependenciesStub) DescribeZoneEditorGraph(
 	[]template_model.Zone,
-	[]entities.Connection,
+	[]template_model.Connection,
 ) dtos.ZoneEditorGraphDto {
 	return dtos.ZoneEditorGraphDto{}
 }
 
 func (this *handlerDependenciesStub) ComputeHasErrors(
 	[]template_model.Zone,
-	[]entities.Connection,
+	[]template_model.Connection,
 ) bool {
 	return false
 }
 
 func (this *handlerDependenciesStub) RebuildZoneConnectionRoads(
 	[]template_model.Zone,
-	[]entities.Connection,
+	[]template_model.Connection,
 ) {
 }
 
 func (this *handlerDependenciesStub) CreateZoneEditorConnection(
 	dtos.ZoneEditorConnectionRequestDto,
-) entities.Connection {
-	return entities.Connection{}
+) template_model.Connection {
+	return template_model.Connection{}
 }
 
 func (this *handlerDependenciesStub) FindOpenZonePosition([][2]float64) [2]float64 {

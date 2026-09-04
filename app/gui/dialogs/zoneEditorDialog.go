@@ -17,7 +17,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -46,8 +45,8 @@ type ZoneEditorDialog struct {
 	topology       config.MapTopology
 	tuning         models.GenerationTuning
 	generateRoads  bool
-	working        []*entities.Connection
-	original       []entities.Connection
+	working        []*template_model.Connection
+	original       []template_model.Connection
 	onApply        func(dtos.ZoneEditorZonesDto)
 	onRevertToBase func() (dtos.ZoneEditorZonesDto, bool)
 	revertedToBase bool
@@ -70,7 +69,7 @@ type ZoneEditorDialog struct {
 // so it may be nil.
 func NewZoneEditorDialog(
 	zones []template_model.Zone,
-	connections []entities.Connection,
+	connections []template_model.Connection,
 	topology config.MapTopology,
 	tuning models.GenerationTuning,
 	generateRoads bool,
@@ -177,7 +176,7 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 // setEditingSet installs a zone and connection list as both the working copy
 // and the baseline Undo restores, so a revert to base also moves the point
 // Undo returns to.
-func (this *ZoneEditorDialog) setEditingSet(zones []template_model.Zone, connections []entities.Connection) {
+func (this *ZoneEditorDialog) setEditingSet(zones []template_model.Zone, connections []template_model.Connection) {
 	this.zones = append([]template_model.Zone(nil), zones...)
 	this.originalZones = append([]template_model.Zone(nil), zones...)
 	this.playerZones = make(map[string]bool)
@@ -356,7 +355,7 @@ func (this *ZoneEditorDialog) addConnection(from, to string) {
 	this.geometryDirty = true
 }
 
-func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) {
+func (this *ZoneEditorDialog) deleteConnection(connection *template_model.Connection) {
 	for i, candidate := range this.working {
 		if candidate == connection {
 			this.working = append(this.working[:i], this.working[i+1:]...)
@@ -522,8 +521,8 @@ func (this *ZoneEditorDialog) deleteZone(name string) {
 	this.hint = ""
 }
 
-func derefConnections(pointers []*entities.Connection) []entities.Connection {
-	out := make([]entities.Connection, len(pointers))
+func derefConnections(pointers []*template_model.Connection) []template_model.Connection {
+	out := make([]template_model.Connection, len(pointers))
 	for i, pointer := range pointers {
 		out[i] = *pointer
 	}

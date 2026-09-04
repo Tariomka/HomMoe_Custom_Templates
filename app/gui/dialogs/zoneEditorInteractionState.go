@@ -3,8 +3,8 @@ package dialogs
 import (
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // zoneDragDeadZonePx is how far the pointer must travel before a press on a
@@ -16,7 +16,7 @@ const zoneDragDeadZonePx = 6.0
 // state only - nothing here belongs to the domain or to the geometry service.
 type zoneEditorInteractionState struct {
 	canvasTag     int
-	selected      *entities.Connection
+	selected      *template_model.Connection
 	selectedZone  string
 	addMode       bool
 	addZoneMode   bool
@@ -30,7 +30,7 @@ type zoneEditorInteractionState struct {
 }
 
 // selectConnection makes an edge the active selection.
-func (this *zoneEditorInteractionState) selectConnection(connection *entities.Connection) {
+func (this *zoneEditorInteractionState) selectConnection(connection *template_model.Connection) {
 	this.selected = connection
 	this.selectedZone = ""
 }

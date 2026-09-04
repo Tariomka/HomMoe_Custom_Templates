@@ -104,7 +104,7 @@ func TestWhenEditsAreAppliedTwice_TheManualSnapshotSurvives(t *testing.T) {
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       template.Variants[0].Zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	})
 
 	// Assert
@@ -133,7 +133,7 @@ func newEditedSession(t *testing.T) *drivers.State {
 	}
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	})
 	stateData := state.GetStateData()
 	require.True(t, stateData.HasManualEdits(), "the edit must be applied before it can be reverted")

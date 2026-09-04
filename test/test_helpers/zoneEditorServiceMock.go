@@ -1,7 +1,6 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -15,13 +14,13 @@ type ZoneEditorServiceMock struct {
 	mock.Mock
 }
 
-func (this *ZoneEditorServiceMock) EnsureConnectionNames(connections []entities.Connection) {
+func (this *ZoneEditorServiceMock) EnsureConnectionNames(connections []template_model.Connection) {
 	this.Called(connections)
 }
 
 func (this *ZoneEditorServiceMock) RebuildZoneConnectionRoads(
 	zones []template_model.Zone,
-	connections []entities.Connection) {
+	connections []template_model.Connection) {
 	this.Called(zones, connections)
 }
 
@@ -65,11 +64,11 @@ func (this *ZoneEditorServiceMock) CanDeleteZone(zoneName string, playerZoneName
 
 func (this *ZoneEditorServiceMock) RemoveZone(
 	zones []template_model.Zone,
-	connections []entities.Connection,
-	zoneName string) ([]template_model.Zone, []entities.Connection) {
+	connections []template_model.Connection,
+	zoneName string) ([]template_model.Zone, []template_model.Connection) {
 	arguments := this.Called(zones, connections, zoneName)
 	remainingZones, _ := arguments.Get(0).([]template_model.Zone)
-	remainingConnections, _ := arguments.Get(1).([]entities.Connection)
+	remainingConnections, _ := arguments.Get(1).([]template_model.Connection)
 	return remainingZones, remainingConnections
 }
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -29,7 +28,7 @@ func regenerateAfterDebounce(state *drivers.State, now time.Time) {
 
 // connectionKeys captures the identity of every connection so tests can prove
 // the manual connection graph survives a regeneration untouched.
-func connectionKeys(connections []entities.Connection) map[[3]string]bool {
+func connectionKeys(connections []template_model.Connection) map[[3]string]bool {
 	keys := make(map[[3]string]bool, len(connections))
 	for _, connection := range connections {
 		keys[[3]string{connection.From, connection.To, connection.ConnectionType}] = true
@@ -78,8 +77,8 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.05 * float64(i+1)}
 	}
-	connections := append([]entities.Connection(nil), template_model.ToConnectionEntities(template.Variants[0].Connections)...)
-	connections = append(connections, entities.Connection{
+	connections := append([]template_model.Connection(nil), template.Variants[0].Connections...)
+	connections = append(connections, template_model.Connection{
 		From: zones[0].Name, To: zones[1].Name, ConnectionType: "Portal", IsUserAdded: true,
 	})
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
@@ -105,7 +104,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 		assert.NotNilf(t, zone.ManualPosition, "zone %s lost its manual position", zone.Name)
 	}
 
-	gotConnections := connectionKeys(template_model.ToConnectionEntities(got.Variants[0].Connections))
+	gotConnections := connectionKeys(got.Variants[0].Connections)
 	assert.Equal(t, expectedConnections, gotConnections,
 		"the manual connection graph must survive a castle-count regeneration untouched")
 
@@ -143,7 +142,7 @@ func TestAdvancedTierCastleChange_UpdatesByManualQuality(t *testing.T) {
 	promotedName := zones[promoted].Name
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	})
 
 	state.UpdateState(func(s *editor_state_model.EditorState) { s.NeutralHighCastlesPerZone = 3 })
@@ -188,7 +187,7 @@ func TestNonCastleChange_AfterManualEdits_KeepsSnapshotVerbatim(t *testing.T) {
 	editedName := zones[edited].Name
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	})
 
 	// Non-castle, non-layout change.

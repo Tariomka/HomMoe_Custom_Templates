@@ -3,7 +3,6 @@ package zoneEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -166,7 +165,7 @@ func TestWhenZoneHasNoMainObjects_CreatesConnectorRoads(t *testing.T) {
 		{Name: "Neutral-K"},
 		{Name: "Neutral-L", MainObjects: []template_model.MainObject{{Type: "City"}}},
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		{Name: "Rnd-K-L", From: "Neutral-K", To: "Neutral-L", ConnectionType: "Direct"},
 	}
 
@@ -181,7 +180,7 @@ func TestWhenZoneHasNoMainObjects_CreatesConnectorRoads(t *testing.T) {
 // buildFootholdScenario returns two spawn zones sharing connection Rnd-A-B plus
 // a neutral zone; Spawn-A additionally has a remote-foothold road and the
 // editor added a second connection (Rnd-A-C) that has no road yet.
-func buildFootholdScenario() ([]template_model.Zone, []entities.Connection) {
+func buildFootholdScenario() ([]template_model.Zone, []template_model.Connection) {
 	zones := []template_model.Zone{
 		{
 			Name:        "Spawn-A",
@@ -217,7 +216,7 @@ func buildFootholdScenario() ([]template_model.Zone, []entities.Connection) {
 			Roads:       nil,
 		},
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		{Name: "Rnd-A-B", From: "Spawn-A", To: "Spawn-B", ConnectionType: "Direct"},
 		{Name: "Rnd-A-C", From: "Spawn-A", To: "Neutral-C", ConnectionType: "Direct"},
 	}
@@ -227,7 +226,7 @@ func buildFootholdScenario() ([]template_model.Zone, []entities.Connection) {
 // buildCastleGrowthScenario returns a three-castle zone that has only a
 // connection road (no castle roads at all), mirroring a connector zone that
 // had castles added to it in the editor.
-func buildCastleGrowthScenario() ([]template_model.Zone, []entities.Connection) {
+func buildCastleGrowthScenario() ([]template_model.Zone, []template_model.Connection) {
 	zones := []template_model.Zone{
 		{
 			Name:        "Neutral-G",
@@ -237,7 +236,7 @@ func buildCastleGrowthScenario() ([]template_model.Zone, []entities.Connection) 
 			},
 		},
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		{Name: "Rnd-G-H", From: "Neutral-G", To: "Neutral-H", ConnectionType: "Direct"},
 	}
 	return zones, connections
@@ -245,7 +244,7 @@ func buildCastleGrowthScenario() ([]template_model.Zone, []entities.Connection) 
 
 // buildNamelessManualScenario returns two zones joined by a single nameless,
 // user-added connection, exactly as produced by the manual zone editor.
-func buildNamelessManualScenario() ([]template_model.Zone, []entities.Connection) {
+func buildNamelessManualScenario() ([]template_model.Zone, []template_model.Connection) {
 	zones := []template_model.Zone{
 		{
 			Name:        "Spawn-E",
@@ -256,7 +255,7 @@ func buildNamelessManualScenario() ([]template_model.Zone, []entities.Connection
 			MainObjects: []template_model.MainObject{{Type: "City"}},
 		},
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		{From: "Spawn-E", To: "Neutral-M", ConnectionType: "Direct", IsUserAdded: true},
 	}
 	return zones, connections

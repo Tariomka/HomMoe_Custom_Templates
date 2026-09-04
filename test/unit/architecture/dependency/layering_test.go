@@ -40,24 +40,20 @@ var dtoNamerPrefixes = []string{
 
 // entityNamerAllowList records the packages that named an entity before the
 // rule existed. Base internal/entities is the .rmg.json vocabulary the whole
-// generator is built out of, so this list is large by design and shrinks one
-// package at a time. **Only ever remove entries.** The residual breach is
-// tracked in .agent/backlog/backlog-opus5.md.
+// generator is built out of, so this list started large and shrinks one package
+// at a time. **Only ever remove entries.** The residual breach is tracked in
+// .agent/backlog/backlog-opus5.md.
 //
-// not debt: file_service writes .rmg.json and is permanent. Do not try to clean it.
+// EXACTLY ONE entry is permanent, not debt: internal/services/file_service, which
+// writes .rmg.json. **Everything else here is DEBT to be cleaned - the generator
+// and its whole topology tree included.** Owner rule: only internal/repositories
+// and file_service may touch entities in implementation code.
 //
 //nolint:gochecknoglobals // shared, read-only rule input for this file's tests.
 var entityNamerAllowList = []string{
-	"app/gui/dialogs",
-	"app/gui/drivers",
-	"app/gui/models",
-	"internal/dtos",
-	"internal/handlers",
-	"internal/handlers/handler_interfaces",
 	"internal/services/builders/mandatory_content",
 	"internal/services/builders/placement_rule",
 	"internal/services/builders/variant_content",
-	"internal/services/connection_editor",
 	"internal/services/content_rules",
 	"internal/services/file_service",
 	"internal/services/template_generator",

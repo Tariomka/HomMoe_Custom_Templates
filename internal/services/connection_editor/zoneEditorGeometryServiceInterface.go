@@ -1,7 +1,6 @@
 package connection_editor
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -16,7 +15,7 @@ type IZoneEditorGeometryService interface {
 	// share a zone pair and bending clear of intermediate nodes.
 	BuildGeometry(
 		zones []template_model.Zone,
-		connections []entities.Connection,
+		connections []template_model.Connection,
 		topology config.MapTopology,
 		canvasSide int) models.ZoneEditorGeometry
 

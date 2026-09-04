@@ -99,7 +99,7 @@ func saveStateWithNeutralTier(t *testing.T, quality *neutral_zone.Quality) strin
 	}
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	})
 
 	state.SaveStateToFile(filepath.Join(directory, "tier.gen.json"))

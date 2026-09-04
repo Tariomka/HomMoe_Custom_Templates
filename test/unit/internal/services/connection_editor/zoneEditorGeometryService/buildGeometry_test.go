@@ -3,7 +3,6 @@ package zoneEditorGeometryService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -71,7 +70,7 @@ func TestWhenASingleConnectionSpansAClearChord_ItsCurveStaysOnTheChord(t *testin
 	t.Parallel()
 	// Arrange
 	service, _ := newGeometryFixture(chordPositions())
-	connections := []entities.Connection{newConnection("ab", "A", "B")}
+	connections := []template_model.Connection{newConnection("ab", "A", "B")}
 
 	// Act
 	geometry := service.BuildGeometry(nil, connections, "", fixtureCanvasSide)
@@ -85,7 +84,7 @@ func TestWhenAnEdgeIsLaidOut_ItsLabelSitsOnTheCurveMidpoint(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, _ := newGeometryFixture(chordPositions())
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		newConnection("ab", "A", "B"),
 		newConnection("ba", "B", "A"),
 	}
@@ -102,7 +101,7 @@ func TestWhenTwoConnectionsSharePair_TheirCurvesSpreadSymmetrically(t *testing.T
 	t.Parallel()
 	// Arrange
 	service, _ := newGeometryFixture(chordPositions())
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		newConnection("ab", "A", "B"),
 		newConnection("ba", "B", "A"),
 	}
@@ -121,7 +120,7 @@ func TestWhenConnectionsSharePairs_TheyAreGroupedInFirstSeenOrder(t *testing.T) 
 	t.Parallel()
 	// Arrange
 	service, _ := newGeometryFixture(trianglePositions())
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		newConnection("ab", "A", "B"),
 		newConnection("ac", "A", "C"),
 		newConnection("ba", "B", "A"),
@@ -138,7 +137,7 @@ func TestWhenAZoneSitsNearTheChord_TheCurveBulgesClearOfIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, _ := newGeometryFixture(obstaclePositions())
-	connections := []entities.Connection{newConnection("ab", "A", "B")}
+	connections := []template_model.Connection{newConnection("ab", "A", "B")}
 
 	// Act
 	geometry := service.BuildGeometry(nil, connections, "", fixtureCanvasSide)
@@ -152,7 +151,7 @@ func TestWhenAnEndpointHasNoPosition_TheConnectionIsSkipped(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, _ := newGeometryFixture(chordPositions())
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		newConnection("ab", "A", "B"),
 		newConnection("az", "A", "Z"),
 	}
@@ -172,7 +171,7 @@ func TestWhenBothEndpointsShareAPosition_TheCurveCollapsesOntoThatPoint(t *testi
 		"B": data.NewVec2(140.0, 350.0),
 	}
 	service, _ := newGeometryFixture(stacked)
-	connections := []entities.Connection{newConnection("ab", "A", "B")}
+	connections := []template_model.Connection{newConnection("ab", "A", "B")}
 
 	// Act
 	geometry := service.BuildGeometry(nil, connections, "", fixtureCanvasSide)

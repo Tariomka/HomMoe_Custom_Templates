@@ -3,7 +3,6 @@ package zoneEditorHandler_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +14,7 @@ func TestWhenGraphIsDescribed_ReturnsTheEditorsErrorFlag(t *testing.T) {
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
 	zones := []template_model.Zone{{Name: gofakeit.Word()}}
-	connections := []entities.Connection{{}}
+	connections := []template_model.Connection{{}}
 	fixture.connectionEditor.On("ComputeHasErrors", zones, connections).Return(true)
 	fixture.connectionEditor.On("FindIsolatedZones", zones, connections).Return([]string{})
 

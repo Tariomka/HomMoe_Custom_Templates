@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -84,7 +83,7 @@ func (this *zoneEditorHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQua
 
 func (this *zoneEditorHandler) DescribeZoneEditorGraph(
 	zones []template_model.Zone,
-	connections []entities.Connection) dtos.ZoneEditorGraphDto {
+	connections []template_model.Connection) dtos.ZoneEditorGraphDto {
 	return dtos.ZoneEditorGraphDto{
 		HasErrors:         this.connectionEditor.ComputeHasErrors(zones, connections),
 		IsolatedZoneCount: len(this.connectionEditor.FindIsolatedZones(zones, connections)),
@@ -92,7 +91,7 @@ func (this *zoneEditorHandler) DescribeZoneEditorGraph(
 }
 
 func (this *zoneEditorHandler) CreateZoneEditorConnection(
-	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
+	request dtos.ZoneEditorConnectionRequestDto) template_model.Connection {
 	return this.connectionEditor.NewDefaultConnection(request.From, request.To, request.Zones, request.PlayerZoneNames)
 }
 

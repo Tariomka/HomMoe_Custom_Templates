@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +15,7 @@ func TestWhenZoneIsRemoved_ReturnsServiceEquivalentMutation(t *testing.T) {
 	handler := newProductionGuiHandler()
 	request := dtos.ZoneEditorRemoveRequestDto{
 		Zones: []template_model.Zone{{Name: "Spawn-A"}, {Name: "Neutral-C"}, {Name: "Neutral-D"}},
-		Connections: []entities.Connection{
+		Connections: []template_model.Connection{
 			{From: "Spawn-A", To: "Neutral-C"},
 			{From: "Spawn-A", To: "Neutral-D"},
 		},

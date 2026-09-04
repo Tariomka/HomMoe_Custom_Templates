@@ -10,7 +10,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 func (this *LayoutPanel) getManualZoneEditWidget(theme *material.Theme) layout.Widget {
@@ -113,7 +112,7 @@ func (this *LayoutPanel) handleConnectionEditorClick(gtx layout.Context) {
 	options := this.zoneEditorHandler.GetZoneEditorOptions(this.state.GetStateDto(), len(activeVariant.Zones))
 	this.state.GetDialogHost().Open(dialogs.NewZoneEditorDialog(
 		activeVariant.Zones,
-		template_model.ToConnectionEntities(activeVariant.Connections),
+		activeVariant.Connections,
 		options.Topology,
 		options.Tuning,
 		options.GenerateRoads,

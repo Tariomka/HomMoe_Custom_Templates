@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -66,7 +65,7 @@ func TestWhenManualEditsAreApplied_TemplateRevisionAdvances(t *testing.T) {
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       template.Variants[0].Zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	})
 
 	// Assert

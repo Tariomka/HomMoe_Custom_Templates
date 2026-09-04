@@ -6,7 +6,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -52,7 +51,7 @@ func TestWhenGeneratedZonesAndConnectionsAreReapplied_ReturnsNoError(t *testing.
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       template.Variants[0].Zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	}
 
 	// Act
@@ -67,8 +66,8 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
-	brokenConnections := slices.Clone(template_model.ToConnectionEntities(template.Variants[0].Connections))
-	brokenConnections = append(brokenConnections, entities.Connection{
+	brokenConnections := slices.Clone(template.Variants[0].Connections)
+	brokenConnections = append(brokenConnections, template_model.Connection{
 		Name: gofakeit.ProductName(),
 		From: "No-Such-Zone",
 		To:   "Another-Missing-Zone",
@@ -95,7 +94,7 @@ func TestWhenUpdateSucceeds_ReturnedTemplateCarriesTheAppliedZones(t *testing.T)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	}
 
 	// Act
@@ -142,7 +141,7 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 		EditorState: toDtoPointer(&editorState),
 	}
 
@@ -197,7 +196,7 @@ func TestWhenEditorStateIsNil_MandatoryContentIsLeftUntouched(t *testing.T) {
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       template.Variants[0].Zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	}
 
 	// Act
@@ -234,7 +233,7 @@ func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
-	originalConnections := template_model.ToConnectionEntities(template.Variants[0].Connections)
+	originalConnections := template.Variants[0].Connections
 	require.NotEmpty(t, originalConnections)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
@@ -247,5 +246,5 @@ func TestWhenUpdateReplacesConnections_CallersTemplateConnectionsAreNotMutated(t
 
 	// Assert
 	require.NoError(t, err)
-	assert.Len(t, template_model.ToConnectionEntities(template.Variants[0].Connections), len(originalConnections))
+	assert.Len(t, template.Variants[0].Connections, len(originalConnections))
 }

@@ -20,10 +20,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // layoutCanvas draws the node/edge canvas and processes pointer interaction. All
@@ -171,7 +171,7 @@ func (this *ZoneEditorDialog) hitTestNode(pos models.Position) string {
 	})
 }
 
-func (this *ZoneEditorDialog) hitTestEdge(pos models.Position) *entities.Connection {
+func (this *ZoneEditorDialog) hitTestEdge(pos models.Position) *template_model.Connection {
 	edgeIndex := this.zoneHandler.HitTestZoneEditorEdge(pos, this.geometry.Edges)
 	if edgeIndex < 0 {
 		return nil
@@ -182,7 +182,7 @@ func (this *ZoneEditorDialog) hitTestEdge(pos models.Position) *entities.Connect
 
 // edgeConnection resolves the working connection an edge was laid out for, or
 // nil when the cached geometry no longer lines up with the connection list.
-func (this *ZoneEditorDialog) edgeConnection(edge models.ZoneEditorEdge) *entities.Connection {
+func (this *ZoneEditorDialog) edgeConnection(edge models.ZoneEditorEdge) *template_model.Connection {
 	if edge.ConnectionIndex < 0 || edge.ConnectionIndex >= len(this.working) {
 		return nil
 	}

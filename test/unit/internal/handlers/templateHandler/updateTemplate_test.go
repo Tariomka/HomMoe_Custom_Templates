@@ -59,7 +59,7 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T)
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	connections := []entities.Connection{{Name: gofakeit.Word()}}
+	connections := []template_model.Connection{{Name: gofakeit.Word()}}
 	arrangeUpdateCollaborators(fixture, false)
 
 	// Act
@@ -69,7 +69,26 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T)
 	})
 
 	// Assert
-	assert.Equal(t, connections, template_model.ToConnectionEntities(loadDto.Template.Variants[0].Connections))
+	assert.Equal(t, connections, loadDto.Template.Variants[0].Connections)
+}
+
+// UpdateTemplate maps the template through the .rmg.json entity, which has
+// nowhere to put the editor-only user-added flag.
+func TestWhenAnAppliedConnectionIsUserAdded_KeepsTheFlagThroughTheEntityRoundTrip(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+	connections := []template_model.Connection{{Name: gofakeit.Word(), IsUserAdded: true}}
+	arrangeUpdateCollaborators(fixture, false)
+
+	// Act
+	loadDto, _ := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{
+		Template:    singleVariantTemplate(),
+		Connections: connections,
+	})
+
+	// Assert
+	assert.True(t, loadDto.Template.Variants[0].Connections[0].IsUserAdded)
 }
 
 func TestWhenTemplateIsUpdated_LeavesTheSourceTemplateUntouched(t *testing.T) {
@@ -95,7 +114,7 @@ func TestWhenTemplateIsUpdated_RebuildsTheZoneConnectionRoads(t *testing.T) {
 	// Arrange
 	fixture := newTemplateHandlerFixture()
 	zones := []template_model.Zone{{Name: gofakeit.Word()}}
-	connections := []entities.Connection{{Name: gofakeit.Word()}}
+	connections := []template_model.Connection{{Name: gofakeit.Word()}}
 	arrangeUpdateCollaborators(fixture, false)
 
 	// Act

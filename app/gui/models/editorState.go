@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
@@ -92,7 +91,7 @@ func (this *EditorState) WasStateChanged() bool {
 
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
 
-func (this *EditorState) SetManualEdits(zones []template_model.Zone, connections []entities.Connection) {
+func (this *EditorState) SetManualEdits(zones []template_model.Zone, connections []template_model.Connection) {
 	this.current.ManualZones = editor_state_model.ToManualZoneSaves(zones)
 	this.current.ManualConnections = editor_state_model.ToManualConnectionSaves(connections)
 }
@@ -110,6 +109,6 @@ func (this *EditorState) GetManualZones() []template_model.Zone {
 	return editor_state_model.FromManualZoneSaves(this.current.ManualZones)
 }
 
-func (this *EditorState) GetManualConnections() []entities.Connection {
+func (this *EditorState) GetManualConnections() []template_model.Connection {
 	return editor_state_model.FromManualConnectionSaves(this.current.ManualConnections)
 }

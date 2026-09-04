@@ -1,7 +1,6 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -17,7 +16,7 @@ type ZoneEditorGeometryServiceMock struct {
 
 func (this *ZoneEditorGeometryServiceMock) BuildGeometry(
 	zones []template_model.Zone,
-	connections []entities.Connection,
+	connections []template_model.Connection,
 	topology config.MapTopology,
 	canvasSide int) models.ZoneEditorGeometry {
 	arguments := this.Called(zones, connections, topology, canvasSide)

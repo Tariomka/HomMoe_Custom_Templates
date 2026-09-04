@@ -85,7 +85,7 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 
 	newTemplate := this.templateMapper.ToEntity(*templateDto.Template)
 	newTemplate.Variants[0].Zones = template_model.ToZoneEntities(zones)
-	newTemplate.Variants[0].Connections = connections
+	newTemplate.Variants[0].Connections = template_model.ToConnectionEntities(connections)
 
 	// Rebuild mandatory content from the final zones so a zone re-tiered in the
 	// manual editor gets the content of its new quality instead of the original tier.
@@ -99,11 +99,12 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 		err = common_errors.ErrZonesMissing
 	}
 
-	// Re-attaching the applied zones rather than the ones the round trip produced
-	// is what keeps each zone's recorded tier: the .rmg.json entity has nowhere
-	// to put it, so a zone that went through ToEntity comes back with none.
+	// Re-attaching the applied zones and connections rather than the ones the
+	// round trip produced is what keeps each zone's recorded tier and each
+	// connection's user-added flag: the .rmg.json entity has nowhere to put them.
 	updated := this.templateMapper.ToModel(newTemplate)
 	updated.Variants[0].Zones = zones
+	updated.Variants[0].Connections = connections
 
 	return dtos.TemplateLoadDto{Template: &updated}, err
 }

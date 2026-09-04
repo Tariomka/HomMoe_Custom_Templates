@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -204,7 +203,7 @@ func TestWhenApplyingWithoutARevert_TheManualSnapshotIsStoredAnyway(t *testing.T
 // mock for further expectations, and the template's zones and connections to
 // edit.
 func newGeneratedState() (
-	*drivers.State, *test_helpers.TemplateHandlerMock, []template_model.Zone, []entities.Connection) {
+	*drivers.State, *test_helpers.TemplateHandlerMock, []template_model.Zone, []template_model.Connection) {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	template := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
@@ -219,5 +218,5 @@ func newGeneratedState() (
 	return state,
 		handlerMock,
 		variant.Zones,
-		template_model.ToConnectionEntities(variant.Connections)
+		variant.Connections
 }

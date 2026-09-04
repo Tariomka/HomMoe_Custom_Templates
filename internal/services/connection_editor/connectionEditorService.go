@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -27,10 +26,12 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 	from string,
 	to string,
 	zones []template_model.Zone,
-	playerZoneNames map[string]bool) entities.Connection {
+	playerZoneNames map[string]bool) template_model.Connection {
 	quality := this.tierService.GetConnectionGuardQuality(
 		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
-	return variant_content.NewConnectionBuilder().
+	// The connection builder is shared with the generator and yields the .rmg.json
+	// entity, so this service converts its one built connection here.
+	connection := template_model.ToConnectionModel(variant_content.NewConnectionBuilder().
 		WithFrom(from).
 		WithTo(to).
 		WithConnectionTypeDirect().
@@ -38,13 +39,14 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 		WithGuardZone(from).
 		WithGuardMatchGroup("rnd_guard_" + helpers.GetZoneLabel(from) + "_" + helpers.GetZoneLabel(to)).
 		WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
-		WithIsUserAdded().
-		Build()
+		Build())
+	connection.IsUserAdded = true
+	return connection
 }
 
 func (this *ConnectionEditorService) FindIsolatedZones(
 	zones []template_model.Zone,
-	connections []entities.Connection) []string {
+	connections []template_model.Connection) []string {
 	var isolated []string
 
 	for _, zone := range zones {
@@ -64,7 +66,7 @@ func (this *ConnectionEditorService) FindIsolatedZones(
 
 func (this *ConnectionEditorService) ComputeHasErrors(
 	zones []template_model.Zone,
-	connections []entities.Connection) bool {
+	connections []template_model.Connection) bool {
 	zoneNames := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		zoneNames[zone.Name] = true
@@ -78,8 +80,8 @@ func (this *ConnectionEditorService) ComputeHasErrors(
 }
 
 func (this *ConnectionEditorService) HasDuplicateName(
-	connections []entities.Connection,
-	current *entities.Connection) bool {
+	connections []template_model.Connection,
+	current *template_model.Connection) bool {
 	if current == nil || len(current.Name) == 0 {
 		return false
 	}

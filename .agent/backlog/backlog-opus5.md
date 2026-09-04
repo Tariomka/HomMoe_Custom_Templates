@@ -43,7 +43,9 @@ a decision the owner already made.
 §2.1 and §1.5 (batch I) · **2026-09-03:** §2.2 (batch J) — **15 done, 6 open.**
 Batch D spun off §1.5 (render-path clone cost), which batch I then absorbed;
 batch I spun off §2.6 (entities named outside the permitted layers), whose
-step 1 batch O then closed and whose entity list batch J shrank by two packages.
+step 1 batch O closed, whose entity list batch J shrank by two packages, and
+whose steps 2 and 3 batch P closed on **2026-09-04** (§2.6 stays open on
+step 4 alone).
 
 **Baselines to hold (AGENTS.md §2.3):** unit coverage **74.3 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
@@ -1075,10 +1077,9 @@ only the rename.
 
 ---
 
-### 2.6 🟠 84 production files name an Entity from outside the permitted layers
+### 2.6 🟠 64 production files name an Entity from outside the permitted layers
 
-*(The DTO half of this item — step 1 — is **closed**; the entity half, steps
-2–4, is what remains open.)*
+*(Steps 1–3 are **closed**. Step 4 — the generator tail — is what remains open.)*
 
 **Evidence.** Batch I §12 turned the Entity/Model/DTO doctrine into a gate
 ([test/unit/architecture/dependency/layering_test.go](../../test/unit/architecture/dependency/layering_test.go)).
@@ -1086,37 +1087,29 @@ Turning it on exposed the pre-existing breach it had to be seeded with:
 **113 files in 23 packages** named a type from `internal/entities` while sitting
 outside the permitted namers (`internal/repositories`, `internal/models`,
 `internal/entities`, `internal/mappers`, `internal/helpers/*_helpers`).
-**Batch J took it to 84 files in 21 packages** — `app/gui/editor` and
-`internal/services/preview_service` came off the list, the latter because
-`preview_service` now speaks `template_model` end to end. Current shape:
+Batch J took it to **84 / 21**; **batch P took it to 64 files in 14 packages**,
+and the allow-list is now exactly those 14. Current shape — note it is *entirely*
+the generator tail plus two builders:
 
 | Area | Files |
 | --- | --- |
-| `internal/services/**` (15 packages) | 70 |
-| `app/gui/**` (3 packages: `dialogs`, `drivers`, `models`) | 6 |
-| `internal/dtos` | 5 |
-| `internal/handlers` + `handler_interfaces` | 3 |
-
-⚠ **`internal/dtos` will not come off by tidying.** All five files name
-`entities.Connection`, which batch J deliberately left alone — a connection
-carries no tier, so moving it would have been churn with no meaning behind it.
-Deciding its fate is step 2's job, not a sweep.
-
-A second, much smaller list rode along in the same test: **6 files in 3
-packages** (`internal/services/bonuses`, `internal/services/pickers`,
-`internal/services/zone_content`) consumed DTOs below the handler boundary.
-Batch O closed that list at **4 files in 2 packages** — see step 1; it does not
-drain to zero, and the two survivors are there by decision.
+| `internal/services/template_generator/**` (7 packages) | 40 |
+| `internal/services/zones` + `zone_interfaces` | 10 |
+| `internal/services/builders/**` (3 packages) | 9 |
+| `internal/services/content_rules` | 3 |
+| `internal/services/file_service` | 2 |
 
 **Why it is not simply a defect.** Base `internal/entities` is the `.rmg.json`
 schema vocabulary — `Zone`, `Connection`, `RmgTemplate` — and §0.5.3 of the
 Batch I plan deliberately kept it as a repository-wide alias façade. The whole
 generator exists to build those types, so a service naming `entities.Zone` is
 not the same kind of mistake as a service naming `editor_state.EditorState`.
-Scoped to the entity layer Batch I actually created
-(`internal/entities/editor_state` + `/topology`) the breach is **one file**:
-[fileService.go](../../internal/services/file_service/fileService.go), and only
-as the generic argument of `repositories.IFileRepository[editor_state.EditorState]`.
+
+A second, much smaller list rode along in the same test: **6 files in 3
+packages** (`internal/services/bonuses`, `internal/services/pickers`,
+`internal/services/zone_content`) consumed DTOs below the handler boundary.
+Batch O closed that list at **4 files in 2 packages** — see step 1; it does not
+drain to zero, and the two survivors are there by decision.
 
 **Fix (incremental, one package per batch — the allow-list only ever shrinks).**
 
@@ -1162,19 +1155,88 @@ as the generic argument of `repositories.IFileRepository[editor_state.EditorStat
    whether a type crosses a boundary, follow the method signatures the other
    side calls — never grep for the type name.
 
-2. `internal/dtos` and `internal/handlers` — decide whether the DTO layer
-   naming `entities.Zone` / `entities.RmgTemplate` is a breach at all, or
-   whether the schema vocabulary deserves a documented carve-out like
-   `internal/helpers/data` already has.
-3. `app/gui/**` — the 6 remaining files are the zone editor and the drivers.
-   Batch J moved their zones onto `template_model`; what is left is
-   `entities.Connection` and `entities.RmgTemplate`.
-4. `internal/services/**` — the large tail. Only worth doing if step 2 rules
-   that the schema vocabulary is genuinely off limits below the repositories.
-   **Two of those packages are exempt by decision, not by debt:**
-   `internal/services/file_service` writes `.rmg.json` and
-   `internal/services/template_generator` (with the whole topology tree beneath
-   it) assembles the entity the golden-template test compares — see §2.2.
+2. ✅ **DONE (batch P, 2026-09-04) — RULED A BREACH. The `.rmg.json` vocabulary
+   gets NO carve-out.** The question was whether `internal/dtos` /
+   `internal/handlers` naming a schema type is a genuine violation or whether
+   base `internal/entities` deserves a documented exemption like
+   `internal/helpers/data` has. **It is a breach.** Four findings decided it,
+   and they are worth keeping because they generalise:
+
+   - **The framing was stale.** The item said "`entities.Connection` /
+     `entities.RmgTemplate`". Measured, `entities.RmgTemplate` was **not named
+     anywhere** in `internal/dtos`, `internal/handlers` or `app/gui` — batch J
+     had already removed it. The entire breach in those layers was **one type,
+     `entities.Connection`, in 8 files.** *Re-measure a backlog item before
+     ruling on it.*
+   - **The model twin already existed.** Batch J had built
+     `template_variant_model.Connection` — field-identical, with converters
+     already re-exported. There was nothing to design, only to adopt.
+   - **The seams were already half-migrated.** `connection_editor` signatures
+     read `(zones []template_model.Zone, connections []entities.Connection)`,
+     and `zoneEditorGeometryService` called `ToConnectionModels` **mid-service**
+     to feed the preview. A service converting halfway through its own call is
+     the smell that settles the argument.
+   - **`IsUserAdded` was editor state living in the schema mirror**, as
+     `json:"-"`, and `editor_state.ManualConnectionSave` already carried a
+     **sidecar** copy *because* the entity could not serialize it. The
+     workaround was the proof the field was misplaced. (Also: the façade's own
+     doc comment says it "needs to be removed".)
+
+   **What landed.** `entities.Connection` → `template_model.Connection` across
+   62 files (+260/−236): `internal/dtos` (5), `internal/handlers` +
+   `handler_interfaces` (3), `internal/services/connection_editor` (6),
+   `app/gui/{dialogs,drivers,models,panels}` (7), `editor_state_model` (1),
+   plus 4 mocks and the tests. **This closed step 3 as well** — see below.
+   `template_model/converters.go` gained the singular `ToConnectionEntity` /
+   `ToConnectionModel`. **With owner approval, `IsUserAdded` was removed from
+   the protected `internal/entities/template/template_variant/connection.go`**;
+   the model keeps it and `editor_state.ManualConnectionSave`'s sidecar persists
+   it. `ConnectionBuilder.WithIsUserAdded()` went with it. Coverage flat at
+   **74.3 %**, lint 0, no golden moved, no fixture touched (the field was
+   `json:"-"`, so the wire format could not move).
+
+   ⚠ **Two traps this left behind, both load-bearing:**
+   - **`updated.Variants[0].Connections = connections` in
+     `templateHandler.UpdateTemplate`** is the *only* thing keeping a
+     hand-drawn connection marked user-added across an Apply, now that the
+     entity round trip cannot carry the flag. Mutation-verified: delete that
+     line and `TestWhenAnAppliedConnectionIsUserAdded_KeepsTheFlagThroughTheEntityRoundTrip`
+     fails. It sits beside the identical zone re-attach that protects the tier.
+   - **`ConnectionEditorService.NewDefaultConnection` is a third conversion
+     seam**, outside handlers and repositories. Tolerated only because
+     `variant_content.NewConnectionBuilder` is shared with the generator, and it
+     must now also set `IsUserAdded` by hand. **Step 4 dissolves it** — do not
+     copy the pattern.
+
+3. ✅ **DONE (batch P, 2026-09-04) — folded into step 2.** `app/gui/**` held
+   `entities.Connection` in the zone editor and drivers; since it is the same
+   single type as step 2, splitting the work would have meant `app/` holding an
+   entity while the DTOs held a model — the handler converting backwards
+   relative to AGENTS §4.4.1 rule 2. **`app/gui/**` now names zero entity types,
+   including in its tests.**
+
+4. `internal/services/**` — the large tail, **now the only thing left**: 64
+   files in 14 packages, all generator-side. Step 2 ruled that the schema
+   vocabulary is genuinely off limits below the repositories, so this is
+   sanctioned work rather than an open question. It is also the batch that
+   would let `TemplateGenerator.Generate` build the model directly instead of
+   building an entity and lifting it (see §2.2 — that lift was a *migration
+   tactic*, not a design).
+
+   ⚠ **EXACTLY ONE of these 14 packages is permanent:
+   `internal/services/file_service`**, because it writes `.rmg.json` — and even
+   there entities must stay *inside* it, never in a parameter or return type.
+   **The floor is one entry, not two.** Every other entry, **`template_generator`
+   and its whole topology tree included, is DEBT.** Owner rule: only
+   `internal/repositories` and `file_service` may touch entities in
+   implementation code.
+
+   ⚠ *A previous version of this item claimed the generator keeps the entity
+   "forever, by decision, because `Generate` lifts the assembled entity and that
+   makes the golden-template test a proof". **That is wrong** (owner,
+   2026-09-03) and it has resurfaced more than once — the byte-identical
+   argument was a **migration tactic**, never a design. Do not cite it, and do
+   not re-add `template_generator` to any "permanent" list.*
 
 **Do not** widen the allow-lists in `layering_test.go` to make a new package
 compile; clean the package instead.
@@ -1182,8 +1244,12 @@ compile; clean the package instead.
 **Tests.** The gate is the test. Removing an allow-list entry must leave
 `go test ./test/unit/architecture/...` green; it fails with the exact file list
 when an entry is dropped prematurely, which is how every removal so far was
-verified — batch J proved both of its removals by re-introducing an
-`internal/entities` import in the package and watching the rule name that file.
+verified. ⚠ **The rule keys on the *import path*, not on naming a type** — so
+the minimal mutation is a blank `_ ".../internal/entities"` import. Batch P
+mutated all seven of its removals **simultaneously**, one file per package,
+which proves each entry independently *and* proves none was masking another.
+⚠ **`git status` cannot confirm the revert** when the files are already dirty
+from the same batch; grep for the mutation itself.
 
 ---
 
@@ -1917,6 +1983,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. Full record in §5.4 above. |
 | ✅ **N** | §1.5 | **Folded into batch I phase 6, 2026-08-31.** Never ran standalone — the measurement showed the cost was the clone *mechanism* (lazy `linq` chains allocating for empty slices), not the panel read sites this item named. Record: §1.5. |
 | ✅ **O** | §2.6 step 1 | **Done 2026-09-01.** Closed the **DTO** allow-list at **two entries, not zero**. `internal/services/pickers` was view-model logic, not a service: deleted, and rebuilt as package-level functions in `app/gui/models/` along with its handler, interface, four DTOs, mock and wire providers. `bonuses` and `zone_content` keep their DTOs by owner decision, under a written justification in the list's comment. §2.6 steps 2–4 (the 113-file **entity** list) are untouched and stay open. Record: §2.6. |
+| ✅ **P** | §2.6 steps 2 + 3 | **Done 2026-09-04.** Ruled the `.rmg.json` vocabulary gets **no carve-out**, then acted: `entities.Connection` → `template_model.Connection` across 62 files, closing steps 2 and 3 together. `entityNamerAllowList` 21 → **14 entries**, breach 84 files/21 packages → **64/14**, all seven removals mutation-proved simultaneously. **Owner approved one protected edit**: `IsUserAdded` removed from `internal/entities/template/template_variant/connection.go` — it was `json:"-"` editor state in the schema mirror, and `editor_state.ManualConnectionSave` already carried a sidecar copy because the entity could not serialize it. Wire format provably unmoved; no golden, no fixture. Coverage flat at **74.3 %**, lint 0. Record: §2.6. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is
 otherwise ordered by dependency.
@@ -1926,7 +1993,8 @@ otherwise ordered by dependency.
 (72.5 % through batch B; batch C added the helper tests, batch D the clone and
 accessor tests, batch I the entity/model/converter tests; batch O gave back
 0.1 pp with the two constructors it deleted; batch J added the tier-service,
-`template_model` converter and persistence tests).
+`template_model` converter and persistence tests; batch P was type-only and
+moved it not at all).
 
 ---
 

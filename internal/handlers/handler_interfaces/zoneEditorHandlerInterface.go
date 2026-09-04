@@ -3,7 +3,6 @@ package handler_interfaces
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -20,8 +19,8 @@ type IZoneEditorHandler interface {
 	ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) template_model.Zone
 	DescribeZoneEditorGraph(
 		zones []template_model.Zone,
-		connections []entities.Connection) dtos.ZoneEditorGraphDto
-	CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) entities.Connection
+		connections []template_model.Connection) dtos.ZoneEditorGraphDto
+	CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) template_model.Connection
 	FindOpenZonePosition(occupied [][2]float64) [2]float64
 	GetNextZoneLabel(zones []template_model.Zone) string
 	CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone

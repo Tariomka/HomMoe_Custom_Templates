@@ -150,7 +150,7 @@ func allFieldsManualZones() []editor_state_model.ManualZoneSave {
 }
 
 // allFieldsManualConnections builds a manual connection carrying the
-// user-added flag that entities.Connection itself omits from JSON.
+// user-added flag, which lives on the save rather than on the connection.
 func allFieldsManualConnections() []editor_state_model.ManualConnectionSave {
 	return []editor_state_model.ManualConnectionSave{{
 		Connection: entities.Connection{

@@ -33,7 +33,8 @@ type Connection struct {
 	PortalPlacementRulesTo   []template_common_model.PlacementRule
 
 	// IsUserAdded marks a connection added by hand in the zone editor rather
-	// than produced by the generator. It never reaches the .rmg.json output.
+	// than produced by the generator. It has no entity counterpart: the editor
+	// state persists it on editor_state.ManualConnectionSave instead.
 	IsUserAdded bool
 }
 
@@ -55,7 +56,6 @@ func ToConnectionModel(entity template.Connection) Connection {
 		GuardMatchGroup:          entity.GuardMatchGroup,
 		PortalPlacementRulesFrom: template_common_model.ToPlacementRuleModels(entity.PortalPlacementRulesFrom),
 		PortalPlacementRulesTo:   template_common_model.ToPlacementRuleModels(entity.PortalPlacementRulesTo),
-		IsUserAdded:              entity.IsUserAdded,
 	}
 }
 
@@ -77,7 +77,6 @@ func ToConnectionEntity(model Connection) template.Connection {
 		GuardMatchGroup:          model.GuardMatchGroup,
 		PortalPlacementRulesFrom: template_common_model.ToPlacementRuleEntities(model.PortalPlacementRulesFrom),
 		PortalPlacementRulesTo:   template_common_model.ToPlacementRuleEntities(model.PortalPlacementRulesTo),
-		IsUserAdded:              model.IsUserAdded,
 	}
 }
 

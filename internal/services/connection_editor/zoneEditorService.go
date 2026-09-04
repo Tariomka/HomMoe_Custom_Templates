@@ -10,7 +10,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/road_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
@@ -42,7 +41,7 @@ func NewZoneEditorService(
 // already have one. Connections added in the manual zone editor start nameless,
 // but a road can only target a connection by name, so an unnamed connection can
 // never receive a road. Names are mutated in place.
-func (this *ZoneEditorService) EnsureConnectionNames(connections []entities.Connection) {
+func (this *ZoneEditorService) EnsureConnectionNames(connections []template_model.Connection) {
 	used := make(map[string]bool, len(connections))
 	for _, connection := range connections {
 		if connection.Name != "" {
@@ -81,7 +80,7 @@ func (this *ZoneEditorService) EnsureConnectionNames(connections []entities.Conn
 // ends up without a road.
 func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 	zones []template_model.Zone,
-	connections []entities.Connection) {
+	connections []template_model.Connection) {
 	this.EnsureConnectionNames(connections)
 
 	connectionsByZone := make(map[string][]string)
@@ -236,15 +235,15 @@ func (this *ZoneEditorService) CanDeleteZone(zoneName string, playerZoneNames ma
 // without any connection referencing it.
 func (this *ZoneEditorService) RemoveZone(
 	zones []template_model.Zone,
-	connections []entities.Connection,
-	zoneName string) ([]template_model.Zone, []entities.Connection) {
+	connections []template_model.Connection,
+	zoneName string) ([]template_model.Zone, []template_model.Connection) {
 	keptZones := make([]template_model.Zone, 0, len(zones))
 	for _, zone := range zones {
 		if zone.Name != zoneName {
 			keptZones = append(keptZones, zone)
 		}
 	}
-	keptConnections := make([]entities.Connection, 0, len(connections))
+	keptConnections := make([]template_model.Connection, 0, len(connections))
 	for _, connection := range connections {
 		if connection.From != zoneName && connection.To != zoneName {
 			keptConnections = append(keptConnections, connection)

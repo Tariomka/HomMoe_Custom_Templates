@@ -3,7 +3,6 @@ package connectionEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -15,7 +14,7 @@ func TestWhenZoneHasNoConnections_ReturnsThatZone(t *testing.T) {
 	// Arrange
 	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	zones := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}, {Name: "Neutral-2"}}
-	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
+	connections := []template_model.Connection{{From: "Spawn-A", To: "Neutral-1"}}
 
 	// Act
 	isolated := service.FindIsolatedZones(zones, connections)
@@ -29,7 +28,7 @@ func TestWhenEveryZoneIsConnected_ReturnsNoZones(t *testing.T) {
 	// Arrange
 	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 	zones := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Neutral-1"}}
-	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1"}}
+	connections := []template_model.Connection{{From: "Spawn-A", To: "Neutral-1"}}
 
 	// Act
 	isolated := service.FindIsolatedZones(zones, connections)

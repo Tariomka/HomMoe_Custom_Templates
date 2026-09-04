@@ -14,7 +14,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -139,8 +138,8 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.2 * float64(i+1)}
 	}
-	connections := append([]entities.Connection(nil), template_model.ToConnectionEntities(template.Variants[0].Connections)...)
-	added := entities.Connection{
+	connections := append([]template_model.Connection(nil), template.Variants[0].Connections...)
+	added := template_model.Connection{
 		From:           zones[0].Name,
 		To:             zones[1].Name,
 		ConnectionType: "Portal",
@@ -193,7 +192,7 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	}
 
 	foundAdded := false
-	for _, c := range template_model.ToConnectionEntities(got.Variants[0].Connections) {
+	for _, c := range got.Variants[0].Connections {
 		if c.From == added.From && c.To == added.To && c.ConnectionType == "Portal" {
 			foundAdded = true
 			break
@@ -243,7 +242,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	}
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       zones,
-		Connections: template_model.ToConnectionEntities(template.Variants[0].Connections),
+		Connections: template.Variants[0].Connections,
 	})
 
 	// A structural change (player count) must regenerate from scratch.

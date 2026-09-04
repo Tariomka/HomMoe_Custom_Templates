@@ -1,10 +1,10 @@
 package zoneEditorGeometryService_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/mock"
@@ -57,8 +57,8 @@ func obstaclePositions() map[string]models.Position {
 	return positions
 }
 
-func newConnection(name, from, to string) entities.Connection {
-	return entities.Connection{Name: name, From: from, To: to}
+func newConnection(name, from, to string) template_model.Connection {
+	return template_model.Connection{Name: name, From: from, To: to}
 }
 
 func connectionIndices(edges []models.ZoneEditorEdge) []int {
