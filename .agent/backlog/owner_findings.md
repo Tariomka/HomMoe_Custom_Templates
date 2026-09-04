@@ -132,3 +132,13 @@ After adding Template model:
   model have 2 fields for a single value, the mapper will just use the same Size value for both
 
 ---
+
+Panels are becoming oversized, holding a lot of state on their own. A somewhat separation was start
+in the past with the LayoutPanel and it's topology and zones vertical sections, but realisticly
+this should be made as separate section private classes in sub packages, like `panels/layout_panel`,
+`panels/general_panel` and `panels/bonuses_panel`, moving the panels there, moving the section state
+to their own structs with their respective logic (widgets, button clicks, saves and loads, etc.),
+panel structs driving the inner states and having `panels/types.go` to expose the public panel structs
+as "top level structs" (to simulate the current accessing).
+
+---
