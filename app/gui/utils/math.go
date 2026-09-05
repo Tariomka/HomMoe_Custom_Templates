@@ -1,5 +1,18 @@
 package utils
 
+import (
+	"gioui.org/f32"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+)
+
+func ToF32Point(vector data.Vec2[float64]) f32.Point {
+	return f32.Pt(float32(vector.X), float32(vector.Y))
+}
+
+func ToVec2(point f32.Point) data.Vec2[float64] {
+	return data.NewVec2(float64(point.X), float64(point.Y))
+}
+
 // Denormalize returns the inverse of Normalize(float32, float32, float32), i.e. converts value from range [0,1] -> [low, high].
 func Denormalize(value, low, high float32) float32 {
 	if value < 0 {

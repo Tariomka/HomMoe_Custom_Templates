@@ -16,10 +16,9 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 )
 
 // MultiSelectPicker is a generic searchable, optionally-grouped, multi-select
@@ -27,15 +26,14 @@ import (
 // (a guard-value field, a "make free" toggle) are supplied via the footer hook
 // and read back inside onApply. Implements widgets.Dialog.
 type MultiSelectPicker struct {
-	title         string
-	prefW, prefH  unit.Dp
-	entries       []dtos.PickerEntryDto
-	grouped       bool
-	groupColor    func(group string) color.NRGBA
-	addLabel      string
-	footerWidget  func(theme *material.Theme) layout.Widget
-	onApply       func(ids []string)
-	pickerHandler handler_interfaces.IPickerHandler
+	title        string
+	prefW, prefH unit.Dp
+	entries      []models.PickerEntry
+	grouped      bool
+	groupColor   func(group string) color.NRGBA
+	addLabel     string
+	footerWidget func(theme *material.Theme) layout.Widget
+	onApply      func(ids []string)
 
 	search    widget.Editor
 	scroll    widget.List
@@ -45,45 +43,19 @@ type MultiSelectPicker struct {
 	cancelBtn widget.Clickable
 }
 
-func newMultiSelectPicker(
-	title string,
-	entries []dtos.PickerEntryDto,
-	grouped bool,
-	pickerHandler handler_interfaces.IPickerHandler) *MultiSelectPicker {
-	picker := &MultiSelectPicker{
-		title:         title,
-		prefW:         unit.Dp(560),
-		prefH:         unit.Dp(560),
-		entries:       entries,
-		grouped:       grouped,
-		addLabel:      "Add Selected",
-		selected:      map[string]bool{},
-		clicks:        map[string]*widget.Clickable{},
-		pickerHandler: pickerHandler,
-	}
-	picker.search.SingleLine = true
-	picker.scroll.Axis = layout.Vertical
-	return picker
-}
-
-func NewItemPickerDialog(
-	title string,
-	excluded []string,
-	pickerHandler handler_interfaces.IPickerHandler,
-	onApply func(ids []string)) *MultiSelectPicker {
+func NewItemPickerDialog(title string, excluded []string, onApply func(ids []string)) *MultiSelectPicker {
 	visible := constants.GetBannableItemsWithExclusions(excluded)
 
-	items := make([]dtos.PickerItemDto, 0, len(visible))
+	items := make([]models.PickerItem, 0, len(visible))
 	for _, item := range visible {
-		items = append(items, dtos.PickerItemDto{
+		items = append(items, models.PickerItem{
 			Sid:      item.Sid,
 			Name:     item.Name,
 			Category: item.Category,
 		})
 	}
 
-	picker := newMultiSelectPicker(
-		title, pickerHandler.BuildItemPickerEntries(items), true, pickerHandler)
+	picker := newMultiSelectPicker(title, models.BuildItemPickerEntries(items), true)
 	picker.onApply = onApply
 	return picker
 }
@@ -91,13 +63,12 @@ func NewItemPickerDialog(
 func NewSpellPickerDialog(
 	excluded []string,
 	showMakeFree bool,
-	pickerHandler handler_interfaces.IPickerHandler,
 	onApply func(ids []string, makeFree bool)) *MultiSelectPicker {
 	visible := constants.GetKnownSpellsWithExclusions(excluded)
 
-	spells := make([]dtos.PickerSpellDto, 0, len(visible))
+	spells := make([]models.PickerSpell, 0, len(visible))
 	for _, spell := range visible {
-		spells = append(spells, dtos.PickerSpellDto{
+		spells = append(spells, models.PickerSpell{
 			Sid:               spell.Sid,
 			Name:              spell.Name,
 			School:            spell.School,
@@ -107,8 +78,7 @@ func NewSpellPickerDialog(
 	}
 
 	makeFree := new(widget.Bool)
-	picker := newMultiSelectPicker(
-		"Pick Spells", pickerHandler.BuildSpellPickerEntries(spells), true, pickerHandler)
+	picker := newMultiSelectPicker("Pick Spells", models.BuildSpellPickerEntries(spells), true)
 	picker.groupColor = constants.GetSpellSchoolColorFromDisplayName
 	if showMakeFree {
 		picker.footerWidget = func(theme *material.Theme) layout.Widget {
@@ -121,19 +91,12 @@ func NewSpellPickerDialog(
 	return picker
 }
 
-func NewValueOverridePickerDialog(
-	excluded []string,
-	pickerHandler handler_interfaces.IPickerHandler,
-	onApply func(lines []string)) *MultiSelectPicker {
+func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *MultiSelectPicker {
 	sids := constants.GetValueOverrideSidsWithExclusions(excluded)
 
 	guardEdit := &widget.Editor{SingleLine: true}
 	guardEdit.SetText("5000")
-	picker := newMultiSelectPicker(
-		"Pick Value Overrides",
-		pickerHandler.BuildValueOverridePickerEntries(sids),
-		false,
-		pickerHandler)
+	picker := newMultiSelectPicker("Pick Value Overrides", models.BuildValueOverridePickerEntries(sids), false)
 	picker.footerWidget = func(theme *material.Theme) layout.Widget {
 		return func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -160,6 +123,22 @@ func NewValueOverridePickerDialog(
 	return picker
 }
 
+func newMultiSelectPicker(title string, entries []models.PickerEntry, grouped bool) *MultiSelectPicker {
+	picker := &MultiSelectPicker{
+		title:    title,
+		prefW:    unit.Dp(560),
+		prefH:    unit.Dp(560),
+		entries:  entries,
+		grouped:  grouped,
+		addLabel: "Add Selected",
+		selected: map[string]bool{},
+		clicks:   map[string]*widget.Clickable{},
+	}
+	picker.search.SingleLine = true
+	picker.scroll.Axis = layout.Vertical
+	return picker
+}
+
 func (this *MultiSelectPicker) Title() string { return this.title }
 
 func (this *MultiSelectPicker) PreferredSize() (unit.Dp, unit.Dp) { return this.prefW, this.prefH }
@@ -167,7 +146,7 @@ func (this *MultiSelectPicker) PreferredSize() (unit.Dp, unit.Dp) { return this.
 func (this *MultiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
 	if this.addBtn.Clicked(gtx) {
 		if this.onApply != nil {
-			this.onApply(this.selectedIDs())
+			this.onApply(models.GetSelectedPickerIDs(this.entries, this.selected))
 		}
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
@@ -176,7 +155,7 @@ func (this *MultiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
 
-	filter := this.pickerHandler.NormalizePickerFilter(this.search.Text())
+	filter := models.NormalizePickerFilter(this.search.Text())
 	rows := this.getRowWidgets(theme, filter)
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -205,7 +184,8 @@ func (this *MultiSelectPicker) Body(gtx layout.Context, theme *material.Theme) (
 }
 
 func (this *MultiSelectPicker) getButtonsWidget(theme *material.Theme) layout.Widget {
-	count := len(this.selectedIDs())
+	// This has no point making the array. Need to create a Linq.Count(predicate) so that the length is returned immediately
+	count := len(models.GetSelectedPickerIDs(this.entries, this.selected))
 	addText := this.addLabel
 	if count > 1 {
 		addText = fmt.Sprintf("%s (%d)", this.addLabel, count)
@@ -222,9 +202,9 @@ func (this *MultiSelectPicker) getButtonsWidget(theme *material.Theme) layout.Wi
 	}
 }
 
-// getRowWidgets renders the filtered row model produced by the picker handler.
+// getRowWidgets renders the filtered row model produced by the picker view model.
 func (this *MultiSelectPicker) getRowWidgets(theme *material.Theme, filter string) []layout.Widget {
-	model := this.pickerHandler.GetVisiblePickerRows(this.entries, filter, this.grouped)
+	model := models.GetVisiblePickerRows(this.entries, filter, this.grouped)
 
 	rows := make([]layout.Widget, 0, len(model))
 	for _, row := range model {
@@ -265,7 +245,7 @@ func (this *MultiSelectPicker) getGroupHeaderWidget(theme *material.Theme, group
 	}
 }
 
-func (this *MultiSelectPicker) getLeafRowWidget(theme *material.Theme, entry dtos.PickerEntryDto) layout.Widget {
+func (this *MultiSelectPicker) getLeafRowWidget(theme *material.Theme, entry models.PickerEntry) layout.Widget {
 	clk := this.clickFor(entry.ID)
 	return func(gtx layout.Context) layout.Dimensions {
 		if clk.Clicked(gtx) {
@@ -294,7 +274,7 @@ func (this *MultiSelectPicker) getLeafRowWidget(theme *material.Theme, entry dto
 
 // getLeafRowContentWidget lays out a leaf row's checkmark, optional badge,
 // label and optional trailing text.
-func getLeafRowContentWidget(theme *material.Theme, entry dtos.PickerEntryDto, checked bool) layout.Widget {
+func getLeafRowContentWidget(theme *material.Theme, entry models.PickerEntry, checked bool) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -343,8 +323,4 @@ func (this *MultiSelectPicker) clickFor(id string) *widget.Clickable {
 		this.clicks[id] = clk
 	}
 	return clk
-}
-
-func (this *MultiSelectPicker) selectedIDs() []string {
-	return this.pickerHandler.GetSelectedPickerIDs(this.entries, this.selected)
 }

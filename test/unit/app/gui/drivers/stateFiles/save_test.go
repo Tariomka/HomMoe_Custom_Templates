@@ -8,12 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenNoCurrentPathExists_SaveOpensSaveAsDialog(t *testing.T) {
+func TestWhenNoCurrentPathExists_SaveOpensSaveToDialog(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Act
 	state.Save()
@@ -27,7 +31,11 @@ func TestWhenNoCurrentPathExists_SaveDoesNotCallHandler(t *testing.T) {
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Act
 	state.Save()

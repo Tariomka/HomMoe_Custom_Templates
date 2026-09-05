@@ -1,6 +1,6 @@
 package preview
 
-import "image"
+import "github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 
 // Connection is a drawn link between two zones on the preview canvas.
 // Ctrl is the quadratic Bézier control point used to draw the edge: a lone
@@ -8,7 +8,7 @@ import "image"
 // edges between the same pair of zones spread their control points to either
 // side so each connection stays individually visible.
 type Connection struct {
-	Start, Ctrl, End image.Point
+	Start, Ctrl, End data.Vec2[float64]
 	Type             ConnectionType
 }
 

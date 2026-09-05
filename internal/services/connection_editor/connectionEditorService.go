@@ -6,33 +6,30 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ConnectionEditorService struct {
-	zoneClassifier zone_interfaces.IZoneClassifier
+	tierService zone_interfaces.IZoneTierService
 }
 
 func NewConnectionEditorService(
-	zoneClassifier zone_interfaces.IZoneClassifier) IConnectionEditorService {
-	return &ConnectionEditorService{zoneClassifier: zoneClassifier}
+	tierService zone_interfaces.IZoneTierService) IConnectionEditorService {
+	return &ConnectionEditorService{tierService: tierService}
 }
 
 func (this *ConnectionEditorService) NewDefaultConnection(
 	from string,
 	to string,
-	zones []entities.Zone,
-	playerZoneNames map[string]bool) entities.Connection {
-	quality := this.zoneClassifier.GetConnectionGuardQuality(
-		from,
-		to,
-		zones,
-		linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
-	return variant_content.NewConnectionBuilder().
+	zones []template_model.Zone,
+	playerZoneNames map[string]bool) template_model.Connection {
+	quality := this.tierService.GetConnectionGuardQuality(
+		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
+	connection := variant_content.NewConnectionBuilder().
 		WithFrom(from).
 		WithTo(to).
 		WithConnectionTypeDirect().
@@ -40,13 +37,14 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 		WithGuardZone(from).
 		WithGuardMatchGroup("rnd_guard_" + helpers.GetZoneLabel(from) + "_" + helpers.GetZoneLabel(to)).
 		WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
-		WithIsUserAdded().
 		Build()
+	connection.IsUserAdded = true
+	return connection
 }
 
 func (this *ConnectionEditorService) FindIsolatedZones(
-	zones []entities.Zone,
-	connections []entities.Connection) []string {
+	zones []template_model.Zone,
+	connections []template_model.Connection) []string {
 	var isolated []string
 
 	for _, zone := range zones {
@@ -64,7 +62,9 @@ func (this *ConnectionEditorService) FindIsolatedZones(
 	return isolated
 }
 
-func (this *ConnectionEditorService) ComputeHasErrors(zones []entities.Zone, connections []entities.Connection) bool {
+func (this *ConnectionEditorService) ComputeHasErrors(
+	zones []template_model.Zone,
+	connections []template_model.Connection) bool {
 	zoneNames := make(map[string]bool, len(zones))
 	for _, zone := range zones {
 		zoneNames[zone.Name] = true
@@ -78,8 +78,8 @@ func (this *ConnectionEditorService) ComputeHasErrors(zones []entities.Zone, con
 }
 
 func (this *ConnectionEditorService) HasDuplicateName(
-	connections []entities.Connection,
-	current *entities.Connection) bool {
+	connections []template_model.Connection,
+	current *template_model.Connection) bool {
 	if current == nil || len(current.Name) == 0 {
 		return false
 	}

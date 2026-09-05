@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -14,14 +14,14 @@ func TestWhenNoRuleOfThatTypeExists_TheRuleIsAppended(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := zone_content.NewZoneContentEditorService()
-	existing := models.ContentRuleRowSave{Name: gofakeit.Word()}
-	added := models.ContentRuleRowSave{Name: gofakeit.Sentence(2)}
+	existing := editor_state_model.ContentRuleRow{Name: gofakeit.Word()}
+	added := editor_state_model.ContentRuleRow{Name: gofakeit.Sentence(2)}
 
 	// Act
-	rules := service.UpsertContentRule([]models.ContentRuleRowSave{existing}, added)
+	rules := service.UpsertContentRule([]editor_state_model.ContentRuleRow{existing}, added)
 
 	// Assert
-	assert.Equal(t, []models.ContentRuleRowSave{existing, added}, rules)
+	assert.Equal(t, []editor_state_model.ContentRuleRow{existing, added}, rules)
 }
 
 func TestWhenARuleOfThatTypeExists_ItIsReplacedInPlace(t *testing.T) {
@@ -29,13 +29,13 @@ func TestWhenARuleOfThatTypeExists_ItIsReplacedInPlace(t *testing.T) {
 	// Arrange
 	service := zone_content.NewZoneContentEditorService()
 	name := gofakeit.Word()
-	replacement := models.ContentRuleRowSave{Name: name, DistanceName: gofakeit.Word()}
+	replacement := editor_state_model.ContentRuleRow{Name: name, DistanceName: gofakeit.Word()}
 
 	// Act
-	rules := service.UpsertContentRule([]models.ContentRuleRowSave{{Name: name}}, replacement)
+	rules := service.UpsertContentRule([]editor_state_model.ContentRuleRow{{Name: name}}, replacement)
 
 	// Assert
-	assert.Equal(t, []models.ContentRuleRowSave{replacement}, rules)
+	assert.Equal(t, []editor_state_model.ContentRuleRow{replacement}, rules)
 }
 
 func TestWhenTheExistingRuleNameDiffersOnlyByCase_ItIsStillReplaced(t *testing.T) {
@@ -43,11 +43,11 @@ func TestWhenTheExistingRuleNameDiffersOnlyByCase_ItIsStillReplaced(t *testing.T
 	// Arrange
 	service := zone_content.NewZoneContentEditorService()
 	name := gofakeit.Word()
-	replacement := models.ContentRuleRowSave{Name: strings.ToUpper(name)}
+	replacement := editor_state_model.ContentRuleRow{Name: strings.ToUpper(name)}
 
 	// Act
-	rules := service.UpsertContentRule([]models.ContentRuleRowSave{{Name: name}}, replacement)
+	rules := service.UpsertContentRule([]editor_state_model.ContentRuleRow{{Name: name}}, replacement)
 
 	// Assert
-	assert.Equal(t, []models.ContentRuleRowSave{replacement}, rules)
+	assert.Equal(t, []editor_state_model.ContentRuleRow{replacement}, rules)
 }

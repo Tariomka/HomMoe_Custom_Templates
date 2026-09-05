@@ -1,15 +1,15 @@
 package guiHandler_test
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type handlerDependenciesStub struct {
@@ -20,11 +20,10 @@ type handlerDependenciesStub struct {
 	contentRuleCalled         bool
 	zoneEditorCalled          bool
 	bonusCalled               bool
-	pickerCalled              bool
 }
 
 func (this *handlerDependenciesStub) GenerateTemplate(
-	dtos.EditorStateDto,
+	editor_state_dto.EditorStateDto,
 ) (dtos.TemplateLoadDto, error) {
 	this.templateWorkflowCalled = true
 	return dtos.TemplateLoadDto{}, nil
@@ -38,25 +37,24 @@ func (this *handlerDependenciesStub) UpdateTemplate(
 
 func (this *handlerDependenciesStub) ReapplyCastleSettings(
 	dtos.CastleSettingsReapplyRequestDto,
-) []entities.Zone {
+) []template_model.Zone {
 	return nil
 }
 
 func (this *handlerDependenciesStub) ValidateEditorState(
-	stateDto dtos.EditorStateDto,
+	stateDto editor_state_model.EditorState,
 	_ bool,
-) dtos.EditorStateValidationDto {
-	return dtos.EditorStateValidationDto{State: stateDto}
+) editor_state_dto.EditorStateValidationDto {
+	return editor_state_dto.EditorStateValidationDto{State: stateDto}
 }
 
 func (this *handlerDependenciesStub) LoadState(
 	_ string,
-	_ bool,
-) (*dtos.EditorStateDto, []string, error) {
-	return nil, nil, nil
+	_ bool) (*editor_state_dto.EditorStateValidationDto, error) {
+	return &editor_state_dto.EditorStateValidationDto{}, nil
 }
 
-func (this *handlerDependenciesStub) SaveState(dtos.EditorStateSaveDto) (string, error) {
+func (this *handlerDependenciesStub) SaveState(editor_state_dto.EditorStateSaveDto) (string, error) {
 	this.statePersistenceCalled = true
 	return "", nil
 }
@@ -68,9 +66,9 @@ func (this *handlerDependenciesStub) SaveTemplate(dtos.TemplateSaveDto) (string,
 
 func (this *handlerDependenciesStub) BuildPreviewLayout(
 	dtos.PreviewLayoutRequestDto,
-) (dtos.PreviewLayoutDto, error) {
+) dtos.PreviewLayoutDto {
 	this.previewCalled = true
-	return dtos.PreviewLayoutDto{}, nil
+	return dtos.PreviewLayoutDto{}
 }
 
 func (this *handlerDependenciesStub) GetContentRuleEditorOptions(
@@ -82,31 +80,31 @@ func (this *handlerDependenciesStub) GetContentRuleEditorOptions(
 
 func (this *handlerDependenciesStub) DescribeContentRule(
 	models.SidMapping,
-	models.ContentRuleRowSave,
+	editor_state_model.ContentRuleRow,
 ) dtos.ContentRuleDescriptionDto {
 	return dtos.ContentRuleDescriptionDto{}
 }
 
 func (this *handlerDependenciesStub) GetZoneEditorOptions(
-	dtos.EditorStateDto,
+	editor_state_dto.EditorStateDto,
 	int,
 ) dtos.ZoneEditorOptionsDto {
 	return dtos.ZoneEditorOptionsDto{}
 }
 
-func (this *handlerDependenciesStub) CountZoneCastles(entities.Zone) int {
+func (this *handlerDependenciesStub) CountZoneCastles(template_model.Zone) int {
 	this.zoneEditorCalled = true
 	return 0
 }
 
-func (this *handlerDependenciesStub) GetZoneQuality(entities.Zone) neutral_zone.Quality {
+func (this *handlerDependenciesStub) GetZoneQuality(template_model.Zone) neutral_zone.Quality {
 	return neutral_zone.QualityUnknown
 }
 
 func (this *handlerDependenciesStub) GetZoneConnectionGuardQuality(
 	string,
 	string,
-	[]entities.Zone,
+	[]template_model.Zone,
 	map[string]bool,
 ) neutral_zone.Quality {
 	return neutral_zone.QualityUnknown
@@ -114,48 +112,48 @@ func (this *handlerDependenciesStub) GetZoneConnectionGuardQuality(
 
 func (this *handlerDependenciesStub) ApplyZoneEditorQuality(
 	request dtos.ZoneEditorQualityRequestDto,
-) entities.Zone {
+) template_model.Zone {
 	return request.Zone
 }
 
 func (this *handlerDependenciesStub) DescribeZoneEditorGraph(
-	[]entities.Zone,
-	[]entities.Connection,
+	[]template_model.Zone,
+	[]template_model.Connection,
 ) dtos.ZoneEditorGraphDto {
 	return dtos.ZoneEditorGraphDto{}
 }
 
 func (this *handlerDependenciesStub) ComputeHasErrors(
-	[]entities.Zone,
-	[]entities.Connection,
+	[]template_model.Zone,
+	[]template_model.Connection,
 ) bool {
 	return false
 }
 
 func (this *handlerDependenciesStub) RebuildZoneConnectionRoads(
-	[]entities.Zone,
-	[]entities.Connection,
+	[]template_model.Zone,
+	[]template_model.Connection,
 ) {
 }
 
 func (this *handlerDependenciesStub) CreateZoneEditorConnection(
 	dtos.ZoneEditorConnectionRequestDto,
-) entities.Connection {
-	return entities.Connection{}
+) template_model.Connection {
+	return template_model.Connection{}
 }
 
 func (this *handlerDependenciesStub) FindOpenZonePosition([][2]float64) [2]float64 {
 	return [2]float64{}
 }
 
-func (this *handlerDependenciesStub) GetNextZoneLabel([]entities.Zone) string {
+func (this *handlerDependenciesStub) GetNextZoneLabel([]template_model.Zone) string {
 	return ""
 }
 
 func (this *handlerDependenciesStub) CreateZoneEditorNeutralZone(
 	dtos.ZoneEditorNeutralZoneRequestDto,
-) entities.Zone {
-	return entities.Zone{}
+) template_model.Zone {
+	return template_model.Zone{}
 }
 
 func (this *handlerDependenciesStub) CanDeleteZone(string, map[string]bool) bool {
@@ -178,11 +176,11 @@ func (this *handlerDependenciesStub) HitTestZoneEditorNode(dtos.ZoneEditorHitTes
 	return ""
 }
 
-func (this *handlerDependenciesStub) HitTestZoneEditorEdge(image.Point, []models.ZoneEditorEdge) int {
+func (this *handlerDependenciesStub) HitTestZoneEditorEdge(models.Position, []models.ZoneEditorEdge) int {
 	return -1
 }
 
-func (this *handlerDependenciesStub) GetZoneEditorGridStep(int) float64 {
+func (this *handlerDependenciesStub) GetZoneEditorGridStep(float64) float64 {
 	return 0
 }
 
@@ -222,21 +220,21 @@ func (this *handlerDependenciesStub) ComposeContentRule(
 }
 
 func (this *handlerDependenciesStub) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave,
-) []models.ContentRuleRowSave {
+	rules []editor_state_model.ContentRuleRow,
+	rule editor_state_model.ContentRuleRow,
+) []editor_state_model.ContentRuleRow {
 	this.contentRuleCalled = true
 	return append(rules, rule)
 }
 
-func (this *handlerDependenciesStub) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRowSave {
+func (this *handlerDependenciesStub) GetDefaultContentRules(models.SidMapping) []editor_state_model.ContentRuleRow {
 	this.contentRuleCalled = true
 	return nil
 }
 
 func (this *handlerDependenciesStub) GetContentRuleMarkers(
 	models.SidMapping,
-	[]models.ContentRuleRowSave,
+	[]editor_state_model.ContentRuleRow,
 ) string {
 	this.contentRuleCalled = true
 	return ""
@@ -244,7 +242,7 @@ func (this *handlerDependenciesStub) GetContentRuleMarkers(
 
 func (this *handlerDependenciesStub) GetContentRowDisplayName(
 	content models.SidMapping,
-	_ []models.ContentRuleRowSave,
+	_ []editor_state_model.ContentRuleRow,
 ) string {
 	this.contentRuleCalled = true
 	return content.Name
@@ -260,47 +258,6 @@ func (this *handlerDependenciesStub) ClampContentCount(count int, _ int) int {
 	return count
 }
 
-func (this *handlerDependenciesStub) BuildItemPickerEntries(
-	[]dtos.PickerItemDto,
-) []dtos.PickerEntryDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) BuildSpellPickerEntries(
-	[]dtos.PickerSpellDto,
-) []dtos.PickerEntryDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) BuildValueOverridePickerEntries([]string) []dtos.PickerEntryDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) NormalizePickerFilter(text string) string {
-	this.pickerCalled = true
-	return text
-}
-
-func (this *handlerDependenciesStub) GetVisiblePickerRows(
-	[]dtos.PickerEntryDto,
-	string,
-	bool,
-) []dtos.PickerRowDto {
-	this.pickerCalled = true
-	return nil
-}
-
-func (this *handlerDependenciesStub) GetSelectedPickerIDs(
-	[]dtos.PickerEntryDto,
-	map[string]bool,
-) []string {
-	this.pickerCalled = true
-	return nil
-}
-
 func (this *handlerDependenciesStub) newHandler() handler_interfaces.IGuiHandler {
-	return handlers.NewGuiHandler(this, this, this, this, this, this, this)
+	return handlers.NewGuiHandler(this, this, this, this, this, this)
 }

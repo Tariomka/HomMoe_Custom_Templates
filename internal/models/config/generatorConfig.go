@@ -1,17 +1,12 @@
 package config
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 const defaultTemplateName = "Custom Template"
 
-// GeneratorConfig is the input model for the template generator
-//
-// All values here describe a single template generation request - the GUI and
-// CLI build one of these and hand it to TemplateGenerator.
 type GeneratorConfig struct {
 	TemplateName string
 	GameMode     string // [registry.gameModes]
@@ -32,8 +27,6 @@ type GeneratorConfig struct {
 	BannedMagics       string
 	ValueOverridesText string
 
-	// Configurable game-start bonuses (Wood/Ore/spell/etc.). Parsed from
-	// SettingsFile.BonusesJson by the loader.
 	Bonuses []BonusEntry
 
 	Topology          MapTopology
@@ -46,19 +39,12 @@ type GeneratorConfig struct {
 	GladiatorArenaRules *GladiatorArenaRules
 	TournamentRules     *TournamentRules
 
-	// Optional extra mandatory content seeded by the UI; appended to the
-	// player-zone defaults built by ZoneContentManager.
-	PlayerZoneMandatoryContent    []entities.MandatoryContentItem
-	LowestNeutralMandatoryContent []entities.MandatoryContentItem
-	LowNeutralMandatoryContent    []entities.MandatoryContentItem
-	MediumNeutralMandatoryContent []entities.MandatoryContentItem
-	HighNeutralMandatoryContent   []entities.MandatoryContentItem
-	HubZoneMandatoryContent       []entities.MandatoryContentItem
-
-	// ShufflePlayerZones randomizes which physical zone each player starts in.
-	// Enabled by default so generated templates vary between runs; tests can
-	// disable it to obtain deterministic output.
-	ShufflePlayerZones bool
+	PlayerZoneMandatoryContent    []template_model.MandatoryContentItem
+	LowestNeutralMandatoryContent []template_model.MandatoryContentItem
+	LowNeutralMandatoryContent    []template_model.MandatoryContentItem
+	MediumNeutralMandatoryContent []template_model.MandatoryContentItem
+	HighNeutralMandatoryContent   []template_model.MandatoryContentItem
+	HubZoneMandatoryContent       []template_model.MandatoryContentItem
 }
 
 func NewGeneratorConfig() *GeneratorConfig {
@@ -76,7 +62,7 @@ func NewGeneratorConfig() *GeneratorConfig {
 		RemoteFootholdCount:   1,
 		GenerateRoads:         true,
 		MaxPortalConnections:  32,
-		Topology:              config_inner.TopologyCircles,
+		Topology:              TopologyCircles,
 		FactionLawsExpPercent: 100,
 		AstrologyExpPercent:   100,
 		ZoneConfiguration: ZoneConfig{
@@ -105,7 +91,6 @@ func NewGeneratorConfig() *GeneratorConfig {
 			PointsToWin:        2,
 			SaveArmy:           true,
 		},
-		ShufflePlayerZones: true,
 	}
 }
 
@@ -125,7 +110,7 @@ func (this *GeneratorConfig) IsCityHoldMode() bool {
 }
 
 func (this *GeneratorConfig) IsHubCityToHold() bool {
-	return (this.Topology == config_inner.TopologyHubAndSpoke || this.Topology == config_inner.TopologyGeometricHub) &&
+	return (this.Topology == TopologyHubAndSpoke || this.Topology == TopologyGeometricHub) &&
 		this.IsCityHoldMode()
 }
 
@@ -156,6 +141,7 @@ func (this *GeneratorConfig) GetGameEndConditions() GameEndConditions {
 	if this.GameEndConditions != nil {
 		return *this.GameEndConditions
 	}
+
 	return GameEndConditions{
 		VictoryCondition: registry.GetWinningConditionValues().Standard,
 		LostStartCityDay: 3,
@@ -167,6 +153,7 @@ func (this *GeneratorConfig) GetGladiatorArenaRules() GladiatorArenaRules {
 	if this.GladiatorArenaRules != nil {
 		return *this.GladiatorArenaRules
 	}
+
 	return GladiatorArenaRules{}
 }
 
@@ -174,6 +161,7 @@ func (this *GeneratorConfig) GetTournamentRules() TournamentRules {
 	if this.TournamentRules != nil {
 		return *this.TournamentRules
 	}
+
 	return TournamentRules{}
 }
 

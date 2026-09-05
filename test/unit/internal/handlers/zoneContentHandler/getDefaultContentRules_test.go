@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +18,7 @@ func TestWhenDefaultRulesAreRequested_TheEditorOptionsAreHandedToTheService(t *t
 	options := dtos.ContentRuleEditorOptionsDto{
 		Rules: []dtos.ContentRuleOptionDto{{Key: dtos.ContentRuleKeyGuarded, Name: gofakeit.Word()}},
 	}
-	expected := []models.ContentRuleRowSave{{Name: gofakeit.Word()}}
+	expected := []editor_state_model.ContentRuleRow{{Name: gofakeit.Word()}}
 	fixture.contentRules.GetContentRuleEditorOptionsFunc = func(models.SidMapping) dtos.ContentRuleEditorOptionsDto {
 		return options
 	}

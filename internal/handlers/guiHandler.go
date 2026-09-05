@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type GUIHandler struct {
@@ -18,7 +18,6 @@ type GUIHandler struct {
 	contentRuleHandler handler_interfaces.IZoneContentHandler
 	zoneEditorHandler  handler_interfaces.IZoneEditorHandler
 	bonusHandler       handler_interfaces.IBonusHandler
-	pickerHandler      handler_interfaces.IPickerHandler
 }
 
 func NewGuiHandler(
@@ -27,8 +26,7 @@ func NewGuiHandler(
 	previewHandler handler_interfaces.IPreviewHandler,
 	contentRuleHandler handler_interfaces.IZoneContentHandler,
 	zoneEditorHandler handler_interfaces.IZoneEditorHandler,
-	bonusHandler handler_interfaces.IBonusHandler,
-	pickerHandler handler_interfaces.IPickerHandler) handler_interfaces.IGuiHandler {
+	bonusHandler handler_interfaces.IBonusHandler) handler_interfaces.IGuiHandler {
 	return &GUIHandler{
 		templateHandler:    templateHandler,
 		stateHandler:       stateHandler,
@@ -36,82 +34,56 @@ func NewGuiHandler(
 		contentRuleHandler: contentRuleHandler,
 		zoneEditorHandler:  zoneEditorHandler,
 		bonusHandler:       bonusHandler,
-		pickerHandler:      pickerHandler,
 	}
 }
 
-func (this *GUIHandler) BuildItemPickerEntries(items []dtos.PickerItemDto) []dtos.PickerEntryDto {
-	return this.pickerHandler.BuildItemPickerEntries(items)
-}
-
-func (this *GUIHandler) BuildSpellPickerEntries(spells []dtos.PickerSpellDto) []dtos.PickerEntryDto {
-	return this.pickerHandler.BuildSpellPickerEntries(spells)
-}
-
-func (this *GUIHandler) BuildValueOverridePickerEntries(sids []string) []dtos.PickerEntryDto {
-	return this.pickerHandler.BuildValueOverridePickerEntries(sids)
-}
-
-func (this *GUIHandler) NormalizePickerFilter(text string) string {
-	return this.pickerHandler.NormalizePickerFilter(text)
-}
-
-func (this *GUIHandler) GetVisiblePickerRows(
-	entries []dtos.PickerEntryDto,
-	filter string,
-	grouped bool) []dtos.PickerRowDto {
-	return this.pickerHandler.GetVisiblePickerRows(entries, filter, grouped)
-}
-
-func (this *GUIHandler) GetSelectedPickerIDs(
-	entries []dtos.PickerEntryDto,
-	selected map[string]bool) []string {
-	return this.pickerHandler.GetSelectedPickerIDs(entries, selected)
-}
-
-func (this *GUIHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	return this.templateHandler.GenerateTemplate(stateDto)
+func (this *GUIHandler) GenerateTemplate(
+	state editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
+	return this.templateHandler.GenerateTemplate(state)
 }
 
 func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {
 	return this.templateHandler.UpdateTemplate(templateDto)
 }
 
-func (this *GUIHandler) ReapplyCastleSettings(request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
+func (this *GUIHandler) ReapplyCastleSettings(
+	request dtos.CastleSettingsReapplyRequestDto) []template_model.Zone {
 	return this.templateHandler.ReapplyCastleSettings(request)
 }
 
-func (this *GUIHandler) GetZoneEditorOptions(state dtos.EditorStateDto, totalZoneCount int) dtos.ZoneEditorOptionsDto {
+func (this *GUIHandler) GetZoneEditorOptions(
+	state editor_state_dto.EditorStateDto,
+	totalZoneCount int) dtos.ZoneEditorOptionsDto {
 	return this.zoneEditorHandler.GetZoneEditorOptions(state, totalZoneCount)
 }
 
-func (this *GUIHandler) CountZoneCastles(zone entities.Zone) int {
+func (this *GUIHandler) CountZoneCastles(zone template_model.Zone) int {
 	return this.zoneEditorHandler.CountZoneCastles(zone)
 }
 
-func (this *GUIHandler) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *GUIHandler) GetZoneQuality(zone template_model.Zone) neutral_zone.Quality {
 	return this.zoneEditorHandler.GetZoneQuality(zone)
 }
 
 func (this *GUIHandler) GetZoneConnectionGuardQuality(
 	from, to string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerZoneNames map[string]bool) neutral_zone.Quality {
 	return this.zoneEditorHandler.GetZoneConnectionGuardQuality(from, to, zones, playerZoneNames)
 }
 
-func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) entities.Zone {
+func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) template_model.Zone {
 	return this.zoneEditorHandler.ApplyZoneEditorQuality(request)
 }
 
 func (this *GUIHandler) DescribeZoneEditorGraph(
-	zones []entities.Zone,
-	connections []entities.Connection) dtos.ZoneEditorGraphDto {
+	zones []template_model.Zone,
+	connections []template_model.Connection) dtos.ZoneEditorGraphDto {
 	return this.zoneEditorHandler.DescribeZoneEditorGraph(zones, connections)
 }
 
 func (this *GUIHandler) CreateZoneEditorConnection(
-	request dtos.ZoneEditorConnectionRequestDto) entities.Connection {
+	request dtos.ZoneEditorConnectionRequestDto) template_model.Connection {
 	return this.zoneEditorHandler.CreateZoneEditorConnection(request)
 }
 
@@ -119,11 +91,11 @@ func (this *GUIHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
 	return this.zoneEditorHandler.FindOpenZonePosition(occupied)
 }
 
-func (this *GUIHandler) GetNextZoneLabel(zones []entities.Zone) string {
+func (this *GUIHandler) GetNextZoneLabel(zones []template_model.Zone) string {
 	return this.zoneEditorHandler.GetNextZoneLabel(zones)
 }
 
-func (this *GUIHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone {
+func (this *GUIHandler) CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone {
 	return this.zoneEditorHandler.CreateZoneEditorNeutralZone(request)
 }
 
@@ -135,8 +107,7 @@ func (this *GUIHandler) RemoveZoneEditorZone(request dtos.ZoneEditorRemoveReques
 	return this.zoneEditorHandler.RemoveZoneEditorZone(request)
 }
 
-func (this *GUIHandler) BuildZoneEditorGeometry(
-	request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
+func (this *GUIHandler) BuildZoneEditorGeometry(request dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry {
 	return this.zoneEditorHandler.BuildZoneEditorGeometry(request)
 }
 
@@ -144,16 +115,15 @@ func (this *GUIHandler) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequ
 	return this.zoneEditorHandler.HitTestZoneEditorNode(request)
 }
 
-func (this *GUIHandler) HitTestZoneEditorEdge(position image.Point, edges []models.ZoneEditorEdge) int {
+func (this *GUIHandler) HitTestZoneEditorEdge(position models.Position, edges []models.ZoneEditorEdge) int {
 	return this.zoneEditorHandler.HitTestZoneEditorEdge(position, edges)
 }
 
-func (this *GUIHandler) GetZoneEditorGridStep(zoneRadius int) float64 {
+func (this *GUIHandler) GetZoneEditorGridStep(zoneRadius float64) float64 {
 	return this.zoneEditorHandler.GetZoneEditorGridStep(zoneRadius)
 }
 
-func (this *GUIHandler) SnapZoneEditorPosition(
-	request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
+func (this *GUIHandler) SnapZoneEditorPosition(request dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult {
 	return this.zoneEditorHandler.SnapZoneEditorPosition(request)
 }
 
@@ -161,8 +131,7 @@ func (this *GUIHandler) DescribeExistingBonuses(existing []config.BonusEntry) dt
 	return this.bonusHandler.DescribeExistingBonuses(existing)
 }
 
-func (this *GUIHandler) BuildBonusEntries(
-	request dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto {
+func (this *GUIHandler) BuildBonusEntries(request dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto {
 	return this.bonusHandler.BuildBonusEntries(request)
 }
 
@@ -180,7 +149,7 @@ func (this *GUIHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (string, 
 	return this.templateHandler.SaveTemplate(templateDto)
 }
 
-func (this *GUIHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error) {
+func (this *GUIHandler) BuildPreviewLayout(request dtos.PreviewLayoutRequestDto) dtos.PreviewLayoutDto {
 	return this.previewHandler.BuildPreviewLayout(request)
 }
 
@@ -190,7 +159,7 @@ func (this *GUIHandler) GetContentRuleEditorOptions(content models.SidMapping) d
 
 func (this *GUIHandler) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
+	savedRule editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto {
 	return this.contentRuleHandler.DescribeContentRule(content, savedRule)
 }
 
@@ -200,24 +169,24 @@ func (this *GUIHandler) ComposeContentRule(
 }
 
 func (this *GUIHandler) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave) []models.ContentRuleRowSave {
+	rules []editor_state_model.ContentRuleRow,
+	rule editor_state_model.ContentRuleRow) []editor_state_model.ContentRuleRow {
 	return this.contentRuleHandler.UpsertContentRule(rules, rule)
 }
 
-func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []models.ContentRuleRowSave {
+func (this *GUIHandler) GetDefaultContentRules(content models.SidMapping) []editor_state_model.ContentRuleRow {
 	return this.contentRuleHandler.GetDefaultContentRules(content)
 }
 
 func (this *GUIHandler) GetContentRuleMarkers(
 	content models.SidMapping,
-	rules []models.ContentRuleRowSave) string {
+	rules []editor_state_model.ContentRuleRow) string {
 	return this.contentRuleHandler.GetContentRuleMarkers(content, rules)
 }
 
 func (this *GUIHandler) GetContentRowDisplayName(
 	content models.SidMapping,
-	rules []models.ContentRuleRowSave) string {
+	rules []editor_state_model.ContentRuleRow) string {
 	return this.contentRuleHandler.GetContentRowDisplayName(content, rules)
 }
 
@@ -230,15 +199,15 @@ func (this *GUIHandler) ClampContentCount(count int, maxCount int) int {
 }
 
 func (this *GUIHandler) ValidateEditorState(
-	stateDto dtos.EditorStateDto,
-	fixIssues bool) dtos.EditorStateValidationDto {
-	return this.stateHandler.ValidateEditorState(stateDto, fixIssues)
+	state editor_state_model.EditorState,
+	fixIssues bool) editor_state_dto.EditorStateValidationDto {
+	return this.stateHandler.ValidateEditorState(state, fixIssues)
 }
 
-func (this *GUIHandler) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
+func (this *GUIHandler) LoadState(path string, fixIssues bool) (*editor_state_dto.EditorStateValidationDto, error) {
 	return this.stateHandler.LoadState(path, fixIssues)
 }
 
-func (this *GUIHandler) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
+func (this *GUIHandler) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {
 	return this.stateHandler.SaveState(stateDto)
 }

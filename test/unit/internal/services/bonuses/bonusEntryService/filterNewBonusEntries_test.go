@@ -3,6 +3,7 @@ package bonusEntryService_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/bonuses"
 	"github.com/brianvoe/gofakeit/v7"
@@ -18,7 +19,7 @@ func TestWhenAnEntryIsAlreadyKnown_ItIsDroppedFromTheResult(t *testing.T) {
 	// Act
 	fresh := service.FilterNewBonusEntries(
 		[]config.BonusEntry{known},
-		map[string]bool{known.GetHash(): true})
+		map[string]bool{config_helpers.GetHash(known): true})
 
 	// Assert
 	assert.Empty(t, fresh)
@@ -34,7 +35,7 @@ func TestWhenAnEntryIsUnknown_ItIsKeptInTheResult(t *testing.T) {
 	// Act
 	fresh := service.FilterNewBonusEntries(
 		[]config.BonusEntry{known, unknown},
-		map[string]bool{known.GetHash(): true})
+		map[string]bool{config_helpers.GetHash(known): true})
 
 	// Assert
 	assert.Equal(t, []config.BonusEntry{unknown}, fresh)

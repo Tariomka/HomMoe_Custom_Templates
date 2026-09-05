@@ -1,9 +1,9 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -14,21 +14,21 @@ type ZoneEditorServiceMock struct {
 	mock.Mock
 }
 
-func (this *ZoneEditorServiceMock) EnsureConnectionNames(connections []entities.Connection) {
+func (this *ZoneEditorServiceMock) EnsureConnectionNames(connections []template_model.Connection) {
 	this.Called(connections)
 }
 
 func (this *ZoneEditorServiceMock) RebuildZoneConnectionRoads(
-	zones []entities.Zone,
-	connections []entities.Connection) {
+	zones []template_model.Zone,
+	connections []template_model.Connection) {
 	this.Called(zones, connections)
 }
 
-func (this *ZoneEditorServiceMock) RebuildCastleRoads(zone *entities.Zone) {
+func (this *ZoneEditorServiceMock) RebuildCastleRoads(zone *template_model.Zone) {
 	this.Called(zone)
 }
 
-func (this *ZoneEditorServiceMock) NextFreeZoneLabel(zones []entities.Zone) string {
+func (this *ZoneEditorServiceMock) NextFreeZoneLabel(zones []template_model.Zone) string {
 	arguments := this.Called(zones)
 	return arguments.String(0)
 }
@@ -38,19 +38,19 @@ func (this *ZoneEditorServiceMock) NewDefaultNeutralZone(
 	quality neutral_zone.Quality,
 	castleCount int,
 	generateRoads bool,
-	tuning models.GenerationTuning) entities.Zone {
+	tuning models.GenerationTuning) template_model.Zone {
 	arguments := this.Called(label, quality, castleCount, generateRoads, tuning)
-	zone, _ := arguments.Get(0).(entities.Zone)
+	zone, _ := arguments.Get(0).(template_model.Zone)
 	return zone
 }
 
-func (this *ZoneEditorServiceMock) CountZoneCastles(zone entities.Zone) int {
+func (this *ZoneEditorServiceMock) CountZoneCastles(zone template_model.Zone) int {
 	arguments := this.Called(zone)
 	return arguments.Int(0)
 }
 
 func (this *ZoneEditorServiceMock) ApplyNeutralZoneQuality(
-	zone *entities.Zone,
+	zone *template_model.Zone,
 	quality neutral_zone.Quality,
 	castleCount int,
 	tuning models.GenerationTuning) {
@@ -63,12 +63,12 @@ func (this *ZoneEditorServiceMock) CanDeleteZone(zoneName string, playerZoneName
 }
 
 func (this *ZoneEditorServiceMock) RemoveZone(
-	zones []entities.Zone,
-	connections []entities.Connection,
-	zoneName string) ([]entities.Zone, []entities.Connection) {
+	zones []template_model.Zone,
+	connections []template_model.Connection,
+	zoneName string) ([]template_model.Zone, []template_model.Connection) {
 	arguments := this.Called(zones, connections, zoneName)
-	remainingZones, _ := arguments.Get(0).([]entities.Zone)
-	remainingConnections, _ := arguments.Get(1).([]entities.Connection)
+	remainingZones, _ := arguments.Get(0).([]template_model.Zone)
+	remainingConnections, _ := arguments.Get(1).([]template_model.Connection)
 	return remainingZones, remainingConnections
 }
 

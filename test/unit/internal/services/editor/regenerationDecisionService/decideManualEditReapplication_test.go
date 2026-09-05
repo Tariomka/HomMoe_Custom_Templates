@@ -3,23 +3,14 @@ package regenerationDecisionService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
-
-func manualZoneSaves() []editor_state_dto.ManualZoneSave {
-	return []editor_state_dto.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
-}
-
-func stateWithManualEdits() *dtos.EditorStateDto {
-	state := defaultState()
-	state.ManualZones = manualZoneSaves()
-	return state
-}
 
 func TestWhenNoPreviousGenerationAndManualEditsExist_Reapplies(t *testing.T) {
 	t.Parallel()
@@ -30,8 +21,8 @@ func TestWhenNoPreviousGenerationAndManualEditsExist_Reapplies(t *testing.T) {
 	decision := service.DecideManualEditReapplication(nil, stateWithManualEdits())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{
-		ReapplyWithCastleChanges: &editor_state_dto.CastleSettingChanges{},
+	assert.Equal(t, regeneration.ManualEditDecision{
+		ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{},
 	}, decision)
 }
 
@@ -44,7 +35,7 @@ func TestWhenNoPreviousGenerationAndNoManualEdits_DoesNotReapply(t *testing.T) {
 	decision := service.DecideManualEditReapplication(nil, defaultState())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{}, decision)
+	assert.Equal(t, regeneration.ManualEditDecision{}, decision)
 }
 
 func TestWhenNoManualEditsExist_DoesNotReapply(t *testing.T) {
@@ -56,7 +47,7 @@ func TestWhenNoManualEditsExist_DoesNotReapply(t *testing.T) {
 	decision := service.DecideManualEditReapplication(defaultState(), defaultState())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{}, decision)
+	assert.Equal(t, regeneration.ManualEditDecision{}, decision)
 }
 
 func TestWhenManualEditsExistAndLayoutUnchanged_Reapplies(t *testing.T) {
@@ -68,8 +59,8 @@ func TestWhenManualEditsExistAndLayoutUnchanged_Reapplies(t *testing.T) {
 	decision := service.DecideManualEditReapplication(defaultState(), stateWithManualEdits())
 
 	// Assert
-	assert.Equal(t, dtos.ManualEditDecisionDto{
-		ReapplyWithCastleChanges: &editor_state_dto.CastleSettingChanges{},
+	assert.Equal(t, regeneration.ManualEditDecision{
+		ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{},
 	}, decision)
 }
 
@@ -80,7 +71,7 @@ func TestWhenManualEditsExistButLayoutChanged_DoesNotReapply(t *testing.T) {
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	current := layoutChangedState()
-	current.ManualZones = manualZoneSaves()
+	current.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
 
 	// Act
 	decision := service.DecideManualEditReapplication(defaultState(), current)
@@ -102,7 +93,7 @@ func TestWhenCastleOptionChangedSinceGeneration_ReportsCastleChange(t *testing.T
 
 	// Assert
 	assert.Equal(t,
-		&editor_state_dto.CastleSettingChanges{PlayerCastles: true},
+		&editor_state_model.CastleSettingChanges{PlayerCastles: true},
 		decision.ReapplyWithCastleChanges)
 }
 
@@ -115,5 +106,15 @@ func TestWhenCastleOptionsUnchangedSinceGeneration_ReportsNoCastleChange(t *test
 	decision := service.DecideManualEditReapplication(defaultState(), stateWithManualEdits())
 
 	// Assert
-	assert.Equal(t, &editor_state_dto.CastleSettingChanges{}, decision.ReapplyWithCastleChanges)
+	assert.Equal(t, &editor_state_model.CastleSettingChanges{}, decision.ReapplyWithCastleChanges)
+}
+
+func manualZoneSaves() []editor_state.ManualZoneSave {
+	return []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
+}
+
+func stateWithManualEdits() *editor_state_model.EditorState {
+	state := defaultState()
+	state.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
+	return state
 }

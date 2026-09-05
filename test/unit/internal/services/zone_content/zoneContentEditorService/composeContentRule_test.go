@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +54,7 @@ func TestWhenADistanceToRoadRuleIsComposed_ItCarriesTheSelectedDistance(t *testi
 	})
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: name, DistanceName: distance}, result.Rule)
+	assert.Equal(t, editor_state_model.ContentRuleRow{Name: name, DistanceName: distance}, result.Rule)
 }
 
 func TestWhenADistanceToTownRuleIsComposed_ItCarriesTheSelectedDistance(t *testing.T) {
@@ -71,7 +71,7 @@ func TestWhenADistanceToTownRuleIsComposed_ItCarriesTheSelectedDistance(t *testi
 	})
 
 	// Assert
-	assert.Equal(t, models.ContentRuleRowSave{Name: name, DistanceName: distance}, result.Rule)
+	assert.Equal(t, editor_state_model.ContentRuleRow{Name: name, DistanceName: distance}, result.Rule)
 }
 
 func TestWhenAGuardedRuleIsComposed_ItCarriesTheCheckboxValue(t *testing.T) {

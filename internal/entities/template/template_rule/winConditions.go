@@ -1,6 +1,9 @@
 package template_rule
 
-import "encoding/json"
+import (
+	"encoding/json/jsontext"
+	"encoding/json/v2"
+)
 
 // WinConditions enumerates every observed win-condition toggle and tuning value.
 // All fields are optional in the source JSON; absent fields keep their Go zero value.
@@ -38,17 +41,22 @@ type WinConditions struct {
 // where the receiver currently holds its zero value (so a nested `winConditions` block
 // always wins over flat sibling keys).
 func (this *WinConditions) MergeWinConditionsIfDoesNotExist(source WinConditions) {
-	destinationBytes, err := json.Marshal(*this)
+	// v2 reads `omitempty` as "would encode as an empty JSON value", so false and
+	// 0 are written out; OmitZeroStructFields is what makes an absent key mean an
+	// unset field again.
+	omitZero := json.OmitZeroStructFields(true)
+
+	destinationBytes, err := json.Marshal(*this, omitZero)
 	if err != nil {
 		return
 	}
 
-	sourceBytes, err := json.Marshal(source)
+	sourceBytes, err := json.Marshal(source, omitZero)
 	if err != nil {
 		return
 	}
 
-	var destinationMap, sourceMap map[string]json.RawMessage
+	var destinationMap, sourceMap map[string]jsontext.Value
 	if err = json.Unmarshal(destinationBytes, &destinationMap); err != nil {
 		return
 	}

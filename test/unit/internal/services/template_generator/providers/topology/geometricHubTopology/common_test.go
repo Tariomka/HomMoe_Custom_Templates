@@ -4,16 +4,16 @@ import (
 	"math"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
 // buildGeoHubVariant runs the Geometric Hub topology service with the given
 // players and plans using default generator options (no random portals).
-func buildGeoHubVariant(playerLabels []string, plans neutral_zone.Plans) entities.Variant {
+func buildGeoHubVariant(playerLabels []string, plans neutral_zone.Plans) template_model.Variant {
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
@@ -23,7 +23,7 @@ func buildGeoHubVariant(playerLabels []string, plans neutral_zone.Plans) entitie
 }
 
 // neighborsOf collects the names of every zone connected to zoneName.
-func neighborsOf(variant entities.Variant, zoneName string) []string {
+func neighborsOf(variant template_model.Variant, zoneName string) []string {
 	var neighbors []string
 	for _, connection := range variant.Connections {
 		if connection.From == zoneName {
@@ -36,8 +36,8 @@ func neighborsOf(variant entities.Variant, zoneName string) []string {
 }
 
 // hubConnections returns every connection with the Hub as an endpoint.
-func hubConnections(variant entities.Variant) []entities.Connection {
-	var connections []entities.Connection
+func hubConnections(variant template_model.Variant) []template_model.Connection {
+	var connections []template_model.Connection
 	for _, connection := range variant.Connections {
 		if connection.From == "Hub" || connection.To == "Hub" {
 			connections = append(connections, connection)
@@ -47,12 +47,12 @@ func hubConnections(variant entities.Variant) []entities.Connection {
 }
 
 // hubPortalTargets returns the names of the zones connected to the Hub.
-func hubPortalTargets(variant entities.Variant) []string {
+func hubPortalTargets(variant template_model.Variant) []string {
 	return neighborsOf(variant, "Hub")
 }
 
 // spawnNeighborsOf filters the neighbors of zoneName down to spawn zones.
-func spawnNeighborsOf(variant entities.Variant, zoneName string) []string {
+func spawnNeighborsOf(variant template_model.Variant, zoneName string) []string {
 	var spawns []string
 	for _, neighbor := range neighborsOf(variant, zoneName) {
 		if strings.HasPrefix(neighbor, "Spawn-") {
@@ -79,7 +79,7 @@ func mixedPlans(mediumLabels, lowLabels, highLabels []string) neutral_zone.Plans
 }
 
 // positionOf returns the generator position of the named zone.
-func positionOf(variant entities.Variant, zoneName string) [2]float64 {
+func positionOf(variant template_model.Variant, zoneName string) [2]float64 {
 	for _, zone := range variant.Zones {
 		if zone.Name == zoneName && zone.GeneratorPosition != nil {
 			return *zone.GeneratorPosition
@@ -90,7 +90,7 @@ func positionOf(variant entities.Variant, zoneName string) [2]float64 {
 }
 
 // distanceBetween returns the Euclidean distance between two zones' positions.
-func distanceBetween(variant entities.Variant, firstZone, secondZone string) float64 {
+func distanceBetween(variant template_model.Variant, firstZone, secondZone string) float64 {
 	first := positionOf(variant, firstZone)
 	second := positionOf(variant, secondZone)
 	return math.Hypot(first[0]-second[0], first[1]-second[1])
@@ -108,7 +108,7 @@ func spreadOf(values []float64) float64 {
 
 // interiorAngleAt returns the interior angle (degrees) of the hexagon ring at
 // zone `at`, formed by its ring neighbors `previous` and `next`.
-func interiorAngleAt(variant entities.Variant, previous, at, next string) float64 {
+func interiorAngleAt(variant template_model.Variant, previous, at, next string) float64 {
 	previousPosition := positionOf(variant, previous)
 	atPosition := positionOf(variant, at)
 	nextPosition := positionOf(variant, next)
@@ -123,7 +123,7 @@ func interiorAngleAt(variant entities.Variant, previous, at, next string) float6
 
 // perimeterFreeAngles returns the interior angles (degrees) at the five
 // non-hub vertices of a hexagon perimeter listed hub-first.
-func perimeterFreeAngles(variant entities.Variant, perimeter [6]string) []float64 {
+func perimeterFreeAngles(variant template_model.Variant, perimeter [6]string) []float64 {
 	angles := make([]float64, 0, 5)
 	for index := 1; index < len(perimeter); index++ {
 		previous := perimeter[index-1]

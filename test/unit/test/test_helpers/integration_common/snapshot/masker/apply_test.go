@@ -9,35 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// checkeredImage builds a deterministic non-uniform RGBA image so masked and
-// unmasked pixels are distinguishable.
-func checkeredImage(width, height int) *image.RGBA {
-	result := image.NewRGBA(image.Rect(0, 0, width, height))
-	for row := range height {
-		for column := range width {
-			shade := uint8(50 + 20*((column+row)%2))
-			result.SetRGBA(column, row, color.RGBA{R: shade, G: shade, B: shade, A: 255})
-		}
-	}
-	return result
-}
-
-// maskedExpectation clones the source and paints the given marks black, the
-// way a correct Apply should.
-func maskedExpectation(source *image.RGBA, marks ...image.Rectangle) *image.RGBA {
-	expected := image.NewRGBA(source.Bounds())
-	copy(expected.Pix, source.Pix)
-	for _, rect := range marks {
-		clamped := rect.Intersect(source.Bounds())
-		for row := clamped.Min.Y; row < clamped.Max.Y; row++ {
-			for column := clamped.Min.X; column < clamped.Max.X; column++ {
-				expected.SetRGBA(column, row, color.RGBA{A: 255})
-			}
-		}
-	}
-	return expected
-}
-
 func TestWhenRectIsInsideBounds_MasksOnlyThatRegion(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -115,4 +86,33 @@ func TestWhenRectIsFullyOutsideBounds_LeavesScreenshotUntouched(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, expected, screenshotImage)
+}
+
+// checkeredImage builds a deterministic non-uniform RGBA image so masked and
+// unmasked pixels are distinguishable.
+func checkeredImage(width, height int) *image.RGBA {
+	result := image.NewRGBA(image.Rect(0, 0, width, height))
+	for row := range height {
+		for column := range width {
+			shade := uint8(50 + 20*((column+row)%2))
+			result.SetRGBA(column, row, color.RGBA{R: shade, G: shade, B: shade, A: 255})
+		}
+	}
+	return result
+}
+
+// maskedExpectation clones the source and paints the given marks black, the
+// way a correct Apply should.
+func maskedExpectation(source *image.RGBA, marks ...image.Rectangle) *image.RGBA {
+	expected := image.NewRGBA(source.Bounds())
+	copy(expected.Pix, source.Pix)
+	for _, rect := range marks {
+		clamped := rect.Intersect(source.Bounds())
+		for row := clamped.Min.Y; row < clamped.Max.Y; row++ {
+			for column := clamped.Min.X; column < clamped.Max.X; column++ {
+				expected.SetRGBA(column, row, color.RGBA{A: 255})
+			}
+		}
+	}
+	return expected
 }

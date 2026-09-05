@@ -3,6 +3,7 @@ package topologyBase_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -112,4 +113,49 @@ func TestWhenBorderGuardMultiplierIsDoubled_PlayerBorderGuardIsScaled(t *testing
 
 	// Assert
 	assert.Equal(t, 60000, guardValue)
+}
+
+func TestWhenOneLabelIsTheHub_ReturnsTheHighestQualityGuardValue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	neutralPlans := neutral_zone.Plans{
+		{Label: "C", Quality: neutral_zone.QualityLowest, CastleCount: 0},
+	}
+	testCases := []struct {
+		name       string
+		firstLabel string
+		otherLabel string
+	}{
+		{name: "WhenTheHubBordersAPlayer_HubTierWins", firstLabel: constants.HubZoneName, otherLabel: "A"},
+		{name: "WhenTheHubBordersALowNeutral_HubTierWins", firstLabel: constants.HubZoneName, otherLabel: "C"},
+		{name: "WhenTheHubIsTheSecondLabel_HubTierStillWins", firstLabel: "C", otherLabel: constants.HubZoneName},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+
+			// Act
+			guardValue := topologyBase.GetBorderGuardValue(
+				testCase.firstLabel, testCase.otherLabel, []string{"A", "B"}, neutralPlans, newUnitTuning())
+
+			// Assert
+			assert.Equal(t, 35000, guardValue)
+		})
+	}
+}
+
+func TestWhenOneLabelIsATournamentHub_ReturnsTheHighestQualityGuardValue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+
+	// Act
+	guardValue := topologyBase.GetBorderGuardValue(
+		constants.HubZonePrefix+"A", "A", []string{"A"}, nil, newUnitTuning())
+
+	// Assert
+	assert.Equal(t, 35000, guardValue)
 }

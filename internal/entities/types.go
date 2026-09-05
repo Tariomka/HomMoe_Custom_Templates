@@ -1,50 +1,48 @@
+// Package entities re-exports the .rmg.json schema types under their historical
+// short names. The canonical home is internal/entities/template/types.go; these
+// are aliases of aliases, so both spellings name the identical type. This needs
+// to be removed and internal/entities/template should be used instead.
 package entities
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_common"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_layout"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_override"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_rule"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
 )
 
 type (
 	RmgTemplate = template.RmgTemplate
 
-	ValueOverride = template_override.ValueOverride
+	ValueOverride = template.ValueOverride
 
-	PlacementRule = template_common.PlacementRule
+	PlacementRule = template.PlacementRule
 
-	ContentCountLimit    = template_content.ContentCountLimit
-	ContentLimit         = template_content.ContentLimit
-	ContentList          = template_content.ContentList
-	ContentPool          = template_content.ContentPool
-	MandatoryContent     = template_content.MandatoryContent
-	MandatoryContentItem = template_content.MandatoryContentItem
-	WeightedContent      = template_content.WeightedContent
+	ContentCountLimit    = template.ContentCountLimit
+	ContentLimit         = template.ContentLimit
+	ContentList          = template.ContentList
+	ContentPool          = template.ContentPool
+	MandatoryContent     = template.MandatoryContent
+	MandatoryContentItem = template.MandatoryContentItem
+	WeightedContent      = template.WeightedContent
 
-	Bonus         = template_rule.Bonus
-	BonusList     = template_rule.BonusList
-	GameRules     = template_rule.GameRules
-	GlobalBans    = template_rule.GlobalBans
-	WinConditions = template_rule.WinConditions
+	Bonus         = template.Bonus
+	BonusList     = template.BonusList
+	GameRules     = template.GameRules
+	GlobalBans    = template.GlobalBans
+	WinConditions = template.WinConditions
 
-	Border                 = template_variant.Border
-	Connection             = template_variant.Connection
-	EncounterHolesSettings = template_variant.EncounterHolesSettings
-	MainObject             = template_variant.MainObject
-	Noise                  = template_variant.Noise
-	Orientation            = template_variant.Orientation
-	Road                   = template_variant.Road
-	StringList             = template_variant.StringList
-	TypedRef               = template_variant.TypedRef
-	Variant                = template_variant.Variant
-	Zone                   = template_variant.Zone
+	Border                 = template.Border
+	Connection             = template.Connection
+	EncounterHolesSettings = template.EncounterHolesSettings
+	MainObject             = template.MainObject
+	Noise                  = template.Noise
+	Orientation            = template.Orientation
+	Road                   = template.Road
+	StringList             = template.StringList
+	TypedRef               = template.TypedRef
+	Variant                = template.Variant
+	Zone                   = template.Zone
 
-	AmbientPickupDistribution         = template_layout.AmbientPickupDistribution
-	ElevationMode                     = template_layout.ElevationMode
-	GuardedEncounterResourceFractions = template_layout.GuardedEncounterResourceFractions
-	ZoneLayoutDef                     = template_layout.ZoneLayoutDef
+	AmbientPickupDistribution         = template.AmbientPickupDistribution
+	ElevationMode                     = template.ElevationMode
+	GuardedEncounterResourceFractions = template.GuardedEncounterResourceFractions
+	ZoneLayoutDef                     = template.ZoneLayoutDef
 )

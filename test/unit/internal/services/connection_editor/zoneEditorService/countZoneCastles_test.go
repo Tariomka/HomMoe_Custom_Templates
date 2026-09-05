@@ -3,7 +3,7 @@ package zoneEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,8 +11,8 @@ import (
 func TestWhenZoneHasMixedMainObjects_CountsOnlyCities(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := entities.Zone{
-		MainObjects: []entities.MainObject{
+	zone := template_model.Zone{
+		MainObjects: []template_model.MainObject{
 			{Type: "Spawn"},
 			{Type: "City"},
 			{Type: "AbandonedOutpost"},
@@ -30,8 +30,8 @@ func TestWhenZoneHasMixedMainObjects_CountsOnlyCities(t *testing.T) {
 func TestWhenCityTypeDiffersInCase_DoesNotCountIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := entities.Zone{
-		MainObjects: []entities.MainObject{{Type: "city"}},
+	zone := template_model.Zone{
+		MainObjects: []template_model.MainObject{{Type: "city"}},
 	}
 
 	// Act
@@ -44,7 +44,7 @@ func TestWhenCityTypeDiffersInCase_DoesNotCountIt(t *testing.T) {
 func TestWhenZoneHasNoMainObjects_ReturnsZero(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	zone := entities.Zone{}
+	zone := template_model.Zone{}
 
 	// Act
 	count := test_helpers.NewZoneEditorService().CountZoneCastles(zone)

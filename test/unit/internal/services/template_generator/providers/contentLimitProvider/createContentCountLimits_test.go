@@ -4,27 +4,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// maxCountFor returns the MaxCount of the limit with the given SID in the
-// first limit group, and fails the test when the SID has no limit entry.
-func maxCountFor(t *testing.T, groups []entities.ContentCountLimit, sid string) int {
-	t.Helper()
-	require.NotEmpty(t, groups)
-	for _, limit := range groups[0].Limits {
-		if strings.EqualFold(limit.SID, sid) {
-			return limit.MaxCount
-		}
-	}
-	t.Fatalf("no content limit found for SID %q", sid)
-	return 0
-}
 
 func TestWhenDefaultConfiguration_CreatesSeventeenLimitGroups(t *testing.T) {
 	t.Parallel()
@@ -93,7 +79,7 @@ func TestWhenMandatoryContentBelowDefaultCap_KeepsDefaultCap(t *testing.T) {
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{{SID: fountainSid}}
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: fountainSid}}
 
 	// Act
 	groups := provider.CreateContentCountLimits(*configuration)
@@ -108,7 +94,7 @@ func TestWhenMandatoryContentExceedsDefaultCap_LiftsLimitToRequestedCount(t *tes
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{
 		{SID: fountainSid}, {SID: fountainSid}, {SID: fountainSid}, {SID: fountainSid},
 	}
 
@@ -125,10 +111,10 @@ func TestWhenRequestedSidsSpanSeveralContentLists_SumsCountsAcrossLists(t *testi
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{
 		{SID: fountainSid}, {SID: fountainSid},
 	}
-	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{
+	configuration.LowNeutralMandatoryContent = []template_model.MandatoryContentItem{
 		{SID: fountainSid}, {SID: fountainSid}, {SID: fountainSid},
 	}
 
@@ -146,7 +132,7 @@ func TestWhenRequestedSidCaseDiffersFromLimitSid_StillLiftsLimit(t *testing.T) {
 	upperCaseSid := strings.ToUpper(fountainSid)
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{
 		{SID: upperCaseSid}, {SID: upperCaseSid}, {SID: upperCaseSid},
 	}
 
@@ -163,7 +149,7 @@ func TestWhenMandatoryContentUsesUnlimitedSid_AddsNoNewLimitEntry(t *testing.T) 
 	provider := providers.NewContentLimitProvider()
 	defaultGroups := provider.CreateContentCountLimits(*config.NewGeneratorConfig())
 	configuration := config.NewGeneratorConfig()
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{
 		{SID: "some_sid_without_default_limit"},
 	}
 
@@ -180,7 +166,7 @@ func TestWhenLowestTierRequestsMoreThanDefaultCap_LiftsLimit(t *testing.T) {
 	fountainSid := registry.GetMapObjectHeroBuffBuildingValues().Fountain
 	provider := providers.NewContentLimitProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.LowestNeutralMandatoryContent = []entities.MandatoryContentItem{
+	configuration.LowestNeutralMandatoryContent = []template_model.MandatoryContentItem{
 		{SID: fountainSid}, {SID: fountainSid}, {SID: fountainSid},
 	}
 
@@ -189,4 +175,18 @@ func TestWhenLowestTierRequestsMoreThanDefaultCap_LiftsLimit(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, 3, maxCountFor(t, groups, fountainSid))
+}
+
+// maxCountFor returns the MaxCount of the limit with the given SID in the
+// first limit group, and fails the test when the SID has no limit entry.
+func maxCountFor(t *testing.T, groups []template_model.ContentCountLimit, sid string) int {
+	t.Helper()
+	require.NotEmpty(t, groups)
+	for _, limit := range groups[0].Limits {
+		if strings.EqualFold(limit.SID, sid) {
+			return limit.MaxCount
+		}
+	}
+	t.Fatalf("no content limit found for SID %q", sid)
+	return 0
 }

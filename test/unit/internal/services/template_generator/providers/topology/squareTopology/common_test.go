@@ -3,11 +3,11 @@ package squareTopology_test
 import (
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // zoneNameSet returns the set of zone names present in the variant.
-func zoneNameSet(variant entities.Variant) map[string]bool {
+func zoneNameSet(variant template_model.Variant) map[string]bool {
 	names := make(map[string]bool, len(variant.Zones))
 	for _, zone := range variant.Zones {
 		names[zone.Name] = true
@@ -17,7 +17,7 @@ func zoneNameSet(variant entities.Variant) map[string]bool {
 
 // danglingConnectionNames returns the names of connections whose endpoints do
 // not both exist as zones in the variant.
-func danglingConnectionNames(variant entities.Variant) []string {
+func danglingConnectionNames(variant template_model.Variant) []string {
 	names := zoneNameSet(variant)
 	var dangling []string
 	for _, connection := range variant.Connections {
@@ -30,7 +30,7 @@ func danglingConnectionNames(variant entities.Variant) []string {
 
 // zonesWithoutValidPosition returns the names of zones whose generator position
 // is missing or falls outside the normalized [0,1]x[0,1] layout square.
-func zonesWithoutValidPosition(variant entities.Variant) []string {
+func zonesWithoutValidPosition(variant template_model.Variant) []string {
 	var invalid []string
 	for _, zone := range variant.Zones {
 		if zone.GeneratorPosition == nil {
@@ -46,7 +46,7 @@ func zonesWithoutValidPosition(variant entities.Variant) []string {
 }
 
 // countPortalConnections counts the connections of type Portal.
-func countPortalConnections(variant entities.Variant) int {
+func countPortalConnections(variant template_model.Variant) int {
 	count := 0
 	for _, connection := range variant.Connections {
 		if connection.ConnectionType == "Portal" {
@@ -58,7 +58,7 @@ func countPortalConnections(variant entities.Variant) int {
 
 // directSpawnToSpawnNames returns the names of Direct connections with the
 // given name prefix that join two spawn zones.
-func directSpawnToSpawnNames(variant entities.Variant, prefix string) []string {
+func directSpawnToSpawnNames(variant template_model.Variant, prefix string) []string {
 	var names []string
 	for _, connection := range variant.Connections {
 		if connection.ConnectionType != "Direct" || !strings.HasPrefix(connection.Name, prefix) {

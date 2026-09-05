@@ -3,8 +3,8 @@ package manualReapplyService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -33,7 +33,9 @@ func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
 	newManualReapplyService().SetNeutralZoneCastleCount(&zone, 3, defaultTuning())
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHigh, zone_services.NewZoneClassifier().GetQuality(zone))
+	assert.Equal(t,
+		neutral_zone.QualityHigh,
+		zone_services.NewZoneTierService().GetQuality(zone))
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {
@@ -94,7 +96,7 @@ func TestWhenZoneHasAbandonedOutpost_PreservesIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	zone := makeNeutralZone("G", neutral_zone.QualityMedium, 1)
-	zone.MainObjects = append(zone.MainObjects, entities.MainObject{Type: "AbandonedOutpost"})
+	zone.MainObjects = append(zone.MainObjects, template_model.MainObject{Type: "AbandonedOutpost"})
 
 	// Act
 	newManualReapplyService().SetNeutralZoneCastleCount(&zone, 2, defaultTuning())

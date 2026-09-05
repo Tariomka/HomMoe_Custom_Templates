@@ -14,6 +14,10 @@ import (
 // recognizable double extension.
 const saveFileSuffix = ".gen.json"
 
+// missingSaveNameMessage explains a disabled Save button: the target name is
+// derived from the template name, so an unnamed template cannot be saved.
+const missingSaveNameMessage = "Template name is required."
+
 // FileExplorerDialog is a self-contained, cross-platform file/folder picker
 // rendered as a modal by the DialogHost. It replaces the OS-native pickers
 // (gioui.org/x/explorer, PowerShell folder dialog, xdg-open) so behavior is
@@ -54,7 +58,7 @@ type FileExplorerDialog struct {
 
 	// modeSaveFile overwrite-confirmation sub-state.
 	overwriteActive bool
-	saveErr         string // inline rejection of the typed filename
+	saveErr         string // inline rejection of the resolved save target
 
 	// New-folder sub-state.
 	newFolderActive bool
@@ -67,7 +71,6 @@ type FileExplorerDialog struct {
 	hiddenToggle        widget.Clickable
 	newFolderBtn        widget.Clickable
 	createFolderBtn     widget.Clickable
-	cancelFolderBtn     widget.Clickable
 	confirmBtn          widget.Clickable
 	cancelBtn           widget.Clickable
 	overwriteConfirmBtn widget.Clickable
@@ -137,10 +140,6 @@ func (this *FileExplorerDialog) Body(gtx layout.Context, theme *material.Theme) 
 		if this.createFolderBtn.Clicked(gtx) {
 			this.tryCreateFolder()
 		}
-		if this.cancelFolderBtn.Clicked(gtx) {
-			this.newFolderActive = false
-			this.newFolderErr = ""
-		}
 	}
 
 	if this.handleConfirm(gtx) {
@@ -188,11 +187,7 @@ func (this *FileExplorerDialog) onEntryClicked(entry models.DirectoryEntry) {
 	switch this.mode {
 	case modeOpenFile:
 		this.selectedPath = entry.Path
-	case modeSaveFile:
-		this.filenameEd.SetText(entry.Name)
-		this.overwriteActive = false
-		this.saveErr = ""
-	case modePickFolder, modeBrowse: // noop
+	case modeSaveFile, modePickFolder, modeBrowse: // noop
 	}
 }
 
@@ -201,6 +196,13 @@ func (this *FileExplorerDialog) onEntryClicked(entry models.DirectoryEntry) {
 // suffix. ok is false when the field is empty.
 func (this *FileExplorerDialog) resolveSaveTarget() (string, bool) {
 	return this.fileSystem.ResolveSaveTarget(this.currentDir, this.filenameEd.Text(), saveFileSuffix)
+}
+
+// hasResolvedSaveName reports whether the caller supplied a name to save under.
+// The name is derived from the template name and the field is read-only, so an
+// empty field means the editor state has nothing to derive a filename from.
+func (this *FileExplorerDialog) hasResolvedSaveName() bool {
+	return this.filenameEd.Text() != ""
 }
 
 func (this *FileExplorerDialog) canModify() bool {

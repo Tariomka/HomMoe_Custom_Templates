@@ -1,9 +1,7 @@
 package provider_interfaces
 
-import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-)
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 
 type IZoneLayoutProvider interface {
-	CreateZoneLayouts() []entities.ZoneLayoutDef
+	CreateZoneLayouts() []template_model.ZoneLayoutDef
 }

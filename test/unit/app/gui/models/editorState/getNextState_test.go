@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ func TestWhenNextStateWasAssigned_NextStateMatchesTheAssignedValue(t *testing.T)
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	assigned := dtos.NewDefaultEditorStateDto()
+	assigned := editor_state_model.NewDefaultEditorStateModel()
 	assigned.PlayerCount++
 
 	// Act
@@ -38,7 +38,7 @@ func TestWhenReturnedNextStateIsMutated_StoredPendingStateIsUnaffected(t *testin
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	state.SetNextState(dtos.NewDefaultEditorStateDto())
+	state.SetNextState(editor_state_model.NewDefaultEditorStateModel())
 	next := state.GetNextState()
 	require.NotNil(t, next)
 
@@ -53,7 +53,7 @@ func TestWhenNextStateIsReset_NextStateIsNil(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	state.SetNextState(dtos.NewDefaultEditorStateDto())
+	state.SetNextState(editor_state_model.NewDefaultEditorStateModel())
 
 	// Act
 	state.ResetNextState()

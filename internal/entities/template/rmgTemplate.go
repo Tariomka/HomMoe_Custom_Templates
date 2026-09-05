@@ -1,13 +1,5 @@
 package template
 
-import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_content"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_layout"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_override"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_rule"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template/template_variant"
-)
-
 // RmgTemplate represents the top-level template structure for .rmg.json files.
 // Mirrors the on-disk schema observed across all bundled `data/ExampleTemplates/*.rmg.json` files.
 type RmgTemplate struct {
@@ -20,19 +12,19 @@ type RmgTemplate struct {
 	SizeX int `json:"sizeX"`
 	SizeZ int `json:"sizeZ"`
 
-	ValueOverrides []template_override.ValueOverride `json:"valueOverrides,omitempty"`
+	ValueOverrides []ValueOverride `json:"valueOverrides,omitempty"`
 
-	Orientation *template_variant.Orientation `json:"orientation,omitempty"`
-	Border      *template_variant.Border      `json:"border,omitempty"`
+	Orientation *Orientation `json:"orientation,omitempty"`
+	Border      *Border      `json:"border,omitempty"`
 
-	GameRules  template_rule.GameRules   `json:"gameRules"`
-	GlobalBans *template_rule.GlobalBans `json:"globalBans,omitempty"`
+	GameRules  GameRules   `json:"gameRules"`
+	GlobalBans *GlobalBans `json:"globalBans,omitempty"`
 
-	Variants []template_variant.Variant `json:"variants"`
+	Variants []Variant `json:"variants"`
 
-	ZoneLayouts        []template_layout.ZoneLayoutDef      `json:"zoneLayouts,omitempty"`
-	MandatoryContent   []template_content.MandatoryContent  `json:"mandatoryContent,omitempty"`
-	ContentCountLimits []template_content.ContentCountLimit `json:"contentCountLimits,omitempty"`
-	ContentPools       []template_content.ContentPool       `json:"contentPools"`
-	ContentLists       []template_content.ContentList       `json:"contentLists"`
+	ZoneLayouts        []ZoneLayoutDef     `json:"zoneLayouts,omitempty"`
+	MandatoryContent   []MandatoryContent  `json:"mandatoryContent,omitempty"`
+	ContentCountLimits []ContentCountLimit `json:"contentCountLimits,omitempty"`
+	ContentPools       []ContentPool       `json:"contentPools"`
+	ContentLists       []ContentList       `json:"contentLists"`
 }

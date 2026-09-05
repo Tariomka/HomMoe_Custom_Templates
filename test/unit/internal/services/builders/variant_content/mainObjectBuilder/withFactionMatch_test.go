@@ -3,7 +3,7 @@ package mainObjectBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +18,7 @@ func TestWhenFactionMatchIsApplied_SetsMatchFactionReferenceWithZeroArgument(t *
 	mainObject := builder.WithFactionMatch().Build()
 
 	// Assert
-	assert.Equal(t, entities.MainObject{
-		Faction: &entities.TypedRef{Type: registry.GetFactionTypeValues().Match, Args: []string{"0"}},
+	assert.Equal(t, template_model.MainObject{
+		Faction: &template_model.TypedRef{Type: registry.GetFactionTypeValues().Match, Args: []string{"0"}},
 	}, mainObject)
 }

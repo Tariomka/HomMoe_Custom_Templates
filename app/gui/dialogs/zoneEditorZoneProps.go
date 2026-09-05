@@ -11,12 +11,12 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
-func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *entities.Zone) []layout.Widget {
+func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *template_model.Zone) []layout.Widget {
 	isNeutral := zone_helpers.IsZoneNameNeutral(zone.Name)
 	isSpawn := this.playerZones[zone.Name]
 	rows := []layout.Widget{
@@ -57,7 +57,7 @@ func (this *ZoneEditorDialog) zonePropertyRows(theme *material.Theme, zone *enti
 
 // syncZoneProps loads the zone property widgets from the selected zone.
 // Called once whenever the zone selection changes.
-func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
+func (this *ZoneEditorDialog) syncZoneProps(zone *template_model.Zone) {
 	quality := this.zoneHandler.GetZoneQuality(*zone)
 	this.qualityDropdown.SelectByName(quality.GetName())
 	castles := min(this.zoneHandler.CountZoneCastles(*zone), 4)
@@ -69,7 +69,7 @@ func (this *ZoneEditorDialog) syncZoneProps(zone *entities.Zone) {
 
 // writebackZoneProps copies the zone widget state back into the selected zone
 // after the panel has been laid out for this frame.
-func (this *ZoneEditorDialog) writebackZoneProps(zone *entities.Zone) {
+func (this *ZoneEditorDialog) writebackZoneProps(zone *template_model.Zone) {
 	if value, err := strconv.ParseFloat(strings.TrimSpace(this.zoneSizeEdit.Text()), 64); err == nil {
 		zone.Size = math.Round(math.Min(math.Max(value, 0.1), 2.0)*100) / 100
 	}

@@ -63,6 +63,11 @@ func (this Vec2[T]) DotProduct(other Vec2[T]) T { return this.X*other.X + this.Y
 
 func (this Vec2[T]) CrossProduct(other Vec2[T]) T { return this.X*other.Y - this.Y*other.X }
 
+func (this Vec2[T]) Distance() float64 { return math.Hypot(float64(this.X), float64(this.Y)) }
+
+// RotateClockwise rotates the vector 90° clockwise: ( x, y ) → ( y, -x ).
+func (this Vec2[T]) RotateClockwise() Vec2[T] { return NewVec2(this.Y, -this.X) }
+
 func (this Vec2[T]) ToPoint() image.Point { return image.Pt(int(this.X), int(this.Y)) }
 
 func (this Vec2[T]) ToPointRounded() image.Point {

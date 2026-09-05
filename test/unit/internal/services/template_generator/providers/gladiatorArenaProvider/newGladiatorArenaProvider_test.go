@@ -11,7 +11,7 @@ import (
 func TestWhenConstructed_ReturnsNonNilProvider(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	provider := providers.NewGladiatorArenaProvider(zone_services.NewZoneClassifier())
+	provider := providers.NewGladiatorArenaProvider(zone_services.NewZoneTierService())
 
 	// Assert
 	assert.NotNil(t, provider)

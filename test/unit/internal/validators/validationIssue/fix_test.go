@@ -3,28 +3,17 @@ package validationIssue_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// applyAllFixes validates the state and applies every returned fix in order,
-// requiring that at least one issue was found.
-func applyAllFixes(t *testing.T, state *dtos.EditorStateDto) {
-	t.Helper()
-	issues := validators.NewEditorStateValidator().Validate(state)
-	require.NotEmpty(t, issues)
-	for _, issue := range issues {
-		issue.Fix(state)
-	}
-}
-
 func TestWhenPlayerCountAboveMaximum_FixClampsToMaximum(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.PlayerCount = 50
 
 	// Act
@@ -37,7 +26,7 @@ func TestWhenPlayerCountAboveMaximum_FixClampsToMaximum(t *testing.T) {
 func TestWhenPlayerCountBelowMinimum_FixClampsToMinimum(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.PlayerCount = 0
 
 	// Act
@@ -50,7 +39,7 @@ func TestWhenPlayerCountBelowMinimum_FixClampsToMinimum(t *testing.T) {
 func TestWhenPercentFieldBelowMinimum_FixClampsToMinimum(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.ResourceDensityPercent = 0
 
 	// Act
@@ -63,7 +52,7 @@ func TestWhenPercentFieldBelowMinimum_FixClampsToMinimum(t *testing.T) {
 func TestWhenCountFieldIsNegative_FixSetsToZero(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.NeutralZoneCount = -5
 
 	// Act
@@ -76,7 +65,7 @@ func TestWhenCountFieldIsNegative_FixSetsToZero(t *testing.T) {
 func TestWhenHeroMaxIsLessThanHeroMin_FixRaisesHeroMaxToHeroMin(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.HeroCountMin = 6
 	state.HeroCountMax = 4
 
@@ -90,7 +79,7 @@ func TestWhenHeroMaxIsLessThanHeroMin_FixRaisesHeroMaxToHeroMin(t *testing.T) {
 func TestWhenHeroMinAboveRangeAndHeroMaxBelowHeroMin_FixesRestoreOrder(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.HeroCountMin = 50
 	state.HeroCountMax = 5
 
@@ -104,7 +93,7 @@ func TestWhenHeroMinAboveRangeAndHeroMaxBelowHeroMin_FixesRestoreOrder(t *testin
 func TestWhenMapSizeIsUnknown_FixSnapsToNearestSize(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.MapSize = 100
 
 	// Act
@@ -117,7 +106,7 @@ func TestWhenMapSizeIsUnknown_FixSnapsToNearestSize(t *testing.T) {
 func TestWhenGameModeIsUnknown_FixResetsToClassic(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.GameMode = "NotARealGameMode"
 
 	// Act
@@ -130,7 +119,7 @@ func TestWhenGameModeIsUnknown_FixResetsToClassic(t *testing.T) {
 func TestWhenVictoryConditionIsUnknown_FixResetsToStandard(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.VictoryCondition = "NotARealCondition"
 
 	// Act
@@ -138,4 +127,15 @@ func TestWhenVictoryConditionIsUnknown_FixResetsToStandard(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, registry.GetWinningConditionValues().Standard, state.VictoryCondition)
+}
+
+// applyAllFixes validates the state and applies every returned fix in order,
+// requiring that at least one issue was found.
+func applyAllFixes(t *testing.T, state *editor_state_model.EditorState) {
+	t.Helper()
+	issues := validators.NewEditorStateValidator().Validate(state)
+	require.NotEmpty(t, issues)
+	for _, issue := range issues {
+		issue.Fix(state)
+	}
 }

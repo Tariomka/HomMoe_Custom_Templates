@@ -3,9 +3,9 @@ package mandatoryContentProvider_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,7 +36,7 @@ func TestWhenRemoteFootholdsEnabled_PrependsFootholdItemPerCount(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = true
 	configuration.RemoteFootholdCount = 3
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "sawmill"}}
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "sawmill"}}
 
 	// Act
 	groups := provider.CreateContents(*configuration, []string{"A"}, nil)
@@ -52,7 +52,7 @@ func TestWhenRemoteFootholdsDisabled_AddsNoFootholdItems(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "sawmill"}}
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "sawmill"}}
 
 	// Act
 	groups := provider.CreateContents(*configuration, []string{"A"}, nil)
@@ -67,7 +67,7 @@ func TestWhenLowTierRowsConfigured_CopiesRowsIntoLowNeutralZone(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
+	configuration.LowNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "low_only"}}
 	plans := neutral_zone.Plans{}
 	plans.AddPlan("C", neutral_zone.QualityLow, 1)
 
@@ -84,7 +84,7 @@ func TestWhenMediumTierRowsConfigured_CopiesRowsIntoMediumNeutralZone(t *testing
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "medium_only"}}
 	plans := neutral_zone.Plans{}
 	plans.AddPlan("C", neutral_zone.QualityMedium, 1)
 
@@ -104,7 +104,7 @@ func TestWhenHighTierRowsConfigured_CopiesRowsIntoHighNeutralZone(t *testing.T) 
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.HighNeutralMandatoryContent = []entities.MandatoryContentItem{
+	configuration.HighNeutralMandatoryContent = []template_model.MandatoryContentItem{
 		{SID: "university"},
 		{SID: "random_item_legendary"},
 	}
@@ -126,8 +126,8 @@ func TestWhenHighestTierPlanExists_CopiesHubZoneRowsIntoThatNeutralZone(t *testi
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.HighNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "high_only"}}
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
+	configuration.HighNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "high_only"}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_treasure"}}
 	plans := neutral_zone.Plans{}
 	plans.AddPlan("V", neutral_zone.QualityHighest, 1)
 
@@ -147,9 +147,9 @@ func TestWhenNeutralZoneHasNoCastles_StripsNearCastlePlacementRules(t *testing.T
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{
 		SID: "treasure",
-		Rules: []entities.PlacementRule{
+		Rules: []template_model.PlacementRule{
 			{Type: ruleTypeMainObject, Args: []any{"0"}},
 			{Type: ruleTypeMainObject, Args: []any{"1"}},
 		},
@@ -161,7 +161,7 @@ func TestWhenNeutralZoneHasNoCastles_StripsNearCastlePlacementRules(t *testing.T
 	groups := provider.CreateContents(*configuration, nil, plans)
 
 	// Assert
-	assert.Equal(t, []entities.PlacementRule{{Type: ruleTypeMainObject, Args: []any{"1"}}},
+	assert.Equal(t, []template_model.PlacementRule{{Type: ruleTypeMainObject, Args: []any{"1"}}},
 		groupContent(groups, "mandatory_content_neutral_C")[0].Rules,
 		"only the near-castle (main object 0) rule must be removed")
 }
@@ -173,9 +173,9 @@ func TestWhenNeutralZoneHasCastles_KeepsNearCastlePlacementRules(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{
 		SID:   "treasure",
-		Rules: []entities.PlacementRule{{Type: ruleTypeMainObject, Args: []any{"0"}}},
+		Rules: []template_model.PlacementRule{{Type: ruleTypeMainObject, Args: []any{"0"}}},
 	}}
 	plans := neutral_zone.Plans{}
 	plans.AddPlan("C", neutral_zone.QualityMedium, 1)
@@ -184,7 +184,7 @@ func TestWhenNeutralZoneHasCastles_KeepsNearCastlePlacementRules(t *testing.T) {
 	groups := provider.CreateContents(*configuration, nil, plans)
 
 	// Assert
-	assert.Equal(t, []entities.PlacementRule{{Type: ruleTypeMainObject, Args: []any{"0"}}},
+	assert.Equal(t, []template_model.PlacementRule{{Type: ruleTypeMainObject, Args: []any{"0"}}},
 		groupContent(groups, "mandatory_content_neutral_C")[0].Rules)
 }
 
@@ -197,9 +197,9 @@ func TestWhenZeroCastleZoneStripsRules_DoesNotMutateConfiguredRows(t *testing.T)
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{
 		SID: "treasure",
-		Rules: []entities.PlacementRule{
+		Rules: []template_model.PlacementRule{
 			{Type: ruleTypeMainObject, Args: []any{"0"}},
 			{Type: ruleTypeMainObject, Args: []any{"1"}},
 		},
@@ -224,7 +224,7 @@ func TestWhenHubTopologyWithHubRows_EmitsHubGroupWithConfiguredRows(t *testing.T
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
 	configuration.SpawnRemoteFootholds = false
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_treasure"}}
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, nil)
@@ -253,7 +253,7 @@ func TestWhenNonHubTopologyWithHubRows_OmitsHubGroup(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_treasure"}}
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, nil)

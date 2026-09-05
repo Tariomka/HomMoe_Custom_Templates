@@ -4,38 +4,13 @@ import (
 	"image"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// mustNewGenerator fails the test immediately when the embedded assets cannot load.
-func mustNewGenerator(t *testing.T) preview_service.IPreviewGeneratorService {
-	t.Helper()
-	generator, err := preview_service.NewPreviewGenerator(preview_service.NewPreviewLayoutService())
-	require.NoError(t, err)
-	return generator
-}
-
-// ringTemplate builds a small two-player ring template with plain connections.
-func ringTemplate() *entities.RmgTemplate {
-	return &entities.RmgTemplate{
-		Variants: []entities.Variant{{
-			Zones: []entities.Zone{
-				{Name: "Spawn-A"}, {Name: "Neutral-B"},
-				{Name: "Spawn-C"}, {Name: "Neutral-D"},
-			},
-			Connections: []entities.Connection{
-				{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Direct"},
-				{From: "Neutral-B", To: "Spawn-C", ConnectionType: "Direct"},
-				{From: "Spawn-C", To: "Neutral-D", ConnectionType: "Direct"},
-				{From: "Neutral-D", To: "Spawn-A", ConnectionType: "Direct"},
-			},
-		}},
-	}
-}
 
 func TestWhenTemplateIsRendered_ReturnsFullSizeCanvas(t *testing.T) {
 	t.Parallel()
@@ -53,7 +28,7 @@ func TestWhenTemplateIsNil_ReturnsBackgroundOnlyCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
-	backgroundOnly := generator.CreatePreviewImage(&entities.RmgTemplate{}, config.TopologyRing)
+	backgroundOnly := generator.CreatePreviewImage(&template_model.Template{}, config.TopologyRing)
 
 	// Act
 	canvas := generator.CreatePreviewImage(nil, config.TopologyRing)
@@ -66,7 +41,7 @@ func TestWhenTemplateHasZones_DrawsThemOverTheBackground(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
-	backgroundOnly := generator.CreatePreviewImage(&entities.RmgTemplate{}, config.TopologyRing)
+	backgroundOnly := generator.CreatePreviewImage(&template_model.Template{}, config.TopologyRing)
 
 	// Act
 	canvas := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
@@ -131,7 +106,7 @@ func TestWhenZoneHostsTheArena_DrawsArenaBubbleInsteadOfThePlainOne(t *testing.T
 	arenaTemplate := ringTemplate()
 	arenaTemplate.Variants[0].Zones[1].MainObjects = append(
 		arenaTemplate.Variants[0].Zones[1].MainObjects,
-		entities.MainObject{Type: "GladiatorArena"})
+		template_model.MainObject{Type: "GladiatorArena"})
 
 	// Act
 	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRing)
@@ -151,4 +126,32 @@ func TestWhenSameTemplateIsRenderedTwice_ProducesIdenticalImages(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, firstRender.Pix, secondRender.Pix)
+}
+
+// mustNewGenerator fails the test immediately when the embedded assets cannot load.
+func mustNewGenerator(t *testing.T) preview_service.IPreviewGeneratorService {
+	t.Helper()
+	generator, err := preview_service.NewPreviewGenerator(
+		preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()),
+	)
+	require.NoError(t, err)
+	return generator
+}
+
+// ringTemplate builds a small two-player ring template with plain connections.
+func ringTemplate() *template_model.Template {
+	return &template_model.Template{
+		Variants: []template_model.Variant{{
+			Zones: []template_model.Zone{
+				{Name: "Spawn-A"}, {Name: "Neutral-B"},
+				{Name: "Spawn-C"}, {Name: "Neutral-D"},
+			},
+			Connections: []template_model.Connection{
+				{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Direct"},
+				{From: "Neutral-B", To: "Spawn-C", ConnectionType: "Direct"},
+				{From: "Spawn-C", To: "Neutral-D", ConnectionType: "Direct"},
+				{From: "Neutral-D", To: "Spawn-A", ConnectionType: "Direct"},
+			},
+		}},
+	}
 }

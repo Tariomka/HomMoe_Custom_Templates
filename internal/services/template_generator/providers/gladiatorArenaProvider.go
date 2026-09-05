@@ -1,10 +1,10 @@
 package providers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
@@ -27,18 +27,23 @@ import (
 //     layouts), the arena falls back to a main object in the richest neutral
 //     zone so it is never silently dropped.
 type GladiatorArenaProvider struct {
-	zoneClassifier zone_interfaces.IZoneClassifier
+	tierService zone_interfaces.IZoneTierService
 }
 
 func NewGladiatorArenaProvider(
-	zoneClassifier zone_interfaces.IZoneClassifier) provider_interfaces.IGladiatorArenaProvider {
-	return &GladiatorArenaProvider{zoneClassifier: zoneClassifier}
+	tierService zone_interfaces.IZoneTierService) provider_interfaces.IGladiatorArenaProvider {
+	return &GladiatorArenaProvider{tierService: tierService}
 }
 
 // PlaceArena writes the arena into the variant when the configuration asks for
 // the Gladiator Arena win condition. Templates without a hub and without any
 // neutral zone are left untouched - there is nowhere neutral to put it.
-func (this *GladiatorArenaProvider) PlaceArena(configuration config.GeneratorConfig, variant *entities.Variant) {
+//
+// A zone carries the tier the generator planned for it; a zone that carries
+// none falls back to inference.
+func (this *GladiatorArenaProvider) PlaceArena(
+	configuration config.GeneratorConfig,
+	variant *template_model.Variant) {
 	if !configuration.IsGladiatorArenaMode() {
 		return
 	}
@@ -62,7 +67,7 @@ func (this *GladiatorArenaProvider) PlaceArena(configuration config.GeneratorCon
 // endpoints are the richest, or -1 when the variant has none. Ties are broken
 // on the connection name so the same configuration always yields the same
 // template.
-func (this *GladiatorArenaProvider) findArenaConnectionIndex(variant entities.Variant) int {
+func (this *GladiatorArenaProvider) findArenaConnectionIndex(variant template_model.Variant) int {
 	qualities := this.mapNeutralZoneQualities(variant.Zones)
 
 	bestIndex, bestScore := -1, 0
@@ -84,14 +89,14 @@ func (this *GladiatorArenaProvider) findArenaConnectionIndex(variant entities.Va
 
 // findRichestNeutralZoneIndex returns the highest-quality neutral zone, or -1
 // when the variant has none. Ties are broken on the zone name.
-func (this *GladiatorArenaProvider) findRichestNeutralZoneIndex(zones []entities.Zone) int {
+func (this *GladiatorArenaProvider) findRichestNeutralZoneIndex(zones []template_model.Zone) int {
 	bestIndex, bestQuality := -1, neutral_zone.QualityUnknown
 	for index, zone := range zones {
 		if !zone_helpers.IsZoneNameNeutral(zone.Name) {
 			continue
 		}
 
-		quality := this.zoneClassifier.GetQuality(zone)
+		quality := this.tierService.ResolveQuality(zone)
 		if bestIndex < 0 || quality > bestQuality ||
 			(quality == bestQuality && zone.Name < zones[bestIndex].Name) {
 			bestIndex, bestQuality = index, quality
@@ -101,17 +106,17 @@ func (this *GladiatorArenaProvider) findRichestNeutralZoneIndex(zones []entities
 }
 
 func (this *GladiatorArenaProvider) mapNeutralZoneQualities(
-	zones []entities.Zone) map[string]neutral_zone.Quality {
+	zones []template_model.Zone) map[string]neutral_zone.Quality {
 	qualities := make(map[string]neutral_zone.Quality, len(zones))
 	for _, zone := range zones {
 		if zone_helpers.IsZoneNameNeutral(zone.Name) {
-			qualities[zone.Name] = this.zoneClassifier.GetQuality(zone)
+			qualities[zone.Name] = this.tierService.ResolveQuality(zone)
 		}
 	}
 	return qualities
 }
 
-func findHubZoneIndex(zones []entities.Zone) int {
+func findHubZoneIndex(zones []template_model.Zone) int {
 	for index, zone := range zones {
 		if zone_helpers.IsZoneNameHub(zone.Name) {
 			return index
@@ -122,7 +127,7 @@ func findHubZoneIndex(zones []entities.Zone) int {
 
 // addArenaMainObject appends the arena object using the same placement Blitz
 // ships with, so the in-game generator treats it identically.
-func addArenaMainObject(zone *entities.Zone) {
+func addArenaMainObject(zone *template_model.Zone) {
 	zone.MainObjects = append(zone.MainObjects,
 		variant_content.NewObjectBuilder().
 			WithTypeGladiatorArena().

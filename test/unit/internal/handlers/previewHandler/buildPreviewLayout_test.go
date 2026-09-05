@@ -4,15 +4,14 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestWhenRequestIsEmpty_LaysOutNoTemplate(t *testing.T) {
@@ -22,55 +21,24 @@ func TestWhenRequestIsEmpty_LaysOutNoTemplate(t *testing.T) {
 	handler := handlers.NewPreviewHandler(layoutService)
 
 	// Act
-	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
+	handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
 
 	// Assert
-	layoutService.AssertCalled(t, "BuildPreviewLayout", (*entities.RmgTemplate)(nil), mock.Anything, mock.Anything)
-}
-
-func TestWhenOnlyZonesAreProvided_LaysOutASynthesizedTemplate(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	zones := []entities.Zone{{Name: gofakeit.Word()}}
-	layoutService := newLayoutServiceReturning(preview.Layout{})
-	handler := handlers.NewPreviewHandler(layoutService)
-
-	// Act
-	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{Zones: zones})
-
-	// Assert
-	assert.Equal(t, zones, laidOutTemplate(t, layoutService).Variants[0].Zones)
-}
-
-func TestWhenOnlyConnectionsAreProvided_LaysOutASynthesizedTemplate(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	connections := []entities.Connection{{Name: gofakeit.Word()}}
-	layoutService := newLayoutServiceReturning(preview.Layout{})
-	handler := handlers.NewPreviewHandler(layoutService)
-
-	// Act
-	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{Connections: connections})
-
-	// Assert
-	assert.Equal(t, connections, laidOutTemplate(t, layoutService).Variants[0].Connections)
+	layoutService.AssertCalled(t, "BuildPreviewLayout", (*template_model.Template)(nil), mock.Anything, mock.Anything)
 }
 
 func TestWhenTemplateIsProvided_LaysOutThatTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	template := &entities.RmgTemplate{Name: gofakeit.Word()}
+	template := &template_model.Template{Name: gofakeit.Word()}
 	layoutService := newLayoutServiceReturning(preview.Layout{})
 	handler := handlers.NewPreviewHandler(layoutService)
 
 	// Act
-	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
-		Template: template,
-		Zones:    []entities.Zone{{Name: gofakeit.Word()}},
-	})
+	handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{Template: template})
 
 	// Assert
-	assert.Same(t, template, laidOutTemplate(t, layoutService))
+	assert.Equal(t, template.Name, laidOutTemplate(t, layoutService).Name)
 }
 
 func TestWhenTopologyAndCanvasSideAreProvided_ForwardsThemToTheLayoutService(t *testing.T) {
@@ -81,7 +49,7 @@ func TestWhenTopologyAndCanvasSideAreProvided_ForwardsThemToTheLayoutService(t *
 	handler := handlers.NewPreviewHandler(layoutService)
 
 	// Act
-	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
+	handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
 		Topology:   config.TopologyChain,
 		CanvasSide: canvasSide,
 	})
@@ -93,14 +61,13 @@ func TestWhenTopologyAndCanvasSideAreProvided_ForwardsThemToTheLayoutService(t *
 func TestWhenLayoutIsComputed_ReturnsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := preview.Layout{ZoneRadius: gofakeit.IntRange(10, 40)}
+	expected := preview.Layout{ZoneRadius: gofakeit.Float64Range(10, 40)}
 	handler := handlers.NewPreviewHandler(newLayoutServiceReturning(expected))
 
 	// Act
-	layoutDto, err := handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
+	layoutDto := handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
 
 	// Assert
-	require.NoError(t, err)
 	assert.Equal(t, expected, layoutDto.Layout)
 }
 
@@ -111,9 +78,9 @@ func newLayoutServiceReturning(layout preview.Layout) *test_helpers.PreviewLayou
 }
 
 // laidOutTemplate returns the template the handler handed to the layout service.
-func laidOutTemplate(t *testing.T, layoutService *test_helpers.PreviewLayoutServiceMock) *entities.RmgTemplate {
+func laidOutTemplate(t *testing.T, layoutService *test_helpers.PreviewLayoutServiceMock) *template_model.Template {
 	t.Helper()
 
-	template, _ := layoutService.Calls[0].Arguments.Get(0).(*entities.RmgTemplate)
+	template, _ := layoutService.Calls[0].Arguments.Get(0).(*template_model.Template)
 	return template
 }

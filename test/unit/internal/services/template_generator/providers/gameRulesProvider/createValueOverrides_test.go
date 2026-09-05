@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,7 +21,7 @@ func TestWhenTextMixesValidAndJunkLines_ParsesOnlyValidLines(t *testing.T) {
 	actual, _ := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
 
 	// Assert
-	assert.Equal(t, []entities.ValueOverride{
+	assert.Equal(t, []template_model.ValueOverride{
 		{SID: "watchtower", Variant: -1, GuardValue: 25000},
 		{SID: "gold_mine", Variant: -1, GuardValue: 12000},
 	}, actual)
@@ -114,7 +114,7 @@ func TestWhenBlitzOverrideLineParsed_ReproducesBlitzSidAndGuardValue(t *testing.
 	actual, _ := providers.NewGameRulesProvider().CreateValueOverrides(*configuration)
 
 	// Assert
-	assert.Equal(t, []entities.ValueOverride{
+	assert.Equal(t, []template_model.ValueOverride{
 		{SID: blitzOverride.SID, Variant: -1, GuardValue: blitzOverride.GuardValue},
 	}, actual)
 }

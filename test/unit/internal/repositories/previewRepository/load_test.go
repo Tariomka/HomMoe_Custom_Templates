@@ -1,6 +1,7 @@
 package previewRepository_test
 
 import (
+	"image"
 	"path/filepath"
 	"testing"
 
@@ -15,7 +16,7 @@ func TestWhenPreviewLoadIsRequested_ReportsNotImplemented(t *testing.T) {
 	previewPath := filepath.Join(t.TempDir(), "T.png")
 
 	// Act
-	_, err := repositories.NewPreviewRepository().Load(previewPath)
+	err := repositories.NewPreviewRepository().Load(previewPath, &image.RGBA{})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNotImplemented)

@@ -64,10 +64,11 @@ Generated template preview:
 │   ├── common/                              # Shared errors, constants and immutable catalogs
 │   ├── registry/                            # Pure game SIDs / enum pools (items, spells, factions…)
 │   ├── helpers/                             # IO (Steam VDF detect), math, slice, string, linq
-│   ├── entities/                            # Read-only .rmg.json schema (template/ + re-export aliases)
-│   ├── mappers/                             # Editor-state DTO to generator-config mapping
-│   ├── models/                              # GeneratorConfig + settings, mappings, plans, tuning
-│   │   └── config/                          # GeneratorConfig (config_inner: topology, zone, hero, rules)
+│   ├── entities/                            # Database layer: read-only .rmg.json schema (template/), editor_state/, topology/
+│   ├── mappers/                             # Entity ⇄ model and editor-state ⇄ generator-config mapping
+│   ├── models/                              # Service layer: owns the structure and the business logic
+│   │   ├── config/                          # GeneratorConfig (config_inner: topology, zone, hero, rules)
+│   │   └── editor_state_model/              # EditorState and its nine groups, wrapping the entities
 │   ├── repositories/                        # Atomic file read/write per persisted artifact
 │   ├── validators/                          # Editor-state validation rules
 │   └── services/                            # Business logic
@@ -117,7 +118,7 @@ Generated template preview:
 
 ## Building & Running
 
-Requires **Go 1.26.5** or later (see [go.mod](go.mod)).
+Requires **Go 1.27.0** or later (see [go.mod](go.mod)).
 
 ```powershell
 # Run directly
@@ -151,7 +152,8 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
    **Bonuses & Bans** tabs.
 3. (Optional) On the **Layout & Zones** tab open the **Manual zone editor** to
    tweak the zones and connections of the last generated template.
-4. **Save** / **Save As** writes a `.gen.json` settings file (your inputs).
+4. **Save** / **Save To** writes a `.gen.json` settings file (your inputs).
+   The filename comes from the template name; **Save To** only picks the folder.
 5. Click **Generate** to build the template and refresh the preview,
    then **Save Template** to write `<TemplateName>.rmg.json` (plus a preview
    `.png`) into the output folder.
@@ -211,16 +213,22 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
    topology/content/rule providers), the manual `connection_editor`,
    `content_rules`, shared zone/castle/road factories, preview layout/rendering,
    and `.gen.json` / `.rmg.json` IO.
-4. **Models** (`internal/models`) — `config.GeneratorConfig` (the generator
-   input) plus mappings, neutral-zone plans, generation tuning and positions.
-5. **Entities** (`internal/entities`) — the on-disk `.rmg.json` schema
-   (`RmgTemplate`, `Variant`, `Zone`, `GameRules`, content pools…). Read-only;
-   guarantees game compatibility.
+4. **Models** (`internal/models`) — the service layer, and the layer that
+   **owns the structure**: `editor_state_model.EditorState` wraps the entity
+   groups and carries all editor-state behaviour, alongside
+   `config.GeneratorConfig` (the generator input), mappings, neutral-zone plans,
+   generation tuning and positions.
+5. **Entities** (`internal/entities`) — the database layer: the on-disk
+   `.rmg.json` schema (`RmgTemplate`, `Variant`, `Zone`, `GameRules`, content
+   pools…), which is read-only and guarantees game compatibility, plus
+   `editor_state/` (the `.gen.json` schema) and `topology/`. JSON tags only, no
+   logic.
 6. **Registry & common catalogs** (`internal/registry`, `internal/common`) —
    pure game SIDs / enum pools plus immutable shared constants and catalogs.
 7. **Mappers, validators & helpers** (`internal/mappers`,
-   `internal/validators`, `internal/helpers`) — boundary mapping, editor-state
-   validation and cross-cutting utilities including Steam library detection.
+   `internal/validators`, `internal/helpers`) — entity ⇄ model mapping,
+   editor-state validation and cross-cutting utilities including Steam library
+   detection.
 8. **Composition root** (`internal/composition`) — the wire provider sets and
    the generated `InitializeGuiHandler` injector. Every dependency is
    constructed here exactly once; nothing else builds its own collaborators.
@@ -229,7 +237,8 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
 
 ```
 app/gui (panels, dialogs, drivers.State)
-   │   collects widget input into dtos.EditorStateDto
+   │   holds the working state as editor_state_model.EditorState and crosses
+   │   the handler boundary as editor_state_dto.EditorStateDto
    │   invokes app/gui/interfaces.IBackend
    ▼
 handlers.GUIHandler → templateHandler.GenerateTemplate

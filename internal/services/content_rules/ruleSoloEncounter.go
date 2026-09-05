@@ -3,8 +3,8 @@ package content_rules
 import (
 	"fmt"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // Rule metadata constants for the solo-encounter rule.
@@ -24,7 +24,8 @@ func NewRuleSoloEncounter(isSoloEncounter bool) *RuleSoloEncounter {
 	return &RuleSoloEncounter{IsSoloEncounter: isSoloEncounter}
 }
 
-func (this *RuleSoloEncounter) Name() string        { return RuleSoloEncounterName }
+func (this *RuleSoloEncounter) Name() string { return RuleSoloEncounterName }
+
 func (this *RuleSoloEncounter) Description() string { return RuleSoloEncounterDescription }
 
 // Marker shows "S" when solo and "!S" when explicitly not solo.
@@ -40,13 +41,13 @@ func (this *RuleSoloEncounter) DisplayText() string {
 	return fmt.Sprintf("%s: %t", this.Name(), this.IsSoloEncounter)
 }
 
-func (this *RuleSoloEncounter) Apply(item *entities.MandatoryContentItem) {
+func (this *RuleSoloEncounter) Apply(item *template_model.MandatoryContentItem) {
 	item.SoloEncounter = this.IsSoloEncounter
 }
 
-func (this *RuleSoloEncounter) SerializeToRowSave() models.ContentRuleRowSave {
+func (this *RuleSoloEncounter) SerializeToRowSave() editor_state_model.ContentRuleRow {
 	value := this.IsSoloEncounter
-	return models.ContentRuleRowSave{
+	return editor_state_model.ContentRuleRow{
 		Name:            this.Name(),
 		IsSoloEncounter: &value,
 	}

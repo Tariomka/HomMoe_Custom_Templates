@@ -3,8 +3,8 @@ package mandatoryContentProvider_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,15 +18,15 @@ func TestWhenZoneManuallyPromotedToHighTier_UsesHighTierRows(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
-	configuration.HighNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "high_only"}}
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "medium_only"}}
+	configuration.HighNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "high_only"}}
 	// A zone the generator labelled "G" but whose profile was manually raised to
 	// the high tier (treasure layout, t4 pool) with three castles.
-	zones := []entities.Zone{{
+	zones := []template_model.Zone{{
 		Name:               "Neutral-G",
 		Layout:             registry.GetLayoutValues().TreasureZone,
 		GuardedContentPool: []string{"classic_template_pool_random_t4_item"},
-		MainObjects: []entities.MainObject{
+		MainObjects: []template_model.MainObject{
 			{Type: "City"}, {Type: "City"}, {Type: "City"},
 		},
 	}}
@@ -46,13 +46,13 @@ func TestWhenZonePoolIsLowTier_UsesLowTierRows(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
-	zones := []entities.Zone{{
+	configuration.LowNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "low_only"}}
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "medium_only"}}
+	zones := []template_model.Zone{{
 		Name:               "Neutral-C",
 		Layout:             registry.GetLayoutValues().Sides,
 		GuardedContentPool: []string{"classic_template_pool_random_t2_item"},
-		MainObjects:        []entities.MainObject{{Type: "City"}},
+		MainObjects:        []template_model.MainObject{{Type: "City"}},
 	}}
 
 	// Act
@@ -68,13 +68,13 @@ func TestWhenZonePoolIsLowestTier_UsesLowestTierRows(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.LowestNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "lowest_only"}}
-	configuration.LowNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "low_only"}}
-	zones := []entities.Zone{{
+	configuration.LowestNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "lowest_only"}}
+	configuration.LowNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "low_only"}}
+	zones := []template_model.Zone{{
 		Name:               "Neutral-C",
 		Layout:             registry.GetLayoutValues().Sides,
 		GuardedContentPool: []string{"classic_template_pool_random_t1_item"},
-		MainObjects:        []entities.MainObject{{Type: "City"}},
+		MainObjects:        []template_model.MainObject{{Type: "City"}},
 	}}
 
 	// Act
@@ -90,10 +90,10 @@ func TestWhenZoneHasNoRecognizableQuality_CreatesAnEmptyGroup(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "medium_only"}}
-	zones := []entities.Zone{{
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "medium_only"}}
+	zones := []template_model.Zone{{
 		Name:        "Neutral-C",
-		MainObjects: []entities.MainObject{{Type: "City"}},
+		MainObjects: []template_model.MainObject{{Type: "City"}},
 	}}
 
 	// Act
@@ -111,8 +111,8 @@ func TestWhenZoneHasNoCastles_KeepsConfiguredRows(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "treasure"}}
-	zones := []entities.Zone{{
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "treasure"}}
+	zones := []template_model.Zone{{
 		Name:               "Neutral-H",
 		Layout:             registry.GetLayoutValues().TreasureZone,
 		GuardedContentPool: []string{"classic_template_pool_random_t3_item"},
@@ -131,8 +131,8 @@ func TestWhenSpawnZoneProvided_CreatesPlayerGroupNamedAfterZoneSuffix(t *testing
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.PlayerZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "sawmill"}}
-	zones := []entities.Zone{{Name: "Spawn-B"}}
+	configuration.PlayerZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "sawmill"}}
+	zones := []template_model.Zone{{Name: "Spawn-B"}}
 
 	// Act
 	groups := provider.CreateContentsForZones(*configuration, zones)
@@ -146,8 +146,8 @@ func TestWhenZoneNameIsUnrecognized_SkipsZone(t *testing.T) {
 	// Arrange
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.MediumNeutralMandatoryContent = []entities.MandatoryContentItem{{SID: "treasure"}}
-	zones := []entities.Zone{{Name: "SomethingElse"}}
+	configuration.MediumNeutralMandatoryContent = []template_model.MandatoryContentItem{{SID: "treasure"}}
+	zones := []template_model.Zone{{Name: "SomethingElse"}}
 
 	// Act
 	groups := provider.CreateContentsForZones(*configuration, zones)
@@ -164,9 +164,9 @@ func TestWhenMultipleHubZonesProvided_EmitsSingleHubGroup(t *testing.T) {
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
-	zones := []entities.Zone{
-		{Name: "Hub", MainObjects: []entities.MainObject{{Type: "City"}}},
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_treasure"}}
+	zones := []template_model.Zone{
+		{Name: "Hub", MainObjects: []template_model.MainObject{{Type: "City"}}},
 		{Name: "Hub-B"},
 	}
 
@@ -184,9 +184,9 @@ func TestWhenMultipleHubZonesProvided_SharedHubGroupContainsConfiguredRows(t *te
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
 	configuration.SpawnRemoteFootholds = false
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_treasure"}}
-	zones := []entities.Zone{
-		{Name: "Hub", MainObjects: []entities.MainObject{{Type: "City"}}},
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_treasure"}}
+	zones := []template_model.Zone{
+		{Name: "Hub", MainObjects: []template_model.MainObject{{Type: "City"}}},
 		{Name: "Hub-B"},
 	}
 
@@ -202,7 +202,7 @@ func TestWhenHubZoneProvidedWithoutHubRows_OmitsHubGroup(t *testing.T) {
 	// Arrange
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
-	zones := []entities.Zone{{Name: "Hub", MainObjects: []entities.MainObject{{Type: "City"}}}}
+	zones := []template_model.Zone{{Name: "Hub", MainObjects: []template_model.MainObject{{Type: "City"}}}}
 
 	// Act
 	groups := provider.CreateContentsForZones(*configuration, zones)

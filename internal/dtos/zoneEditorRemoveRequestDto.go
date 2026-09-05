@@ -1,9 +1,11 @@
 package dtos
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/entities"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
+)
 
 type ZoneEditorRemoveRequestDto struct {
-	Zones       []entities.Zone
-	Connections []entities.Connection
+	Zones       []template_model.Zone
+	Connections []template_model.Connection
 	ZoneName    string
 }

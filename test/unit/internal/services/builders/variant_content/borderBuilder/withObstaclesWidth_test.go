@@ -3,7 +3,7 @@ package borderBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenObstaclesWidthIsProvided_SetsObstaclesWidthOnBuiltBorder(t *testing
 	border := builder.WithObstaclesWidth(expectedWidth).Build()
 
 	// Assert
-	assert.Equal(t, entities.Border{ObstaclesWidth: expectedWidth}, border)
+	assert.Equal(t, template_model.Border{ObstaclesWidth: expectedWidth}, border)
 }

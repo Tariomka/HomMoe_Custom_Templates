@@ -1,14 +1,13 @@
 package test_helpers
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/stretchr/testify/mock"
 )
@@ -18,27 +17,27 @@ import (
 type TemplateHandlerMock struct {
 	mock.Mock
 
-	ValidateEditorStateFunc         func(dtos.EditorStateDto, bool) dtos.EditorStateValidationDto
-	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) (dtos.PreviewLayoutDto, error)
+	ValidateEditorStateFunc         func(editor_state_model.EditorState, bool) editor_state_dto.EditorStateValidationDto
+	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) dtos.PreviewLayoutDto
 	GetContentRuleEditorOptionsFunc func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
-	DescribeContentRuleFunc         func(models.SidMapping, models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto
-	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []entities.Zone
-	GetZoneEditorOptionsFunc        func(dtos.EditorStateDto, int) dtos.ZoneEditorOptionsDto
-	CountZoneCastlesFunc            func(entities.Zone) int
-	GetZoneQualityFunc              func(entities.Zone) neutral_zone.Quality
-	GetZoneConnectionQualityFunc    func(string, string, []entities.Zone, map[string]bool) neutral_zone.Quality
-	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) entities.Zone
-	DescribeZoneEditorGraphFunc     func([]entities.Zone, []entities.Connection) dtos.ZoneEditorGraphDto
-	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) entities.Connection
+	DescribeContentRuleFunc         func(models.SidMapping, editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto
+	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []template_model.Zone
+	GetZoneEditorOptionsFunc        func(editor_state_dto.EditorStateDto, int) dtos.ZoneEditorOptionsDto
+	CountZoneCastlesFunc            func(template_model.Zone) int
+	GetZoneQualityFunc              func(template_model.Zone) neutral_zone.Quality
+	GetZoneConnectionQualityFunc    func(string, string, []template_model.Zone, map[string]bool) neutral_zone.Quality
+	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) template_model.Zone
+	DescribeZoneEditorGraphFunc     func([]template_model.Zone, []template_model.Connection) dtos.ZoneEditorGraphDto
+	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) template_model.Connection
 	FindOpenZonePositionFunc        func([][2]float64) [2]float64
-	GetNextZoneLabelFunc            func([]entities.Zone) string
-	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) entities.Zone
+	GetNextZoneLabelFunc            func([]template_model.Zone) string
+	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone
 	CanDeleteZoneFunc               func(string, map[string]bool) bool
 	RemoveZoneEditorZoneFunc        func(dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto
 	BuildZoneEditorGeometryFunc     func(dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry
 	HitTestZoneEditorNodeFunc       func(dtos.ZoneEditorHitTestRequestDto) string
-	HitTestZoneEditorEdgeFunc       func(image.Point, []models.ZoneEditorEdge) int
-	GetZoneEditorGridStepFunc       func(int) float64
+	HitTestZoneEditorEdgeFunc       func(models.Position, []models.ZoneEditorEdge) int
+	GetZoneEditorGridStepFunc       func(float64) float64
 	SnapZoneEditorPositionFunc      func(dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult
 	DescribeExistingBonusesFunc     func([]config.BonusEntry) dtos.ExistingBonusesDto
 	BuildBonusEntriesFunc           func(dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto
@@ -46,8 +45,10 @@ type TemplateHandlerMock struct {
 	GetSpellCountLabelFunc          func(int) string
 }
 
-func (this *TemplateHandlerMock) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	arguments := this.Called(stateDto)
+func (this *TemplateHandlerMock) GenerateTemplate(
+	state editor_state_dto.EditorStateDto,
+) (dtos.TemplateLoadDto, error) {
+	arguments := this.Called(state)
 	template, _ := arguments.Get(0).(dtos.TemplateLoadDto)
 	return template, arguments.Error(1)
 }
@@ -60,7 +61,7 @@ func (this *TemplateHandlerMock) UpdateTemplate(templateDto dtos.TemplateUpdateD
 
 func (this *TemplateHandlerMock) ReapplyCastleSettings(
 	request dtos.CastleSettingsReapplyRequestDto,
-) []entities.Zone {
+) []template_model.Zone {
 	if this.ReapplyCastleSettingsFunc != nil {
 		return this.ReapplyCastleSettingsFunc(request)
 	}
@@ -68,7 +69,7 @@ func (this *TemplateHandlerMock) ReapplyCastleSettings(
 }
 
 func (this *TemplateHandlerMock) GetZoneEditorOptions(
-	state dtos.EditorStateDto,
+	state editor_state_dto.EditorStateDto,
 	totalZoneCount int,
 ) dtos.ZoneEditorOptionsDto {
 	if this.GetZoneEditorOptionsFunc != nil {
@@ -77,14 +78,14 @@ func (this *TemplateHandlerMock) GetZoneEditorOptions(
 	return dtos.ZoneEditorOptionsDto{}
 }
 
-func (this *TemplateHandlerMock) CountZoneCastles(zone entities.Zone) int {
+func (this *TemplateHandlerMock) CountZoneCastles(zone template_model.Zone) int {
 	if this.CountZoneCastlesFunc != nil {
 		return this.CountZoneCastlesFunc(zone)
 	}
 	return 0
 }
 
-func (this *TemplateHandlerMock) GetZoneQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *TemplateHandlerMock) GetZoneQuality(zone template_model.Zone) neutral_zone.Quality {
 	if this.GetZoneQualityFunc != nil {
 		return this.GetZoneQualityFunc(zone)
 	}
@@ -93,7 +94,7 @@ func (this *TemplateHandlerMock) GetZoneQuality(zone entities.Zone) neutral_zone
 
 func (this *TemplateHandlerMock) GetZoneConnectionGuardQuality(
 	from, to string,
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	playerZoneNames map[string]bool,
 ) neutral_zone.Quality {
 	if this.GetZoneConnectionQualityFunc != nil {
@@ -104,7 +105,7 @@ func (this *TemplateHandlerMock) GetZoneConnectionGuardQuality(
 
 func (this *TemplateHandlerMock) ApplyZoneEditorQuality(
 	request dtos.ZoneEditorQualityRequestDto,
-) entities.Zone {
+) template_model.Zone {
 	if this.ApplyZoneEditorQualityFunc != nil {
 		return this.ApplyZoneEditorQualityFunc(request)
 	}
@@ -112,8 +113,8 @@ func (this *TemplateHandlerMock) ApplyZoneEditorQuality(
 }
 
 func (this *TemplateHandlerMock) DescribeZoneEditorGraph(
-	zones []entities.Zone,
-	connections []entities.Connection,
+	zones []template_model.Zone,
+	connections []template_model.Connection,
 ) dtos.ZoneEditorGraphDto {
 	if this.DescribeZoneEditorGraphFunc != nil {
 		return this.DescribeZoneEditorGraphFunc(zones, connections)
@@ -123,11 +124,11 @@ func (this *TemplateHandlerMock) DescribeZoneEditorGraph(
 
 func (this *TemplateHandlerMock) CreateZoneEditorConnection(
 	request dtos.ZoneEditorConnectionRequestDto,
-) entities.Connection {
+) template_model.Connection {
 	if this.CreateZoneEditorConnectionFunc != nil {
 		return this.CreateZoneEditorConnectionFunc(request)
 	}
-	return entities.Connection{}
+	return template_model.Connection{}
 }
 
 func (this *TemplateHandlerMock) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
@@ -137,7 +138,7 @@ func (this *TemplateHandlerMock) FindOpenZonePosition(occupied [][2]float64) [2]
 	return [2]float64{}
 }
 
-func (this *TemplateHandlerMock) GetNextZoneLabel(zones []entities.Zone) string {
+func (this *TemplateHandlerMock) GetNextZoneLabel(zones []template_model.Zone) string {
 	if this.GetNextZoneLabelFunc != nil {
 		return this.GetNextZoneLabelFunc(zones)
 	}
@@ -146,11 +147,11 @@ func (this *TemplateHandlerMock) GetNextZoneLabel(zones []entities.Zone) string 
 
 func (this *TemplateHandlerMock) CreateZoneEditorNeutralZone(
 	request dtos.ZoneEditorNeutralZoneRequestDto,
-) entities.Zone {
+) template_model.Zone {
 	if this.CreateZoneEditorNeutralZoneFunc != nil {
 		return this.CreateZoneEditorNeutralZoneFunc(request)
 	}
-	return entities.Zone{}
+	return template_model.Zone{}
 }
 
 func (this *TemplateHandlerMock) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
@@ -175,7 +176,7 @@ func (this *TemplateHandlerMock) BuildZoneEditorGeometry(
 	if this.BuildZoneEditorGeometryFunc != nil {
 		return this.BuildZoneEditorGeometryFunc(request)
 	}
-	return models.ZoneEditorGeometry{Positions: map[string]image.Point{}}
+	return models.ZoneEditorGeometry{Positions: map[string]models.Position{}}
 }
 
 func (this *TemplateHandlerMock) HitTestZoneEditorNode(request dtos.ZoneEditorHitTestRequestDto) string {
@@ -186,7 +187,7 @@ func (this *TemplateHandlerMock) HitTestZoneEditorNode(request dtos.ZoneEditorHi
 }
 
 func (this *TemplateHandlerMock) HitTestZoneEditorEdge(
-	position image.Point,
+	position models.Position,
 	edges []models.ZoneEditorEdge,
 ) int {
 	if this.HitTestZoneEditorEdgeFunc != nil {
@@ -195,7 +196,7 @@ func (this *TemplateHandlerMock) HitTestZoneEditorEdge(
 	return -1
 }
 
-func (this *TemplateHandlerMock) GetZoneEditorGridStep(zoneRadius int) float64 {
+func (this *TemplateHandlerMock) GetZoneEditorGridStep(zoneRadius float64) float64 {
 	if this.GetZoneEditorGridStepFunc != nil {
 		return this.GetZoneEditorGridStepFunc(zoneRadius)
 	}
@@ -216,35 +217,36 @@ func (this *TemplateHandlerMock) SaveTemplate(templateDto dtos.TemplateSaveDto) 
 	return arguments.String(0), arguments.Error(1)
 }
 
-func (this *TemplateHandlerMock) LoadState(path string, fixIssues bool) (*dtos.EditorStateDto, []string, error) {
+func (this *TemplateHandlerMock) LoadState(
+	path string,
+	fixIssues bool) (*editor_state_dto.EditorStateValidationDto, error) {
 	arguments := this.Called(path, fixIssues)
-	state, _ := arguments.Get(0).(*dtos.EditorStateDto)
-	warnings, _ := arguments.Get(1).([]string)
-	return state, warnings, arguments.Error(2)
+	validation, _ := arguments.Get(0).(*editor_state_dto.EditorStateValidationDto)
+	return validation, arguments.Error(1)
 }
 
-func (this *TemplateHandlerMock) SaveState(stateDto dtos.EditorStateSaveDto) (string, error) {
+func (this *TemplateHandlerMock) SaveState(stateDto editor_state_dto.EditorStateSaveDto) (string, error) {
 	arguments := this.Called(stateDto)
 	return arguments.String(0), arguments.Error(1)
 }
 
 func (this *TemplateHandlerMock) ValidateEditorState(
-	stateDto dtos.EditorStateDto,
+	state editor_state_model.EditorState,
 	fixIssues bool,
-) dtos.EditorStateValidationDto {
+) editor_state_dto.EditorStateValidationDto {
 	if this.ValidateEditorStateFunc != nil {
-		return this.ValidateEditorStateFunc(stateDto, fixIssues)
+		return this.ValidateEditorStateFunc(state, fixIssues)
 	}
-	return dtos.EditorStateValidationDto{State: stateDto}
+	return editor_state_dto.EditorStateValidationDto{State: state}
 }
 
 func (this *TemplateHandlerMock) BuildPreviewLayout(
 	request dtos.PreviewLayoutRequestDto,
-) (dtos.PreviewLayoutDto, error) {
+) dtos.PreviewLayoutDto {
 	if this.BuildPreviewLayoutFunc != nil {
 		return this.BuildPreviewLayoutFunc(request)
 	}
-	return dtos.PreviewLayoutDto{}, nil
+	return dtos.PreviewLayoutDto{}
 }
 
 func (this *TemplateHandlerMock) GetContentRuleEditorOptions(
@@ -258,7 +260,7 @@ func (this *TemplateHandlerMock) GetContentRuleEditorOptions(
 
 func (this *TemplateHandlerMock) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave,
+	savedRule editor_state_model.ContentRuleRow,
 ) dtos.ContentRuleDescriptionDto {
 	if this.DescribeContentRuleFunc != nil {
 		return this.DescribeContentRuleFunc(content, savedRule)
@@ -308,23 +310,23 @@ func (this *TemplateHandlerMock) ComposeContentRule(
 }
 
 func (this *TemplateHandlerMock) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave,
-) []models.ContentRuleRowSave {
+	rules []editor_state_model.ContentRuleRow,
+	rule editor_state_model.ContentRuleRow,
+) []editor_state_model.ContentRuleRow {
 	return zone_content.NewZoneContentEditorService().UpsertContentRule(rules, rule)
 }
 
-func (this *TemplateHandlerMock) GetDefaultContentRules(models.SidMapping) []models.ContentRuleRowSave {
+func (this *TemplateHandlerMock) GetDefaultContentRules(models.SidMapping) []editor_state_model.ContentRuleRow {
 	return nil
 }
 
-func (this *TemplateHandlerMock) GetContentRuleMarkers(models.SidMapping, []models.ContentRuleRowSave) string {
+func (this *TemplateHandlerMock) GetContentRuleMarkers(models.SidMapping, []editor_state_model.ContentRuleRow) string {
 	return ""
 }
 
 func (this *TemplateHandlerMock) GetContentRowDisplayName(
 	content models.SidMapping,
-	_ []models.ContentRuleRowSave,
+	_ []editor_state_model.ContentRuleRow,
 ) string {
 	return content.Name
 }
@@ -335,33 +337,4 @@ func (this *TemplateHandlerMock) SortContentItemsByName(items []models.SidMappin
 
 func (this *TemplateHandlerMock) ClampContentCount(count int, maxCount int) int {
 	return zone_content.NewZoneContentEditorService().ClampContentCount(count, maxCount)
-}
-
-func (this *TemplateHandlerMock) BuildItemPickerEntries(items []dtos.PickerItemDto) []dtos.PickerEntryDto {
-	return pickers.NewPickerEntryService().BuildItemPickerEntries(items)
-}
-
-func (this *TemplateHandlerMock) BuildSpellPickerEntries(spells []dtos.PickerSpellDto) []dtos.PickerEntryDto {
-	return pickers.NewPickerEntryService().BuildSpellPickerEntries(spells)
-}
-
-func (this *TemplateHandlerMock) BuildValueOverridePickerEntries(sids []string) []dtos.PickerEntryDto {
-	return pickers.NewPickerEntryService().BuildValueOverridePickerEntries(sids)
-}
-
-func (this *TemplateHandlerMock) NormalizePickerFilter(text string) string {
-	return pickers.NewPickerEntryService().NormalizePickerFilter(text)
-}
-
-func (this *TemplateHandlerMock) GetVisiblePickerRows(
-	entries []dtos.PickerEntryDto,
-	filter string,
-	grouped bool) []dtos.PickerRowDto {
-	return pickers.NewPickerEntryService().GetVisiblePickerRows(entries, filter, grouped)
-}
-
-func (this *TemplateHandlerMock) GetSelectedPickerIDs(
-	entries []dtos.PickerEntryDto,
-	selected map[string]bool) []string {
-	return pickers.NewPickerEntryService().GetSelectedPickerIDs(entries, selected)
 }

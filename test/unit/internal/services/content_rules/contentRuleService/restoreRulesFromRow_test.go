@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +14,7 @@ func TestWhenRowHasSerializedRules_RestoresEachRule(t *testing.T) {
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	row := models.ZoneContentRowSave{Sid: "x", Rules: []models.ContentRuleRowSave{
+	row := editor_state_model.ZoneContentRow{Sid: "x", Rules: []editor_state_model.ContentRuleRow{
 		{Name: "Guarded", IsGuarded: &isGuarded},
 		{Name: "Distance to road", DistanceName: "Far"},
 	}}
@@ -33,7 +34,7 @@ func TestWhenRowHasNoRules_ReturnsNoRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	row := models.ZoneContentRowSave{Sid: "x"}
+	row := editor_state_model.ZoneContentRow{Sid: "x"}
 
 	// Act
 	rules := service.RestoreRulesFromRow(row, models.SidMapping{Sid: "x"})
@@ -47,7 +48,7 @@ func TestWhenSavedRuleIsInvalid_SkipsIt(t *testing.T) {
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	row := models.ZoneContentRowSave{Sid: "x", Rules: []models.ContentRuleRowSave{
+	row := editor_state_model.ZoneContentRow{Sid: "x", Rules: []editor_state_model.ContentRuleRow{
 		{Name: "Nope"},
 		{Name: "Guarded", IsGuarded: &isGuarded},
 	}}

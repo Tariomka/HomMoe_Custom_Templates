@@ -33,3 +33,17 @@ func IsZoneNamePlayer(zoneName string) bool {
 }
 
 func IsZoneNameHub(zoneName string) bool { return GetZoneTypeFromName(zoneName) == preview.ZoneTypeHub }
+
+// IsClusterHubZoneName reports whether the zone is one of the per-cluster hubs
+// of a multi-hub topology ("Hub-A"). Unlike IsZoneNameHub it excludes the shared
+// hub, so callers that count clusters do not count the shared hub as one.
+func IsClusterHubZoneName(zoneName string) bool {
+	return strings.HasPrefix(zoneName, constants.HubZonePrefix)
+}
+
+// IsSharedHubZoneName reports whether the zone is the single shared hub every
+// other zone connects to ("Hub"). Unlike IsZoneNameHub it excludes the
+// per-cluster hubs, so callers that look for one center never match several.
+func IsSharedHubZoneName(zoneName string) bool {
+	return zoneName == constants.HubZoneName
+}

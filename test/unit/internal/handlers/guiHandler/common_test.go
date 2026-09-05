@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
@@ -18,15 +19,23 @@ import (
 
 // generateDefaultTemplate produces a real generated template from the default
 // editor state so update tests operate on realistic zones and connections.
-func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateHandler) *entities.RmgTemplate {
+func generateDefaultTemplate(t *testing.T, handler handler_interfaces.ITemplateHandler) *template_model.Template {
 	t.Helper()
 
-	loadDto, err := handler.GenerateTemplate(dtos.NewDefaultEditorStateDto())
+	loadDto, err := handler.GenerateTemplate(toDto(editor_state_model.NewDefaultEditorStateModel()))
 	require.NoError(t, err)
 	require.NotNil(t, loadDto.Template)
 	require.NotEmpty(t, loadDto.Template.Variants)
 
 	return loadDto.Template
+}
+
+func toDto(state editor_state_model.EditorState) editor_state_dto.EditorStateDto {
+	return editor_state_dto.EditorStateDto{EditorState: state}
+}
+
+func toDtoPointer(state *editor_state_model.EditorState) *editor_state_dto.EditorStateDto {
+	return &editor_state_dto.EditorStateDto{EditorState: *state}
 }
 
 // newProductionGuiHandler builds the same handler graph the application uses.
@@ -40,7 +49,7 @@ func newManualReapplyService() connection_editor.IManualReapplyService {
 	return connection_editor.NewManualReapplyService(
 		test_helpers.NewZoneEditorService(),
 		zone_services.NewCastleFactory(),
-		zone_services.NewZoneClassifier(),
+		zone_services.NewZoneTierService(),
 		generation_tuning.NewGenerationTuningFactory(),
 	)
 }
@@ -49,7 +58,7 @@ func newManualReapplyService() connection_editor.IManualReapplyService {
 // same collaborators the handler graph wires.
 func newMandatoryContentProvider() provider_interfaces.IMandatoryContentProvider {
 	return providers.NewMandatoryContentProvider(
-		zone_services.NewZoneClassifier(),
+		zone_services.NewZoneTierService(),
 		test_helpers.NewZoneEditorService(),
 	)
 }

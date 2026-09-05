@@ -8,13 +8,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
@@ -32,8 +32,7 @@ func NewBalancedClusterService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *BalancedClusterService {
+	connectionService base.ITopologyConnectionService) *BalancedClusterService {
 	return &BalancedClusterService{
 		TopologyBase:          base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		positionLayoutService: position_layout.NewPositionLayoutService(),
@@ -45,7 +44,7 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
-	playerLabel string) ([]entities.Zone, []entities.Connection) {
+	playerLabel string) ([]template_model.Zone, []template_model.Connection) {
 	singlePlayerList := []string{playerLabel}
 	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans)
 	rawPositions := this.positionLayoutService.CreatePositionsFromPlans(
@@ -81,15 +80,9 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	}
 
 	connections := this.createConnections(
-		playerLabel, orderedLabels,
-		tuning, allNeutralZonePlans,
-		connectionNames, sortedPairs)
-	connections = append(
-		connections,
-		this.CreateMissingConnections(
-			singlePlayerList, orderedLabels,
-			positions, zones, connections,
-			tuning, allNeutralZonePlans)...)
+		playerLabel, orderedLabels, tuning, allNeutralZonePlans, connectionNames, sortedPairs)
+	connections = append(connections, this.CreateMissingConnections(
+		singlePlayerList, orderedLabels, positions, zones, connections, tuning, allNeutralZonePlans)...)
 	return zones, connections
 }
 
@@ -158,8 +151,10 @@ func (this *BalancedClusterService) createSortedPairs(
 		if sortedPairs[i][0] != sortedPairs[j][0] {
 			return sortedPairs[i][0] < sortedPairs[j][0]
 		}
+
 		return sortedPairs[i][1] < sortedPairs[j][1]
 	})
+
 	return sortedPairs
 }
 
@@ -175,9 +170,7 @@ func bucketIndicesByTier(orderedLabels []string, allNeutralZonePlans neutral_zon
 
 // sortTiersByAngle orders every tier's indexes by their angle around the map
 // center and returns the sorted indexes alongside the matching angles.
-func sortTiersByAngle(
-	tierIndices map[int][]int,
-	rawPositions models.Positions) (map[int][]int, map[int][]float64) {
+func sortTiersByAngle(tierIndices map[int][]int, rawPositions models.Positions) (map[int][]int, map[int][]float64) {
 	tierSorted := map[int][]int{}
 	tierAngles := map[int][]float64{}
 	for tier, indexes := range tierIndices {
@@ -187,6 +180,7 @@ func sortTiersByAngle(
 			return math.Atan2(rawPositions[sorted[i]].Y-0.5, rawPositions[sorted[i]].X-0.5) <
 				math.Atan2(rawPositions[sorted[j]].Y-0.5, rawPositions[sorted[j]].X-0.5)
 		})
+
 		tierSorted[tier] = sorted
 		angles := make([]float64, len(sorted))
 		for j, zoneIndex := range sorted {
@@ -205,6 +199,7 @@ func addSameRingPairs(addPair func(a, b int), tierSorted map[int][]int) {
 		if ringSize < 3 {
 			continue
 		}
+
 		for i := range sorted {
 			addPair(sorted[i], sorted[(i+1)%ringSize])
 		}
@@ -238,16 +233,13 @@ func addCrossRingPairs(
 		bestDistance := math.MaxFloat64
 		for outerIndex := range outerSorted {
 			if distance := misc.GetShortestAngleDistance(
-				innerAngles[innerIndex],
-				outerAngles[outerIndex],
-			); distance < bestDistance {
+				innerAngles[innerIndex], outerAngles[outerIndex]); distance < bestDistance {
 				bestDistance = distance
 			}
 		}
 		for outerIndex := range outerSorted {
 			if misc.GetShortestAngleDistance(
-				innerAngles[innerIndex],
-				outerAngles[outerIndex]) <= bestDistance+epsilon {
+				innerAngles[innerIndex], outerAngles[outerIndex]) <= bestDistance+epsilon {
 				addPair(innerSorted[innerIndex], outerSorted[outerIndex])
 			}
 		}
@@ -259,7 +251,7 @@ func (this *BalancedClusterService) createConnectionNames(orderedLabels []string
 	for _, pair := range sortedPairs {
 		labelFrom := orderedLabels[pair[0]]
 		labelTo := orderedLabels[pair[1]]
-		connectionName := fmt.Sprintf("TBal-%s-%s", labelFrom, labelTo)
+		connectionName := constants.GetTournamentBalancedConnectionNameFor(labelFrom, labelTo)
 		connectionNamesByZone[pair[0]] = append(connectionNamesByZone[pair[0]], connectionName)
 		connectionNamesByZone[pair[1]] = append(connectionNamesByZone[pair[1]], connectionName)
 	}
@@ -273,8 +265,8 @@ func (this *BalancedClusterService) createZones(
 	orderedLabels []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
-	connectionNames [][]string) []entities.Zone {
-	var zones []entities.Zone
+	connectionNames [][]string) []template_model.Zone {
+	var zones []template_model.Zone
 	for index, label := range orderedLabels {
 		myConns := connectionNames[index]
 		zones = append(zones, this.CreateClusterZone(
@@ -289,10 +281,10 @@ func (this *BalancedClusterService) createConnections(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
 	connectionNames [][]string,
-	sortedPairs [][2]int) []entities.Connection {
+	sortedPairs [][2]int) []template_model.Connection {
 	nameLookup := make(map[int]int, len(orderedLabels))
 
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for _, pair := range sortedPairs {
 		indexA, indexB := pair[0], pair[1]
 		labelFrom := orderedLabels[indexA]
@@ -302,13 +294,13 @@ func (this *BalancedClusterService) createConnections(
 		nameLookup[indexA]++
 		nameLookup[indexB]++
 
-		fromZone := constants.PlayerZonePrefix + labelFrom
+		fromZone := constants.GetPlayerZoneNameFor(labelFrom)
 		if labelFrom != playerLabel {
-			fromZone = constants.NeutralZonePrefix + labelFrom
+			fromZone = constants.GetNeutralZoneNameFor(labelFrom)
 		}
-		toZone := constants.PlayerZonePrefix + labelTo
+		toZone := constants.GetPlayerZoneNameFor(labelTo)
 		if labelTo != playerLabel {
-			toZone = constants.NeutralZonePrefix + labelTo
+			toZone = constants.GetNeutralZoneNameFor(labelTo)
 		}
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(connName).

@@ -18,7 +18,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -36,14 +35,14 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iZoneLabelProvider := zones.NewZoneLabelProvider()
 	iGenerationTuningFactory := generation_tuning.NewGenerationTuningFactory()
 	iContentLimitProvider := providers.NewContentLimitProvider()
-	iZoneClassifier := zones.NewZoneClassifier()
+	iZoneTierService := zones.NewZoneTierService()
 	iCastleFactory := zones.NewCastleFactory()
 	iRoadFactory := zones.NewRoadFactory()
 	iZoneFactory := zones.NewZoneFactory(iCastleFactory, iRoadFactory)
 	iZoneEditorService := connection_editor.NewZoneEditorService(iCastleFactory, iRoadFactory, iZoneFactory)
-	iMandatoryContentProvider := providers.NewMandatoryContentProvider(iZoneClassifier, iZoneEditorService)
+	iMandatoryContentProvider := providers.NewMandatoryContentProvider(iZoneTierService, iZoneEditorService)
 	iGameRulesProvider := providers.NewGameRulesProvider()
-	iGladiatorArenaProvider := providers.NewGladiatorArenaProvider(iZoneClassifier)
+	iGladiatorArenaProvider := providers.NewGladiatorArenaProvider(iZoneTierService)
 	iTopologyConnectionService := base.NewTopologyConnectionService(iZoneLabelProvider)
 	iTopologyServiceLookup := provideTopologyServices(iZoneFactory, iRoadFactory, iZoneLabelProvider, iTopologyConnectionService)
 	iTopologyProvider := providers.NewTopologyProvider(iTopologyServiceLookup)
@@ -52,13 +51,15 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iContentRuleService := content_rules.NewContentRuleService()
 	iMandatoryContentItemMapper := mappers.NewMandatoryContentItemMapper(iContentRuleService)
 	iGeneratorConfigMapper := mappers.NewConfigMapper(iMandatoryContentItemMapper)
-	iConnectionEditorService := connection_editor.NewConnectionEditorService(iZoneClassifier)
-	iManualReapplyService := connection_editor.NewManualReapplyService(iZoneEditorService, iCastleFactory, iZoneClassifier, iGenerationTuningFactory)
+	iConnectionEditorService := connection_editor.NewConnectionEditorService(iZoneTierService)
+	iManualReapplyService := connection_editor.NewManualReapplyService(iZoneEditorService, iCastleFactory, iZoneTierService, iGenerationTuningFactory)
 	iFileRepository := repositories.NewEditorStateRepository()
 	repositoriesIFileRepository := repositories.NewTemplateRepository()
 	iFileRepository2 := repositories.NewPreviewRepository()
-	iFileService := file_service.NewFileService(iFileRepository, repositoriesIFileRepository, iFileRepository2)
-	iPreviewLayoutService := preview_service.NewPreviewLayoutService()
+	iEditorStateMapper := mappers.NewEditorStateMapper()
+	iTemplateMapper := mappers.NewTemplateMapper()
+	iFileService := file_service.NewFileService(iFileRepository, repositoriesIFileRepository, iFileRepository2, iEditorStateMapper, iTemplateMapper)
+	iPreviewLayoutService := preview_service.NewPreviewLayoutService(iZoneTierService)
 	iPreviewGeneratorService := providePreviewGenerator(iPreviewLayoutService)
 	iEditorStateValidator := validators.NewEditorStateValidator()
 	iStateHandler := handlers.NewStateHandler(iFileService, iEditorStateValidator)
@@ -68,12 +69,10 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iZoneContentEditorService := zone_content.NewZoneContentEditorService()
 	iZoneContentHandler := handlers.NewZoneContentHandler(iContentRuleHandler, iZoneContentEditorService)
 	iZoneEditorGeometryService := connection_editor.NewZoneEditorGeometryService(iPreviewLayoutService)
-	iZoneEditorHandler := handlers.NewZoneEditorHandler(iGeneratorConfigMapper, iZoneClassifier, iConnectionEditorService, iZoneEditorService, iZoneEditorGeometryService, iGenerationTuningFactory)
+	iZoneEditorHandler := handlers.NewZoneEditorHandler(iGeneratorConfigMapper, iZoneTierService, iConnectionEditorService, iZoneEditorService, iZoneEditorGeometryService, iGenerationTuningFactory)
 	iBonusEntryService := bonuses.NewBonusEntryService()
 	iBonusHandler := handlers.NewBonusHandler(iBonusEntryService)
-	iPickerEntryService := pickers.NewPickerEntryService()
-	iPickerHandler := handlers.NewPickerHandler(iPickerEntryService)
-	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iZoneContentHandler, iZoneEditorHandler, iBonusHandler, iPickerHandler)
+	iGuiHandler := handlers.NewGuiHandler(iTemplateHandler, iStateHandler, iPreviewHandler, iZoneContentHandler, iZoneEditorHandler, iBonusHandler)
 	return iGuiHandler
 }
 

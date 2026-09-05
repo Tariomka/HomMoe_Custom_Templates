@@ -13,15 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTemplateWithNaN() entities.RmgTemplate {
-	return entities.RmgTemplate{
-		Name: "T",
-		Variants: []entities.Variant{{
-			Connections: []entities.Connection{{From: "A", To: "B", GuardWeeklyIncrement: math.NaN()}},
-		}},
-	}
-}
-
 func TestWhenTemplateIsSaved_ReturnsPathWithRmgJsonExtension(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -189,4 +180,13 @@ func TestWhenTargetPathIsOccupiedByDirectory_ReturnsError(t *testing.T) {
 
 	// Assert
 	assert.Error(t, err)
+}
+
+func newTemplateWithNaN() entities.RmgTemplate {
+	return entities.RmgTemplate{
+		Name: "T",
+		Variants: []entities.Variant{{
+			Connections: []entities.Connection{{From: "A", To: "B", GuardWeeklyIncrement: math.NaN()}},
+		}},
+	}
 }

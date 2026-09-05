@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +23,7 @@ func TestWhenManualZonesWereStored_ReportsManualEdits(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	state.SetManualEdits([]entities.Zone{{Name: "Zone A"}}, nil)
+	state.SetManualEdits([]template_model.Zone{{Name: "Zone A"}}, nil)
 
 	// Act
 	hasEdits := state.HasManualEdits()

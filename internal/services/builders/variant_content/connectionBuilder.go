@@ -1,16 +1,16 @@
 package variant_content
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type ConnectionBuilder struct {
-	item entities.Connection
+	item template_model.Connection
 }
 
 func NewConnectionBuilder() *ConnectionBuilder {
-	return &ConnectionBuilder{item: entities.Connection{}}
+	return &ConnectionBuilder{item: template_model.Connection{}}
 }
 
 func (this *ConnectionBuilder) WithName(name string) *ConnectionBuilder {
@@ -40,11 +40,6 @@ func (this *ConnectionBuilder) WithConnectionTypeProximity() *ConnectionBuilder 
 
 func (this *ConnectionBuilder) WithSimTurnSquad() *ConnectionBuilder {
 	this.item.SimTurnSquad = true
-	return this
-}
-
-func (this *ConnectionBuilder) WithIsUserAdded() *ConnectionBuilder {
-	this.item.IsUserAdded = true
 	return this
 }
 
@@ -92,16 +87,16 @@ func (this *ConnectionBuilder) WithGuardMatchGroup(guardMatchGroup string) *Conn
 	return this
 }
 
-func (this *ConnectionBuilder) WithPortalPlacementRulesFrom(rules ...entities.PlacementRule) *ConnectionBuilder {
+func (this *ConnectionBuilder) WithPortalPlacementRulesFrom(rules ...template_model.PlacementRule) *ConnectionBuilder {
 	this.item.PortalPlacementRulesFrom = append(this.item.PortalPlacementRulesFrom, rules...)
 	return this
 }
-func (this *ConnectionBuilder) WithPortalPlacementRulesTo(rules ...entities.PlacementRule) *ConnectionBuilder {
+func (this *ConnectionBuilder) WithPortalPlacementRulesTo(rules ...template_model.PlacementRule) *ConnectionBuilder {
 	this.item.PortalPlacementRulesTo = append(this.item.PortalPlacementRulesTo, rules...)
 	return this
 }
 
-func (this *ConnectionBuilder) Build() entities.Connection { return this.item }
+func (this *ConnectionBuilder) Build() template_model.Connection { return this.item }
 
 func (this *ConnectionBuilder) withConnectionType(connectionType string) *ConnectionBuilder {
 	this.item.ConnectionType = connectionType

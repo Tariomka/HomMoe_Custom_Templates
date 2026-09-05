@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // Rule metadata constants for the variant rule.
@@ -49,9 +50,11 @@ func NewRuleVariant(mapping *models.VariantMapping, variantID *int) (*RuleVarian
 	return &RuleVariant{Mapping: resolved, VariantID: id}, nil
 }
 
-func (this *RuleVariant) Name() string        { return RuleVariantName }
+func (this *RuleVariant) Name() string { return RuleVariantName }
+
 func (this *RuleVariant) Description() string { return RuleVariantDescription }
-func (this *RuleVariant) Marker() string      { return RuleVariantMarker }
+
+func (this *RuleVariant) Marker() string { return RuleVariantMarker }
 
 func (this *RuleVariant) DisplayText() string {
 	if description, ok := this.Mapping.GetVariantByID(this.VariantID); ok {
@@ -61,14 +64,14 @@ func (this *RuleVariant) DisplayText() string {
 	return fmt.Sprintf("%s: Unforeseen Error", this.Name())
 }
 
-func (this *RuleVariant) Apply(item *entities.MandatoryContentItem) {
+func (this *RuleVariant) Apply(item *template_model.MandatoryContentItem) {
 	id := this.VariantID
 	item.Variant = &id
 }
 
-func (this *RuleVariant) SerializeToRowSave() models.ContentRuleRowSave {
+func (this *RuleVariant) SerializeToRowSave() editor_state_model.ContentRuleRow {
 	id := this.VariantID
-	return models.ContentRuleRowSave{
+	return editor_state_model.ContentRuleRow{
 		Name:      this.Name(),
 		VariantID: &id,
 	}

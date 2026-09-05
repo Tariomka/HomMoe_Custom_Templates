@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,7 +43,7 @@ func TestWhenGenerateTemplateCalled_DelegatesToTemplateHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.GenerateTemplate(dtos.EditorStateDto{})
+	_, _ = handler.GenerateTemplate(toDto(editor_state_model.EditorState{}))
 
 	// Assert
 	assert.True(t, stub.templateWorkflowCalled)
@@ -69,7 +71,7 @@ func TestWhenSaveStateCalled_DelegatesToStateHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.SaveState(dtos.EditorStateSaveDto{})
+	_, _ = handler.SaveState(editor_state_dto.EditorStateSaveDto{})
 
 	// Assert
 	assert.True(t, stub.statePersistenceCalled)
@@ -83,7 +85,7 @@ func TestWhenBuildPreviewLayoutCalled_DelegatesToPreviewHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	_, _ = handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
+	handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{})
 
 	// Assert
 	assert.True(t, stub.previewCalled)
@@ -111,7 +113,7 @@ func TestWhenCastleCountRequested_DelegatesToZoneEditorHandler(t *testing.T) {
 	require.NotNil(t, handler)
 
 	// Act
-	handler.CountZoneCastles(entities.Zone{})
+	handler.CountZoneCastles(template_model.Zone{})
 
 	// Assert
 	assert.True(t, stub.zoneEditorCalled)

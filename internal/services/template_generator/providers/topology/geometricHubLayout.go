@@ -105,6 +105,7 @@ func (this *geometricHubLayout) assignPlans(
 		sortedPlans = sortedPlans[1:]
 		return label
 	}
+
 	popLowest := func() string {
 		label := sortedPlans[len(sortedPlans)-1].Label
 		sortedPlans = sortedPlans[:len(sortedPlans)-1]
@@ -173,11 +174,13 @@ func (this *geometricHubLayout) computeInteriorPositions(
 	if vertexCount == 0 {
 		return
 	}
+
 	center := circlePoint(playerAxisAngle, geometry.interiorCenter)
 	if vertexCount == 1 {
 		this.positions[interiors[0]] = center
 		return
 	}
+
 	for index, label := range interiors {
 		step := float64(2*((index+2)/2) - 1)
 		side := 1.0
@@ -200,6 +203,7 @@ func (this *geometricHubLayout) buildEdges(playerLabels []string) {
 		if from == to {
 			return
 		}
+
 		key := [2]string{min(from, to), max(from, to)}
 		if !seen[key] {
 			seen[key] = true
@@ -220,6 +224,7 @@ func (this *geometricHubLayout) buildEdges(playerLabels []string) {
 		if len(chain) == 0 {
 			continue // an empty gap never links the two players directly
 		}
+
 		addDirect(playerLabels[gap], chain[0])
 		for index := 0; index+1 < len(chain); index++ {
 			addDirect(chain[index], chain[index+1])
@@ -260,6 +265,7 @@ func (this *geometricHubLayout) buildInteriorEdges(addDirect func(from, to strin
 		if len(interiors) == 0 {
 			continue
 		}
+
 		this.hubPortalLabels = append(this.hubPortalLabels, interiors[:min(len(interiors), 2)]...)
 		ordered := interiorAngularOrder(interiors)
 		for index := range ordered {
@@ -296,6 +302,7 @@ func (this *geometricHubLayout) connectInteriorStables(
 	if len(stables) == 0 {
 		return
 	}
+
 	stableLeft := stables[0]
 	stableRight := stables[len(stables)-1]
 	addDirect(stableLeft, interiors[0])
@@ -303,6 +310,7 @@ func (this *geometricHubLayout) connectInteriorStables(
 	if len(interiors) < 3 {
 		return
 	}
+
 	addDirect(stableLeft, interiors[2])
 	addDirect(stableRight, interiors[min(3, len(interiors)-1)])
 }

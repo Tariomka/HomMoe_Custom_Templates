@@ -3,7 +3,7 @@ package connectionEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
@@ -13,8 +13,8 @@ import (
 func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
-	zones := []entities.Zone{
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		{Name: "Spawn-A"},
 		{
 			Name:               "Neutral-Gold",
@@ -23,7 +23,7 @@ func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 		},
 	}
 	playerZoneNames := map[string]bool{"Spawn-A": true}
-	expected := entities.Connection{
+	expected := template_model.Connection{
 		From:                 "Spawn-A",
 		To:                   "Neutral-Gold",
 		ConnectionType:       "Direct",
@@ -44,8 +44,8 @@ func TestWhenEndpointTierIsGold_SeedsGoldGeneratorDefaults(t *testing.T) {
 func TestWhenBothEndpointsArePlayerZones_SeedsPlayerToPlayerGeneratorDefault(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
-	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
 	playerZoneNames := map[string]bool{"Spawn-A": true, "Spawn-B": true}
 
 	// Act

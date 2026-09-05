@@ -11,21 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newChainTournamentConfig() *config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyChain
-	return configuration
-}
-
-func newFourNeutralPlans() neutral_zone.Plans {
-	neutralZones := neutral_zone.Plans{}
-	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("E", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("F", neutral_zone.QualityHigh, 1)
-	return neutralZones
-}
-
 func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeutralLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -197,4 +182,19 @@ func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T
 		}
 	}
 	assert.Equal(t, map[string]int{"A": 2, "B": 2}, neutralPerCluster)
+}
+
+func newChainTournamentConfig() *config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyChain
+	return configuration
+}
+
+func newFourNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("E", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("F", neutral_zone.QualityHigh, 1)
+	return neutralZones
 }

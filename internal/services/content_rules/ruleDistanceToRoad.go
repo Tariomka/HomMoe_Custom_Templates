@@ -3,8 +3,9 @@ package content_rules
 import (
 	"fmt"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 )
 
@@ -30,21 +31,22 @@ func NewRuleDistanceToRoad(distance *models.DistancePreset) *RuleDistanceToRoad 
 	return &RuleDistanceToRoad{Distance: resolved}
 }
 
-func (this *RuleDistanceToRoad) Name() string        { return RuleDistanceToRoadName }
+func (this *RuleDistanceToRoad) Name() string { return RuleDistanceToRoadName }
+
 func (this *RuleDistanceToRoad) Description() string { return RuleDistanceToRoadDescription }
-func (this *RuleDistanceToRoad) Marker() string      { return RuleDistanceToRoadMarker }
+
+func (this *RuleDistanceToRoad) Marker() string { return RuleDistanceToRoadMarker }
 
 func (this *RuleDistanceToRoad) DisplayText() string {
 	return fmt.Sprintf("%s: %s", this.Name(), this.Distance.Name)
 }
 
-func (this *RuleDistanceToRoad) Apply(item *entities.MandatoryContentItem) {
-	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().
-		BuildRoadRule(this.Distance, 1))
+func (this *RuleDistanceToRoad) Apply(item *template_model.MandatoryContentItem) {
+	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildRoadRule(this.Distance, 1))
 }
 
-func (this *RuleDistanceToRoad) SerializeToRowSave() models.ContentRuleRowSave {
-	return models.ContentRuleRowSave{
+func (this *RuleDistanceToRoad) SerializeToRowSave() editor_state_model.ContentRuleRow {
+	return editor_state_model.ContentRuleRow{
 		Name:         this.Name(),
 		DistanceName: this.Distance.Name,
 	}

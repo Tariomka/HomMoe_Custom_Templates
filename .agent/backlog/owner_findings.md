@@ -1,0 +1,148 @@
+# Personal findings and manual backlog
+
+---
+
+Creating a Geometric Hub topology template, saving the editor and loading that state
+produces a completely incorrect preview in the preview panel and in the preview png.
+A pre-made tested editor state and its output before reloading can be found in
+[Topology when loaded](../../output/research/Topology%20when%20loaded).
+
+---
+
+App portal connections are not being rendered in preview png - such an example can be found in
+[Colosseum v3.png](../../output/research/Topology%20when%20loaded/Colosseum%20v3.png).
+I haven't checked if this is applicable for all topologies or just Geometric Hub topology
+(it was only tested on Geometric Hub).
+
+---
+
+Last time I tried, Bonuses and Bans did not apply in the generated template in the game.
+More testing is required.
+
+---
+
+Some of the custom connections are not being applied even though it is rendered in the manual
+editor dialog and the preview panel - this was observed on the preview png.
+Easiest way to reproduce this is to add an additional connection between 2 zones that already have
+a connection - the arched outer connection will not appear in the png file.
+
+---
+
+Need to create some sort of OCR tool for agents and me to use when the need arises to debug
+integration test goldens vs failure images.
+
+---
+
+Need to block the ability to change player count when Tournament mode is selected. It should always
+use 2 players only. Most of the current tournament topology variants will need to be removed, new
+tournament specific topologies will need to be added and the tournament topology provider will
+need to be reworked.
+
+---
+
+Need to check if hero hire ban is enabled when Single Hero, FinalBattle/Gladiator Arena or
+Lost Start Hero options are activated. If it is not, need to fix it - this is a bug because in-game
+this is the option that blocks players from recruiting additional heros.
+
+---
+
+Need to remove old obsolete topologies (Ring, Hub, Chain and Shared Web) these topologies do not add
+any value and are not balanced.
+
+---
+
+Need to add Zone Content presets to be able to be applied, preferably on top of existing contents,
+in the zone content editor dialogs for neutral zones. Maybe the same or a separate set of presets
+should be added for player zones as well.
+
+---
+
+In Manual Zone Editor dialog, when a neutral zone quality is changed, it should recalculate and
+reapply connection guard strength value between the edited zone and all connected zones. The
+reapplication should be done on both value and preset - the value should be the same as the guard
+preset, and the guard preset should be of the same tier as it was before the change, for example:
+if changing from Silver to Gold, the preset should stay the same (Default (20000) -> Default (25000),
+Medium (24000) -> Medium (48000), etc.) and the value should be updated appropriately (20000 -> 25000,
+24000 -> 48000, etc.)
+
+---
+
+Need to optimize the editor state object and the values saved in the .gen.json - for example,
+currently all of the connections and zones are saved if a single manual change occurs, even though
+only the manual edits should be tracked (if a single zone is removed/changed/added, that one change
+should be tracked, all other zones and connection should be applied from the topology).
+Also need to check what values are being stored that can be extrapolated from other properties -
+for example guardReactionDistribution, guardContentPool, unguardedContentPool, contentCountLimits
+and other values never change within a zone and zone type can easily be extrapolated, default
+content rows are always the same and only modifications could be tracked, etc.
+
+---
+
+BannedItems, BannedMagics and ValueOverrides should be lists, not strings in the .gen.json, just
+like Bonuses.
+
+---
+
+Eventually need to make the editor state in the .gen.json not a flat option mashup, but sectioned,
+possibly using the current separated structure of the editor state and the sectioned structure in
+the json.
+
+---
+
+In [layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go) instead of creating
+setters and getters, make Editor Stage have those setters and getters.
+
+---
+
+[ZoneContentEditorService](../../internal/services/zone_content/zoneContentEditorService.go)
+creates `ContentRuleCompositionResultDto` instead of returning ZoneContentRow - need to fix this -
+handler must construct the dto from the service result.
+
+---
+
+`internal\services\zones` and `internal\services\zones\zone_interfaces` has to be renamed to
+`internal\services\zone_services` and `internal\services\zone_service_interfaces` respectfully.
+
+---
+
+In rare instances there are preview artifacts. This is reproducible, likely because the artifacts
+are caused because of calculation/position inaccuracies or something along those lines. There is an
+[Editor state](../../output/research/Buggy$20Preview/Buggy%20preview.gen.json) for this scenario
+already saved.
+
+---
+
+After adding Template model:
+
+- [Template Model](../../internal/models/template_model/template.go) - Move ToModel and ToEntity from
+  here to mapper completely.
+- [TemplateMapper](../../internal/mappers/templateMapper.go) - when the template model functions are
+  moved to here, make a change to ToModel method - Variants need to be constructed in such a way
+  that Zones inside it would have precalculated `Quality`, so probably the mapper needs the ZoneTierService
+  (it's too big to be a simple helper).
+- [Template Converters](../../internal/models/template_model/converters.go) - These functions must be
+  completely removed - everything should use models, and for entities (in service to repository part)
+  exclusively use mapper (but in theory this should not even be needed).
+- All of the builders and other places must completely remove the usage of RmgTemplate entity types -
+  models must be used up until saving to the file.
+- [State](../../app/gui/drivers/state.go) - `templateRevision` should be completely moved to Template
+  model.
+- [Template Model](../../internal/models/template_model/template.go) - at a minimum SizeX and SizeZ
+  should be made to a single Size int - all templates are squares, so there is no point in having the
+  model have 2 fields for a single value, the mapper will just use the same Size value for both
+
+---
+
+Panels are becoming oversized, holding a lot of state on their own. A somewhat separation was start
+in the past with the LayoutPanel and it's topology and zones vertical sections, but realisticly
+this should be made as separate section private classes in sub packages, like `panels/layout_panel`,
+`panels/general_panel` and `panels/bonuses_panel`, moving the panels there, moving the section state
+to their own structs with their respective logic (widgets, button clicks, saves and loads, etc.),
+panel structs driving the inner states and having `panels/types.go` to expose the public panel structs
+as "top level structs" (to simulate the current accessing).
+
+---
+
+`neutralRowsForQuality` should be moved to either `generatorConfig`, or to helpers to a public location.
+
+---

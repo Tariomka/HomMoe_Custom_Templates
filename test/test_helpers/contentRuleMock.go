@@ -1,8 +1,8 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -32,12 +32,12 @@ func (this *ContentRuleMock) DisplayText() string {
 	return arguments.String(0)
 }
 
-func (this *ContentRuleMock) SerializeToRowSave() models.ContentRuleRowSave {
+func (this *ContentRuleMock) SerializeToRowSave() editor_state_model.ContentRuleRow {
 	arguments := this.Called()
-	row, _ := arguments.Get(0).(models.ContentRuleRowSave)
+	row, _ := arguments.Get(0).(editor_state_model.ContentRuleRow)
 	return row
 }
 
-func (this *ContentRuleMock) Apply(item *entities.MandatoryContentItem) {
+func (this *ContentRuleMock) Apply(item *template_model.MandatoryContentItem) {
 	this.Called(item)
 }

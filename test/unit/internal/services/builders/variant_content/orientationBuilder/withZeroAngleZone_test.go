@@ -3,7 +3,7 @@ package orientationBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenZeroAngleZoneIsProvided_SetsZeroAngleZoneOnBuiltOrientation(t *test
 	orientation := builder.WithZeroAngleZone(expectedZone).Build()
 
 	// Assert
-	assert.Equal(t, entities.Orientation{ZeroAngleZone: expectedZone}, orientation)
+	assert.Equal(t, template_model.Orientation{ZeroAngleZone: expectedZone}, orientation)
 }

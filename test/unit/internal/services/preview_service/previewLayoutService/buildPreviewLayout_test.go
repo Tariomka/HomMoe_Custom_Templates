@@ -1,15 +1,16 @@
 package previewLayoutService_test
 
 import (
-	"image"
 	"math"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
+	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,8 +20,8 @@ const layoutSide = 700.0
 func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	expected := preview.Layout{Positions: map[string]image.Point{}}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	expected := preview.Layout{Positions: map[string]data.Vec2[float64]{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(nil, config.TopologyRing, layoutSide)
@@ -32,11 +33,11 @@ func TestWhenTemplateIsNil_ReturnsEmptyLayout(t *testing.T) {
 func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	expected := preview.Layout{Positions: map[string]image.Point{}}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	expected := preview.Layout{Positions: map[string]data.Vec2[float64]{}}
 
 	// Act
-	actual := service.BuildPreviewLayout(&entities.RmgTemplate{}, config.TopologyRing, layoutSide)
+	actual := service.BuildPreviewLayout(&template_model.Template{}, config.TopologyRing, layoutSide)
 
 	// Assert
 	assert.Equal(t, expected, actual)
@@ -45,8 +46,8 @@ func TestWhenTemplateHasNoVariants_ReturnsEmptyLayout(t *testing.T) {
 func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	expected := preview.Layout{Positions: map[string]image.Point{}}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	expected := preview.Layout{Positions: map[string]data.Vec2[float64]{}}
 
 	// Act
 	actual := service.BuildPreviewLayout(templateWith(nil, nil), config.TopologyRing, layoutSide)
@@ -58,12 +59,12 @@ func TestWhenVariantHasNoZones_ReturnsEmptyLayout(t *testing.T) {
 func TestWhenRingTopologyIsLaidOut_EveryZoneStaysInsideTheCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Spawn-A"), namedZone("Spawn-B"),
 		namedZone("Neutral-C"), namedZone("Neutral-D"),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-C"),
 		directConnection("Neutral-C", "Spawn-B"),
 		directConnection("Spawn-B", "Neutral-D"),
@@ -75,23 +76,25 @@ func TestWhenRingTopologyIsLaidOut_EveryZoneStaysInsideTheCanvas(t *testing.T) {
 
 	// Assert
 	require.Len(t, layout.Positions, len(zones))
-	canvasBounds := image.Rect(0, 0, layoutSide, layoutSide)
 	for zoneName, zonePosition := range layout.Positions {
-		assert.True(t, zonePosition.In(canvasBounds), "zone %s at %v escapes the canvas", zoneName, zonePosition)
+		assert.True(t,
+			zonePosition.X >= 0 && zonePosition.X <= layoutSide &&
+				zonePosition.Y >= 0 && zonePosition.Y <= layoutSide,
+			"zone %s at %v escapes the canvas", zoneName, zonePosition)
 	}
 }
 
 func TestWhenAllZonesHaveManualPositions_PlacesThemVerbatim(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		manualZone("Spawn-A", 0.25, 0.5),
 		manualZone("Neutral-B", 0.75, 0.5),
 	}
-	expected := map[string]image.Point{
-		"Spawn-A":   image.Pt(175, 350),
-		"Neutral-B": image.Pt(525, 350),
+	expected := map[string]data.Vec2[float64]{
+		"Spawn-A":   data.NewVec2(175.0, 350.0),
+		"Neutral-B": data.NewVec2(525.0, 350.0),
 	}
 
 	// Act
@@ -101,11 +104,28 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemVerbatim(t *testing.T) {
 	assert.Equal(t, expected, layout.Positions)
 }
 
+func TestWhenTwoZonesAreLessThanAPixelApart_TheirCentresDiffer(t *testing.T) {
+	t.Parallel()
+	// Arrange - the two manual positions are 0.3px apart on the canvas, which
+	// the old integer layout collapsed onto the same pixel.
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
+		manualZone("Spawn-A", 0.5, 0.5),
+		manualZone("Neutral-B", 0.5+0.3/layoutSide, 0.5),
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, layoutSide)
+
+	// Assert
+	assert.NotEqual(t, layout.Positions["Spawn-A"], layout.Positions["Neutral-B"])
+}
+
 func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.1, 0.5),
 		positionedZone("Neutral-B", 0.5, 0.5),
 		positionedZone("Spawn-C", 0.9, 0.5),
@@ -119,14 +139,14 @@ func TestWhenFixedGeometryTopologyIsLaidOut_PreservesRelativeGeometry(t *testing
 	left := layout.Positions["Spawn-A"]
 	middle := layout.Positions["Neutral-B"]
 	right := layout.Positions["Spawn-C"]
-	assert.Equal(t, image.Pt((left.X+right.X)/2, (left.Y+right.Y)/2), middle)
+	assert.Equal(t, left.Add(right).MultiplyScalar(0.5), middle)
 }
 
 func TestWhenGeometricHubTopologyIsLaidOut_FigureKeepsExtraBorderClearance(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.1, 0.5),
 		positionedZone("Neutral-B", 0.5, 0.5),
 		positionedZone("Spawn-C", 0.9, 0.5),
@@ -148,8 +168,8 @@ func TestWhenGeometricHubTopologyIsLaidOut_FigureKeepsExtraBorderClearance(t *te
 func TestWhenGeometricHubHasSixPlayers_FigureSitsCloserToBorder(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	crowdedZones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	crowdedZones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.1, 0.5),
 		positionedZone("Spawn-B", 0.3, 0.2),
 		positionedZone("Spawn-C", 0.5, 0.8),
@@ -157,7 +177,7 @@ func TestWhenGeometricHubHasSixPlayers_FigureSitsCloserToBorder(t *testing.T) {
 		positionedZone("Spawn-E", 0.9, 0.5),
 		positionedZone("Spawn-F", 0.5, 0.5),
 	}
-	sparseZones := []entities.Zone{
+	sparseZones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.1, 0.5),
 		positionedZone("Neutral-B", 0.3, 0.2),
 		positionedZone("Neutral-C", 0.5, 0.8),
@@ -182,9 +202,9 @@ func TestWhenGeometricHubHasSixPlayers_FigureSitsCloserToBorder(t *testing.T) {
 func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
-	connections := []entities.Connection{directConnection("Spawn-A", "Neutral-B")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Neutral-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
@@ -200,9 +220,9 @@ func TestWhenZoneNameStartsWithSpawn_MarksZoneAsPlayer(t *testing.T) {
 func TestWhenZoneIsNamedHub_MarksZoneAsHub(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Hub")}
-	connections := []entities.Connection{directConnection("Spawn-A", "Hub")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Hub")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Hub")}
 
 	// Act
 	layout := service.BuildPreviewLayout(
@@ -219,11 +239,11 @@ func TestWhenZoneIsNamedHub_MarksZoneAsHub(t *testing.T) {
 func TestWhenSpawnMainObjectNamesPlayer_ParsesOwnerNumber(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
 	zone := namedZone("Spawn-A")
-	zone.MainObjects = []entities.MainObject{{Type: "Spawn", Spawn: "Player3"}}
-	zones := []entities.Zone{zone, namedZone("Neutral-B")}
-	connections := []entities.Connection{directConnection("Spawn-A", "Neutral-B")}
+	zone.MainObjects = []template_model.MainObject{{Type: "Spawn", Spawn: "Player3"}}
+	zones := []template_model.Zone{zone, namedZone("Neutral-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Neutral-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
@@ -239,11 +259,11 @@ func TestWhenSpawnMainObjectNamesPlayer_ParsesOwnerNumber(t *testing.T) {
 func TestWhenZoneHasCityMainObjects_CountsCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
 	zone := namedZone("Neutral-B")
-	zone.MainObjects = []entities.MainObject{{Type: "City"}, {Type: "City"}}
-	zones := []entities.Zone{namedZone("Spawn-A"), zone}
-	connections := []entities.Connection{directConnection("Spawn-A", "Neutral-B")}
+	zone.MainObjects = []template_model.MainObject{{Type: "City"}, {Type: "City"}}
+	zones := []template_model.Zone{namedZone("Spawn-A"), zone}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Neutral-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
@@ -259,9 +279,9 @@ func TestWhenZoneHasCityMainObjects_CountsCastles(t *testing.T) {
 func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []template_model.Connection{
 		{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Portal"},
 	}
 
@@ -276,11 +296,11 @@ func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T)
 func TestWhenZoneHasGladiatorArenaMainObject_MarksZoneAsArena(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
 	zone := namedZone("Neutral-B")
-	zone.MainObjects = []entities.MainObject{{Type: "GladiatorArena"}}
-	zones := []entities.Zone{namedZone("Spawn-A"), zone}
-	connections := []entities.Connection{directConnection("Spawn-A", "Neutral-B")}
+	zone.MainObjects = []template_model.MainObject{{Type: "GladiatorArena"}}
+	zones := []template_model.Zone{namedZone("Spawn-A"), zone}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Neutral-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, layoutSide)
@@ -296,9 +316,9 @@ func TestWhenZoneHasGladiatorArenaMainObject_MarksZoneAsArena(t *testing.T) {
 func TestWhenConnectionTypeIsGladiatorArena_MarksPreviewConnectionAsArena(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []template_model.Connection{
 		{From: "Spawn-A", To: "Neutral-B", ConnectionType: "GladiatorArena"},
 	}
 
@@ -313,9 +333,9 @@ func TestWhenConnectionTypeIsGladiatorArena_MarksPreviewConnectionAsArena(t *tes
 func TestWhenConnectionTypeIsProximity_MarksPreviewConnectionAsProximity(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []template_model.Connection{
 		{From: "Spawn-A", To: "Neutral-B", ConnectionType: "Proximity"},
 	}
 
@@ -330,9 +350,9 @@ func TestWhenConnectionTypeIsProximity_MarksPreviewConnectionAsProximity(t *test
 func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-B"),
 		directConnection("Spawn-A", "Ghost-Zone"),
 	}
@@ -347,9 +367,9 @@ func TestWhenConnectionEndpointHasNoPosition_SkipsThatConnection(t *testing.T) {
 func TestWhenTwoConnectionsShareTheSameZonePair_FansOutTheirControlPoints(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")}
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-B"),
 		directConnection("Spawn-A", "Neutral-B"),
 	}
@@ -365,12 +385,12 @@ func TestWhenTwoConnectionsShareTheSameZonePair_FansOutTheirControlPoints(t *tes
 func TestWhenZeroAngleZoneIsSet_RotatesTheRingToStartAtThatZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Spawn-A"), namedZone("Neutral-B"),
 		namedZone("Spawn-C"), namedZone("Neutral-D"),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-B"),
 		directConnection("Neutral-B", "Spawn-C"),
 		directConnection("Spawn-C", "Neutral-D"),
@@ -379,7 +399,7 @@ func TestWhenZeroAngleZoneIsSet_RotatesTheRingToStartAtThatZone(t *testing.T) {
 	defaultLayout := service.BuildPreviewLayout(
 		templateWith(zones, connections), config.TopologyRing, layoutSide)
 	pivotedTemplate := templateWith(zones, connections)
-	pivotedTemplate.Variants[0].Orientation = entities.Orientation{ZeroAngleZone: "Spawn-C"}
+	pivotedTemplate.Variants[0].Orientation = template_model.Orientation{ZeroAngleZone: "Spawn-C"}
 
 	// Act
 	pivotedLayout := service.BuildPreviewLayout(pivotedTemplate, config.TopologyRing, layoutSide)
@@ -393,9 +413,9 @@ func TestWhenZeroAngleZoneIsSet_RotatesTheRingToStartAtThatZone(t *testing.T) {
 func TestWhenRingTopologyProvided_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Spawn-B"),
 		directConnection("Spawn-B", "Neutral-C"),
 	}
@@ -410,9 +430,9 @@ func TestWhenRingTopologyProvided_PositionsEveryZone(t *testing.T) {
 func TestWhenTopologyIsUnknown_UsesRingLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Neutral-B"), namedZone("Neutral-C")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B"), namedZone("Neutral-C")}
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-B"),
 		directConnection("Neutral-B", "Neutral-C"),
 	}
@@ -429,8 +449,8 @@ func TestWhenTopologyIsUnknown_UsesRingLayout(t *testing.T) {
 func TestWhenRingTopologyProvided_ComputesPositiveZoneRadius(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, 600)
@@ -442,27 +462,27 @@ func TestWhenRingTopologyProvided_ComputesPositiveZoneRadius(t *testing.T) {
 func TestWhenOnlyOneZoneExists_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 func TestWhenZoneIsNamedHub_PlacesItAtCanvasCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Hub"), namedZone("Spawn-A"), namedZone("Spawn-B")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Hub"), namedZone("Spawn-A"), namedZone("Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRing, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Hub"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Hub"])
 }
 
 // ── implicit hub rejection ───────────────────────────────────────────
@@ -470,11 +490,11 @@ func TestWhenZoneIsNamedHub_PlacesItAtCanvasCenter(t *testing.T) {
 func TestWhenNeutralTouchesEverySpawn_DoesNotCenterIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Spawn-C"), namedZone("Neutral-H"),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Neutral-H", "Spawn-A"),
 		directConnection("Neutral-H", "Spawn-B"),
 		directConnection("Neutral-H", "Spawn-C"),
@@ -484,17 +504,17 @@ func TestWhenNeutralTouchesEverySpawn_DoesNotCenterIt(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
 
 	// Assert
-	assert.NotEqual(t, image.Pt(300, 300), layout.Positions["Neutral-H"])
+	assert.NotEqual(t, data.NewVec2(300.0, 300.0), layout.Positions["Neutral-H"])
 }
 
 func TestWhenNeutralTouchesEverySpawn_DoesNotFlagItAsHub(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Spawn-C"), namedZone("Neutral-H"),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Neutral-H", "Spawn-A"),
 		directConnection("Neutral-H", "Spawn-B"),
 		directConnection("Neutral-H", "Spawn-C"),
@@ -516,9 +536,9 @@ func TestWhenNeutralTouchesEverySpawn_DoesNotFlagItAsHub(t *testing.T) {
 func TestWhenNeutralOnlyConnectsTwoSpawns_FlagsNoHub(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-H")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-H")}
+	connections := []template_model.Connection{
 		directConnection("Neutral-H", "Spawn-A"),
 		directConnection("Neutral-H", "Spawn-B"),
 	}
@@ -539,9 +559,9 @@ func TestWhenNeutralOnlyConnectsTwoSpawns_FlagsNoHub(t *testing.T) {
 func TestWhenZoneIsExplicitlyNamedHub_FlagsOnlyThatZoneAsHub(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Hub"), namedZone("Spawn-A"), namedZone("Spawn-B")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Hub"), namedZone("Spawn-A"), namedZone("Spawn-B")}
+	connections := []template_model.Connection{
 		directConnection("Hub", "Spawn-A"),
 		directConnection("Hub", "Spawn-B"),
 	}
@@ -562,11 +582,11 @@ func TestWhenZoneIsExplicitlyNamedHub_FlagsOnlyThatZoneAsHub(t *testing.T) {
 func TestWhenTwoHubZonesExist_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"), namedZone("Spawn-A"), namedZone("Spawn-B"),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Hub-A", "Spawn-A"),
 		directConnection("Hub-B", "Spawn-B"),
 		directConnection("Hub-A", "Hub-B"),
@@ -584,13 +604,13 @@ func TestWhenTwoHubZonesExist_PositionsEveryZone(t *testing.T) {
 func TestWhenRandomTopologyZonesHavePositions_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
 		positionedZone("Spawn-B", 0.8, 0.8),
 		positionedZone("Neutral-C", 0.5, 0.5),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-C"),
 		directConnection("Neutral-C", "Spawn-B"),
 	}
@@ -605,8 +625,8 @@ func TestWhenRandomTopologyZonesHavePositions_PositionsEveryZone(t *testing.T) {
 func TestWhenRandomTopologyHasNoConnections_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.1, 0.1),
 		positionedZone("Spawn-B", 0.9, 0.9),
 		positionedZone("Neutral-C", 0.5, 0.5),
@@ -622,8 +642,8 @@ func TestWhenRandomTopologyHasNoConnections_PositionsEveryZone(t *testing.T) {
 func TestWhenRandomTopologyZonesLackPositions_FallsBackToRingLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
@@ -637,8 +657,8 @@ func TestWhenRandomTopologyZonesLackPositions_FallsBackToRingLayout(t *testing.T
 func TestWhenCirclesZonesSpanMultipleRings_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		ringedZone("Spawn-A", 0, 0.1, 0.1),
 		ringedZone("Spawn-B", 0, 0.9, 0.1),
 		ringedZone("Neutral-C", 1, 0.5, 0.5),
@@ -654,8 +674,8 @@ func TestWhenCirclesZonesSpanMultipleRings_PositionsEveryZone(t *testing.T) {
 func TestWhenCirclesZonesShareOneRing_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		ringedZone("Spawn-A", 0, 0.2, 0.2),
 		ringedZone("Spawn-B", 0, 0.8, 0.8),
 		ringedZone("Spawn-C", 0, 0.5, 0.5),
@@ -671,14 +691,14 @@ func TestWhenCirclesZonesShareOneRing_PositionsEveryZone(t *testing.T) {
 func TestWhenCirclesTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{ringedZone("Spawn-A", 0, 0.5, 0.5)}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{ringedZone("Spawn-A", 0, 0.5, 0.5)}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyCircles, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 // ── connection rendering ─────────────────────────────────────────────
@@ -686,9 +706,9 @@ func TestWhenCirclesTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 func TestWhenDirectConnectionExists_CollectsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
-	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
@@ -700,9 +720,9 @@ func TestWhenDirectConnectionExists_CollectsIt(t *testing.T) {
 func TestWhenDirectConnectionExists_DoesNotFlagItAsPortal(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
-	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
@@ -715,9 +735,9 @@ func TestWhenDirectConnectionExists_DoesNotFlagItAsPortal(t *testing.T) {
 func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
-	connections := []entities.Connection{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-C"),
 		directConnection("Neutral-C", "Spawn-B"),
 		{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"},
@@ -739,9 +759,9 @@ func TestWhenPortalConnectionExists_FlagsExactlyOnePortal(t *testing.T) {
 func TestWhenConnectionReferencesUnknownZone_SkipsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
-	connections := []entities.Connection{directConnection("Spawn-A", "Missing-X")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Missing-X")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
@@ -753,9 +773,9 @@ func TestWhenConnectionReferencesUnknownZone_SkipsIt(t *testing.T) {
 func TestWhenConnectionSourceIsUnknownZone_SkipsIt(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
-	connections := []entities.Connection{directConnection("Missing-X", "Spawn-B")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B")}
+	connections := []template_model.Connection{directConnection("Missing-X", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
@@ -769,12 +789,12 @@ func TestWhenConnectionSourceIsUnknownZone_SkipsIt(t *testing.T) {
 func TestWhenTemplateHasTwoClusters_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Spawn-A"), namedZone("Neutral-X"),
 		namedZone("Spawn-B"), namedZone("Neutral-Y"),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Neutral-X"),
 		directConnection("Spawn-B", "Neutral-Y"),
 	}
@@ -791,14 +811,14 @@ func TestWhenTemplateHasTwoClusters_PositionsEveryZone(t *testing.T) {
 func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
-		{Name: "Spawn-A", MainObjects: []entities.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
+		{Name: "Spawn-A", MainObjects: []template_model.MainObject{{Type: "Spawn", Spawn: "Player1"}}},
 	}
 	expected := preview.Zone{
 		Name:    "Spawn-A",
 		Label:   "A",
-		Center:  image.Pt(300, 300),
+		Center:  data.NewVec2(300.0, 300.0),
 		Type:    preview.ZoneTypePlayer,
 		Quality: neutral_zone.QualityUnknown,
 		Castles: 1,
@@ -816,9 +836,9 @@ func TestWhenZoneHasSpawnMainObject_ClassifiesItAsOwnedPlayerZone(t *testing.T) 
 func TestWhenZoneHasTwoCityMainObjects_CountsTwoCastles(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
-		{Name: "Neutral-Z", MainObjects: []entities.MainObject{{Type: "City"}, {Type: "City"}}},
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
+		{Name: "Neutral-Z", MainObjects: []template_model.MainObject{{Type: "City"}, {Type: "City"}}},
 	}
 
 	// Act
@@ -829,17 +849,46 @@ func TestWhenZoneHasTwoCityMainObjects_CountsTwoCastles(t *testing.T) {
 	assert.Equal(t, 2, layout.Zones[0].Castles)
 }
 
+func TestWhenZoneCarriesARecordedTier_ColoursItWithThatTierInsteadOfInferring(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zone := lowTierZone("Neutral-Z")
+	zone.Quality = new(neutral_zone.QualityHigh)
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith([]template_model.Zone{zone}, nil), config.TopologyRing, 600)
+
+	// Assert
+	require.Len(t, layout.Zones, 1)
+	assert.Equal(t, neutral_zone.QualityHigh, layout.Zones[0].Quality)
+}
+
+func TestWhenZoneCarriesNoRecordedTier_ColoursItWithTheInferredTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zone := lowTierZone("Neutral-Z")
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith([]template_model.Zone{zone}, nil), config.TopologyRing, 600)
+
+	// Assert
+	require.Len(t, layout.Zones, 1)
+	assert.Equal(t, neutral_zone.QualityLow, layout.Zones[0].Quality)
+}
+
 // ── parallel connection fanning ──────────────────────────────────────
 
 func TestWhenOnlyOneEdgeConnectsAPair_KeepsControlPointOnMidpoint(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.2, 0.5),
 		positionedZone("Spawn-B", 0.8, 0.5),
 	}
-	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRandom, 600)
@@ -856,12 +905,12 @@ func TestWhenOnlyOneEdgeConnectsAPair_KeepsControlPointOnMidpoint(t *testing.T) 
 func TestWhenParallelEdgesConnectSamePair_GivesThemDistinctControlPoints(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.2, 0.5),
 		positionedZone("Spawn-B", 0.8, 0.5),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Spawn-B"),
 		directConnection("Spawn-A", "Spawn-B"),
 	}
@@ -877,12 +926,12 @@ func TestWhenParallelEdgesConnectSamePair_GivesThemDistinctControlPoints(t *test
 func TestWhenParallelEdgesConnectSamePair_BulgesThemSymmetricallyAboutMidpoint(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.2, 0.5),
 		positionedZone("Spawn-B", 0.8, 0.5),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Spawn-A", "Spawn-B"),
 		directConnection("Spawn-A", "Spawn-B"),
 	}
@@ -906,21 +955,21 @@ func TestWhenParallelEdgesConnectSamePair_BulgesThemSymmetricallyAboutMidpoint(t
 func TestWhenFixedGeometryTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{positionedZone("Spawn-A", 0.3, 0.7)}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{positionedZone("Spawn-A", 0.3, 0.7)}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologySquare, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 func TestWhenFixedGeometryZonesShareOnePosition_PositionsBothAtSamePoint(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.5, 0.5),
 		positionedZone("Spawn-B", 0.5, 0.5),
 	}
@@ -935,8 +984,8 @@ func TestWhenFixedGeometryZonesShareOnePosition_PositionsBothAtSamePoint(t *test
 func TestWhenFixedGeometryZonesLackPositions_FallsBackToRingLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologySquare, 600)
@@ -950,9 +999,9 @@ func TestWhenFixedGeometryZonesLackPositions_FallsBackToRingLayout(t *testing.T)
 func TestWhenCirclesZoneLacksRingStamp_StillPositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
 	missingRingZone := positionedZone("Neutral-C", 0.5, 0.5)
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		ringedZone("Spawn-A", 0, 0.1, 0.1),
 		ringedZone("Spawn-B", 0, 0.9, 0.1),
 		missingRingZone,
@@ -968,8 +1017,8 @@ func TestWhenCirclesZoneLacksRingStamp_StillPositionsEveryZone(t *testing.T) {
 func TestWhenCirclesOuterRingHasSingleZone_PositionsEveryZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		ringedZone("Neutral-C", 1, 0.4, 0.4),
 		ringedZone("Neutral-D", 1, 0.6, 0.4),
 		ringedZone("Neutral-E", 1, 0.5, 0.6),
@@ -987,8 +1036,8 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 	t.Parallel()
 	// Arrange - 23 zones on one ring force the ring circumference past the
 	// draw radius at the maximum zone size, so the binary search must shrink.
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{ringedZone("Neutral-Center", 1, 0.5, 0.5)}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{ringedZone("Neutral-Center", 1, 0.5, 0.5)}
 	for index := range 23 {
 		angle := 2.0 * math.Pi * float64(index) / 23.0
 		zones = append(zones, ringedZone(
@@ -1000,7 +1049,7 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyCircles, 600)
 
 	// Assert
-	assert.Less(t, layout.ZoneRadius, 33)
+	assert.Less(t, layout.ZoneRadius, 33.0)
 }
 
 // ── scatter edge cases ───────────────────────────────────────────────
@@ -1008,25 +1057,25 @@ func TestWhenCirclesOuterRingIsOvercrowded_ShrinksZoneRadiusBelowMaximum(t *test
 func TestWhenRandomTopologyHasOneZone_CentersItOnCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{positionedZone("Spawn-A", 0.2, 0.8)}
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{positionedZone("Spawn-A", 0.2, 0.8)}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Spawn-A"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Spawn-A"])
 }
 
 func TestWhenConnectedScatterZonesShareOnePosition_PositionsBothZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.5, 0.5),
 		positionedZone("Spawn-B", 0.5, 0.5),
 	}
-	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRandom, 600)
@@ -1038,13 +1087,13 @@ func TestWhenConnectedScatterZonesShareOnePosition_PositionsBothZones(t *testing
 func TestWhenUnconnectedZoneLiesFarFromTightPair_KeepsEveryZoneInsideCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.0, 0.0),
 		positionedZone("Spawn-B", 0.001, 0.0),
 		positionedZone("Neutral-C", 1.0, 1.0),
 	}
-	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRandom, 600)
@@ -1062,13 +1111,13 @@ func TestWhenUnconnectedZoneLiesFarFromTightPair_KeepsEveryZoneInsideCanvas(t *t
 func TestWhenThirdZoneLiesOnConnectionLine_NudgesItOffTheLine(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.1, 0.5),
 		positionedZone("Spawn-B", 0.9, 0.5),
 		positionedZone("Neutral-C", 0.5, 0.5),
 	}
-	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRandom, 600)
@@ -1082,13 +1131,13 @@ func TestWhenThirdZoneLiesOnConnectionLine_NudgesItOffTheLine(t *testing.T) {
 func TestWhenScatterConnectionIsPortal_IgnoresItForAdjacency(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
 		positionedZone("Spawn-B", 0.8, 0.8),
 		positionedZone("Neutral-C", 0.5, 0.5),
 	}
-	portalOnly := []entities.Connection{{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"}}
+	portalOnly := []template_model.Connection{{From: "Spawn-A", To: "Spawn-B", ConnectionType: "Portal"}}
 	unconnectedLayout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
 
 	// Act
@@ -1101,12 +1150,12 @@ func TestWhenScatterConnectionIsPortal_IgnoresItForAdjacency(t *testing.T) {
 func TestWhenScatterConnectionReferencesUnknownZone_IgnoresItForAdjacency(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
 		positionedZone("Spawn-B", 0.8, 0.8),
 	}
-	danglingOnly := []entities.Connection{directConnection("Spawn-A", "Missing-X")}
+	danglingOnly := []template_model.Connection{directConnection("Spawn-A", "Missing-X")}
 	unconnectedLayout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
 
 	// Act
@@ -1119,12 +1168,12 @@ func TestWhenScatterConnectionReferencesUnknownZone_IgnoresItForAdjacency(t *tes
 func TestWhenScatterConnectionIsSelfLoop_IgnoresItForAdjacency(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		positionedZone("Spawn-A", 0.2, 0.2),
 		positionedZone("Spawn-B", 0.8, 0.8),
 	}
-	selfLoopOnly := []entities.Connection{directConnection("Spawn-A", "Spawn-A")}
+	selfLoopOnly := []template_model.Connection{directConnection("Spawn-A", "Spawn-A")}
 	unconnectedLayout := service.BuildPreviewLayout(templateWith(zones, nil), config.TopologyRandom, 600)
 
 	// Act
@@ -1139,16 +1188,16 @@ func TestWhenScatterConnectionIsSelfLoop_IgnoresItForAdjacency(t *testing.T) {
 func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		manualZone("Spawn-A", 0.25, 0.5),
 		manualZone("Spawn-B", 0.75, 0.5),
 		manualZone("Spawn-C", 0.5, 0.25),
 	}
-	expected := map[string]image.Point{
-		"Spawn-A": image.Pt(150, 300),
-		"Spawn-B": image.Pt(450, 300),
-		"Spawn-C": image.Pt(300, 150),
+	expected := map[string]data.Vec2[float64]{
+		"Spawn-A": data.NewVec2(150.0, 300.0),
+		"Spawn-B": data.NewVec2(450.0, 300.0),
+		"Spawn-C": data.NewVec2(300.0, 150.0),
 	}
 
 	// Act
@@ -1161,12 +1210,12 @@ func TestWhenAllZonesHaveManualPositions_PlacesThemAtScaledCoordinates(t *testin
 func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		manualZone("Spawn-A", 0.5, 0.5),
 		manualZone("Spawn-B", 0.5, 0.5),
 	}
-	connections := []entities.Connection{directConnection("Spawn-A", "Spawn-B")}
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyRing, 600)
@@ -1181,30 +1230,30 @@ func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
 func TestWhenZoneConnectsToNoHub_PlacesItAtCanvasCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"),
 		namedZone("Spawn-A"), namedZone("Neutral-X"),
 	}
-	connections := []entities.Connection{directConnection("Hub-A", "Spawn-A")}
+	connections := []template_model.Connection{directConnection("Hub-A", "Spawn-A")}
 
 	// Act
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyHubAndSpoke, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Neutral-X"])
 }
 
 func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCenter(t *testing.T) {
 	t.Parallel()
 	// Arrange - portal connections never count as spokes, so the zone
 	// collapses to the canvas center as a straggler.
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"),
 		namedZone("Spawn-A"), namedZone("Neutral-X"),
 	}
-	connections := []entities.Connection{
+	connections := []template_model.Connection{
 		directConnection("Hub-A", "Spawn-A"),
 		{From: "Hub-B", To: "Neutral-X", ConnectionType: "Portal"},
 	}
@@ -1213,23 +1262,23 @@ func TestWhenZoneOnlyPortalsToAHub_PlacesItAtCanvasCenter(t *testing.T) {
 	layout := service.BuildPreviewLayout(templateWith(zones, connections), config.TopologyHubAndSpoke, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 300), layout.Positions["Neutral-X"])
+	assert.Equal(t, data.NewVec2(300.0, 300.0), layout.Positions["Neutral-X"])
 }
 
 func TestWhenHubSpokeConnectionIsDuplicated_PlacesTheSpokeOnce(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{
 		namedZone("Hub-A"), namedZone("Hub-B"),
 		namedZone("Spawn-A"), namedZone("Spawn-B"),
 	}
-	singleConnections := []entities.Connection{
+	singleConnections := []template_model.Connection{
 		directConnection("Hub-A", "Spawn-A"),
 		directConnection("Hub-B", "Spawn-B"),
 	}
 	duplicatedConnections := append(
-		[]entities.Connection{directConnection("Hub-A", "Spawn-A")}, singleConnections...)
+		[]template_model.Connection{directConnection("Hub-A", "Spawn-A")}, singleConnections...)
 	singleLayout := service.BuildPreviewLayout(
 		templateWith(zones, singleConnections), config.TopologyHubAndSpoke, 600)
 
@@ -1246,12 +1295,12 @@ func TestWhenHubSpokeConnectionIsDuplicated_PlacesTheSpokeOnce(t *testing.T) {
 func TestWhenZeroAngleZoneIsSet_RotatesThatZoneToFirstRingSlot(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := preview_service.NewPreviewLayoutService()
-	zones := []entities.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
-	rmgTemplate := &entities.RmgTemplate{
-		Variants: []entities.Variant{{
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	zones := []template_model.Zone{namedZone("Spawn-A"), namedZone("Spawn-B"), namedZone("Neutral-C")}
+	rmgTemplate := &template_model.Template{
+		Variants: []template_model.Variant{{
 			Zones:       zones,
-			Orientation: entities.Orientation{ZeroAngleZone: "Spawn-B"},
+			Orientation: template_model.Orientation{ZeroAngleZone: "Spawn-B"},
 		}},
 	}
 
@@ -1259,5 +1308,8 @@ func TestWhenZeroAngleZoneIsSet_RotatesThatZoneToFirstRingSlot(t *testing.T) {
 	layout := service.BuildPreviewLayout(rmgTemplate, config.TopologyRing, 600)
 
 	// Assert
-	assert.Equal(t, image.Pt(300, 48), layout.Positions["Spawn-B"])
+	assert.InDeltaSlice(t,
+		[]float64{300.0, 48.0},
+		[]float64{layout.Positions["Spawn-B"].X, layout.Positions["Spawn-B"].Y},
+		1e-9)
 }

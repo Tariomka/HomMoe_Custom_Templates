@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 func (this *State) Generate() { this.handleGenerateTemplate(false) }
@@ -26,11 +26,10 @@ func (this *State) SaveTemplate() { this.handleSaveTemplate() }
 // used to wake the UI back up once the debounce window elapses without further
 // input.
 func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
-	currentState := this.innerState.GetCurrentState()
 	decision := this.regeneration.DecideRegeneration(dtos.RegenerationDecisionRequestDto{
-		Previous:      this.innerState.GetPreviousState(),
-		Current:       &currentState,
-		Next:          this.innerState.GetNextState(),
+		Previous:      this.getPreviousStateDto(),
+		Current:       new(this.GetStateDto()),
+		Next:          this.getNextStateDto(),
 		Now:           now,
 		DebounceDueAt: this.applyNextStateAt,
 	})
@@ -39,7 +38,7 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 	case dtos.NextStateClear:
 		this.innerState.ResetNextState()
 	case dtos.NextStateSetFromCurrent:
-		this.innerState.SetNextState(currentState)
+		this.innerState.SetNextState(this.innerState.GetCurrentState())
 	case dtos.NextStateLeave:
 	}
 
@@ -57,7 +56,7 @@ func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRe
 func (this *State) handleSaveTemplate() {
 	savedPath, err := this.handler.SaveTemplate(dtos.TemplateSaveDto{
 		Template:   this.GetLastTemplate(),
-		Topology:   this.innerState.GetCurrentState().Topology,
+		Topology:   this.innerState.GetTopology(),
 		OutputPath: strings.TrimSpace(this.outputPath.Text()),
 	})
 
@@ -79,7 +78,7 @@ func (this *State) handleSaveTemplate() {
 // handleGenerateTemplate regenerates the template; on failure the previous
 // template is left in place.
 func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
-	currentState := this.innerState.GetCurrentState()
+	currentState := this.GetStateDto()
 	dto, err := this.handler.GenerateTemplate(currentState)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
@@ -91,8 +90,7 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 
 	// The decision compares against the state of the LAST generation, so it
 	// must be taken before applyGeneratedTemplate snapshots the current state.
-	manualEdits := this.regeneration.DecideManualEditReapplication(
-		this.innerState.GetPreviousState(), &currentState)
+	manualEdits := this.regeneration.DecideManualEditReapplication(this.getPreviousStateDto(), &currentState)
 	this.applyGeneratedTemplate(dto.Template)
 	if manualEdits.ReapplyWithCastleChanges != nil && this.hasTemplateVariants() {
 		this.reapplyManualEdits(*manualEdits.ReapplyWithCastleChanges)
@@ -116,7 +114,7 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 
 // applyGeneratedTemplate stores a freshly generated template as the live one
 // and records the editor state that produced it.
-func (this *State) applyGeneratedTemplate(template *entities.RmgTemplate) {
+func (this *State) applyGeneratedTemplate(template *template_model.Template) {
 	this.setLastTemplate(template)
 	this.innerState.SnapshotCurrentState()
 }

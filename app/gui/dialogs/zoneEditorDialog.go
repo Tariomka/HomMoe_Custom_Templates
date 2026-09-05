@@ -17,19 +17,19 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // ZoneEditorDialog is the Manual Zone Editor. It renders zones as
 // tier-coloured nodes and connections as curved lines, supports drag-to-create
 // and right-click-delete for connections, lets the user add, move and delete
 // zones, and exposes a property panel for the selected edge or zone. It works
-// on private copies of the zone and connection lists; Apply commits, Cancel/✕
+// on private copies of the zone and connection lists; Apply commits, Cancel/X
 // discards.
 type ZoneEditorDialog struct {
 	zoneEditorGeometryState
@@ -39,14 +39,14 @@ type ZoneEditorDialog struct {
 	zoneEditorConnectionPropertiesState
 	zoneEditorZonePropertiesState
 
-	zones          []entities.Zone
-	originalZones  []entities.Zone
+	zones          []template_model.Zone
+	originalZones  []template_model.Zone
 	playerZones    map[string]bool
 	topology       config.MapTopology
 	tuning         models.GenerationTuning
 	generateRoads  bool
-	working        []*entities.Connection
-	original       []entities.Connection
+	working        []*template_model.Connection
+	original       []template_model.Connection
 	onApply        func(dtos.ZoneEditorZonesDto)
 	onRevertToBase func() (dtos.ZoneEditorZonesDto, bool)
 	revertedToBase bool
@@ -68,8 +68,8 @@ type ZoneEditorDialog struct {
 // layout for the editor to show; nothing is committed until the user applies,
 // so it may be nil.
 func NewZoneEditorDialog(
-	zones []entities.Zone,
-	connections []entities.Connection,
+	zones []template_model.Zone,
+	connections []template_model.Connection,
 	topology config.MapTopology,
 	tuning models.GenerationTuning,
 	generateRoads bool,
@@ -77,26 +77,19 @@ func NewZoneEditorDialog(
 	onApply func(dtos.ZoneEditorZonesDto),
 	onRevertToBase func() (dtos.ZoneEditorZonesDto, bool)) *ZoneEditorDialog {
 	dialog := &ZoneEditorDialog{
-		topology:       topology,
-		tuning:         tuning,
-		generateRoads:  generateRoads,
-		onApply:        onApply,
-		onRevertToBase: onRevertToBase,
-		zoneHandler:    zoneHandler,
-		zoneEditorGeometryState: zoneEditorGeometryState{
-			geometryDirty: true,
-		},
-		zoneEditorConnectionPropertiesState: zoneEditorConnectionPropertiesState{
-			typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
-			guardZoneDropdown: components.NewDropdownSelector(nil),
-			guardDropdown:     components.NewDropdownSelector(nil),
-			weeklyDropdown: components.NewDropdownSelector(
-				common_connections.GetGuardWeeklyIncrementLabels()),
-		},
-		zoneEditorZonePropertiesState: zoneEditorZonePropertiesState{
-			qualityDropdown: components.NewDropdownSelector(neutral_zone.GetQualityNames()),
-			castleDropdown:  components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
-		},
+		topology:          topology,
+		tuning:            tuning,
+		generateRoads:     generateRoads,
+		onApply:           onApply,
+		onRevertToBase:    onRevertToBase,
+		zoneHandler:       zoneHandler,
+		geometryDirty:     true,
+		typeDropdown:      components.NewDropdownSelector(common_connections.GetConnectionTypes()),
+		guardZoneDropdown: components.NewDropdownSelector(nil),
+		guardDropdown:     components.NewDropdownSelector(nil),
+		weeklyDropdown:    components.NewDropdownSelector(common_connections.GetGuardWeeklyIncrementLabels()),
+		qualityDropdown:   components.NewDropdownSelector(neutral_zone.GetQualityNames()),
+		castleDropdown:    components.NewDropdownSelector([]string{"0", "1", "2", "3", "4"}),
 	}
 	dialog.setEditingSet(zones, connections)
 	dialog.scroll.Axis = layout.Vertical
@@ -183,9 +176,9 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 // setEditingSet installs a zone and connection list as both the working copy
 // and the baseline Undo restores, so a revert to base also moves the point
 // Undo returns to.
-func (this *ZoneEditorDialog) setEditingSet(zones []entities.Zone, connections []entities.Connection) {
-	this.zones = append([]entities.Zone(nil), zones...)
-	this.originalZones = append([]entities.Zone(nil), zones...)
+func (this *ZoneEditorDialog) setEditingSet(zones []template_model.Zone, connections []template_model.Connection) {
+	this.zones = append([]template_model.Zone(nil), zones...)
+	this.originalZones = append([]template_model.Zone(nil), zones...)
 	this.playerZones = make(map[string]bool)
 	for _, zone := range zones {
 		if zone_helpers.IsZoneNamePlayer(zone.Name) {
@@ -239,7 +232,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 		connections := derefConnections(this.working)
 		graph := this.zoneHandler.DescribeZoneEditorGraph(this.zones, connections)
 		if graph.HasErrors {
-			label := material.Body2(theme, "⚠ A connection references a missing zone - fix before export.")
+			label := material.Body2(theme, "‼ A connection references a missing zone - fix before export.")
 			label.Color = themes.ColorsBase.Error
 			label.TextSize = unit.Sp(12)
 			label.MaxLines = 2
@@ -362,7 +355,7 @@ func (this *ZoneEditorDialog) addConnection(from, to string) {
 	this.geometryDirty = true
 }
 
-func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) {
+func (this *ZoneEditorDialog) deleteConnection(connection *template_model.Connection) {
 	for i, candidate := range this.working {
 		if candidate == connection {
 			this.working = append(this.working[:i], this.working[i+1:]...)
@@ -380,7 +373,7 @@ func (this *ZoneEditorDialog) deleteConnection(connection *entities.Connection) 
 // discarding this session's edits only. Manual edits applied in earlier
 // sessions are untouched, and after a revert to base it returns to that base.
 func (this *ZoneEditorDialog) undoSessionEdits() {
-	this.zones = append([]entities.Zone(nil), this.originalZones...)
+	this.zones = append([]template_model.Zone(nil), this.originalZones...)
 	this.working = this.working[:0]
 	for i := range this.original {
 		clone := this.original[i]
@@ -421,14 +414,14 @@ func (this *ZoneEditorDialog) selectZone(name string) {
 	this.syncedFor = nil
 }
 
-func (this *ZoneEditorDialog) selectedZoneRef() *entities.Zone {
+func (this *ZoneEditorDialog) selectedZoneRef() *template_model.Zone {
 	if this.selectedZone == "" {
 		return nil
 	}
 	return this.zoneByName(this.selectedZone)
 }
 
-func (this *ZoneEditorDialog) zoneByName(name string) *entities.Zone {
+func (this *ZoneEditorDialog) zoneByName(name string) *template_model.Zone {
 	for i := range this.zones {
 		if this.zones[i].Name == name {
 			return &this.zones[i]
@@ -451,8 +444,8 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 		}
 		if pos, ok := this.geometry.Positions[this.zones[i].Name]; ok {
 			this.zones[i].ManualPosition = &[2]float64{
-				float64(pos.X) / float64(this.side),
-				float64(pos.Y) / float64(this.side),
+				pos.X / float64(this.side),
+				pos.Y / float64(this.side),
 			}
 		} else {
 			open := this.zoneHandler.FindOpenZonePosition(this.manualPositions())
@@ -474,7 +467,7 @@ func (this *ZoneEditorDialog) manualPositions() [][2]float64 {
 // addZoneAt appends a new medium-quality neutral zone at the clicked canvas
 // position. The add-zone mode stays active so several zones can be placed
 // without re-clicking the toolbar button.
-func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
+func (this *ZoneEditorDialog) addZoneAt(pos models.Position) {
 	if this.side <= 0 {
 		return
 	}
@@ -491,8 +484,8 @@ func (this *ZoneEditorDialog) addZoneAt(pos image.Point) {
 		GenerateRoads: this.generateRoads,
 		Tuning:        this.tuning,
 	})
-	x := math.Min(math.Max(float64(pos.X)/float64(this.side), 0.04), 0.96)
-	y := math.Min(math.Max(float64(pos.Y)/float64(this.side), 0.04), 0.96)
+	x := math.Min(math.Max(pos.X/float64(this.side), 0.04), 0.96)
+	y := math.Min(math.Max(pos.Y/float64(this.side), 0.04), 0.96)
 	zone.ManualPosition = &[2]float64{x, y}
 	this.zones = append(this.zones, zone)
 	this.geometryDirty = true
@@ -528,8 +521,8 @@ func (this *ZoneEditorDialog) deleteZone(name string) {
 	this.hint = ""
 }
 
-func derefConnections(pointers []*entities.Connection) []entities.Connection {
-	out := make([]entities.Connection, len(pointers))
+func derefConnections(pointers []*template_model.Connection) []template_model.Connection {
+	out := make([]template_model.Connection, len(pointers))
 	for i, pointer := range pointers {
 		out[i] = *pointer
 	}

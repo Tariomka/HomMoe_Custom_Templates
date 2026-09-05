@@ -11,7 +11,7 @@ import (
 func TestWhenServiceIsCreated_ReturnsInstance(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
 
 	// Assert
 	assert.NotNil(t, service)

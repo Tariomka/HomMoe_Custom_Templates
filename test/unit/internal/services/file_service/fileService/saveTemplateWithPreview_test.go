@@ -7,13 +7,10 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func newPreviewImage() *image.RGBA {
-	return image.NewRGBA(image.Rect(0, 0, 16, 16))
-}
 
 func TestWhenSavedTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository(t *testing.T) {
 	t.Parallel()
@@ -23,7 +20,7 @@ func TestWhenSavedTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository
 	mocks.template.On("Save", "out", "a/b:c", rmgTemplate).Return("written", nil)
 
 	// Act
-	_, err := service.SaveTemplateWithPreview("out", &rmgTemplate, nil)
+	_, err := service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), nil)
 
 	// Assert
 	require.NoError(t, err)
@@ -39,7 +36,7 @@ func TestWhenTemplateIsSaved_ReturnsThePathTheRepositoryWrote(t *testing.T) {
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return(expectedPath, nil)
 
 	// Act
-	actualPath, err := service.SaveTemplateWithPreview("out", &rmgTemplate, nil)
+	actualPath, err := service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), nil)
 
 	// Assert
 	require.NoError(t, err)
@@ -54,7 +51,7 @@ func TestWhenPreviewImageIsNil_DoesNotSaveAPreview(t *testing.T) {
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("written", nil)
 
 	// Act
-	_, err := service.SaveTemplateWithPreview("out", &rmgTemplate, nil)
+	_, err := service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), nil)
 
 	// Assert
 	require.NoError(t, err)
@@ -71,7 +68,7 @@ func TestWhenPreviewImageIsGiven_SavesItBesideTheTemplateUnderTheSameName(t *tes
 	mocks.preview.On("Save", "out", "T", *previewImage).Return("preview", nil)
 
 	// Act
-	_, err := service.SaveTemplateWithPreview("out", &rmgTemplate, previewImage)
+	_, err := service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), previewImage)
 
 	// Assert
 	require.NoError(t, err)
@@ -86,7 +83,7 @@ func TestWhenTemplateCannotBeSaved_DoesNotSaveAPreview(t *testing.T) {
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("", errors.New("disk full"))
 
 	// Act
-	_, _ = service.SaveTemplateWithPreview("out", &rmgTemplate, newPreviewImage())
+	_, _ = service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), newPreviewImage())
 
 	// Assert
 	mocks.preview.AssertNotCalled(t, "Save")
@@ -100,7 +97,7 @@ func TestWhenTemplateCannotBeSaved_ReturnsNoPath(t *testing.T) {
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("", errors.New("disk full"))
 
 	// Act
-	actualPath, _ := service.SaveTemplateWithPreview("out", &rmgTemplate, nil)
+	actualPath, _ := service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), nil)
 
 	// Assert
 	assert.Empty(t, actualPath)
@@ -115,7 +112,7 @@ func TestWhenTemplateCannotBeSaved_ReturnsError(t *testing.T) {
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("", expectedError)
 
 	// Act
-	_, err := service.SaveTemplateWithPreview("out", &rmgTemplate, nil)
+	_, err := service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), nil)
 
 	// Assert
 	assert.ErrorIs(t, err, expectedError)
@@ -132,7 +129,8 @@ func TestWhenPreviewCannotBeSaved_StillReturnsTheTemplatePath(t *testing.T) {
 	mocks.preview.On("Save", "out", "T", *previewImage).Return("", errors.New("no space"))
 
 	// Act
-	actualPath, _ := service.SaveTemplateWithPreview("out", &rmgTemplate, previewImage)
+	actualPath, _ := service.SaveTemplateWithPreview(
+		"out", new(template_model.ToTemplateModel(rmgTemplate)), previewImage)
 
 	// Assert
 	assert.Equal(t, expectedPath, actualPath)
@@ -149,8 +147,10 @@ func TestWhenPreviewCannotBeSaved_ReturnsError(t *testing.T) {
 	mocks.preview.On("Save", "out", "T", *previewImage).Return("", expectedError)
 
 	// Act
-	_, err := service.SaveTemplateWithPreview("out", &rmgTemplate, previewImage)
+	_, err := service.SaveTemplateWithPreview("out", new(template_model.ToTemplateModel(rmgTemplate)), previewImage)
 
 	// Assert
 	assert.ErrorIs(t, err, expectedError)
 }
+
+func newPreviewImage() *image.RGBA { return image.NewRGBA(image.Rect(0, 0, 16, 16)) }

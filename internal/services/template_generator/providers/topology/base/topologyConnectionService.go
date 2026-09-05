@@ -7,12 +7,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
@@ -31,7 +32,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	maxCount int,
-) []entities.Connection {
+	neutralZones neutral_zone.Plans) []template_model.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
 		return nil
@@ -46,7 +47,7 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 	})
 
 	rule := placement_rule.NewPlacementRuleBuilder().BuildNearCrossroadsRule(2)
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for index := range min(count, maxCount) {
 		labelIndex := indices[index]
 		fromLabel := orderedLabels[labelIndex]
@@ -54,14 +55,14 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 		fromName := this.zoneLabelProvider.CreateZoneName(fromLabel, playerLabels)
 		toName := this.zoneLabelProvider.CreateZoneName(toLabel, playerLabels)
 		connections = append(connections, variant_content.NewConnectionBuilder().
-			WithName(fmt.Sprintf("Portal-%s-%s", fromLabel, toLabel)).
+			WithName(constants.GetPortalConnectionNameFor(fromLabel, toLabel)).
 			WithFrom(fromName).
 			WithTo(toName).
 			WithConnectionTypePortal().
 			WithPortalPlacementRulesFrom(rule).
 			WithPortalPlacementRulesTo(rule).
 			WithRoad(true).
-			WithGuardValue(tuning.ScaleByBorderGuardStrength(25000)).
+			WithGuardValue(this.GetBorderGuardValue(fromLabel, toLabel, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 			Build())
 	}
@@ -70,10 +71,9 @@ func (this *TopologyConnectionService) CreateRandomPortalConnections(
 
 func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 	playerLabels []string,
-	zones []entities.Zone,
-	connections []entities.Connection,
-	tuning models.GenerationTuning,
-) []entities.Connection {
+	zones []template_model.Zone,
+	connections []template_model.Connection,
+	tuning models.GenerationTuning) []template_model.Connection {
 	if len(playerLabels) < 2 {
 		return nil
 	}
@@ -84,10 +84,10 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 			connectionNames[connection.Name] = true
 		}
 	}
-	var additionalConnections []entities.Connection
+	var additionalConnections []template_model.Connection
 	for _, label := range playerLabels {
-		zoneName := constants.PlayerZonePrefix + label
-		zone, ok := linq.FromSlice(zones).First(func(candidate entities.Zone) bool {
+		zoneName := constants.GetPlayerZoneNameFor(label)
+		zone, ok := linq.FromSlice(zones).First(func(candidate template_model.Zone) bool {
 			return candidate.Name == zoneName
 		})
 		if !ok || spawnZoneHasConnection(zone, connectionNames) {
@@ -101,7 +101,11 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 			continue
 		}
 
-		fallbackName := createFallbackConnectionName(label, partner)
+		labelFrom, labelTo := label, partner
+		if label > partner {
+			labelFrom, labelTo = partner, label
+		}
+		fallbackName := constants.GetFallbackConnectionNameFor(labelFrom, labelTo)
 		if connectionNames[fallbackName] {
 			continue
 		}
@@ -109,7 +113,7 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 		additionalConnections = append(additionalConnections, variant_content.NewConnectionBuilder().
 			WithName(fallbackName).
 			WithFrom(zoneName).
-			WithTo(constants.PlayerZonePrefix+partner).
+			WithTo(constants.GetPlayerZoneNameFor(partner)).
 			WithConnectionTypeDirect().
 			WithGuardZone(zoneName).
 			WithSimTurnSquad().
@@ -126,11 +130,10 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 func (this *TopologyConnectionService) CreateMissingConnections(
 	playerLabels, allLabels []string,
 	positions models.Positions,
-	zones []entities.Zone,
-	connections []entities.Connection,
+	zones []template_model.Zone,
+	connections []template_model.Connection,
 	tuning models.GenerationTuning,
-	neutralZones neutral_zone.Plans,
-) []entities.Connection {
+	neutralZones neutral_zone.Plans) []template_model.Connection {
 	if len(allLabels) < 2 {
 		return nil
 	}
@@ -138,11 +141,11 @@ func (this *TopologyConnectionService) CreateMissingConnections(
 	adjacency := this.buildZoneAdjacency(playerLabels, allLabels, connections)
 	connectionNames := map[string]bool{}
 	for connection := range linq.FromSlice(connections).
-		Where(func(candidate entities.Connection) bool { return candidate.Name != "" }).Iterate {
+		Where(func(candidate template_model.Connection) bool { return candidate.Name != "" }).Iterate {
 		connectionNames[connection.Name] = true
 	}
 
-	var additionalConnections []entities.Connection
+	var additionalConnections []template_model.Connection
 	for {
 		nodes := make([]int, len(allLabels))
 		for index := range nodes {
@@ -159,7 +162,7 @@ func (this *TopologyConnectionService) CreateMissingConnections(
 		if labelA > labelB {
 			labelA, labelB = labelB, labelA
 		}
-		bridgeName := fmt.Sprintf("Bridge-%s-%s", labelA, labelB)
+		bridgeName := constants.GetBridgeConnectionNameFor(labelA, labelB)
 		if connectionNames[bridgeName] {
 			adjacency.Link(bestIndexes.X, bestIndexes.Y)
 			continue
@@ -181,32 +184,33 @@ func (this *TopologyConnectionService) GetBorderGuardValue(
 	labelA, labelB string,
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
-	tuning models.GenerationTuning,
-) int {
-	firstIsPlayer := slices.Contains(playerLabels, labelA)
-	secondIsPlayer := slices.Contains(playerLabels, labelB)
-	if firstIsPlayer && secondIsPlayer {
-		return tuning.ScaleByBorderGuardStrength(neutral_zone.QualityUnknown.GetGuardValue())
-	}
-
-	if firstIsPlayer || secondIsPlayer {
-		neutralLabel := labelB
-		if !firstIsPlayer {
-			neutralLabel = labelA
-		}
-		return tuning.ScaleByBorderGuardStrength(neutralZones.GetQuality(neutralLabel).GetGuardValue())
-	}
-
-	higherQuality := max(neutralZones.GetQuality(labelA), neutralZones.GetQuality(labelB))
+	tuning models.GenerationTuning) int {
+	higherQuality := max(
+		labelQuality(labelA, playerLabels, neutralZones),
+		labelQuality(labelB, playerLabels, neutralZones))
 	return tuning.ScaleByBorderGuardStrength(higherQuality.GetGuardValue())
+}
+
+// labelQuality ranks a label for guarding purposes. QualityUnknown is -1, so a
+// player label always loses the max against a real tier while still supplying
+// the player-border guard value when both endpoints are players.
+func labelQuality(label string, playerLabels []string, neutralZones neutral_zone.Plans) neutral_zone.Quality {
+	if zone_helpers.IsZoneNameHub(label) {
+		return neutral_zone.QualityHighest
+	}
+
+	if slices.Contains(playerLabels, label) {
+		return neutral_zone.QualityUnknown
+	}
+
+	return neutralZones.GetQuality(label)
 }
 
 func (this *TopologyConnectionService) createBridgeConnection(
 	bridgeName, zoneFrom, zoneTo, labelA, labelB string,
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
-	tuning models.GenerationTuning,
-) entities.Connection {
+	tuning models.GenerationTuning) template_model.Connection {
 	return variant_content.NewConnectionBuilder().
 		WithName(bridgeName).
 		WithFrom(zoneFrom).
@@ -222,8 +226,7 @@ func (this *TopologyConnectionService) createBridgeConnection(
 
 func (this *TopologyConnectionService) buildZoneAdjacency(
 	playerLabels, allLabels []string,
-	connections []entities.Connection,
-) data.Adjacency[int] {
+	connections []template_model.Connection) data.Adjacency[int] {
 	nodes := make([]int, len(allLabels))
 	for index := range nodes {
 		nodes[index] = index
@@ -234,12 +237,12 @@ func (this *TopologyConnectionService) buildZoneAdjacency(
 		zoneNameToIndex[this.zoneLabelProvider.CreateZoneName(label, playerLabels)] = index
 	}
 	for connection := range linq.FromSlice(connections).
-		Where(func(candidate entities.Connection) bool {
+		Where(func(candidate template_model.Connection) bool {
 			connectionTypes := registry.GetConnectionTypeValues()
 			return candidate.ConnectionType == connectionTypes.Direct ||
 				candidate.ConnectionType == connectionTypes.Portal
 		}).
-		Where(func(candidate entities.Connection) bool {
+		Where(func(candidate template_model.Connection) bool {
 			_, hasFrom := zoneNameToIndex[candidate.From]
 			_, hasTo := zoneNameToIndex[candidate.To]
 			return hasFrom && hasTo
@@ -249,27 +252,21 @@ func (this *TopologyConnectionService) buildZoneAdjacency(
 	return adjacency
 }
 
-func createFallbackConnectionName(label, partner string) string {
-	if label > partner {
-		label, partner = partner, label
-	}
-	return fmt.Sprintf("Fallback-%s-%s", label, partner)
-}
-
-func spawnZoneHasConnection(zone entities.Zone, connectionNames map[string]bool) bool {
+func spawnZoneHasConnection(zone template_model.Zone, connectionNames map[string]bool) bool {
 	connectionType := registry.GetRoadConnectionTypeValues().Connection
 	for _, road := range zone.Roads {
 		if road.To.Type == connectionType && len(road.To.Args) > 0 && connectionNames[road.To.Args[0]] {
 			return true
 		}
 	}
+
 	return false
 }
 
-func appendSpawnFallbackRoads(zones []entities.Zone, label, partner, fallbackName string) {
+func appendSpawnFallbackRoads(zones []template_model.Zone, label, partner, fallbackName string) {
 	for _, playerLabel := range []string{label, partner} {
-		spawnZoneName := constants.PlayerZonePrefix + playerLabel
-		zoneIndex := slices.IndexFunc(zones, func(candidate entities.Zone) bool {
+		spawnZoneName := constants.GetPlayerZoneNameFor(playerLabel)
+		zoneIndex := slices.IndexFunc(zones, func(candidate template_model.Zone) bool {
 			return candidate.Name == spawnZoneName
 		})
 		if zoneIndex >= 0 {
@@ -281,27 +278,31 @@ func appendSpawnFallbackRoads(zones []entities.Zone, label, partner, fallbackNam
 	}
 }
 
-func findExistingConnectionName(zone entities.Zone) string {
+func findExistingConnectionName(zone template_model.Zone) string {
 	connectionType := registry.GetRoadConnectionTypeValues().Connection
 	for _, road := range zone.Roads {
 		if road.From.Type == connectionType && len(road.From.Args) > 0 {
 			return road.From.Args[0]
 		}
+
 		if road.To.Type == connectionType && len(road.To.Args) > 0 {
 			return road.To.Args[0]
 		}
 	}
+
 	return ""
 }
 
-func appendBridgeRoads(zones []entities.Zone, zoneFrom, zoneTo, bridgeName string) {
+func appendBridgeRoads(zones []template_model.Zone, zoneFrom, zoneTo, bridgeName string) {
 	for _, zoneName := range []string{zoneFrom, zoneTo} {
-		zoneIndex := slices.IndexFunc(zones, func(candidate entities.Zone) bool {
+		zoneIndex := slices.IndexFunc(zones, func(candidate template_model.Zone) bool {
 			return candidate.Name == zoneName
 		})
+
 		if zoneIndex < 0 {
 			continue
 		}
+
 		roadBuilder := variant_content.NewRoadBuilder().WithTo(
 			variant_content.NewRefBuilder().BuildConnectionType(bridgeName))
 		switch {
@@ -328,6 +329,7 @@ func buildNonAdjacentDerangement(count int) []int {
 			return destinations
 		}
 	}
+
 	return buildShiftDerangement(count)
 }
 
@@ -347,6 +349,7 @@ func tryRandomDerangement(count int) ([]int, bool) {
 		if foundIndex < 0 {
 			return nil, false
 		}
+
 		destinations[index] = candidates[foundIndex]
 		used[candidates[foundIndex]] = true
 	}
@@ -358,6 +361,7 @@ func pickDerangementTarget(candidates []int, used []bool, sourceIndex, count int
 		if used[candidates[index]] {
 			continue
 		}
+
 		candidate := candidates[index]
 		if candidate != sourceIndex &&
 			candidate != (sourceIndex+1)%count &&
@@ -365,11 +369,13 @@ func pickDerangementTarget(candidates []int, used []bool, sourceIndex, count int
 			return index
 		}
 	}
+
 	for index := range candidates {
 		if !used[candidates[index]] && candidates[index] != sourceIndex {
 			return index
 		}
 	}
+
 	return -1
 }
 

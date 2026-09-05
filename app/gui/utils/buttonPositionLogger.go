@@ -58,14 +58,6 @@ func (this *ButtonPositionLogger) LogButtonPositions(operations *op.Ops, metric 
 	}
 }
 
-// pixelsToDp converts a point from physical pixels to device-independent pixels,
-// rounding to the nearest whole dp.
-func pixelsToDp(metric unit.Metric, point image.Point) image.Point {
-	return image.Pt(
-		int(math.Round(float64(point.X)/float64(metric.PxPerDp))),
-		int(math.Round(float64(point.Y)/float64(metric.PxPerDp))))
-}
-
 // AddButtonSemantics records the button class and label in a nested, handler-free
 // clip area sized to the button. The input router keeps semantics of such areas
 // intact (areas with an input handler lose them unless a gesture filter is
@@ -76,4 +68,12 @@ func AddButtonSemantics(operations *op.Ops, label string, size image.Point) {
 	semantic.Button.Add(operations)
 	semantic.LabelOp(label).Add(operations)
 	area.Pop()
+}
+
+// pixelsToDp converts a point from physical pixels to device-independent pixels,
+// rounding to the nearest whole dp.
+func pixelsToDp(metric unit.Metric, point image.Point) image.Point {
+	return image.Pt(
+		int(math.Round(float64(point.X)/float64(metric.PxPerDp))),
+		int(math.Round(float64(point.Y)/float64(metric.PxPerDp))))
 }

@@ -2,7 +2,6 @@ package dialogs
 
 import (
 	"errors"
-	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/widget/material"
@@ -24,7 +23,7 @@ func (this *FileExplorerDialog) getHeaderWidget(theme *material.Theme) layout.Wi
 
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(widgets.NewButtonWidget(theme, "Up", &this.upBtn, upDisabled)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "← Back", &this.upBtn, upDisabled)),
 			widgets.NewDefaultComponentSpacer(),
 			layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.pathEd, "Current directory", true)),
 			widgets.NewDefaultComponentSpacer(),
@@ -38,13 +37,25 @@ func (this *FileExplorerDialog) getSaveRowWidget(theme *material.Theme) layout.W
 		return widgets.NewEmptyWidget()
 	}
 
-	hint := fmt.Sprintf("filename%s", saveFileSuffix)
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: constants.DefaultPadding}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(widgets.NewLabelBigWidget(theme, "Save as:", themes.ColorsBase.TextDim)),
-				widgets.NewDefaultComponentSpacer(),
-				layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, hint, false)),
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(widgets.NewLabelBigWidget(theme, "Will save as:", themes.ColorsBase.TextDim)),
+						widgets.NewDefaultComponentSpacer(),
+						layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.filenameEd, "", true)),
+					)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if this.hasResolvedSaveName() {
+						return layout.Dimensions{}
+					}
+
+					return layout.Inset{Top: constants.DefaultPaddingSmall - 2}.
+						Layout(gtx, widgets.NewLabelBuilder(theme).WithSizeDefault().
+							WithText(missingSaveNameMessage).WithColor(themes.ColorsBase.Error).WithMaxLines(2).Build)
+				}),
 			)
 		})
 	}
@@ -64,9 +75,7 @@ func (this *FileExplorerDialog) getNewFolderRowWidget(theme *material.Theme) lay
 						widgets.NewDefaultComponentSpacer(),
 						layout.Flexed(1, widgets.NewTextboxWidget(theme, &this.newFolderEd, "folder name", false)),
 						widgets.NewDefaultComponentSpacer(),
-						layout.Rigid(widgets.NewButtonWidget(theme, "Create", &this.createFolderBtn, false)),
-						widgets.NewDefaultComponentSpacer(),
-						layout.Rigid(widgets.NewButtonWidget(theme, "Cancel", &this.cancelFolderBtn, false)),
+						layout.Rigid(widgets.NewButtonWidget(theme, "Create Folder", &this.createFolderBtn, false)),
 					)
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {

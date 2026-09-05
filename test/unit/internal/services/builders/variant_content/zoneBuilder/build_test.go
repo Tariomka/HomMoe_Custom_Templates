@@ -3,7 +3,7 @@ package zoneBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +28,7 @@ func TestWhenMultipleOptionsAreChained_ReturnsZoneWithAllAccumulatedValues(t *te
 		Build()
 
 	// Assert
-	assert.Equal(t, entities.Zone{
+	assert.Equal(t, template_model.Zone{
 		Name:               expectedName,
 		Size:               expectedSize,
 		Layout:             "zone_layout_spawns",

@@ -4,20 +4,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
-
-func newTwoNeutralPlans() neutral_zone.Plans {
-	neutralZones := neutral_zone.Plans{}
-	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutral_zone.QualityHigh, 1)
-	return neutralZones
-}
 
 func TestWhenPlayerHasTwoNeutralPlans_CreatesHubSpawnAndNeutralZones(t *testing.T) {
 	t.Parallel()
@@ -51,6 +44,28 @@ func TestWhenClusterIsBuilt_HubZoneIsNamedAfterPlayerLabel(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, "Hub-B", zones[0].Name)
+}
+
+func TestWhenASpokeConnectionTouchesTheHub_ItIsGuardedAtTheHighestTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	neutralZones := newTwoNeutralPlans()
+	tuning := test_helpers.NewGenerationTuning(configuration, 4)
+	tuning.BorderGuardStrengthMultiplier = 1.0
+	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
+	var hubGuardValues []int
+
+	// Act
+	_, connections := service.CreateClusterVariant(*configuration, tuning, neutralZones, neutralZones, 0, "A")
+
+	// Assert
+	for _, connection := range connections {
+		if connection.From == "Hub-A" || connection.To == "Hub-A" {
+			hubGuardValues = append(hubGuardValues, connection.GuardValue)
+		}
+	}
+	assert.Equal(t, []int{35000, 35000, 35000}, hubGuardValues)
 }
 
 func TestWhenSpokesAreBuilt_CreatesSpokeConnectionPerSpokeZone(t *testing.T) {
@@ -124,7 +139,7 @@ func TestWhenHubMandatoryContentIsConfigured_HubZoneReferencesHubContentGroup(t 
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{}}
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())
@@ -150,4 +165,11 @@ func TestWhenHubMandatoryContentIsEmpty_HubZoneHasNoMandatoryContent(t *testing.
 
 	// Assert
 	assert.Empty(t, zones[0].MandatoryContent)
+}
+
+func newTwoNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityHigh, 1)
+	return neutralZones
 }

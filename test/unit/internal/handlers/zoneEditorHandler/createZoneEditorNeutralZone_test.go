@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +22,7 @@ func TestWhenNeutralZoneIsCreated_ReturnsTheEditorsZone(t *testing.T) {
 		GenerateRoads: true,
 		Tuning:        models.GenerationTuning{ContentScale: gofakeit.Float64Range(0.5, 2)},
 	}
-	expected := entities.Zone{Name: request.Label}
+	expected := template_model.Zone{Name: request.Label}
 	fixture.zoneEditor.
 		On("NewDefaultNeutralZone",
 			request.Label, request.Quality, request.CastleCount, request.GenerateRoads, request.Tuning).

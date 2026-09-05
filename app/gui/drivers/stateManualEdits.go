@@ -7,8 +7,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // ApplyEditedZones writes zones and connections edited in the manual zone
@@ -45,7 +45,7 @@ func (this *State) ApplyEditedZones(request dtos.ZoneEditorZonesDto) {
 // than the one the manual edits were originally made on; that layout is not
 // retained anywhere.
 func (this *State) PreviewBaseZones() (dtos.ZoneEditorZonesDto, bool) {
-	dto, err := this.handler.GenerateTemplate(this.innerState.GetCurrentState())
+	dto, err := this.handler.GenerateTemplate(this.GetStateDto())
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Generation failed: %v.", err), true)
 		return dtos.ZoneEditorZonesDto{}, false
@@ -68,18 +68,17 @@ func matchesZoneSet(left, right dtos.ZoneEditorZonesDto) bool {
 		reflect.DeepEqual(left.Connections, right.Connections)
 }
 
-func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []entities.Connection) {
-	editorState := this.innerState.GetCurrentState()
+func (this *State) handleUpdateTemplate(zones []template_model.Zone, connections []template_model.Connection) {
 	dto, err := this.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    this.lastTemplate,
 		Zones:       zones,
 		Connections: connections,
-		EditorState: &editorState,
+		EditorState: new(this.GetStateDto()),
 	})
 
 	if err != nil && errors.Is(err, common_errors.ErrProvidedTemplateInvalid) {
 		this.SetStatus(
-			fmt.Sprintf("Unable to update template, possibly because template was not generated. ⚠ Error: %v", err),
+			fmt.Sprintf("Unable to update template, possibly because template was not generated. ‼ Error: %v", err),
 			true)
 		return
 	}
@@ -88,7 +87,7 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 	if err != nil {
 		this.SetStatus(
 			fmt.Sprintf(
-				"Applied %d zones and %d connections. ⚠ Error: %v; fix before export.",
+				"Applied %d zones and %d connections. ‼ Error: %v; fix before export.",
 				len(zones), len(connections), err),
 			true)
 		return
@@ -104,14 +103,14 @@ func (this *State) handleUpdateTemplate(zones []entities.Zone, connections []ent
 // last generation - the only generator options that override manual edits -
 // the new counts are first pushed into the snapshot and the updated snapshot
 // is stored back so later regenerations and saves carry it.
-func (this *State) reapplyManualEdits(castleChanges editor_state_dto.CastleSettingChanges) {
+func (this *State) reapplyManualEdits(castleChanges editor_state_model.CastleSettingChanges) {
 	zones := this.innerState.GetManualZones()
 	connections := this.innerState.GetManualConnections()
 	if castleChanges.Any() {
 		zones = this.handler.ReapplyCastleSettings(dtos.CastleSettingsReapplyRequestDto{
 			Zones:       zones,
 			Changes:     castleChanges,
-			EditorState: this.innerState.GetCurrentState(),
+			EditorState: this.GetStateDto(),
 		})
 		this.innerState.SetManualEdits(zones, connections)
 	}

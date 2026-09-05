@@ -12,17 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// sampleScreenshot builds a small deterministic image for snapshot IO tests.
-func sampleScreenshot() *image.RGBA {
-	screenshot := image.NewRGBA(image.Rect(0, 0, 3, 2))
-	for row := range 2 {
-		for column := range 3 {
-			screenshot.SetRGBA(column, row, color.RGBA{R: uint8(40 * column), G: uint8(90 * row), B: 200, A: 255})
-		}
-	}
-	return screenshot
-}
-
 func TestWhenDirectoriesMissing_CreatesThemAndWritesFile(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -65,4 +54,15 @@ func TestWhenRootIsExistingFile_ReturnsError(t *testing.T) {
 
 	// Assert
 	assert.Error(t, err)
+}
+
+// sampleScreenshot builds a small deterministic image for snapshot IO tests.
+func sampleScreenshot() *image.RGBA {
+	screenshot := image.NewRGBA(image.Rect(0, 0, 3, 2))
+	for row := range 2 {
+		for column := range 3 {
+			screenshot.SetRGBA(column, row, color.RGBA{R: uint8(40 * column), G: uint8(90 * row), B: 200, A: 255})
+		}
+	}
+	return screenshot
 }

@@ -1,10 +1,10 @@
 package tournament_variant
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type IClusterService interface {
@@ -13,5 +13,5 @@ type IClusterService interface {
 		tuning models.GenerationTuning,
 		allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 		playerIndex int,
-		playerLabel string) ([]entities.Zone, []entities.Connection)
+		playerLabel string) ([]template_model.Zone, []template_model.Connection)
 }

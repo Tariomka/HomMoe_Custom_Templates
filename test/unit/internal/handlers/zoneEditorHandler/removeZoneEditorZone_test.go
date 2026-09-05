@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,10 +14,10 @@ func TestWhenZoneIsRemoved_ReturnsTheRemainingZones(t *testing.T) {
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
 	request := removeRequest()
-	remainingZones := []entities.Zone{{Name: gofakeit.Word()}}
+	remainingZones := []template_model.Zone{{Name: gofakeit.Word()}}
 	fixture.zoneEditor.
 		On("RemoveZone", request.Zones, request.Connections, request.ZoneName).
-		Return(remainingZones, []entities.Connection{})
+		Return(remainingZones, []template_model.Connection{})
 
 	// Act
 	mutation := fixture.handler.RemoveZoneEditorZone(request)
@@ -31,10 +31,10 @@ func TestWhenZoneIsRemoved_ReturnsTheRemainingConnections(t *testing.T) {
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
 	request := removeRequest()
-	remainingConnections := []entities.Connection{{From: gofakeit.Word()}}
+	remainingConnections := []template_model.Connection{{From: gofakeit.Word()}}
 	fixture.zoneEditor.
 		On("RemoveZone", request.Zones, request.Connections, request.ZoneName).
-		Return([]entities.Zone{}, remainingConnections)
+		Return([]template_model.Zone{}, remainingConnections)
 
 	// Act
 	mutation := fixture.handler.RemoveZoneEditorZone(request)
@@ -45,8 +45,8 @@ func TestWhenZoneIsRemoved_ReturnsTheRemainingConnections(t *testing.T) {
 
 func removeRequest() dtos.ZoneEditorRemoveRequestDto {
 	return dtos.ZoneEditorRemoveRequestDto{
-		Zones:       []entities.Zone{{Name: gofakeit.Word()}},
-		Connections: []entities.Connection{{From: gofakeit.Word()}},
+		Zones:       []template_model.Zone{{Name: gofakeit.Word()}},
+		Connections: []template_model.Connection{{From: gofakeit.Word()}},
 		ZoneName:    gofakeit.Word(),
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,7 +57,7 @@ func TestWhenSavedNameDiffersOnlyByCase_RestoresRule(t *testing.T) {
 	// Arrange
 	service := content_rules.NewContentRuleService()
 	isGuarded := true
-	saved := models.ContentRuleRowSave{Name: "gUaRdEd", IsGuarded: &isGuarded}
+	saved := editor_state_model.ContentRuleRow{Name: "gUaRdEd", IsGuarded: &isGuarded}
 
 	// Act
 	restored := service.CreateRuleFromSavedRule(saved, models.SidMapping{Sid: "x"})
@@ -72,23 +73,23 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 	someVariantID := 0
 	testCases := []struct {
 		name  string
-		saved models.ContentRuleRowSave
+		saved editor_state_model.ContentRuleRow
 	}{
-		{"WhenNameIsUnknown_ReturnsNil", models.ContentRuleRowSave{Name: "Nope"}},
-		{"WhenGuardedValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Guarded"}},
-		{"WhenSoloEncounterValueIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Solo Encounter"}},
-		{"WhenVariantIdIsMissing_ReturnsNil", models.ContentRuleRowSave{Name: "Variant"}},
+		{"WhenNameIsUnknown_ReturnsNil", editor_state_model.ContentRuleRow{Name: "Nope"}},
+		{"WhenGuardedValueIsMissing_ReturnsNil", editor_state_model.ContentRuleRow{Name: "Guarded"}},
+		{"WhenSoloEncounterValueIsMissing_ReturnsNil", editor_state_model.ContentRuleRow{Name: "Solo Encounter"}},
+		{"WhenVariantIdIsMissing_ReturnsNil", editor_state_model.ContentRuleRow{Name: "Variant"}},
 		{
 			"WhenRoadDistanceNameIsUnknown_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Whatever"},
+			editor_state_model.ContentRuleRow{Name: "Distance to road", DistanceName: "Whatever"},
 		},
 		{
 			"WhenTownDistanceNameIsUnknown_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Distance to town", DistanceName: "Whatever"},
+			editor_state_model.ContentRuleRow{Name: "Distance to town", DistanceName: "Whatever"},
 		},
 		{
 			"WhenVariantIdIsNotDefinedForContent_ReturnsNil",
-			models.ContentRuleRowSave{Name: "Variant", VariantID: &invalidVariantID},
+			editor_state_model.ContentRuleRow{Name: "Variant", VariantID: &invalidVariantID},
 		},
 	}
 
@@ -108,7 +109,7 @@ func TestWhenSavedDataIsInvalid_ReturnsNil(t *testing.T) {
 	t.Run("WhenContentHasNoVariants_ReturnsNil", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		saved := models.ContentRuleRowSave{Name: "Variant", VariantID: &someVariantID}
+		saved := editor_state_model.ContentRuleRow{Name: "Variant", VariantID: &someVariantID}
 
 		// Act
 		restored := service.CreateRuleFromSavedRule(saved, models.SidMapping{Sid: "x"})

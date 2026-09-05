@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -54,9 +54,11 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 	}
 }
 
-// Generate builds the template for the current configuration and returns the
-// warnings raised while parsing its free-text fields.
-func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
+// Generate builds the template for the current configuration and returns it,
+// with the tier the zone factory planned recorded on every neutral and hub
+// zone, plus the warnings raised while parsing the configuration's free-text
+// fields.
+func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 	this.configuration.EnsureNameExists()
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
@@ -65,11 +67,9 @@ func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
 	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
 
 	variant := this.topologyProvider.
-		ShufflePlayerZones(this.configuration.ShufflePlayerZones).
 		CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel)
-	this.gladiatorProvider.PlaceArena(*this.configuration, &variant)
 
-	return &entities.RmgTemplate{
+	generated := template_model.Template{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
 		Description:         this.createTemplateDescription(len(neutralZones)),
@@ -79,13 +79,17 @@ func (this *TemplateGenerator) Generate() (*entities.RmgTemplate, []string) {
 		ValueOverrides:      valueOverrides,
 		GlobalBans:          this.gameRulesProvider.CreateGlobalBans(*this.configuration),
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
-		Variants:            []entities.Variant{variant},
+		Variants:            []template_model.Variant{variant},
 		ZoneLayouts:         this.zoneLayoutProvider.CreateZoneLayouts(),
 		MandatoryContent:    this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
 		ContentCountLimits:  this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
-		ContentPools:        []entities.ContentPool{},
-		ContentLists:        []entities.ContentList{},
-	}, warnings
+		ContentPools:        []template_model.ContentPool{},
+		ContentLists:        []template_model.ContentList{},
+	}
+
+	this.gladiatorProvider.PlaceArena(*this.configuration, &generated.Variants[0])
+
+	return &generated, warnings
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {

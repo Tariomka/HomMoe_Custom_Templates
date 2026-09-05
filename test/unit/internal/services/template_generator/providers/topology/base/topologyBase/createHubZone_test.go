@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -82,7 +82,7 @@ func TestWhenHubHasNoCastlesAndIsNotHoldCity_BiomeMatchesZone(t *testing.T) {
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 0, true, "")
 
 	// Assert
-	assert.Equal(t, entities.TypedRef{Type: "MatchZone"}, zone.ZoneBiome)
+	assert.Equal(t, template_model.TypedRef{Type: "MatchZone"}, zone.ZoneBiome)
 }
 
 func TestWhenHubHasMultipleCastles_MainObjectCountMatchesCastleCount(t *testing.T) {
@@ -162,7 +162,7 @@ func TestWhenHubZoneIsCreated_ClassifiesAsHighestQuality(t *testing.T) {
 	zone := topologyBase.CreateHubZone("Hub", nil, newUnitTuning(), false, 1.0, 1, true, "")
 
 	// Assert
-	assert.Equal(t, neutral_zone.QualityHighest, zone_services.NewZoneClassifier().GetQuality(zone))
+	assert.Equal(t, neutral_zone.QualityHighest, zone_services.NewZoneTierService().GetQuality(zone))
 }
 
 func TestWhenHubZoneIsCreated_RoadsCountCastlesOnly(t *testing.T) {
@@ -177,15 +177,15 @@ func TestWhenHubZoneIsCreated_RoadsCountCastlesOnly(t *testing.T) {
 	zone := topologyBase.CreateHubZone("Hub", []string{"Hub-Gate"}, tuning, false, 1.0, 2, true, "")
 
 	// Assert
-	assert.Equal(t, []entities.Road{
+	assert.Equal(t, []template_model.Road{
 		{
 			Type: "Stone",
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 		},
 		{
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Hub-Gate"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Hub-Gate"}},
 		},
 	}, zone.Roads)
 }

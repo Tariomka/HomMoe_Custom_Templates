@@ -16,27 +16,6 @@ const (
 	testExportsPath   = "app/gui/editor/window_testexports.go"
 )
 
-func writeTree(t *testing.T, files map[string]string) string {
-	t.Helper()
-	root := t.TempDir()
-	for relativePath, content := range files {
-		path := filepath.Join(root, filepath.FromSlash(relativePath))
-		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o750))
-		require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
-	}
-
-	return root
-}
-
-func reportedRules(violations []checker.Violation) []string {
-	rules := make([]string, 0, len(violations))
-	for _, violation := range violations {
-		rules = append(rules, violation.Rule)
-	}
-
-	return rules
-}
-
 func TestWhenTreeFollowsTheRules_ReturnsNoViolations(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -240,4 +219,25 @@ func TestWhenRootDoesNotExist_ReturnsError(t *testing.T) {
 
 	// Assert
 	assert.Error(t, err)
+}
+
+func writeTree(t *testing.T, files map[string]string) string {
+	t.Helper()
+	root := t.TempDir()
+	for relativePath, content := range files {
+		path := filepath.Join(root, filepath.FromSlash(relativePath))
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o750))
+		require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
+	}
+
+	return root
+}
+
+func reportedRules(violations []checker.Violation) []string {
+	rules := make([]string, 0, len(violations))
+	for _, violation := range violations {
+		rules = append(rules, violation.Rule)
+	}
+
+	return rules
 }

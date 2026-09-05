@@ -3,7 +3,7 @@ package connectionEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
@@ -12,8 +12,8 @@ import (
 func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
-	connections := []entities.Connection{
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "main-road"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "main-road"},
 	}
@@ -28,8 +28,8 @@ func TestWhenAnotherConnectionSharesName_ReturnsTrue(t *testing.T) {
 func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
-	connections := []entities.Connection{
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "Main-Road"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "main-road"},
 	}
@@ -44,8 +44,8 @@ func TestWhenNamesDifferOnlyByCase_ReturnsTrue(t *testing.T) {
 func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
-	connections := []entities.Connection{
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{
 		{From: "Spawn-A", To: "Neutral-1", Name: "alpha"},
 		{From: "Neutral-1", To: "Neutral-2", Name: "beta"},
 	}
@@ -60,8 +60,8 @@ func TestWhenNamesAreDistinct_ReturnsFalse(t *testing.T) {
 func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
-	connections := []entities.Connection{{From: "Spawn-A", To: "Neutral-1", Name: "alpha"}}
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{{From: "Spawn-A", To: "Neutral-1", Name: "alpha"}}
 
 	// Act
 	hasDuplicate := service.HasDuplicateName(connections, nil)
@@ -73,8 +73,8 @@ func TestWhenCurrentConnectionIsNil_ReturnsFalse(t *testing.T) {
 func TestWhenCurrentNameIsEmpty_ReturnsFalse(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneClassifier())
-	connections := []entities.Connection{
+	service := connection_editor.NewConnectionEditorService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{
 		{From: "Spawn-A", To: "Neutral-1"},
 		{From: "Neutral-1", To: "Neutral-2"},
 	}

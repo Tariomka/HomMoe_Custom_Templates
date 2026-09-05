@@ -3,7 +3,7 @@ package placementRuleBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenWeightIsProvided_SetsWeightOnBuiltRule(t *testing.T) {
 	rule := builder.WithWeight(expectedWeight).Build()
 
 	// Assert
-	assert.Equal(t, entities.PlacementRule{Weight: expectedWeight}, rule)
+	assert.Equal(t, template_model.PlacementRule{Weight: expectedWeight}, rule)
 }

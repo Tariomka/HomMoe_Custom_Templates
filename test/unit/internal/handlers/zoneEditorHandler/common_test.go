@@ -1,8 +1,10 @@
 package zoneEditorHandler_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
@@ -11,7 +13,7 @@ import (
 type zoneEditorHandlerFixture struct {
 	handler          handler_interfaces.IZoneEditorHandler
 	mapper           *test_helpers.GeneratorConfigMapperMock
-	zoneClassifier   *test_helpers.ZoneClassifierMock
+	tierService      *test_helpers.ZoneTierServiceMock
 	connectionEditor *test_helpers.ConnectionEditorServiceMock
 	zoneEditor       *test_helpers.ZoneEditorServiceMock
 	geometry         *test_helpers.ZoneEditorGeometryServiceMock
@@ -21,7 +23,7 @@ type zoneEditorHandlerFixture struct {
 func newZoneEditorHandlerFixture() *zoneEditorHandlerFixture {
 	fixture := &zoneEditorHandlerFixture{
 		mapper:           &test_helpers.GeneratorConfigMapperMock{},
-		zoneClassifier:   &test_helpers.ZoneClassifierMock{},
+		tierService:      &test_helpers.ZoneTierServiceMock{},
 		connectionEditor: &test_helpers.ConnectionEditorServiceMock{},
 		zoneEditor:       &test_helpers.ZoneEditorServiceMock{},
 		geometry:         &test_helpers.ZoneEditorGeometryServiceMock{},
@@ -30,7 +32,7 @@ func newZoneEditorHandlerFixture() *zoneEditorHandlerFixture {
 
 	fixture.handler = handlers.NewZoneEditorHandler(
 		fixture.mapper,
-		fixture.zoneClassifier,
+		fixture.tierService,
 		fixture.connectionEditor,
 		fixture.zoneEditor,
 		fixture.geometry,
@@ -38,4 +40,8 @@ func newZoneEditorHandlerFixture() *zoneEditorHandlerFixture {
 	)
 
 	return fixture
+}
+
+func toDto(state editor_state_model.EditorState) editor_state_dto.EditorStateDto {
+	return editor_state_dto.EditorStateDto{EditorState: state}
 }

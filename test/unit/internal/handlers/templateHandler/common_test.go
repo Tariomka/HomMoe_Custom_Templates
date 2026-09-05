@@ -1,8 +1,10 @@
 package templateHandler_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
 
@@ -47,4 +49,8 @@ func newTemplateHandlerFixture() *templateHandlerFixture {
 	)
 
 	return fixture
+}
+
+func toDto(state editor_state_model.EditorState) editor_state_dto.EditorStateDto {
+	return editor_state_dto.EditorStateDto{EditorState: state}
 }

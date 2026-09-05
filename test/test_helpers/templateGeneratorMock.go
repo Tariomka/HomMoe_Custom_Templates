@@ -1,8 +1,8 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -17,9 +17,9 @@ func (this *TemplateGeneratorMock) SetConfiguration(configuration *config.Genera
 	this.Called(configuration)
 }
 
-func (this *TemplateGeneratorMock) Generate() (*entities.RmgTemplate, []string) {
+func (this *TemplateGeneratorMock) Generate() (*template_model.Template, []string) {
 	arguments := this.Called()
-	template, _ := arguments.Get(0).(*entities.RmgTemplate)
+	generated, _ := arguments.Get(0).(*template_model.Template)
 	warnings, _ := arguments.Get(1).([]string)
-	return template, warnings
+	return generated, warnings
 }

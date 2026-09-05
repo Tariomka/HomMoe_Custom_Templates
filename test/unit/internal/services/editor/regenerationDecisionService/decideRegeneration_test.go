@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/config/config_inner"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -16,32 +17,11 @@ import (
 // changes silently.
 const debounceWindow = 300 * time.Millisecond
 
-func defaultState() *dtos.EditorStateDto {
-	state := dtos.NewDefaultEditorStateDto()
-	return &state
-}
-
-// layoutChangedState returns a state differing from defaultState in a
-// layout-defining option, which invalidates any hand-made zone layout.
-func layoutChangedState() *dtos.EditorStateDto {
-	state := defaultState()
-	state.Topology = config_inner.TopologyChain
-	return state
-}
-
-// nonLayoutChangedState differs from defaultState only in an option that does
-// not alter the zone or connection graph, so it is debounced instead.
-func nonLayoutChangedState() *dtos.EditorStateDto {
-	state := defaultState()
-	state.ResourceDensityPercent = 50
-	return state
-}
-
 func TestWhenNoPreviousGenerationExists_RegeneratesImmediately(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous: nil,
 		Current:  defaultState(),
 		Now:      gofakeit.Date(),
@@ -51,9 +31,9 @@ func TestWhenNoPreviousGenerationExists_RegeneratesImmediately(t *testing.T) {
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      true,
-		NextStateAction: dtos.NextStateLeave,
+		NextStateAction: regeneration.NextStateLeave,
 	}, decision)
 }
 
@@ -61,7 +41,7 @@ func TestWhenStateIsUnchangedSinceLastGeneration_CancelsPendingDebounce(t *testi
 	t.Parallel()
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous: defaultState(),
 		Current:  defaultState(),
 		Next:     defaultState(),
@@ -72,9 +52,9 @@ func TestWhenStateIsUnchangedSinceLastGeneration_CancelsPendingDebounce(t *testi
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      false,
-		NextStateAction: dtos.NextStateClear,
+		NextStateAction: regeneration.NextStateClear,
 	}, decision)
 }
 
@@ -82,7 +62,7 @@ func TestWhenLayoutDefiningOptionChanged_RegeneratesImmediately(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous: defaultState(),
 		Current:  layoutChangedState(),
 		Now:      gofakeit.Date(),
@@ -92,9 +72,9 @@ func TestWhenLayoutDefiningOptionChanged_RegeneratesImmediately(t *testing.T) {
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      true,
-		NextStateAction: dtos.NextStateClear,
+		NextStateAction: regeneration.NextStateClear,
 	}, decision)
 }
 
@@ -103,7 +83,7 @@ func TestWhenNonLayoutOptionChangedAndNoDebounceArmed_ArmsDebounce(t *testing.T)
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	now := gofakeit.Date()
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous: defaultState(),
 		Current:  nonLayoutChangedState(),
 		Next:     nil,
@@ -114,9 +94,9 @@ func TestWhenNonLayoutOptionChangedAndNoDebounceArmed_ArmsDebounce(t *testing.T)
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      false,
-		NextStateAction: dtos.NextStateSetFromCurrent,
+		NextStateAction: regeneration.NextStateSetFromCurrent,
 		RedrawAt:        now.Add(debounceWindow),
 		ScheduleRedraw:  true,
 	}, decision)
@@ -127,7 +107,7 @@ func TestWhenStateMovedAgainWhileDebounceArmed_RearmsDebounceFromNow(t *testing.
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	now := gofakeit.Date()
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous:      defaultState(),
 		Current:       nonLayoutChangedState(),
 		Next:          defaultState(),
@@ -139,9 +119,9 @@ func TestWhenStateMovedAgainWhileDebounceArmed_RearmsDebounceFromNow(t *testing.
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      false,
-		NextStateAction: dtos.NextStateSetFromCurrent,
+		NextStateAction: regeneration.NextStateSetFromCurrent,
 		RedrawAt:        now.Add(debounceWindow),
 		ScheduleRedraw:  true,
 	}, decision)
@@ -153,7 +133,7 @@ func TestWhenStateIsStableAndDebounceNotDue_KeepsWaiting(t *testing.T) {
 	service := editor.NewRegenerationDecisionService()
 	now := gofakeit.Date()
 	dueAt := now.Add(time.Nanosecond)
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous:      defaultState(),
 		Current:       nonLayoutChangedState(),
 		Next:          nonLayoutChangedState(),
@@ -165,9 +145,9 @@ func TestWhenStateIsStableAndDebounceNotDue_KeepsWaiting(t *testing.T) {
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      false,
-		NextStateAction: dtos.NextStateLeave,
+		NextStateAction: regeneration.NextStateLeave,
 		RedrawAt:        dueAt,
 		ScheduleRedraw:  true,
 	}, decision)
@@ -180,7 +160,7 @@ func TestWhenStateIsStableAndDebounceExactlyDue_Regenerates(t *testing.T) {
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	now := gofakeit.Date()
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous:      defaultState(),
 		Current:       nonLayoutChangedState(),
 		Next:          nonLayoutChangedState(),
@@ -192,9 +172,9 @@ func TestWhenStateIsStableAndDebounceExactlyDue_Regenerates(t *testing.T) {
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      true,
-		NextStateAction: dtos.NextStateClear,
+		NextStateAction: regeneration.NextStateClear,
 	}, decision)
 }
 
@@ -203,7 +183,7 @@ func TestWhenStateIsStableAndDebounceOverdue_Regenerates(t *testing.T) {
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	now := gofakeit.Date()
-	request := dtos.RegenerationDecisionRequestDto{
+	request := regeneration.DecisionRequest{
 		Previous:      defaultState(),
 		Current:       nonLayoutChangedState(),
 		Next:          nonLayoutChangedState(),
@@ -215,9 +195,9 @@ func TestWhenStateIsStableAndDebounceOverdue_Regenerates(t *testing.T) {
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      true,
-		NextStateAction: dtos.NextStateClear,
+		NextStateAction: regeneration.NextStateClear,
 	}, decision)
 }
 
@@ -228,8 +208,8 @@ func TestWhenOnlyManualEditsDiffer_CancelsPendingDebounce(t *testing.T) {
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	current := defaultState()
-	current.ManualZones = manualZoneSaves()
-	request := dtos.RegenerationDecisionRequestDto{
+	current.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
+	request := regeneration.DecisionRequest{
 		Previous: defaultState(),
 		Current:  current,
 		Now:      gofakeit.Date(),
@@ -239,8 +219,29 @@ func TestWhenOnlyManualEditsDiffer_CancelsPendingDebounce(t *testing.T) {
 	decision := service.DecideRegeneration(request)
 
 	// Assert
-	assert.Equal(t, dtos.RegenerationDecisionDto{
+	assert.Equal(t, regeneration.Decision{
 		Regenerate:      false,
-		NextStateAction: dtos.NextStateClear,
+		NextStateAction: regeneration.NextStateClear,
 	}, decision)
+}
+
+func defaultState() *editor_state_model.EditorState {
+	state := editor_state_model.NewDefaultEditorStateModel()
+	return &state
+}
+
+// layoutChangedState returns a state differing from defaultState in a
+// layout-defining option, which invalidates any hand-made zone layout.
+func layoutChangedState() *editor_state_model.EditorState {
+	state := defaultState()
+	state.Topology = config.TopologyChain
+	return state
+}
+
+// nonLayoutChangedState differs from defaultState only in an option that does
+// not alter the zone or connection graph, so it is debounced instead.
+func nonLayoutChangedState() *editor_state_model.EditorState {
+	state := defaultState()
+	state.ResourceDensityPercent = 50
+	return state
 }

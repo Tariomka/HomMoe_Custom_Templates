@@ -1,13 +1,13 @@
 package preview_service
 
 import (
-	"image"
 	"math"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
-type assetFitter func(image.Point) image.Point
+type assetFitter func(data.Vec2[float64]) data.Vec2[float64]
 
 // newAssetFitter returns a function that pulls canvas points uniformly toward the center
 // just enough that no zone asset crosses the border line painted on the background
@@ -29,22 +29,17 @@ func newAssetFitter(zones []preview.Zone, scale float64) assetFitter {
 		}
 
 		// Chebyshev actualDeviation: the worse of the two axes.
-		actualDeviation := math.Max(
-			math.Abs(float64(zone.Center.X)-center),
-			math.Abs(float64(zone.Center.Y)-center))
+		actualDeviation := math.Max(math.Abs(zone.Center.X-center), math.Abs(zone.Center.Y-center))
 		if actualDeviation > allowedDeviation {
 			fit = min(fit, allowedDeviation/actualDeviation)
 		}
 	}
 
 	if fit >= 1 {
-		return func(p image.Point) image.Point { return p }
+		return func(point data.Vec2[float64]) data.Vec2[float64] { return point }
 	}
 
-	return func(p image.Point) image.Point {
-		return image.Pt(
-			int(math.Round(center+(float64(p.X)-center)*fit)),
-			int(math.Round(center+(float64(p.Y)-center)*fit)),
-		)
+	return func(point data.Vec2[float64]) data.Vec2[float64] {
+		return data.NewVec2(center+(point.X-center)*fit, center+(point.Y-center)*fit)
 	}
 }

@@ -5,7 +5,9 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -29,7 +31,7 @@ func TestWhenUpdatedTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t 
 	fixture := newTemplateHandlerFixture()
 
 	// Act
-	_, err := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{Template: &entities.RmgTemplate{}})
+	_, err := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{Template: &template_model.Template{}})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrProvidedTemplateInvalid)
@@ -39,7 +41,7 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	zones := []entities.Zone{{Name: gofakeit.Word()}}
+	zones := []template_model.Zone{{Name: gofakeit.Word()}}
 	arrangeUpdateCollaborators(fixture, false)
 
 	// Act
@@ -56,7 +58,7 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T)
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	connections := []entities.Connection{{Name: gofakeit.Word()}}
+	connections := []template_model.Connection{{Name: gofakeit.Word()}}
 	arrangeUpdateCollaborators(fixture, false)
 
 	// Act
@@ -67,6 +69,25 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T)
 
 	// Assert
 	assert.Equal(t, connections, loadDto.Template.Variants[0].Connections)
+}
+
+// The user-added flag is editor-only state with no .rmg.json counterpart; an
+// Apply must carry it on the model as-is.
+func TestWhenAnAppliedConnectionIsUserAdded_KeepsTheFlagAcrossTheApply(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+	connections := []template_model.Connection{{Name: gofakeit.Word(), IsUserAdded: true}}
+	arrangeUpdateCollaborators(fixture, false)
+
+	// Act
+	loadDto, _ := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{
+		Template:    singleVariantTemplate(),
+		Connections: connections,
+	})
+
+	// Assert
+	assert.True(t, loadDto.Template.Variants[0].Connections[0].IsUserAdded)
 }
 
 func TestWhenTemplateIsUpdated_LeavesTheSourceTemplateUntouched(t *testing.T) {
@@ -80,7 +101,7 @@ func TestWhenTemplateIsUpdated_LeavesTheSourceTemplateUntouched(t *testing.T) {
 	// Act
 	_, _ = fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template: source,
-		Zones:    []entities.Zone{{Name: gofakeit.Word()}},
+		Zones:    []template_model.Zone{{Name: gofakeit.Word()}},
 	})
 
 	// Assert
@@ -91,8 +112,8 @@ func TestWhenTemplateIsUpdated_RebuildsTheZoneConnectionRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	zones := []entities.Zone{{Name: gofakeit.Word()}}
-	connections := []entities.Connection{{Name: gofakeit.Word()}}
+	zones := []template_model.Zone{{Name: gofakeit.Word()}}
+	connections := []template_model.Connection{{Name: gofakeit.Word()}}
 	arrangeUpdateCollaborators(fixture, false)
 
 	// Act
@@ -123,9 +144,9 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	state := dtos.NewDefaultEditorStateDto()
-	zones := []entities.Zone{{Name: gofakeit.Word()}}
-	expected := []entities.MandatoryContent{{Name: gofakeit.Word()}}
+	state := editor_state_model.NewDefaultEditorStateModel()
+	zones := []template_model.Zone{{Name: gofakeit.Word()}}
+	expected := []template_model.MandatoryContent{{Name: gofakeit.Word()}}
 	configuration := namedConfiguration()
 	arrangeUpdateCollaborators(fixture, false)
 	fixture.mapper.On("FromEditorState", state).Return(configuration)
@@ -135,7 +156,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	loadDto, _ := fixture.handler.UpdateTemplate(dtos.TemplateUpdateDto{
 		Template:    singleVariantTemplate(),
 		Zones:       zones,
-		EditorState: &state,
+		EditorState: &editor_state_dto.EditorStateDto{EditorState: state},
 	})
 
 	// Assert
@@ -175,9 +196,9 @@ func arrangeUpdateCollaborators(fixture *templateHandlerFixture, hasErrors bool)
 	fixture.connectionEditor.On("ComputeHasErrors", mock.Anything, mock.Anything).Return(hasErrors)
 }
 
-func singleVariantTemplate() *entities.RmgTemplate {
-	return &entities.RmgTemplate{
+func singleVariantTemplate() *template_model.Template {
+	return &template_model.Template{
 		Name:     gofakeit.Word(),
-		Variants: []entities.Variant{{Zones: []entities.Zone{{Name: gofakeit.Word()}}}},
+		Variants: []template_model.Variant{{Zones: []template_model.Zone{{Name: gofakeit.Word()}}}},
 	}
 }

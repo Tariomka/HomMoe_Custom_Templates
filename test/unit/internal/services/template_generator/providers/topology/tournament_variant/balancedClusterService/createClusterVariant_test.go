@@ -4,22 +4,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
-
-func newFourNeutralPlans() neutral_zone.Plans {
-	neutralZones := neutral_zone.Plans{}
-	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("E", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("F", neutral_zone.QualityHigh, 1)
-	return neutralZones
-}
 
 func TestWhenPlayerHasFourNeutralPlans_CreatesSpawnPlusNeutralZones(t *testing.T) {
 	t.Parallel()
@@ -181,7 +172,7 @@ func TestWhenClusterIsBuilt_AllZonesFormSingleConnectedComponent(t *testing.T) {
 	assert.Len(t, components, 1)
 }
 
-func countWithPrefix(connections []entities.Connection, prefix string) int {
+func countWithPrefix(connections []template_model.Connection, prefix string) int {
 	count := 0
 	for _, connection := range connections {
 		if strings.HasPrefix(connection.Name, prefix) {
@@ -189,4 +180,13 @@ func countWithPrefix(connections []entities.Connection, prefix string) int {
 		}
 	}
 	return count
+}
+
+func newFourNeutralPlans() neutral_zone.Plans {
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("C", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("D", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("E", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("F", neutral_zone.QualityHigh, 1)
+	return neutralZones
 }

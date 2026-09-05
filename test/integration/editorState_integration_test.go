@@ -14,8 +14,9 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,7 +73,7 @@ func TestLoadFromFile_SyncsPanels_AndSurvivesNextFrameSave(t *testing.T) {
 
 	// Author a distinctive state and persist it through the real save path.
 	author := newUIState()
-	author.UpdateState(func(s *dtos.EditorStateDto) {
+	author.UpdateState(func(s *editor_state_model.EditorState) {
 		s.TemplateName = "Loaded Template"
 		s.PlayerCount = 6
 		s.Topology = config.TopologyCross
@@ -133,12 +134,12 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 
 	// Hand-edit the layout: stamp a manual position onto every zone and add a
 	// user-created connection between the first two zones.
-	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
+	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.2 * float64(i+1)}
 	}
-	connections := append([]entities.Connection(nil), template.Variants[0].Connections...)
-	added := entities.Connection{
+	connections := append([]template_model.Connection(nil), template.Variants[0].Connections...)
+	added := template_model.Connection{
 		From:           zones[0].Name,
 		To:             zones[1].Name,
 		ConnectionType: "Portal",
@@ -155,7 +156,7 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 
 	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
-	var onDisk dtos.EditorStateDto
+	var onDisk editor_state_model.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 
 	require.Len(t, onDisk.ManualZones, len(zones), "gen.json did not persist all manual zones")
@@ -217,7 +218,7 @@ func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 
-	var onDisk dtos.EditorStateDto
+	var onDisk editor_state_model.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 	assert.Empty(t, onDisk.ManualZones)
 	assert.Empty(t, onDisk.ManualConnections)
@@ -235,7 +236,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	require.NotNil(t, template)
 	require.NotEmpty(t, template.Variants)
 
-	zones := append([]entities.Zone(nil), template.Variants[0].Zones...)
+	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
 		zones[i].ManualPosition = &[2]float64{0.3, 0.4}
 	}
@@ -245,7 +246,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 	})
 
 	// A structural change (player count) must regenerate from scratch.
-	state.UpdateState(func(s *dtos.EditorStateDto) { s.PlayerCount = 4 })
+	state.UpdateState(func(s *editor_state_model.EditorState) { s.PlayerCount = 4 })
 	state.AutoRegenerate(now)
 
 	regenerated := state.GetLastTemplate()
@@ -268,7 +269,7 @@ func TestLoadFromFile_RestoresGameMode_AndSurvivesNextFrameSave(t *testing.T) {
 
 	// Author a state with the non-default game mode and persist it.
 	author := newUIState()
-	author.UpdateState(func(s *dtos.EditorStateDto) { s.GameMode = singleHero })
+	author.UpdateState(func(s *editor_state_model.EditorState) { s.GameMode = singleHero })
 	author.SaveStateToFile(savedPath)
 	message, irError := author.GetStatus()
 	require.False(t, irError)

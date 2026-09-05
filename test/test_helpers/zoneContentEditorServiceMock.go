@@ -3,6 +3,7 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -21,17 +22,17 @@ func (this *ZoneContentEditorServiceMock) ComposeContentRule(
 }
 
 func (this *ZoneContentEditorServiceMock) UpsertContentRule(
-	rules []models.ContentRuleRowSave,
-	rule models.ContentRuleRowSave) []models.ContentRuleRowSave {
+	rules []editor_state_model.ContentRuleRow,
+	rule editor_state_model.ContentRuleRow) []editor_state_model.ContentRuleRow {
 	arguments := this.Called(rules, rule)
-	merged, _ := arguments.Get(0).([]models.ContentRuleRowSave)
+	merged, _ := arguments.Get(0).([]editor_state_model.ContentRuleRow)
 	return merged
 }
 
 func (this *ZoneContentEditorServiceMock) GetDefaultContentRules(
-	options dtos.ContentRuleEditorOptionsDto) []models.ContentRuleRowSave {
+	options dtos.ContentRuleEditorOptionsDto) []editor_state_model.ContentRuleRow {
 	arguments := this.Called(options)
-	rules, _ := arguments.Get(0).([]models.ContentRuleRowSave)
+	rules, _ := arguments.Get(0).([]editor_state_model.ContentRuleRow)
 	return rules
 }
 

@@ -2,6 +2,7 @@ package dialogs
 
 import (
 	"image"
+	"slices"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -9,11 +10,11 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
-	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // ManageRulesDialog edits the polymorphic content-rule list for a single
@@ -22,8 +23,8 @@ import (
 // adds or updates a rule (one per type).
 type ManageRulesDialog struct {
 	mapping models.SidMapping
-	rules   []models.ContentRuleRowSave
-	onApply func([]models.ContentRuleRowSave)
+	rules   []editor_state_model.ContentRuleRow
+	onApply func([]editor_state_model.ContentRuleRow)
 
 	contentRuleHandler handler_interfaces.IZoneContentHandler
 	types              []dtos.ContentRuleOptionDto
@@ -48,13 +49,13 @@ type ManageRulesDialog struct {
 // invoked with the edited rule list when the user clicks Apply.
 func NewManageRulesDialog(
 	mapping models.SidMapping,
-	rules []models.ContentRuleRowSave,
+	rules []editor_state_model.ContentRuleRow,
 	contentRuleHandler handler_interfaces.IZoneContentHandler,
-	onApply func([]models.ContentRuleRowSave)) *ManageRulesDialog {
+	onApply func([]editor_state_model.ContentRuleRow)) *ManageRulesDialog {
 	options := contentRuleHandler.GetContentRuleEditorOptions(mapping)
 	dialog := &ManageRulesDialog{
 		mapping:            mapping,
-		rules:              utils.CloneRuleRows(rules),
+		rules:              slices.Clone(rules),
 		onApply:            onApply,
 		contentRuleHandler: contentRuleHandler,
 		types:              options.Rules,
@@ -89,13 +90,15 @@ func (this *ManageRulesDialog) PreferredSize() (unit.Dp, unit.Dp) {
 func (this *ManageRulesDialog) Body(gtx layout.Context, theme *material.Theme) (layout.Dimensions, bool) {
 	if this.applyBtn.Clicked(gtx) {
 		if this.onApply != nil {
-			this.onApply(utils.CloneRuleRows(this.rules))
+			this.onApply(slices.Clone(this.rules))
 		}
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
+
 	if this.cancelBtn.Clicked(gtx) {
 		return layout.Dimensions{Size: gtx.Constraints.Min}, true
 	}
+
 	if this.addBtn.Clicked(gtx) {
 		this.upsertFromEditor()
 	}
@@ -154,8 +157,7 @@ func (this *ManageRulesDialog) buildContentWidgets(theme *material.Theme) []layo
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Top: unit.Dp(6)}.Layout(gtx,
 				widgets.NewButtonWidget(theme, "+ Add / update", &this.addBtn, false))
-		},
-	)
+		})
 	return rows
 }
 
@@ -199,6 +201,7 @@ func (this *ManageRulesDialog) layoutEditor(theme *material.Theme) layout.Widget
 		if !ok {
 			return layout.Dimensions{}
 		}
+
 		return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			switch option.EditorKind {
 			case dtos.ContentRuleEditorKindDistance:
@@ -263,11 +266,12 @@ func (this *ManageRulesDialog) upsertFromEditor() {
 	this.rules = this.contentRuleHandler.UpsertContentRule(this.rules, saved)
 }
 
-func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRowSave, bool) {
+func (this *ManageRulesDialog) buildRuleFromEditor() (editor_state_model.ContentRuleRow, bool) {
 	option, ok := this.selectedRuleType()
 	if !ok {
-		return models.ContentRuleRowSave{}, false
+		return editor_state_model.ContentRuleRow{}, false
 	}
+
 	result := this.contentRuleHandler.ComposeContentRule(dtos.ContentRuleCompositionRequestDto{
 		Option:          option,
 		DistanceNames:   this.distanceNames,
@@ -277,7 +281,6 @@ func (this *ManageRulesDialog) buildRuleFromEditor() (models.ContentRuleRowSave,
 		VariantIDs:      this.variantIDs,
 		VariantIndex:    this.variantDropdown.GetSelectedIndex(),
 	})
-
 	return result.Rule, result.Valid
 }
 
@@ -286,11 +289,12 @@ func (this *ManageRulesDialog) selectedRuleType() (dtos.ContentRuleOptionDto, bo
 	if index < 0 || index >= len(this.types) {
 		return dtos.ContentRuleOptionDto{}, false
 	}
+
 	return this.types[index], true
 }
 
 // ruleDisplayText reconstructs a rule's user-facing description, falling back to
 // the raw name when the saved data cannot be resolved to a known rule.
-func (this *ManageRulesDialog) ruleDisplayText(saved models.ContentRuleRowSave) string {
+func (this *ManageRulesDialog) ruleDisplayText(saved editor_state_model.ContentRuleRow) string {
 	return this.contentRuleHandler.DescribeContentRule(this.mapping, saved).DisplayText
 }

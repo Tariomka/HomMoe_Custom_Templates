@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,8 +26,28 @@ func TestWhenCurrentStateChangesAfterSnapshot_SnapshotKeepsOldValues(t *testing.
 	state.SnapshotCurrentState()
 
 	// Act
-	state.UpdateCurrentState(func(dto *dtos.EditorStateDto) { dto.PlayerCount++ })
+	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) { dto.PlayerCount++ })
 
 	// Assert - the snapshot still holds the old player count, so the state reads as changed
+	assert.True(t, state.WasStateChanged())
+}
+
+// TestWhenSnapshotTakenAndContentRowMutatedInPlace_ReportsStateChanged locks in
+// the deep snapshot: a shallow struct copy would share the content-row backing
+// array, so an in-place edit would leave the state looking unchanged and the
+// editor would neither mark the file dirty nor regenerate.
+func TestWhenSnapshotTakenAndContentRowMutatedInPlace_ReportsStateChanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := newEditorState()
+	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) {
+		dto.PlayerZoneContentRows = []editor_state_model.ZoneContentRow{{Sid: "sawmill", Count: 1}}
+	})
+	state.SnapshotCurrentState()
+
+	// Act
+	state.UpdateCurrentState(func(dto *editor_state_model.EditorState) { dto.PlayerZoneContentRows[0].Count = 5 })
+
+	// Assert
 	assert.True(t, state.WasStateChanged())
 }

@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +12,7 @@ func TestWhenManualZonesWereStored_ZonesRoundTripWithManualPositions(t *testing.
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		{
 			Name:           "Zone A",
 			Size:           gofakeit.Float64Range(0.5, 2),

@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -17,10 +18,13 @@ import (
 func TestWhenThereIsNoStateToSave_ReturnsNothingToSaveError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, newPassingValidator())
+	handler := handlers.NewStateHandler(
+		&test_helpers.FileServiceMock{},
+		newPassingValidator(),
+	)
 
 	// Act
-	_, err := handler.SaveState(dtos.EditorStateSaveDto{OutputPath: gofakeit.Word()})
+	_, err := handler.SaveState(editor_state_dto.EditorStateSaveDto{OutputPath: gofakeit.Word()})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNothingToSave)
@@ -29,11 +33,15 @@ func TestWhenThereIsNoStateToSave_ReturnsNothingToSaveError(t *testing.T) {
 func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
-	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, newPassingValidator())
+	state := editor_state_model.NewDefaultEditorStateModel()
+	handler := handlers.NewStateHandler(
+		&test_helpers.FileServiceMock{},
+		newPassingValidator(),
+	)
 
 	// Act
-	_, err := handler.SaveState(dtos.EditorStateSaveDto{State: &state, OutputPath: ""})
+	dto := editor_state_dto.EditorStateDto{EditorState: state}
+	_, err := handler.SaveState(editor_state_dto.EditorStateSaveDto{State: &dto, OutputPath: ""})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
@@ -42,11 +50,15 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	state := dtos.NewDefaultEditorStateDto()
-	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, newPassingValidator())
+	state := editor_state_model.NewDefaultEditorStateModel()
+	handler := handlers.NewStateHandler(
+		&test_helpers.FileServiceMock{},
+		newPassingValidator(),
+	)
 
 	// Act
-	_, err := handler.SaveState(dtos.EditorStateSaveDto{State: &state, OutputPath: " \t "})
+	dto := editor_state_dto.EditorStateDto{EditorState: state}
+	_, err := handler.SaveState(editor_state_dto.EditorStateSaveDto{State: &dto, OutputPath: " \t "})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
@@ -56,13 +68,14 @@ func TestWhenStateOutputPathIsPadded_SavesToTheTrimmedPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	outputPath := gofakeit.Word()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("SaveSettings", outputPath, &state).Return(gofakeit.Word(), nil)
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
-	_, _ = handler.SaveState(dtos.EditorStateSaveDto{State: &state, OutputPath: " " + outputPath + " "})
+	dto := editor_state_dto.EditorStateDto{EditorState: state}
+	_, _ = handler.SaveState(editor_state_dto.EditorStateSaveDto{State: &dto, OutputPath: " " + outputPath + " "})
 
 	// Assert
 	fileService.AssertCalled(t, "SaveSettings", outputPath, &state)
@@ -72,13 +85,18 @@ func TestWhenStateIsSaved_ReturnsTheWrittenPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedPath := gofakeit.Word() + ".gen.json"
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("SaveSettings", mock.Anything, mock.Anything).Return(expectedPath, nil)
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
-	writtenPath, err := handler.SaveState(dtos.EditorStateSaveDto{State: &state, OutputPath: gofakeit.Word()})
+	writtenPath, err := handler.SaveState(
+		editor_state_dto.EditorStateSaveDto{
+			State:      &editor_state_dto.EditorStateDto{EditorState: state},
+			OutputPath: gofakeit.Word(),
+		},
+	)
 
 	// Assert
 	require.NoError(t, err)
@@ -89,13 +107,14 @@ func TestWhenStateCannotBeSaved_PropagatesTheError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedError := errors.New(gofakeit.Sentence(3))
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	fileService := &test_helpers.FileServiceMock{}
 	fileService.On("SaveSettings", mock.Anything, mock.Anything).Return("", expectedError)
 	handler := handlers.NewStateHandler(fileService, newPassingValidator())
 
 	// Act
-	_, err := handler.SaveState(dtos.EditorStateSaveDto{State: &state, OutputPath: gofakeit.Word()})
+	dto := editor_state_dto.EditorStateDto{EditorState: state}
+	_, err := handler.SaveState(editor_state_dto.EditorStateSaveDto{State: &dto, OutputPath: gofakeit.Word()})
 
 	// Assert
 	assert.ErrorIs(t, err, expectedError)

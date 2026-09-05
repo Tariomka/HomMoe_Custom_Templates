@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -16,7 +17,7 @@ import (
 func TestWhenSavedRuleCannotBeRestored_ReturnsAnInvalidDescription(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	savedRule := models.ContentRuleRowSave{Name: gofakeit.Word()}
+	savedRule := editor_state_model.ContentRuleRow{Name: gofakeit.Word()}
 	service := &test_helpers.ContentRuleServiceMock{}
 	service.On("CreateRuleFromSavedRule", mock.Anything, mock.Anything).Return(nil)
 	handler := handlers.NewContentRuleHandler(service)
@@ -41,7 +42,7 @@ func TestWhenSavedRuleIsRestored_ReturnsTheRulesDisplayText(t *testing.T) {
 	handler := handlers.NewContentRuleHandler(service)
 
 	// Act
-	description := handler.DescribeContentRule(models.SidMapping{}, models.ContentRuleRowSave{})
+	description := handler.DescribeContentRule(models.SidMapping{}, editor_state_model.ContentRuleRow{})
 
 	// Assert
 	assert.Equal(t, expected, description.DisplayText)
@@ -57,7 +58,7 @@ func TestWhenSavedRuleIsRestored_ReturnsTheRulesMarker(t *testing.T) {
 	handler := handlers.NewContentRuleHandler(service)
 
 	// Act
-	description := handler.DescribeContentRule(models.SidMapping{}, models.ContentRuleRowSave{})
+	description := handler.DescribeContentRule(models.SidMapping{}, editor_state_model.ContentRuleRow{})
 
 	// Assert
 	assert.Equal(t, expected, description.Marker)
@@ -72,7 +73,7 @@ func TestWhenSavedRuleIsRestored_MarksTheDescriptionValid(t *testing.T) {
 	handler := handlers.NewContentRuleHandler(service)
 
 	// Act
-	description := handler.DescribeContentRule(models.SidMapping{}, models.ContentRuleRowSave{})
+	description := handler.DescribeContentRule(models.SidMapping{}, editor_state_model.ContentRuleRow{})
 
 	// Assert
 	assert.True(t, description.Valid)
@@ -88,7 +89,7 @@ func TestWhenSavedRuleNamesAKnownRule_ReturnsItsKey(t *testing.T) {
 	// Act
 	description := handler.DescribeContentRule(
 		models.SidMapping{},
-		models.ContentRuleRowSave{Name: content_rules.RuleGuardedName})
+		editor_state_model.ContentRuleRow{Name: content_rules.RuleGuardedName})
 
 	// Assert
 	assert.Equal(t, dtos.ContentRuleKeyGuarded, description.Key)
@@ -104,7 +105,7 @@ func TestWhenSavedRuleNamesAnUnknownRule_ReturnsAnEmptyKey(t *testing.T) {
 	// Act
 	description := handler.DescribeContentRule(
 		models.SidMapping{},
-		models.ContentRuleRowSave{Name: gofakeit.UUID()})
+		editor_state_model.ContentRuleRow{Name: gofakeit.UUID()})
 
 	// Assert
 	assert.Equal(t, dtos.ContentRuleKey(""), description.Key)
@@ -124,7 +125,7 @@ func TestWhenSavedRuleSelectsAKnownVariant_ReturnsItsLabel(t *testing.T) {
 	handler := handlers.NewContentRuleHandler(service)
 
 	// Act
-	description := handler.DescribeContentRule(content, models.ContentRuleRowSave{VariantID: &variantID})
+	description := handler.DescribeContentRule(content, editor_state_model.ContentRuleRow{VariantID: &variantID})
 
 	// Assert
 	assert.Equal(t, expectedLabel, description.VariantLabel)
@@ -142,7 +143,7 @@ func TestWhenSavedRuleSelectsAnUnknownVariant_ReturnsNoVariantLabel(t *testing.T
 	handler := handlers.NewContentRuleHandler(service)
 
 	// Act
-	description := handler.DescribeContentRule(content, models.ContentRuleRowSave{VariantID: &variantID})
+	description := handler.DescribeContentRule(content, editor_state_model.ContentRuleRow{VariantID: &variantID})
 
 	// Assert
 	assert.Empty(t, description.VariantLabel)

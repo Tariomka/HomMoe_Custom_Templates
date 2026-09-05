@@ -1,24 +1,17 @@
-# Agent Operating Instructions
+# Heroes of Might and Magic: Olden Era - Custom Templates
 
-These instructions apply to any AI coding agent (GitHub Copilot, Claude, etc.)
-working on the **HomMoe Custom Templates** repository. Follow them strictly.
+A desktop GUI for designing and generating `.rmg.json` random map templates for
+**Heroes of Might and Magic: Olden Era**.
 
 ---
 
-## 1. Project Snapshot
+## 1. Overview
 
-- **Language / Toolchain:** Go 1.26.5. Two modules: the application module
-  `github.com/Tariomka/hommoe_custom_templates` at the repository root, and
-  [tools/go.mod](tools/go.mod), a tools-only module (also Go 1.26.5) that pins
-  `wire`, `golangci-lint` and `gcov2lcov` through `tool` directives.
-- **UI:** Gio (`gioui.org v0.10.0`) — immediate-mode desktop GUI.
-- **Purpose:** Generate `.rmg.json` random-map templates for *Heroes of Might
-  and Magic: Olden Era* and persist editor state as `.gen.json` files.
-- **Entry point:** [main.go](main.go) → [app/gui/program.go](app/gui/program.go) (`StartApplication`).
-- **Core generation:** [internal/services/template_generator/templateGenerator.go](internal/services/template_generator/templateGenerator.go).
-
-Always read [README.md](README.md) and the relevant package before making
-non-trivial changes.
+This is a highly performant, fully offline, multi-platform, native Golang application,
+rendered using immediate-mode rendering library GioUI.
+Most of the projects don't really accomplish all of those points so I strive to keep the project
+simple, well structured and most importantly performant, so you need to do it as well. Clean and
+concise architecture is also an aspiration so that the codebase would be understandable and extendable.
 
 ---
 
@@ -58,12 +51,8 @@ The project must build and run on **both Windows and Linux**. Therefore:
 - Use `filepath.Join`, `filepath.Separator`, `os.UserConfigDir`, etc.
 - Avoid OS-specific syscalls without a build-tag-guarded fallback.
 - No CRLF-only assumptions; read files as bytes/strings and let Go normalize.
-- Avoid shell-specific commands in code; if a tool/script is needed, provide
-  both `.ps1` (Windows) and `.sh` (Linux) variants or use a Go program.
-- Do not introduce dependencies that are Windows- or Linux-only without
-  build tags (`//go:build windows` / `//go:build linux`).
-- When suggesting terminal commands to the user, remember the workspace's
-  default shell is **PowerShell on Windows** — chain with `;`, never `&&`.
+- Avoid shell-specific commands in code; if a tool/script is needed, use a Go program.
+- Do not introduce dependencies that are Windows- or Linux-only without build tags (`//go:build windows` / `//go:build linux`).
 
 ### 2.3 Test coverage
 
@@ -195,15 +184,18 @@ When orchestrating subagents, pick the model per task using these ratings
 - **Intelligence** — how hard a problem you can hand the model unsupervised.
 - **Taste** — code quality, API design, UI/UX and other subjective decisions.
 
-| model           | cost | intelligence | taste |
-|-----------------|------|--------------|-------|
-| claude-opus-5   | 5    | 8            | 9     |
-| claude-fable-5  | 2    | 9            | 9     |
-| gpt-5.6-sol     | 6    | 7            | 6     |
-| gpt-5.6-terra   | 7    | 7            | 5     |
-| gpt-5.5         | 4    | 6            | 5     |
-| claude-opus-4.8 | 4    | 7            | 7     |
-| sonnet-5        | 4    | 4            | 6     |
+| model            | cost | intelligence | taste |
+|------------------|------|--------------|-------|
+| claude-opus-5    | 5    | 8            | 9     |
+| claude-fable-5.1 | 3    | 9.5          | 10    |
+| claude-fable-5   | 2    | 9            | 10    |
+| gpt-5.6-sol      | 6    | 7            | 6     |
+| kimi-k3          | 7    | 7            | 7     |
+| gpt-5.6-terra    | 7    | 7            | 6     |
+| grok-4.6         | 8    | 6            | 5     |
+| claude-opus-4.8  | 4    | 7            | 7     |
+| gpt-5.6-luna     | 8    | 6            | 4     |
+| sonnet-5         | 4    | 3            | 5     |
 
 Application directives:
 
@@ -217,12 +209,11 @@ Application directives:
   related requires taste > 7.
 - Review of plans/implementations must be done by opus-5 preferably
   (use fable-5 sparingly as it is much more costly);
-  optionally add gpt-5.6-terra as an extra independent perspective.
+  optionally add gpt-5.6-sol/gpt-5.6-terra as an extra independent perspective.
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (gpt-5.6-terra,
-  gpt-5.5, sonnet-5) for read-only exploration, searching, summarizing, and
-  mechanical/repetitive edits; reserve opus-5/fable-5 for design
-  decisions, tricky debugging, and final review.
+- Match model to task shape: use cheap, high-cost-rating models (kimi-k3, gpt-5.6-luna,
+  gpt-5.6-terra, grok-4.6) for read-only exploration, searching, summarizing, and
+  mechanical/repetitive edits; reserve opus-5/fable-5 for design decisions, tricky debugging, and final review.
 - Parallelize independent exploration and/or action execution
   (like running tests) across cheap subagents rather than serializing
   everything through one expensive model.
@@ -257,6 +248,7 @@ any file you *do* touch must leave the repo in conformance.
   descriptive names (`zoneIndex`, `playerCount`, `templatePath`).
 - **Allowed exceptions** — only the well-established Go idioms:
   - `i`, `j` for loop indices only, but if a single for loop, better use `index`
+  - `x` in simple `linq.Select` queries (single returns with no closures, example `return x.Label`)
   - `err` for errors
   - `ok` for the comma-ok idiom
   - `ctx` for `context.Context`
@@ -301,15 +293,16 @@ number of interfaces:
 Examples of each:
 
 1. [.../tournament_variant/clusterServiceInterface.go](internal/services/template_generator/providers/topology/tournament_variant/clusterServiceInterface.go)
-   — one interface for four implementations, all in that package;
-   [internal/services/zones/zoneLabelProviderInterface.go](internal/services/zones/zoneLabelProviderInterface.go)
-   — one interface for one implementation. Likewise
+   — one interface for four implementations, all in that package. Likewise
    [internal/services/connection_editor/](internal/services/connection_editor/)
    holds three interfaces for its three implementations.
 2. [internal/handlers/](internal/handlers/) has six implementation files, so its
    contracts live in
    [internal/handlers/handler_interfaces/](internal/handlers/handler_interfaces/)
-   (six files, eight interfaces).
+   (six files, eight interfaces). Same for
+   [internal/services/zones/](internal/services/zones/) — six implementation
+   files, contracts in
+   [internal/services/zones/zone_interfaces/](internal/services/zones/zone_interfaces/).
 3. [app/gui/interfaces/](app/gui/interfaces/) holds the shared `IDialog` /
    `IPanel` contracts: `drivers` and `panels` both implement them, and declaring
    them in either package would create a `drivers`↔`panels` and
@@ -337,18 +330,101 @@ embeds the other handler interfaces).
 
 Place new code in the package whose responsibility matches its role:
 
-| Kind of code                                              | Location                                                                                                                                                                  |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| UI / rendering (Gio widgets, layouts, theming, input)     | [app/gui/](app/gui/)                                                                                                                                                      |
-| Data structs / DTOs / factory functions (no behaviour)    | [internal/models/](internal/models/) + [internal/dtos/](internal/dtos/); read-only `.rmg.json` schema in [internal/entities/](internal/entities/) (`template/`, see §2.1) |
-| Business logic, orchestrators, services                   | [internal/services/](internal/services/) + [internal/handlers/](internal/handlers/)                                                                                       |
-| Constants, IDs, immutable lookup tables                   | [internal/constants/](internal/constants/) + [internal/registry/](internal/registry/)                                                                                     |
-| Misc / cross-cutting utility functions                    | [internal/helpers/](internal/helpers/)                                                                                                                                    |
+| Kind of code                                                            | Location                                                                                                                                       |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI / rendering (Gio widgets, layouts, theming, input)                   | [app/gui/](app/gui/)                                                                                                                           |
+| Serializable objects (entities)                                         | [internal/entities/](internal/entities/); read-only `.rmg.json` schema in [internal/entities/template/](internal/entities/template) (see §2.1) |
+| Minimal data transfer objects                                           | [internal/dtos/](internal/dtos/)                                                                                                               |
+| Data structs with attached logic (might have factory functions as well) | [internal/models/](internal/models/)                                                                                                           |
+| Data mappers and converters                                             | [internal/mappers/](internal/mappers/)                                                                                                         |
+| Orchestrators / entry points                                            | [internal/handlers/](internal/handlers/)                                                                                                       |
+| Business logic, services                                                | [internal/services/](internal/services/)                                                                                                       |
+| Game data values (exclusively)                                          | [internal/registry/](internal/registry/) (read-only, see §2.1)                                                                                 |
+| Constants, IDs, immutable lookup tables (non game values)               | [internal/common/](internal/common/)                                                                                                           |
+| Misc / cross-cutting utility functions                                  | [internal/helpers/](internal/helpers/)                                                                                                         |
+| Validators                                                              | [internal/validators/](internal/validators/)                                                                                                   |
 
 - If a struct or function has dependencies (helper structs, private types)
   **that are not used anywhere else**, nest them in a sibling folder next to
   the dependant file rather than polluting a shared package.
 - Do not introduce new top-level packages without a clear reason.
+- `internal/entities/` is the base data layer and as such should never import other
+  packages (except `internal/helpers/data/`); `internal/models/` is the second layer -
+  it can import `internal/entities/`, `internal/helpers/`, `internal/registry/`;
+  `internal/dtos/` is the highest layer - it is used for transferring data from and
+  to `app/.../` - it can import `internal/entities/`, `internal/models/` and any data
+  related additional packages (`internal/helpers/`, `internal/registry/`, `internal/common/`, etc.).
+  - In theory, if `app/` would be detached from the project, it would have a separate model
+    implementation, but here `app/.../` can use the `internal/models/` instead of duplicating code.
+  - Object traversal flow for request(from app)-response(from internal handlers):
+
+    ```mermaid
+    sequenceDiagram
+        participant GUI as app/{user interface implementation}
+        participant H as internal/handlers
+        participant S as internal/services
+        participant R as internal/repositories
+        participant Disk as .gen.json / .rmg.json
+
+        Note over GUI: maps stored Model → DTO
+        GUI->>H: request DTO
+        Note over H: maps DTO → Model
+        H->>S: Model
+        Note over S: save: maps Model → Entity
+        S->>R: Entity
+        R->>Disk: Entity
+        Disk-->>R: Entity
+        R-->>S: Entity
+        Note over S: load: maps Entity → Model
+        S-->>H: Model
+        Note over H: maps Model → DTO
+        H-->>GUI: response DTO
+        Note over GUI: maps DTO → Model and stores it
+    ```
+
+- Packages outside `internal/` must enter internal functionality
+  (services, validators, mappers, etc.) through `internal/handlers/`; data accessing
+  (`internal/registry/`, `internal/common/`), data typing (`internal/models/`, `internal/dtos/`)
+  and usage of helpers (`internal/helpers`) is permitted.
+
+### 4.4.1 Entity / Model / DTO — the layering doctrine
+
+This is the standard three-layer split. It is **enforced**, not advisory: see
+[test/unit/architecture/dependency/layering_test.go](test/unit/architecture/dependency/layering_test.go),
+which fails the unit suite when a rule is broken.
+
+| Layer | Type | Declared in | May be **named** by | Logic |
+| --- | --- | --- | --- | --- |
+| **Database** | Entity | `internal/entities/` | `internal/repositories/`, `internal/models/`, `internal/entities/`, `internal/mappers/`, `internal/helpers/*_helpers/` | none beyond (de)serialization — i.e. json tags |
+| **Service** | Model | `internal/models/` | `internal/services/`, `internal/validators/`, `internal/mappers/`, `internal/repositories/`, **and `app/`** | **all business logic lives here** |
+| **Consumer** | DTO | `internal/dtos/` | `internal/handlers/`, `internal/dtos/`, `app/` | none |
+
+The four rules that matter, in order of how often they are gotten wrong:
+
+1. **The Model owns the structure.** *Redefinition is expected in Models, but it
+   should never happen in DTOs.* A Model group embeds its entity group and adds
+   the behaviour; the DTO is thin. `EditorStateDto` is literally
+   `struct { editor_state_model.EditorState }`. **A DTO carrying or embedding a
+   Model is intended** — do not "fix" it.
+2. **`app/` may hold a Model; only the crossing must be a DTO.** The GUI maps
+   *stored Model → request DTO* on the way in and *response DTO → stored Model*
+   on the way back, exactly as the diagram above shows. `app/` → `internal/models`
+   is **not** a violation. `app/` → `internal/mappers`, `internal/services`,
+   `internal/repositories` or `internal/validators` is.
+3. **Dependency direction is DTO → Model → Entity and never the reverse.** An
+   entity importing `internal/models`, `internal/dtos`, `internal/services`,
+   `internal/handlers` or `internal/helpers` is a defect. The one carve-out is
+   `internal/helpers/data`, which holds generic data structures (`Vec2`,
+   `Tuple`, `Adjacency`), not logic.
+4. **Conversion happens at exactly two seams** — `internal/handlers` (DTO ⇄
+   Model) and `internal/repositories` (Model ⇄ Entity). Nowhere else converts.
+
+**Two allow-lists exist, and they only ever shrink.** The layering test carries
+the packages that predate the rule: the services that still consume DTOs
+directly, and the packages that name the base `internal/entities` types. That
+base package is the `.rmg.json` vocabulary the whole generator is built out of,
+so its list is long by design. Never add an entry to either list — clean the
+package instead.
 
 ### 4.5 UI vs. business logic separation
 
@@ -358,7 +434,8 @@ Place new code in the package whose responsibility matches its role:
   lives in [internal/services/](internal/services/) (or `models/`,
   `helpers/`, `constants/` as appropriate) and is invoked by the GUI layer.
 - If you find yourself writing an `if`/`switch` in a GUI file that decides
-  *what* to do (rather than *how to draw*), extract it into a service.
+  *what* to do (rather than *how to draw*), extract it into a service
+  (except in cases where it is pure UI logic, UI data and/or UI view-model shaping).
 
 ### 4.6 Tests
 
@@ -411,7 +488,7 @@ mocking; use `gofakeit` for fuzzed input data wherever possible.
 - Private code is tested indirectly through public entry points — never add
   helpers/seams to implementation code just to make it testable. If code is
   unreachable through public APIs, record it in
-  [todo/test_observations.md](todo/test_observations.md) instead.
+  [.agent/backlog/test_observations.md](.agent/backlog/test_observations.md) instead.
 - Code that is exercised indirectly by other tests still requires its **own**
   test folder with dedicated tests, so coverage can be assessed per file.
 - `*_testexports.go` files (`//go:build integration_test`) must never be used
@@ -419,7 +496,7 @@ mocking; use `gofakeit` for fuzzed input data wherever possible.
   unit test must never carry the `integration_test` tag (see §4.6.1).
 - Gio-UI-heavy code (widgets, dialogs, panels, window/event-loop code) that
   requires a `layout.Context`/window is covered by the integration suite, not
-  unit tests; list such files in [todo/test_observations.md](todo/test_observations.md).
+  unit tests; list such files in [.agent/backlog/test_observations.md](.agent/backlog/test_observations.md).
 
 See §2.3 for coverage requirements.
 
@@ -524,6 +601,11 @@ In VS Code use the tasks in [.vscode/tasks.json](.vscode/tasks.json). gopls is
 configured with `-tags=integration_test` for **analysis only** so the gated files
 still get IntelliSense — that does not cause them to run.
 
+When running the same tests multiple times, for example first run for checking if everything works
+and the second run for gathering coverage or anything else, only use `-count=1` flag the first time,
+to utilize Go's caching the subsequent times and running the tests quicker (count flag effectively
+bypasses caching and forcefully runs all tests, making the test runs slow).
+
 ### 4.6.3 The `wireinject` build tag (code generation only)
 
 Dependency wiring is generated by [goforj/wire](https://github.com/goforj/wire), a
@@ -554,10 +636,14 @@ alongside `golangci-lint` and `gcov2lcov`; install it with
 `go install github.com/goforj/wire/cmd/wire@latest`. A missing or ambiguous provider is
 a **generation-time** failure — treat a broken `wire gen` as a broken build.
 
-### 4.7 Writing the Plan
+### 4.7 Comments
 
-Save to `plans/<descriptive-name>.md` in the repository root (create `plans/` if needed).
-Use this self-documenting template:
+Don't overuse code comments. Comments describe how a thing is used, and move when the code moves.
+To be used mostly to describe functions, not to annotate every line of behavior.
+
+### 4.8 Writing the Plan
+
+Save to `.agent/plans/<descriptive-name>.md` in the repository root. Use this self-documenting template:
 
 ```markdown
 # <Work Title>
@@ -656,6 +742,12 @@ no prior memory must be able to resume work from it alone.
 - If a tool call rejects/errors or the user declines a suggestion, note it
   immediately so it lands in the *Rejections* section.
 
+### 5.4 Local memories
+
+If you need to track any specific information between sessions, write it up in `.agents/memories`,
+do not populate some arbitrary temporary user directory. Occasionally clear out stale and/or
+irrelevant memories.
+
 ---
 
 ## 6. Communication Style
@@ -665,9 +757,9 @@ no prior memory must be able to resume work from it alone.
 - Use Markdown. Wrap symbols in backticks; link files using
   `[path](path)` or `[path](path#L10-L20)` (workspace-relative, never
   inside backticks).
+- Never name internal tools to the user ("I'll run the tests", not "I'll use `runTests`").
 - No emojis unless the user asks.
-- Never name internal tools to the user ("I'll run the tests", not "I'll
-  use `runTests`").
+- Don't use sloppy LLM speech, no em dashes, etc., put some soul into your responses.
 
 ---
 
@@ -693,9 +785,9 @@ no prior memory must be able to resume work from it alone.
 
 ---
 
-**TL;DR:** Don't touch [data/](data/),
-[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/). Never change
-where `.rmg.json` is written and never persist the output directory — the game
+**TL;DR:** Take a deep breath. Don't touch [data/](data/),
+[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/).
+Never change where `.rmg.json` is written and never persist the output directory — the game
 only reads templates from its own folder. Stay cross-platform.
 Cover everything you write with tests. Cap sessions at 38–50 messages and
 hand off via `./.agent/session-carry-forward.md`.

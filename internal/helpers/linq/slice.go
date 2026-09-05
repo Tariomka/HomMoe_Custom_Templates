@@ -4,11 +4,6 @@ import "iter"
 
 type Predicate[T any] = func(T) bool
 
-// Iterable is an interface that has to be implemented by a custom collection to work with linq.
-type Iterable[T any] interface {
-	Iterate() iter.Seq[T]
-}
-
 // Query is the type returned from query functions. It can be iterated manually
 // using Iterate property. Example:
 //
@@ -53,26 +48,16 @@ func (this Query[T]) Where(predicate Predicate[T]) Query[T] {
 	}
 }
 
-// SelectString projects each element of a collection into a new string form.
-func (this Query[T]) SelectString(selector func(T) string) Query[string] {
-	return Query[string]{
-		Iterate: func(yield func(string) bool) {
+// Select projects each element of a collection into a new form.
+func (this Query[T]) Select[TResult any](selector func(T) TResult) Query[TResult] {
+	return Query[TResult]{
+		Iterate: func(yield func(TResult) bool) {
 			this.Iterate(func(item T) bool {
 				return yield(selector(item))
 			})
 		},
 	}
 }
-
-// func (this Query[T]) Select[TResult any](selector func(T) TResult) Query[TResult] { // Should be valid with 1.27
-// 	return Query[TResult]{
-// 		Iterate: func(yield func(TResult) bool) {
-// 			this.Iterate(func(item T) bool {
-// 				return yield(selector(item))
-// 			})
-// 		},
-// 	}
-// }
 
 // ToSlice executes the query and returns the results as a slice. The returned slice is a copy, not a reference.
 func (this Query[T]) ToSlice() []T {
@@ -195,4 +180,21 @@ func (this Query[T]) DistinctBy(selector func(T) any) Query[T] {
 			})
 		},
 	}
+}
+
+// SelectSlice is the eager equivalent of FromSlice(...).Select(...).ToSlice().
+// It allocates nothing for an empty source and sizes the result exactly once,
+// where the lazy chain allocates its closures and regrows the result even when
+// there is nothing to project. Use it on the per-frame clone paths.
+func SelectSlice[S ~[]T, T, TResult any](source S, selector func(T) TResult) []TResult {
+	if len(source) == 0 {
+		return nil
+	}
+
+	result := make([]TResult, 0, len(source))
+	for _, item := range source {
+		result = append(result, selector(item))
+	}
+
+	return result
 }

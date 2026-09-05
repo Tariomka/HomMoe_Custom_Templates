@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 )
 
@@ -76,7 +77,7 @@ func (this *contentRuleHandler) GetContentRuleEditorOptions(
 
 func (this *contentRuleHandler) DescribeContentRule(
 	content models.SidMapping,
-	savedRule models.ContentRuleRowSave) dtos.ContentRuleDescriptionDto {
+	savedRule editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto {
 	description := dtos.ContentRuleDescriptionDto{
 		Key:         contentRuleKeyFromName(savedRule.Name),
 		DisplayText: savedRule.Name,
