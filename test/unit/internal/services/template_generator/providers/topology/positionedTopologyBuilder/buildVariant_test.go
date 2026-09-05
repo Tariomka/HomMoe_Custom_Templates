@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -126,7 +126,7 @@ func TestWhenZoneDecoratorProvided_AppliesItToBuiltZones(t *testing.T) {
 		return []string{"A"}, models.Positions{data.NewVec2(0.0, 0.0)}, nil
 	}
 	expectedRing := 3
-	decorator := func(zones []entities.Zone, _ []string, _ []string, _ neutral_zone.Plans) {
+	decorator := func(zones []template_model.Zone, _ []string, _ []string, _ neutral_zone.Plans) {
 		zones[0].GeneratorRing = &expectedRing
 	}
 
@@ -137,7 +137,7 @@ func TestWhenZoneDecoratorProvided_AppliesItToBuiltZones(t *testing.T) {
 	assert.Equal(t, &expectedRing, variant.Zones[0].GeneratorRing)
 }
 
-func connectionNames(connections []entities.Connection) []string {
+func connectionNames(connections []template_model.Connection) []string {
 	names := make([]string, len(connections))
 	for index, connection := range connections {
 		names[index] = connection.Name
@@ -145,7 +145,7 @@ func connectionNames(connections []entities.Connection) []string {
 	return names
 }
 
-func countConnectionsWithPrefix(connections []entities.Connection, prefix string) int {
+func countConnectionsWithPrefix(connections []template_model.Connection, prefix string) int {
 	count := 0
 	for _, connection := range connections {
 		if strings.HasPrefix(connection.Name, prefix) {

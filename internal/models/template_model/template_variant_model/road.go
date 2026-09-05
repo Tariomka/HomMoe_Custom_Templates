@@ -7,7 +7,6 @@ import (
 
 type Road struct {
 	Type string
-
 	From TypedRef
 	To   TypedRef
 
@@ -15,6 +14,14 @@ type Road struct {
 	SimTurnSquad         bool
 	GuardValue           int
 	GuardWeeklyIncrement float64
+}
+
+func (this Road) Clone() Road {
+	clone := this
+	clone.From = this.From.Clone()
+	clone.To = this.To.Clone()
+	clone.Road = helpers.ClonePointer(this.Road)
+	return clone
 }
 
 func ToRoadModel(entity template.Road) Road {

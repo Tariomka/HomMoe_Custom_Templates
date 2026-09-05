@@ -6,10 +6,10 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -36,7 +36,7 @@ func (this *PositionedTopologyBuilder) BuildVariant(
 	tuning models.GenerationTuning,
 	holdCityNeutralLabel string,
 	buildLayout PositionedTopologyLayoutBuilder,
-	decorateZones PositionedTopologyZoneDecorator) entities.Variant {
+	decorateZones PositionedTopologyZoneDecorator) template_model.Variant {
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	allLabels, positions, pairs := buildLayout(playerLabels, neutralZones)
 	connectionNames := this.createConnectionNames(playerLabels, allLabels, pairs, isIsolated)
@@ -95,8 +95,8 @@ func (this *PositionedTopologyBuilder) createZones(
 	tuning models.GenerationTuning,
 	neutralZones neutral_zone.Plans,
 	holdCityNeutralLabel string,
-	connectionNames map[int][]string) []entities.Zone {
-	var zones []entities.Zone
+	connectionNames map[int][]string) []template_model.Zone {
+	var zones []template_model.Zone
 	for index, label := range allLabels {
 		zoneConnectionNames := connectionNames[index]
 		playerIndex := slices.Index(playerLabels, label)
@@ -113,10 +113,10 @@ func (this *PositionedTopologyBuilder) createConnections(
 	isIsolated bool,
 	neutralZones neutral_zone.Plans,
 	connectionNames map[int][]string,
-	pairs []models.ConnectionIndexes) []entities.Connection {
+	pairs []models.ConnectionIndexes) []template_model.Connection {
 	nameLookup := make(map[int]int, len(allLabels))
 
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for _, pair := range pairs {
 		indexA, indexB := pair.X, pair.Y
 		labelFrom := allLabels[indexA]

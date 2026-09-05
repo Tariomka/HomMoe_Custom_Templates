@@ -3,7 +3,7 @@ package zoneBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -20,5 +20,5 @@ func TestWhenMandatoryContentNamesAreProvided_SetsMandatoryContentOnBuiltZone(t 
 	zone := builder.WithMandatoryContent(firstName, secondName).Build()
 
 	// Assert
-	assert.Equal(t, entities.Zone{MandatoryContent: entities.StringList{firstName, secondName}}, zone)
+	assert.Equal(t, template_model.Zone{MandatoryContent: template_model.StringList{firstName, secondName}}, zone)
 }

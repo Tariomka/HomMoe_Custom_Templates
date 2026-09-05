@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -80,7 +79,7 @@ func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
 			// Assert
 			assert.Equal(t,
 				testCase.quality,
-				zone_services.NewZoneTierService().GetQuality(template_model.ToZoneEntity(zone)))
+				zone_services.NewZoneTierService().GetQuality(zone))
 		})
 	}
 }

@@ -142,3 +142,7 @@ panel structs driving the inner states and having `panels/types.go` to expose th
 as "top level structs" (to simulate the current accessing).
 
 ---
+
+`neutralRowsForQuality` should be moved to either `generatorConfig`, or to helpers to a public location.
+
+---

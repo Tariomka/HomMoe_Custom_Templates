@@ -3,7 +3,7 @@ package placementRuleBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,5 +17,5 @@ func TestWhenMainObjectTypeIsChosen_SetsMainObjectTypeOnBuiltRule(t *testing.T) 
 	rule := builder.WithTypeMainObject().Build()
 
 	// Assert
-	assert.Equal(t, entities.PlacementRule{Type: "MainObject"}, rule)
+	assert.Equal(t, template_model.PlacementRule{Type: "MainObject"}, rule)
 }

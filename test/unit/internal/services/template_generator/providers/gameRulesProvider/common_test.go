@@ -8,13 +8,14 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/require"
 )
 
 // createGameRules builds a default configuration, applies the optional mutation
 // and runs it through the provider's CreateGameRules.
-func createGameRules(configure func(configuration *config.GeneratorConfig)) entities.GameRules {
+func createGameRules(configure func(configuration *config.GeneratorConfig)) template_model.GameRules {
 	configuration := config.NewGeneratorConfig()
 	if configure != nil {
 		configure(configuration)
@@ -24,15 +25,16 @@ func createGameRules(configure func(configuration *config.GeneratorConfig)) enti
 
 // bonusesFor runs the provider's bonus expansion (via CreateGameRules) for the
 // given UI bonus entries and returns the produced raw bonuses.
-func bonusesFor(entries ...config.BonusEntry) entities.BonusList {
+func bonusesFor(entries ...config.BonusEntry) template_model.BonusList {
 	return createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.Bonuses = entries
 	}).Bonuses
 }
 
 // loadExampleTemplate reads one of the real game templates shipped under
-// data/ExampleTemplates for functional-equivalence checks.
-func loadExampleTemplate(t *testing.T, name string) entities.RmgTemplate {
+// data/ExampleTemplates for functional-equivalence checks. The file is the
+// wire format, so it decodes into the entity and is lifted to the model.
+func loadExampleTemplate(t *testing.T, name string) template_model.Template {
 	t.Helper()
 	path, err := filepath.Abs(filepath.Join(
 		"..", "..", "..", "..", "..", "..", "..", "data", "ExampleTemplates", name))
@@ -41,5 +43,5 @@ func loadExampleTemplate(t *testing.T, name string) entities.RmgTemplate {
 	require.NoError(t, err)
 	var parsedTemplate entities.RmgTemplate
 	require.NoError(t, json.Unmarshal(raw, &parsedTemplate))
-	return parsedTemplate
+	return template_model.ToTemplateModel(parsedTemplate)
 }

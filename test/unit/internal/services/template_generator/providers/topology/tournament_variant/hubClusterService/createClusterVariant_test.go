@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -139,7 +139,7 @@ func TestWhenHubMandatoryContentIsConfigured_HubZoneReferencesHubContentGroup(t 
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{}}
 	neutralZones := newTwoNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 4)
 	service := tournament_variant.NewHubClusterService(test_helpers.NewZoneFactories())

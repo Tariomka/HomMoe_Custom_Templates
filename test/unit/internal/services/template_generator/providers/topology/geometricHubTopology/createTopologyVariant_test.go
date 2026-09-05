@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +44,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentGroup(t *t
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_item"}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_item"}}
 	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
 
 	// Act

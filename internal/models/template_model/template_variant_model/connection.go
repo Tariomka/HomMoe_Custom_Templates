@@ -12,30 +12,34 @@ type Connection struct {
 	To   string
 
 	ConnectionType string
+	Length         float64
 
 	SimTurnSquad bool
 	Road         *bool
 
-	GuardZone   string
-	GuardEscape bool
-
+	GuardZone            string
+	GuardEscape          bool
 	GuardValue           int
 	GuardRandomization   float64
 	GuardWeeklyIncrement float64
+	GuardMatchGroup      string
 
 	GatePlacement string
-
-	Length float64
-
-	GuardMatchGroup string
 
 	PortalPlacementRulesFrom []template_common_model.PlacementRule
 	PortalPlacementRulesTo   []template_common_model.PlacementRule
 
-	// IsUserAdded marks a connection added by hand in the zone editor rather
-	// than produced by the generator. It has no entity counterpart: the editor
-	// state persists it on editor_state.ManualConnectionSave instead.
 	IsUserAdded bool
+}
+
+func (this Connection) Clone() Connection {
+	clone := this
+	clone.Road = helpers.ClonePointer(this.Road)
+	clone.PortalPlacementRulesFrom = helpers.MapSlice(
+		this.PortalPlacementRulesFrom, template_common_model.PlacementRule.Clone)
+	clone.PortalPlacementRulesTo = helpers.MapSlice(
+		this.PortalPlacementRulesTo, template_common_model.PlacementRule.Clone)
+	return clone
 }
 
 func ToConnectionModel(entity template.Connection) Connection {

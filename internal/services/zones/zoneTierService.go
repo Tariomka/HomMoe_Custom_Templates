@@ -4,7 +4,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -20,7 +19,7 @@ func NewZoneTierService() zone_interfaces.IZoneTierService {
 	return &ZoneTierService{}
 }
 
-func (this *ZoneTierService) GetQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) GetQuality(zone template_model.Zone) neutral_zone.Quality {
 	if zone_helpers.IsZoneNamePlayer(zone.Name) {
 		return neutral_zone.QualityUnknown
 	}
@@ -48,7 +47,7 @@ func (this *ZoneTierService) ResolveQuality(zone template_model.Zone) neutral_zo
 		return *zone.Quality
 	}
 
-	return this.GetQuality(template_model.ToZoneEntity(zone))
+	return this.GetQuality(zone)
 }
 
 func (this *ZoneTierService) GetGuardQuality(
@@ -98,7 +97,7 @@ func (this *ZoneTierService) GetConnectionGuardQuality(
 		this.GetGuardQuality(zoneB, zones, playerNames))
 }
 
-func (this *ZoneTierService) getCenterQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) getCenterQuality(zone template_model.Zone) neutral_zone.Quality {
 	if len(zone.GuardedContentPool) == 0 && len(zone.UnguardedContentPool) == 0 {
 		return neutral_zone.QualityUnknown
 	}
@@ -114,7 +113,7 @@ func (this *ZoneTierService) getCenterQuality(zone entities.Zone) neutral_zone.Q
 	return neutral_zone.QualityUnknown
 }
 
-func (this *ZoneTierService) getTreasureQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) getTreasureQuality(zone template_model.Zone) neutral_zone.Quality {
 	if len(zone.GuardedContentPool) == 0 && len(zone.UnguardedContentPool) == 0 {
 		return neutral_zone.QualityUnknown
 	}
@@ -138,7 +137,7 @@ func (this *ZoneTierService) getTreasureQuality(zone entities.Zone) neutral_zone
 	return neutral_zone.QualityUnknown
 }
 
-func (this *ZoneTierService) getSidesQuality(zone entities.Zone) neutral_zone.Quality {
+func (this *ZoneTierService) getSidesQuality(zone template_model.Zone) neutral_zone.Quality {
 	if len(zone.GuardedContentPool) == 0 && len(zone.UnguardedContentPool) == 0 {
 		return neutral_zone.QualityUnknown
 	}

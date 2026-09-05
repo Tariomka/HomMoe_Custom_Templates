@@ -129,10 +129,9 @@ func findHubZoneIndex(zones []template_model.Zone) int {
 // ships with, so the in-game generator treats it identically.
 func addArenaMainObject(zone *template_model.Zone) {
 	zone.MainObjects = append(zone.MainObjects,
-		template_model.ToMainObjectModel(
-			variant_content.NewObjectBuilder().
-				WithTypeGladiatorArena().
-				WithPlacementUniform().
-				WithPlacementArgs("true", "0", "0").
-				Build()))
+		variant_content.NewObjectBuilder().
+			WithTypeGladiatorArena().
+			WithPlacementUniform().
+			WithPlacementArgs("true", "0", "0").
+			Build())
 }

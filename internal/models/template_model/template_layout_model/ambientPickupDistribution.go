@@ -1,12 +1,20 @@
 package template_layout_model
 
 import (
+	"slices"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
 type AmbientPickupDistribution struct {
 	template.AmbientPickupDistribution
+}
+
+func (this AmbientPickupDistribution) Clone() AmbientPickupDistribution {
+	clone := this
+	clone.GroupSizeWeights = slices.Clone(this.GroupSizeWeights)
+	return clone
 }
 
 func ToAmbientPickupDistributionModel(entity template.AmbientPickupDistribution) AmbientPickupDistribution {

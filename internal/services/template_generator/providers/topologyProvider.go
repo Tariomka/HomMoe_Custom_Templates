@@ -1,10 +1,10 @@
 package providers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
 
@@ -22,7 +22,7 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) entities.Variant {
+	holdCityNeutralLabel string) template_model.Variant {
 	if configuration.IsTournamentMode() && len(playerLabels) == 2 {
 		return this.services.Tournament()(
 			configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel)

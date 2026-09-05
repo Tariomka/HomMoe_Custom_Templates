@@ -3,9 +3,9 @@ package content_rules
 import (
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type ContentRuleService struct {
@@ -32,7 +32,7 @@ func (this *ContentRuleService) GetRules() []IContentRule {
 	}
 }
 
-func (this *ContentRuleService) ApplyRulesToItem(item *entities.MandatoryContentItem, rules []IContentRule) {
+func (this *ContentRuleService) ApplyRulesToItem(item *template_model.MandatoryContentItem, rules []IContentRule) {
 	for _, rule := range rules {
 		if rule != nil {
 			rule.Apply(item)

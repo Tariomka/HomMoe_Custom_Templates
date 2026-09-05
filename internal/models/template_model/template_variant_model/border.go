@@ -1,6 +1,8 @@
 package template_variant_model
 
 import (
+	"slices"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 )
 
@@ -11,6 +13,13 @@ type Border struct {
 	WaterWidth     int
 	WaterNoise     []Noise
 	WaterType      string
+}
+
+func (this Border) Clone() Border {
+	clone := this
+	clone.ObstaclesNoise = slices.Clone(this.ObstaclesNoise)
+	clone.WaterNoise = slices.Clone(this.WaterNoise)
+	return clone
 }
 
 func ToBorderModel(entity template.Border) Border {

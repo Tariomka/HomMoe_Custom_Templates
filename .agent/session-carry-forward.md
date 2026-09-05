@@ -1,83 +1,77 @@
-# Session carry-forward — 2026-09-04
+# Session carry-forward — 2026-09-05
 
 ## 1. Session goal
 
-Take **backlog §2.6 step 2** — a *decision*, not a sweep: is `internal/dtos` /
-`internal/handlers` naming `entities.Connection` a breach, or does the
-`.rmg.json` vocabulary deserve a documented carve-out? The owner ruled, and the
-ruling was then executed in the same session as **batch P**.
+Take **backlog §2.6 step 4**, the last step of the entity-confinement work: move the
+generator and its whole tail off `internal/entities` onto `internal/models/template_model`,
+so `TemplateGenerator.Generate` builds the model directly and `entityNamerAllowList`
+reaches its floor of one entry. Executed as **batch Q**, four phases, all complete.
 
-**Batch P is complete.** All five phases done, records written, every gate
-green, no golden and no fixture moved.
+## 2. Fixes applied
 
-## 2. The ruling (the durable answer to step 2)
+No user-facing bug fixes. Two latent structural gaps closed:
 
-**It is a breach. Base `internal/entities` gets NO carve-out.** Four findings
-decided it — all four are recorded in backlog §2.6 step 2, and the first is a
-general lesson:
-
-1. **The backlog framing was stale.** It said "`entities.Connection` /
-   `entities.RmgTemplate`". Measured, `entities.RmgTemplate` was named **nowhere**
-   in `internal/dtos`, `internal/handlers` or `app/gui` — batch J had already
-   removed it. The whole breach was **one type in 8 files**.
-   *Re-measure a backlog item before ruling on it.*
-2. **The model twin already existed** — batch J built
-   `template_variant_model.Connection`, field-identical, converters exported.
-3. **The seams were already half-migrated** — `connection_editor` signatures
-   mixed `[]template_model.Zone` with `[]entities.Connection`, and
-   `zoneEditorGeometryService` converted **mid-service**.
-4. **`IsUserAdded` was editor state inside the schema mirror** as `json:"-"`,
-   with `editor_state.ManualConnectionSave` already carrying a **sidecar** copy
-   *because the entity could not serialize it*. The workaround was the proof.
-
-Also recorded in `.agent/memories/settled-decisions.md` so it is not
-re-litigated.
+- `FileService.SaveTemplateWithPreview` took an entity in its signature, breaking the
+  "entities stay inside `file_service`" half of the owner's rule
+  ([internal/services/file_service/fileService.go](../internal/services/file_service/fileService.go)).
+- `templateHandler.UpdateTemplate` used a Model → Entity → Model round trip as an
+  accidental deep copy, which forced two load-bearing "re-attach" lines
+  ([internal/handlers/templateHandler.go](../internal/handlers/templateHandler.go)).
 
 ## 3. Features added / changed
 
 No user-visible behaviour change. Structural:
 
-- `entities.Connection` → `template_model.Connection` across `internal/dtos`,
-  `internal/handlers` (+`handler_interfaces`), `internal/services/connection_editor`,
-  `app/gui/{dialogs,drivers,models,panels}` and `editor_state_model`.
-- `template_model/converters.go` gained singular `ToConnectionEntity` /
-  `ToConnectionModel`.
-- **`IsUserAdded` removed from the protected `.rmg.json` entity** (owner-approved).
-  The model keeps it; `editor_state.ManualConnectionSave`'s sidecar persists it.
-  `ConnectionBuilder.WithIsUserAdded()` deleted with it.
-- `entityNamerAllowList` **21 → 14** entries; breach **84 files/21 packages → 64/14**.
-- Four `ToConnection*` calls deleted as pure ceremony — they crossed a boundary
-  that no longer exists.
+- Every builder, factory, provider, interface and topology service under
+  `internal/services/` returns `template_model` types. 26 entity types, none of which
+  had an alias twin, so every change was compiler-checked.
+- `Generate` assembles `template_model.Template{...}`; the `ITemplateMapper` dependency
+  and `stampPlannedZoneTiers` are gone. **`ZoneFactory` stamps the tier at build time**
+  (neutral → requested, hub → Highest, spawn → nil). Owner decision.
+- `template_model.Template.Clone()` (deep, one `Clone()` per type owning a slice or
+  pointer); `UpdateTemplate` clones instead of round-tripping. Owner decision.
+- `FileService` takes `mappers.ITemplateMapper`; `SaveTemplateWithPreview` takes the
+  model; `templateHandler` no longer holds `ITemplateMapper` at all. Owner decision.
+- `ConnectionEditorService.NewDefaultConnection`'s third conversion seam dissolved;
+  twelve `template_model.ToXModel(s)` lifts deleted across `connection_editor`,
+  `zoneTierService`, `gladiatorArenaProvider`.
+- `entityNamerAllowList` **14 → 1** (`file_service`), comment says never add.
 
 ## 4. File modifications
 
-**70 files changed, +331/−605**, plus one deletion and one rename. Highlights:
+**320 files changed, +1570/−1306**, one untracked test folder, one untracked plan.
+Highlights:
 
 | File | Change |
 | --- | --- |
-| [internal/entities/template/template_variant/connection.go](../internal/entities/template/template_variant/connection.go) | ⚠ **PROTECTED (§2.1), owner-approved.** `IsUserAdded` + comment removed. `git diff --stat` on that whole tree = **1 file, 5 deletions**. |
-| [internal/handlers/templateHandler.go](../internal/handlers/templateHandler.go) | `ToConnectionEntities` on assign; **added the positional connection re-attach** beside the zone one. |
-| [internal/models/editor_state_model/manualConnectionSave.go](../internal/models/editor_state_model/manualConnectionSave.go) | Takes/returns `[]template_model.Connection`; the save's field stays an entity. Mirrors `manualZoneSave.go`. |
-| [internal/services/connection_editor/connectionEditorService.go](../internal/services/connection_editor/connectionEditorService.go) | `NewDefaultConnection` returns a model, converts the shared builder's entity, sets `IsUserAdded` by hand. |
-| [test/unit/architecture/dependency/layering_test.go](../test/unit/architecture/dependency/layering_test.go) | 7 allow-list entries removed; comment states **exactly one** permanent entry (`file_service`) and names the generator explicitly as debt. |
-| `test/unit/.../connectionBuilder/withIsUserAdded_test.go` | **Deleted** (`Remove-Item`). |
-| `.agent/plans/batch-p-connection-follows-zone.md` | The plan, with Final Recap + Deployment Plan. **Renamed from `batch-k-`** — see §7. |
-| [.agent/backlog/backlog-opus5.md](backlog/backlog-opus5.md) | §2.6 rewritten (steps 2+3 ✅, ruling, recount, retitle); header and §8 updated with batch **P**. |
-| `.agent/memories/{template-model,settled-decisions}.md` | Batch P section; the no-carve-out decision. |
+| [internal/services/template_generator/templateGenerator.go](../internal/services/template_generator/templateGenerator.go) | Builds the model directly; mapper + `stampPlannedZoneTiers` deleted. |
+| [internal/services/zones/zoneFactory.go](../internal/services/zones/zoneFactory.go) | Returns model zones; stamps `Quality` in `CreateNeutralZone` / `CreateHubZone`. |
+| [internal/models/template_model/template.go](../internal/models/template_model/template.go) + every `template_*_model/*.go` with a reference field | `Clone()` methods. |
+| [internal/handlers/templateHandler.go](../internal/handlers/templateHandler.go) | `UpdateTemplate` clones; `SaveTemplate` passes the model; no `ITemplateMapper`. |
+| [internal/services/file_service/fileService.go](../internal/services/file_service/fileService.go) + interface | Model signature, mapper injected, maps at the repository call. |
+| [internal/models/config/generatorConfig.go](../internal/models/config/generatorConfig.go), [internal/mappers/mandatoryContentItemMapper.go](../internal/mappers/mandatoryContentItemMapper.go) | Followed the builder's return type (permitted namers). |
+| [internal/composition/wire_gen.go](../internal/composition/wire_gen.go) | Regenerated twice. |
+| [test/unit/architecture/dependency/layering_test.go](../test/unit/architecture/dependency/layering_test.go) | Allow-list at one entry; comment rewritten. |
+| `test/unit/internal/models/template_model/template/clone_test.go` | **New.** |
+| `test/unit/internal/services/zones/zoneFactory/create{Neutral,Hub,Spawn}Zone_test.go` | Three tier tests added. |
+| ~204 test files + 5 mocks | `entities.X` → `template_model.X`. |
+| `.agent/plans/batch-q-generator-builds-the-model.md` | The plan, complete with Final Recap + Deployment Plan. |
+| [.agent/backlog/backlog-opus5.md](backlog/backlog-opus5.md) | Header, §2.6 (✅, step 4 self-contained), §8 row **Q**, coverage note. |
+| `.agent/memories/{architecture,settled-decisions,template-model}.md` | Updated to the achieved state. |
 
-One test was **deleted, not migrated**:
-`TestWhenSaveFlagDiffersFromEmbeddedConnectionFlag_SaveFlagWins` — the entity no
-longer has a flag to disagree with, so the scenario is unconstructible. The
-surviving `..._RestoresEachFlagOntoConnection` still fails if the copy is dropped.
+`cmd/tmpentitymigrate/` (throwaway stdlib AST rewriter) was created and **deleted**.
 
 ## 5. Tests added or updated
 
-- **Added** `TestWhenAnAppliedConnectionIsUserAdded_KeepsTheFlagThroughTheEntityRoundTrip`
-  in [updateTemplate_test.go](../test/unit/internal/handlers/templateHandler/updateTemplate_test.go).
-  Mutation-verified twice: once against `ToConnectionModel` (phase 1) and, more
-  importantly, against the `UpdateTemplate` re-attach after the entity field was
-  removed (phase 4) — proving it is **not vacuous**.
-- ~35 test/mock files migrated to the model type.
+- **Added**: `clone_test.go` (equality, 18 deep-mutation cases, nil and empty
+  preservation); `TestWhenNeutralZoneIsCreated_RecordsTheRequestedQuality`,
+  `TestWhenHubZoneIsCreated_RecordsTheHighestQuality`,
+  `TestWhenSpawnZoneIsCreated_LeavesTheQualityUnrecorded`.
+- **Renamed**: `…KeepsTheFlagThroughTheEntityRoundTrip` → `…KeepsTheFlagAcrossTheApply`
+  (there is no round trip any more; assertion unchanged).
+- **Mutation-verified**: factory stamp (3 tests fail without it), `Clone()` in
+  `UpdateTemplate` (`…LeavesTheSourceTemplateUntouched` fails without it), allow-list
+  (an injected `entities.Zone` in the generator fails the layering gate).
 
 **Final gate run, all green:**
 
@@ -87,73 +81,55 @@ surviving `..._RestoresEachFlagOntoConnection` still fails if the copy is droppe
 | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | `go run ./cmd/testlayoutcheck .` | passed |
 | `wire diff ./internal/composition/...` | exit 0 |
-| `go test ./test/unit/... -count=1` + coverage | exit 0 — **74.3 %** (floor 72.5 %, unchanged) |
+| `go test ./test/unit/... -count=1` + coverage | exit 0 — **74.5 %** (was 74.3, floor 72.5) |
 | `go test -tags=integration_test ./test/integration/...` | exit 0 |
 | `go test -tags='integration_test,gui' ./test/integration/gui/...` | exit 0, **no `-update`** |
-| `git status --short -- '*.golden'` / `testdata/*` | `goldens=0`, `fixtures=0` |
+| goldens / `testdata/` / `data/` / `internal/entities` changed | **0 / 0 / 0 / 0** |
 | `golangci-lint-v2 run ./...` | **0 issues** |
 
 ## 6. Git status snapshot
 
-Branch **`AD/fixing_some_stuff_08-12`**, head `eec6904 Batch J done` — batch J
-is fully committed. 70 modified files, 1 deletion, 1 untracked plan.
-**Nothing was staged or unstaged by the agent (AGENTS §2.5).**
-
-⚠ **One index oddity for the owner to resolve.** The owner had staged
-`A .agent/plans/batch-k-connection-follows-zone.md`. Renaming it (see §7) left
-that path as `AD` — *added in index, deleted in worktree* — while the real file
-`.agent/plans/batch-p-connection-follows-zone.md` is untracked (`??`). Resolving
-it means staging, which the agent must not do. `.agent/plans/batch-j-…md` also
-remains staged-deleted from the previous session.
+Branch **`AD/fixing_some_stuff_08-12`**, head `e54456d docs` (batch P committed). 320
+modified files, 2 untracked paths (`.agent/plans/batch-q-…md`,
+`test/unit/internal/models/template_model/`). **Nothing staged or unstaged by the agent.**
+No index oddities this time.
 
 ## 7. Rejections / corrections
 
-- **The carve-out option was rejected by the owner** in favour of cleaning. The
-  "dtos+handlers only" option was rejected in the framing because it would have
-  left `app/` holding an entity while the DTOs held a model — the handler
-  converting backwards relative to AGENTS §4.4.1 rule 2.
-- ⚠ **Batch letter corrected mid-session: this is batch P, not K.** §8 of the
-  backlog already used **⚠ K** for the owner-gated group (§2.2 Branch A, §2.4,
-  §2.5, §6.1). Letters through O were taken. The plan file was renamed with
-  `Move-Item` and all references updated. **Check §8 for a free letter before
-  naming a batch.**
-- A plan-authoring error was caught in phase 1: the plan sketched a nested
-  `templateHandler/updateTemplate/` test folder. AGENTS §4.6 puts the folder at
-  the *implementation file* name and the file at the *function* name.
-- ‼ **Corrected on owner review: `template_generator` is NOT a permanent entity
-  exception.** This session inherited "`file_service` + `template_generator` are
-  both permanent" from the previous carry-forward and wrote it into backlog
-  §2.6 step 4, `settled-decisions.md`, this file **and** the repo's
-  `entityNamerAllowList` comment — without checking
-  `.agent/memories/settled-decisions.md`, which already carried a ⚠ correction
-  dated 2026-09-03 stating that exact claim is wrong. All five places are now
-  fixed to say **exactly one permanent entry, `file_service`**, with the
-  generator named explicitly as debt. **A claim inherited from a carry-forward
-  is not evidence — verify it against the memories.**
+- None from the owner this session; all five scoping questions were answered before any
+  edit and every answer was followed.
+- Self-corrections worth keeping:
+  - **The tool retyped a `json.Unmarshal` target** in `gameRulesProvider/common_test.go`
+    (decoding a `.rmg.json` into the tagless model). Only `musttag` caught it. Restored
+    to decode the entity and lift via `ToTemplateModel`.
+  - Two `gofmt -r` attempts on *statements* failed (it rewrites expressions only); the
+    mutations were done with targeted edits and grep-verified instead.
+  - I round-tripped **two markdown files** and, during the allow-list mutation, **one
+    `.go` file** (`templateGenerator.go`) through `Get-Content`/`Set-Content` — the
+    latter is a rule breach. The file was immediately `gofmt -w`'d, its full diff read,
+    and CR count / UTF-8 arrow byte-checked (0 CRs, arrow intact). Don't repeat it.
+  - Phases 2 and 3 collapsed into one sweep because the compiler would not let the
+    providers flip without `Generate` and `UpdateTemplate` following.
 
 ## 8. Open questions
 
-- **Backlog §2.6 step 4 is the only step left** — 64 files / 14 packages, all
-  generator-side. Step 2's ruling makes it sanctioned work rather than an open
-  question. It is also the batch that would let `TemplateGenerator.Generate`
-  build the model directly instead of building an entity and lifting it (§2.2
-  records that lift as a *migration tactic*, not a design). ⚠ **The floor is
-  ONE package, `file_service`, not two** — `template_generator` and its topology
-  tree are debt, per `settled-decisions.md` §"Entity confinement".
-- Still unreconciled from the previous session: two `TabCycling` benchmark
-  baselines disagree (~5,699 vs 6,640 allocs/op), taken on different trees.
+- None blocking. §2.6 is closed; the entity façade `internal/entities` (alias package)
+  still exists and its own doc comment says it should be removed — that is a possible
+  future item, not scheduled, not asked for.
+- Still unreconciled from two sessions ago: two `TabCycling` benchmark baselines
+  disagree (~5,699 vs 6,640 allocs/op), taken on different trees.
 
 ## 9. Next recommended actions
 
-1. **Owner reviews and commits batch P.** Follow the Deployment Plan in
-   `.agent/plans/batch-p-connection-follows-zone.md` — especially step 1 (the
-   protected diff is 1 file / 5 deletions and nothing else) and step 5, the
-   in-app smoke test: draw a connection **by hand**, Apply, save, reload, and
-   confirm it is still marked user-added.
-2. Resolve the index oddity in §6 while committing.
-3. Delete the transient docs once it lands: the plan and this file. **Backlog
-   §2.6 is the surviving record** and is written to stand alone.
-4. Take **§2.6 step 4** as its own batch (letter **Q**).
+1. **Owner reviews and commits batch Q.** Follow the Deployment Plan in the plan file,
+   in particular step 1 (protected trees and goldens untouched) and step 3, the in-app
+   smoke test: tier colouring, hand-added neutral zone takes its tier, hand-drawn
+   connection stays user-added after Apply, castle sliders rebuild, **Save To** lands
+   the `.rmg.json` + `.png` in the detected templates directory.
+2. Delete the transient docs once it lands: the plan and this file. **Backlog §2.6 is
+   the surviving record** and is written to stand alone.
+3. Pick the next item from backlog §8; the remaining open items are the owner-gated
+   **⚠ K** group and whatever is left in §5/§6. There is no successor to §2.6.
 
 ## 10. Carry-forward prompt
 
@@ -162,65 +138,50 @@ remains staged-deleted from the previous session.
 > explicit owner approval** — `internal/entities/editor_state/` is *not*
 > protected; everything must build and run on Windows and Linux
 > (`path/filepath`; chain PowerShell with `;`, never `&&`); every change ships
-> with tests and unit coverage must not drop below 72.5 % (currently **74.3 %**),
+> with tests and unit coverage must not drop below 72.5 % (currently **74.5 %**),
 > lint baseline **0 issues**; **never stage and never commit** — `Move-Item` not
 > `git mv`, `Remove-Item` not `git rm`; never change where `.rmg.json` is written
 > and never persist the output directory; never run a bulk in-place rewrite and
-> **never round-trip a `.go` file through `Get-Content`/`Set-Content`** — use
-> `gofmt -r` on an explicit file list and verify insertions == deletions per file.
+> **never round-trip a `.go` file through `Get-Content`/`Set-Content`** — a
+> throwaway Go AST tool on an explicit file list is the sanctioned bulk mechanism,
+> `gofmt -r` rewrites expressions only (not statements), and verify
+> insertions == deletions per file.
 >
-> **Batch P (Connection follows Zone, backlog §2.6 steps 2 + 3) is COMPLETE** —
-> five phases, every gate green, no golden and no fixture moved. It ruled that
-> base `internal/entities` gets **no vocabulary carve-out**: naming a `.rmg.json`
-> schema type below the repositories is a genuine breach. `entityNamerAllowList`
-> went 21 → 14 entries and the breach 84 files/21 packages → **64/14**, now
-> entirely generator-side. With owner approval it removed `IsUserAdded` from the
-> protected `internal/entities/template/template_variant/connection.go`. Batch P
-> is **uncommitted** (70 modified files, 1 deleted, 1 untracked plan); batch J is
-> committed through `eec6904` on `AD/fixing_some_stuff_08-12`.
+> **Batch Q (the generator builds the model, backlog §2.6 step 4) is COMPLETE** —
+> four phases, every gate green, no golden, no fixture, **no protected edit**.
+> `entityNamerAllowList` is at its floor: `{internal/services/file_service}`,
+> permanent, never add. §2.6 is closed. Batch Q is **uncommitted** (320 modified
+> files, 2 untracked paths); batch P is committed through `e54456d` on
+> `AD/fixing_some_stuff_08-12`.
 >
-> Standing traps this codebase punishes: **nil is load-bearing** three times over
-> — nil `Previous` = first generation, nil `Next` = unarmed debounce, nil
-> `Zone.Quality` = "infer it"; **two re-attach lines in
-> `templateHandler.UpdateTemplate` are load-bearing** — `updated.Variants[0].Zones`
-> carries the tier and `.Connections` carries the user-added flag across an Apply,
-> both mutation-verified, both look redundant and are not; the persisted tier is
-> `*int8` because `omitempty` on a plain `int8` would drop every Plastic zone
-> (ordinal 0); the two frozen fixtures under `test/test_helpers/testdata/` and the
-> untagged `editorStateWireFormat_integration_test.go` must keep passing unchanged
-> and compare **parsed objects, never bytes**; `cmd/testlayoutcheck` matches
-> test-only export names tree-wide, so grep any new accessor name first; a file
-> gets `//go:build integration_test` **only** if it calls a `*_testexports.go`
-> accessor; `helpers.MapSlice`/`MapPointer` preserve nil-vs-empty where
-> `linq.SelectSlice` does not; and `golangci-lint --fix` wraps a long signature as
-> `param,\n) Ret {` where the house style is `param) Ret {`.
+> What batch Q changed that later sessions must know: `TemplateGenerator.Generate`
+> builds `template_model.Template` directly — no entity, no mapper;
+> **`ZoneFactory` stamps `Quality`** (neutral → requested, hub → Highest, spawn →
+> nil, and nil is still load-bearing "infer it"); `UpdateTemplate` deep-copies with
+> `template_model.Template.Clone()` — the two re-attach lines are gone with the
+> round trip; `FileService.SaveTemplateWithPreview` takes the model and maps inside,
+> so `templateHandler` holds no `ITemplateMapper`. The golden generator test still
+> proves the entity round trip by lifting the model **test-side** in
+> `templateGenerator/common_test.go`; `GetDefaultTemplate()` stays entity-typed.
+> **The model has no JSON tags — never `json.Unmarshal` into it**; decode the entity
+> and lift.
 >
-> Three lessons from batch P worth keeping: **when migrating a type, grep its
-> converters as well as its name** (three files called `ToConnectionEntities`
-> without ever naming `entities.Connection` — only the compiler found them);
-> **`git status` cannot verify a mutation revert** when the file is already dirty
-> from the same batch, so grep for the mutation itself; and **check backlog §8 for
-> a free batch letter before naming a batch** (K was already taken, this one had
-> to be renamed to P mid-session).
+> Standing traps unchanged: **nil is load-bearing** (nil `Previous` = first
+> generation, nil `Next` = unarmed debounce, nil `Zone.Quality` = infer); the
+> persisted tier is `*int8`; the two frozen fixtures under
+> `test/test_helpers/testdata/` and the untagged
+> `editorStateWireFormat_integration_test.go` must keep passing unchanged and
+> compare **parsed objects, never bytes**; `cmd/testlayoutcheck` matches test-only
+> export names tree-wide; a file gets `//go:build integration_test` **only** if it
+> calls a `*_testexports.go` accessor; `helpers.MapSlice`/`MapPointer` preserve
+> nil-vs-empty; `golangci-lint --fix` wraps as `param,\n) Ret {` where house style
+> is `param) Ret {`.
 >
-> ‼ And the one that cost a review round-trip: **a claim inherited from a
-> carry-forward is not evidence.** This session re-propagated "`file_service` +
-> `template_generator` are both permanent entity exceptions" out of the previous
-> handoff and wrote it into the backlog, the memories AND the repo's
-> `entityNamerAllowList` comment — while `.agent/memories/settled-decisions.md`
-> already carried a ⚠ correction, dated 2026-09-03, saying that exact claim is
-> wrong. **Check `settled-decisions.md` and `architecture.md` before restating
-> any "by decision" / "permanent" / "do not clean" claim.**
+> Lessons from Q: **a type rewriter cannot see `json.Unmarshal` targets** — grep
+> every rewritten file for `Unmarshal(`/`Decode(` (only `musttag` caught the one
+> that slipped); **check `settled-decisions.md` and `architecture.md` before
+> restating any "permanent" / "by decision" claim**; and check backlog §8 for a
+> free batch letter (next free is **R**).
 >
-> Next up is **backlog §2.6 step 4**, the last step: 64 files in 14 packages,
-> all generator-side. Step 2 already ruled it sanctioned work rather than an open
-> question, and it is the batch that would let `TemplateGenerator.Generate` build
-> the model directly instead of building an entity and lifting it. ⚠ **EXACTLY
-> ONE of the 14 is permanent: `internal/services/file_service`** (it writes
-> `.rmg.json`, and even there entities stay inside it, never in a signature).
-> **The floor is one, not two.** `template_generator` and its whole topology tree
-> are **DEBT** — the "the golden-template test makes the lifted entity a proof"
-> argument is a *migration tactic*, explicitly rejected by the owner on
-> 2026-09-03. See `.agent/memories/settled-decisions.md` §"Entity confinement".
->
-> Full handoff in `./.agent/session-carry-forward.md`.
+> Next up: whatever the owner picks from backlog §8 — §2.6 has no successor. Full
+> handoff in `./.agent/session-carry-forward.md`.

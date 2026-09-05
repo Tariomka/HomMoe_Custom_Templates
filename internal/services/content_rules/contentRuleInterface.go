@@ -1,8 +1,8 @@
 package content_rules
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // IContentRule is the polymorphic interface implemented by every content rule.
@@ -21,5 +21,5 @@ type IContentRule interface {
 	// SerializeToRowSave projects the rule back to its persisted form.
 	SerializeToRowSave() editor_state_model.ContentRuleRow
 	// Apply mutates the final content item according to the rule.
-	Apply(item *entities.MandatoryContentItem)
+	Apply(item *template_model.MandatoryContentItem)
 }

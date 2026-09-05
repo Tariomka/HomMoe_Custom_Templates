@@ -20,7 +20,6 @@ import (
 type templateHandler struct {
 	templateGenerator template_generator.ITemplateGenerator
 	mapper            mappers.IGeneratorConfigMapper
-	templateMapper    mappers.ITemplateMapper
 	contentProvider   provider_interfaces.IMandatoryContentProvider
 	connectionEditor  connection_editor.IConnectionEditorService
 	zoneEditor        connection_editor.IZoneEditorService
@@ -33,7 +32,6 @@ type templateHandler struct {
 func NewTemplateHandler(
 	templateGenerator template_generator.ITemplateGenerator,
 	mapper mappers.IGeneratorConfigMapper,
-	templateMapper mappers.ITemplateMapper,
 	contentProvider provider_interfaces.IMandatoryContentProvider,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
@@ -44,7 +42,6 @@ func NewTemplateHandler(
 	return &templateHandler{
 		templateGenerator: templateGenerator,
 		mapper:            mapper,
-		templateMapper:    templateMapper,
 		contentProvider:   contentProvider,
 		connectionEditor:  connectionEditor,
 		zoneEditor:        zoneEditor,
@@ -83,28 +80,19 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 	connections := templateDto.Connections
 	this.zoneEditor.RebuildZoneConnectionRoads(zones, connections)
 
-	newTemplate := this.templateMapper.ToEntity(*templateDto.Template)
-	newTemplate.Variants[0].Zones = template_model.ToZoneEntities(zones)
-	newTemplate.Variants[0].Connections = template_model.ToConnectionEntities(connections)
+	updated := templateDto.Template.Clone()
+	updated.Variants[0].Zones = zones
+	updated.Variants[0].Connections = connections
 
-	// Rebuild mandatory content from the final zones so a zone re-tiered in the
-	// manual editor gets the content of its new quality instead of the original tier.
 	if templateDto.EditorState != nil {
 		configuration := this.mapper.FromEditorState(templateDto.EditorState.EditorState)
-		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(*configuration, zones)
+		updated.MandatoryContent = this.contentProvider.CreateContentsForZones(*configuration, zones)
 	}
 
 	var err error
 	if this.connectionEditor.ComputeHasErrors(zones, connections) {
 		err = common_errors.ErrZonesMissing
 	}
-
-	// Re-attaching the applied zones and connections rather than the ones the
-	// round trip produced is what keeps each zone's recorded tier and each
-	// connection's user-added flag: the .rmg.json entity has nowhere to put them.
-	updated := this.templateMapper.ToModel(newTemplate)
-	updated.Variants[0].Zones = zones
-	updated.Variants[0].Connections = connections
 
 	return dtos.TemplateLoadDto{Template: &updated}, err
 }
@@ -126,11 +114,6 @@ func (this *templateHandler) SaveTemplate(templateDto dtos.TemplateSaveDto) (str
 		return "", common_errors.ErrNoOutputPath
 	}
 
-	// Writing the .rmg.json is one of the two places the wire format is genuinely
-	// required, so this is where the model goes back to being an entity. The
-	// preview renders from the model, which is what lets it colour a zone by the
-	// tier the user picked rather than by the one its content pools imply.
 	previewImage := this.previewGenerator.CreatePreviewImage(templateDto.Template, templateDto.Topology)
-	template := this.templateMapper.ToEntity(*templateDto.Template)
-	return this.fileService.SaveTemplateWithPreview(outputPath, &template, previewImage)
+	return this.fileService.SaveTemplateWithPreview(outputPath, templateDto.Template, previewImage)
 }

@@ -51,7 +51,8 @@ func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
 		mapper:      mappers.NewEditorStateMapper(),
 	}
 
-	service := file_service.NewFileService(mocks.editorState, mocks.template, mocks.preview, mocks.mapper)
+	service := file_service.NewFileService(
+		mocks.editorState, mocks.template, mocks.preview, mocks.mapper, mappers.NewTemplateMapper())
 
 	return service, mocks
 }

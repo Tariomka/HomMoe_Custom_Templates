@@ -99,8 +99,7 @@ func (this *ManualReapplyService) SetNeutralZoneCastleCount(
 	profile := common_zones.GetNeutralZoneProfile(quality)
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		template_model.ToMainObjectModels(
-			this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity)),
+		this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, isHoldCity),
 		preserved...)
 	this.zoneEditor.RebuildCastleRoads(zone)
 }
@@ -163,13 +162,13 @@ func (this *ManualReapplyService) rebuildSpawnZoneCastles(
 	matchFactions := configuration.MatchPlayerCastleFactions
 	mainObjects := []template_model.MainObject{spawnCastle}
 	mainObjects = append(mainObjects,
-		template_model.ToMainObjectModels(this.castleFactory.CreatePlayerOwnedCastles(
-			matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles))...)
+		this.castleFactory.CreatePlayerOwnedCastles(
+			matchFactions, spawnCastle.Spawn, tuning.PlayerOwnedCastles)...)
 	mainObjects = append(mainObjects,
-		template_model.ToMainObjectModels(this.castleFactory.CreatePlayerUnclaimedCastles(
+		this.castleFactory.CreatePlayerUnclaimedCastles(
 			matchFactions,
 			tuning.ScaleByNeutralGuardStrength(5000),
-			configuration.ZoneConfiguration.PlayerZoneCastles))...)
+			configuration.ZoneConfiguration.PlayerZoneCastles)...)
 	zone.MainObjects = mainObjects
 	this.zoneEditor.RebuildCastleRoads(zone)
 }
@@ -182,8 +181,7 @@ func (this *ManualReapplyService) rebuildHubZoneCastles(
 	tuning models.GenerationTuning) {
 	preserved, isHoldCity := splitOutNonCastles(zone.MainObjects)
 	zone.MainObjects = append(
-		template_model.ToMainObjectModels(
-			this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity)),
+		this.castleFactory.CreateHubZoneCastles(tuning, castleCount, isHoldCity),
 		preserved...)
 	this.zoneEditor.RebuildCastleRoads(zone)
 }

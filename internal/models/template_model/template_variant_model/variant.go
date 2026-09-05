@@ -12,6 +12,15 @@ type Variant struct {
 	Connections []Connection
 }
 
+func (this Variant) Clone() Variant {
+	return Variant{
+		Orientation: this.Orientation,
+		Border:      this.Border.Clone(),
+		Zones:       helpers.MapSlice(this.Zones, Zone.Clone),
+		Connections: helpers.MapSlice(this.Connections, Connection.Clone),
+	}
+}
+
 func ToVariantModel(entity template.Variant) Variant {
 	return Variant{
 		Orientation: ToOrientationModel(entity.Orientation),

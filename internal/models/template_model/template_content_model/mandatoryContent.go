@@ -10,6 +10,12 @@ type MandatoryContent struct {
 	Content []MandatoryContentItem
 }
 
+func (this MandatoryContent) Clone() MandatoryContent {
+	clone := this
+	clone.Content = helpers.MapSlice(this.Content, MandatoryContentItem.Clone)
+	return clone
+}
+
 func ToMandatoryContentModel(entity template.MandatoryContent) MandatoryContent {
 	return MandatoryContent{
 		Name:    entity.Name,

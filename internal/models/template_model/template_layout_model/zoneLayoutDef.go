@@ -1,6 +1,8 @@
 package template_layout_model
 
 import (
+	"slices"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
@@ -20,6 +22,14 @@ type ZoneLayoutDef struct {
 
 	GuardedEncounterResourceFractions GuardedEncounterResourceFractions
 	AmbientPickupDistribution         AmbientPickupDistribution
+}
+
+func (this ZoneLayoutDef) Clone() ZoneLayoutDef {
+	clone := this
+	clone.ElevationModes = slices.Clone(this.ElevationModes)
+	clone.GuardedEncounterResourceFractions = this.GuardedEncounterResourceFractions.Clone()
+	clone.AmbientPickupDistribution = this.AmbientPickupDistribution.Clone()
+	return clone
 }
 
 func ToZoneLayoutDefModel(entity template.ZoneLayoutDef) ZoneLayoutDef {

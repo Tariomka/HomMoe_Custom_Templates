@@ -1,11 +1,11 @@
 package hubTopology_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // zoneNameSet returns the set of zone names present in the variant.
-func zoneNameSet(variant entities.Variant) map[string]bool {
+func zoneNameSet(variant template_model.Variant) map[string]bool {
 	names := make(map[string]bool, len(variant.Zones))
 	for _, zone := range variant.Zones {
 		names[zone.Name] = true
@@ -15,7 +15,7 @@ func zoneNameSet(variant entities.Variant) map[string]bool {
 
 // danglingConnectionNames returns the names of connections whose endpoints do
 // not both exist as zones in the variant.
-func danglingConnectionNames(variant entities.Variant) []string {
+func danglingConnectionNames(variant template_model.Variant) []string {
 	names := zoneNameSet(variant)
 	var dangling []string
 	for _, connection := range variant.Connections {
@@ -27,7 +27,7 @@ func danglingConnectionNames(variant entities.Variant) []string {
 }
 
 // countPortalConnections counts the connections of type Portal.
-func countPortalConnections(variant entities.Variant) int {
+func countPortalConnections(variant template_model.Variant) int {
 	count := 0
 	for _, connection := range variant.Connections {
 		if connection.ConnectionType == "Portal" {
@@ -38,7 +38,7 @@ func countPortalConnections(variant entities.Variant) int {
 }
 
 // connectionNames returns the names of all connections in the variant.
-func connectionNames(variant entities.Variant) []string {
+func connectionNames(variant template_model.Variant) []string {
 	names := make([]string, 0, len(variant.Connections))
 	for _, connection := range variant.Connections {
 		names = append(names, connection.Name)

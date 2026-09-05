@@ -35,19 +35,20 @@ and §1.9 there stay numbered as they are and are restated here as §1.1 and §1
 go-ahead**, because it edits a protected directory (AGENTS.md §2.1) or reverses
 a decision the owner already made.
 
-**Item count: 0 🔴 · 7 🟠 · 10 🟡 · 3 ⚪ (21 total).**
+**Item count: 0 🔴 · 6 🟠 · 10 🟡 · 3 ⚪ (21 total).**
 
 **✅ Completed 2026-08-12:** §1.4 (batch A) · §1.2, §1.3 and §3.3 (batch B) ·
 §3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D), §5.3 (batch F) ·
 **2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) · **2026-09-01:**
-§2.1 and §1.5 (batch I) · **2026-09-03:** §2.2 (batch J) — **15 done, 6 open.**
+§2.1 and §1.5 (batch I) · **2026-09-03:** §2.2 (batch J) · **2026-09-05:** §2.6
+(batches O, J, P, Q) — **16 done, 5 open.**
 Batch D spun off §1.5 (render-path clone cost), which batch I then absorbed;
 batch I spun off §2.6 (entities named outside the permitted layers), whose
-step 1 batch O closed, whose entity list batch J shrank by two packages, and
-whose steps 2 and 3 batch P closed on **2026-09-04** (§2.6 stays open on
-step 4 alone).
+step 1 batch O closed, whose entity list batch J shrank by two packages, whose
+steps 2 and 3 batch P closed on **2026-09-04**, and whose step 4 batch Q closed
+on **2026-09-05** — the entity allow-list is at its one-entry floor.
 
-**Baselines to hold (AGENTS.md §2.3):** unit coverage **74.3 %**, floor
+**Baselines to hold (AGENTS.md §2.3):** unit coverage **74.5 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
 `integration_test` and `integration_test,gui`.
@@ -1077,9 +1078,11 @@ only the rename.
 
 ---
 
-### 2.6 🟠 64 production files name an Entity from outside the permitted layers
+### 2.6 ✅ Entities named outside the permitted layers — closed at the one-entry floor
 
-*(Steps 1–3 are **closed**. Step 4 — the generator tail — is what remains open.)*
+*(All four steps are **closed**. Batch Q, 2026-09-05, took the entity allow-list from
+14 entries to **one**, `internal/services/file_service`, which is permanent. The
+history below is kept because the measurements and lessons generalise.)*
 
 **Evidence.** Batch I §12 turned the Entity/Model/DTO doctrine into a gate
 ([test/unit/architecture/dependency/layering_test.go](../../test/unit/architecture/dependency/layering_test.go)).
@@ -1087,9 +1090,9 @@ Turning it on exposed the pre-existing breach it had to be seeded with:
 **113 files in 23 packages** named a type from `internal/entities` while sitting
 outside the permitted namers (`internal/repositories`, `internal/models`,
 `internal/entities`, `internal/mappers`, `internal/helpers/*_helpers`).
-Batch J took it to **84 / 21**; **batch P took it to 64 files in 14 packages**,
-and the allow-list is now exactly those 14. Current shape — note it is *entirely*
-the generator tail plus two builders:
+Batch J took it to **84 / 21**; batch P to **64 / 14**; **batch Q to 2 files / 1
+package**, the floor. Before Q the shape was *entirely* the generator tail plus two
+builders:
 
 | Area | Files |
 | --- | --- |
@@ -1099,11 +1102,13 @@ the generator tail plus two builders:
 | `internal/services/content_rules` | 3 |
 | `internal/services/file_service` | 2 |
 
-**Why it is not simply a defect.** Base `internal/entities` is the `.rmg.json`
-schema vocabulary — `Zone`, `Connection`, `RmgTemplate` — and §0.5.3 of the
-Batch I plan deliberately kept it as a repository-wide alias façade. The whole
-generator exists to build those types, so a service naming `entities.Zone` is
-not the same kind of mistake as a service naming `editor_state.EditorState`.
+**Why it was not simply a defect (historical framing, ruled on in step 2).** Base
+`internal/entities` is the `.rmg.json` schema vocabulary — `Zone`, `Connection`,
+`RmgTemplate` — and §0.5.3 of the Batch I plan deliberately kept it as a
+repository-wide alias façade. The whole generator exists to build those types, so
+a service naming `entities.Zone` looked less wrong than a service naming
+`editor_state.EditorState`. Step 2 ruled it a breach all the same, and step 4
+proved the generator can build the model twin directly with no loss.
 
 A second, much smaller list rode along in the same test: **6 files in 3
 packages** (`internal/services/bonuses`, `internal/services/pickers`,
@@ -1215,28 +1220,60 @@ drain to zero, and the two survivors are there by decision.
    relative to AGENTS §4.4.1 rule 2. **`app/gui/**` now names zero entity types,
    including in its tests.**
 
-4. `internal/services/**` — the large tail, **now the only thing left**: 64
-   files in 14 packages, all generator-side. Step 2 ruled that the schema
-   vocabulary is genuinely off limits below the repositories, so this is
-   sanctioned work rather than an open question. It is also the batch that
-   would let `TemplateGenerator.Generate` build the model directly instead of
-   building an entity and lifting it (see §2.2 — that lift was a *migration
-   tactic*, not a design).
+4. ✅ **DONE (batch Q, 2026-09-05) — the generator builds the model.** 64 files in
+   13 debt packages moved from `internal/entities` to `internal/models/template_model`;
+   `entityNamerAllowList` is `{internal/services/file_service}` and its comment says
+   **never add an entry**. Coverage 74.3 % → **74.5 %**, lint 0, no golden, no fixture,
+   no `data/` change, **no protected edit** (`git diff --stat -- internal/entities` was
+   empty throughout).
 
-   ⚠ **EXACTLY ONE of these 14 packages is permanent:
-   `internal/services/file_service`**, because it writes `.rmg.json` — and even
-   there entities must stay *inside* it, never in a parameter or return type.
-   **The floor is one entry, not two.** Every other entry, **`template_generator`
-   and its whole topology tree included, is DEBT.** Owner rule: only
-   `internal/repositories` and `file_service` may touch entities in
-   implementation code.
+   **What was measured first.** None of the 26 entity types used by the generator had a
+   type-alias twin: every `template_model` type is a re-declared struct or a struct
+   embedding the entity. So every rename was a real type change and the compiler found
+   every consumer — the schema types form one connected component (`Zone` ↔
+   `MainObject`/`Road`/`TypedRef` ↔ `Connection` ↔ `PlacementRule` ↔
+   `MandatoryContentItem`), which is why the sweep could not go package by package.
 
-   ⚠ *A previous version of this item claimed the generator keeps the entity
-   "forever, by decision, because `Generate` lifts the assembled entity and that
-   makes the golden-template test a proof". **That is wrong** (owner,
-   2026-09-03) and it has resurfaced more than once — the byte-identical
-   argument was a **migration tactic**, never a design. Do not cite it, and do
-   not re-add `template_generator` to any "permanent" list.*
+   **What landed** (57 production + 204 test files through a throwaway stdlib AST
+   rewriter under `cmd/`, deleted afterwards; insertions == deletions on every
+   pure-rename file):
+   - Every builder (`builders/**`), factory (`zones/**`), provider, interface and
+     topology service returns `template_model` types. `config.GeneratorConfig`'s six
+     mandatory-content slices and `mappers.MandatoryContentItemMapper` followed.
+   - `TemplateGenerator.Generate` assembles `template_model.Template{...}` directly;
+     the `ITemplateMapper` dependency and `stampPlannedZoneTiers` are deleted.
+     **`ZoneFactory` stamps the tier at build time** (neutral → requested, hub →
+     Highest, spawn → nil). Owner decision; three factory tests added and the existing
+     `generateZoneTiers_test.go` passes untouched, which proves the two stamps agree.
+   - Twelve `template_model.ToXModel(s)` lifts on factory/builder results deleted
+     across `connection_editor`, `zoneTierService` and `gladiatorArenaProvider`.
+     `NewDefaultConnection`'s third conversion seam (§2.6 step 2 trap) is gone.
+   - **`UpdateTemplate` no longer round-trips Model → Entity → Model.** It clones via
+     the new deep `template_model.Template.Clone()` (one `Clone()` per type owning a
+     slice or pointer, `helpers.MapSlice`/`ClonePointer` so nil-vs-empty survives),
+     assigns zones/connections/rebuilt content, returns the copy. The two load-bearing
+     re-attach lines are gone with the round trip that made them necessary. Owner
+     decision. `Clone` is tested against the fuzzed all-fields fixture; the pre-existing
+     `…LeavesTheSourceTemplateUntouched` test is its mutation-verified guard.
+   - **`FileService.SaveTemplateWithPreview` takes `*template_model.Template`** and
+     maps to the entity at the repository call; `FileService` gains `ITemplateMapper`
+     in its constructor; `templateHandler` drops `ITemplateMapper` entirely. Owner
+     decision; closes the "no entities in `file_service` signatures" gap.
+   - `wire gen` twice (generator and file-service constructors).
+
+   **Golden proof preserved test-side.** `test_helpers.GetDefaultTemplate()` and
+   `defaultTemplate.json` stay entity-typed; `templateGenerator/common_test.go` lifts
+   the generated model through the real `mappers.NewTemplateMapper()` before comparing.
+
+   ⚠ **Two lessons worth keeping:**
+   - **A type rewriter cannot see `json.Unmarshal` targets.** The tool retyped
+     `gameRulesProvider/common_test.go` so a `data/ExampleTemplates` file decoded
+     straight into the tagless model; only the `musttag` linter caught it. Grep every
+     rewritten file for `Unmarshal(`/`Decode(` and keep such decodes on the entity.
+   - **Phases collapse when the compiler says so.** The plan had "providers on the
+     model" and "`Generate` builds the model" as separate phases; once the providers
+     flipped, `Generate` and `UpdateTemplate` would not compile, so both landed in one
+     sweep. Bridging with temporaries would have been churn for its own sake.
 
 **Do not** widen the allow-lists in `layering_test.go` to make a new package
 compile; clean the package instead.
@@ -1984,17 +2021,18 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **N** | §1.5 | **Folded into batch I phase 6, 2026-08-31.** Never ran standalone — the measurement showed the cost was the clone *mechanism* (lazy `linq` chains allocating for empty slices), not the panel read sites this item named. Record: §1.5. |
 | ✅ **O** | §2.6 step 1 | **Done 2026-09-01.** Closed the **DTO** allow-list at **two entries, not zero**. `internal/services/pickers` was view-model logic, not a service: deleted, and rebuilt as package-level functions in `app/gui/models/` along with its handler, interface, four DTOs, mock and wire providers. `bonuses` and `zone_content` keep their DTOs by owner decision, under a written justification in the list's comment. §2.6 steps 2–4 (the 113-file **entity** list) are untouched and stay open. Record: §2.6. |
 | ✅ **P** | §2.6 steps 2 + 3 | **Done 2026-09-04.** Ruled the `.rmg.json` vocabulary gets **no carve-out**, then acted: `entities.Connection` → `template_model.Connection` across 62 files, closing steps 2 and 3 together. `entityNamerAllowList` 21 → **14 entries**, breach 84 files/21 packages → **64/14**, all seven removals mutation-proved simultaneously. **Owner approved one protected edit**: `IsUserAdded` removed from `internal/entities/template/template_variant/connection.go` — it was `json:"-"` editor state in the schema mirror, and `editor_state.ManualConnectionSave` already carried a sidecar copy because the entity could not serialize it. Wire format provably unmoved; no golden, no fixture. Coverage flat at **74.3 %**, lint 0. Record: §2.6. |
+| ✅ **Q** | §2.6 step 4 | **Done 2026-09-05.** The generator builds the model. 64 files / 13 packages moved off `internal/entities`; `entityNamerAllowList` **14 → 1** (`file_service`, permanent, never add). Three owner-chosen design changes rode along: `ZoneFactory` stamps the zone tier at build time (`stampPlannedZoneTiers` deleted); `UpdateTemplate` deep-copies via a new `template_model.Template.Clone()` instead of a Model→Entity→Model round trip (both re-attach lines gone); `FileService.SaveTemplateWithPreview` takes the model and maps inside, so `templateHandler` holds no `ITemplateMapper`. **No protected edit**, no golden, no fixture. Coverage 74.3 → **74.5 %**, lint 0. Record: §2.6. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is
 otherwise ordered by dependency.
 
 **Coverage note.** Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **74.3 %**
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **74.5 %**
 (72.5 % through batch B; batch C added the helper tests, batch D the clone and
 accessor tests, batch I the entity/model/converter tests; batch O gave back
 0.1 pp with the two constructors it deleted; batch J added the tier-service,
 `template_model` converter and persistence tests; batch P was type-only and
-moved it not at all).
+moved it not at all; batch Q added the `Clone` and factory-tier tests, +0.2 pp).
 
 ---
 

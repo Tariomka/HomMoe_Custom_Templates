@@ -3,11 +3,11 @@ package topology
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -36,7 +36,7 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) entities.Variant {
+	holdCityNeutralLabel string) template_model.Variant {
 	return this.BuildVariant(
 		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel,
 		this.createCirclesLayout, stampGeneratorRings)
@@ -52,7 +52,10 @@ func (this *CirclesTopologyService) createCirclesLayout(
 	return allLabels, positions, pairs
 }
 
-func stampGeneratorRings(zones []entities.Zone, allLabels, playerLabels []string, neutralZones neutral_zone.Plans) {
+func stampGeneratorRings(
+	zones []template_model.Zone,
+	allLabels, playerLabels []string,
+	neutralZones neutral_zone.Plans) {
 	for index := range zones {
 		tier := 0
 		if !slices.Contains(playerLabels, allLabels[index]) {

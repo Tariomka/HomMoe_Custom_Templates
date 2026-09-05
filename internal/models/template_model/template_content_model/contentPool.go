@@ -1,11 +1,17 @@
 package template_content_model
 
 import (
+	"maps"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
 type ContentPool map[string]any
+
+func (this ContentPool) Clone() ContentPool {
+	return maps.Clone(this)
+}
 
 func ToContentPoolModel(entity template.ContentPool) ContentPool {
 	return ContentPool(entity)

@@ -7,7 +7,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_distances"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -39,14 +38,14 @@ func NewMandatoryContentProvider(
 func (this *MandatoryContentProvider) CreateContents(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutral_zone.Plans) []entities.MandatoryContent {
-	var groups []entities.MandatoryContent
+	neutralZones neutral_zone.Plans) []template_model.MandatoryContent {
+	var groups []template_model.MandatoryContent
 	footholdCount := 0
 	if configuration.SpawnRemoteFootholds {
 		footholdCount = configuration.RemoteFootholdCount
 	}
 	for _, letter := range playerLabels {
-		groups = append(groups, entities.MandatoryContent{
+		groups = append(groups, template_model.MandatoryContent{
 			Name: constants.GetSideContentNameFor(letter),
 			Content: this.createContentItemsWithFoothold(
 				configuration.PlayerZoneMandatoryContent,
@@ -59,7 +58,7 @@ func (this *MandatoryContentProvider) CreateContents(
 		if zone.CastleCount == 0 {
 			content = stripNearCastleRules(content)
 		}
-		groups = append(groups, entities.MandatoryContent{
+		groups = append(groups, template_model.MandatoryContent{
 			Name:    constants.GetNeutralContentNameFor(zone.Label),
 			Content: this.createContentItemsWithFoothold(content, footholdCount, zone.CastleCount),
 		})
@@ -79,18 +78,18 @@ func (this *MandatoryContentProvider) CreateContents(
 // the quality and castle count from the zone itself keeps the two in sync.
 func (this *MandatoryContentProvider) CreateContentsForZones(
 	configuration config.GeneratorConfig,
-	zones []template_model.Zone) []entities.MandatoryContent {
+	zones []template_model.Zone) []template_model.MandatoryContent {
 	footholdCount := 0
 	if configuration.SpawnRemoteFootholds {
 		footholdCount = configuration.RemoteFootholdCount
 	}
 
-	var groups []entities.MandatoryContent
+	var groups []template_model.MandatoryContent
 	hubGroupAdded := false
 	for _, zone := range zones {
 		switch zone_helpers.GetZoneTypeFromName(zone.Name) {
 		case preview.ZoneTypePlayer:
-			groups = append(groups, entities.MandatoryContent{
+			groups = append(groups, template_model.MandatoryContent{
 				Name: constants.GetSideContentNameFor(helpers.GetZoneLabel(zone.Name)),
 				Content: this.createContentItemsWithFoothold(
 					cloneContentItems(configuration.PlayerZoneMandatoryContent),
@@ -104,7 +103,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			if castleCount == 0 {
 				content = stripNearCastleRules(content)
 			}
-			groups = append(groups, entities.MandatoryContent{
+			groups = append(groups, template_model.MandatoryContent{
 				Name:    constants.GetNeutralContentNameFor(helpers.GetZoneLabel(zone.Name)),
 				Content: this.createContentItemsWithFoothold(content, footholdCount, castleCount),
 			})
@@ -119,7 +118,7 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 			if this.zoneEditor.CountZoneCastles(zone) == 0 {
 				content = stripNearCastleRules(content)
 			}
-			groups = append(groups, entities.MandatoryContent{Name: constants.HubContentName, Content: content})
+			groups = append(groups, template_model.MandatoryContent{Name: constants.HubContentName, Content: content})
 			hubGroupAdded = true
 
 		case preview.ZoneTypeUnknown:
@@ -135,24 +134,24 @@ func (this *MandatoryContentProvider) CreateContentsForZones(
 // rows are set. The hub zone has no remote-foothold roads, so no foothold
 // item is added.
 func (this *MandatoryContentProvider) hubContentGroup(
-	configuration config.GeneratorConfig) (entities.MandatoryContent, bool) {
+	configuration config.GeneratorConfig) (template_model.MandatoryContent, bool) {
 	if !common_topologies.GetTopologyCapabilities(configuration.Topology).UsesHub ||
 		len(configuration.HubZoneMandatoryContent) == 0 {
-		return entities.MandatoryContent{}, false
+		return template_model.MandatoryContent{}, false
 	}
 
 	content := cloneContentItems(configuration.HubZoneMandatoryContent)
 	if configuration.ZoneConfiguration.Advanced.HubZoneCastles == 0 {
 		content = stripNearCastleRules(content)
 	}
-	return entities.MandatoryContent{Name: constants.HubContentName, Content: content}, true
+	return template_model.MandatoryContent{Name: constants.HubContentName, Content: content}, true
 }
 
 func (this *MandatoryContentProvider) createContentItemsWithFoothold(
-	rows []entities.MandatoryContentItem,
+	rows []template_model.MandatoryContentItem,
 	footholdCount int,
-	castleCount int) []entities.MandatoryContentItem {
-	var content []entities.MandatoryContentItem
+	castleCount int) []template_model.MandatoryContentItem {
+	var content []template_model.MandatoryContentItem
 	for i := 1; i <= footholdCount; i++ {
 		content = append(content, this.createFootholdContentItem(i, castleCount))
 	}
@@ -162,13 +161,13 @@ func (this *MandatoryContentProvider) createContentItemsWithFoothold(
 
 func (this *MandatoryContentProvider) createFootholdContentItem(
 	index int,
-	castleCount int) entities.MandatoryContentItem {
+	castleCount int) template_model.MandatoryContentItem {
 	return mandatory_content.NewContentItemBuilder(registry.GetMapObjectNonContentValues().RemoteFoothold).
 		WithName(fmt.Sprintf("name_remote_foothold_%d", index)).
 		WithSoloEncounter().
-		WithRulesCallback(func() []entities.PlacementRule {
+		WithRulesCallback(func() []template_model.PlacementRule {
 			footholdDistances := common_distances.GetFootholdDistancePresets()
-			rules := []entities.PlacementRule{
+			rules := []template_model.PlacementRule{
 				placement_rule.NewPlacementRuleBuilder().
 					BuildCrossroadsRule(footholdDistances.Crossroads, 0),
 			}
@@ -198,7 +197,7 @@ func (this *MandatoryContentProvider) createFootholdContentItem(
 // stripNearCastleRules removes placement rules that anchor an item near
 // the zone's main castle. Used when a zone has no castle so the rule
 // would never be satisfiable.
-func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
+func stripNearCastleRules(items []template_model.MandatoryContentItem) []template_model.MandatoryContentItem {
 	ruleTypes := registry.GetRuleTypeValues()
 	for i := range items {
 		if len(items[i].Rules) == 0 {
@@ -224,11 +223,11 @@ func stripNearCastleRules(items []entities.MandatoryContentItem) []entities.Mand
 // original CreateContents used copy() into a nil slice, which silently dropped
 // every row; cloning preserves them while keeping the per-zone isolation that
 // copy() was meant to provide.
-func cloneContentItems(items []entities.MandatoryContentItem) []entities.MandatoryContentItem {
+func cloneContentItems(items []template_model.MandatoryContentItem) []template_model.MandatoryContentItem {
 	if len(items) == 0 {
 		return nil
 	}
-	out := make([]entities.MandatoryContentItem, len(items))
+	out := make([]template_model.MandatoryContentItem, len(items))
 	for i, item := range items {
 		item.Rules = slices.Clone(item.Rules)
 		out[i] = item
@@ -240,7 +239,7 @@ func cloneContentItems(items []entities.MandatoryContentItem) []entities.Mandato
 // neutral zone's quality tier.
 func neutralRowsForQuality(
 	configuration config.GeneratorConfig,
-	quality neutral_zone.Quality) []entities.MandatoryContentItem {
+	quality neutral_zone.Quality) []template_model.MandatoryContentItem {
 	switch quality {
 	case neutral_zone.QualityHighest:
 		return configuration.HubZoneMandatoryContent

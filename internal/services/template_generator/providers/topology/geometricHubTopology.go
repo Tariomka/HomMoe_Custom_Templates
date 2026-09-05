@@ -5,11 +5,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
@@ -40,7 +40,7 @@ func (this *GeometricHubTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	_ string) entities.Variant {
+	_ string) template_model.Variant {
 	layout := newGeometricHubLayout(playerLabels, neutralZones)
 	allLabels := append(append([]string{}, playerLabels...),
 		linq.FromSlice(neutralZones).Select(func(plan neutral_zone.Plan) string { return plan.Label }).ToSlice()...)
@@ -78,12 +78,12 @@ func (this *GeometricHubTopologyService) createZones(
 	neutralZones neutral_zone.Plans,
 	layout *geometricHubLayout,
 	connectionNames map[string][]string,
-	tuning models.GenerationTuning) []entities.Zone {
+	tuning models.GenerationTuning) []template_model.Zone {
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
 		hubContentName = constants.HubContentName
 	}
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		this.CreateHubZone(
 			constants.HubZoneName, connectionNames[constants.HubZoneName], tuning, configuration.IsHubCityToHold(),
 			configuration.ZoneConfiguration.HubZoneSize, configuration.ZoneConfiguration.Advanced.HubZoneCastles,
@@ -112,8 +112,8 @@ func (this *GeometricHubTopologyService) createConnections(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	layout *geometricHubLayout,
-	tuning models.GenerationTuning) []entities.Connection {
-	var connections []entities.Connection
+	tuning models.GenerationTuning) []template_model.Connection {
+	var connections []template_model.Connection
 	for _, edge := range layout.directEdges {
 		zoneFrom := this.ZoneLabelProvider.CreateZoneName(edge[0], playerLabels)
 		connections = append(connections, variant_content.NewConnectionBuilder().

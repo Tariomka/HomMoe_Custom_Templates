@@ -150,7 +150,7 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, expectedContent, template_model.ToTemplateEntity(*loadDto.Template).MandatoryContent)
+	assert.Equal(t, expectedContent, loadDto.Template.MandatoryContent)
 }
 
 func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {

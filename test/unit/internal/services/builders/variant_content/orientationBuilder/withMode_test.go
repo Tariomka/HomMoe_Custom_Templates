@@ -3,7 +3,7 @@ package orientationBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenModeIsProvided_SetsModeOnBuiltOrientation(t *testing.T) {
 	orientation := builder.WithMode(expectedMode).Build()
 
 	// Assert
-	assert.Equal(t, entities.Orientation{Mode: expectedMode}, orientation)
+	assert.Equal(t, template_model.Orientation{Mode: expectedMode}, orientation)
 }

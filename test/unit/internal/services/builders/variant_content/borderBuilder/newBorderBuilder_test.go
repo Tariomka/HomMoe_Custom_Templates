@@ -3,7 +3,7 @@ package borderBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,5 +14,5 @@ func TestWhenBuilderIsFreshlyCreated_ProducesEmptyBorder(t *testing.T) {
 	builder := variant_content.NewBorderBuilder()
 
 	// Assert
-	assert.Equal(t, entities.Border{}, builder.Build())
+	assert.Equal(t, template_model.Border{}, builder.Build())
 }

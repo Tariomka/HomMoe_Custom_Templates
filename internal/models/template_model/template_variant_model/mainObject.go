@@ -1,13 +1,14 @@
 package template_variant_model
 
 import (
+	"slices"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
 type MainObject struct {
-	Type string
-
+	Type  string
 	Spawn string
 	Owner string
 
@@ -32,6 +33,14 @@ type MainObject struct {
 
 	EnableWeeklyUnitIncrement bool
 	InitialUnitIncrement      int
+}
+
+func (this MainObject) Clone() MainObject {
+	clone := this
+	clone.Faction = helpers.MapPointer(this.Faction, TypedRef.Clone)
+	clone.Factions = slices.Clone(this.Factions)
+	clone.PlacementArgs = slices.Clone(this.PlacementArgs)
+	return clone
 }
 
 func ToMainObjectModel(entity template.MainObject) MainObject {

@@ -38,33 +38,17 @@ var dtoNamerPrefixes = []string{
 	"app/",
 }
 
-// entityNamerAllowList records the packages that named an entity before the
-// rule existed. Base internal/entities is the .rmg.json vocabulary the whole
-// generator is built out of, so this list started large and shrinks one package
-// at a time. **Only ever remove entries.** The residual breach is tracked in
-// .agent/backlog/backlog-opus5.md.
-//
-// EXACTLY ONE entry is permanent, not debt: internal/services/file_service, which
-// writes .rmg.json. **Everything else here is DEBT to be cleaned - the generator
-// and its whole topology tree included.** Owner rule: only internal/repositories
-// and file_service may touch entities in implementation code.
+// entityNamerAllowList is at its floor. Base internal/entities is the .rmg.json
+// vocabulary; the list started at 23 packages when the rule was seeded (batch I)
+// and was drained by batches J, P and Q. The one entry left is permanent, not
+// debt: internal/services/file_service writes .rmg.json and .gen.json, so it maps
+// Model -> Entity at the repository call - and only there, its own signatures
+// speak models. Owner rule: only internal/repositories and file_service may touch
+// entities in implementation code. **Never add an entry.**
 //
 //nolint:gochecknoglobals // shared, read-only rule input for this file's tests.
 var entityNamerAllowList = []string{
-	"internal/services/builders/mandatory_content",
-	"internal/services/builders/placement_rule",
-	"internal/services/builders/variant_content",
-	"internal/services/content_rules",
 	"internal/services/file_service",
-	"internal/services/template_generator",
-	"internal/services/template_generator/providers",
-	"internal/services/template_generator/providers/provider_interfaces",
-	"internal/services/template_generator/providers/topology",
-	"internal/services/template_generator/providers/topology/base",
-	"internal/services/template_generator/providers/topology/topology_interfaces",
-	"internal/services/template_generator/providers/topology/tournament_variant",
-	"internal/services/zones",
-	"internal/services/zones/zone_interfaces",
 }
 
 // dtoNamerAllowList records the two services that speak DTOs **by decision, not

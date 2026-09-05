@@ -5,11 +5,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -32,11 +32,11 @@ func (this *RingClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
-	playerLabel string) ([]entities.Zone, []entities.Connection) {
+	playerLabel string) ([]template_model.Zone, []template_model.Connection) {
 	ringLabels := this.createLabels(playerNeutralZonePlans, playerLabel)
 	ringCount := len(ringLabels)
 	if ringCount < 2 {
-		return []entities.Zone{this.createSinglePlayerZone(configuration, playerLabel, playerIndex, tuning)}, nil
+		return []template_model.Zone{this.createSinglePlayerZone(configuration, playerLabel, playerIndex, tuning)}, nil
 	}
 
 	connNames := make([]string, ringCount)
@@ -79,10 +79,10 @@ func (this *RingClusterService) createZones(
 	ringLabels, connectionNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
-	playerIndex int) []entities.Zone {
+	playerIndex int) []template_model.Zone {
 	count := len(ringLabels)
 
-	var zones []entities.Zone
+	var zones []template_model.Zone
 	for index, label := range ringLabels {
 		prev := (index - 1 + count) % count
 		seen := map[string]bool{}
@@ -103,7 +103,7 @@ func (this *RingClusterService) createSinglePlayerZone(
 	configuration config.GeneratorConfig,
 	playerLabel string,
 	playerIndex int,
-	tuning models.GenerationTuning) entities.Zone {
+	tuning models.GenerationTuning) template_model.Zone {
 	return this.CreateClusterZone(configuration, playerLabel, nil, playerIndex, true, false, tuning, nil)
 }
 
@@ -111,10 +111,10 @@ func (this *RingClusterService) createConnections(
 	ringLabels, connectionNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
-	playerLabel string) []entities.Connection {
+	playerLabel string) []template_model.Connection {
 	ringCount := len(ringLabels)
 
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for currentIndex := range ringCount {
 		nextIndex := (currentIndex + 1) % ringCount
 		labelFrom := ringLabels[currentIndex]

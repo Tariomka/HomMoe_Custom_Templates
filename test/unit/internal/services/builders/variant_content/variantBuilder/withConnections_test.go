@@ -3,7 +3,7 @@ package variantBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -12,9 +12,9 @@ import (
 func TestWhenConnectionsAreProvidedTwice_AppendsAllConnectionsOnBuiltVariant(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	firstConnection := entities.Connection{Name: gofakeit.Word()}
-	secondConnection := entities.Connection{Name: gofakeit.Word()}
-	thirdConnection := entities.Connection{Name: gofakeit.Word()}
+	firstConnection := template_model.Connection{Name: gofakeit.Word()}
+	secondConnection := template_model.Connection{Name: gofakeit.Word()}
+	thirdConnection := template_model.Connection{Name: gofakeit.Word()}
 	builder := variant_content.NewVariantBuilder()
 
 	// Act
@@ -24,7 +24,7 @@ func TestWhenConnectionsAreProvidedTwice_AppendsAllConnectionsOnBuiltVariant(t *
 		Build()
 
 	// Assert
-	assert.Equal(t, entities.Variant{
-		Connections: []entities.Connection{firstConnection, secondConnection, thirdConnection},
+	assert.Equal(t, template_model.Variant{
+		Connections: []template_model.Connection{firstConnection, secondConnection, thirdConnection},
 	}, variant)
 }

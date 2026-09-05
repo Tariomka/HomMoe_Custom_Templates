@@ -3,7 +3,7 @@ package borderBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func TestWhenMultipleOptionsAreChained_ReturnsBorderWithAllAccumulatedValues(t *
 		Build()
 
 	// Assert
-	assert.Equal(t, entities.Border{
+	assert.Equal(t, template_model.Border{
 		CornerRadius:   expectedRadius,
 		ObstaclesWidth: expectedObstaclesWidth,
 		WaterWidth:     expectedWaterWidth,

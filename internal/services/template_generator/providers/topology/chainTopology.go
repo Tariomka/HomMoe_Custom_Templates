@@ -6,10 +6,10 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -34,7 +34,7 @@ func (this *ChainTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLetter string) entities.Variant {
+	holdCityNeutralLetter string) template_model.Variant {
 	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, false)
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 	connNames := this.createConnectionNames(playerLabels, orderedLabels, isIsolated)
@@ -76,10 +76,10 @@ func (this *ChainTopologyService) createZones(
 	tuning models.GenerationTuning,
 	neutralZones neutral_zone.Plans,
 	holdCityNeutralLabel string,
-	connectionNames []string) []entities.Zone {
+	connectionNames []string) []template_model.Zone {
 	labelCount := len(orderedLabels)
 
-	var zones []entities.Zone
+	var zones []template_model.Zone
 	for index, label := range orderedLabels {
 		var tempConnectionNames []string
 		if index > 0 && connectionNames[index-1] != "" {
@@ -100,10 +100,10 @@ func (this *ChainTopologyService) createConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	neutralZones neutral_zone.Plans,
-	connectionNames []string) []entities.Connection {
+	connectionNames []string) []template_model.Connection {
 	labelCount := len(orderedLabels)
 
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for i := range labelCount - 1 {
 		if connectionNames[i] == "" {
 			continue

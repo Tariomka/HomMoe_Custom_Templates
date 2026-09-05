@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // Rule metadata constants for the variant rule.
@@ -64,7 +64,7 @@ func (this *RuleVariant) DisplayText() string {
 	return fmt.Sprintf("%s: Unforeseen Error", this.Name())
 }
 
-func (this *RuleVariant) Apply(item *entities.MandatoryContentItem) {
+func (this *RuleVariant) Apply(item *template_model.MandatoryContentItem) {
 	id := this.VariantID
 	item.Variant = &id
 }

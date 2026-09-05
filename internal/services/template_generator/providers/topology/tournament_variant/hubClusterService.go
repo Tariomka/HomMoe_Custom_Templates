@@ -5,11 +5,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -34,7 +34,7 @@ func (this *HubClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
-	playerLabel string) ([]entities.Zone, []entities.Connection) {
+	playerLabel string) ([]template_model.Zone, []template_model.Connection) {
 	hubName := constants.GetHubZoneNameFor(playerLabel)
 	spokeLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).Select(func(x neutral_zone.Plan) string { return x.Label }).ToSlice()...)
@@ -56,8 +56,8 @@ func (this *HubClusterService) createZones(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
 	hubName string,
-	playerIndex int) []entities.Zone {
-	var zones []entities.Zone
+	playerIndex int) []template_model.Zone {
+	var zones []template_model.Zone
 	hubContentName := ""
 	if len(configuration.HubZoneMandatoryContent) > 0 {
 		hubContentName = constants.HubContentName
@@ -79,8 +79,8 @@ func (this *HubClusterService) createConnections(
 	spokeLabels, spokeConnNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
-	hubName, playerLabel string) []entities.Connection {
-	var connections []entities.Connection
+	hubName, playerLabel string) []template_model.Connection {
+	var connections []template_model.Connection
 	for index, spokeLabel := range spokeLabels {
 		connectionBuilder := variant_content.NewConnectionBuilder().
 			WithName(spokeConnNames[index]).

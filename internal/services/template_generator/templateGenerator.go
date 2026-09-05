@@ -5,12 +5,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
-	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
@@ -21,7 +16,6 @@ type TemplateGenerator struct {
 	configuration     *config.GeneratorConfig
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider
 	tuningFactory     generation_tuning.IGenerationTuningFactory
-	templateMapper    mappers.ITemplateMapper
 
 	contentLimitProvider provider_interfaces.IContentLimitProvider
 	contentProvider      provider_interfaces.IMandatoryContentProvider
@@ -35,7 +29,6 @@ func NewTemplateGenerator(
 	configuration *config.GeneratorConfig,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
 	tuningFactory generation_tuning.IGenerationTuningFactory,
-	templateMapper mappers.ITemplateMapper,
 	contentLimitProvider provider_interfaces.IContentLimitProvider,
 	contentProvider provider_interfaces.IMandatoryContentProvider,
 	gameRulesProvider provider_interfaces.IGameRulesProvider,
@@ -46,7 +39,6 @@ func NewTemplateGenerator(
 		configuration:        configuration,
 		zoneLabelProvider:    zoneLabelProvider,
 		tuningFactory:        tuningFactory,
-		templateMapper:       templateMapper,
 		contentLimitProvider: contentLimitProvider,
 		contentProvider:      contentProvider,
 		gameRulesProvider:    gameRulesProvider,
@@ -63,8 +55,8 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 }
 
 // Generate builds the template for the current configuration and returns it,
-// with the tier the generator planned recorded on every zone it planned one
-// for, plus the warnings raised while parsing the configuration's free-text
+// with the tier the zone factory planned recorded on every neutral and hub
+// zone, plus the warnings raised while parsing the configuration's free-text
 // fields.
 func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 	this.configuration.EnsureNameExists()
@@ -77,7 +69,7 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 	variant := this.topologyProvider.
 		CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel)
 
-	generated := this.templateMapper.ToModel(entities.RmgTemplate{
+	generated := template_model.Template{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
 		Description:         this.createTemplateDescription(len(neutralZones)),
@@ -87,41 +79,17 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 		ValueOverrides:      valueOverrides,
 		GlobalBans:          this.gameRulesProvider.CreateGlobalBans(*this.configuration),
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
-		Variants:            []entities.Variant{variant},
+		Variants:            []template_model.Variant{variant},
 		ZoneLayouts:         this.zoneLayoutProvider.CreateZoneLayouts(),
 		MandatoryContent:    this.contentProvider.CreateContents(*this.configuration, playerLabels, neutralZones),
 		ContentCountLimits:  this.contentLimitProvider.CreateContentCountLimits(*this.configuration),
-		ContentPools:        []entities.ContentPool{},
-		ContentLists:        []entities.ContentList{},
-	})
+		ContentPools:        []template_model.ContentPool{},
+		ContentLists:        []template_model.ContentList{},
+	}
 
-	stampPlannedZoneTiers(neutralZones, generated.Variants[0].Zones)
 	this.gladiatorProvider.PlaceArena(*this.configuration, &generated.Variants[0])
 
 	return &generated, warnings
-}
-
-// stampPlannedZoneTiers records on every zone the tier the generator chose for
-// it. Hub zones are always built from the Highest profile; player spawn zones
-// have no tier and keep a nil Quality, which reads as "infer it".
-func stampPlannedZoneTiers(neutralZones neutral_zone.Plans, zones []template_model.Zone) {
-	plannedQualities := make(map[string]neutral_zone.Quality, len(neutralZones))
-	for _, plan := range neutralZones {
-		plannedQualities[constants.GetNeutralZoneNameFor(plan.Label)] = plan.Quality
-	}
-
-	for index := range zones {
-		if zone_helpers.IsZoneNameHub(zones[index].Name) {
-			zones[index].Quality = new(neutral_zone.QualityHighest)
-			continue
-		}
-
-		// Comma-ok is mandatory: Quality counts from iota - 1, so a missing key
-		// would read back as QualityLowest and silently down-tier the zone.
-		if quality, ok := plannedQualities[zones[index].Name]; ok {
-			zones[index].Quality = &quality
-		}
-	}
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {

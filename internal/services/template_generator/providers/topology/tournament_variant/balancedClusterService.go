@@ -8,13 +8,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
@@ -44,7 +44,7 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
-	playerLabel string) ([]entities.Zone, []entities.Connection) {
+	playerLabel string) ([]template_model.Zone, []template_model.Connection) {
 	singlePlayerList := []string{playerLabel}
 	orderedLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(singlePlayerList, playerNeutralZonePlans)
 	rawPositions := this.positionLayoutService.CreatePositionsFromPlans(
@@ -265,8 +265,8 @@ func (this *BalancedClusterService) createZones(
 	orderedLabels []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
-	connectionNames [][]string) []entities.Zone {
-	var zones []entities.Zone
+	connectionNames [][]string) []template_model.Zone {
+	var zones []template_model.Zone
 	for index, label := range orderedLabels {
 		myConns := connectionNames[index]
 		zones = append(zones, this.CreateClusterZone(
@@ -281,10 +281,10 @@ func (this *BalancedClusterService) createConnections(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
 	connectionNames [][]string,
-	sortedPairs [][2]int) []entities.Connection {
+	sortedPairs [][2]int) []template_model.Connection {
 	nameLookup := make(map[int]int, len(orderedLabels))
 
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for _, pair := range sortedPairs {
 		indexA, indexB := pair[0], pair[1]
 		labelFrom := orderedLabels[indexA]

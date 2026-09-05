@@ -10,6 +10,12 @@ type ContentCountLimit struct {
 	Limits []ContentLimit
 }
 
+func (this ContentCountLimit) Clone() ContentCountLimit {
+	clone := this
+	clone.Limits = helpers.MapSlice(this.Limits, ContentLimit.Clone)
+	return clone
+}
+
 func ToContentCountLimitModel(entity template.ContentCountLimit) ContentCountLimit {
 	return ContentCountLimit{
 		Name:   entity.Name,

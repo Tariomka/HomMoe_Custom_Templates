@@ -115,20 +115,19 @@ func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 
 		mainObjectCount := len(zone.MainObjects)
 		roads := append(
-			template_model.ToRoadModels(this.roadFactory.CreateOuterZoneRoads(nil, mainObjectCount, 0, true)),
+			this.roadFactory.CreateOuterZoneRoads(nil, mainObjectCount, 0, true),
 			preserved...)
 
 		names := connectionsByZone[zone.Name]
 		if mainObjectCount > 0 {
 			for _, name := range names {
-				roads = append(roads, template_model.ToRoadModel(variant_content.NewRoadBuilder().
+				roads = append(roads, variant_content.NewRoadBuilder().
 					WithFrom(variant_content.NewRefBuilder().BuildMainObjectType("0")).
 					WithTo(variant_content.NewRefBuilder().BuildConnectionType(name)).
-					Build()))
+					Build())
 			}
 		} else {
-			roads = append(roads, template_model.ToRoadModels(
-				this.roadFactory.CreateConnectorZoneRoads(names, true))...)
+			roads = append(roads, this.roadFactory.CreateConnectorZoneRoads(names, true)...)
 		}
 
 		zone.Roads = roads
@@ -153,15 +152,15 @@ func (this *ZoneEditorService) NextFreeZoneLabel(zones []template_model.Zone) st
 
 // NewDefaultNeutralZone builds a manually-added neutral zone with the same
 // builder the generator uses. The mandatory-content reference is cleared
-// because no template-level definition exists for a manual zone. The requested
-// quality is recorded on the zone, not merely flattened into its profile.
+// because no template-level definition exists for a manual zone; the factory
+// records the requested quality on the zone.
 func (this *ZoneEditorService) NewDefaultNeutralZone(
 	label string,
 	quality neutral_zone.Quality,
 	castleCount int,
 	generateRoads bool,
 	tuning models.GenerationTuning) template_model.Zone {
-	zone := template_model.ToZoneModel(this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreationRequest{
+	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreationRequest{
 		Name:               constants.GetNeutralZoneNameFor(label),
 		Quality:            quality,
 		Size:               1.0,
@@ -171,9 +170,7 @@ func (this *ZoneEditorService) NewDefaultNeutralZone(
 		GuardRandomization: tuning.GuardRandomization,
 		GenerateRoads:      generateRoads,
 		Tuning:             tuning,
-	}))
-	zone.Quality = &quality
-	return zone
+	})
 }
 
 // CountZoneCastles returns the number of City main objects in the zone.
@@ -216,8 +213,7 @@ func (this *ZoneEditorService) ApplyNeutralZoneQuality(
 	zone.ResourcesValue = tuning.ScaleByResourceDensity(float64(profile.ResourcesValue) * tuning.ContentScale)
 	zone.ResourcesValuePerArea = tuning.ScaleByResourceDensity(
 		float64(profile.ResourcesValuePerArea) * math.Sqrt(tuning.ContentScale))
-	zone.MainObjects = template_model.ToMainObjectModels(
-		this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, false))
+	zone.MainObjects = this.castleFactory.CreateNeutralZoneCastles(profile, tuning, castleCount, false)
 
 	// Regenerate the castle<->castle roads so the rebuilt castles are
 	// road-connected. Other roads (connection and foothold roads) are left for
@@ -291,6 +287,6 @@ func (this *ZoneEditorService) RebuildCastleRoads(zone *template_model.Zone) {
 		kept = append(kept, road)
 	}
 	zone.Roads = append(
-		template_model.ToRoadModels(this.roadFactory.CreateOuterZoneRoads(nil, len(zone.MainObjects), 0, true)),
+		this.roadFactory.CreateOuterZoneRoads(nil, len(zone.MainObjects), 0, true),
 		kept...)
 }

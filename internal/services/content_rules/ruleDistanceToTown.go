@@ -3,9 +3,9 @@ package content_rules
 import (
 	"fmt"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 )
 
@@ -41,7 +41,7 @@ func (this *RuleDistanceToTown) DisplayText() string {
 	return fmt.Sprintf("%s: %s", this.Name(), this.Distance.Name)
 }
 
-func (this *RuleDistanceToTown) Apply(item *entities.MandatoryContentItem) {
+func (this *RuleDistanceToTown) Apply(item *template_model.MandatoryContentItem) {
 	item.Rules = append(item.Rules, placement_rule.NewPlacementRuleBuilder().BuildCastleRule(this.Distance, 1))
 }
 

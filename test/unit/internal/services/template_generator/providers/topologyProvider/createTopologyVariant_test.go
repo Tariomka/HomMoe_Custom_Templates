@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -204,7 +204,7 @@ func buildVariantInputs(
 }
 
 // spawnZoneNames returns the sorted names of the variant's spawn zones.
-func spawnZoneNames(variant entities.Variant) []string {
+func spawnZoneNames(variant template_model.Variant) []string {
 	var names []string
 	for _, zone := range variant.Zones {
 		if strings.HasPrefix(zone.Name, "Spawn-") {

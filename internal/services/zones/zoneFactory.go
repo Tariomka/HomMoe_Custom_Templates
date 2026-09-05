@@ -5,10 +5,10 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -28,8 +28,8 @@ func NewZoneFactory(
 	}
 }
 
-func (this *ZoneFactory) CreateSpawnZone(input models.SpawnZoneCreationRequest) entities.Zone {
-	mainObjects := []entities.MainObject{
+func (this *ZoneFactory) CreateSpawnZone(input models.SpawnZoneCreationRequest) template_model.Zone {
+	mainObjects := []template_model.MainObject{
 		this.castleFactory.CreatePlayerSpawnCastle(
 			input.PlayerName,
 			input.Tuning.ScaleByNeutralGuardStrength(5000),
@@ -85,11 +85,11 @@ func (this *ZoneFactory) CreateSpawnZone(input models.SpawnZoneCreationRequest) 
 		Build()
 }
 
-func (this *ZoneFactory) CreateNeutralZone(input models.NeutralZoneCreationRequest) entities.Zone {
+func (this *ZoneFactory) CreateNeutralZone(input models.NeutralZoneCreationRequest) template_model.Zone {
 	if input.HoldCity && input.CastleCount < 1 {
 		input.CastleCount = 1
 	}
-	return this.createNeutralLikeZone(models.NeutralLikeZoneCreationRequest{
+	zone := this.createNeutralLikeZone(models.NeutralLikeZoneCreationRequest{
 		Name:                 input.Name,
 		Profile:              common_zones.GetNeutralZoneProfile(input.Quality),
 		Size:                 input.Size,
@@ -105,13 +105,15 @@ func (this *ZoneFactory) CreateNeutralZone(input models.NeutralZoneCreationReque
 		BiomeMatchPolicy:     models.ZoneBiomeMatchPrimaryMainObjectWhenPresent,
 		Tuning:               input.Tuning,
 	})
+	zone.Quality = &input.Quality
+	return zone
 }
 
-func (this *ZoneFactory) CreateHubZone(input models.HubZoneCreationRequest) entities.Zone {
+func (this *ZoneFactory) CreateHubZone(input models.HubZoneCreationRequest) template_model.Zone {
 	if input.HoldCity && input.CastleCount < 1 {
 		input.CastleCount = 1
 	}
-	return this.createNeutralLikeZone(models.NeutralLikeZoneCreationRequest{
+	zone := this.createNeutralLikeZone(models.NeutralLikeZoneCreationRequest{
 		Name:                 input.Name,
 		Profile:              common_zones.GetNeutralZoneProfile(neutral_zone.QualityHighest),
 		Size:                 input.Size,
@@ -125,6 +127,8 @@ func (this *ZoneFactory) CreateHubZone(input models.HubZoneCreationRequest) enti
 		BiomeMatchPolicy:     models.ZoneBiomeMatchPrimaryMainObjectWhenPresent,
 		Tuning:               input.Tuning,
 	})
+	zone.Quality = new(neutral_zone.QualityHighest)
+	return zone
 }
 
 func normalizeZoneSize(zoneSize float64) float64 {

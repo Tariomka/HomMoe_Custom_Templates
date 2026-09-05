@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/stretchr/testify/assert"
@@ -18,22 +18,22 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 	resourcePools := registry.GetResourcesContentPoolValues()
 	testCases := []struct {
 		subtestName string
-		zone        entities.Zone
+		zone        template_model.Zone
 		expected    neutral_zone.Quality
 	}{
 		{
 			"WhenZoneIsPlayerSpawn_ReturnsUnknown",
-			entities.Zone{Name: "Spawn-A", Layout: layoutValues.Center},
+			template_model.Zone{Name: "Spawn-A", Layout: layoutValues.Center},
 			neutral_zone.QualityUnknown,
 		},
 		{
 			"WhenLayoutIsUnrecognized_ReturnsUnknown",
-			entities.Zone{Name: "Neutral-B", Layout: "zone_layout_back"},
+			template_model.Zone{Name: "Neutral-B", Layout: "zone_layout_back"},
 			neutral_zone.QualityUnknown,
 		},
 		{
 			"WhenCenterLayoutHasRichTreasureResources_ReturnsHighest",
-			entities.Zone{
+			template_model.Zone{
 				Name:                 "Hub",
 				Layout:               layoutValues.Center,
 				GuardedContentPool:   []string{"pool_t5_treasure"},
@@ -43,7 +43,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenCenterLayoutHasOnlyTier5GuardedPool_ReturnsHighest",
-			entities.Zone{
+			template_model.Zone{
 				Name:               "Hub",
 				Layout:             layoutValues.Center,
 				GuardedContentPool: []string{"pool_t5_treasure", "pool_t5_item"},
@@ -52,12 +52,12 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenCenterLayoutHasNoContentPools_ReturnsUnknown",
-			entities.Zone{Name: "Hub", Layout: layoutValues.Center},
+			template_model.Zone{Name: "Hub", Layout: layoutValues.Center},
 			neutral_zone.QualityUnknown,
 		},
 		{
 			"WhenCenterLayoutPoolsCarryNoTier5Marker_ReturnsUnknown",
-			entities.Zone{
+			template_model.Zone{
 				Name:               "Hub",
 				Layout:             layoutValues.Center,
 				GuardedContentPool: []string{"pool_t3_stuff"},
@@ -66,7 +66,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenTreasureLayoutHasRichStartResources_ReturnsHigh",
-			entities.Zone{
+			template_model.Zone{
 				Name:                 "Neutral-B",
 				Layout:               layoutValues.TreasureZone,
 				GuardedContentPool:   []string{"pool_without_tier_marker"},
@@ -76,7 +76,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenTreasureLayoutHasMixedTier4AndTier5Pools_ReturnsHigh",
-			entities.Zone{
+			template_model.Zone{
 				Name:               "Neutral-B",
 				Layout:             layoutValues.TreasureZone,
 				GuardedContentPool: []string{"pool_t4_stuff", "pool_t5_stuff"},
@@ -85,7 +85,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenTreasureLayoutHasOnlyTier3Pools_ReturnsMedium",
-			entities.Zone{
+			template_model.Zone{
 				Name:                 "Neutral-B",
 				Layout:               layoutValues.TreasureZone,
 				GuardedContentPool:   []string{"pool_t3_stuff"},
@@ -95,7 +95,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenTreasureLayoutHasMediumStartResources_ReturnsMedium",
-			entities.Zone{
+			template_model.Zone{
 				Name:                 "Neutral-B",
 				Layout:               layoutValues.TreasureZone,
 				GuardedContentPool:   []string{"pool_without_tier_marker"},
@@ -105,12 +105,12 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenTreasureLayoutHasNoContentPools_ReturnsUnknown",
-			entities.Zone{Name: "Neutral-B", Layout: layoutValues.TreasureZone},
+			template_model.Zone{Name: "Neutral-B", Layout: layoutValues.TreasureZone},
 			neutral_zone.QualityUnknown,
 		},
 		{
 			"WhenTreasureLayoutPoolsCarryNoKnownMarker_ReturnsUnknown",
-			entities.Zone{
+			template_model.Zone{
 				Name:               "Neutral-B",
 				Layout:             layoutValues.TreasureZone,
 				GuardedContentPool: []string{"pool_t1_stuff"},
@@ -119,7 +119,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenSidesLayoutHasOnlyTier2Pools_ReturnsLow",
-			entities.Zone{
+			template_model.Zone{
 				Name:               "Neutral-B",
 				Layout:             layoutValues.Sides,
 				GuardedContentPool: []string{"pool_t2_stuff"},
@@ -128,7 +128,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenSidesLayoutHasPoorStartResources_ReturnsLow",
-			entities.Zone{
+			template_model.Zone{
 				Name:                 "Neutral-B",
 				Layout:               layoutValues.Sides,
 				GuardedContentPool:   []string{"pool_without_tier_marker"},
@@ -138,7 +138,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenSidesLayoutHasOnlyTier1Pools_ReturnsLowest",
-			entities.Zone{
+			template_model.Zone{
 				Name:               "Neutral-B",
 				Layout:             layoutValues.Sides,
 				GuardedContentPool: []string{"pool_t1_stuff"},
@@ -147,7 +147,7 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenSidesLayoutHasVeryPoorStartResources_ReturnsLowest",
-			entities.Zone{
+			template_model.Zone{
 				Name:                 "Neutral-B",
 				Layout:               layoutValues.Sides,
 				GuardedContentPool:   []string{"pool_without_tier_marker"},
@@ -157,12 +157,12 @@ func TestWhenZoneCharacteristicsVary_DetectsQualityAccordingly(t *testing.T) {
 		},
 		{
 			"WhenSidesLayoutHasNoContentPools_ReturnsUnknown",
-			entities.Zone{Name: "Neutral-B", Layout: layoutValues.Sides},
+			template_model.Zone{Name: "Neutral-B", Layout: layoutValues.Sides},
 			neutral_zone.QualityUnknown,
 		},
 		{
 			"WhenSidesLayoutPoolsCarryNoKnownMarker_ReturnsUnknown",
-			entities.Zone{
+			template_model.Zone{
 				Name:               "Neutral-B",
 				Layout:             layoutValues.Sides,
 				GuardedContentPool: []string{"pool_t3_stuff"},
@@ -202,7 +202,7 @@ func TestWhenGeneratedProfileRoundTrips_EveryQualityIsDetectedBack(t *testing.T)
 			t.Parallel()
 			// Arrange
 			profile := common_zones.GetNeutralZoneProfile(testCase.quality)
-			zone := entities.Zone{
+			zone := template_model.Zone{
 				Name:                 "Neutral-Z",
 				Layout:               profile.Layout,
 				GuardedContentPool:   profile.GuardedContentPool,

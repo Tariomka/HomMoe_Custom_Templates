@@ -3,8 +3,8 @@ package test_helpers
 import (
 	"image"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -30,8 +30,8 @@ func (this *FileServiceMock) SaveSettings(
 
 func (this *FileServiceMock) SaveTemplateWithPreview(
 	directory string,
-	template *entities.RmgTemplate,
+	generated *template_model.Template,
 	previewImage *image.RGBA) (string, error) {
-	arguments := this.Called(directory, template, previewImage)
+	arguments := this.Called(directory, generated, previewImage)
 	return arguments.String(0), arguments.Error(1)
 }

@@ -6,10 +6,10 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -34,7 +34,7 @@ func (this *RingTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) entities.Variant {
+	holdCityNeutralLabel string) template_model.Variant {
 	orderedLabels := this.ZoneLabelProvider.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
 	isIsolated := configuration.NoDirectPlayerConnections && len(playerLabels) > 1
 
@@ -58,7 +58,7 @@ func (this *RingTopologyService) createZones(
 	tuning models.GenerationTuning,
 	isIsolated bool,
 	neutralZones neutral_zone.Plans,
-	holdCityNeutralLabel string) []entities.Zone {
+	holdCityNeutralLabel string) []template_model.Zone {
 	labelCount := len(orderedLabels)
 
 	ringConnRight := make([]string, labelCount)
@@ -75,7 +75,7 @@ func (this *RingTopologyService) createZones(
 		ringConnLeft[next] = name
 	}
 
-	var zones []entities.Zone
+	var zones []template_model.Zone
 	for i, label := range orderedLabels {
 		var connNames []string
 		if ringConnLeft[i] != "" {
@@ -96,13 +96,13 @@ func (this *RingTopologyService) createConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones neutral_zone.Plans) []entities.Connection {
+	neutralZones neutral_zone.Plans) []template_model.Connection {
 	count := len(orderedLabels)
 	if count < 2 {
 		return nil
 	}
 
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for i := range count {
 		labelFrom := orderedLabels[i]
 		labelTo := orderedLabels[(i+1)%count]

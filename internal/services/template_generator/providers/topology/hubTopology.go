@@ -6,11 +6,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -35,7 +35,7 @@ func (this *HubTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	_ string) entities.Variant {
+	_ string) template_model.Variant {
 	outerLabels := this.createOuterLabels(configuration, playerLabels, neutralZones)
 
 	zones := this.createZones(configuration, playerLabels, outerLabels, tuning, neutralZones)
@@ -65,7 +65,7 @@ func (this *HubTopologyService) createZones(
 	configuration config.GeneratorConfig,
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
-	neutralZones neutral_zone.Plans) []entities.Zone {
+	neutralZones neutral_zone.Plans) []template_model.Zone {
 	hubConns := make([]string, len(outerLabels))
 	for index, label := range outerLabels {
 		hubConns[index] = constants.GetHubSpokeConnectionNameFor(label)
@@ -74,7 +74,7 @@ func (this *HubTopologyService) createZones(
 	if len(configuration.HubZoneMandatoryContent) > 0 {
 		hubContentName = constants.HubContentName
 	}
-	zones := []entities.Zone{
+	zones := []template_model.Zone{
 		this.CreateHubZone(
 			constants.HubZoneName, hubConns, tuning, configuration.IsHubCityToHold(),
 			configuration.ZoneConfiguration.HubZoneSize,
@@ -95,8 +95,8 @@ func (this *HubTopologyService) createConnections(
 	playerLabels, outerLabels []string,
 	tuning models.GenerationTuning,
 	isIsolated bool,
-	neutralZones neutral_zone.Plans) []entities.Connection {
-	var connections []entities.Connection
+	neutralZones neutral_zone.Plans) []template_model.Connection {
+	var connections []template_model.Connection
 	for index, label := range outerLabels {
 		hubGuard := this.GetBorderGuardValue(
 			constants.HubZoneName, label, playerLabels, neutralZones, tuning)

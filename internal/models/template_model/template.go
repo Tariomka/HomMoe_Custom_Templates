@@ -1,14 +1,8 @@
-// Package template_model is the service-layer mirror of the .rmg.json schema in
-// internal/entities/template. The entity is the wire format and nothing else;
-// this package owns the structure the application actually works with, which is
-// what lets a zone carry its tier without touching the protected schema.
-//
-// Every type is reachable from here - see types.go - so no caller ever names a
-// *_model subpackage. The depguard rule template-model-inner-private enforces
-// that.
 package template_model
 
 import (
+	"slices"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/template_content_model"
@@ -18,8 +12,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/template_variant_model"
 )
 
-// Template mirrors template.RmgTemplate; it deliberately does not embed it,
-// because every composite field is re-typed.
 type Template struct {
 	Name string
 
@@ -45,6 +37,22 @@ type Template struct {
 	ContentCountLimits []ContentCountLimit
 	ContentPools       []ContentPool
 	ContentLists       []ContentList
+}
+
+func (this Template) Clone() Template {
+	clone := this
+	clone.ValueOverrides = slices.Clone(this.ValueOverrides)
+	clone.Orientation = helpers.ClonePointer(this.Orientation)
+	clone.Border = helpers.MapPointer(this.Border, Border.Clone)
+	clone.GameRules = this.GameRules.Clone()
+	clone.GlobalBans = helpers.MapPointer(this.GlobalBans, GlobalBans.Clone)
+	clone.Variants = helpers.MapSlice(this.Variants, Variant.Clone)
+	clone.ZoneLayouts = helpers.MapSlice(this.ZoneLayouts, ZoneLayoutDef.Clone)
+	clone.MandatoryContent = helpers.MapSlice(this.MandatoryContent, MandatoryContent.Clone)
+	clone.ContentCountLimits = helpers.MapSlice(this.ContentCountLimits, ContentCountLimit.Clone)
+	clone.ContentPools = helpers.MapSlice(this.ContentPools, ContentPool.Clone)
+	clone.ContentLists = helpers.MapSlice(this.ContentLists, ContentList.Clone)
+	return clone
 }
 
 func ToTemplateModel(entity template.RmgTemplate) Template {

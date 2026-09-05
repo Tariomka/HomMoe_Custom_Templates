@@ -3,7 +3,7 @@ package connectionBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,5 +17,5 @@ func TestWhenPortalTypeIsChosen_SetsPortalConnectionTypeOnBuiltConnection(t *tes
 	connection := builder.WithConnectionTypePortal().Build()
 
 	// Assert
-	assert.Equal(t, entities.Connection{ConnectionType: "Portal"}, connection)
+	assert.Equal(t, template_model.Connection{ConnectionType: "Portal"}, connection)
 }

@@ -1,16 +1,18 @@
 package variant_content
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type MainObjectBuilder struct {
-	item entities.MainObject
+	item template_model.MainObject
 }
 
-func NewObjectBuilder() *MainObjectBuilder { return &MainObjectBuilder{item: entities.MainObject{}} }
+func NewObjectBuilder() *MainObjectBuilder {
+	return &MainObjectBuilder{item: template_model.MainObject{}}
+}
 
 func (this *MainObjectBuilder) WithTypeSpawn() *MainObjectBuilder {
 	return this.withType(registry.GetMainObjectTypeValues().Spawn)
@@ -137,7 +139,7 @@ func (this *MainObjectBuilder) WithInitialUnitIncrement(initialIncrement int) *M
 	return this
 }
 
-func (this *MainObjectBuilder) Build() entities.MainObject { return this.item }
+func (this *MainObjectBuilder) Build() template_model.MainObject { return this.item }
 
 func (this *MainObjectBuilder) withType(objectType string) *MainObjectBuilder {
 	this.item.Type = objectType

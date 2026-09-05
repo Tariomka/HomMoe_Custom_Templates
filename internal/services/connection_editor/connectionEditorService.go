@@ -29,9 +29,7 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 	playerZoneNames map[string]bool) template_model.Connection {
 	quality := this.tierService.GetConnectionGuardQuality(
 		from, to, zones, linq.FromMap(playerZoneNames).SelectKeys().ToSlice())
-	// The connection builder is shared with the generator and yields the .rmg.json
-	// entity, so this service converts its one built connection here.
-	connection := template_model.ToConnectionModel(variant_content.NewConnectionBuilder().
+	connection := variant_content.NewConnectionBuilder().
 		WithFrom(from).
 		WithTo(to).
 		WithConnectionTypeDirect().
@@ -39,7 +37,7 @@ func (this *ConnectionEditorService) NewDefaultConnection(
 		WithGuardZone(from).
 		WithGuardMatchGroup("rnd_guard_" + helpers.GetZoneLabel(from) + "_" + helpers.GetZoneLabel(to)).
 		WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
-		Build())
+		Build()
 	connection.IsUserAdded = true
 	return connection
 }

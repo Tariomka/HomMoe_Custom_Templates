@@ -5,11 +5,11 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -38,8 +38,8 @@ func (this *TopologyBase) CreateVariant(
 	playerLabels []string,
 	firstLabel string,
 	zoneCount int,
-	zones []entities.Zone,
-	connections []entities.Connection) entities.Variant {
+	zones []template_model.Zone,
+	connections []template_model.Connection) template_model.Variant {
 	orientationBuilder := variant_content.NewOrientationBuilder().
 		WithBaseAngleMin(45).
 		WithBaseAngleMax(45).
@@ -80,7 +80,7 @@ func (this *TopologyBase) CreateClusterZone(
 	isSpawn bool,
 	isHoldCity bool,
 	tuning models.GenerationTuning,
-	allNeutralZonePlans neutral_zone.Plans) entities.Zone {
+	allNeutralZonePlans neutral_zone.Plans) template_model.Zone {
 	if isSpawn {
 		return this.CreateSpawnZone(models.SpawnZoneCreationRequest{
 			Label:           label,
@@ -107,11 +107,11 @@ func (this *TopologyBase) CreateClusterZone(
 	})
 }
 
-func (this *TopologyBase) CreateSpawnZone(input models.SpawnZoneCreationRequest) entities.Zone {
+func (this *TopologyBase) CreateSpawnZone(input models.SpawnZoneCreationRequest) template_model.Zone {
 	return this.zoneFactory.CreateSpawnZone(input)
 }
 
-func (this *TopologyBase) CreateNeutralZone(input models.TopologyNeutralZoneCreationRequest) entities.Zone {
+func (this *TopologyBase) CreateNeutralZone(input models.TopologyNeutralZoneCreationRequest) template_model.Zone {
 	return this.zoneFactory.CreateNeutralZone(models.NeutralZoneCreationRequest{
 		Name:                 constants.GetNeutralZoneNameFor(input.Plan.Label),
 		Quality:              input.Plan.Quality,
@@ -136,7 +136,7 @@ func (this *TopologyBase) CreateHubZone(
 	size float64,
 	castleCount int,
 	generateRoads bool,
-	mandatoryContentName string) entities.Zone {
+	mandatoryContentName string) template_model.Zone {
 	return this.zoneFactory.CreateHubZone(models.HubZoneCreationRequest{
 		Name:                 name,
 		Size:                 size,
@@ -154,31 +154,31 @@ func (this *TopologyBase) CreateRandomPortalConnections(
 	playerLabels, orderedLabels []string,
 	tuning models.GenerationTuning,
 	maxCount int,
-	neutralZones neutral_zone.Plans) []entities.Connection {
+	neutralZones neutral_zone.Plans) []template_model.Connection {
 	return this.connectionService.CreateRandomPortalConnections(
 		playerLabels, orderedLabels, tuning, maxCount, neutralZones)
 }
 
 func (this *TopologyBase) CreateMissingPlayerConnections(
 	playerLabels []string,
-	zones []entities.Zone,
-	connections []entities.Connection,
-	tuning models.GenerationTuning) []entities.Connection {
+	zones []template_model.Zone,
+	connections []template_model.Connection,
+	tuning models.GenerationTuning) []template_model.Connection {
 	return this.connectionService.CreateMissingPlayerConnections(playerLabels, zones, connections, tuning)
 }
 
 func (this *TopologyBase) CreateMissingConnections(
 	playerLabels, allLabels []string,
 	positions models.Positions,
-	zones []entities.Zone,
-	connections []entities.Connection,
+	zones []template_model.Zone,
+	connections []template_model.Connection,
 	tuning models.GenerationTuning,
-	neutralZones neutral_zone.Plans) []entities.Connection {
+	neutralZones neutral_zone.Plans) []template_model.Connection {
 	return this.connectionService.CreateMissingConnections(
 		playerLabels, allLabels, positions, zones, connections, tuning, neutralZones)
 }
 
-func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []entities.Road {
+func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []template_model.Road {
 	return this.roadFactory.CreateConnectorZoneRoads(connectionNames, generateRoads)
 }
 

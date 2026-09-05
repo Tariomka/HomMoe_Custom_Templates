@@ -3,8 +3,8 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -56,21 +56,21 @@ func TestWhenOnlyTwoZonesExist_PortalsLinkThemInBothDirections(t *testing.T) {
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	portalRoad := true
-	crossroadsRule := entities.PlacementRule{Type: "Crossroads", TargetMin: 0.1, TargetMax: 0.25, Weight: 2}
-	expectedConnections := []entities.Connection{
+	crossroadsRule := template_model.PlacementRule{Type: "Crossroads", TargetMin: 0.1, TargetMax: 0.25, Weight: 2}
+	expectedConnections := []template_model.Connection{
 		{
 			Name: "Portal-A-B", From: "Spawn-A", To: "Spawn-B",
 			ConnectionType: "Portal", Road: &portalRoad,
 			GuardValue: 30000, GuardWeeklyIncrement: 0.15,
-			PortalPlacementRulesFrom: []entities.PlacementRule{crossroadsRule},
-			PortalPlacementRulesTo:   []entities.PlacementRule{crossroadsRule},
+			PortalPlacementRulesFrom: []template_model.PlacementRule{crossroadsRule},
+			PortalPlacementRulesTo:   []template_model.PlacementRule{crossroadsRule},
 		},
 		{
 			Name: "Portal-B-A", From: "Spawn-B", To: "Spawn-A",
 			ConnectionType: "Portal", Road: &portalRoad,
 			GuardValue: 30000, GuardWeeklyIncrement: 0.15,
-			PortalPlacementRulesFrom: []entities.PlacementRule{crossroadsRule},
-			PortalPlacementRulesTo:   []entities.PlacementRule{crossroadsRule},
+			PortalPlacementRulesFrom: []template_model.PlacementRule{crossroadsRule},
+			PortalPlacementRulesTo:   []template_model.PlacementRule{crossroadsRule},
 		},
 	}
 

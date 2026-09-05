@@ -1,13 +1,13 @@
 package variant_content
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/entities"
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 
 type OrientationBuilder struct {
-	item entities.Orientation
+	item template_model.Orientation
 }
 
 func NewOrientationBuilder() *OrientationBuilder {
-	return &OrientationBuilder{item: entities.Orientation{}}
+	return &OrientationBuilder{item: template_model.Orientation{}}
 }
 
 func (this *OrientationBuilder) WithMode(mode string) *OrientationBuilder {
@@ -34,4 +34,4 @@ func (this *OrientationBuilder) WithRandomAngleStep(step int) *OrientationBuilde
 	this.item.RandomAngleStep = step
 	return this
 }
-func (this *OrientationBuilder) Build() entities.Orientation { return this.item }
+func (this *OrientationBuilder) Build() template_model.Orientation { return this.item }

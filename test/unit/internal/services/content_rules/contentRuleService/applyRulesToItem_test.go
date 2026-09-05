@@ -3,8 +3,8 @@ package contentRuleService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,14 +14,14 @@ func TestWhenRoadDistanceRuleIsApplied_AppendsRoadPlacementRule(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	item := entities.MandatoryContentItem{SID: "x"}
+	item := template_model.MandatoryContentItem{SID: "x"}
 	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleDistanceToRoad(&near)})
 
 	// Assert
-	assert.Equal(t, []entities.PlacementRule{
+	assert.Equal(t, []template_model.PlacementRule{
 		{Type: "Road", TargetMin: 0.1, TargetMax: 0.25, Weight: 1},
 	}, item.Rules)
 }
@@ -30,14 +30,14 @@ func TestWhenTownDistanceRuleIsApplied_AppendsMainObjectPlacementRule(t *testing
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	item := entities.MandatoryContentItem{SID: "x"}
+	item := template_model.MandatoryContentItem{SID: "x"}
 	near := models.DistancePreset{Name: "Near", Min: 0.1, Max: 0.25}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleDistanceToTown(&near)})
 
 	// Assert
-	assert.Equal(t, []entities.PlacementRule{
+	assert.Equal(t, []template_model.PlacementRule{
 		{Type: "MainObject", Args: []any{"0"}, TargetMin: 0.1, TargetMax: 0.25, Weight: 1},
 	}, item.Rules)
 }
@@ -46,7 +46,7 @@ func TestWhenGuardedRuleIsApplied_SetsIsGuarded(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	item := entities.MandatoryContentItem{SID: "x"}
+	item := template_model.MandatoryContentItem{SID: "x"}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleGuarded(true)})
@@ -59,7 +59,7 @@ func TestWhenGuardedRuleIsApplied_AddsNoPlacementRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	item := entities.MandatoryContentItem{SID: "x"}
+	item := template_model.MandatoryContentItem{SID: "x"}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleGuarded(true)})
@@ -72,7 +72,7 @@ func TestWhenSoloEncounterRuleIsApplied_SetsSoloEncounter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	item := entities.MandatoryContentItem{SID: "x"}
+	item := template_model.MandatoryContentItem{SID: "x"}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.IContentRule{content_rules.NewRuleSoloEncounter(true)})
@@ -85,7 +85,7 @@ func TestWhenVariantRuleIsApplied_SetsVariantId(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	item := entities.MandatoryContentItem{SID: "dragon_utopia"}
+	item := template_model.MandatoryContentItem{SID: "dragon_utopia"}
 	variantID := 3
 	defaultMapping := content_rules.NewVariantMappingCatalog().GetDefaultMapping()
 	variantRule, err := content_rules.NewRuleVariant(&defaultMapping, &variantID)
@@ -103,7 +103,7 @@ func TestWhenRuleListContainsNil_SkipsItWithoutPanicking(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := content_rules.NewContentRuleService()
-	item := entities.MandatoryContentItem{SID: "x"}
+	item := template_model.MandatoryContentItem{SID: "x"}
 
 	// Act
 	service.ApplyRulesToItem(&item, []content_rules.IContentRule{nil, content_rules.NewRuleGuarded(true)})

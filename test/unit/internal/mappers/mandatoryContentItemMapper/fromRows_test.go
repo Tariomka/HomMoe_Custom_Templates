@@ -3,9 +3,9 @@ package mandatoryContentItemMapper_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 )
@@ -45,7 +45,7 @@ func TestWhenRowCountIsThree_CreatesThreeIdenticalItems(t *testing.T) {
 	actual := mapper.FromRows(rows)
 
 	// Assert
-	assert.Equal(t, []entities.MandatoryContentItem{
+	assert.Equal(t, []template_model.MandatoryContentItem{
 		{SID: "sawmill"},
 		{SID: "sawmill"},
 		{SID: "sawmill"},
@@ -62,7 +62,7 @@ func TestWhenRowCountIsBelowOne_NormalizesToSingleItem(t *testing.T) {
 	actual := mapper.FromRows(rows)
 
 	// Assert
-	assert.Equal(t, []entities.MandatoryContentItem{{SID: "sawmill"}}, actual)
+	assert.Equal(t, []template_model.MandatoryContentItem{{SID: "sawmill"}}, actual)
 }
 
 func TestWhenRowIsGroup_SetsIncludeListsInsteadOfSid(t *testing.T) {
@@ -75,7 +75,7 @@ func TestWhenRowIsGroup_SetsIncludeListsInsteadOfSid(t *testing.T) {
 	actual := mapper.FromRows(rows)
 
 	// Assert
-	assert.Equal(t, []entities.MandatoryContentItem{
+	assert.Equal(t, []template_model.MandatoryContentItem{
 		{IncludeLists: []string{"include_list_dwellings"}},
 	}, actual)
 }
@@ -90,7 +90,7 @@ func TestWhenRowIsMine_SetsIsMineOnItem(t *testing.T) {
 	actual := mapper.FromRows(rows)
 
 	// Assert
-	assert.Equal(t, []entities.MandatoryContentItem{{SID: "gold_mine", IsMine: true}}, actual)
+	assert.Equal(t, []template_model.MandatoryContentItem{{SID: "gold_mine", IsMine: true}}, actual)
 }
 
 func TestWhenRowHasGuardedRule_AppliesGuardedFlagToItem(t *testing.T) {
@@ -108,5 +108,5 @@ func TestWhenRowHasGuardedRule_AppliesGuardedFlagToItem(t *testing.T) {
 	actual := mapper.FromRows(rows)
 
 	// Assert
-	assert.Equal(t, []entities.MandatoryContentItem{{SID: "sawmill", IsGuarded: true}}, actual)
+	assert.Equal(t, []template_model.MandatoryContentItem{{SID: "sawmill", IsGuarded: true}}, actual)
 }

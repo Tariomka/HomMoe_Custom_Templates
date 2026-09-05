@@ -1,12 +1,12 @@
 package provider_interfaces
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type IGameRulesProvider interface {
-	CreateGameRules(configuration config.GeneratorConfig) entities.GameRules
-	CreateValueOverrides(configuration config.GeneratorConfig) ([]entities.ValueOverride, []string)
-	CreateGlobalBans(configuration config.GeneratorConfig) *entities.GlobalBans
+	CreateGameRules(configuration config.GeneratorConfig) template_model.GameRules
+	CreateValueOverrides(configuration config.GeneratorConfig) ([]template_model.ValueOverride, []string)
+	CreateGlobalBans(configuration config.GeneratorConfig) *template_model.GlobalBans
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
@@ -61,9 +60,8 @@ func TestWhenTemplateOutputPathIsPadded_SavesToTheTrimmedPath(t *testing.T) {
 	fixture := newTemplateHandlerFixture()
 	outputPath := gofakeit.Word()
 	template := &template_model.Template{}
-	templateEntity := new(mappers.NewTemplateMapper().ToEntity(*template))
 	fixture.previewGenerator.On("CreatePreviewImage", mock.Anything, mock.Anything).Return(nil)
-	fixture.fileService.On("SaveTemplateWithPreview", outputPath, templateEntity, mock.Anything).
+	fixture.fileService.On("SaveTemplateWithPreview", outputPath, template, mock.Anything).
 		Return(gofakeit.Word(), nil)
 
 	// Act
@@ -73,7 +71,7 @@ func TestWhenTemplateOutputPathIsPadded_SavesToTheTrimmedPath(t *testing.T) {
 	})
 
 	// Assert
-	fixture.fileService.AssertCalled(t, "SaveTemplateWithPreview", outputPath, templateEntity, (*image.RGBA)(nil))
+	fixture.fileService.AssertCalled(t, "SaveTemplateWithPreview", outputPath, template, (*image.RGBA)(nil))
 }
 
 func TestWhenPreviewIsRendered_SavesItAlongsideTheTemplate(t *testing.T) {
@@ -81,7 +79,6 @@ func TestWhenPreviewIsRendered_SavesItAlongsideTheTemplate(t *testing.T) {
 	// Arrange
 	fixture := newTemplateHandlerFixture()
 	template := &template_model.Template{}
-	templateEntity := new(mappers.NewTemplateMapper().ToEntity(*template))
 	previewImage := image.NewRGBA(image.Rect(0, 0, 1, 1))
 	fixture.previewGenerator.On("CreatePreviewImage", template, config.TopologyChain).Return(previewImage)
 	fixture.fileService.On("SaveTemplateWithPreview", mock.Anything, mock.Anything, mock.Anything).
@@ -95,7 +92,7 @@ func TestWhenPreviewIsRendered_SavesItAlongsideTheTemplate(t *testing.T) {
 	})
 
 	// Assert
-	fixture.fileService.AssertCalled(t, "SaveTemplateWithPreview", mock.Anything, templateEntity, previewImage)
+	fixture.fileService.AssertCalled(t, "SaveTemplateWithPreview", mock.Anything, template, previewImage)
 }
 
 func TestWhenTemplateIsSaved_ReturnsTheWrittenPath(t *testing.T) {

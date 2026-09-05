@@ -3,7 +3,7 @@ package connectionBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenGuardEscapeIsProvided_SetsGuardEscapeOnBuiltConnection(t *testing.T
 	connection := builder.WithGuardEscape(expectedGuardEscape).Build()
 
 	// Assert
-	assert.Equal(t, entities.Connection{GuardEscape: expectedGuardEscape}, connection)
+	assert.Equal(t, template_model.Connection{GuardEscape: expectedGuardEscape}, connection)
 }

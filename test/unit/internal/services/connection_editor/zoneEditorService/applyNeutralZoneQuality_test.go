@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +22,7 @@ func TestWhenQualityChangesToHigh_ReprofilesZoneAsHigh(t *testing.T) {
 	// Assert
 	assert.Equal(t,
 		neutral_zone.QualityHigh,
-		zone_services.NewZoneTierService().GetQuality(template_model.ToZoneEntity(zone)))
+		zone_services.NewZoneTierService().GetQuality(zone))
 }
 
 func TestWhenQualityChanges_RecordsTheNewTierOnTheZone(t *testing.T) {

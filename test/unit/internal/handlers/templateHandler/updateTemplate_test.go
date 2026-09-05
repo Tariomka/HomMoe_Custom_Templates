@@ -6,7 +6,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
@@ -72,9 +71,9 @@ func TestWhenTemplateIsUpdated_ReplacesTheFirstVariantsConnections(t *testing.T)
 	assert.Equal(t, connections, loadDto.Template.Variants[0].Connections)
 }
 
-// UpdateTemplate maps the template through the .rmg.json entity, which has
-// nowhere to put the editor-only user-added flag.
-func TestWhenAnAppliedConnectionIsUserAdded_KeepsTheFlagThroughTheEntityRoundTrip(t *testing.T) {
+// The user-added flag is editor-only state with no .rmg.json counterpart; an
+// Apply must carry it on the model as-is.
+func TestWhenAnAppliedConnectionIsUserAdded_KeepsTheFlagAcrossTheApply(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
@@ -147,7 +146,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	fixture := newTemplateHandlerFixture()
 	state := editor_state_model.NewDefaultEditorStateModel()
 	zones := []template_model.Zone{{Name: gofakeit.Word()}}
-	expected := []entities.MandatoryContent{{Name: gofakeit.Word()}}
+	expected := []template_model.MandatoryContent{{Name: gofakeit.Word()}}
 	configuration := namedConfiguration()
 	arrangeUpdateCollaborators(fixture, false)
 	fixture.mapper.On("FromEditorState", state).Return(configuration)
@@ -161,7 +160,7 @@ func TestWhenEditorStateIsSupplied_RebuildsTheMandatoryContentFromTheFinalZones(
 	})
 
 	// Assert
-	assert.Equal(t, expected, template_model.ToTemplateEntity(*loadDto.Template).MandatoryContent)
+	assert.Equal(t, expected, loadDto.Template.MandatoryContent)
 }
 
 func TestWhenTheUpdatedGraphHasErrors_ReturnsZonesMissingError(t *testing.T) {

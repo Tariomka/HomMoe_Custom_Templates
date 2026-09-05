@@ -35,7 +35,7 @@ func TestWhenCastlesAreRebuilt_KeepsQualityProfile(t *testing.T) {
 	// Assert
 	assert.Equal(t,
 		neutral_zone.QualityHigh,
-		zone_services.NewZoneTierService().GetQuality(template_model.ToZoneEntity(zone)))
+		zone_services.NewZoneTierService().GetQuality(zone))
 }
 
 func TestWhenCastlesAreRebuilt_KeepsGuardMultiplier(t *testing.T) {

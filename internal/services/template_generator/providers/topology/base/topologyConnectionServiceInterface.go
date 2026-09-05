@@ -1,9 +1,9 @@
 package base
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type ITopologyConnectionService interface {
@@ -11,21 +11,21 @@ type ITopologyConnectionService interface {
 		playerLabels, orderedLabels []string,
 		tuning models.GenerationTuning,
 		maxCount int,
-		neutralZones neutral_zone.Plans) []entities.Connection
+		neutralZones neutral_zone.Plans) []template_model.Connection
 
 	CreateMissingPlayerConnections(
 		playerLabels []string,
-		allZones []entities.Zone,
-		connections []entities.Connection,
-		tuning models.GenerationTuning) []entities.Connection
+		allZones []template_model.Zone,
+		connections []template_model.Connection,
+		tuning models.GenerationTuning) []template_model.Connection
 
 	CreateMissingConnections(
 		playerLabels, allLabels []string,
 		positions models.Positions,
-		allZones []entities.Zone,
-		connections []entities.Connection,
+		allZones []template_model.Zone,
+		connections []template_model.Connection,
 		tuning models.GenerationTuning,
-		neutralZones neutral_zone.Plans) []entities.Connection
+		neutralZones neutral_zone.Plans) []template_model.Connection
 
 	GetBorderGuardValue(
 		labelA, labelB string,

@@ -29,6 +29,14 @@ type GameRules struct {
 	AstrologyExpModifier   float64
 }
 
+func (this GameRules) Clone() GameRules {
+	clone := this
+	clone.Bonuses = this.Bonuses.Clone()
+	clone.WinConditions = this.WinConditions.Clone()
+	clone.GlobalBans = helpers.MapPointer(this.GlobalBans, GlobalBans.Clone)
+	return clone
+}
+
 func ToGameRulesModel(entity template.GameRules) GameRules {
 	return GameRules{
 		HeroCountMin:                         entity.HeroCountMin,

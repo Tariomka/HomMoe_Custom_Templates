@@ -7,6 +7,10 @@ import (
 
 type BonusList []Bonus
 
+func (this BonusList) Clone() BonusList {
+	return helpers.MapSlice(this, Bonus.Clone)
+}
+
 func ToBonusListModel(entity template.BonusList) BonusList {
 	return helpers.MapSlice(entity, ToBonusModel)
 }

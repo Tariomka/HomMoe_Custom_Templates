@@ -1,11 +1,11 @@
 package topology
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/tournament_variant"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -44,12 +44,12 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	_ string) entities.Variant {
+	_ string) template_model.Variant {
 	perPlayerNeutralZones := this.createPerPlayerNeutralZonePlans(neutralZones)
 	clusterService := this.selectClusterService(configuration.Topology)
 
-	var zones []entities.Zone
-	var conns []entities.Connection
+	var zones []template_model.Zone
+	var conns []template_model.Connection
 	for playerIndex := range 2 {
 		perPlayerZones, perPlayerConns := clusterService.CreateClusterVariant(
 			configuration,

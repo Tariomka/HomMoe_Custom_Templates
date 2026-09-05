@@ -1,16 +1,12 @@
 package config
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 const defaultTemplateName = "Custom Template"
 
-// GeneratorConfig is the input model for the template generator
-//
-// All values here describe a single template generation request - the GUI and
-// CLI build one of these and hand it to TemplateGenerator.
 type GeneratorConfig struct {
 	TemplateName string
 	GameMode     string // [registry.gameModes]
@@ -31,8 +27,6 @@ type GeneratorConfig struct {
 	BannedMagics       string
 	ValueOverridesText string
 
-	// Configurable game-start bonuses (Wood/Ore/spell/etc.). Parsed from
-	// SettingsFile.BonusesJson by the loader.
 	Bonuses []BonusEntry
 
 	Topology          MapTopology
@@ -45,14 +39,12 @@ type GeneratorConfig struct {
 	GladiatorArenaRules *GladiatorArenaRules
 	TournamentRules     *TournamentRules
 
-	// Optional extra mandatory content seeded by the UI; appended to the
-	// player-zone defaults built by ZoneContentManager.
-	PlayerZoneMandatoryContent    []entities.MandatoryContentItem
-	LowestNeutralMandatoryContent []entities.MandatoryContentItem
-	LowNeutralMandatoryContent    []entities.MandatoryContentItem
-	MediumNeutralMandatoryContent []entities.MandatoryContentItem
-	HighNeutralMandatoryContent   []entities.MandatoryContentItem
-	HubZoneMandatoryContent       []entities.MandatoryContentItem
+	PlayerZoneMandatoryContent    []template_model.MandatoryContentItem
+	LowestNeutralMandatoryContent []template_model.MandatoryContentItem
+	LowNeutralMandatoryContent    []template_model.MandatoryContentItem
+	MediumNeutralMandatoryContent []template_model.MandatoryContentItem
+	HighNeutralMandatoryContent   []template_model.MandatoryContentItem
+	HubZoneMandatoryContent       []template_model.MandatoryContentItem
 }
 
 func NewGeneratorConfig() *GeneratorConfig {

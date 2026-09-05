@@ -5,11 +5,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -34,7 +34,7 @@ func (this *ChainClusterService) CreateClusterVariant(
 	tuning models.GenerationTuning,
 	allNeutralZonePlans, playerNeutralZonePlans neutral_zone.Plans,
 	playerIndex int,
-	playerLabel string) ([]entities.Zone, []entities.Connection) {
+	playerLabel string) ([]template_model.Zone, []template_model.Connection) {
 	chainLabels := append([]string{playerLabel},
 		linq.FromSlice(playerNeutralZonePlans).Select(func(x neutral_zone.Plan) string { return x.Label }).ToSlice()...)
 	connectionNames := make([]string, len(chainLabels)-1)
@@ -52,8 +52,8 @@ func (this *ChainClusterService) createZones(
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
-	playerIndex int) []entities.Zone {
-	var zones []entities.Zone
+	playerIndex int) []template_model.Zone {
+	var zones []template_model.Zone
 	for index, label := range chainLabels {
 		var myConns []string
 		if index > 0 {
@@ -72,8 +72,8 @@ func (this *ChainClusterService) createConnections(
 	chainLabels, connectionNames []string,
 	tuning models.GenerationTuning,
 	allNeutralZonePlans neutral_zone.Plans,
-	playerLabel string) []entities.Connection {
-	var connections []entities.Connection
+	playerLabel string) []template_model.Connection {
+	var connections []template_model.Connection
 	for index, name := range connectionNames {
 		labelFrom := chainLabels[index]
 		labelTo := chainLabels[index+1]

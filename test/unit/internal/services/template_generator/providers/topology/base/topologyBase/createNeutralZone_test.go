@@ -3,8 +3,8 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -74,7 +74,7 @@ func TestWhenZoneHasNoMainObjects_BiomeMatchesZone(t *testing.T) {
 	zone := topologyBase.CreateNeutralZone(newNeutralRequest(plan, nil, 0, newUnitTuning(), false))
 
 	// Assert
-	assert.Equal(t, entities.TypedRef{Type: "MatchZone"}, zone.ZoneBiome)
+	assert.Equal(t, template_model.TypedRef{Type: "MatchZone"}, zone.ZoneBiome)
 }
 
 func TestWhenZoneHasMainObjects_BiomeMatchesPrimaryMainObject(t *testing.T) {
@@ -87,7 +87,7 @@ func TestWhenZoneHasMainObjects_BiomeMatchesPrimaryMainObject(t *testing.T) {
 	zone := topologyBase.CreateNeutralZone(newNeutralRequest(plan, nil, 0, newUnitTuning(), false))
 
 	// Assert
-	assert.Equal(t, entities.TypedRef{Type: "MatchMainObject", Args: []string{"0"}}, zone.ZoneBiome)
+	assert.Equal(t, template_model.TypedRef{Type: "MatchMainObject", Args: []string{"0"}}, zone.ZoneBiome)
 }
 
 func TestWhenAbandonedOutpostCountIsPositive_AppendsOutpostsAfterCastles(t *testing.T) {
@@ -121,19 +121,19 @@ func TestWhenNeutralZoneHasOutpostsAndFootholds_RoadsIncludeBoth(t *testing.T) {
 	zone := topologyBase.CreateNeutralZone(newNeutralRequest(plan, []string{"Gate-D"}, 1, tuning, false))
 
 	// Assert
-	assert.Equal(t, []entities.Road{
+	assert.Equal(t, []template_model.Road{
 		{
 			Type: "Stone",
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 		},
 		{
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
 		},
 		{
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Gate-D"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Gate-D"}},
 		},
 	}, zone.Roads)
 }

@@ -3,7 +3,7 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -27,7 +27,7 @@ func TestWhenSpawnZoneIsCreated_FirstMainObjectIsSpawnCastleForPlayer(t *testing
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	expected := entities.MainObject{
+	expected := template_model.MainObject{
 		Type:                     "Spawn",
 		Spawn:                    "Player1",
 		RemoveGuardIfHasOwner:    true,
@@ -64,10 +64,10 @@ func TestWhenZoneHasNoExtraCastles_RoadsChainConnectionsInsteadOfCastles(t *test
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	expectedRoads := []entities.Road{
+	expectedRoads := []template_model.Road{
 		{
-			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Gate-2"}},
+			From: template_model.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Gate-2"}},
 		},
 	}
 
@@ -83,16 +83,16 @@ func TestWhenExtraCastlesArePresent_EveryExtraCastleGetsStoneRoadFromSpawnCastle
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	expectedRoads := []entities.Road{
+	expectedRoads := []template_model.Road{
 		{
 			Type: "Stone",
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 		},
 		{
 			Type: "Stone",
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MainObject", Args: []string{"2"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"2"}},
 		},
 	}
 
@@ -107,19 +107,19 @@ func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T)
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	expectedRoads := []entities.Road{
+	expectedRoads := []template_model.Road{
 		{
 			Type: "Stone",
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 		},
 		{
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
 		},
 		{
-			From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-			To:   entities.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_2"}},
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_2"}},
 		},
 	}
 
