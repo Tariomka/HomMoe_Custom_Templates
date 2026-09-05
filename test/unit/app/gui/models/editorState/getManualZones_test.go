@@ -3,6 +3,7 @@ package editorState_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ func TestWhenManualZonesWereStored_ZonesRoundTripWithManualPositions(t *testing.
 		{
 			Name:           "Zone A",
 			Size:           gofakeit.Float64Range(0.5, 2),
-			ManualPosition: &[2]float64{gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1)},
+			ManualPosition: new(data.NewVec2(gofakeit.Float64Range(0, 1), gofakeit.Float64Range(0, 1))),
 		},
 		{Name: "Zone B"},
 	}

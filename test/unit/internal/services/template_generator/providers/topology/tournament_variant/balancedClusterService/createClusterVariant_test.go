@@ -62,7 +62,7 @@ func TestWhenFirstPlayerClusterIsBuilt_AllZonePositionsStayInLeftHalf(t *testing
 	// Assert
 	inLeftHalf := 0
 	for _, zone := range zones {
-		if zone.GeneratorPosition[0] < 0.5 {
+		if zone.GeneratorPosition.X < 0.5 {
 			inLeftHalf++
 		}
 	}
@@ -83,7 +83,7 @@ func TestWhenSecondPlayerClusterIsBuilt_AllZonePositionsStayInRightHalf(t *testi
 	// Assert
 	inRightHalf := 0
 	for _, zone := range zones {
-		if zone.GeneratorPosition[0] > 0.5 {
+		if zone.GeneratorPosition.X > 0.5 {
 			inRightHalf++
 		}
 	}

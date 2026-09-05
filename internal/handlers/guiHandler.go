@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
@@ -87,7 +88,7 @@ func (this *GUIHandler) CreateZoneEditorConnection(
 	return this.zoneEditorHandler.CreateZoneEditorConnection(request)
 }
 
-func (this *GUIHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
+func (this *GUIHandler) FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64] {
 	return this.zoneEditorHandler.FindOpenZonePosition(occupied)
 }
 

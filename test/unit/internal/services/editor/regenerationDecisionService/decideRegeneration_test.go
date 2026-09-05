@@ -208,7 +208,7 @@ func TestWhenOnlyManualEditsDiffer_CancelsPendingDebounce(t *testing.T) {
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	current := defaultState()
-	current.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
+	current.ManualZones = manualZones()
 	request := regeneration.DecisionRequest{
 		Previous: defaultState(),
 		Current:  current,

@@ -89,13 +89,13 @@ func TestWhenAManualZoneIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *testing.
 	// Arrange
 	state := newFullyPopulatedState(t)
 	clone := state.Clone()
-	originalName := state.ManualZones[0].Zone.Name
+	originalName := state.ManualZones[0].Name
 
 	// Act
-	clone.ManualZones[0].Zone.Name = originalName + "-changed"
+	clone.ManualZones[0].Name = originalName + "-changed"
 
 	// Assert
-	assert.Equal(t, originalName, state.ManualZones[0].Zone.Name)
+	assert.Equal(t, originalName, state.ManualZones[0].Name)
 }
 
 func TestWhenAManualConnectionIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *testing.T) {

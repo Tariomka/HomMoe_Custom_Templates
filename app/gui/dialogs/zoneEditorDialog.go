@@ -18,6 +18,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -443,10 +444,9 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 			continue
 		}
 		if pos, ok := this.geometry.Positions[this.zones[i].Name]; ok {
-			this.zones[i].ManualPosition = &[2]float64{
-				pos.X / float64(this.side),
-				pos.Y / float64(this.side),
-			}
+			this.zones[i].ManualPosition = new(data.NewVec2(
+				pos.X/float64(this.side),
+				pos.Y/float64(this.side)))
 		} else {
 			open := this.zoneHandler.FindOpenZonePosition(this.manualPositions())
 			this.zones[i].ManualPosition = &open
@@ -454,8 +454,8 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 	}
 }
 
-func (this *ZoneEditorDialog) manualPositions() [][2]float64 {
-	out := make([][2]float64, 0, len(this.zones))
+func (this *ZoneEditorDialog) manualPositions() []data.Vec2[float64] {
+	out := make([]data.Vec2[float64], 0, len(this.zones))
 	for _, zone := range this.zones {
 		if zone.ManualPosition != nil {
 			out = append(out, *zone.ManualPosition)
@@ -486,7 +486,7 @@ func (this *ZoneEditorDialog) addZoneAt(pos models.Position) {
 	})
 	x := math.Min(math.Max(pos.X/float64(this.side), 0.04), 0.96)
 	y := math.Min(math.Max(pos.Y/float64(this.side), 0.04), 0.96)
-	zone.ManualPosition = &[2]float64{x, y}
+	zone.ManualPosition = new(data.NewVec2(x, y))
 	this.zones = append(this.zones, zone)
 	this.geometryDirty = true
 	this.selectZone(zone.Name)

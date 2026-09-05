@@ -322,7 +322,7 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos models.Position) {
 	pos = this.snapDraggedPosition(pos)
 	x := math.Min(math.Max(pos.X/float64(this.side), 0.04), 0.96)
 	y := math.Min(math.Max(pos.Y/float64(this.side), 0.04), 0.96)
-	zone.ManualPosition = &[2]float64{x, y}
+	zone.ManualPosition = new(data.NewVec2(x, y))
 	this.geometryDirty = true
 }
 

@@ -3,6 +3,7 @@ package geometricTopology_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -61,7 +62,7 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCenter(t *testing.T) 
 		}
 	}
 	require.NotNil(t, centerZone.GeneratorPosition)
-	assert.Equal(t, [2]float64{0.5, 0.5}, *centerZone.GeneratorPosition)
+	assert.Equal(t, data.NewVec2(0.5, 0.5), *centerZone.GeneratorPosition)
 }
 
 func TestWhenFlowerIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {

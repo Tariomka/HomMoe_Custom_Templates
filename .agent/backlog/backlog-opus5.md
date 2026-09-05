@@ -41,14 +41,16 @@ a decision the owner already made.
 §3.1, §3.2 and §3.4 (batch C) · **2026-08-14:** §1.1 (batch D), §5.3 (batch F) ·
 **2026-08-19:** §2.3 (batch G) · §5.1 and §5.2 (batch H) · **2026-09-01:**
 §2.1 and §1.5 (batch I) · **2026-09-03:** §2.2 (batch J) · **2026-09-05:** §2.6
-(batches O, J, P, Q) — **16 done, 5 open.**
+(batches O, J, P, Q) and §2.4 (batch R) — **17 done, 4 open.**
 Batch D spun off §1.5 (render-path clone cost), which batch I then absorbed;
 batch I spun off §2.6 (entities named outside the permitted layers), whose
 step 1 batch O closed, whose entity list batch J shrank by two packages, whose
 steps 2 and 3 batch P closed on **2026-09-04**, and whose step 4 batch Q closed
 on **2026-09-05** — the entity allow-list is at its one-entry floor.
+Batch R spun off **batch S** (editor-state schema v2 + a versioned migration),
+which is fully scoped but not started.
 
-**Baselines to hold (AGENTS.md §2.3):** unit coverage **74.5 %**, floor
+**Baselines to hold (AGENTS.md §2.3):** unit coverage **74.1 %**, floor
 **72.5 %** · `golangci-lint-v2 run ./...` **0 issues** · `gofmt -l` empty ·
 `go run ./cmd/testlayoutcheck .` passes · build + vet clean under both
 `integration_test` and `integration_test,gui`.
@@ -848,6 +850,15 @@ topology has a tier to carry, since `stampPlannedZoneTiers` derives every one of
 them from the plans afterwards. **Do not sweep those two by reflex in a later
 batch.**
 
+> **Superseded 2026-09-05.** The paragraph above describes the state at batch J
+> and is kept only as the record of what was decided then. Batch Q swept the
+> second seam on purpose: `Generate` builds the model directly, the golden proves
+> the entity round trip **test-side** in `templateGenerator/common_test.go`, and
+> `stampPlannedZoneTiers` no longer exists — `ZoneFactory` stamps the tier.
+> Batch R then deleted the three `json:"-"` position fields from the entity zone
+> outright. Only the `file_service` seam is still real. Read §2.6 and §2.4 for
+> the current picture.
+
 **Dead code removed on the way through.** `PreviewLayoutRequestDto.Zones` /
 `.Connections` — the "editor-only preview when Template is nil" branch — had no
 production caller, so the fields, the branch and its three tests are gone.
@@ -983,49 +994,52 @@ this entry is the record.
 
 ---
 
-### 2.4 ⚪ ⚠ Replace `[2]float64` with `Vec2` in the template entities
+### 2.4 ✅ DONE 🟠 ⚠ Positions are `Vec2`, and the entity stopped carrying editor state
 
-**Evidence.** [zone.go](../../internal/entities/template/template_variant/zone.go#L7-L23)
-declares `GeneratorPosition *[2]float64` (`json:"-"`), and producers stamp it
-as an array literal —
-[geometricHubTopology.go](../../internal/services/template_generator/providers/topology/geometricHubTopology.go#L104-L119):
+**Resolved 2026-09-05 (batch R).** Scoped far beyond the original item on the owner's
+instruction: the point was never the ergonomics of `[2]float64`, it was that the entity was
+still carrying three fields it can never serialize.
 
-```go
-	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
-	…
-		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
-```
+**What was actually wrong.** `template_variant.Zone` declared `GeneratorPosition`,
+`GeneratorRing` and `ManualPosition`, all `json:"-"`. After batch Q every real producer and
+consumer of those fields was model-typed; the only production code left touching them on the
+entity was `ToZoneModel`, `ToZoneEntity` and a hand-written `cloneZone`. But they were not
+dead: `SetManualEdits` lowered live model zones to `entities.Zone` and `GetManualZones` lifted
+them back, so a generator stamp survived a regenerate-with-manual-edits **only because the
+entity carried it** — while a `.gen.json` reload dropped it, because `json:"-"`.
 
-— i.e. a `models.Position` (`data.Vec2[float64]`) is unpacked into an array at
-every write site and re-packed at every read site.
+**The fix, in order.** The carrier was replaced before the fields were removed:
 
-**Why it matters.** Purely ergonomic: `[2]float64` has no `.X`/`.Y`, no
-arithmetic, and no `ToPointRounded`, so the conversion noise above is repeated
-in `positionedTopologyBuilder`, `geometricHubTopology`, `balancedClusterService`
-and the preview `generatorCoords` helper.
+1. `editor_state_model.ManualZoneSave` **deleted**. `EditorState.ManualZones` is
+   `[]template_model.Zone`; the `manualPosition`/`quality` sidecars exist only on the entity,
+   built by the two remaining converters. `cloneZone`/`cloneMainObject`/`cloneRoad`/
+   `cloneTypedRef` (~60 lines of hand-maintained entity deep-copy, with a comment obliging
+   future authors to extend it) died with the wrapper; `template_model.Zone.Clone` owns it now.
+2. The three fields removed from `internal/entities/template/template_variant/zone.go` —
+   **the one approved protected edit, 19 deletions, 0 insertions, nothing else in the tree.**
+3. `*[2]float64` → `*data.Vec2[float64]` through the model, the four topology producers,
+   `ZoneBuilder`, all four preview layout files, the zone-editor canvas and dialog, and the
+   whole `FindOpenPosition`/`FindOpenZonePosition` chain (two interfaces, three test doubles).
+   The pack/unpack noise the item was filed about is gone, and so are the three
+   "Is this required to be copied?" comments — with a value struct the question answers itself.
 
-**⚠ OWNER DECISION REQUIRED — protected directory.**
-[internal/entities/template/](../../internal/entities/template/) is read-only under
-AGENTS.md §2.1. The field is `json:"-"`, so changing its Go type **cannot**
-change the emitted `.rmg.json`, but the rule is absolute: **do not start this
-without the owner explicitly approving the edit to
-`template_variant/zone.go`.**
+**Decisions worth keeping.** Positions stay **pointers** (`nil` = never stamped; `Vec2`'s zero
+value is a legitimate position). The spelling is `data.Vec2[float64]` everywhere, not the
+`models.Position` alias. `data.Vec2` gets **no** JSON methods, ever.
 
-**Fix, if approved.** Change the field to `*models.Position`
-(= `data.Vec2[float64]`) — note this makes `internal/entities/template` import
-`internal/models`, so **first check for an import cycle**: if
-`internal/models` already imports `internal/entities` (it does, via
-`ManualZoneSave` in `internal/dtos/editor_state_dto`), the type must instead be
-`*data.Vec2[float64]` from
-[vec2.go](../../internal/helpers/data/vec2.go), which has no such dependency.
-Then delete the pack/unpack at every producer and consumer.
+**What batch R deliberately did NOT do.** The persisted `editor_state.ManualZoneSave.ManualPosition`
+is still `*[2]float64`, so `.gen.json` is byte-identical and the frozen v0/v1 fixtures pass
+unchanged. A temporary array⇄Vec2 bridge sits in `editor_state_model/manualZoneSave.go`,
+marked as **batch S's to delete**. Batch S changes the persisted shape, bumps the schema to 2,
+adds the frozen-snapshot migration and finally persists the generator stamps.
 
-**Blocked by:** §2.3 — do that first so the preview side is already float-native
-and this becomes a mechanical type swap.
+**One trap found on the way through.** Two integration tests `json.Unmarshal`ed the on-disk
+file into `editor_state_model.EditorState`. That only ever worked because the model embedded
+the tagged entity groups; the moment `ManualZones` became a tagless model type the decode
+started failing. Both now decode the entity, which is the only type with json tags.
 
-**Tests.** No behaviour change is expected. The proof obligation is a golden
-test: generate a template before and after, assert the `.rmg.json` bytes are
-identical.
+Coverage 74.5 % → **74.1 %**; lint held at 0. The drop is the deleted `cloneZone` machinery,
+not a hole: every function in every touched file reports 100 %.
 
 ---
 
@@ -2015,24 +2029,29 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **H** | §5.1, §5.2 | **Done 2026-08-11.** Zone-editor pointer + property-panel tests against the post-§2.3 float coordinates: eight pointer tests and eighteen property tests, all driven through the real window with a golden per action. Turned `ZoneEditorHandler` from a reachability-only handler into a driving one (canvas, side-panel and Apply actions). `TestWhenAZoneNameIsTyped_…` dropped — the zone name is a read-only label. Coverage flat. Record: §5.1, §5.2. |
 | ✅ **I** | §2.1, §1.5 | **Done 2026-09-01.** `EditorStateDto` rework across twelve phases (5 and 11 superseded mid-flight), folding in §1.5 as phase 6. Entity/Model/DTO split with the **Model owning the structure**; `.gen.json` shape unchanged throughout. Phase 6 cut render-path allocations by 62 %; phase 12 added the layering gate and spun off §2.6. Doctrine now lives in **AGENTS.md §4.4.1**. Records: §2.1, §1.5, §2.6. |
 | **J** | §2.2 Branch B | **Done 2026-09-03.** Zone tier single source of truth, no protected edit. Five phases: `IZoneTierService` absorbed and deleted `ZoneClassifier`; the generator records the tier it planned; `internal/models/template_model/` mirrors the whole `.rmg.json` schema and puts `Quality *neutral_zone.Quality` on the zone; `.gen.json` persists it as `*int8`; the sweep moved the editor, handlers and `preview_service` onto the model. **No golden moved and no pixel changed** — the correction is latent by construction (see §2.2). Coverage 72.9 % → **74.3 %**. Record: §2.2. |
-| **⚠ K** | §2.2 Branch A, §2.4, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 depends on §2.3. |
+| **⚠ K** | §2.2 Branch A, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 left the group on 2026-09-05 when the owner approved it as batch R. |
 | ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer, and a real font-fallback bug in `themes.NewTheme`. §5.5 step 2 rejected — CI never becomes the golden reference. Full record in §5.4/§5.5 above. |
 | ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. Full record in §5.4 above. |
 | ✅ **N** | §1.5 | **Folded into batch I phase 6, 2026-08-31.** Never ran standalone — the measurement showed the cost was the clone *mechanism* (lazy `linq` chains allocating for empty slices), not the panel read sites this item named. Record: §1.5. |
 | ✅ **O** | §2.6 step 1 | **Done 2026-09-01.** Closed the **DTO** allow-list at **two entries, not zero**. `internal/services/pickers` was view-model logic, not a service: deleted, and rebuilt as package-level functions in `app/gui/models/` along with its handler, interface, four DTOs, mock and wire providers. `bonuses` and `zone_content` keep their DTOs by owner decision, under a written justification in the list's comment. §2.6 steps 2–4 (the 113-file **entity** list) are untouched and stay open. Record: §2.6. |
 | ✅ **P** | §2.6 steps 2 + 3 | **Done 2026-09-04.** Ruled the `.rmg.json` vocabulary gets **no carve-out**, then acted: `entities.Connection` → `template_model.Connection` across 62 files, closing steps 2 and 3 together. `entityNamerAllowList` 21 → **14 entries**, breach 84 files/21 packages → **64/14**, all seven removals mutation-proved simultaneously. **Owner approved one protected edit**: `IsUserAdded` removed from `internal/entities/template/template_variant/connection.go` — it was `json:"-"` editor state in the schema mirror, and `editor_state.ManualConnectionSave` already carried a sidecar copy because the entity could not serialize it. Wire format provably unmoved; no golden, no fixture. Coverage flat at **74.3 %**, lint 0. Record: §2.6. |
 | ✅ **Q** | §2.6 step 4 | **Done 2026-09-05.** The generator builds the model. 64 files / 13 packages moved off `internal/entities`; `entityNamerAllowList` **14 → 1** (`file_service`, permanent, never add). Three owner-chosen design changes rode along: `ZoneFactory` stamps the zone tier at build time (`stampPlannedZoneTiers` deleted); `UpdateTemplate` deep-copies via a new `template_model.Template.Clone()` instead of a Model→Entity→Model round trip (both re-attach lines gone); `FileService.SaveTemplateWithPreview` takes the model and maps inside, so `templateHandler` holds no `ITemplateMapper`. **No protected edit**, no golden, no fixture. Coverage 74.3 → **74.5 %**, lint 0. Record: §2.6. |
+| ✅ **R** | §2.4 | **Done 2026-09-05.** Re-scoped by the owner from "swap a type" to "the entity stops carrying editor state". Three phases: the `editor_state_model.ManualZoneSave` wrapper deleted so `ManualZones` is `[]template_model.Zone` and nothing lowers zones to entities in memory; **one approved protected edit** removing `GeneratorPosition`/`GeneratorRing`/`ManualPosition` from `template_variant/zone.go` (19 deletions, 0 insertions); then `*[2]float64` → `*data.Vec2[float64]` across ~35 files. `.gen.json` **byte-identical** — the persisted sidecar stays an array behind a temporary bridge that batch S deletes. No golden, no fixture. Coverage 74.5 → **74.1 %** (deleted `cloneZone`, no new holes), lint 0. Record: §2.4. |
+| **S** | §2.4 follow-on | **Not started, fully scoped 2026-09-05.** Editor-state schema **v2**: `manualZones[*].manualPosition` becomes an object, `generatorPosition`/`generatorRing` gain sidecars, `CurrentEditorStateSchemaVersion` → 2. Mechanism is **frozen per-version snapshots + typed migrations** in `internal/entities/editor_state/editor_state_v1/`, hooked in `FileService.LoadSettingsFile`, rejecting newer-than-current loudly. `data.Vec2` gets no marshaller. See the plan file's "Deferred to batch S" section for every decision already taken. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is
 otherwise ordered by dependency.
 
 **Coverage note.** Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **74.5 %**
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **74.1 %**
 (72.5 % through batch B; batch C added the helper tests, batch D the clone and
 accessor tests, batch I the entity/model/converter tests; batch O gave back
 0.1 pp with the two constructors it deleted; batch J added the tier-service,
 `template_model` converter and persistence tests; batch P was type-only and
-moved it not at all; batch Q added the `Clone` and factory-tier tests, +0.2 pp).
+moved it not at all; batch Q added the `Clone` and factory-tier tests, +0.2 pp;
+batch R gave back 0.4 pp by **deleting** the fully-covered `cloneZone` machinery
+— removing 100 %-covered code from a 74 %-covered tree always lowers the ratio,
+and no test was written to paper over it).
 
 ---
 
@@ -2048,7 +2067,7 @@ moved it not at all; batch Q added the `Clone` and factory-tier tests, +0.2 pp).
 | Unit | `go test ./test/unit/... -count=1` | pass |
 | Integration | `go test -tags=integration_test ./test/integration/... -count=1` | pass |
 | GUI integration | `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (needs GPU) |
-| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **74.3 %** |
+| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **74.1 %** |
 | Lint | `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
 | Format | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | Wire | `wire diff ./internal/composition/...` | no diff |

@@ -263,7 +263,7 @@ func TestWhenPositionDrivenTopologySelected_SetsGeneratorPositionOnAllZones(t *t
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual, _ := generateTemplate(generator)
+			actual, _ := generator.Generate()
 
 			// Assert
 			for _, zone := range actual.Variants[0].Zones {
@@ -283,7 +283,7 @@ func TestWhenCirclesTopologySelected_SetsGeneratorRingOnAllZones(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	actual, _ := generateTemplate(generator)
+	actual, _ := generator.Generate()
 
 	// Assert
 	for _, zone := range actual.Variants[0].Zones {

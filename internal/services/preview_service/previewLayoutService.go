@@ -99,8 +99,7 @@ func (this *PreviewLayoutService) layoutManualPositions(zones []template_model.Z
 
 	var positions models.Positions
 	for _, zone := range zones {
-		p := *zone.ManualPosition // Is this required to be copied? can't it be used directly safely?
-		positions.Add(data.NewVec2(p[0], p[1]).MultiplyScalar(side))
+		positions.Add(zone.ManualPosition.MultiplyScalar(side))
 	}
 	radius := radiusFromClosestPair(positions, metrics.zoneRadiusMax, metrics.minGap)
 	this.commitPositions(zones, positions, radius)

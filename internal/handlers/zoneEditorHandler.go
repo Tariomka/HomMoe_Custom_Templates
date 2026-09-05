@@ -4,6 +4,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -95,7 +96,7 @@ func (this *zoneEditorHandler) CreateZoneEditorConnection(
 	return this.connectionEditor.NewDefaultConnection(request.From, request.To, request.Zones, request.PlayerZoneNames)
 }
 
-func (this *zoneEditorHandler) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
+func (this *zoneEditorHandler) FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64] {
 	return this.zoneEditor.FindOpenPosition(occupied)
 }
 

@@ -2,10 +2,10 @@ package geometricHubTopology_test
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -579,13 +579,10 @@ func TestWhenHexagonHasThreeInteriors_VerticesAreEquidistantFromPolygonCenter(t 
 	vertexM := positionOf(variant, "Neutral-M")
 	vertexO := positionOf(variant, "Neutral-O")
 	vertexQ := positionOf(variant, "Neutral-Q")
-	centroid := [2]float64{
-		(vertexM[0] + vertexO[0] + vertexQ[0]) / 3,
-		(vertexM[1] + vertexO[1] + vertexQ[1]) / 3,
-	}
+	centroid := vertexM.Add(vertexO).Add(vertexQ).DivideScalar(3)
 	radii := make([]float64, 0, 3)
-	for _, vertex := range [][2]float64{vertexM, vertexO, vertexQ} {
-		radii = append(radii, math.Hypot(vertex[0]-centroid[0], vertex[1]-centroid[1]))
+	for _, vertex := range []data.Vec2[float64]{vertexM, vertexO, vertexQ} {
+		radii = append(radii, vertex.Subtract(centroid).Distance())
 	}
 	assert.InDelta(t, 0, spreadOf(radii), 0.000001,
 		"triangle vertices must be equidistant from the polygon center: %v", radii)
@@ -653,7 +650,7 @@ func TestWhenEightPlayersHaveManyInteriors_AllPositionsStayInsideUnitSquare(t *t
 	outOfBounds := 0
 	for _, zone := range variant.Zones {
 		position := *zone.GeneratorPosition
-		if position[0] < 0 || position[0] > 1 || position[1] < 0 || position[1] > 1 {
+		if position.X < 0 || position.X > 1 || position.Y < 0 || position.Y > 1 {
 			outOfBounds++
 		}
 	}

@@ -1,15 +1,18 @@
 package editor_state_model
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
+)
 
 type ManualEditSettings struct {
-	ManualZones       []ManualZoneSave
+	ManualZones       []template_model.Zone
 	ManualConnections []ManualConnectionSave
 }
 
 func ToManualEditSettingsModel(entity editor_state.ManualEditSettings) ManualEditSettings {
 	return ManualEditSettings{
-		ManualZones:       ToManualZoneSaveModels(entity.ManualZones),
+		ManualZones:       ToManualZoneModels(entity.ManualZones),
 		ManualConnections: ToManualConnectionSaveModels(entity.ManualConnections),
 	}
 }

@@ -5,11 +5,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenTheGroupIsPersisted_TheZonesAreWrapped(t *testing.T) {
+func TestWhenTheGroupIsPersisted_TheZonesAreLifted(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	entity := allFieldsManualEditSettings()
@@ -20,7 +22,7 @@ func TestWhenTheGroupIsPersisted_TheZonesAreWrapped(t *testing.T) {
 	// Assert
 	assert.Equal(
 		t,
-		[]editor_state_model.ManualZoneSave{{ManualZoneSave: entity.ManualZones[0]}},
+		[]template_model.Zone{{Name: "Zone A", ManualPosition: new(data.NewVec2(0.25, 0.75))}},
 		model.ManualZones)
 }
 

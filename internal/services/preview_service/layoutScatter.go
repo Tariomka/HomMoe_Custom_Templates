@@ -94,8 +94,7 @@ func projectScatterPositions(
 	rawCenter := positionCentroid(zones)
 	var positions models.Positions
 	for _, zone := range zones {
-		p := *zone.GeneratorPosition // Is this required to be copied? can't it be used directly safely?
-		positions.Add(data.NewVec2(p[0], p[1]).Subtract(rawCenter).MultiplyScalar(gScale))
+		positions.Add(zone.GeneratorPosition.Subtract(rawCenter).MultiplyScalar(gScale))
 	}
 	fitToCanvas(positions, metrics, zoneRadius+metrics.margin, false)
 	return positions
@@ -110,9 +109,7 @@ func meanRawEdgeLength(zones []template_model.Zone, adj [][]int) float64 {
 			if j <= i {
 				continue
 			}
-			pi := *zones[i].GeneratorPosition
-			pj := *zones[j].GeneratorPosition
-			sum += math.Hypot(pi[0]-pj[0], pi[1]-pj[1])
+			sum += zones[i].GeneratorPosition.Subtract(*zones[j].GeneratorPosition).Distance()
 			count++
 		}
 	}

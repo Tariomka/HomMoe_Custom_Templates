@@ -45,7 +45,7 @@ func (this *PositionedTopologyBuilder) BuildVariant(
 		configuration, playerLabels, allLabels, tuning, neutralZones, holdCityNeutralLabel, connectionNames)
 	for index := range zones {
 		position := positions[index]
-		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
+		zones[index].GeneratorPosition = &position
 	}
 	if decorateZones != nil {
 		decorateZones(zones, allLabels, playerLabels, neutralZones)

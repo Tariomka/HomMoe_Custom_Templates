@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/road_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -250,22 +251,21 @@ func (this *ZoneEditorService) RemoveZone(
 
 // FindOpenPosition returns a normalized position on a coarse interior grid
 // that maximizes the distance to the occupied positions.
-func (this *ZoneEditorService) FindOpenPosition(occupied [][2]float64) [2]float64 {
+func (this *ZoneEditorService) FindOpenPosition(occupied []data.Vec2[float64]) data.Vec2[float64] {
 	const gridSteps = 7
-	best := [2]float64{0.5, 0.5}
+	best := data.NewVec2(0.5, 0.5)
 	bestScore := -1.0
 	for row := range gridSteps {
 		for col := range gridSteps {
-			candidate := [2]float64{
-				0.1 + 0.8*float64(col)/float64(gridSteps-1),
-				0.1 + 0.8*float64(row)/float64(gridSteps-1),
-			}
+			candidate := data.NewVec2(
+				0.1+0.8*float64(col)/float64(gridSteps-1),
+				0.1+0.8*float64(row)/float64(gridSteps-1))
 			score := math.MaxFloat64
-			for _, p := range occupied {
-				score = math.Min(score, math.Hypot(candidate[0]-p[0], candidate[1]-p[1]))
+			for _, position := range occupied {
+				score = math.Min(score, candidate.Subtract(position).Distance())
 			}
 			if len(occupied) == 0 {
-				score = math.Hypot(candidate[0]-0.5, candidate[1]-0.5)
+				score = candidate.Subtract(data.NewVec2(0.5, 0.5)).Distance()
 			}
 			if score > bestScore {
 				bestScore = score

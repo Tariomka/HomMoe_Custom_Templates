@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -166,7 +167,7 @@ func TestWhenApplyingAnEditedRevertToBase_TheEditsAreStored(t *testing.T) {
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
 	base, _ := state.PreviewBaseZones()
 	editedZones := append([]template_model.Zone(nil), base.Zones...)
-	editedZones[0].ManualPosition = &[2]float64{0.1, 0.2}
+	editedZones[0].ManualPosition = new(data.NewVec2(0.1, 0.2))
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{

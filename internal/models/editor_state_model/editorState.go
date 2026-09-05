@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/topology"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -85,7 +86,7 @@ func (this *EditorState) Clone() EditorState {
 	clone.HighNeutralContentRows = CloneZoneContentRows(this.HighNeutralContentRows)
 	clone.HubZoneContentRows = CloneZoneContentRows(this.HubZoneContentRows)
 
-	clone.ManualZones = linq.SelectSlice(this.ManualZones, ManualZoneSave.Clone)
+	clone.ManualZones = linq.SelectSlice(this.ManualZones, template_model.Zone.Clone)
 	clone.ManualConnections = linq.SelectSlice(this.ManualConnections, ManualConnectionSave.Clone)
 
 	return clone

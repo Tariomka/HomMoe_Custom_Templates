@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -70,7 +71,7 @@ func TestWhenGeometricHubTopologySelected_CreatesPositionedHubZone(t *testing.T)
 	variant := provider.CreateTopologyVariant(*configuration, playerLabels, nil, tuning, "")
 
 	// Assert
-	var hubPosition *[2]float64
+	var hubPosition *data.Vec2[float64]
 	for _, zone := range variant.Zones {
 		if zone.Name == "Hub" {
 			hubPosition = zone.GeneratorPosition

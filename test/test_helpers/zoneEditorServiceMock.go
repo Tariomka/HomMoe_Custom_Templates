@@ -1,6 +1,7 @@
 package test_helpers
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -72,8 +73,8 @@ func (this *ZoneEditorServiceMock) RemoveZone(
 	return remainingZones, remainingConnections
 }
 
-func (this *ZoneEditorServiceMock) FindOpenPosition(occupied [][2]float64) [2]float64 {
+func (this *ZoneEditorServiceMock) FindOpenPosition(occupied []data.Vec2[float64]) data.Vec2[float64] {
 	arguments := this.Called(occupied)
-	position, _ := arguments.Get(0).([2]float64)
+	position, _ := arguments.Get(0).(data.Vec2[float64])
 	return position
 }

@@ -3,6 +3,7 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
@@ -29,7 +30,7 @@ type TemplateHandlerMock struct {
 	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) template_model.Zone
 	DescribeZoneEditorGraphFunc     func([]template_model.Zone, []template_model.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) template_model.Connection
-	FindOpenZonePositionFunc        func([][2]float64) [2]float64
+	FindOpenZonePositionFunc        func([]data.Vec2[float64]) data.Vec2[float64]
 	GetNextZoneLabelFunc            func([]template_model.Zone) string
 	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone
 	CanDeleteZoneFunc               func(string, map[string]bool) bool
@@ -131,11 +132,11 @@ func (this *TemplateHandlerMock) CreateZoneEditorConnection(
 	return template_model.Connection{}
 }
 
-func (this *TemplateHandlerMock) FindOpenZonePosition(occupied [][2]float64) [2]float64 {
+func (this *TemplateHandlerMock) FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64] {
 	if this.FindOpenZonePositionFunc != nil {
 		return this.FindOpenZonePositionFunc(occupied)
 	}
-	return [2]float64{}
+	return data.Vec2[float64]{}
 }
 
 func (this *TemplateHandlerMock) GetNextZoneLabel(zones []template_model.Zone) string {

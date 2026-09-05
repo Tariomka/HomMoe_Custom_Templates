@@ -1,187 +1,258 @@
-# Session carry-forward — 2026-09-05
+# Session carry-forward — 2026-09-05 (batch R done, batch S next)
 
 ## 1. Session goal
 
-Take **backlog §2.6 step 4**, the last step of the entity-confinement work: move the
-generator and its whole tail off `internal/entities` onto `internal/models/template_model`,
-so `TemplateGenerator.Generate` builds the model directly and `entityNamerAllowList`
-reaches its floor of one entry. Executed as **batch Q**, four phases, all complete.
+Pick the next item from backlog §8. Everything left was owner-gated; the owner chose **§2.4**
+and immediately re-scoped it from "swap `[2]float64` for `Vec2`" to the structural problem
+underneath: `entities.Zone` was still the in-memory *carrier* for three fields it can never
+serialize. Executed as **batch R**, four phases, all complete and green. The wire-format half
+was deliberately split off as **batch S**, which is fully scoped but not started.
 
 ## 2. Fixes applied
 
-No user-facing bug fixes. Two latent structural gaps closed:
+No user-facing bug fixes. Two latent defects closed:
 
-- `FileService.SaveTemplateWithPreview` took an entity in its signature, breaking the
-  "entities stay inside `file_service`" half of the owner's rule
-  ([internal/services/file_service/fileService.go](../internal/services/file_service/fileService.go)).
-- `templateHandler.UpdateTemplate` used a Model → Entity → Model round trip as an
-  accidental deep copy, which forced two load-bearing "re-attach" lines
-  ([internal/handlers/templateHandler.go](../internal/handlers/templateHandler.go)).
+- The manual-edit snapshot round-tripped live zones through `entities.Zone`
+  (`SetManualEdits` → `ManualZones` → `GetManualZones`), so a generator stamp survived a
+  regenerate-with-manual-edits **only because the entity carried it**, while a `.gen.json`
+  reload silently dropped it. The carrier is gone; the model keeps its own zones.
+- Two integration tests were `json.Unmarshal`ing the on-disk file into
+  `editor_state_model.EditorState`. That only ever worked because the model embedded the
+  *tagged* entity groups. Both now decode `editor_state.EditorState`.
 
 ## 3. Features added / changed
 
-No user-visible behaviour change. Structural:
+No user-visible behaviour change. `.gen.json` and `.rmg.json` are byte-identical.
 
-- Every builder, factory, provider, interface and topology service under
-  `internal/services/` returns `template_model` types. 26 entity types, none of which
-  had an alias twin, so every change was compiler-checked.
-- `Generate` assembles `template_model.Template{...}`; the `ITemplateMapper` dependency
-  and `stampPlannedZoneTiers` are gone. **`ZoneFactory` stamps the tier at build time**
-  (neutral → requested, hub → Highest, spawn → nil). Owner decision.
-- `template_model.Template.Clone()` (deep, one `Clone()` per type owning a slice or
-  pointer); `UpdateTemplate` clones instead of round-tripping. Owner decision.
-- `FileService` takes `mappers.ITemplateMapper`; `SaveTemplateWithPreview` takes the
-  model; `templateHandler` no longer holds `ITemplateMapper` at all. Owner decision.
-- `ConnectionEditorService.NewDefaultConnection`'s third conversion seam dissolved;
-  twelve `template_model.ToXModel(s)` lifts deleted across `connection_editor`,
-  `zoneTierService`, `gladiatorArenaProvider`.
-- `entityNamerAllowList` **14 → 1** (`file_service`), comment says never add.
+- `editor_state_model.ManualZoneSave` **deleted**; `EditorState.ManualZones` is
+  `[]template_model.Zone`. Four converters became two:
+  `ToManualZoneSaveEntities([]template_model.Zone)` and
+  `ToManualZoneModels([]editor_state.ManualZoneSave)`.
+- `cloneZone` / `cloneMainObject` / `cloneRoad` / `cloneTypedRef` **deleted** (~60 lines of
+  hand-maintained entity deep-copy, plus the comment obliging future authors to extend it).
+  `template_model.Zone.Clone` owns it.
+- **One approved protected edit:** `GeneratorPosition`, `GeneratorRing`, `ManualPosition`
+  removed from `internal/entities/template/template_variant/zone.go` — 19 deletions,
+  0 insertions, nothing else in the protected trees.
+- `*[2]float64` → `*data.Vec2[float64]` through the model, four topology producers,
+  `ZoneBuilder`, four preview layout files, the zone-editor canvas and dialog, and the whole
+  `FindOpenPosition` / `FindOpenZonePosition` chain (two interfaces, three test doubles).
+  The three "Is this required to be copied?" comments are gone.
+
+**Decision changed from the written plan:** the converters stayed in `editor_state_model`
+instead of moving to `internal/mappers/editorStateMapper.go`. Moving them would have split the
+pair from its identical sibling `manualConnectionSave.go` and from
+`ToManualEditSettingsModel`/`Entity`, which live in the model package and call them.
 
 ## 4. File modifications
 
-**320 files changed, +1570/−1306**, one untracked test folder, one untracked plan.
-Highlights:
+**58 modified, 3 added, 4 deleted.** Highlights:
 
 | File | Change |
 | --- | --- |
-| [internal/services/template_generator/templateGenerator.go](../internal/services/template_generator/templateGenerator.go) | Builds the model directly; mapper + `stampPlannedZoneTiers` deleted. |
-| [internal/services/zones/zoneFactory.go](../internal/services/zones/zoneFactory.go) | Returns model zones; stamps `Quality` in `CreateNeutralZone` / `CreateHubZone`. |
-| [internal/models/template_model/template.go](../internal/models/template_model/template.go) + every `template_*_model/*.go` with a reference field | `Clone()` methods. |
-| [internal/handlers/templateHandler.go](../internal/handlers/templateHandler.go) | `UpdateTemplate` clones; `SaveTemplate` passes the model; no `ITemplateMapper`. |
-| [internal/services/file_service/fileService.go](../internal/services/file_service/fileService.go) + interface | Model signature, mapper injected, maps at the repository call. |
-| [internal/models/config/generatorConfig.go](../internal/models/config/generatorConfig.go), [internal/mappers/mandatoryContentItemMapper.go](../internal/mappers/mandatoryContentItemMapper.go) | Followed the builder's return type (permitted namers). |
-| [internal/composition/wire_gen.go](../internal/composition/wire_gen.go) | Regenerated twice. |
-| [test/unit/architecture/dependency/layering_test.go](../test/unit/architecture/dependency/layering_test.go) | Allow-list at one entry; comment rewritten. |
-| `test/unit/internal/models/template_model/template/clone_test.go` | **New.** |
-| `test/unit/internal/services/zones/zoneFactory/create{Neutral,Hub,Spawn}Zone_test.go` | Three tier tests added. |
-| ~204 test files + 5 mocks | `entities.X` → `template_model.X`. |
-| `.agent/plans/batch-q-generator-builds-the-model.md` | The plan, complete with Final Recap + Deployment Plan. |
-| [.agent/backlog/backlog-opus5.md](backlog/backlog-opus5.md) | Header, §2.6 (✅, step 4 self-contained), §8 row **Q**, coverage note. |
-| `.agent/memories/{architecture,settled-decisions,template-model}.md` | Updated to the achieved state. |
-
-`cmd/tmpentitymigrate/` (throwaway stdlib AST rewriter) was created and **deleted**.
+| `internal/entities/template/template_variant/zone.go` | **The protected edit.** Three fields removed. |
+| `internal/models/editor_state_model/manualZoneSave.go` | Wrapper + entity clone gone; two converters plus the temporary `toPositionArray`/`fromPositionArray` bridge. |
+| `internal/models/editor_state_model/manualEditSettings.go`, `editorState.go` | `ManualZones []template_model.Zone`; `Clone` uses `template_model.Zone.Clone`. |
+| `internal/models/template_model/template_variant_model/zone.go` | Positions are `*data.Vec2[float64]`; six copy lines dropped from the converters. |
+| `app/gui/models/editorState.go` | `SetManualEdits`/`GetManualZones` no longer convert; `slices.Clone` only. |
+| `app/gui/dialogs/zoneEditorCanvas.go`, `zoneEditorDialog.go` | Vec2 drag/add/`manualPositions()`. |
+| `internal/services/preview_service/*` (4 files) | Vec2 reads; `a.Subtract(b).Distance()` replaces manual `math.Hypot`. |
+| topology producers (3) + `zoneBuilder.go` | Stamp the vector they already hold. |
+| `internal/services/connection_editor/zoneEditorService.go` + interface, `guiHandler.go`, `zoneEditorHandler.go` + interface | `FindOpenPosition`/`FindOpenZonePosition` take and return `Vec2`. |
+| `test/test_helpers/defaultTemplate.go` | Stopped stamping positions on the golden entity. |
+| `.agent/backlog/backlog-opus5.md` | §2.4 rewritten as the record; §8 rows **R** and **S**; tallies, coverage note and §9 baseline refreshed; §2.2's superseded "two seams" note corrected. |
+| `.agent/memories/{architecture,generator-domain,template-model}.md` | Updated to the achieved state, incl. the batch S plan. |
+| `.agent/plans/batch-r-entity-stops-carrying-editor-state.md` | The plan, complete with Final Recap and Deployment Plan. |
 
 ## 5. Tests added or updated
 
-- **Added**: `clone_test.go` (equality, 18 deep-mutation cases, nil and empty
-  preservation); `TestWhenNeutralZoneIsCreated_RecordsTheRequestedQuality`,
-  `TestWhenHubZoneIsCreated_RecordsTheHighestQuality`,
-  `TestWhenSpawnZoneIsCreated_LeavesTheQualityUnrecorded`.
-- **Renamed**: `…KeepsTheFlagThroughTheEntityRoundTrip` → `…KeepsTheFlagAcrossTheApply`
-  (there is no round trip any more; assertion unchanged).
-- **Mutation-verified**: factory stamp (3 tests fail without it), `Clone()` in
-  `UpdateTemplate` (`…LeavesTheSourceTemplateUntouched` fails without it), allow-list
-  (an injected `entities.Zone` in the generator fails the layering gate).
+- **Added:** `test/unit/internal/models/template_model/template_variant_model/zone/clone_test.go`
+  — the 24 deep-mutation cases **moved** from the deleted wrapper test and retargeted at
+  `template_model.Zone.Clone`, plus a `Quality` case the entity could not have.
+  `manualZoneSave/toManualZoneSaveEntities_test.go` and `toManualZoneModels_test.go`.
+- **Deleted:** `manualZoneSave/{clone,fromManualZoneSaves,toManualZoneSaves,toManualZoneSaveModels}_test.go`.
+  `…_SavePositionWins` was not carried over — phase 2 makes it structurally impossible.
+- **Retargeted:** the two stamp assertions in `templateGenerator/generate_test.go` now assert on
+  `Generate()`'s **model** rather than the lowered entity. This matters: the golden compares
+  whole entity templates, so it would have kept passing while silently no longer comparing
+  positions at all.
+- ~25 further test files moved onto `Vec2`.
 
 **Final gate run, all green:**
 
 | Gate | Result |
 | --- | --- |
-| `go build ./...` / `go vet` (both tag sets) | exit 0 |
+| `go build ./...`, `go vet` (both tag sets) | exit 0 |
 | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | `go run ./cmd/testlayoutcheck .` | passed |
 | `wire diff ./internal/composition/...` | exit 0 |
-| `go test ./test/unit/... -count=1` + coverage | exit 0 — **74.5 %** (was 74.3, floor 72.5) |
-| `go test -tags=integration_test ./test/integration/...` | exit 0 |
-| `go test -tags='integration_test,gui' ./test/integration/gui/...` | exit 0, **no `-update`** |
-| goldens / `testdata/` / `data/` / `internal/entities` changed | **0 / 0 / 0 / 0** |
+| `go test ./test/unit/... -count=1` | pass |
+| `go test -tags=integration_test ./test/integration/...` | pass |
+| `go test -tags='integration_test,gui' ./test/integration/gui/...` | pass, **no `-update`**, no golden moved |
 | `golangci-lint-v2 run ./...` | **0 issues** |
+| Coverage | **74.1 %** (was 74.5, floor 72.5) |
+| protected trees changed | 1 file / 19 deletions / 0 insertions; `data/` and `internal/registry/` untouched |
+
+Coverage fell 0.4 pp because the deleted `cloneZone` machinery was 100 % covered; removing
+fully-covered code from a 74 %-covered tree always lowers the ratio. Every function in every
+touched file still reports 100 %. No test was written to move the number back.
 
 ## 6. Git status snapshot
 
-Branch **`AD/fixing_some_stuff_08-12`**, head `e54456d docs` (batch P committed). 320
-modified files, 2 untracked paths (`.agent/plans/batch-q-…md`,
-`test/unit/internal/models/template_model/`). **Nothing staged or unstaged by the agent.**
-No index oddities this time.
+Branch **`AD/fixing_some_stuff_08-12`**, head **`7b3ccea Batch Q done`** — the owner committed
+batch Q before this session. Batch R is **uncommitted**: 58 modified, 4 deleted, 3 untracked
+(`manualZoneSave/toManualZoneModels_test.go`, `…/toManualZoneSaveEntities_test.go`,
+`test/unit/internal/models/template_model/template_variant_model/`).
+
+⚠ **Two paths appear STAGED and the agent did not stage them** — no `git add` was ever run this
+session. `.agent/plans/batch-r-…md` shows `AM` and `.agent/session-carry-forward.md` shows a
+staged deletion `D `. Per AGENTS.md §2.5 the index was left untouched. Check before committing.
 
 ## 7. Rejections / corrections
 
-- None from the owner this session; all five scoping questions were answered before any
-  edit and every answer was followed.
+- **The owner banned `goimports` mid-session** ("current tooling is enough to audit
+  everything"). One `goimports -w` pass over an explicit 16-file list had already run; every
+  import after that was fixed by hand against the compiler. Do not reach for it again.
 - Self-corrections worth keeping:
-  - **The tool retyped a `json.Unmarshal` target** in `gameRulesProvider/common_test.go`
-    (decoding a `.rmg.json` into the tagless model). Only `musttag` caught it. Restored
-    to decode the entity and lift via `ToTemplateModel`.
-  - Two `gofmt -r` attempts on *statements* failed (it rewrites expressions only); the
-    mutations were done with targeted edits and grep-verified instead.
-  - I round-tripped **two markdown files** and, during the allow-list mutation, **one
-    `.go` file** (`templateGenerator.go`) through `Get-Content`/`Set-Content` — the
-    latter is a rule breach. The file was immediately `gofmt -w`'d, its full diff read,
-    and CR count / UTF-8 arrow byte-checked (0 CRs, arrow intact). Don't repeat it.
-  - Phases 2 and 3 collapsed into one sweep because the compiler would not let the
-    providers flip without `Generate` and `UpdateTemplate` following.
+  - **A backlog edit used `| ✅ **Q** | §2.6 step 4 |` as its anchor — a *prefix* of the batch Q
+    row — so the replacement swallowed Q's text into the new S row.** Caught by re-listing the
+    table rows immediately after the edit, and repaired. Anchor on something that cannot be a
+    prefix of a line you intend to keep, and re-read the table after editing it.
+  - Phase 1 could not be verified standalone (see §3 of the plan); phases 1 and 2 were gated
+    together. The ordering that mattered — carrier fix before field deletion — was preserved.
+  - The plan's "move the converters to `internal/mappers`" was overruled by the codebase's
+    established seam; recorded in the phase summary rather than silently done differently.
 
 ## 8. Open questions
 
-- None blocking. §2.6 is closed; the entity façade `internal/entities` (alias package)
-  still exists and its own doc comment says it should be removed — that is a possible
-  future item, not scheduled, not asked for.
-- Still unreconciled from two sessions ago: two `TabCycling` benchmark baselines
-  disagree (~5,699 vs 6,640 allocs/op), taken on different trees.
+- The staged index entries in §6 — not created by the agent.
+- **Manual connections still use the old wrapper shape.** `editor_state_model.ManualConnectionSave`
+  wraps the entity exactly as `ManualZoneSave` used to, and `template_model.Connection` already
+  carries `IsUserAdded`, so the same collapse applies. Deliberately out of scope (the owner
+  scoped zones), but the asymmetry is now visible in the code. Worth a decision.
+- Still unreconciled from three sessions ago: two `TabCycling` benchmark baselines disagree
+  (~5,699 vs 6,640 allocs/op), taken on different trees.
 
 ## 9. Next recommended actions
 
-1. **Owner reviews and commits batch Q.** Follow the Deployment Plan in the plan file,
-   in particular step 1 (protected trees and goldens untouched) and step 3, the in-app
-   smoke test: tier colouring, hand-added neutral zone takes its tier, hand-drawn
-   connection stays user-added after Apply, castle sliders rebuild, **Save To** lands
-   the `.rmg.json` + `.png` in the detected templates directory.
-2. Delete the transient docs once it lands: the plan and this file. **Backlog §2.6 is
-   the surviving record** and is written to stand alone.
-3. Pick the next item from backlog §8; the remaining open items are the owner-gated
-   **⚠ K** group and whatever is left in §5/§6. There is no successor to §2.6.
+1. **Review and commit batch R.** Follow the Deployment Plan in
+   `.agent/plans/batch-r-entity-stops-carrying-editor-state.md` — in particular step 1 (the
+   protected diff is exactly one file), step 2 (the frozen fixtures did not move), and the
+   step 3 smoke test: drag a zone, add a zone by hand, regenerate with manual edits, change a
+   castle count, Save To, reload a fresh session, and **open an existing `.gen.json` from
+   `output/`** (it must still load — R does not change the format).
+2. Delete the plan file and this file once R lands. **Backlog §2.4 is the surviving record.**
+3. **Start batch S.** Full scope below.
+
+### Batch S — editor-state schema v2 and the versioned migration
+
+Every design decision is already made; do not re-ask. They are recorded in backlog §8's row S
+and in the plan's "Deferred to batch S" section.
+
+**Goal.** Make the persisted position a `Vec2`, persist the generator stamps, and build the
+versioning machinery that lets an old `.gen.json` still load.
+
+**Decided:**
+
+- `editor_state.ManualZoneSave.ManualPosition` becomes `*data.Vec2[float64]`, so
+  `manualZones[*].manualPosition` changes from `[0.25,0.75]` to `{"X":0.25,"Y":0.75}`. It is
+  the **only** JSON array-of-floats in the 72-key schema.
+- v2 **also adds `generatorPosition` and `generatorRing` sidecars** to `ManualZoneSave`, fixing
+  a real latent loss: every save silently drops the generator stamps today. They nest under
+  `manualZones`, so `persistedEditorStateFieldCount = 72` is **not** affected.
+- `CurrentEditorStateSchemaVersion` → **2**.
+- Mechanism: **frozen per-version snapshots + typed migrations.** A full frozen copy of the v1
+  struct tree lives in **`internal/entities/editor_state/editor_state_v1/`**, never edited
+  again, with a typed `MigrateToV2` beside it. Duplication is the feature — a later change to a
+  current struct can never silently redefine what v1 meant.
+- Hook: **`FileService.LoadSettingsFile`**, between decode and `ToModel`. A file whose
+  `schemaVersion` is **newer than current is rejected loudly** with a dedicated error saying the
+  app is too old — never a best-effort load, which would discard the newer file's data on the
+  next save.
+- **`data.Vec2` gets no `MarshalJSON`/`UnmarshalJSON`, ever.** The migration is what makes old
+  files load. This was an explicit owner ruling; a tolerant wrapper type was offered and
+  declined.
+- Delete `toPositionArray`/`fromPositionArray` from `internal/models/editor_state_model/manualZoneSave.go`
+  — they exist only to bridge R to S. When they are gone, `[2]float64` should vanish from the
+  repository entirely.
+
+**Constraints discovered while scoping R — read these before writing code:**
+
+- The repo decodes with **`encoding/json/v2`**. Feeding `[0.25,0.75]` to a struct field is a
+  **hard decode error**, not a silent nil. Without the migration, every existing user
+  `.gen.json` — including the real files in `output/` — becomes unloadable with a bare
+  "Load failed". Use those files as the acceptance test.
+- `FileService.LoadSettingsFile` decodes **into a seeded default entity**
+  (`editorStateMapper.NewDefaultEntity()`), so absent keys keep defaults rather than zero
+  values. `test/unit/internal/repositories/editorStateRepository/load_test.go` pins this. The
+  migration must not fight it.
+- Writes go through `atomicFileWriter.WriteJSON` with fixed options
+  (`jsontext.WithIndent("  ")`, `OmitEmptyWithLegacySemantics(true)`,
+  `FormatNilSliceAsNull(true)`). Do not introduce a second write path.
+- **Two fixture tests cannot survive unchanged, and this is the one sanctioned exception to the
+  frozen-fixture rule:** `TestWhenTheLegacyStateFixtureIsLoaded_…` and
+  `TestWhenTheCurrentStateFixtureIsLoaded_…` in
+  `test/integration/editorStateWireFormat_integration_test.go` `json.Unmarshal` straight into
+  `editor_state.EditorState`. They must be rewritten to decode **through the migration**. The
+  fixture **files** `editorState_v0_flat.gen.json` and `editorState_v1_flat.gen.json` stay
+  byte-frozen as legacy migration inputs; add `editorState_v2_flat.gen.json` beside them. Keep
+  comparing parsed objects, never bytes.
+- v0 carries **no** `schemaVersion` key at all and decodes at 0, so the migration gate is
+  `version < 2`, not `version == 1`.
+- `test/test_helpers/allFieldsEditorState.go` is the compile-time blast-radius point: the
+  fixtures are the marshaled form of `NewAllFieldsEditorStateEntity()`.
+- `SchemaVersion` is excluded from `EqualsIgnoringManualEdits`' change detection. Keep that
+  exemption for anything version-related you add.
+- **Prior art: none.** The repo has never transformed a decoded old shape — v0→v1 only added a
+  key. The dual-fixture pattern is the template to extend.
 
 ## 10. Carry-forward prompt
 
 > Read `AGENTS.md` first. The hard rules, one line each: never modify `data/`,
-> `internal/registry/` or anything under `internal/entities/template/` **without
-> explicit owner approval** — `internal/entities/editor_state/` is *not*
-> protected; everything must build and run on Windows and Linux
-> (`path/filepath`; chain PowerShell with `;`, never `&&`); every change ships
-> with tests and unit coverage must not drop below 72.5 % (currently **74.5 %**),
-> lint baseline **0 issues**; **never stage and never commit** — `Move-Item` not
-> `git mv`, `Remove-Item` not `git rm`; never change where `.rmg.json` is written
-> and never persist the output directory; never run a bulk in-place rewrite and
-> **never round-trip a `.go` file through `Get-Content`/`Set-Content`** — a
-> throwaway Go AST tool on an explicit file list is the sanctioned bulk mechanism,
-> `gofmt -r` rewrites expressions only (not statements), and verify
-> insertions == deletions per file.
+> `internal/registry/` or anything under `internal/entities/template/` **without explicit owner
+> approval** — `internal/entities/editor_state/` is *not* protected and batch S edits it
+> heavily; everything must build and run on Windows and Linux (`path/filepath`; chain
+> PowerShell with `;`, never `&&`); every change ships with tests and unit coverage must not
+> drop below 72.5 % (currently **74.1 %**), lint baseline **0 issues**; **never stage and never
+> commit** — `Move-Item` not `git mv`, `Remove-Item` not `git rm`; never change where
+> `.rmg.json` is written and never persist the output directory; never run a bulk in-place
+> rewrite and **never round-trip a `.go` file through `Get-Content`/`Set-Content`**. The owner
+> has **banned `goimports`** — fix imports by hand against the compiler.
 >
-> **Batch Q (the generator builds the model, backlog §2.6 step 4) is COMPLETE** —
-> four phases, every gate green, no golden, no fixture, **no protected edit**.
-> `entityNamerAllowList` is at its floor: `{internal/services/file_service}`,
-> permanent, never add. §2.6 is closed. Batch Q is **uncommitted** (320 modified
-> files, 2 untracked paths); batch P is committed through `e54456d` on
-> `AD/fixing_some_stuff_08-12`.
+> **Batch R is COMPLETE and uncommitted** (58 modified, 3 untracked, 4 deleted; batch Q is
+> committed at `7b3ccea` on `AD/fixing_some_stuff_08-12`). ⚠ Two `.agent/` paths show as
+> **staged** and no agent staged them — do not touch the index.
 >
-> What batch Q changed that later sessions must know: `TemplateGenerator.Generate`
-> builds `template_model.Template` directly — no entity, no mapper;
-> **`ZoneFactory` stamps `Quality`** (neutral → requested, hub → Highest, spawn →
-> nil, and nil is still load-bearing "infer it"); `UpdateTemplate` deep-copies with
-> `template_model.Template.Clone()` — the two re-attach lines are gone with the
-> round trip; `FileService.SaveTemplateWithPreview` takes the model and maps inside,
-> so `templateHandler` holds no `ITemplateMapper`. The golden generator test still
-> proves the entity round trip by lifting the model **test-side** in
-> `templateGenerator/common_test.go`; `GetDefaultTemplate()` stays entity-typed.
-> **The model has no JSON tags — never `json.Unmarshal` into it**; decode the entity
-> and lift.
+> What batch R changed that later sessions must know: `EditorState.ManualZones` is
+> `[]template_model.Zone` — the `editor_state_model.ManualZoneSave` wrapper and the
+> hand-written entity deep-copy are **gone**, `template_model.Zone.Clone` owns copying;
+> `GeneratorPosition`, `GeneratorRing` and `ManualPosition` **no longer exist on
+> `entities.Zone`** (one approved protected edit, 19 deletions); positions are
+> `*data.Vec2[float64]` everywhere above the persistence seam, spelled `data.Vec2[float64]`
+> and never `models.Position`. `.gen.json` is **byte-identical** — the persisted sidecar is
+> still `*[2]float64` behind `toPositionArray`/`fromPositionArray`, which batch S deletes.
 >
-> Standing traps unchanged: **nil is load-bearing** (nil `Previous` = first
-> generation, nil `Next` = unarmed debounce, nil `Zone.Quality` = infer); the
-> persisted tier is `*int8`; the two frozen fixtures under
-> `test/test_helpers/testdata/` and the untagged
-> `editorStateWireFormat_integration_test.go` must keep passing unchanged and
-> compare **parsed objects, never bytes**; `cmd/testlayoutcheck` matches test-only
-> export names tree-wide; a file gets `//go:build integration_test` **only** if it
-> calls a `*_testexports.go` accessor; `helpers.MapSlice`/`MapPointer` preserve
-> nil-vs-empty; `golangci-lint --fix` wraps as `param,\n) Ret {` where house style
-> is `param) Ret {`.
+> **Next up: batch S** — editor-state schema v2 plus a versioned migration. Every decision is
+> already made; see §9 of `./.agent/session-carry-forward.md` for the full brief, and backlog
+> §8 row S. The short version: persisted `ManualPosition` becomes a `Vec2` (object on the
+> wire), `generatorPosition`/`generatorRing` gain sidecars, `CurrentEditorStateSchemaVersion`
+> → 2, migration via a **full frozen v1 snapshot** in
+> `internal/entities/editor_state/editor_state_v1/` with a typed `MigrateToV2`, hooked in
+> `FileService.LoadSettingsFile`, rejecting newer-than-current loudly. **`data.Vec2` never gets
+> a marshaller** — owner ruling. The gate is `schemaVersion < 2` because v0 has no key at all.
 >
-> Lessons from Q: **a type rewriter cannot see `json.Unmarshal` targets** — grep
-> every rewritten file for `Unmarshal(`/`Decode(` (only `musttag` caught the one
-> that slipped); **check `settled-decisions.md` and `architecture.md` before
-> restating any "permanent" / "by decision" claim**; and check backlog §8 for a
-> free batch letter (next free is **R**).
+> Standing traps: **nil is load-bearing** (nil `Previous` = first generation, nil `Next` =
+> unarmed debounce, nil `Zone.Quality` = infer, nil position = never stamped); the persisted
+> tier is `*int8`; **the model has no JSON tags — never `json.Unmarshal` into it, including in
+> test code** (batch R found two tests doing exactly that); the repo decodes with
+> `encoding/json/v2`, which **hard-fails** an array into a struct, so schema v2 without its
+> migration makes every existing user `.gen.json` unloadable — test against the real files in
+> `output/`; `cmd/testlayoutcheck` matches test-only export names tree-wide; a file gets
+> `//go:build integration_test` **only** if it calls a `*_testexports.go` accessor;
+> `helpers.MapSlice`/`MapPointer` preserve nil-vs-empty; `golangci-lint --fix` wraps as
+> `param,\n) Ret {` where house style is `param) Ret {`.
 >
-> Next up: whatever the owner picks from backlog §8 — §2.6 has no successor. Full
-> handoff in `./.agent/session-carry-forward.md`.
+> Lessons from R: when editing a Markdown table, **never anchor on a string that is a prefix of
+> a row you intend to keep** — one such edit swallowed a neighbouring row — and re-read the
+> table right after. Check `settled-decisions.md` and `architecture.md` before restating any
+> "permanent" claim. The next free batch letter after S is **T**.

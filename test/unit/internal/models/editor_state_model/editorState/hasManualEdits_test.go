@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +25,7 @@ func TestWhenOnlyManualZonesArePresent_ReportsManualEdits(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
-	state.ManualZones = []editor_state_model.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+	state.ManualZones = []template_model.Zone{{Name: "Zone A"}}
 
 	// Act
 	hasEdits := state.HasManualEdits()

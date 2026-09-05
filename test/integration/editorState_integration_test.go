@@ -14,6 +14,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/panels"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -136,7 +138,7 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	// user-created connection between the first two zones.
 	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
-		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.2 * float64(i+1)}
+		zones[i].ManualPosition = new(data.NewVec2(0.1*float64(i+1), 0.2*float64(i+1)))
 	}
 	connections := append([]template_model.Connection(nil), template.Variants[0].Connections...)
 	added := template_model.Connection{
@@ -156,14 +158,14 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 
 	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
-	var onDisk editor_state_model.EditorState
+	var onDisk editor_state.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 
 	require.Len(t, onDisk.ManualZones, len(zones), "gen.json did not persist all manual zones")
 	require.NotEmpty(t, onDisk.ManualConnections, "gen.json did not persist manual connections")
 
-	// ManualPosition is json:"-" on the zone itself, so the round trip relies
-	// on the save wrapper preserving it.
+	// entities.Zone carries no position at all, so the round trip relies on the
+	// save wrapper's sidecar preserving it.
 	require.NotNil(t, onDisk.ManualZones[0].ManualPosition, "manual position was lost on save")
 	assert.InDelta(t, 0.1, onDisk.ManualZones[0].ManualPosition[0], 1e-9)
 	assert.InDelta(t, 0.2, onDisk.ManualZones[0].ManualPosition[1], 1e-9)
@@ -218,7 +220,7 @@ func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 	raw, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 
-	var onDisk editor_state_model.EditorState
+	var onDisk editor_state.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 	assert.Empty(t, onDisk.ManualZones)
 	assert.Empty(t, onDisk.ManualConnections)
@@ -238,7 +240,7 @@ func TestStructuralRegeneration_DropsManualEdits(t *testing.T) {
 
 	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
-		zones[i].ManualPosition = &[2]float64{0.3, 0.4}
+		zones[i].ManualPosition = new(data.NewVec2(0.3, 0.4))
 	}
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
 		Zones:       zones,

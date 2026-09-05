@@ -3,10 +3,9 @@ package regenerationDecisionService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -71,7 +70,7 @@ func TestWhenManualEditsExistButLayoutChanged_DoesNotReapply(t *testing.T) {
 	// Arrange
 	service := editor.NewRegenerationDecisionService()
 	current := layoutChangedState()
-	current.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
+	current.ManualZones = manualZones()
 
 	// Act
 	decision := service.DecideManualEditReapplication(defaultState(), current)
@@ -109,12 +108,12 @@ func TestWhenCastleOptionsUnchangedSinceGeneration_ReportsNoCastleChange(t *test
 	assert.Equal(t, &editor_state_model.CastleSettingChanges{}, decision.ReapplyWithCastleChanges)
 }
 
-func manualZoneSaves() []editor_state.ManualZoneSave {
-	return []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: gofakeit.Word()}}}
+func manualZones() []template_model.Zone {
+	return []template_model.Zone{{Name: gofakeit.Word()}}
 }
 
 func stateWithManualEdits() *editor_state_model.EditorState {
 	state := defaultState()
-	state.ManualZones = editor_state_model.ToManualZoneSaveModels(manualZoneSaves())
+	state.ManualZones = manualZones()
 	return state
 }

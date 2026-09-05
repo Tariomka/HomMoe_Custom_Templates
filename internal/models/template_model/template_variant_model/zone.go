@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
@@ -12,8 +13,8 @@ type Zone struct {
 	Name    string
 	Quality *neutral_zone.Quality
 
-	GeneratorPosition *[2]float64
-	ManualPosition    *[2]float64
+	GeneratorPosition *data.Vec2[float64]
+	ManualPosition    *data.Vec2[float64]
 
 	GeneratorRing *int
 
@@ -83,9 +84,6 @@ func (this Zone) Clone() Zone {
 func ToZoneModel(entity template.Zone) Zone {
 	return Zone{
 		Name:                      entity.Name,
-		GeneratorPosition:         entity.GeneratorPosition,
-		GeneratorRing:             entity.GeneratorRing,
-		ManualPosition:            entity.ManualPosition,
 		Size:                      entity.Size,
 		Layout:                    entity.Layout,
 		GuardCutoffValue:          entity.GuardCutoffValue,
@@ -123,9 +121,6 @@ func ToZoneModel(entity template.Zone) Zone {
 func ToZoneEntity(model Zone) template.Zone {
 	return template.Zone{
 		Name:                      model.Name,
-		GeneratorPosition:         model.GeneratorPosition,
-		GeneratorRing:             model.GeneratorRing,
-		ManualPosition:            model.ManualPosition,
 		Size:                      model.Size,
 		Layout:                    model.Layout,
 		GuardCutoffValue:          model.GuardCutoffValue,

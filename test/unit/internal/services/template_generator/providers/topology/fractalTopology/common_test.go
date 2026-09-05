@@ -37,7 +37,7 @@ func zonesWithoutValidPosition(variant template_model.Variant) []string {
 			invalid = append(invalid, zone.Name)
 			continue
 		}
-		positionX, positionY := zone.GeneratorPosition[0], zone.GeneratorPosition[1]
+		positionX, positionY := zone.GeneratorPosition.X, zone.GeneratorPosition.Y
 		if positionX < 0 || positionX > 1 || positionY < 0 || positionY > 1 {
 			invalid = append(invalid, zone.Name)
 		}

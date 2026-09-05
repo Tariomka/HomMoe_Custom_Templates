@@ -3,9 +3,11 @@ package test_helpers
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // NewAllFieldsEditorStateEntity is the all-fields model in its persisted shape,
@@ -135,17 +137,15 @@ func allFieldsContentRows(sid string, variantID int) []editor_state_model.ZoneCo
 
 // allFieldsManualZones builds a manual zone carrying the normalized position
 // that entities.Zone itself omits from JSON.
-func allFieldsManualZones() []editor_state_model.ManualZoneSave {
-	return []editor_state_model.ManualZoneSave{{
-		Zone: entities.Zone{
-			Name:                 "Fixture-Spawn-A",
-			Size:                 1.35,
-			Layout:               "Sides",
-			GuardCutoffValue:     17500,
-			GuardRandomization:   0.15,
-			GuardWeeklyIncrement: 0.2,
-		},
-		ManualPosition: &[2]float64{0.25, 0.75},
+func allFieldsManualZones() []template_model.Zone {
+	return []template_model.Zone{{
+		Name:                 "Fixture-Spawn-A",
+		Size:                 1.35,
+		Layout:               "Sides",
+		GuardCutoffValue:     17500,
+		GuardRandomization:   0.15,
+		GuardWeeklyIncrement: 0.2,
+		ManualPosition:       new(data.NewVec2(0.25, 0.75)),
 	}}
 }
 

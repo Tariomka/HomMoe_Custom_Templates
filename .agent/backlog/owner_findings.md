@@ -146,3 +146,8 @@ as "top level structs" (to simulate the current accessing).
 `neutralRowsForQuality` should be moved to either `generatorConfig`, or to helpers to a public location.
 
 ---
+
+Check all of the places where `data.Vec2` is used and update the code to use Vec2 methods instead
+of making calculations manually, like `positionAngle` and `FindOpenPosition`.
+
+---

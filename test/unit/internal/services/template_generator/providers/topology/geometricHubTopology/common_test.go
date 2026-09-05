@@ -4,6 +4,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -79,7 +80,7 @@ func mixedPlans(mediumLabels, lowLabels, highLabels []string) neutral_zone.Plans
 }
 
 // positionOf returns the generator position of the named zone.
-func positionOf(variant template_model.Variant, zoneName string) [2]float64 {
+func positionOf(variant template_model.Variant, zoneName string) data.Vec2[float64] {
 	for _, zone := range variant.Zones {
 		if zone.Name == zoneName && zone.GeneratorPosition != nil {
 			return *zone.GeneratorPosition
@@ -93,7 +94,7 @@ func positionOf(variant template_model.Variant, zoneName string) [2]float64 {
 func distanceBetween(variant template_model.Variant, firstZone, secondZone string) float64 {
 	first := positionOf(variant, firstZone)
 	second := positionOf(variant, secondZone)
-	return math.Hypot(first[0]-second[0], first[1]-second[1])
+	return first.Subtract(second).Distance()
 }
 
 // spreadOf returns the difference between the largest and smallest value.
@@ -112,13 +113,10 @@ func interiorAngleAt(variant template_model.Variant, previous, at, next string) 
 	previousPosition := positionOf(variant, previous)
 	atPosition := positionOf(variant, at)
 	nextPosition := positionOf(variant, next)
-	toPreviousX := previousPosition[0] - atPosition[0]
-	toPreviousY := previousPosition[1] - atPosition[1]
-	toNextX := nextPosition[0] - atPosition[0]
-	toNextY := nextPosition[1] - atPosition[1]
-	dot := toPreviousX*toNextX + toPreviousY*toNextY
-	magnitudes := math.Hypot(toPreviousX, toPreviousY) * math.Hypot(toNextX, toNextY)
-	return math.Acos(dot/magnitudes) * 180 / math.Pi
+	toPrevious := previousPosition.Subtract(atPosition)
+	toNext := nextPosition.Subtract(atPosition)
+	magnitudes := toPrevious.Distance() * toNext.Distance()
+	return math.Acos(toPrevious.DotProduct(toNext)/magnitudes) * 180 / math.Pi
 }
 
 // perimeterFreeAngles returns the interior angles (degrees) at the five

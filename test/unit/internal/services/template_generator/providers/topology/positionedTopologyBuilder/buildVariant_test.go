@@ -20,9 +20,9 @@ func TestWhenLayoutIsBuilt_StampsGeneratorPosition(t *testing.T) {
 	configuration := config.NewGeneratorConfig()
 	tuning := test_helpers.NewGenerationTuning(configuration, 1)
 	builder := newPositionedTopologyBuilder()
-	expectedPosition := [2]float64{0.25, 0.75}
+	expectedPosition := data.NewVec2(0.25, 0.75)
 	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
-		return []string{"A"}, models.Positions{data.NewVec2(expectedPosition[0], expectedPosition[1])}, nil
+		return []string{"A"}, models.Positions{expectedPosition}, nil
 	}
 
 	// Act

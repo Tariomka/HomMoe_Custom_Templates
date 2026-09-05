@@ -69,12 +69,8 @@ func (this *BalancedClusterService) CreateClusterVariant(
 
 	for index, label := range orderedLabels {
 		position := positions[index]
-		zones[index].GeneratorPosition = &[2]float64{position.X, position.Y}
-		// Seed the editor/preview layout with the mirrored position too, so the
-		// generated tournament opens as a full-size, two-sided mirror (honored
-		// by layoutManualPositions for every topology) while staying fully
-		// editable. ManualPosition is editor-only (json:"-") and is never saved.
-		zones[index].ManualPosition = &[2]float64{position.X, position.Y}
+		zones[index].GeneratorPosition = new(position)
+		zones[index].ManualPosition = new(position)
 		tier := allNeutralZonePlans.GetTier(label)
 		zones[index].GeneratorRing = &tier
 	}

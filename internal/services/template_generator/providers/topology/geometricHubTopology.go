@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -89,20 +90,20 @@ func (this *GeometricHubTopologyService) createZones(
 			configuration.ZoneConfiguration.HubZoneSize, configuration.ZoneConfiguration.Advanced.HubZoneCastles,
 			configuration.GenerateRoads, hubContentName),
 	}
-	zones[0].GeneratorPosition = &[2]float64{layoutCenter, layoutCenter}
+	zones[0].GeneratorPosition = new(data.NewVec2(layoutCenter, layoutCenter))
 
 	for index, label := range playerLabels {
 		zone := this.CreateClusterZone(
 			configuration, label, connectionNames[label], index, true, false, tuning, neutralZones)
 		position := layout.positions[label]
-		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
+		zone.GeneratorPosition = &position
 		zones = append(zones, zone)
 	}
 	for _, plan := range neutralZones {
 		zone := this.CreateClusterZone(
 			configuration, plan.Label, connectionNames[plan.Label], 0, false, false, tuning, neutralZones)
 		position := layout.positions[plan.Label]
-		zone.GeneratorPosition = &[2]float64{position.X, position.Y}
+		zone.GeneratorPosition = &position
 		zones = append(zones, zone)
 	}
 	return zones

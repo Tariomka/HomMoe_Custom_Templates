@@ -3,6 +3,8 @@ package manualZoneSave_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -15,7 +17,7 @@ func TestWhenZoneListIsEmpty_ReturnsNil(t *testing.T) {
 	var zones []template_model.Zone
 
 	// Act
-	saves := editor_state_model.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaveEntities(zones)
 
 	// Assert
 	assert.Nil(t, saves)
@@ -24,19 +26,19 @@ func TestWhenZoneListIsEmpty_ReturnsNil(t *testing.T) {
 func TestWhenZonesHaveManualPositions_PreservesEachPositionInSave(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	firstPosition := &[2]float64{0.25, 0.75}
-	secondPosition := &[2]float64{0.5, 0.5}
+	firstPosition := data.NewVec2(0.25, 0.75)
+	secondPosition := data.NewVec2(0.5, 0.5)
 	zones := []template_model.Zone{
-		{Name: "Zone A", ManualPosition: firstPosition},
-		{Name: "Zone B", ManualPosition: secondPosition},
+		{Name: "Zone A", ManualPosition: &firstPosition},
+		{Name: "Zone B", ManualPosition: &secondPosition},
 	}
-	expected := []editor_state_model.ManualZoneSave{
-		{Zone: template_model.ToZoneEntity(zones[0]), ManualPosition: firstPosition},
-		{Zone: template_model.ToZoneEntity(zones[1]), ManualPosition: secondPosition},
+	expected := []editor_state.ManualZoneSave{
+		{Zone: template_model.ToZoneEntity(zones[0]), ManualPosition: &[2]float64{0.25, 0.75}},
+		{Zone: template_model.ToZoneEntity(zones[1]), ManualPosition: &[2]float64{0.5, 0.5}},
 	}
 
 	// Act
-	saves := editor_state_model.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaveEntities(zones)
 
 	// Assert
 	assert.Equal(t, expected, saves)
@@ -48,7 +50,7 @@ func TestWhenZoneHasNoManualPosition_SavesNilPosition(t *testing.T) {
 	zones := []template_model.Zone{{Name: "Zone A"}}
 
 	// Act
-	saves := editor_state_model.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaveEntities(zones)
 
 	// Assert
 	assert.Nil(t, saves[0].ManualPosition)
@@ -63,7 +65,7 @@ func TestWhenZoneRecordsThePlasticTier_SavesItsOrdinal(t *testing.T) {
 	zones := []template_model.Zone{{Name: "Neutral-C", Quality: &quality}}
 
 	// Act
-	saves := editor_state_model.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaveEntities(zones)
 
 	// Assert
 	assert.Equal(t, int8(neutral_zone.QualityLowest), *saves[0].Quality)
@@ -75,7 +77,7 @@ func TestWhenZoneRecordsNoTier_SavesNoQuality(t *testing.T) {
 	zones := []template_model.Zone{{Name: "Neutral-C"}}
 
 	// Act
-	saves := editor_state_model.ToManualZoneSaves(zones)
+	saves := editor_state_model.ToManualZoneSaveEntities(zones)
 
 	// Assert
 	assert.Nil(t, saves[0].Quality)

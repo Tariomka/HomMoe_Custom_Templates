@@ -8,6 +8,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -75,7 +76,7 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	retierZone(state, zones, retiered, neutral_zone.QualityHigh, 1)
 	retieredName := zones[retiered].Name
 	for i := range zones {
-		zones[i].ManualPosition = &[2]float64{0.1 * float64(i+1), 0.05 * float64(i+1)}
+		zones[i].ManualPosition = new(data.NewVec2(0.1*float64(i+1), 0.05*float64(i+1)))
 	}
 	connections := append([]template_model.Connection(nil), template.Variants[0].Connections...)
 	connections = append(connections, template_model.Connection{
@@ -110,10 +111,9 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 
 	// The updated counts must be persisted back into the snapshot so saves and
 	// later regenerations carry them.
-	for _, save := range state.GetStateData().ManualZones {
-		if zone_helpers.IsZoneNameNeutral(save.Zone.Name) {
-			assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(
-				template_model.ToZoneModel(save.Zone)))
+	for _, zone := range state.GetStateData().ManualZones {
+		if zone_helpers.IsZoneNameNeutral(zone.Name) {
+			assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zone))
 		}
 	}
 }

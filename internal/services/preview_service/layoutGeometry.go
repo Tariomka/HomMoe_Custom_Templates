@@ -99,8 +99,7 @@ func (this *PreviewLayoutService) commitPositions(
 func getGeneratorCoordinates(zones []template_model.Zone) models.Positions {
 	var positions models.Positions
 	for _, zone := range zones {
-		p := *zone.GeneratorPosition // Is this required to be copied? can't it be used directly safely?
-		positions.Add(data.NewVec2(p[0], p[1]))
+		positions.Add(*zone.GeneratorPosition)
 	}
 	return positions
 }
@@ -272,15 +271,14 @@ func positionCentroid(zones []template_model.Zone) data.Vec2[float64] {
 
 	sum := data.NewVec2(0.0, 0.0)
 	for _, z := range zones {
-		p := *z.GeneratorPosition // Is this required to be copied? can't it be used directly safely?
-		sum = sum.Add(data.NewVec2(p[0], p[1]))
+		sum = sum.Add(*z.GeneratorPosition)
 	}
 	return sum.DivideScalar(float64(len(zones)))
 }
 
 func positionAngle(z template_model.Zone, rawCenter data.Vec2[float64]) float64 {
-	p := *z.GeneratorPosition
-	return math.Atan2(p[1]-rawCenter.Y, p[0]-rawCenter.X)
+	position := *z.GeneratorPosition
+	return math.Atan2(position.Y-rawCenter.Y, position.X-rawCenter.X)
 }
 
 // sortIndicesByAngle returns the given zone indices reordered by their raw

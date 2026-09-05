@@ -31,7 +31,7 @@ const geometryCanvasSide = 700
 
 // newGeometryZone builds a zone pinned at a normalized position.
 func newGeometryZone(name string, x, y float64) template_model.Zone {
-	return template_model.Zone{Name: name, ManualPosition: &[2]float64{x, y}}
+	return template_model.Zone{Name: name, ManualPosition: new(data.NewVec2(x, y))}
 }
 
 // newGeometryConnection builds a plain connection between two zones.

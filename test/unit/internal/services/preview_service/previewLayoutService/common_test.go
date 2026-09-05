@@ -1,13 +1,14 @@
 package previewLayoutService_test
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 // position returns a pointer to a normalized [0,1] coordinate pair.
-func position(x, y float64) *[2]float64 {
-	point := [2]float64{x, y}
+func position(x, y float64) *data.Vec2[float64] {
+	point := data.NewVec2(x, y)
 	return &point
 }
 

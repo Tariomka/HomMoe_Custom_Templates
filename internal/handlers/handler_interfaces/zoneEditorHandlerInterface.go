@@ -3,6 +3,7 @@ package handler_interfaces
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -21,7 +22,7 @@ type IZoneEditorHandler interface {
 		zones []template_model.Zone,
 		connections []template_model.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) template_model.Connection
-	FindOpenZonePosition(occupied [][2]float64) [2]float64
+	FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64]
 	GetNextZoneLabel(zones []template_model.Zone) string
 	CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone
 	CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool

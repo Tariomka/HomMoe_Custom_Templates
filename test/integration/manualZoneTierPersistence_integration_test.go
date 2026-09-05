@@ -119,9 +119,9 @@ func reloadedNeutralTier(t *testing.T, path string) *neutral_zone.Quality {
 	_, isError := reloaded.GetStatus()
 	require.False(t, isError, "loading the state failed")
 
-	saves := reloaded.GetStateData().ManualZones
-	require.NotEmpty(t, saves, "the manual snapshot was not persisted")
-	for _, zone := range editor_state_model.FromManualZoneSaves(saves) {
+	zones := reloaded.GetStateData().ManualZones
+	require.NotEmpty(t, zones, "the manual snapshot was not persisted")
+	for _, zone := range zones {
 		if zone_helpers.IsZoneNameNeutral(zone.Name) {
 			return zone.Quality
 		}

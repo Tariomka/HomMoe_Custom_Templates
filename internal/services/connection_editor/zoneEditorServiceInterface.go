@@ -1,6 +1,7 @@
 package connection_editor
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -57,5 +58,5 @@ type IZoneEditorService interface {
 
 	// FindOpenPosition returns a normalized position that maximizes the
 	// distance to the occupied positions.
-	FindOpenPosition(occupied [][2]float64) [2]float64
+	FindOpenPosition(occupied []data.Vec2[float64]) data.Vec2[float64]
 }

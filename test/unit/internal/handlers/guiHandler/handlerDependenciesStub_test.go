@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
@@ -142,8 +143,8 @@ func (this *handlerDependenciesStub) CreateZoneEditorConnection(
 	return template_model.Connection{}
 }
 
-func (this *handlerDependenciesStub) FindOpenZonePosition([][2]float64) [2]float64 {
-	return [2]float64{}
+func (this *handlerDependenciesStub) FindOpenZonePosition([]data.Vec2[float64]) data.Vec2[float64] {
+	return data.Vec2[float64]{}
 }
 
 func (this *handlerDependenciesStub) GetNextZoneLabel([]template_model.Zone) string {

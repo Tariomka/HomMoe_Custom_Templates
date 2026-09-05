@@ -7,7 +7,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,16 +36,16 @@ var (
 func manualZoneSave(
 	t *testing.T,
 	runner *integration_common.AppRunner,
-	name string) editor_state_model.ManualZoneSave {
+	name string) template_model.Zone {
 	t.Helper()
-	for _, save := range runner.CurrentState().ManualZones {
-		if save.Zone.Name == name {
-			return save
+	for _, zone := range runner.CurrentState().ManualZones {
+		if zone.Name == name {
+			return zone
 		}
 	}
 	t.Fatalf("the editor state committed no manual zone called %q", name)
 
-	return editor_state_model.ManualZoneSave{}
+	return template_model.Zone{}
 }
 
 // A drag has to survive the round trip through the canvas' normalized manual
@@ -65,7 +65,7 @@ func TestWhenAZoneIsDraggedToANewPosition_TheAppliedLayoutRecordsIt(t *testing.T
 
 	// Assert
 	assert.Equal(t,
-		&[2]float64{0.3448275862068966, 0.3448275862068966},
+		new(data.NewVec2(0.3448275862068966, 0.3448275862068966)),
 		manualZoneSave(t, runner, hubZoneName).ManualPosition)
 }
 

@@ -1,6 +1,7 @@
 package variant_content
 
 import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
@@ -168,7 +169,7 @@ func (this *ZoneBuilder) WithEncounterHolesSettings(settings template_model.Enco
 	this.item.EncounterHolesSettings = &settings
 	return this
 }
-func (this *ZoneBuilder) WithGeneratorPosition(position [2]float64) *ZoneBuilder {
+func (this *ZoneBuilder) WithGeneratorPosition(position data.Vec2[float64]) *ZoneBuilder {
 	this.item.GeneratorPosition = &position
 	return this
 }

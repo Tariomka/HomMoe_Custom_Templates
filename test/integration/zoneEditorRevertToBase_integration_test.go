@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -128,7 +129,7 @@ func newEditedSession(t *testing.T) *drivers.State {
 
 	zones := append([]template_model.Zone(nil), template.Variants[0].Zones...)
 	for i := range zones {
-		pinned := [2]float64{0.1, 0.2}
+		pinned := data.NewVec2(0.1, 0.2)
 		zones[i].ManualPosition = &pinned
 	}
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
@@ -148,7 +149,7 @@ func zonesCarryManualPositions(state *drivers.State) bool {
 	if template == nil || len(template.Variants) == 0 {
 		return false
 	}
-	for _, zone := range template_model.ToZoneEntities(template.Variants[0].Zones) {
+	for _, zone := range template.Variants[0].Zones {
 		if zone.ManualPosition != nil {
 			return true
 		}
