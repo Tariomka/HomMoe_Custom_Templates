@@ -57,7 +57,7 @@ func allFieldsManualEditSettings() editor_state.ManualEditSettings {
 	return editor_state.ManualEditSettings{
 		ManualZones: []editor_state.ManualZoneSave{{
 			Zone:           entities.Zone{Name: "Zone A"},
-			ManualPosition: &[2]float64{0.25, 0.75},
+			ManualPosition: new(data.NewVec2(0.25, 0.75)),
 		}},
 		ManualConnections: []editor_state.ManualConnectionSave{{
 			Connection:  entities.Connection{Name: "Conn A"},

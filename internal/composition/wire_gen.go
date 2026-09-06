@@ -17,6 +17,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service/editor_state_migrator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
@@ -58,7 +59,9 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iFileRepository2 := repositories.NewPreviewRepository()
 	iEditorStateMapper := mappers.NewEditorStateMapper()
 	iTemplateMapper := mappers.NewTemplateMapper()
-	iFileService := file_service.NewFileService(iFileRepository, repositoriesIFileRepository, iFileRepository2, iEditorStateMapper, iTemplateMapper)
+	iFileRepository3 := repositories.NewLegacyEditorStateRepository()
+	iEditorStateMigrator := editor_state_migrator.NewEditorStateMigrator(iFileRepository, iFileRepository3)
+	iFileService := file_service.NewFileService(iFileRepository, repositoriesIFileRepository, iFileRepository2, iEditorStateMapper, iTemplateMapper, iEditorStateMigrator)
 	iPreviewLayoutService := preview_service.NewPreviewLayoutService(iZoneTierService)
 	iPreviewGeneratorService := providePreviewGenerator(iPreviewLayoutService)
 	iEditorStateValidator := validators.NewEditorStateValidator()

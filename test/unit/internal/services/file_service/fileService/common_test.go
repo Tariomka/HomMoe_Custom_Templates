@@ -36,11 +36,30 @@ func (this *mockFileRepository[T]) Save(directory string, filename string, entit
 	return arguments.String(0), arguments.Error(1)
 }
 
+// mockEditorStateMigrator records the entity the service seeded the load with,
+// which is the only place the defaults-before-decode contract shows.
+type mockEditorStateMigrator struct {
+	mock.Mock
+
+	seed editor_state.EditorState
+}
+
+func (this *mockEditorStateMigrator) Load(filePath string, target *editor_state.EditorState) error {
+	this.seed = *target
+	arguments := this.Called(filePath)
+	if loaded, ok := arguments.Get(0).(editor_state.EditorState); ok {
+		*target = loaded
+	}
+
+	return arguments.Error(1)
+}
+
 type serviceMocks struct {
 	editorState *mockFileRepository[editor_state.EditorState]
 	template    *mockFileRepository[template.RmgTemplate]
 	preview     *mockFileRepository[image.RGBA]
 	mapper      mappers.IEditorStateMapper
+	migrator    *mockEditorStateMigrator
 }
 
 func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
@@ -49,10 +68,16 @@ func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
 		template:    &mockFileRepository[template.RmgTemplate]{},
 		preview:     &mockFileRepository[image.RGBA]{},
 		mapper:      mappers.NewEditorStateMapper(),
+		migrator:    &mockEditorStateMigrator{},
 	}
 
 	service := file_service.NewFileService(
-		mocks.editorState, mocks.template, mocks.preview, mocks.mapper, mappers.NewTemplateMapper())
+		mocks.editorState,
+		mocks.template,
+		mocks.preview,
+		mocks.mapper,
+		mappers.NewTemplateMapper(),
+		mocks.migrator)
 
 	return service, mocks
 }

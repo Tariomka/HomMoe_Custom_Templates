@@ -27,11 +27,9 @@ func TestWhenSaveListIsEmpty_ReturnsNil(t *testing.T) {
 func TestWhenSavesCarryManualPositions_RestoresEachPositionOntoZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	firstPosition := &[2]float64{0.1, 0.9}
-	secondPosition := &[2]float64{0.6, 0.4}
 	saves := []editor_state.ManualZoneSave{
-		{Zone: entities.Zone{Name: "Zone A"}, ManualPosition: firstPosition},
-		{Zone: entities.Zone{Name: "Zone B"}, ManualPosition: secondPosition},
+		{Zone: entities.Zone{Name: "Zone A"}, ManualPosition: new(data.NewVec2(0.1, 0.9))},
+		{Zone: entities.Zone{Name: "Zone B"}, ManualPosition: new(data.NewVec2(0.6, 0.4))},
 	}
 	expected := []template_model.Zone{
 		{Name: "Zone A", ManualPosition: new(data.NewVec2(0.1, 0.9))},
@@ -72,4 +70,59 @@ func TestWhenSaveCarriesNoQuality_LeavesTheTierUnrecorded(t *testing.T) {
 
 	// Assert
 	assert.Nil(t, zones[0].Quality)
+}
+
+func TestWhenSaveCarriesAGeneratorPosition_RestoresItOntoTheZone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	position := data.NewVec2(0.4, 0.6)
+	saves := []editor_state.ManualZoneSave{
+		{Zone: entities.Zone{Name: "Zone A"}, GeneratorPosition: &position},
+	}
+
+	// Act
+	zones := editor_state_model.ToManualZoneModels(saves)
+
+	// Assert
+	assert.Equal(t, position, *zones[0].GeneratorPosition)
+}
+
+func TestWhenSaveCarriesTheInnermostGeneratorRing_RestoresItOntoTheZone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	saves := []editor_state.ManualZoneSave{
+		{Zone: entities.Zone{Name: "Zone A"}, GeneratorRing: new(0)},
+	}
+
+	// Act
+	zones := editor_state_model.ToManualZoneModels(saves)
+
+	// Assert
+	assert.Equal(t, 0, *zones[0].GeneratorRing)
+}
+
+// A .gen.json written before schema v2 carries no stamps, and the preview has
+// to fall back to a computed layout rather than believe the zone sits at 0,0.
+func TestWhenSaveCarriesNoGeneratorPosition_LeavesTheZoneUnstamped(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	saves := []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+
+	// Act
+	zones := editor_state_model.ToManualZoneModels(saves)
+
+	// Assert
+	assert.Nil(t, zones[0].GeneratorPosition)
+}
+
+func TestWhenSaveCarriesNoGeneratorRing_LeavesTheZoneUnstamped(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	saves := []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+
+	// Act
+	zones := editor_state_model.ToManualZoneModels(saves)
+
+	// Assert
+	assert.Nil(t, zones[0].GeneratorRing)
 }

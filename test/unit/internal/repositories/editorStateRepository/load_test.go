@@ -53,7 +53,7 @@ func TestWhenStateFileContainsValidJson_TheDecodedKeysReachTheTarget(t *testing.
 }
 
 // The repository decodes *into* the value it is handed and never seeds one, so
-// whatever the caller put there survives the keys the file omits. FileService
+// whatever the caller put there survives the keys the file omits. The migrator
 // relies on this to hand the load the default entity.
 func TestWhenStateFileOmitsAKey_TheValueSeededByTheCallerSurvives(t *testing.T) {
 	t.Parallel()

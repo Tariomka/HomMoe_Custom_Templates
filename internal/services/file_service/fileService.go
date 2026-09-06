@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service/editor_state_migrator"
 )
 
 type FileService struct {
@@ -18,6 +19,7 @@ type FileService struct {
 	previewRepository     repositories.IFileRepository[image.RGBA]
 	editorStateMapper     mappers.IEditorStateMapper
 	templateMapper        mappers.ITemplateMapper
+	editorStateMigrator   editor_state_migrator.IEditorStateMigrator
 }
 
 func NewFileService(
@@ -25,19 +27,21 @@ func NewFileService(
 	templateRepository repositories.IFileRepository[template.RmgTemplate],
 	previewRepository repositories.IFileRepository[image.RGBA],
 	editorStateMapper mappers.IEditorStateMapper,
-	templateMapper mappers.ITemplateMapper) IFileService {
+	templateMapper mappers.ITemplateMapper,
+	editorStateMigrator editor_state_migrator.IEditorStateMigrator) IFileService {
 	return &FileService{
 		editorStateRepository: editorStateRepository,
 		templateRepository:    templateRepository,
 		previewRepository:     previewRepository,
 		editorStateMapper:     editorStateMapper,
 		templateMapper:        templateMapper,
+		editorStateMigrator:   editorStateMigrator,
 	}
 }
 
 func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, error) {
 	entity := this.editorStateMapper.NewDefaultEntity()
-	if err := this.editorStateRepository.Load(filePath, &entity); err != nil {
+	if err := this.editorStateMigrator.Load(filePath, &entity); err != nil {
 		return nil, err
 	}
 

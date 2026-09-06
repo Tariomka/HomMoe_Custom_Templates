@@ -15,6 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	editor_services "github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service/editor_state_migrator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
@@ -67,8 +68,10 @@ var EditorSet = wire.NewSet(
 // InfrastructureSet builds the persistence and mapping collaborators.
 var InfrastructureSet = wire.NewSet(
 	repositories.NewEditorStateRepository,
+	repositories.NewLegacyEditorStateRepository,
 	repositories.NewPreviewRepository,
 	repositories.NewTemplateRepository,
+	editor_state_migrator.NewEditorStateMigrator,
 	file_service.NewFileService,
 	mappers.NewConfigMapper,
 	mappers.NewEditorStateMapper,

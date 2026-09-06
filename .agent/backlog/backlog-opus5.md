@@ -1027,11 +1027,28 @@ entity carried it** — while a `.gen.json` reload dropped it, because `json:"-"
 value is a legitimate position). The spelling is `data.Vec2[float64]` everywhere, not the
 `models.Position` alias. `data.Vec2` gets **no** JSON methods, ever.
 
-**What batch R deliberately did NOT do.** The persisted `editor_state.ManualZoneSave.ManualPosition`
-is still `*[2]float64`, so `.gen.json` is byte-identical and the frozen v0/v1 fixtures pass
-unchanged. A temporary array⇄Vec2 bridge sits in `editor_state_model/manualZoneSave.go`,
-marked as **batch S's to delete**. Batch S changes the persisted shape, bumps the schema to 2,
-adds the frozen-snapshot migration and finally persists the generator stamps.
+**What batch R deliberately did NOT do — and batch S then did.** R left the persisted
+`editor_state.ManualZoneSave.ManualPosition` as `*[2]float64` so `.gen.json` stayed
+byte-identical. **Batch S (done 2026-09-05) closed that out:**
+
+- The persisted position is `*data.Vec2[float64]`, so `manualZones[*].manualPosition` is
+  `{"X":0.25,"Y":0.75}` on the wire. The array⇄Vec2 bridge is deleted; `[2]float64` now
+  survives only inside the frozen v1 snapshot.
+- `generatorPosition` and `generatorRing` are persisted for the first time. Before S, every
+  save silently dropped them and a reloaded manual layout fell back to a computed preview.
+- `CurrentEditorStateSchemaVersion` → **2**, with the repo's first real migration:
+  `internal/entities/editor_state/editor_state_v1/` holds a 17-file frozen snapshot (data only,
+  never to be edited) and `internal/services/file_service/editor_state_migrator/` probes the
+  version, refuses anything newer than this build, and dispatches to one of two repositories. The
+  gate is `schemaVersion < 2`, because v0 has no version key and probes as 0.
+- **The freeze stops at the editor-state boundary** (owner). `ManualZoneSave.Zone` still names
+  the live `entities.Zone`: that is the game's `.rmg.json` vocabulary and it versions with the
+  game, not with this file format. Copying it would conflate two versioning axes and duplicate
+  protected types into an unprotected package.
+- **Repositories stay plain typed decoders** (owner, on review). The v1 shape gets its own
+  `IFileRepository[editor_state_v1.EditorState]`; `EditorStateRepository` is byte-for-byte what it
+  was. Every settings group crosses `MigrateToV2` by plain Go struct conversion, which is precisely
+  the compile-time tripwire the frozen snapshot exists to provide.
 
 **One trap found on the way through.** Two integration tests `json.Unmarshal`ed the on-disk
 file into `editor_state_model.EditorState`. That only ever worked because the model embedded
@@ -2037,13 +2054,14 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **P** | §2.6 steps 2 + 3 | **Done 2026-09-04.** Ruled the `.rmg.json` vocabulary gets **no carve-out**, then acted: `entities.Connection` → `template_model.Connection` across 62 files, closing steps 2 and 3 together. `entityNamerAllowList` 21 → **14 entries**, breach 84 files/21 packages → **64/14**, all seven removals mutation-proved simultaneously. **Owner approved one protected edit**: `IsUserAdded` removed from `internal/entities/template/template_variant/connection.go` — it was `json:"-"` editor state in the schema mirror, and `editor_state.ManualConnectionSave` already carried a sidecar copy because the entity could not serialize it. Wire format provably unmoved; no golden, no fixture. Coverage flat at **74.3 %**, lint 0. Record: §2.6. |
 | ✅ **Q** | §2.6 step 4 | **Done 2026-09-05.** The generator builds the model. 64 files / 13 packages moved off `internal/entities`; `entityNamerAllowList` **14 → 1** (`file_service`, permanent, never add). Three owner-chosen design changes rode along: `ZoneFactory` stamps the zone tier at build time (`stampPlannedZoneTiers` deleted); `UpdateTemplate` deep-copies via a new `template_model.Template.Clone()` instead of a Model→Entity→Model round trip (both re-attach lines gone); `FileService.SaveTemplateWithPreview` takes the model and maps inside, so `templateHandler` holds no `ITemplateMapper`. **No protected edit**, no golden, no fixture. Coverage 74.3 → **74.5 %**, lint 0. Record: §2.6. |
 | ✅ **R** | §2.4 | **Done 2026-09-05.** Re-scoped by the owner from "swap a type" to "the entity stops carrying editor state". Three phases: the `editor_state_model.ManualZoneSave` wrapper deleted so `ManualZones` is `[]template_model.Zone` and nothing lowers zones to entities in memory; **one approved protected edit** removing `GeneratorPosition`/`GeneratorRing`/`ManualPosition` from `template_variant/zone.go` (19 deletions, 0 insertions); then `*[2]float64` → `*data.Vec2[float64]` across ~35 files. `.gen.json` **byte-identical** — the persisted sidecar stays an array behind a temporary bridge that batch S deletes. No golden, no fixture. Coverage 74.5 → **74.1 %** (deleted `cloneZone`, no new holes), lint 0. Record: §2.4. |
-| **S** | §2.4 follow-on | **Not started, fully scoped 2026-09-05.** Editor-state schema **v2**: `manualZones[*].manualPosition` becomes an object, `generatorPosition`/`generatorRing` gain sidecars, `CurrentEditorStateSchemaVersion` → 2. Mechanism is **frozen per-version snapshots + typed migrations** in `internal/entities/editor_state/editor_state_v1/`, hooked in `FileService.LoadSettingsFile`, rejecting newer-than-current loudly. `data.Vec2` gets no marshaller. See the plan file's "Deferred to batch S" section for every decision already taken. |
+| ✅ **S** | §2.4 follow-on | **Done 2026-09-06.** Editor-state schema **v2** and the first real migration the repo has ever had. Four phases: a frozen 17-file v1 snapshot in `internal/entities/editor_state/editor_state_v1/` (data only); `manualZones[*].manualPosition` becomes `{"X":…,"Y":…}` and gains `generatorPosition` / `generatorRing` sidecars that every save silently dropped before; `CurrentEditorStateSchemaVersion` → 2; `internal/services/file_service/editor_state_migrator/` probes the version with `os.Open`, refuses newer-than-current loudly, and dispatches to one of **two repositories** — `IFileRepository[editor_state.EditorState]` (unchanged) or the new `IFileRepository[editor_state_v1.EditorState]` plus the typed `MigrateToV2`. **Three owner decisions taken mid-flight:** the freeze stops at the editor-state boundary (`ManualZoneSave.Zone` still names the live `entities.Zone`, which versions with the game, not with this file format); the migrator lives inside `file_service` and repositories stay plain typed decoders (a first attempt that turned `EditorStateRepository` into a byte reader was rejected on review); and the migrator package joins `entityNamerPrefixes` as a first-class entity-speaking layer rather than an allow-list exception — the allow-list is still exactly `file_service`. `toPositionArray`/`fromPositionArray` deleted; `[2]float64` now exists only in the frozen v1 struct. v0/v1 fixtures byte-frozen, `editorState_v2_flat.gen.json` added, the two fixture tests rewritten to load through the migrator. No golden moved. Coverage 74.1 → **74.3 %**, lint 0. Record: §2.4. |
+| **T** | — | Next free batch letter. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is
 otherwise ordered by dependency.
 
 **Coverage note.** Run the coverage task before and after **every** batch
-(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **74.1 %**
+(AGENTS.md §2.3) — the floor is **72.5 %** and the current figure is **74.3 %**
 (72.5 % through batch B; batch C added the helper tests, batch D the clone and
 accessor tests, batch I the entity/model/converter tests; batch O gave back
 0.1 pp with the two constructors it deleted; batch J added the tier-service,
@@ -2051,7 +2069,8 @@ accessor tests, batch I the entity/model/converter tests; batch O gave back
 moved it not at all; batch Q added the `Clone` and factory-tier tests, +0.2 pp;
 batch R gave back 0.4 pp by **deleting** the fully-covered `cloneZone` machinery
 — removing 100 %-covered code from a 74 %-covered tree always lowers the ratio,
-and no test was written to paper over it).
+and no test was written to paper over it; batch S returned 0.2 pp with the
+migrator and the legacy repository, whose every function is 100 % covered).
 
 ---
 
@@ -2067,7 +2086,7 @@ and no test was written to paper over it).
 | Unit | `go test ./test/unit/... -count=1` | pass |
 | Integration | `go test -tags=integration_test ./test/integration/... -count=1` | pass |
 | GUI integration | `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass (needs GPU) |
-| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **74.1 %** |
+| Coverage | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` | **≥ 72.5 %**, currently **74.3 %** |
 | Lint | `golangci-lint-v2 run ./... --issues-exit-code=0` | **0 issues** |
 | Format | `gofmt -l ./app ./internal ./test ./cmd` | empty |
 | Wire | `wire diff ./internal/composition/...` | no diff |

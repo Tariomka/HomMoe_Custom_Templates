@@ -19,6 +19,10 @@ var productionRoots = []string{"app", "internal", "cmd"}
 // entityNamerPrefixes are the packages allowed to name an entity type
 // (plan §0.5.4). internal/helpers is permitted only through its per-domain
 // *_helpers subpackages, which is checked separately.
+// internal/services/file_service/editor_state_migrator is here rather than on
+// the allow-list below because it is not an exception: reading a .gen.json whose
+// shape depends on its own schemaVersion is entity work by definition, and its
+// whole public contract is stated in entities.
 //
 //nolint:gochecknoglobals // shared, read-only rule input for this file's tests.
 var entityNamerPrefixes = []string{
@@ -26,6 +30,7 @@ var entityNamerPrefixes = []string{
 	"internal/models/",
 	"internal/entities/",
 	"internal/mappers/",
+	"internal/services/file_service/editor_state_migrator/",
 }
 
 // dtoNamerPrefixes are the packages allowed to name a DTO: the API boundary

@@ -135,8 +135,8 @@ func allFieldsContentRows(sid string, variantID int) []editor_state_model.ZoneCo
 	}}
 }
 
-// allFieldsManualZones builds a manual zone carrying the normalized position
-// that entities.Zone itself omits from JSON.
+// allFieldsManualZones builds a manual zone carrying the three normalized
+// positions that entities.Zone itself has nowhere to put.
 func allFieldsManualZones() []template_model.Zone {
 	return []template_model.Zone{{
 		Name:                 "Fixture-Spawn-A",
@@ -145,6 +145,8 @@ func allFieldsManualZones() []template_model.Zone {
 		GuardCutoffValue:     17500,
 		GuardRandomization:   0.15,
 		GuardWeeklyIncrement: 0.2,
+		GeneratorPosition:    new(data.NewVec2(0.4, 0.6)),
+		GeneratorRing:        new(2),
 		ManualPosition:       new(data.NewVec2(0.25, 0.75)),
 	}}
 }

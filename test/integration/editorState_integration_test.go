@@ -167,8 +167,8 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	// entities.Zone carries no position at all, so the round trip relies on the
 	// save wrapper's sidecar preserving it.
 	require.NotNil(t, onDisk.ManualZones[0].ManualPosition, "manual position was lost on save")
-	assert.InDelta(t, 0.1, onDisk.ManualZones[0].ManualPosition[0], 1e-9)
-	assert.InDelta(t, 0.2, onDisk.ManualZones[0].ManualPosition[1], 1e-9)
+	assert.InDelta(t, 0.1, onDisk.ManualZones[0].ManualPosition.X, 1e-9)
+	assert.InDelta(t, 0.2, onDisk.ManualZones[0].ManualPosition.Y, 1e-9)
 
 	lastConn := onDisk.ManualConnections[len(onDisk.ManualConnections)-1]
 	assert.True(t, lastConn.IsUserAdded, "IsUserAdded flag was lost on save")
