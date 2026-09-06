@@ -3,7 +3,7 @@ package manualConnectionSave_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +28,7 @@ func TestWhenSaveIsCloned_ScalarFieldsAreCopied(t *testing.T) {
 }
 
 // TestWhenAReferenceFieldIsMutatedInPlaceOnTheClone_SourceIsUnchanged walks
-// every slice and pointer reachable from entities.Connection. That entity lives
+// every slice and pointer reachable from template_entity.Connection. That entity lives
 // in the protected template tree and cannot carry a Clone of its own, so this
 // is the only place its copy semantics are pinned.
 func TestWhenAReferenceFieldIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *testing.T) {
@@ -94,13 +94,15 @@ func referenceFieldCases() map[string]referenceFieldCase {
 // newPopulatedSave builds a save whose every reference-typed field carries data,
 // so that a missed copy in cloneConnection shows up as shared storage.
 func newPopulatedSave() editor_state_model.ManualConnectionSave {
-	connection := entities.Connection{
+	connection := template_entity.Connection{
 		Name:                     "connection",
 		From:                     "a",
 		To:                       "b",
 		Road:                     new(true),
-		PortalPlacementRulesFrom: []entities.PlacementRule{{Type: "Road", Args: []any{"fromArg"}, Weight: 1}},
-		PortalPlacementRulesTo:   []entities.PlacementRule{{Type: "Crossroads", Args: []any{"toArg"}, Weight: 2}},
+		PortalPlacementRulesFrom: []template_entity.PlacementRule{{Type: "Road", Args: []any{"fromArg"}, Weight: 1}},
+		PortalPlacementRulesTo: []template_entity.PlacementRule{
+			{Type: "Crossroads", Args: []any{"toArg"}, Weight: 2},
+		},
 	}
 
 	return editor_state_model.ManualConnectionSave{

@@ -3,10 +3,10 @@ package template_rule_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 )
 
-type WinConditions struct{ template.WinConditions }
+type WinConditions struct{ template_entity.WinConditions }
 
 func (this WinConditions) Clone() WinConditions {
 	clone := this
@@ -15,10 +15,10 @@ func (this WinConditions) Clone() WinConditions {
 	return clone
 }
 
-func ToWinConditionsModel(entity template.WinConditions) WinConditions {
+func ToWinConditionsModel(entity template_entity.WinConditions) WinConditions {
 	return WinConditions{WinConditions: entity}
 }
 
-func ToWinConditionsEntity(model WinConditions) template.WinConditions {
+func ToWinConditionsEntity(model WinConditions) template_entity.WinConditions {
 	return model.WinConditions
 }

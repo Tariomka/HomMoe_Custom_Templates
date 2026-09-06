@@ -3,8 +3,8 @@ package manualZoneSave_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -28,8 +28,8 @@ func TestWhenSavesCarryManualPositions_RestoresEachPositionOntoZone(t *testing.T
 	t.Parallel()
 	// Arrange
 	saves := []editor_state.ManualZoneSave{
-		{Zone: entities.Zone{Name: "Zone A"}, ManualPosition: new(data.NewVec2(0.1, 0.9))},
-		{Zone: entities.Zone{Name: "Zone B"}, ManualPosition: new(data.NewVec2(0.6, 0.4))},
+		{Zone: template_entity.Zone{Name: "Zone A"}, ManualPosition: new(data.NewVec2(0.1, 0.9))},
+		{Zone: template_entity.Zone{Name: "Zone B"}, ManualPosition: new(data.NewVec2(0.6, 0.4))},
 	}
 	expected := []template_model.Zone{
 		{Name: "Zone A", ManualPosition: new(data.NewVec2(0.1, 0.9))},
@@ -48,7 +48,7 @@ func TestWhenSaveRecordsThePlasticTier_RestoresItOntoTheZone(t *testing.T) {
 	// Arrange
 	ordinal := int8(neutral_zone.QualityLowest)
 	saves := []editor_state.ManualZoneSave{
-		{Zone: entities.Zone{Name: "Neutral-C"}, Quality: &ordinal},
+		{Zone: template_entity.Zone{Name: "Neutral-C"}, Quality: &ordinal},
 	}
 
 	// Act
@@ -63,7 +63,7 @@ func TestWhenSaveRecordsThePlasticTier_RestoresItOntoTheZone(t *testing.T) {
 func TestWhenSaveCarriesNoQuality_LeavesTheTierUnrecorded(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	saves := []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Neutral-C"}}}
+	saves := []editor_state.ManualZoneSave{{Zone: template_entity.Zone{Name: "Neutral-C"}}}
 
 	// Act
 	zones := editor_state_model.ToManualZoneModels(saves)
@@ -77,7 +77,7 @@ func TestWhenSaveCarriesAGeneratorPosition_RestoresItOntoTheZone(t *testing.T) {
 	// Arrange
 	position := data.NewVec2(0.4, 0.6)
 	saves := []editor_state.ManualZoneSave{
-		{Zone: entities.Zone{Name: "Zone A"}, GeneratorPosition: &position},
+		{Zone: template_entity.Zone{Name: "Zone A"}, GeneratorPosition: &position},
 	}
 
 	// Act
@@ -91,7 +91,7 @@ func TestWhenSaveCarriesTheInnermostGeneratorRing_RestoresItOntoTheZone(t *testi
 	t.Parallel()
 	// Arrange
 	saves := []editor_state.ManualZoneSave{
-		{Zone: entities.Zone{Name: "Zone A"}, GeneratorRing: new(0)},
+		{Zone: template_entity.Zone{Name: "Zone A"}, GeneratorRing: new(0)},
 	}
 
 	// Act
@@ -106,7 +106,7 @@ func TestWhenSaveCarriesTheInnermostGeneratorRing_RestoresItOntoTheZone(t *testi
 func TestWhenSaveCarriesNoGeneratorPosition_LeavesTheZoneUnstamped(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	saves := []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+	saves := []editor_state.ManualZoneSave{{Zone: template_entity.Zone{Name: "Zone A"}}}
 
 	// Act
 	zones := editor_state_model.ToManualZoneModels(saves)
@@ -118,7 +118,7 @@ func TestWhenSaveCarriesNoGeneratorPosition_LeavesTheZoneUnstamped(t *testing.T)
 func TestWhenSaveCarriesNoGeneratorRing_LeavesTheZoneUnstamped(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	saves := []editor_state.ManualZoneSave{{Zone: entities.Zone{Name: "Zone A"}}}
+	saves := []editor_state.ManualZoneSave{{Zone: template_entity.Zone{Name: "Zone A"}}}
 
 	// Act
 	zones := editor_state_model.ToManualZoneModels(saves)

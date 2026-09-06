@@ -10,7 +10,7 @@ import (
 
 // ToManualZoneSaveEntities converts live editor zones into their serializable
 // form. The positions and the recorded tier travel beside the zone because
-// entities.Zone has nowhere to put either.
+// template_entity.Zone has nowhere to put either.
 func ToManualZoneSaveEntities(zones []template_model.Zone) []editor_state.ManualZoneSave {
 	if len(zones) == 0 {
 		return nil

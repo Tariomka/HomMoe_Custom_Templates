@@ -1,8 +1,8 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -136,7 +136,7 @@ func allFieldsContentRows(sid string, variantID int) []editor_state_model.ZoneCo
 }
 
 // allFieldsManualZones builds a manual zone carrying the three normalized
-// positions that entities.Zone itself has nowhere to put.
+// positions that template_entity.Zone itself has nowhere to put.
 func allFieldsManualZones() []template_model.Zone {
 	return []template_model.Zone{{
 		Name:                 "Fixture-Spawn-A",
@@ -155,7 +155,7 @@ func allFieldsManualZones() []template_model.Zone {
 // user-added flag, which lives on the save rather than on the connection.
 func allFieldsManualConnections() []editor_state_model.ManualConnectionSave {
 	return []editor_state_model.ManualConnectionSave{{
-		Connection: entities.Connection{
+		Connection: template_entity.Connection{
 			Name:                 "Fixture-Conn-A-B",
 			From:                 "Fixture-Spawn-A",
 			To:                   "Fixture-Spawn-B",

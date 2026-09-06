@@ -3,7 +3,7 @@ package templateMapper_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -33,8 +33,8 @@ func TestWhenATemplateHasEmptyCollections_TheyStayEmptyRatherThanBecomingNil(t *
 	// Arrange
 	mapper := mappers.NewTemplateMapper()
 	expected := test_helpers.NewAllFieldsTemplate()
-	expected.ContentPools = []entities.ContentPool{}
-	expected.ContentLists = []entities.ContentList{}
+	expected.ContentPools = []template_entity.ContentPool{}
+	expected.ContentLists = []template_entity.ContentList{}
 
 	// Act
 	actual := mapper.ToEntity(mapper.ToModel(expected))

@@ -1,7 +1,7 @@
 package template_variant_model
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -24,7 +24,7 @@ func (this Road) Clone() Road {
 	return clone
 }
 
-func ToRoadModel(entity template.Road) Road {
+func ToRoadModel(entity template_entity.Road) Road {
 	return Road{
 		Type:                 entity.Type,
 		From:                 ToTypedRefModel(entity.From),
@@ -36,8 +36,8 @@ func ToRoadModel(entity template.Road) Road {
 	}
 }
 
-func ToRoadEntity(model Road) template.Road {
-	return template.Road{
+func ToRoadEntity(model Road) template_entity.Road {
+	return template_entity.Road{
 		Type:                 model.Type,
 		From:                 ToTypedRefEntity(model.From),
 		To:                   ToTypedRefEntity(model.To),
@@ -48,10 +48,10 @@ func ToRoadEntity(model Road) template.Road {
 	}
 }
 
-func ToRoadModels(entities []template.Road) []Road {
+func ToRoadModels(entities []template_entity.Road) []Road {
 	return helpers.MapSlice(entities, ToRoadModel)
 }
 
-func ToRoadEntities(models []Road) []template.Road {
+func ToRoadEntities(models []Road) []template_entity.Road {
 	return helpers.MapSlice(models, ToRoadEntity)
 }

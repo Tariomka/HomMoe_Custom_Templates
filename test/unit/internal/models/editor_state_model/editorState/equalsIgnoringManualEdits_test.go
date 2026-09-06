@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -34,7 +34,7 @@ func TestWhenOnlyManualEditFieldsDiffer_ReportsEqual(t *testing.T) {
 	right := left
 	right.ManualZones = []template_model.Zone{{Name: "Zone A"}}
 	right.ManualConnections = []editor_state_model.ManualConnectionSave{
-		{Connection: entities.Connection{Name: "A-B"}, IsUserAdded: true},
+		{Connection: template_entity.Connection{Name: "A-B"}, IsUserAdded: true},
 	}
 
 	// Act
@@ -196,7 +196,7 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 		}},
 		{"ManualConnectionsDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
 			state.ManualConnections = []editor_state_model.ManualConnectionSave{
-				{Connection: entities.Connection{Name: "A-B"}, IsUserAdded: true},
+				{Connection: template_entity.Connection{Name: "A-B"}, IsUserAdded: true},
 			}
 		}},
 	}

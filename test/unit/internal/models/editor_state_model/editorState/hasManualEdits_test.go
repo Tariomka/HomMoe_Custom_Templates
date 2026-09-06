@@ -3,7 +3,7 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +39,7 @@ func TestWhenOnlyManualConnectionsArePresent_ReportsManualEdits(t *testing.T) {
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.ManualConnections = []editor_state_model.ManualConnectionSave{
-		{Connection: entities.Connection{Name: "A-B"}},
+		{Connection: template_entity.Connection{Name: "A-B"}},
 	}
 
 	// Act

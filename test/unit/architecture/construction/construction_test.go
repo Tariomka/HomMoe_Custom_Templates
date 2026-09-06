@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const entitiesImportPath = "github.com/Tariomka/hommoe_custom_templates/internal/entities"
+const entitiesImportPath = "github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 
 func TestWhenProductionEntityConstructionIsScanned_UsesBuildersForInvariantRichTypes(t *testing.T) {
 	t.Parallel()
@@ -38,13 +38,13 @@ func TestWhenSliceElementOmitsEntityType_DetectsBuilderOwnedLiteral(t *testing.T
 	t.Parallel()
 	// Arrange
 	fileSet := token.NewFileSet()
-	expression, err := parser.ParseExprFrom(fileSet, "fixture.go", `[]entities.Zone{{Name: "A"}}`, 0)
+	expression, err := parser.ParseExprFrom(fileSet, "fixture.go", `[]template_entity.Zone{{Name: "A"}}`, 0)
 	require.NoError(t, err)
 	literal := expression.(*ast.CompositeLit)
 
 	// Act
 	violations := findElidedEntityLiterals(
-		fileSet, "fixture.go", literal, "entities", map[string]bool{"Zone": true})
+		fileSet, "fixture.go", literal, "template_entity", map[string]bool{"Zone": true})
 
 	// Assert
 	assert.Equal(t, []string{"fixture.go:1 Zone"}, violations)
@@ -55,13 +55,13 @@ func TestWhenMapValueOmitsEntityType_DetectsBuilderOwnedLiteral(t *testing.T) {
 	// Arrange
 	fileSet := token.NewFileSet()
 	expression, err := parser.ParseExprFrom(
-		fileSet, "fixture.go", `map[string]entities.Zone{"A": {Name: "A"}}`, 0)
+		fileSet, "fixture.go", `map[string]template_entity.Zone{"A": {Name: "A"}}`, 0)
 	require.NoError(t, err)
 	literal := expression.(*ast.CompositeLit)
 
 	// Act
 	violations := findElidedEntityLiterals(
-		fileSet, "fixture.go", literal, "entities", map[string]bool{"Zone": true})
+		fileSet, "fixture.go", literal, "template_entity", map[string]bool{"Zone": true})
 
 	// Assert
 	assert.Equal(t, []string{"fixture.go:1 Zone"}, violations)
@@ -71,13 +71,13 @@ func TestWhenPointerElementOmitsEntityType_DetectsBuilderOwnedLiteral(t *testing
 	t.Parallel()
 	// Arrange
 	fileSet := token.NewFileSet()
-	expression, err := parser.ParseExprFrom(fileSet, "fixture.go", `[]*entities.Zone{{Name: "A"}}`, 0)
+	expression, err := parser.ParseExprFrom(fileSet, "fixture.go", `[]*template_entity.Zone{{Name: "A"}}`, 0)
 	require.NoError(t, err)
 	literal := expression.(*ast.CompositeLit)
 
 	// Act
 	violations := findElidedEntityLiterals(
-		fileSet, "fixture.go", literal, "entities", map[string]bool{"Zone": true})
+		fileSet, "fixture.go", literal, "template_entity", map[string]bool{"Zone": true})
 
 	// Assert
 	assert.Equal(t, []string{"fixture.go:1 Zone"}, violations)
@@ -87,13 +87,13 @@ func TestWhenNestedElementOmitsEntityType_DetectsBuilderOwnedLiteral(t *testing.
 	t.Parallel()
 	// Arrange
 	fileSet := token.NewFileSet()
-	expression, err := parser.ParseExprFrom(fileSet, "fixture.go", `[][]entities.Zone{{{Name: "A"}}}`, 0)
+	expression, err := parser.ParseExprFrom(fileSet, "fixture.go", `[][]template_entity.Zone{{{Name: "A"}}}`, 0)
 	require.NoError(t, err)
 	literal := expression.(*ast.CompositeLit)
 
 	// Act
 	violations := findElidedEntityLiterals(
-		fileSet, "fixture.go", literal, "entities", map[string]bool{"Zone": true})
+		fileSet, "fixture.go", literal, "template_entity", map[string]bool{"Zone": true})
 
 	// Assert
 	assert.Equal(t, []string{"fixture.go:1 Zone"}, violations)
@@ -147,8 +147,13 @@ func shouldSkipPath(repositoryRoot, path string, info os.FileInfo) bool {
 		return false
 	}
 	normalizedPath := filepath.ToSlash(relativePath)
+	// template_model is exempt for the same reason builders are: its ToXEntity
+	// functions are the sanctioned Model -> Entity seam, and lowering an
+	// already-valid model field by field is a mapping, not construction. The
+	// builders cannot serve here - since batch Q they emit models, not entities.
 	return strings.HasPrefix(normalizedPath, "internal/entities/") ||
-		strings.HasPrefix(normalizedPath, "internal/services/builders/")
+		strings.HasPrefix(normalizedPath, "internal/services/builders/") ||
+		strings.HasPrefix(normalizedPath, "internal/models/template_model/")
 }
 
 func findFileEntityLiterals(
@@ -281,7 +286,7 @@ func findEntitiesAlias(parsedFile *ast.File) (string, error) {
 		if importSpec.Name != nil {
 			return importSpec.Name.Name, nil
 		}
-		return "entities", nil
+		return "template_entity", nil
 	}
 	return "", nil
 }

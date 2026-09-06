@@ -1060,52 +1060,67 @@ not a hole: every function in every touched file reports 100 %.
 
 ---
 
-### 2.5 ⚪ ⚠ Move `entities/types.go` under `template/` and rename `template` → `template_entity`
+### 2.5 ✅ DONE ⚠ `template` renamed to `template_entity`, and the alias shim deleted
 
-**Evidence.** [types.go](../../internal/entities/types.go) is a single
-alias-only file re-exporting 40 types out of the seven `template*` subpackages:
+**Done 2026-09-06 as batch T**, with the owner's explicit approval for the
+protected-directory edit (AGENTS.md §2.1). Naming only: no field, JSON tag, type
+or behaviour moved anywhere, and `.rmg.json` / `.gen.json` are untouched.
 
-```go
-type (
-	RmgTemplate = template.RmgTemplate
-	…
-	Zone = template_variant.Zone
-	…
-)
-```
+**What the item said, and what was actually true.** Its step 1 — "move
+`internal/entities/types.go` under `template/`" — had already happened: a
+canonical `types.go` aliasing the six subpackages already lived *inside* the
+protected tree. The outer file was an alias **of those aliases**, and its own doc
+comment asked to be removed. So nothing moved inward; the outer file was deleted
+and its 28 consumers now name the real package. The item's "open question for the
+owner" was therefore moot and is dropped.
 
-It sits **outside** the protected tree; everything it aliases sits inside it.
+**Its recipe was also wrong twice** and must not be copied by a future item:
+`git mv` stages, which §2.5 of AGENTS.md forbids (use `Move-Item`), and
+`gopls rename` is not reachable from the agent — every package clause and import
+line was edited individually with the edit tools, no bulk rewrite.
 
-**Why the owner wants it.** `template` is an extremely generic package name for
-something that is specifically the `.rmg.json` **entity** schema, and the alias
-file living one directory above the thing it aliases makes the ownership
-boundary of the protected tree ambiguous.
+**What shipped.**
 
-**⚠ OWNER DECISION REQUIRED — protected directory.** The rename touches the
-`package` clause of **every file** under
-[internal/entities/template/](../../internal/entities/template/) and moves a file
-*into* that tree. AGENTS.md §2.1 forbids both without explicit approval. There
-is no functional benefit, only naming; **do not start without a go-ahead.**
+1. `internal/entities/template` → `internal/entities/template_entity`, and the
+   six subpackages took the **suffix** form that mirrors
+   `internal/models/template_model/template_variant_model`:
+   `template_common_entity`, `template_content_entity`, `template_layout_entity`,
+   `template_override_entity`, `template_rule_entity`, `template_variant_entity`.
+   Directory name still equals package name everywhere, so **no import alias
+   exists anywhere in the repo**.
+2. `internal/entities/types.go` deleted. `entities.Zone` is now
+   `template_entity.Zone` in all 28 consumers, including the two frozen
+   `editor_state_v1` files — the owner approved that as an **import-only** edit,
+   the same type under a new name, so the frozen bytes cannot move.
+3. `template_entity/types.go` **stays** and still re-exports all 40 subpackage
+   types.
+4. The mirrored unit-test directories moved with the packages.
 
-**Fix, if approved.**
-1. `git mv internal/entities/types.go internal/entities/template/types.go` and
-   change its package clause; the aliases then reference sibling subpackages.
-2. Rename the directory `internal/entities/template` →
-   `internal/entities/template_entity` and update the `package template` clause
-   in [rmgTemplate.go](../../internal/entities/template/rmgTemplate.go).
-3. Update every import path across the repo.
-4. ⚠ **Do not** run a bulk in-place rewrite (AGENTS.md §2.6). Use
-   `gopls rename` / the language server, then `gofmt -w` on the explicit list
-   produced by `gofmt -l`.
+**Proof the rename is content-neutral.** Every one of the 31 protected files was
+compared against its `HEAD` blob with the rename normalized away: all 31 are
+identical. The GUI suite passed with no `-update` and no golden moved.
 
-**Open question for the owner:** if `types.go` moves *inside* the protected
-tree, the alias list becomes protected too — every future type alias then needs
-owner approval. Confirm that is intended, or keep `types.go` where it is and do
-only the rename.
+**One live defect fell out of it — read this before touching
+`test/unit/architecture/construction/construction_test.go`.** That gate keys on a
+single import path constant. It was pointed at the deleted shim, which no
+production file had imported since batches P/Q moved everything onto
+`template.X`, so **the gate had been silently passing over an empty set**.
+Repointing it at `template_entity` woke it up and it immediately flagged seven
+`ToXEntity` converters in `internal/models/template_model/**`.
 
-**Tests.** Pure move/rename; `go build ./...`,
-`go vet -tags='integration_test,gui' ./...`,
-`go run ./cmd/testlayoutcheck .` and the full suite are the verification.
+They are not violations, and the fix the gate's name implies is impossible:
+**since batch Q every builder returns a _model_** (`ZoneBuilder.Build()
+template_model.Zone`), none imports `internal/entities`, and none may — services
+cannot name entities and `entityNamerAllowList` only ever shrinks. Entities are
+now constructed in exactly one place in production, the Model→Entity converter
+seam, which is a mapping of an already-valid model rather than construction of
+new invariants. By owner decision `internal/models/template_model/` therefore
+joins `internal/services/builders/` in `shouldSkipPath`, with the reasoning in a
+comment beside it. The gate stays live for everything else.
+
+**Note on history.** Older records in this file still spell the pre-rename path;
+they describe what was true when they were written and were deliberately left
+alone. AGENTS.md §2.1 is the authority for where the protected tree lives.
 
 ---
 
@@ -2046,7 +2061,7 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **H** | §5.1, §5.2 | **Done 2026-08-11.** Zone-editor pointer + property-panel tests against the post-§2.3 float coordinates: eight pointer tests and eighteen property tests, all driven through the real window with a golden per action. Turned `ZoneEditorHandler` from a reachability-only handler into a driving one (canvas, side-panel and Apply actions). `TestWhenAZoneNameIsTyped_…` dropped — the zone name is a read-only label. Coverage flat. Record: §5.1, §5.2. |
 | ✅ **I** | §2.1, §1.5 | **Done 2026-09-01.** `EditorStateDto` rework across twelve phases (5 and 11 superseded mid-flight), folding in §1.5 as phase 6. Entity/Model/DTO split with the **Model owning the structure**; `.gen.json` shape unchanged throughout. Phase 6 cut render-path allocations by 62 %; phase 12 added the layering gate and spun off §2.6. Doctrine now lives in **AGENTS.md §4.4.1**. Records: §2.1, §1.5, §2.6. |
 | **J** | §2.2 Branch B | **Done 2026-09-03.** Zone tier single source of truth, no protected edit. Five phases: `IZoneTierService` absorbed and deleted `ZoneClassifier`; the generator records the tier it planned; `internal/models/template_model/` mirrors the whole `.rmg.json` schema and puts `Quality *neutral_zone.Quality` on the zone; `.gen.json` persists it as `*int8`; the sweep moved the editor, handlers and `preview_service` onto the model. **No golden moved and no pixel changed** — the correction is latent by construction (see §2.2). Coverage 72.9 % → **74.3 %**. Record: §2.2. |
-| **⚠ K** | §2.2 Branch A, §2.5, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 left the group on 2026-09-05 when the owner approved it as batch R. |
+| **⚠ K** | §2.2 Branch A, §6.1 | Owner-gated. Do not schedule until each is explicitly approved. §2.4 left the group on 2026-09-05 when the owner approved it as batch R; §2.5 left it on 2026-09-06 as batch T. |
 | ✅ **L** | §5.4 (a–c), §5.5 | **Done 2026-08-14.** GUI test-harness groundwork: handler hygiene, named mask helpers (423 k → 208 k masked px), coordinate constants, two-gate snapshot comparer, and a real font-fallback bug in `themes.NewTheme`. §5.5 step 2 rejected — CI never becomes the golden reference. Full record in §5.4/§5.5 above. |
 | ✅ **M** | §5.4 (d–g) | **Done 2026-08-14.** Built **standalone and ahead of F** by owner decision, not grown from it. Three tab handlers, two reachability-only dialog handlers, three toolbar methods, the `Scroll` seam, and layout-shift tracking. (g) kept as a standing guideline. Full record in §5.4 above. |
 | ✅ **N** | §1.5 | **Folded into batch I phase 6, 2026-08-31.** Never ran standalone — the measurement showed the cost was the clone *mechanism* (lazy `linq` chains allocating for empty slices), not the panel read sites this item named. Record: §1.5. |
@@ -2055,7 +2070,8 @@ blocks. Each batch is one PR-sized unit; the owner reviews and commits.
 | ✅ **Q** | §2.6 step 4 | **Done 2026-09-05.** The generator builds the model. 64 files / 13 packages moved off `internal/entities`; `entityNamerAllowList` **14 → 1** (`file_service`, permanent, never add). Three owner-chosen design changes rode along: `ZoneFactory` stamps the zone tier at build time (`stampPlannedZoneTiers` deleted); `UpdateTemplate` deep-copies via a new `template_model.Template.Clone()` instead of a Model→Entity→Model round trip (both re-attach lines gone); `FileService.SaveTemplateWithPreview` takes the model and maps inside, so `templateHandler` holds no `ITemplateMapper`. **No protected edit**, no golden, no fixture. Coverage 74.3 → **74.5 %**, lint 0. Record: §2.6. |
 | ✅ **R** | §2.4 | **Done 2026-09-05.** Re-scoped by the owner from "swap a type" to "the entity stops carrying editor state". Three phases: the `editor_state_model.ManualZoneSave` wrapper deleted so `ManualZones` is `[]template_model.Zone` and nothing lowers zones to entities in memory; **one approved protected edit** removing `GeneratorPosition`/`GeneratorRing`/`ManualPosition` from `template_variant/zone.go` (19 deletions, 0 insertions); then `*[2]float64` → `*data.Vec2[float64]` across ~35 files. `.gen.json` **byte-identical** — the persisted sidecar stays an array behind a temporary bridge that batch S deletes. No golden, no fixture. Coverage 74.5 → **74.1 %** (deleted `cloneZone`, no new holes), lint 0. Record: §2.4. |
 | ✅ **S** | §2.4 follow-on | **Done 2026-09-06.** Editor-state schema **v2** and the first real migration the repo has ever had. Four phases: a frozen 17-file v1 snapshot in `internal/entities/editor_state/editor_state_v1/` (data only); `manualZones[*].manualPosition` becomes `{"X":…,"Y":…}` and gains `generatorPosition` / `generatorRing` sidecars that every save silently dropped before; `CurrentEditorStateSchemaVersion` → 2; `internal/services/file_service/editor_state_migrator/` probes the version with `os.Open`, refuses newer-than-current loudly, and dispatches to one of **two repositories** — `IFileRepository[editor_state.EditorState]` (unchanged) or the new `IFileRepository[editor_state_v1.EditorState]` plus the typed `MigrateToV2`. **Three owner decisions taken mid-flight:** the freeze stops at the editor-state boundary (`ManualZoneSave.Zone` still names the live `entities.Zone`, which versions with the game, not with this file format); the migrator lives inside `file_service` and repositories stay plain typed decoders (a first attempt that turned `EditorStateRepository` into a byte reader was rejected on review); and the migrator package joins `entityNamerPrefixes` as a first-class entity-speaking layer rather than an allow-list exception — the allow-list is still exactly `file_service`. `toPositionArray`/`fromPositionArray` deleted; `[2]float64` now exists only in the frozen v1 struct. v0/v1 fixtures byte-frozen, `editorState_v2_flat.gen.json` added, the two fixture tests rewritten to load through the migrator. No golden moved. Coverage 74.1 → **74.3 %**, lint 0. Record: §2.4. |
-| **T** | — | Next free batch letter. |
+| ✅ **T** | §2.5 | **Done 2026-09-06.** The `.rmg.json` entity tree stopped being called `template`. `internal/entities/template` → `internal/entities/template_entity`, the six subpackages took the suffix form that mirrors `template_model/template_variant_model`, and the outer alias-of-alias `internal/entities/types.go` was **deleted** — its 28 consumers now say `template_entity.Zone`. **Owner approved the protected edit** (31 package clauses plus two sibling import paths) and an **import-only** edit to the two frozen `editor_state_v1` files. Naming only: all 31 protected files were proved byte-identical to `HEAD` once the rename is normalized away, no golden moved, no fixture touched. Its §2.5 recipe was followed only in spirit — `git mv` stages and `gopls rename` is unreachable, so every clause and import was hand-edited. **It also woke a dead gate:** `construction_test.go` keyed on the shim path and had been scanning an empty set since batches P/Q; live, it flags the seven Model→Entity converters, which cannot use builders because since batch Q builders emit **models**. By owner decision `internal/models/template_model/` joins `builders/` in `shouldSkipPath`. Coverage 74.2 → **74.3 %**, lint 0. Record: §2.5. |
+| **U** | — | Next free batch letter. |
 
 **Note on L/M.** Both are done; they sit last in the table only because it is
 otherwise ordered by dependency.
@@ -2070,7 +2086,8 @@ moved it not at all; batch Q added the `Clone` and factory-tier tests, +0.2 pp;
 batch R gave back 0.4 pp by **deleting** the fully-covered `cloneZone` machinery
 — removing 100 %-covered code from a 74 %-covered tree always lowers the ratio,
 and no test was written to paper over it; batch S returned 0.2 pp with the
-migrator and the legacy repository, whose every function is 100 % covered).
+migrator and the legacy repository, whose every function is 100 % covered;
+batch T was a pure rename and moved it not at all).
 
 ---
 

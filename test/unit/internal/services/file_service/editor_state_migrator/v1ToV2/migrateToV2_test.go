@@ -3,9 +3,9 @@ package v1ToV2_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v1"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/topology"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service/editor_state_migrator"
@@ -165,7 +165,7 @@ func TestWhenALegacyStateCarriesManualConnections_TheyCrossUnchanged(t *testing.
 	// Arrange
 	legacy := newLegacyState()
 	expected := []editor_state.ManualConnectionSave{{
-		Connection:  entities.Connection{Name: "Conn A", ConnectionType: "Portal"},
+		Connection:  template_entity.Connection{Name: "Conn A", ConnectionType: "Portal"},
 		IsUserAdded: true,
 	}}
 
@@ -249,12 +249,12 @@ func newLegacyState() editor_state_v1.EditorState {
 			}},
 		}},
 		ManualZones: []editor_state_v1.ManualZoneSave{{
-			Zone:           entities.Zone{Name: "Zone A", Size: 1.35},
+			Zone:           template_entity.Zone{Name: "Zone A", Size: 1.35},
 			ManualPosition: &[2]float64{0.25, 0.75},
 			Quality:        new(int8(2)),
 		}},
 		ManualConnections: []editor_state_v1.ManualConnectionSave{{
-			Connection:  entities.Connection{Name: "Conn A", ConnectionType: "Portal"},
+			Connection:  template_entity.Connection{Name: "Conn A", ConnectionType: "Portal"},
 			IsUserAdded: true,
 		}},
 	}

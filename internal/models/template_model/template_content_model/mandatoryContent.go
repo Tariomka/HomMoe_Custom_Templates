@@ -1,7 +1,7 @@
 package template_content_model
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -16,24 +16,24 @@ func (this MandatoryContent) Clone() MandatoryContent {
 	return clone
 }
 
-func ToMandatoryContentModel(entity template.MandatoryContent) MandatoryContent {
+func ToMandatoryContentModel(entity template_entity.MandatoryContent) MandatoryContent {
 	return MandatoryContent{
 		Name:    entity.Name,
 		Content: ToMandatoryContentItemModels(entity.Content),
 	}
 }
 
-func ToMandatoryContentEntity(model MandatoryContent) template.MandatoryContent {
-	return template.MandatoryContent{
+func ToMandatoryContentEntity(model MandatoryContent) template_entity.MandatoryContent {
+	return template_entity.MandatoryContent{
 		Name:    model.Name,
 		Content: ToMandatoryContentItemEntities(model.Content),
 	}
 }
 
-func ToMandatoryContentModels(entities []template.MandatoryContent) []MandatoryContent {
+func ToMandatoryContentModels(entities []template_entity.MandatoryContent) []MandatoryContent {
 	return helpers.MapSlice(entities, ToMandatoryContentModel)
 }
 
-func ToMandatoryContentEntities(models []MandatoryContent) []template.MandatoryContent {
+func ToMandatoryContentEntities(models []MandatoryContent) []template_entity.MandatoryContent {
 	return helpers.MapSlice(models, ToMandatoryContentEntity)
 }

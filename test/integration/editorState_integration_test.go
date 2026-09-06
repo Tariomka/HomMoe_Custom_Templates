@@ -164,7 +164,7 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	require.Len(t, onDisk.ManualZones, len(zones), "gen.json did not persist all manual zones")
 	require.NotEmpty(t, onDisk.ManualConnections, "gen.json did not persist manual connections")
 
-	// entities.Zone carries no position at all, so the round trip relies on the
+	// template_entity.Zone carries no position at all, so the round trip relies on the
 	// save wrapper's sidecar preserving it.
 	require.NotNil(t, onDisk.ManualZones[0].ManualPosition, "manual position was lost on save")
 	assert.InDelta(t, 0.1, onDisk.ManualZones[0].ManualPosition.X, 1e-9)

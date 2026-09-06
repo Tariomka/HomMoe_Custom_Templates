@@ -4,7 +4,7 @@ import (
 	"image"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/stretchr/testify/mock"
@@ -56,7 +56,7 @@ func (this *mockEditorStateMigrator) Load(filePath string, target *editor_state.
 
 type serviceMocks struct {
 	editorState *mockFileRepository[editor_state.EditorState]
-	template    *mockFileRepository[template.RmgTemplate]
+	template    *mockFileRepository[template_entity.RmgTemplate]
 	preview     *mockFileRepository[image.RGBA]
 	mapper      mappers.IEditorStateMapper
 	migrator    *mockEditorStateMigrator
@@ -65,7 +65,7 @@ type serviceMocks struct {
 func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
 	mocks := serviceMocks{
 		editorState: &mockFileRepository[editor_state.EditorState]{},
-		template:    &mockFileRepository[template.RmgTemplate]{},
+		template:    &mockFileRepository[template_entity.RmgTemplate]{},
 		preview:     &mockFileRepository[image.RGBA]{},
 		mapper:      mappers.NewEditorStateMapper(),
 		migrator:    &mockEditorStateMigrator{},

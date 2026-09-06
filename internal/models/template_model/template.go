@@ -3,7 +3,7 @@ package template_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/template_content_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/template_layout_model"
@@ -55,7 +55,7 @@ func (this Template) Clone() Template {
 	return clone
 }
 
-func ToTemplateModel(entity template.RmgTemplate) Template {
+func ToTemplateModel(entity template_entity.RmgTemplate) Template {
 	return Template{
 		Name:                entity.Name,
 		GameMode:            entity.GameMode,
@@ -77,8 +77,8 @@ func ToTemplateModel(entity template.RmgTemplate) Template {
 	}
 }
 
-func ToTemplateEntity(model Template) template.RmgTemplate {
-	return template.RmgTemplate{
+func ToTemplateEntity(model Template) template_entity.RmgTemplate {
+	return template_entity.RmgTemplate{
 		Name:                model.Name,
 		GameMode:            model.GameMode,
 		Description:         model.Description,

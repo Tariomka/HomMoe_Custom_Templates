@@ -3,7 +3,7 @@ package template_variant_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -81,7 +81,7 @@ func (this Zone) Clone() Zone {
 	return clone
 }
 
-func ToZoneModel(entity template.Zone) Zone {
+func ToZoneModel(entity template_entity.Zone) Zone {
 	return Zone{
 		Name:                      entity.Name,
 		Size:                      entity.Size,
@@ -118,8 +118,8 @@ func ToZoneModel(entity template.Zone) Zone {
 	}
 }
 
-func ToZoneEntity(model Zone) template.Zone {
-	return template.Zone{
+func ToZoneEntity(model Zone) template_entity.Zone {
+	return template_entity.Zone{
 		Name:                      model.Name,
 		Size:                      model.Size,
 		Layout:                    model.Layout,
@@ -155,10 +155,10 @@ func ToZoneEntity(model Zone) template.Zone {
 	}
 }
 
-func ToZoneModels(entities []template.Zone) []Zone {
+func ToZoneModels(entities []template_entity.Zone) []Zone {
 	return helpers.MapSlice(entities, ToZoneModel)
 }
 
-func ToZoneEntities(models []Zone) []template.Zone {
+func ToZoneEntities(models []Zone) []template_entity.Zone {
 	return helpers.MapSlice(models, ToZoneEntity)
 }

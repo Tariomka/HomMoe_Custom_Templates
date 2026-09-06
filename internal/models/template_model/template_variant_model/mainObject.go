@@ -3,7 +3,7 @@ package template_variant_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -43,7 +43,7 @@ func (this MainObject) Clone() MainObject {
 	return clone
 }
 
-func ToMainObjectModel(entity template.MainObject) MainObject {
+func ToMainObjectModel(entity template_entity.MainObject) MainObject {
 	return MainObject{
 		Type:                      entity.Type,
 		Spawn:                     entity.Spawn,
@@ -65,8 +65,8 @@ func ToMainObjectModel(entity template.MainObject) MainObject {
 	}
 }
 
-func ToMainObjectEntity(model MainObject) template.MainObject {
-	return template.MainObject{
+func ToMainObjectEntity(model MainObject) template_entity.MainObject {
+	return template_entity.MainObject{
 		Type:                      model.Type,
 		Spawn:                     model.Spawn,
 		Owner:                     model.Owner,
@@ -87,10 +87,10 @@ func ToMainObjectEntity(model MainObject) template.MainObject {
 	}
 }
 
-func ToMainObjectModels(entities []template.MainObject) []MainObject {
+func ToMainObjectModels(entities []template_entity.MainObject) []MainObject {
 	return helpers.MapSlice(entities, ToMainObjectModel)
 }
 
-func ToMainObjectEntities(models []MainObject) []template.MainObject {
+func ToMainObjectEntities(models []MainObject) []template_entity.MainObject {
 	return helpers.MapSlice(models, ToMainObjectEntity)
 }

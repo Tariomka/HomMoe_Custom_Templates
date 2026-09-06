@@ -1,7 +1,7 @@
 package template_rule_model
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -37,7 +37,7 @@ func (this GameRules) Clone() GameRules {
 	return clone
 }
 
-func ToGameRulesModel(entity template.GameRules) GameRules {
+func ToGameRulesModel(entity template_entity.GameRules) GameRules {
 	return GameRules{
 		HeroCountMin:                         entity.HeroCountMin,
 		HeroCountMax:                         entity.HeroCountMax,
@@ -59,8 +59,8 @@ func ToGameRulesModel(entity template.GameRules) GameRules {
 	}
 }
 
-func ToGameRulesEntity(model GameRules) template.GameRules {
-	return template.GameRules{
+func ToGameRulesEntity(model GameRules) template_entity.GameRules {
+	return template_entity.GameRules{
 		HeroCountMin:                         model.HeroCountMin,
 		HeroCountMax:                         model.HeroCountMax,
 		HeroCountIncrement:                   model.HeroCountIncrement,

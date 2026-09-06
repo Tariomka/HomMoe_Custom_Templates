@@ -3,7 +3,7 @@
 package templateGenerator_test
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 )
@@ -13,7 +13,7 @@ import (
 // call Generate directly. Going through the real mapper here also makes every
 // one of those assertions a proof that the round trip is lossless.
 func generateTemplate(
-	generator template_generator.ITemplateGenerator) (*entities.RmgTemplate, []string) {
+	generator template_generator.ITemplateGenerator) (*template_entity.RmgTemplate, []string) {
 	generated, warnings := generator.Generate()
 	return new(mappers.NewTemplateMapper().ToEntity(*generated)), warnings
 }

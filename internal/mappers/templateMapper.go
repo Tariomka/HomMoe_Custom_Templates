@@ -1,7 +1,7 @@
 package mappers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
@@ -17,12 +17,12 @@ func NewTemplateMapper() ITemplateMapper {
 
 // ToModel lifts a template read from disk. Nothing on the wire records a zone's
 // tier, so every zone comes back with a nil Quality, meaning "infer it".
-func (this *TemplateMapper) ToModel(entity template.RmgTemplate) template_model.Template {
+func (this *TemplateMapper) ToModel(entity template_entity.RmgTemplate) template_model.Template {
 	return template_model.ToTemplateModel(entity)
 }
 
 // ToEntity flattens the template back to the wire format, dropping the tier the
 // schema has no field for.
-func (this *TemplateMapper) ToEntity(model template_model.Template) template.RmgTemplate {
+func (this *TemplateMapper) ToEntity(model template_model.Template) template_entity.RmgTemplate {
 	return template_model.ToTemplateEntity(model)
 }

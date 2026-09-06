@@ -1,7 +1,7 @@
 package template_variant_model
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -21,7 +21,7 @@ func (this Variant) Clone() Variant {
 	}
 }
 
-func ToVariantModel(entity template.Variant) Variant {
+func ToVariantModel(entity template_entity.Variant) Variant {
 	return Variant{
 		Orientation: ToOrientationModel(entity.Orientation),
 		Border:      ToBorderModel(entity.Border),
@@ -30,8 +30,8 @@ func ToVariantModel(entity template.Variant) Variant {
 	}
 }
 
-func ToVariantEntity(model Variant) template.Variant {
-	return template.Variant{
+func ToVariantEntity(model Variant) template_entity.Variant {
+	return template_entity.Variant{
 		Orientation: ToOrientationEntity(model.Orientation),
 		Border:      ToBorderEntity(model.Border),
 		Zones:       ToZoneEntities(model.Zones),
@@ -39,10 +39,10 @@ func ToVariantEntity(model Variant) template.Variant {
 	}
 }
 
-func ToVariantModels(entities []template.Variant) []Variant {
+func ToVariantModels(entities []template_entity.Variant) []Variant {
 	return helpers.MapSlice(entities, ToVariantModel)
 }
 
-func ToVariantEntities(models []Variant) []template.Variant {
+func ToVariantEntities(models []Variant) []template_entity.Variant {
 	return helpers.MapSlice(models, ToVariantEntity)
 }

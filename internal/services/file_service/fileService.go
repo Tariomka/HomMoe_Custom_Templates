@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -15,7 +15,7 @@ import (
 
 type FileService struct {
 	editorStateRepository repositories.IFileRepository[editor_state.EditorState]
-	templateRepository    repositories.IFileRepository[template.RmgTemplate]
+	templateRepository    repositories.IFileRepository[template_entity.RmgTemplate]
 	previewRepository     repositories.IFileRepository[image.RGBA]
 	editorStateMapper     mappers.IEditorStateMapper
 	templateMapper        mappers.ITemplateMapper
@@ -24,7 +24,7 @@ type FileService struct {
 
 func NewFileService(
 	editorStateRepository repositories.IFileRepository[editor_state.EditorState],
-	templateRepository repositories.IFileRepository[template.RmgTemplate],
+	templateRepository repositories.IFileRepository[template_entity.RmgTemplate],
 	previewRepository repositories.IFileRepository[image.RGBA],
 	editorStateMapper mappers.IEditorStateMapper,
 	templateMapper mappers.ITemplateMapper,

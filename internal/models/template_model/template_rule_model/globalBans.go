@@ -3,11 +3,11 @@ package template_rule_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 )
 
 type GlobalBans struct {
-	template.GlobalBans
+	template_entity.GlobalBans
 }
 
 func (this GlobalBans) Clone() GlobalBans {
@@ -18,10 +18,10 @@ func (this GlobalBans) Clone() GlobalBans {
 	return clone
 }
 
-func ToGlobalBansModel(entity template.GlobalBans) GlobalBans {
+func ToGlobalBansModel(entity template_entity.GlobalBans) GlobalBans {
 	return GlobalBans{GlobalBans: entity}
 }
 
-func ToGlobalBansEntity(model GlobalBans) template.GlobalBans {
+func ToGlobalBansEntity(model GlobalBans) template_entity.GlobalBans {
 	return model.GlobalBans
 }

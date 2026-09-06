@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +16,7 @@ func TestWhenTemplateLoadIsRequested_ReportsNotImplemented(t *testing.T) {
 	templatePath := filepath.Join(t.TempDir(), "T.rmg.json")
 
 	// Act
-	err := repositories.NewTemplateRepository().Load(templatePath, &template.RmgTemplate{})
+	err := repositories.NewTemplateRepository().Load(templatePath, &template_entity.RmgTemplate{})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNotImplemented)

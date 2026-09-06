@@ -3,8 +3,8 @@ package editor_state_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -76,7 +76,7 @@ func (this ManualConnectionSave) Clone() ManualConnectionSave {
 	}
 }
 
-func cloneConnection(source entities.Connection) entities.Connection {
+func cloneConnection(source template_entity.Connection) template_entity.Connection {
 	clone := source
 	clone.Road = helpers.ClonePointer(source.Road)
 	clone.PortalPlacementRulesFrom = clonePlacementRules(source.PortalPlacementRulesFrom)
@@ -84,7 +84,7 @@ func cloneConnection(source entities.Connection) entities.Connection {
 	return clone
 }
 
-func clonePlacementRules(source []entities.PlacementRule) []entities.PlacementRule {
+func clonePlacementRules(source []template_entity.PlacementRule) []template_entity.PlacementRule {
 	clone := slices.Clone(source)
 	for ruleIndex := range clone {
 		// Args elements are opaque: JSON decoding only ever boxes immutable

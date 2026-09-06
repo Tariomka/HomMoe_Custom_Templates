@@ -3,7 +3,7 @@ package template_variant_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 )
 
 type Border struct {
@@ -22,7 +22,7 @@ func (this Border) Clone() Border {
 	return clone
 }
 
-func ToBorderModel(entity template.Border) Border {
+func ToBorderModel(entity template_entity.Border) Border {
 	return Border{
 		CornerRadius:   entity.CornerRadius,
 		ObstaclesWidth: entity.ObstaclesWidth,
@@ -33,8 +33,8 @@ func ToBorderModel(entity template.Border) Border {
 	}
 }
 
-func ToBorderEntity(model Border) template.Border {
-	return template.Border{
+func ToBorderEntity(model Border) template_entity.Border {
+	return template_entity.Border{
 		CornerRadius:   model.CornerRadius,
 		ObstaclesWidth: model.ObstaclesWidth,
 		ObstaclesNoise: ToNoiseEntities(model.ObstaclesNoise),

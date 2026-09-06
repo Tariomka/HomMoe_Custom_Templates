@@ -25,7 +25,7 @@ renaming, reformatting, or "cleaning up" their contents will break the project
 in production:
 
 - [data/](data/) - including `ExampleTemplates/` and `GameData/` and `Images/`
-- [internal/entities/template/](internal/entities/template/) - the `.rmg.json`
+- [internal/entities/template_entity/](internal/entities/template_entity/) - the `.rmg.json`
   output schema
 - [internal/registry/](internal/registry) - game map generation template values/constants
 
@@ -333,7 +333,7 @@ Place new code in the package whose responsibility matches its role:
 | Kind of code                                                            | Location                                                                                                                                       |
 | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | UI / rendering (Gio widgets, layouts, theming, input)                   | [app/gui/](app/gui/)                                                                                                                           |
-| Serializable objects (entities)                                         | [internal/entities/](internal/entities/); read-only `.rmg.json` schema in [internal/entities/template/](internal/entities/template) (see §2.1) |
+| Serializable objects (entities)                                         | [internal/entities/](internal/entities/); read-only `.rmg.json` schema in [internal/entities/template_entity/](internal/entities/template_entity) (see §2.1) |
 | Minimal data transfer objects                                           | [internal/dtos/](internal/dtos/)                                                                                                               |
 | Data structs with attached logic (might have factory functions as well) | [internal/models/](internal/models/)                                                                                                           |
 | Data mappers and converters                                             | [internal/mappers/](internal/mappers/)                                                                                                         |
@@ -786,7 +786,7 @@ irrelevant memories.
 ---
 
 **TL;DR:** Take a deep breath. Don't touch [data/](data/),
-[internal/entities/template/](internal/entities/template/) or [internal/registry/](internal/registry/).
+[internal/entities/template_entity/](internal/entities/template_entity/) or [internal/registry/](internal/registry/).
 Never change where `.rmg.json` is written and never persist the output directory — the game
 only reads templates from its own folder. Stay cross-platform.
 Cover everything you write with tests. Cap sessions at 38–50 messages and

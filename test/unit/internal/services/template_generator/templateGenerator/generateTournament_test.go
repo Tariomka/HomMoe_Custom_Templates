@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -39,7 +39,7 @@ func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubGuardGroups(t *t
 
 	// Assert
 	hasHubGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(connection entities.Connection) bool {
+		Where(func(connection template_entity.Connection) bool {
 			return strings.HasPrefix(connection.GuardMatchGroup, "tourney_hub_guard_")
 		}).
 		Any()
@@ -107,7 +107,7 @@ func TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections(t *testing
 
 	// Assert
 	hasPortalConnections := linq.FromSlice(actual.Variants[0].Connections).
-		Where(func(connection entities.Connection) bool { return connection.ConnectionType == "Portal" }).
+		Where(func(connection template_entity.Connection) bool { return connection.ConnectionType == "Portal" }).
 		Any()
 	assert.True(t, hasPortalConnections)
 }

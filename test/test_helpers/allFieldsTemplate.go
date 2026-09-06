@@ -1,7 +1,7 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/brianvoe/gofakeit/v7"
 )
 
@@ -10,10 +10,10 @@ import (
 // whole schema. Fuzzing it rather than hand-writing it is the point: a field
 // added to the schema and forgotten in a converter fails the round trip instead
 // of passing silently, which a hand-written fixture could never catch.
-func NewAllFieldsTemplate() entities.RmgTemplate {
+func NewAllFieldsTemplate() template_entity.RmgTemplate {
 	faker := gofakeit.New(allFieldsTemplateSeed)
 
-	var template entities.RmgTemplate
+	var template template_entity.RmgTemplate
 	if err := faker.Struct(&template); err != nil {
 		panic(err)
 	}
@@ -29,12 +29,12 @@ func NewAllFieldsTemplate() entities.RmgTemplate {
 // failure is always reproducible.
 const allFieldsTemplateSeed = 20260902
 
-func fillLooselyTypedFields(template *entities.RmgTemplate, faker *gofakeit.Faker) {
+func fillLooselyTypedFields(template *template_entity.RmgTemplate, faker *gofakeit.Faker) {
 	for index := range template.ContentPools {
-		template.ContentPools[index] = entities.ContentPool{faker.Word(): faker.Word()}
+		template.ContentPools[index] = template_entity.ContentPool{faker.Word(): faker.Word()}
 	}
 	for index := range template.ContentLists {
-		template.ContentLists[index] = entities.ContentList{faker.Word(): faker.Word()}
+		template.ContentLists[index] = template_entity.ContentList{faker.Word(): faker.Word()}
 	}
 
 	for contentIndex := range template.MandatoryContent {
@@ -53,7 +53,7 @@ func fillLooselyTypedFields(template *entities.RmgTemplate, faker *gofakeit.Fake
 	}
 }
 
-func fillPlacementRuleArgs(rules []entities.PlacementRule, faker *gofakeit.Faker) {
+func fillPlacementRuleArgs(rules []template_entity.PlacementRule, faker *gofakeit.Faker) {
 	for index := range rules {
 		rules[index].Args = []any{faker.Word(), faker.Number(1, 100)}
 	}

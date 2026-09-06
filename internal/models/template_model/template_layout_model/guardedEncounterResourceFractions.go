@@ -3,12 +3,12 @@ package template_layout_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
 type GuardedEncounterResourceFractions struct {
-	template.GuardedEncounterResourceFractions
+	template_entity.GuardedEncounterResourceFractions
 }
 
 func (this GuardedEncounterResourceFractions) Clone() GuardedEncounterResourceFractions {
@@ -19,21 +19,21 @@ func (this GuardedEncounterResourceFractions) Clone() GuardedEncounterResourceFr
 }
 
 func ToGuardedEncounterResourceFractionsModel(
-	entity template.GuardedEncounterResourceFractions) GuardedEncounterResourceFractions {
+	entity template_entity.GuardedEncounterResourceFractions) GuardedEncounterResourceFractions {
 	return GuardedEncounterResourceFractions{GuardedEncounterResourceFractions: entity}
 }
 
 func ToGuardedEncounterResourceFractionsEntity(
-	model GuardedEncounterResourceFractions) template.GuardedEncounterResourceFractions {
+	model GuardedEncounterResourceFractions) template_entity.GuardedEncounterResourceFractions {
 	return model.GuardedEncounterResourceFractions
 }
 
 func ToGuardedEncounterResourceFractionsModels(
-	entities []template.GuardedEncounterResourceFractions) []GuardedEncounterResourceFractions {
+	entities []template_entity.GuardedEncounterResourceFractions) []GuardedEncounterResourceFractions {
 	return helpers.MapSlice(entities, ToGuardedEncounterResourceFractionsModel)
 }
 
 func ToGuardedEncounterResourceFractionsEntities(
-	models []GuardedEncounterResourceFractions) []template.GuardedEncounterResourceFractions {
+	models []GuardedEncounterResourceFractions) []template_entity.GuardedEncounterResourceFractions {
 	return helpers.MapSlice(models, ToGuardedEncounterResourceFractionsEntity)
 }

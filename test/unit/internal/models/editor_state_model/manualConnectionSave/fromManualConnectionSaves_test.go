@@ -3,7 +3,7 @@ package manualConnectionSave_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
@@ -25,8 +25,8 @@ func TestWhenSavesCarryUserAddedFlags_RestoresEachFlagOntoConnection(t *testing.
 	t.Parallel()
 	// Arrange
 	saves := []editor_state_model.ManualConnectionSave{
-		{Connection: entities.Connection{Name: "A-B", From: "Zone A", To: "Zone B"}, IsUserAdded: true},
-		{Connection: entities.Connection{Name: "B-C", From: "Zone B", To: "Zone C"}, IsUserAdded: false},
+		{Connection: template_entity.Connection{Name: "A-B", From: "Zone A", To: "Zone B"}, IsUserAdded: true},
+		{Connection: template_entity.Connection{Name: "B-C", From: "Zone B", To: "Zone C"}, IsUserAdded: false},
 	}
 	expected := []template_model.Connection{
 		{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true},

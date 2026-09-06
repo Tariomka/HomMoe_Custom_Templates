@@ -114,7 +114,7 @@ func TestWhenAManualConnectionIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *te
 
 // TestWhenEveryReferenceFieldIsWalked_CloneSharesNoStorageWithTheSource is the
 // drift guard. It reflects over a state whose every slice and pointer - down
-// through the protected entities.Zone and entities.Connection - carries data,
+// through the protected template_entity.Zone and template_entity.Connection - carries data,
 // and fails as soon as a reference field is left aliased. A new slice or
 // pointer anywhere in that tree therefore trips this test until Clone covers it.
 func TestWhenEveryReferenceFieldIsWalked_CloneSharesNoStorageWithTheSource(t *testing.T) {

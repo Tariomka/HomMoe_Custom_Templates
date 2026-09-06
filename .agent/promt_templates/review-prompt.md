@@ -13,7 +13,7 @@ protocol (ask → plan → approve → implement + verify → owner commits → 
    document: `.agent/backlog/review-<model>-<MM-DD>.md`.
    Scratch verification programs are allowed only if deleted before you finish.
 2. **Respect AGENTS.md hard rules** when judging code: `data/`,
-   `internal/entities/template/`, and `internal/registry/` are read-only game
+   `internal/entities/template_entity/`, and `internal/registry/` are read-only game
    data — findings inside them may only propose lint-config exclusions or
    owner-approved changes, never direct edits. `this` receivers, file-per-struct,
    camelCase file names, and the `test/unit` mirror layout are house style, not

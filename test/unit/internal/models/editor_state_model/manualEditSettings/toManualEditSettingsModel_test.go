@@ -3,8 +3,8 @@ package manualEditSettings_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -56,11 +56,11 @@ func TestWhenAnEmptyGroupIsPersisted_TheListsStayNil(t *testing.T) {
 func allFieldsManualEditSettings() editor_state.ManualEditSettings {
 	return editor_state.ManualEditSettings{
 		ManualZones: []editor_state.ManualZoneSave{{
-			Zone:           entities.Zone{Name: "Zone A"},
+			Zone:           template_entity.Zone{Name: "Zone A"},
 			ManualPosition: new(data.NewVec2(0.25, 0.75)),
 		}},
 		ManualConnections: []editor_state.ManualConnectionSave{{
-			Connection:  entities.Connection{Name: "Conn A"},
+			Connection:  template_entity.Connection{Name: "Conn A"},
 			IsUserAdded: true,
 		}},
 	}

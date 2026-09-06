@@ -299,7 +299,7 @@ go tool pprof -http :42069 cpu.prof
 - Default guard randomization is `0.05`.
 - Player zones are emitted first (`A` onwards), neutral zones follow.
 - Read-only by design: the `.rmg.json` schema in
-  [internal/entities/template](internal/entities/template) and the game data
+  [internal/entities/template_entity](internal/entities/template_entity) and the game data
   under [data/](data) are kept verbatim for game compatibility.
 - Generator and persistence compatibility are covered by the unit and
    integration suites under [test/](test/).

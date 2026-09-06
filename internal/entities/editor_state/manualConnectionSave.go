@@ -1,11 +1,10 @@
 package editor_state
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 )
 
-// ManualConnectionSave persists a connection edited in the manual zone editor.
 type ManualConnectionSave struct {
-	Connection  entities.Connection `json:"connection"`
-	IsUserAdded bool                `json:"isUserAdded,omitempty"`
+	Connection  template_entity.Connection `json:"connection"`
+	IsUserAdded bool                       `json:"isUserAdded,omitempty"`
 }

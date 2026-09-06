@@ -3,12 +3,12 @@ package template_common_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
 type PlacementRule struct {
-	template.PlacementRule
+	template_entity.PlacementRule
 }
 
 func (this PlacementRule) Clone() PlacementRule {
@@ -17,18 +17,14 @@ func (this PlacementRule) Clone() PlacementRule {
 	return clone
 }
 
-func ToPlacementRuleModel(entity template.PlacementRule) PlacementRule {
-	return PlacementRule{PlacementRule: entity}
+func ToPlacementRuleModels(entities []template_entity.PlacementRule) []PlacementRule {
+	return helpers.MapSlice(entities, func(entity template_entity.PlacementRule) PlacementRule {
+		return PlacementRule{PlacementRule: entity}
+	})
 }
 
-func ToPlacementRuleEntity(model PlacementRule) template.PlacementRule {
-	return model.PlacementRule
-}
-
-func ToPlacementRuleModels(entities []template.PlacementRule) []PlacementRule {
-	return helpers.MapSlice(entities, ToPlacementRuleModel)
-}
-
-func ToPlacementRuleEntities(models []PlacementRule) []template.PlacementRule {
-	return helpers.MapSlice(models, ToPlacementRuleEntity)
+func ToPlacementRuleEntities(models []PlacementRule) []template_entity.PlacementRule {
+	return helpers.MapSlice(models, func(model PlacementRule) template_entity.PlacementRule {
+		return model.PlacementRule
+	})
 }

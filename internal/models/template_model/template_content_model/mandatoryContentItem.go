@@ -3,7 +3,7 @@ package template_content_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/template_common_model"
 )
@@ -39,7 +39,7 @@ func (this MandatoryContentItem) Clone() MandatoryContentItem {
 	return clone
 }
 
-func ToMandatoryContentItemModel(entity template.MandatoryContentItem) MandatoryContentItem {
+func ToMandatoryContentItemModel(entity template_entity.MandatoryContentItem) MandatoryContentItem {
 	return MandatoryContentItem{
 		SID:                 entity.SID,
 		Name:                entity.Name,
@@ -57,8 +57,8 @@ func ToMandatoryContentItemModel(entity template.MandatoryContentItem) Mandatory
 	}
 }
 
-func ToMandatoryContentItemEntity(model MandatoryContentItem) template.MandatoryContentItem {
-	return template.MandatoryContentItem{
+func ToMandatoryContentItemEntity(model MandatoryContentItem) template_entity.MandatoryContentItem {
+	return template_entity.MandatoryContentItem{
 		SID:                 model.SID,
 		Name:                model.Name,
 		IsMine:              model.IsMine,
@@ -75,10 +75,10 @@ func ToMandatoryContentItemEntity(model MandatoryContentItem) template.Mandatory
 	}
 }
 
-func ToMandatoryContentItemModels(entities []template.MandatoryContentItem) []MandatoryContentItem {
+func ToMandatoryContentItemModels(entities []template_entity.MandatoryContentItem) []MandatoryContentItem {
 	return helpers.MapSlice(entities, ToMandatoryContentItemModel)
 }
 
-func ToMandatoryContentItemEntities(models []MandatoryContentItem) []template.MandatoryContentItem {
+func ToMandatoryContentItemEntities(models []MandatoryContentItem) []template_entity.MandatoryContentItem {
 	return helpers.MapSlice(models, ToMandatoryContentItemEntity)
 }

@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service/editor_state_migrator"
 	"github.com/stretchr/testify/assert"
@@ -242,7 +242,7 @@ func TestWhenACurrentFileCarriesTheGeneratorStamps_TheyReachTheTarget(t *testing
 	statePath := writeStateFile(t, `{"schemaVersion":2,"manualZones":[{"zone":{"name":"A"},`+
 		`"generatorPosition":{"X":0.4,"Y":0.6},"generatorRing":0,"manualPosition":{"X":0.25,"Y":0.75}}]}`)
 	expected := editor_state.ManualZoneSave{
-		Zone:              entities.Zone{Name: "A"},
+		Zone:              template_entity.Zone{Name: "A"},
 		GeneratorPosition: new(data.NewVec2(0.4, 0.6)),
 		GeneratorRing:     new(0),
 		ManualPosition:    new(data.NewVec2(0.25, 0.75)),

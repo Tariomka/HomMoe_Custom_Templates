@@ -3,7 +3,7 @@ package templateGenerator_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -41,7 +41,7 @@ func TestWhenRingTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegre
 	actual, _ := generateTemplate(generator)
 
 	// Assert
-	expectedOrientation := entities.Orientation{
+	expectedOrientation := template_entity.Orientation{
 		ZeroAngleZone:        "Spawn-A",
 		BaseAngleMin:         45,
 		BaseAngleMax:         45,
@@ -155,7 +155,7 @@ func TestWhenCityHoldEnabledWithMixedNeutralTiers_MarksExactlyOneHoldCityMainObj
 	actual, _ := generateTemplate(generator)
 
 	// Assert
-	var holdCityObjects []entities.MainObject
+	var holdCityObjects []template_entity.MainObject
 	for _, zone := range actual.Variants[0].Zones {
 		for _, mainObject := range zone.MainObjects {
 			if mainObject.HoldCityWinCon {
@@ -168,7 +168,7 @@ func TestWhenCityHoldEnabledWithMixedNeutralTiers_MarksExactlyOneHoldCityMainObj
 
 // sumConnectionGuardValues totals the guard values of every connection in the
 // template's first variant.
-func sumConnectionGuardValues(generated *entities.RmgTemplate) int {
+func sumConnectionGuardValues(generated *template_entity.RmgTemplate) int {
 	total := 0
 	for _, connection := range generated.Variants[0].Connections {
 		total += connection.GuardValue

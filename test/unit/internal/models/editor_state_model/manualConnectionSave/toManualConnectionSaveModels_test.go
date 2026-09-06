@@ -3,8 +3,8 @@ package manualConnectionSave_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +25,7 @@ func TestWhenConnectionSavesArePersisted_EachOneIsWrapped(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	saves := []editor_state.ManualConnectionSave{{
-		Connection:  entities.Connection{Name: "Conn A"},
+		Connection:  template_entity.Connection{Name: "Conn A"},
 		IsUserAdded: true,
 	}}
 
@@ -52,7 +52,7 @@ func TestWhenConnectionSavesAreUnwrapped_TheEntitiesAreCarried(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	saves := []editor_state_model.ManualConnectionSave{{
-		Connection:  entities.Connection{Name: "Conn A"},
+		Connection:  template_entity.Connection{Name: "Conn A"},
 		IsUserAdded: true,
 	}}
 

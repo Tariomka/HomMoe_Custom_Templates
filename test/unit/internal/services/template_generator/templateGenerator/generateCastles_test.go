@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -64,7 +64,7 @@ func TestWhenPlayerOwnedCastlesConfigured_AddsOwnedCityPerCountInEachSpawnZone(t
 	var ownedCounts []int
 	for _, zone := range zonesWithPrefix(actual, "Spawn-") {
 		ownedCounts = append(ownedCounts, countZoneCitiesWhere(zone,
-			func(mainObject entities.MainObject) bool { return mainObject.Owner != "" }))
+			func(mainObject template_entity.MainObject) bool { return mainObject.Owner != "" }))
 	}
 	assert.Equal(t, []int{ownedPerZone, ownedPerZone}, ownedCounts)
 }
@@ -102,7 +102,7 @@ func TestWhenPlayerOwnedCastlesConfigured_KeepsConfiguredUnclaimedCastleCount(t 
 	var unclaimedCounts []int
 	for _, zone := range zonesWithPrefix(actual, "Spawn-") {
 		unclaimedCounts = append(unclaimedCounts, countZoneCitiesWhere(zone,
-			func(mainObject entities.MainObject) bool { return mainObject.Owner == "" }))
+			func(mainObject template_entity.MainObject) bool { return mainObject.Owner == "" }))
 	}
 	assert.Equal(t, []int{1, 1}, unclaimedCounts)
 }
@@ -182,7 +182,7 @@ func newPlayerOwnedCastlesConfiguration(ownedPerZone int) *config.GeneratorConfi
 
 // countZoneCitiesWhere counts City main objects of the zone matching the
 // given predicate.
-func countZoneCitiesWhere(zone entities.Zone, predicate func(entities.MainObject) bool) int {
+func countZoneCitiesWhere(zone template_entity.Zone, predicate func(template_entity.MainObject) bool) int {
 	count := 0
 	for _, mainObject := range zone.MainObjects {
 		if mainObject.Type == "City" && predicate(mainObject) {
@@ -210,7 +210,7 @@ func newAbandonedOutpostConfiguration(spawnOutposts bool) *config.GeneratorConfi
 
 // countNeutralMainObjectsOfType counts main objects of the given type across
 // all neutral zones of the template's first variant.
-func countNeutralMainObjectsOfType(generated *entities.RmgTemplate, objectType string) int {
+func countNeutralMainObjectsOfType(generated *template_entity.RmgTemplate, objectType string) int {
 	count := 0
 	for _, zone := range zonesWithPrefix(generated, "Neutral-") {
 		for _, mainObject := range zone.MainObjects {

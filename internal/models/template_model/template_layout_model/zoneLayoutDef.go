@@ -3,7 +3,7 @@ package template_layout_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -32,7 +32,7 @@ func (this ZoneLayoutDef) Clone() ZoneLayoutDef {
 	return clone
 }
 
-func ToZoneLayoutDefModel(entity template.ZoneLayoutDef) ZoneLayoutDef {
+func ToZoneLayoutDefModel(entity template_entity.ZoneLayoutDef) ZoneLayoutDef {
 	return ZoneLayoutDef{
 		Name:                  entity.Name,
 		ObstaclesFill:         entity.ObstaclesFill,
@@ -49,8 +49,8 @@ func ToZoneLayoutDefModel(entity template.ZoneLayoutDef) ZoneLayoutDef {
 	}
 }
 
-func ToZoneLayoutDefEntity(model ZoneLayoutDef) template.ZoneLayoutDef {
-	return template.ZoneLayoutDef{
+func ToZoneLayoutDefEntity(model ZoneLayoutDef) template_entity.ZoneLayoutDef {
+	return template_entity.ZoneLayoutDef{
 		Name:                  model.Name,
 		ObstaclesFill:         model.ObstaclesFill,
 		ObstaclesFillVoid:     model.ObstaclesFillVoid,
@@ -66,10 +66,10 @@ func ToZoneLayoutDefEntity(model ZoneLayoutDef) template.ZoneLayoutDef {
 	}
 }
 
-func ToZoneLayoutDefModels(entities []template.ZoneLayoutDef) []ZoneLayoutDef {
+func ToZoneLayoutDefModels(entities []template_entity.ZoneLayoutDef) []ZoneLayoutDef {
 	return helpers.MapSlice(entities, ToZoneLayoutDefModel)
 }
 
-func ToZoneLayoutDefEntities(models []ZoneLayoutDef) []template.ZoneLayoutDef {
+func ToZoneLayoutDefEntities(models []ZoneLayoutDef) []template_entity.ZoneLayoutDef {
 	return helpers.MapSlice(models, ToZoneLayoutDefEntity)
 }

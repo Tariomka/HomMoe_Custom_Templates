@@ -3,10 +3,10 @@ package template_rule_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 )
 
-type Bonus struct{ template.Bonus }
+type Bonus struct{ template_entity.Bonus }
 
 func (this Bonus) Clone() Bonus {
 	clone := this
@@ -14,10 +14,10 @@ func (this Bonus) Clone() Bonus {
 	return clone
 }
 
-func ToBonusModel(entity template.Bonus) Bonus {
+func ToBonusModel(entity template_entity.Bonus) Bonus {
 	return Bonus{Bonus: entity}
 }
 
-func ToBonusEntity(model Bonus) template.Bonus {
+func ToBonusEntity(model Bonus) template_entity.Bonus {
 	return model.Bonus
 }

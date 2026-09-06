@@ -1,7 +1,7 @@
 package template_variant_model
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/template_common_model"
 )
@@ -42,7 +42,7 @@ func (this Connection) Clone() Connection {
 	return clone
 }
 
-func ToConnectionModel(entity template.Connection) Connection {
+func ToConnectionModel(entity template_entity.Connection) Connection {
 	return Connection{
 		Name:                     entity.Name,
 		From:                     entity.From,
@@ -63,8 +63,8 @@ func ToConnectionModel(entity template.Connection) Connection {
 	}
 }
 
-func ToConnectionEntity(model Connection) template.Connection {
-	return template.Connection{
+func ToConnectionEntity(model Connection) template_entity.Connection {
+	return template_entity.Connection{
 		Name:                     model.Name,
 		From:                     model.From,
 		To:                       model.To,
@@ -84,10 +84,10 @@ func ToConnectionEntity(model Connection) template.Connection {
 	}
 }
 
-func ToConnectionModels(entities []template.Connection) []Connection {
+func ToConnectionModels(entities []template_entity.Connection) []Connection {
 	return helpers.MapSlice(entities, ToConnectionModel)
 }
 
-func ToConnectionEntities(models []Connection) []template.Connection {
+func ToConnectionEntities(models []Connection) []template_entity.Connection {
 	return helpers.MapSlice(models, ToConnectionEntity)
 }

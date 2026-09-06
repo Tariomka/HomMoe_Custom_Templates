@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func TestWhenSavedTemplateNameNeedsSanitizing_ForwardsItUnchangedToTheRepository
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "a/b:c"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "a/b:c"}
 	mocks.template.On("Save", "out", "a/b:c", rmgTemplate).Return("written", nil)
 
 	// Act
@@ -31,7 +31,7 @@ func TestWhenTemplateIsSaved_ReturnsThePathTheRepositoryWrote(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	expectedPath := filepath.Join("out", "T.rmg.json")
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return(expectedPath, nil)
 
@@ -47,7 +47,7 @@ func TestWhenPreviewImageIsNil_DoesNotSaveAPreview(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("written", nil)
 
 	// Act
@@ -62,7 +62,7 @@ func TestWhenPreviewImageIsGiven_SavesItBesideTheTemplateUnderTheSameName(t *tes
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	previewImage := newPreviewImage()
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("written", nil)
 	mocks.preview.On("Save", "out", "T", *previewImage).Return("preview", nil)
@@ -79,7 +79,7 @@ func TestWhenTemplateCannotBeSaved_DoesNotSaveAPreview(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("", errors.New("disk full"))
 
 	// Act
@@ -93,7 +93,7 @@ func TestWhenTemplateCannotBeSaved_ReturnsNoPath(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("", errors.New("disk full"))
 
 	// Act
@@ -107,7 +107,7 @@ func TestWhenTemplateCannotBeSaved_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	expectedError := errors.New("disk full")
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("", expectedError)
 
@@ -122,7 +122,7 @@ func TestWhenPreviewCannotBeSaved_StillReturnsTheTemplatePath(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	previewImage := newPreviewImage()
 	expectedPath := filepath.Join("out", "T.rmg.json")
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return(expectedPath, nil)
@@ -140,7 +140,7 @@ func TestWhenPreviewCannotBeSaved_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service, mocks := newServiceWithMocks()
-	rmgTemplate := entities.RmgTemplate{Name: "T"}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T"}
 	previewImage := newPreviewImage()
 	expectedError := errors.New("no space")
 	mocks.template.On("Save", "out", "T", rmgTemplate).Return("written", nil)
