@@ -1,223 +1,137 @@
-# Session carry-forward — 2026-09-06 (batch S done and committed, batch T next)
+# Carry-forward: begin repository-review backlog work
+
+Date: 2026-09-07.
 
 ## 1. Session goal
 
-Execute **batch S**, the follow-on to §2.4 that batch R deliberately deferred: move the persisted
-editor state to schema **v2** and build the versioned migration that keeps every existing
-`.gen.json` loadable. Four phases, all complete. The owner reviewed the result mid-session,
-rejected the shape of the repository/migration seam, and it was rebuilt to their design before the
-commit.
+Review the repository according to [the review prompt](promt_templates/review-prompt.md), then prepare a new session to implement the resulting backlog under owner approval.
+
+**Source of truth:** [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md). It contains **25 findings: 8 High, 13 Medium, 4 Low**, all prior-item dispositions, source evidence, proposed tests, decisions, execution order (§9), and measured baselines (§11).
+
+**Implementation has not started.** Creating this handoff is not approval to implement all findings. Start with review §1.1, then §1.2 (batch A), after confirming scope and the remaining decisions.
 
 ## 2. Fixes applied
 
-- **A real data loss closed.** `generatorPosition` and `generatorRing` were dropped by every save.
-  A reloaded manual layout therefore lost its generator stamps and the preview fell back to a
-  computed scatter instead of drawing the real layout. Both are now persisted on
-  [internal/entities/editor_state/manualZoneSave.go](internal/entities/editor_state/manualZoneSave.go).
-- **A file from a newer build no longer half-loads.** Before, unknown keys would be silently
-  dropped and the next save would write that loss back to disk. The load is now refused with a
-  typed `UnsupportedSchemaVersionError` naming both versions.
+- No application, test, configuration, dependency, or protected-data fixes were applied during the review.
+- This [handoff](session-carry-forward.md) replaces obsolete operational instructions with the current starting point. It partially addresses review §7.2, but that item also covers other stale observations; do not mark the entire item fixed automatically.
 
 ## 3. Features added / changed
 
-- **Schema v2 on disk.** `manualZones[*].manualPosition` went from `[0.25,0.75]` to
-  `{"X":0.25,"Y":0.75}`; `generatorPosition` / `generatorRing` are written for the first time;
-  `CurrentEditorStateSchemaVersion` is **2**. Nothing else in the 72-key schema moved.
-  `persistedEditorStateFieldCount` is still 72 — the new keys nest under `manualZones`.
-  `.rmg.json` is untouched.
-- **A frozen v1 snapshot**, [internal/entities/editor_state/editor_state_v1/](internal/entities/editor_state/editor_state_v1/):
-  17 files, **data only, never to be edited**.
-- **A migrator**, [internal/services/file_service/editor_state_migrator/](internal/services/file_service/editor_state_migrator/):
-  probes `schemaVersion` with `os.Open` + `json.UnmarshalRead`, refuses newer-than-current, then
-  dispatches to the current repository or to the legacy one plus `MigrateToV2`.
-- **A second repository**, [internal/repositories/legacyEditorStateRepository.go](internal/repositories/legacyEditorStateRepository.go),
-  under the same generic `IFileRepository[T]`. Its `Save` refuses.
-- `toPositionArray` / `fromPositionArray` **deleted**. `[2]float64` now appears in exactly one
-  place in the repository: the frozen v1 struct.
-
-### Three owner decisions taken during the work — do not relitigate
-
-1. **The freeze stops at the editor-state boundary.** `editor_state_v1` copies the 17
-   `internal/entities/editor_state` structs and no more; `ManualZoneSave.Zone` and
-   `ManualConnectionSave.Connection` still name the live `entities.Zone` / `entities.Connection`.
-   Those are the game's `.rmg.json` vocabulary — they version with the game, not with this file
-   format, and copying protected types into an unprotected package cuts against AGENTS.md §2.1.
-2. **Repositories stay plain typed decoders** *(taken on review — the first implementation was
-   rejected)*. The initial attempt turned `EditorStateRepository` into a byte reader behind a
-   bespoke `IEditorStateRepository` and put the migration in `internal/services/`. The owner
-   rejected that: the legacy shape gets its **own** repository under the same generic interface,
-   `EditorStateRepository` is byte-for-byte what it was before batch S, and the migrator lives
-   **inside** `file_service`, the package that owns loading.
-3. **The migrator is a permitted `entityNamerPrefix`, not an allow-list exception.** Reading a
-   `.gen.json` whose shape depends on its own `schemaVersion` is entity work by definition. The
-   prefix is `internal/services/file_service/editor_state_migrator/`. **`entityNamerAllowList` is
-   untouched and still holds exactly `internal/services/file_service`.**
+- Added the [review backlog](backlog/review-gpt-6-astra-09-07.md), with stable finding numbers and per-item fix/test plans.
+- The owner selected **“Include verified owner items”** when asked how to treat the existing manual backlog.
+- The owner explicitly selected **“Reopen the DTO removal request”** after being shown the conflict between the zone-content owner backlog and the architecture gate's accepted exception. This is review **§2.2**. The bonuses DTO exception is **not** reopened. The exact replacement API/result and whole-exception versus single-seam scope still need approval.
+- No application features were changed.
 
 ## 4. File modifications
 
-**50 files, +2236 / −90**, all in commit `404b604`. Highlights:
-
-| File | Change |
+| File | State / purpose |
 | --- | --- |
-| `internal/entities/editor_state/editor_state_v1/` (17 new files) | The frozen v1 snapshot. Data only, no logic, so `internal/entities/` keeps its no-logic rule. |
-| `internal/entities/editor_state/manualZoneSave.go` | `ManualPosition *data.Vec2[float64]`, plus `GeneratorPosition` / `GeneratorRing` sidecars. |
-| `internal/entities/editor_state/editorState.go` | `CurrentEditorStateSchemaVersion` → 2. |
-| `internal/services/file_service/editor_state_migrator/` (4 new files) | Migrator, interface, typed error, `v1ToV2.go`. |
-| `internal/repositories/legacyEditorStateRepository.go` | New. `IFileRepository[editor_state_v1.EditorState]`; `Save` refuses. |
-| `internal/repositories/editorStateRepository.go` | **Unchanged** — reverted to its pre-batch-S content after the review. |
-| `internal/services/file_service/fileService.go` | Keeps the editor-state repository for `SaveSettings`, gains `IEditorStateMigrator`; `LoadSettingsFile` is seed → `migrator.Load` → map. |
-| `internal/models/editor_state_model/manualZoneSave.go` | Carries the stamps both ways via `helpers.ClonePointer`; the array bridge is gone. |
-| `internal/composition/providerSets.go` + `wire_gen.go` | Two new providers; regenerated. |
-| `test/test_helpers/allFieldsEditorState.go` | The fixture zone now stamps `GeneratorPosition` and `GeneratorRing`. |
-| `test/test_helpers/testdata/editorState_v2_flat.gen.json` | New. `_v0_` and `_v1_` are **byte-frozen** and were verified unmoved. |
-| `test/unit/architecture/dependency/layering_test.go` | The new `entityNamerPrefixes` entry. |
-| `.agent/backlog/backlog-opus5.md` | §2.4 record extended with what S did; §8 row S closed and row **T** opened; coverage note and §9 baseline refreshed. |
-| `.agent/memories/{architecture,template-model,generator-domain}.md` | Updated to the achieved state. |
+| [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) | Created in the review session; subsequently staged by the owner. Do not unstage or overwrite owner edits. |
+| [session-carry-forward.md](session-carry-forward.md) | Created by this handoff request after the owner staged deletion of the obsolete version. This new working-tree content is intentionally not staged by the agent. |
+
+A temporary verification program under .agent/review_probe was created, executed, and deleted during the review. Its absence was checked again before this handoff. No scratch source remains. Existing root coverage reports were not overwritten; diagnostic output was directed outside the repository and is not required to resume because results are recorded in the review.
+
+No files in the protected game-data/schema/registry trees were edited. No implementation plan exists for this backlog yet; create one only after the first batch's scope is confirmed.
 
 ## 5. Tests added or updated
 
-- **Added:** `test/unit/internal/services/file_service/editor_state_migrator/` — `editorStateMigrator/`
-  (load + constructor), `unsupportedSchemaVersionError/`, `v1ToV2/`. Plus
-  `test/unit/internal/repositories/legacyEditorStateRepository/` (4 files).
-- **Updated:** the two sanctioned fixture tests in
-  [test/integration/editorStateWireFormat_integration_test.go](test/integration/editorStateWireFormat_integration_test.go)
-  now load **through the migrator**; new coverage for a v1 array position surviving as a `Vec2`, a
-  v2 file round-tripping the stamps, a version-3 file being refused, and every real `.gen.json` in
-  `output/` still loading (skips when the folder is empty — it is gitignored).
-  `TestWhenTheCurrentStateFixtureIsLoaded_…` now means v2; the old v1 assertion lives on as
-  `TestWhenTheV1StateFixtureIsLoaded_…`.
-- **Reverted:** `test/unit/internal/repositories/editorStateRepository/` is back to its
-  pre-batch-S content bar one word in a comment.
-- ~9 converter tests added for the stamps in both directions, including ring 0 and the
-  snapshot-not-alias property.
+**None.** The review proposes regression tests but does not implement them. Findings must be reverified on the current source before fixing; line citations describe the reviewed revision and may move.
 
-**Final gate run — re-verified on the committed tree after the owner's cosmetic edits, all green:**
+Last measured verification, on revision `f4f4cf63f22e84040754a7231b4d1dc793070af1`:
 
-| Gate | Result |
+| Check | Result |
 | --- | --- |
-| `go build ./...`, `go vet ./...` | 0 |
-| `gofmt -l ./app ./internal ./test ./cmd` | empty |
-| `go run ./cmd/testlayoutcheck .` | passed |
-| `wire diff ./internal/composition/...` | 0 |
-| `go test ./test/unit/... -count=1` | pass |
-| `go test -tags=integration_test ./test/integration/... -count=1` | pass |
-| `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` | pass, **no `-update`**, no golden moved |
-| `golangci-lint-v2 run ./...` | **0 issues** |
-| Coverage | **74.3 %** (was 74.1, floor 72.5); every function in both new packages 100 % |
-| Protected trees | `data/`, `internal/registry/`, `internal/entities/template/` all untouched — **batch S needed no protected edit** |
+| Go toolchain | `go1.27.0 windows/amd64` |
+| Installed golangci-lint | `2.13.1`, built with Go `1.27.0`; tools module still pins `2.12.2` (§6.2) |
+| `go build ./...` | PASS |
+| `go vet -tags=integration_test ./...` | PASS |
+| `go test ./test/... -count=1` | PASS, 183 packages, including 181 unit packages |
+| `go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1` | PASS; performance package reported no tests to run, not a benchmark result |
+| Unit coverage with `-coverpkg=./internal/...,./app/...` | PASS, **74.4%** total statements from Go's own `cover -func` output |
+| Full configured report-only lint | **0 issues**, three unused-exclusion warnings |
+| `go run ./cmd/testlayoutcheck .` | PASS |
+| Geometry unit, PNG unit, and untagged integration packages repeated with `-count=20` | PASS |
+| Root and tools `go mod tidy -diff` | Both exit 1 solely from Windows checksum-file EOL differences; normalized content identical (§6.3) |
+| Local full race / GUI / Linux / benchmarks | Not run in this review |
+| Local govulncheck | Not installed/not run; PR and scheduled CI scan configuration verified, remote outcome unknown |
+
+The review's complete coverage inventory has 282 instrumented files: 192 at 100%, 52 partial, 38 at 0%. Some GUI and other-platform files are outside that profile, not implicitly covered. Use **74.4% and zero lint issues** as the comparable Windows no-regression baseline; remeasure before implementation. Do not substitute historical 74.3%, a memory-only floor, or CI's configured 60% minimum for the current baseline.
+
+Public-API experiments confirmed:
+
+- §1.3: a portal with centers 100 pixels apart rendered exactly the no-edge background; Direct with the same geometry did not.
+- §1.4: manual road reconstruction added roads to roadless zones.
+- §1.7: `SaveArmy=false` produced `TournamentSaveArmy=true`.
+- §1.9: mutating an input to `SetManualEdits` or a result of `GetManualZones` mutated stored nested position data.
+- §1.13: 200 identical symmetric-obstacle geometry calls produced two different control-point Y values (300 and 400).
+
+Other findings are source-traced, not represented as experimentally reproduced. In particular no full GUI reproduction of the revert or batched-pointer findings was run.
 
 ## 6. Git status snapshot
 
-Branch **`AD/fixing_some_stuff_08-12`**. Working tree is **clean**.
+Checked immediately before writing this new handoff:
 
-```
-404b604 (HEAD -> AD/fixing_some_stuff_08-12) Batch S done
-1aaf4c2 (origin/AD/fixing_some_stuff_08-12)  Batch R done
-7b3ccea                                      Batch Q done
-```
+- Branch: **master**.
+- HEAD: **f4f4cf6**, “Backlog item resolution (#36)”.
+- Local `origin/master` and `origin/HEAD` refs point at the same commit. No fetch was performed; this is not a claim about current remote state.
+- Staged addition: [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md).
+- Staged deletion: the obsolete [session-carry-forward.md](session-carry-forward.md).
+- No application-source changes were reported; temporary verification source was absent.
 
-⚠ **Batch S is committed locally but NOT pushed** — `origin` is one commit behind, at batch R.
+This request recreates the deleted handoff in the working tree while **leaving the staged deletion intact**. A new session should inspect both index and working tree. The agent did not stage, unstage, commit, push, or switch branches. Do not alter the owner's staging to make status look clean.
 
-Both plan files are still present in `.agent/plans/`
-(`batch-r-entity-stops-carrying-editor-state.md` and `batch-s-editor-state-schema-v2.md`). Each
-one's own deployment plan says to delete it once the batch lands; backlog §2.4 and §8 are the
-surviving records and are written to stand alone.
+## 7. Rejections / things declined or corrected
 
-## 7. Rejections / corrections
-
-- **The byte-reader design was rejected on review.** See §3 decision 2. Recorded in the plan and
-  in `.agent/memories/architecture.md` with a "do not re-propose" note.
-- **An agent rule was broken and should be re-read.** Mid-session a `Get-Content`/`Set-Content`
-  round-trip was used to fix imports in two `.go` files — exactly what AGENTS.md §2.6 forbids.
-  Audited afterwards: no BOM, zero non-ASCII bytes, LF endings, gofmt clean, tests pass. No damage
-  done, but the rule stands. Use the edit tools.
-- Standing from batch R and still true: **`goimports` is banned.** Fix imports by hand against the
-  compiler.
+- Review-only scope was enforced: no drive-by fixes, formatting, dependency tidy writes, or protected-data changes.
+- Do not claim the portal issue fixed merely because a dashed branch exists and a test says its image differs from solid. Missing pixels satisfy that weak assertion; the public-API probe disproved the initial superficial assessment.
+- Do not report accepted DTO/model layering as a fresh breach. Only the zone-content exception was explicitly reopened by the owner in this session.
+- Do not propose output-path persistence, a different default export directory, live-pointer state reads, blanket test tags, or a flaky global Gio allocation threshold. Those conflict with hard rules or settled decisions.
+- Proposed stale-zone-name control and generic concurrent-preview production-race findings were excluded for lack of a current demonstrated failure path. The dialog resets the zone property sync marker on addition; current preview calls are serialized.
+- The first requested subagent model alias was unavailable; the display-name model worked. Use available model names, such as `Claude Opus 5 (copilot)`, for final plan/implementation review. Never use Haiku.
+- A naïve custom coverage aggregation was discarded because profiles contain duplicate blocks across executables. Use Go's own total and per-file HTML percentages, not sums/averages of raw profile rows.
+- Tidy failures were investigated and classified as EOL-only, not dependency drift. No files were normalized during review.
+- The old handoff no longer existed when this request began because its deletion had been staged by the owner. It was not restored from Git; this is fresh content requested by the owner.
 
 ## 8. Open questions
 
-- **Batch S is unpushed.** Deliberate or pending?
-- **The smoke test in the app has not been run.** Step 4 of the plan's deployment section lists it,
-  and it covers the half the suites cannot: opening a real pre-v2 `.gen.json` from `output/`,
-  confirming a reloaded manual layout now draws its **real** preview rather than a scatter, and
-  confirming a hand-bumped `"schemaVersion": 3` file is refused without disturbing the session.
-- **Manual connections still use the old wrapper shape.** `editor_state_model.ManualConnectionSave`
-  wraps the entity exactly as `ManualZoneSave` used to, and `template_model.Connection` already
-  carries `IsUserAdded`, so the same collapse batch R did for zones applies. Carried over from the
-  batch R hand-off; still undecided.
-- Still unreconciled from four sessions ago: two `TabCycling` benchmark baselines disagree
-  (~5,699 vs 6,640 allocs/op), taken on different trees.
+### First work: batch A, §1.1 and §1.2
+
+1. **§1.1 no-op behavior:** should applying an identical manual layout leave a clean document clean? Recommended: mark dirty only when persisted manual state actually changes; rejected applies remain unchanged. Confirm before planning.
+2. **§1.1 confirmation reset:** after any committed manual change, reset a previously armed Exit confirmation as scalar edits already do. Include clearing a manual snapshot via Revert-to-Base.
+3. **§1.2 detection seam:** leaving an undetected output path empty follows the existing hard rule, but choose the narrowest real composition seam for deterministic failure tests if necessary. Do not add private test exports or persist the result. Ensure the folder picker can start browsing from an empty output path without authorizing that browsing directory as the export destination.
+4. **Batch/branch scope:** confirm whether the owner wants both A items together or §1.1 first, and follow their branch preference. Do not switch branches speculatively while owner-staged changes exist.
+
+### Later work
+
+- §1.4/§1.10: generated versus imported/custom roads and optional nil editor-state semantics.
+- §1.5: clearing incompatible manual edits versus reapplying arena policy; compare effective modes including victory-condition aliases.
+- §1.7: whether omitted false means tournament army saving is disabled in the game; any required protected schema edit is owner-only.
+- §1.11: custom guard numbers and ambiguous preset identity during quality reprofile.
+- §1.12: whether the previous non-tournament player count should be remembered in session view state.
+- §2.1: intentional editor/PNG curve differences versus required visual agreement.
+- §2.2: `ContentRuleRow` versus the owner note's `ZoneContentRow`, the service result validity contract, and full DTO exception removal versus composition-only scope.
+- §6: action pin/update policy, linter version, narrow EOL normalization, tools dependency maintenance, release tag validation format.
+- Review §10 retains in-game validation for bonuses/bans, hero-hire policy, and historical preview artifacts. No new game result was obtained.
 
 ## 9. Next recommended actions
 
-1. **Run the app smoke test** from §8 before pushing. It is the only unverified part of batch S.
-2. **Push batch S**, then delete both plan files in `.agent/plans/`.
-3. **Say the one-way door out loud** wherever this ships: a file saved by this build cannot be
-   opened by any earlier build — the old code has no migration and hard-fails on the object-shaped
-   `manualPosition`. That is the intended cost of versioning, and it is why the refusal is loud.
-4. **Pick batch T.** Backlog §8 has row **T** open with no items assigned. The visible candidate is
-   the manual-connection asymmetry in §8 above; everything else left in §8 is the owner-gated
-   **⚠ K** group (§2.2 Branch A, §2.5, §6.1), which must not be scheduled without explicit
-   approval.
+1. Read [AGENTS.md](../AGENTS.md), this handoff, then review §0, §1.1–§1.2, §9, and §11. Consult [.agent/memories](memories) for settled decisions but prefer current source and the newly recorded owner decision on §2.2.
+2. Inspect Git status and the staged diff without changing either. Check for edits made since the reviewed SHA. Do not rerun the whole repository review by default.
+3. Re-read each target plus its callers and tests. For §1.1 begin with [stateManualEdits.go](../app/gui/drivers/stateManualEdits.go), [state.go](../app/gui/drivers/state.go), [stateFiles.go](../app/gui/drivers/stateFiles.go), and [applyEditedZones_test.go](../test/unit/app/gui/drivers/stateManualEdits/applyEditedZones_test.go).
+4. Ask the concrete batch-A questions above, summarize the agreed scope, then write a durable plan under .agent/plans using the AGENTS.md template. Obtain owner approval before implementation. Use a suitable independent review of the plan.
+5. Establish fresh pre-change coverage/tests. Add focused failing regressions through production APIs, then implement only approved behavior. Keep rendering in GUI and domain policy behind handlers; use existing clone/conversion helpers.
+6. Verify build, unit tests, coverage, full configured lint, and test layout. Run the relevant integration/GUI suites explicitly when required. Regenerate Wire for changed constructors/provider sets; never edit generated code manually.
+7. Record files, exact checks, results, and any residual limits in the plan. Present the diff to the owner. **The owner stages/commits.** Mark the review item `✅ FIXED` only after the protocol's owner-commit step is satisfied; until then record “implemented/verified, awaiting owner commit” without misrepresenting completion.
+8. Continue with the review's order: B (§1.3/§1.7), C (§1.4/§1.6/§1.10), D (§1.8/§1.9), E (§1.5/§1.11/§1.12), F geometry, G measured performance, H tooling, I docs, J reopened DTO work. D coordinates with C's road rebuild and A's dirty handling; do not renumber items or implement an entire category without scope approval.
 
 ## 10. Carry-forward prompt
 
-> Read `AGENTS.md` first. The hard rules, one line each: never modify `data/`,
-> `internal/registry/` or anything under `internal/entities/template/` **without explicit owner
-> approval**; everything must build and run on Windows and Linux (`path/filepath`; chain
-> PowerShell with `;`, never `&&`); every change ships with tests and unit coverage must not drop
-> below 72.5 % (currently **74.3 %**), lint baseline **0 issues**; **never stage and never
-> commit** — `Move-Item` not `git mv`, `Remove-Item` not `git rm`; never change where `.rmg.json`
-> is written and never persist the output directory; never run a bulk in-place rewrite and
-> **never round-trip a `.go` file through `Get-Content`/`Set-Content`** (this was violated last
-> session — use the edit tools). `goimports` is **banned**; fix imports by hand against the
-> compiler.
+> Read [AGENTS.md](../AGENTS.md) first, then [.agent/session-carry-forward.md](session-carry-forward.md) for the full handoff and [.agent/backlog/review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) as the backlog source of truth.
 >
-> **Batch S is COMPLETE and committed at `404b604` on `AD/fixing_some_stuff_08-12`, but NOT
-> pushed** — `origin` is still at `1aaf4c2` (batch R). The working tree is clean. Both plan files
-> are still in `.agent/plans/`; the surviving records are backlog §2.4 and §8 row S.
+> Begin work on the review backlog, starting with batch A: §1.1 manual edits fail to mark the document unsaved, and §1.2 failed game-directory detection falls back to an invalid export destination. First inspect current Git state and reverify source/callers/tests, ask the open scope questions, and obtain approval for a durable plan before implementing. No application fixes have been made yet. The review has 25 findings, with exact evidence/test plans and a complete prior-item disposition; do not repeat the full audit or mark anything fixed prematurely.
 >
-> What batch S changed that later sessions must know: the editor state is **schema v2**.
-> `manualZones[*].manualPosition` is `{"X":…,"Y":…}`, and `generatorPosition` / `generatorRing`
-> are persisted for the first time — before S every save dropped them, so a reloaded manual layout
-> lost its preview. `CurrentEditorStateSchemaVersion` is 2. Loading goes
-> `FileService.LoadSettingsFile` → seed the default entity → `editor_state_migrator.Load(path,
-> &entity)` → map; the migrator probes `schemaVersion` with `os.Open` and dispatches to
-> `IFileRepository[editor_state.EditorState]` or to `IFileRepository[editor_state_v1.EditorState]`
-> plus `MigrateToV2`. The gate is `< 2` because v0 has no version key. A load opens the file twice,
-> by design.
+> Hard rules: never modify the protected data, template_entity schema, or registry trees; protected changes require explicit owner approval and owner application. Preserve Windows/Linux compatibility using portable paths and guarded platform code. Every nontrivial code change needs tests and before/after coverage; current measured Windows baseline is 74.4%, lint zero, and build/vet/default/tagged integration/layout checks passed. Multi-step work requires a durable approved plan. Never stage, unstage, commit, or push, and preserve owner-staged changes. Never bulk-rewrite the repository or hand-edit generated Wire output; format only explicit permitted files and regenerate injectors when needed. Export must use the machine-detected game templates directory or the deliberate session-only picker override, never a persisted output path or an unrelated fallback.
 >
-> Three settled decisions — do not relitigate: the frozen v1 snapshot in
-> `internal/entities/editor_state/editor_state_v1/` is **data only, never edited**, and stops at
-> the editor-state boundary (`ManualZoneSave.Zone` still names the live `entities.Zone`, which
-> versions with the game); **repositories stay plain typed decoders** — turning
-> `EditorStateRepository` into a byte reader was tried and rejected on review; and
-> `internal/services/file_service/editor_state_migrator/` is a permitted `entityNamerPrefix`, not
-> an allow-list entry (`entityNamerAllowList` is still exactly `internal/services/file_service`
-> and only ever shrinks).
+> At handoff HEAD was f4f4cf6 on master. The owner had staged the new review and deletion of the obsolete handoff; this request recreated the handoff in the working tree without changing the index. Recheck before acting. Temporary verification code was deleted. No global integration_test/gui/wireinject tags, no fake unit seams for private/Gio code, and no drive-by refactors.
 >
-> Standing traps: **nil is load-bearing** (nil `Previous` = first generation, nil `Next` =
-> unarmed debounce, nil `Zone.Quality` = infer, nil position/ring = never stamped, and ring **0**
-> is the innermost ring, not "absent"); the persisted tier is `*int8`; **the model has no JSON
-> tags — never `json.Unmarshal` into it, including in test code**; `data.Vec2` gets **no**
-> marshaller and **no** json tags ever — `X`/`Y` *is* the wire form, which makes `musttag` fire on
-> any `json.Marshal` of a struct containing one (the nolint is deliberate); a bare `json.Marshal`
-> in a test writes nil slices as `[]`, not `null`, because the real writer sets
-> `FormatNilSliceAsNull(true)`; flat groups cross `MigrateToV2` by plain **struct conversion**, so
-> adding a field to a current group breaks `v1ToV2.go` at compile time — fix it there, never in
-> the frozen snapshot; the v0/v1 fixtures are **byte-frozen migration inputs**; Go 1.27 accepts
-> promoted fields as composite-literal keys and `modernize`'s `embedlit` **requires** the flat
-> form; `cmd/testlayoutcheck` matches test-only export names tree-wide; a file gets
-> `//go:build integration_test` **only** if it calls a `*_testexports.go` accessor;
-> `helpers.MapSlice`/`MapPointer` preserve nil-vs-empty; `golangci-lint --fix` wraps as
-> `param,\n) Ret {` where house style is `param) Ret {`.
->
-> Lessons that keep costing time: when editing a Markdown table, **never anchor on a string that
-> is a prefix of a row you intend to keep**, and re-read the table right after. Match em-dashes
-> exactly when anchoring on prose in `.agent/` docs — a search string with a hyphen will not find
-> a line written with `—`. Check `settled-decisions.md` and `architecture.md` before restating any
-> "permanent" claim.
->
-> Where work left off: batch S is committed but unpushed and **the in-app smoke test has not been
-> run** — see §8 of `./.agent/session-carry-forward.md`, which is the full handoff. The next free
-> batch letter is **T**; backlog §8 row T is open and unassigned.
+> Owner decision: §2.2 zone-content DTO removal was explicitly reopened, but its API and scope still need planning; the bonuses DTO exception remains accepted. Other in-game policy checks remain unresolved. Module tidy dry-runs failed only because Windows checksum files have CRLF, not dependency-content drift. Local GUI/race/Linux/benchmark/vulnerability outcomes were not measured in this review. Follow ask → plan → approve → implement + verify → owner commits → mark, keeping finding numbers stable.
