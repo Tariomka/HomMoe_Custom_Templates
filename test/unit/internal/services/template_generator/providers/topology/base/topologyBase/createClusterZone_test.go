@@ -10,17 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// newClusterConfiguration builds the minimal generator configuration that
-// CreateClusterZone reads from.
-func newClusterConfiguration() config.GeneratorConfig {
-	configuration := config.GeneratorConfig{GenerateRoads: true}
-	configuration.ZoneConfiguration.PlayerZoneCastles = 0
-	configuration.ZoneConfiguration.PlayerZoneSize = 1.0
-	configuration.ZoneConfiguration.NeutralZoneSize = 1.0
-
-	return configuration
-}
-
 func TestWhenClusterZoneIsSpawn_CreatesSpawnZoneForPlayerIndex(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -76,4 +65,15 @@ func TestWhenClusterZoneIsNeutralAndHoldsCity_PrimaryCastleCarriesHoldCityWinCon
 
 	// Assert
 	assert.True(t, zone.MainObjects[0].HoldCityWinCon)
+}
+
+// newClusterConfiguration builds the minimal generator configuration that
+// CreateClusterZone reads from.
+func newClusterConfiguration() config.GeneratorConfig {
+	configuration := config.GeneratorConfig{GenerateRoads: true}
+	configuration.ZoneConfiguration.PlayerZoneCastles = 0
+	configuration.ZoneConfiguration.PlayerZoneSize = 1.0
+	configuration.ZoneConfiguration.NeutralZoneSize = 1.0
+
+	return configuration
 }

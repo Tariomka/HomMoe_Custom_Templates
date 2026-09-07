@@ -3,7 +3,7 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -61,7 +61,7 @@ func TestWhenZonesProvided_VariantCarriesZonesVerbatim(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Neutral-C"}}
+	zones := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Neutral-C"}}
 
 	// Act
 	variant := topologyBase.CreateVariant([]string{"A"}, "A", 2, zones, nil)
@@ -74,7 +74,7 @@ func TestWhenConnectionsProvided_VariantCarriesConnectionsVerbatim(t *testing.T)
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	connections := []entities.Connection{{Name: "Ring-A-C", From: "Spawn-A", To: "Neutral-C"}}
+	connections := []template_model.Connection{{Name: "Ring-A-C", From: "Spawn-A", To: "Neutral-C"}}
 
 	// Act
 	variant := topologyBase.CreateVariant([]string{"A"}, "A", 2, nil, connections)

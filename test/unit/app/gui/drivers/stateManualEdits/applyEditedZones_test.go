@@ -6,33 +6,25 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-// newGeneratedState returns a State holding the default template, plus its
-// mock for further expectations, and the template's zones and connections to
-// edit.
-func newGeneratedState() (
-	*drivers.State, *test_helpers.TemplateHandlerMock, []entities.Zone, []entities.Connection) {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
-	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
-	state.Generate()
-	return state, handlerMock, template.Variants[0].Zones, template.Variants[0].Connections
-}
-
 func TestWhenNoTemplateWasGenerated_EditsAreIgnored(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{})
@@ -45,7 +37,7 @@ func TestWhenTemplateExists_UpdatedTemplateIsStored(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	updatedTemplate.Name = gofakeit.ProductName()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
@@ -61,7 +53,7 @@ func TestWhenTemplateExists_ManualEditsAreStoredInState(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
 
@@ -78,7 +70,7 @@ func TestWhenTemplateExists_CurrentEditorStateIsSentForUpdate(t *testing.T) {
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
 	expectedState := state.GetStateData()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	var updateRequest dtos.TemplateUpdateDto
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Run(func(arguments mock.Arguments) {
@@ -90,14 +82,14 @@ func TestWhenTemplateExists_CurrentEditorStateIsSentForUpdate(t *testing.T) {
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
 
 	// Assert
-	assert.Equal(t, &expectedState, updateRequest.EditorState)
+	assert.Equal(t, &editor_state_dto.EditorStateDto{EditorState: expectedState}, updateRequest.EditorState)
 }
 
 func TestWhenTemplateExists_StatusReportsAppliedCounts(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
 
@@ -128,7 +120,7 @@ func TestWhenUpdateFailsWithOtherError_ErrorStatusAsksToFixBeforeExport(t *testi
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, gofakeit.ErrorValidation())
 
@@ -146,7 +138,7 @@ func TestWhenApplyingAnUntouchedRevertToBase_NoManualSnapshotIsStored(t *testing
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
@@ -170,12 +162,12 @@ func TestWhenApplyingAnEditedRevertToBase_TheEditsAreStored(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, _, _ := newGeneratedState()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
 	base, _ := state.PreviewBaseZones()
-	editedZones := append([]entities.Zone(nil), base.Zones...)
-	editedZones[0].ManualPosition = &[2]float64{0.1, 0.2}
+	editedZones := append([]template_model.Zone(nil), base.Zones...)
+	editedZones[0].ManualPosition = new(data.NewVec2(0.1, 0.2))
 
 	// Act
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
@@ -195,7 +187,7 @@ func TestWhenApplyingWithoutARevert_TheManualSnapshotIsStoredAnyway(t *testing.T
 	t.Parallel()
 	// Arrange
 	state, handlerMock, _, _ := newGeneratedState()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
 	base, _ := state.PreviewBaseZones()
@@ -206,4 +198,26 @@ func TestWhenApplyingWithoutARevert_TheManualSnapshotIsStoredAnyway(t *testing.T
 	// Assert
 	stateData := state.GetStateData()
 	assert.True(t, stateData.HasManualEdits())
+}
+
+// newGeneratedState returns a State holding the default template, plus its
+// mock for further expectations, and the template's zones and connections to
+// edit.
+func newGeneratedState() (
+	*drivers.State, *test_helpers.TemplateHandlerMock, []template_model.Zone, []template_model.Connection) {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	template := test_helpers.GetDefaultTemplateModel()
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
+	state := drivers.NewUIState(
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		false)
+
+	state.Generate()
+	variant := template.Variants[0]
+	return state,
+		handlerMock,
+		variant.Zones,
+		variant.Connections
 }

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,7 +22,7 @@ func TestWhenItemsAndMagicsBanned_ReturnsBothLists(t *testing.T) {
 	actual := providers.NewGameRulesProvider().CreateGlobalBans(*configuration)
 
 	// Assert
-	assert.Equal(t, &entities.GlobalBans{
+	assert.Equal(t, &template_model.GlobalBans{
 		Items:  []string{"voodoosh_doll_artifact", "flag_of_truce_artifact"},
 		Magics: []string{"magic_armageddon"},
 	}, actual)
@@ -50,7 +50,7 @@ func TestWhenOnlyMagicsBanned_ReturnsBansWithNilItems(t *testing.T) {
 	actual := providers.NewGameRulesProvider().CreateGlobalBans(*configuration)
 
 	// Assert
-	assert.Equal(t, &entities.GlobalBans{Items: nil, Magics: []string{"magic_armageddon"}}, actual)
+	assert.Equal(t, &template_model.GlobalBans{Items: nil, Magics: []string{"magic_armageddon"}}, actual)
 }
 
 func TestWhenBannedLinesContainWhitespace_TrimsAndSkipsBlankLines(t *testing.T) {

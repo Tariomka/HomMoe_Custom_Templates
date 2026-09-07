@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
@@ -18,10 +18,10 @@ func NewGameRulesProvider() provider_interfaces.IGameRulesProvider {
 	return &GameRulesProvider{}
 }
 
-func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorConfig) entities.GameRules {
+func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorConfig) template_model.GameRules {
 	heroSettings := configuration.GetHeroSettings()
 
-	return entities.GameRules{
+	return template_model.GameRules{
 		HeroCountMin:           heroSettings.HeroCountMin,
 		HeroCountMax:           heroSettings.HeroCountMax,
 		HeroCountIncrement:     heroSettings.HeroCountIncrement,
@@ -40,8 +40,8 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 // edit is not discarded without telling the user. Variant -1 applies the
 // override to all variants.
 func (this *GameRulesProvider) CreateValueOverrides(
-	configuration config.GeneratorConfig) ([]entities.ValueOverride, []string) {
-	var overrides []entities.ValueOverride
+	configuration config.GeneratorConfig) ([]template_model.ValueOverride, []string) {
+	var overrides []template_model.ValueOverride
 	var warnings []string
 	for index, rawLine := range strings.Split(configuration.ValueOverridesText, "\n") {
 		line := strings.TrimSpace(rawLine)
@@ -60,32 +60,32 @@ func (this *GameRulesProvider) CreateValueOverrides(
 
 // CreateGlobalBans turns the newline-separated banned item / magic SIDs edited
 // in the UI into a GlobalBans block, or nil when nothing is banned.
-func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorConfig) *entities.GlobalBans {
+func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorConfig) *template_model.GlobalBans {
 	items := parseSidLines(configuration.BannedItems)
 	magics := parseSidLines(configuration.BannedMagics)
 	if len(items) == 0 && len(magics) == 0 {
 		return nil
 	}
-	return &entities.GlobalBans{Items: items, Magics: magics}
+	return &template_model.GlobalBans{Items: items, Magics: magics}
 }
 
-func (this *GameRulesProvider) parseValueOverride(line string, lineNumber int) (entities.ValueOverride, error) {
+func (this *GameRulesProvider) parseValueOverride(line string, lineNumber int) (template_model.ValueOverride, error) {
 	equals := strings.Index(line, "=")
 	if equals <= 0 {
-		return entities.ValueOverride{}, fmt.Errorf("line %d: '%s' is not sid=value", lineNumber, line)
+		return template_model.ValueOverride{}, fmt.Errorf("line %d: '%s' is not sid=value", lineNumber, line)
 	}
 
 	guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
 	if err != nil {
-		return entities.ValueOverride{}, fmt.Errorf("line %d: '%s' has a non-numeric value", lineNumber, line)
+		return template_model.ValueOverride{}, fmt.Errorf("line %d: '%s' has a non-numeric value", lineNumber, line)
 	}
 
 	sid := strings.TrimSpace(line[:equals])
-	return entities.ValueOverride{SID: sid, Variant: -1, GuardValue: guardValue}, nil
+	return template_model.ValueOverride{SID: sid, Variant: -1, GuardValue: guardValue}, nil
 }
 
 func (this *GameRulesProvider) createAdvancedWinConditions(
-	configuration config.GeneratorConfig) entities.WinConditions {
+	configuration config.GeneratorConfig) template_model.WinConditions {
 	victoryCondition := configuration.GetVictoryCondition()
 	gameEndConditions := configuration.GetGameEndConditions()
 	gladiatorRules := configuration.GetGladiatorArenaRules()
@@ -94,7 +94,7 @@ func (this *GameRulesProvider) createAdvancedWinConditions(
 	useGladiator := configuration.IsGladiatorArenaMode()
 
 	winConditionValues := registry.GetWinningConditionValues()
-	winConditions := entities.WinConditions{
+	winConditions := template_model.WinConditions{
 		Classic:          true,
 		Desertion:        true,
 		DesertionDay:     3,
@@ -120,7 +120,7 @@ func (this *GameRulesProvider) createAdvancedWinConditions(
 
 func (this *GameRulesProvider) setGladiatorArenaRules(
 	gladiatorRules config.GladiatorArenaRules,
-	winConditions *entities.WinConditions) {
+	winConditions *template_model.WinConditions) {
 	winConditions.GladiatorArena = true
 	winConditions.GladiatorArenaRegistrationStartFight = true
 	winConditions.GladiatorArenaDaysDelayStart = helpers.Clamp(gladiatorRules.DaysDelayStart, 1, 60)
@@ -130,7 +130,7 @@ func (this *GameRulesProvider) setGladiatorArenaRules(
 
 func (this *GameRulesProvider) setTournamentRules(
 	tournamentRules config.TournamentRules,
-	winConditions *entities.WinConditions) {
+	winConditions *template_model.WinConditions) {
 	firstDay := helpers.Clamp(tournamentRules.FirstTournamentDay, 3, 60)
 	interval := helpers.Clamp(tournamentRules.Interval, 3, 30)
 	pointsToWin := helpers.Clamp(tournamentRules.PointsToWin, 1, 10)
@@ -159,21 +159,17 @@ func (this *GameRulesProvider) setTournamentRules(
 	winConditions.TournamentDays = battleOffsets
 }
 
-func (this *GameRulesProvider) createBonuses(bonusEntries []config.BonusEntry) entities.BonusList {
-	bonuses := entities.BonusList{}
+func (this *GameRulesProvider) createBonuses(bonusEntries []config.BonusEntry) template_model.BonusList {
+	bonuses := template_model.BonusList{}
 	for _, entry := range bonusEntries {
 		bonuses = append(bonuses, expandBonusEntry(entry)...)
 	}
 	return bonuses
 }
 
-// expandBonusEntry turns a single UI bonus preset into the one or two raw Bonus
-// objects the template needs, mirroring the parallel C# editor's
-// BonusEntry.ToBonuses(). Every bonus targets all sides (receiverSide -1) and
-// uses the entry's receiver filter ("start_hero" / "all_heroes").
-func expandBonusEntry(entry config.BonusEntry) []entities.Bonus {
-	bonus := func(sid string, parameters ...string) entities.Bonus {
-		return entities.Bonus{
+func expandBonusEntry(entry config.BonusEntry) []template_model.Bonus {
+	bonus := func(sid string, parameters ...string) template_model.Bonus {
+		return template_model.Bonus{
 			SID:            sid,
 			ReceiverSide:   -1,
 			ReceiverFilter: entry.ReceiverFilter,
@@ -185,34 +181,34 @@ func expandBonusEntry(entry config.BonusEntry) []entities.Bonus {
 	switch entry.PresetType {
 	case config.BonusTownPortalFree:
 		highNeutralSpells := registry.GetHighNeutralSpellSidValues()
-		return []entities.Bonus{
+		return []template_model.Bonus{
 			bonus(mapBonuses.HeroSpell, highNeutralSpells.TownPortal),
 			bonus(mapBonuses.HeroStat, "magicCostSidSet", highNeutralSpells.TownPortal, "-999", "0"),
 		}
 	case config.BonusSpell:
-		bonuses := []entities.Bonus{bonus(mapBonuses.HeroSpell, entry.Param)}
+		bonuses := []template_model.Bonus{bonus(mapBonuses.HeroSpell, entry.Param)}
 		if entry.Param2 == "1" {
 			bonuses = append(bonuses, bonus(mapBonuses.HeroStat, "magicCostSidSet", entry.Param, "-999", "0"))
 		}
 		return bonuses
 	case config.BonusUnitMultiplier:
-		return []entities.Bonus{bonus(mapBonuses.HeroUnitMultiplier, entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.HeroUnitMultiplier, entry.Param)}
 	case config.BonusMovementBonus:
-		return []entities.Bonus{bonus(mapBonuses.HeroStat, "movementBonus", entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.HeroStat, "movementBonus", entry.Param)}
 	case config.BonusStartingItem:
-		return []entities.Bonus{bonus(mapBonuses.HeroItem, entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.HeroItem, entry.Param)}
 	case config.BonusStartingGold:
-		return []entities.Bonus{bonus(mapBonuses.Resource, "gold", entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.Resource, "gold", entry.Param)}
 	case config.BonusStartingGems:
-		return []entities.Bonus{bonus(mapBonuses.Resource, "gemstones", entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.Resource, "gemstones", entry.Param)}
 	case config.BonusStartingCrystals:
-		return []entities.Bonus{bonus(mapBonuses.Resource, "crystals", entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.Resource, "crystals", entry.Param)}
 	case config.BonusStartingMercury:
-		return []entities.Bonus{bonus(mapBonuses.Resource, "mercury", entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.Resource, "mercury", entry.Param)}
 	case config.BonusStartingWood:
-		return []entities.Bonus{bonus(mapBonuses.Resource, "wood", entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.Resource, "wood", entry.Param)}
 	case config.BonusStartingOre:
-		return []entities.Bonus{bonus(mapBonuses.Resource, "ore", entry.Param)}
+		return []template_model.Bonus{bonus(mapBonuses.Resource, "ore", entry.Param)}
 	}
 	return nil
 }

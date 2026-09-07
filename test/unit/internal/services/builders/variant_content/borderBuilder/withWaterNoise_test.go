@@ -3,7 +3,7 @@ package borderBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestWhenWaterNoiseIsProvided_SetsSingleWaterNoiseOnBuiltBorder(t *testing.T
 	border := builder.WithWaterNoise(expectedAmplitude, expectedFrequency).Build()
 
 	// Assert
-	assert.Equal(t, entities.Border{
-		WaterNoise: []entities.Noise{{Amplitude: expectedAmplitude, Frequency: expectedFrequency}},
+	assert.Equal(t, template_model.Border{
+		WaterNoise: []template_model.Noise{{Amplitude: expectedAmplitude, Frequency: expectedFrequency}},
 	}, border)
 }

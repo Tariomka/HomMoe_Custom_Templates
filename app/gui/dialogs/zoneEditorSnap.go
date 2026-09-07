@@ -11,6 +11,7 @@ import (
 	"gioui.org/unit"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
 
 // gridStep returns the snapping-grid cell size in canvas pixels.
@@ -67,12 +68,13 @@ func (this *ZoneEditorDialog) drawSnapGuides(gtx layout.Context) {
 // snapDraggedPosition nudges the dragged zone's center so that its edges or
 // center "hold on" to nearby guides, and records the alignment lines it caught
 // so the overlay can draw them.
-func (this *ZoneEditorDialog) snapDraggedPosition(pos image.Point) image.Point {
+func (this *ZoneEditorDialog) snapDraggedPosition(pos models.Position) models.Position {
 	this.snapGuideXActive = false
 	this.snapGuideYActive = false
 	if !this.snapBool.Value {
 		return pos
 	}
+
 	result := this.zoneHandler.SnapZoneEditorPosition(dtos.ZoneEditorSnapRequestDto{
 		Position:    pos,
 		Positions:   this.geometry.Positions,

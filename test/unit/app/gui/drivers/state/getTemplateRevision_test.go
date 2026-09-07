@@ -11,16 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newRevisionState returns a State whose handler always generates the default
-// template, plus its mock so manual-edit expectations can be added.
-func newRevisionState() (*drivers.State, *test_helpers.TemplateHandlerMock) {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	template := test_helpers.GetDefaultTemplate()
-	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
-	return drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false), handlerMock
-}
-
 func TestWhenNothingWasGenerated_TemplateRevisionIsZero(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -66,7 +56,7 @@ func TestWhenManualEditsAreApplied_TemplateRevisionAdvances(t *testing.T) {
 	state, handlerMock := newRevisionState()
 	state.Generate()
 	template := state.GetLastTemplate()
-	updatedTemplate := test_helpers.GetDefaultTemplate()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
 	updatedTemplate.Name = gofakeit.ProductName()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
@@ -94,4 +84,17 @@ func TestWhenStateIsReset_TemplateRevisionAdvances(t *testing.T) {
 
 	// Assert
 	assert.Greater(t, state.GetTemplateRevision(), before)
+}
+
+// newRevisionState returns a State whose handler always generates the default
+// template, plus its mock so manual-edit expectations can be added.
+func newRevisionState() (*drivers.State, *test_helpers.TemplateHandlerMock) {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	template := test_helpers.GetDefaultTemplateModel()
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
+	return drivers.NewUIState(
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		false), handlerMock
 }

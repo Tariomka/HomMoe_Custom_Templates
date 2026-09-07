@@ -1,8 +1,6 @@
 package models
 
 import (
-	"image"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 )
 
@@ -15,5 +13,5 @@ type ZoneEditorEdge struct {
 	StartPoint      data.Vec2[float64]
 	EndPoint        data.Vec2[float64]
 	ControlPoint    data.Vec2[float64]
-	MidPoint        image.Point
+	MidPoint        data.Vec2[float64]
 }

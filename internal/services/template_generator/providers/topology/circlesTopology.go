@@ -3,11 +3,11 @@ package topology
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/geometry_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/position_layout"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -23,8 +23,7 @@ func NewCirclesTopologyService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *CirclesTopologyService {
+	connectionService base.ITopologyConnectionService) *CirclesTopologyService {
 	return &CirclesTopologyService{
 		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
 			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
@@ -37,7 +36,7 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) entities.Variant {
+	holdCityNeutralLabel string) template_model.Variant {
 	return this.BuildVariant(
 		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel,
 		this.createCirclesLayout, stampGeneratorRings)
@@ -45,24 +44,18 @@ func (this *CirclesTopologyService) CreateTopologyVariant(
 
 func (this *CirclesTopologyService) createCirclesLayout(
 	playerLabels []string,
-	neutralZones neutral_zone.Plans,
-) ([]string, models.Positions, []models.ConnectionIndexes) {
+	neutralZones neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
 	allLabels := this.ZoneLabelProvider.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
 	positions := this.positionLayoutService.CreatePositionsFromPlans(allLabels, playerLabels, neutralZones)
 	pairs := this.createCirclesPairs(
-		geometry_helpers.CreateDelaunayTriangulation(positions),
-		allLabels,
-		playerLabels,
-		neutralZones,
-	)
+		geometry_helpers.CreateDelaunayTriangulation(positions), allLabels, playerLabels, neutralZones)
 	return allLabels, positions, pairs
 }
 
 func stampGeneratorRings(
-	zones []entities.Zone,
+	zones []template_model.Zone,
 	allLabels, playerLabels []string,
-	neutralZones neutral_zone.Plans,
-) {
+	neutralZones neutral_zone.Plans) {
 	for index := range zones {
 		tier := 0
 		if !slices.Contains(playerLabels, allLabels[index]) {

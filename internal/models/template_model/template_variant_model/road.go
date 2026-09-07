@@ -1,0 +1,57 @@
+package template_variant_model
+
+import (
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+)
+
+type Road struct {
+	Type string
+	From TypedRef
+	To   TypedRef
+
+	Road                 *bool
+	SimTurnSquad         bool
+	GuardValue           int
+	GuardWeeklyIncrement float64
+}
+
+func (this Road) Clone() Road {
+	clone := this
+	clone.From = this.From.Clone()
+	clone.To = this.To.Clone()
+	clone.Road = helpers.ClonePointer(this.Road)
+	return clone
+}
+
+func ToRoadModel(entity template_entity.Road) Road {
+	return Road{
+		Type:                 entity.Type,
+		From:                 TypedRef{TypedRef: entity.From},
+		To:                   TypedRef{TypedRef: entity.To},
+		Road:                 entity.Road,
+		SimTurnSquad:         entity.SimTurnSquad,
+		GuardValue:           entity.GuardValue,
+		GuardWeeklyIncrement: entity.GuardWeeklyIncrement,
+	}
+}
+
+func ToRoadEntity(model Road) template_entity.Road {
+	return template_entity.Road{
+		Type:                 model.Type,
+		From:                 model.From.TypedRef,
+		To:                   model.To.TypedRef,
+		Road:                 model.Road,
+		SimTurnSquad:         model.SimTurnSquad,
+		GuardValue:           model.GuardValue,
+		GuardWeeklyIncrement: model.GuardWeeklyIncrement,
+	}
+}
+
+func ToRoadModels(entities []template_entity.Road) []Road {
+	return helpers.MapSlice(entities, ToRoadModel)
+}
+
+func ToRoadEntities(models []Road) []template_entity.Road {
+	return helpers.MapSlice(models, ToRoadEntity)
+}

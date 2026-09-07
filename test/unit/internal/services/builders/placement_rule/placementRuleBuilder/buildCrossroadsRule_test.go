@@ -3,8 +3,8 @@ package placementRuleBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +24,7 @@ func TestWhenCrossroadsRuleIsBuilt_SetsCrossroadsTypeDistanceAndWeight(t *testin
 	rule := builder.BuildCrossroadsRule(expectedDistance, expectedWeight)
 
 	// Assert
-	assert.Equal(t, entities.PlacementRule{
+	assert.Equal(t, template_model.PlacementRule{
 		Type:      "Crossroads",
 		TargetMin: expectedDistance.Min,
 		TargetMax: expectedDistance.Max,

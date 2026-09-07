@@ -16,9 +16,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 type BonusesPanel struct {
@@ -69,7 +70,7 @@ func (this *BonusesPanel) LoadFromState() {
 }
 
 func (this *BonusesPanel) SaveToState() {
-	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
+	this.state.UpdateState(func(settings *editor_state_model.EditorState) {
 		settings.Bonuses = this.bonuses
 		settings.BannedItems = strings.Join(this.bannedItems, "\n")
 		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
@@ -165,16 +166,8 @@ func (this *BonusesPanel) getValueOverridesWidgets(theme *material.Theme) []layo
 
 	for i, line := range this.valueOverrides {
 		name, value := overrideLabel(line)
-		overrideRows = append(
-			overrideRows,
-			this.getEntryRowWidget(
-				theme,
-				themes.ColorsDotCategories.Resource,
-				name,
-				value,
-				&this.overrideRemoveBtns[i],
-			),
-		)
+		overrideRows = append(overrideRows, this.getEntryRowWidget(
+			theme, themes.ColorsDotCategories.Resource, name, value, &this.overrideRemoveBtns[i]))
 	}
 	return overrideRows
 }
@@ -205,7 +198,7 @@ func (this *BonusesPanel) getEntryRowWidget(
 
 						return widgets.NewDimmedLabelWidget(theme, trailing)(gtx)
 					}),
-					layout.Rigid(widgets.NewButtonWidget(theme, "✕", removeBtn, false)),
+					layout.Rigid(widgets.NewButtonWidget(theme, "X", removeBtn, false)),
 				)
 			},
 		)
@@ -224,14 +217,14 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 		}))
 	}
 	if this.pickItemsBtn.Clicked(gtx) {
-		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, this.handler, func(ids []string) {
+		opener(dialogs.NewItemPickerDialog("Ban Items", this.bannedItems, func(ids []string) {
 			this.bannedItems = appendUnique(this.bannedItems, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
 		}))
 	}
 	if this.pickSpellsBtn.Clicked(gtx) {
-		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, this.handler, func(ids []string, _ bool) {
+		opener(dialogs.NewSpellPickerDialog(this.bannedMagics, false, func(ids []string, _ bool) {
 			this.bannedMagics = appendUnique(this.bannedMagics, ids)
 			this.syncRemoveButtons()
 			this.SaveToState()
@@ -239,7 +232,7 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	}
 	if this.pickOverridesBtn.Clicked(gtx) {
 		excluded := overrideSids(this.valueOverrides)
-		opener(dialogs.NewValueOverridePickerDialog(excluded, this.handler, func(lines []string) {
+		opener(dialogs.NewValueOverridePickerDialog(excluded, func(lines []string) {
 			this.valueOverrides = appendUnique(this.valueOverrides, lines)
 			this.syncRemoveButtons()
 			this.SaveToState()
@@ -326,7 +319,7 @@ func bonusDisplayName(entry config.BonusEntry) string {
 
 // bonusReceiverLabel is the dim trailing text; hidden for resource bonuses.
 func bonusReceiverLabel(entry config.BonusEntry) string {
-	if entry.PresetType.IsResource() {
+	if config_helpers.IsResource(entry.PresetType) {
 		return ""
 	}
 

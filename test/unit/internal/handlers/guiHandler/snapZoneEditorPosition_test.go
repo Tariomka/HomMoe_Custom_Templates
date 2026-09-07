@@ -1,10 +1,11 @@
 package guiHandler_test
 
 import (
-	"image"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,8 +14,8 @@ func TestWhenASnapRequested_HoldsTheDraggedZoneOnItsNeighboursGuide(t *testing.T
 	// Arrange
 	handler := newProductionGuiHandler()
 	request := dtos.ZoneEditorSnapRequestDto{
-		Position:    image.Pt(200, 355),
-		Positions:   map[string]image.Point{"Spawn-A": image.Pt(350, 350)},
+		Position:    data.NewVec2(200.0, 355.0),
+		Positions:   map[string]models.Position{"Spawn-A": data.NewVec2(350.0, 350.0)},
 		ZoneRadius:  38,
 		DraggedZone: "Spawn-B",
 	}
@@ -23,5 +24,5 @@ func TestWhenASnapRequested_HoldsTheDraggedZoneOnItsNeighboursGuide(t *testing.T
 	result := handler.SnapZoneEditorPosition(request)
 
 	// Assert
-	assert.Equal(t, image.Pt(201, 350), result.Position)
+	assert.Equal(t, data.NewVec2(200.85714285714286, 350.0), result.Position)
 }

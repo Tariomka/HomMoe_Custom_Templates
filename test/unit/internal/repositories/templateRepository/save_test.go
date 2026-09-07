@@ -7,20 +7,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func newTemplateWithNaN() entities.RmgTemplate {
-	return entities.RmgTemplate{
-		Name: "T",
-		Variants: []entities.Variant{{
-			Connections: []entities.Connection{{From: "A", To: "B", GuardWeeklyIncrement: math.NaN()}},
-		}},
-	}
-}
 
 func TestWhenTemplateIsSaved_ReturnsPathWithRmgJsonExtension(t *testing.T) {
 	t.Parallel()
@@ -28,7 +19,8 @@ func TestWhenTemplateIsSaved_ReturnsPathWithRmgJsonExtension(t *testing.T) {
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "My_Template", entities.RmgTemplate{})
+	writtenPath, err := repositories.NewTemplateRepository().
+		Save(outputDir, "My_Template", template_entity.RmgTemplate{})
 
 	// Assert
 	require.NoError(t, err)
@@ -41,7 +33,7 @@ func TestWhenTemplateIsSaved_CreatesFileOnDisk(t *testing.T) {
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "Plain", entities.RmgTemplate{})
+	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "Plain", template_entity.RmgTemplate{})
 
 	// Assert
 	require.NoError(t, err)
@@ -54,7 +46,7 @@ func TestWhenTemplateNameContainsInvalidCharacters_WritesUnderASanitizedName(t *
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "a/b:c", entities.RmgTemplate{})
+	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "a/b:c", template_entity.RmgTemplate{})
 
 	// Assert
 	require.NoError(t, err)
@@ -67,7 +59,7 @@ func TestWhenTemplateNameIsOnlyWhitespace_FallsBackToGeneratedTemplateFileName(t
 	outputDir := t.TempDir()
 
 	// Act
-	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "   ", entities.RmgTemplate{})
+	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "   ", template_entity.RmgTemplate{})
 
 	// Assert
 	require.NoError(t, err)
@@ -80,7 +72,7 @@ func TestWhenTemplateDirectoryIsMissing_CreatesIt(t *testing.T) {
 	outputDir := filepath.Join(t.TempDir(), "a", "b", "c")
 
 	// Act
-	_, err := repositories.NewTemplateRepository().Save(outputDir, "T", entities.RmgTemplate{})
+	_, err := repositories.NewTemplateRepository().Save(outputDir, "T", template_entity.RmgTemplate{})
 
 	// Assert
 	require.NoError(t, err)
@@ -92,7 +84,7 @@ func TestWhenTemplateIsSaved_ProducesIndentedJson(t *testing.T) {
 	// Arrange
 	outputDir := t.TempDir()
 	writtenPath, err := repositories.NewTemplateRepository().Save(
-		outputDir, "T", entities.RmgTemplate{Name: "T", SizeX: 10})
+		outputDir, "T", template_entity.RmgTemplate{Name: "T", SizeX: 10})
 	require.NoError(t, err)
 
 	// Act
@@ -107,14 +99,14 @@ func TestWhenWrittenFileIsRead_ParsesBackIntoTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	outputDir := t.TempDir()
-	rmgTemplate := entities.RmgTemplate{Name: "T", SizeX: 10}
+	rmgTemplate := template_entity.RmgTemplate{Name: "T", SizeX: 10}
 	writtenPath, err := repositories.NewTemplateRepository().Save(outputDir, "T", rmgTemplate)
 	require.NoError(t, err)
 	data, err := os.ReadFile(writtenPath)
 	require.NoError(t, err)
 
 	// Act
-	var parsed entities.RmgTemplate
+	var parsed template_entity.RmgTemplate
 	parseErr := json.Unmarshal(data, &parsed)
 
 	// Assert
@@ -172,7 +164,7 @@ func TestWhenTemplateParentPathIsAFile_ReturnsError(t *testing.T) {
 	outputDir := filepath.Join(blockerPath, "child")
 
 	// Act
-	_, err := repositories.NewTemplateRepository().Save(outputDir, "T", entities.RmgTemplate{})
+	_, err := repositories.NewTemplateRepository().Save(outputDir, "T", template_entity.RmgTemplate{})
 
 	// Assert
 	assert.Error(t, err)
@@ -185,8 +177,17 @@ func TestWhenTargetPathIsOccupiedByDirectory_ReturnsError(t *testing.T) {
 	require.NoError(t, os.Mkdir(filepath.Join(outputDir, "T.rmg.json"), 0o755))
 
 	// Act
-	_, err := repositories.NewTemplateRepository().Save(outputDir, "T", entities.RmgTemplate{})
+	_, err := repositories.NewTemplateRepository().Save(outputDir, "T", template_entity.RmgTemplate{})
 
 	// Assert
 	assert.Error(t, err)
+}
+
+func newTemplateWithNaN() template_entity.RmgTemplate {
+	return template_entity.RmgTemplate{
+		Name: "T",
+		Variants: []template_entity.Variant{{
+			Connections: []template_entity.Connection{{From: "A", To: "B", GuardWeeklyIncrement: math.NaN()}},
+		}},
+	}
 }

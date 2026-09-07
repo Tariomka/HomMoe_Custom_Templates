@@ -3,9 +3,9 @@ package topologyServiceLookup_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -109,7 +109,7 @@ func TestWhenCityHoldIsEnabledForHubTopology_PassesHoldCityFlagToService(t *test
 	assert.True(t, holdsCity(variant, "Hub"))
 }
 
-func hasZoneNamed(variant entities.Variant, name string) bool {
+func hasZoneNamed(variant template_model.Variant, name string) bool {
 	for _, zone := range variant.Zones {
 		if zone.Name == name {
 			return true
@@ -118,7 +118,7 @@ func hasZoneNamed(variant entities.Variant, name string) bool {
 	return false
 }
 
-func holdsCity(variant entities.Variant, zoneName string) bool {
+func holdsCity(variant template_model.Variant, zoneName string) bool {
 	for _, zone := range variant.Zones {
 		if zone.Name != zoneName {
 			continue

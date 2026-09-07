@@ -10,17 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newExpectedStrengthList(strength models.GuardStrength) []data.Tuple[string, int] {
-	return []data.Tuple[string, int]{
-		data.NewTuple("Default", strength.Default),
-		data.NewTuple("Weakest", strength.Weakest),
-		data.NewTuple("Low", strength.Low),
-		data.NewTuple("Medium", strength.Medium),
-		data.NewTuple("High", strength.High),
-		data.NewTuple("Very High", strength.VeryHigh),
-	}
-}
-
 func TestWhenQualityVaries_ReturnsMatchingGuardStrengthList(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
@@ -71,5 +60,16 @@ func TestWhenQualityVaries_ReturnsMatchingGuardStrengthList(t *testing.T) {
 			// Assert
 			assert.Equal(t, testCase.expected, strengthList)
 		})
+	}
+}
+
+func newExpectedStrengthList(strength models.GuardStrength) []data.Tuple[string, int] {
+	return []data.Tuple[string, int]{
+		data.NewTuple("Default", strength.Default),
+		data.NewTuple("Weakest", strength.Weakest),
+		data.NewTuple("Low", strength.Low),
+		data.NewTuple("Medium", strength.Medium),
+		data.NewTuple("High", strength.High),
+		data.NewTuple("Very High", strength.VeryHigh),
 	}
 }

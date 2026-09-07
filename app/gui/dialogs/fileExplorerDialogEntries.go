@@ -11,6 +11,7 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 )
@@ -107,6 +108,7 @@ func (this *FileExplorerDialog) getEntryRowWidget(
 				paint.FillShape(gtx.Ops, themes.ColorsBase.Hover, clip.Rect{Max: dims.Size}.Op())
 			}
 			call.Add(gtx.Ops)
+			utils.AddButtonSemantics(gtx.Ops, entry.Name, dims.Size)
 			return dims
 		})
 	}

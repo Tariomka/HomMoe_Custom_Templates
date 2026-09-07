@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +14,7 @@ func TestWhenSavedRuleIsValid_ReturnsDisplayTextAndMarker(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	savedRule := models.ContentRuleRowSave{Name: "Distance to road", DistanceName: "Far"}
+	savedRule := editor_state_model.ContentRuleRow{Name: "Distance to road", DistanceName: "Far"}
 	expected := dtos.ContentRuleDescriptionDto{
 		Key:         dtos.ContentRuleKeyDistanceToRoad,
 		DisplayText: "Distance to road: Far",
@@ -34,7 +35,7 @@ func TestWhenBooleanRuleIsFalse_ReturnsNegatedMarker(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	value := false
-	savedRule := models.ContentRuleRowSave{Name: "Guarded", IsGuarded: &value}
+	savedRule := editor_state_model.ContentRuleRow{Name: "Guarded", IsGuarded: &value}
 
 	// Act
 	result := handler.DescribeContentRule(models.SidMapping{}, savedRule)
@@ -52,7 +53,7 @@ func TestWhenVariantRuleIsValid_ReturnsVariantLabel(t *testing.T) {
 		Sid:  registry.GetMapObjectT3GuardedResourceBankValues().DragonUtopia,
 		Name: "Dragon Utopia",
 	}
-	savedRule := models.ContentRuleRowSave{Name: "Variant", VariantID: &variantID}
+	savedRule := editor_state_model.ContentRuleRow{Name: "Variant", VariantID: &variantID}
 	expected := dtos.ContentRuleDescriptionDto{
 		Key:          dtos.ContentRuleKeyVariant,
 		DisplayText:  "Variant: Large Guard",
@@ -72,7 +73,7 @@ func TestWhenSavedRuleIsInvalid_ReturnsFallbackDescription(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	savedRule := models.ContentRuleRowSave{Name: "Unknown rule"}
+	savedRule := editor_state_model.ContentRuleRow{Name: "Unknown rule"}
 	expected := dtos.ContentRuleDescriptionDto{
 		DisplayText: "Unknown rule",
 		SavedRule:   savedRule,

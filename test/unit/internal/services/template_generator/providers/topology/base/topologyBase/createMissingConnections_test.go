@@ -3,9 +3,9 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +29,7 @@ func TestWhenAllZonesAreAlreadyConnected_NoBridgesAreCreated(t *testing.T) {
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
-	existingConnections := []entities.Connection{
+	existingConnections := []template_model.Connection{
 		{Name: "Ring-A-B", From: "Spawn-A", To: "Spawn-B", ConnectionType: "Direct"},
 	}
 
@@ -46,7 +46,7 @@ func TestWhenTwoPlayerZonesAreDisconnected_BridgeLinksThemWithPlayerBorderGuard(
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
-	expectedConnections := []entities.Connection{
+	expectedConnections := []template_model.Connection{
 		{
 			Name: "Bridge-A-B", From: "Spawn-A", To: "Spawn-B",
 			ConnectionType: "Direct", GuardZone: "Spawn-A", SimTurnSquad: true,
@@ -82,10 +82,10 @@ func TestWhenIsolatedZoneSitsClosestToSecondZone_BridgeAttachesToClosestPair(t *
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.5, Y: 0.5}, {X: 0.55, Y: 0.5}}
-	existingConnections := []entities.Connection{
+	existingConnections := []template_model.Connection{
 		{Name: "Ring-A-B", From: "Spawn-A", To: "Spawn-B", ConnectionType: "Direct"},
 	}
-	expectedConnections := []entities.Connection{
+	expectedConnections := []template_model.Connection{
 		{
 			Name: "Bridge-B-C", From: "Spawn-B", To: "Spawn-C",
 			ConnectionType: "Direct", GuardZone: "Spawn-B", SimTurnSquad: true,
@@ -112,7 +112,7 @@ func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *
 		{Label: "C", Quality: neutral_zone.QualityLow, CastleCount: 0},
 		{Label: "D", Quality: neutral_zone.QualityHigh, CastleCount: 0},
 	}
-	expectedConnections := []entities.Connection{
+	expectedConnections := []template_model.Connection{
 		{
 			Name: "Bridge-C-D", From: "Neutral-C", To: "Neutral-D",
 			ConnectionType: "Direct", GuardZone: "Neutral-C", SimTurnSquad: true,
@@ -134,7 +134,7 @@ func TestWhenLabelOrderIsReversed_BridgeNameStillSortsLabelsAlphabetically(t *te
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
-	expectedConnections := []entities.Connection{
+	expectedConnections := []template_model.Connection{
 		{
 			Name: "Bridge-A-B", From: "Spawn-B", To: "Spawn-A",
 			ConnectionType: "Direct", GuardZone: "Spawn-B", SimTurnSquad: true,
@@ -157,38 +157,38 @@ func TestWhenBridgedZonesHaveVariousRoadShapes_BridgeIsStillReturned(t *testing.
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	testCases := []struct {
 		name      string
-		firstZone entities.Zone
+		firstZone template_model.Zone
 	}{
 		{
 			name: "WhenZoneHasMainObjects_RoadAttachesToPrimaryMainObject",
-			firstZone: entities.Zone{Name: "Spawn-A", MainObjects: []entities.MainObject{
+			firstZone: template_model.Zone{Name: "Spawn-A", MainObjects: []template_model.MainObject{
 				{Type: "Spawn"},
 			}},
 		},
 		{
 			name: "WhenZoneHasRoadFromExistingConnection_RoadChainsFromIt",
-			firstZone: entities.Zone{Name: "Spawn-A", Roads: []entities.Road{
-				{From: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
+			firstZone: template_model.Zone{Name: "Spawn-A", Roads: []template_model.Road{
+				{From: template_model.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
 			}},
 		},
 		{
 			name: "WhenZoneHasRoadToExistingConnection_RoadChainsFromIt",
-			firstZone: entities.Zone{Name: "Spawn-A", Roads: []entities.Road{
-				{To: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
+			firstZone: template_model.Zone{Name: "Spawn-A", Roads: []template_model.Road{
+				{To: template_model.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
 			}},
 		},
 		{
 			name: "WhenZoneRoadsHaveNoConnectionRefs_RoadFallsBackToBridgeName",
-			firstZone: entities.Zone{Name: "Spawn-A", Roads: []entities.Road{
+			firstZone: template_model.Zone{Name: "Spawn-A", Roads: []template_model.Road{
 				{
-					From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+					From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+					To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 				},
 			}},
 		},
 		{
 			name:      "WhenZoneHasNeitherMainObjectsNorRoads_RoadSelfReferencesBridge",
-			firstZone: entities.Zone{Name: "Spawn-A"},
+			firstZone: template_model.Zone{Name: "Spawn-A"},
 		},
 	}
 
@@ -197,7 +197,7 @@ func TestWhenBridgedZonesHaveVariousRoadShapes_BridgeIsStillReturned(t *testing.
 			t.Parallel()
 			// Arrange
 			topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-			zones := []entities.Zone{testCase.firstZone, {Name: "Spawn-B"}}
+			zones := []template_model.Zone{testCase.firstZone, {Name: "Spawn-B"}}
 
 			// Act
 			connections := topologyBase.CreateMissingConnections(
@@ -215,60 +215,60 @@ func TestWhenBridgeIsCreated_FirstZoneInSliceGainsBridgeRoad(t *testing.T) {
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
 	testCases := []struct {
 		name          string
-		firstZone     entities.Zone
-		expectedRoads []entities.Road
+		firstZone     template_model.Zone
+		expectedRoads []template_model.Road
 	}{
 		{
 			name: "WhenZoneHasMainObjects_AppendedRoadStartsAtPrimaryMainObject",
-			firstZone: entities.Zone{Name: "Spawn-A", MainObjects: []entities.MainObject{
+			firstZone: template_model.Zone{Name: "Spawn-A", MainObjects: []template_model.MainObject{
 				{Type: "Spawn"},
 			}},
-			expectedRoads: []entities.Road{
+			expectedRoads: []template_model.Road{
 				{
-					From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+					To:   template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
 				},
 			},
 		},
 		{
 			name: "WhenZoneHasRoadReferencingExistingConnection_AppendedRoadChainsFromIt",
-			firstZone: entities.Zone{Name: "Spawn-A", Roads: []entities.Road{
-				{From: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
+			firstZone: template_model.Zone{Name: "Spawn-A", Roads: []template_model.Road{
+				{From: template_model.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
 			}},
-			expectedRoads: []entities.Road{
-				{From: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
+			expectedRoads: []template_model.Road{
+				{From: template_model.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}}},
 				{
-					From: entities.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}},
-					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					From: template_model.TypedRef{Type: "Connection", Args: []string{"Old-Conn"}},
+					To:   template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
 				},
 			},
 		},
 		{
 			name: "WhenZoneRoadsHaveNoConnectionRefs_AppendedRoadFallsBackToBridgeName",
-			firstZone: entities.Zone{Name: "Spawn-A", Roads: []entities.Road{
+			firstZone: template_model.Zone{Name: "Spawn-A", Roads: []template_model.Road{
 				{
-					From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+					From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+					To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 				},
 			}},
-			expectedRoads: []entities.Road{
+			expectedRoads: []template_model.Road{
 				{
-					From: entities.TypedRef{Type: "MainObject", Args: []string{"0"}},
-					To:   entities.TypedRef{Type: "MainObject", Args: []string{"1"}},
+					From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+					To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
 				},
 				{
-					From: entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
-					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					From: template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					To:   template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
 				},
 			},
 		},
 		{
 			name:      "WhenZoneHasNeitherMainObjectsNorRoads_AppendedRoadSelfReferencesBridge",
-			firstZone: entities.Zone{Name: "Spawn-A"},
-			expectedRoads: []entities.Road{
+			firstZone: template_model.Zone{Name: "Spawn-A"},
+			expectedRoads: []template_model.Road{
 				{
-					From: entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
-					To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					From: template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+					To:   template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
 				},
 			},
 		},
@@ -279,7 +279,7 @@ func TestWhenBridgeIsCreated_FirstZoneInSliceGainsBridgeRoad(t *testing.T) {
 			t.Parallel()
 			// Arrange
 			topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-			zones := []entities.Zone{testCase.firstZone, {Name: "Spawn-B"}}
+			zones := []template_model.Zone{testCase.firstZone, {Name: "Spawn-B"}}
 
 			// Act
 			topologyBase.CreateMissingConnections(
@@ -296,11 +296,11 @@ func TestWhenBridgeIsCreated_SecondZoneInSliceAlsoGainsBridgeRoad(t *testing.T) 
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
-	zones := []entities.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
-	expectedRoads := []entities.Road{
+	zones := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+	expectedRoads := []template_model.Road{
 		{
-			From: entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+			From: template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Bridge-A-B"}},
 		},
 	}
 
@@ -317,7 +317,7 @@ func TestWhenBridgeNameAlreadyExistsOnUnmappedConnection_LoopTerminatesWithoutDu
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
 	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
-	existingConnections := []entities.Connection{
+	existingConnections := []template_model.Connection{
 		{Name: "Bridge-A-B", From: "Unknown-X", To: "Unknown-Y", ConnectionType: "Direct"},
 	}
 

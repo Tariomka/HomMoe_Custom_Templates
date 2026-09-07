@@ -7,11 +7,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenConstructed_UsesDefaultThreshold(t *testing.T) {
+func TestWhenConstructed_UsesDefaultThresholds(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
 	comparer := snapshot.NewComparer()
 
 	// Assert
-	assert.InEpsilon(t, snapshot.DefaultSnapshotThreshold, comparer.Threshold, 1e-12)
+	assert.Equal(t, snapshot.Comparer{
+		MeanThreshold:         snapshot.DefaultMeanThreshold,
+		PixelTolerance:        snapshot.DefaultPixelTolerance,
+		ChangedPixelThreshold: snapshot.DefaultChangedPixelThreshold,
+	}, comparer)
 }

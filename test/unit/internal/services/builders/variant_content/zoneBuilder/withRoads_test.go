@@ -3,7 +3,7 @@ package zoneBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -12,9 +12,9 @@ import (
 func TestWhenRoadsAreProvided_SetsRoadsOnBuiltZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expectedRoads := []entities.Road{
-		{Type: "Stone", From: entities.TypedRef{Type: gofakeit.Word()}},
-		{Type: "Dirt", To: entities.TypedRef{Type: gofakeit.Word()}},
+	expectedRoads := []template_model.Road{
+		{Type: "Stone", From: template_model.TypedRef{Type: gofakeit.Word()}},
+		{Type: "Dirt", To: template_model.TypedRef{Type: gofakeit.Word()}},
 	}
 	builder := variant_content.NewZoneBuilder()
 
@@ -22,5 +22,5 @@ func TestWhenRoadsAreProvided_SetsRoadsOnBuiltZone(t *testing.T) {
 	zone := builder.WithRoads(expectedRoads).Build()
 
 	// Assert
-	assert.Equal(t, entities.Zone{Roads: expectedRoads}, zone)
+	assert.Equal(t, template_model.Zone{Roads: expectedRoads}, zone)
 }

@@ -7,5 +7,4 @@ type IGuiHandler interface {
 	IZoneContentHandler
 	IZoneEditorHandler
 	IBonusHandler
-	IPickerHandler
 }

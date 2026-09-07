@@ -3,7 +3,7 @@ package zoneBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,5 +17,5 @@ func TestWhenSpawnsLayoutIsChosen_SetsSpawnsLayoutOnBuiltZone(t *testing.T) {
 	zone := builder.WithLayoutSpawns().Build()
 
 	// Assert
-	assert.Equal(t, entities.Zone{Layout: "zone_layout_spawns"}, zone)
+	assert.Equal(t, template_model.Zone{Layout: "zone_layout_spawns"}, zone)
 }

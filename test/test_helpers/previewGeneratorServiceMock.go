@@ -3,8 +3,8 @@ package test_helpers
 import (
 	"image"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -16,7 +16,7 @@ type PreviewGeneratorServiceMock struct {
 }
 
 func (this *PreviewGeneratorServiceMock) CreatePreviewImage(
-	template *entities.RmgTemplate,
+	template *template_model.Template,
 	topology config.MapTopology) *image.RGBA {
 	arguments := this.Called(template, topology)
 	previewImage, _ := arguments.Get(0).(*image.RGBA)

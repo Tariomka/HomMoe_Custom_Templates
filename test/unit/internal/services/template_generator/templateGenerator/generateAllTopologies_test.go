@@ -9,24 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// allGeneratorTopologies lists every topology the generator supports, so the
-// cross-topology contract tests exercise each layout implementation.
-func allGeneratorTopologies() []config.MapTopology {
-	return []config.MapTopology{
-		config.TopologyRing,
-		config.TopologyChain,
-		config.TopologyHubAndSpoke,
-		config.TopologyGeometricHub,
-		config.TopologySharedWeb,
-		config.TopologyRandom,
-		config.TopologyCircles,
-		config.TopologySquare,
-		config.TopologyGeometric,
-		config.TopologyCross,
-		config.TopologyFractal,
-	}
-}
-
 func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlannedZone(t *testing.T) {
 	t.Parallel()
 	for _, topology := range allGeneratorTopologies() {
@@ -45,7 +27,7 @@ func TestWhenAnyTopologyWithVariedPlayerAndNeutralCounts_CreatesZoneForEveryPlan
 					generator := test_helpers.NewTemplateGenerator(configuration)
 
 					// Act
-					actual, _ := generator.Generate()
+					actual, _ := generateTemplate(generator)
 
 					// Assert
 					assert.GreaterOrEqual(t, len(actual.Variants[0].Zones), playerCount+neutralZoneCount)
@@ -70,7 +52,7 @@ func TestWhenAnyTopologySelected_EveryZoneHasAllRequiredFields(t *testing.T) {
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual, _ := generator.Generate()
+			actual, _ := generateTemplate(generator)
 
 			// Assert
 			var violations []string
@@ -116,7 +98,7 @@ func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testi
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
 			// Act
-			actual, _ := generator.Generate()
+			actual, _ := generateTemplate(generator)
 
 			// Assert
 			zoneNames := map[string]bool{}
@@ -136,5 +118,23 @@ func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testi
 			}
 			assert.Empty(t, invalidReferences)
 		})
+	}
+}
+
+// allGeneratorTopologies lists every topology the generator supports, so the
+// cross-topology contract tests exercise each layout implementation.
+func allGeneratorTopologies() []config.MapTopology {
+	return []config.MapTopology{
+		config.TopologyRing,
+		config.TopologyChain,
+		config.TopologyHubAndSpoke,
+		config.TopologyGeometricHub,
+		config.TopologySharedWeb,
+		config.TopologyRandom,
+		config.TopologyCircles,
+		config.TopologySquare,
+		config.TopologyGeometric,
+		config.TopologyCross,
+		config.TopologyFractal,
 	}
 }

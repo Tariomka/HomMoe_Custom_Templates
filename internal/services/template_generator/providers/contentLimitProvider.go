@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 )
@@ -17,13 +17,13 @@ func NewContentLimitProvider() provider_interfaces.IContentLimitProvider {
 }
 
 func (this *ContentLimitProvider) CreateContentCountLimits(
-	settings config.GeneratorConfig) []entities.ContentCountLimit {
+	settings config.GeneratorConfig) []template_model.ContentCountLimit {
 	sidLimits := this.createDefaultContentLimits()
 
 	// Lift limits when any mandatory-content list (player or neutral or
 	// hub) requests more of a given SID than the default cap.
 	sidCounts := map[string]int{}
-	tally := func(items []entities.MandatoryContentItem) {
+	tally := func(items []template_model.MandatoryContentItem) {
 		for _, item := range items {
 			if item.SID != "" {
 				sidCounts[strings.ToLower(item.SID)]++
@@ -44,12 +44,12 @@ func (this *ContentLimitProvider) CreateContentCountLimits(
 		}
 	}
 
-	var limits []entities.ContentCountLimit
-	limits = append(limits, entities.ContentCountLimit{Name: "content_limits_side", Limits: sidLimits})
-	limits = append(limits, entities.ContentCountLimit{Name: "content_limits_side_0_0", Limits: sidLimits})
+	var limits []template_model.ContentCountLimit
+	limits = append(limits, template_model.ContentCountLimit{Name: "content_limits_side", Limits: sidLimits})
+	limits = append(limits, template_model.ContentCountLimit{Name: "content_limits_side_0_0", Limits: sidLimits})
 	for a := 1; a <= 5; a++ {
 		for b := a + 1; b <= 6; b++ {
-			limits = append(limits, entities.ContentCountLimit{
+			limits = append(limits, template_model.ContentCountLimit{
 				Name:   fmt.Sprintf("content_limits_side_%d_%d", a, b),
 				Limits: sidLimits,
 			})
@@ -58,7 +58,7 @@ func (this *ContentLimitProvider) CreateContentCountLimits(
 	return limits
 }
 
-func (this *ContentLimitProvider) createDefaultContentLimits() []entities.ContentLimit {
+func (this *ContentLimitProvider) createDefaultContentLimits() []template_model.ContentLimit {
 	buildingObjects := registry.GetMapObjectBuildingValues()
 	heroBuffBuildings := registry.GetMapObjectHeroBuffBuildingValues()
 	magicBuildings := registry.GetMapObjectMagicBuildingValues()
@@ -70,7 +70,7 @@ func (this *ContentLimitProvider) createDefaultContentLimits() []entities.Conten
 	t2StatsAndSkillsBuildings := registry.GetMapObjectT2StatsAndSkillsBuildingValues()
 	unitBanks := registry.GetMapObjectNamedUnitBankValues()
 	visionBuildings := registry.GetMapObjectVisionBuildingValues()
-	return []entities.ContentLimit{
+	return []template_model.ContentLimit{
 		{SID: t1GuardedResourceBanks.BlackTower, MaxCount: 0},
 		{SID: heroBuffBuildings.Fountain, MaxCount: 2},
 		{SID: heroBuffBuildings.Fountain2, MaxCount: 2},

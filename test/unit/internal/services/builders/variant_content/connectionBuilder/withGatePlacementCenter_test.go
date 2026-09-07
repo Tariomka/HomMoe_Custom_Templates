@@ -3,7 +3,7 @@ package connectionBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,5 +17,5 @@ func TestWhenCenterGatePlacementIsChosen_SetsCenterGatePlacementOnBuiltConnectio
 	connection := builder.WithGatePlacementCenter().Build()
 
 	// Assert
-	assert.Equal(t, entities.Connection{GatePlacement: "Center"}, connection)
+	assert.Equal(t, template_model.Connection{GatePlacement: "Center"}, connection)
 }

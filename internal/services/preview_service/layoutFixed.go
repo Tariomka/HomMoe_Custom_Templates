@@ -1,9 +1,9 @@
 package preview_service
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // layoutFixedPositions places zones at their exact GeneratorPosition stamps,
@@ -15,36 +15,37 @@ import (
 // widens the padding for topologies whose figure should keep clear of the
 // border.
 func (this *PreviewLayoutService) layoutFixedPositions(
-	zones []entities.Zone, side float64, extraInset float64) {
+	zones []template_model.Zone, side float64, extraInset float64) {
 	metrics := newCanvasMetrics(side)
 	if this.placeTrivial(zones, metrics) {
 		return
 	}
 
-	px, py := generatorCoords(zones)
-	// The margin reserves room for the largest possible zone radius, so the
-	// eventual radius (never larger) always fits.
-	fitToCanvas(px, py, metrics, metrics.margin+metrics.zoneRadiusMax+extraInset*metrics.scale, true)
-	radius := radiusFromClosestPair(px, py, metrics.zoneRadiusMax, metrics.minGap)
-	this.commitPositions(zones, px, py, radius)
+	positions := getGeneratorCoordinates(zones)
+	// The margin reserves room for the largest possible zone radius, so the eventual radius (never larger) always fits.
+	fitToCanvas(positions, metrics, metrics.margin+metrics.zoneRadiusMax+extraInset*metrics.scale, true)
+	radius := radiusFromClosestPair(positions, metrics.zoneRadiusMax, metrics.minGap)
+	this.commitPositions(zones, positions, radius)
 }
 
 // fixedGeometryEdgeInset returns the extra border padding for a
 // fixed-geometry topology's preview figure. Crowded Geometric Hub figures
 // (csGeoHubCrowdedMinPlayers+ players) keep a smaller inset so the players
 // sit closer to the border and further from the central hub.
-func fixedGeometryEdgeInset(topology config.MapTopology, zones []entities.Zone) float64 {
+func fixedGeometryEdgeInset(topology config.MapTopology, zones []template_model.Zone) float64 {
 	if topology != config.TopologyGeometricHub {
 		return 0
 	}
+
 	if countPlayerZones(zones) >= csGeoHubCrowdedMinPlayers {
 		return csGeoHubEdgeInsetCrowded
 	}
+
 	return csGeoHubEdgeInset
 }
 
 // countPlayerZones counts the player (spawn) zones in the cluster.
-func countPlayerZones(zones []entities.Zone) int {
+func countPlayerZones(zones []template_model.Zone) int {
 	playerCount := 0
 	for _, zone := range zones {
 		if zone_helpers.IsZoneNamePlayer(zone.Name) {

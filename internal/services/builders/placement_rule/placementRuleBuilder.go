@@ -2,13 +2,13 @@ package placement_rule
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_distances"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type PlacementRuleBuilder struct {
-	item entities.PlacementRule
+	item template_model.PlacementRule
 }
 
 func NewPlacementRuleBuilder() *PlacementRuleBuilder {
@@ -41,12 +41,11 @@ func (this *PlacementRuleBuilder) WithArgs(arguments ...any) *PlacementRuleBuild
 	return this
 }
 
-func (this *PlacementRuleBuilder) Build() entities.PlacementRule { return this.item }
+func (this *PlacementRuleBuilder) Build() template_model.PlacementRule { return this.item }
 
 func (this *PlacementRuleBuilder) BuildRoadRule(
 	distance models.DistancePreset,
-	weight int,
-) entities.PlacementRule {
+	weight int) template_model.PlacementRule {
 	return this.
 		WithTypeRoad().
 		WithDistance(distance).
@@ -56,8 +55,7 @@ func (this *PlacementRuleBuilder) BuildRoadRule(
 
 func (this *PlacementRuleBuilder) BuildCrossroadsRule(
 	distance models.DistancePreset,
-	weight int,
-) entities.PlacementRule {
+	weight int) template_model.PlacementRule {
 	return this.
 		WithTypeCrossroads().
 		WithDistance(distance).
@@ -67,8 +65,7 @@ func (this *PlacementRuleBuilder) BuildCrossroadsRule(
 
 func (this *PlacementRuleBuilder) BuildCastleRule(
 	distance models.DistancePreset,
-	weight int,
-) entities.PlacementRule {
+	weight int) template_model.PlacementRule {
 	return this.
 		WithTypeMainObject().
 		WithArgs("0").
@@ -77,7 +74,7 @@ func (this *PlacementRuleBuilder) BuildCastleRule(
 		Build()
 }
 
-func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) entities.PlacementRule {
+func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) template_model.PlacementRule {
 	return this.
 		WithTypeMainObject().
 		WithArgs("0").
@@ -86,7 +83,7 @@ func (this *PlacementRuleBuilder) BuildNearCastleRule(weight int) entities.Place
 		Build()
 }
 
-func (this *PlacementRuleBuilder) BuildNearCrossroadsRule(weight int) entities.PlacementRule {
+func (this *PlacementRuleBuilder) BuildNearCrossroadsRule(weight int) template_model.PlacementRule {
 	return this.
 		WithTypeCrossroads().
 		WithDistance(getPortalPlacementNearDistance()).

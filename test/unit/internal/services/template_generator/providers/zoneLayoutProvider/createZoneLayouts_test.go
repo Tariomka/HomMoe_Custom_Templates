@@ -3,7 +3,7 @@ package zoneLayoutProvider_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
 	"github.com/stretchr/testify/assert"
@@ -47,23 +47,23 @@ func TestWhenCreatingZoneLayouts_SpawnsLayoutMatchesExpectedTuning(t *testing.T)
 	t.Parallel()
 	// Arrange
 	layoutSids := registry.GetLayoutValues()
-	expected := entities.ZoneLayoutDef{
+	expected := template_model.ZoneLayoutDef{
 		Name:                  layoutSids.Spawns,
 		ObstaclesFill:         0.24,
 		ObstaclesFillVoid:     0.48,
 		LakesFill:             0.30,
 		MinLakeArea:           16,
 		ElevationClusterScale: 0.16,
-		ElevationModes: []entities.ElevationMode{
+		ElevationModes: []template_model.ElevationMode{
 			{Weight: 2, MinElevatedFraction: 0.2, MaxElevatedFraction: 0.4},
 			{Weight: 1, MinElevatedFraction: 0.6, MaxElevatedFraction: 0.8},
 		},
 		RoadClusterArea: 160,
-		GuardedEncounterResourceFractions: entities.GuardedEncounterResourceFractions{
+		GuardedEncounterResourceFractions: template_model.GuardedEncounterResourceFractions{
 			CountBounds: []int{},
 			Fractions:   []float64{0.66},
 		},
-		AmbientPickupDistribution: entities.AmbientPickupDistribution{
+		AmbientPickupDistribution: template_model.AmbientPickupDistribution{
 			Repulsion:          1.0,
 			Noise:              0.4,
 			RoadAttraction:     -0.30,

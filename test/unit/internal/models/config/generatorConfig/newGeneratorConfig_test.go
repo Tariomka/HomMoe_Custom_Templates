@@ -53,7 +53,6 @@ func TestWhenConfigIsCreated_ReturnsDocumentedDefaults(t *testing.T) {
 			PointsToWin:        2,
 			SaveArmy:           true,
 		},
-		ShufflePlayerZones: true,
 	}
 
 	// Act

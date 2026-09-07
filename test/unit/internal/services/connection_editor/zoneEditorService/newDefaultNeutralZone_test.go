@@ -77,7 +77,21 @@ func TestWhenQualityIsRequested_ProfilesZoneWithThatQuality(t *testing.T) {
 				NewDefaultNeutralZone("Z", testCase.quality, 1, false, defaultTuning())
 
 			// Assert
-			assert.Equal(t, testCase.quality, zone_services.NewZoneClassifier().GetQuality(zone))
+			assert.Equal(t,
+				testCase.quality,
+				zone_services.NewZoneTierService().GetQuality(zone))
 		})
 	}
+}
+
+func TestWhenQualityIsRequested_RecordsThatTierOnTheZone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+
+	// Act
+	zone := test_helpers.NewZoneEditorService().
+		NewDefaultNeutralZone("Z", neutral_zone.QualityHigh, 1, false, defaultTuning())
+
+	// Assert
+	assert.Equal(t, neutral_zone.QualityHigh, *zone.Quality)
 }

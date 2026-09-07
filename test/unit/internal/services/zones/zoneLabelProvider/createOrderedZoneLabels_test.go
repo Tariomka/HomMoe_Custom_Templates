@@ -9,22 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func mediumPlans(labels ...string) []neutral_zone.Plan {
-	plans := make([]neutral_zone.Plan, len(labels))
-	for i, label := range labels {
-		plans[i] = neutral_zone.Plan{Label: label, Quality: neutral_zone.QualityMedium}
-	}
-	return plans
-}
-
-func orderingConfig(topology config.MapTopology, playerCount, neutralCount int) config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = topology
-	configuration.PlayerCount = playerCount
-	configuration.ZoneConfiguration.NeutralZoneCount = neutralCount
-	return *configuration
-}
-
 func TestWhenTopologyIsNotCircles_AppendsNeutralsAfterPlayers(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -75,4 +59,20 @@ func TestWhenCirclesTopologyIsChain_DelegatesToBalancedChainOrdering(t *testing.
 
 	// Assert
 	assert.Equal(t, []string{"A", "C"}, ordered)
+}
+
+func mediumPlans(labels ...string) []neutral_zone.Plan {
+	plans := make([]neutral_zone.Plan, len(labels))
+	for i, label := range labels {
+		plans[i] = neutral_zone.Plan{Label: label, Quality: neutral_zone.QualityMedium}
+	}
+	return plans
+}
+
+func orderingConfig(topology config.MapTopology, playerCount, neutralCount int) config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = topology
+	configuration.PlayerCount = playerCount
+	configuration.ZoneConfiguration.NeutralZoneCount = neutralCount
+	return *configuration
 }

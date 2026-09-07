@@ -1,7 +1,6 @@
 package guiHandler_test
 
 import (
-	"image"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
@@ -21,7 +20,7 @@ func TestWhenAnEdgeHitTestRequested_ReturnsTheCurveUnderThePoint(t *testing.T) {
 	}}
 
 	// Act
-	index := handler.HitTestZoneEditorEdge(image.Pt(50, 5), edges)
+	index := handler.HitTestZoneEditorEdge(data.NewVec2(50.0, 5.0), edges)
 
 	// Assert
 	assert.Equal(t, 0, index)

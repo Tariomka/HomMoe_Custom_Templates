@@ -6,7 +6,7 @@ then click **Generate** + **Save Template** to write a `.rmg.json` file.
 
 ## 1. Run the App
 
-Requires Go **1.26.5+**.
+Requires Go **1.27.0+**.
 
 ```powershell
 # Run directly
@@ -45,7 +45,7 @@ Windows needs no extra packages.
 
 The window has three regions:
 
-- **Toolbar** (top): `New`, `Load`, `Save`, `Save As`, `Exit`, with the current
+- **Toolbar** (top): `New`, `Load`, `Save`, `Save To`, `Exit`, with the current
   settings-file path on the right (a trailing `*` marks unsaved edits).
 - **Tabs** (left): the three configuration tabs listed below.
 - **Preview** (right): live render of the most recently generated template,
@@ -106,7 +106,12 @@ Your editor state is persisted as `.gen.json` files (the `dtos.EditorStateDto`
 model, handled by `file_service.FileService.SaveSettings` /
 `file_service.FileService.LoadSettingsFile`).
 
-- **Save / Save As** — write the current widget state to disk.
+- **Save** — write the current widget state back to the active `.gen.json`,
+  or ask for a folder if there is not one yet.
+- **Save To** — pick the *folder* to write to. The filename is not yours to
+  choose: it is always derived from the template name, and the dialog shows
+  the name it will use. An unnamed template cannot be saved — name it on the
+  **General** tab first.
 - **Load** — load a `.gen.json` file back into the widgets.
 - **New** — reset to defaults.
 
@@ -214,7 +219,7 @@ and the shape each one produces.
   running over Remote Desktop or in a headless container, run on a real
   desktop session instead. On Linux, make sure the development packages listed
   under [Building on Linux](#building-on-linux) are installed.
-- **`go build` complains about Go version** — install Go 1.26.5 or later
+- **`go build` complains about Go version** — install Go 1.27.0 or later
   (`go version`).
 - **`Save Template` is disabled** — click **Generate** first; the button only
   enables once a template is in memory.

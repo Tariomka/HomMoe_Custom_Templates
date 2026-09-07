@@ -24,9 +24,9 @@
         "gioui",
         "gochecknoglobals",
         "gofakeit",
-        "goforj",
         "gofmt",
         "gofont",
+        "goforj",
         "golines",
         "gosec",
         "govet",
@@ -40,6 +40,7 @@
         "Interactable",
         "Interactables",
         "isolateplayers",
+        "jsontext",
         "linq",
         "Mearea",
         "Mereas",
@@ -113,6 +114,12 @@
     "coverage-gutters.showGutterCoverage": true,
     "workbench.editorAssociations": {
         "*.golden": "imagePreview.previewEditor",
+        "*.failure": "imagePreview.previewEditor",
+        "*.copilotmd": "vscode.markdown.preview.editor",
+        "*.md": "vscode.markdown.editor"
+    },
+    "workbench.diffEditorAssociations": {
+        "*.golden": "imagePreview.previewEditor",
 		"*.failure": "imagePreview.previewEditor",
     },
     "chat.tools.terminal.autoApprove": {
@@ -124,5 +131,6 @@
         "go test": true,
         "go tool": true,
         "go vet": true,
+        "go run ./cmd/testlayoutcheck": true,
     },
 }

@@ -3,7 +3,7 @@ package mainObjectBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,5 +17,5 @@ func TestWhenRichCastleQualityIsChosen_SetsRichConstructionSidOnBuiltObject(t *t
 	mainObject := builder.WithCastleQualityRich().Build()
 
 	// Assert
-	assert.Equal(t, entities.MainObject{BuildingsConstructionSid: "rich_buildings_construction"}, mainObject)
+	assert.Equal(t, template_model.MainObject{BuildingsConstructionSid: "rich_buildings_construction"}, mainObject)
 }

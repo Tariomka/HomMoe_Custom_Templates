@@ -3,7 +3,7 @@ package zoneBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenGuardReactionDistributionIsProvided_SetsGuardReactionDistributionOn
 	zone := builder.WithGuardReactionDistribution(expectedDistribution).Build()
 
 	// Assert
-	assert.Equal(t, entities.Zone{GuardReactionDistribution: expectedDistribution}, zone)
+	assert.Equal(t, template_model.Zone{GuardReactionDistribution: expectedDistribution}, zone)
 }

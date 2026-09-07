@@ -6,9 +6,10 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
@@ -51,23 +52,23 @@ func NewTemplateHandler(
 	}
 }
 
-func (this *templateHandler) GenerateTemplate(stateDto dtos.EditorStateDto) (dtos.TemplateLoadDto, error) {
-	validation := this.stateHandler.ValidateEditorState(stateDto, true)
-	stateDto = validation.State
+func (this *templateHandler) GenerateTemplate(
+	state editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
+	validation := this.stateHandler.ValidateEditorState(state.EditorState, true)
 
-	configuration := this.mapper.FromEditorState(stateDto)
+	configuration := this.mapper.FromEditorState(validation.State)
 	if configuration.TemplateName == "" {
 		return dtos.TemplateLoadDto{}, common_errors.ErrNoTemplateName
 	}
 
 	this.templateGenerator.SetConfiguration(configuration)
-	template, generationWarnings := this.templateGenerator.Generate()
-	if template == nil {
+	generated, generationWarnings := this.templateGenerator.Generate()
+	if generated == nil {
 		return dtos.TemplateLoadDto{}, common_errors.ErrGeneratedTemplateInvalid
 	}
 
 	warnings := slices.Concat(validation.Warnings, generationWarnings)
-	return dtos.TemplateLoadDto{Template: template, Warnings: warnings}, nil
+	return dtos.TemplateLoadDto{Template: generated, Warnings: warnings}, nil
 }
 
 func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos.TemplateLoadDto, error) {
@@ -75,34 +76,30 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 		return dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid
 	}
 
-	newTemplate := *templateDto.Template
-	newTemplate.Variants = slices.Clone(templateDto.Template.Variants)
-	newTemplate.Variants[0].Zones = templateDto.Zones
-	newTemplate.Variants[0].Connections = templateDto.Connections
+	zones := templateDto.Zones
+	connections := templateDto.Connections
+	this.zoneEditor.RebuildZoneConnectionRoads(zones, connections)
 
-	this.zoneEditor.RebuildZoneConnectionRoads(
-		newTemplate.Variants[0].Zones,
-		newTemplate.Variants[0].Connections)
+	updated := templateDto.Template.Clone()
+	updated.Variants[0].Zones = zones
+	updated.Variants[0].Connections = connections
 
-	// Rebuild mandatory content from the final zones so a zone re-tiered in the
-	// manual editor gets the content of its new quality instead of the original tier.
 	if templateDto.EditorState != nil {
-		configuration := this.mapper.FromEditorState(*templateDto.EditorState)
-		newTemplate.MandatoryContent = this.contentProvider.CreateContentsForZones(
-			*configuration, newTemplate.Variants[0].Zones)
+		configuration := this.mapper.FromEditorState(templateDto.EditorState.EditorState)
+		updated.MandatoryContent = this.contentProvider.CreateContentsForZones(*configuration, zones)
 	}
 
 	var err error
-	if this.connectionEditor.ComputeHasErrors(newTemplate.Variants[0].Zones, newTemplate.Variants[0].Connections) {
+	if this.connectionEditor.ComputeHasErrors(zones, connections) {
 		err = common_errors.ErrZonesMissing
 	}
 
-	return dtos.TemplateLoadDto{Template: &newTemplate}, err
+	return dtos.TemplateLoadDto{Template: &updated}, err
 }
 
 func (this *templateHandler) ReapplyCastleSettings(
-	request dtos.CastleSettingsReapplyRequestDto) []entities.Zone {
-	configuration := this.mapper.FromEditorState(request.EditorState)
+	request dtos.CastleSettingsReapplyRequestDto) []template_model.Zone {
+	configuration := this.mapper.FromEditorState(request.EditorState.EditorState)
 	this.manualReapply.ApplyCastleSettingChanges(request.Zones, request.Changes, configuration)
 	return request.Zones
 }

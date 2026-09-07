@@ -74,31 +74,32 @@ func (this *AssetProvider) DrawBackground(canvas *image.RGBA) {
 }
 
 func (this *AssetProvider) DrawPlayerZone(
-	canvas *image.RGBA, zone preview.Zone, center image.Point, scale float64) {
+	canvas *image.RGBA, zone preview.Zone, center data.Vec2[float64], scale float64) {
 	this.drawAsset(canvas, this.getPlayerAsset(zone), center, scale)
 }
 
 func (this *AssetProvider) DrawNeutralZone(
-	canvas *image.RGBA, zone preview.Zone, center image.Point, scale float64) {
+	canvas *image.RGBA, zone preview.Zone, center data.Vec2[float64], scale float64) {
 	this.drawAsset(canvas, this.getNeutralZoneAsset(zone), center, scale)
 }
 
 // DrawArenaMarker stamps the transparent swords sprite onto the canvas. It marks
 // a Gladiator Arena connection, which - unlike an arena zone - has no bubble of
 // its own to composite the swords into.
-func (this *AssetProvider) DrawArenaMarker(canvas *image.RGBA, center image.Point, scale float64) {
+func (this *AssetProvider) DrawArenaMarker(canvas *image.RGBA, center data.Vec2[float64], scale float64) {
 	this.drawAsset(canvas, this.arena, center, scale)
 }
 
 // drawAsset draws an asset onto canvas so that the asset lands on canvas point (center), scaled by the given factor.
+// The center stays fractional: the bilinear sample below resolves it, so sub-pixel placement is preserved.
 func (this *AssetProvider) drawAsset(
-	canvas *image.RGBA, asset image.Image, center image.Point, scale float64) {
+	canvas *image.RGBA, asset image.Image, center data.Vec2[float64], scale float64) {
 	assetBounds := asset.Bounds()
 	const roundness = 2
 
 	// Destination rectangle covered by the scaled asset, clipped to canvas.
-	left := int(float64(center.X) - assetCenter*scale)
-	top := int(float64(center.Y) - assetCenter*scale)
+	left := int(center.X - assetCenter*scale)
+	top := int(center.Y - assetCenter*scale)
 	width := int(float64(assetBounds.Dx())*scale) + roundness
 	height := int(float64(assetBounds.Dy())*scale) + roundness
 	intersection := image.Rect(left, top, left+width, top+height).Intersect(canvas.Bounds())
@@ -106,8 +107,8 @@ func (this *AssetProvider) drawAsset(
 	for y := intersection.Min.Y; y < intersection.Max.Y; y++ {
 		for x := intersection.Min.X; x < intersection.Max.X; x++ {
 			normalizedPosition := data.NewVec2(
-				(float64(x)-float64(center.X))/scale+assetCenter,
-				(float64(y)-float64(center.Y))/scale+assetCenter)
+				(float64(x)-center.X)/scale+assetCenter,
+				(float64(y)-center.Y)/scale+assetCenter)
 			interpolatedColor := this.calculateBilinearInterpolation(asset, normalizedPosition)
 			if interpolatedColor.A == 0 {
 				continue

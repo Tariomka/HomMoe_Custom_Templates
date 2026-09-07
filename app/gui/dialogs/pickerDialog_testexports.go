@@ -62,7 +62,3 @@ func (this *MultiSelectPicker) ClickAdd() { this.addBtn.Click() }
 
 // ClickCancel ONLY FOR INTEGRATION TEST USE
 func (this *MultiSelectPicker) ClickCancel() { this.cancelBtn.Click() }
-
-// SelectedIDs exposes the applied selection in entry order.
-// ONLY FOR INTEGRATION TEST USE
-func (this *MultiSelectPicker) SelectedIDs() []string { return this.selectedIDs() }

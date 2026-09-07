@@ -18,8 +18,7 @@ func NewPositionLayoutService() *PositionLayoutService {
 func (this *PositionLayoutService) CreatePositionsFromPlans(
 	orderedLabels,
 	playerLabels []string,
-	neutralZonePlans neutral_zone.Plans,
-) models.Positions {
+	neutralZonePlans neutral_zone.Plans) models.Positions {
 	count := len(orderedLabels)
 	if count == 0 {
 		return nil

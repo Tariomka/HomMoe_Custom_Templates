@@ -3,7 +3,7 @@ package topologyBase_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -37,10 +37,10 @@ func TestWhenSingleConnectionNameIsProvided_RoadLoopsBackToItself(t *testing.T) 
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	expectedRoads := []entities.Road{
+	expectedRoads := []template_model.Road{
 		{
-			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
+			From: template_model.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
 		},
 	}
 
@@ -55,14 +55,14 @@ func TestWhenMultipleConnectionNamesAreProvided_RoadsFanOutFromFirstConnection(t
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	expectedRoads := []entities.Road{
+	expectedRoads := []template_model.Road{
 		{
-			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Gate-2"}},
+			From: template_model.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Gate-2"}},
 		},
 		{
-			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Gate-3"}},
+			From: template_model.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Gate-3"}},
 		},
 	}
 
@@ -77,10 +77,10 @@ func TestWhenDuplicateConnectionNamesAreProvided_DuplicatesAreIgnored(t *testing
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
-	expectedRoads := []entities.Road{
+	expectedRoads := []template_model.Road{
 		{
-			From: entities.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
-			To:   entities.TypedRef{Type: "Connection", Args: []string{"Gate-2"}},
+			From: template_model.TypedRef{Type: "Connection", Args: []string{"Gate-1"}},
+			To:   template_model.TypedRef{Type: "Connection", Args: []string{"Gate-2"}},
 		},
 	}
 

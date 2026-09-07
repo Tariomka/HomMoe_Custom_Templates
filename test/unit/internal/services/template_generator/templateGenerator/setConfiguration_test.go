@@ -21,7 +21,7 @@ func TestWhenNewConfigurationProvided_GeneratesWithNewConfiguration(t *testing.T
 	generator.SetConfiguration(newConfiguration)
 
 	// Assert
-	template, _ := generator.Generate()
+	template, _ := generateTemplate(generator)
 	assert.Equal(t, expectedName, template.Name)
 }
 
@@ -37,6 +37,6 @@ func TestWhenNilConfigurationProvided_KeepsPreviousConfiguration(t *testing.T) {
 	generator.SetConfiguration(nil)
 
 	// Assert
-	template, _ := generator.Generate()
+	template, _ := generateTemplate(generator)
 	assert.Equal(t, expectedName, template.Name)
 }

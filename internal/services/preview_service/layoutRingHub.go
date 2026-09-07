@@ -1,12 +1,11 @@
 package preview_service
 
 import (
-	"image"
 	"math"
-	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // layoutRingOrHub renders the structured topologies (Default, HubAndSpoke,
@@ -18,8 +17,8 @@ import (
 // a hub. The preview is a faithful representation of the template data, so
 // connectivity is never used to guess an implicit hub.
 func (this *PreviewLayoutService) layoutRingOrHub(
-	zones []entities.Zone,
-	conns []entities.Connection,
+	zones []template_model.Zone,
+	conns []template_model.Connection,
 	side float64) {
 	metrics := newCanvasMetrics(side)
 	if this.placeTrivial(zones, metrics) {
@@ -29,7 +28,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 	// Multi-hub tournament layout: clusters fan out around the canvas.
 	var hubIndices []int
 	for i, zone := range zones {
-		if strings.HasPrefix(zone.Name, constants.HubZonePrefix) {
+		if zone_helpers.IsClusterHubZoneName(zone.Name) {
 			hubIndices = append(hubIndices, i)
 		}
 	}
@@ -40,7 +39,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 
 	hubIdx := -1
 	for i, zone := range zones {
-		if zone.Name == constants.HubZoneName {
+		if zone_helpers.IsSharedHubZoneName(zone.Name) {
 			hubIdx = i
 			break
 		}
@@ -53,7 +52,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 	}
 
 	zoneRadius := ringZoneRadius(len(outer), hubIdx >= 0, metrics)
-	this.layout.ZoneRadius = int(math.Round(zoneRadius))
+	this.layout.ZoneRadius = zoneRadius
 
 	ringRadius0 := side/2.0 - metrics.margin
 	ringRadius := math.Max(metrics.hubRadiusMin+zoneRadius+metrics.minGap,
@@ -66,7 +65,7 @@ func (this *PreviewLayoutService) layoutRingOrHub(
 		angle := -math.Pi/2.0 + float64(i)*2.0*math.Pi/float64(len(outer))
 		x := metrics.cx + math.Cos(angle)*ringRadius
 		y := metrics.cy + math.Sin(angle)*ringRadius
-		this.layout.Positions[zones[zoneIndex].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+		this.layout.Positions[zones[zoneIndex].Name] = data.NewVec2(x, y)
 	}
 }
 
@@ -93,8 +92,8 @@ func ringZoneRadius(outerCount int, hasHub bool, metrics canvasMetrics) float64 
 // hubs on an inner ring and their direct spokes around each hub. Zones that
 // spoke off no hub (e.g. cross-cluster zones) collapse to the canvas center.
 func (this *PreviewLayoutService) layoutMultiHub(
-	zones []entities.Zone,
-	conns []entities.Connection,
+	zones []template_model.Zone,
+	conns []template_model.Connection,
 	hubIndices []int,
 	metrics canvasMetrics) {
 	hubSpokes := buildHubSpokes(zones, conns, hubIndices)
@@ -121,7 +120,7 @@ func (this *PreviewLayoutService) layoutMultiHub(
 	zoneRadius := math.Min(metrics.zoneRadiusMax, (radialLeft*sinA-metrics.minGap/2.0)/(1.0+sinA))
 	zoneRadius = math.Max(1.0, zoneRadius)
 	spokeRing := math.Max(radialLeft-zoneRadius, metrics.hubRadiusMin+metrics.minGap+zoneRadius)
-	this.layout.ZoneRadius = int(math.Round(zoneRadius))
+	this.layout.ZoneRadius = zoneRadius
 
 	for h, hubIndex := range hubIndices {
 		hubAngle := -math.Pi/2.0 + float64(h)*2.0*math.Pi/float64(numHubs)
@@ -130,7 +129,7 @@ func (this *PreviewLayoutService) layoutMultiHub(
 			hx = metrics.cx + math.Cos(hubAngle)*hubRing
 			hy = metrics.cy + math.Sin(hubAngle)*hubRing
 		}
-		this.layout.Positions[zones[hubIndex].Name] = image.Pt(int(math.Round(hx)), int(math.Round(hy)))
+		this.layout.Positions[zones[hubIndex].Name] = data.NewVec2(hx, hy)
 
 		spokes := hubSpokes[zones[hubIndex].Name]
 		if len(spokes) == 0 {
@@ -144,7 +143,7 @@ func (this *PreviewLayoutService) layoutMultiHub(
 			angle := spokeBase + float64(i)*2.0*math.Pi/float64(len(spokes))
 			x := hx + math.Cos(angle)*spokeRing
 			y := hy + math.Sin(angle)*spokeRing
-			this.layout.Positions[zones[spokeIndex].Name] = image.Pt(int(math.Round(x)), int(math.Round(y)))
+			this.layout.Positions[zones[spokeIndex].Name] = data.NewVec2(x, y)
 		}
 	}
 	// Stragglers (e.g. cross-cluster zones) collapse to canvas center.
@@ -158,8 +157,8 @@ func (this *PreviewLayoutService) layoutMultiHub(
 // buildHubSpokes collects each hub's directly connected zone indices
 // (structural connections only, deduplicated, in connection order).
 func buildHubSpokes(
-	zones []entities.Zone,
-	conns []entities.Connection,
+	zones []template_model.Zone,
+	conns []template_model.Connection,
 	hubIndices []int) map[string][]int {
 	zoneIdx := make(map[string]int, len(zones))
 	for i, zone := range zones {

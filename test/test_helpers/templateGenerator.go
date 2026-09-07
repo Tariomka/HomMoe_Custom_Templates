@@ -16,7 +16,7 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) template_genera
 	castleFactory := zones.NewCastleFactory()
 	roadFactory := zones.NewRoadFactory()
 	zoneFactory := zones.NewZoneFactory(castleFactory, roadFactory)
-	zoneClassifier := zones.NewZoneClassifier()
+	zoneClassifier := zones.NewZoneTierService()
 	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)
 	zoneLabelProvider := zones.NewZoneLabelProvider()
 	connectionService := base.NewTopologyConnectionService(zoneLabelProvider)

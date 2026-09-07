@@ -1,6 +1,6 @@
 package dtos
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 
 // ManualEditDecisionDto says whether a freshly generated template should have
 // the manual zone/connection edits reapplied, and which castle options moved
@@ -8,5 +8,5 @@ import "github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_d
 //
 // A nil ReapplyWithCastleChanges means the edits must be dropped instead.
 type ManualEditDecisionDto struct {
-	ReapplyWithCastleChanges *editor_state_dto.CastleSettingChanges
+	ReapplyWithCastleChanges *editor_state_model.CastleSettingChanges
 }

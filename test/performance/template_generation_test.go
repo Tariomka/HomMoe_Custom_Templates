@@ -3,8 +3,8 @@ package performance_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/require"
 )
@@ -36,14 +36,14 @@ func BenchmarkTemplateGenerator_Generate(b *testing.B) {
 			}
 			generator := test_helpers.NewTemplateGenerator(configuration)
 
-			var template *entities.RmgTemplate
+			var generated *template_model.Template
 
 			b.ReportAllocs()
 			for b.Loop() {
-				template, _ = generator.Generate()
+				generated, _ = generator.Generate()
 			}
 
-			require.NotEmpty(b, template.Variants)
+			require.NotEmpty(b, generated.Variants)
 		})
 	}
 }

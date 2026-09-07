@@ -1,6 +1,6 @@
 package dtos
 
-import "github.com/Tariomka/hommoe_custom_templates/internal/models"
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 
 type ContentRuleDescriptionDto struct {
 	Key          ContentRuleKey
@@ -8,5 +8,5 @@ type ContentRuleDescriptionDto struct {
 	Marker       string
 	VariantLabel string
 	Valid        bool
-	SavedRule    models.ContentRuleRowSave
+	SavedRule    editor_state_model.ContentRuleRow
 }

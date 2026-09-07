@@ -3,9 +3,10 @@ package squareTopology_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -75,7 +76,7 @@ func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCenter(t *testing.T)
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
-	var interiorZone entities.Zone
+	var interiorZone template_model.Zone
 	for _, zone := range variant.Zones {
 		if zone.Name == "Neutral-N3" {
 			interiorZone = zone
@@ -83,7 +84,7 @@ func TestWhenSingleInteriorNeutralExists_PlacesItAtTheSquareCenter(t *testing.T)
 		}
 	}
 	require.NotNil(t, interiorZone.GeneratorPosition)
-	assert.Equal(t, [2]float64{0.5, 0.5}, *interiorZone.GeneratorPosition)
+	assert.Equal(t, data.NewVec2(0.5, 0.5), *interiorZone.GeneratorPosition)
 }
 
 func TestWhenSquareIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {

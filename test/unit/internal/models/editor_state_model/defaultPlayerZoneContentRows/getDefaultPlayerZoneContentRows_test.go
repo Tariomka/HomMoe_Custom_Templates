@@ -1,0 +1,58 @@
+package defaultPlayerZoneContentRows_test
+
+import (
+	"testing"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestWhenDefaultRowsAreBuilt_ReturnsFourteenRows(t *testing.T) {
+	t.Parallel()
+	// Arrange
+
+	// Act
+	rows := editor_state_model.GetDefaultPlayerZoneContentRows()
+
+	// Assert
+	assert.Len(t, rows, 14)
+}
+
+func TestWhenDefaultRowsAreBuilt_MarksOnlyFirstSevenRowsAsMines(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	expectedMineFlags := []bool{
+		true, true, true, true, true, true, true,
+		false, false, false, false, false, false, false,
+	}
+
+	// Act
+	rows := editor_state_model.GetDefaultPlayerZoneContentRows()
+
+	// Assert
+	actualMineFlags := make([]bool, 0, len(rows))
+	for _, row := range rows {
+		actualMineFlags = append(actualMineFlags, row.IsMine)
+	}
+	assert.Equal(t, expectedMineFlags, actualMineFlags)
+}
+
+func TestWhenDefaultRowsAreBuilt_GuardsEveryRow(t *testing.T) {
+	t.Parallel()
+	// Arrange
+
+	// Act
+	rows := editor_state_model.GetDefaultPlayerZoneContentRows()
+
+	// Assert
+	guardedRowCount := 0
+	for _, row := range rows {
+		for _, rule := range row.Rules {
+			if rule.Name == "Guarded" && rule.IsGuarded != nil && *rule.IsGuarded {
+				guardedRowCount++
+				break
+			}
+		}
+	}
+	assert.Equal(t, len(rows), guardedRowCount)
+}

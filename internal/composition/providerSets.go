@@ -15,8 +15,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	editor_services "github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service/editor_state_migrator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_system"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/pickers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -33,7 +33,7 @@ var ZoneSet = wire.NewSet(
 	zone_services.NewCastleFactory,
 	zone_services.NewRoadFactory,
 	zone_services.NewZoneFactory,
-	zone_services.NewZoneClassifier,
+	zone_services.NewZoneTierService,
 	zone_services.NewZoneLabelProvider,
 	base.NewTopologyConnectionService,
 )
@@ -55,7 +55,6 @@ var GenerationSet = wire.NewSet(
 // EditorSet builds the services backing the manual zone editor and the previews.
 var EditorSet = wire.NewSet(
 	bonuses.NewBonusEntryService,
-	pickers.NewPickerEntryService,
 	connection_editor.NewConnectionEditorService,
 	connection_editor.NewManualReapplyService,
 	connection_editor.NewZoneEditorService,
@@ -69,18 +68,21 @@ var EditorSet = wire.NewSet(
 // InfrastructureSet builds the persistence and mapping collaborators.
 var InfrastructureSet = wire.NewSet(
 	repositories.NewEditorStateRepository,
+	repositories.NewLegacyEditorStateRepository,
 	repositories.NewPreviewRepository,
 	repositories.NewTemplateRepository,
+	editor_state_migrator.NewEditorStateMigrator,
 	file_service.NewFileService,
 	mappers.NewConfigMapper,
+	mappers.NewEditorStateMapper,
 	mappers.NewMandatoryContentItemMapper,
+	mappers.NewTemplateMapper,
 	validators.NewEditorStateValidator,
 )
 
 // HandlerSet builds the handlers the GUI facade delegates to.
 var HandlerSet = wire.NewSet(
 	handlers.NewBonusHandler,
-	handlers.NewPickerHandler,
 	handlers.NewContentRuleHandler,
 	handlers.NewPreviewHandler,
 	handlers.NewStateHandler,

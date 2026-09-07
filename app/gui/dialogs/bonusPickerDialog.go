@@ -17,6 +17,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
@@ -68,7 +69,7 @@ func NewBonusPickerDialog(
 	summary := handler.DescribeExistingBonuses(existing)
 
 	labels := linq.FromSlice(constants.GetBonusTypeOptions()).
-		SelectString(func(opt constants.BonusTypeOption) string { return opt.Label }).
+		Select(func(opt constants.BonusTypeOption) string { return opt.Label }).
 		ToSlice()
 
 	dialog := &BonusPickerDialog{
@@ -113,7 +114,7 @@ func (this *BonusPickerDialog) Body(gtx layout.Context, theme *material.Theme) (
 		}),
 		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if presetType.IsResource() {
+			if config_helpers.IsResource(presetType) {
 				return layout.Dimensions{}
 			}
 
@@ -253,7 +254,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 
 	if this.pickSpellBtn.Clicked(gtx) {
 		excluded := append(append([]string{}, this.existingSpellIDs...), this.selectedSpells...)
-		this.opener(NewSpellPickerDialog(excluded, false, this.handler, func(ids []string, _ bool) {
+		this.opener(NewSpellPickerDialog(excluded, false, func(ids []string, _ bool) {
 			// Append to (never overwrite) the current selection.
 			for _, id := range ids {
 				if id != "" && !slices.Contains(this.selectedSpells, id) {
@@ -267,7 +268,7 @@ func (this *BonusPickerDialog) handleSubPickers(gtx layout.Context) {
 	}
 
 	if this.pickItemBtn.Clicked(gtx) {
-		this.opener(NewItemPickerDialog("Pick Starting Item", nil, this.handler, func(ids []string) {
+		this.opener(NewItemPickerDialog("Pick Starting Item", nil, func(ids []string) {
 			if len(ids) == 0 {
 				return
 			}
@@ -352,7 +353,7 @@ func (this *BonusPickerDialog) getSpellRowWidget(theme *material.Theme, index in
 					layout.Rigid(widgets.NewLabelBuilder(theme).WithSizeBig().WithText(name).WithColorDefault().Build),
 					widgets.NewDefaultComponentSpacer(),
 					layout.Flexed(1, widgets.NewDimmedLabelWidget(theme, school)),
-					layout.Rigid(widgets.NewButtonWidget(theme, "✕", &this.spellRemoveBtns[index], false)),
+					layout.Rigid(widgets.NewButtonWidget(theme, "X", &this.spellRemoveBtns[index], false)),
 				)
 			})
 	}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,4 +24,17 @@ func TestWhenTournamentHubIsCreated_PreservesExplicitName(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, "Hub-B", zone.Name)
+}
+
+func TestWhenHubZoneIsCreated_RecordsTheHighestQuality(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	factory := newZoneFactory()
+	input := models.HubZoneCreationRequest{Name: "Hub-B", Size: 1, Tuning: newUnitTuning()}
+
+	// Act
+	zone := factory.CreateHubZone(input)
+
+	// Assert
+	assert.Equal(t, new(neutral_zone.QualityHighest), zone.Quality)
 }

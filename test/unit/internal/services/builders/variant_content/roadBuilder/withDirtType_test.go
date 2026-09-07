@@ -3,7 +3,7 @@ package roadBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,5 +17,5 @@ func TestWhenDirtTypeIsChosen_SetsDirtTypeOnBuiltRoad(t *testing.T) {
 	road := builder.WithDirtType().Build()
 
 	// Assert
-	assert.Equal(t, entities.Road{Type: "Dirt"}, road)
+	assert.Equal(t, template_model.Road{Type: "Dirt"}, road)
 }

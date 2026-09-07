@@ -2,16 +2,17 @@ package geometricHubTopology_test
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenRandomPortalsEnabled_AddsExtraPortalConnections(t *testing.T) {
@@ -43,7 +44,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentGroup(t *t
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = len(playerLabels)
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{SID: "hub_item"}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_item"}}
 	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
 
 	// Act
@@ -66,6 +67,32 @@ func TestWhenNoNeutralZonesSelected_EveryPlayerConnectsToHub(t *testing.T) {
 	assert.ElementsMatch(t,
 		[]string{"Spawn-A", "Spawn-B", "Spawn-C", "Spawn-D"},
 		hubPortalTargets(variant))
+}
+
+func TestWhenAPortalTouchesTheHub_ItIsGuardedAtTheHighestTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	playerLabels := []string{"A", "B"}
+	plans := mixedPlans([]string{"E", "F"}, []string{"G"}, nil)
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyGeometricHub
+	configuration.PlayerCount = len(playerLabels)
+	tuning := test_helpers.NewGenerationTuning(configuration, len(playerLabels)+len(plans)+1)
+	tuning.BorderGuardStrengthMultiplier = 1.0
+	var hubGuardValues []int
+
+	// Act
+	variant := topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories()).
+		CreateTopologyVariant(*configuration, playerLabels, plans, tuning, "")
+
+	// Assert
+	for _, connection := range hubConnections(variant) {
+		hubGuardValues = append(hubGuardValues, connection.GuardValue)
+	}
+	require.NotEmpty(t, hubGuardValues)
+	for _, guardValue := range hubGuardValues {
+		assert.Equal(t, 35000, guardValue)
+	}
 }
 
 func TestWhenNoNeutralZonesSelected_NoPlayerToPlayerConnectionsExist(t *testing.T) {
@@ -552,13 +579,10 @@ func TestWhenHexagonHasThreeInteriors_VerticesAreEquidistantFromPolygonCenter(t 
 	vertexM := positionOf(variant, "Neutral-M")
 	vertexO := positionOf(variant, "Neutral-O")
 	vertexQ := positionOf(variant, "Neutral-Q")
-	centroid := [2]float64{
-		(vertexM[0] + vertexO[0] + vertexQ[0]) / 3,
-		(vertexM[1] + vertexO[1] + vertexQ[1]) / 3,
-	}
+	centroid := vertexM.Add(vertexO).Add(vertexQ).DivideScalar(3)
 	radii := make([]float64, 0, 3)
-	for _, vertex := range [][2]float64{vertexM, vertexO, vertexQ} {
-		radii = append(radii, math.Hypot(vertex[0]-centroid[0], vertex[1]-centroid[1]))
+	for _, vertex := range []data.Vec2[float64]{vertexM, vertexO, vertexQ} {
+		radii = append(radii, vertex.Subtract(centroid).Distance())
 	}
 	assert.InDelta(t, 0, spreadOf(radii), 0.000001,
 		"triangle vertices must be equidistant from the polygon center: %v", radii)
@@ -626,7 +650,7 @@ func TestWhenEightPlayersHaveManyInteriors_AllPositionsStayInsideUnitSquare(t *t
 	outOfBounds := 0
 	for _, zone := range variant.Zones {
 		position := *zone.GeneratorPosition
-		if position[0] < 0 || position[0] > 1 || position[1] < 0 || position[1] > 1 {
+		if position.X < 0 || position.X > 1 || position.Y < 0 || position.Y > 1 {
 			outOfBounds++
 		}
 	}

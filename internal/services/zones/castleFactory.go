@@ -2,9 +2,9 @@ package zones
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -18,8 +18,8 @@ func NewCastleFactory() zone_interfaces.ICastleFactory {
 func (this *CastleFactory) CreatePlayerOwnedCastles(
 	matchPlayerFaction bool,
 	owner string,
-	castleCount int) []entities.MainObject {
-	var castles []entities.MainObject
+	castleCount int) []template_model.MainObject {
+	var castles []template_model.MainObject
 
 	for range castleCount {
 		objectBuilder := variant_content.NewObjectBuilder().
@@ -39,8 +39,8 @@ func (this *CastleFactory) CreatePlayerOwnedCastles(
 
 func (this *CastleFactory) CreatePlayerUnclaimedCastles(
 	matchPlayerFaction bool,
-	guardValue, castleCount int) []entities.MainObject {
-	var castles []entities.MainObject
+	guardValue, castleCount int) []template_model.MainObject {
+	var castles []template_model.MainObject
 
 	for range castleCount {
 		objectBuilder := variant_content.NewObjectBuilder().
@@ -65,8 +65,8 @@ func (this *CastleFactory) CreateNeutralZoneCastles(
 	profile neutral_zone.Profile,
 	tuning models.GenerationTuning,
 	castleCount int,
-	isHoldCityZone bool) []entities.MainObject {
-	var castles []entities.MainObject
+	isHoldCityZone bool) []template_model.MainObject {
+	var castles []template_model.MainObject
 
 	if castleCount > 0 {
 		objectBuilder := variant_content.NewObjectBuilder().
@@ -111,15 +111,15 @@ func (this *CastleFactory) CreateNeutralZoneCastles(
 func (this *CastleFactory) CreateHubZoneCastles(
 	tuning models.GenerationTuning,
 	castleCount int,
-	isHoldCityZone bool) []entities.MainObject {
-	var castles []entities.MainObject
+	isHoldCityZone bool) []template_model.MainObject {
+	var castles []template_model.MainObject
 	newCastleBuilder := func() *variant_content.MainObjectBuilder {
 		return variant_content.NewObjectBuilder().
 			WithTypeCity().
 			WithGuardWeeklyIncrement(0.10).
 			WithFactionFromList()
 	}
-	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
+	buildHoldCityCastle := func(builder *variant_content.MainObjectBuilder) template_model.MainObject {
 		return builder.
 			WithGuardChance(1).
 			WithGuardValue(tuning.ScaleByNeutralGuardStrength(25_000)).
@@ -128,7 +128,7 @@ func (this *CastleFactory) CreateHubZoneCastles(
 			WithHoldCityWinCon().
 			Build()
 	}
-	buildCastle := func(builder *variant_content.MainObjectBuilder) entities.MainObject {
+	buildCastle := func(builder *variant_content.MainObjectBuilder) template_model.MainObject {
 		return builder.
 			WithGuardChance(0.5).
 			WithGuardValue(tuning.ScaleByNeutralGuardStrength(16_000)).
@@ -151,7 +151,7 @@ func (this *CastleFactory) CreateHubZoneCastles(
 	return castles
 }
 
-func (this *CastleFactory) CreatePlayerSpawnCastle(playerName string, guardValue int) entities.MainObject {
+func (this *CastleFactory) CreatePlayerSpawnCastle(playerName string, guardValue int) template_model.MainObject {
 	return variant_content.NewObjectBuilder().
 		WithTypeSpawn().
 		WithSpawn(playerName).
@@ -168,8 +168,8 @@ func (this *CastleFactory) CreatePlayerSpawnCastle(playerName string, guardValue
 func (this *CastleFactory) CreateAbandonedOutposts(
 	profile neutral_zone.Profile,
 	tuning models.GenerationTuning,
-	count int) []entities.MainObject {
-	var outposts []entities.MainObject
+	count int) []template_model.MainObject {
+	var outposts []template_model.MainObject
 
 	for range count {
 		outposts = append(outposts,

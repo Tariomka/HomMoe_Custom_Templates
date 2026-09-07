@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,14 +20,14 @@ func TestWhenQualityIsApplied_ReturnsTheMutatedZone(t *testing.T) {
 	fixture.zoneEditor.
 		On("ApplyNeutralZoneQuality", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Run(func(arguments mock.Arguments) {
-			zone, _ := arguments.Get(0).(*entities.Zone)
+			zone, _ := arguments.Get(0).(*template_model.Zone)
 			zone.Name = appliedName
 		}).
 		Return()
 
 	// Act
 	zone := fixture.handler.ApplyZoneEditorQuality(dtos.ZoneEditorQualityRequestDto{
-		Zone: entities.Zone{Name: gofakeit.Word()},
+		Zone: template_model.Zone{Name: gofakeit.Word()},
 	})
 
 	// Assert
@@ -46,7 +46,7 @@ func TestWhenQualityIsApplied_ForwardsTheRequestedQualityAndCastleCount(t *testi
 
 	// Act
 	_ = fixture.handler.ApplyZoneEditorQuality(dtos.ZoneEditorQualityRequestDto{
-		Zone:        entities.Zone{Name: gofakeit.Word()},
+		Zone:        template_model.Zone{Name: gofakeit.Word()},
 		Quality:     neutral_zone.QualityLow,
 		CastleCount: castleCount,
 		Tuning:      tuning,

@@ -1,15 +1,15 @@
 package mandatory_content
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type MandatoryContentItemBuilder struct {
-	item entities.MandatoryContentItem
+	item template_model.MandatoryContentItem
 }
 
 func NewContentItemBuilder(sid string) *MandatoryContentItemBuilder {
-	return &MandatoryContentItemBuilder{item: entities.MandatoryContentItem{SID: sid}}
+	return &MandatoryContentItemBuilder{item: template_model.MandatoryContentItem{SID: sid}}
 }
 
 func (this *MandatoryContentItemBuilder) WithName(name string) *MandatoryContentItemBuilder {
@@ -32,12 +32,14 @@ func (this *MandatoryContentItemBuilder) WithSoloEncounter() *MandatoryContentIt
 	this.item.SoloEncounter = true
 	return this
 }
-func (this *MandatoryContentItemBuilder) WithRules(rules ...entities.PlacementRule) *MandatoryContentItemBuilder {
+func (this *MandatoryContentItemBuilder) WithRules(rules ...template_model.PlacementRule) *MandatoryContentItemBuilder {
 	this.item.Rules = append(this.item.Rules, rules...)
 	return this
 }
 func (this *MandatoryContentItemBuilder) WithRulesCallback(
-	callback func() []entities.PlacementRule) *MandatoryContentItemBuilder {
+	callback func() []template_model.PlacementRule) *MandatoryContentItemBuilder {
 	return this.WithRules(callback()...)
 }
-func (this *MandatoryContentItemBuilder) Build() entities.MandatoryContentItem { return this.item }
+func (this *MandatoryContentItemBuilder) Build() template_model.MandatoryContentItem {
+	return this.item
+}

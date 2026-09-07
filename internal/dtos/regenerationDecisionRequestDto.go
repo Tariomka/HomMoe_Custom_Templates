@@ -1,6 +1,10 @@
 package dtos
 
-import "time"
+import (
+	"time"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+)
 
 // RegenerationDecisionRequestDto is everything the regeneration decision
 // depends on. Previous and Next are nil when absent, which is what
@@ -10,9 +14,9 @@ import "time"
 // window elapses; both are supplied by the caller so the decision stays
 // deterministic and testable.
 type RegenerationDecisionRequestDto struct {
-	Previous      *EditorStateDto
-	Current       *EditorStateDto
-	Next          *EditorStateDto
+	Previous      *editor_state_dto.EditorStateDto
+	Current       *editor_state_dto.EditorStateDto
+	Next          *editor_state_dto.EditorStateDto
 	Now           time.Time
 	DebounceDueAt time.Time
 }

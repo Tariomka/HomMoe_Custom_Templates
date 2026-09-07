@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +15,7 @@ func TestWhenStateToSaveIsNil_ReturnsNothingToSaveError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	stateSaveDto := dtos.EditorStateSaveDto{
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{
 		State:      nil,
 		OutputPath: filepath.Join(t.TempDir(), "state.gen.json"),
 	}
@@ -30,8 +31,8 @@ func TestWhenStateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	state := dtos.NewDefaultEditorStateDto()
-	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: ""}
+	state := editor_state_model.NewDefaultEditorStateModel()
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: ""}
 
 	// Act
 	_, err := handler.SaveState(stateSaveDto)
@@ -44,8 +45,8 @@ func TestWhenStateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *testing
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	state := dtos.NewDefaultEditorStateDto()
-	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: " \t  "}
+	state := editor_state_model.NewDefaultEditorStateModel()
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: " \t  "}
 
 	// Act
 	_, err := handler.SaveState(stateSaveDto)
@@ -59,10 +60,10 @@ func TestWhenStateAndOutputPathAreValid_ReturnsPathNamedAfterTemplate(t *testing
 	// Arrange
 	handler := newProductionGuiHandler()
 	outputDirectory := t.TempDir()
-	state := dtos.NewDefaultEditorStateDto()
+	state := editor_state_model.NewDefaultEditorStateModel()
 	state.TemplateName = "My Template"
-	stateSaveDto := dtos.EditorStateSaveDto{
-		State:      &state,
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{
+		State:      toDtoPointer(&state),
 		OutputPath: filepath.Join(outputDirectory, "ignored-name.gen.json"),
 	}
 
@@ -79,8 +80,8 @@ func TestWhenStateAndOutputPathAreValid_WritesSettingsFile(t *testing.T) {
 	// Arrange
 	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "written-state.gen.json")
-	state := dtos.NewDefaultEditorStateDto()
-	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
+	state := editor_state_model.NewDefaultEditorStateModel()
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: outputPath}
 
 	// Act
 	savedPath, err := handler.SaveState(stateSaveDto)
@@ -95,8 +96,8 @@ func TestWhenStateOutputDirectoryDoesNotExist_CreatesItAndWritesTheFile(t *testi
 	// Arrange
 	handler := newProductionGuiHandler()
 	outputPath := filepath.Join(t.TempDir(), "no-such-directory", "state.gen.json")
-	state := dtos.NewDefaultEditorStateDto()
-	stateSaveDto := dtos.EditorStateSaveDto{State: &state, OutputPath: outputPath}
+	state := editor_state_model.NewDefaultEditorStateModel()
+	stateSaveDto := editor_state_dto.EditorStateSaveDto{State: toDtoPointer(&state), OutputPath: outputPath}
 
 	// Act
 	savedPath, err := handler.SaveState(stateSaveDto)

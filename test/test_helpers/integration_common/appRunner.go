@@ -38,7 +38,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
 
@@ -164,6 +164,26 @@ func (this *AppRunner) ClickAt(point f32.Point) {
 	this.invalidate()
 }
 
+// RightClickAt injects a synthetic secondary-button mouse click at point. Touch
+// carries no buttons, so a right click is the one gesture that has to be sent
+// as a mouse event.
+func (this *AppRunner) RightClickAt(point f32.Point) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	this.router.Queue(
+		pointer.Event{
+			Kind:     pointer.Press,
+			Source:   pointer.Mouse,
+			Buttons:  pointer.ButtonSecondary,
+			Position: point,
+		},
+		pointer.Event{Kind: pointer.Release, Source: pointer.Mouse, Position: point})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
+}
+
 // MoveTo injects a synthetic touch move at point. The leading frame registers
 // the input areas, the trailing frame processes the move. Both run under one
 // lock so a render cannot observe a half-applied move.
@@ -172,6 +192,27 @@ func (this *AppRunner) MoveTo(point f32.Point) {
 	this.mu.Lock()
 	this.frameLocked()
 	this.router.Queue(pointer.Event{Kind: pointer.Move, Source: pointer.Touch, Position: point})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
+}
+
+// Scroll injects a synthetic mouse wheel event at point with the given pixel
+// delta (positive Y scrolls the content up, i.e. moves the viewport down). The
+// leading frame registers the scrollable areas, the trailing frame processes the
+// wheel. Both run under one lock so a render cannot observe a half-applied
+// scroll. Gio clamps the delta to the scrollable range declared by the widget
+// under point, so an oversized delta simply scrolls to the end.
+func (this *AppRunner) Scroll(point f32.Point, delta f32.Point) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	this.router.Queue(pointer.Event{
+		Kind:     pointer.Scroll,
+		Source:   pointer.Mouse,
+		Position: point,
+		Scroll:   delta,
+	})
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
@@ -252,8 +293,53 @@ func (this *AppRunner) CloseTopDialog() {
 	this.mu.Unlock()
 }
 
+// TopFileExplorer returns the open file explorer dialog and whether the
+// top-most dialog is one (lock-guarded).
+func (this *AppRunner) TopFileExplorer() (editor.IFileExplorerDialog, bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.TopFileExplorer()
+}
+
+// TopZoneEditor returns the open zone editor dialog and whether the top-most
+// dialog is one (lock-guarded).
+func (this *AppRunner) TopZoneEditor() (editor.IZoneEditorDialog, bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.TopZoneEditor()
+}
+
+// SetCurrentPath seeds the file the editor is working on, which is where the
+// Load and Save To dialogs open (lock-guarded).
+func (this *AppRunner) SetCurrentPath(path string) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.App.GetStateDriver().SetCurrentPath(path)
+	this.mu.Unlock()
+}
+
+// CurrentPath returns the file the editor last loaded from or saved to
+// (lock-guarded).
+func (this *AppRunner) CurrentPath() string {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.GetStateDriver().GetCurrentPath()
+}
+
+// SetTemplateName seeds the name the Save To dialog derives its filename from
+// (lock-guarded).
+func (this *AppRunner) SetTemplateName(name string) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.App.SetTemplateName(name)
+	this.mu.Unlock()
+}
+
 // CurrentState returns the editor's current state snapshot (lock-guarded).
-func (this *AppRunner) CurrentState() dtos.EditorStateDto {
+func (this *AppRunner) CurrentState() editor_state_model.EditorState {
 	this.tb.Helper()
 	this.mu.Lock()
 	defer this.mu.Unlock()
@@ -284,6 +370,15 @@ func (this *AppRunner) Status() (string, bool) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.GetStateDriver().GetStatus()
+}
+
+// SelectedPanelScrollPosition returns the selected panel's first visible child
+// and its pixel offset (lock-guarded), plus whether that panel exposes one.
+func (this *AppRunner) SelectedPanelScrollPosition() (int, int, bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.SelectedPanelScrollPosition()
 }
 
 // runWindow is the real app.Window event loop, mirroring gui.eventLoop. It only

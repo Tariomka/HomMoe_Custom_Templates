@@ -3,7 +3,7 @@ package mainObjectBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,5 +17,5 @@ func TestWhenWeeklyUnitIncrementIsChosen_EnablesWeeklyUnitIncrementOnBuiltObject
 	mainObject := builder.WithWeeklyUnitIncrement().Build()
 
 	// Assert
-	assert.Equal(t, entities.MainObject{EnableWeeklyUnitIncrement: true}, mainObject)
+	assert.Equal(t, template_model.MainObject{EnableWeeklyUnitIncrement: true}, mainObject)
 }

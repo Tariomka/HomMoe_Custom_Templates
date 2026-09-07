@@ -1,0 +1,228 @@
+{
+  "templateName": "All Fields Fixture",
+  "gameMode": "SingleHero",
+  "mapSize": 208,
+  "experimentalMapSizes": true,
+  "playerCount": 7,
+  "heroMin": 2,
+  "heroMax": 9,
+  "heroIncrement": 3,
+  "neutralZoneCount": 13,
+  "spawnAbandonedOutposts": true,
+  "abandonedOutpostCount": 4,
+  "neutralLowestNoCastle": 21,
+  "neutralLowestCastle": 22,
+  "neutralLowNoCastle": 23,
+  "neutralLowCastle": 24,
+  "neutralMediumNoCastle": 25,
+  "neutralMediumCastle": 26,
+  "neutralHighNoCastle": 27,
+  "neutralHighCastle": 28,
+  "advancedMode": true,
+  "playerOwnedCastles": 3,
+  "playerCastles": 4,
+  "neutralCastles": 2,
+  "hubCastles": 5,
+  "neutralLowestCastlesPerZone": 31,
+  "neutralLowCastlesPerZone": 32,
+  "neutralMedCastlesPerZone": 33,
+  "neutralHighCastlesPerZone": 34,
+  "matchPlayerCastleFactions": true,
+  "playerZoneSize": 1.25,
+  "neutralZoneSize": 1.5,
+  "hubZoneSize": 1.75,
+  "guardRandomization": 0.35,
+  "topology": "Chain",
+  "randomPortals": true,
+  "maxPortalConns": 17,
+  "spawnFootholds": true,
+  "remoteFootholdCount": 6,
+  "generateRoads": true,
+  "isolateplayers": true,
+  "resourceDensity": 111,
+  "structureDensity": 122,
+  "neutralStackStrength": 133,
+  "borderGuardStrength": 144,
+  "victoryCondition": "win_condition_4",
+  "factionLawsExp": 155,
+  "astrologyExp": 166,
+  "lostStartCity": true,
+  "lostStartCityDay": 8,
+  "lostStartHero": true,
+  "cityHold": true,
+  "cityHoldDays": 9,
+  "gladiatorArena": true,
+  "gladiatorArenaDaysDelayStart": 41,
+  "gladiatorArenaCountDay": 5,
+  "tournament": true,
+  "tournamentFirstTournamentDay": 18,
+  "tournamentInterval": 11,
+  "tournamentPointsToWin": 7,
+  "tournamentSaveArmy": true,
+  "bannedItems": "fixture_banned_item_one\nfixture_banned_item_two",
+  "bannedMagics": "fixture_banned_magic",
+  "valueOverrides": "fixture_override_sid=12345",
+  "bonuses": [
+    {
+      "presetType": 5,
+      "receiverFilter": "all_heroes",
+      "param": "9500",
+      "param2": "1"
+    }
+  ],
+  "playerZoneContentRows": [
+    {
+      "sid": "fixture_player_zone_row",
+      "count": 41,
+      "isGroup": true,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "distanceName": "Very Far",
+          "isGuarded": true,
+          "isSoloEncounter": true,
+          "variantId": 41
+        }
+      ]
+    }
+  ],
+  "lowestNeutralContentRows": [
+    {
+      "sid": "fixture_lowest_neutral_row",
+      "count": 42,
+      "isGroup": true,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "distanceName": "Very Far",
+          "isGuarded": true,
+          "isSoloEncounter": true,
+          "variantId": 42
+        }
+      ]
+    }
+  ],
+  "lowNeutralContentRows": [
+    {
+      "sid": "fixture_low_neutral_row",
+      "count": 43,
+      "isGroup": true,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "distanceName": "Very Far",
+          "isGuarded": true,
+          "isSoloEncounter": true,
+          "variantId": 43
+        }
+      ]
+    }
+  ],
+  "mediumNeutralContentRows": [
+    {
+      "sid": "fixture_medium_neutral_row",
+      "count": 44,
+      "isGroup": true,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "distanceName": "Very Far",
+          "isGuarded": true,
+          "isSoloEncounter": true,
+          "variantId": 44
+        }
+      ]
+    }
+  ],
+  "highNeutralContentRows": [
+    {
+      "sid": "fixture_high_neutral_row",
+      "count": 45,
+      "isGroup": true,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "distanceName": "Very Far",
+          "isGuarded": true,
+          "isSoloEncounter": true,
+          "variantId": 45
+        }
+      ]
+    }
+  ],
+  "hubZoneContentRows": [
+    {
+      "sid": "fixture_hub_zone_row",
+      "count": 46,
+      "isGroup": true,
+      "isMine": true,
+      "rules": [
+        {
+          "name": "Guarded",
+          "distanceName": "Very Far",
+          "isGuarded": true,
+          "isSoloEncounter": true,
+          "variantId": 46
+        }
+      ]
+    }
+  ],
+  "manualZones": [
+    {
+      "zone": {
+        "name": "Fixture-Spawn-A",
+        "size": 1.35,
+        "layout": "Sides",
+        "guardCutoffValue": 17500,
+        "guardRandomization": 0.15,
+        "guardWeeklyIncrement": 0.2,
+        "guardReactionDistribution": null,
+        "guardedContentPool": null,
+        "unguardedContentPool": null,
+        "resourcesContentPool": null,
+        "guardedContentValue": 0,
+        "guardedContentValuePerArea": 0,
+        "unguardedContentValue": 0,
+        "unguardedContentValuePerArea": 0,
+        "resourcesValue": 0,
+        "resourcesValuePerArea": 0,
+        "mainObjects": null,
+        "zoneBiome": {
+          "type": "",
+          "args": null
+        },
+        "contentBiome": {
+          "type": "",
+          "args": null
+        },
+        "metaObjectsBiome": {
+          "type": "",
+          "args": null
+        }
+      },
+      "manualPosition": [
+        0.25,
+        0.75
+      ]
+    }
+  ],
+  "manualConnections": [
+    {
+      "connection": {
+        "name": "Fixture-Conn-A-B",
+        "from": "Fixture-Spawn-A",
+        "to": "Fixture-Spawn-B",
+        "connectionType": "Portal",
+        "guardValue": 26500,
+        "guardWeeklyIncrement": 0.15
+      },
+      "isUserAdded": true
+    }
+  ],
+  "schemaVersion": 1
+}

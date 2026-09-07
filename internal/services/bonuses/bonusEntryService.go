@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
@@ -22,7 +23,7 @@ func NewBonusEntryService() IBonusEntryService {
 func (this *BonusEntryService) DescribeExistingBonuses(existing []config.BonusEntry) dtos.ExistingBonusesDto {
 	summary := dtos.ExistingBonusesDto{Keys: make(map[string]bool, len(existing))}
 	for _, entry := range existing {
-		summary.Keys[entry.GetHash()] = true
+		summary.Keys[config_helpers.GetHash(entry)] = true
 		if entry.PresetType == config.BonusSpell && entry.Param != "" {
 			summary.SpellIDs = append(summary.SpellIDs, entry.Param)
 		}
@@ -59,7 +60,7 @@ func (this *BonusEntryService) FilterNewBonusEntries(
 	existingKeys map[string]bool) []config.BonusEntry {
 	fresh := make([]config.BonusEntry, 0, len(entries))
 	for _, entry := range entries {
-		if !existingKeys[entry.GetHash()] {
+		if !existingKeys[config_helpers.GetHash(entry)] {
 			fresh = append(fresh, entry)
 		}
 	}

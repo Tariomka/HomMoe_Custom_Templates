@@ -3,7 +3,7 @@ package typedRefBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenBiomeMatchZoneReferenceIsBuilt_SetsMatchZoneTypeWithArguments(t *te
 	reference := builder.BuildBiomeMatchZoneType(expectedArgument)
 
 	// Assert
-	assert.Equal(t, entities.TypedRef{Type: "MatchZone", Args: []string{expectedArgument}}, reference)
+	assert.Equal(t, template_model.TypedRef{Type: "MatchZone", Args: []string{expectedArgument}}, reference)
 }

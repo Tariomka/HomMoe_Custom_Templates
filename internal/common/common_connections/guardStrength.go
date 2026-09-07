@@ -62,22 +62,7 @@ func GetHubGuardStrength() models.GuardStrength {
 }
 
 func GetGuardStrengthListForQuality(zoneQuality neutral_zone.Quality) []data.Tuple[string, int] {
-	strength := models.GuardStrength{}
-	switch zoneQuality {
-	case neutral_zone.QualityLowest, neutral_zone.QualityLow:
-		strength = GetBronzeGuardStrength()
-	case neutral_zone.QualityMedium:
-		strength = GetSilverGuardStrength()
-	case neutral_zone.QualityHigh:
-		strength = GetGoldGuardStrength()
-	case neutral_zone.QualityHighest:
-		strength = GetHubGuardStrength()
-	case neutral_zone.QualityUnknown:
-		fallthrough // Assume this is a player-to-player connection.
-	default:
-		strength = GetPlayerToPlayerGuardStrength()
-	}
-
+	strength := GetGuardStrengthForQuality(zoneQuality)
 	return []data.Tuple[string, int]{
 		data.NewTuple("Default", strength.Default),
 		data.NewTuple("Weakest", strength.Weakest),

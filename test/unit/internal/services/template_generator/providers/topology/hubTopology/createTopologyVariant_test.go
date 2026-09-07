@@ -3,9 +3,9 @@ package hubTopology_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -75,12 +75,41 @@ func TestWhenHubAndSpokesAreBuilt_EveryConnectionReferencesExistingZones(t *test
 	assert.Empty(t, danglingConnectionNames(variant))
 }
 
+func TestWhenAConnectionTouchesTheHub_ItIsGuardedAtTheHighestTier(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyHubAndSpoke
+	playerLabels := []string{"A", "B"}
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLowest, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	tuning := test_helpers.NewGenerationTuning(configuration, 5)
+	tuning.BorderGuardStrengthMultiplier = 1.0
+	service := topology.NewHubTopologyService(test_helpers.NewZoneFactories())
+	var hubGuardValues []int
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
+
+	// Assert
+	for _, connection := range variant.Connections {
+		if connection.From == "Hub" || connection.To == "Hub" {
+			hubGuardValues = append(hubGuardValues, connection.GuardValue)
+		}
+	}
+	require.NotEmpty(t, hubGuardValues)
+	for _, guardValue := range hubGuardValues {
+		assert.Equal(t, 35000, guardValue)
+	}
+}
+
 func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentName(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyHubAndSpoke
-	configuration.HubZoneMandatoryContent = []entities.MandatoryContentItem{{}}
+	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{}}
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("N1", neutral_zone.QualityMedium, 1)
@@ -91,7 +120,7 @@ func TestWhenHubMandatoryContentConfigured_HubZoneReferencesHubContentName(t *te
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
-	var hubZone entities.Zone
+	var hubZone template_model.Zone
 	for _, zone := range variant.Zones {
 		if zone.Name == "Hub" {
 			hubZone = zone

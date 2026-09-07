@@ -16,7 +16,7 @@ func TestWhenValueOverridesAreAllValid_ReturnsNoWarnings(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	_, warnings := generator.Generate()
+	_, warnings := generateTemplate(generator)
 
 	// Assert
 	assert.Empty(t, warnings)
@@ -30,7 +30,7 @@ func TestWhenValueOverrideLineIsRejected_ReturnsWarning(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	_, warnings := generator.Generate()
+	_, warnings := generateTemplate(generator)
 
 	// Assert
 	assert.Equal(t, []string{"line 2: 'bad_line' is not sid=value"}, warnings)
@@ -44,7 +44,7 @@ func TestWhenValueOverrideLineIsRejected_StillReturnsTheTemplate(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
-	template, _ := generator.Generate()
+	template, _ := generateTemplate(generator)
 
 	// Assert
 	assert.NotNil(t, template)

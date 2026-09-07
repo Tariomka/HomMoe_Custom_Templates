@@ -30,7 +30,7 @@ func GetGuardWeeklyIncrementList() []data.Tuple[string, float64] {
 func GetGuardWeeklyIncrementLabels() []string {
 	incrementList := GetGuardWeeklyIncrementList()
 	return linq.FromSlice(incrementList).
-		SelectString(func(t data.Tuple[string, float64]) string { return t.Key }).
+		Select(func(t data.Tuple[string, float64]) string { return t.Key }).
 		ToSlice()
 }
 

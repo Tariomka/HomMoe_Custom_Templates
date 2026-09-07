@@ -1,10 +1,10 @@
 package topology_interfaces
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // ITopologyService is the contract every topology service satisfies: it turns a
@@ -22,5 +22,5 @@ type ITopologyService interface {
 		playerLabels []string,
 		neutralZones neutral_zone.Plans,
 		tuning models.GenerationTuning,
-		holdCityNeutralLabel string) entities.Variant
+		holdCityNeutralLabel string) template_model.Variant
 }

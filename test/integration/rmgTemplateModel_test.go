@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,7 +34,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 			raw, err := os.ReadFile(path)
 			require.NoError(t, err, "read file: "+path)
 
-			var tpl entities.RmgTemplate
+			var tpl template_entity.RmgTemplate
 			dec := json.NewDecoder(strings.NewReader(string(raw)))
 			dec.DisallowUnknownFields()
 			require.NoError(t, dec.Decode(&tpl), func() string {
@@ -46,7 +46,7 @@ func TestRmgTemplate_RoundTripAllExamples(t *testing.T) {
 			// Re-encode and decode again to confirm the model is self-consistent.
 			out, err := json.Marshal(&tpl)
 			require.NoError(t, err, "re-encode: "+path)
-			var tpl2 entities.RmgTemplate
+			var tpl2 template_entity.RmgTemplate
 			err = json.Unmarshal(out, &tpl2)
 			require.NoError(t, err, "re-decode: "+path)
 		})

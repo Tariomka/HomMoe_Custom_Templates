@@ -1,10 +1,10 @@
 package mappers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type IMandatoryContentItemMapper interface {
-	FromRows(rows []models.ZoneContentRowSave) []entities.MandatoryContentItem
+	FromRows(rows []editor_state_model.ZoneContentRow) []template_model.MandatoryContentItem
 }

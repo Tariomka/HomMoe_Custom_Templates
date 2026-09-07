@@ -12,14 +12,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
-const (
-	configFileExtension = ".gen.json"
-)
+const configFileExtension = ".gen.json"
 
 type State struct {
 	handler      handler_interfaces.IGuiHandler
@@ -32,7 +33,7 @@ type State struct {
 	unsaved     bool
 
 	outputPath   widget.Editor
-	lastTemplate *entities.RmgTemplate
+	lastTemplate *template_model.Template
 	// templateRevision counts every replacement of lastTemplate, letting the
 	// preview cache detect a new template without comparing its contents.
 	templateRevision uint64
@@ -81,7 +82,7 @@ func NewUIState(
 			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)
 		}
 
-		templateDir = state.workingDirectory()
+		templateDir = state.getWorkingDirectory()
 	}
 	state.outputPath.SetText(templateDir)
 	return state
@@ -91,13 +92,29 @@ func (this *State) GetStatus() (msg string, isErr bool) { return this.statusMsg,
 
 func (this *State) GetDialogHost() *DialogHost { return this.dialogs }
 
-func (this *State) GetStateData() dtos.EditorStateDto { return this.innerState.GetCurrentState() }
+func (this *State) GetStateData() editor_state_model.EditorState {
+	return this.innerState.GetCurrentState()
+}
+
+func (this *State) GetStateDto() editor_state_dto.EditorStateDto {
+	return editor_state_dto.EditorStateDto{EditorState: this.GetStateData()}
+}
+
+// Clone-free single-setting readers for per-frame Layout code; see EditorState.
+
+func (this *State) GetTemplateName() string { return this.innerState.GetTemplateName() }
+
+func (this *State) GetMapSize() int { return this.innerState.GetMapSize() }
+
+func (this *State) GetTopology() config.MapTopology { return this.innerState.GetTopology() }
+
+func (this *State) GetExperimentalMapSizes() bool { return this.innerState.GetExperimentalMapSizes() }
 
 func (this *State) GetCurrentPath() string { return this.currentPath }
 
 func (this *State) IsUnsaved() bool { return this.unsaved }
 
-func (this *State) GetLastTemplate() *entities.RmgTemplate { return this.lastTemplate }
+func (this *State) GetLastTemplate() *template_model.Template { return this.lastTemplate }
 
 func (this *State) GetTemplateRevision() uint64 { return this.templateRevision }
 
@@ -115,7 +132,7 @@ func (this *State) Reset() {
 	this.SetStatus("New settings file.", false)
 }
 
-func (this *State) UpdateState(updateFunc func(*dtos.EditorStateDto)) {
+func (this *State) UpdateState(updateFunc func(*editor_state_model.EditorState)) {
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
 		this.unsaved = true
@@ -135,7 +152,25 @@ func (this *State) hasTemplateVariants() bool {
 
 // setLastTemplate is the only writer of lastTemplate, so templateRevision
 // cannot drift away from the template the preview is showing.
-func (this *State) setLastTemplate(template *entities.RmgTemplate) {
+func (this *State) setLastTemplate(template *template_model.Template) {
 	this.lastTemplate = template
 	this.templateRevision++
+}
+
+func (this *State) getPreviousStateDto() *editor_state_dto.EditorStateDto {
+	state := this.innerState.GetPreviousState()
+	if state == nil {
+		return nil
+	}
+
+	return &editor_state_dto.EditorStateDto{EditorState: *state}
+}
+
+func (this *State) getNextStateDto() *editor_state_dto.EditorStateDto {
+	state := this.innerState.GetNextState()
+	if state == nil {
+		return nil
+	}
+
+	return &editor_state_dto.EditorStateDto{EditorState: *state}
 }

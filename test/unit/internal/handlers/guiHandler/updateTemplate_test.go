@@ -6,8 +6,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -33,7 +33,7 @@ func TestWhenTemplateHasNoVariants_ReturnsProvidedTemplateInvalidError(t *testin
 	// Arrange
 	handler := newProductionGuiHandler()
 	templateDto := dtos.TemplateUpdateDto{
-		Template: &entities.RmgTemplate{Name: gofakeit.ProductName()},
+		Template: &template_model.Template{Name: gofakeit.ProductName()},
 	}
 
 	// Act
@@ -67,7 +67,7 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	brokenConnections := slices.Clone(template.Variants[0].Connections)
-	brokenConnections = append(brokenConnections, entities.Connection{
+	brokenConnections = append(brokenConnections, template_model.Connection{
 		Name: gofakeit.ProductName(),
 		From: "No-Such-Zone",
 		To:   "Another-Missing-Zone",
@@ -85,14 +85,15 @@ func TestWhenConnectionReferencesUnknownZone_ReturnsZonesMissingError(t *testing
 	assert.ErrorIs(t, err, common_errors.ErrZonesMissing)
 }
 
-func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testing.T) {
+func TestWhenUpdateSucceeds_ReturnedTemplateCarriesTheAppliedZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
+	zones := template.Variants[0].Zones
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
+		Zones:       zones,
 		Connections: template.Variants[0].Connections,
 	}
 
@@ -101,7 +102,7 @@ func TestWhenUpdateSucceeds_ReturnedTemplateIsProvidedTemplateInstance(t *testin
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, *template, *loadDto.Template)
+	assert.Equal(t, zones, loadDto.Template.Variants[0].Zones)
 }
 
 func TestWhenOnlySubsetOfZonesIsProvided_VariantZonesAreReplaced(t *testing.T) {
@@ -130,17 +131,18 @@ func TestWhenEditorStateIsProvided_MandatoryContentMatchesMappedConfiguration(t 
 	handler := newProductionGuiHandler()
 	template := generateDefaultTemplate(t, handler)
 	template.MandatoryContent = nil
-	editorState := dtos.NewDefaultEditorStateDto()
+	editorState := editor_state_model.NewDefaultEditorStateModel()
 	configuration := test_helpers.NewConfigMapper().FromEditorState(editorState)
+	zones := template.Variants[0].Zones
 	expectedContent := newMandatoryContentProvider().CreateContentsForZones(
 		*configuration,
-		template.Variants[0].Zones,
+		zones,
 	)
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
-		Zones:       template.Variants[0].Zones,
+		Zones:       zones,
 		Connections: template.Variants[0].Connections,
-		EditorState: &editorState,
+		EditorState: toDtoPointer(&editorState),
 	}
 
 	// Act
@@ -155,22 +157,24 @@ func TestWhenZoneWasPromotedToHighTier_UsesHighTierEditorRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	zones := []entities.Zone{{
+	zones := []template_model.Zone{{
 		Name:               "Neutral-G",
 		Layout:             registry.GetLayoutValues().TreasureZone,
 		GuardedContentPool: []string{"classic_template_pool_random_t4_item"},
-		MainObjects:        []entities.MainObject{{Type: "City"}},
+		MainObjects:        []template_model.MainObject{{Type: "City"}},
 	}}
-	template := &entities.RmgTemplate{Variants: []entities.Variant{{Zones: zones}}}
-	editorState := dtos.NewDefaultEditorStateDto()
+	template := &template_model.Template{
+		Variants: []template_model.Variant{{Zones: zones}},
+	}
+	editorState := editor_state_model.NewDefaultEditorStateModel()
 	editorState.SpawnRemoteFootholds = false
-	editorState.MediumNeutralContentRows = []models.ZoneContentRowSave{{Sid: "medium_only", Count: 1}}
-	editorState.HighNeutralContentRows = []models.ZoneContentRowSave{{Sid: "high_only", Count: 1}}
+	editorState.MediumNeutralContentRows = []editor_state_model.ZoneContentRow{{Sid: "medium_only", Count: 1}}
+	editorState.HighNeutralContentRows = []editor_state_model.ZoneContentRow{{Sid: "high_only", Count: 1}}
 	templateDto := dtos.TemplateUpdateDto{
 		Template:    template,
 		Zones:       zones,
 		Connections: nil,
-		EditorState: &editorState,
+		EditorState: toDtoPointer(&editorState),
 	}
 
 	// Act

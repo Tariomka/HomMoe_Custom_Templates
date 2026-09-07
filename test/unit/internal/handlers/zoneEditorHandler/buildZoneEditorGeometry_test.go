@@ -18,7 +18,7 @@ func TestWhenCanvasGeometryIsRequested_ReturnsTheServiceLayout(t *testing.T) {
 		Topology:   config.MapTopology(gofakeit.Word()),
 		CanvasSide: gofakeit.Number(100, 900),
 	}
-	expected := models.ZoneEditorGeometry{ZoneRadius: gofakeit.Number(1, 60)}
+	expected := models.ZoneEditorGeometry{ZoneRadius: gofakeit.Float64Range(1, 60)}
 	fixture.geometry.
 		On("BuildGeometry", request.Zones, request.Connections, request.Topology, request.CanvasSide).
 		Return(expected)

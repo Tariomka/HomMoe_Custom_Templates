@@ -28,6 +28,24 @@ func TestWhenNeutralZoneIsCreated_PreservesExplicitName(t *testing.T) {
 	assert.Equal(t, "Neutral-Q", zone.Name)
 }
 
+func TestWhenNeutralZoneIsCreated_RecordsTheRequestedQuality(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	factory := newZoneFactory()
+	input := models.NeutralZoneCreationRequest{
+		Name:    "Neutral-Q",
+		Quality: neutral_zone.QualityLow,
+		Size:    1,
+		Tuning:  newUnitTuning(),
+	}
+
+	// Act
+	zone := factory.CreateNeutralZone(input)
+
+	// Assert
+	assert.Equal(t, new(neutral_zone.QualityLow), zone.Quality)
+}
+
 func TestWhenZoneSizeIsProvided_NormalizesIntoSupportedRange(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {

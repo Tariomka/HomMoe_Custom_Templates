@@ -6,9 +6,8 @@
 package composition
 
 import (
-	"github.com/goforj/wire"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/goforj/wire"
 )
 
 func InitializeGuiHandler() handler_interfaces.IGuiHandler {

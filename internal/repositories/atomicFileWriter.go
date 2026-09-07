@@ -1,7 +1,9 @@
 package repositories
 
 import (
-	"encoding/json"
+	jsonV1 "encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,6 +18,7 @@ const (
 	defaultName         = "Generated_Template"
 	renameAttempts      = 5
 	renameRetryDelay    = 20 * time.Millisecond
+	jsonIndent          = "  "
 )
 
 type atomicFileWriter struct{}
@@ -27,9 +30,7 @@ func newAtomicFileWriter() *atomicFileWriter {
 // Write encodes into "{directory}/TEMP-{fileName}{extension}" and renames it
 // onto "{directory}/{fileName}{extension}", returning the destination path.
 func (this *atomicFileWriter) Write(
-	directory string,
-	fileName string,
-	extension string,
+	directory, fileName, extension string,
 	encode func(file *os.File) error) (string, error) {
 	if err := os.MkdirAll(directory, constants.FolderPermission); err != nil {
 		return "", err
@@ -54,28 +55,22 @@ func (this *atomicFileWriter) Write(
 
 // WriteJSON marshals value as indented JSON through write.
 func (this *atomicFileWriter) WriteJSON(
-	directory string,
-	fileName string,
-	extension string,
+	directory, fileName, extension string,
 	value any) (string, error) {
 	return this.Write(directory, fileName, extension, func(file *os.File) error {
-		data, err := json.MarshalIndent(value, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		_, err = file.Write(data)
-		return err
+		return json.MarshalWrite(
+			file, value,
+			jsontext.WithIndent(jsonIndent),
+			jsonV1.OmitEmptyWithLegacySemantics(true),
+			json.FormatNilSliceAsNull(true),
+			json.FormatNilMapAsNull(true))
 	})
 }
 
 func (this *atomicFileWriter) encodeToTemporaryFile(
 	temporaryPath string,
 	encode func(file *os.File) error) (err error) {
-	file, err := os.OpenFile(
-		temporaryPath,
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-		constants.FilePermission)
+	file, err := os.OpenFile(temporaryPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, constants.FilePermission)
 	if err != nil {
 		return err
 	}
@@ -97,7 +92,7 @@ func (this *atomicFileWriter) encodeToTemporaryFile(
 
 // commit retries the rename because on Windows it fails while another process
 // (the game, an editor) still holds the destination open.
-func (this *atomicFileWriter) commit(temporaryPath string, destinationPath string) error {
+func (this *atomicFileWriter) commit(temporaryPath, destinationPath string) error {
 	var err error
 	for attempt := range renameAttempts {
 		if err = os.Rename(temporaryPath, destinationPath); err == nil {
@@ -108,15 +103,12 @@ func (this *atomicFileWriter) commit(temporaryPath string, destinationPath strin
 			time.Sleep(renameRetryDelay)
 		}
 	}
-
 	return fmt.Errorf("could not replace %s: %w", destinationPath, err)
 }
 
 // discard drops the temporary file; the destination still holds the previous
 // valid contents, so losing the half-written copy is the correct outcome.
-func (this *atomicFileWriter) discard(temporaryPath string) {
-	_ = os.Remove(temporaryPath)
-}
+func (this *atomicFileWriter) discard(temporaryPath string) { _ = os.Remove(temporaryPath) }
 
 func (this *atomicFileWriter) resolveFileName(fileName string) string {
 	safeName := helpers.SanitizeFilename(fileName)

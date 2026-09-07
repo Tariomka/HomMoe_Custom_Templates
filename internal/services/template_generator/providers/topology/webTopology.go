@@ -6,11 +6,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
@@ -36,7 +36,7 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLetter string) entities.Variant {
+	holdCityNeutralLetter string) template_model.Variant {
 	neutralLabels := this.createLabels(playerLabels, neutralZones, configuration.Topology == config.TopologyCircles)
 	playerSpokes, neutralSpokes := this.createSpokes(playerLabels, neutralLabels)
 	neutralConnNames := this.createRingConnectionNames(neutralLabels)
@@ -48,7 +48,8 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 	if configuration.RandomPortals {
 		allLabels := append(append([]string{}, playerLabels...), neutralLabels...)
 		conns = append(conns,
-			this.CreateRandomPortalConnections(playerLabels, allLabels, tuning, configuration.MaxPortalConnections)...)
+			this.CreateRandomPortalConnections(
+				playerLabels, allLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	if configuration.NoDirectPlayerConnections && len(playerLabels) > 1 {
 		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
@@ -77,7 +78,7 @@ func (this *SharedWebTopologyService) createSpokes(
 	neutralCount := len(neutralLabels)
 
 	addSpoke := func(playerLabel, neutralLabel string) {
-		connectionName := fmt.Sprintf("Web-%s-%s", playerLabel, neutralLabel)
+		connectionName := constants.GetWebConnectionNameFor(playerLabel, neutralLabel)
 		playerSpokes[playerLabel] = append(playerSpokes[playerLabel], connectionName)
 		neutralSpokes[neutralLabel] = append(neutralSpokes[neutralLabel], connectionName)
 	}
@@ -107,7 +108,7 @@ func (this *SharedWebTopologyService) createRingConnectionNames(neutralLabels []
 	neutralCount := len(neutralLabels)
 	neutralRingConnNames := make([]string, neutralCount)
 	for i, label := range neutralLabels {
-		neutralRingConnNames[i] = fmt.Sprintf("NRing-%s-%s", label, neutralLabels[(i+1)%neutralCount])
+		neutralRingConnNames[i] = constants.GetNeutralRingConnectionNameFor(label, neutralLabels[(i+1)%neutralCount])
 	}
 	return neutralRingConnNames
 }
@@ -119,10 +120,10 @@ func (this *SharedWebTopologyService) createZones(
 	neutralZones neutral_zone.Plans,
 	holdCityNeutralLabel string,
 	playerSpokes, neutralSpokes map[string][]string,
-	connectionNames []string) []entities.Zone {
+	connectionNames []string) []template_model.Zone {
 	neutralCount := len(neutralLabels)
 
-	var zones []entities.Zone
+	var zones []template_model.Zone
 	for i, label := range neutralLabels {
 		var neutralConnNames []string
 		if neutralCount > 1 {
@@ -154,19 +155,19 @@ func (this *SharedWebTopologyService) createConnections(
 	tuning models.GenerationTuning,
 	neutralZones neutral_zone.Plans,
 	playerSpokes map[string][]string,
-	connectionNames []string) []entities.Connection {
+	connectionNames []string) []template_model.Connection {
 	neutralCount := len(neutralLabels)
 
-	var connections []entities.Connection
+	var connections []template_model.Connection
 	for _, label := range playerLabels {
 		for _, connectionName := range playerSpokes[label] {
 			nextLabel := strings.Split(connectionName, "-")[2]
 			connections = append(connections, variant_content.NewConnectionBuilder().
 				WithName(connectionName).
-				WithFrom(constants.PlayerZonePrefix+label).
-				WithTo(constants.NeutralZonePrefix+nextLabel).
+				WithFrom(constants.GetPlayerZoneNameFor(label)).
+				WithTo(constants.GetNeutralZoneNameFor(nextLabel)).
 				WithConnectionTypeDirect().
-				WithGuardZone(constants.NeutralZonePrefix+nextLabel).
+				WithGuardZone(constants.GetNeutralZoneNameFor(nextLabel)).
 				WithSimTurnSquad().
 				WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
 				WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
@@ -184,10 +185,10 @@ func (this *SharedWebTopologyService) createConnections(
 		nextLabel := neutralLabels[next]
 		connections = append(connections, variant_content.NewConnectionBuilder().
 			WithName(connectionNames[i]).
-			WithFrom(constants.NeutralZonePrefix+label).
-			WithTo(constants.NeutralZonePrefix+nextLabel).
+			WithFrom(constants.GetNeutralZoneNameFor(label)).
+			WithTo(constants.GetNeutralZoneNameFor(nextLabel)).
 			WithConnectionTypeDirect().
-			WithGuardZone(constants.NeutralZonePrefix+label).
+			WithGuardZone(constants.GetNeutralZoneNameFor(label)).
 			WithSimTurnSquad().
 			WithGuardValue(this.GetBorderGuardValue(label, nextLabel, playerLabels, neutralZones, tuning)).
 			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).

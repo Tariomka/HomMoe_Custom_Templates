@@ -11,21 +11,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// newFailingState returns a State whose generator always errors.
-func newFailingState() *drivers.State {
-	handlerMock := &test_helpers.TemplateHandlerMock{}
-	handlerMock.On("GenerateTemplate", mock.Anything).
-		Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
-
-	return drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
-}
-
 func TestWhenPreviewingTheBase_TheGeneratedZonesAreReturned(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, _, _, _ := newGeneratedState()
-	expected := test_helpers.GetDefaultTemplate()
+	expected := test_helpers.GetDefaultTemplateModel()
 
 	// Act
 	base, _ := state.PreviewBaseZones()
@@ -38,7 +28,7 @@ func TestWhenPreviewingTheBase_TheGeneratedConnectionsAreReturned(t *testing.T) 
 	t.Parallel()
 	// Arrange
 	state, _, _, _ := newGeneratedState()
-	expected := test_helpers.GetDefaultTemplate()
+	expected := test_helpers.GetDefaultTemplateModel()
 
 	// Act
 	base, _ := state.PreviewBaseZones()
@@ -65,7 +55,7 @@ func TestWhenPreviewingTheBase_TheLiveTemplateIsUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	editedTemplate := test_helpers.GetDefaultTemplate()
+	editedTemplate := test_helpers.GetDefaultTemplateModel()
 	editedTemplate.Name = gofakeit.ProductName()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &editedTemplate}, nil)
@@ -82,7 +72,7 @@ func TestWhenPreviewingTheBase_TheStoredManualEditsAreUntouched(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state, handlerMock, zones, connections := newGeneratedState()
-	editedTemplate := test_helpers.GetDefaultTemplate()
+	editedTemplate := test_helpers.GetDefaultTemplateModel()
 	handlerMock.On("UpdateTemplate", mock.Anything).
 		Return(dtos.TemplateLoadDto{Template: &editedTemplate}, nil)
 	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
@@ -117,4 +107,16 @@ func TestWhenGenerationFails_NoBaseZonesAreReturned(t *testing.T) {
 
 	// Assert
 	assert.Empty(t, base.Zones)
+}
+
+// newFailingState returns a State whose generator always errors.
+func newFailingState() *drivers.State {
+	handlerMock := &test_helpers.TemplateHandlerMock{}
+	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{}, gofakeit.ErrorValidation())
+
+	return drivers.NewUIState(
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+		false)
 }

@@ -3,7 +3,7 @@ package connectionBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenGuardMatchGroupIsProvided_SetsGuardMatchGroupOnBuiltConnection(t *t
 	connection := builder.WithGuardMatchGroup(expectedGroup).Build()
 
 	// Assert
-	assert.Equal(t, entities.Connection{GuardMatchGroup: expectedGroup}, connection)
+	assert.Equal(t, template_model.Connection{GuardMatchGroup: expectedGroup}, connection)
 }

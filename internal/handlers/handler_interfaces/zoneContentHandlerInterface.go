@@ -3,6 +3,7 @@ package handler_interfaces
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 // IZoneContentHandler backs the zone-content editor: it composes and merges the
@@ -14,11 +15,11 @@ type IZoneContentHandler interface {
 
 	ComposeContentRule(request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto
 	UpsertContentRule(
-		rules []models.ContentRuleRowSave,
-		rule models.ContentRuleRowSave) []models.ContentRuleRowSave
-	GetDefaultContentRules(content models.SidMapping) []models.ContentRuleRowSave
-	GetContentRuleMarkers(content models.SidMapping, rules []models.ContentRuleRowSave) string
-	GetContentRowDisplayName(content models.SidMapping, rules []models.ContentRuleRowSave) string
+		rules []editor_state_model.ContentRuleRow,
+		rule editor_state_model.ContentRuleRow) []editor_state_model.ContentRuleRow
+	GetDefaultContentRules(content models.SidMapping) []editor_state_model.ContentRuleRow
+	GetContentRuleMarkers(content models.SidMapping, rules []editor_state_model.ContentRuleRow) string
+	GetContentRowDisplayName(content models.SidMapping, rules []editor_state_model.ContentRuleRow) string
 	SortContentItemsByName(items []models.SidMapping) []models.SidMapping
 	ClampContentCount(count int, maxCount int) int
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"math"
 
-	"gioui.org/f32"
 	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -15,15 +15,15 @@ import (
 	"gioui.org/widget/material"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 )
 
-func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int) {
-	radius := float64(zoneRadius)
-	start, ok1 := helpers.CalculatePointTowards(conn.Start, conn.Ctrl, radius)
-	end, ok2 := helpers.CalculatePointTowards(conn.End, conn.Ctrl, radius)
+func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius float64) {
+	start, ok1 := helpers.CalculatePointTowards(conn.Start, conn.Ctrl, zoneRadius)
+	end, ok2 := helpers.CalculatePointTowards(conn.End, conn.Ctrl, zoneRadius)
 	if !ok1 || !ok2 {
 		return
 	}
@@ -37,18 +37,22 @@ func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius int)
 	drawCurve(gtx, start, conn.Ctrl, end, lineWidth, lineColor)
 }
 
-func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zone, zoneRadius int) {
+func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zone, zoneRadius float64) {
 	radius := zoneRadius
 	if zone.Type == preview.ZoneTypeHub {
 		radius = max(radius, 28)
 	}
-	rect := image.Rect(zone.Center.X-radius, zone.Center.Y-radius, zone.Center.X+radius, zone.Center.Y+radius)
+	center := zone.Center.ToPointRounded()
+	roundedRadius := int(math.Round(radius))
+	rect := image.Rect(
+		center.X-roundedRadius, center.Y-roundedRadius,
+		center.X+roundedRadius, center.Y+roundedRadius)
 
 	fill, edge := zoneColors(zone)
-	circle := clip.UniformRRect(rect, radius).Op(gtx.Ops)
+	circle := clip.UniformRRect(rect, roundedRadius).Op(gtx.Ops)
 	paint.FillShape(gtx.Ops, fill, circle)
 	paint.FillShape(gtx.Ops, edge, clip.Stroke{
-		Path:  clip.UniformRRect(rect, radius).Path(gtx.Ops),
+		Path:  clip.UniformRRect(rect, roundedRadius).Path(gtx.Ops),
 		Width: float32(gtx.Dp(unit.Dp(2))),
 	}.Op())
 
@@ -58,19 +62,20 @@ func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zon
 	}
 	if zone.HasCastles() {
 		drawOffsetText(
-			gtx, theme, zone.Center.Add(image.Pt(radius/2, radius/2)),
+			gtx, theme, zone.Center.Add(data.NewVec2(radius/2, radius/2)),
 			fmt.Sprintf("⌂%d", zone.Castles), 10, themes.ColorsPreview.CastleBadge)
 	}
 }
 
-func drawCurve(gtx layout.Context, start, ctrl, end image.Point, width float32, lineColor color.NRGBA) {
+func drawCurve(
+	gtx layout.Context,
+	start, ctrl, end data.Vec2[float64],
+	width float32,
+	lineColor color.NRGBA) {
 	var path clip.Path
 	path.Begin(gtx.Ops)
-	path.MoveTo(f32.Point{X: float32(start.X), Y: float32(start.Y)})
-	path.QuadTo(
-		f32.Point{X: float32(ctrl.X), Y: float32(ctrl.Y)},
-		f32.Point{X: float32(end.X), Y: float32(end.Y)},
-	)
+	path.MoveTo(ToF32Point(start))
+	path.QuadTo(ToF32Point(ctrl), ToF32Point(end))
 	paint.FillShape(gtx.Ops, lineColor, clip.Stroke{
 		Path:  path.End(),
 		Width: width,
@@ -80,7 +85,7 @@ func drawCurve(gtx layout.Context, start, ctrl, end image.Point, width float32, 
 func drawOffsetText(
 	gtx layout.Context,
 	theme *material.Theme,
-	offset image.Point,
+	offset data.Vec2[float64],
 	text string,
 	sizeSp int,
 	textColor color.NRGBA) {
@@ -96,7 +101,7 @@ func drawOffsetText(
 	}()
 	call := macro.Stop()
 
-	stack := op.Offset(offset.Sub(dims.Size.Div(2))).Push(gtx.Ops)
+	stack := op.Offset(offset.ToPointRounded().Sub(dims.Size.Div(2))).Push(gtx.Ops)
 	call.Add(gtx.Ops)
 	stack.Pop()
 }

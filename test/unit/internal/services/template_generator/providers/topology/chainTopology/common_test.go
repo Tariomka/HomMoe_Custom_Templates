@@ -3,7 +3,7 @@ package chainTopology_test
 import (
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 )
@@ -13,7 +13,7 @@ func newChainTopologyService() *topology.ChainTopologyService {
 }
 
 // zoneNameSet returns the set of zone names present in the variant.
-func zoneNameSet(variant entities.Variant) map[string]bool {
+func zoneNameSet(variant template_model.Variant) map[string]bool {
 	names := make(map[string]bool, len(variant.Zones))
 	for _, zone := range variant.Zones {
 		names[zone.Name] = true
@@ -23,7 +23,7 @@ func zoneNameSet(variant entities.Variant) map[string]bool {
 
 // danglingConnectionNames returns the names of connections whose endpoints do
 // not both exist as zones in the variant.
-func danglingConnectionNames(variant entities.Variant) []string {
+func danglingConnectionNames(variant template_model.Variant) []string {
 	names := zoneNameSet(variant)
 	var dangling []string
 	for _, connection := range variant.Connections {
@@ -36,7 +36,7 @@ func danglingConnectionNames(variant entities.Variant) []string {
 
 // countConnectionsWithPrefix counts the connections whose name starts with the
 // given prefix.
-func countConnectionsWithPrefix(variant entities.Variant, prefix string) int {
+func countConnectionsWithPrefix(variant template_model.Variant, prefix string) int {
 	count := 0
 	for _, connection := range variant.Connections {
 		if strings.HasPrefix(connection.Name, prefix) {
@@ -47,7 +47,7 @@ func countConnectionsWithPrefix(variant entities.Variant, prefix string) int {
 }
 
 // countPortalConnections counts the connections of type Portal.
-func countPortalConnections(variant entities.Variant) int {
+func countPortalConnections(variant template_model.Variant) int {
 	count := 0
 	for _, connection := range variant.Connections {
 		if connection.ConnectionType == "Portal" {

@@ -58,6 +58,10 @@ func (this *FileExplorerDialog) confirmButtonState() (label string, show bool, d
 	case modeOpenFile:
 		return "Open", true, this.selectedPath == ""
 	case modeSaveFile:
+		if !this.hasResolvedSaveName() {
+			return "Save", true, true
+		}
+
 		_, ok := this.resolveSaveTarget()
 		return "Save", true, !ok
 	case modePickFolder:

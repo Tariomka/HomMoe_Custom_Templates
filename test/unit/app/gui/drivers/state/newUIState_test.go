@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,10 +16,14 @@ func TestWhenStateIsCreated_StateDataIsDefault(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Assert
-	assert.Equal(t, dtos.NewDefaultEditorStateDto(), state.GetStateData())
+	assert.Equal(t, editor_state_model.NewDefaultEditorStateModel(), state.GetStateData())
 }
 
 func TestWhenStateIsCreated_NoDialogIsOpen(t *testing.T) {
@@ -29,7 +33,11 @@ func TestWhenStateIsCreated_NoDialogIsOpen(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Assert
 	assert.False(t, state.GetDialogHost().IsOpen())
@@ -42,7 +50,11 @@ func TestWhenTemplateDirLookupIsSkipped_OutputPathIsEmpty(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Assert
 	assert.Empty(t, state.GetOutputPath())
@@ -57,7 +69,11 @@ func TestWhenTemplateDirLookupIsRequested_OutputPathIsSet(t *testing.T) {
 
 	// Act
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), true)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		true)
 
 	// Assert
 	assert.NotEmpty(t, state.GetOutputPath())

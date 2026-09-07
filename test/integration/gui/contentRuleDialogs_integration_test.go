@@ -15,7 +15,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,10 +25,9 @@ func TestWhenManageRulesDialogHasVariantRule_RendersContent(t *testing.T) {
 	variantID := 2
 	dialog := dialogs.NewManageRulesDialog(
 		constants.ContentIDs.DragonUtopia,
-		[]models.ContentRuleRowSave{{Name: "Variant", VariantID: &variantID}},
+		[]editor_state_model.ContentRuleRow{{Name: "Variant", VariantID: &variantID}},
 		composition.InitializeGuiHandler(),
-		nil,
-	)
+		nil)
 	gtx, frameRouter := newDialogContext(image.Pt(540, 500))
 
 	// Act
@@ -44,23 +43,22 @@ func TestWhenZoneContentDialogRenders_PreservesSavedRules(t *testing.T) {
 	// Arrange
 	variantID := 2
 	guarded := false
-	expected := []models.ZoneContentRowSave{{
+	expected := []editor_state_model.ZoneContentRow{{
 		Sid:   constants.ContentIDs.DragonUtopia.Sid,
 		Count: 2,
-		Rules: []models.ContentRuleRowSave{
+		Rules: []editor_state_model.ContentRuleRow{
 			{Name: "Variant", VariantID: &variantID},
 			{Name: "Guarded", IsGuarded: &guarded},
 		},
 	}}
-	var persisted []models.ZoneContentRowSave
+	var persisted []editor_state_model.ZoneContentRow
 	dialog := dialogs.NewZoneContentDialog(
 		"Zone Content: High Neutral",
 		false,
 		expected,
 		composition.InitializeGuiHandler(),
 		nil,
-		func(rows []models.ZoneContentRowSave) { persisted = rows },
-	)
+		func(rows []editor_state_model.ZoneContentRow) { persisted = rows })
 	gtx, frameRouter := newDialogContext(image.Pt(640, 560))
 
 	// Act

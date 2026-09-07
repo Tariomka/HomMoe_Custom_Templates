@@ -3,7 +3,7 @@ package mandatoryContentItemBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -19,5 +19,5 @@ func TestWhenSoloEncounterIsChosen_MarksBuiltItemAsSoloEncounter(t *testing.T) {
 	item := builder.WithSoloEncounter().Build()
 
 	// Assert
-	assert.Equal(t, entities.MandatoryContentItem{SID: expectedSid, SoloEncounter: true}, item)
+	assert.Equal(t, template_model.MandatoryContentItem{SID: expectedSid, SoloEncounter: true}, item)
 }

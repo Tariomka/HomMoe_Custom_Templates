@@ -9,15 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func simpleCountConfig(playerCount, neutralCount, castleCount int) config.GeneratorConfig {
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
-	configuration.PlayerCount = playerCount
-	configuration.ZoneConfiguration.NeutralZoneCount = neutralCount
-	configuration.ZoneConfiguration.NeutralZoneCastles = castleCount
-	return *configuration
-}
-
 func TestWhenSimpleCountIsUsed_CreatesMediumPlansStartingAfterPlayerLabels(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -155,4 +146,13 @@ func TestWhenRequestedCountIsNegative_CreatesNoPlans(t *testing.T) {
 
 	// Assert
 	assert.Empty(t, plans)
+}
+
+func simpleCountConfig(playerCount, neutralCount, castleCount int) config.GeneratorConfig {
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = playerCount
+	configuration.ZoneConfiguration.NeutralZoneCount = neutralCount
+	configuration.ZoneConfiguration.NeutralZoneCastles = castleCount
+	return *configuration
 }

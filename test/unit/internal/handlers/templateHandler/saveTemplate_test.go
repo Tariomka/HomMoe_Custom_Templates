@@ -7,8 +7,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -33,7 +33,7 @@ func TestWhenTemplateOutputPathIsEmpty_ReturnsNoOutputPathError(t *testing.T) {
 	fixture := newTemplateHandlerFixture()
 
 	// Act
-	_, err := fixture.handler.SaveTemplate(dtos.TemplateSaveDto{Template: &entities.RmgTemplate{}})
+	_, err := fixture.handler.SaveTemplate(dtos.TemplateSaveDto{Template: &template_model.Template{}})
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
@@ -46,7 +46,7 @@ func TestWhenTemplateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *test
 
 	// Act
 	_, err := fixture.handler.SaveTemplate(dtos.TemplateSaveDto{
-		Template:   &entities.RmgTemplate{},
+		Template:   &template_model.Template{},
 		OutputPath: "  \t ",
 	})
 
@@ -59,7 +59,7 @@ func TestWhenTemplateOutputPathIsPadded_SavesToTheTrimmedPath(t *testing.T) {
 	// Arrange
 	fixture := newTemplateHandlerFixture()
 	outputPath := gofakeit.Word()
-	template := &entities.RmgTemplate{}
+	template := &template_model.Template{}
 	fixture.previewGenerator.On("CreatePreviewImage", mock.Anything, mock.Anything).Return(nil)
 	fixture.fileService.On("SaveTemplateWithPreview", outputPath, template, mock.Anything).
 		Return(gofakeit.Word(), nil)
@@ -78,7 +78,7 @@ func TestWhenPreviewIsRendered_SavesItAlongsideTheTemplate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newTemplateHandlerFixture()
-	template := &entities.RmgTemplate{}
+	template := &template_model.Template{}
 	previewImage := image.NewRGBA(image.Rect(0, 0, 1, 1))
 	fixture.previewGenerator.On("CreatePreviewImage", template, config.TopologyChain).Return(previewImage)
 	fixture.fileService.On("SaveTemplateWithPreview", mock.Anything, mock.Anything, mock.Anything).
@@ -106,7 +106,7 @@ func TestWhenTemplateIsSaved_ReturnsTheWrittenPath(t *testing.T) {
 
 	// Act
 	writtenPath, err := fixture.handler.SaveTemplate(dtos.TemplateSaveDto{
-		Template:   &entities.RmgTemplate{},
+		Template:   &template_model.Template{},
 		OutputPath: gofakeit.Word(),
 	})
 
@@ -126,7 +126,7 @@ func TestWhenTemplateCannotBeSaved_PropagatesTheError(t *testing.T) {
 
 	// Act
 	_, err := fixture.handler.SaveTemplate(dtos.TemplateSaveDto{
-		Template:   &entities.RmgTemplate{},
+		Template:   &template_model.Template{},
 		OutputPath: gofakeit.Word(),
 	})
 

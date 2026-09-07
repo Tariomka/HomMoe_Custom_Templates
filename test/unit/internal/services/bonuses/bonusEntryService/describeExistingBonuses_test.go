@@ -3,6 +3,7 @@ package bonusEntryService_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/bonuses"
 	"github.com/brianvoe/gofakeit/v7"
@@ -47,7 +48,7 @@ func TestWhenABonusExists_ItsHashIsMarkedAsTaken(t *testing.T) {
 	summary := service.DescribeExistingBonuses([]config.BonusEntry{entry})
 
 	// Assert
-	assert.Equal(t, map[string]bool{entry.GetHash(): true}, summary.Keys)
+	assert.Equal(t, map[string]bool{config_helpers.GetHash(entry): true}, summary.Keys)
 }
 
 func TestWhenASpellBonusExists_ItsSpellIdIsCollected(t *testing.T) {

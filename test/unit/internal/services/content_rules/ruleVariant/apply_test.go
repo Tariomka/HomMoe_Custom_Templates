@@ -3,7 +3,7 @@ package ruleVariant_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func TestWhenRuleIsApplied_SetsItemVariantId(t *testing.T) {
 	defaultMapping := content_rules.NewVariantMappingCatalog().GetDefaultMapping()
 	rule, err := content_rules.NewRuleVariant(&defaultMapping, &variantID)
 	require.NoError(t, err)
-	item := entities.MandatoryContentItem{SID: "dragon_utopia"}
+	item := template_model.MandatoryContentItem{SID: "dragon_utopia"}
 
 	// Act
 	rule.Apply(&item)

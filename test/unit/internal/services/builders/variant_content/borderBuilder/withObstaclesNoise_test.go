@@ -3,7 +3,7 @@ package borderBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestWhenObstaclesNoiseIsProvided_SetsSingleObstaclesNoiseOnBuiltBorder(t *t
 	border := builder.WithObstaclesNoise(expectedAmplitude, expectedFrequency).Build()
 
 	// Assert
-	assert.Equal(t, entities.Border{
-		ObstaclesNoise: []entities.Noise{{Amplitude: expectedAmplitude, Frequency: expectedFrequency}},
+	assert.Equal(t, template_model.Border{
+		ObstaclesNoise: []template_model.Noise{{Amplitude: expectedAmplitude, Frequency: expectedFrequency}},
 	}, border)
 }

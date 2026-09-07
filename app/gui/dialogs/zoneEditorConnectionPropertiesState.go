@@ -3,11 +3,11 @@ package dialogs
 import (
 	"gioui.org/widget"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/components"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type zoneEditorConnectionPropertiesState struct {
-	syncedFor         *entities.Connection
+	syncedFor         *template_model.Connection
 	typeDropdown      *components.DropdownSelector
 	guardZoneDropdown *components.DropdownSelector
 	guardDropdown     *components.DropdownSelector

@@ -1,8 +1,7 @@
 package preview
 
 import (
-	"image"
-
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
@@ -10,7 +9,7 @@ import (
 type Zone struct {
 	Name    string
 	Label   string
-	Center  image.Point
+	Center  data.Vec2[float64]
 	Type    ZoneType
 	Quality neutral_zone.Quality
 	Owner   int

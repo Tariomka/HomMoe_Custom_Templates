@@ -4,11 +4,6 @@ import "iter"
 
 type PredicateMap[TKey comparable, TValue any] = func(TKey, TValue) bool
 
-// IterableMap is an interface that has to be implemented by a custom collection to work with linq.
-type IterableMap[TKey comparable, TValue any] interface {
-	Iterate() iter.Seq2[TKey, TValue]
-}
-
 // QueryMap is the type returned from query functions. It can be iterated manually
 // using Iterate property. Example:
 //

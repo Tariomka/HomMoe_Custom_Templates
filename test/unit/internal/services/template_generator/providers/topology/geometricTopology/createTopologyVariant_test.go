@@ -3,9 +3,10 @@ package geometricTopology_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +54,7 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCenter(t *testing.T) 
 	variant := service.CreateTopologyVariant(*configuration, playerLabels, neutralZones, tuning, "")
 
 	// Assert
-	var centerZone entities.Zone
+	var centerZone template_model.Zone
 	for _, zone := range variant.Zones {
 		if zone.Name == "Neutral-N1" {
 			centerZone = zone
@@ -61,7 +62,7 @@ func TestWhenNeutralZonesExist_FirstNeutralAnchorsTheFlowerCenter(t *testing.T) 
 		}
 	}
 	require.NotNil(t, centerZone.GeneratorPosition)
-	assert.Equal(t, [2]float64{0.5, 0.5}, *centerZone.GeneratorPosition)
+	assert.Equal(t, data.NewVec2(0.5, 0.5), *centerZone.GeneratorPosition)
 }
 
 func TestWhenFlowerIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {

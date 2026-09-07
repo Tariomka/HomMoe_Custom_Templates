@@ -3,7 +3,7 @@ package connectionBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +28,7 @@ func TestWhenMultipleOptionsAreChained_ReturnsConnectionWithAllAccumulatedValues
 		Build()
 
 	// Assert
-	assert.Equal(t, entities.Connection{
+	assert.Equal(t, template_model.Connection{
 		Name:           expectedName,
 		From:           expectedFrom,
 		To:             expectedTo,

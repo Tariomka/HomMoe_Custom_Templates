@@ -3,11 +3,11 @@ package topology
 import (
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/topology/base"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -24,8 +24,7 @@ func NewCrossTopologyService(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
-	connectionService base.ITopologyConnectionService,
-) *CrossTopologyService {
+	connectionService base.ITopologyConnectionService) *CrossTopologyService {
 	return &CrossTopologyService{
 		PositionedTopologyBuilder: *NewPositionedTopologyBuilder(
 			zoneFactory, roadFactory, zoneLabelProvider, connectionService),
@@ -37,7 +36,7 @@ func (this *CrossTopologyService) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) entities.Variant {
+	holdCityNeutralLabel string) template_model.Variant {
 	return this.BuildVariant(
 		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel, this.createCrossLayout, nil)
 }
@@ -115,6 +114,7 @@ func (this *CrossTopologyService) createCrossPairs(
 		if len(indices) == 0 {
 			continue
 		}
+
 		// The center joins the innermost zone of each arm.
 		if centerIndex >= 0 {
 			builder.add(centerIndex, indices[0])

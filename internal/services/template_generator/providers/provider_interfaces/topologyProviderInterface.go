@@ -1,10 +1,10 @@
 package provider_interfaces
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type ITopologyProvider interface {
@@ -13,8 +13,5 @@ type ITopologyProvider interface {
 		playerLabels []string,
 		neutralZones neutral_zone.Plans,
 		tuning models.GenerationTuning,
-		holdCityNeutralLabel string) entities.Variant
-
-	// ShufflePlayerZones is a fluent setter and returns the receiver.
-	ShufflePlayerZones(enabled bool) ITopologyProvider
+		holdCityNeutralLabel string) template_model.Variant
 }

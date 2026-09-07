@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 )
 
-func (this *ZoneFactory) createNeutralLikeZone(input models.NeutralLikeZoneCreationRequest) entities.Zone {
+func (this *ZoneFactory) createNeutralLikeZone(input models.NeutralLikeZoneCreationRequest) template_model.Zone {
 	mainObjects := this.createNeutralLikeMainObjects(input)
 	roadMainObjectCount := len(mainObjects)
 	if input.CastleStrategy == models.ZoneCastleStrategyHub {
@@ -38,8 +38,7 @@ func (this *ZoneFactory) createNeutralLikeZone(input models.NeutralLikeZoneCreat
 }
 
 func (this *ZoneFactory) createNeutralLikeMainObjects(
-	input models.NeutralLikeZoneCreationRequest,
-) []entities.MainObject {
+	input models.NeutralLikeZoneCreationRequest) []template_model.MainObject {
 	if input.CastleStrategy == models.ZoneCastleStrategyHub {
 		return this.castleFactory.CreateHubZoneCastles(input.Tuning, input.CastleCount, input.HoldCity)
 	}
@@ -56,8 +55,7 @@ func (this *ZoneFactory) createNeutralLikeMainObjects(
 }
 
 func (this *ZoneFactory) createNeutralLikeZoneBuilder(
-	input models.NeutralLikeZoneCreationRequest,
-) *variant_content.ZoneBuilder {
+	input models.NeutralLikeZoneCreationRequest) *variant_content.ZoneBuilder {
 	profile := input.Profile
 	tuning := input.Tuning
 	return variant_content.NewZoneBuilder().
@@ -89,7 +87,7 @@ func (this *ZoneFactory) createNeutralLikeZoneBuilder(
 		WithCrossroadsPosition(0)
 }
 
-func buildSideContentLimits() entities.StringList {
+func buildSideContentLimits() template_model.StringList {
 	var limits []string
 	for firstIndex := 1; firstIndex <= 5; firstIndex++ {
 		for secondIndex := firstIndex + 1; secondIndex <= 6; secondIndex++ {

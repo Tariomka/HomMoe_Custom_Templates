@@ -3,7 +3,7 @@ package zoneBuilder_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,7 @@ import (
 func TestWhenMainObjectsAreProvided_SetsMainObjectsOnBuiltZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expectedObjects := []entities.MainObject{
+	expectedObjects := []template_model.MainObject{
 		{Type: "Spawn", Owner: gofakeit.Word()},
 		{Type: "City", GuardValue: gofakeit.Number(1, 60000)},
 	}
@@ -22,5 +22,5 @@ func TestWhenMainObjectsAreProvided_SetsMainObjectsOnBuiltZone(t *testing.T) {
 	zone := builder.WithMainObjects(expectedObjects).Build()
 
 	// Assert
-	assert.Equal(t, entities.Zone{MainObjects: expectedObjects}, zone)
+	assert.Equal(t, template_model.Zone{MainObjects: expectedObjects}, zone)
 }

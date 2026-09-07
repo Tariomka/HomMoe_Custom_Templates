@@ -17,7 +17,11 @@ func TestWhenTemplateSaveSucceeds_StatusReportsSavedPath(t *testing.T) {
 	savedPath := gofakeit.Word() + ".rmg.json"
 	handlerMock.On("SaveTemplate", mock.Anything).Return(savedPath, nil)
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Act
 	state.SaveTemplate()
@@ -33,7 +37,11 @@ func TestWhenTemplateSaveFailsBeforeWriting_ErrorStatusIsSet(t *testing.T) {
 	handlerMock := &test_helpers.TemplateHandlerMock{}
 	handlerMock.On("SaveTemplate", mock.Anything).Return("", gofakeit.ErrorValidation())
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Act
 	state.SaveTemplate()
@@ -50,7 +58,11 @@ func TestWhenTemplateSavedButPreviewFails_StatusWarnsAboutPreview(t *testing.T) 
 	savedPath := gofakeit.Word() + ".rmg.json"
 	handlerMock.On("SaveTemplate", mock.Anything).Return(savedPath, gofakeit.ErrorValidation())
 	state := drivers.NewUIState(
-		handlerMock, test_helpers.NewFileSystemHandler(), test_helpers.NewRegenerationHandler(), false)
+		handlerMock,
+		test_helpers.NewFileSystemHandler(),
+		test_helpers.NewRegenerationHandler(),
+
+		false)
 
 	// Act
 	state.SaveTemplate()

@@ -27,17 +27,18 @@ func NewOpenFileDialog(
 	return dialog
 }
 
-// NewSaveFileDialog builds a save-location picker starting at initialDir with
-// the filename field prefilled to defaultName. onSave receives the chosen
-// absolute path (with a guaranteed .gen.json suffix) after any overwrite
-// confirmation.
+// NewSaveFileDialog builds a save-location picker starting at initialDir. The
+// filename is not chosen here: resolvedName is shown read-only as the name the
+// state will be written under, and an empty resolvedName disables the confirm.
+// onSave receives the chosen absolute path (with a guaranteed .gen.json suffix)
+// after any overwrite confirmation.
 func NewSaveFileDialog(
 	fileSystem handler_interfaces.IFileSystemHandler,
-	initialDir, defaultName string,
+	initialDir, resolvedName string,
 	onSave func(path string)) *FileExplorerDialog {
-	dialog := newFileExplorerDialog(fileSystem, modeSaveFile, "Save File")
+	dialog := newFileExplorerDialog(fileSystem, modeSaveFile, "Save To")
 	dialog.onSave = onSave
-	dialog.filenameEd.SetText(defaultName)
+	dialog.filenameEd.SetText(resolvedName)
 	dialog.loadDir(fileSystem.ResolveStartDirectory(initialDir))
 	return dialog
 }

@@ -1,10 +1,10 @@
 package mappers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 type IGeneratorConfigMapper interface {
-	FromEditorState(editorState dtos.EditorStateDto) *config.GeneratorConfig
+	FromEditorState(editorState editor_state_model.EditorState) *config.GeneratorConfig
 }

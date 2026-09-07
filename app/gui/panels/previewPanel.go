@@ -167,20 +167,16 @@ func (this *PreviewPanel) getPreviewCanvasWidget(theme *material.Theme) layout.W
 				theme, "Adjust the options to generate the map layout.", canvasSize, outerCanvasSize)(gtx)
 		}
 
-		topology := this.state.GetStateData().Topology
+		topology := this.state.GetTopology()
 		canvasSide := float64(canvasSize.X)
-		previewLayout, err := this.layoutCache.Get(this.state.GetTemplateRevision(), topology, canvasSide,
-			func() (preview.Layout, error) {
-				response, err := this.previewHandler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
+		previewLayout := this.layoutCache.Get(this.state.GetTemplateRevision(), topology, canvasSide,
+			func() preview.Layout {
+				return this.previewHandler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
 					Template:   template,
 					Topology:   topology,
 					CanvasSide: canvasSide,
-				})
-				return response.Layout, err
+				}).Layout
 			})
-		if err != nil {
-			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)
-		}
 		if len(previewLayout.Positions) == 0 {
 			return widgets.NewCenteredMessageWidget(theme, template.Name, canvasSize, outerCanvasSize)(gtx)
 		}

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -18,8 +18,7 @@ func NewRoadFactory() zone_interfaces.IRoadFactory {
 
 func (this *RoadFactory) CreateConnectorZoneRoads(
 	connectionNames []string,
-	generateRoads bool,
-) []entities.Road {
+	generateRoads bool) []template_model.Road {
 	if !generateRoads {
 		return nil
 	}
@@ -30,13 +29,13 @@ func (this *RoadFactory) CreateConnectorZoneRoads(
 	}
 
 	if len(distinctNames) == 1 {
-		return []entities.Road{
+		return []template_model.Road{
 			variant_content.NewRoadBuilder().
 				WithFrom(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
 				WithTo(variant_content.NewRefBuilder().BuildConnectionType(distinctNames[0])).
 				Build()}
 	}
-	var roads []entities.Road
+	var roads []template_model.Road
 	for _, name := range distinctNames[1:] {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().
@@ -51,8 +50,7 @@ func (this *RoadFactory) CreateOuterZoneRoads(
 	connectionNames []string,
 	mainObjectCount int,
 	footholdCount int,
-	generateRoads bool,
-) []entities.Road {
+	generateRoads bool) []template_model.Road {
 	if !generateRoads {
 		return nil
 	}
@@ -61,7 +59,7 @@ func (this *RoadFactory) CreateOuterZoneRoads(
 		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
 	}
 
-	var roads []entities.Road
+	var roads []template_model.Road
 	for index := range mainObjectCount - 1 {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().

@@ -3,8 +3,9 @@ package content_rules
 import (
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type ContentRuleService struct {
@@ -31,7 +32,7 @@ func (this *ContentRuleService) GetRules() []IContentRule {
 	}
 }
 
-func (this *ContentRuleService) ApplyRulesToItem(item *entities.MandatoryContentItem, rules []IContentRule) {
+func (this *ContentRuleService) ApplyRulesToItem(item *template_model.MandatoryContentItem, rules []IContentRule) {
 	for _, rule := range rules {
 		if rule != nil {
 			rule.Apply(item)
@@ -40,7 +41,7 @@ func (this *ContentRuleService) ApplyRulesToItem(item *entities.MandatoryContent
 }
 
 func (this *ContentRuleService) CreateRuleFromSavedRule(
-	saved models.ContentRuleRowSave,
+	saved editor_state_model.ContentRuleRow,
 	content models.SidMapping) IContentRule {
 	switch {
 	case strings.EqualFold(saved.Name, RuleDistanceToRoadName):
@@ -63,10 +64,12 @@ func (this *ContentRuleService) CreateRuleFromSavedRule(
 		if saved.VariantID == nil {
 			return nil
 		}
+
 		mapping, ok := this.variantMappingCatalog.GetVariantForContentByID(content, *saved.VariantID)
 		if !ok {
 			return nil
 		}
+
 		rule, err := NewRuleVariant(&mapping, saved.VariantID)
 		if err == nil {
 			return rule
@@ -77,7 +80,7 @@ func (this *ContentRuleService) CreateRuleFromSavedRule(
 }
 
 func (this *ContentRuleService) RestoreRulesFromRow(
-	row models.ZoneContentRowSave,
+	row editor_state_model.ZoneContentRow,
 	content models.SidMapping) []IContentRule {
 	var result []IContentRule
 	for _, savedRule := range row.Rules {

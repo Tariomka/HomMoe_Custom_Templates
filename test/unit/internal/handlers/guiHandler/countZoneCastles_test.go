@@ -3,7 +3,7 @@ package guiHandler_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +12,7 @@ func TestWhenZoneContainsMixedMainObjects_ReturnsServiceEquivalentCount(t *testi
 	t.Parallel()
 	// Arrange
 	handler := newProductionGuiHandler()
-	zone := entities.Zone{MainObjects: []entities.MainObject{
+	zone := template_model.Zone{MainObjects: []template_model.MainObject{
 		{Type: "Spawn"},
 		{Type: "City"},
 		{Type: "AbandonedOutpost"},

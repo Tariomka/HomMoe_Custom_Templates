@@ -1,0 +1,162 @@
+package template_variant_model
+
+import (
+	"slices"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+)
+
+type Zone struct {
+	Name    string
+	Quality *neutral_zone.Quality
+
+	GeneratorPosition *data.Vec2[float64]
+	ManualPosition    *data.Vec2[float64]
+
+	GeneratorRing *int
+
+	Size   float64
+	Layout string
+
+	GuardCutoffValue          int
+	GuardRandomization        float64
+	GuardMultiplier           float64
+	GuardWeeklyIncrement      float64
+	GuardReactionDistribution []int
+	DiplomacyModifier         float64
+
+	EncounterHolesSettings *EncounterHolesSettings
+
+	RandomHireEnableWeeklyUnitIncrement []bool
+	RandomHireInitialUnitIncrement      []int
+
+	GuardedContentPool   []string
+	UnguardedContentPool []string
+	ResourcesContentPool []string
+
+	MandatoryContent   StringList
+	ContentCountLimits StringList
+
+	GuardedContentValue          int
+	GuardedContentValuePerArea   int
+	UnguardedContentValue        int
+	UnguardedContentValuePerArea int
+	ResourcesValue               int
+	ResourcesValuePerArea        int
+
+	MainObjects []MainObject
+
+	ZoneBiome        TypedRef
+	ContentBiome     TypedRef
+	MetaObjectsBiome TypedRef
+
+	CrossroadsPosition *int
+	Roads              []Road
+}
+
+func (this Zone) Clone() Zone {
+	clone := this
+	clone.Quality = helpers.ClonePointer(this.Quality)
+	clone.GeneratorPosition = helpers.ClonePointer(this.GeneratorPosition)
+	clone.GeneratorRing = helpers.ClonePointer(this.GeneratorRing)
+	clone.ManualPosition = helpers.ClonePointer(this.ManualPosition)
+	clone.GuardReactionDistribution = slices.Clone(this.GuardReactionDistribution)
+	clone.EncounterHolesSettings = helpers.ClonePointer(this.EncounterHolesSettings)
+	clone.RandomHireEnableWeeklyUnitIncrement = slices.Clone(this.RandomHireEnableWeeklyUnitIncrement)
+	clone.RandomHireInitialUnitIncrement = slices.Clone(this.RandomHireInitialUnitIncrement)
+	clone.GuardedContentPool = slices.Clone(this.GuardedContentPool)
+	clone.UnguardedContentPool = slices.Clone(this.UnguardedContentPool)
+	clone.ResourcesContentPool = slices.Clone(this.ResourcesContentPool)
+	clone.MandatoryContent = slices.Clone(this.MandatoryContent)
+	clone.ContentCountLimits = slices.Clone(this.ContentCountLimits)
+	clone.MainObjects = helpers.MapSlice(this.MainObjects, MainObject.Clone)
+	clone.ZoneBiome = this.ZoneBiome.Clone()
+	clone.ContentBiome = this.ContentBiome.Clone()
+	clone.MetaObjectsBiome = this.MetaObjectsBiome.Clone()
+	clone.CrossroadsPosition = helpers.ClonePointer(this.CrossroadsPosition)
+	clone.Roads = helpers.MapSlice(this.Roads, Road.Clone)
+	return clone
+}
+
+func ToZoneModel(entity template_entity.Zone) Zone {
+	return Zone{
+		Name:                      entity.Name,
+		Size:                      entity.Size,
+		Layout:                    entity.Layout,
+		GuardCutoffValue:          entity.GuardCutoffValue,
+		GuardRandomization:        entity.GuardRandomization,
+		GuardMultiplier:           entity.GuardMultiplier,
+		GuardWeeklyIncrement:      entity.GuardWeeklyIncrement,
+		GuardReactionDistribution: entity.GuardReactionDistribution,
+		DiplomacyModifier:         entity.DiplomacyModifier,
+		EncounterHolesSettings: helpers.MapPointer(
+			entity.EncounterHolesSettings,
+			ToEncounterHolesSettingsModel),
+		RandomHireEnableWeeklyUnitIncrement: entity.RandomHireEnableWeeklyUnitIncrement,
+		RandomHireInitialUnitIncrement:      entity.RandomHireInitialUnitIncrement,
+		GuardedContentPool:                  entity.GuardedContentPool,
+		UnguardedContentPool:                entity.UnguardedContentPool,
+		ResourcesContentPool:                entity.ResourcesContentPool,
+		MandatoryContent:                    StringList(entity.MandatoryContent),
+		ContentCountLimits:                  StringList(entity.ContentCountLimits),
+		GuardedContentValue:                 entity.GuardedContentValue,
+		GuardedContentValuePerArea:          entity.GuardedContentValuePerArea,
+		UnguardedContentValue:               entity.UnguardedContentValue,
+		UnguardedContentValuePerArea:        entity.UnguardedContentValuePerArea,
+		ResourcesValue:                      entity.ResourcesValue,
+		ResourcesValuePerArea:               entity.ResourcesValuePerArea,
+		MainObjects:                         ToMainObjectModels(entity.MainObjects),
+		ZoneBiome:                           TypedRef{TypedRef: entity.ZoneBiome},
+		ContentBiome:                        TypedRef{TypedRef: entity.ContentBiome},
+		MetaObjectsBiome:                    TypedRef{TypedRef: entity.MetaObjectsBiome},
+		CrossroadsPosition:                  entity.CrossroadsPosition,
+		Roads:                               ToRoadModels(entity.Roads),
+	}
+}
+
+func ToZoneEntity(model Zone) template_entity.Zone {
+	return template_entity.Zone{
+		Name:                      model.Name,
+		Size:                      model.Size,
+		Layout:                    model.Layout,
+		GuardCutoffValue:          model.GuardCutoffValue,
+		GuardRandomization:        model.GuardRandomization,
+		GuardMultiplier:           model.GuardMultiplier,
+		GuardWeeklyIncrement:      model.GuardWeeklyIncrement,
+		GuardReactionDistribution: model.GuardReactionDistribution,
+		DiplomacyModifier:         model.DiplomacyModifier,
+		EncounterHolesSettings: helpers.MapPointer(
+			model.EncounterHolesSettings,
+			ToEncounterHolesSettingsEntity),
+		RandomHireEnableWeeklyUnitIncrement: model.RandomHireEnableWeeklyUnitIncrement,
+		RandomHireInitialUnitIncrement:      model.RandomHireInitialUnitIncrement,
+		GuardedContentPool:                  model.GuardedContentPool,
+		UnguardedContentPool:                model.UnguardedContentPool,
+		ResourcesContentPool:                model.ResourcesContentPool,
+		MandatoryContent:                    template_entity.StringList(model.MandatoryContent),
+		ContentCountLimits:                  template_entity.StringList(model.ContentCountLimits),
+		GuardedContentValue:                 model.GuardedContentValue,
+		GuardedContentValuePerArea:          model.GuardedContentValuePerArea,
+		UnguardedContentValue:               model.UnguardedContentValue,
+		UnguardedContentValuePerArea:        model.UnguardedContentValuePerArea,
+		ResourcesValue:                      model.ResourcesValue,
+		ResourcesValuePerArea:               model.ResourcesValuePerArea,
+		MainObjects:                         ToMainObjectEntities(model.MainObjects),
+		ZoneBiome:                           model.ZoneBiome.TypedRef,
+		ContentBiome:                        model.ContentBiome.TypedRef,
+		MetaObjectsBiome:                    model.MetaObjectsBiome.TypedRef,
+		CrossroadsPosition:                  model.CrossroadsPosition,
+		Roads:                               ToRoadEntities(model.Roads),
+	}
+}
+
+func ToZoneModels(entities []template_entity.Zone) []Zone {
+	return helpers.MapSlice(entities, ToZoneModel)
+}
+
+func ToZoneEntities(models []Zone) []template_entity.Zone {
+	return helpers.MapSlice(models, ToZoneEntity)
+}

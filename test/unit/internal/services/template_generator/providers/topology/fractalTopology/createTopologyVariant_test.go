@@ -10,17 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// addTieredNeutralPlans adds two low, two medium and two high quality plans so
-// every fractal tier band receives zones.
-func addTieredNeutralPlans(neutralZones *neutral_zone.Plans) {
-	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
-	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
-	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
-	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
-}
-
 func TestWhenTwoPlayersAndSixTieredNeutralPlansProvided_CreatesZonePerLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -184,4 +173,15 @@ func TestWhenRandomPortalsEnabled_AddsPortalConnections(t *testing.T) {
 
 	// Assert
 	assert.NotZero(t, countPortalConnections(variant))
+}
+
+// addTieredNeutralPlans adds two low, two medium and two high quality plans so
+// every fractal tier band receives zones.
+func addTieredNeutralPlans(neutralZones *neutral_zone.Plans) {
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N3", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N4", neutral_zone.QualityMedium, 1)
+	neutralZones.AddPlan("N5", neutral_zone.QualityHigh, 1)
+	neutralZones.AddPlan("N6", neutral_zone.QualityHigh, 1)
 }

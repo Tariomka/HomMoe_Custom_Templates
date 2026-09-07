@@ -14,7 +14,7 @@ type Toolbar struct {
 	buttonReset  widget.Clickable
 	buttonOpen   widget.Clickable
 	buttonSave   widget.Clickable
-	buttonSaveAs widget.Clickable
+	buttonSaveTo widget.Clickable
 	buttonExit   widget.Clickable
 
 	resetCallback func()
@@ -51,8 +51,8 @@ func (this *Toolbar) HandleClicks(gtx layout.Context) {
 	if this.buttonSave.Clicked(gtx) {
 		this.state.Save()
 	}
-	if this.buttonSaveAs.Clicked(gtx) {
-		this.state.SaveAs(this.state.GetStateData().TemplateName)
+	if this.buttonSaveTo.Clicked(gtx) {
+		this.state.SaveTo(this.state.GetTemplateName())
 	}
 	if this.buttonExit.Clicked(gtx) {
 		this.state.Exit()
@@ -68,7 +68,7 @@ func (this *Toolbar) getButtonsWidget(theme *material.Theme) layout.Widget {
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Save", &this.buttonSave, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
-			layout.Rigid(widgets.NewButtonWidget(theme, "Save As", &this.buttonSaveAs, false)),
+			layout.Rigid(widgets.NewButtonWidget(theme, "Save To", &this.buttonSaveTo, false)),
 			layout.Rigid(widgets.NewHorizontalSpacerWidget(6)),
 			layout.Rigid(widgets.NewButtonWidget(theme, "Exit", &this.buttonExit, false)))
 	}

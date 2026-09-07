@@ -3,8 +3,8 @@ package gameRulesProvider_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +15,7 @@ import (
 func TestWhenDefaultConfiguration_ReturnsExpectedGameRules(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := entities.GameRules{
+	expected := template_model.GameRules{
 		HeroCountMin:           4,
 		HeroCountMax:           8,
 		HeroCountIncrement:     1,
@@ -23,8 +23,8 @@ func TestWhenDefaultConfiguration_ReturnsExpectedGameRules(t *testing.T) {
 		EncounterHoles:         false,
 		FactionLawsExpModifier: 1,
 		AstrologyExpModifier:   1,
-		Bonuses:                entities.BonusList{},
-		WinConditions: entities.WinConditions{
+		Bonuses:                template_model.BonusList{},
+		WinConditions: template_model.WinConditions{
 			Classic:          true,
 			Desertion:        true,
 			DesertionDay:     3,
@@ -568,7 +568,7 @@ func TestWhenTownPortalFreeBonusConfigured_ExpandsToSpellAndFreeCostBonuses(t *t
 	actual := bonusesFor(entry)
 
 	// Assert
-	assert.Equal(t, entities.BonusList{
+	assert.Equal(t, template_model.BonusList{
 		{
 			SID:            "add_bonus_hero_spell",
 			ReceiverSide:   -1,
@@ -598,7 +598,7 @@ func TestWhenFreeSpellBonusConfigured_ExpandsToSpellAndCostOverrideBonuses(t *te
 	actual := bonusesFor(entry)
 
 	// Assert
-	assert.Equal(t, entities.BonusList{
+	assert.Equal(t, template_model.BonusList{
 		{
 			SID:            "add_bonus_hero_spell",
 			ReceiverSide:   -1,
@@ -628,7 +628,7 @@ func TestWhenPaidSpellBonusConfigured_ProducesOnlySpellBonus(t *testing.T) {
 	actual := bonusesFor(entry)
 
 	// Assert
-	assert.Equal(t, entities.BonusList{
+	assert.Equal(t, template_model.BonusList{
 		{
 			SID:            "add_bonus_hero_spell",
 			ReceiverSide:   -1,
@@ -725,7 +725,7 @@ func TestWhenSingleBonusPresetConfigured_ProducesExpectedBonus(t *testing.T) {
 			actual := bonusesFor(entry)
 
 			// Assert
-			assert.Equal(t, entities.BonusList{
+			assert.Equal(t, template_model.BonusList{
 				{
 					SID:            testCase.expectedSID,
 					ReceiverSide:   -1,

@@ -13,8 +13,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -77,8 +77,8 @@ func NewGeneralPanel(state *drivers.State) *GeneralPanel {
 			return labels
 		}()),
 		mapSizeSelector: components.NewDropdownSelector(func() []string {
-			return linq.FromSlice(constants.GetMapSizes(state.GetStateData().ExperimentalMapSizes)).
-				SelectString(func(ms constants.MapSize) string { return ms.Label }).
+			return linq.FromSlice(constants.GetMapSizes(state.GetExperimentalMapSizes())).
+				Select(func(ms constants.MapSize) string { return ms.Label }).
 				ToSlice()
 		}()),
 		state: state,
@@ -148,7 +148,7 @@ func (this *GeneralPanel) LoadFromState() {
 }
 
 func (this *GeneralPanel) SaveToState() {
-	this.state.UpdateState(func(settings *dtos.EditorStateDto) {
+	this.state.UpdateState(func(settings *editor_state_model.EditorState) {
 		settings.TemplateName = strings.TrimSpace(this.templateName.Text())
 		settings.PlayerCount = int(utils.RoundHalfAway(float64(utils.Denormalize(this.playerCount.Value, 2, 8))))
 		settings.MapSize = this.getCurrentMapSize().Size
@@ -319,7 +319,7 @@ func (this *GeneralPanel) updateMapSizeSelectorItems() {
 		labels = append(labels, mapSize.Label)
 	}
 	this.mapSizeSelector.SetItems(labels)
-	this.mapSizeSelector.SelectByName(constants.GetMapSize(this.state.GetStateData().MapSize).Label)
+	this.mapSizeSelector.SelectByName(constants.GetMapSize(this.state.GetMapSize()).Label)
 }
 
 func (this *GeneralPanel) updateConditionOptions() {
