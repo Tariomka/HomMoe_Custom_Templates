@@ -147,13 +147,16 @@ func shouldSkipPath(repositoryRoot, path string, info os.FileInfo) bool {
 		return false
 	}
 	normalizedPath := filepath.ToSlash(relativePath)
-	// template_model is exempt for the same reason builders are: its ToXEntity
-	// functions are the sanctioned Model -> Entity seam, and lowering an
-	// already-valid model field by field is a mapping, not construction. The
-	// builders cannot serve here - since batch Q they emit models, not entities.
+	// The Model -> Entity seam is exempt for the same reason builders are:
+	// lowering an already-valid model field by field is a mapping, not
+	// construction. The builders cannot serve here - since batch Q they emit
+	// models, not entities. internal/mappers is that seam by definition;
+	// template_model still holds the zone, connection, main object and road
+	// converters the generator reaches for directly.
 	return strings.HasPrefix(normalizedPath, "internal/entities/") ||
 		strings.HasPrefix(normalizedPath, "internal/services/builders/") ||
-		strings.HasPrefix(normalizedPath, "internal/models/template_model/")
+		strings.HasPrefix(normalizedPath, "internal/models/template_model/") ||
+		strings.HasPrefix(normalizedPath, "internal/mappers/")
 }
 
 func findFileEntityLiterals(

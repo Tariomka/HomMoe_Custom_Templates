@@ -14,11 +14,3 @@ func (this WinConditions) Clone() WinConditions {
 	clone.TournamentAnnounceDays = slices.Clone(this.TournamentAnnounceDays)
 	return clone
 }
-
-func ToWinConditionsModel(entity template_entity.WinConditions) WinConditions {
-	return WinConditions{WinConditions: entity}
-}
-
-func ToWinConditionsEntity(model WinConditions) template_entity.WinConditions {
-	return model.WinConditions
-}

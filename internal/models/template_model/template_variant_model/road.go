@@ -27,8 +27,8 @@ func (this Road) Clone() Road {
 func ToRoadModel(entity template_entity.Road) Road {
 	return Road{
 		Type:                 entity.Type,
-		From:                 ToTypedRefModel(entity.From),
-		To:                   ToTypedRefModel(entity.To),
+		From:                 TypedRef{TypedRef: entity.From},
+		To:                   TypedRef{TypedRef: entity.To},
 		Road:                 entity.Road,
 		SimTurnSquad:         entity.SimTurnSquad,
 		GuardValue:           entity.GuardValue,
@@ -39,8 +39,8 @@ func ToRoadModel(entity template_entity.Road) Road {
 func ToRoadEntity(model Road) template_entity.Road {
 	return template_entity.Road{
 		Type:                 model.Type,
-		From:                 ToTypedRefEntity(model.From),
-		To:                   ToTypedRefEntity(model.To),
+		From:                 model.From.TypedRef,
+		To:                   model.To.TypedRef,
 		Road:                 model.Road,
 		SimTurnSquad:         model.SimTurnSquad,
 		GuardValue:           model.GuardValue,

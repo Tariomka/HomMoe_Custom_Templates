@@ -83,11 +83,3 @@ func ToConnectionEntity(model Connection) template_entity.Connection {
 		PortalPlacementRulesTo:   template_common_model.ToPlacementRuleEntities(model.PortalPlacementRulesTo),
 	}
 }
-
-func ToConnectionModels(entities []template_entity.Connection) []Connection {
-	return helpers.MapSlice(entities, ToConnectionModel)
-}
-
-func ToConnectionEntities(models []Connection) []template_entity.Connection {
-	return helpers.MapSlice(models, ToConnectionEntity)
-}

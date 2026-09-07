@@ -32,6 +32,22 @@ func TestWhenATemplateIsLifted_NoZoneCarriesARecordedTier(t *testing.T) {
 	assert.Empty(t, tieredZoneNames)
 }
 
+// The schema has sizeX and sizeZ; the model has one MapSize, taken from sizeX.
+func TestWhenATemplateIsLifted_TheMapSizeComesFromSizeX(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	mapper := mappers.NewTemplateMapper()
+	entity := test_helpers.NewAllFieldsTemplate()
+	entity.SizeX = 160
+	entity.SizeZ = 96
+
+	// Act
+	model := mapper.ToModel(entity)
+
+	// Assert
+	assert.Equal(t, 160, model.MapSize)
+}
+
 func TestWhenATemplateIsLifted_TheZoneNamesAreCarriedAcross(t *testing.T) {
 	t.Parallel()
 	// Arrange

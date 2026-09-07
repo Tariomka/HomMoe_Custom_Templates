@@ -74,8 +74,7 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 		GameMode:            this.configuration.GameMode,
 		Description:         this.createTemplateDescription(len(neutralZones)),
 		DisplayWinCondition: this.configuration.GetVictoryCondition(),
-		SizeX:               this.configuration.MapSize,
-		SizeZ:               this.configuration.MapSize,
+		MapSize:             this.configuration.MapSize,
 		ValueOverrides:      valueOverrides,
 		GlobalBans:          this.gameRulesProvider.CreateGlobalBans(*this.configuration),
 		GameRules:           this.gameRulesProvider.CreateGameRules(*this.configuration),
@@ -86,7 +85,6 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 		ContentPools:        []template_model.ContentPool{},
 		ContentLists:        []template_model.ContentList{},
 	}
-
 	this.gladiatorProvider.PlaceArena(*this.configuration, &generated.Variants[0])
 
 	return &generated, warnings
@@ -135,6 +133,7 @@ func formatPhraseWithCount(count int, singular, plural string) string {
 	if count == 0 {
 		return "no " + plural
 	}
+
 	word := singular
 	if count != 1 {
 		word = plural

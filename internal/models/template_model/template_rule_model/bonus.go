@@ -13,11 +13,3 @@ func (this Bonus) Clone() Bonus {
 	clone.Parameters = slices.Clone(this.Parameters)
 	return clone
 }
-
-func ToBonusModel(entity template_entity.Bonus) Bonus {
-	return Bonus{Bonus: entity}
-}
-
-func ToBonusEntity(model Bonus) template_entity.Bonus {
-	return model.Bonus
-}

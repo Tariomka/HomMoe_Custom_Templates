@@ -18,6 +18,8 @@ func TestWhenAFullyPopulatedTemplateRoundTrips_TheEntityComesBackUnchanged(t *te
 	// Arrange
 	mapper := mappers.NewTemplateMapper()
 	expected := test_helpers.NewAllFieldsTemplate()
+	// The model carries one MapSize, so only a square template round trips.
+	expected.SizeZ = expected.SizeX
 
 	// Act
 	actual := mapper.ToEntity(mapper.ToModel(expected))
@@ -33,6 +35,7 @@ func TestWhenATemplateHasEmptyCollections_TheyStayEmptyRatherThanBecomingNil(t *
 	// Arrange
 	mapper := mappers.NewTemplateMapper()
 	expected := test_helpers.NewAllFieldsTemplate()
+	expected.SizeZ = expected.SizeX
 	expected.ContentPools = []template_entity.ContentPool{}
 	expected.ContentLists = []template_entity.ContentList{}
 
@@ -58,5 +61,24 @@ func TestWhenAZoneCarriesATier_TheEntityIsProducedWithoutIt(t *testing.T) {
 	actual := mapper.ToEntity(model)
 
 	// Assert
-	assert.Equal(t, test_helpers.NewAllFieldsTemplate(), actual)
+	expected := test_helpers.NewAllFieldsTemplate()
+	expected.SizeZ = expected.SizeX
+	assert.Equal(t, expected, actual)
+}
+
+// The model has a single MapSize where the schema has two dimensions, so
+// flattening writes it to both and a non-square template comes back square.
+func TestWhenAModelIsFlattened_BothMapDimensionsGetTheMapSize(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	mapper := mappers.NewTemplateMapper()
+	entity := test_helpers.NewAllFieldsTemplate()
+	entity.SizeX = 160
+	entity.SizeZ = 96
+
+	// Act
+	actual := mapper.ToEntity(mapper.ToModel(entity))
+
+	// Assert
+	assert.Equal(t, 160, actual.SizeZ)
 }

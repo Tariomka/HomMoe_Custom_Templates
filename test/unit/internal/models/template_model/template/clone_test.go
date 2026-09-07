@@ -3,6 +3,7 @@ package template_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -135,7 +136,7 @@ func TestWhenSlicesAreEmpty_CloneKeepsThemEmpty(t *testing.T) {
 // model and not just on the wire-format subset.
 func newAllFieldsModel(t *testing.T) template_model.Template {
 	t.Helper()
-	model := template_model.ToTemplateModel(test_helpers.NewAllFieldsTemplate())
+	model := mappers.NewTemplateMapper().ToModel(test_helpers.NewAllFieldsTemplate())
 	require.NotEmpty(t, model.Variants)
 	require.NotEmpty(t, model.Variants[0].Zones)
 	require.NotEmpty(t, model.Variants[0].Connections)

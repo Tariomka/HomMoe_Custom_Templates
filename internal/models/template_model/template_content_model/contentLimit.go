@@ -3,7 +3,6 @@ package template_content_model
 import (
 	"slices"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 )
 
@@ -21,32 +20,4 @@ func (this ContentLimit) Clone() ContentLimit {
 	clone.Content = slices.Clone(this.Content)
 	clone.Variant = helpers.ClonePointer(this.Variant)
 	return clone
-}
-
-func ToContentLimitModel(entity template_entity.ContentLimit) ContentLimit {
-	return ContentLimit{
-		SID:          entity.SID,
-		IncludeLists: entity.IncludeLists,
-		Content:      ToWeightedContentModels(entity.Content),
-		Variant:      entity.Variant,
-		MaxCount:     entity.MaxCount,
-	}
-}
-
-func ToContentLimitEntity(model ContentLimit) template_entity.ContentLimit {
-	return template_entity.ContentLimit{
-		SID:          model.SID,
-		IncludeLists: model.IncludeLists,
-		Content:      ToWeightedContentEntities(model.Content),
-		Variant:      model.Variant,
-		MaxCount:     model.MaxCount,
-	}
-}
-
-func ToContentLimitModels(entities []template_entity.ContentLimit) []ContentLimit {
-	return helpers.MapSlice(entities, ToContentLimitModel)
-}
-
-func ToContentLimitEntities(models []ContentLimit) []template_entity.ContentLimit {
-	return helpers.MapSlice(models, ToContentLimitEntity)
 }

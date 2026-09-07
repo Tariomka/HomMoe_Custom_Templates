@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
+	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers"
@@ -43,5 +44,5 @@ func loadExampleTemplate(t *testing.T, name string) template_model.Template {
 	require.NoError(t, err)
 	var parsedTemplate template_entity.RmgTemplate
 	require.NoError(t, json.Unmarshal(raw, &parsedTemplate))
-	return template_model.ToTemplateModel(parsedTemplate)
+	return mappers.NewTemplateMapper().ToModel(parsedTemplate)
 }

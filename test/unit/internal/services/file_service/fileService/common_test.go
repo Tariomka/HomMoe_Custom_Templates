@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/stretchr/testify/mock"
 )
@@ -80,4 +81,9 @@ func newServiceWithMocks() (file_service.IFileService, serviceMocks) {
 		mocks.migrator)
 
 	return service, mocks
+}
+
+// toModelPointer lifts a wire-format template the way the service's callers do.
+func toModelPointer(entity template_entity.RmgTemplate) *template_model.Template {
+	return new(mappers.NewTemplateMapper().ToModel(entity))
 }

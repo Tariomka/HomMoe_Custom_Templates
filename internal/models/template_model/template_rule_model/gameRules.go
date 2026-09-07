@@ -1,9 +1,6 @@
 package template_rule_model
 
-import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
-)
+import "github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 
 type GameRules struct {
 	HeroCountMin       int
@@ -35,48 +32,4 @@ func (this GameRules) Clone() GameRules {
 	clone.WinConditions = this.WinConditions.Clone()
 	clone.GlobalBans = helpers.MapPointer(this.GlobalBans, GlobalBans.Clone)
 	return clone
-}
-
-func ToGameRulesModel(entity template_entity.GameRules) GameRules {
-	return GameRules{
-		HeroCountMin:                         entity.HeroCountMin,
-		HeroCountMax:                         entity.HeroCountMax,
-		HeroCountIncrement:                   entity.HeroCountIncrement,
-		HeroHireBan:                          entity.HeroHireBan,
-		EncounterHoles:                       entity.EncounterHoles,
-		TournamentRules:                      entity.TournamentRules,
-		Bonuses:                              ToBonusListModel(entity.Bonuses),
-		WinConditions:                        ToWinConditionsModel(entity.WinConditions),
-		GladiatorArena:                       entity.GladiatorArena,
-		GladiatorArenaRegistrationStartWork:  entity.GladiatorArenaRegistrationStartWork,
-		GladiatorArenaRegistrationStartFight: entity.GladiatorArenaRegistrationStartFight,
-		GladiatorArenaDaysDelayStart:         entity.GladiatorArenaDaysDelayStart,
-		GladiatorArenaCountDay:               entity.GladiatorArenaCountDay,
-		ChampionSelectRule:                   entity.ChampionSelectRule,
-		GlobalBans:                           helpers.MapPointer(entity.GlobalBans, ToGlobalBansModel),
-		FactionLawsExpModifier:               entity.FactionLawsExpModifier,
-		AstrologyExpModifier:                 entity.AstrologyExpModifier,
-	}
-}
-
-func ToGameRulesEntity(model GameRules) template_entity.GameRules {
-	return template_entity.GameRules{
-		HeroCountMin:                         model.HeroCountMin,
-		HeroCountMax:                         model.HeroCountMax,
-		HeroCountIncrement:                   model.HeroCountIncrement,
-		HeroHireBan:                          model.HeroHireBan,
-		EncounterHoles:                       model.EncounterHoles,
-		TournamentRules:                      model.TournamentRules,
-		Bonuses:                              ToBonusListEntity(model.Bonuses),
-		WinConditions:                        ToWinConditionsEntity(model.WinConditions),
-		GladiatorArena:                       model.GladiatorArena,
-		GladiatorArenaRegistrationStartWork:  model.GladiatorArenaRegistrationStartWork,
-		GladiatorArenaRegistrationStartFight: model.GladiatorArenaRegistrationStartFight,
-		GladiatorArenaDaysDelayStart:         model.GladiatorArenaDaysDelayStart,
-		GladiatorArenaCountDay:               model.GladiatorArenaCountDay,
-		ChampionSelectRule:                   model.ChampionSelectRule,
-		GlobalBans:                           helpers.MapPointer(model.GlobalBans, ToGlobalBansEntity),
-		FactionLawsExpModifier:               model.FactionLawsExpModifier,
-		AstrologyExpModifier:                 model.AstrologyExpModifier,
-	}
 }

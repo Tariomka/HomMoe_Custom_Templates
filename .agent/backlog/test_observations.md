@@ -226,3 +226,15 @@ Still unit-untestable (dialog-callback or Gio territory):
   backlog §1.5 are the reference; re-measure by hand when touching
   `EditorState.Clone`, `linq.SelectSlice` or the clone helpers in
   internal/models/editor_state_model/ and internal/helpers/editor_state_helpers/.
+
+- Converter move into the template mapper (2026-09-07) -
+  internal/models/template_model/template_variant_model/zone.go `ToZoneModels`
+  and `ToZoneEntities` have **no callers anywhere**, production or test, since
+  the mapper grew its own `GetZoneModelList` / `GetZoneEntityList`. They are
+  left at 0 % deliberately: writing a test for a function nothing calls would
+  buy coverage and hide the fact that it is dead. Delete them, or give them a
+  caller - do not paper over them with a test. Their singular forms
+  (`ToZoneModel` / `ToZoneEntity`) are alive: `internal/models/editor_state_model`
+  reaches them through template_model/converters.go, and cannot use the mapper
+  instead because mappers already import models.
+
