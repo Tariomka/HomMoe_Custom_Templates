@@ -34,7 +34,11 @@ protocol (ask → plan → approve → implement + verify → owner commits → 
 5. **Check the session-history notes** (`.agent/memories/`, `.agent/backlog/*.md`, `.agent/*.md`)
    for known-stale findings, deliberate owner decisions (e.g. dead code kept on
    purpose), and items already marked "owner's responsibility" — do not
-   re-report those as new findings; list them in the disposition section.
+   re-report those as new findings; ask the owner if they which ones(if any) should be
+   added to the review as explicit points of interest - backlog items,
+   otherwise list them in the disposition section.
+6. **Check agent memories** (`.agent/memories/*.md`) for any potential findings and
+   memory invalidations for stale information.
 
 ## Evidence gathering (run all of these, record versions and numbers)
 
@@ -56,7 +60,7 @@ fix sessions will be held against:
 - `go mod tidy` dry-run / `go.mod` vs CI Go-version consistency; note every
   module in the repo (`tools/` is separate).
 
-## Review dimensions (cover ALL of these; add more if the code warrants)
+## Review dimensions (cover ALL of these if applicable; add more or remove if the code warrants)
 
 1. **Bugs & correctness** — value-copy mutations lost, aliasing of slices/maps
    across API boundaries, swallowed errors, infinite-loop risks, unchecked type
