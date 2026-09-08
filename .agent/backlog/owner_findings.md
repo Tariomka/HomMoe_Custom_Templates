@@ -2,13 +2,6 @@
 
 ---
 
-Creating a Geometric Hub topology template, saving the editor and loading that state
-produces a completely incorrect preview in the preview panel and in the preview png.
-A pre-made tested editor state and its output before reloading can be found in
-[Topology when loaded](../../output/research/Topology%20when%20loaded).
-
----
-
 App portal connections are not being rendered in preview png - such an example can be found in
 [Colosseum v3.png](../../output/research/Topology%20when%20loaded/Colosseum%20v3.png).
 I haven't checked if this is applicable for all topologies or just Geometric Hub topology
@@ -114,22 +107,15 @@ already saved.
 
 After adding Template model:
 
-- [Template Model](../../internal/models/template_model/template.go) - Move ToModel and ToEntity from
-  here to mapper completely.
-- [TemplateMapper](../../internal/mappers/templateMapper.go) - when the template model functions are
-  moved to here, make a change to ToModel method - Variants need to be constructed in such a way
+- [TemplateMapper](../../internal/mappers/templateMapper.go) - make a change to ToModel method -
+  Variants need to be constructed in such a way
   that Zones inside it would have precalculated `Quality`, so probably the mapper needs the ZoneTierService
   (it's too big to be a simple helper).
 - [Template Converters](../../internal/models/template_model/converters.go) - These functions must be
   completely removed - everything should use models, and for entities (in service to repository part)
   exclusively use mapper (but in theory this should not even be needed).
-- All of the builders and other places must completely remove the usage of RmgTemplate entity types -
-  models must be used up until saving to the file.
 - [State](../../app/gui/drivers/state.go) - `templateRevision` should be completely moved to Template
   model.
-- [Template Model](../../internal/models/template_model/template.go) - at a minimum SizeX and SizeZ
-  should be made to a single Size int - all templates are squares, so there is no point in having the
-  model have 2 fields for a single value, the mapper will just use the same Size value for both
 
 ---
 
