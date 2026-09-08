@@ -2,19 +2,19 @@
 
 **Reviewed revision:** `f4f4cf63f22e84040754a7231b4d1dc793070af1`, branch `master`, initially clean working tree. **Platform:** Windows/amd64. **Toolchain:** Go `go1.27.0`; installed golangci-lint `2.13.1`, built with Go `1.27.0`. Both modules declare Go `1.27.0`; the tools module pins golangci-lint `2.12.2`. **Lint baseline: 0 issues. Unit statement coverage: 74.4%.**
 
-**Scope and authority.** This is a read-only review under [AGENTS.md](../../AGENTS.md) and [the review contract](../promt_templates/review-prompt.md). No implementation, tests, configuration, game data, existing coverage reports, or previous notes were modified. A temporary public-API verification program was created, run, and deleted. Diagnostic reports were written outside the repository. The only repository changes in this PR are this document and the updated session carry-forward that links to it.
+**Scope and authority.** The original read-only review followed [AGENTS.md](../../AGENTS.md) and [the review contract](../promt_templates/review-prompt.md). No implementation, tests, configuration, game data, or existing coverage reports were modified. A temporary public-API verification program was created, run, and deleted; diagnostic reports were written outside the repository. Owner-directed curation on 2026-09-08 updated this backlog, its carry-forward, and completed entries in the two source backlogs. Baselines below remain measurements from the reviewed revision, not new test runs.
 
 **Supersession.** This document supersedes the review/disposition status of [owner_findings.md](owner_findings.md) and [test_observations.md](test_observations.md), without deleting either and without cancelling their owner-requested features. It supersedes the *current-state claims* of [session-carry-forward.md](../session-carry-forward.md), not its historical decisions. No earlier review document or general backlog survives in the current tree. The latest commit deleted historical review/backlog files; their absent contents are not reconstructed from memory or silently described as audited. Every item in the two surviving backlog documents is accounted for below. The owner explicitly selected **“Include verified owner items”** during this review.
 
 **Severity:** 🔴 High: bug/correctness/user-visible · 🟠 Medium: architecture, performance, CI gaps · 🟡 Low: readability/hygiene · ⚪ Informational.
 
-**Finding count:** **25 actionable findings: 8 High, 13 Medium, 4 Low.** Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
+**Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Fix-session protocol:** ask → plan → owner approves → implement and verify → owner commits → mark the stable item `✅ FIXED`. This document authorizes no fixes, protected-directory edits, deletions, migrations, or topology removals. Each future change must follow the test layout, AAA, `t.Parallel()`, testify, coverage, build, and tag requirements in [AGENTS.md](../../AGENTS.md). Proposed new test paths below are deliberately not hyperlinks until the files exist.
+**Fix-session protocol:** ask → plan → owner approves → implement and verify → owner commits → mark the stable item `✅ FIXED`. Owner-confirmed scope below is not permission to implement before the per-item plan is approved. Protected-directory changes remain owner-approved and owner-applied only. Each future change must follow the test layout, AAA, `t.Parallel()`, testify, coverage, build, and tag requirements in [AGENTS.md](../../AGENTS.md). Proposed new test paths below are deliberately not hyperlinks until the files exist.
 
 ## §0 Disposition of prior reviews
 
-Owner-item identifiers O01–O20 follow the prose blocks in [owner_findings.md](owner_findings.md); T01–T06 identify the six nested “After adding Template model” bullets. Observation identifiers preserve the order of [test_observations.md](test_observations.md). These identifiers are local accounting labels, not historical review section numbers.
+Owner-item identifiers O01–O20 identify the original prose blocks in [owner_findings.md](owner_findings.md); T01–T06 identify its original six nested “After adding Template model” bullets. They remain stable after completed entries are removed from that source backlog. Observation descriptions identify entries in [test_observations.md](test_observations.md), including completed entries retained here as evidence. These identifiers are local accounting labels, not historical review section numbers.
 
 ### Fixed ✅
 
@@ -32,16 +32,7 @@ Owner-item identifiers O01–O20 follow the prose blocks in [owner_findings.md](
 | Prior item | Disposition and evidence |
 | --- | --- |
 | O05: OCR utility | Owner tooling proposal, not a missing application requirement. No OCR implementation found; retain as optional owner work, not a numbered defect. |
-| O08: remove Ring/Hub/Chain/Shared Web | Owner-gated topology/product change. They remain in [topologyDescriptors.go](../../internal/common/common_topologies/topologyDescriptors.go); removal requires compatibility/migration decisions for saved states. |
-| O09: zone-content presets | Feature request, not a proved regression. Existing [zone controls](../../app/gui/panels/layoutPanelZones.go) open per-tier content editors. Ask about merge/replace semantics and player presets before planning. |
-| O11: save only manual deltas and remove derivable state | Owner-directed format redesign. [manual state persistence](../../internal/models/editor_state_model/manualZoneSave.go) still saves complete edited zones. Delta persistence needs reproducible topology generation/versioning before “only edits” can reconstruct the same random map. No speculative format rewrite recommended. |
-| O12: bans/overrides as lists | [contentSettings.go](../../internal/entities/editor_state/contentSettings.go#L3-L12) still uses strings. Existing versioned persistence makes this a migration/product choice, not corruption. |
-| O13: sectioned rather than flat JSON | [editorState.go](../../internal/entities/editor_state/editorState.go#L7-L19) still embeds groups into a flat persisted aggregate. Keep as owner-gated schema work. |
-| O14: put LayoutPanel setters/getters on state | Current [layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go) already accesses state through its driver. The desired new API is unspecified. Ask which setters/getters and which state layer before scheduling. |
-| O16: rename zones/zone_interfaces packages | Existing [ZoneFactory](../../internal/services/zones/zoneFactory.go) and [interface](../../internal/services/zones/zone_interfaces/zoneFactoryInterface.go) are intentional current names. Naming-only owner backlog; no correctness benefit established. |
-| O18: move panel state into section subpackages | [LayoutPanel](../../app/gui/panels/layoutPanel.go) remains state-heavy. Broad owner preference, not an independent defect merely because files are large. See §2's decomposition inventory before choosing scope. |
-| O19: move neutralRowsForQuality | [mandatoryContentProvider.go](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L239-L259) retains the private lookup. No second consumer requiring public exposure identified. Keep owner request, not a new public helper just for reuse in theory. |
-| O20: use Vec2 methods instead of handwritten vector arithmetic | [FindOpenPosition](../../internal/services/connection_editor/zoneEditorService.go#L253-L274) already uses `Subtract`/`Distance`; some scalar arithmetic remains in [layoutBalancedRings.go](../../internal/services/preview_service/layoutBalancedRings.go). Opportunistic house-style work, not a numerical defect established by the syntax. |
+| O09: zone-content presets | Deferred by the owner on 2026-09-08: implementation has not been investigated or planned. Not an actionable item in this review. Existing [zone controls](../../app/gui/panels/layoutPanelZones.go) remain unchanged. |
 | T02: stamp Quality during template mapping | [ToZoneModel](../../internal/mappers/templateMapper.go#L263-L301) leaves editor-only quality unstamped. [GetZoneQuality](../../internal/handlers/zoneEditorHandler.go#L58-L64) explicitly falls back to inference for raw RMG zones. No wrong current result established; owner must decide eager vs lazy inference before adding mapper service dependencies. |
 | T03: remove all converter bridges | Two plural zone converters remain unused; their intentional 0% coverage is recorded below. Singular converters still bridge editor-state models without introducing a mapper→model→mapper cycle. [zone.go](../../internal/models/template_model/template_variant_model/zone.go#L85-L162), [converters.go](../../internal/models/template_model/converters.go). Delete-or-migrate is owner work; do not write coverage-padding tests for dead functions. |
 | T05: move templateRevision into Template | [state.go](../../app/gui/drivers/state.go#L35-L40) defines revision as replacement/cache view state. Current behavior is coherent; moving it into the domain model is an owner design choice, not a missing invalidation found here. |
@@ -85,11 +76,20 @@ Test-observation dispositions, including the individual documented gaps:
 | O02: portals absent from PNG | **§1.3**, reproduced. Merely finding a dashed-line branch and a passing “different from solid” test did not establish that portal pixels were drawn. |
 | O03: bonuses/bans ineffective in game | **§10 owner validation queue.** [gameRulesProvider.go](../../internal/services/template_generator/providers/gameRulesProvider.go#L21-L71) emits the data. Repository tests cannot prove the game's acceptance of the SID vocabulary. Not marked fixed or a newly proved application bug. |
 | O04: added parallel/arched connection missing in PNG | **§2.1** establishes differing curve implementations; **§1.3** explains sufficiently short dashed chords. Current preview code retains multiple endpoint-pair edges. Exact old solid-edge artifact remains unreproduced; retain game/artifact follow-up in §10, not “fixed.” |
-| O06: tournament player count and topology redesign | **§1.12** for the verified two-player enforcement gap. Removing variants/introducing tournament topologies remains separate owner-gated product scope. |
+| O06: tournament player count and topology redesign | **§1.12** for the verified two-player enforcement gap. The specific retirement and fallback policy in **§2.3** is now scoped under O08; introducing new tournament designs remains separate owner-gated product work. |
 | O07: hero-hire ban in Single Hero/FinalBattle/LostStartHero | **§10 owner validation queue.** Source emits `HeroHireBan` only for single-hero mode; broader desired game policy must be confirmed. Not silently discarded. |
+| O08: remove Ring/Hub/Chain/Shared Web | **§2.3.** Remove ordinary implementations and corresponding tournament builders; reject retired saved selections and use balanced tournament generation for surviving fallback cases. |
 | O10: quality change must recalculate connection guard value/preset | **§1.11**, source-verified missing propagation. |
+| O11: save only manual deltas and remove derivable state | **§2.4.** Investigate both live state and persistence first; owner reviews feasibility before selecting reconstruction semantics or authorizing implementation. |
+| O12: bans/overrides as lists | **§2.5.** Structured entries throughout, following `BonusEntry`, with existing parsing/export semantics retained and a coordinated migration. |
+| O13: sectioned rather than flat JSON | **§2.6.** Nest current groups except `TemplateIdentity`, `MapSettings`, and `SchemaOptions`, whose fields remain flat. Coordinate the schema migration with §2.5 and §2.4's outcome. |
+| O14: put LayoutPanel setters/getters on state | **§2.7.** Move the six zone-content accessors to `app/gui/drivers.State`; retain validated dirty-tracked updates and snapshot isolation. |
 | O15: zone-content service returns DTO | **§2.2. Owner explicitly reopened the DTO removal request during this review**, after being shown the conflicting accepted-exception comment in the current architecture gate. This is newly authorized architecture backlog, not an undisclosed violation of the old gate. The `bonuses` exception remains accepted. |
+| O16: rename zones/zone_interfaces packages | **§2.8.** Rename the implementation package and its nested interface package, including imports, mirrored tests, and generated wiring. |
 | O17: intermittent preview artifacts | **§1.13** reproduces one real nondeterminism; **§2.1** records graph-renderer divergence. Neither is asserted to explain the historical artifact without a current reproducer. Keep that artifact queued in §10. |
+| O18: move panel state into section subpackages | **§2.9.** Split General/Layout/Bonuses into private cohesive sections with top-level public aliases; preserve behavior and leave Preview unchanged. |
+| O19: move neutralRowsForQuality | **§2.10.** Promote the lookup to a `GeneratorConfig` method without changing quality mapping or ownership semantics. |
+| O20: use Vec2 methods instead of handwritten vector arithmetic | **§4.1.** Audit permitted production code, replace equivalent arithmetic, and add missing operations only when justified and tested. |
 
 **Memory/history invalidations applied:** current branch is `master`, not the branch named in the handoff; schema-v2 work is present in the merged revision; missing backlog/plan paths are not active instructions to push/delete anything; old GUI-CI absence claims are stale. The current architecture gate accepts two DTO exceptions, but the owner explicitly reopened the zone-content one in this review; the bonuses exception is unchanged. The frozen v1 boundary, plain typed repositories, output-path non-persistence, nil/ring-zero semantics, and per-frame clone tradeoff were respected.
 
@@ -221,7 +221,7 @@ Test-observation dispositions, including the individual documented gaps:
 
 **Fix.** Enforce the effective tournament-mode constraint in domain validation and render the player control consistently disabled/fixed at two. Handle loaded states and the victory-condition selector as well as the checkbox. Extend [validateEditorState_test.go](../../test/unit/internal/validators/editorStateValidator/validateEditorState_test.go), [createTopologyVariant_test.go](../../test/unit/internal/services/template_generator/providers/topologyProvider/createTopologyVariant_test.go), and the General-tab GUI integration suite. Test loaded 3–8 player states, switching modes, warning text, and non-tournament preservation.
 
-**Owner decision.** Confirm whether to remember the previous non-tournament count in session view state. Topology removals/redesign in O06 are not part of this constraint fix.
+**Owner decision.** Confirm whether to remember the previous non-tournament count in session view state. Topology retirement is separately scoped in §2.3; new tournament designs from O06 are not part of this constraint fix.
 
 ### 1.13 🟠 Symmetric obstacles make connection curves nondeterministic
 
@@ -255,7 +255,7 @@ Test-observation dispositions, including the individual documented gaps:
 
 **Owner decision.** Confirm whether changing the editor type should clear old placement rules or merely display the effective type. Never silently rewrite protected schema vocabulary.
 
-## §2 Architecture and duplication
+## §2 Architecture, product scope, and duplication
 
 ### 2.1 🟡 Connection-curve construction is duplicated with divergent visual policies
 
@@ -294,6 +294,76 @@ Decomposition guidance for work already justified elsewhere, not additional numb
 
 **Owner decision.** Reopening is authorized; the API/result shape and whole-exception vs single-seam scope still require the normal ask/plan/approval protocol. The bonuses DTO exception is not reopened by this decision.
 
+### 2.3 🟠 Retire Ring, Hub, Chain, and Shared Web topologies and their tournament builders
+
+**Evidence / owner request O08.** [Topology descriptors](../../internal/common/common_topologies/topologyDescriptors.go) still expose all four ordinary choices. Their serialized IDs in [mapTopology.go](../../internal/entities/topology/mapTopology.go) are `Default`, `HubAndSpoke`, `Chain`, and `SharedWeb`. [TopologyServiceLookup](../../internal/services/template_generator/providers/topologyServiceLookup.go) uses Ring as a fallback. [TournamentTopology](../../internal/services/template_generator/providers/topology/tournamentTopology.go) selects dedicated Ring/Hub builders, a balanced builder for Circles, and a chain fallback for other IDs, including surviving choices such as Random.
+
+**Approved scope.** Remove the four ordinary choices and their implementations, dedicated wiring, and now-unused helpers/tests. Remove the corresponding Ring/Hub/chain tournament builders too. All surviving tournament selections that used the chain fallback must use the balanced builder, including Random, Square, Geometric, Cross, Fractal, and Geometric Hub. Preserve their ordinary implementations, Circles, and shared hub-zone concepts; preserving ordinary Geometric Hub does not mean preserving its former tournament fallback output. This is owner-requested product simplification, not a claim that all old algorithms are broken.
+
+**Compatibility.** Reject an existing saved state selecting a retired topology with a clear message; do not silently substitute, accept via a default fallback, or discard its manual edits. Rejection must leave the current document unchanged. Keep only the minimal legacy-ID recognition needed for this error. Preserve supported saved states and distinguish retired IDs from unknown/invalid ones. The implementation plan must replace the ordinary lookup's Ring fallback with an explicit, panic-free invalid-selection contract, including zero/unknown IDs and any documented legacy default handling; do not conflate this with the approved balanced fallback for valid surviving tournament selections. No new tournament designs belong in this item.
+
+**Implementation / verification.** Inventory descriptors, validation/load paths, ordinary/tournament dispatch, preview helpers, zone labeling, factories, constructors, benchmarks, and all test fixtures before deletion; retain code shared with surviving topologies. Update the [README topology catalogue](../../README.md) and other active user documentation. Regenerate Wire. Replace retired topology tests with explicit rejection and surviving-dispatch coverage, including Random tournament fallback, Circles, Geometric Hub, and all remaining supported choices. Extend [topology-provider tests](../../test/unit/internal/services/template_generator/providers/topologyProvider/createTopologyVariant_test.go), [tournament tests](../../test/unit/internal/services/template_generator/providers/topology/tournamentTopology/createTopologyVariant_test.go), and [wire-format integration tests](../../test/integration/editorStateWireFormat_integration_test.go); cover old-version rejected loads and unchanged current state after failure. Compile/run the appropriate unit, integration, GUI, and performance suites explicitly so retired constants cannot remain hidden behind tags. Add GUI selection coverage and remeasure coverage after the deliberate code/test deletions. Keep §1.12's two-player enforcement as a separate coordinated item.
+
+### 2.4 🟠 Investigate compact manual deltas and derivable editor state before redesign
+
+**Evidence / owner request O11.** [ManualZoneSave](../../internal/models/editor_state_model/manualZoneSave.go) persists complete edited zones; [EditorState](../../internal/models/editor_state_model/editorState.go) retains manual zone/connection snapshots. A single manual edit can therefore persist substantially more than the changed data. Redundant candidates include generated pools, guard reaction distribution, content limits, inferable zone classification, and unchanged default content rows. These are candidates to verify, not fields approved for deletion.
+
+**Approved first deliverable.** A focused feasibility investigation covering **both live editor state and persisted data**, with representative byte/allocation measurements and a proposed design for added/changed/deleted zones and connections. Compare exact generated-base reconstruction against regenerating untouched parts and applying edits. Explain random generation/seed requirements, stable identities and endpoint references, generator-version upgrades, default evolution, derived versus explicitly overridden values, and compatibility with old full snapshots. Include dirty tracking, cloning, Undo/Revert-to-Base, setting changes, and final preview/export equivalence. Do not assume regeneration produces an identical base or silently erase fields merely because current generators usually derive them.
+
+**Decision gate.** The owner chose investigation first and has **not** selected exact-base versus regenerated-base semantics. Present alternatives, measured benefits, risks, and migration limitations for owner approval before changing representation, adding deterministic generation infrastructure, or implementing delta persistence. The investigation must also state whether each proposed derived/default field can be omitted losslessly and how future default changes affect saved documents.
+
+**Verification plan.** Analyze fixtures representing untouched generation, single-zone moves, additions/deletions, connection edits, explicit content overrides, nil/empty values, and old saved states. Define reconstruction/round-trip and size/performance acceptance tests for the chosen design; do not claim improvement without a baseline. If implementation is approved, add dedicated model/delta tests, migration tests, and [wire-format integration coverage](../../test/integration/editorStateWireFormat_integration_test.go), plus manual-edit GUI regression flows. Coordinate its approved format outcome with §2.5/§2.6 in one migration plan; no speculative migration is authorized by this investigation item.
+
+### 2.5 🟠 Represent bans and value overrides as structured lists throughout
+
+**Evidence / owner request O12.** [ContentSettings model](../../internal/models/editor_state_model/contentSettings.go) and [entity](../../internal/entities/editor_state/contentSettings.go) still store `BannedItems`, `BannedMagics`, and `ValueOverridesText` as strings. [GameRulesProvider](../../internal/services/template_generator/providers/gameRulesProvider.go) parses the strings during generation. In contrast, [BonusEntry entity](../../internal/entities/editor_state/bonusEntry.go), [model wrapper](../../internal/models/editor_state_model/bonusEntry.go), and [config aliases](../../internal/models/config/types.go) already provide the requested pattern.
+
+**Approved scope.** Use structured entries throughout editor entities/models, model-bearing DTOs, configuration, and handler/service crossings, following the `BonusEntry` approach. Ban entries carry `SID`; override entries carry `SID` and `GuardValue`. Preserve the current fixed output `Variant=-1`. Text parsing/formatting belongs at UI or legacy migration boundaries, not in generation over already-typed data. Retain existing order, duplicate handling, malformed-input behavior, empty/nil semantics, and export meaning. If typed migration cannot preserve a legacy case, surface the concrete conflict for owner approval rather than inventing a cleanup policy.
+
+**Implementation / verification.** Inventory all readers, parsers, cloning/conversion seams, and UI controls before replacing the string fields; do not widen layer exceptions or edit the protected RMG schema. Preserve malformed-text warnings at the UI/legacy parsing boundaries: the implementation plan must trace their delivery to the user and specify the resulting typed generation API, rather than silently dropping warnings or testing malformed text at a seam that no longer parses it. Use one coordinated new-schema migration with §2.6, informed by §2.4's decision gate, while continuing to load supported older states. Extend [override generation tests](../../test/unit/internal/services/template_generator/providers/gameRulesProvider/createValueOverrides_test.go), content-state clone/mapping tests, and [wire-format integration tests](../../test/integration/editorStateWireFormat_integration_test.go). Test multiple entries, blanks, malformed legacy text, duplicates/order, round trips, mutation isolation, and unchanged exported rules; add Bonuses-panel editing/save/load GUI coverage. This item does not authorize a separate bonuses DTO-exception refactor.
+
+### 2.6 🟠 Persist editor settings in sections while retaining flat identity/map/schema fields
+
+**Evidence / owner request O13.** [EditorState entity](../../internal/entities/editor_state/editorState.go) embeds ten groups into a flat aggregate; [JSON tests](../../test/unit/internal/entities/editor_state/editorState/editorStateJson_test.go) and [wire-format integration tests](../../test/integration/editorStateWireFormat_integration_test.go) pin that current representation.
+
+**Approved shape.** Use the existing groups as sections for `PlayerSettings`, `NeutralZoneSettings`, `CastleSettings`, `GenerationSettings`, `GameRuleSettings`, `ContentSettings`, and `ManualEditSettings`. Keep the fields of `TemplateIdentity`, `MapSettings`, and `SchemaOptions` at the root, not under three extra section objects. In particular, root-level `schemaVersion` remains available for version dispatch. Propose exact JSON section keys in the implementation plan using the current lower-camel convention; do not silently regroup settings by GUI tabs or change field meanings.
+
+**Migration / verification.** Coordinate §2.5 and any owner-approved §2.4 format work into **one migration**, preserving loading of all supported older schema versions and leaving frozen v1 snapshots unchanged. Separate versioned wire shapes from the live model as needed within the existing layering rules; repositories remain typed decoders. Extend dedicated serialization, migrator, and wire-format tests for flat legacy input, the new nested shape, the three flat groups, typed content entries, manual geometry, nil/empty values, unsupported versions, and current-version round trips. Save/load/preview/export must retain the same user choices and data; test malformed sections and failed loads without overwriting the current document. No change to RMG output schema or output-path persistence belongs here.
+
+### 2.7 🟠 Move zone-content accessors from LayoutPanel closures to the state driver
+
+**Evidence / owner request O14.** [layoutPanelZones.go](../../app/gui/panels/layoutPanelZones.go) defines six inline getter/setter pairs for Player, Lowest, Low, Medium, High, and Hub rows, then passes them to `openZoneContentDialog`. Updates currently go through [drivers.State.UpdateState](../../app/gui/drivers/state.go), which owns validation/dirty tracking around the GUI state model.
+
+**Approved scope.** Put the zone/tier content access API on **`app/gui/drivers.State`**, not the domain `EditorState` and not the GUI model. Replace the panel's repeated callbacks with a clear zone/tier selection passed to driver accessors. Keep the driver responsible only for view-state access/update orchestration; it must not take over content composition or generation policy. Preserve existing validation, dirty detection, and cloned-snapshot ownership; getters must not expose mutable aliases into retained state. Dialog cancellation remains non-mutating.
+
+**Verification.** Add mirrored unit tests for every new public driver accessor, covering all six targets, unrelated rows unchanged, empty/nil values, input/output mutation isolation, no-op versus changed updates, and invalid selectors if the API permits them. Use existing production update paths rather than test-only exports. Extend content-dialog GUI flows for open, edit, cancel, and Apply. Coordinate with §2.9 so the panel move reuses the driver API rather than recreating closure-based setters inside the new sections.
+
+### 2.8 🟡 Rename the zones service package and its nested interface package
+
+**Evidence / owner request O16.** [ZoneFactory](../../internal/services/zones/zoneFactory.go) lives under the zones service package, with [IZoneFactory](../../internal/services/zones/zone_interfaces/zoneFactoryInterface.go) in its interface subpackage.
+
+**Approved targets.** Rename the implementation package to internal/services/zone_services and its **nested** contract package to internal/services/zone_services/zone_service_interfaces. Update package declarations, imports, qualifiers, mirrored test directories, relevant documentation references, and Wire provider references together. Keep interfaces prefixed `I` in their separate `*Interface.go` files. This is a naming-only owner request: do not combine it with behavior changes, new abstractions, or unrelated renames.
+
+**Verification.** Regenerate Wire rather than hand-editing generated code. Run build, test-layout checks, full unit tests, architecture gates, coverage, lint, and affected integration suites on supported platforms. Search active imports/declarations for the old paths; historical review evidence may still describe the reviewed revision. Update active documentation links after the move. Existing tests move with implementations and retain dedicated public-method coverage; add tests only for uncovered adjacent logic, not assertions about package spelling.
+
+### 2.9 🟠 Split General, Layout, and Bonuses panels into private cohesive sections
+
+**Evidence / owner request O18.** [GeneralPanel](../../app/gui/panels/generalPanel.go), [LayoutPanel](../../app/gui/panels/layoutPanel.go), and [BonusesPanel](../../app/gui/panels/bonusesPanel.go) each own many controls and their load/save/click handling. [Window](../../app/gui/editor/window.go) constructs the panels and coordinates per-frame saving and load refresh. The Layout method-file split does not give its sections their own state ownership.
+
+**Approved structure.** Move those three panels into app/gui/panels/general_panel, app/gui/panels/layout_panel, and app/gui/panels/bonuses_panel respectively. Each cohesive section gets its own private struct owning its widgets, click handling, and state load/save operations; the enclosing panel composes sections and coordinates them. Expose the public panel structs through aliases in a new app/gui/panels/types.go and preserve existing constructors/public access with thin forwarding functions where needed. Leave Preview unchanged. Child packages must not import the parent alias package; keep shared interfaces in their existing cycle-free location.
+
+**Behavior boundary.** Preserve appearance, ordering, keyboard/pointer behavior, frame-to-frame widget identity, save/load semantics, and public API behavior. No new content presets, domain logic in GUI, live state pointers, or business-layer refactors. Inventory section boundaries in the implementation plan before moving fields. Coordinate zone-content controls with §2.7 and the Bonuses controls with §2.5 to avoid overlapping rewrites.
+
+**Verification.** Keep one primary struct per file and mirrored test layout. Move the existing tagged General/Layout panel test-export methods with their owning structs: Go cannot define methods on aliases of non-local types. Preserve per-file tags and run both gated integration and GUI suites that consume those exports. Run build and architecture checks after package moves, existing window/tab save/load and content-dialog GUI suites, and snapshot comparisons without blindly updating goldens. Exercise each section's state round trip and event routing through integration tests; any extracted non-Gio logic requires its own unit coverage. Compare TabCycling performance before/after because Gio widget identity and retained state are load-bearing; do not introduce an automated global allocation threshold.
+
+### 2.10 🟡 Move neutral content-row selection to GeneratorConfig
+
+**Evidence / owner request O19.** The package-level [neutralRowsForQuality](../../internal/services/template_generator/providers/mandatoryContentProvider.go) maps Lowest/Low/Medium/High to the corresponding configured neutral rows, Highest to Hub rows, and unknown quality to nil. [GeneratorConfig](../../internal/models/config/generatorConfig.go) already owns these configuration values.
+
+**Approved scope.** Replace the private provider lookup with a public `GeneratorConfig` method and update both callers, retaining their respective direct-quality and resolved-quality inputs. Preserve every quality mapping, including Highest→Hub, nil versus empty rows, and the existing read-only borrowed-slice ownership contract. Do not introduce new cloning/allocation or expand lookup behavior incidentally; consumers must not mutate returned configuration rows. Do not add a competing public helper or alter standalone Hub generation policy.
+
+**Verification.** Add a dedicated mirrored test file for the new public method, with separate quality cases including unknown, nil, empty, and populated rows. Retain [mandatory content tests](../../test/unit/internal/services/template_generator/providers/mandatoryContentProvider/createContents_test.go), especially Highest-tier content, and confirm generated content is unchanged. Coordinate with §2.5 if shared content types move.
+
 ## §3 Performance
 
 ### 3.1 🟠 Editor graph diagnostics are rebuilt on every frame despite geometry caching
@@ -311,6 +381,14 @@ Decomposition guidance for work already justified elsewhere, not additional numb
 `git grep` over tracked Go source found **zero TODO/FIXME/HACK/XXX markers**; configured `godox` also emitted zero issues. There is therefore no omitted source TODO list. Free-form suggestions remain in [zoneEditorGeometryService.go](../../internal/services/connection_editor/zoneEditorGeometryService.go#L133-L135) (`"Probably can just be a Vec3"`) and its [guide/snap helper comments](../../internal/services/connection_editor/zoneEditorGeometryService.go#L272-L295). Disposition: accepted owner follow-up/style suggestion, no demonstrated benefit from replacing three scalar offsets or allocating different guide arrays. A commented-out experimental banner is not a correctness finding.
 
 Magic drawing constants mostly have descriptive local names. The portal literal is addressed in §1.15. `getCurrentMapSize` indexes the complete map-size list by the selector index; the normal list is currently its prefix and index clamping exists. This is a verified current non-issue, not a panic claim. A proposed “reused zone name leaves stale controls” bug was rejected: `addZoneAt` explicitly resets `syncedZoneFor`.
+
+### 4.1 🟡 Replace equivalent handwritten vector arithmetic with Vec2 operations
+
+**Evidence / owner request O20.** [Vec2](../../internal/helpers/data/vec2.go) provides value-returning arithmetic, distance, and related operations. [FindOpenPosition](../../internal/services/connection_editor/zoneEditorService.go) already uses some of them. Geometry files are audit candidates, not blanket rewrite targets; polar placement in [balanced-ring layout](../../internal/services/preview_service/layoutBalancedRings.go) is not itself evidence of a missing vector-method replacement. This is an owner-requested consistency audit, not a finding that all scalar math is incorrect. The earlier Vec3 comment disposition does not exclude equivalent Vec2 replacements from this audit.
+
+**Approved scope.** Audit all non-protected production `data.Vec2` usage and replace calculations where an existing vector operation is equivalent and clearer. Record justified exclusions rather than forcing unrelated scalar/angle math into vectors. Add missing vector methods only for concrete callers where they improve the code, with their own tests. Exclude protected game-data/schema/registry trees and generated code; regenerate any generated output only through its normal generator. No bulk in-place rewrite.
+
+**Verification.** Preserve operation order where floating-point rounding matters, zero-length/degenerate behavior, coordinate units, and value ownership. Any intentional numerical change requires separate approval, not concealment as cleanup. Add or extend each affected public API's mirrored tests, including representative axis/diagonal/negative/degenerate cases, and test new methods directly. Run geometry/layout/PNG tests and relevant GUI snapshots, comparing outputs rather than automatically accepting new goldens. Measure hot-path allocations/timing where touched and avoid new allocations or slower general-purpose abstractions. Coordinate overlapping geometry edits with §1.13/§2.1 and preserve dedicated regression assertions.
 
 ## §5 Testing and coverage interpretation
 
@@ -331,16 +409,6 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 ## §6 CI/CD and dependency tooling
 
-### 6.1 🟠 Third-party Actions use mutable tags, including the publishing job
-
-**Evidence.** [PR workflow](../../.github/workflows/pr-validation.yml#L26-L34) uses `actions/checkout@v7` and `actions/setup-go@v7`; [release publish](../../.github/workflows/release.yml#L77-L104) grants `contents: write` and uses `softprops/action-gh-release@v3`. Other external actions also use version tags.
-
-**Why it matters.** An upstream tag can be retargeted. The exact code receiving job permissions is not immutable, particularly for release publication. No compromise is alleged.
-
-**Fix.** Pin all external actions, including composite setup dependencies, to verified commit SHAs with readable version comments. Keep local action paths local and least-privilege permissions. Let Dependabot update pins. Validate workflow syntax and verify each SHA belongs to the intended release; exercise a disposable prerelease workflow without granting extra permissions. No Go unit test is appropriate for a SHA-only workflow change; retain normal gates.
-
-**Owner decision.** Approve the pin/update policy and review upstream provenance rather than copying arbitrary hashes.
-
 ### 6.2 🟠 The tools module installs a different linter than CI and this baseline
 
 **Evidence.** [tools/go.mod](../../tools/go.mod#L90-L98) pins `github.com/golangci/golangci-lint/v2 v2.12.2`; [PR lint](../../.github/workflows/pr-validation.yml#L72-L77) specifies `version: v2.13.1`. The installed executable used here reports `2.13.1`.
@@ -360,16 +428,6 @@ These are specific test-plan gaps attached to the production findings, not six a
 **Fix.** Add explicit LF attributes for module/checksum files, then have the owner approve narrowly scoped normalization of those four paths. Re-run tidy dry-runs from Windows and Linux and verify no dependency-content changes. Avoid a repository-wide normalization/rewrite. No new Go test is warranted.
 
 **Owner decision.** Attribute/normalization change only; do not stage or commit during the fix session.
-
-### 6.4 🟠 Dependabot does not cover the separate tools module
-
-**Evidence.** [.github/dependabot.yml](../../.github/dependabot.yml#L1-L21) has one gomod entry with `directory: /` and one github-actions entry, but no tools-directory entry. [tools/go.mod](../../tools/go.mod#L1-L9) is a separate module with three declared commands and a large independent dependency graph.
-
-**Why it matters.** Application updates do not automatically maintain tool dependencies. Root `govulncheck ./...` also does not scan a separate module merely because its directory is nested. The tools tidy workflow checks consistency, not dependency freshness or known-vulnerability exposure of tools.
-
-**Fix.** Add a tools gomod update entry/group and explicitly decide whether tool vulnerability scanning/building belongs in its path-filtered workflow. Verify the declared Wire, linter, and coverage converter commands build under the selected toolchain after updates. Keep the workflow non-required, as the owner decided. Configuration validation and actual tool builds, not new application unit tests, verify this change.
-
-**Owner decision.** Decide update cadence/grouping and scanner noise policy for developer tools separately from the shipped application's vulnerability policy.
 
 ### 6.5 🟠 Release tag input is interpolated directly into shell source
 
@@ -403,15 +461,13 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 **Owner decision.** None; do not expand this into a documentation rewrite.
 
-### 7.2 🟡 The surviving carry-forward instructs future agents from an obsolete branch state
+### 7.2 🟡 Remaining observation paths and CI claims need reconciliation
 
-**Evidence.** [handoff](../session-carry-forward.md#L109-L123) says batch S is locally committed but not pushed on a feature branch and references now-absent plan/backlog files; [next actions](../session-carry-forward.md#L151-L159) tell the next agent to push/delete/select batch T. Current reviewed HEAD is the merged `master` revision. Some [observation paths](test_observations.md) and CI claims are also obsolete.
+**Evidence / progress.** The obsolete branch/push instructions identified in the original review have been replaced by the owner-requested [current handoff](../session-carry-forward.md). That portion is addressed. Remaining [test observations](test_observations.md) still refer to older flat snapshot-helper paths, `suggestDirectory`, and GPU tests never running in CI. Current source uses [snapshot helpers](../../test/test_helpers/integration_common/snapshot), [getWorkingDirectory](../../app/gui/drivers/stateFiles.go), and a [Mesa/Xvfb GUI job](../../.github/workflows/pr-validation.yml#L235-L278). The old benchmark figures are historical, not current measurements.
 
-**Why it matters.** A resumable work artifact must not direct a future agent to push an old branch or operate on missing plans. Historical decisions are valuable, but obsolete operational instructions are not current authority.
+**Why it matters.** Coverage limitations remain useful only if their paths and execution claims reflect the current test architecture. Updating the handoff does not automatically resolve these remaining observations or invalidate settled testability decisions.
 
-**Fix.** With owner approval, retire the stale handoff or replace its operational sections with a clear “historical/completed” notice and link this review. Retain settled schema/repository decisions in the surviving local memory index; correct moved snapshot-helper paths and distinguish old benchmark results from current measurements. Verify all surviving local links and compare branch/SHA statements against Git. No new Go unit tests needed.
-
-**Owner decision.** File retirement is destructive documentation lifecycle work; the review does not perform it. Do not fabricate remote push status from local history.
+**Remaining work.** Correct moved paths and stale symbols/CI claims; distinguish historical benchmark figures from current evidence and keep the intentional absence of an automated allocation threshold. Verify surviving local links and branch statements without fabricating remote status. Do not re-create retired operational instructions or remove useful coverage-limit explanations. No new Go unit tests are needed; mark the whole item fixed only after its remaining documentation scope and owner-commit protocol are satisfied.
 
 ## §8 Full linter disposition
 
@@ -442,15 +498,21 @@ The configured run includes existing exclusions (protected registry duplication,
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Owner decisions on edit invalidation, custom guard values, player-count restoration. Do not include topology deletion/redesign automatically. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Determinism first; batched real-input tests; shared classification; owner approval before visual-policy consolidation. |
 | G: measured performance | §3.1 | Establish public-API/GUI baseline before caching; no flaky global allocation threshold. |
-| H: CI/tooling hardening | §6.1–§6.5 | Independent small PR-sized configuration changes; pin verification, Windows/Linux EOL checks, tool build and update policy. |
+| H: CI/tooling hardening | §6.2, §6.3, §6.5 | Independent configuration changes: linter alignment, Windows/Linux EOL checks, and safe release-tag validation. |
 | I: docs | §7.1, §7.2 | Can run independently after owner approves retirement scope. |
 | J: reopened service boundary | §2.2 | Confirm the composition result/API and exception-removal scope first; preserve bonuses exception. Independent from geometry and road fixes. |
+| K: topology retirement | §2.3 | Inventory shared builders before removal; reject retired saved IDs, reroute surviving tournament fallbacks to balanced generation, and coordinate §1.12. |
+| L: compact-state investigation | §2.4 | Can begin independently; owner reviews live/persisted feasibility and reconstruction semantics before implementation or schema design. |
+| M: coordinated persistence format | §2.5, §2.6; approved outcome of §2.4 only | Follow L's decision gate. One migration plan, supported legacy loading, typed entries, and explicit root-versus-section wire assertions. |
+| N: panel/state organization | §2.7, §2.9 | Driver accessors first; preserve public panel API, GUI snapshots, and state round trips. Coordinate Bonuses work with M. |
+| O: focused naming and lookup | §2.8, §2.10 | Separate behavior-preserving changes; schedule rename outside overlapping service work, regenerate Wire, test the config lookup directly. |
+| P: vector arithmetic audit | §4.1 | Coordinate with F; equivalent permitted production edits only, dedicated numerical tests and hot-path checks. |
 
 For every code batch: capture coverage before/after, build, unit suite, test-layout check, full lint baseline, relevant tagged integration/GUI suites, and Wire regeneration when constructors/provider sets change. Preserve **74.4% or higher comparable Windows coverage** and **0 lint issues**, unless a measured denominator/platform change is separately explained and approved. Owner stages/commits. Mark items in place; never renumber.
 
 ## §10 Security, dependencies, owner validation, and verified non-issues
 
-**Vulnerability status.** `govulncheck` is not installed locally. An attempted tool lookup via the tools module was not a successful scan; no vulnerability count is claimed. The contract allows confirmation of CI coverage: [PR vulnerability job](../../.github/workflows/pr-validation.yml#L79-L99) and [scheduled security scan](../../.github/workflows/security-scan.yml#L14-L33) run `golang/govulncheck-action@v1` against `./...`. Actual remote results were not fetched. The separate tools module is addressed in §6.4. No dependency is labelled vulnerable/unmaintained merely because it is old or indirect.
+**Vulnerability status.** `govulncheck` is not installed locally. An attempted tool lookup via the tools module was not a successful scan; no vulnerability count is claimed. The contract allows confirmation of CI coverage: [PR vulnerability job](../../.github/workflows/pr-validation.yml#L79-L99) and [scheduled security scan](../../.github/workflows/security-scan.yml#L14-L33) run `golang/govulncheck-action@v1` against `./...`. Actual remote results were not fetched. No dependency is labelled vulnerable/unmaintained merely because it is old or indirect.
 
 **File-system safety checked.** [SanitizeFilename](../../internal/helpers/string.go) removes path separators/unsafe characters; [PathResolutionService](../../internal/services/file_system/pathResolutionService.go) checks names and resolves destinations; [atomicFileWriter](../../internal/repositories/atomicFileWriter.go) uses temporary write/sync/close/rename and cleanup. No concrete template-name traversal or command execution in application template handling was found. The dangerous output fallback is §1.2, not a demand to persist a directory.
 
@@ -605,4 +667,4 @@ All 36 app files below are Gio/rendering/view composition and should be consider
 
 Protected entity/registry rows above are informational only. Generated Wire code must be regenerated, never hand-edited. Dead plural converters are already dispositioned. Host/embedded-asset/disk-fault gaps retain the explicit observation limitations. Lower GUI percentages do not supersede the integration-only policy.
 
-**Final baseline:** Windows Go **1.27.0**; build/vet/default/tagged integration/layout checks **pass**; unit coverage **74.4%**; full configured lint **0 issues**; selected repeated suites **pass 20 times**; module tidy dry-runs **fail only on Windows checksum EOLs**; local vulnerability/race/GUI/Linux outcomes **not measured**. Only this review document is a retained change.
+**Final review baseline:** Windows Go **1.27.0**; build/vet/default/tagged integration/layout checks **pass**; unit coverage **74.4%**; full configured lint **0 issues**; selected repeated suites **pass 20 times**; module tidy dry-runs **fail only on Windows checksum EOLs**; local vulnerability/race/GUI/Linux outcomes **not measured**. Subsequent backlog curation is documentation-only and does not constitute a fresh application verification run.

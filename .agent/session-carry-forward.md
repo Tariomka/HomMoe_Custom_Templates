@@ -1,12 +1,12 @@
 # Carry-forward: begin repository-review backlog work
 
-Date: 2026-09-07.
+Date: 2026-09-08.
 
 ## 1. Session goal
 
 Review the repository according to [the review prompt](promt_templates/review-prompt.md), then prepare a new session to implement the resulting backlog under owner approval.
 
-**Source of truth:** [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md). It contains **25 findings: 8 High, 13 Medium, 4 Low**, all prior-item dispositions, source evidence, proposed tests, decisions, execution order (§9), and measured baselines (§11).
+**Source of truth:** [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md). It contains **32 actionable items: 8 High, 17 Medium, 7 Low**, including the owner-requested work scoped on 2026-09-08, prior-item dispositions, source evidence, proposed tests, decisions, execution order (§9), and measured baselines (§11).
 
 **Implementation has not started.** Creating this handoff is not approval to implement all findings. Start with review §1.1, then §1.2 (batch A), after confirming scope and the remaining decisions.
 
@@ -21,13 +21,16 @@ Review the repository according to [the review prompt](promt_templates/review-pr
 - The owner selected **“Include verified owner items”** when asked how to treat the existing manual backlog.
 - The owner explicitly selected **“Reopen the DTO removal request”** after being shown the conflict between the zone-content owner backlog and the architecture gate's accepted exception. This is review **§2.2**. The bonuses DTO exception is **not** reopened. The exact replacement API/result and whole-exception versus single-seam scope still need approval.
 - No application features were changed.
+- Owner-scoped additions are §2.3–§2.10 and §4.1. They cover topology retirement, compact-state investigation, typed content lists, sectioned persistence, driver accessors, package naming, panel sections, config lookup, and vector arithmetic. O09 presets remain deferred, not actionable.
 
 ## 4. File modifications
 
 | File | State / purpose |
 | --- | --- |
-| [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) | Created in the review session; subsequently staged by the owner. Do not unstage or overwrite owner edits. |
-| [session-carry-forward.md](session-carry-forward.md) | Created by this handoff request after the owner staged deletion of the obsolete version. This new working-tree content is intentionally not staged by the agent. |
+| [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) | Curated backlog with nine owner-scoped additions, stable IDs, acceptance criteria, and execution dependencies. |
+| [owner_findings.md](backlog/owner_findings.md) | Completed O01/T01/T04/T06 source entries removed; their evidence remains in review §0. |
+| [test_observations.md](backlog/test_observations.md) | Completed SaveTo observation removed as requested; its review disposition remains. |
+| [session-carry-forward.md](session-carry-forward.md) | Updated to the current backlog scope and starting repository state. |
 
 A temporary verification program under .agent/review_probe was created, executed, and deleted during the review. Its absence was checked again before this handoff. No scratch source remains. Existing root coverage reports were not overwritten; diagnostic output was directed outside the repository and is not required to resume because results are recorded in the review.
 
@@ -69,16 +72,15 @@ Other findings are source-traced, not represented as experimentally reproduced. 
 
 ## 6. Git status snapshot
 
-Checked immediately before writing this new handoff:
+Checked before the 2026-09-08 documentation curation:
 
 - Branch: **master**.
-- HEAD: **f4f4cf6**, “Backlog item resolution (#36)”.
-- Local `origin/master` and `origin/HEAD` refs point at the same commit. No fetch was performed; this is not a claim about current remote state.
-- Staged addition: [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md).
-- Staged deletion: the obsolete [session-carry-forward.md](session-carry-forward.md).
-- No application-source changes were reported; temporary verification source was absent.
+- HEAD: **6ec9e2c**, “Added New Backlog of items (#39)”, tagged **v0.3.8**.
+- Local `origin/master` and `origin/HEAD` refs point at the same commit after the owner's pull. This is not a fresh remote query by the agent.
+- Working tree and index were clean before these documentation edits.
+- The four documents in §4 are the intended unstaged changes. No application source was changed.
 
-This request recreates the deleted handoff in the working tree while **leaving the staged deletion intact**. A new session should inspect both index and working tree. The agent did not stage, unstage, commit, push, or switch branches. Do not alter the owner's staging to make status look clean.
+A new session must inspect both index and working tree again. The agent did not stage, unstage, commit, push, or switch branches. Do not alter owner staging.
 
 ## 7. Rejections / things declined or corrected
 
@@ -90,9 +92,8 @@ This request recreates the deleted handoff in the working tree while **leaving t
 - The first requested subagent model alias was unavailable; the display-name model worked. Use available model names, such as `Claude Opus 5 (copilot)`, for final plan/implementation review. Never use Haiku.
 - A naïve custom coverage aggregation was discarded because profiles contain duplicate blocks across executables. Use Go's own total and per-file HTML percentages, not sums/averages of raw profile rows.
 - Tidy failures were investigated and classified as EOL-only, not dependency drift. No files were normalized during review.
-- The old handoff no longer existed when this request began because its deletion had been staged by the owner. It was not restored from Git; this is fresh content requested by the owner.
 
-## 8. Open questions
+## 8. Open questions and confirmed scope
 
 ### First work: batch A, §1.1 and §1.2
 
@@ -110,8 +111,21 @@ This request recreates the deleted handoff in the working tree while **leaving t
 - §1.12: whether the previous non-tournament player count should be remembered in session view state.
 - §2.1: intentional editor/PNG curve differences versus required visual agreement.
 - §2.2: `ContentRuleRow` versus the owner note's `ZoneContentRow`, the service result validity contract, and full DTO exception removal versus composition-only scope.
-- §6: action pin/update policy, linter version, narrow EOL normalization, tools dependency maintenance, release tag validation format.
+- §6.2/§6.3/§6.5: linter version, narrow EOL normalization, and release tag validation format.
 - Review §10 retains in-game validation for bonuses/bans, hero-hire policy, and historical preview artifacts. No new game result was obtained.
+
+### Confirmed owner scope for the additions
+
+- **§2.3 / O08:** completely remove Ring, Hub, Chain, Shared Web and corresponding tournament builders. Reject saved selections of retired IDs with a clear error, without changing the current document. Route surviving tournament cases formerly using the chain fallback to the balanced builder. Preserve Geometric Hub and shared hub-zone concepts.
+- **§2.4 / O11:** first investigate live state and persistence, comparing exact-base reconstruction with regenerated untouched zones plus deltas. Cover identities, randomness, upgrades, derived fields, defaults, migration, and measured size/performance. Owner approves the feasibility outcome before either representation is implemented.
+- **§2.5 / O12:** follow `BonusEntry` with structured entity/model entries throughout, ban `SID` and override `SID`/`GuardValue`; preserve current semantics and output `Variant=-1`. Keep legacy/UI text parsing at boundaries.
+- **§2.6 / O13:** use current groups as JSON sections except `TemplateIdentity`, `MapSettings`, and `SchemaOptions`, whose fields remain flat. One coordinated migration with §2.5 and any approved §2.4 outcome; retain supported old-state loading. Exact section keys belong in the implementation plan.
+- **§2.7 / O14:** place all six zone-content getters/setters on `app/gui/drivers.State`, replacing panel callbacks with a zone/tier selection. Preserve validated dirty-tracked updates and snapshot isolation.
+- **§2.8 / O16:** rename to internal/services/zone_services and its nested zone_service_interfaces package; update imports, mirrored tests, active links, and generated wiring without changing behavior.
+- **§2.9 / O18:** move General/Layout/Bonuses to their named panel subpackages, with a private struct per cohesive section and public top-level aliases/constructor compatibility. Preserve GUI behavior; Preview remains unchanged.
+- **§2.10 / O19:** move the lookup to a public `GeneratorConfig` method; preserve Highest→Hub, unknown→nil, and read-only borrowed-row semantics.
+- **§4.1 / O20:** audit all permitted production `Vec2` use; prefer equivalent methods and add missing ones only for justified callers with tests. Preserve numerical behavior and avoid hot-path regressions.
+- **O09:** not scheduled. Presets have not been investigated or planned.
 
 ## 9. Next recommended actions
 
@@ -122,16 +136,16 @@ This request recreates the deleted handoff in the working tree while **leaving t
 5. Establish fresh pre-change coverage/tests. Add focused failing regressions through production APIs, then implement only approved behavior. Keep rendering in GUI and domain policy behind handlers; use existing clone/conversion helpers.
 6. Verify build, unit tests, coverage, full configured lint, and test layout. Run the relevant integration/GUI suites explicitly when required. Regenerate Wire for changed constructors/provider sets; never edit generated code manually.
 7. Record files, exact checks, results, and any residual limits in the plan. Present the diff to the owner. **The owner stages/commits.** Mark the review item `✅ FIXED` only after the protocol's owner-commit step is satisfied; until then record “implemented/verified, awaiting owner commit” without misrepresenting completion.
-8. Continue with the review's order: B (§1.3/§1.7), C (§1.4/§1.6/§1.10), D (§1.8/§1.9), E (§1.5/§1.11/§1.12), F geometry, G measured performance, H tooling, I docs, J reopened DTO work. D coordinates with C's road rebuild and A's dirty handling; do not renumber items or implement an entire category without scope approval.
+8. Continue with review §9: B (§1.3/§1.7), C roads/graph, D manual lifecycle, E modes/guards, F geometry, G performance, H (§6.2/§6.3/§6.5), I docs, J DTO work; then K topology retirement, L compact-state investigation, M coordinated persistence, N driver/panel organization, O naming/config lookup, P vector arithmetic. L may start independently but gates M's representation decisions. Coordinate overlapping files; do not renumber items or implement an entire category without plan approval.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [.agent/session-carry-forward.md](session-carry-forward.md) for the full handoff and [.agent/backlog/review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) as the backlog source of truth.
 >
-> Begin work on the review backlog, starting with batch A: §1.1 manual edits fail to mark the document unsaved, and §1.2 failed game-directory detection falls back to an invalid export destination. First inspect current Git state and reverify source/callers/tests, ask the open scope questions, and obtain approval for a durable plan before implementing. No application fixes have been made yet. The review has 25 findings, with exact evidence/test plans and a complete prior-item disposition; do not repeat the full audit or mark anything fixed prematurely.
+> Begin work on the review backlog, starting with batch A: §1.1 manual edits fail to mark the document unsaved, and §1.2 failed game-directory detection falls back to an invalid export destination. First inspect current Git state and reverify source/callers/tests, ask the open scope questions, and obtain approval for a durable plan before implementing. No application fixes have been made yet. The review has 32 actionable items, with evidence/test plans and prior-item dispositions. Its nine owner additions are scoped in handoff §8; O11 is investigation-first and O09 presets are deferred. Do not repeat the full audit or mark anything fixed prematurely.
 >
 > Hard rules: never modify the protected data, template_entity schema, or registry trees; protected changes require explicit owner approval and owner application. Preserve Windows/Linux compatibility using portable paths and guarded platform code. Every nontrivial code change needs tests and before/after coverage; current measured Windows baseline is 74.4%, lint zero, and build/vet/default/tagged integration/layout checks passed. Multi-step work requires a durable approved plan. Never stage, unstage, commit, or push, and preserve owner-staged changes. Never bulk-rewrite the repository or hand-edit generated Wire output; format only explicit permitted files and regenerate injectors when needed. Export must use the machine-detected game templates directory or the deliberate session-only picker override, never a persisted output path or an unrelated fallback.
 >
-> At handoff HEAD was f4f4cf6 on master. The owner had staged the new review and deletion of the obsolete handoff; this request recreated the handoff in the working tree without changing the index. Recheck before acting. Temporary verification code was deleted. No global integration_test/gui/wireinject tags, no fake unit seams for private/Gio code, and no drive-by refactors.
+> Before the latest documentation curation, HEAD was 6ec9e2c on master, tagged v0.3.8, with a clean index and working tree. The review, two source backlogs, and handoff were then edited without staging. Recheck before acting. Temporary review verification code was deleted. No global integration_test/gui/wireinject tags, no fake unit seams for private/Gio code, and no drive-by refactors.
 >
 > Owner decision: §2.2 zone-content DTO removal was explicitly reopened, but its API and scope still need planning; the bonuses DTO exception remains accepted. Other in-game policy checks remain unresolved. Module tidy dry-runs failed only because Windows checksum files have CRLF, not dependency-content drift. Local GUI/race/Linux/benchmark/vulnerability outcomes were not measured in this review. Follow ask → plan → approve → implement + verify → owner commits → mark, keeping finding numbers stable.
