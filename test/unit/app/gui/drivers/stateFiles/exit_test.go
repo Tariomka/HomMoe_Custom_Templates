@@ -173,6 +173,25 @@ func TestWhenAnIdenticalApplyWithAValidationWarningFollowsExitConfirmation_TheCo
 	assert.True(t, exited)
 }
 
+func TestWhenAnUntouchedRevertHasNoSnapshot_TheExitConfirmationStillHolds(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, exited, _, _ := newUnsavedGeneratedState()
+	base, _ := state.PreviewBaseZones()
+	state.Exit()
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:        base.Zones,
+		Connections:  base.Connections,
+		RevertToBase: true,
+	})
+	state.Exit()
+
+	// Assert
+	assert.True(t, *exited)
+}
+
 // newUnsavedState returns a State with a generated template and an unsaved
 // change, plus a flag pointer reporting whether Exit closed the application.
 func newUnsavedState() (state *drivers.State, exited *bool) {

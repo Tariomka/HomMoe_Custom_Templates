@@ -10,6 +10,9 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
+**Current progress (2026-09-09):** **4 fixed, 28 remaining**: 5 High, 16 Medium,
+7 Low. The original audit measurements above remain historical.
+
 **Fix-session protocol:** ask → plan → owner approves → implement and verify → owner commits → mark the stable item `✅ FIXED`. Owner-confirmed scope below is not permission to implement before the per-item plan is approved. Protected-directory changes remain owner-approved and owner-applied only. Each future change must follow the test layout, AAA, `t.Parallel()`, testify, coverage, build, and tag requirements in [AGENTS.md](../../AGENTS.md). Proposed new test paths below are deliberately not hyperlinks until the files exist.
 
 ## §0 Disposition of prior reviews
@@ -183,20 +186,20 @@ session-only picker confirmation. Owner committed the fix in `a9eb35c`
 
 **Owner decision.** If the game requires explicit false and the existing protected schema cannot express it, stop and request owner approval for a schema change; never edit it as part of a routine fix.
 
-### 1.8 🔴 Untouched Revert-to-Base is compared after the handler mutates it
+### 1.8 ✅ FIXED — Untouched Revert-to-Base is compared after the handler mutates it
 
-**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0:
-revert identity is captured before handler mutation, and the real-handler
-roads-off regression confirms an untouched revert clears an existing snapshot.
-Owner committed `a9eb35c`, but closure is blocked by a subsequent code change
-included in that commit: `if revertsToUntouchedBase && ClearManualEdits()` returns
-only when a snapshot existed. With no existing snapshot, an untouched revert
-falls through to `SetManualEdits`, pins the base and marks the document dirty.
-The dialog permits this scenario. Existing revert tests first establish a
-snapshot and miss the empty-snapshot case. Return unconditionally for an accepted
-untouched revert, while setting dirty only if the clear changed data; add tests
-for no snapshot and clean/confirmation preservation. No application correction
-was applied during the documentation closeout. This item is not yet fixed.
+**Progress (2026-09-09).** `a9eb35c` implemented compare-before-mutation and
+verified real-handler roads-off reverts with an existing snapshot. Closure review
+found a separate empty-snapshot fallthrough: the clear's changed result governed
+the return, so the unchanged base could be stored. Owner corrected that control
+flow in `509cc05`; the production correction is verified read-only. Three
+additional regression assertions are unstaged and awaiting owner review/commit in
+[applyEditedZones_test.go](../../test/unit/app/gui/drivers/stateManualEdits/applyEditedZones_test.go)
+and [exit_test.go](../../test/unit/app/gui/drivers/stateFiles/exit_test.go). They
+were added by the assistant in this closure; the owner committed the production
+fix. They prove an untouched base with no manual snapshot stored leaves a clean
+document saved and retains an armed Exit confirmation. These are unit-only; the
+existing real-handler integration continues to cover reverting an existing snapshot.
 
 **Evidence.** [ApplyEditedZones](../../app/gui/drivers/stateManualEdits.go#L22-L35) calls `this.handleUpdateTemplate(...)` before `matchesZoneSet(request, pendingBase)`. The comparison is [reflect.DeepEqual](../../app/gui/drivers/stateManualEdits.go#L66-L69). [UpdateTemplate](../../internal/handlers/templateHandler.go#L79-L85) rebuilds the request's roads in place. The dialog [copies the top-level zone slice](../../app/gui/dialogs/zoneEditorDialog.go#L179-L197), separating those field replacements from the stored pending base.
 
@@ -525,7 +528,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | A: prevent silent loss/misplacement | §1.1, §1.2 | Dirty/exit tests and failed-detection export refusal. Highest user impact; preserve output hard rule. |
 | B: PNG and value contract | §1.3, §1.7 | Independent small fixes with public-API pixel and tournament-value tests. Confirm game's omitted-false semantics. |
 | C: road and graph invariants | §1.4, §1.6, §1.10 | Agree generated/custom-road handling, then separate graph connectivity from road policy. End-to-end road-target integrity and roads-off matrices. |
-| D: manual state lifecycle | §1.8, §1.9 | Coordinate with A's dirty tracking and C's road-rebuild changes; retain compare-before-mutation tests even after roads-off is fixed. Land after C or include §1.8 in C. |
+| D: manual state lifecycle | §1.8, §1.9 | Complete in Batch A. Retain compare-before-mutation tests if C changes road rebuilding. |
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Owner decisions on edit invalidation, custom guard values, player-count restoration. Do not include topology deletion/redesign automatically. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Determinism first; batched real-input tests; shared classification; owner approval before visual-policy consolidation. |
 | G: measured performance | §3.1 | Establish public-API/GUI baseline before caching; no flaky global allocation threshold. |

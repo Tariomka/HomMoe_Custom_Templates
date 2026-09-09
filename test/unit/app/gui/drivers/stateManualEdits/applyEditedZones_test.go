@@ -289,7 +289,7 @@ func TestWhenTheUpdateRewritesTheRequestRoads_TheUntouchedRevertStillClearsTheSn
 	base, _ := state.PreviewBaseZones()
 
 	// Act
-	state.ApplyEditedZones(copyZoneSet(base, true))
+	state.ApplyEditedZones(copyZoneSet(base))
 
 	// Assert
 	stateData := state.GetStateData()
@@ -306,14 +306,43 @@ func TestWhenARejectedRevertIsRetried_TheConsumedBaseIsNoLongerRecognised(t *tes
 		Return(dtos.TemplateLoadDto{}, common_errors.ErrProvidedTemplateInvalid).Once()
 	expectAcceptedUpdate(handlerMock)
 	base, _ := state.PreviewBaseZones()
-	state.ApplyEditedZones(copyZoneSet(base, true))
+	state.ApplyEditedZones(copyZoneSet(base))
 
 	// Act
-	state.ApplyEditedZones(copyZoneSet(base, true))
+	state.ApplyEditedZones(copyZoneSet(base))
 
 	// Assert
 	stateData := state.GetStateData()
 	assert.True(t, stateData.HasManualEdits())
+}
+
+func TestWhenAnUntouchedBaseIsAppliedWithoutManualEdits_NoSnapshotIsStored(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, _, _ := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	base, _ := state.PreviewBaseZones()
+
+	// Act
+	state.ApplyEditedZones(copyZoneSet(base))
+
+	// Assert
+	stateData := state.GetStateData()
+	assert.False(t, stateData.HasManualEdits())
+}
+
+func TestWhenAnUntouchedBaseIsAppliedWithoutManualEdits_TheDocumentStaysSaved(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, _, _ := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	base, _ := state.PreviewBaseZones()
+
+	// Act
+	state.ApplyEditedZones(copyZoneSet(base))
+
+	// Assert
+	assert.False(t, state.IsUnsaved())
 }
 
 // newGeneratedState returns a State holding the default template, plus its
@@ -365,10 +394,10 @@ func expectRoadRewritingUpdate(handlerMock *test_helpers.TemplateHandlerMock) {
 
 // copyZoneSet mimics the zone editor dialog, which hands the driver its own
 // top-level slices holding the same zone values.
-func copyZoneSet(source dtos.ZoneEditorZonesDto, revertToBase bool) dtos.ZoneEditorZonesDto {
+func copyZoneSet(source dtos.ZoneEditorZonesDto) dtos.ZoneEditorZonesDto {
 	return dtos.ZoneEditorZonesDto{
 		Zones:        append([]template_model.Zone(nil), source.Zones...),
 		Connections:  append([]template_model.Connection(nil), source.Connections...),
-		RevertToBase: revertToBase,
+		RevertToBase: true,
 	}
 }
