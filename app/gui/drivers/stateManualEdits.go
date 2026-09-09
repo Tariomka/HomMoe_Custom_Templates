@@ -23,8 +23,10 @@ func (this *State) ApplyEditedZones(request dtos.ZoneEditorZonesDto) {
 		return
 	}
 
-	if revertsToUntouchedBase && this.innerState.ClearManualEdits() {
-		this.flagAsUnsaved()
+	if revertsToUntouchedBase {
+		if this.innerState.ClearManualEdits() {
+			this.flagAsUnsaved()
+		}
 		return
 	}
 

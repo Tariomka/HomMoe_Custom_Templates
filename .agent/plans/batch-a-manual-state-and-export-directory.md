@@ -331,8 +331,9 @@ Status: In progress
   tags, no persisted path, no unrelated changes, and owner staging preserved.
 - [x] Update this plan with exact commands/results and residual limits. In the
   review, record “implemented/verified, awaiting owner commit” only when true.
-- [ ] Owner reviews and commits the verified working-tree changes. Do not mark §1.1/§1.2/§1.8/§1.9 fixed until the
-  owner has committed and that commit has been verified read-only.
+- [x] Owner committed `a9eb35c`; commit and clean starting Git state verified read-only.
+- [ ] Correct and test the committed empty-snapshot revert fallthrough under §1.8,
+  then verify the owner's follow-up commit before closing that finding and this plan.
 
 ### Verification Plan
 
@@ -352,7 +353,15 @@ Status: In progress
 
 ### Phase Summary
 
-Implementation verification is complete and the owner commit is pending. Windows
+Pre-commit implementation verification completed with the results below. Owner
+committed `a9eb35c` on 2026-09-09. Read-only closure inspection found the committed
+Apply rewrite differs from the tested implementation: combining untouched-revert
+selection with `ClearManualEdits()`'s changed result allows an empty-snapshot
+revert to fall through and store the base. §1.8 closure is blocked; §1.1, §1.2,
+and §1.9 are marked fixed. The working tree and index were clean before these
+documentation updates. No post-commit tests or application edits were performed.
+
+Historical pre-commit verification: Windows
 Go 1.27 checks passed: `go build ./...`; `go test ./test/unit/...`; coverage task
 at **74.5%**; `go test ./test/...`; tagged integration; tagged GUI integration
 (GUI 27.261s, main 2.734s); `go vet -tags=integration_test ./...`; and the
@@ -365,18 +374,21 @@ benchmark, or vulnerability-scan result is claimed.
 
 ## Final Recap
 
-Batch A implementation and verification are complete, pending owner review and
-commit. It fixes the selected manual-state and export-directory findings without
-changing protected data/schema/registry content, output-path persistence, or Wire
-providers/generated output. The four review findings remain awaiting owner commit,
-not fixed.
+Owner commit `a9eb35c` contains this batch. §1.1, §1.2, and §1.9 are fixed.
+§1.8 and final plan completion remain open because an accepted untouched revert
+with no previous snapshot now stores a snapshot. Fix the fallthrough without
+changing the owner-approved consume-pending-base policy, add the missing
+regression, remeasure coverage and verify, then await the owner's follow-up commit.
+The earlier verification ledger must not be read as verification of this later
+committed rewrite. Protected data/schema/registry and output persistence remain
+unchanged.
 
 ## Deployment Plan
 
-1. Owner reviews the verified working-tree diff and confirms scope.
-2. Owner stages and commits the approved changes using the existing release workflow.
-3. In a later read-only verification, confirm that commit and then mark §1.1,
-   §1.2, §1.8, and §1.9 `✅ FIXED` in the review.
+1. Owner review and commit completed in `a9eb35c`; verified read-only.
+2. Correct §1.8's empty-snapshot revert fallthrough and verify the follow-up
+  before declaring this plan complete. No such correction has been applied yet.
+3. Owner commits the correction; verify that commit and mark §1.8 fixed.
 
 No data migration or output-path preference change is required. Each launch
 redetects the game folder; if unavailable, users must explicitly select the
