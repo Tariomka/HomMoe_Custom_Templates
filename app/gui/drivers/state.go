@@ -3,6 +3,7 @@ package drivers
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gioui.org/layout"
@@ -14,13 +15,15 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
-const configFileExtension = ".gen.json"
+const (
+	configFileExtension    = ".gen.json"
+	chooseOutputFolderHint = "Choose the game templates folder using the output folder picker before exporting."
+)
 
 type State struct {
 	handler      handler_interfaces.IGuiHandler
@@ -41,19 +44,11 @@ type State struct {
 	statusErr        bool
 
 	confirmExit bool
-	// onExit closes the application window (injected via SetOnExit) so exit
-	// flows through the normal Gio app.DestroyEvent path.
-	onExit func()
+	onExit      func() // app closing callback for Gio app.DestroyEvent flow.
 
-	// applyNextStateAt is when the armed debounce window elapses.
-	applyNextStateAt time.Time
+	applyNextStateAt time.Time               // for debouncing
+	pendingBaseZones dtos.ZoneEditorZonesDto // uncommitted layout produced by PreviewBaseZones.
 
-	// pendingBaseZones is the uncommitted layout produced by PreviewBaseZones,
-	// kept so an apply can tell an untouched revert from one the user edited.
-	pendingBaseZones dtos.ZoneEditorZonesDto
-
-	// dialogs renders modal dialogs (rule editors, pickers, the connection
-	// editor) over the main UI.
 	dialogs *DialogHost
 }
 
@@ -74,17 +69,7 @@ func NewUIState(
 		return state
 	}
 
-	templateDir, err := helpers.FindOldenEraTemplatesDir(false)
-	if templateDir == "" {
-		if errors.Is(err, common_errors.ErrTemplatesDirNotFound) {
-			state.SetStatus("Game template directory not found, using fallback directory.", false)
-		} else {
-			state.SetStatus(fmt.Sprintf("Failed to find game template directory: %v", err), true)
-		}
-
-		templateDir = state.getWorkingDirectory()
-	}
-	state.outputPath.SetText(templateDir)
+	state.tryResolveTemplateDirectory()
 	return state
 }
 
@@ -99,8 +84,6 @@ func (this *State) GetStateData() editor_state_model.EditorState {
 func (this *State) GetStateDto() editor_state_dto.EditorStateDto {
 	return editor_state_dto.EditorStateDto{EditorState: this.GetStateData()}
 }
-
-// Clone-free single-setting readers for per-frame Layout code; see EditorState.
 
 func (this *State) GetTemplateName() string { return this.innerState.GetTemplateName() }
 
@@ -135,15 +118,29 @@ func (this *State) Reset() {
 func (this *State) UpdateState(updateFunc func(*editor_state_model.EditorState)) {
 	this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() {
-		this.unsaved = true
-		// New edits invalidate a pending exit confirmation.
-		this.confirmExit = false
+		this.flagAsUnsaved()
 	}
 }
 
 func (this *State) SetStatus(msg string, isErr bool) {
 	this.statusMsg = msg
 	this.statusErr = isErr
+}
+
+func (this *State) tryResolveTemplateDirectory() {
+	templateDir, err := this.fileSystem.FindGameTemplateDirectory()
+	templateDir = strings.TrimSpace(templateDir)
+	if err == nil && templateDir != "" {
+		this.outputPath.SetText(templateDir)
+		return
+	}
+
+	if err == nil || errors.Is(err, common_errors.ErrTemplatesDirNotFound) {
+		this.SetStatus("Game template directory not found. "+chooseOutputFolderHint, true)
+		return
+	}
+
+	this.SetStatus(fmt.Sprintf("Failed to find game template directory: %v. %s", err, chooseOutputFolderHint), true)
 }
 
 func (this *State) hasTemplateVariants() bool {
@@ -173,4 +170,10 @@ func (this *State) getNextStateDto() *editor_state_dto.EditorStateDto {
 	}
 
 	return &editor_state_dto.EditorStateDto{EditorState: *state}
+}
+
+func (this *State) flagAsUnsaved() {
+	this.unsaved = true
+	// New edits invalidate a pending exit confirmation.
+	this.confirmExit = false
 }

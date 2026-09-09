@@ -1,151 +1,94 @@
-# Carry-forward: begin repository-review backlog work
+# Carry-forward: Batch A and D complete
 
-Date: 2026-09-08.
+Date: 2026-09-09.
 
 ## 1. Session goal
 
-Review the repository according to [the review prompt](promt_templates/review-prompt.md), then prepare a new session to implement the resulting backlog under owner approval.
-
-**Source of truth:** [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md). It contains **32 actionable items: 8 High, 17 Medium, 7 Low**, including the owner-requested work scoped on 2026-09-08, prior-item dispositions, source evidence, proposed tests, decisions, execution order (§9), and measured baselines (§11).
-
-**Implementation has not started.** Creating this handoff is not approval to implement all findings. Start with review §1.1, then §1.2 (batch A), after confirming scope and the remaining decisions.
+Complete review §1.1, §1.2, §1.8 and §1.9, verify the owner's committed correction, and prepare the next session. [The review](backlog/review-gpt-6-astra-09-07.md) remains the backlog source of truth: **4 fixed, 28 remaining** (5 High, 16 Medium, 7 Low), from 32 original findings.
 
 ## 2. Fixes applied
 
-- No application, test, configuration, dependency, or protected-data fixes were applied during the review.
-- This [handoff](session-carry-forward.md) replaces obsolete operational instructions with the current starting point. It partially addresses review §7.2, but that item also covers other stale observations; do not mark the entire item fixed automatically.
+- [Manual Apply](../app/gui/drivers/stateManualEdits.go): changed accepted snapshots mark dirty and reset Exit confirmation; rejected/no-template/identical applies preserve the appropriate flags. Revert identity is computed before handler mutation.
+- [GUI editor state](../app/gui/models/editorState.go) and [manual-state equality](../internal/models/editor_state_model/manualEditSettings.go): deep-clone manual zones on ingress/egress and compare persistable snapshot data.
+- [Startup state](../app/gui/drivers/state.go), [filesystem handler](../internal/handlers/fileSystemHandler.go), and [path resolution](../internal/services/file_system/pathResolutionService.go): failed lookup leaves export unset; only detection or explicit session folder selection authorizes a destination.
+- Owner committed the batch in `a9eb35c`, then corrected untouched-revert fallthrough in `509cc05`. An accepted untouched revert now returns even if there was no manual snapshot to clear. Both commits were checked read-only.
 
 ## 3. Features added / changed
 
-- Added the [review backlog](backlog/review-gpt-6-astra-09-07.md), with stable finding numbers and per-item fix/test plans.
-- The owner selected **“Include verified owner items”** when asked how to treat the existing manual backlog.
-- The owner explicitly selected **“Reopen the DTO removal request”** after being shown the conflict between the zone-content owner backlog and the architecture gate's accepted exception. This is review **§2.2**. The bonuses DTO exception is **not** reopened. The exact replacement API/result and whole-exception versus single-seam scope still need approval.
-- No application features were changed.
-- Owner-scoped additions are §2.3–§2.10 and §4.1. They cover topology retirement, compact-state investigation, typed content lists, sectioned persistence, driver accessors, package naming, panel sections, config lookup, and vector arithmetic. O09 presets remain deferred, not actionable.
+- No-op Apply does not dirty a clean document or reset an armed Exit confirmation. Creating the first manual snapshot counts as a persisted change even if visually identical to generation.
+- Every Apply consumes the pending base, including rejected/no-template applies, by explicit owner decision.
+- `FindGameTemplateDirectory` belongs to existing `PathResolutionService` and `IPathResolutionService`; no separate detector service remains. No path persistence, detector-algorithm changes, or browsing fallback exports.
+- Closure added three regression tests and documentation only; no production code was changed after `509cc05` by the assistant.
 
 ## 4. File modifications
 
-| File | State / purpose |
+Committed production and test work is in `a9eb35c` and `509cc05`. Five files remain unstaged from the closure:
+
+| File | Change |
 | --- | --- |
-| [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) | Curated backlog with nine owner-scoped additions, stable IDs, acceptance criteria, and execution dependencies. |
-| [owner_findings.md](backlog/owner_findings.md) | Completed O01/T01/T04/T06 source entries removed; their evidence remains in review §0. |
-| [test_observations.md](backlog/test_observations.md) | Completed SaveTo observation removed as requested; its review disposition remains. |
-| [session-carry-forward.md](session-carry-forward.md) | Updated to the current backlog scope and starting repository state. |
+| [applyEditedZones_test.go](../test/unit/app/gui/drivers/stateManualEdits/applyEditedZones_test.go) | Assistant-added empty-snapshot revert tests; remove always-true helper parameter reported by lint. |
+| [exit_test.go](../test/unit/app/gui/drivers/stateFiles/exit_test.go) | Assistant-added empty-snapshot revert confirmation test. |
+| [review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) | Mark §1.8 fixed in `509cc05`; current progress count. |
+| [batch-a-manual-state-and-export-directory.md](plans/batch-a-manual-state-and-export-directory.md) | Completed plan with correction verification and uncommitted test disclosure. |
+| [session-carry-forward.md](session-carry-forward.md) | Current handoff. |
 
-A temporary verification program under .agent/review_probe was created, executed, and deleted during the review. Its absence was checked again before this handoff. No scratch source remains. Existing root coverage reports were not overwritten; diagnostic output was directed outside the repository and is not required to resume because results are recorded in the review.
-
-No files in the protected game-data/schema/registry trees were edited. No implementation plan exists for this backlog yet; create one only after the first batch's scope is confirmed.
+Protected data/schema/registry trees are unchanged. Wire was regenerated during implementation and the final graph is identical to its original form; no separate provider remains.
 
 ## 5. Tests added or updated
 
-**None.** The review proposes regression tests but does not implement them. Findings must be reverified on the current source before fixing; line citations describe the reviewed revision and may move.
+Three new tests prove that an untouched revert with no previous snapshot stores no snapshot, leaves a clean document saved, and preserves an armed Exit confirmation. These tests are assistant-added and still await owner review/commit. The specific empty-snapshot case is unit-tested; existing real-handler integration tests cover revert with a previous snapshot.
 
-Last measured verification, on revision `f4f4cf63f22e84040754a7231b4d1dc793070af1`:
+Verification on Go 1.27.0 Windows/amd64 after the owner's correction:
 
-| Check | Result |
-| --- | --- |
-| Go toolchain | `go1.27.0 windows/amd64` |
-| Installed golangci-lint | `2.13.1`, built with Go `1.27.0`; tools module still pins `2.12.2` (§6.2) |
-| `go build ./...` | PASS |
-| `go vet -tags=integration_test ./...` | PASS |
-| `go test ./test/... -count=1` | PASS, 183 packages, including 181 unit packages |
-| `go test -tags=integration_test ./test/integration/... ./test/performance/... -count=1` | PASS; performance package reported no tests to run, not a benchmark result |
-| Unit coverage with `-coverpkg=./internal/...,./app/...` | PASS, **74.4%** total statements from Go's own `cover -func` output |
-| Full configured report-only lint | **0 issues**, three unused-exclusion warnings |
-| `go run ./cmd/testlayoutcheck .` | PASS |
-| Geometry unit, PNG unit, and untagged integration packages repeated with `-count=20` | PASS |
-| Root and tools `go mod tidy -diff` | Both exit 1 solely from Windows checksum-file EOL differences; normalized content identical (§6.3) |
-| Local full race / GUI / Linux / benchmarks | Not run in this review |
-| Local govulncheck | Not installed/not run; PR and scheduled CI scan configuration verified, remote outcome unknown |
+- Build, full unit suite (`-count=1`), default `go test ./test/...`, tagged integration, tagged GUI integration, vet with `integration_test`, and test-layout check: PASS.
+- Focused test run: 29 passed; final focused packages also passed after test-helper cleanup.
+- Coverage task before/after closure tests: **74.5% / 74.5%**, `ApplyEditedZones` 100%. Original pre-batch baseline was 74.4%.
+- Final report-only lint: **0 issues**, three existing unused-exclusion warnings. An always-true test-helper parameter finding was corrected without production edits.
+- No GUI goldens changed. Recovery tests export only into isolated fixture directories.
+- No local Linux, full race, benchmark, or vulnerability-scan result is claimed.
 
-The review's complete coverage inventory has 282 instrumented files: 192 at 100%, 52 partial, 38 at 0%. Some GUI and other-platform files are outside that profile, not implicitly covered. Use **74.4% and zero lint issues** as the comparable Windows no-regression baseline; remeasure before implementation. Do not substitute historical 74.3%, a memory-only floor, or CI's configured 60% minimum for the current baseline.
-
-Public-API experiments confirmed:
-
-- §1.3: a portal with centers 100 pixels apart rendered exactly the no-edge background; Direct with the same geometry did not.
-- §1.4: manual road reconstruction added roads to roadless zones.
-- §1.7: `SaveArmy=false` produced `TournamentSaveArmy=true`.
-- §1.9: mutating an input to `SetManualEdits` or a result of `GetManualZones` mutated stored nested position data.
-- §1.13: 200 identical symmetric-obstacle geometry calls produced two different control-point Y values (300 and 400).
-
-Other findings are source-traced, not represented as experimentally reproduced. In particular no full GUI reproduction of the revert or batched-pointer findings was run.
+Independent Claude Opus 5 review accepted the corrected branch and regression tests with no application blocker. Existing connection `Road` pointer/placement aliases remain outside the explicitly zone-only isolation scope.
 
 ## 6. Git status snapshot
 
-Checked before the 2026-09-08 documentation curation:
+Branch: `AD/save_and_pathing_silent_bug`. HEAD: `509cc05` (`Quick fix`), following `a9eb35c` (`Batch A and D done`). Index was clean and working tree clean before closure tests; the five files in §4 are now unstaged. Recheck before acting. No agent staging, unstaging, commits, pushes, or branch switches occurred. Release/publication has not been verified.
 
-- Branch: **master**.
-- HEAD: **6ec9e2c**, “Added New Backlog of items (#39)”, tagged **v0.3.8**.
-- Local `origin/master` and `origin/HEAD` refs point at the same commit after the owner's pull. This is not a fresh remote query by the agent.
-- Working tree and index were clean before these documentation edits.
-- The four documents in §4 are the intended unstaged changes. No application source was changed.
+## 7. Rejections / things the user declined
 
-A new session must inspect both index and working tree again. The agent did not stage, unstage, commit, push, or switch branches. Do not alter owner staging.
+- Separate detector service rejected: use `PathResolutionService`.
+- Retaining a pending base after rejected Apply rejected: consume on every Apply.
+- No persisted output path, unrelated fallback export, protected edits, global test tags, bulk rewrite, or generated Wire hand edits.
+- The owner briefly combined revert selection with the clear-change result; closure found the fallthrough, and owner corrected it in `509cc05`.
+- Do not repeat the full audit or restart completed A/D work. No Batch B implementation has started.
 
-## 7. Rejections / things declined or corrected
+## 8. Open questions and confirmed later scope
 
-- Review-only scope was enforced: no drive-by fixes, formatting, dependency tidy writes, or protected-data changes.
-- Do not claim the portal issue fixed merely because a dashed branch exists and a test says its image differs from solid. Missing pixels satisfy that weak assertion; the public-API probe disproved the initial superficial assessment.
-- Do not report accepted DTO/model layering as a fresh breach. Only the zone-content exception was explicitly reopened by the owner in this session.
-- Do not propose output-path persistence, a different default export directory, live-pointer state reads, blanket test tags, or a flaky global Gio allocation threshold. Those conflict with hard rules or settled decisions.
-- Proposed stale-zone-name control and generic concurrent-preview production-race findings were excluded for lack of a current demonstrated failure path. The dialog resets the zone property sync marker on addition; current preview calls are serialized.
-- The first requested subagent model alias was unavailable; the display-name model worked. Use available model names, such as `Claude Opus 5 (copilot)`, for final plan/implementation review. Never use Haiku.
-- A naïve custom coverage aggregation was discarded because profiles contain duplicate blocks across executables. Use Go's own total and per-file HTML percentages, not sums/averages of raw profile rows.
-- Tidy failures were investigated and classified as EOL-only, not dependency drift. No files were normalized during review.
+Next is Batch B: §1.3 PNG rasterization and §1.7 Tournament SaveArmy. Reverify sources/tests, ask remaining scope questions, create a durable plan, and obtain approval. Confirm whether omitted false disables army saving in-game; any protected schema change is owner-approved and owner-applied only. PNG expectation changes need review; do not bulk-update unrelated GUI goldens.
 
-## 8. Open questions and confirmed scope
+Retained owner decisions for later work:
 
-### First work: batch A, §1.1 and §1.2
+- §2.3/O08: remove Ring, Hub, Chain, Shared Web and corresponding tournament builders; reject retired saved IDs without modifying the current document; surviving tournament fallback cases use balanced generation. Preserve Geometric Hub and shared hub-zone concepts.
+- §2.4/O11: investigate live state and persistence before implementation, comparing exact-base reconstruction against regenerated untouched zones plus deltas. Cover identity, randomness, upgrades, defaults, derived fields, migration and measured size/performance; owner approves feasibility first.
+- §2.5/O12: structured entries following BonusEntry; bans carry SID, overrides SID/GuardValue, preserve semantics and Variant=-1. Legacy/UI text parsing stays at boundaries.
+- §2.6/O13: section current groups except TemplateIdentity, MapSettings and SchemaOptions remain flat. Coordinate migration with §2.5 and any approved §2.4 outcome; retain supported legacy loading. Section keys still require planning.
+- §2.7/O14: all six zone-content accessors on drivers.State, replacing panel callbacks with zone/tier selection; retain validation, dirty tracking and snapshot isolation.
+- §2.8/O16: rename services/zones to zone_services and nested interfaces to zone_service_interfaces, updating imports/tests/links/generated wiring without behavior change.
+- §2.9/O18: General/Layout/Bonuses named subpackages with private cohesive sections and public aliases/constructor compatibility; Preview unchanged.
+- §2.10/O19: public GeneratorConfig lookup preserving Highest→Hub, unknown→nil and read-only borrowed-row semantics.
+- §4.1/O20: permitted production Vec2 audit, equivalent methods, justified tested additions, numerical and hot-path behavior preserved.
+- §2.2: zone-content DTO removal reopened; bonuses exception remains accepted. Replacement row/result API and full-exception versus single-seam scope still need approval.
+- O09 presets remain deferred and uninvestigated.
 
-1. **§1.1 no-op behavior:** should applying an identical manual layout leave a clean document clean? Recommended: mark dirty only when persisted manual state actually changes; rejected applies remain unchanged. Confirm before planning.
-2. **§1.1 confirmation reset:** after any committed manual change, reset a previously armed Exit confirmation as scalar edits already do. Include clearing a manual snapshot via Revert-to-Base.
-3. **§1.2 detection seam:** leaving an undetected output path empty follows the existing hard rule, but choose the narrowest real composition seam for deterministic failure tests if necessary. Do not add private test exports or persist the result. Ensure the folder picker can start browsing from an empty output path without authorizing that browsing directory as the export destination.
-4. **Batch/branch scope:** confirm whether the owner wants both A items together or §1.1 first, and follow their branch preference. Do not switch branches speculatively while owner-staged changes exist.
-
-### Later work
-
-- §1.4/§1.10: generated versus imported/custom roads and optional nil editor-state semantics.
-- §1.5: clearing incompatible manual edits versus reapplying arena policy; compare effective modes including victory-condition aliases.
-- §1.7: whether omitted false means tournament army saving is disabled in the game; any required protected schema edit is owner-only.
-- §1.11: custom guard numbers and ambiguous preset identity during quality reprofile.
-- §1.12: whether the previous non-tournament player count should be remembered in session view state.
-- §2.1: intentional editor/PNG curve differences versus required visual agreement.
-- §2.2: `ContentRuleRow` versus the owner note's `ZoneContentRow`, the service result validity contract, and full DTO exception removal versus composition-only scope.
-- §6.2/§6.3/§6.5: linter version, narrow EOL normalization, and release tag validation format.
-- Review §10 retains in-game validation for bonuses/bans, hero-hire policy, and historical preview artifacts. No new game result was obtained.
-
-### Confirmed owner scope for the additions
-
-- **§2.3 / O08:** completely remove Ring, Hub, Chain, Shared Web and corresponding tournament builders. Reject saved selections of retired IDs with a clear error, without changing the current document. Route surviving tournament cases formerly using the chain fallback to the balanced builder. Preserve Geometric Hub and shared hub-zone concepts.
-- **§2.4 / O11:** first investigate live state and persistence, comparing exact-base reconstruction with regenerated untouched zones plus deltas. Cover identities, randomness, upgrades, derived fields, defaults, migration, and measured size/performance. Owner approves the feasibility outcome before either representation is implemented.
-- **§2.5 / O12:** follow `BonusEntry` with structured entity/model entries throughout: ban entries carry `SID`, override entries carry `SID`/`GuardValue`; preserve current semantics and output `Variant=-1`. Keep legacy/UI text parsing at boundaries.
-- **§2.6 / O13:** use current groups as JSON sections except `TemplateIdentity`, `MapSettings`, and `SchemaOptions`, whose fields remain flat. One coordinated migration with §2.5 and any approved §2.4 outcome; retain supported old-state loading. Exact section keys belong in the implementation plan.
-- **§2.7 / O14:** place all six zone-content getters/setters on `app/gui/drivers.State`, replacing panel callbacks with a zone/tier selection. Preserve validated dirty-tracked updates and snapshot isolation.
-- **§2.8 / O16:** rename to internal/services/zone_services and its nested zone_service_interfaces package; update imports, mirrored tests, active links, and generated wiring without changing behavior.
-- **§2.9 / O18:** move General/Layout/Bonuses to their named panel subpackages, with a private struct per cohesive section and public top-level aliases/constructor compatibility. Preserve GUI behavior; Preview remains unchanged.
-- **§2.10 / O19:** move the lookup to a public `GeneratorConfig` method; preserve Highest→Hub, unknown→nil, and read-only borrowed-row semantics.
-- **§4.1 / O20:** audit all permitted production `Vec2` use; prefer equivalent methods and add missing ones only for justified callers with tests. Preserve numerical behavior and avoid hot-path regressions.
-- **O09:** not scheduled. Presets have not been investigated or planned.
+Other pending decisions: generated/imported road policy and nil EditorState (§1.4/§1.10); arena/manual invalidation and effective mode aliases (§1.5); custom guards/preset identity (§1.11); remembering non-tournament player count (§1.12); GUI/PNG curve agreement (§2.1); tooling version/EOL/release-tag rules (§6.2/§6.3/§6.5). Review §10 retains in-game bonuses/bans, hero-hire and historical preview validation. Tidy dry-run differences previously measured were Windows checksum EOL-only, not dependency drift.
 
 ## 9. Next recommended actions
 
-1. Read [AGENTS.md](../AGENTS.md), this handoff, then review §0, §1.1–§1.2, §9, and §11. Consult [.agent/memories](memories) for settled decisions but prefer current source and the newly recorded owner decision on §2.2.
-2. Inspect Git status and the staged diff without changing either. Check for edits made since the reviewed SHA. Do not rerun the whole repository review by default.
-3. Re-read each target plus its callers and tests. For §1.1 begin with [stateManualEdits.go](../app/gui/drivers/stateManualEdits.go), [state.go](../app/gui/drivers/state.go), [stateFiles.go](../app/gui/drivers/stateFiles.go), and [applyEditedZones_test.go](../test/unit/app/gui/drivers/stateManualEdits/applyEditedZones_test.go).
-4. Ask the concrete batch-A questions above, summarize the agreed scope, then write a durable plan under .agent/plans using the AGENTS.md template. Obtain owner approval before implementation. Use a suitable independent review of the plan.
-5. Establish fresh pre-change coverage/tests. Add focused failing regressions through production APIs, then implement only approved behavior. Keep rendering in GUI and domain policy behind handlers; use existing clone/conversion helpers.
-6. Verify build, unit tests, coverage, full configured lint, and test layout. Run the relevant integration/GUI suites explicitly when required. Regenerate Wire for changed constructors/provider sets; never edit generated code manually.
-7. Record files, exact checks, results, and any residual limits in the plan. Present the diff to the owner. **The owner stages/commits.** Mark the review item `✅ FIXED` only after the protocol's owner-commit step is satisfied; until then record “implemented/verified, awaiting owner commit” without misrepresenting completion.
-8. Continue with review §9: B (§1.3/§1.7), C roads/graph, D manual lifecycle, E modes/guards, F geometry, G performance, H (§6.2/§6.3/§6.5), I docs, J DTO work; then K topology retirement, L compact-state investigation, M coordinated persistence, N driver/panel organization, O naming/config lookup, P vector arithmetic. L may start independently but gates M's representation decisions. Coordinate overlapping files; do not renumber items or implement an entire category without plan approval.
+1. Owner reviews/commits the two additional regression-test edits and three documentation updates.
+2. Recheck Git and read the backlog, then ask/plan/approve Batch B (§1.3/§1.7); establish a fresh baseline before changes.
+3. Follow backlog §9 afterward, skipping completed A/D. Keep stable finding numbers and distinguish verified code from in-game outcomes.
 
 ## 10. Carry-forward prompt
 
-> Read [AGENTS.md](../AGENTS.md) first, then [.agent/session-carry-forward.md](session-carry-forward.md) for the full handoff and [.agent/backlog/review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md) as the backlog source of truth.
+> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md) and [the review](backlog/review-gpt-6-astra-09-07.md). Batch A/D (§1.1/§1.2/§1.8/§1.9) is fixed in owner commits `a9eb35c` and `509cc05`. Current branch is `AD/save_and_pathing_silent_bug`; recheck HEAD/index/worktree. Two assistant-added regression-test files and three docs are unstaged pending owner review/commit. Tests/build/GUI/vet/layout passed; Windows coverage is 74.5%, lint zero. Begin Batch B only after source verification, scope questions and an approved durable plan; §1.7 needs the in-game omitted-false decision. Do not repeat the audit or restart A/D.
 >
-> Begin work on the review backlog, starting with batch A: §1.1 manual edits fail to mark the document unsaved, and §1.2 failed game-directory detection falls back to an invalid export destination. First inspect current Git state and reverify source/callers/tests, ask the open scope questions, and obtain approval for a durable plan before implementing. No application fixes have been made yet. The review has 32 actionable items, with evidence/test plans and prior-item dispositions. Its nine owner additions are scoped in handoff §8; O11 is investigation-first and O09 presets are deferred. Do not repeat the full audit or mark anything fixed prematurely.
->
-> Hard rules: never modify the protected data, template_entity schema, or registry trees; protected changes require explicit owner approval and owner application. Preserve Windows/Linux compatibility using portable paths and guarded platform code. Every nontrivial code change needs tests and before/after coverage; current measured Windows baseline is 74.4%, lint zero, and build/vet/default/tagged integration/layout checks passed. Multi-step work requires a durable approved plan. Never stage, unstage, commit, or push, and preserve owner-staged changes. Never bulk-rewrite the repository or hand-edit generated Wire output; format only explicit permitted files and regenerate injectors when needed. Export must use the machine-detected game templates directory or the deliberate session-only picker override, never a persisted output path or an unrelated fallback.
->
-> Before the latest documentation curation, HEAD was 6ec9e2c on master, tagged v0.3.8, with a clean index and working tree. The review, two source backlogs, and handoff were then edited without staging. Recheck before acting. Temporary review verification code was deleted. No global integration_test/gui/wireinject tags, no fake unit seams for private/Gio code, and no drive-by refactors.
->
-> Owner decision: §2.2 zone-content DTO removal was explicitly reopened, but its API and scope still need planning; the bonuses DTO exception remains accepted. Other in-game policy checks remain unresolved. Module tidy dry-runs failed only because Windows checksum files have CRLF, not dependency-content drift. Local GUI/race/Linux/benchmark/vulnerability outcomes were not measured in this review. Follow ask → plan → approve → implement + verify → owner commits → mark, keeping finding numbers stable.
+> Never modify protected data/schema/registry trees; proposed protected changes require owner approval and owner application. Preserve Windows/Linux portable paths and guarded platform code. Test nontrivial changes and measure coverage before/after. Keep multi-step work in an approved durable plan. Never stage, unstage, commit or push; preserve owner staging and do not switch branches speculatively. Never bulk-rewrite or hand-edit generated Wire output. Export only to the detected game templates directory or explicit session-only picker destination; never persist output paths or authorize browsing fallbacks. Never set global integration_test/gui/wireinject tags or add fake unit seams. Preserve later scope in §8, including reopened zone-content DTO removal, accepted bonuses exception, investigation-first O11, and deferred O09.

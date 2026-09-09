@@ -10,6 +10,9 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
+**Current progress (2026-09-09):** **4 fixed, 28 remaining**: 5 High, 16 Medium,
+7 Low. The original audit measurements above remain historical.
+
 **Fix-session protocol:** ask → plan → owner approves → implement and verify → owner commits → mark the stable item `✅ FIXED`. Owner-confirmed scope below is not permission to implement before the per-item plan is approved. Protected-directory changes remain owner-approved and owner-applied only. Each future change must follow the test layout, AAA, `t.Parallel()`, testify, coverage, build, and tag requirements in [AGENTS.md](../../AGENTS.md). Proposed new test paths below are deliberately not hyperlinks until the files exist.
 
 ## §0 Disposition of prior reviews
@@ -95,7 +98,13 @@ Test-observation dispositions, including the individual documented gaps:
 
 ## §1 Bugs and correctness
 
-### 1.1 🔴 Applying manual edits does not mark the document unsaved
+### 1.1 ✅ FIXED — Applying manual edits does not mark the document unsaved
+
+**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0; changed
+manual commits now set dirty and re-arm Exit, while identical, rejected, and
+accepted-warning no-op Apply cases preserve the appropriate state. Owner committed
+the fix in `a9eb35c` (2026-09-09); commit verified read-only. The distinct untouched
+revert fallthrough introduced in that commit is tracked under §1.8 below.
 
 **Evidence.** [ApplyEditedZones](../../app/gui/drivers/stateManualEdits.go#L22-L35) ends with `this.innerState.SetManualEdits(request.Zones, request.Connections)` or `ClearManualEdits()`, without changing `unsaved` or `confirmExit`. The only dirty setter is [UpdateState](../../app/gui/drivers/state.go#L135-L142): `if this.innerState.WasStateChanged() { this.unsaved = true }`. That comparison deliberately [ignores manual edits](../../internal/models/editor_state_model/editorState.go#L129-L157). [Exit](../../app/gui/drivers/stateFiles.go#L48-L57) asks for confirmation only when `this.unsaved && !this.confirmExit`.
 
@@ -105,7 +114,13 @@ Test-observation dispositions, including the individual documented gaps:
 
 **Owner decision.** Confirm no-op Apply semantics; do not change close/reset/load policy incidentally.
 
-### 1.2 🔴 Failed game-directory detection silently authorizes export to the working directory
+### 1.2 ✅ FIXED — Failed game-directory detection silently authorizes export to the working directory
+
+**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0:
+`FindGameTemplateDirectory` now belongs to `PathResolutionService`/
+`IPathResolutionService`, and failed detection leaves export unset until explicit
+session-only picker confirmation. Owner committed the fix in `a9eb35c`
+(2026-09-09); commit verified read-only.
 
 **Evidence.** [NewUIState](../../app/gui/drivers/state.go#L77-L89): `templateDir = state.getWorkingDirectory()` after failed detection, then `state.outputPath.SetText(templateDir)`. One status even says `"using fallback directory."` with the error flag false. [SaveTemplate](../../internal/handlers/templateHandler.go#L107-L119) rejects only an empty output path before writing through the file service.
 
@@ -171,7 +186,20 @@ Test-observation dispositions, including the individual documented gaps:
 
 **Owner decision.** If the game requires explicit false and the existing protected schema cannot express it, stop and request owner approval for a schema change; never edit it as part of a routine fix.
 
-### 1.8 🔴 Untouched Revert-to-Base is compared after the handler mutates it
+### 1.8 ✅ FIXED — Untouched Revert-to-Base is compared after the handler mutates it
+
+**Progress (2026-09-09).** `a9eb35c` implemented compare-before-mutation and
+verified real-handler roads-off reverts with an existing snapshot. Closure review
+found a separate empty-snapshot fallthrough: the clear's changed result governed
+the return, so the unchanged base could be stored. Owner corrected that control
+flow in `509cc05`; the production correction is verified read-only. Three
+additional regression assertions are unstaged and awaiting owner review/commit in
+[applyEditedZones_test.go](../../test/unit/app/gui/drivers/stateManualEdits/applyEditedZones_test.go)
+and [exit_test.go](../../test/unit/app/gui/drivers/stateFiles/exit_test.go). They
+were added by the assistant in this closure; the owner committed the production
+fix. They prove an untouched base with no manual snapshot stored leaves a clean
+document saved and retains an armed Exit confirmation. These are unit-only; the
+existing real-handler integration continues to cover reverting an existing snapshot.
 
 **Evidence.** [ApplyEditedZones](../../app/gui/drivers/stateManualEdits.go#L22-L35) calls `this.handleUpdateTemplate(...)` before `matchesZoneSet(request, pendingBase)`. The comparison is [reflect.DeepEqual](../../app/gui/drivers/stateManualEdits.go#L66-L69). [UpdateTemplate](../../internal/handlers/templateHandler.go#L79-L85) rebuilds the request's roads in place. The dialog [copies the top-level zone slice](../../app/gui/dialogs/zoneEditorDialog.go#L179-L197), separating those field replacements from the stored pending base.
 
@@ -181,7 +209,13 @@ Test-observation dispositions, including the individual documented gaps:
 
 **Owner decision.** None beyond preserving the existing commit-on-Apply/revert design.
 
-### 1.9 🟠 Manual-zone snapshot setters and getters share nested storage
+### 1.9 ✅ FIXED — Manual-zone snapshot setters and getters share nested storage
+
+**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0: manual
+zones now deep-clone on ingress and egress, including zone-only snapshot
+isolation checks. The pre-existing connection `Road` pointer/placement alias is
+unchanged by this scoped work. Owner committed the fix in `a9eb35c`
+(2026-09-09); commit verified read-only.
 
 **Evidence.** [EditorState.SetManualEdits/GetManualZones](../../app/gui/models/editorState.go#L96-L113) both use `slices.Clone`, while the model's [Clone](../../internal/models/editor_state_model/editorState.go#L77-L91) correctly calls `template_model.Zone.Clone` for every zone.
 
@@ -494,7 +528,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | A: prevent silent loss/misplacement | §1.1, §1.2 | Dirty/exit tests and failed-detection export refusal. Highest user impact; preserve output hard rule. |
 | B: PNG and value contract | §1.3, §1.7 | Independent small fixes with public-API pixel and tournament-value tests. Confirm game's omitted-false semantics. |
 | C: road and graph invariants | §1.4, §1.6, §1.10 | Agree generated/custom-road handling, then separate graph connectivity from road policy. End-to-end road-target integrity and roads-off matrices. |
-| D: manual state lifecycle | §1.8, §1.9 | Coordinate with A's dirty tracking and C's road-rebuild changes; retain compare-before-mutation tests even after roads-off is fixed. Land after C or include §1.8 in C. |
+| D: manual state lifecycle | §1.8, §1.9 | Complete in Batch A. Retain compare-before-mutation tests if C changes road rebuilding. |
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Owner decisions on edit invalidation, custom guard values, player-count restoration. Do not include topology deletion/redesign automatically. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Determinism first; batched real-input tests; shared classification; owner approval before visual-policy consolidation. |
 | G: measured performance | §3.1 | Establish public-API/GUI baseline before caching; no flaky global allocation threshold. |

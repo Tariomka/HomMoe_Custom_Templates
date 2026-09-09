@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -279,4 +280,155 @@ func TestWhenSaveTargetIsAnExistingFolder_TheSaveIsRefused(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, "A folder with that name already exists.", explorer.Dialog().SaveError())
+}
+
+// The name the recovery tests export under, and the two files that export
+// produces.
+const (
+	recoveryTemplateName = "Recovery"
+	recoveryTemplateFile = recoveryTemplateName + ".rmg.json"
+	recoveryPreviewFile  = recoveryTemplateName + ".png"
+)
+
+// The recovery status the editor shows when it could not find the game's own
+// templates directory. Exporting anywhere else would produce a file the game
+// never reads (AGENTS.md 2.7), so the user is sent to the picker instead.
+const recoveryStatus = "Game template directory not found. " +
+	"Choose the game templates folder using the output folder picker before exporting."
+
+// newRecoveryEditor builds an editor whose game directory lookup fails, so the
+// recovery path is exercised even on a machine with the game installed - and so
+// nothing here can browse or write into that real directory. The fixture
+// directory it returns is where the picker opens and where an export lands once
+// the user has confirmed it. Snapshots stay off: every frame shows that per-run
+// path, which no golden can hold.
+func newRecoveryEditor(t *testing.T) (*integration_common.AppRunner, *integration_common.BaseHandler, string) {
+	t.Helper()
+	fixtureDirectory := t.TempDir()
+	runner := integration_common.NewAppRunnerWithFileSystem(
+		t, test_helpers.NewFailedLookupFileSystemHandler(fixtureDirectory))
+	if !integration_common.IsHeadless() {
+		runner.SetRenderDelay(500 * time.Millisecond)
+	}
+
+	return runner, integration_common.NewHandler(runner), fixtureDirectory
+}
+
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenTheGameTemplateDirectoryIsNotFound_NoExportDestinationIsSelected(t *testing.T) {
+	// Arrange & Act
+	runner, _, _ := newRecoveryEditor(t)
+
+	// Assert
+	assert.Empty(t, runner.OutputPath())
+}
+
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenTheGameTemplateDirectoryIsNotFound_TheStatusDirectsToThePicker(t *testing.T) {
+	// Arrange & Act
+	runner, _, _ := newRecoveryEditor(t)
+
+	// Assert
+	message, _ := runner.Status()
+	assert.Equal(t, recoveryStatus, message)
+}
+
+// The picker still has to open somewhere usable, but where it browses is not a
+// destination: only confirming a folder is.
+//
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenTheOutputPickerOpensWithoutADetectedDirectory_ItStartsAtABrowsableDirectory(t *testing.T) {
+	// Arrange
+	_, handler, fixtureDirectory := newRecoveryEditor(t)
+
+	// Act
+	explorer := handler.ClickBrowseOutput()
+
+	// Assert
+	assert.Equal(t, fixtureDirectory, explorer.Dialog().CurrentDir())
+}
+
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenTheOutputPickerIsCancelled_NoExportDestinationIsSelected(t *testing.T) {
+	// Arrange
+	runner, handler, _ := newRecoveryEditor(t)
+
+	// Act
+	handler.ClickBrowseOutput().ClickCancel()
+
+	// Assert
+	assert.Empty(t, runner.OutputPath())
+}
+
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenTheOutputFolderIsConfirmed_ItBecomesTheExportDestination(t *testing.T) {
+	// Arrange
+	runner, handler, fixtureDirectory := newRecoveryEditor(t)
+
+	// Act
+	handler.ClickBrowseOutput().ClickSelectFolder()
+
+	// Assert
+	assert.Equal(t, fixtureDirectory, runner.OutputPath())
+}
+
+// Without a confirmed destination there is nowhere the game would read the
+// result from, so neither the template nor its preview may be written.
+//
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenNoExportDestinationIsSelected_SavingTheTemplateWritesNothing(t *testing.T) {
+	// Arrange
+	runner, handler, fixtureDirectory := newRecoveryEditor(t)
+	runner.SetTemplateName(recoveryTemplateName)
+	handler.ClickGenerate()
+
+	// Act
+	handler.ClickSaveTemplate()
+
+	// Assert
+	written, err := filepath.Glob(filepath.Join(fixtureDirectory, "*"))
+	require.NoError(t, err)
+	assert.Empty(t, written)
+}
+
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenTheExportDestinationWasConfirmed_TheTemplateAndItsPreviewLandThere(t *testing.T) {
+	// Arrange
+	runner, handler, fixtureDirectory := newRecoveryEditor(t)
+	runner.SetTemplateName(recoveryTemplateName)
+	handler.ClickGenerate().ClickBrowseOutput().ClickSelectFolder()
+
+	// Act
+	handler.ClickSaveTemplate()
+
+	// Assert
+	written, err := filepath.Glob(filepath.Join(fixtureDirectory, "*"))
+	require.NoError(t, err)
+	assert.ElementsMatch(t,
+		[]string{
+			filepath.Join(fixtureDirectory, recoveryTemplateFile),
+			filepath.Join(fixtureDirectory, recoveryPreviewFile),
+		},
+		written)
+}
+
+// The destination is a property of the machine, not of the document: a session
+// that picked one must not hand it to the next one through a saved file.
+//
+//nolint:paralleltest // The GUI suite drives one shared window.
+func TestWhenAStateSavedWithAPickedDestinationIsReloaded_TheDestinationIsNotRestored(t *testing.T) {
+	// Arrange
+	runner, handler, fixtureDirectory := newRecoveryEditor(t)
+	runner.SetTemplateName(recoveryTemplateName)
+	handler.ClickBrowseOutput().ClickSelectFolder()
+	runner.SaveStateToFile(filepath.Join(fixtureDirectory, recoveryTemplateName+saveSuffix))
+	savedPath := runner.CurrentPath()
+	require.FileExists(t, savedPath)
+
+	// Act
+	nextRunner, _, _ := newRecoveryEditor(t)
+	nextRunner.LoadStateFromFile(savedPath)
+
+	// Assert
+	assert.Empty(t, nextRunner.OutputPath())
 }

@@ -35,3 +35,8 @@ func (this *PathResolutionServiceMock) DirectoryExists(path string) bool {
 	arguments := this.Called(path)
 	return arguments.Bool(0)
 }
+
+func (this *PathResolutionServiceMock) FindGameTemplateDirectory() (string, error) {
+	arguments := this.Called()
+	return arguments.String(0), arguments.Error(1)
+}

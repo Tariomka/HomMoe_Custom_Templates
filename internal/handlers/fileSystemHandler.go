@@ -57,3 +57,7 @@ func (this *fileSystemHandler) PathExists(path string) bool {
 func (this *fileSystemHandler) DirectoryExists(path string) bool {
 	return this.pathResolution.DirectoryExists(path)
 }
+
+func (this *fileSystemHandler) FindGameTemplateDirectory() (string, error) {
+	return this.pathResolution.FindGameTemplateDirectory()
+}

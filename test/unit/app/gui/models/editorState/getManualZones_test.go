@@ -41,3 +41,24 @@ func TestWhenNoManualZonesWereStored_NilZonesAreReturned(t *testing.T) {
 	// Assert
 	assert.Nil(t, restored)
 }
+
+// Returned zones are the editor's working copies; editing them must not
+// rewrite the committed snapshot behind the state's back.
+func TestWhenAReturnedZoneIsMutated_TheStoredSnapshotIsUnchanged(t *testing.T) {
+	t.Parallel()
+	for caseName, fieldCase := range manualZoneFieldCases() {
+		t.Run(caseName, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			state := newEditorState()
+			state.SetManualEdits([]template_model.Zone{newPopulatedManualZone()}, nil)
+			expected := fieldCase.read(state.GetCurrentState().ManualZones[0])
+
+			// Act
+			fieldCase.mutate(state.GetManualZones()[0])
+
+			// Assert
+			assert.Equal(t, expected, fieldCase.read(state.GetCurrentState().ManualZones[0]))
+		})
+	}
+}

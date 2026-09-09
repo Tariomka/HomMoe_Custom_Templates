@@ -133,6 +133,31 @@ func (this *BaseHandler) ClickSaveTo() *FileExplorerHandler {
 	return newFileExplorerHandler(this)
 }
 
+// ClickBrowseOutput opens the preview panel's output folder picker, the only
+// way a user can name an export destination when detection found none.
+func (this *BaseHandler) ClickBrowseOutput() *FileExplorerHandler {
+	this.runner.tb.Helper()
+	this.runner.ClickButton(browseOutputButtonLabel)
+	return newFileExplorerHandler(this)
+}
+
+// ClickGenerate builds a template in memory; nothing is written to disk.
+func (this *BaseHandler) ClickGenerate() *BaseHandler {
+	this.runner.tb.Helper()
+	this.runner.ClickButton(generateButtonLabel)
+	this.runner.VerifySnapshot()
+	return this
+}
+
+// ClickSaveTemplate exports the generated template, which is where the output
+// directory finally matters.
+func (this *BaseHandler) ClickSaveTemplate() *BaseHandler {
+	this.runner.tb.Helper()
+	this.runner.ClickButton(saveTemplateButtonLabel)
+	this.runner.VerifySnapshot()
+	return this
+}
+
 // ScrollPanel turns the mouse wheel over the settings panel by delta pixels;
 // positive scrolls the content up. Gio clamps to the panel's scrollable range,
 // so an oversized delta scrolls to the end.
