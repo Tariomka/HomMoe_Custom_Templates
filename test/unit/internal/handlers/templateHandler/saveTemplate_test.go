@@ -54,6 +54,47 @@ func TestWhenTemplateOutputPathIsWhitespaceOnly_ReturnsNoOutputPathError(t *test
 	assert.ErrorIs(t, err, common_errors.ErrNoOutputPath)
 }
 
+// Without a destination there is nowhere the game would read the result from,
+// so the refusal has to come before any work is done.
+func TestWhenTemplateOutputPathIsEmpty_NoPreviewIsRendered(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+
+	// Act
+	_, _ = fixture.handler.SaveTemplate(dtos.TemplateSaveDto{Template: &template_model.Template{}})
+
+	// Assert
+	fixture.previewGenerator.AssertNotCalled(t, "CreatePreviewImage", mock.Anything, mock.Anything)
+}
+
+func TestWhenTemplateOutputPathIsEmpty_NothingIsWritten(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+
+	// Act
+	_, _ = fixture.handler.SaveTemplate(dtos.TemplateSaveDto{Template: &template_model.Template{}})
+
+	// Assert
+	fixture.fileService.AssertNotCalled(t, "SaveTemplateWithPreview", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestWhenTemplateOutputPathIsWhitespaceOnly_NothingIsWritten(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+
+	// Act
+	_, _ = fixture.handler.SaveTemplate(dtos.TemplateSaveDto{
+		Template:   &template_model.Template{},
+		OutputPath: "  \t ",
+	})
+
+	// Assert
+	fixture.fileService.AssertNotCalled(t, "SaveTemplateWithPreview", mock.Anything, mock.Anything, mock.Anything)
+}
+
 func TestWhenTemplateOutputPathIsPadded_SavesToTheTrimmedPath(t *testing.T) {
 	t.Parallel()
 	// Arrange

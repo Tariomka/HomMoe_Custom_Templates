@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -113,15 +114,70 @@ func TestWhenEditsAreAppliedTwice_TheManualSnapshotSurvives(t *testing.T) {
 	assert.True(t, stateData.HasManualEdits())
 }
 
+// The real handler rebuilds the request's roads in place, and the editor
+// dialog hands over its own top-level slices: the untouched base must still be
+// recognised as untouched afterwards.
+func TestWhenApplyingARoadlessBaseThroughItsOwnSlices_TheStoredManualEditsAreGone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := newEditedSessionWithRoads(t, false)
+	base, ok := state.PreviewBaseZones()
+	require.True(t, ok)
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:        append([]template_model.Zone(nil), base.Zones...),
+		Connections:  append([]template_model.Connection(nil), base.Connections...),
+		RevertToBase: true,
+	})
+
+	// Assert
+	stateData := state.GetStateData()
+	assert.False(t, stateData.HasManualEdits())
+}
+
+// Edits made on top of the roadless base are still ordinary manual edits.
+func TestWhenApplyingAnEditedRoadlessBase_TheEditsAreStored(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := newEditedSessionWithRoads(t, false)
+	base, ok := state.PreviewBaseZones()
+	require.True(t, ok)
+	editedZones := append([]template_model.Zone(nil), base.Zones...)
+	editedZones[0].ManualPosition = new(data.NewVec2(0.3, 0.4))
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{
+		Zones:        editedZones,
+		Connections:  append([]template_model.Connection(nil), base.Connections...),
+		RevertToBase: true,
+	})
+
+	// Assert
+	stateData := state.GetStateData()
+	assert.True(t, stateData.HasManualEdits())
+}
+
 // newEditedSession generates a template, stamps manual positions on every zone
 // and applies them, leaving a state that carries a persisted manual snapshot.
 func newEditedSession(t *testing.T) *drivers.State {
+	t.Helper()
+	return newEditedSessionWithRoads(t, true)
+}
+
+// newEditedSessionWithRoads builds the same edited session with road
+// generation switched on or off. Roadless generation is where the handler's
+// in-place road rebuild is most likely to diverge from the previewed base.
+func newEditedSessionWithRoads(t *testing.T, generateRoads bool) *drivers.State {
 	t.Helper()
 	state := drivers.NewUIState(
 		composition.InitializeGuiHandler(),
 		composition.InitializeFileSystemHandler(),
 		composition.InitializeRegenerationHandler(),
 		false)
+	state.UpdateState(func(editorState *editor_state_model.EditorState) {
+		editorState.GenerateRoads = generateRoads
+	})
 	state.Generate()
 	template := state.GetLastTemplate()
 	require.NotNil(t, template)

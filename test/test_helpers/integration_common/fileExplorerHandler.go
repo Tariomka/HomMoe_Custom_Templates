@@ -13,14 +13,24 @@ import (
 // inside the dialog panel, so a label the editor behind the scrim also uses
 // (Save, Cancel) still resolves to the dialog's own button.
 const (
-	backButtonLabel            = "← Back"
-	showHiddenButtonLabel      = "Show hidden"
-	newFolderButtonLabel       = "New Folder"
-	createFolderButtonLabel    = "Create Folder"
-	openButtonLabel            = "Open"
-	saveButtonLabel            = "Save"
-	overwriteButtonLabel       = "Overwrite"
-	overwriteCancelButtonLabel = "Cancel"
+	backButtonLabel         = "← Back"
+	showHiddenButtonLabel   = "Show hidden"
+	newFolderButtonLabel    = "New Folder"
+	createFolderButtonLabel = "Create Folder"
+	openButtonLabel         = "Open"
+	saveButtonLabel         = "Save"
+	selectFolderButtonLabel = "Select This Folder"
+	cancelButtonLabel       = "Cancel"
+	overwriteButtonLabel    = "Overwrite"
+)
+
+// The preview panel's buttons, addressed by label like every other widget. They
+// live here rather than in handlerCoordinates.go because none of them is pinned
+// to a measured coordinate.
+const (
+	browseOutputButtonLabel = "Browse"
+	generateButtonLabel     = "Generate"
+	saveTemplateButtonLabel = "Save Template"
 )
 
 // newFolderFieldOffset is how far left of the Create Folder button the new
@@ -117,6 +127,17 @@ func (this *FileExplorerHandler) ClickSave() *FileExplorerHandler {
 	return this.clickDialogButton(saveButtonLabel)
 }
 
+// ClickSelectFolder confirms the folder picker on the directory it is showing.
+func (this *FileExplorerHandler) ClickSelectFolder() *FileExplorerHandler {
+	return this.clickDialogButton(selectFolderButtonLabel)
+}
+
+// ClickCancel dismisses the dialog through its own Cancel button, which is what
+// a user pressing it does - unlike Close, which closes it from the outside.
+func (this *FileExplorerHandler) ClickCancel() *FileExplorerHandler {
+	return this.clickDialogButton(cancelButtonLabel)
+}
+
 // ClickOverwrite accepts the overwrite prompt.
 func (this *FileExplorerHandler) ClickOverwrite() *FileExplorerHandler {
 	return this.clickDialogButton(overwriteButtonLabel)
@@ -124,7 +145,7 @@ func (this *FileExplorerHandler) ClickOverwrite() *FileExplorerHandler {
 
 // ClickOverwriteCancel dismisses the overwrite prompt, leaving the file alone.
 func (this *FileExplorerHandler) ClickOverwriteCancel() *FileExplorerHandler {
-	return this.clickDialogButton(overwriteCancelButtonLabel)
+	return this.clickDialogButton(cancelButtonLabel)
 }
 
 // TypeFolderName focuses the new folder field and types text into it.

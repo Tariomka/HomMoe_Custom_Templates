@@ -9,4 +9,5 @@ type IPathResolutionService interface {
 	ResolveSaveTarget(directory, filename, requiredSuffix string) (string, bool)
 	PathExists(path string) bool
 	DirectoryExists(path string) bool
+	FindGameTemplateDirectory() (string, error)
 }

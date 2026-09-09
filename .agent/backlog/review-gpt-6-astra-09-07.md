@@ -97,6 +97,11 @@ Test-observation dispositions, including the individual documented gaps:
 
 ### 1.1 🔴 Applying manual edits does not mark the document unsaved
 
+**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0; changed
+manual commits now set dirty and re-arm Exit, while identical, rejected, and
+accepted-warning no-op Apply cases preserve the appropriate state. Awaiting owner
+commit; this finding is not yet marked fixed.
+
 **Evidence.** [ApplyEditedZones](../../app/gui/drivers/stateManualEdits.go#L22-L35) ends with `this.innerState.SetManualEdits(request.Zones, request.Connections)` or `ClearManualEdits()`, without changing `unsaved` or `confirmExit`. The only dirty setter is [UpdateState](../../app/gui/drivers/state.go#L135-L142): `if this.innerState.WasStateChanged() { this.unsaved = true }`. That comparison deliberately [ignores manual edits](../../internal/models/editor_state_model/editorState.go#L129-L157). [Exit](../../app/gui/drivers/stateFiles.go#L48-L57) asks for confirmation only when `this.unsaved && !this.confirmExit`.
 
 **Why wrong.** Load/save a clean state, move a zone or change a connection, Apply, then Exit. The persisted layout changed but `IsUnsaved()` remains false; the application can close without its normal warning. Revert-to-Base also changes persisted manual state and needs dirty tracking. Later per-frame scalar comparison does not repair this omission.
@@ -106,6 +111,12 @@ Test-observation dispositions, including the individual documented gaps:
 **Owner decision.** Confirm no-op Apply semantics; do not change close/reset/load policy incidentally.
 
 ### 1.2 🔴 Failed game-directory detection silently authorizes export to the working directory
+
+**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0:
+`FindGameTemplateDirectory` now belongs to `PathResolutionService`/
+`IPathResolutionService`, and failed detection leaves export unset until explicit
+session-only picker confirmation. Awaiting owner commit; this finding is not yet
+marked fixed.
 
 **Evidence.** [NewUIState](../../app/gui/drivers/state.go#L77-L89): `templateDir = state.getWorkingDirectory()` after failed detection, then `state.outputPath.SetText(templateDir)`. One status even says `"using fallback directory."` with the error flag false. [SaveTemplate](../../internal/handlers/templateHandler.go#L107-L119) rejects only an empty output path before writing through the file service.
 
@@ -173,6 +184,11 @@ Test-observation dispositions, including the individual documented gaps:
 
 ### 1.8 🔴 Untouched Revert-to-Base is compared after the handler mutates it
 
+**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0:
+revert identity is captured before handler mutation, and the real-handler
+roads-off regression confirms an untouched revert clears the snapshot. Awaiting
+owner commit; this finding is not yet marked fixed.
+
 **Evidence.** [ApplyEditedZones](../../app/gui/drivers/stateManualEdits.go#L22-L35) calls `this.handleUpdateTemplate(...)` before `matchesZoneSet(request, pendingBase)`. The comparison is [reflect.DeepEqual](../../app/gui/drivers/stateManualEdits.go#L66-L69). [UpdateTemplate](../../internal/handlers/templateHandler.go#L79-L85) rebuilds the request's roads in place. The dialog [copies the top-level zone slice](../../app/gui/dialogs/zoneEditorDialog.go#L179-L197), separating those field replacements from the stored pending base.
 
 **Why wrong.** An untouched revert should clear the manual snapshot. Road reconstruction can make its payload differ from the pre-rebuild base, particularly for roadless generation, so the equality fails and the base is pinned as another manual edit. This is a source-traced interaction; no full GUI reproduction was run. The current [revert unit test](../../test/unit/app/gui/drivers/stateManualEdits/applyEditedZones_test.go#L135-L160) uses a nonmutating mock and passes identical base slices directly, missing the dialog/handler interaction.
@@ -182,6 +198,12 @@ Test-observation dispositions, including the individual documented gaps:
 **Owner decision.** None beyond preserving the existing commit-on-Apply/revert design.
 
 ### 1.9 🟠 Manual-zone snapshot setters and getters share nested storage
+
+**Progress (2026-09-09).** Implemented and verified on Windows Go 1.27.0: manual
+zones now deep-clone on ingress and egress, including zone-only snapshot
+isolation checks. The pre-existing connection `Road` pointer/placement alias is
+unchanged by this scoped work. Awaiting owner commit; this finding is not yet
+marked fixed.
 
 **Evidence.** [EditorState.SetManualEdits/GetManualZones](../../app/gui/models/editorState.go#L96-L113) both use `slices.Clone`, while the model's [Clone](../../internal/models/editor_state_model/editorState.go#L77-L91) correctly calls `template_model.Zone.Clone` for every zone.
 

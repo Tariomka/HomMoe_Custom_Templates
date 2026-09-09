@@ -1,9 +1,8 @@
 package models
 
 import (
-	"slices"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -93,22 +92,31 @@ func (this *EditorState) WasStateChanged() bool {
 
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
 
-func (this *EditorState) SetManualEdits(zones []template_model.Zone, connections []template_model.Connection) {
-	this.current.ManualZones = slices.Clone(zones)
-	this.current.ManualConnections = editor_state_model.ToManualConnectionSaves(connections)
+func (this *EditorState) SetManualEdits(zones []template_model.Zone, connections []template_model.Connection) bool {
+	candidate := editor_state_model.ManualEditSettings{
+		ManualZones:       helpers.MapSlice(zones, template_model.Zone.Clone),
+		ManualConnections: editor_state_model.ToManualConnectionSaves(connections),
+	}
+
+	changed := !candidate.Equals(this.current.ManualEditSettings)
+	this.current.ManualEditSettings = candidate
+	return changed
 }
 
 // ClearManualEdits drops the manual snapshot, used when a layout-defining
-// option change invalidates the hand-made layout.
+// option change invalidates the hand-made layout, and reports whether there
+// was anything to drop.
 // This does not clear manual edits applied to the template,
 // effectively making it useless if you want to reset the entire layout.
-func (this *EditorState) ClearManualEdits() {
+func (this *EditorState) ClearManualEdits() (changed bool) {
+	changed = this.current.HasManualEdits()
 	this.current.ManualZones = nil
 	this.current.ManualConnections = nil
+	return changed
 }
 
 func (this *EditorState) GetManualZones() []template_model.Zone {
-	return slices.Clone(this.current.ManualZones)
+	return helpers.MapSlice(this.current.ManualZones, template_model.Zone.Clone)
 }
 
 func (this *EditorState) GetManualConnections() []template_model.Connection {

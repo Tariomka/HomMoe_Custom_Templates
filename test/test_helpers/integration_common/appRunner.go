@@ -38,6 +38,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
@@ -90,10 +91,19 @@ type AppRunner struct {
 // NewAppRunner builds a runner. The window is created only in windowed mode; a
 // nil window marks the runner headless.
 func NewAppRunner(tb testing.TB) *AppRunner {
+	return NewAppRunnerWithFileSystem(tb, composition.InitializeFileSystemHandler())
+}
+
+// NewAppRunnerWithFileSystem is NewAppRunner over a caller-supplied filesystem
+// handler, for the tests that have to pin what the disk answers - a game
+// directory lookup that fails, say, which on a developer machine with the game
+// installed would otherwise succeed. Everything else is built by the real
+// composition root.
+func NewAppRunnerWithFileSystem(tb testing.TB, fileSystem handler_interfaces.IFileSystemHandler) *AppRunner {
 	runner := &AppRunner{
 		App: editor.NewWindow(
 			composition.InitializeGuiHandler(),
-			composition.InitializeFileSystemHandler(),
+			fileSystem,
 			composition.InitializeRegenerationHandler()),
 		theme: themes.NewTheme(),
 		tb:    tb,
@@ -103,7 +113,7 @@ func NewAppRunner(tb testing.TB) *AppRunner {
 	}
 
 	runner.Start()
-	runner.tb.Cleanup(runner.Stop)
+	tb.Cleanup(runner.Stop)
 	return runner
 }
 
@@ -370,6 +380,15 @@ func (this *AppRunner) Status() (string, bool) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.GetStateDriver().GetStatus()
+}
+
+// OutputPath returns the directory templates would be exported to, which is
+// empty until detection or the folder picker supplies one (lock-guarded).
+func (this *AppRunner) OutputPath() string {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.GetStateDriver().GetOutputPath()
 }
 
 // SelectedPanelScrollPosition returns the selected panel's first visible child
