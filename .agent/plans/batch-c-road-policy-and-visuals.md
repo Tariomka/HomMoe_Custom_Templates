@@ -1,6 +1,6 @@
 # Batch C: road policy, connectivity and visual road status
 
-Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is complete and uncommitted. Phase 3 is next. Preserve the owner's staged handoff; this plan has the newer implementation status.
+Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is committed at `abf0d36`. Phase 3 is next, explicitly authorized by the owner: “Changes reviewed, you can proceed”. Resume in a fresh session without another approval gate.
 
 ## For Future Agents
 
@@ -313,7 +313,12 @@ Status: Not started
 
 ### Phase Summary: Phase 3
 
-Pending phase completion.
+Not started. Owner reviewed and committed Phase 2 at `abf0d36` and authorized the
+next phase on 2026-09-10: “Changes reviewed, you can proceed”. Git was clean before
+the documentation-only handoff update. The preceding session reached its budget;
+begin Phase 3 directly in a fresh session after inspecting current edits. Read
+[the refreshed handoff](../session-carry-forward.md), preserve all existing work,
+and use 74.9% as the last verified unit coverage reference before a fresh baseline.
 
 ## Phase 4: PNG per-edge opacity
 

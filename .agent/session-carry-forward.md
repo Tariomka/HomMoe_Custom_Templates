@@ -1,122 +1,176 @@
-# Carry-forward: Batch C Phase 1 complete, begin Phase 2
+# Carry-forward: Batch C Phase 2 complete, begin Phase 3
 
 Date: 2026-09-10.
 
-**Next action:** Implement Phase 2 of [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
-Owner approved implementation on 2026-09-10: “looks good, please proceed”. No code has
-been committed by the agent; Phase 1 is implemented, verified and still unstaged.
-Do not ask for approval again.
-Owner accepted Phase 1 and explicitly requested Phase 2 on 2026-09-10:
-“All looks good, you can proceed with the next Phase”. Phase 2 has not started:
-the current session reached the AGENTS.md session limit. Resume directly in a
-fresh session. The editor reports intervening source/test edits; re-read current
-files and inspect Git before changes rather than assuming the prior verified state.
-A/D and B are complete; no validation, closure or retired-document lookup is required.
-
 ## 1. Session goal
 
-Implement approved Batch C Phase 1: shared road classifier and endpoint-based,
-road-gated public graph repair. Full Batch C includes the later road reconciliation
-and three visual surfaces, which remain unimplemented.
+Complete approved Batch C Phase 2 road-policy and final-content reconciliation.
+Phase 1 and Phase 2 are implemented and owner-committed. Phase 3, pending editor
+policy and GUI road styles, is next and has not been implemented. No further approval
+question is needed.
 
 ## 2. Fixes applied
 
-Implemented Phase 1:
-- [Connection model](../internal/models/template_model/template_variant_model/connection.go):
-	`IsExplicitPortal()` and `HasRoad()`, explicit true/false and nil classifier.
-- [Repair service](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go):
-	valid incident endpoints replace road references for player connectivity;
-	accumulated repairs update both endpoints. Missing/self endpoints do not count.
-- Repair methods now take a final `generateRoads bool`, threaded through their
-	interface, TopologyBase, positioned, Chain, Ring, SharedWeb and balanced cluster
-	callers. Road creation is conditional; fallback/bridge edges and guards remain.
-- Repair-name collisions choose first free `-2`, `-3`, etc. suffix. Removed the
-	old bridge collision behavior that merged adjacency without a real edge.
+Phase 1, committed at `07ca8b6`:
+
+- Added explicit-Portal and road classification on the connection model.
+- Made public topology repair endpoint-based and road-gated while preserving graph
+  repairs, guards, impossible-isolation fallback, and collision-safe edge names.
 
 Prior settled fixes stay intact: manual compare-before-mutation/dirty tracking and
 snapshot isolation; no output browsing-fallback authorization; additive PNG ceiling
 sample count with existing stamp spacing; configured tournament SaveArmy (nil rules
 plus tournament selector means false; normal constructor default remains true).
 
+Phase 2, committed at `abf0d36`:
+
+- Added `RoadPolicyService` reconciliation for authoritative non-Portal road flags,
+  scoped mandatory-content validation, eligible approach restoration, and invalid
+  generated-road removal.
+- Kept internal castle/object/foothold roads independent of the between-zone checkbox.
+  Preserved valid custom routes, opaque references, explicit Portal flags, spawn
+  anchoring, and marker-only arena connector routing.
+- Final generation reconciles after content and arena placement. `UpdateTemplate`
+  names connections directly and runs policy only when `EditorState` is present; nil
+  state preserves supplied roads, flags, and mandatory content while retaining graph
+  diagnostics.
+- Cloned castle-road slices before deletion/appending to prevent alias mutation and
+  rebased imported non-arena anchors to actual indices. Arena markers are excluded
+  from automatic anchors and never gain a new castle road.
+- Regenerated Wire. The shared golden retains full equality; its only intentional
+  output delta is `road: true` on `Rnd-A-B`.
+
 ## 3. Features added / changed
 
-Phase 1 changes are above. The following approved full Batch C requirements remain
-the source of truth; do not mistake these later policy/visual items for implemented work:
+Implemented contract:
 
-- Checkbox means roads **between zones**. With EditorState present, set Road true/on or false/off on every non-explicit-Portal connection, including custom/imported, Default, empty, arena and proximity. On overwrites imported false; off overwrites true. Off removes whole zone-road segments referencing these connections, not edges.
-- Internal castle/object/foothold roads stay generated even off. Preserve explicit Portal flags and valid approaches, including Road=false portals; generated portals keep true. Portal placement rules alone do NOT grant road-policy exemption.
-- Reconcile foothold additions/removals/count changes with final mandatory content and actual main objects. Remove only confirmed invalid MainObject, incident Connection and named MandatoryContent references; preserve valid custom internal roads and opaque types. No prefix-only deletion, no new provenance metadata.
-- Nil EditorState preserves supplied roads/flags and existing mandatory content, with direct EnsureConnectionNames and normal graph checks but NO road cleanup.
-- Repair graph connectivity from edges, including accumulated repairs. Preserve impossible-isolation fallback independently of road materialization.
-- All three visual surfaces: explicit Road false is roadless, true roaded, nil roaded ONLY for explicit Portal. Owner will test this interpretation in-game.
-- GUI roadless non-portals #B0B0B0; roadless explicit portals #90EE90. Keep roaded colors. Selected editor edges retain road color (even roaded) and use thicker width. Legends: Road / No road / Portal / Portal without road.
-- PNG roadless strokes: existing color at 50% once per edge; stamps within one edge do not accumulate, intersections of separate edges may. Preserve geometry/dashes, clipping and opaque markers. Reusable mask, no per-edge full-image allocations.
-- Pending editor create/type changes show the checkbox policy before Apply via handler/service logic. Cancel stays non-mutating. No per-edge checkbox requested.
-- Road display classification is separate from existing effective preview Type. Keep placement-rule-derived portal shapes and existing type comparison behavior; road policy uses explicit Portal only. §1.15 unification remains deferred.
+- With settings present, `GenerateRoads` overwrites `Road` on every non-explicit-Portal
+  connection, on or off, including custom/imported, Default, empty, arena and proximity
+  connections. Explicit Portal flags, including false and nil, are preserved.
+- When roads are off, reconciliation removes complete zone-road segments referencing
+  disabled connections. Internal roads remain; valid Portal approaches remain. Turning
+  roads back on restores eligible target sets, not redundant connector record equality.
+- Final reconciliation treats nil/empty mandatory content as authoritative, resolves
+  names within each zone's final groups, and removes only confirmed invalid `MainObject`,
+  incident `Connection`, or named `MandatoryContent` references.
+- The legacy settings-free `RebuildZoneConnectionRoads` compatibility entry point
+  explicitly validates with roads enabled and unknown content. It has no production
+  caller; no deletion/refactor is required in this batch.
+
+Approved full Batch C contract still pending in the visual surfaces:
+
+- The shared display classifier is explicit false = roadless, explicit true = roaded,
+  and nil = roaded only for explicit Portal. Road display classification stays separate
+  from effective preview `Type` and portal placement rules.
+- Preview and editor roadless colors are `#B0B0B0` for non-Portals and `#90EE90` for
+  explicit Portals. Existing roaded colors stay. Selected editor edges retain the same
+  road-state color and use thicker width. Legends require `Road`, `No road`, `Portal`,
+  and `Portal without road`.
+- Pending editor create/type changes must show checkbox policy before Apply through
+  handler/service logic. Cancel must not mutate retained data. No per-edge checkbox.
+- PNG roadless strokes use the existing dark color at 50% once per edge, with a reusable
+  mask and no compounding among one edge's stamps. Geometry, dashes, clipping, and
+  opaque markers remain unchanged. PNG work is Phase 4, separate from Phase 3 GUI work.
 
 ## 4. File modifications
 
-- [connection.go](../internal/models/template_model/template_variant_model/connection.go): classifier.
-- [topologyConnectionService.go](../internal/services/template_generator/providers/topology/base/topologyConnectionService.go): endpoint connectivity, road gate, collision-safe repair names.
-- [topologyConnectionServiceInterface.go](../internal/services/template_generator/providers/topology/base/topologyConnectionServiceInterface.go): final boolean arguments.
-- [topologyBase.go](../internal/services/template_generator/providers/topology/base/topologyBase.go): forward boolean arguments.
-- [chainTopology.go](../internal/services/template_generator/providers/topology/chainTopology.go), [ringTopology.go](../internal/services/template_generator/providers/topology/ringTopology.go), [webTopology.go](../internal/services/template_generator/providers/topology/webTopology.go), [positionedTopologyBuilder.go](../internal/services/template_generator/providers/topology/positionedTopologyBuilder.go), [balancedClusterService.go](../internal/services/template_generator/providers/topology/tournament_variant/balancedClusterService.go): pass configuration road setting.
-- Edited base test files: [createMissingConnections_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createMissingConnections_test.go), [createMissingPlayerConnections_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createMissingPlayerConnections_test.go).
-- Edited topology regressions: [buildVariant_test.go](../test/unit/internal/services/template_generator/providers/topology/positionedTopologyBuilder/buildVariant_test.go), [createTopologyVariant_test.go](../test/unit/internal/services/template_generator/providers/topology/randomTopology/createTopologyVariant_test.go).
-- New connection-model test files under [connection/](../test/unit/internal/models/template_model/template_variant_model/connection/): common, hasRoad, isExplicitPortal, clone, toConnectionModel, toConnectionEntity (all `_test.go`).
-- New direct service test files under [topologyConnectionService/](../test/unit/internal/services/template_generator/providers/topology/base/topologyConnectionService/): common, createMissingConnections, createMissingPlayerConnections, createRandomPortalConnections, getBorderGuardValue (all `_test.go`).
-- Updated [active plan](plans/batch-c-road-policy-and-visuals.md), [this handoff](session-carry-forward.md), and ignored [tooling memory](memories/tooling-and-shell.md).
-- Refreshed ignored [coverage.txt](../coverage.txt), [coverage.html](../coverage.html), [lcov.info](../lcov.info).
-- No configuration, protected trees, Wire, goldens or snapshots edited.
+Phase 2 committed files at `abf0d36`:
+
+- Docs: [batch-c-road-policy-and-visuals.md](plans/batch-c-road-policy-and-visuals.md)
+  and [session-carry-forward.md](session-carry-forward.md).
+- Composition and handlers: [providerSets.go](../internal/composition/providerSets.go),
+  [wire_gen.go](../internal/composition/wire_gen.go), and
+  [templateHandler.go](../internal/handlers/templateHandler.go).
+- Models and services: [roadReconciliationRequest.go](../internal/models/roadReconciliationRequest.go),
+  [zoneEditorService.go](../internal/services/connection_editor/zoneEditorService.go),
+  [zoneEditorServiceInterface.go](../internal/services/connection_editor/zoneEditorServiceInterface.go),
+  [templateGenerator.go](../internal/services/template_generator/templateGenerator.go),
+  [roadFactory.go](../internal/services/zones/roadFactory.go),
+  [roadFactoryInterface.go](../internal/services/zones/zone_interfaces/roadFactoryInterface.go),
+  [roadPolicyScope.go](../internal/services/zones/roadPolicyScope.go),
+  [roadPolicyService.go](../internal/services/zones/roadPolicyService.go), and
+  [roadPolicyServiceInterface.go](../internal/services/zones/zone_interfaces/roadPolicyServiceInterface.go).
+- Integration and fixtures: [roadPolicyApply_integration_test.go](../test/integration/roadPolicyApply_integration_test.go),
+  [defaultTemplate.json](../test/test_helpers/defaultTemplate.json),
+  [roadFactoryMock.go](../test/test_helpers/roadFactoryMock.go),
+  [roadPolicyServiceMock.go](../test/test_helpers/roadPolicyServiceMock.go),
+  [templateGenerator.go](../test/test_helpers/templateGenerator.go), and
+  [zoneEditorService.go](../test/test_helpers/zoneEditorService.go).
+- Unit tests: [common_test.go](../test/unit/internal/handlers/templateHandler/common_test.go),
+  [updateTemplate_test.go](../test/unit/internal/handlers/templateHandler/updateTemplate_test.go),
+  [newZoneEditorService_test.go](../test/unit/internal/services/connection_editor/zoneEditorService/newZoneEditorService_test.go),
+  [createSpawnZone_test.go](../test/unit/internal/services/template_generator/providers/topology/base/topologyBase/createSpawnZone_test.go),
+  [generate_test.go](../test/unit/internal/services/template_generator/templateGenerator/generate_test.go),
+  [createOuterZoneRoads_test.go](../test/unit/internal/services/zones/roadFactory/createOuterZoneRoads_test.go),
+  [common_test.go](../test/unit/internal/services/zones/roadPolicyService/common_test.go),
+  [newRoadPolicyService_test.go](../test/unit/internal/services/zones/roadPolicyService/newRoadPolicyService_test.go),
+  [rebuildCastleRoads_test.go](../test/unit/internal/services/zones/roadPolicyService/rebuildCastleRoads_test.go),
+  [rebuildZoneConnectionRoads_test.go](../test/unit/internal/services/zones/roadPolicyService/rebuildZoneConnectionRoads_test.go),
+  and [reconcile_test.go](../test/unit/internal/services/zones/roadPolicyService/reconcile_test.go).
+
+Current uncommitted documentation work is this rewritten handoff. No source, test,
+protected-tree, generated-output, index, or branch change is part of this documentation
+update.
 
 ## 5. Tests added or updated
 
-Added classifier matrix, adjacent cloning/mapping coverage, direct-service tests and
-base/topology regressions for roadless valid graphs, repairs accumulated within/across
-calls, real Random impossible isolation, invalid/self endpoints and name collisions.
-Separate edge and road assertions prevent vacuous flattened expectations.
+Phase 2 added policy, factory, handler, generator, integration, arena-only,
+roads-disabled, nil-state, slice-alias, malformed-anchor, custom-road, and final-output
+JSON matrices. Factory mock coverage is legitimate constructor dependency coverage for
+malformed anchors. Regression tests were observed failing when the implemented fixes
+were removed.
 
-Windows verification PASS: build; affected generator/model and architecture suites;
-fresh before/after full unit coverage tasks (`-count=1`), final cache-eligible full
-coverage rerun after test-only additions; `go test ./test/...` including untagged
-integration; test-layout checker; diff whitespace check. Coverage **74.5% → 74.6%**.
-Classifier and changed/new repair functions **100%**. Report-only lint **0 issues**,
-three existing unused-exclusion warnings. No gated integration/GUI, Linux, race,
-benchmark or in-game validation this session. Independent Claude Opus 5 Phase 1
-implementation review approved after assertion and collision fixes.
+Windows verification PASS:
+
+- `go build ./...`.
+- Full unit suite with `-count=1`.
+- Fresh pre/post full coverage: **74.6% -> 74.9%**, followed by a final
+  cache-eligible full-coverage rerun. New road-policy functions, including
+  `rebaseAnchorRef`, and factory coverage are 100%; touched handler/editor entry
+  points are 100%.
+- Default `go test ./test/...`, tagged integration, and tagged
+  `integration_test,gui` under the whole integration tree. Actual GUI execution took
+  about 37 seconds.
+- Test-layout and diff-whitespace checks.
+- Report-only lint: 0 issues, with three existing unused-exclusion warnings.
+
+Independent Claude Opus review approved after corrections for marker-only arena
+anchoring, slice alias mutation, and a vacuous From-vs-To assertion. No Linux, race,
+benchmark, or in-game validation is claimed.
 
 ## 6. Git status snapshot
 
-Branch `AD/road_and_graph_invariants`, HEAD `87ae8789d84178854a395e8dd34e172095a9ebc6`.
-Started clean; current source edits in §4 are `M`, new test files are `??`, plan and
-handoff modified. Index empty. Protected trees and generated Wire unchanged.
-No agent staging, unstaging, commits, pushes, stashes or branch changes. Reinspect
-current Git and preserve owner changes before continuing.
+Branch `AD/road_and_graph_invariants`, clean `HEAD abf0d36`. Phase 1 is the earlier
+owner commit `07ca8b6`; the owner committed all Phase 2 source, tests, wiring, fixture,
+plan, and prior handoff changes. This documentation rewrite intentionally leaves the
+handoff modified. Do not stage, unstage, commit, push, stash, or switch branches.
 
 ## 7. Rejections / things the user declined
 
-- Phase 1 review rejected vacuous nil-zone endpoint tests and flattened edge/road
-	expectations; corrected to independent real-graph and road assertions.
-- Did not retain the old fake-adjacency collision fallback: first-free suffixes
-	satisfy the approved actual-edge invariant without overwriting supplied edges.
-- A guessed connection-model path did not exist; located the nested implementation.
-	A promoted-field fixture lint edit produced invalid Go syntax; corrected to the
-	actual Go 1.27 flat literal and updated tooling memory. One stale patch context
-	was re-read before continuing. Final build/tests/lint are clean.
-- Original zero-roads-anywhere interpretation rejected: internal roads and portal approaches stay; only non-Portal border roads follow the checkbox.
-- Do not infer display state from zone-road references or default every nil to roaded.
-- Scope was initially withheld pending visual expansion, then approved in full.
-- Reject review suggestions contrary to owner: nil-state cleanup, orange selected roaded edges, deleting portal approaches for false flags, adding arena-marker castle roads, and relying solely on final generator cleanup for public repair correctness.
-- No protected edits, global tags, bulk rewrites, fake seams or Wire hand edits.
-- Keep PathResolutionService, pending-base consumption on every Apply and unpersisted session-only export selection. Browsing fallbacks never authorize export.
-- Keep unconditional in-memory PNG assertions; no environment-gated capture-only utility. Keep original floating-point stamp spacing, no resampling disguise.
-- Two exploration calls rejected lowercase model IDs; retried successfully using exact `GPT-5.6 Terra (copilot)` display name (already documented in tooling memory).
-- Completed plans are owner-deleted. Future handoffs must not link them or delegate their validation/closure; surviving decisions must be self-contained.
+- Never skip cleanup because final content is nil or empty: it is authoritative during
+  `Reconcile`. The settings-free legacy `RebuildZoneConnectionRoads` explicitly uses
+  validation false and has no production caller.
+- Never auto-anchor arena-only zones. Exclude the marker while preserving spawn
+  anchoring and rebasing shifted imported non-arena anchors.
+- Clone castle roads before deletion/appending; do not mutate shared backing arrays.
+- Preserve explicit Portal flags even when false. Roads-off does not disable internal
+  roads or valid Portal approaches.
+- Do not replace restored target-set behavior with redundant connector-record equality;
+  no deletion/refactor is needed for the legacy compatibility entry point.
+- A/D and B are closed; no old-document lookup, validation, or closure work is
+  required.
+- A source-build warning from guessed nonexistent
+  `internal/models/generatorConfig.go` was resolved by using the actual config path.
+  One terminal command accidentally prepended `d` to `go`, failed, then succeeded on
+  retry.
+- No protected edits, global tags, bulk rewrites, fake seams, or hand-edited Wire.
+  Wire was regenerated and its golden delta is exactly one `road: true` field.
 
 ## 8. Open questions and confirmed later scope
 
 Batch C source verification, baseline, policy questions, scope approval and written-plan
-implementation approval are done. **Phase 1 is complete; begin Phase 2 without asking approval or settled policy again.**
+implementation approval are done. **Phase 2 is complete; begin Phase 3 without asking approval or settled policy again.**
+Owner Phase 3 authorization, 2026-09-10: "Changes reviewed, you can proceed".
 The owner will validate true/false/nil engine behavior after changes. Existing engine
 evidence is inconclusive: schema is optional bool; shipped examples use both values
 for direct and portal connections; examples do not prove defaults.
@@ -139,24 +193,26 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-1. Read AGENTS, this handoff and [active plan](plans/batch-c-road-policy-and-visuals.md).
-2. Inspect current Git and preserve owner changes. Approval is already granted.
-3. Current Phase 1 verified coverage is 74.6%; preserve the unstaged/untracked implementation. Reconcile any owner edits since this handoff, not old completed-batch audits.
-4. Begin Phase 2 road-policy service and final-content reconciliation. New classifier methods are ready for use; repair signatures already accept the road setting. Follow the plan one phase at a time, with verification and summaries.
-5. Keep §8 later scope intact. In-game checks belong to the owner, not a claimed agent result.
+1. Read [AGENTS.md](../AGENTS.md), this handoff, and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
+2. Inspect Git and preserve owner changes. Phase 3 is authorized; do not ask for approval again.
+3. Implement only Phase 3 from the fresh **74.9%** coverage baseline: pending create/type policy through handler/service, preview road display state, GUI colors/legends, and selected-edge styling.
+4. Keep Phase 4 PNG opacity separate and leave §8 scope unchanged.
+5. Run focused model/service/handler and preview tests after each first substantive edit, then the Phase 3 verification matrix. The owner, not the agent, validates engine behavior in-game.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md)
-> and [active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Scope AND written-plan
-> implementation are approved (owner, 2026-09-10: “looks good, please proceed”). Begin
-> Phase 2 without asking for approval again; Phase 1 is implemented and verified,
-> but unstaged/untracked. Preserve it.
-> Batch C covers §1.4/§1.6/§1.10 plus all three road-state visual surfaces. Follow the
-> settled owner contract in the handoff/plan; do not reopen its policy questions.
-> Phase 1 Windows verification: build/default tests/architecture/layout PASS, coverage
-> 74.5% → 74.6%, lint zero. Classifier and repair methods 100%. Opus review approved.
-> Inspect Git to preserve owner changes. A/D and B are closed; no old-document lookup,
-> validation or closure work. Preserve all later scope in §8.
+> and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Owner approval
+> remains in force. Phase 1 (`07ca8b6`) and Phase 2 (`abf0d36`) are implemented and
+> committed; begin Phase 3 without asking again. Phase 3 GUI/pending-edit work is not
+> implemented. Owner Phase 3 authorization, 2026-09-10: "Changes reviewed, you can
+> proceed". Begin from the fresh 74.9% coverage baseline.
 >
-> Never modify protected data/schema/registry trees; proposed protected changes require owner approval and application. Preserve Windows/Linux portable paths and guarded platform code. Test nontrivial changes and measure coverage before/after. Keep multi-step work in an approved durable plan. Never stage, unstage, commit or push; preserve owner staging and do not switch branches speculatively. Never bulk-rewrite or hand-edit generated Wire output. Export only to the detected game templates directory or explicit session-only picker destination; never persist output paths or authorize browsing fallbacks. Never set global integration_test/gui/wireinject tags or add fake unit seams. Preserve later scope in §8.
+> Never modify protected `data/`, template schema, or registry trees. Keep all paths
+> cross-platform and never change or persist the game output directory. Test nontrivial
+> changes and measure coverage; never stage, unstage, commit, push, stash, or switch
+> branches. Never bulk-rewrite or hand-edit generated Wire. Never enable global
+> `integration_test`, `gui`, or `wireinject` tags, and never add fake unit seams.
+> Preserve the complete later scope in §8 verbatim. Keep business policy in the
+> handler/service layer, carry road display state separately from effective preview
+> type, and leave Phase 4 PNG work untouched.
