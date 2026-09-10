@@ -10,7 +10,7 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-09-09):** **4 fixed, 28 remaining**: 5 High, 16 Medium,
+**Current progress (2026-09-10):** **6 fixed, 26 remaining**: 3 High, 16 Medium,
 7 Low. The original audit measurements above remain historical.
 
 **Fix-session protocol:** ask → plan → owner approves → implement and verify → owner commits → mark the stable item `✅ FIXED`. Owner-confirmed scope below is not permission to implement before the per-item plan is approved. Protected-directory changes remain owner-approved and owner-applied only. Each future change must follow the test layout, AAA, `t.Parallel()`, testify, coverage, build, and tag requirements in [AGENTS.md](../../AGENTS.md). Proposed new test paths below are deliberately not hyperlinks until the files exist.
@@ -130,7 +130,9 @@ session-only picker confirmation. Owner committed the fix in `a9eb35c`
 
 **Owner decision.** This enforces the existing hard rule; no permission to choose a new default export folder or remember a path. Verify that opening the session folder picker from an empty output path still resolves a usable browsing start directory; a browsing start is not an authorized export destination.
 
-### 1.3 🔴 Short portal connections rasterize to zero pixels in PNG previews
+### 1.3 ✅ FIXED — Short portal connections rasterize to zero pixels in PNG previews
+
+**Progress (2026-09-10).** Owner committed the additive ceiling sample-count fix and unconditional pixel regressions in `252a7ee`. Floating-point increments, existing sample positions, geometry, brush and dash policy are preserved. Short/long direct/portal axes, diagonals, curves, gaps, fitting/clipping and degenerate paths are covered. Owner approved the focused before/after PNG pairs. The review-only capture utility was excluded from the commit and removed at owner request; `a4c5fa3` commits the remaining helper cleanup. Both commits verified read-only. Windows coverage remains 74.5%, raster paths 100%; build/unit/default/integration/GUI/vet/layout passed, lint zero. This does not close the separate historical solid-curve artifact or GUI/PNG geometry divergence.
 
 **Evidence.** [drawLine](../../internal/services/preview_service/previewGeneratorService.go#L131-L147): `steps := max(math.Abs(delta.X), math.Abs(delta.Y))`, followed by `for i := range int(steps)`. [drawDashedLine](../../internal/services/preview_service/previewGeneratorService.go#L113-L129) splits curves into 96 chords; solid curves use 24. Positive subpixel chords pass `steps <= 0` but truncate to zero loop iterations.
 
@@ -174,7 +176,9 @@ session-only picker confirmation. Owner committed the fix in `a9eb35c`
 
 **Owner decision.** Preserve the existing “connect an otherwise impossible isolated map” policy; do not confuse that accepted fallback with the incorrect road-based predicate.
 
-### 1.7 🔴 Tournament “Save army” is ignored
+### 1.7 ✅ FIXED — Tournament “Save army” is ignored
+
+**Progress (2026-09-10).** Owner committed configured Save Army propagation and regression tests in `252a7ee`, verified read-only. Tests cover both tournament activation modes, true/false, inactive mode, nil rules and constructor defaults; real generation/save integration verifies nested raw JSON with positive controls. Owner confirmed omission means off in-game and selected nil rules plus tournament victory selector => false, without a new fallback. No protected schema or writer change. Validation is source/test evidence plus owner-supplied game semantics, not an assistant in-game run. Windows verification is recorded under §1.3 and in the completed Batch B plan.
 
 **Evidence.** [GeneralPanel.SaveToState](../../app/gui/panels/generalPanel.go#L179-L184) saves `settings.TournamentSaveArmy = this.checkTournamentSaveArmy.Value`. [setTournamentRules](../../internal/services/template_generator/providers/gameRulesProvider.go#L133-L143) writes `winConditions.TournamentSaveArmy = true` instead of consuming the configured value.
 

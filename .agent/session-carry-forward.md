@@ -1,18 +1,17 @@
-# Carry-forward: Batch B verified, awaiting owner commit
+# Carry-forward: Start Batch C
 
 Date: 2026-09-10.
 
-**Latest owner-review follow-up:** Batch B is committed as `252a7ee` on `AD/visual_and_value_save_bugs`. The owner excluded the untracked PNG capture utility and requested its removal rather than keeping an environment-gated test that only counts files. That utility is removed; fixture enumeration is now private and the unconditional pixel regression suite is retained. Cleanup build/default tests/fresh unit coverage/layout pass, coverage 74.5% before/after, final lint zero. Only the helper, plan and handoff have unstaged tracked changes. Index was clean at follow-up start and is untouched. Earlier pending-commit/staging descriptions below are historical; backlog closure remains separate from this focused cleanup.
+**Next session:** Start Batch C (§1.4/§1.6/§1.10), covering road policy and graph connectivity. A/D and B are complete; they require no further validation or closure work. Use this handoff and the current review for context, not documents from completed batches.
 
 ## 1. Session goal
 
-Implement approved Batch B (§1.3 PNG rasterization and §1.7 Tournament Save Army), verify it and obtain owner PNG approval. All three are complete; owner commit is pending. [The plan](plans/batch-b-png-and-tournament-save-army.md) is the resumable source of truth. [The review](backlog/review-gpt-6-astra-09-07.md) still correctly records **4 fixed, 28 remaining** until the owner commits B. A/D is closed in squash `f986a91` (PR #41); do not restart it or repeat the audit.
+Prepare the next session to address Batch C without reopening completed work. [The review](backlog/review-gpt-6-astra-09-07.md) records **6 fixed, 26 remaining** (3 High, 16 Medium, 7 Low). Batch C needs source verification specific to its findings, owner decisions on road handling and approval of its implementation approach.
 
 ## 2. Fixes applied
 
 - [PNG rasterizer](../internal/services/preview_service/previewGeneratorService.go): loop count uses `int(math.Ceil(steps))`; floating-point increment and all existing stamp positions stay unchanged. Subpixel segments now paint without changing geometry, brush, dash policy or assets.
 - [Game rules](../internal/services/template_generator/providers/gameRulesProvider.go): `TournamentSaveArmy` uses `tournamentRules.SaveArmy`, rather than forced true. No protected schema or writer changes.
-- Checked A/D production paths match owner correction `509cc05`; the additional three closure regressions are included in squash `f986a91`. The former handoff's unstaged A/D claims are obsolete.
 
 ## 3. Features added / changed
 
@@ -31,11 +30,11 @@ Implement approved Batch B (§1.3 PNG rasterization and §1.7 Tournament Save Ar
 | [createPreviewImage_test.go](../test/unit/internal/services/preview_service/previewGeneratorService/createPreviewImage_test.go) | Raster matrix, visibility, gaps, fitting/clipping, degeneracy and determinism. |
 | [createGameRules_test.go](../test/unit/internal/services/template_generator/providers/gameRulesProvider/createGameRules_test.go) | True/false, activation aliases, inactive, nil and default cases. |
 | [fromEditorState_test.go](../test/unit/internal/mappers/generatorConfigMapper/fromEditorState_test.go) | False propagation. |
-| [previewRasterFixture.go](../test/test_helpers/previewRasterFixture.go) | New fixed-layout test helper, 22 fixtures. |
+| [previewRasterFixture.go](../test/test_helpers/previewRasterFixture.go) | Fixed-layout test helper, 22 fixtures; enumeration privatized in owner cleanup commit. |
 | Removed review-only PNG capture utility | Was never committed; no environment-variable setup remains in test code. |
 | [tournamentSaveArmySerialization_integration_test.go](../test/integration/tournamentSaveArmySerialization_integration_test.go) | New real generation/save raw-JSON matrix with structure and tournament:true positive controls. |
-| [Batch B plan](plans/batch-b-png-and-tournament-save-army.md) | Owner-staged original; unstaged progress updates. |
-| [Handoff](session-carry-forward.md) | Updated current state and pending owner closure. |
+| [Review](backlog/review-gpt-6-astra-09-07.md) | §1.3/§1.7 fixed and counts updated; closure update unstaged. |
+| [Handoff](session-carry-forward.md) | Current committed state and next-session scope; closure update unstaged. |
 
 ## 5. Tests added or updated
 
@@ -49,21 +48,23 @@ Windows Go 1.27.0 verification:
 - Independent Claude Opus 5 review: no blockers. Its optional short-portal gap regression was added; final full unit/coverage/lint/layout checks passed afterward. Default/tagged/GUI checks passed before that last test-only addition.
 - Pixel preservation follows the additive-stamp proof plus visual spot checks; no automated comparison of all 18 image pairs is claimed.
 - No protected data/schema/registry, generated Wire or GUI golden changes. No local Linux/race/benchmark/vulnerability-scan execution claimed.
+- After capture removal/helper cleanup: build, default `go test ./test/...`, fresh unit coverage task, layout and lint passed; 74.5% before/after. Final focused pixel tests after helper function ordering: 36 passed. GUI was not rerun for removal of a non-GUI capture utility. Owner commits were checked read-only; this final wrap-up changes documentation only.
 
 ## 6. Git status snapshot
 
-Branch: `AD/visual_and_value_save_bugs`. HEAD: `f986a918e7b2ed351b2dacfddeb2ba472a8303fc`, A/D squash PR #41. Owner staged the original Batch B plan before implementation; it is `AM` now, with its index preserved and progress updates unstaged. The five tracked Go files and this handoff are modified unstaged; the three new helper/integration files are untracked. Recheck before acting. No assistant staging, unstaging, commit, push or branch switch. No release/publication.
+Last observed branch: `AD/visual_and_value_save_bugs`. HEAD: `a4c5fa3a05184b43f2ef1e3c0a7d4a55b74c55d2`. Implementation is committed; documentation-only edits were pending at wrap-up. Inspect current Git state before Batch C solely to preserve owner changes and staging, not to revalidate completed batches. Never stage, unstage, commit, push or switch branches speculatively.
 
 ## 7. Rejections / things the user declined
 
 - Retain settled A/D decisions: use `PathResolutionService`, consume pending base on every Apply, no saved output path or browsing-fallback authorization.
 - No protected edits, global test tags, bulk rewrite, generated Wire hand edits or fake production seams.
-- Review refined the plan to preserve floating-point stamp spacing rather than resampling long chords; unit tests stay in-memory and raw JSON checks use actual nested fields instead of substring assertions.
-- Tool attempts: lowercase model name failed and was corrected; the read-only Explore agent could not implement tests, so a normal implementation subagent was used. A delegated handoff update did not match its completion report; direct replacement and readback corrected it. Verify actual files rather than completion claims.
+- Owner rejected retaining the environment-gated PNG capture test: it only checked errors/file count, not image correctness. It was removed entirely, along with capture-only setup; fixture enumeration is private. Retain real unconditional pixel assertions. Future GUI flow and saved-preview goldens are separate work, not implemented here.
+- Retain floating-point stamp spacing rather than resampling long chords; unit tests stay in-memory and raw JSON checks use actual nested fields instead of substring assertions.
+- Carry-forward documents must be self-contained and forward-looking. Do not reference completed-batch planning documents or assign previous-batch checking, validation or closure to the next session. Completed-batch documents are disposable; unresolved corrections normally stay in the same session.
 
 ## 8. Open questions and confirmed later scope
 
-Batch B has no open implementation or visual decision. Owner commit is pending. After it, verify contents read-only, mark §1.3/§1.7 fixed and update counts. Then Batch C (§1.4/§1.6/§1.10) requires source verification, generated/custom/imported road policy and nil EditorState questions, plus a separately approved durable plan. Do not begin C automatically.
+Batch C (§1.4/§1.6/§1.10) is not started: verify its current sources and tests, ask about generated/custom/imported road handling and optional nil EditorState behavior, then agree the scope and obtain approval before implementation. Preserve the accepted impossible-isolation connectivity fallback while keeping roads independent from graph connectivity. No previous-batch follow-up is required.
 
 Retained owner decisions for later work:
 
@@ -83,12 +84,13 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-1. Owner reviews/commits Batch B, including the new untracked helper and integration tests. Preserve owner staging.
-2. Verify that commit read-only, finish plan Phase 4 and mark review §1.3/§1.7 fixed with updated counts.
-3. Begin Batch C only after source verification, scope questions and an approved plan. Do not repeat the audit or A/D/B implementation.
+1. Read [AGENTS.md](../AGENTS.md), this handoff and review §1.4/§1.6/§1.10. Inspect current Git state to preserve owner changes.
+2. Trace Batch C's road rebuild, connectivity repair and foothold-content paths, their callers and existing tests. Do not repeat the full audit.
+3. Resolve generated versus custom/imported road handling when roads are disabled, stale foothold-target handling and behavior when `EditorState` is nil. Preserve required graph repairs independently of road creation.
+4. Confirm Batch C scope with the owner, prepare its new durable implementation plan and obtain approval. Then capture a fresh coverage baseline and implement with dedicated regression coverage.
 
 ## 10. Carry-forward prompt
 
-> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md), [the Batch B plan](plans/batch-b-png-and-tournament-save-army.md) and [the review](backlog/review-gpt-6-astra-09-07.md). Branch was `AD/visual_and_value_save_bugs`, HEAD `f986a91`; recheck Git. A/D is closed. Batch B is implemented, verified and owner PNG-approved, awaiting owner commit. Windows build/unit/default/integration/GUI/vet/layout passed; coverage 74.5% before/after, lint zero. Owner-staged original plan must be preserved; implementation and progress are unstaged, three new test/helper files untracked. Confirm owner commit before marking §1.3/§1.7 fixed. Then Batch C needs scope questions and its own approved plan.
+> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md) and [the review](backlog/review-gpt-6-astra-09-07.md). Start Batch C (§1.4/§1.6/§1.10): verify its current source paths and tests, ask about generated/custom/imported road policy and nil EditorState behavior, confirm scope and obtain approval before implementation. Preserve graph connectivity repair independently of road creation. Last observed Windows coverage was 74.5%, lint zero; measure a fresh baseline for C. Inspect current Git state to preserve owner changes. A/D and B are complete and require no validation or closure work. This handoff contains the required carry-forward decisions; do not seek documents from completed batches.
 >
 > Never modify protected data/schema/registry trees; proposed protected changes require owner approval and application. Preserve Windows/Linux portable paths and guarded platform code. Test nontrivial changes and measure coverage before/after. Keep multi-step work in an approved durable plan. Never stage, unstage, commit or push; preserve owner staging and do not switch branches speculatively. Never bulk-rewrite or hand-edit generated Wire output. Export only to the detected game templates directory or explicit session-only picker destination; never persist output paths or authorize browsing fallbacks. Never set global integration_test/gui/wireinject tags or add fake unit seams. Preserve later scope in §8.
