@@ -1,6 +1,6 @@
 # Batch C: road policy, connectivity and visual road status
 
-Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. Scope approved on 2026-09-10; **implementation is NOT approved**. Present this reviewed plan to the owner before any production/test/configuration edits.
+Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Begin Phase 1 next session without requesting approval again; implementation has not started because the planning session reached its length limit.
 
 ## For Future Agents
 
@@ -147,7 +147,7 @@ never edited. No global test tags, fake test seams, output-path changes or persi
 
 Status: Not started
 
-- [ ] Obtain owner approval of this written plan; inspect current Git safely.
+- [x] Obtain owner approval of this written plan; inspect current Git safely. Approval received 2026-09-10. Clean `AD/road_and_graph_invariants` at `5240389aa0a8eb6a0a04d0552369bc2437540e60`; owner committed only the plan/handoff since the measured baseline. Recheck Git before code edits next session.
 - [ ] Add dedicated connection-model classifier tests, true/false/nil × explicit
   Portal/non-Portal (including placement-rule-only portal and type-case handling).
 - [ ] Add red public-API graph tests for roadless-but-connected players, newly
@@ -298,7 +298,8 @@ Written-plan Claude Opus 5 review completed: approve with corrections. Both bloc
 gaps were incorporated: preserve whole-template golden equality while updating explicit
 flags, and retain direct naming on the nil-state path with the old mock expectation
 re-specified. Clarifications for the new type-change seam and unchanged case-sensitive
-preview shape classifier were also incorporated. Implementation approval: pending.
+preview shape classifier were also incorporated. Owner implementation approval received
+2026-09-10: “looks good, please proceed”. No further approval gate for the existing scope.
 
 ## Final Recap
 

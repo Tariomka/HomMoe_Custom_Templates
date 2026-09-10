@@ -1,10 +1,11 @@
-# Carry-forward: Batch C plan awaiting implementation approval
+# Carry-forward: Batch C approved, begin Phase 1
 
 Date: 2026-09-10.
 
-**Next action:** Owner reviews [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
-Scope is approved; implementation is NOT approved and no code has changed. A/D and B
-are complete and require no validation or closure. Do not seek their retired documents.
+**Next action:** Implement Phase 1 of [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
+Owner approved implementation on 2026-09-10: “looks good, please proceed”. No code has
+changed; the planning session reached its length limit. Do not ask for approval again.
+A/D and B are complete; no validation, closure or retired-document lookup is required.
 
 ## 1. Session goal
 
@@ -38,7 +39,7 @@ No implemented changes. Owner approved these Batch C requirements:
 ## 4. File modifications
 
 - Created [active Batch C plan](plans/batch-c-road-policy-and-visuals.md): approved requirements, concrete boundaries, phased tests and independent review corrections.
-- Updated [this handoff](session-carry-forward.md) for the approval gate.
+- Updated [this handoff](session-carry-forward.md) to record implementation approval and the Phase 1 starting point.
 - Updated [settled decisions](memories/settled-decisions.md) with durable owner road/visual policy.
 - Refreshed ignored [coverage.txt](../coverage.txt), [coverage.html](../coverage.html) and [lcov.info](../lcov.info) with the fresh baseline task.
 - No production, tests, configuration, protected trees, Wire or goldens edited.
@@ -61,10 +62,13 @@ and clarified new type-change handler operation and unchanged shape classificati
 
 ## 6. Git status snapshot
 
-Baseline branch was `master`. Final observed branch is `AD/road_and_graph_invariants`,
-same HEAD `5b1feb0eb315a4df54ca1ea9e1defd070f6061d8`; the agent did not switch it.
-Initial and post-baseline status were clean. Final status: modified handoff and
-untracked .agent/plans/; staged diff empty. Memory and coverage artifacts are ignored.
+Baseline was measured on `master` at `5b1feb0eb315a4df54ca1ea9e1defd070f6061d8`.
+Latest branch `AD/road_and_graph_invariants`, HEAD `5240389aa0a8eb6a0a04d0552369bc2437540e60`.
+Owner changed branch and committed plan/handoff; the agent did neither. Read-only
+diff from the baseline confirms only those two documentation files changed. Working
+tree and staging were clean before recording approval. Final `git status --short`
+reports only this handoff modified; staged diff is empty. Approval was saved in the
+plan, handoff and memory. Reinspect current Git rather than assuming their status.
 Inspect again before implementation; preserve all owner staging/changes. No agent
 staging, unstaging, commits, pushes, stashes or speculative branch changes.
 
@@ -82,8 +86,8 @@ staging, unstaging, commits, pushes, stashes or speculative branch changes.
 
 ## 8. Open questions and confirmed later scope
 
-Batch C source verification, baseline, policy questions and scope approval are done.
-**Written-plan implementation approval is pending.** Do not ask settled policy again.
+Batch C source verification, baseline, policy questions, scope approval and written-plan
+implementation approval are done. **Begin Phase 1; do not ask approval or settled policy again.**
 The owner will validate true/false/nil engine behavior after changes. Existing engine
 evidence is inconclusive: schema is optional bool; shipped examples use both values
 for direct and portal connections; examples do not prove defaults.
@@ -107,16 +111,17 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 ## 9. Next recommended actions
 
 1. Read AGENTS, this handoff and [active plan](plans/batch-c-road-policy-and-visuals.md).
-2. Obtain owner implementation approval of the written plan. Do not implement yet.
-3. Inspect current Git; if HEAD/source changed, measure a new C baseline and reconcile current sources only. Do not repeat completed-batch audits or settled questions.
-4. Implement/verify the plan one phase at a time; update its checkboxes and summaries.
+2. Inspect current Git and preserve owner changes. Approval is already granted.
+3. If implementation sources changed since the recorded baseline, measure a new C baseline and reconcile current sources only. The latest owner commit was documentation-only. Do not repeat completed-batch audits or settled questions.
+4. Begin Phase 1 classifier/graph regressions, then implement/verify the plan one phase at a time; update its checkboxes and summaries.
 5. Keep §8 later scope intact. In-game checks belong to the owner, not a claimed agent result.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md)
-> and [active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Scope is approved;
-> written-plan implementation approval is pending. Obtain that approval before edits.
+> and [active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Scope AND written-plan
+> implementation are approved (owner, 2026-09-10: “looks good, please proceed”). Begin
+> Phase 1 without asking for approval again; no implementation has started yet.
 > Batch C covers §1.4/§1.6/§1.10 plus all three road-state visual surfaces. Follow the
 > settled owner contract in the handoff/plan; do not reopen its policy questions.
 > Fresh Windows baseline at master 5b1feb0: full unit coverage PASS, 74.5%, lint zero.
