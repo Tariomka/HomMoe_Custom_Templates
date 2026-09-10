@@ -137,7 +137,7 @@ func (this *GameRulesProvider) setTournamentRules(
 	roundCount := pointsToWin*2 - 1
 	winConditions.ChampionSelectRule = registry.GetChampionSelectValues().StartHero
 	winConditions.Tournament = true
-	winConditions.TournamentSaveArmy = true
+	winConditions.TournamentSaveArmy = tournamentRules.SaveArmy
 	winConditions.TournamentPointsToWin = pointsToWin
 
 	var announceDays, battleOffsets []int

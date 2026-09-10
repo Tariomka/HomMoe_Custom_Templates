@@ -138,7 +138,7 @@ func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end dat
 	increment := delta.DivideScalar(steps)
 	half := connectorLineWidth / 2
 	brushSource := image.NewUniform(color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF})
-	for i := range int(steps) {
+	for i := range int(math.Ceil(steps)) {
 		center := start.Add(increment.MultiplyScalar(float64(i))).ToPointRounded()
 		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
 			Intersect(canvas.Bounds()) // Square brush around the center, clipped to the canvas.
