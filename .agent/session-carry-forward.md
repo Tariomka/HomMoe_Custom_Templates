@@ -2,6 +2,8 @@
 
 Date: 2026-09-10.
 
+**Latest owner-review follow-up:** Batch B is committed as `252a7ee` on `AD/visual_and_value_save_bugs`. The owner excluded the untracked PNG capture utility and requested its removal rather than keeping an environment-gated test that only counts files. That utility is removed; fixture enumeration is now private and the unconditional pixel regression suite is retained. Cleanup build/default tests/fresh unit coverage/layout pass, coverage 74.5% before/after, final lint zero. Only the helper, plan and handoff have unstaged tracked changes. Index was clean at follow-up start and is untouched. Earlier pending-commit/staging descriptions below are historical; backlog closure remains separate from this focused cleanup.
+
 ## 1. Session goal
 
 Implement approved Batch B (§1.3 PNG rasterization and §1.7 Tournament Save Army), verify it and obtain owner PNG approval. All three are complete; owner commit is pending. [The plan](plans/batch-b-png-and-tournament-save-army.md) is the resumable source of truth. [The review](backlog/review-gpt-6-astra-09-07.md) still correctly records **4 fixed, 28 remaining** until the owner commits B. A/D is closed in squash `f986a91` (PR #41); do not restart it or repeat the audit.
@@ -17,7 +19,7 @@ Implement approved Batch B (§1.3 PNG rasterization and §1.7 Tournament Save Ar
 - Owner confirmed omitted `tournamentSaveArmy` means off in-game. This is owner-supplied validation, not an assistant game test.
 - Owner selected nil `TournamentRules` plus tournament victory selector => false, no new fallback. Normal constructor default explicitly sets true and is unchanged.
 - Owner approved focused before/after PNG pairs: short portal, longer portal and short direct edge. Eighteen paired images and four after-only cases are under `output/research/batch-b-png/20260910-101656/{before,after}`. These are ignored synthetic image diagnostics, not game exports.
-- Artifact capture is an untagged integration test, skipped unless `HOMMOE_BATCH_B_PNG_REVIEW_DIR` is set to an absolute diagnostic directory. It writes exclusively, never overwrites. Unit tests stay in-memory.
+- Review-only artifact capture was removed at owner request. Pixel assertions run unconditionally and stay in-memory; future GUI flow and saved-preview golden coverage is separate work.
 - In-app vector rendering, GUI goldens and all output-directory authorization/persistence behavior remain unchanged.
 
 ## 4. File modifications
@@ -30,7 +32,7 @@ Implement approved Batch B (§1.3 PNG rasterization and §1.7 Tournament Save Ar
 | [createGameRules_test.go](../test/unit/internal/services/template_generator/providers/gameRulesProvider/createGameRules_test.go) | True/false, activation aliases, inactive, nil and default cases. |
 | [fromEditorState_test.go](../test/unit/internal/mappers/generatorConfigMapper/fromEditorState_test.go) | False propagation. |
 | [previewRasterFixture.go](../test/test_helpers/previewRasterFixture.go) | New fixed-layout test helper, 22 fixtures. |
-| [previewRasterArtifacts_integration_test.go](../test/integration/previewRasterArtifacts_integration_test.go) | New default-skipped synthetic PNG capture. |
+| Removed review-only PNG capture utility | Was never committed; no environment-variable setup remains in test code. |
 | [tournamentSaveArmySerialization_integration_test.go](../test/integration/tournamentSaveArmySerialization_integration_test.go) | New real generation/save raw-JSON matrix with structure and tournament:true positive controls. |
 | [Batch B plan](plans/batch-b-png-and-tournament-save-army.md) | Owner-staged original; unstaged progress updates. |
 | [Handoff](session-carry-forward.md) | Updated current state and pending owner closure. |

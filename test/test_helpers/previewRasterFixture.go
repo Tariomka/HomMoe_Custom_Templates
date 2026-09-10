@@ -7,7 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
-// Names of the raster fixtures returned by NewPreviewRasterFixtures.
+// Names of the raster fixtures available through FindPreviewRasterFixture.
 //
 // The fitted chord of a straight connector is the center distance minus one zone
 // radius per end (2 * 21 px). A solid connector is subdivided into 24 samples and
@@ -70,9 +70,19 @@ func (this PreviewRasterFixture) WithoutConnections() PreviewRasterFixture {
 	return this
 }
 
-// NewPreviewRasterFixtures returns every connector raster fixture shared by the
-// unit tests and the PNG review capture.
-func NewPreviewRasterFixtures() []PreviewRasterFixture {
+// FindPreviewRasterFixture returns the fixture registered under the given name.
+func FindPreviewRasterFixture(name string) (PreviewRasterFixture, bool) {
+	for _, fixture := range newPreviewRasterFixtures() {
+		if fixture.Name == name {
+			return fixture, true
+		}
+	}
+
+	return PreviewRasterFixture{}, false
+}
+
+// newPreviewRasterFixtures builds the fixed layouts used by the pixel regression tests.
+func newPreviewRasterFixtures() []PreviewRasterFixture {
 	point := data.NewVec2[float64]
 	portal, direct := preview.ConnectionTypePortal, preview.ConnectionTypeDirect
 
@@ -107,17 +117,6 @@ func NewPreviewRasterFixtures() []PreviewRasterFixture {
 		newStraightFixture(PreviewFixtureDirectNearBorder, point(660, 350), point(560, 350), direct),
 		newConnectorOnlyFixture(PreviewFixtureDirectOffCanvas, point(-40, 350), point(300, 350), direct),
 	}
-}
-
-// FindPreviewRasterFixture returns the fixture registered under the given name.
-func FindPreviewRasterFixture(name string) (PreviewRasterFixture, bool) {
-	for _, fixture := range NewPreviewRasterFixtures() {
-		if fixture.Name == name {
-			return fixture, true
-		}
-	}
-
-	return PreviewRasterFixture{}, false
 }
 
 // newStraightFixture places the control point on the midpoint, which renders the
