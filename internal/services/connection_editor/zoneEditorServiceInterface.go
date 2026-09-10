@@ -10,15 +10,12 @@ import (
 // IZoneEditorService is the contract of the zone-level behaviour of the manual
 // zone editor.
 type IZoneEditorService interface {
-	// EnsureConnectionNames assigns a unique name to every nameless connection,
-	// in place.
+	// EnsureConnectionNames assigns a unique name to every nameless connection in place.
 	EnsureConnectionNames(connections []template_model.Connection)
 
-	// RebuildZoneConnectionRoads recomputes each zone's connection and castle
-	// roads to match the current connection list and main objects.
 	RebuildZoneConnectionRoads(zones []template_model.Zone, connections []template_model.Connection)
 
-	// RebuildCastleRoads regenerates only the zone's castle<->castle roads,
+	// RebuildCastleRoads reconciles only the zone's castle<->castle roads,
 	// preserving every other road.
 	RebuildCastleRoads(zone *template_model.Zone)
 

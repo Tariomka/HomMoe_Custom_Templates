@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
@@ -15,6 +16,7 @@ import (
 type TemplateGenerator struct {
 	configuration     *config.GeneratorConfig
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider
+	roadPolicy        zone_interfaces.IRoadPolicyService
 	tuningFactory     generation_tuning.IGenerationTuningFactory
 
 	contentLimitProvider provider_interfaces.IContentLimitProvider
@@ -28,6 +30,7 @@ type TemplateGenerator struct {
 func NewTemplateGenerator(
 	configuration *config.GeneratorConfig,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
+	roadPolicy zone_interfaces.IRoadPolicyService,
 	tuningFactory generation_tuning.IGenerationTuningFactory,
 	contentLimitProvider provider_interfaces.IContentLimitProvider,
 	contentProvider provider_interfaces.IMandatoryContentProvider,
@@ -38,6 +41,7 @@ func NewTemplateGenerator(
 	return &TemplateGenerator{
 		configuration:        configuration,
 		zoneLabelProvider:    zoneLabelProvider,
+		roadPolicy:           roadPolicy,
 		tuningFactory:        tuningFactory,
 		contentLimitProvider: contentLimitProvider,
 		contentProvider:      contentProvider,
@@ -86,6 +90,15 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 		ContentLists:        []template_model.ContentList{},
 	}
 	this.gladiatorProvider.PlaceArena(*this.configuration, &generated.Variants[0])
+
+	this.roadPolicy.Reconcile(models.RoadReconciliationRequest{
+		Zones:                generated.Variants[0].Zones,
+		Connections:          generated.Variants[0].Connections,
+		MandatoryContent:     generated.MandatoryContent,
+		GenerateRoads:        this.configuration.GenerateRoads,
+		SpawnRemoteFootholds: this.configuration.SpawnRemoteFootholds,
+		RemoteFootholdCount:  this.configuration.RemoteFootholdCount,
+	})
 
 	return &generated, warnings
 }

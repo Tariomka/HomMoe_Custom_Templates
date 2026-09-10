@@ -17,6 +17,7 @@ type templateHandlerFixture struct {
 	contentProvider   *test_helpers.MandatoryContentProviderMock
 	connectionEditor  *test_helpers.ConnectionEditorServiceMock
 	zoneEditor        *test_helpers.ZoneEditorServiceMock
+	roadPolicy        *test_helpers.RoadPolicyServiceMock
 	manualReapply     *test_helpers.ManualReapplyServiceMock
 	fileService       *test_helpers.FileServiceMock
 	previewGenerator  *test_helpers.PreviewGeneratorServiceMock
@@ -30,6 +31,7 @@ func newTemplateHandlerFixture() *templateHandlerFixture {
 		contentProvider:   &test_helpers.MandatoryContentProviderMock{},
 		connectionEditor:  &test_helpers.ConnectionEditorServiceMock{},
 		zoneEditor:        &test_helpers.ZoneEditorServiceMock{},
+		roadPolicy:        &test_helpers.RoadPolicyServiceMock{},
 		manualReapply:     &test_helpers.ManualReapplyServiceMock{},
 		fileService:       &test_helpers.FileServiceMock{},
 		previewGenerator:  &test_helpers.PreviewGeneratorServiceMock{},
@@ -42,6 +44,7 @@ func newTemplateHandlerFixture() *templateHandlerFixture {
 		fixture.contentProvider,
 		fixture.connectionEditor,
 		fixture.zoneEditor,
+		fixture.roadPolicy,
 		fixture.manualReapply,
 		fixture.fileService,
 		fixture.previewGenerator,

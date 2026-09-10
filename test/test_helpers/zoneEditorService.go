@@ -13,7 +13,7 @@ func NewZoneEditorService() connection_editor.IZoneEditorService {
 
 	return connection_editor.NewZoneEditorService(
 		castleFactory,
-		roadFactory,
+		zones.NewRoadPolicyService(roadFactory),
 		zones.NewZoneFactory(castleFactory, roadFactory),
 	)
 }

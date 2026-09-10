@@ -51,14 +51,21 @@ func (this *RoadFactory) CreateOuterZoneRoads(
 	mainObjectCount int,
 	footholdCount int,
 	generateRoads bool) []template_model.Road {
-	if !generateRoads {
-		return nil
-	}
-
 	if mainObjectCount == 0 {
 		return this.CreateConnectorZoneRoads(connectionNames, generateRoads)
 	}
 
+	roads := this.createInternalZoneRoads(mainObjectCount, footholdCount)
+	if !generateRoads {
+		return roads
+	}
+
+	return append(roads, this.createConnectionApproachRoads(connectionNames)...)
+}
+
+func (this *RoadFactory) createInternalZoneRoads(
+	mainObjectCount int,
+	footholdCount int) []template_model.Road {
 	var roads []template_model.Road
 	for index := range mainObjectCount - 1 {
 		roads = append(roads,
@@ -76,6 +83,11 @@ func (this *RoadFactory) CreateOuterZoneRoads(
 					BuildMandatoryContentType(fmt.Sprintf("name_remote_foothold_%d", index+1))).
 				Build())
 	}
+	return roads
+}
+
+func (this *RoadFactory) createConnectionApproachRoads(connectionNames []string) []template_model.Road {
+	var roads []template_model.Road
 	for _, name := range connectionNames {
 		roads = append(roads,
 			variant_content.NewRoadBuilder().

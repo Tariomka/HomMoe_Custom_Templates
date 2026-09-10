@@ -390,6 +390,7 @@
           "to": "Spawn-B",
           "connectionType": "Direct",
           "simTurnSquad": true,
+          "road": true,
           "guardZone": "Spawn-A",
           "guardValue": 30000,
           "guardWeeklyIncrement": 0.15,

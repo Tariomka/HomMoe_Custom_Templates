@@ -15,15 +15,17 @@ import (
 func NewTemplateGenerator(configuration *config.GeneratorConfig) template_generator.ITemplateGenerator {
 	castleFactory := zones.NewCastleFactory()
 	roadFactory := zones.NewRoadFactory()
+	roadPolicy := zones.NewRoadPolicyService(roadFactory)
 	zoneFactory := zones.NewZoneFactory(castleFactory, roadFactory)
 	zoneClassifier := zones.NewZoneTierService()
-	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadFactory, zoneFactory)
+	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadPolicy, zoneFactory)
 	zoneLabelProvider := zones.NewZoneLabelProvider()
 	connectionService := base.NewTopologyConnectionService(zoneLabelProvider)
 
 	return template_generator.NewTemplateGenerator(
 		configuration,
 		zoneLabelProvider,
+		roadPolicy,
 		generation_tuning.NewGenerationTuningFactory(),
 		providers.NewContentLimitProvider(),
 		providers.NewMandatoryContentProvider(zoneClassifier, zoneEditor),

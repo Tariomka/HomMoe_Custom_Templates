@@ -33,3 +33,37 @@ func TestWhenZoneHasObjectsFootholdAndConnection_CreatesAllRoadKinds(t *testing.
 		},
 	}, roads)
 }
+
+func TestWhenRoadsAreDisabled_StillCreatesTheInternalRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	factory := zones.NewRoadFactory()
+
+	// Act
+	roads := factory.CreateOuterZoneRoads([]string{"Gate-1"}, 2, 1, false)
+
+	// Assert
+	assert.Equal(t, []template_model.Road{
+		{
+			Type: "Stone",
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
+		},
+		{
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+		},
+	}, roads)
+}
+
+func TestWhenRoadsAreDisabledAndZoneHasNoMainObjects_CreatesNoRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	factory := zones.NewRoadFactory()
+
+	// Act
+	roads := factory.CreateOuterZoneRoads([]string{"Gate-1", "Gate-2"}, 0, 1, false)
+
+	// Assert
+	assert.Nil(t, roads)
+}

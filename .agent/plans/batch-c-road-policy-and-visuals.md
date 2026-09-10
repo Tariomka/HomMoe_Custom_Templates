@@ -1,6 +1,6 @@
 # Batch C: road policy, connectivity and visual road status
 
-Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is complete and uncommitted; begin Phase 2 next without requesting approval again.
+Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is complete and uncommitted. Phase 3 is next. Preserve the owner's staged handoff; this plan has the newer implementation status.
 
 ## For Future Agents
 
@@ -171,6 +171,7 @@ Only plan/handoff documentation differs from the recorded source baseline.
 Fresh pre-change full unit coverage task passed; Go total remains **74.5%**.
 
 Completed 2026-09-10:
+
 - Connection model now exposes `IsExplicitPortal()` / `HasRoad()` with the approved
   case-insensitive explicit-type classifier. No preview/GUI consumer changed yet.
 - Player repair uses valid incident endpoints (not transitive reachability or roads),
@@ -202,25 +203,25 @@ are not implemented by this phase. Existing preview shape/type classification re
 
 ## Phase 2: Road policy and final content reconciliation
 
-Status: Not started
+Status: Complete
 
-- [ ] Implement flag policy, internal-vs-approach factory separation and coherent
+- [x] Implement flag policy, internal-vs-approach factory separation and coherent
   final-zone reconciliation using scoped mandatory-content references.
-- [ ] Integrate generation and UpdateTemplate with correct finalization ordering.
-- [ ] Preserve nil EditorState roads/flags/content exactly; cover graph warnings and
+- [x] Integrate generation and UpdateTemplate with correct finalization ordering.
+- [x] Preserve nil EditorState roads/flags/content exactly; cover graph warnings and
   existing naming behavior separately from the skipped road work.
-- [ ] Cover roads on/off/toggle both directions for all non-Portal types; explicit
+- [x] Cover roads on/off/toggle both directions for all non-Portal types; explicit
   Portal true/false/nil flags preserved, including mixed direct/portal approaches.
-- [ ] Cover foothold disable, count decrease/increase, no-main-object zones, custom
+- [x] Cover foothold disable, count decrease/increase, no-main-object zones, custom
   valid targets with matching prefixes, unknown refs, confirmed invalid indices,
   missing/nonincident connections, and per-zone mandatory group resolution.
-- [ ] Cover valid custom internal road preservation/attributes, no duplicate generated
+- [x] Cover valid custom internal road preservation/attributes, no duplicate generated
   roads, actual castle changes, unchanged arena routing and existing spawn anchoring.
-- [ ] Regenerate Wire for changed providers/constructors; update real test mocks.
-- [ ] Update [shared generated-template golden](../../test/test_helpers/defaultTemplate.json)
+- [x] Regenerate Wire for changed providers/constructors; update real test mocks.
+- [x] Update [shared generated-template golden](../../test/test_helpers/defaultTemplate.json)
   and derived fixtures for explicit road flags, preserving full golden equality.
   Never change protected example templates or weaken assertions to hide the delta.
-- [ ] Re-specify the existing nil-state UpdateTemplate mock test that expects a road
+- [x] Re-specify the existing nil-state UpdateTemplate mock test that expects a road
   rebuild: require direct naming, no reconciliation, unchanged roads/flags/content.
 
 ### Verification Plan: Phase 2
@@ -237,7 +238,56 @@ Status: Not started
 
 ### Phase Summary: Phase 2
 
-Pending phase completion.
+Started 2026-09-10 at `07ca8b6` (`AD/road_and_graph_invariants`): the owner committed
+Phase 1. The only inherited edit is the staged handoff addition, preserved untouched.
+Fresh pre-change full unit coverage task passed, total **74.6%**. Implementation
+approval remains in force; no policy questions reopened.
+
+Completed 2026-09-10:
+
+- Added `RoadPolicyService`, its interface, `RoadReconciliationRequest`, and private
+  resolved scope. Non-explicit-Portal flags follow the setting; explicit Portal flags
+  and eligible approaches survive unchanged, including false/nil flags.
+- Factory internal roads are independent of the checkbox. Reconciliation removes
+  whole segments with confirmed invalid/disabled endpoints, validates mandatory
+  names against each zone's final groups (including empty final content), preserves
+  opaque/custom references and attributes, and adds missing approaches/foothold roads.
+- `Generate` reconciles after content and arena placement; `UpdateTemplate` names
+  connections directly and rebuilds final content before policy only with settings.
+  Nil settings preserve roads/flags/content and still compute graph diagnostics.
+- Castle reconciliation preserves custom routes and clones before pruning/appending
+  to prevent alias mutation. Arena markers are excluded from generated anchors;
+  marker-only zones retain connector routing. Imported shifted anchors are rebased
+  to actual non-arena indices; original spawn anchoring is retained.
+- Legacy settings-free `RebuildZoneConnectionRoads` remains public and delegates to
+  policy with explicitly unknown content and roads on (documented flag stamping).
+  No production caller remains; removal is not part of this phase.
+- Added dedicated public-policy tests and real generation→Apply→JSON regression
+  matrices, plus nil-handler, roads-disabled, arena-only and slice-alias tests.
+  Existing mandatory-content and manual-reapply suites pass unchanged. Wire was
+  regenerated. Full golden equality remains; its only delta is `road: true` on
+  `Rnd-A-B` in the shared test fixture.
+- Off→on restores eligible approach targets, not byte-identical redundant connector
+  segments from initial topology assembly. Existing valid custom records are not
+  collapsed or rewritten to make the two forms identical.
+
+Verification: Windows production build PASS; full fresh unit run PASS; fresh full
+coverage task and final cache-eligible reruns PASS, **74.6% → 74.9%**. Policy service,
+resolved scope, road factory and changed handler/editor entry points are 100%
+statement-covered after the final injected-factory reference matrix. Default
+`go test ./test/...`, tagged integration, and
+`go test -tags='integration_test,gui' ./test/integration/...` PASS (GUI included).
+Test-layout and diff-whitespace checks PASS; final report-only lint **0 issues**
+(three existing exclusion warnings). Independent Claude Opus 5 review approved
+after arena-only anchoring, shared-array mutation and a one-endpoint assertion
+were corrected. Regression tests were observed failing with those fixes removed.
+
+Protected trees unchanged; generated Wire changed only through regeneration. All
+Phase 2 source/tests/plan edits remain unstaged or untracked, and the owner's staged
+five-line handoff addition is untouched. No Linux, race, benchmark or in-game
+validation claimed. GUI/PNG road-state visuals are still Phase 3/4, not implemented.
+Resume from this plan rather than the older staged handoff; later scope recorded
+in that handoff remains unchanged. No extra approval question is needed for Phase 3.
 
 ## Phase 3: Pending editor policy and GUI road styles
 
