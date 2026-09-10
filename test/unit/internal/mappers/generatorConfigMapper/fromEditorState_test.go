@@ -317,6 +317,19 @@ func TestWhenTournamentOptionsProvided_PopulatesTournamentRules(t *testing.T) {
 	assert.Equal(t, expected, configuration.TournamentRules)
 }
 
+func TestWhenTournamentSaveArmyDisabled_PreservesDisabledFlag(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.TournamentSaveArmy = false
+
+	// Act
+	configuration := test_helpers.NewConfigMapper().FromEditorState(state)
+
+	// Assert
+	assert.False(t, configuration.TournamentRules.SaveArmy)
+}
+
 func TestWhenContentRowsProvidedForEveryZoneKind_PopulatesEveryMandatoryCollection(t *testing.T) {
 	t.Parallel()
 	// Arrange

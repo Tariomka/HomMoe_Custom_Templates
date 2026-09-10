@@ -430,16 +430,104 @@ func TestWhenTournamentEnabled_EnablesTournamentWinCondition(t *testing.T) {
 	assert.True(t, actual.WinConditions.Tournament)
 }
 
-func TestWhenTournamentEnabled_EnablesTournamentSaveArmy(t *testing.T) {
+func TestWhenTournamentCheckboxEnabledAndSaveArmyEnabled_PropagatesSaveArmy(t *testing.T) {
 	t.Parallel()
-	// Arrange & Act
+	// Arrange
+	expectedSaveArmy := true
+
+	// Act
 	actual := createGameRules(func(configuration *config.GeneratorConfig) {
 		configuration.TournamentRules = &config.TournamentRules{
 			Enabled:            true,
 			FirstTournamentDay: 10,
 			Interval:           5,
 			PointsToWin:        2,
+			SaveArmy:           expectedSaveArmy,
 		}
+	})
+
+	// Assert
+	assert.Equal(t, expectedSaveArmy, actual.WinConditions.TournamentSaveArmy)
+}
+
+func TestWhenTournamentCheckboxEnabledAndSaveArmyDisabled_PropagatesSaveArmy(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	expectedSaveArmy := false
+
+	// Act
+	actual := createGameRules(func(configuration *config.GeneratorConfig) {
+		configuration.TournamentRules = &config.TournamentRules{
+			Enabled:            true,
+			FirstTournamentDay: 10,
+			Interval:           5,
+			PointsToWin:        2,
+			SaveArmy:           expectedSaveArmy,
+		}
+	})
+
+	// Assert
+	assert.Equal(t, expectedSaveArmy, actual.WinConditions.TournamentSaveArmy)
+}
+
+func TestWhenTournamentVictoryConditionSelectedAndSaveArmyEnabled_PropagatesSaveArmy(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	expectedSaveArmy := true
+
+	// Act
+	actual := createGameRules(func(configuration *config.GeneratorConfig) {
+		configuration.GameEndConditions.VictoryCondition = "win_condition_6"
+		configuration.TournamentRules.SaveArmy = expectedSaveArmy
+	})
+
+	// Assert
+	assert.Equal(t, expectedSaveArmy, actual.WinConditions.TournamentSaveArmy)
+}
+
+func TestWhenTournamentVictoryConditionSelectedAndSaveArmyDisabled_PropagatesSaveArmy(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	expectedSaveArmy := false
+
+	// Act
+	actual := createGameRules(func(configuration *config.GeneratorConfig) {
+		configuration.GameEndConditions.VictoryCondition = "win_condition_6"
+		configuration.TournamentRules.SaveArmy = expectedSaveArmy
+	})
+
+	// Assert
+	assert.Equal(t, expectedSaveArmy, actual.WinConditions.TournamentSaveArmy)
+}
+
+func TestWhenTournamentIsInactiveAndSaveArmyEnabled_DoesNotEnableSaveArmy(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	actual := createGameRules(func(configuration *config.GeneratorConfig) {
+		configuration.TournamentRules.SaveArmy = true
+	})
+
+	// Assert
+	assert.False(t, actual.WinConditions.TournamentSaveArmy)
+}
+
+func TestWhenTournamentVictoryConditionSelectedAndRulesAreNil_UsesDisabledSaveArmy(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	actual := createGameRules(func(configuration *config.GeneratorConfig) {
+		configuration.GameEndConditions.VictoryCondition = "win_condition_6"
+		configuration.TournamentRules = nil
+	})
+
+	// Assert
+	assert.False(t, actual.WinConditions.TournamentSaveArmy)
+}
+
+func TestWhenDefaultTournamentConfigurationEnabled_UsesEnabledSaveArmy(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	actual := createGameRules(func(configuration *config.GeneratorConfig) {
+		configuration.TournamentRules.Enabled = true
 	})
 
 	// Assert
