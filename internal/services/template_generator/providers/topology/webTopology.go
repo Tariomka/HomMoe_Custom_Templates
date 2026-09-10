@@ -52,7 +52,8 @@ func (this *SharedWebTopologyService) CreateTopologyVariant(
 				playerLabels, allLabels, tuning, configuration.MaxPortalConnections, neutralZones)...)
 	}
 	if configuration.NoDirectPlayerConnections && len(playerLabels) > 1 {
-		conns = append(conns, this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning)...)
+		conns = append(conns,
+			this.CreateMissingPlayerConnections(playerLabels, zones, conns, tuning, configuration.GenerateRoads)...)
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(zones), zones, conns)
 }

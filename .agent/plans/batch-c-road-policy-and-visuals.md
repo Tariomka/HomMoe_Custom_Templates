@@ -1,6 +1,6 @@
 # Batch C: road policy, connectivity and visual road status
 
-Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Begin Phase 1 next session without requesting approval again; implementation has not started because the planning session reached its length limit.
+Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is complete and uncommitted; begin Phase 2 next without requesting approval again.
 
 ## For Future Agents
 
@@ -145,16 +145,16 @@ never edited. No global test tags, fake test seams, output-path changes or persi
 
 ## Phase 1: Public policy and graph regressions
 
-Status: Not started
+Status: Complete
 
 - [x] Obtain owner approval of this written plan; inspect current Git safely. Approval received 2026-09-10. Clean `AD/road_and_graph_invariants` at `5240389aa0a8eb6a0a04d0552369bc2437540e60`; owner committed only the plan/handoff since the measured baseline. Recheck Git before code edits next session.
-- [ ] Add dedicated connection-model classifier tests, true/false/nil × explicit
+- [x] Add dedicated connection-model classifier tests, true/false/nil × explicit
   Portal/non-Portal (including placement-rule-only portal and type-case handling).
-- [ ] Add red public-API graph tests for roadless-but-connected players, newly
+- [x] Add red public-API graph tests for roadless-but-connected players, newly
   accumulated repairs, required impossible-isolation fallback and component bridges.
-- [ ] Implement endpoint-based player connectivity and road-gated repair calls across
+- [x] Implement endpoint-based player connectivity and road-gated repair calls across
   TopologyBase, its service/interface and every current caller.
-- [ ] Test no unnecessary fallback for fixed A-neutral-B layout; required fallback
+- [x] Test no unnecessary fallback for fixed A-neutral-B layout; required fallback
   for two-player/no-neutral isolated Random; bridge edges remain when roads are off.
 
 ### Verification Plan: Phase 1
@@ -165,7 +165,40 @@ Status: Not started
 
 ### Phase Summary: Phase 1
 
-Pending phase completion.
+Started 2026-09-10. Current branch `AD/road_and_graph_invariants`, HEAD
+`87ae8789d84178854a395e8dd34e172095a9ebc6`; working tree and index were clean at start.
+Only plan/handoff documentation differs from the recorded source baseline.
+Fresh pre-change full unit coverage task passed; Go total remains **74.5%**.
+
+Completed 2026-09-10:
+- Connection model now exposes `IsExplicitPortal()` / `HasRoad()` with the approved
+  case-insensitive explicit-type classifier. No preview/GUI consumer changed yet.
+- Player repair uses valid incident endpoints (not transitive reachability or roads),
+  including newly created repairs; missing/self endpoints cannot mark a spawn connected.
+- Both repair APIs take final `generateRoads bool`; TopologyBase and every current
+  caller forward the setting. Edges/guards remain when approach-road creation is off.
+- Occupied fallback/bridge names use the first free `-2`, `-3`, etc. suffix. This
+  closes the existing bridge collision path that linked adjacency without creating
+  an edge. Only real repair edges update connectivity; existing records are untouched.
+- Added dedicated classifier and adjacent clone/mapping tests, direct service tests,
+  base regressions, fixed positioned A-neutral-B and real Random isolation cases.
+  Initial focused graph run reproduced eight failures; repaired suites pass.
+- Independent Claude Opus 5 review approved after vacuous/combined test assertions
+  were corrected and collision cases added. No approved policy was reopened.
+
+Verification: production build PASS; affected generator/model suites and architecture
+tests PASS; fresh post-change full unit coverage task (`-count=1`) PASS; final cached-
+eligible full coverage rerun after test-only additions PASS, **74.6%** (baseline 74.5%).
+Classifier methods, both service/base repair methods, fallback construction and unique-
+name helper are **100%** statement-covered; value/branch matrices cover roads on/off,
+endpoint validity, accumulated repairs and collisions. `go test ./test/...` PASS,
+including untagged integration; test-layout checker PASS; report-only lint **0 issues**
+(three existing exclusion warnings); `git diff --check` PASS.
+No protected data/schema/registry or generated Wire changes. Index remains empty;
+all Phase 1 work is unstaged/untracked. No constructor changes or Wire regeneration.
+Windows only: no Linux, gated integration/GUI, race, or in-game validation claimed.
+Phase 2 remains unstarted; full road-flag policy and internal/foothold reconciliation
+are not implemented by this phase. Existing preview shape/type classification remains.
 
 ## Phase 2: Road policy and final content reconciliation
 

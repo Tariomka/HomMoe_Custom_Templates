@@ -18,7 +18,7 @@ func TestWhenFewerThanTwoLabelsExist_NoBridgesAreCreated(t *testing.T) {
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
-		[]string{"A"}, []string{"A"}, models.Positions{{X: 0.5, Y: 0.5}}, nil, nil, newUnitTuning(), nil)
+		[]string{"A"}, []string{"A"}, models.Positions{{X: 0.5, Y: 0.5}}, nil, nil, newUnitTuning(), nil, true)
 
 	// Assert
 	assert.Empty(t, connections)
@@ -35,7 +35,7 @@ func TestWhenAllZonesAreAlreadyConnected_NoBridgesAreCreated(t *testing.T) {
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
-		[]string{"A", "B"}, []string{"A", "B"}, positions, nil, existingConnections, newUnitTuning(), nil)
+		[]string{"A", "B"}, []string{"A", "B"}, positions, nil, existingConnections, newUnitTuning(), nil, true)
 
 	// Assert
 	assert.Empty(t, connections)
@@ -57,7 +57,7 @@ func TestWhenTwoPlayerZonesAreDisconnected_BridgeLinksThemWithPlayerBorderGuard(
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
-		[]string{"A", "B"}, []string{"A", "B"}, positions, nil, nil, newUnitTuning(), nil)
+		[]string{"A", "B"}, []string{"A", "B"}, positions, nil, nil, newUnitTuning(), nil, true)
 
 	// Assert
 	assert.Equal(t, expectedConnections, connections)
@@ -71,7 +71,7 @@ func TestWhenThreeZonesAreAllDisconnected_BridgesAreAddedUntilFullyConnected(t *
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
-		[]string{"A", "B", "C"}, []string{"A", "B", "C"}, positions, nil, nil, newUnitTuning(), nil)
+		[]string{"A", "B", "C"}, []string{"A", "B", "C"}, positions, nil, nil, newUnitTuning(), nil, true)
 
 	// Assert
 	assert.Len(t, connections, 2)
@@ -97,7 +97,7 @@ func TestWhenIsolatedZoneSitsClosestToSecondZone_BridgeAttachesToClosestPair(t *
 	// Act
 	connections := topologyBase.CreateMissingConnections(
 		[]string{"A", "B", "C"}, []string{"A", "B", "C"}, positions, nil,
-		existingConnections, newUnitTuning(), nil)
+		existingConnections, newUnitTuning(), nil, true)
 
 	// Assert
 	assert.Equal(t, expectedConnections, connections)
@@ -123,7 +123,7 @@ func TestWhenDisconnectedZonesAreNeutral_BridgeGuardUsesHigherNeutralQuality(t *
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
-		nil, []string{"C", "D"}, positions, nil, nil, newUnitTuning(), neutralPlans)
+		nil, []string{"C", "D"}, positions, nil, nil, newUnitTuning(), neutralPlans, true)
 
 	// Assert
 	assert.Equal(t, expectedConnections, connections)
@@ -145,7 +145,7 @@ func TestWhenLabelOrderIsReversed_BridgeNameStillSortsLabelsAlphabetically(t *te
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
-		[]string{"A", "B"}, []string{"B", "A"}, positions, nil, nil, newUnitTuning(), nil)
+		[]string{"A", "B"}, []string{"B", "A"}, positions, nil, nil, newUnitTuning(), nil, true)
 
 	// Assert
 	assert.Equal(t, expectedConnections, connections)
@@ -201,7 +201,7 @@ func TestWhenBridgedZonesHaveVariousRoadShapes_BridgeIsStillReturned(t *testing.
 
 			// Act
 			connections := topologyBase.CreateMissingConnections(
-				[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil)
+				[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil, true)
 
 			// Assert
 			assert.Len(t, connections, 1)
@@ -283,7 +283,7 @@ func TestWhenBridgeIsCreated_FirstZoneInSliceGainsBridgeRoad(t *testing.T) {
 
 			// Act
 			topologyBase.CreateMissingConnections(
-				[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil)
+				[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil, true)
 
 			// Assert
 			assert.Equal(t, testCase.expectedRoads, zones[0].Roads)
@@ -306,13 +306,13 @@ func TestWhenBridgeIsCreated_SecondZoneInSliceAlsoGainsBridgeRoad(t *testing.T) 
 
 	// Act
 	topologyBase.CreateMissingConnections(
-		[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil)
+		[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil, true)
 
 	// Assert
 	assert.Equal(t, expectedRoads, zones[1].Roads)
 }
 
-func TestWhenBridgeNameAlreadyExistsOnUnmappedConnection_LoopTerminatesWithoutDuplicateBridge(t *testing.T) {
+func TestWhenBridgeNameAlreadyExistsOnUnrelatedConnection_BridgeUsesFirstFreeNumericSuffix(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
@@ -323,8 +323,67 @@ func TestWhenBridgeNameAlreadyExistsOnUnmappedConnection_LoopTerminatesWithoutDu
 
 	// Act
 	connections := topologyBase.CreateMissingConnections(
-		[]string{"A", "B"}, []string{"A", "B"}, positions, nil, existingConnections, newUnitTuning(), nil)
+		[]string{"A", "B"}, []string{"A", "B"}, positions, nil, existingConnections, newUnitTuning(), nil, true)
 
 	// Assert
-	assert.Empty(t, connections)
+	assert.Equal(t, []string{"Bridge-A-B-2"}, connectionNames(connections))
+}
+
+func TestWhenBridgeRoadGenerationIsDisabled_ExistingConnectionsAreRetained(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
+	existingConnections := []template_model.Connection{{Name: "Custom-A-N", From: "Spawn-A", To: "Neutral-N"}}
+	zones := []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}}
+
+	// Act
+	connections := topologyBase.CreateMissingConnections(
+		[]string{"A", "B"}, []string{"A", "B"}, positions, zones,
+		existingConnections, newUnitTuning(), nil, false)
+
+	// Assert
+	assert.Equal(t, []string{"Bridge-A-B"}, connectionNames(connections))
+}
+
+func TestWhenBridgeRoadGenerationIsDisabled_WholeZonesIncludingCustomRoadsArePreserved(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.9, Y: 0.9}}
+	expectedZones := []template_model.Zone{
+		{Name: "Spawn-A", Roads: []template_model.Road{{
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
+		}}},
+		{Name: "Spawn-B", Roads: []template_model.Road{{
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"2"}},
+		}}},
+	}
+	zones := append([]template_model.Zone(nil), expectedZones...)
+
+	// Act
+	topologyBase.CreateMissingConnections(
+		[]string{"A", "B"}, []string{"A", "B"}, positions, zones, nil, newUnitTuning(), nil, false)
+
+	// Assert
+	assert.Equal(t, expectedZones, zones)
+}
+
+func TestWhenThreeDisconnectedZonesAreRepaired_SecondRepairUsingAccumulatedEndpointsReturnsNoBridges(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+	labels := []string{"A", "B", "C"}
+	positions := models.Positions{{X: 0.1, Y: 0.1}, {X: 0.5, Y: 0.5}, {X: 0.9, Y: 0.9}}
+	firstRepair := topologyBase.CreateMissingConnections(
+		labels, labels, positions, nil, nil, newUnitTuning(), nil, false)
+
+	// Act
+	secondRepair := topologyBase.CreateMissingConnections(
+		labels, labels, positions, nil, firstRepair, newUnitTuning(), nil, false)
+
+	// Assert
+	assert.Empty(t, secondRepair)
 }
